@@ -93,7 +93,7 @@ TableDownComm::TableDownComm(bool is_downtime)
     }
 
     TableHosts::addColumns(this, "host_",    (char *)&(ref->_host)    - (char *)ref);
-    g_table_services->addColumns(this, "service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
+    TableServices::addColumns(this, "service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
 }
 
 TableDownComm::~TableDownComm()

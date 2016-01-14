@@ -41,9 +41,9 @@ class ServicelistColumn : public Column
 public:
     ServicelistColumn(std::string name, std::string description, int offset, int indirect_offset, bool show_host, int info_depth)
         : Column(name, description, indirect_offset), _offset(offset), _show_host(show_host), _info_depth(info_depth) {}
-    int type() { return COLTYPE_LIST; };
-    void output(void *, Query *);
-    Filter *createFilter(int opid, char *value);
+    int type() override { return COLTYPE_LIST; };
+    void output(void *, Query *) override;
+    Filter *createFilter(int opid, char *value) override;
     servicesmember *getMembers(void *data);
 private:
     int inCustomTimeperiod(service *svc, const char *varname);

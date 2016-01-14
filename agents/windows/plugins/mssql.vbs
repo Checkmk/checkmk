@@ -117,7 +117,7 @@ If Err.Number <> 0 Then
             ' try MSSQL < 10
             Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement")
             If Err.Number <> 0 Then
-                addOutput( "Error: " & Err.Number & " " & Err.Description )
+                WScript.echo "Error: " & Err.Number & " " & Err.Description
                 Err.Clear()
                 wscript.quit()
             End If

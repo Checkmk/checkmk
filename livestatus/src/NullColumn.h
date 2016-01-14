@@ -36,8 +36,8 @@ class NullColumn : public Column
 public:
     NullColumn(std::string name, std::string description) :
         Column(name, description, -1) {}
-    int type() { return COLTYPE_NULL; }
-    void output(void *data, Query *);
+    int type() override { return COLTYPE_NULL; }
+    void output(void *data, Query *) override;
 };
 
 #endif // NullColumn_h

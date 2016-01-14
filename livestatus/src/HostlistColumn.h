@@ -40,9 +40,9 @@ class HostlistColumn : public Column
 public:
     HostlistColumn(std::string name, std::string description, int offset, int indirect_offset, bool show_state)
         : Column(name, description, indirect_offset), _offset(offset), _show_state(show_state) {}
-    int type() { return COLTYPE_LIST; }
-    void output(void *, Query *);
-    Filter *createFilter(int opid, char *value);
+    int type() override { return COLTYPE_LIST; }
+    void output(void *, Query *) override;
+    Filter *createFilter(int opid, char *value) override;
     hostsmember *getMembers(void *data);
 };
 

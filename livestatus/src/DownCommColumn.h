@@ -41,8 +41,8 @@ class DownCommColumn : public ListColumn
 public:
     DownCommColumn(std::string name, std::string description, int indirect_offset, bool is_downtime, bool is_service, bool with_info, bool with_extra_info)
         : ListColumn(name, description, indirect_offset), _is_downtime(is_downtime), _with_info(with_info), _is_service(is_service), _with_extra_info(with_extra_info) {}
-    int type() { return COLTYPE_LIST; }
-    void output(void *, Query *);
+    int type() override { return COLTYPE_LIST; }
+    void output(void *, Query *) override;
     void *getNagiosObject(char *name);
     bool isEmpty(void *data);
     bool isNagiosMember(void *data, void *member);

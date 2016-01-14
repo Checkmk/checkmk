@@ -155,7 +155,7 @@ void TableStateHistory::addColumns(Table *table)
 
     // join host and service tables
     TableHosts::addColumns(table, "current_host_", (char *)&(ref->_host)    - (char *)ref);
-    g_table_services->addColumns(table, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
+    TableServices::addColumns(table, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
 }
 
 LogEntry *TableStateHistory::getPreviousLogentry()

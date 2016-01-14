@@ -1,0 +1,9 @@
+Title: cisco_nexus_cpu, cisco_oldcpu: new checks for Cisco devices which do not support CPU utilization information from CISCO PROCESS MIB
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452761536
+Class: feature
+
+

@@ -40,9 +40,9 @@ public:
         OffsetStringColumn(name, description, offset, indirect_offset) {}
     // reimplement several functions from StringColumn
 
-    std::string valueAsString(void *data, Query *);
-    void output(void *data, Query *);
-    Filter *createFilter(int opid, char *value);
+    std::string valueAsString(void *data, Query *) override;
+    void output(void *data, Query *) override;
+    Filter *createFilter(int opid, char *value) override;
 
     // overriden by host and service macro columns
     virtual host *getHost(void *) = 0;

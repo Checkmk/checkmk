@@ -37,8 +37,8 @@ public:
     BlobColumn(std::string name, std::string description, int indirect_offset) :
         Column(name, description, indirect_offset) {}
     virtual char *getBlob(void *data, int *size) = 0;
-    void output(void *, Query *);
-    int type() { return COLTYPE_BLOB; }
+    void output(void *, Query *) override;
+    int type() override { return COLTYPE_BLOB; }
 };
 
 #endif // BlobColumn_h

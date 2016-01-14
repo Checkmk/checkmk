@@ -36,7 +36,7 @@ class ServiceContactsColumn : public ContactsColumn
 public:
     ServiceContactsColumn(std::string name, std::string description, int indirect_offset)
         : ContactsColumn(name, description, indirect_offset) {}
-    int type() { return COLTYPE_LIST; }
+    int type() override { return COLTYPE_LIST; }
     bool isNagiosMember(void *data, void *member);
 };
 

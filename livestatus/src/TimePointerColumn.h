@@ -38,9 +38,9 @@ class TimePointerColumn : public IntPointerColumn
 public:
     TimePointerColumn(std::string name, std::string description, int* number)
         : IntPointerColumn(name, description, number) {}
-    void output(void *data, Query *query);
-    int type() { return COLTYPE_TIME; }
-    Filter *createFilter(int operator_id, char *value);
+    void output(void *data, Query *query) override;
+    int type() override { return COLTYPE_TIME; }
+    Filter *createFilter(int operator_id, char *value) override;
 };
 
 #endif // TimePointerColumn_h

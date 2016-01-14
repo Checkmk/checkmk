@@ -36,8 +36,8 @@ class MetricsColumn : public Column
 public:
     MetricsColumn(std::string name, std::string description, int indirect_offset)
         : Column(name, description, indirect_offset) {}
-    int type() { return COLTYPE_LIST; }
-    void output(void *, Query *);
+    int type() override { return COLTYPE_LIST; }
+    void output(void *, Query *) override;
     // Filter *createFilter(int opid, char *value);
 };
 

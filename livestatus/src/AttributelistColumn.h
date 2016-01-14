@@ -48,10 +48,10 @@ public:
         : IntColumn(name, description, indirect_offset), _offset(offset), _show_list(show_list) {}
 
     /* API of Column */
-    int type() { return _show_list ? COLTYPE_LIST : COLTYPE_INT; }
-    virtual std::string valueAsString(void *data, Query *);
-    void output(void *, Query *);
-    Filter *createFilter(int opid, char *value);
+    int type() override { return _show_list ? COLTYPE_LIST : COLTYPE_INT; }
+    std::string valueAsString(void *data, Query *) override;
+    void output(void *, Query *) override;
+    Filter *createFilter(int opid, char *value) override;
 
     /* API of IntColumn */
     virtual int32_t getValue(void *data, Query *) { return getValue(data); }

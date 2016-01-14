@@ -38,10 +38,10 @@ public:
     DoubleColumn(std::string name, std::string description, int indirect_offset)
         : Column(name, description, indirect_offset) {}
     virtual double getValue(void *data) = 0;
-    void output(void *, Query *);
-    int type() { return COLTYPE_DOUBLE; }
-    std::string valueAsString(void *data, Query *);
-    Filter *createFilter(int operator_id, char *value);
+    void output(void *, Query *) override;
+    int type() override { return COLTYPE_DOUBLE; }
+    std::string valueAsString(void *data, Query *) override;
+    Filter *createFilter(int operator_id, char *value) override;
 };
 
 #endif // DoubleColumn_h

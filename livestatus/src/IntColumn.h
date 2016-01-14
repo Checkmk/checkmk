@@ -39,10 +39,10 @@ public:
     IntColumn(std::string name, std::string description, int indirect_offset)
         : Column(name, description, indirect_offset) {}
     virtual int32_t getValue(void *data, Query *) = 0;
-    void output(void *, Query *);
-    int type() { return COLTYPE_INT; }
-    std::string valueAsString(void *data, Query *);
-    Filter *createFilter(int operator_id, char *value);
+    void output(void *, Query *) override;
+    int type() override { return COLTYPE_INT; }
+    std::string valueAsString(void *data, Query *) override;
+    Filter *createFilter(int operator_id, char *value) override;
 };
 
 #endif // IntColumn_h

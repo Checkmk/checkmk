@@ -39,8 +39,8 @@ class ServicegroupsColumn : public ListColumn
 public:
     ServicegroupsColumn(std::string name, std::string description, int offset, int indirect_offset)
         : ListColumn(name, description, indirect_offset), _offset(offset) {}
-    int type() { return COLTYPE_LIST; }
-    void output(void *, Query *);
+    int type() override { return COLTYPE_LIST; }
+    void output(void *, Query *) override;
     void *getNagiosObject(char *name); // return pointer to service group
     bool isEmpty(void *data);
     bool isNagiosMember(void *data, void *nagobject);

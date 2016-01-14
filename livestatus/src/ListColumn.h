@@ -36,11 +36,11 @@ class ListColumn : public Column
 public:
     ListColumn(std::string name, std::string description, int indirect_offset) :
         Column(name, description, indirect_offset) {}
-    int type() { return COLTYPE_LIST; }
+    int type() override { return COLTYPE_LIST; }
     virtual void *getNagiosObject(char *name) = 0;
     virtual bool isNagiosMember(void *data, void *member) = 0;
     virtual bool isEmpty(void *data) = 0;
-    Filter *createFilter(int opid, char *value);
+    Filter *createFilter(int opid, char *value) override;
 };
 
 #endif // ListColumn_h

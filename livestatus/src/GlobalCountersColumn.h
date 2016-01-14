@@ -40,9 +40,9 @@ class GlobalCountersColumn : public Column
 public:
     GlobalCountersColumn(std::string name, std::string description, unsigned counter_index, bool do_average)
         : Column(name, description, -1), _counter_index(counter_index), _do_average(do_average) {}
-    int type() { return _do_average ? COLTYPE_DOUBLE : COLTYPE_INT; }
-    void output(void *, Query *);
-    Filter *createFilter(int, char *) { return 0; }
+    int type() override { return _do_average ? COLTYPE_DOUBLE : COLTYPE_INT; }
+    void output(void *, Query *) override;
+    Filter *createFilter(int, char *) override { return 0; }
 };
 
 #endif // GlobalCountersColumn_h

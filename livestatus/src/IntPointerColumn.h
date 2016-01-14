@@ -32,8 +32,8 @@ class IntPointerColumn : public IntColumn {
     int *_number;
 
 public:
-    IntPointerColumn(std::string name, std::string description, int *number)
-        : IntColumn(name, description, -1), _number(number)
+    IntPointerColumn(std::string name, std::string description, int *number, int indirect_offset = -1, int extra_offset = -1)
+        : IntColumn(name, description, indirect_offset, extra_offset), _number(number)
     {
     }
     int32_t getValue(void *, Query *) { return *_number; }

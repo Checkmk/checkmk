@@ -34,8 +34,8 @@ class Query;
 class BlobColumn : public Column
 {
 public:
-    BlobColumn(std::string name, std::string description, int indirect_offset) :
-        Column(name, description, indirect_offset) {}
+    BlobColumn(std::string name, std::string description, int indirect_offset, int extra_offset)
+        : Column(name, description, indirect_offset, extra_offset) {}
     virtual char *getBlob(void *data, int *size) = 0;
     void output(void *, Query *) override;
     int type() override { return COLTYPE_BLOB; }

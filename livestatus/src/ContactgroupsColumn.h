@@ -35,8 +35,8 @@ class ContactgroupsColumn : public ListColumn
 {
     int _offset;
 public:
-    ContactgroupsColumn(std::string name, std::string description, int offset, int indirect_offset)
-        : ListColumn(name, description, indirect_offset), _offset(offset) {}
+    ContactgroupsColumn(std::string name, std::string description, int offset, int indirect_offset, int extra_offset = -1)
+        : ListColumn(name, description, indirect_offset, extra_offset), _offset(offset) {}
     void output(void *, Query *) override;
     void *getNagiosObject(char *name) override; // return pointer to contact group
     bool isNagiosMember(void *data, void *nagobject) override;

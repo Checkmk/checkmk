@@ -791,3 +791,61 @@ register_rule(group,
              'via the AppDynamics REST API. You can configure your connection settings here.'),
     factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
+
+mk_jolokia_elements = [
+   ( "port",
+     Integer(
+         title = _("TCP port for connection"),
+         default_value = 8080,
+         minvalue = 1,
+         maxvalue = 65535,
+     )
+   ),
+   ( "login",
+       Tuple(
+           title = _("Optional login (if required)"),
+           elements = [
+             TextAscii(
+                 title = _("User ID for web login (if login required)"),
+                 default_value = "monitoring",
+             ),
+             Password(
+                 title = _("Password for this user")
+             ),
+             DropdownChoice(
+                 title = _("Login mode"),
+                 choices = [
+                    ( "basic",  _("HTTP Basic Authentication") ),
+                    ( "digest", _("HTTP Digest") ),
+                 ]
+             )
+           ]
+       )
+   ),
+   ( "suburi",
+     TextAscii(
+         title = _("relative URI under which Jolokia is visible"),
+         default_value = "jolokia",
+         size = 30,
+     )
+   ),
+   ( "instance",
+     TextUnicode(
+         title = _("Name of the instance in the monitoring"),
+         help = _("If you do not specify a name here, then the TCP port number "
+                  "will be used as an instance name.")
+     ),
+   ),
+]
+
+group = 'datasource_programs'
+register_rule(group,
+    'special_agents:jolokia',
+    Dictionary(
+        elements = mk_jolokia_elements,
+    ),
+    title = _('Jolokia'),
+    help = _('This rule allows querying the Jolokia web API.'),
+    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    match = 'first')
+

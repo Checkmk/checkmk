@@ -38,8 +38,8 @@ class GlobalCountersColumn : public Column
     bool _do_average;
 
 public:
-    GlobalCountersColumn(std::string name, std::string description, unsigned counter_index, bool do_average)
-        : Column(name, description, -1), _counter_index(counter_index), _do_average(do_average) {}
+    GlobalCountersColumn(std::string name, std::string description, unsigned counter_index, bool do_average, int indirect_offset = -1, int extra_offset = -1)
+        : Column(name, description, indirect_offset, extra_offset), _counter_index(counter_index), _do_average(do_average) {}
     int type() override { return _do_average ? COLTYPE_DOUBLE : COLTYPE_INT; }
     void output(void *, Query *) override;
     Filter *createFilter(int, char *) override { return 0; }

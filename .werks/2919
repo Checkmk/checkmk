@@ -1,0 +1,10 @@
+Title: hp_webmgmt_status: New check for health status of various Hewlett-Packard devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452847397
+Class: feature
+
+This check supports different device types but apparently not all models. Among the supported devices are some
+switches and tape libraries of the storever series.

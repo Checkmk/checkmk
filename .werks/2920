@@ -1,0 +1,10 @@
+Title: hr_cpu: this check can now also supports per-core features
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452853469
+Class: feature
+
+per-core graphs and alerts on high single-core load are optional features
+that have to be enabled through the rule "CPU utilization for simple devices"

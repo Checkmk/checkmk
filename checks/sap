@@ -24,6 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+# <<<sap:sep(9)>>>
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTime    249 msec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTimeDialog  249 msec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTimeDialogRFC   249 msec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTimeHTTP    9830    msec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/FrontendResponseTime    542 msec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/LongRunners 120 sec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTime(StandardTran.) 7   msec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/UsersLoggedIn   97  -
+# sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime    249 msec
+# sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Network Time/FrontEndNetTime 80  msec
+# sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Standardized Response Time/ResponseTime(StandardTran.)   7   msec
+# sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Users Logged On/UsersLoggedIn    97  -
+
+
+
 # This map converts between the SAP color codes (key values) and the
 # nagios state codes
 sap_nagios_state_map = [
@@ -51,7 +68,7 @@ def check_sap_dialog(item, params, info):
             dialog[key] = perfval, uom
 
     if not dialog:
-        # this isn't perfect. Sap data is delivered as piggyback output. Potentially mulitple
+        # this isn't perfect. Sap data is delivered as piggyback output. Potentially multiple
         # hosts can each send data for multiple sap instances. The data can also overlap.
         # This means technically we may not get here and report then incomplete data if one host is
         # down.

@@ -48,7 +48,6 @@
 #include "ServicelistStateColumn.h"
 #include "TableHostgroups.h"
 #include "auth.h"
-#include "tables.h"
 
 using std::string;
 

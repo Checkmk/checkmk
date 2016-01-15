@@ -47,7 +47,6 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "logger.h"
-#include "tables.h"
 
 #ifdef CMC
 #include "Host.h"

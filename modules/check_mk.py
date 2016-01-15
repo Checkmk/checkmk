@@ -1611,7 +1611,9 @@ def get_single_oid(hostname, ipaddress, oid):
     vverbose("       Getting OID %s: " % oid)
     if opt_use_snmp_walk or is_usewalk_host(hostname):
         walk = get_stored_snmpwalk(hostname, oid)
-        if len(walk) == 1:
+        # get_stored_snmpwalk returns all oids that start with oid but here
+        # we need an exact match
+        if len(walk) == 1 and oid == walk[0][0]:
             value = walk[0][1]
         else:
             value = None

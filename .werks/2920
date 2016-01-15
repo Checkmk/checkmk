@@ -1,0 +1,10 @@
+Title: hr_cpu: this check can now also display per-core graphs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452853469
+Class: feature
+
+per-core graphs are optional and have to be enabled through the rule "CPU utilization for simple
+devices"

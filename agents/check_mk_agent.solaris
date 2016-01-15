@@ -244,6 +244,11 @@ then
     /usr/bin/top | grep '^Memory:'
 fi
 
+if type prtdiag >/dev/null 2>&1
+    then
+        echo '<<<solaris_prtdiag:sep(10)>>>'
+        run_cached prtdiag 300 '/usr/sbin/prtdiag -v;echo "SerialNumber: $(sneep -t serial)";echo "PRTDIAG_OVERALL_STATE : $(echo $?)"'
+fi
 
 # TCP Connection stats
 echo '<<<tcp_conn_stats>>>'

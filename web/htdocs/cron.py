@@ -49,6 +49,9 @@ def load_plugins(force):
 # Page called by some external trigger (usually cron job in OMD site)
 # Note: this URL is being called *without* any login. We have no
 # user. Everyone can call this! We must not read any URL variables.
+#
+# There is no output written to the user in regular cases. Exceptions
+# are written to the web log.
 def page_run_cron():
     now = time.time()
     # Prevent cron jobs from being run too often, also we need
@@ -61,4 +64,10 @@ def page_run_cron():
     aquire_lock(lock_file)
 
     for cron_job in multisite_cronjobs:
-        cron_job()
+        try:
+            cron_job()
+        except Exception, e:
+            html.write("An exception occured. Take a look at the web.log.\n")
+            import traceback
+            logger(LOG_ERR, "Exception in cron_job [%s]:\n%s" %
+                             (cron_job.__name__, traceback.format_exc()))

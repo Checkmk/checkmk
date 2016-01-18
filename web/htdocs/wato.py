@@ -15006,8 +15006,11 @@ def execute_network_scan_job():
         if config.site_is_local(folder.site_id()):
             found = do_network_scan(folder)
         else:
-            found = do_remote_automation(folder.site_id(), "network-scan",
+            found = do_remote_automation(config.site(folder.site_id()), "network-scan",
                                           [("folder", folder.path())])
+
+        if not type(found) == list:
+            raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
 
         add_scanned_hosts_to_folder(folder, found)
 
@@ -15201,7 +15204,7 @@ def scan_ip_addresses(folder, ip_addresses):
     num_addresses = len(ip_addresses)
 
     # dont start more threads than needed
-    parallel_pings = min(folder.attribute("network_scan")["max_parallel_pings"], num_addresses)
+    parallel_pings = min(folder.attribute("network_scan").get("max_parallel_pings", 100), num_addresses)
 
     # Initalize all workers
     threads = []

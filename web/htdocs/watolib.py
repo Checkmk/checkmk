@@ -3101,14 +3101,16 @@ def do_remote_automation(site, command, vars):
     vars_encoded = html.urlencode_vars(vars)
     response = get_url(url, site.get('insecure', False),
                        post_data=vars_encoded)
+
     if not response:
         raise MKAutomationException("Empty output from remote site.")
+
     try:
         response = eval(response)
     except:
-        # The remote site will send non-Python data in case of an
-        # error.
+        # The remote site will send non-Python data in case of an error.
         raise MKAutomationException("<pre>%s</pre>" % response)
+
     return response
 
 
@@ -3127,7 +3129,7 @@ def is_distributed(sites = None):
 
 
 def is_wato_slave_site():
-    return has_distributed_wato_file()
+    return has_distributed_wato_file() and not has_wato_slave_sites()
 
 
 def has_wato_slave_sites():

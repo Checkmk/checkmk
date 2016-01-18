@@ -240,6 +240,40 @@ def load_web_plugins(forwhat, globalvars):
                         code = marshal.loads(code_bytes)
                         exec code in globalvars
 
+
+def find_local_web_plugins():
+    if not defaults.omd_root:
+        return
+
+    basedir = defaults.omd_root + "/local/share/check_mk/web/plugins/"
+    for plugins_dir in os.listdir(basedir):
+        dir_path = basedir + plugins_dir
+        yield dir_path # Changes in the directory like deletion of files!
+        if os.path.isdir(dir_path):
+            for file_name in os.listdir(dir_path):
+                if file_name.endswith(".py") or file_name.endswith(".pyc"):
+                    yield dir_path + "/" + file_name
+
+
+last_web_plugins_update = 0
+def local_web_plugins_have_changed():
+    global last_web_plugins_update
+
+    if html.is_cached("local_web_plugins_have_changed"):
+        return html.get_cached("local_web_plugins_have_changed")
+
+    this_time = 0.0
+    for path in find_local_web_plugins():
+        this_time = max(os.stat(path).st_mtime, this_time)
+    last_time = last_web_plugins_update
+    last_time = last_web_plugins_update
+    last_web_plugins_update = this_time
+
+    have_changed = this_time > last_time
+    html.set_cache("local_web_plugins_have_changed", have_changed)
+    return have_changed
+
+
 def pnp_cleanup(s):
     return s \
         .replace(' ', '_') \
@@ -290,9 +324,9 @@ def format_plugin_output(output, row = None):
     if config.escape_plugin_output:
         # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
         # handling for the HTML code produced by check_http when "clickable URL" option is active.
-        output = re.sub("(?:&lt;A HREF=&quot;)?http[s]?://[^\"'>\t\s\n,]+(?: target=&quot;_blank&quot;&gt;)?",
+        output = re.sub("(?:&lt;A HREF=&quot;)?(http[s]?://[^\"'>\t\s\n,]+)(?: target=&quot;_blank&quot;&gt;)?",
                          lambda p: '<a href="%s"><img class=pluginurl align=absmiddle title="%s" src="images/pluginurl.png"></a>' %
-                            (p.group(0).replace('&quot;', ''), p.group(0).replace('&quot;', '')), output)
+                            (p.group(1).replace('&quot;', ''), p.group(1).replace('&quot;', '')), output)
 
         if output.endswith(" &lt;/A&gt;"):
             output = output[:-11]
@@ -342,17 +376,28 @@ def lqencode(s):
     # of the next query.
     return s.replace('\n', '')
 
+
 def saveint(x):
     try:
         return int(x)
     except:
         return 0
 
+
 def tryint(x):
     try:
         return int(x)
     except:
         return x
+
+
+def isint(i):
+    try:
+        int(i)
+        return True
+    except:
+        return False
+
 
 def set_is_disjoint(a, b):
     for elem in a:

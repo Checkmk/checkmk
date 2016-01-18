@@ -1,0 +1,21 @@
+title: Windows CPU Load
+agents: windows
+catalog: os/services
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the process queue length and produces 1, 5 and
+ 15 minute averages.
+ This works roughly the same as CPU load known from the unix world.
+ The only difference is that while unix-based system include processes
+ currently being run in the CPU load, windows counts only the number
+ of processes that are waiting to be processed.
+ This means that unless the system is under high load, this will be 0.
+ {WARN} and {CRIT} thresholds can be configured, which will be treated
+ as per-core averages so if the warn level is at 2 on a 4 core system,
+ the 15 minute average processor queue length has to be 8 processes or
+ longer.
+
+inventory:
+ Exactly one item is discovered.
+

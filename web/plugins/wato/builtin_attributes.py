@@ -72,16 +72,22 @@ declare_host_attribute(TextAttribute("ipv6address", _("IPv6 Address"),
                          show_in_folder = False,
                          depends_on_tags = ["ip-v6"])
 
-declare_host_attribute(TextAttribute("snmp_community", _("SNMP Community"),
-                       _("Using this option you can configure the community which should be used when "
-                         "contacting this host via SNMP v1 or v2. It is possible to configure the SNMP community by "
-                         "using the <a href=\"%s\">SNMP Communities</a> ruleset, but when you configure "
-                         "a community here, this will override the community defined by the rules.") % \
-                             html.makeuri([('mode', 'edit_ruleset'), ('varname', 'snmp_communities')]),
-                         allow_empty = False),
-                         show_in_table = False,
-                         show_in_folder = True,
-                         depends_on_tags = ['snmp'])
+declare_host_attribute(
+    ValueSpecAttribute(
+        "snmp_community",
+        Password(
+            title = _("SNMP Community"),
+            help =  _("Using this option you can configure the community which should be used when "
+                      "contacting this host via SNMP v1 or v2. It is possible to configure the SNMP community by "
+                      "using the <a href=\"%s\">SNMP Communities</a> ruleset, but when you configure "
+                      "a community here, this will override the community defined by the rules.") % \
+                      html.makeuri([('mode', 'edit_ruleset'), ('varname', 'snmp_communities')]),
+            allow_empty = False,
+        )),
+    show_in_table = False,
+    show_in_folder = True,
+    depends_on_tags = ['snmp'],
+)
 
 # Attribute for configuring parents
 class ParentsAttribute(ValueSpecAttribute):
@@ -107,7 +113,7 @@ class ParentsAttribute(ValueSpecAttribute):
 
     def paint(self, value, hostname):
         parts = [ '<a href="%s">%s</a>' % (
-                   "wato.py?" + html.urlencode_vars([("mode", "edithost"), ("host", hn)]), hn)
+                   "wato.py?" + html.urlencode_vars([("mode", "edit_host"), ("host", hn)]), hn)
                   for hn in value ]
         return "", ", ".join(parts)
 
@@ -116,20 +122,17 @@ declare_host_attribute(ParentsAttribute(),
                        show_in_table = True,
                        show_in_folder = True)
 
-def validate_host_parents(effective_host):
-    for parentname in effective_host["parents"]:
-        parent_folder = find_host(parentname)
-        if not parent_folder:
-            raise MKUserError(None, _("You defined the non-existing host '%s' as a parent.") % parentname)
-        # In case of distributed wato check also if site of host and parent
-        # are the same.
-        if is_distributed():
-            parent = effective_attributes(parent_folder[".hosts"][parentname], parent_folder)
-            if effective_host["site"] !=  parent["site"]:
-                raise MKUserError(None, _("The parent '%s' is monitored on site '%s' while the host itself "
-                  "is monitored on site '%s'. Both must be monitored on the same site. Remember: The parent/child "
-                  "relation is used to describe the reachability of hosts by one monitoring daemon.") %
-                    (parentname, parent["site"], effective_host["site"]))
+def validate_host_parents(host):
+    for parent_name in host.parents():
+        parent = Host.host(parent_name)
+        if not parent:
+            raise MKUserError(None, _("You defined the non-existing host '%s' as a parent.") % parent_name)
+
+        if host.site_id() != parent.site_id():
+            raise MKUserError(None, _("The parent '%s' is monitored on site '%s' while the host itself "
+              "is monitored on site '%s'. Both must be monitored on the same site. Remember: The parent/child "
+              "relation is used to describe the reachability of hosts by one monitoring daemon.") %
+                (parent_name, parent.site_id(), host.site_id()))
 
 register_hook('validate-host', validate_host_parents)
 

@@ -25,6 +25,7 @@
 
 #include "Environment.h"
 #include "stringutil.h"
+#include "logging.h"
 #include <windows.h>
 #include <stdexcept>
 #include <cassert>
@@ -32,8 +33,6 @@
 
 using namespace std;
 
-
-extern void crash_log(const char *format, ...);
 
 
 // technically this is the limit for path names on windows, practically few applications and not
@@ -51,6 +50,7 @@ Environment::Environment(bool use_cwd)
         _hostname = buffer;
     }
 }
+
 
 void Environment::getAgentDirectory(char *buffer, int size, bool use_cwd)
 {
@@ -99,7 +99,8 @@ string Environment::assignDirectory(const char *name)
     string result(_agent_directory + "\\" + name);
     if (!CreateDirectoryA(result.c_str(), NULL)) {
         if (GetLastError() != ERROR_ALREADY_EXISTS) {
-            crash_log("Failed to create directory %s: %s", GetLastError(), get_win_error_as_string().c_str());
+            crash_log("Failed to create directory %s: %s (%lu)",
+                    name, get_win_error_as_string().c_str(), GetLastError());
         }
     }
     return result;
@@ -140,6 +141,27 @@ void Environment::determineDirectories(bool use_cwd)
     SetEnvironmentVariable("MK_STATEDIR",   _state_directory.c_str());
     SetEnvironmentVariable("MK_TEMPDIR",    _temp_directory.c_str());
     SetEnvironmentVariable("MK_LOGDIR",     _log_directory.c_str());
+}
+
+
+bool Environment::isWinNt()
+{
+    OSVERSIONINFO osv;
+    osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    ::GetVersionEx(&osv);
+
+    return (osv.dwPlatformId == VER_PLATFORM_WIN32_NT);
+}
+
+
+uint16_t Environment::winVersion()
+{
+    OSVERSIONINFO osv;
+    osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    ::GetVersionEx(&osv);
+
+    return ((osv.dwMajorVersion & 0xFF) << 8)
+          | (osv.dwMinorVersion & 0xFF);
 }
 
 

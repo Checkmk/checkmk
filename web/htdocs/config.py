@@ -41,7 +41,6 @@ except:
 # move all user related stuff there. e.g. html.user should also be moved
 # there.
 
-#.
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
 #   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
@@ -137,7 +136,7 @@ def load_config():
     modification_timestamps = []
 
     # Set default values for all user-changable configuration settings
-    load_plugins()
+    load_plugins(True)
 
     # First load main file
     include("multisite.mk")
@@ -244,9 +243,9 @@ def login(u):
 
     # Get best base roles and use as "the" role of the user
     global user_baserole_id
-    if "admin" in user_role_ids:
+    if "admin" in user_baserole_ids:
         user_baserole_id = "admin"
-    elif "user" in user_role_ids:
+    elif "user" in user_baserole_ids:
         user_baserole_id = "user"
     else:
         user_baserole_id = "guest"
@@ -276,6 +275,34 @@ def login(u):
 
     # load current on/off-switching states of sites
     read_site_config()
+
+# Login a user that has all permissions. This is needed for making
+# Livestatus queries from unauthentiated page handlers
+def login_super_user():
+    global user_id
+    user_id = None
+
+    global user_role_ids
+    user_role_ids = []
+
+    global user_baserole_ids
+    user_baserole_ids = [ "admin" ]
+
+    global user_baserole_id
+    user_baserole_id = "admin"
+
+    # Prepare user object
+    global user, user_alias
+    user = { "roles" : "admin" }
+    user_alias = "Superuser for unauthenticated pages"
+
+    # Prepare cache of already computed permissions
+    global user_permissions
+    user_permissions = {}
+
+    # All sites are enabled
+    global user_siteconf
+    user_siteconf = {}
 
 def set_user_confdir(user_id):
     global user_confdir
@@ -421,7 +448,10 @@ def load_user_file(name, deflt, lock = False):
     # happen that a user file is requested byt the user_confdir is not yet
     # set. We have all information to set it, then do it.
     if user_confdir == None:
-        set_user_confdir(name)
+        if user_id:
+            set_user_confdir(user_id)
+        else:
+            return deflt # No user known at this point of time
 
     path = user_confdir + "/" + name + ".mk"
     try:
@@ -439,8 +469,8 @@ def save_user_file(name, content, unlock=False, user=None):
     make_nagios_directory(dirname)
     path = dirname + "/" + name + ".mk"
     try:
-        write_settings_file(path+".new", content)
-        os.rename(path+".new", path)
+        write_settings_file(path + ".new", content)
+        os.rename(path + ".new", path)
 
         if unlock:
             release_lock(path)
@@ -571,7 +601,7 @@ def save_site_config():
 #   |  declare defaults for configuration variables.                       |
 #   '----------------------------------------------------------------------'
 
-def load_plugins():
+def load_plugins(force):
     load_web_plugins("config", globals())
 
-load_plugins()
+load_plugins(True)

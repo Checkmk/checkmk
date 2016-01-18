@@ -36,11 +36,11 @@ class Query;
 class TimePointerColumn : public IntPointerColumn
 {
 public:
-    TimePointerColumn(std::string name, std::string description, int* number)
-        : IntPointerColumn(name, description, number) {}
-    void output(void *data, Query *query);
-    int type() { return COLTYPE_TIME; }
-    Filter *createFilter(int operator_id, char *value);
+    TimePointerColumn(std::string name, std::string description, int* number, int indirect_offset = -1, int extra_offset = -1)
+        : IntPointerColumn(name, description, number, indirect_offset, extra_offset) {}
+    void output(void *data, Query *query) override;
+    int type() override { return COLTYPE_TIME; }
+    Filter *createFilter(int operator_id, char *value) override;
 };
 
 #endif // TimePointerColumn_h

@@ -28,9 +28,6 @@
 // Registry:
 // http://msdn.microsoft.com/en-us/library/ms724897.aspx
 
-// Performance-Counters:
-// http://msdn.microsoft.com/en-us/library/aa373178(VS.85).aspx
-
 // Eventlogs:
 // http://msdn.microsoft.com/en-us/library/aa363672(VS.85).aspx
 // http://msdn.microsoft.com/en-us/library/bb427356(VS.85).aspx
@@ -64,18 +61,21 @@
 #include <sys/types.h>
 #include <stdarg.h>
 #include <ctype.h>     // isspace()
-#include <sys/stat.h>  // stat()
-#include <sys/time.h>  // gettimeofday()
 #include <map>
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <sys/time.h>
 #include "stringutil.h"
 #include "Environment.h"
 #include "Configuration.h"
 #include "ListenSocket.h"
+#include "PerfCounter.h"
+#include "OutputProxy.h"
 #include "types.h"
 #include "wmiHelper.h"
+#include "Thread.h"
+#include "logging.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
@@ -92,14 +92,13 @@
 
 const char *check_mk_version = CHECK_MK_VERSION;
 
+static const char RT_PROTOCOL_VERSION[2] = { '0', '0' };
+
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024
 
 // Limits for static global arrays
 #define MAX_EVENTLOGS                 128
-
-// Default buffer size for reading performance counters
-#define DEFAULT_BUFFER_SIZE         40960L
 
 // Maximum heap buffer for a single local/plugin script
 // This buffer contains the check output
@@ -120,21 +119,11 @@ const char *check_mk_version = CHECK_MK_VERSION;
 #endif
 
 
-#ifdef _LP64
-#define PRIdword  "d"
-#define PRIudword "u"
-#else
-#define PRIdword  "ld"
-#define PRIudword "lu"
-#endif
-
-
 using namespace std;
 
 
 typedef map<string, script_container*> script_containers_t;
 script_containers_t script_containers;
-
 
 
 struct process_entry {
@@ -147,19 +136,13 @@ typedef map<unsigned long long, process_entry> process_entry_t;
 
 // Forward declarations of functions
 void listen_tcp_loop(const Environment &env);
-char *ipv4_to_text(uint32_t ip);
-void output_data(SOCKET &out, const Environment &env);
+void output_data(OutputProxy &out, const Environment &env, unsigned long sectionMask, bool section_flush);
 double file_time(const FILETIME *filetime);
-void open_crash_log(const std::string &log_directory);
-void close_crash_log();
 void lowercase(char* value);
 void collect_script_data(script_execution_mode mode);
 void find_scripts(const Environment &env);
 void RunImmediate(const char *mode, int argc, char **argv);
 
-void output(SOCKET &out, const char *format, ...) __attribute__ ((format (gnu_printf, 2, 3)));
-void crash_log(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
-void verbose(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
 
 //  .----------------------------------------------------------------------.
 //  |                    ____ _       _           _                        |
@@ -174,13 +157,10 @@ void verbose(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2))
 
 
 bool verbose_mode               = false;
-bool do_tcp                     = false;
 bool with_stderr                = false;
-bool force_tcp_output           = false; // if true, send socket data immediately
 bool do_file                    = false;
 static FILE* fileout;
 
-OSVERSIONINFO osv;
 
 // Statistical values
 struct script_statistics_t {
@@ -202,7 +182,7 @@ HANDLE        g_collection_thread;
 HANDLE        g_workers_job_object;
 
 // Mutex for crash.log
-HANDLE crashlogMutex = CreateMutex(NULL, FALSE, NULL);
+HANDLE g_crashlogMutex = CreateMutex(NULL, FALSE, NULL);
 
 // Variables for section <<<logwatch>>>
 bool logwatch_suppress_info        = true;
@@ -223,14 +203,9 @@ mrpe_entries_t g_included_mrpe_entries;
 eventlog_hints_t g_eventlog_hints;
 eventlog_state_t g_eventlog_state;
 
-// Pointer to open crash log file, if crash_debug = on
-HANDLE g_connectionlog_file;
-struct timeval g_crashlog_start;
 bool   g_found_crash = false;
 
 wmi::Helper *g_wmi_helper = NULL;
-
-
 
 
 //  .----------------------------------------------------------------------.
@@ -243,35 +218,6 @@ wmi::Helper *g_wmi_helper = NULL;
 //  +----------------------------------------------------------------------+
 //  | Global helper functions                                              |
 //  '----------------------------------------------------------------------'
-
-#ifdef DEBUG
-void debug(char *text)
-{
-    FILE *debugout = fopen("C:\\check_mk_agent.log", "a");
-    if (debugout) {
-        fprintf(debugout, "%s\n", text);
-        fflush(debugout);
-        fclose(debugout);
-    }
-}
-#else
-#define debug(C)
-#endif
-
-
-void verbose(const char *format, ...)
-{
-    if (!verbose_mode)
-        return;
-
-    va_list ap;
-    va_start(ap, format);
-    printf("DEBUG: ");
-    vprintf(format, ap);
-    va_end(ap);
-    printf("\n");
-    fflush(stdout);
-}
 
 
 // determine system root by reading the environment variable
@@ -295,14 +241,16 @@ double current_time()
     return file_time(&filetime);
 }
 
-#define WINDOWS_TICK 10000000
-#define SEC_TO_UNIX_EPOCH 11644473600LL
 double file_time(const FILETIME *filetime)
 {
+    static const double SEC_TO_UNIX_EPOCH = 11644473600.0;
+    static const double WINDOWS_TICK      = 10000000.0;
+
     _ULARGE_INTEGER uli;
     uli.LowPart = filetime->dwLowDateTime;
     uli.HighPart = filetime->dwHighDateTime;
-    return double(uli.QuadPart / (double)WINDOWS_TICK - SEC_TO_UNIX_EPOCH);
+
+    return (double(uli.QuadPart) / WINDOWS_TICK) - SEC_TO_UNIX_EPOCH;
 }
 
 void char_replace(char what, char into, char *in)
@@ -350,11 +298,11 @@ template <typename FuncT> FuncT dynamic_func(LPCWSTR dllName, LPCSTR funcName) {
 //  |            |___/                                                     |
 //  '----------------------------------------------------------------------'
 
-void section_systemtime(SOCKET &out)
+void section_systemtime(OutputProxy &out)
 {
     crash_log("<<<systemtime>>>");
-    output(out, "<<<systemtime>>>\n");
-    output(out, "%.0f\n", current_time());
+    out.output("<<<systemtime>>>\n"
+               "%.0f\n", current_time());
 }
 
 //  .----------------------------------------------------------------------.
@@ -366,16 +314,16 @@ void section_systemtime(SOCKET &out)
 //  |                       |_|                                            |
 //  '----------------------------------------------------------------------'
 
-void section_uptime(SOCKET &out)
+void section_uptime(OutputProxy &out)
 {
     crash_log("<<<uptime>>>");
-    output(out, "<<<uptime>>>\n");
     static LARGE_INTEGER Frequency, Ticks;
     QueryPerformanceFrequency(&Frequency);
     QueryPerformanceCounter(&Ticks);
     Ticks.QuadPart = Ticks.QuadPart - Frequency.QuadPart;
     unsigned int uptime = (double)Ticks.QuadPart / Frequency.QuadPart;
-    output(out, "%u\n", uptime);
+    out.output("<<<uptime>>>\n"
+               "%u\n", uptime);
 }
 
 
@@ -389,7 +337,7 @@ void section_uptime(SOCKET &out)
 //  |                                                                      |
 //  '----------------------------------------------------------------------'
 
-void df_output_filesystem(SOCKET &out, char *volid)
+void df_output_filesystem(OutputProxy &out, char *volid)
 {
     TCHAR fsname[128];
     TCHAR volume[512];
@@ -412,16 +360,16 @@ void df_output_filesystem(SOCKET &out, char *volid)
         else
             strncpy(volume, volid, sizeof(volume));
 
-        output(out, "%s %s ", volume, fsname);
-        output(out, "%" PRIu64 " ", total.QuadPart / KiloByte);
-        output(out, "%" PRIu64 " ", (total.QuadPart - free_avail.QuadPart) / KiloByte);
-        output(out, "%" PRIu64 " ", free_avail.QuadPart / KiloByte);
-        output(out, "%3.0f%% ", perc_used);
-        output(out, "%s\n", volid);
+        out.output("%s %s ", volume, fsname);
+        out.output("%" PRIu64 " ", total.QuadPart / KiloByte);
+        out.output("%" PRIu64 " ", (total.QuadPart - free_avail.QuadPart) / KiloByte);
+        out.output("%" PRIu64 " ", free_avail.QuadPart / KiloByte);
+        out.output("%3.0f%% ", perc_used);
+        out.output("%s\n", volid);
     }
 }
 
-void df_output_mountpoints(SOCKET &out, char *volid)
+void df_output_mountpoints(OutputProxy &out, char *volid)
 {
     char mountpoint[512];
     HANDLE hPt = FindFirstVolumeMountPoint(volid, mountpoint, sizeof(mountpoint));
@@ -437,10 +385,10 @@ void df_output_mountpoints(SOCKET &out, char *volid)
     }
 }
 
-void section_df(SOCKET &out)
+void section_df(OutputProxy &out)
 {
     crash_log("<<<df>>>");
-    output(out, "<<<df>>>\n");
+    out.output("<<<df>>>\n");
     TCHAR buffer[4096];
     DWORD len = GetLogicalDriveStrings(sizeof(buffer), buffer);
 
@@ -525,10 +473,10 @@ const char *service_start_type(SC_HANDLE scm, LPCWSTR service_name)
 }
 
 
-void section_services(SOCKET &out)
+void section_services(OutputProxy &out)
 {
     crash_log("<<<services>>>");
-    output(out, "<<<services>>>\n");
+    out.output("<<<services>>>\n");
     SC_HANDLE scm = OpenSCManager(0, 0, SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
     if (scm != INVALID_HANDLE_VALUE) {
         DWORD bytes_needed = 0;
@@ -563,12 +511,12 @@ void section_services(SOCKET &out)
                         // in some cases it does. We replace them with _ in order
                         // the keep it in one space-separated column. Since we own
                         // the buffer, we can simply change the name inplace.
-                        for (char *w=(char *)(service->lpServiceName); *w; w++) {
-                            if (*w == ' ')
-                                *w = '_';
+                        for (LPWSTR w=service->lpServiceName; *w; ++w) {
+                            if (*w == L' ')
+                                *w = L'_';
                         }
 
-                        output(out, "%ls %s/%s %s\n",
+                        out.output("%ls %s/%s %s\n",
                                 service->lpServiceName, state_name, start_type,
                                 to_utf8(service->lpDisplayName).c_str());
                         service ++;
@@ -591,258 +539,38 @@ void section_services(SOCKET &out)
 //  |                            |_|              |_____|                  |
 //  '----------------------------------------------------------------------'
 
-// Hilfsfunktionen zum Navigieren in den Performance-Counter Binaerdaten
-PERF_OBJECT_TYPE *FirstObject(PERF_DATA_BLOCK *dataBlock) {
-    return (PERF_OBJECT_TYPE *) ((BYTE *)dataBlock + dataBlock->HeaderLength);
-}
-PERF_OBJECT_TYPE *NextObject(PERF_OBJECT_TYPE *act) {
-    return (PERF_OBJECT_TYPE *) ((BYTE *)act + act->TotalByteLength);
-}
-PERF_COUNTER_DEFINITION *FirstCounter(PERF_OBJECT_TYPE *perfObject) {
-    return (PERF_COUNTER_DEFINITION *) ((BYTE *) perfObject + perfObject->HeaderLength);
-}
-PERF_COUNTER_DEFINITION *NextCounter(PERF_COUNTER_DEFINITION *perfCounter) {
-    return (PERF_COUNTER_DEFINITION *) ((BYTE *) perfCounter + perfCounter->ByteLength);
-}
-PERF_COUNTER_BLOCK *GetCounterBlock(PERF_INSTANCE_DEFINITION *pInstance) {
-    return (PERF_COUNTER_BLOCK *) ((BYTE *)pInstance + pInstance->ByteLength);
-}
-PERF_INSTANCE_DEFINITION *FirstInstance (PERF_OBJECT_TYPE *pObject) {
-    return (PERF_INSTANCE_DEFINITION *)  ((BYTE *) pObject + pObject->DefinitionLength);
-}
-PERF_INSTANCE_DEFINITION *NextInstance (PERF_INSTANCE_DEFINITION *pInstance) {
-    return (PERF_INSTANCE_DEFINITION *) ((BYTE *)pInstance + pInstance->ByteLength + GetCounterBlock(pInstance)->ByteLength);
-}
 
-void outputCounter(SOCKET &out, BYTE *datablock, int counter,
-        PERF_OBJECT_TYPE *objectPtr, PERF_COUNTER_DEFINITION *counterPtr);
-void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_COUNTER_BLOCK *counterBlockPtr);
-
-
-void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const char *countername)
+void dump_performance_counters(OutputProxy &out, unsigned counter_base_number, const char *countername)
 {
     crash_log("<<<winperf_%s>>>", countername);
-    static LARGE_INTEGER Frequency;
-    QueryPerformanceFrequency (&Frequency);
 
-    // registry entry is ascii representation of counter index
-    char counter_index_name[8];
-    snprintf(counter_index_name, sizeof(counter_index_name), "%u", counter_base_number);
+    PerfCounterObject counterObject(counter_base_number);
 
-    // allocate block to store counter data block
-    DWORD size = DEFAULT_BUFFER_SIZE;
-    BYTE *data = new BYTE[DEFAULT_BUFFER_SIZE];
-    DWORD type;
-    DWORD ret;
+    if (!counterObject.isEmpty()) {
+        LARGE_INTEGER Frequency;
+        QueryPerformanceFrequency (&Frequency);
+        out.output("<<<winperf_%s>>>\n", countername);
+        out.output("%.2f %u %" PRId64 "\n", current_time(), counter_base_number, Frequency.QuadPart);
 
-    // Holt zu einem bestimmten Counter den kompletten Binärblock aus der
-    // Registry. Da man vorher nicht weiß, wie groß der Puffer sein muss,
-    // kann man nur mit irgendeiner Größe anfangen und dann diesen immer
-    // wieder größer machen, wenn er noch zu klein ist. >:-P
-    while ((ret = RegQueryValueEx(HKEY_PERFORMANCE_DATA, counter_index_name,
-                    0, &type, data, &size)) != ERROR_SUCCESS)
-    {
-        if (ret == ERROR_MORE_DATA) // WIN32 API sucks...
-        {
-            // Der Puffer war zu klein. Toll. Also den Puffer größer machen
-            // und das ganze nochmal probieren.
-            size += DEFAULT_BUFFER_SIZE;
-            verbose("Buffer for RegQueryValueEx too small. Resizing...");
-            delete [] data;
-            data = new BYTE [size];
-        }
-        else {
-            // Es ist ein anderer Fehler aufgetreten. Abbrechen.
-            delete [] data;
-            return;
-        }
-    }
-    crash_log(" - read performance data, buffer size %" PRIudword, size);
-
-    PERF_DATA_BLOCK *dataBlockPtr = (PERF_DATA_BLOCK *)data;
-
-    // Determine first object in list of objects
-    PERF_OBJECT_TYPE *objectPtr = FirstObject(dataBlockPtr);
-
-    // awkward way to ensure we really really only create the section header if there
-    // are performance counters
-    bool first_counter = true;
-
-    // Now walk through the list of objects. The bad news is:
-    // even if we expect only one object, windows might send
-    // us more than one object. We need to scan a list of objects
-    // in order to find the one we have asked for. >:-P
-    for (unsigned int a=0 ; a < dataBlockPtr->NumObjectTypes ; a++)
-    {
-        // Have we found the object we seek?
-        if (objectPtr->ObjectNameTitleIndex == counter_base_number)
-        {
-            // Yes. Great. Now: each object consist of a lot of counters.
-            // We walk through the list of counters in this object:
-
-            // get pointer to first counter
-            PERF_COUNTER_DEFINITION *counterPtr = FirstCounter(objectPtr);
-
-            // Now we make a first quick walk through all counters, only in order
-            // to find the beginning of the data block (which comes after the
-            // counter definitions)
-            PERF_COUNTER_DEFINITION *last_counter = FirstCounter(objectPtr);
-            for (unsigned int b=0 ; b < objectPtr->NumCounters ; b++)
-                last_counter = NextCounter(last_counter);
-            BYTE *datablock = (BYTE *)last_counter;
-
-            // In case of multi-instance objects, output a list of all instance names
-            int num_instances = objectPtr->NumInstances;
-            if (num_instances >= 0)
-            {
-                if (first_counter) {
-                    output(out, "<<<winperf_%s>>>\n", countername);
-                    output(out, "%.2f %u %" PRId64 "\n", current_time(), counter_base_number, Frequency.QuadPart);
-                    first_counter = false;
-                }
-
-                output(out, "%d instances:", num_instances);
-                char name[512];
-                PERF_INSTANCE_DEFINITION *instancePtr = FirstInstance(objectPtr);
-                for(int b=0 ; b<objectPtr->NumInstances ; b++)
-                {
-                    WCHAR *name_start = (WCHAR *)((char *)(instancePtr) + instancePtr->NameOffset);
-                    memcpy(name, name_start, instancePtr->NameLength);
-                    WideCharToMultiByte(CP_UTF8, 0, name_start, instancePtr->NameLength, name, sizeof(name), NULL, NULL);
-                    // replace spaces with '_'
-                    for (char *s = name; *s; s++)
-                        if (*s == ' ') *s = '_';
-
-                    output(out, " %s", name);
-                    instancePtr = NextInstance(instancePtr);
-                }
-                output(out, "\n");
+        std::vector<PERF_INSTANCE_DEFINITION*> instances = counterObject.instances();
+        // output instances - if any
+        if (instances.size() > 0) {
+            out.output("%d instances:", static_cast<int>(instances.size()));
+            for (std::wstring name : counterObject.instanceNames()) {
+                std::replace(name.begin(), name.end(), L' ', L'_');
+                out.output(" %s", to_utf8(name.c_str()).c_str());
             }
-
-            if (first_counter && (objectPtr->NumCounters > 0)) {
-                output(out, "<<<winperf_%s>>>\n", countername);
-                output(out, "%.2f %u %" PRId64 "\n", current_time(), counter_base_number, Frequency.QuadPart);
-                first_counter = false;
-            }
-
-            // Now walk through the counter list a second time and output all counters
-            for (unsigned int b=0 ; b < objectPtr->NumCounters ; b++)
-            {
-                outputCounter(out, datablock, counter_base_number, objectPtr, counterPtr);
-                counterPtr = NextCounter(counterPtr);
-            }
-        }
-        // naechstes Objekt in der Liste
-        objectPtr = NextObject(objectPtr);
-    }
-    delete [] data;
-}
-
-
-void outputCounter(SOCKET &out, BYTE *datablock, int counter_base_number,
-        PERF_OBJECT_TYPE *objectPtr, PERF_COUNTER_DEFINITION *counterPtr)
-{
-
-    // determine the type of the counter (for verbose output)
-    const char *countertypename = 0;
-    switch (counterPtr->CounterType) {
-        case PERF_COUNTER_COUNTER:                countertypename = "counter"; break;
-        case PERF_COUNTER_TIMER:                  countertypename = "timer"; break;
-        case PERF_COUNTER_QUEUELEN_TYPE:          countertypename = "queuelen_type"; break;
-        case PERF_COUNTER_BULK_COUNT:             countertypename = "bulk_count"; break;
-        case PERF_COUNTER_TEXT:                   countertypename = "text"; break;
-        case PERF_COUNTER_RAWCOUNT:               countertypename = "rawcount"; break;
-        case PERF_COUNTER_LARGE_RAWCOUNT:         countertypename = "large_rawcount"; break;
-        case PERF_COUNTER_RAWCOUNT_HEX:           countertypename = "rawcount_hex"; break;
-        case PERF_COUNTER_LARGE_RAWCOUNT_HEX:     countertypename = "large_rawcount_HEX"; break;
-        case PERF_SAMPLE_FRACTION:                countertypename = "sample_fraction"; break;
-        case PERF_SAMPLE_COUNTER:                 countertypename = "sample_counter"; break;
-        case PERF_COUNTER_NODATA:                 countertypename = "nodata"; break;
-        case PERF_COUNTER_TIMER_INV:              countertypename = "timer_inv"; break;
-        case PERF_SAMPLE_BASE:                    countertypename = "sample_base"; break;
-        case PERF_AVERAGE_TIMER:                  countertypename = "average_timer"; break;
-        case PERF_AVERAGE_BASE:                   countertypename = "average_base"; break;
-        case PERF_AVERAGE_BULK:                   countertypename = "average_bulk"; break;
-        case PERF_100NSEC_TIMER:                  countertypename = "100nsec_timer"; break;
-        case PERF_100NSEC_TIMER_INV:              countertypename = "100nsec_timer_inv"; break;
-        case PERF_COUNTER_MULTI_TIMER:            countertypename = "multi_timer"; break;
-        case PERF_COUNTER_MULTI_TIMER_INV:        countertypename = "multi_timer_inV"; break;
-        case PERF_COUNTER_MULTI_BASE:             countertypename = "multi_base"; break;
-        case PERF_100NSEC_MULTI_TIMER:            countertypename = "100nsec_multi_timer"; break;
-        case PERF_100NSEC_MULTI_TIMER_INV:        countertypename = "100nsec_multi_timer_inV"; break;
-        case PERF_RAW_FRACTION:                   countertypename = "raw_fraction"; break;
-        case PERF_RAW_BASE:                       countertypename = "raw_base"; break;
-        case PERF_ELAPSED_TIME:                   countertypename = "elapsed_time"; break;
-    }
-
-    // Output index of counter object and counter, and timestamp
-    output(out, "%d", static_cast<int>(counterPtr->CounterNameTitleIndex) - counter_base_number);
-
-    // If this is a multi-instance-counter, loop over the instances
-    int num_instances = objectPtr->NumInstances;
-    if (num_instances >= 0)
-    {
-        // get pointer to first instance
-        PERF_INSTANCE_DEFINITION *instancePtr = FirstInstance(objectPtr);
-
-        for (int b=0 ; b<objectPtr->NumInstances ; b++)
-        {
-            // PERF_COUNTER_BLOCK dieser Instanz ermitteln.
-            PERF_COUNTER_BLOCK *counterBlockPtr = GetCounterBlock(instancePtr);
-            outputCounterValue(out, counterPtr, counterBlockPtr);
-            instancePtr = NextInstance(instancePtr);
+            out.output("\n");
         }
 
-    }
-    else { // instanceless counter
-        PERF_COUNTER_BLOCK *counterBlockPtr = (PERF_COUNTER_BLOCK *) datablock;
-        outputCounterValue(out, counterPtr, counterBlockPtr);
-    }
-    if (countertypename)
-        output(out, " %s\n", countertypename);
-    else
-        output(out, " type(%lx)\n", counterPtr->CounterType);
-}
-
-
-void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_COUNTER_BLOCK *counterBlockPtr)
-{
-    unsigned offset = counterPtr->CounterOffset;
-    int size = counterPtr->CounterSize;
-    BYTE *pData = ((BYTE *)counterBlockPtr) + offset;
-
-    if (counterPtr->CounterType & PERF_SIZE_DWORD)
-        output(out, " %lu", *(DWORD*)pData);
-
-    else if (counterPtr->CounterType & PERF_SIZE_LARGE)
-        output(out, " %" PRIu64, *(UNALIGNED ULONGLONG*)pData);
-
-    // handle other data generically. This is wrong in some situation.
-    // Once upon a time in future we might implement a conversion as
-    // described in http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
-    else if (size == 4) {
-        DWORD value = *((DWORD *)pData);
-        output(out, " %lu", value);
-    }
-    else if (size == 8) {
-        DWORD *data_at = (DWORD *)pData;
-        DWORDLONG value = (DWORDLONG)*data_at + ((DWORDLONG)*(data_at + 1) << 32);
-        output(out, " %" PRIu64, value);
-    }
-    else
-        output(out, " unknown");
-}
-
-void section_winperf(SOCKET &out)
-{
-    dump_performance_counters(out, 234, "phydisk");
-    dump_performance_counters(out, 238, "processor");
-    dump_performance_counters(out, 510, "if");
-
-    // also output additionally configured counters
-    for (winperf_counters_t::const_iterator it_wp = g_config->winperfCounters().begin();
-            it_wp != g_config->winperfCounters().end(); ++it_wp) {
-        dump_performance_counters(out, (*it_wp)->id, (*it_wp)->name);
+        // output counters
+        for (const PerfCounter &counter : counterObject.counters()) {
+            out.output("%d", static_cast<int>(counter.titleIndex()) - static_cast<int>(counter_base_number));
+            for (ULONGLONG value : counter.values(instances)) {
+                out.output(" %" PRIu64, value);
+            }
+            out.output(" %s\n", counter.typeName().c_str());
+        }
     }
 }
 
@@ -864,7 +592,7 @@ void grow_eventlog_buffer(int newsize)
 }
 
 
-bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, char type_char,
+bool output_eventlog_entry(OutputProxy &out, char *dllpath, EVENTLOGRECORD *event, char type_char,
         const char *logname, const char *source_name, WCHAR **strings)
 {
     char msgbuffer[8192];
@@ -969,7 +697,7 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
     char timestamp[64];
     strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
 
-    output(out, "%c %s %lu.%lu %s %s\n", type_char, timestamp,
+    out.output("%c %s %lu.%lu %s %s\n", type_char, timestamp,
             event->EventID / 65536, // "Qualifiers": no idea what *that* is
             event->EventID % 65536, // the actual event id
             source_name, msgbuffer);
@@ -977,7 +705,7 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
 }
 
 
-void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
+void process_eventlog_entries(OutputProxy &out, const char *logname, char *buffer,
         DWORD bytesread, DWORD *record_number, bool do_not_output,
         int *worst_state, int level, int hide_context)
 {
@@ -1005,6 +733,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
                 break;
             case EVENTLOG_INFORMATION_TYPE:
             case EVENTLOG_AUDIT_SUCCESS:
+            case EVENTLOG_SUCCESS:
                 type_char = level == 0 ? 'O' : '.';
                 this_state = 0;
                 break;
@@ -1106,7 +835,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 }
 
 
-void output_eventlog(SOCKET &out, const char *logname,
+void output_eventlog(OutputProxy &out, const char *logname,
         DWORD *record_number, int level, int hide_context)
 {
     crash_log(" - event log \"%s\":", logname);
@@ -1123,7 +852,7 @@ void output_eventlog(SOCKET &out, const char *logname,
     if (hEventlog) {
         crash_log("   . successfully opened event log");
 
-        output(out, "[[[%s]]]\n", logname);
+        out.output("[[[%s]]]\n", logname);
         int worst_state = 0;
         DWORD old_record_number = *record_number;
 
@@ -1188,7 +917,7 @@ void output_eventlog(SOCKET &out, const char *logname,
                         break;
                     }
                     else {
-                        output(out, "ERROR: Cannot read eventlog '%s': error %lu\n", logname, error);
+                        out.output("ERROR: Cannot read eventlog '%s': error %lu\n", logname, error);
                         break;
                     }
                 }
@@ -1200,7 +929,7 @@ void output_eventlog(SOCKET &out, const char *logname,
         CloseEventLog(hEventlog);
     }
     else {
-        output(out, "[[[%s:missing]]]\n", logname);
+        out.output("[[[%s:missing]]]\n", logname);
     }
 }
 
@@ -1228,7 +957,7 @@ void unregister_all_eventlogs()
 
 /* Look into the registry in order to find out, which
    event logs are available. */
-bool find_eventlogs(SOCKET &out)
+bool find_eventlogs(OutputProxy &out)
 {
     for (eventlog_state_t::iterator iter  = g_eventlog_state.begin();
                                     iter != g_eventlog_state.end(); ++iter) {
@@ -1256,7 +985,7 @@ bool find_eventlogs(SOCKET &out)
             else if (r != ERROR_MORE_DATA)
             {
                 if (r != ERROR_NO_MORE_ITEMS) {
-                    output(out, "ERROR: Cannot enumerate over event logs: error code %lu\n", r);
+                    out.output("ERROR: Cannot enumerate over event logs: error code %lu\n", r);
                     success = false;
                 }
                 break;
@@ -1267,7 +996,7 @@ bool find_eventlogs(SOCKET &out)
     }
     else {
         success = false;
-        output(out, "ERROR: Cannot open registry key %s for enumeration: error code %lu\n",
+        out.output("ERROR: Cannot open registry key %s for enumeration: error code %lu\n",
                 regpath, GetLastError());
     }
     return success;
@@ -1336,109 +1065,44 @@ bool ExtractProcessOwner(HANDLE hProcess_i, string& csOwner_o)
 
 process_entry_t get_process_perfdata()
 {
-    unsigned int counter_base_number = 230; // process base number
+    process_entry_t process_info;
 
-    map< ULONGLONG, process_entry > process_info;
-    // registry entry is ascii representation of counter index
-    char counter_index_name[8];
-    snprintf(counter_index_name, sizeof(counter_index_name), "%u", counter_base_number);
+    PerfCounterObject counterObject(230);  // process base number
 
-    // allocate block to store counter data block
-    DWORD size = DEFAULT_BUFFER_SIZE;
-    BYTE *data = new BYTE[DEFAULT_BUFFER_SIZE];
-    DWORD type;
-    DWORD ret;
+    if (!counterObject.isEmpty()) {
+        LARGE_INTEGER Frequency;
+        QueryPerformanceFrequency (&Frequency);
 
-    // Holt zu einem bestimmten Counter den kompletten Binärblock aus der
-    // Registry. Da man vorher nicht weiß, wie groß der Puffer sein muss,
-    // kann man nur mit irgendeiner Größe anfangen und dann diesen immer
-    // wieder größer machen, wenn er noch zu klein ist. >:-P
-    while ((ret = RegQueryValueEx(HKEY_PERFORMANCE_DATA, counter_index_name,
-                    0, &type, data, &size)) != ERROR_SUCCESS)
-    {
-        if (ret == ERROR_MORE_DATA) // WIN32 API sucks...
-        {
-            // Der Puffer war zu klein. Toll. Also den Puffer größer machen
-            // und das ganze nochmal probieren.
-            size += DEFAULT_BUFFER_SIZE;
-            delete [] data;
-            data = new BYTE [size];
-        }
-        else {
-            // Es ist ein anderer Fehler aufgetreten. Abbrechen.
-            delete [] data;
-            return process_info;
-        }
-    }
+        std::vector<PERF_INSTANCE_DEFINITION*> instances = counterObject.instances();
 
-    PERF_DATA_BLOCK *dataBlockPtr = (PERF_DATA_BLOCK *)data;
+        std::vector<process_entry> entries(instances.size()); // one instance = one process
 
-    // Determine first object in list of objects
-    PERF_OBJECT_TYPE *objectPtr = FirstObject(dataBlockPtr);
-
-    // Now walk through the list of objects. The bad news is:
-    // even if we expect only one object, windows might send
-    // us more than one object. We need to scan a list of objects
-    // in order to find the one we have asked for. >:-P
-    for (unsigned int a=0 ; a < dataBlockPtr->NumObjectTypes ; a++)
-    {
-        // Have we found the object we seek?
-        if (objectPtr->ObjectNameTitleIndex == counter_base_number)
-        {
-            char name[512];
-            PERF_INSTANCE_DEFINITION *instancePtr = FirstInstance(objectPtr);
-            for(int b=0 ; b<objectPtr->NumInstances ; b++)
-            {
-                // get pointer to first counter
-                PERF_COUNTER_DEFINITION *counterPtr = FirstCounter(objectPtr);
-
-                WCHAR *name_start = (WCHAR *)((char *)(instancePtr) + instancePtr->NameOffset);
-                memcpy(name, name_start, instancePtr->NameLength);
-                WideCharToMultiByte(CP_UTF8, 0, name_start, instancePtr->NameLength, name, sizeof(name), NULL, NULL);
-                // replace spaces with '_'
-                for (char *s = name; *s; s++)
-                    if (*s == ' ') *s = '_';
-
-                // get PERF_COUNTER_BLOCK of this instance
-                PERF_COUNTER_BLOCK *counterBlockPtr = GetCounterBlock(instancePtr);
-
-                process_entry entry;
-                memset(&entry, 0, sizeof(entry));
-                for (unsigned int bc=0 ; bc < objectPtr->NumCounters ; bc++) {
-                    unsigned offset = counterPtr->CounterOffset;
-                    BYTE *pData = ((BYTE *)counterBlockPtr) + offset;
-                    switch(offset){
-                        case 40:
-                             entry.virtual_size     = (ULONGLONG)(*(DWORD*)pData);
-                             break;
-                        case 56:
-                             entry.working_set_size = (ULONGLONG)(*(DWORD*)pData);
-                             break;
-                        case 64:
-                             entry.pagefile_usage   = (ULONGLONG)(*(DWORD*)pData);
-                             break;
-                        case 104:
-                             entry.process_id       = (ULONGLONG)(*(DWORD*)pData);
-                             break;
-                        default:
-                             break;
-                    }
-                    counterPtr = NextCounter(counterPtr);
+        // gather counters
+        for (const PerfCounter &counter : counterObject.counters()) {
+            std::vector<ULONGLONG> values = counter.values(instances);
+            for (std::size_t i = 0; i < values.size(); ++i) {
+                switch (counter.offset()) {
+                    case 40:  entries.at(i).virtual_size = values[i];
+                              break;
+                    case 56:  entries.at(i).working_set_size = values[i];
+                              break;
+                    case 64:  entries.at(i).pagefile_usage = values[i];
+                              break;
+                    case 104: entries.at(i).process_id = values[i];
+                              break;
                 }
-                process_info[entry.process_id] = entry;
-                instancePtr = NextInstance(instancePtr);
             }
-
         }
-        // next object in list
-        objectPtr = NextObject(objectPtr);
+
+        for (const process_entry &entry : entries) {
+            process_info[entry.process_id] = entry;
+        }
     }
-    delete [] data;
     return process_info;
 }
 
 
-void section_ps_wmi(SOCKET &out)
+void section_ps_wmi(OutputProxy &out)
 {
     crash_log("<<<ps>>>");
 
@@ -1449,7 +1113,7 @@ void section_ps_wmi(SOCKET &out)
        if (!more) {
             return;
         }
-        output(out, "<<<ps:sep(9)>>>\n");
+        out.output("<<<ps:sep(9)>>>\n");
 
         while (more) {
             int processId = result.get<int>(L"ProcessId");
@@ -1474,7 +1138,7 @@ void section_ps_wmi(SOCKET &out)
                 LocalFree(argv);
             }
 
-            output(out, "(%s,%" PRIu64 ",%" PRIu64 ",%d,%d,%d,%ls,%ls,%u,%d)\t%ls\n",
+            out.output("(%s,%" PRIu64 ",%" PRIu64 ",%d,%d,%d,%ls,%ls,%u,%d)\t%ls\n",
                     user.c_str(),
                     string_to_llu(result.get<string>(L"VirtualSize").c_str()) / 1024,
                     string_to_llu(result.get<string>(L"WorkingSetSize").c_str()) / 1024,
@@ -1506,10 +1170,10 @@ void section_ps_wmi(SOCKET &out)
 }
 
 
-void section_ps(SOCKET &out)
+void section_ps(OutputProxy &out)
 {
     crash_log("<<<ps>>>");
-    output(out, "<<<ps:sep(9)>>>\n");
+    out.output("<<<ps:sep(9)>>>\n");
     PROCESSENTRY32 pe32;
 
     process_entry_t process_perfdata = get_process_perfdata();
@@ -1565,7 +1229,7 @@ void section_ps(SOCKET &out)
                 }
 
                 //// Note: CPU utilization is determined out of usermodetime and kernelmodetime
-                output(out, "(%s,%" PRIu64 ",%" PRIu64 ",%d,%lu,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%lu,%lu)\t%s\n",
+                out.output("(%s,%" PRIu64 ",%" PRIu64 ",%d,%lu,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%lu,%lu)\t%s\n",
                         user.c_str(),
                         virtual_size / 1024,
                         working_set_size / 1024,
@@ -1582,7 +1246,7 @@ void section_ps(SOCKET &out)
         // We simply fake this entry..
         SYSTEM_INFO sysinfo;
         GetSystemInfo(&sysinfo);
-        output(out, "(SYSTEM,0,0,0,0,0,0,0,0,%lu)\tSystem Idle Process\n", sysinfo.dwNumberOfProcessors);
+        out.output("(SYSTEM,0,0,0,0,0,0,0,0,%lu)\tSystem Idle Process\n", sysinfo.dwNumberOfProcessors);
     }
 }
 
@@ -1789,7 +1453,7 @@ struct process_textfile_response{
     int  unprocessed_bytes;
 };
 
-process_textfile_response process_textfile_unicode(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool write_output)
+process_textfile_response process_textfile_unicode(FILE *file, logwatch_textfile* textfile, OutputProxy &out, bool write_output)
 {
     verbose("Checking UNICODE file %s\n", textfile->path);
     process_textfile_response response;
@@ -1850,7 +1514,7 @@ process_textfile_response process_textfile_unicode(FILE *file, logwatch_textfile
 
         // Output line
         if (write_output && strlen(output_buffer) > 0) {
-            output(out, "%c %s\n", state, output_buffer);
+            out.output("%c %s\n", state, output_buffer);
         }
 
         if (cut_line) {
@@ -1880,7 +1544,7 @@ process_textfile_response process_textfile_unicode(FILE *file, logwatch_textfile
     return response;
 }
 
-process_textfile_response process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool write_output)
+process_textfile_response process_textfile(FILE *file, logwatch_textfile* textfile, OutputProxy &out, bool write_output)
 {
     char line[4096];
     condition_pattern *pattern = 0;
@@ -1911,7 +1575,7 @@ process_textfile_response process_textfile(FILE *file, logwatch_textfile* textfi
         }
 
         if (write_output && strlen(line) > 0 && !(textfile->nocontext && (state == 'I' || state == '.')))
-            output(out, "%c %s\n", state, line);
+            out.output("%c %s\n", state, line);
     }
 
     response.found_match = false;
@@ -1922,10 +1586,10 @@ process_textfile_response process_textfile(FILE *file, logwatch_textfile* textfi
 
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
-void section_logfiles(SOCKET &out, const Environment &env)
+void section_logfiles(OutputProxy &out, const Environment &env)
 {
     crash_log("<<<logwatch>>>");
-    output(out, "<<<logwatch>>>\n");
+    out.output("<<<logwatch>>>\n");
 
     g_config->revalidateLogwatchTextfiles();
 
@@ -1938,14 +1602,14 @@ void section_logfiles(SOCKET &out, const Environment &env)
         for (glob_tokens_t::iterator it_token = cont->tokens.begin();
              it_token != cont->tokens.end(); it_token++) {
             if (!((*it_token)->found_match))
-                output(out, "[[[%s:missing]]]\n", (*it_token)->pattern);
+                out.output("[[[%s:missing]]]\n", (*it_token)->pattern);
         }
     }
     for (logwatch_textfiles_t::iterator it_tf = g_config->logwatchTextfiles().begin();
          it_tf != g_config->logwatchTextfiles().end(); ++it_tf) {
         textfile = *it_tf;
         if (textfile->missing){
-            output(out, "[[[%s:missing]]]\n", textfile->path);
+            out.output("[[[%s:missing]]]\n", textfile->path);
             continue;
         }
 
@@ -1953,7 +1617,7 @@ void section_logfiles(SOCKET &out, const Environment &env)
         if (textfile->encoding == UNDEF || textfile->offset == 0) {
             FILE *file = fopen(textfile->path, "rb");
             if (!file) {
-                output(out, "[[[%s:cannotopen]]]\n", textfile->path);
+                out.output("[[[%s:cannotopen]]]\n", textfile->path);
                 continue;
             }
 
@@ -1974,11 +1638,11 @@ void section_logfiles(SOCKET &out, const Environment &env)
             file = fopen(textfile->path, "r");
 
         if (!file) {
-            output(out, "[[[%s:cannotopen]]]\n", textfile->path);
+            out.output("[[[%s:cannotopen]]]\n", textfile->path);
             continue;
         }
 
-        output(out, "[[[%s]]]\n", textfile->path);
+        out.output("[[[%s]]]\n", textfile->path);
 
         if (textfile->offset == textfile->file_size) { // no new data
             fclose(file);
@@ -2009,9 +1673,91 @@ void section_logfiles(SOCKET &out, const Environment &env)
 }
 
 
+void dump_wmi_table(OutputProxy &out, wmi::Result &result)
+{
+    out.output("%ls\n", join(result.names(), L",").c_str());
+    bool more = result.valid();
+    while (more) {
+        std::vector<std::wstring> values = result.names();
+        // resolve all table keys to their value on this row.
+        std::transform(values.begin(), values.end(), values.begin(),
+                [&result] (const std::wstring &name) {
+                return result.get<std::wstring>(name.c_str());
+                });
+        out.output("%ls\n", join(values, L",").c_str());
+
+        more = result.next();
+    }
+}
+
+
+void output_wmi_table(OutputProxy &out, const wchar_t *table_name, const char *section_name,
+        bool as_subtable = false)
+{
+    wmi::Result result = g_wmi_helper->getClass(table_name);
+
+    if (!result.valid()) {
+        crash_log("table %ls is empty or doesn't exist", table_name);
+        return;
+    }
+
+    if (as_subtable) {
+        out.output("[%s]\n", section_name);
+    }
+    else {
+        out.output("<<<%s:sep(44)>>>\n", section_name);
+    }
+    dump_wmi_table(out, result);
+}
+
+
+void section_dotnet(OutputProxy &out)
+{
+    crash_log("<<<dotnet_clrmemory>>>");
+
+    output_wmi_table(out, L"Win32_PerfRawData_NETFramework_NETCLRMemory", "dotnet_clrmemory");
+}
+
+
+void section_cpu(OutputProxy &out)
+{
+    crash_log("<<<wmi_cpuload>>>");
+
+    out.output("<<<wmi_cpuload:sep(44)>>>\n");
+    output_wmi_table(out, L"Win32_PerfRawData_PerfOS_System", "system_perf",     true);
+    output_wmi_table(out, L"Win32_ComputerSystem",            "computer_system", true);
+}
+
+void section_exchange(OutputProxy &out)
+{
+    for (auto &data_source : {
+            std::make_pair(L"MSExchangeActiveSync",          "msexch_activesync"),
+            std::make_pair(L"MSExchangeAvailabilityService", "msexch_availability"),
+            std::make_pair(L"MSExchangeOWA",                 "msexch_owa"),
+            std::make_pair(L"MSExchangeAutodiscover",        "msexch_autodiscovery"),
+            std::make_pair(L"MSExchangeISClientType",        "msexch_isclienttype"),
+            std::make_pair(L"MSExchangeISStore",             "msexch_isstore"),
+            std::make_pair(L"MSExchangeRpcClientAccess",     "msexch_rpcclientaccess"),
+            }) {
+        std::wostringstream table_name;
+        table_name << L"Win32_PerfRawData_" << data_source.first << L"_" << data_source.first;
+        crash_log("<<<%s>>>", data_source.second);
+        output_wmi_table(out, table_name.str().c_str(), data_source.second);
+    }
+}
+
+
+void section_webservices(OutputProxy &out)
+{
+    crash_log("<<<wmi_webservices>>>");
+
+    output_wmi_table(out, L"Win32_PerfRawData_W3SVC_WebService", "wmi_webservices");
+}
+
+
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
-void section_eventlog(SOCKET &out, const Environment &env)
+void section_eventlog(OutputProxy &out, const Environment &env)
 {
     crash_log("<<<logwatch>>>");
 
@@ -2021,7 +1767,7 @@ void section_eventlog(SOCKET &out, const Environment &env)
     // is skipped to the end. Historic messages are
     // not been processed.
     static bool first_run = true;
-    output(out, "<<<logwatch>>>\n");
+    out.output("<<<logwatch>>>\n");
 
     if (find_eventlogs(out))
     {
@@ -2058,7 +1804,7 @@ void section_eventlog(SOCKET &out, const Environment &env)
         for (eventlog_state_t::iterator it_st  = g_eventlog_state.begin();
                                         it_st != g_eventlog_state.end(); ++it_st) {
             if (!it_st->newly_discovered) // not here any more!
-                output(out, "[[[%s:missing]]]\n", it_st->name.c_str());
+                out.output("[[[%s:missing]]]\n", it_st->name.c_str());
             else {
                 // Get the configuration of that log file (which messages to send)
                 int level = 1;
@@ -2099,23 +1845,23 @@ void section_eventlog(SOCKET &out, const Environment &env)
 // SwapTotal:     1048568 kB
 // SwapFree:      1043732 kB
 
-void section_mem(SOCKET &out)
+void section_mem(OutputProxy &out)
 {
     crash_log("<<<mem>>>");
-    output(out, "<<<mem>>>\n");
+    out.output("<<<mem>>>\n");
 
     MEMORYSTATUSEX statex;
     statex.dwLength = sizeof (statex);
     GlobalMemoryStatusEx (&statex);
 
-    output(out, "MemTotal:     %" PRIu64 " kB\n", statex.ullTotalPhys     / 1024);
-    output(out, "MemFree:      %" PRIu64 " kB\n", statex.ullAvailPhys     / 1024);
-    output(out, "SwapTotal:    %" PRIu64 " kB\n", (statex.ullTotalPageFile - statex.ullTotalPhys) / 1024);
-    output(out, "SwapFree:     %" PRIu64 " kB\n", (statex.ullAvailPageFile - statex.ullAvailPhys) / 1024);
-    output(out, "PageTotal:    %" PRIu64 " kB\n", statex.ullTotalPageFile / 1024);
-    output(out, "PageFree:     %" PRIu64 " kB\n", statex.ullAvailPageFile / 1024);
-    output(out, "VirtualTotal: %" PRIu64 " kB\n", statex.ullTotalVirtual / 1024);
-    output(out, "VirtualFree:  %" PRIu64 " kB\n", statex.ullAvailVirtual / 1024);
+    out.output("MemTotal:     %" PRIu64 " kB\n", statex.ullTotalPhys     / 1024);
+    out.output("MemFree:      %" PRIu64 " kB\n", statex.ullAvailPhys     / 1024);
+    out.output("SwapTotal:    %" PRIu64 " kB\n", (statex.ullTotalPageFile - statex.ullTotalPhys) / 1024);
+    out.output("SwapFree:     %" PRIu64 " kB\n", (statex.ullAvailPageFile - statex.ullAvailPhys) / 1024);
+    out.output("PageTotal:    %" PRIu64 " kB\n", statex.ullTotalPageFile / 1024);
+    out.output("PageFree:     %" PRIu64 " kB\n", statex.ullAvailPageFile / 1024);
+    out.output("VirtualTotal: %" PRIu64 " kB\n", statex.ullTotalVirtual / 1024);
+    out.output("VirtualFree:  %" PRIu64 " kB\n", statex.ullAvailVirtual / 1024);
 }
 
 // .-----------------------------------------------------------------------.
@@ -2127,21 +1873,21 @@ void section_mem(SOCKET &out)
 // |                                                                       |
 // '-----------------------------------------------------------------------'
 
-void output_fileinfos(SOCKET &out, const char *path);
-bool output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data);
+void output_fileinfos(OutputProxy &out, const char *path);
+bool output_fileinfo(OutputProxy &out, const char *basename, WIN32_FIND_DATA *data);
 
-void section_fileinfo(SOCKET &out)
+void section_fileinfo(OutputProxy &out)
 {
     crash_log("<<<fileinfo>>>");
-    output(out, "<<<fileinfo:sep(124)>>>\n");
-    output(out, "%.0f\n", current_time());
+    out.output("<<<fileinfo:sep(124)>>>\n");
+    out.output("%.0f\n", current_time());
     for (fileinfo_paths_t::iterator it_path = g_config->fileinfoPaths().begin();
             it_path != g_config->fileinfoPaths().end(); it_path++) {
         output_fileinfos(out, *it_path);
     }
 }
 
-void output_fileinfos(SOCKET &out, const char *path)
+void output_fileinfos(OutputProxy &out, const char *path)
 {
     WIN32_FIND_DATA data;
     HANDLE h = FindFirstFileEx(path, FindExInfoStandard, &data, FindExSearchNameMatch, NULL, 0);
@@ -2163,22 +1909,22 @@ void output_fileinfos(SOCKET &out, const char *path)
         FindClose(h);
 
         if (!found_file)
-            output(out, "%s|missing|%f\n", path, current_time());
+            out.output("%s|missing|%f\n", path, current_time());
     }
     else {
         DWORD e = GetLastError();
-        output(out, "%s|missing|%lu\n", path, e);
+        out.output("%s|missing|%lu\n", path, e);
     }
 }
 
 
-bool output_fileinfo(SOCKET &out, const char *basename, WIN32_FIND_DATA *data)
+bool output_fileinfo(OutputProxy &out, const char *basename, WIN32_FIND_DATA *data)
 {
     unsigned long long size = (unsigned long long)data->nFileSizeLow
         + (((unsigned long long)data->nFileSizeHigh) << 32);
 
     if (0 == (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-        output(out, "%s\\%s|%" PRIu64 "|%.0f\n", basename,
+        out.output("%s\\%s|%" PRIu64 "|%.0f\n", basename,
                 data->cFileName, size, file_time(&data->ftLastWriteTime));
         return true;
     }
@@ -2312,14 +2058,6 @@ bool banned_exec_name(char *name)
     }
 }
 
-bool IsWinNT()  // check if we're running NT
-{
-    OSVERSIONINFO osv;
-    osv.dwOSVersionInfoSize = sizeof(osv);
-    GetVersionEx(&osv);
-    return (osv.dwPlatformId == VER_PLATFORM_WIN32_NT);
-}
-
 
 int launch_program(script_container* cont)
 {
@@ -2335,7 +2073,7 @@ int launch_program(script_container* cont)
     WinHandle script_stderr,read_stderr;
 
     // initialize security descriptor (Windows NT)
-    if (IsWinNT())
+    if (Environment::isWinNt())
     {
         InitializeSecurityDescriptor(&sd,SECURITY_DESCRIPTOR_REVISION);
         SetSecurityDescriptorDacl(&sd, true, NULL, false);
@@ -2500,8 +2238,8 @@ bool script_exists(script_container *cont)
 
 void run_script_container(script_container *cont)
 {
-    if ( (cont->type == PLUGIN && !(g_config->sectionEnabled(SECTION_PLUGINS))) ||
-         (cont->type == LOCAL  && !(g_config->sectionEnabled(SECTION_LOCAL))) )
+    if ( (cont->type == PLUGIN && ((g_config->enabledSections() & SECTION_PLUGINS) == 0)) ||
+         (cont->type == LOCAL  && ((g_config->enabledSections() & SECTION_LOCAL) == 0)) )
         return;
 
     // Return if this script is no longer present
@@ -2540,13 +2278,12 @@ void run_script_container(script_container *cont)
     }
 }
 
-void output_external_programs(SOCKET &out, script_type type)
+void output_external_programs(OutputProxy &out, script_type type)
 {
     // Collect and output data
     script_containers_t::iterator it_cont = script_containers.begin();
     script_container* cont = NULL;
-    while (it_cont != script_containers.end())
-    {
+    while (it_cont != script_containers.end()) {
         cont = it_cont->second;
         if (!script_exists(cont)) {
             crash_log("script %s missing", cont->script_path);
@@ -2554,10 +2291,8 @@ void output_external_programs(SOCKET &out, script_type type)
             continue;
         }
 
-        if (cont->type == type)
-        {
-            if (cont->status == SCRIPT_FINISHED)
-            {
+        if (cont->type == type) {
+            if (cont->status == SCRIPT_FINISHED) {
                 // Free buffer
                 if (cont->buffer != NULL) {
                     HeapFree(GetProcessHeap(), 0, cont->buffer);
@@ -2642,7 +2377,7 @@ void output_external_programs(SOCKET &out, script_type type)
                 cont->buffer = NULL;
             }
             if (cont->buffer)
-                output(out, "%s", cont->buffer);
+                out.output("%s", cont->buffer);
         }
         it_cont++;
     }
@@ -2738,10 +2473,10 @@ void update_mrpe_includes()
     }
 }
 
-void section_mrpe(SOCKET &out)
+void section_mrpe(OutputProxy &out)
 {
     crash_log("<<<mrpe>>>");
-    output(out, "<<<mrpe>>>\n");
+    out.output("<<<mrpe>>>\n");
 
     update_mrpe_includes();
 
@@ -2755,7 +2490,7 @@ void section_mrpe(SOCKET &out)
             it_mrpe != all_mrpe_entries.end(); it_mrpe++)
     {
         mrpe_entry *entry = *it_mrpe;
-        output(out, "(%s) %s ", entry->plugin_name, entry->service_description);
+        out.output("(%s) %s ", entry->plugin_name, entry->service_description);
         crash_log("%s (%s) %s ", entry->run_as_user, entry->plugin_name, entry->service_description);
 
         char command[1024];
@@ -2766,7 +2501,7 @@ void section_mrpe(SOCKET &out)
         snprintf(command, sizeof(command), "%s%s", run_as_prefix, entry->command_line);
         FILE *f = _popen(entry->command_line, "r");
         if (!f) {
-            output(out, "3 Unable to execute - plugin may be missing.\n");
+            out.output("3 Unable to execute - plugin may be missing.\n");
             continue;
         }
 
@@ -2786,7 +2521,7 @@ void section_mrpe(SOCKET &out)
             }
             int status = _pclose(f);
             int nagios_code = status;
-            output(out, "%d %s\n", nagios_code, plugin_output);
+            out.output("%d %s\n", nagios_code, plugin_output);
         }
         crash_log("Script finished");
     }
@@ -2802,10 +2537,10 @@ void section_mrpe(SOCKET &out)
 //  |                                                                      |
 //  '----------------------------------------------------------------------'
 
-void section_local(SOCKET &out)
+void section_local(OutputProxy &out)
 {
     crash_log("<<<local>>>");
-    output(out, "<<<local>>>\n");
+    out.output("<<<local>>>\n");
     output_external_programs(out, LOCAL);
 }
 
@@ -2818,13 +2553,13 @@ void section_local(SOCKET &out)
 //  |                                 |___/                                |
 //  '----------------------------------------------------------------------'
 
-void section_plugins(SOCKET &out)
+void section_plugins(OutputProxy &out)
 {
     // Prevent errors from plugins with missing section
-    output(out, "<<<>>>\n");
+    out.output("<<<>>>\n");
     output_external_programs(out, PLUGIN);
     // Prevent errors from plugins with missing final newline
-    output(out, "\n<<<>>>\n");
+    out.output("\n<<<>>>\n");
 }
 
 
@@ -2836,7 +2571,7 @@ void section_plugins(SOCKET &out)
 // |                     |____/| .__/ \___/ \___/|_|                       |
 // |                           |_|                                         |
 // '-----------------------------------------------------------------------'
-void section_spool(SOCKET &out, const Environment &env)
+void section_spool(OutputProxy &out, const Environment &env)
 {
     crash_log("<<<spool>>>");
     // Look for files in the spool directory and append these files to
@@ -2887,7 +2622,7 @@ void section_spool(SOCKET &out, const Environment &env)
                 int bytes_read;
                 while (0 < (bytes_read = fread(buffer, 1, sizeof(buffer)-1, file))) {
                     buffer[bytes_read] = 0;
-                    output(out, "%s", buffer);
+                    out.output("%s", buffer);
                 }
                 fclose(file);
             }
@@ -2909,57 +2644,57 @@ void section_spool(SOCKET &out, const Environment &env)
 //  | The section <<<check_mk>>>                                           |
 //  '----------------------------------------------------------------------'
 
-void section_check_mk(SOCKET &out, const Environment &env)
+void section_check_mk(OutputProxy &out, const Environment &env)
 {
     crash_log("<<<check_mk>>>");
-    output(out, "<<<check_mk>>>\n");
+    out.output("<<<check_mk>>>\n");
 
-    output(out, "Version: %s\n", check_mk_version);
-    output(out, "BuildDate: %s\n", __DATE__);
+    out.output("Version: %s\n", check_mk_version);
+    out.output("BuildDate: %s\n", __DATE__);
 #ifdef ENVIRONMENT32
-    output(out, "Architecture: 32bit\n");
+    out.output("Architecture: 32bit\n");
 #else
-    output(out, "Architecture: 64bit\n");
+    out.output("Architecture: 64bit\n");
 #endif
-    output(out, "AgentOS: windows\n");
-    output(out, "Hostname: %s\n",         env.hostname().c_str());
-    output(out, "WorkingDirectory: %s\n", env.currentDirectory().c_str());
-    output(out, "ConfigFile: %s\n",       g_config->configFileName(false).c_str());
-    output(out, "LocalConfigFile: %s\n",  g_config->configFileName(true).c_str());
-    output(out, "AgentDirectory: %s\n",   env.agentDirectory().c_str());
-    output(out, "PluginsDirectory: %s\n", env.pluginsDirectory().c_str());
-    output(out, "StateDirectory: %s\n",   env.stateDirectory().c_str());
-    output(out, "ConfigDirectory: %s\n",  env.configDirectory().c_str());
-    output(out, "TempDirectory: %s\n",    env.tempDirectory().c_str());
-    output(out, "LogDirectory: %s\n",     env.logDirectory().c_str());
-    output(out, "SpoolDirectory: %s\n",   env.spoolDirectory().c_str());
-    output(out, "LocalDirectory: %s\n",   env.localDirectory().c_str());
-    output(out, "ScriptStatistics: Plugin C:%d E:%d T:%d "
+    out.output("AgentOS: windows\n");
+    out.output("Hostname: %s\n",         env.hostname().c_str());
+    out.output("WorkingDirectory: %s\n", env.currentDirectory().c_str());
+    out.output("ConfigFile: %s\n",       g_config->configFileName(false).c_str());
+    out.output("LocalConfigFile: %s\n",  g_config->configFileName(true).c_str());
+    out.output("AgentDirectory: %s\n",   env.agentDirectory().c_str());
+    out.output("PluginsDirectory: %s\n", env.pluginsDirectory().c_str());
+    out.output("StateDirectory: %s\n",   env.stateDirectory().c_str());
+    out.output("ConfigDirectory: %s\n",  env.configDirectory().c_str());
+    out.output("TempDirectory: %s\n",    env.tempDirectory().c_str());
+    out.output("LogDirectory: %s\n",     env.logDirectory().c_str());
+    out.output("SpoolDirectory: %s\n",   env.spoolDirectory().c_str());
+    out.output("LocalDirectory: %s\n",   env.localDirectory().c_str());
+    out.output("ScriptStatistics: Plugin C:%d E:%d T:%d "
             "Local C:%d E:%d T:%d\n",
             g_script_stat.pl_count, g_script_stat.pl_errors, g_script_stat.pl_timeouts,
             g_script_stat.lo_count, g_script_stat.lo_errors, g_script_stat.lo_timeouts);
     if (g_config->crashDebug()) {
-        output(out, "ConnectionLog: %s\n", g_connection_log);
-        output(out, "CrashLog: %s\n",      g_crash_log);
-        output(out, "SuccessLog: %s\n",    g_success_log);
+        out.output("ConnectionLog: %s\n", g_connection_log);
+        out.output("CrashLog: %s\n",      g_crash_log);
+        out.output("SuccessLog: %s\n",    g_success_log);
     }
 
-    output(out, "OnlyFrom:");
+    out.output("OnlyFrom:");
     if (g_config->onlyFrom().size() == 0)
-        output(out, " 0.0.0.0/0\n");
+        out.output(" 0.0.0.0/0\n");
     else {
         for ( only_from_t::const_iterator it_from = g_config->onlyFrom().begin();
                 it_from != g_config->onlyFrom().end(); ++it_from ) {
             ipspec *is = *it_from;
             if (is->ipv6) {
-                output(out, " %x:%x:%x:%x:%x:%x:%x:%x/%d",
+                out.output(" %x:%x:%x:%x:%x:%x:%x:%x/%d",
                         is->ip.v6.address[0], is->ip.v6.address[1],
                         is->ip.v6.address[2], is->ip.v6.address[3],
                         is->ip.v6.address[4], is->ip.v6.address[5],
                         is->ip.v6.address[6], is->ip.v6.address[7],
                         is->bits);
             } else {
-                output(out, " %d.%d.%d.%d/%d",
+                out.output(" %d.%d.%d.%d/%d",
                         is->ip.v4.address & 0xff,
                         is->ip.v4.address >> 8 & 0xff,
                         is->ip.v4.address >> 16 & 0xff,
@@ -2967,7 +2702,7 @@ void section_check_mk(SOCKET &out, const Environment &env)
                         is->bits);
             }
         }
-        output(out, "\n");
+        out.output("\n");
     }
 }
 
@@ -3156,138 +2891,23 @@ void do_remove()
 }
 
 
-// .-----------------------------------------------------------------------.
-// |       ____               _       ____       _                         |
-// |      / ___|_ __ __ _ ___| |__   |  _ \  ___| |__  _   _  __ _         |
-// |     | |   | '__/ _` / __| '_ \  | | | |/ _ \ '_ \| | | |/ _` |        |
-// |     | |___| | | (_| \__ \ | | | | |_| |  __/ |_) | |_| | (_| |        |
-// |      \____|_|  \__,_|___/_| |_| |____/ \___|_.__/ \__,_|\__, |        |
-// |                                                         |___/         |
-// '-----------------------------------------------------------------------'
-
-void open_crash_log(const std::string &log_directory)
+void output_crash_log(OutputProxy &out)
 {
-    struct stat buf;
-
-    if (g_config->crashDebug()) {
-        WaitForSingleObject(crashlogMutex, INFINITE);
-        snprintf(g_crash_log, sizeof(g_crash_log), "%s\\crash.log", log_directory.c_str());
-        snprintf(g_connection_log, sizeof(g_connection_log), "%s\\connection.log", log_directory.c_str());
-        snprintf(g_success_log, sizeof(g_success_log), "%s\\success.log", log_directory.c_str());
-
-        // rename left over log if exists (means crash found)
-        if (0 == stat(g_connection_log, &buf)) {
-            // rotate to up to 9 crash log files
-            char rotate_path_from[256];
-            char rotate_path_to[256];
-            for (int i=9; i>=1; i--) {
-                snprintf(rotate_path_to, sizeof(rotate_path_to),
-                        "%s\\crash-%d.log", log_directory.c_str(), i);
-                if (i>1)
-                    snprintf(rotate_path_from, sizeof(rotate_path_from),
-                            "%s\\crash-%d.log", log_directory.c_str(), i-1);
-                else
-                    snprintf(rotate_path_from, sizeof(rotate_path_from),
-                            "%s\\crash.log", log_directory.c_str());
-                unlink(rotate_path_to);
-                rename(rotate_path_from, rotate_path_to);
-            }
-            rename(g_connection_log, g_crash_log);
-            g_found_crash = true;
-        }
-
-        // Threads are not allowed to access the crash_log
-        g_connectionlog_file = CreateFile(TEXT(g_connection_log),
-            GENERIC_WRITE,            // open for writing
-            FILE_SHARE_READ,          // do not share
-            NULL,                     // no security
-            CREATE_ALWAYS,            // existing file only
-            FILE_ATTRIBUTE_NORMAL,    // normal file
-            NULL);
-        gettimeofday(&g_crashlog_start, 0);
-        time_t now = time(0);
-        struct tm *t = localtime(&now);
-        char timestamp[64];
-        strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
-        crash_log("Opened crash log at %s.", timestamp);
-        ReleaseMutex(crashlogMutex);
-    }
-}
-
-void close_crash_log()
-{
-    if (g_config->crashDebug()) {
-        WaitForSingleObject(crashlogMutex, INFINITE);
-        crash_log("Closing crash log (no crash this time)");
-
-        CloseHandle(g_connectionlog_file);
-        DeleteFile(g_success_log);
-        MoveFile(g_connection_log, g_success_log);
-        ReleaseMutex(crashlogMutex);
-    }
-}
-
-void crash_log(const char *format, ...)
-{
-    WaitForSingleObject(crashlogMutex, INFINITE);
-    struct timeval tv;
-
-//  DEBUG ONLY!
-//    char buffer[256];
-//    va_list args;
-//    va_start (args, format);
-//    vsprintf (buffer,format, args);
-//    printf(buffer);
-//    printf("\n");
-//    va_end (args);
-
-    char buffer[1024];
-    if (g_connectionlog_file != INVALID_HANDLE_VALUE) {
-        gettimeofday(&tv, 0);
-        long int ellapsed_usec = tv.tv_usec - g_crashlog_start.tv_usec;
-        long int ellapsed_sec  = tv.tv_sec - g_crashlog_start.tv_sec;
-        if (ellapsed_usec < 0) {
-            ellapsed_usec += 1000000;
-            ellapsed_sec --;
-        }
-
-        DWORD dwBytesWritten = 0;
-        snprintf(buffer, sizeof(buffer), "%ld.%06ld ", ellapsed_sec, ellapsed_usec);
-        DWORD dwBytesToWrite = (DWORD)strlen(buffer);
-        WriteFile(g_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten, NULL);
-
-        va_list ap;
-        va_start(ap, format);
-        vsnprintf(buffer, sizeof(buffer), format, ap);
-        va_end(ap);
-
-        dwBytesToWrite = (DWORD)strlen(buffer);
-        WriteFile(g_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten, NULL);
-
-        WriteFile(g_connectionlog_file, "\r\n", 2, &dwBytesWritten, NULL);
-        FlushFileBuffers(g_connectionlog_file);
-    }
-    ReleaseMutex(crashlogMutex);
-}
-
-void output_crash_log(SOCKET &out)
-{
-    output(out, "<<<logwatch>>>\n");
-    output(out, "[[[Check_MK Agent]]]\n");
+    out.output("<<<logwatch>>>\n");
+    out.output("[[[Check_MK Agent]]]\n");
     if (g_found_crash) {
-        WaitForSingleObject(crashlogMutex, INFINITE);
-        output(out, "C Check_MK Agent crashed\n");
+        WaitForSingleObject(g_crashlogMutex, INFINITE);
+        out.output("C Check_MK Agent crashed\n");
         FILE *f = fopen(g_crash_log, "r");
         char line[1024];
         while (0 != fgets(line, sizeof(line), f)) {
-            output(out, "W %s", line);
+            out.output("W %s", line);
         }
-        ReleaseMutex(crashlogMutex);
+        ReleaseMutex(g_crashlogMutex);
         fclose(f);
         g_found_crash = false;
     }
 }
-
 
 
 //  .----------------------------------------------------------------------.
@@ -3331,67 +2951,6 @@ void stop_threads()
     TerminateJobObject(g_workers_job_object, 0);
 }
 
-void output(SOCKET &out, const char *format, ...)
-{
-    static char outbuffer[HEAP_BUFFER_MAX]; // won't get any bigger...
-    static int  len = 0;
-    va_list ap;
-    va_start(ap, format);
-    int written_len = vsnprintf(outbuffer + len, sizeof(outbuffer) - len, format, ap);
-    va_end(ap);
-    len += written_len;
-
-    // We do not send out the data immediately
-    // This would lead to many small tcp packages
-    bool write_to_socket = false;
-    if (force_tcp_output || len > 1300)
-        write_to_socket = true;
-
-    if (do_tcp) {
-        while (write_to_socket && !g_should_terminate) {
-            ssize_t result = send(out, outbuffer, len, 0);
-            if (result == SOCKET_ERROR) {
-                debug("send() failed");
-                int error = WSAGetLastError();
-                if (error == WSAEINTR) {
-                    debug("INTR. Nochmal...");
-                    continue;
-                }
-                else if (error == WSAEINPROGRESS) {
-                    debug("INPROGRESS. Nochmal...");
-                    continue;
-                }
-                else if (error == WSAEWOULDBLOCK) {
-                    debug("WOULDBLOCK. Komisch. Breche ab...");
-                    break;
-                }
-                else {
-                    debug("Anderer Fehler. Gebe auf\n");
-                    break;
-                }
-            }
-            else if (result == 0)
-                debug("send() returned 0");
-            else if (result != len) {
-                debug("send() sent too few bytes");
-                len -= result;
-            }
-            else
-                len = 0;
-
-            break;
-        }
-    }
-    else {
-        if (do_file)
-            fwrite(outbuffer, len, 1, fileout);
-        else
-            fwrite(outbuffer, len, 1, stdout);
-        len = 0;
-    }
-}
-
-
 
 //   .----------------------------------------------------------------------.
 //   |                        __  __       _                                |
@@ -3421,21 +2980,27 @@ void usage()
 void do_debug(const Environment &env)
 {
     verbose_mode = true;
-    do_tcp = false;
-    SOCKET dummy;
-    output_data(dummy, env);
+
+    FileOutputProxy dummy(do_file ? fileout : stdout);
+
+    update_script_statistics();
+    output_data(dummy, env, g_config->enabledSections(), g_config->sectionFlush());
 }
 
 
 void do_test(bool output_stderr, const Environment &env)
 {
-    do_tcp  = false;
     with_stderr = output_stderr;
-    SOCKET dummy;
-    open_crash_log(env.logDirectory());
+    FileOutputProxy dummy(do_file ? fileout : stdout);
+    if (g_config->crashDebug()) {
+        open_crash_log(env.logDirectory());
+    }
     crash_log("Started in test mode.");
-    output_data(dummy, env);
-    close_crash_log();
+    update_script_statistics();
+    output_data(dummy, env, g_config->enabledSections(), g_config->sectionFlush());
+    if (g_config->crashDebug()) {
+        close_crash_log();
+    }
 }
 
 
@@ -3455,13 +3020,14 @@ bool ctrl_handler(DWORD fdwCtrlType)
 
 DWORD WINAPI DataCollectionThread( LPVOID lpParam )
 {
-    do
-    {
+    do {
         g_data_collection_retriggered = false;
         for (script_containers_t::iterator it_cont = script_containers.begin();
-                it_cont != script_containers.end(); it_cont++)
-            if (it_cont->second->execution_mode == ASYNC)
+                it_cont != script_containers.end(); ++it_cont) {
+            if (it_cont->second->execution_mode == ASYNC) {
                 run_script_container(it_cont->second);
+            }
+        }
     } while (g_data_collection_retriggered);
     return 0;
 }
@@ -3551,10 +3117,137 @@ void collect_script_data(script_execution_mode mode)
     }
 }
 
+
+struct ThreadData {
+    time_t push_until;
+    bool terminate;
+    Environment env;
+    bool new_request;
+    sockaddr_storage last_address;
+    Mutex mutex;
+};
+
+
+DWORD WINAPI realtime_check_func(void *data_in)
+{
+    ThreadData *data = (ThreadData*)data_in;
+
+    try {
+        sockaddr_storage current_address;
+        std::string current_ip;
+        SOCKET current_socket = INVALID_SOCKET;
+
+        EncryptingBufferedSocketProxy out(INVALID_SOCKET, g_config->passphrase(),
+                BufferedSocketProxy::DEFAULT_BUFFER_SIZE);
+        timeval before;
+        gettimeofday(&before, 0);
+        while (!data->terminate) {
+            timeval now;
+            gettimeofday(&now, 0);
+            long duration = (now.tv_sec - before.tv_sec) * 1000
+                          + (now.tv_usec - before.tv_usec) / 1000;
+            if (duration < 1000) {
+                ::Sleep(1000 - duration);
+            }
+            gettimeofday(&before, 0);
+
+            MutexLock guard(data->mutex);
+            // adhere to the configured timeout
+            if (time(NULL) < data->push_until) {
+                // if a new request was made, reestablish the connection
+                if (data->new_request) {
+                    data->new_request = false;
+                    // (re-)establish connection if necessary
+                    if (current_socket != INVALID_SOCKET) {
+                        closesocket(current_socket);
+                        out.setSocket(INVALID_SOCKET);
+                    }
+                    current_address = data->last_address;
+                    if (current_address.ss_family != 0) {
+                        int sockaddr_size = 0;
+                        if (current_address.ss_family == AF_INET) {
+                            sockaddr_in *addrv4 = (sockaddr_in*)&current_address;
+                            addrv4->sin_port = htons(g_config->realtimePort());
+                            sockaddr_size = sizeof(sockaddr_in);
+                        }
+                        else {
+                            sockaddr_in6 *addrv6 = (sockaddr_in6*)&current_address;
+
+                            if ((addrv6->sin6_addr.u.Word[0] == 0)
+                                && (addrv6->sin6_addr.u.Word[1] == 0)
+                                && (addrv6->sin6_addr.u.Word[2] == 0)
+                                && (addrv6->sin6_addr.u.Word[3] == 0)
+                                && (addrv6->sin6_addr.u.Word[4] == 0)) {
+                                // this is a ipv4 address mapped to ipv6
+                                // revert that mapping, otherwise we may not be able
+                                // to connect.
+                                sockaddr_in temp {0};
+                                temp.sin_port = htons(g_config->realtimePort());
+                                temp.sin_family = AF_INET;
+                                memcpy(&temp.sin_addr.s_addr, addrv6->sin6_addr.u.Byte + 12, 4);
+
+                                current_address.ss_family = AF_INET;
+                                sockaddr_size = sizeof(sockaddr_in);
+                                memcpy(&current_address, &temp, sockaddr_size);
+                            }
+                            else {
+                                // FIXME: for reasons I don't understand, the v6-address we get
+                                // from getpeername has all words flipped. why? is this safe or
+                                // will it break on some systems?
+                                for (int i = 0; i < 16; i += 2) {
+                                    BYTE temp = addrv6->sin6_addr.u.Byte[i];
+                                    addrv6->sin6_addr.u.Byte[i] = addrv6->sin6_addr.u.Byte[i + 1];
+                                    addrv6->sin6_addr.u.Byte[i + 1] = temp;
+                                }
+
+                                addrv6->sin6_port = htons(g_config->realtimePort());
+                                sockaddr_size = sizeof(sockaddr_in6);
+                            }
+                        }
+                        current_ip = ListenSocket::readableIP(&current_address);
+
+                        current_socket = socket(current_address.ss_family, SOCK_DGRAM, IPPROTO_UDP);
+                        if (current_socket == INVALID_SOCKET) {
+                            crash_log("failed to establish socket: %d", (int)::WSAGetLastError());
+                            return 1;
+                        }
+
+                        if (connect(current_socket, (const sockaddr*)&current_address,
+                                    sockaddr_size) == SOCKET_ERROR) {
+                            crash_log("failed to connect: %d", (int)::WSAGetLastError());
+                            closesocket(current_socket);
+                            current_socket = INVALID_SOCKET;
+                        }
+                        out.setSocket(current_socket);
+                    }
+                }
+
+                // send data
+                if (current_socket != INVALID_SOCKET) {
+                    // send data
+                    SetEnvironmentVariable("REMOTE_HOST", current_ip.c_str());
+                    char timestamp[11];
+                    snprintf(timestamp, 11, "%" PRIdtime, time(NULL));
+
+                    // these writes are unencrypted!
+                    out.writeBinary(RT_PROTOCOL_VERSION, 2);
+                    out.writeBinary(timestamp, 10);
+                    output_data(out, data->env, g_config->realtimeSections(), false);
+                }
+            }
+        }
+        closesocket(current_socket);
+
+        return 0;
+    } catch (const std::exception &e) {
+        crash_log("failed to run realtime check: %s", e.what());
+        return 1;
+    }
+}
+
+
 void do_adhoc(const Environment &env)
 {
-    do_tcp = true;
-
     g_should_terminate = false;
 
     ListenSocket sock(g_config->port(), g_config->onlyFrom(), g_config->supportIPV6());
@@ -3589,26 +3282,57 @@ void do_adhoc(const Environment &env)
             break;
     }
 
+    ThreadData thread_data { 0, false, env };
+    Thread realtime_checker(realtime_check_func, thread_data);
+
+    crash_log("realtime monitoring %s", g_config->useRealtimeMonitoring() ? "active"
+                                                                          : "inactive");
+
+    if (g_config->useRealtimeMonitoring() != 0) {
+        thread_data.terminate = false;
+        realtime_checker.start();
+    }
+
     // Das Dreckswindows kann nicht vernuenftig gleichzeitig auf
     // ein Socket und auf ein Event warten. Weil ich nicht extra
     // deswegen mit Threads arbeiten will, verwende ich einfach
     // select() mit einem Timeout und polle should_terminate.
+    BufferedSocketProxy out(INVALID_SOCKET);
     while (!g_should_terminate) {
         SOCKET connection = sock.acceptConnection();
+        BufferedSocketProxy out(connection);
         if ((void*)connection != NULL) {
-            open_crash_log(env.logDirectory());
+            if (g_config->crashDebug()) {
+                close_crash_log();
+                open_crash_log(env.logDirectory());
+            }
+            out.setSocket(connection);
             std::string ip_hr = sock.readableIP(connection);
             crash_log("Accepted client connection from %s.", ip_hr.c_str());
+            { // limit lifetime of mutex lock
+                MutexLock guard(thread_data.mutex);
+                thread_data.new_request  = true;
+                thread_data.last_address = sock.address(connection);
+                thread_data.push_until   = time(NULL) + g_config->realtimeTimeout();
+            }
 
             SetEnvironmentVariable("REMOTE_HOST", ip_hr.c_str());
-            output_data(connection, env);
-            close_crash_log();
+            update_script_statistics();
+            output_data(out, env, g_config->enabledSections(), g_config->sectionFlush());
             closesocket(connection);
         }
     }
 
+    if (realtime_checker.wasStarted()) {
+        thread_data.terminate = true;
+
+        int res = realtime_checker.join();
+        crash_log("realtime check thread ended with errror code %d.", res);
+    }
+
     stop_threads();
     WSACleanup();
+    close_crash_log();
 }
 
 void find_scripts(const Environment &env)
@@ -3623,67 +3347,133 @@ void find_scripts(const Environment &env)
         determine_available_scripts((*it_include)->path, (*it_include)->type, (*it_include)->user);
 }
 
-void output_data(SOCKET &out, const Environment &env)
+
+void output_data(OutputProxy &out, const Environment &env, unsigned long section_mask,
+        bool section_flush)
 {
     // make sure, output of numbers is not localized
     setlocale(LC_ALL, "C");
 
-    if (g_config->crashDebug())
-        output_crash_log(out);
-
-    update_script_statistics();
+    if ((section_mask & SECTION_CRASHLOG) != 0) {
+        if (g_config->crashDebug())
+            output_crash_log(out);
+    }
 
     find_scripts(env);
 
-    if (g_config->sectionEnabled(SECTION_CHECK_MK))
+    if ((section_mask & SECTION_CHECK_MK) != 0) {
         section_check_mk(out, env);
-    if (g_config->sectionEnabled(SECTION_UPTIME))
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_UPTIME) != 0) {
         section_uptime(out);
-    if (g_config->sectionEnabled(SECTION_DF))
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_DF) != 0) {
         section_df(out);
-    if (g_config->sectionEnabled(SECTION_PS)) {
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_PS) != 0) {
         if (g_config->psUseWMI()) {
             section_ps_wmi(out);
         } else {
             section_ps(out);
         }
+        if (section_flush) out.flush();
     }
-    if (g_config->sectionEnabled(SECTION_MEM))
+    if ((section_mask & SECTION_MEM) != 0) {
         section_mem(out);
-    if (g_config->sectionEnabled(SECTION_FILEINFO))
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_FILEINFO) != 0) {
         section_fileinfo(out);
-    if (g_config->sectionEnabled(SECTION_SERVICES))
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_SERVICES) != 0) {
         section_services(out);
-    if (g_config->sectionEnabled(SECTION_WINPERF))
-        section_winperf(out);
-    if (g_config->sectionEnabled(SECTION_LOGWATCH))
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WINPERF_IF) != 0) {
+        dump_performance_counters(out, 510, "if");
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WINPERF_PHYDISK) != 0) {
+        dump_performance_counters(out, 234, "phydisk");
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WINPERF_CPU) != 0) {
+        dump_performance_counters(out, 238, "processor");
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WINPERF_CONFIG) != 0) {
+        for (winperf_counters_t::const_iterator it_wp = g_config->winperfCounters().begin();
+                it_wp != g_config->winperfCounters().end(); ++it_wp) {
+            dump_performance_counters(out, (*it_wp)->id, (*it_wp)->name);
+            if (section_flush) out.flush();
+        }
+    }
+    if ((section_mask & SECTION_LOGWATCH) != 0) {
         section_eventlog(out, env);
-    if (g_config->sectionEnabled(SECTION_LOGFILES))
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_LOGFILES) != 0) {
         section_logfiles(out, env);
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_DOTNET) != 0) {
+        section_dotnet(out);
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_CPU) != 0) {
+        section_cpu(out);
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_EXCHANGE) != 0) {
+        section_exchange(out);
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_WEBSERVICES) != 0) {
+        section_webservices(out);
+        if (section_flush) out.flush();
+    }
 
     // Start data collection of SYNC scripts
-    collect_script_data(SYNC);
+    if (((section_mask & SECTION_PLUGINS) != 0)
+            || ((section_mask & SECTION_LOCAL) != 0)) {
+        collect_script_data(SYNC);
+    }
 
-    if (g_config->sectionEnabled(SECTION_PLUGINS))
+    if ((section_mask & SECTION_PLUGINS) != 0) {
         section_plugins(out);
-    if (g_config->sectionEnabled(SECTION_LOCAL))
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_LOCAL) != 0) {
         section_local(out);
-    if (g_config->sectionEnabled(SECTION_SPOOL))
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_SPOOL) != 0) {
         section_spool(out, env);
-    if (g_config->sectionEnabled(SECTION_MRPE))
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_MRPE) != 0) {
         section_mrpe(out);
-    if (g_config->sectionEnabled(SECTION_SYSTEMTIME))
+        if (section_flush) out.flush();
+    }
+    if ((section_mask & SECTION_SYSTEMTIME) != 0) {
         section_systemtime(out);
+        if (section_flush) out.flush();
+    }
 
-    // Send remaining data in out buffer
-    if (do_tcp) {
-        force_tcp_output = true;
-        output(out, "%s", "");
-        force_tcp_output = false;
+    if (!section_flush) {
+        // Send remaining data in out buffer
+        out.flush();
     }
 
     // Start data collection of ASYNC scripts
-    collect_script_data(ASYNC);
+    if (((section_mask & SECTION_PLUGINS) != 0)
+            || ((section_mask & SECTION_LOCAL) != 0)) {
+        collect_script_data(ASYNC);
+    }
 }
 
 
@@ -3989,13 +3779,11 @@ void RunImmediate(const char *mode, int argc, char **argv)
 
     g_config = new Configuration(env);
 
-    if (g_config->useWMI()) {
-        try {
-            g_wmi_helper = new wmi::Helper();
-        } catch (const std::runtime_error &ex) {
-            fprintf(stderr, "Failed to initialize wmi: %s", ex.what());
-            exit(1);
-        }
+    try {
+        g_wmi_helper = new wmi::Helper();
+    } catch (const std::runtime_error &ex) {
+        fprintf(stderr, "Failed to initialize wmi: %s", ex.what());
+        exit(1);
     }
 
     load_state(env);
@@ -4039,10 +3827,6 @@ int main(int argc, char **argv)
 {
     wsa_startup();
 
-    // Determine windows version
-    osv.dwOSVersionInfoSize = sizeof(osv);
-    GetVersionEx(&osv);
-
     SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrl_handler, TRUE);
 
     if ((argc > 2) && (strcmp(argv[1], "file") && strcmp(argv[1], "unpack")))
@@ -4055,4 +3839,5 @@ int main(int argc, char **argv)
     }
     cleanup();
 }
+
 

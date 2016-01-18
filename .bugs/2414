@@ -1,0 +1,18 @@
+Title: Deletion of host's state files omitted in certain situations
+Component: wato
+State: open
+Date: 2015-12-04 15:37:30
+Targetversion: 1.2.6
+Class: bug
+
+If you delete a host via bulk delete, then all files (autochecks, counters, many other)
+are being correctly deleted via the automation delete-host. When you delete a single
+host or a folder, then this automation is *not* being called!
+
+Change:
+
+- Call the automation always
+- Improve performance by allowing a list of hosts to be specified rather then just one
+- Rename the automation in "delete-hosts"
+- Write a function that sorts the hosts by their site_ids and call the automation
+  once for each affected site.

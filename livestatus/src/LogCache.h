@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <time.h>
 #include <map>
-#include "Mutex.h"
+#include "mk/Mutex.h"
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
 class Logfile;
@@ -64,7 +64,6 @@ public:
 private:
     void scanLogfile(char *path, bool watch);
     _logfiles_t::iterator findLogfileStartingBefore(time_t);
-    void dumpLogfiles();
 };
 
 #endif // LogCache_h

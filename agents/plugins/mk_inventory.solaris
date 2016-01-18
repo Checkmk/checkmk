@@ -46,12 +46,6 @@ then
     echo "<<<solaris_uname:sep(61):persist($UNTIL)>>>"
     uname -X
 
-    if type prtdiag > /dev/null; then
-        echo "<<<solaris_prtdiag:sep(10):persist($UNTIL)>>>"
-        serial=`sneep -t serial`;echo "SerialNumber: $serial"
-        prtdiag -v
-    fi
-
     if type psrinfo > /dev/null; then
         echo "<<<solaris_psrinfo:persist($UNTIL)>>>"
         psrinfo -p -v

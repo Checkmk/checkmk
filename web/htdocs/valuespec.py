@@ -451,7 +451,7 @@ class TextUnicode(TextAscii):
         TextAscii.__init__(self, **kwargs)
 
     def from_html_vars(self, varprefix):
-        return html.var_utf8(varprefix, "").strip()
+        return html.get_unicode_input(varprefix, "").strip()
 
     def validate_datatype(self, value, varprefix):
         if type(value) not in [ str, unicode ]:
@@ -612,6 +612,8 @@ class Hostname(TextAscii):
         self._regex = re.compile('^[-0-9a-zA-Z_.]+$')
         self._regex_error = _("Please enter a valid hostname or IPv4 address. "
                               "Only only letters, digits, dash, underscore and dot are allowed.")
+        if "allow_empty" not in kwargs:
+            self._allow_empty = False
 
 class AbsoluteDirname(TextAscii):
     def __init__(self, **kwargs):
@@ -620,18 +622,20 @@ class AbsoluteDirname(TextAscii):
         self._regex_error = _("Please enter a valid absolut pathname with / as a path separator.")
 
 
-# Valuespec for a HTTP Url (not HTTPS), that
-# automatically adds http:// to the value
+# Valuespec for a HTTP or HTTPS Url, that
+# automatically adds http:// to the value if no protocol has
+# been specified
 class HTTPUrl(TextAscii):
     def __init__(self, **kwargs):
+        kwargs.setdefault("size", 64)
         TextAscii.__init__(self, **kwargs)
         self._target = kwargs.get("target")
 
     def validate_value(self, value, varprefix):
         TextAscii.validate_value(self, value, varprefix)
         if value:
-            if not value.startswith("http://"):
-                raise MKUserError(varprefix, _("The URL must begin with http://"))
+            if not value.startswith("http://") and not value.startswith("https://"):
+                raise MKUserError(varprefix, _("The URL must begin with http:// or https://"))
         ValueSpec.custom_validate(self, value, varprefix)
 
     def from_html_vars(self, varprefix):
@@ -642,7 +646,7 @@ class HTTPUrl(TextAscii):
         return value
 
     def value_to_text(self, url):
-        if not url.startswith("http://"):
+        if not url.startswith("http://") and not value.startswith("https://"):
             url = "http://" + url
         try:
             parts = urlparse.urlparse(url)
@@ -658,6 +662,15 @@ class HTTPUrl(TextAscii):
         return '<a %shref="%s">%s</a>' % (
             (self._target and 'target="%s" ' % self._target or ""),
             html.attrencode(url), html.attrencode(text))
+
+def CheckMKVersion(**args):
+    args = args.copy()
+    regex_unstable = "(1\.[1234]\.(1|3|5|7|9|11|13|15)i[1-9](p[0-9]+)?)"
+    regex_stable = "(1\.[1234]\.(0|2|4|6|8|10|12|14)([bp][1-9]?[0-9]+)?)"
+    args["regex"] =  "(" + regex_unstable + "|" + regex_stable + ")"
+    args["regex_error"] = _("This is not a valid Check_MK version number")
+    return TextAscii(**args)
+
 
 class TextAreaUnicode(TextUnicode):
     def __init__(self, **kwargs):
@@ -701,7 +714,7 @@ class TextAreaUnicode(TextUnicode):
 
     # Overridded because we do not want to strip() here and remove '\r'
     def from_html_vars(self, varprefix):
-        text = html.var_utf8(varprefix, "").replace('\r', '')
+        text = html.get_unicode_input(varprefix, "").replace('\r', '')
         if text and not text.endswith("\n"):
             text += "\n" # force newline at end
         return text
@@ -1537,6 +1550,8 @@ class ListChoice(ValueSpec):
                   lambda id, val: val)
         self._toggle_all = kwargs.get("toggle_all", False)
         self._render_orientation = kwargs.get("render_orientation", "horizontal") # other: vertical
+        self._no_elements_text = kwargs.get("no_elements_text",
+                _("There are no elements defined for this selection"))
 
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
@@ -1556,6 +1571,10 @@ class ListChoice(ValueSpec):
 
     def render_input(self, varprefix, value):
         self.load_elements()
+        if not self._elements:
+            html.write(self._no_elements_text)
+            return
+
         if self._toggle_all:
             html.write("<a href=\"javascript:vs_list_choice_toggle_all('%s')\">%s</a>" %
                         (varprefix, _("Check / Uncheck all")))
@@ -1650,7 +1669,13 @@ class DualListChoice(ListChoice):
         self._custom_order = kwargs.get("custom_order", False)
         self._instant_add = kwargs.get("instant_add", False)
         self._enlarge_active = kwargs.get("enlarge_active", False)
-        self._rows = kwargs.get("rows", 5)
+        if "rows" in kwargs:
+            self._rows = kwargs.get("rows", 5)
+            self._autoheight = False
+        else:
+            self._rows = 5
+        self._size = kwargs.get("size") # Total with in ex
+
 
     def render_input(self, varprefix, value):
         self.load_elements()
@@ -1680,7 +1705,11 @@ class DualListChoice(ListChoice):
         select_func   = 'vs_duallist_switch(\'unselected\', \'%s\', %d);' % (varprefix, self._custom_order and 1 or 0)
         unselect_func = 'vs_duallist_switch(\'selected\', \'%s\', 1);' % varprefix
 
-        html.write('<table class="vs_duallist"><tr><td class="head">')
+        if self._size:
+            style = ' style="width: %dpx"' % (self._size * 6.4)
+        else:
+            style = ''
+        html.write('<table class="vs_duallist"%s><tr><td class="head">' % style)
         html.write(_('Available'))
         if not self._instant_add:
             html.write('<a href="javascript:%s" class="control add">&gt;</a>' % select_func)
@@ -1702,25 +1731,25 @@ class DualListChoice(ListChoice):
             onchange_unselected += ';vs_duallist_enlarge(\'unselected\', \'%s\')' % varprefix
 
         func = self._custom_order and html.select or html.sorted_select
-        func(varprefix + '_unselected', unselected,
-                           attrs = {
-                               'size'       : self._rows,
-                               'multiple'   : 'multiple',
-                               'style'      : self._autoheight and 'height:auto' or '',
-                               'ondblclick' : not self._instant_add and select_func or '',
-                           },
-                           onchange = onchange_unselected)
+        attrs = {
+            'foo'        : "bar",
+            'multiple'   : 'multiple',
+            'style'      : self._autoheight and 'height:auto' or "height: %dpx" % (self._rows * 16),
+            'ondblclick' : not self._instant_add and select_func or '',
+        }
+        func(varprefix + '_unselected', unselected, attrs = attrs, onchange = onchange_unselected)
         html.write('</td><td>')
-        func(varprefix + '_selected', selected,
-                           attrs = {
-                               'size'       : self._rows,
-                               'multiple'   : 'multiple',
-                               'style'      : self._autoheight and 'height:auto' or '',
-                               'ondblclick' : not self._instant_add and unselect_func or '',
-                           },
-                           onchange = onchange_selected)
+        func(varprefix + '_selected', selected, attrs = attrs, onchange = onchange_selected)
         html.write('</td></tr></table>')
         html.hidden_field(varprefix, '|'.join([k for k, v in selected]), id = varprefix, add_var = True)
+
+
+    def validate_value(self, value, varprefix):
+        try:
+            ListChoice.validate_value(self, value, varprefix)
+        except MKUserError, e:
+            raise MKUserError(e.varname + "_selected", e.message)
+
 
     def from_html_vars(self, varprefix):
         self.load_elements()
@@ -1737,6 +1766,7 @@ class DualListChoice(ListChoice):
                 if key in selected:
                     value.append(key)
         return value
+
 
 # A type-save dropdown choice with one extra field that
 # opens a further value spec for entering an alternative
@@ -2512,7 +2542,7 @@ class Alternative(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
-        self._match = kwargs.get("match") # custom match function
+        self._match = kwargs.get("match") # custom match function, returns index in elements
         self._style = kwargs.get("style", "radio") # alternative: "dropdown"
         self._show_alternative_title = kwargs.get("show_alternative_title")
 
@@ -3230,6 +3260,9 @@ class FileUpload(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._allow_empty = kwargs.get('allow_empty', True)
+        self._allowed_extensions = kwargs.get('allowed_extensions')
+        self._allow_empty_content= kwargs.get('allow_empty_content', True)
+
 
     def canonical_value(self):
         if self._allow_empty:
@@ -3237,17 +3270,67 @@ class FileUpload(ValueSpec):
         else:
             return ''
 
+
     def validate_value(self, value, varprefix):
-        if not self._allow_empty and (value == None or value[0] == ''):
+        file_name, mime_type, content = value
+
+        if not self._allow_empty and (value == None or file_name == ''):
             raise MKUserError(varprefix, _('Please select a file.'))
+
+        if not self._allow_empty_content and len(content) == 0:
+            raise MKUserError(varprefix, _('The selected file is empty. Please select a non-empty file.')
+)
+        if self._allowed_extensions != None:
+            matched = False
+            for extension in self._allowed_extensions:
+                if file_name.endswith(extension):
+                    matched = True
+                    break
+            if not matched:
+                raise MKUserError(varprefix, _("Invalid file name extension. Allowed are: %s")
+                                  % ", ".join(self._allowed_extensions))
+
         self.custom_validate(value, varprefix)
+
 
     def render_input(self, varprefix, value):
         html.upload_file(varprefix)
 
+
     def from_html_vars(self, varprefix):
         # returns a triple of (filename, mime-type, content)
         return html.uploaded_file(varprefix)
+
+
+
+class UploadOrPasteTextFile(Alternative):
+    def __init__(self, **kwargs):
+        file_title = kwargs.get("file_title", _("File"))
+        kwargs["elements"] = [
+            FileUpload(title = _("Upload %s") % file_title),
+            TextAreaUnicode(
+                title = _("Content of %s") % file_title,
+                cols=80,
+                rows="auto"),
+        ]
+
+        if kwargs.get("default_mode", "text") == "upload":
+            kwargs["match"] = lambda *args: 0
+        else:
+            kwargs["match"] = lambda *args: 1
+
+        kwargs.setdefault("style", "dropdown")
+        Alternative.__init__(self, **kwargs)
+
+
+    def from_html_vars(self, varprefix):
+        value = Alternative.from_html_vars(self, varprefix)
+        # Convert textarea value to format of upload field
+        if type(value) != tuple:
+            value = (None, None, value)
+        return value
+
+
 
 class IconSelector(ValueSpec):
     _categories = [

@@ -10,6 +10,7 @@
 
 
 using std::string;
+using std::wstring;
 
 
 char *lstrip(char *s)
@@ -82,32 +83,6 @@ char *next_word(char **line)
     return 0;
 }
 
-
-char *llu_to_string(unsigned long long value)
-{
-    static char buffer[64];
-
-    if (value == 0) {
-        strcpy(buffer, "0");
-        return buffer;
-    }
-
-    buffer[63] = 0;
-
-    char *write = buffer + 63;
-    while (value > 0) {
-        if (write <= buffer) {
-            strcpy(buffer, "(invalid)");
-            return buffer;
-        }
-        char digit = (value % 10) + '0';
-        *--write = digit;
-        value = value / 10;
-    }
-    return write;
-}
-
-
 unsigned long long string_to_llu(const char *s)
 {
     unsigned long long value = 0;
@@ -121,17 +96,6 @@ unsigned long long string_to_llu(const char *s)
     return value;
 }
 
-
-char *ipv4_to_text(uint32_t ip)
-{
-    static char text[32];
-    snprintf(text, 32, "%u.%u.%u.%u",
-            ip & 255,
-            ip >> 8 & 255,
-            ip >> 16 & 255,
-            ip >> 24);
-    return text;
-}
 
 void lowercase(char *s)
 {
@@ -154,6 +118,13 @@ int parse_boolean(char *value)
 }
 
 
+string to_utf8(const char *input)
+{
+    // this isn't right, the input is most likely in locat 8-bit encoding
+    return std::string(input);
+}
+
+
 string to_utf8(const wchar_t *input)
 {
     string result;
@@ -167,6 +138,29 @@ string to_utf8(const wchar_t *input)
 
     // real conversion
     WideCharToMultiByte(CP_UTF8, 0, input, -1, &result[0], required_size, NULL, NULL);
+
+    // strip away the zero termination. This is necessary, otherwise the stored string length
+    // in the string is wrong
+    result.resize(required_size - 1);
+
+    return result;
+}
+
+
+
+wstring to_utf16(const char *input)
+{
+    wstring result;
+    // preflight: how many bytes to we need?
+    int required_size = MultiByteToWideChar(CP_UTF8, 0, input, -1, NULL, 0);
+    if (required_size == 0) {
+        // conversion failure. What to do?
+        return wstring();
+    }
+    result.resize(required_size);
+
+    // real conversion
+    MultiByteToWideChar(CP_UTF8, 0, input, -1, &result[0], required_size);
 
     // strip away the zero termination. This is necessary, otherwise the stored string length
     // in the string is wrong
@@ -252,7 +246,7 @@ std::string get_win_error_as_string(DWORD error_id)
     //Free the buffer.
     LocalFree(messageBuffer);
 
-    return message;
+    return message + " (" + std::to_string(error_id) + ")";
 }
 #endif // WIN32
 

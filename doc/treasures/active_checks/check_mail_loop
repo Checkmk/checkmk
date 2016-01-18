@@ -51,6 +51,7 @@ OPTIONS:
                           (leave empty for anonymous SMTP)
   --smtp-password PW      Password to authenticate SMTP
   --smtp-tls              Use TLS over SMTP (disabled by default)
+  --imap-tls              Use TLS for IMAP authentification (disabled by default)
 
   --fetch-protocol PROTO  Set to "IMAP" or "POP3", depending on your mailserver
                           (defaults to IMAP)
@@ -92,7 +93,7 @@ OPTIONS:
 
 short_options = 'dh'
 long_options  = ['smtp-server=', 'smtp-port=', 'smtp-username=', 'smtp-password=',
-    'smtp-tls', 'fetch-protocol=', 'fetch-server=', 'fetch-port=', 'fetch-username=',
+    'smtp-tls', 'imap-tls', 'fetch-protocol=', 'fetch-server=', 'fetch-port=', 'fetch-username=',
     'fetch-password=', 'fetch-ssl', 'mail-from=', 'mail-to=', 'warning=', 'critical=',
     'connect-timeout=', 'delete-messages', 'help', 'status-dir=', 'status-suffix=', "debug", ]
 
@@ -119,6 +120,7 @@ fetch_port      = None
 fetch_user      = None
 fetch_pass      = None
 fetch_ssl       = False
+imap_tls        = False
 mail_from       = None
 mail_to         = None
 warning         = None
@@ -153,6 +155,8 @@ for o,a in opts:
         fetch_user = a
     elif o == '--fetch-password':
         fetch_pass = a
+    elif o == '--imap-tls':
+        imap_tls = True
     elif o == '--fetch-ssl':
         fetch_ssl = True
     elif o == '--mail-from':
@@ -201,6 +205,7 @@ socket.setdefaulttimeout(conn_timeout)
 
 g_expected = {}
 g_mails    = {}
+g_obsolete = {}
 g_M        = None
 
 def load_expected_mails():
@@ -220,8 +225,24 @@ def save_expected_mails():
         lines.append('%d %s' % (ts, key))
     file(status_path, 'w').write('\n'.join(lines) + '\n')
 
+def add_starttls_support(self, keyfile = None, certfile = None):
+    import ssl
+    name = "STARTTLS"
+    typ, dat = self._simple_command(name)
+    if typ != 'OK':
+        raise self.error(dat[-1])
+
+    self.sock = ssl.wrap_socket(self.sock)
+    self.file = self.sock.makefile()
+
+    cap = 'CAPABILITY'
+    self._simple_command(cap)
+    if not cap in self.untagged_responses:
+        raise self.error('no CAPABILITY response from server')
+    self.capabilities = tuple(self.untagged_responses[cap][-1].upper().split())
+
 def fetch_mails():
-    global g_M
+    global g_M, g_obsolete
     if not g_expected:
         return # not expecting any mail, do not check for mails
 
@@ -239,12 +260,21 @@ def fetch_mails():
             for i in range(num_messages):
                 index = i+1
                 lines = g_M.retr(index)[1]
-                mails[i] = email.message_from_string("".join(lines))
+                mails[i] = email.message_from_string("\n".join(lines))
 
         else:
             # Get mails from IMAP mailbox
             fetch_class = fetch_ssl and imaplib.IMAP4_SSL or imaplib.IMAP4
-            g_M = fetch_class(fetch_server, fetch_port)
+
+            if imap_tls:
+                # starttls in imaplib is only available with python >= 3.2
+                # we are going to implement our own version
+                imaplib.Commands.update({"STARTTLS": ("NONAUTH")})
+                g_M = imaplib.IMAP4(fetch_server, fetch_port)
+                add_starttls_support(g_M)
+            else:
+                g_M = fetch_class(fetch_server, fetch_port)
+
             g_M.login(fetch_user, fetch_pass)
             g_M.select('INBOX', readonly=False) # select INBOX
             retcode, messages = g_M.search(None, 'NOT', 'DELETED')
@@ -257,12 +287,13 @@ def fetch_mails():
                         raise Exception('Failed to fetch mail %s (%s). Available messages: %r' % (num, parse_exception(e), messages))
 
         # Now filter out the messages for this check
-        pattern = re.compile('(?:Re: )?Check_MK-Mail-Loop ([^\s]+) ([^\s]+)')
+        pattern = re.compile('(?:Re: |WG: )?Check_MK-Mail-Loop ([^\s]+) ([^\s]+)')
         for index, msg in mails.items():
             matches = pattern.match(msg.get('Subject', ''))
             if matches:
                 ts  = matches.group(1).strip()
                 key = matches.group(2).strip()
+
 
                 # extract received time
                 rx = msg.get('Received')
@@ -271,6 +302,12 @@ def fetch_mails():
                 else:
                     # use current time as fallback where no Received header could be found
                     rx_ts = int(time.time())
+
+                if "%s-%s" % (ts, key) not in g_expected:
+                    # Delete any "Check_MK-Mail-Loop" messages older than 24 hours, even if they are not in our list
+                    if delete_messages and int(time.time()) - rx_ts > 24 * 3600:
+                        g_obsolete[ts+'-'+key] = (index, rx_ts)
+                    continue
 
                 g_mails[ts+'-'+key] = (index, rx_ts)
 
@@ -370,11 +407,10 @@ def cleanup_mailbox():
     try:
         # Do not delete all messages in the inbox. Only the ones which were
         # processed before! In the meantime there might be occured new ones.
-        for ident, (mail_index, recv_ts) in g_mails.items():
+        for ident, (mail_index, recv_ts) in g_mails.items() + g_obsolete.items():
             if fetch_proto == 'POP3':
-                response = g_M.dele(ident)
-                response = None
-                if response != "+OK":
+                response = g_M.dele(mail_index + 1)
+                if not response.startswith("+OK"):
                     raise Exception("Response from server: [%s]" % response)
             else:
                 ty, data = g_M.store(mail_index, '+FLAGS', '\\Deleted')

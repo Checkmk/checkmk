@@ -276,7 +276,7 @@ def compute_fetch_oid(oid, suboid, column):
 
 def sanitize_snmp_encoding(columns):
     for index, column in enumerate(columns):
-        columns[index] = map(decode_incoming_string, column)
+        columns[index] = map(snmp_decode_string, column)
     return columns
 
 
@@ -529,22 +529,16 @@ def get_stored_snmpwalk(hostname, oid):
     else:
         return rowinfo
 
-# Helper function to be used in checks.  It applies a user-specified
-# character encoding in order to tranlate e.g. latin1 to utf8
 def snmp_decode_string(text):
     encoding = get_snmp_character_encoding(g_hostname)
     if encoding:
-        return text.decode(encoding).encode("utf-8")
+        return text.decode(encoding)
     else:
-        # Try to determine the current string encoding. In case a UTF-8
-        # decoding fails, we decode latin1 and encode it as UTF-8 again.
-        # When UTF-8 decoding works, we assume the string is already
-        # encoded in UTF-8 as we expect it to be.
+        # Try to determine the current string encoding. In case a UTF-8 decoding fails, we decode latin1.
         try:
-            text.decode('utf-8')
-            return text
+            return text.decode('utf-8')
         except:
-            return text.decode('latin1').encode('utf-8')
+            return text.decode('latin1')
 
 #   .--Classic SNMP--------------------------------------------------------.
 #   |        ____ _               _        ____  _   _ __  __ ____         |

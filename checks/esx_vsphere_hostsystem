@@ -374,6 +374,14 @@ def esx_vsphere_multipath_convert(info):
     data = zip(data[::2], data[1::2])
     paths = {}
     for path, state in data:
+        # ESX 6.0 uses a different format, e.g "vmhba32:C0:T0:L0 active"
+        if len(path.split(":")) == 4:
+            real_path = ":".join(path.split(":")[:3])
+            paths.setdefault(real_path, [])
+            # Note: There is no path type information available in these esx paths
+            paths[real_path].append((state, None))
+            continue
+
         path_tokens = path.split('-')
         if "." not in path_tokens[-1]:
             continue # invalid format / unknown type
@@ -384,6 +392,7 @@ def esx_vsphere_multipath_convert(info):
             if hw_type != 'unknown':
                 paths.setdefault(path_id, [])
                 paths[path_id].append((state, "%s/%s" % (path_type, hw_type)))
+
     return paths
 
 def inventory_esx_vsphere_hostsystem_multipath(info):
@@ -445,9 +454,14 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
                             state_values[2] = "(!)(more than %d)" % warn_max
 
             # Output message
-            message = "Type %s" % path_type
+            message = ""
+            if path_type:
+                message += "Type %s, " % path_type
+
+            element_text = []
             for element in "active", "dead", "disabled", "standby", "unknown":
-                message += ", %d %s%s" % ( state_infos[element][1], element, state_infos[element][2] )
+                element_text.append("%d %s%s" % ( state_infos[element][1], element, state_infos[element][2]))
+            message += ", ".join(element_text)
             break
     else:
         return 3, "Path not found in agent output"

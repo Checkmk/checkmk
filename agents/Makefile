@@ -40,8 +40,8 @@ usage:
 
 waitmax: waitmax.c
 	@if type diet >/dev/null ; then \
-	    echo "Compiling with diet (please ignore diet-warnings)..." ; \
-	    diet gcc -s -o waitmax waitmax.c ; \
+	    echo "Compiling with diet..." ; \
+	    diet gcc -s -Wall -Wextra -O3 -o waitmax waitmax.c ; \
 	else \
 	    echo "WARNING: your binary is not portable. Please compile " ; \
 	    echo "with dietlibc on 32-Bit to get portable statically " ; \
@@ -56,7 +56,7 @@ setversion:
 	if [ -d ../.git ]; then \
 	    git rm -f *.rpm *.deb || true ; \
 	fi
-	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
+	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
 	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms ; \
 	for agent in check_mk_agent.*; do \
 	    if [ "$$agent" != windows -a "$$agent" != plugins -a "$$agent" != hpux ] ; then \

@@ -39,13 +39,13 @@ class DownCommColumn : public ListColumn
     bool _is_service; // and not host
     bool _with_extra_info; // provides date and type
 public:
-    DownCommColumn(std::string name, std::string description, int indirect_offset, bool is_downtime, bool is_service, bool with_info, bool with_extra_info)
-        : ListColumn(name, description, indirect_offset), _is_downtime(is_downtime), _with_info(with_info), _is_service(is_service), _with_extra_info(with_extra_info) {}
-    int type() { return COLTYPE_LIST; }
-    void output(void *, Query *);
-    void *getNagiosObject(char *name);
-    bool isEmpty(void *data);
-    bool isNagiosMember(void *data, void *member);
+    DownCommColumn(std::string name, std::string description, int indirect_offset, bool is_downtime, bool is_service, bool with_info, bool with_extra_info, int extra_offset = -1)
+        : ListColumn(name, description, indirect_offset, extra_offset), _is_downtime(is_downtime), _with_info(with_info), _is_service(is_service), _with_extra_info(with_extra_info) {}
+    int type() override { return COLTYPE_LIST; }
+    void output(void *, Query *) override;
+    void *getNagiosObject(char *name) override;
+    bool isEmpty(void *data) override;
+    bool isNagiosMember(void *data, void *member) override;
 };
 
 #endif // DownCommColumn_h

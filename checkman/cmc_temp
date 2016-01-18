@@ -1,0 +1,19 @@
+title: Rittal CMC: Temperature
+agents: snmp
+catalog: hw/environment/rittal
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the temperature levels of Rittal devices
+ supporting the CMC MIB. The temperature levels can be configured (default to 45, 50).
+ The configured levels on the device can also get taken into account.
+
+item:
+ The sensor number: "1" or "2".
+
+perfdata:
+ One variable: the current temperature in degrees celsius.
+
+inventory:
+ There are always two temperature sensors detected. Creates one service for each sensor.
+

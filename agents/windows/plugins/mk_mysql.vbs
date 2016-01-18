@@ -94,6 +94,15 @@ For Each instance In instances.Keys
     pos = InStrRev(output, vbCrLf, Len(output)-1)
     conn_args = Mid(output, pos+2, Len(output)-pos-4)
 
+    Dim RegEx : Set RegEx = New RegExp
+    RegEx.Pattern = "(--port=.*?) "
+
+    If RegEx.Test(conn_args) Then
+        conn_args = RegEx.Execute(conn_args)(0).SubMatches(0)
+    Else
+        conn_args = ""
+    End If
+
     ' Now we try to construct a mysql.exe client command which is able to connect to this database
     ' based on the command uses by the database service.
     ' In our development setup, where MySQL 5.6 has been used, the server command is:
@@ -101,7 +110,8 @@ For Each instance In instances.Keys
     ' To get the client command we simply need to replace mysqld.exe with mysql.exe, remove the
     ' my.ini and instance name from the end of the command and add our config as --defaults-extra-file.
     cmd = instances.Item(instance)
-    cmd = Replace(cmd, "mysqld.exe", "mysql.exe")
+    cmd = Replace(cmd, "mysqld""", "mysql""")
+    cmd = Replace(cmd, "mysql""", "mysql.exe""")
     cmd = Left(cmd, InStr(cmd, "mysql.exe""")+9)
     If cfg_file <> "" Then
         cmd = cmd & " --defaults-extra-file=""" & cfg_file & """"

@@ -25,16 +25,19 @@
 #ifndef DoublePointerColumn_h
 #define DoublePointerColumn_h
 
+#include "config.h" // IWYU pragma: keep
 #include "DoubleColumn.h"
 
-class DoublePointerColumn : public DoubleColumn
-{
+class DoublePointerColumn : public DoubleColumn {
     double *_number;
+
 public:
-    DoublePointerColumn(std::string name, std::string description, double *number)
-        : DoubleColumn(name, description, -1), _number(number) {}
+    DoublePointerColumn(std::string name, std::string description,
+                        double *number, int indirect_offset = -1, int extra_offset = -1)
+        : DoubleColumn(name, description, indirect_offset, extra_offset), _number(number)
+    {
+    }
     double getValue(void *) { return *_number; }
 };
-
 
 #endif // DoublePointerColumn_h

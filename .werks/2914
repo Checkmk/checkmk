@@ -1,0 +1,11 @@
+Title: hr_cpu: fixed check not being applied on some systems
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452172518
+Class: fix
+
+both hr_cpu and ucd_cpu_util prioritised the other in their
+scan function so that if both sections were available,
+neither got used.

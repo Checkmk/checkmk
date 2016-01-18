@@ -46,16 +46,16 @@ char *strip(char *s);
 std::vector<const char*> split_line(char *pos, int (*split_pred)(int));
 char *next_word(char **line);
 
-char *llu_to_string(unsigned long long value);
 unsigned long long string_to_llu(const char *s);
-
-char *ipv4_to_text(uint32_t ip);
 
 void lowercase(char *s);
 
 int parse_boolean(char *value);
 
+std::string to_utf8(const char *input);
 std::string to_utf8(const wchar_t *input);
+
+std::wstring to_utf16(const char *input);
 
 // case insensitive compare
 bool ci_equal(const std::string &lhs, const std::string &rhs);
@@ -63,6 +63,24 @@ bool ci_equal(const std::string &lhs, const std::string &rhs);
 // Do a simple pattern matching with the jokers * and ?.
 // This is case insensitive (windows-like).
 bool globmatch(const char *pattern, const char *astring);
+
+template <typename T>
+std::basic_string<T> join(const std::vector<std::basic_string<T>> &input, const T *sep)
+{
+    std::basic_ostringstream<T> stream;
+    bool first = true;
+
+    for (const std::basic_string<T> &val : input) {
+        if (!first) {
+            stream << sep;
+        } else {
+            first = false;
+        }
+        stream << val;
+    }
+    return stream.str();
+}
+
 
 #ifdef _WIN32
 std::string get_win_error_as_string(DWORD error_id = ::GetLastError());

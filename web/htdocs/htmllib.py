@@ -46,6 +46,7 @@
 #    directly when reading from file or URL.
 
 import time, os, pwd, urllib, random, re, __builtin__
+from guitester import GUITester
 
 try:
     import simplejson as json
@@ -77,8 +78,9 @@ class HTML:
 
 __builtin__.HTML = HTML
 
-class html:
+class html(GUITester):
     def __init__(self):
+        GUITester.__init__(self)
         self.user = None
         self.user_errors = {}
         self.focus_object = None
@@ -179,7 +181,15 @@ class html:
 
     def flush(self):
         if self.plugged:
-            self.lowlevel_write(self.plugged_text)
+            text = self.plugged_text
+
+            # encode when really writing out the data. Not when writing plugged,
+            # because the plugged code will be handled somehow by our code. We
+            # only encode when leaving the pythonic world.
+            if type(text) == unicode:
+	        text = text.encode("utf-8")
+
+            self.lowlevel_write(text)
             self.plugged_text = ''
 
     def drain(self):
@@ -237,7 +247,7 @@ class html:
         self.write('<form id="form_%s" name="%s" class="%s" action="%s" method="%s"%s%s>\n' %
                    (enc_name, enc_name, enc_name, self.attrencode(action), self.attrencode(method),
                     enctype, onsubmit))
-        self.hidden_field("filled_in", name)
+        self.hidden_field("filled_in", name, add_var=True)
         if add_transid:
             self.hidden_field("_transid", str(self.get_transid()))
         self.hidden_fields(self.global_vars)
@@ -342,11 +352,13 @@ class html:
     def button(self, *args):
         self.image_button(*args)
 
+
     def raw_button(self, varname, title, cssclass=""):
         self.write("<input onfocus=\"if (this.blur) this.blur();\" "
                    "type=\"submit\" name=\"%s\" id=\"%s\" value=\"%s\" "
                    "class=\"%s\" />\n" % \
-                   ( varname, varname, title, cssclass))
+                   (varname, varname, title, cssclass))
+        self.add_form_var(varname)
 
 
     def buttonlink(self, href, text, add_transid=False, obj_id='', style='', title='', disabled=''):
@@ -466,6 +478,7 @@ class html:
         self.context_buttons_open = False
 
     def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title='', fkey=None):
+        self.guitest_record_output("context_button", (title, url, icon))
         title = self.attrencode(title)
         display = "block"
         if bestof:
@@ -598,11 +611,14 @@ class html:
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
     def select(self, varname, choices, deflt="", onchange=None, attrs = {}):
-        current = self.var_utf8(varname, deflt)
+        current = self.get_unicode_input(varname, deflt)
         onchange_code = onchange and " onchange=\"%s\"" % (onchange) or ""
         attrs.setdefault('size', 1)
         attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
 
+        error = self.user_errors.get(varname)
+        if error:
+            self.write("<x class=\"inputerror\">")
         self.write("<select%s name=\"%s\" id=\"%s\"%s>\n" %
                              (onchange_code, varname, varname, attributes))
         for value, text in choices:
@@ -612,6 +628,8 @@ class html:
             self.write("<option value=\"%s\"%s>%s</option>\n" %
                 (self.attrencode(value), sel, self.attrencode(text)))
         self.write("</select>\n")
+        if error:
+            self.write("<x class=\"inputerror\">")
         if varname:
             self.form_vars.append(varname)
 
@@ -724,6 +742,15 @@ class html:
             # Form filled in but variable missing -> Checkbox not checked
             return False
 
+
+    def get_unicode_input(self, varname, deflt = None):
+        try:
+            return self.var_utf8(varname, deflt)
+        except UnicodeDecodeError:
+            raise MKUserError(varname, _("The given text is wrong encoded. "
+                                         "You need to provide a UTF-8 encoded text."))
+
+
     def datetime_input(self, varname, default_value, submit=None):
         try:
             t = self.get_datetime_input(varname)
@@ -802,6 +829,7 @@ class html:
             self.default_html_headers()
             self.write('<title>')
             self.write(self.attrencode(title))
+            self.guitest_record_output("page_title", title)
             self.write('</title>\n')
 
             # If the variable _link_target is set, then all links in this page
@@ -988,20 +1016,21 @@ class html:
         else:
             self.status_icons[img] = tooltip
 
-    def render_popup_trigger(self, content, ident, what, data=None, url_vars=None):
-        src = '<div class="popup_trigger">\n'
+    def render_popup_trigger(self, content, ident, what, data=None, url_vars=None, style=None):
+        style = style and (' style="%s"' % style) or ""
+        src = '<div class="popup_trigger" id="popup_trigger_%s"%s>\n' % (ident, style)
         onclick = 'toggle_popup(event, this, \'%s\', \'%s\', %s, %s)' % \
                     (ident, what,
                      data and self.attrencode(json.dumps(data)) or 'null',
                      url_vars and "'"+self.urlencode_vars(url_vars)+"'" or 'null')
         src += '<a class="popup_trigger" href="javascript:void(0)" onclick="%s">\n' % onclick
         src += content
-        src += '</a>\n'
+        src += '</a>'
         src += '</div>\n'
         return src
 
-    def popup_trigger(self, content, ident, what, data=None, url_vars=None):
-        self.write(self.render_popup_trigger(content, ident, what, data, url_vars))
+    def popup_trigger(self, *args, **kwargs):
+        self.write(self.render_popup_trigger(*args, **kwargs))
 
     def write_status_icons(self):
         self.icon_button(self.makeuri([]), _("URL to this frame"),
@@ -1047,6 +1076,9 @@ class html:
                 self.write("<div>%s: %.1fms</div>" % (name, duration * 1000))
             self.write('</div>')
 
+    def show_info(self, msg):
+        self.message(msg, 'message')
+
     def show_error(self, msg):
         self.message(msg, 'error')
 
@@ -1075,6 +1107,8 @@ class html:
                 self.write('</center>')
         else:
             self.write('%s: %s\n' % (prefix, self.strip_tags(msg)))
+
+        self.guitest_record_output("message", (what, msg))
 
     def show_localization_hint(self):
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
@@ -1137,6 +1171,10 @@ class html:
             return val.decode("utf-8")
         else:
             return val
+
+
+    def all_vars(self):
+        return self.vars
 
     # Return all values of a variable that possible occurs more
     # than once in the URL. note: self.listvars does contain those
@@ -1266,7 +1304,11 @@ class html:
             return False
 
         # Now check, if this id is a valid one
-        return id in self.load_transids()
+        if id in self.load_transids():
+            self.guitest_set_transid_valid()
+            return True
+        else:
+            return False
 
     # Checks, if the current page is a transation, i.e. something
     # that is secured by a transid (such as a submitted form)
@@ -1303,6 +1345,7 @@ class html:
             if self.mobile:
                 self.write('<center>')
             self.write("<div class=really>%s" % self.permissive_attrencode(msg))
+            # FIXME: When this confirms another form, use the form name from self.vars()
             self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
             self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", _("Yes!"), "really")
@@ -1371,7 +1414,7 @@ class html:
         msg = self.attrencode(obj)
         msg = re.sub(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;', r'<\1\2>', msg)
         # Also repair link definitions
-        return re.sub(r'&lt;a href=&quot;(.*)&quot;&gt;', r'<a href="\1">', msg)
+        return re.sub(r'&lt;a href=&quot;(.*?)&quot;&gt;', r'<a href="\1">', msg)
 
     # Encode HTML attributes: replace " with &quot;, also replace
     # < and >. This code is slow. Works on str and unicode without
@@ -1395,7 +1438,7 @@ class html:
     # on more complex pages!
     def urlencode_vars(self, vars):
         output = []
-        for varname, value in vars:
+        for varname, value in sorted(vars):
             if type(value) == int:
                 value = str(value)
             elif type(value) == unicode:
@@ -1595,12 +1638,23 @@ class html:
     #
     def set_cache(self, name, value):
         self.caches[name] = value
+        return value
+
+    def set_cache_default(self, name, value):
+        if self.is_cached(name):
+            return self.get_cached(name)
+        else:
+            return self.set_cache(name, value)
 
     def is_cached(self, name):
         return name in self.caches
 
     def get_cached(self, name):
         return self.caches.get(name)
+
+    def del_cache(self, name):
+        if name in self.caches:
+            del self.caches[name]
 
     def measure_time(self, name):
         self.times.setdefault(name, 0.0)

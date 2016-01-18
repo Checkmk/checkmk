@@ -55,6 +55,16 @@ Boston, MA 02110-1301 USA.
     background-color: #73a1b4;
 }
 
+/* Tables renderes in forms. */
+.wato table.nform table.data {
+    box-shadow: 1px 1px 2px #444;
+}
+
+.wato table.nform table.data th {
+    background-color: #527280;
+}
+
+
 
 .wato th.left {
     border-left-style: none;
@@ -283,11 +293,11 @@ table.validationerror img {
 
 .wato div.folderpath li select {
     padding: 2px 0px 2px 4px;
-    background-color: #7399ba;
+    background-color: #6da1b8;
     margin: 0;
     color: #fff;
     font-weight: normal;
-    font-size: 8pt;
+    font-size: 9pt;
     border-style: none;
     position: relative;
     right: -6px;
@@ -378,7 +388,7 @@ table.validationerror img {
     right: 47px;
 }
 
-.wato div.floatfolder .move {
+.wato div.floatfolder div.popup_trigger {
     position: absolute;
     top: 20px;
     right: 25px;
@@ -395,6 +405,7 @@ table.validationerror img {
     bottom: 23px;
     left: 20px;
     width: 140px;
+    width: 1140px;
     color: #bde;
     overflow:hidden;
     white-space: nowrap;
@@ -430,15 +441,12 @@ table.validationerror img {
     vertical-align: middle;
 }
 
-.wato div.popup.move_dialog {
-    position: relative;
-    left:105px;
-    top:35px;
-    height: 190px;
+.wato div.popup_menu {
+    min-width: 137px;
 }
 
-.wato div.popup.move_dialog select[multiple] {
-    height: 170px;
+.wato div.popup_menu select {
+    height: auto;
 }
 
 .wato div.hoverarea {

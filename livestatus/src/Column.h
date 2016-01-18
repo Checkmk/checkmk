@@ -45,22 +45,24 @@ class Column
 {
     std::string _name;
     std::string _description;
-public:
     int _indirect_offset;
     int _extra_offset;
+    int _extra_extra_offset;
 
 public:
-    Column(std::string name, std::string description, int indirect_offset);
+    Column(std::string name, std::string description, int indirect_offset,
+           int extra_offset, int extra_extra_offset = -1);
     virtual ~Column() {}
+
     const char *name() const { return _name.c_str(); }
     const char *description() const { return _description.c_str(); }
+    void *shiftPointer(void *data);
+
     virtual std::string valueAsString(void *, Query *) { return "invalid"; }
     virtual int type() = 0;
     virtual void output(void *data, Query *) = 0;
     virtual bool mustDelete() { return false; } // true for dynamic Columns to be deleted after Query
     virtual Filter *createFilter(int, char *) { return 0; }
-    void *shiftPointer(void *data);
-    void setExtraOffset(int o) { _extra_offset = o; }
 };
 
 #endif // Column_h

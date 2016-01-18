@@ -24,20 +24,18 @@
 
 #include "Query.h"
 #include <ctype.h>
-#include <errno.h>
 #include <math.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
 #include <syslog.h>
 #include <utility>
+#include <vector>
 #include "Aggregator.h"
 #include "Column.h"
 #include "Filter.h"
 #include "InputBuffer.h"
-#include "Mutex.h"
 #include "NegatingFilter.h"
 #include "NullColumn.h"
 #include "OringFilter.h"
@@ -55,22 +53,15 @@ extern int g_debug_level;
 extern unsigned long g_max_response_size;
 extern int g_data_encoding;
 
-using mk::lock_guard;
-using mk::mutex;
 using std::string;
-
-namespace {
-
-mutex g_wait_mutex;
-
-};
+using std::vector;
 
 Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
     _output(output),
     _table(table),
     _auth_user(0),
     _wait_timeout(0),
-    _wait_trigger(WT_NONE),
+    _wait_trigger(0),
     _wait_object(0),
     _field_separator(";"),
     _dataset_separator("\n"),
@@ -88,7 +79,9 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
     while (input->moreLines())
     {
         string line = input->nextLine();
-        char *buffer = (char *)line.c_str();
+        vector<char> line_copy(line.begin(), line.end());
+        line_copy.push_back(0);
+        char *buffer = &line_copy[0];
         rstrip(buffer);
         if (g_debug_level > 0)
             logger(LG_INFO, "Query: %s", buffer);
@@ -732,16 +725,14 @@ void Query::parseWaitTriggerLine(char *line)
         _output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitTrigger: missing keyword");
         return;
     }
-
-    for (unsigned i=0; i < WT_NUM_TRIGGERS; i++)
-    {
-        if (!strcmp(value, wt_names[i])) {
-            _wait_trigger = i;
-            return;
-        }
+    struct trigger *t = trigger_find(value);
+    if (t == 0) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "WaitTrigger: invalid trigger '%s'. Allowed are %s.",
+                          value, trigger_all_names());
+        return;
     }
-    _output->setError(RESPONSE_CODE_INVALID_HEADER,
-            "WaitTrigger: invalid trigger '%s'. Allowed are %s.", value, WT_ALLNAMES);
+    _wait_trigger = t;
 }
 
 void Query::parseWaitObjectLine(char *line)
@@ -971,7 +962,7 @@ void Query::finish()
                 delete aggr[i]; // not needed any more
             }
             outputDatasetEnd();
-            delete aggr;
+            delete[] aggr;
         }
     }
 
@@ -1107,22 +1098,6 @@ void Query::outputUnicodeEscape(unsigned value)
     char buf[8];
     snprintf(buf, sizeof(buf), "\\u%04x", value);
     _output->addBuffer(buf, 6);
-}
-
-void Query::outputHostService(const char *host_name, const char *service_description)
-{
-    if (_output_format == OUTPUT_FORMAT_CSV) {
-        outputString(host_name);
-        _output->addBuffer(_host_service_separator.c_str(), _host_service_separator.size());
-        outputString(service_description);
-    }
-    else {
-        _output->addChar('[');
-        outputString(host_name);
-        _output->addChar(',');
-        outputString(service_description);
-        _output->addChar(']');
-    }
 }
 
 void Query::outputBlob(const char *buffer, int size)
@@ -1326,7 +1301,7 @@ void Query::doWait()
 {
     // If no wait condition and no trigger is set,
     // we do not wait at all.
-    if (_wait_condition.numFilters() == 0 && _wait_trigger == WT_NONE)
+    if (_wait_condition.numFilters() == 0 && _wait_trigger == 0)
         return;
 
     // If a condition is set, we check the condition. If it
@@ -1341,8 +1316,8 @@ void Query::doWait()
 
     // No wait on specified trigger. If no trigger was specified
     // we use WT_ALL as default trigger.
-    if (_wait_trigger == WT_NONE)
-        _wait_trigger = WT_ALL;
+    if (_wait_trigger == 0)
+        _wait_trigger = trigger_all();
 
     struct timeval now;
     gettimeofday(&now, NULL);
@@ -1358,14 +1333,12 @@ void Query::doWait()
         if (_wait_timeout == 0) {
             if (g_debug_level >= 2)
                 logger(LG_INFO, "Waiting unlimited until condition becomes true");
-            lock_guard<mutex> lg(g_wait_mutex);
-            pthread_cond_wait(&g_wait_cond[_wait_trigger], g_wait_mutex.native_handle());
+            trigger_wait(_wait_trigger);
         }
         else {
             if (g_debug_level >= 2)
                 logger(LG_INFO, "Waiting %d ms or until condition becomes true", _wait_timeout);
-            lock_guard<mutex> lg(g_wait_mutex);
-            if (pthread_cond_timedwait(&g_wait_cond[_wait_trigger], g_wait_mutex.native_handle(), &timeout) == ETIMEDOUT) {
+            if (!trigger_wait_until(_wait_trigger, &timeout)) {
                 if (g_debug_level >= 2)
                     logger(LG_INFO, "WaitTimeout after %d ms", _wait_timeout);
                 return; // timeout occurred. do not wait any longer

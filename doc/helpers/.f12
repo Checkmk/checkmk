@@ -1,0 +1,4 @@
+#!/bin/bash
+SITE=${SITE:-$(cat ../../.site 2>/dev/null || true)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+sudo install -m 755 guitest /omd/sites/$SITE/bin/guitest

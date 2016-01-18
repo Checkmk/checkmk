@@ -66,6 +66,11 @@ class html_mod_python(htmllib.html):
         self.set_output_format(self.var("output_format", "html"))
 
 
+    def guitest_fake_login(self, user_id):
+        config.login(user_id)
+        self.user = user_id
+
+
     def verify_not_using_threaded_mpm(self):
         if apache.mpm_query(apache.AP_MPMQ_IS_THREADED) != 0:
             raise MKGeneralException(
@@ -80,6 +85,8 @@ class html_mod_python(htmllib.html):
     def init_modes(self):
         self.verify_not_using_threaded_mpm()
 
+        if config.guitests_enabled:
+            self.init_guitests()
         self.init_screenshot_mode()
         self.init_debug_mode()
         self.set_buffering(config.buffered_http_stream)
@@ -147,6 +154,8 @@ class html_mod_python(htmllib.html):
     # Finish the HTTP request short before handing over to mod_python
     def finalize(self, is_error=False):
         self.live = None # disconnects from livestatus
+        self.finalize_guitests()
+
 
     def get_request_header(self, key, deflt=None):
         return self.req.headers_in.get(key, deflt)
@@ -340,6 +349,7 @@ def connect_to_livestatus():
         # Make lists of enabled and disabled sites
         enabled_sites = {}
         disabled_sites = {}
+
 
         for sitename, site in config.allsites().items():
             siteconf = config.user_siteconf.get(sitename, {})

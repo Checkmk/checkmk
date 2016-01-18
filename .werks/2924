@@ -1,0 +1,18 @@
+Title: WATO can now add contact groups from hosts also to services
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452779215
+Class: feature
+
+In WATO in a host or folder you can assign contact groups to hosts.
+The new checkbox <i>Always add host contact groups also to its services</i>
+allows you now to also assign these groups to the services of the host.
+Here is some explanation from the online help:
+
+<i>With this option contact groups that are added to hosts are always being
+added to services, as well. This only makes a difference if you have assigned
+other contact groups to services via rules in Host & Service Parameters. As
+long as you do not have any such rule a service always inherits all contact
+groups from its host.</i>

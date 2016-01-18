@@ -32,6 +32,7 @@
 #include <wbemidl.h>
 #include <vector>
 #include <memory>
+#include <sstream>
 
 
 std::string to_utf8(const wchar_t *string);
@@ -42,8 +43,9 @@ namespace wmi {
 
 struct ComException : public std::runtime_error {
     ComException(const std::string &message, HRESULT result);
+    static std::string resolveError(HRESULT result);
 private:
-    IErrorInfo *getErrorInfo();
+    static IErrorInfo *getErrorInfo();
     std::string toStringHex(HRESULT res);
 };
 
@@ -63,17 +65,20 @@ public:
     Variant(const VARIANT &val);
     ~Variant();
 
-    template <typename T> T get();
+    template <typename T> T get() const;
+
+    VARTYPE type() const;
 
 private:
 };
 
 
-template <> int Variant::get();
-template <> ULONG Variant::get();
-template <> ULONGLONG Variant::get();
-template <> std::string Variant::get();
-template <> std::wstring Variant::get();
+template <> int Variant::get() const;
+template <> bool Variant::get() const;
+template <> ULONG Variant::get() const;
+template <> ULONGLONG Variant::get() const;
+template <> std::string Variant::get() const;
+template <> std::wstring Variant::get() const;
 
 
 class ObjectWrapper {
@@ -108,7 +113,6 @@ private:
     // not implemented
     ObjectWrapper &operator=(const ObjectWrapper &reference);
 
-
     VARIANT getVarByKey(const wchar_t *key) const;
 
 };
@@ -127,7 +131,7 @@ template <typename T> T ObjectWrapper::get(const wchar_t *key) const
 
 class Result : public ObjectWrapper
 {
-    std::shared_ptr<IEnumWbemClassObject> _enumerator;
+    std::shared_ptr<IEnumWbemClassObject> _enumerator { NULL };
 
 public:
 
@@ -168,13 +172,12 @@ public:
     ~Helper();
 
     Result query(LPCWSTR query);
+    Result getClass(LPCWSTR className);
+
 
     ObjectWrapper call(ObjectWrapper &result, LPCWSTR method);
 
 private:
-
-    void initCOM();
-    void deinitCOM();
 
     // get a locator that is used to look up WMI namespaces
     IWbemLocator *getWBEMLocator();

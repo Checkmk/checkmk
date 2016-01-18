@@ -1927,10 +1927,9 @@ register_rule(group,
     "snmp_communities",
     Alternative(
         elements = [
-            TextAscii(
+            Password(
                 title = _("SNMP community (SNMP Versions 1 and 2c)"),
                 allow_empty = False,
-                attrencode = True,
             ),
             Tuple(
                 title = _("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
@@ -1993,6 +1992,7 @@ register_rule(group,
         choices = [
            ("utf-8", _("UTF-8") ),
            ("latin1" ,_("latin1")),
+           ("cp437" ,_("cp437")),
            ]
         )),
 
@@ -2033,7 +2033,7 @@ register_rule(group,
         elements = [
             ( "timeout",
               Float(
-                  title = _("Timeout between retries"),
+                  title = _("Response timeout for a single query"),
                   help = _("After a request is sent to the remote SNMP agent we will wait up to this "
                            "number of seconds until assuming the answer get lost and retrying."),
                   default_value = 1,

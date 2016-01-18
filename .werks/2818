@@ -1,0 +1,10 @@
+Title: check_mail_loop: now only deletes expected mails and not all mails matching a specific pattern
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450346972
+Class: fix
+
+If configured, the mail loop check deleted any received mails matching the pattern "Check_MK-Mail-Loop 1450346942 269".
+With this fix it only deletes mails it was actually expecting and any left over mails older than 24 hours.

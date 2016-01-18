@@ -147,7 +147,7 @@ void LogCache::updateLogfileIndex()
         struct dirent *ent, *result;
         int len = offsetof(struct dirent, d_name)
             + pathconf(log_archive_path, _PC_NAME_MAX) + 1;
-        ent = (struct dirent *)malloc(len);
+        ent = static_cast<struct dirent *>(malloc(len));
 
         while (0 == readdir_r(dir, ent, &result) && result != 0)
         {
@@ -181,17 +181,6 @@ void LogCache::scanLogfile(char *path, bool watch)
     }
     else
         delete logfile;
-}
-
-void LogCache::dumpLogfiles()
-{
-    for (_logfiles_t::iterator it = _logfiles.begin();
-            it != _logfiles.end();
-            ++it)
-    {
-        Logfile *log = it->second;
-        debug("LOG %s from %d, %u messages, classes: 0x%04x", log->path(), log->since(), log->numEntries(), log->classesRead());
-    }
 }
 
 /* This method is called each time a log message is loaded

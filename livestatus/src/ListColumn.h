@@ -34,13 +34,13 @@ class Filter;
 class ListColumn : public Column
 {
 public:
-    ListColumn(std::string name, std::string description, int indirect_offset) :
-        Column(name, description, indirect_offset) {}
-    int type() { return COLTYPE_LIST; }
+    ListColumn(std::string name, std::string description, int indirect_offset, int extra_offset) :
+        Column(name, description, indirect_offset, extra_offset) {}
+    int type() override { return COLTYPE_LIST; }
     virtual void *getNagiosObject(char *name) = 0;
     virtual bool isNagiosMember(void *data, void *member) = 0;
     virtual bool isEmpty(void *data) = 0;
-    Filter *createFilter(int opid, char *value);
+    Filter *createFilter(int opid, char *value) override;
 };
 
 #endif // ListColumn_h

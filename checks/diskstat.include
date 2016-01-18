@@ -411,7 +411,7 @@ def check_diskstat_dict(item, params, disks):
             wait = disk["average_" + what]
             state, text, extraperf = check_levels(wait, what, params.get(what),
                                                   unit = "ms", scale = 0.001, statemarkers=False)
-            yield state, "Average %s: %.2f ms %s" % (what.title().replace("_", " "), wait * 1000, text), extraperf
+            yield state, "Average %s: %.2f ms%s" % (what.title().replace("_", " "), wait * 1000, text), extraperf
 
     # Average disk latency
     if "latency" in disk:

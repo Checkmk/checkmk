@@ -36,21 +36,22 @@ using namespace wmi;
 using namespace std;
 
 
-#ifdef UNICODE
-ComException::ComException(const string &message, HRESULT result)
-    : runtime_error(message + ": " + to_utf8(_com_error(result, getErrorInfo()).ErrorMessage())
-            + " (" + toStringHex(result) + ")")
+std::string ComException::resolveError(HRESULT result)
 {
+    switch (static_cast<ULONG>(result)) {
+        case WBEM_E_INVALID_NAMESPACE:  return "Invalid Namespace";
+        case WBEM_E_ACCESS_DENIED:      return "Access Denied";
+        case WBEM_E_INVALID_CLASS:      return "Invalid Class";
+        case WBEM_E_INVALID_QUERY:      return "Invalid Query";
+        default:  return to_utf8(_com_error(result, getErrorInfo()).ErrorMessage());
+    }
 }
 
-#else
+
 ComException::ComException(const string &message, HRESULT result)
-    : runtime_error(message + ": " + _com_error(result, getErrorInfo()).ErrorMessage()
-            + " (" + toStringHex(result) + ")")
+    : runtime_error(message + ": " + resolveError(result)  + " (" + toStringHex(result) + ")")
 {
 }
-
-#endif
 
 
 ComTypeException::ComTypeException(const string &message)
@@ -160,7 +161,6 @@ Result::Result(const Result &reference)
     : ObjectWrapper(NULL)
     , _enumerator(reference._enumerator)
 {
-    next();
 }
 
 
@@ -168,7 +168,13 @@ Result::Result(IEnumWbemClassObject *enumerator)
     : ObjectWrapper(NULL)
     , _enumerator(enumerator, releaseInterface)
 {
-    next();
+    if (!next()) {
+        // if the first enumeration fails the result is empty
+        // we abstract away two possible reasons:
+        //   a) The class doesn't exist at all
+        //   b) The result is indeed empty
+        _enumerator = NULL;
+    }
 }
 
 
@@ -240,7 +246,8 @@ bool Result::next()
     if (FAILED(res)) {
         // in this case the "current" object isn't changed to guarantee that the
         // Result remains valid
-        throw ComException("Failed to retrieve element", res);
+        //throw ComException("Failed to retrieve element", res);
+        return false;
     }
 
     if (numReturned == 0) {
@@ -254,7 +261,7 @@ bool Result::next()
 }
 
 
-template <> int Variant::get()
+template <> int Variant::get() const
 {
     switch (_value.vt) {
         case VT_I1: return _value.bVal;
@@ -268,7 +275,16 @@ template <> int Variant::get()
 }
 
 
-template <> ULONG Variant::get()
+template <> bool Variant::get() const
+{
+    switch (_value.vt) {
+        case VT_BOOL: return _value.boolVal;
+        default: throw ComTypeException(string("wrong value type requested: ") + to_string(_value.vt));
+    }
+}
+
+
+template <> ULONG Variant::get() const
 {
     switch (_value.vt) {
         case VT_UI1: return _value.cVal;
@@ -279,7 +295,7 @@ template <> ULONG Variant::get()
 }
 
 
-template <> ULONGLONG Variant::get()
+template <> ULONGLONG Variant::get() const
 {
     switch (_value.vt) {
         case VT_UI8: return _value.ullVal;
@@ -288,7 +304,7 @@ template <> ULONGLONG Variant::get()
 }
 
 
-template <> string Variant::get()
+template <> string Variant::get() const
 {
     switch (_value.vt) {
         case VT_BSTR: return to_utf8(_value.bstrVal);
@@ -297,20 +313,87 @@ template <> string Variant::get()
 }
 
 
-template <> wstring Variant::get()
+VARTYPE Variant::type() const
 {
+    return _value.vt;
+}
+
+
+template <> wstring Variant::get() const
+{
+    if (_value.vt & VT_ARRAY) {
+        return L"<array>";
+    }
+    if (_value.vt & VT_VECTOR) {
+        return L"<vector>";
+    }
+
     switch (_value.vt) {
-        case VT_BSTR: return wstring(_value.bstrVal);
-        default: throw ComTypeException(string("wrong value type requested: ") + to_string(_value.vt));
+        case VT_BSTR:
+            return wstring(_value.bstrVal);
+        case VT_I1:
+        case VT_I2:
+        case VT_I4:
+            return std::to_wstring(get<int>());
+        case VT_UI1:
+        case VT_UI2:
+        case VT_UI4:
+            return std::to_wstring(get<ULONG>());
+        case VT_UI8:
+            return std::to_wstring(get<ULONGLONG>());
+        case VT_BOOL:
+            return std::to_wstring(get<bool>());
+        case VT_NULL:
+            return L"";
+        default:
+            throw ComTypeException(string("wrong value type requested: ") + to_string(_value.vt));
     }
 }
+
+
+class COMManager {
+public:
+    static void init() {
+        // this is apparently thread safe in C++11 and in gcc even before that
+        // see §6.4 in C++11 standard or §6.7 in C++14
+        static COMManager s_Instance;
+    }
+
+    ~COMManager() {
+        CoUninitialize();
+    }
+private:
+    COMManager() {
+        HRESULT res = CoInitializeEx(0, COINIT_MULTITHREADED);
+        if (FAILED(res)) {
+            throw ComException("Failed to initialize COM", res);
+        }
+
+        res = CoInitializeSecurity(
+                NULL,                        // security descriptor
+                -1,                          // authentication
+                NULL,                        // authentication services
+                NULL,                        // reserved
+                RPC_C_AUTHN_LEVEL_DEFAULT,   // authentication level
+                RPC_C_IMP_LEVEL_IMPERSONATE, // impersonation level
+                NULL,                        // authentication info
+                EOAC_NONE,                   // additional capabilities
+                NULL                         // reserved
+                );
+        if (FAILED(res)) {
+            throw ComException("Failed to initialize COM security", res);
+        }
+    }
+private:
+};
 
 
 Helper::Helper(LPCWSTR path)
     : _locator(NULL)
     , _path(path)
 {
-    initCOM();
+    COMManager::init();
+
     _locator = getWBEMLocator();
     _services = connectServer(_locator);
 }
@@ -324,37 +407,6 @@ Helper::~Helper()
     if (_services != NULL) {
         _services->Release();
     }
-    deinitCOM();
-}
-
-
-void Helper::initCOM()
-{
-    HRESULT res = CoInitializeEx(0, COINIT_MULTITHREADED);
-    if (FAILED(res)) {
-        throw ComException("Failed to initialize COM", res);
-    }
-
-    res = CoInitializeSecurity(
-            NULL,                        // security descriptor
-            -1,                          // authentication
-            NULL,                        // authentication services
-            NULL,                        // reserved
-            RPC_C_AUTHN_LEVEL_DEFAULT,   // authentication level
-            RPC_C_IMP_LEVEL_IMPERSONATE, // impersonation level
-            NULL,                        // authentication info
-            EOAC_NONE,                   // additional capabilities
-            NULL                         // reserved
-            );
-    if (FAILED(res)) {
-        throw ComException("Failed to initialize COM security", res);
-    }
-}
-
-
-void Helper::deinitCOM()
-{
-    CoUninitialize();
 }
 
 
@@ -419,12 +471,30 @@ void Helper::setProxyBlanket(IWbemServices *services)
 Result Helper::query(LPCWSTR query)
 {
     IEnumWbemClassObject *enumerator = NULL;
+    // WBEM_FLAG_RETURN_IMMEDIATELY makes the call semi-synchronous which means we can
+    // return to caller immediately, iterating the result may break until data is available.
+    // WBEM_FLAG_FORWARD_ONLY allows wmi to free the memory of results already iterated,
+    // thus reducing memory usage
     HRESULT res = _services->ExecQuery(_bstr_t(L"WQL"), _bstr_t(query),
                                        WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
                                        NULL, &enumerator);
 
     if (FAILED(res)) {
         throw ComException(string("Failed to execute query \"") + to_utf8(query) + "\"", res);
+    }
+    return Result(enumerator);
+}
+
+extern void crash_log(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
+
+Result Helper::getClass(LPCWSTR className)
+{
+    IEnumWbemClassObject *enumerator = NULL;
+    HRESULT res = _services->CreateInstanceEnum(_bstr_t(className),
+                                       WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+                                       NULL, &enumerator);
+    if (FAILED(res)) {
+        throw ComException(string("Failed to enum class \"") + to_utf8(className) + "\"", res);
     }
     return Result(enumerator);
 }

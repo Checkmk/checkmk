@@ -34,8 +34,8 @@ class OffsetStringColumn : public StringColumn
 {
     int _offset;
 public:
-    OffsetStringColumn(std::string name, std::string description, int offset, int indirect_offset = -1)
-        : StringColumn(name, description, indirect_offset), _offset(offset) {}
+    OffsetStringColumn(std::string name, std::string description, int offset, int indirect_offset = -1, int extra_offset = -1)
+        : StringColumn(name, description, indirect_offset, extra_offset), _offset(offset) {}
     char *getValue(void *data);
     int offset() { return _offset; }
 };

@@ -732,6 +732,9 @@ def compute_availability(what, av_rawdata, avoptions):
 
 
 def pass_availability_filter(row, avoptions):
+    if row["considered_duration"] == 0:
+        return True
+
     for key, level in avoptions["av_filter_outages"].items():
         if level == 0.0:
             continue
@@ -976,6 +979,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
             if number and av_levels and sid in [ "ok", "up" ]:
                 css = "state%d" % check_av_levels(number, av_levels, entry["considered_duration"])
 
+            css = css + " narrow number"
             row["cells"].append((render_number(number, entry["considered_duration"]), css))
 
             # Statistics?
@@ -1017,6 +1021,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
             if number and av_levels and sid in [ "ok", "up" ]:
                 css = "state%d" % check_av_levels(number, av_levels, entry["considered_duration"])
 
+            css = css + " narrow number"
             summary_cells.append((render_number(number, entry["considered_duration"]), css))
             if sid in os_states:
                 for aggr in os_aggrs:
@@ -1247,7 +1252,7 @@ def find_next_choord(broken, scale):
             broken[1] = 1
             broken[0] += 1
         epoch = time.mktime(broken)
-        title = "%s %d" % (valuespec.month_names[broken[1]-1], broken[0])
+        title = "%s %d" % (month_names[broken[1]-1], broken[0])
 
     dst = broken[8]
     if old_dst == 1 and dst == 0:

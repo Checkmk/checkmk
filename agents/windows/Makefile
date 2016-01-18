@@ -27,9 +27,9 @@ SHELL         = /bin/bash
 VERSION       = 1.2.7i4
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i686-w64-mingw32-windres
-#COPTIONS      = -s -O2 -Wall -Wformat=2 -Werror -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO
+COPTIONS      = -s -O2 -Wall -Wformat=2 -Werror -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO
 # for debug builds
-COPTIONS      = -O0 -Wall -Werror -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -ggdb -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO
+#COPTIONS      = -O0 -Wall -Werror -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -ggdb -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO
 MKDIR         = mkdir -p
 
 ifeq ($(shell uname),Linux)
@@ -46,7 +46,7 @@ all: directories fix_linebreaks check_mk_agent.exe check_mk_agent-64.exe install
 
 setversion:
 	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' installer*.nsi ; \
-	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
+	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
 	rm check_mk_agent.exe check_mk_agent-64.exe check_mk_agent.msi ; \
 	make install_agent.exe install_agent-64.exe msi_installer
 
@@ -98,15 +98,15 @@ obj64/%.o: %.cc
 	$(CXX_64) -c $(COPTIONS) -o $@  $<
 
 
-check_mk_agent.unversioned.exe: obj/check_mk_agent.o obj/SettingsCollector.o obj/Configuration.o obj/Environment.o obj/stringutil.o obj/wmiHelper.o obj/ListenSocket.o
+check_mk_agent.unversioned.exe: obj/check_mk_agent.o obj/SettingsCollector.o obj/Configuration.o obj/Environment.o obj/stringutil.o obj/wmiHelper.o obj/ListenSocket.o obj/PerfCounter.o obj/Thread.o obj/OutputProxy.o obj/logging.o obj/Crypto.o
 	$(MAKE) inc_build_version
 	$(MAKE) check_mk_agent.res
-	$(CXX) $(COPTIONS) -o $@ $^ check_mk_agent.res -lwsock32 -lole32 -loleaut32 -lwbemuuid -lpsapi
+	$(CXX) $(COPTIONS) -o $@ $^ check_mk_agent.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi
 
-check_mk_agent-64.unversioned.exe: obj64/check_mk_agent.o obj64/SettingsCollector.o obj64/Configuration.o obj64/Environment.o obj64/stringutil.o obj64/wmiHelper.o obj64/ListenSocket.o
+check_mk_agent-64.unversioned.exe: obj64/check_mk_agent.o obj64/SettingsCollector.o obj64/Configuration.o obj64/Environment.o obj64/stringutil.o obj64/wmiHelper.o obj64/ListenSocket.o obj64/PerfCounter.o obj64/Thread.o obj64/OutputProxy.o obj64/logging.o obj64/Crypto.o
 	$(MAKE) inc_build_version
 	$(MAKE) check_mk_agent-64.res
-	$(CXX_64) $(COPTIONS) -o $@ $^ check_mk_agent-64.res -lwsock32 -lole32 -loleaut32 -lwbemuuid -lpsapi
+	$(CXX_64) $(COPTIONS) -o $@ $^ check_mk_agent-64.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi
 
 
 # -----------------------------------------------------------------------------
@@ -124,7 +124,7 @@ check_mk_agent-64.exe.versioned:
 
 
 %.exe: %.unversioned.exe %.exe.versioned
-	
+	true
 
 # -----------------------------------------------------------------------------
 # NSIS installer will be removed and replaced by multiarch MSI installer
@@ -157,7 +157,7 @@ nowin.exe: nowin.cc
 	$(CXX) -o $@ $<
 
 clean:
-	rm -f *.o *~ svn-*.tmp *.rc *.res obj/*.o obj64/*.o
+	rm -f *.o *.exe *~ svn-*.tmp *.rc *.res obj/*.o obj64/*.o
 	make -C msibuild clean
 
 mrproper: clean

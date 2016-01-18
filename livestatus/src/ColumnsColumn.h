@@ -43,8 +43,8 @@ class ColumnsColumn : public StringColumn
     TableColumns *_table_columns;
 
 public:
-    ColumnsColumn(std::string name, std::string description, int colcol, TableColumns *tablecols) :
-        StringColumn(name, description, -1), _colcol(colcol), _table_columns(tablecols) {}
+    ColumnsColumn(std::string name, std::string description, int colcol, TableColumns *tablecols, int indirect_offset = -1, int extra_offset = -1) :
+        StringColumn(name, description, indirect_offset, extra_offset), _colcol(colcol), _table_columns(tablecols) {}
     char *getValue(void *data);
 };
 

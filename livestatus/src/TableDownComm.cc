@@ -32,7 +32,6 @@
 #include "TableServices.h"
 #include "auth.h"
 #include "logger.h"
-#include "tables.h"
 
 using std::make_pair;
 
@@ -92,8 +91,8 @@ TableDownComm::TableDownComm(bool is_downtime)
                     "The time of expiry of this comment as a UNIX timestamp", (char *)&(ref->_expire_time) - (char *)ref));
     }
 
-    g_table_hosts->addColumns(this, "host_",    (char *)&(ref->_host)    - (char *)ref);
-    g_table_services->addColumns(this, "service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
+    TableHosts::addColumns(this, "host_",    (char *)&(ref->_host)    - (char *)ref);
+    TableServices::addColumns(this, "service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
 }
 
 TableDownComm::~TableDownComm()

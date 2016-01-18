@@ -1,0 +1,10 @@
+Title: On clean sites "X unacknowledged" werks are shown
+Component: multisite
+State: open
+Date: 2015-11-20 14:09:47
+Targetversion: 1.2.7
+Class: bug
+
+In fresh installed sites, all unacknowledged werks in this version need to be acknowledged
+right from the start. It is useless to let the user confirm changes when there is nothing
+whch has been changed because it is a clean new installation.

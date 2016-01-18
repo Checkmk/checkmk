@@ -62,6 +62,37 @@ def inventory_printer_supply_ricoh(parsed):
 
 
 def check_printer_supply_ricoh(item, params, parsed):
+    def handle_regular(supply_level):
+        infotext = "%.0f%%" % supply_level
+
+        if supply_level <= crit:
+            state = 2
+        elif supply_level <= warn:
+            state = 1
+        else:
+            state = 0
+
+        if state > 0:
+            infotext += " (warn/crit at %.0f%%/%.0f%%)" % (warn, crit)
+        return state, infotext, supply_level
+
+    def handle_negative(code):
+        # the following codes are based on the MP C2800
+        if code == -100:
+            # does not apply level. Since we don't get a proper reading
+            # the best we could do would be test against 0
+            return 2, "almost empty (<10%)", 0
+        elif code == -2:
+            # cartridge removed?
+            return 3, "unknown level", 0
+        elif code == -3:
+            # -3 = full is based on user claim, but other walks also show
+            # the device itself does not alert in this state
+            return 0, "100%", 100
+        else:
+            # unknown code
+            return handle_regular(0)
+
     if type(params) == tuple:
         params = { "levels" : params }
 
@@ -70,19 +101,10 @@ def check_printer_supply_ricoh(item, params, parsed):
     for name, supply_level in parsed.items():
         if item == name:
             if supply_level < 0:
-                supply_level = 0
-
-            infotext = "%.0f%%" % supply_level
-
-            if supply_level <= crit:
-                state = 2
-            elif supply_level <= warn:
-                state = 1
+                # negative levels usually have special meaning
+                state, infotext, supply_level = handle_negative(supply_level)
             else:
-                state = 0
-
-            if state > 0:
-                infotext += " (warn/crit at %.0f%%/%.0f%%)" % (warn, crit)
+                state, infotext, supply_level = handle_regular(supply_level)
 
             if "black" in name.lower():
                 perf_type = "black"

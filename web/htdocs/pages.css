@@ -465,6 +465,12 @@ img.iconbutton {
     padding: 0px 2px;
 }
 
+
+.wato a.checkbox img.iconbutton {
+    width: 60px;
+    height: 16px;
+}
+
 img.iconbutton:hover {
     opacity: 0.5;
     filter: alpha(opacity=50); /* For IE8 and earlier */
@@ -648,7 +654,7 @@ input.date, input.time {
     font-family: monospace;
 }
 
-.inputerror input, .inputerror textarea, .inputerror span.checkbox {
+.inputerror input, .inputerror textarea, .inputerror span.checkbox, .inputerror > select {
     background-color: #f84;
 }
 

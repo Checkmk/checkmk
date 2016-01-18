@@ -1,0 +1,10 @@
+Title: netapp_api_volumes: clustered volumes now longer show the current node name in the service description
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i4
+Date: 1448549213
+Class: feature
+
+Previously, the volume checks went UNKNOWN on a cluster failover.
+The service description for clustered volumes has changed from <i>"{node}.{volume_name}"</i> to <i>"{volume_name}"</i>.

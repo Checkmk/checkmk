@@ -26,7 +26,14 @@
 # gets optional socket as argument
 function do_query() {
   INSTANCE=$(echo $1|awk -v FS="=" '{print $2}')
-  INSTANCE_NAME="[[$(ps -ef|grep socket|grep "${INSTANCE}"|grep "[u]ser" | sed -ne 's/.*user=\([^ ]*\).*/\1/p')]]"
+  COUNT=$(ps -ef | grep [/]usr/sbin/mysqld | grep socket | wc -l)
+  if [ $COUNT -gt 1 ]
+  then
+      INSTANCE_NAME=$(ps -ef|grep socket|grep "${INSTANCE}"|grep "[u]ser" | sed -ne 's/.*socket=\([^.]*\).*/\1/p')
+      INSTANCE_NAME="[[${INSTANCE_NAME##*/}]]"
+  else
+      INSTANCE_NAME="[[$(ps -ef|grep socket|grep "${INSTANCE}"|grep "[u]ser" | sed -ne 's/.*user=\([^ ]*\).*/\1/p')]]"
+  fi
 
 
 

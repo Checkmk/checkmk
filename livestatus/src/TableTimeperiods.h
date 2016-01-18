@@ -37,7 +37,7 @@ public:
     TableTimeperiods();
     const char *name() { return "timeperiods"; }
     void answerQuery(Query *query);
-    void addColumns(Table *table, std::string prefix, int indirect_offset);
+    static void addColumns(Table *table, std::string prefix, int indirect_offset);
 };
 
 #endif // TableTimeperiods_h

@@ -1097,6 +1097,9 @@ function do_reload(url)
         if (window.location.href.indexOf("dashboard_dashlet.py") != -1)
             params["_reload"] = "1";
 
+        if (g_selection_enabled)
+            params["selection"] = g_selection;
+
         call_ajax(makeuri(params), {
             response_handler : handle_content_reload,
             error_handler    : handle_content_reload_error,
@@ -2442,6 +2445,11 @@ function handle_popup_close(event) {
     close_popup();
 }
 
+// trigger_obj: DOM object of trigger object (e.g. icon)
+// ident:       page global uinique identifier of the popup
+// what:        type of popup (used for constructing webservice url 'ajax_popup_'+what+'.py')
+// data:        json data which can be used by actions in popup menus
+// url_vars:    vars are added to ajax_popup_*.py calls for rendering the popup menu
 function toggle_popup(event, trigger_obj, ident, what, data, url_vars)
 {
     var url_vars = typeof(url_vars) === "undefined" ? '' : '?'+url_vars;

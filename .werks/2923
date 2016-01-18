@@ -1,0 +1,13 @@
+Title: SNMP community in WATO is now always displayed with ******
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452773424
+Class: feature
+
+This is due to security. SNMP communities are basically passwords and should
+not be shown in plaintext in the GUI. Of course this change makes it harder
+to read existing rules. If that is a problem for you then you can add the
+plaintext community to the comment field of a rule. Alas - security is always
+linked with inconveniance...

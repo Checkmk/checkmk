@@ -919,7 +919,7 @@ def mode_mkeventd_rule_packs(phase):
         home_button()
         mkeventd_changes_button()
         if config.may("mkeventd.edit"):
-            html.context_button(_("New Rule Pack"), make_link([("mode", "mkeventd_edit_rule_pack")]), "new")
+            html.context_button(_("New Rule Pack"), html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack")]), "new")
             html.context_button(_("Reset Counters"),
               make_action_link([("mode", "mkeventd_rule_packs"), ("_reset_counters", "1")]), "resetcounters")
         mkeventd_status_button()
@@ -1011,10 +1011,10 @@ def mode_mkeventd_rule_packs(phase):
             bottom_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr), ("_where", len(rule_packs)-1)])
             up_url     = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr), ("_where", nr-1)])
             down_url   = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr), ("_where", nr+1)])
-            edit_url   = make_link([("mode", "mkeventd_edit_rule_pack"), ("edit", nr)])
+            edit_url   = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("edit", nr)])
             # Cloning does not work. Rule IDs would not be unique. So drop it for a while
-            # clone_url  = make_link([("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
-            rules_url  = make_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack["id"])])
+            # clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
+            rules_url  = html.makeuri_contextless([("mode", "mkeventd_rules"), ("rule_pack", rule_pack["id"])])
 
             table.cell(_("Actions"), css="buttons")
             html.icon_button(edit_url, _("Edit properties of this rule pack"), "edit")
@@ -1149,8 +1149,8 @@ def mode_mkeventd_rules(phase):
         mkeventd_rules_button()
         mkeventd_changes_button()
         if config.may("mkeventd.edit"):
-            html.context_button(_("New Rule"), make_link([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id)]), "new")
-            html.context_button(_("Properties"), make_link([("mode", "mkeventd_edit_rule_pack"), ("edit", rule_pack_nr)]), "edit")
+            html.context_button(_("New Rule"), html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id)]), "new")
+            html.context_button(_("Properties"), html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("edit", rule_pack_nr)]), "edit")
         return
 
     if phase == "action":
@@ -1218,8 +1218,8 @@ def mode_mkeventd_rules(phase):
             bottom_url = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr), ("_where", len(rules)-1)])
             up_url     = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr), ("_where", nr-1)])
             down_url   = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr), ("_where", nr+1)])
-            edit_url   = make_link([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("edit", nr)])
-            clone_url  = make_link([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("clone", nr)])
+            edit_url   = html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("edit", nr)])
+            clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("clone", nr)])
 
             table.cell(_("Actions"), css="buttons")
             html.icon_button(edit_url, _("Edit this rule"), "edit")
@@ -1622,20 +1622,20 @@ def mkeventd_changes_button():
         buttontext = _("No EC-Changes")
         hot = False
         icon = "mkeventd"
-    html.context_button(buttontext, make_link([("mode", "mkeventd_changes")]), icon, hot)
+    html.context_button(buttontext, html.makeuri_contextless([("mode", "mkeventd_changes")]), icon, hot)
 
 def mkeventd_rules_button():
-    html.context_button(_("Rule Packs"), make_link([("mode", "mkeventd_rule_packs")]), "back")
+    html.context_button(_("Rule Packs"), html.makeuri_contextless([("mode", "mkeventd_rule_packs")]), "back")
 
 def mkeventd_config_button():
     if config.may("mkeventd.config"):
-        html.context_button(_("Settings"), make_link([("mode", "mkeventd_config")]), "configuration")
+        html.context_button(_("Settings"), html.makeuri_contextless([("mode", "mkeventd_config")]), "configuration")
 
 def mkeventd_status_button():
-    html.context_button(_("Server Status"), make_link([("mode", "mkeventd_status")]), "status")
+    html.context_button(_("Server Status"), html.makeuri_contextless([("mode", "mkeventd_status")]), "status")
 
 def mkeventd_mibs_button():
-    html.context_button(_("SNMP MIBs"), make_link([("mode", "mkeventd_mibs")]), "snmpmib")
+    html.context_button(_("SNMP MIBs"), html.makeuri_contextless([("mode", "mkeventd_mibs")]), "snmpmib")
 
 def mode_mkeventd_status(phase):
     if phase == "title":
@@ -1706,44 +1706,6 @@ def mode_mkeventd_status(phase):
         html.hidden_fields()
         html.end_form()
 
-def mode_mkeventd_edit_configvar(phasee):
-    if phase == 'title':
-        return _('Event Console Configuration')
-
-    elif phase == 'buttons':
-        home_button()
-        mkeventd_rules_button()
-        mkeventd_changes_button()
-        mkeventd_status_button()
-        return
-
-    vs = [ (v[1], v[2]) for v in g_configvar_groups[_("Event Console")] ]
-    pending_func = g_configvar_domains['mkeventd']['pending']
-    current_settings = load_configuration_settings()
-
-    if phase == 'action':
-        if not html.check_transaction():
-            return
-
-        for (varname, valuespec) in vs:
-            valuespec = dict(vs)[varname]
-            new_value = valuespec.from_html_vars(varname)
-            valuespec.validate_value(new_value, varname)
-            if current_settings.get(varname) != new_value:
-                msg = _("Changed configuration of %s to %s.") \
-                          % (varname, valuespec.value_to_text(new_value))
-                pending_func(msg)
-            current_settings[varname] = new_value
-
-        save_configuration_settings(current_settings)
-        config.load_config() # make new configuration active
-        return
-
-    html.begin_form('mkeventd_config', method = "POST", action = 'wato.py?mode=mkeventd_config')
-
-    html.button("_save", _("Save"))
-    html.hidden_fields()
-    html.end_form()
 
 def mode_mkeventd_config(phase):
     if phase == 'title':
@@ -1753,7 +1715,7 @@ def mode_mkeventd_config(phase):
         home_button()
         mkeventd_rules_button()
         mkeventd_changes_button()
-        html.context_button(_("Server Status"), make_link([("mode", "mkeventd_status")]), "status")
+        html.context_button(_("Server Status"), html.makeuri_contextless([("mode", "mkeventd_status")]), "status")
         return
 
     vs = [ (v[1], v[2]) for v in g_configvar_groups[_("Event Console")] ]
@@ -1803,7 +1765,7 @@ def mode_mkeventd_config(phase):
         defaultvalue = valuespec.default_value()
         value = current_settings.get(varname, valuespec.default_value())
 
-        edit_url = make_link([("mode", "mkeventd_edit_configvar"),
+        edit_url = html.makeuri_contextless([("mode", "mkeventd_edit_configvar"),
                               ("varname", varname), ("site", html.var("site", ""))])
         help_text  = type(valuespec.help())  == unicode and valuespec.help().encode("utf-8")  or valuespec.help() or ''
         title_text = type(valuespec.title()) == unicode and valuespec.title().encode("utf-8") or valuespec.title()

@@ -1,0 +1,14 @@
+title: MS Exchange Auto Discovery Performance
+agents: windows
+catalog: app/exchange
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the performance/load of the Auto Discovery service (automatic
+ configuration of Outlook clients).
+ Currently it measures the number of requests the service handles per second.
+
+ The check is always in state {OK}.
+
+inventory:
+ Exactly one item will be discovered.

@@ -25,16 +25,11 @@
 
 #include "ListenSocket.h"
 #include "stringutil.h"
+#include "logging.h"
 #include <winsock2.h>
+#include <ws2ipdef.h>
 #include <cassert>
 #include <cstring>
-
-
-#ifdef DEBUG
-extern void debug(char *text);
-#else
-#define debug(C)
-#endif
 
 
 static const size_t INET6_ADDRSTRLEN = 46;
@@ -129,10 +124,12 @@ SOCKET ListenSocket::init_listen_socket(int port)
         int error_id = ::WSAGetLastError();
         if (error_id == WSAEAFNOSUPPORT) {
             // this will happen on Win2k and WinXP without the ipv6 patch
-            debug("IPV6 not supported");
+            verbose("IPV6 not supported");
             _use_ipv6 = false;
             tmp_s = socket(AF_INET, SOCK_STREAM, 0);
-        } else {
+        }
+        if (tmp_s == INVALID_SOCKET) {
+            error_id = ::WSAGetLastError();
             fprintf(stderr, "Cannot create socket: %s (%d)\n",
                     get_win_error_as_string(error_id).c_str(), error_id);
             exit(1);
@@ -150,7 +147,7 @@ SOCKET ListenSocket::init_listen_socket(int port)
 
         int v6only = 0;
         if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&v6only, sizeof(int)) != 0) {
-            debug("failed to disable ipv6 only flag");
+            verbose("failed to disable ipv6 only flag");
             _supports_ipv4 = false;
         }
     } else {
@@ -174,21 +171,34 @@ SOCKET ListenSocket::init_listen_socket(int port)
 }
 
 
+sockaddr_storage ListenSocket::address(SOCKET connection) const
+{
+    sockaddr_storage addr;
+    int addrlen = sizeof(sockaddr_storage);
+    getpeername(connection, (sockaddr*)&addr, &addrlen);
+    return addr;
+}
+
+
 std::string ListenSocket::readableIP(SOCKET connection)
 {
     sockaddr_storage addr;
     int addrlen = sizeof(sockaddr_storage);
     getpeername(connection, (sockaddr*)&addr, &addrlen);
+    return readableIP(&addr);
+}
 
+std::string ListenSocket::readableIP(const sockaddr_storage *addr)
+{
     char ip_hr[INET6_ADDRSTRLEN];
 
-    if (addr.ss_family == AF_INET) {
-        sockaddr_in *s = (sockaddr_in*)&addr;
+    if (addr->ss_family == AF_INET) {
+        sockaddr_in *s = (sockaddr_in*)addr;
         u_char *ip = (u_char*)&s->sin_addr;
         snprintf(ip_hr, INET6_ADDRSTRLEN, "%u.%u.%u.%u",
                  ip[0], ip[1], ip[2], ip[3]);
-    } else if (addr.ss_family == AF_INET6) { // AF_INET6
-        sockaddr_in6 *s = (sockaddr_in6*)&addr;
+    } else if (addr->ss_family == AF_INET6) { // AF_INET6
+        sockaddr_in6 *s = (sockaddr_in6*)addr;
         uint16_t *ip = s->sin6_addr.u.Word;
         snprintf(ip_hr, INET6_ADDRSTRLEN, "%x:%x:%x:%x:%x:%x:%x:%x",
                  ip[0], ip[1], ip[2], ip[3], ip[4], ip[5], ip[6], ip[7]);
@@ -222,8 +232,7 @@ sockaddr *ListenSocket::create_sockaddr(int *addr_len)
 SOCKET ListenSocket::acceptConnection()
 {
     SOCKET connection;
-    // Loop for ever.
-    debug("Starting main loop.");
+    // Loop forever.
 
     fd_set fds;
     FD_ZERO(&fds);

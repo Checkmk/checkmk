@@ -31,9 +31,9 @@ from lib import *
 loaded_with_language = False
 
 # Load all view plugins
-def load_plugins():
+def load_plugins(force):
     global loaded_with_language
-    if loaded_with_language == current_language:
+    if loaded_with_language == current_language and not force:
         return
 
     config.declare_permission_section("bi", _("BI - Check_MK Business Intelligence"))
@@ -175,9 +175,12 @@ def reused_compilation():
 # Returns a sorted list of aggregation group names
 def aggregation_groups():
     if config.bi_precompile_on_demand:
+        migrate_bi_configuration() # convert bi_packs into legacy variables
         # on demand: show all configured groups
         group_names = set([])
         for a in config.aggregations + config.host_aggregations:
+            if a[0] == config.DISABLED:
+                continue
             if type(a[0]) == list:
                 group_names.update(a[0])
             else:
@@ -201,6 +204,8 @@ def log(s):
 # aggregation functions are still left as names. That way the forest
 # printable (and storable in Python syntax to a file).
 def compile_forest(user, only_hosts = None, only_groups = None):
+    migrate_bi_configuration()
+
     global g_cache, g_user_cache
     global used_cache, did_compilation
 
@@ -1414,9 +1419,9 @@ def page_all():
 
 
 def ajax_set_assumption():
-    site = html.var_utf8("site")
-    host = html.var_utf8("host")
-    service = html.var_utf8("service")
+    site = html.get_unicode_input("site")
+    host = html.get_unicode_input("host")
+    service = html.get_unicode_input("service")
     if service:
         key = (site, host, service)
     else:
@@ -1430,7 +1435,7 @@ def ajax_set_assumption():
     save_assumptions()
 
 def ajax_save_treestate():
-    path_id = html.var_utf8("path")
+    path_id = html.get_unicode_input("path")
     current_ex_level, path = path_id.split(":", 1)
     current_ex_level = int(current_ex_level)
 
@@ -1444,9 +1449,9 @@ def ajax_save_treestate():
     save_ex_level(current_ex_level)
 
 def ajax_render_tree():
-    aggr_group = html.var_utf8("group")
+    aggr_group = html.get_unicode_input("group")
     reqhosts = [ tuple(sitehost.split('#')) for sitehost in html.var("reqhosts").split(',') ]
-    aggr_title = html.var_utf8("title")
+    aggr_title = html.get_unicode_input("title")
     omit_root = not not html.var("omit_root")
     boxes = not not html.var("boxes")
     only_problems = not not html.var("only_problems")
@@ -1988,3 +1993,12 @@ def get_state_name(node):
             return host_state_names[node[0]['state']]
     else:
         return service_state_names[node[0]['state']]
+
+
+def migrate_bi_configuration():
+    if config.bi_packs:
+        for pack in config.bi_packs.values():
+            config.aggregations += pack["aggregations"]
+            config.host_aggregations += pack["host_aggregations"]
+            config.aggregation_rules.update(pack["rules"])
+        config.bi_packs = {}

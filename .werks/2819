@@ -1,0 +1,11 @@
+Title: netapp_api_if: now able to detect even more interfaces
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450363196
+Class: fix
+
+The check was unable to detect interfaces with no link-status information.
+Some interfaces (especially virtual ones) often simply report an operational-status.
+The check now uses the operational-status information in case the link-status is missing.

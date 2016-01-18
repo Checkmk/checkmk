@@ -763,13 +763,19 @@ register_rule(group,
                                 )
                             ),
                             ip_address_family_element,
-                            ( "ssl",
-                                FixedValue(
-                                    value = True,
-                                    totext = _("use SSL/HTTPS"),
-                                    title = _("Use SSL/HTTPS for the connection.")
-                                )
-                            ),
+                            ("ssl", Transform(
+                                DropdownChoice(
+                                    title = _("Use SSL/HTTPS for the connection"),
+                                    choices = [
+                                        ("auto",  _("Use SSL with auto negotiation")),
+                                        ("1",     _("Use SSL, enforce TLSv1")),
+                                        ("2",     _("Use SSL, enforce SSLv2")),
+                                        ("3",     _("Use SSL, enforce SSLv3")),
+                                    ],
+                                    default_value = "auto",
+                                ),
+                                forth = lambda x: x == True and "auto" or x,
+                            )),
                             ( "sni",
                                 FixedValue(
                                     value = True,
@@ -990,8 +996,8 @@ register_rule(group,
                             ),
                             ( "cert_host",
                                 TextAscii(
-                                    title = _("Check Cerficate of different IP / DNS Name"),
-                                    help = _("For each SSL cerficate on a host, a different IP address is needed. "
+                                    title = _("Check Certificate of different IP / DNS Name"),
+                                    help = _("For each SSL certificate on a host, a different IP address is needed. "
                                              "Here, you can specify the address if it differs from the  "
                                              "address from the host primary address."),
                                 ),
@@ -1738,7 +1744,7 @@ register_rule(group,
                  'the SMTP protocol and then tries to receive these mails back by querying the '
                  'inbox of a IMAP or POP3 mailbox. With this check you can verify that your whole '
                  'mail delivery progress is working.'),
-        optional_keys = ['smtp_server', 'smtp_tls', 'smtp_port', 'smtp_auth', 'connect_timeout', 'delete_messages', 'duration'],
+        optional_keys = ['smtp_server', 'smtp_tls', 'smtp_port', 'smtp_auth', 'imap_tls', 'connect_timeout', 'delete_messages', 'duration'],
         elements = [
             ('item', TextUnicode(
                 title = _('Name'),
@@ -1754,6 +1760,10 @@ register_rule(group,
             ('smtp_tls', FixedValue(True,
                 title = _('Use TLS over SMTP'),
                 totext = _('Encrypt SMTP communication using TLS'),
+            )),
+            ('imap_tls', FixedValue(True,
+                title = _('Use TLS for IMAP authentification'),
+                totext = _('IMAP authentification uses TLS'),
             )),
             ('smtp_port', Integer(
                 title = _('SMTP TCP Port to connect to'),

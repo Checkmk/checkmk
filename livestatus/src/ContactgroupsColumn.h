@@ -35,12 +35,12 @@ class ContactgroupsColumn : public ListColumn
 {
     int _offset;
 public:
-    ContactgroupsColumn(std::string name, std::string description, int offset, int indirect_offset)
-        : ListColumn(name, description, indirect_offset), _offset(offset) {}
-    void output(void *, Query *);
-    void *getNagiosObject(char *name); // return pointer to contact group
-    bool isNagiosMember(void *data, void *nagobject);
-    bool isEmpty(void *data);
+    ContactgroupsColumn(std::string name, std::string description, int offset, int indirect_offset, int extra_offset = -1)
+        : ListColumn(name, description, indirect_offset, extra_offset), _offset(offset) {}
+    void output(void *, Query *) override;
+    void *getNagiosObject(char *name) override; // return pointer to contact group
+    bool isNagiosMember(void *data, void *nagobject) override;
+    bool isEmpty(void *data) override;
 };
 
 #endif // ContactgroupsColumn_h

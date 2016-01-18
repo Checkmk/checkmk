@@ -79,7 +79,7 @@ OPTIONS:
 user   = None
 secret = None
 
-opt_timeout     = 60
+opt_timeout     = 120
 opt_debug       = False
 opt_dump_xml    = False
 opt_no_counters = []
@@ -250,7 +250,7 @@ def format_dict(the_dict, prefix = "", report = "all", delimeter = "\t", as_line
 #   +----------------------------------------------------------------------+
 
 nodes = []
-def query_nodes(what, only_first = False, node_attribute = "node-name"):
+def query_nodes(what, node_attribute = "node-name"):
     global nodes, section_errors
     if not nodes:
         node_query = NaElement("system-get-node-info-iter")
@@ -269,8 +269,6 @@ def query_nodes(what, only_first = False, node_attribute = "node-name"):
             continue
 
         results["%s.%s" % (what, node)] = response
-        if only_first:
-            break
 
     return results
 
@@ -467,19 +465,23 @@ if netapp_mode == "clustermode":
         print "<<<netapp_api_cpu:sep(9)>>>"
         print format_config(node_info, "cpu-info", "system-name", config_report = ["number-of-processors"],
                                                                   config_rename = {"number-of-processors": "num_processors"})
-        print format_config(system_info, "cpu-info", "node", config_scale = {"cpu-busytime": 10000},
+        print format_config(system_info, "cpu-info", "node", config_scale = {"cpu-busytime": 1000000},
                                                              config_report = ["cpu-busytime", "nvram-battery-status"],
                                                              config_rename = {"cpu-busytime": "cpu_busy"})
 
     # Cluster info
     # TODO: check is missing
     cluster_status = query_nodes("cf-status", node_attribute = "node")
+    ha_partners = {} # Used later on by environmental sensors
     if cluster_status:
         print "<<<netapp_api_cm_cluster:sep(9)>>>"
         for node, entry in cluster_status.items():
             # Small trick improve formatting
             container = NaElement("container")
             container.child_add(entry)
+            partner_name = entry.child_get_string("partner-name")
+            if partner_name:
+                ha_partners[node] = partner_name
             print format_config(container, "cluster", node.split(".",1)[1])
 
     # Disk
@@ -519,12 +521,14 @@ if netapp_mode == "clustermode":
                                                       "volume-state-attributes.state",
                                                       "volume-id-attributes.name",
                                                       "volume-id-attributes.node",
+                                                      "volume-id-attributes.msid",
                                                       "volume-inode-attributes.files-total",
                                                       "volume-inode-attributes.files-used" ],
                                     config_rename = { "volume-space-attributes.size-available": "size-available",
                                                       "volume-space-attributes.size-total"    : "size-total",
                                                       "volume-state-attributes.state"         : "state",
                                                       "volume-id-attributes.name"             : "name",
+                                                      "volume-id-attributes.msid"             : "msid",
                                                       "volume-id-attributes.node"             : "node",
                                                       "volume-inode-attributes.files-total"   : "files-total",
                                                       "volume-inode-attributes.files-used"    : "files-used" },
@@ -579,20 +583,29 @@ if netapp_mode == "clustermode":
         )
 
     # Environmental sensors
-    environment_info = query_nodes("storage-shelf-environment-list-info", only_first = True)
+    environment_info = query_nodes("storage-shelf-environment-list-info")
+    processed_nodes = []
     if environment_info:
-        channel_list = environment_info.values()[0].child_get("shelf-environ-channel-list")
-        for channel in channel_list.children_get():                                    # cycle channel list
-            shelf_list = channel.child_get("shelf-environ-shelf-list")
-            for shelf in channel.child_get("shelf-environ-shelf-list").children_get(): # cylcle shelf list
-                shelf_id = shelf.child_get_string("shelf-id")
-                for what, section in [ ("power-supply-list",    "netapp_api_psu"),
-                                       ("cooling-element-list", "netapp_api_fan"),
-                                       ("temp-sensor-list",     "netapp_api_temp") ]:
-                    print "<<<%s:sep(9)>>>" % section
-                    node = shelf.child_get(what)
-                    print format_config(node, what, shelf_id)
-
+        for node, values in environment_info.items():
+            if node in processed_nodes:
+                continue
+            channel_list = values.child_get("shelf-environ-channel-list")
+            for channel in channel_list.children_get():                                    # cycle channel list
+                shelf_list = channel.child_get("shelf-environ-shelf-list")
+                for shelf in channel.child_get("shelf-environ-shelf-list").children_get(): # cycle shelf list
+                    shelf_id = shelf.child_get_string("shelf-id")
+                    for what, section in [ ("power-supply-list",    "netapp_api_psu"),
+                                           ("cooling-element-list", "netapp_api_fan"),
+                                           ("temp-sensor-list",     "netapp_api_temp") ]:
+                        print "<<<%s:sep(9)>>>" % section
+                        node = shelf.child_get(what)
+                        print format_config(node, what, shelf_id)
+            # HA partners always report redundant environmental data.
+            # (Node1/Node2) <--Cluster--> (Node3/Node4)
+            # We skip data from Node2 and Node4.
+            processed_nodes.append(node)
+            if node in ha_partners:
+                processed_nodes.append(ha_partners[node])
 
 
 #.
@@ -665,11 +678,13 @@ else:
         dict_reserved["size-total"]       = volume.child_get_string("size-total")
         dict_reserved["percent-reserved"] = volume_snapshots_reserved.child_get_string("percent-reserved")
         dict_reserved["blocks-reserved"]  = volume_snapshots_reserved.child_get_string("blocks-reserved")
-        print format_dict(dict_reserved, prefix = "volume_snapshot %s" % name, as_line  = True)
+        snapshots_elements = volume_snapshots.child_get("snapshots")
 
-        volume_snapshots          = server.invoke("snapshot-list-info", "target-name", name, "target-type", "volume")
-        print format_config(volume_snapshots.child_get("snapshots"), "volume_snapshot", name,
-                            config_report = ["volume_snapshot", "percentage-of-total-blocks", "cumulative-total"])
+        if snapshots_elements:
+            volume_snapshots = server.invoke("snapshot-list-info", "target-name", name, "target-type", "volume")
+            print format_dict(dict_reserved, prefix = "volume_snapshot %s" % name, as_line  = True)
+            print format_config(volume_snapshots.child_get("snapshots"), "volume_snapshot", name,
+                                config_report = ["volume_snapshot", "percentage-of-total-blocks", "cumulative-total"])
 
 
     # Protocols

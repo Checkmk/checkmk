@@ -38,10 +38,28 @@ def do_automation(cmd, args):
             result = automation_get_configuration()
         elif cmd == "get-check-information":
             result = automation_get_check_information()
+        elif cmd == "get-real-time-checks":
+            result = automation_get_real_time_checks()
         elif cmd == "get-check-manpage":
             result = automation_get_check_manpage(args)
         elif cmd == "get-check-catalog":
             result = automation_get_check_catalog(args)
+        elif cmd == "get-package-info":
+            result = automation_get_package_info(args)
+        elif cmd == "get-package":
+            result = automation_get_package(args)
+        elif cmd == "create-package":
+            result = automation_create_or_edit_package(args, "create")
+        elif cmd == "edit-package":
+            result = automation_create_or_edit_package(args, "edit")
+        elif cmd == "install-package":
+            result = automation_install_package(args)
+        elif cmd == "remove-package":
+            result = automation_remove_or_release_package(args, "remove")
+        elif cmd == "release-package":
+            result = automation_remove_or_release_package(args, "release")
+        elif cmd == "remove-unpackaged-file":
+            result = automation_remove_unpackaged_file(args)
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
         else:
@@ -107,6 +125,7 @@ def do_automation(cmd, args):
         sys.stdout.write("%r\n" % (result,))
     output_profile()
     sys.exit(0)
+
 
 # Does discovery for a list of hosts. Possible values for how:
 # "new" - find only new services (like -I)
@@ -180,8 +199,8 @@ def automation_try_discovery(args):
     # TODO: Remove this unlucky option opt_use_cachefile. At least do not
     # handle this option so deep in the code. It should only be handled
     # by top-level functions.
-    global opt_use_cachefile, check_max_cachefile_age
-    opt_use_cachefile = use_caches
+    set_use_cachefile(use_caches)
+    global check_max_cachefile_age
     if use_caches:
         check_max_cachefile_age = inventory_max_cachefile_age
     hostname = args[0]
@@ -290,39 +309,46 @@ def automation_analyse_service(args):
     # our service there
     try:
         path = "%s/%s.mk" % (autochecksdir, hostname)
-        for entry in eval(file(path).read()):
-            if len(entry) == 4: # old format
-                hn, ct, item, params = entry
-            else:
-                ct, item, params = entry # new format without host name
-                hn = hostname
-
-            if (ct, item) not in check_table:
-                continue # this is a removed duplicate or clustered service
-            descr = service_description(hn, ct, item)
-            if hn == hostname and descr == servicedesc:
-                dlv = check_info[ct].get("default_levels_variable")
-                if dlv:
-                    fs = factory_settings.get(dlv, None)
+        if os.path.exists(path):
+            for entry in eval(file(path).read()):
+                if len(entry) == 4: # old format
+                    hn, ct, item, params = entry
                 else:
-                    fs = None
+                    ct, item, params = entry # new format without host name
+                    hn = hostname
 
-                return {
-                    "origin"           : "auto",
-                    "checktype"        : ct,
-                    "checkgroup"       : check_info[ct].get("group"),
-                    "item"             : item,
-                    "inv_parameters"   : params,
-                    "factory_settings" : fs,
-                    "parameters"       : compute_check_parameters(hostname, ct, item, params),
-                }
+                if (ct, item) not in check_table:
+                    continue # this is a removed duplicate or clustered service
+                descr = service_description(hn, ct, item)
+                if hn == hostname and descr == servicedesc:
+                    dlv = check_info[ct].get("default_levels_variable")
+                    if dlv:
+                        fs = factory_settings.get(dlv, None)
+                    else:
+                        fs = None
+
+                    return {
+                        "origin"           : "auto",
+                        "checktype"        : ct,
+                        "checkgroup"       : check_info[ct].get("group"),
+                        "item"             : item,
+                        "inv_parameters"   : params,
+                        "factory_settings" : fs,
+                        "parameters"       : compute_check_parameters(hostname, ct, item, params),
+                    }
     except:
         if opt_debug:
             raise
 
     # 3. Classical checks
     for nr, entry in enumerate(custom_checks):
-        rule, tags, hosts = entry
+        if len(entry) == 4:
+            rule, tags, hosts, options = entry
+            if options.get("disabled"):
+                continue
+        else:
+            rule, tags, hosts = entry
+
         matching_hosts = all_matching_hosts(tags, hosts, with_foreign_hosts = True)
         if hostname in matching_hosts:
             desc = rule["service_description"]
@@ -362,15 +388,17 @@ def automation_delete_host(args):
 
     # single files
     for path in [
-        "%s/%s"              % (precompiled_hostchecks_dir, hostname),
-        "%s/%s.py"           % (precompiled_hostchecks_dir, hostname),
-        "%s/%s.mk"           % (autochecksdir, hostname),
-        "%s/%s"              % (counters_directory, hostname),
-        "%s/%s"              % (tcp_cache_dir, hostname),
-        "%s/persisted/%s"    % (var_dir, hostname),
-        "%s/piggyback/%s"    % (tmp_dir, hostname),
-        "%s/inventory/%s"    % (var_dir, hostname),
-        "%s/inventory/%s.gz" % (var_dir, hostname)]:
+        "%s/%s"                  % (precompiled_hostchecks_dir, hostname),
+        "%s/%s.py"               % (precompiled_hostchecks_dir, hostname),
+        "%s/%s.mk"               % (autochecksdir, hostname),
+        "%s/%s"                  % (counters_directory, hostname),
+        "%s/%s"                  % (tcp_cache_dir, hostname),
+        "%s/persisted/%s"        % (var_dir, hostname),
+        "%s/piggyback/%s"        % (tmp_dir, hostname),
+        "%s/inventory/%s"        % (var_dir, hostname),
+        "%s/inventory/%s.gz"     % (var_dir, hostname),
+        "%s/agent_deployment/%s" % (var_dir, hostname),
+        ]:
         if os.path.exists(path):
             os.unlink(path)
 
@@ -391,6 +419,12 @@ def automation_delete_host(args):
 
 
 def automation_restart(job = "restart", use_rushd = True):
+    if check_plugins_have_changed():
+        forced = True
+        job = "restart"
+    else:
+        forced = False
+
 
     # make sure, Nagios does not inherit any open
     # filedescriptors. This really happens, e.g. if
@@ -406,7 +440,7 @@ def automation_restart(job = "restart", use_rushd = True):
                 pass
     else:
         objects_file = var_dir + "/core/config"
-        if job == "restart":
+        if job == "restart" and not forced:
             job = "reload" # force reload for CMC
 
     # os.closerange(3, 256) --> not available in older Python versions
@@ -470,6 +504,34 @@ def automation_restart(job = "restart", use_rushd = True):
 
     sys.stdout = old_stdout
     return configuration_warnings
+
+
+def check_plugins_have_changed():
+    if not omd_root:
+        return False # not supported for manual setup
+
+    this_time = last_modification_in_dir(local_checks_dir)
+    last_time = time_of_last_core_restart()
+    return this_time > last_time
+
+
+def last_modification_in_dir(dir_path):
+    max_time = os.stat(dir_path).st_mtime
+    for file_name in os.listdir(dir_path):
+        max_time = max(max_time, os.stat(dir_path + "/" + file_name).st_mtime)
+    return max_time
+
+
+def time_of_last_core_restart():
+    if monitoring_core == "cmc":
+        pidfile_path = omd_root + "/tmp/run/cmc.pid"
+    else:
+        pidfile_path = omd_root + "/tmp/lock/nagios.lock"
+    if os.path.exists(pidfile_path):
+        return os.stat(pidfile_path).st_mtime
+    else:
+        return 0
+
 
 def automation_get_configuration():
     # We read the list of variable names from stdin since
@@ -537,6 +599,26 @@ def automation_get_check_information():
             if opt_debug:
                 raise
             raise MKAutomationError("Failed to parse man page '%s': %s" % (check_type, e))
+    return checks
+
+
+def automation_get_real_time_checks():
+    manuals = all_manuals()
+
+    checks = []
+    for check_type, check in check_info.items():
+        if check["handle_real_time_checks"]:
+            title = check_type
+            try:
+                manfile = manuals.get(check_type)
+                if manfile:
+                    title = file(manfile).readline().strip().split(":", 1)[1].strip()
+            except Exception, e:
+                if opt_debug:
+                    raise
+
+            checks.append((check_type, "%s - %s" % (check_type, title)))
+
     return checks
 
 
@@ -779,6 +861,11 @@ def rename_host_files(oldname, newname):
     if have_renamed_agent:
         actions.append("agent")
 
+    # Agent deployment
+    deployment_dir = var_dir + "/agent_deployment/"
+    if rename_host_file(deployment_dir, oldname, newname):
+        actions.append("agent_deployment")
+
     # OMD-Stuff. Note: The question really is whether this should be
     # included in Check_MK. The point is - however - that all these
     # actions need to take place while the core is stopped.
@@ -895,6 +982,11 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
 
 
 def automation_create_snapshot(args):
+    if args and args[0] == "sync":
+        sync_mode = True
+    else:
+        sync_mode = False
+
     try:
         import tarfile, time, cStringIO, shutil, subprocess, thread, traceback, threading
         from hashlib import sha256
@@ -951,8 +1043,11 @@ def automation_create_snapshot(args):
         try:
             pid = os.fork()
             if pid > 0:
+                if sync_mode:
+                    os.waitpid(pid, 0)
                 # Exit parent process
                 return
+
             # Decouple from parent environment
             os.chdir("/")
             os.umask(0)
@@ -1130,13 +1225,16 @@ def automation_notification_replay(args):
     nr = args[0]
     return notification_replay_backlog(int(nr))
 
+
 def automation_notification_analyse(args):
     nr = args[0]
     return notification_analyse_backlog(int(nr))
 
+
 def automation_get_bulks(args):
     only_ripe = args[0] == "1"
     return find_bulks(only_ripe)
+
 
 def automation_active_check(args):
     hostname, plugin, item = args
@@ -1220,6 +1318,7 @@ def execute_check_plugin(commandline):
 def automation_update_dns_cache():
     return do_update_dns_cache()
 
+
 def automation_bake_agents():
     if "do_bake_agents" in globals():
         return do_bake_agents()
@@ -1246,3 +1345,80 @@ def automation_get_agent_output(args):
             raise
 
     return success, output, agent_data
+
+
+def automation_get_package_info(args):
+    load_module("packaging")
+    packages = {}
+    for package_name in all_package_names():
+        packages[package_name] = read_package_info(package_name)
+
+    return {
+        "installed" : packages,
+        "unpackaged" : unpackaged_files(),
+        "parts" : package_part_info(),
+    }
+
+
+def automation_get_package(args):
+    load_module("packaging")
+    package_name = args[0]
+    package = read_package_info(package_name)
+    if not package:
+        raise MKAutomationError("Package not installed or corrupt")
+
+    output_file = fake_file()
+    create_mkp_file(package, file_object=output_file)
+    return package, output_file.content()
+
+
+def automation_create_or_edit_package(args, mode):
+    load_module("packaging")
+    package_name = args[0]
+    new_package_info = eval(sys.stdin.read())
+    if mode == "create":
+        create_package(new_package_info)
+    else:
+        edit_package(package_name, new_package_info)
+
+
+def automation_install_package(args):
+    load_module("packaging")
+    file_content = sys.stdin.read()
+    input_file = fake_file(file_content)
+    try:
+        return install_package(file_object=input_file)
+    except Exception, e:
+        if opt_debug:
+            raise
+        raise MKAutomationError("Cannot install package: %s" % e)
+
+
+def automation_remove_or_release_package(args, mode):
+    load_module("packaging")
+    package_name = args[0]
+    package = read_package_info(package_name)
+    if not package:
+        raise MKAutomationError("Package not installed or corrupt")
+    if mode == "remove":
+        remove_package(package)
+    else:
+        remove_package_info(package_name)
+
+
+def automation_remove_unpackaged_file(args):
+    load_module("packaging")
+    part_name = args[0]
+    if part_name not in [ p[0] for p in package_parts ]:
+        raise MKAutomationError("Invalid package part")
+
+    rel_path = args[1]
+    if "../" in rel_path or rel_path.startswith("/"):
+        raise MKAutomationError("Invalid file name")
+
+    for part, title, perm, dir in package_parts:
+        if part == part_name:
+            abspath = dir + "/" + rel_path
+            if not os.path.isfile(abspath):
+                raise MKAutomationError("No such file")
+            os.remove(abspath)

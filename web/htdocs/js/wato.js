@@ -199,7 +199,7 @@ function wato_fix_visibility() {
     }
 
     // FIXME: use generic identifier for each form
-    var available_forms = [ "form_edithost", "form_editfolder", "form_bulkedit" ];
+    var available_forms = [ "form_edit_host", "form_editfolder" ];
     for (var try_form = 0; try_form < available_forms.length; try_form++) {
         var my_form = document.getElementById(available_forms[try_form]);
         if (my_form != null) {
@@ -698,7 +698,7 @@ function wato_toggle_folder(event, oDiv, on) {
     var obj = oDiv.parentNode;
     var id = obj.id.substr(7);
 
-    var elements = ['edit', 'move', 'delete'];
+    var elements = ['edit', 'popup_trigger_move', 'delete'];
     for(var num in elements) {
         var elem = document.getElementById(elements[num] + '_' + id);
         if(elem) {
@@ -724,25 +724,6 @@ function wato_toggle_folder(event, oDiv, on) {
     }
     elem = null;
     obj = null;
-}
-
-function wato_toggle_move_folder(event, oButton) {
-    if(!event)
-        event = window.event;
-
-    var id = oButton.id.substr(5);
-    var obj = document.getElementById('move_dialog_' + id);
-    if (obj) {
-        if (obj.style.display == 'none') {
-            obj.style.display = 'block';
-            fix_popup_menu_position(event, obj);
-        } else {
-            obj.style.display = 'none';
-        }
-        obj = null;
-    }
-
-    return prevent_default_events(event);
 }
 
 // .--Host Diag-----------------------------------------------------------.

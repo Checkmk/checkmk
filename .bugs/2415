@@ -1,0 +1,9 @@
+Title: Remove bogus ancient examples from multisite.mk
+Component: multisite
+State: open
+Date: 2015-12-08 10:12:30
+Targetversion: future
+Class: nastiness
+
+The comments and suggested settings are not uptodate anymore. Also maybe
+remove the custom links contents.

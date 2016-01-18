@@ -34,10 +34,10 @@
 class ContactgroupsMemberColumn : public ContactsColumn
 {
 public:
-    ContactgroupsMemberColumn(std::string name, std::string description, int indirect_offset)
-        : ContactsColumn(name, description, indirect_offset) {}
-    int type() { return COLTYPE_LIST; }
-    bool isNagiosMember(void *data, void *member);
+    ContactgroupsMemberColumn(std::string name, std::string description, int indirect_offset, int extra_offset = -1)
+        : ContactsColumn(name, description, indirect_offset, extra_offset) {}
+    int type() override { return COLTYPE_LIST; }
+    bool isNagiosMember(void *data, void *member) override;
 };
 
 #endif // ContactgroupsMemberColumn_h

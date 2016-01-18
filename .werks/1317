@@ -1,0 +1,13 @@
+Title: fileinfo.groups: Fixed handling of $DATE pattern
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1449837223
+
+Before that fix the feature to use the current date as match criteria for fileinfo groups only worked
+when the filename started with the date. Now the date not longer have to be at the beginning of the filename.
+
+

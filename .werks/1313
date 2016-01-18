@@ -1,0 +1,9 @@
+Title: apc_sts_inputs: New Check for APC Static Transfer Switches: Input Phases
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449569493
+Class: feature
+
+

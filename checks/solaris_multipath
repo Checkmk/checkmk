@@ -52,7 +52,20 @@ def check_solaris_multipath(item, params, info):
                 state = 1
                 infotext += ", expected paths unknown, please redo service discovery"
             else:
-                expected = int(params) # should be int, just for legacy reasons
+                if type(params) == tuple:
+                    warn, crit = params
+                    warn_num  = (warn / 100.0) * total
+                    crit_num = (crit / 100.0) * total
+                    levels = " (Warning/ Critical at %d/ %d)" % (warn_num, crit_num)
+                    info = "paths active: %d" % (operational)
+                    if operational <= crit_num:
+                        return 2, info + levels
+                    elif operational <= warn_num:
+                        return 1, info + levels
+                    else:
+                        return 0, info
+                else:
+                    expected = int(params) # should be int, just for legacy reasons
                 if operational > expected:
                     state = 1
                 elif expected == operational:

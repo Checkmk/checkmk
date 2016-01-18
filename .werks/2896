@@ -1,0 +1,11 @@
+Title: Improved handling of wrong encoded input strings
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450428996
+Class: fix
+
+When a user submitted non UTF-8 encoded strings, for example latin-1 encoded ones,
+where we expect to get a UTF-8 encoded string, this resulted in a cryptic exception.
+This has been fixed now by raising an understandable error message in most places.

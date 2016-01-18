@@ -1,0 +1,15 @@
+Title: Bulk Host import can now handle CSV files including several host attributes
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452676065
+Class: feature
+
+The Bulk Host Import feature of WATO could be used for importing a list of host names
+before. But more complex imports like adding hosts together with a collection of initial
+attributes was not possible.
+
+The import has now been extended that one can upload whole CSV files or paste the contents
+of a CSV file into a form. Then, after the upload, a preview page is displayed to configure
+the parameters how to parse the CSV file and which column to assign to which host attribute.

@@ -39,6 +39,7 @@ TableContactgroups::TableContactgroups()
 }
 
 
+// static
 void TableContactgroups::addColumns(Table *table, string prefix, int indirect_offset)
 {
     contactgroup cg;

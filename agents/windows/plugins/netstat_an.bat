@@ -1,3 +1,3 @@
 @echo off
 echo ^<^<^<win_netstat^>^>^>
-netstat -an
+netstat -anp TCP & netstat –anp TCPv6

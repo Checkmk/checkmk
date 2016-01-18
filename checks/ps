@@ -77,16 +77,91 @@ inventory_processes_perf = []
 ANY_USER = None
 GRAB_USER = False
 
-def parse_ps(info):
-    ps_result = []
-    lines = iter(info)
-    wmic_info = {}
-    use_wmic_info = True
-    cpu_cores = 1
 
+# FIXME: Direct access to g_item_state is not allowed in checks normally,
+# but there is no such API to access and modify it like it is needed here.
+def ps_cleanup_counters(parsed):
+    # remove legacy key used for some kind of caching
     try:
-        is_wmic        = False
-        while True:
+        del g_item_state["last.cleared.ps_"]
+    except KeyError:
+        pass
+
+    pids = ps_get_current_pids(parsed)
+
+    for ident in ps_get_counters_to_delete(pids):
+        del g_item_state[ident]
+
+
+# Get the idents of the counters which can be deleted because the process id of
+# the counter is not found anymore in the process table.
+#
+# Handle these formats of idents:
+# Old string based keys: 'ps_stat.pcpu.669': (1448634267.875281, 1),
+# New magic keys:        ('ps', None, 'ps_wmic.kernel.692'): (1448633487.573496, 1092007),
+def ps_get_counters_to_delete(pids):
+    counters_to_delete = []
+    for ident, state in g_item_state.iteritems():
+        ident_type = type(ident)
+        if ident_type == tuple and ident[0] == "ps":
+            check_ident = ident[2]
+        elif ident_type != tuple and (ident.startswith("ps_stat") or ident.startswith("ps_wmic")):
+            check_ident = ident
+        else:
+            continue
+
+        pid = check_ident.split(".")[-1]
+        if pid not in pids:
+            counters_to_delete.append(ident)
+    return counters_to_delete
+
+
+def ps_get_current_pids(parsed):
+    pids = []
+    for line in parsed:
+        process_info = line[1]
+        if ps_has_extended_perfdata(process_info):
+            pids.append(process_info[4])
+    return pids
+
+
+# Makes sure, that no counter with a give prefix is kept longer
+# than min_keep_seconds * 2. Counter is kept at least min_keep_seconds.
+def clear_counters(counter_name_prefix, min_keep_seconds):
+    global g_item_state
+
+    counters_to_delete = []
+
+    for name, state in g_item_state.iteritems():
+        if type(name) == tuple:
+            counter_name = name[0] # never needed, since only called by ps currently
+        else:
+            counter_name = name
+
+        if type(state) == tuple:
+            timestamp, value = state
+        else:
+            continue # unable to cleanup values without timestamp info, skip
+
+        if counter_name.startswith(counter_name_prefix):
+            if timestamp < remove_if_min_keep_seconds:
+                counters_to_delete.append(name)
+
+    for name in counters_to_delete:
+        del g_item_state[name]
+
+
+# FIXME: Refactor this function for better readability
+def ps_merge_wmic_info(info):
+    ps_result     = []
+    lines         = iter(info)
+    wmic_info     = {}
+    use_wmic_info = True
+    cpu_cores     = 1
+
+    is_wmic = False
+    while True:
+        try:
             line = lines.next()
             if line[-1] == '[wmic process]':
                 is_wmic = True
@@ -95,33 +170,32 @@ def parse_ps(info):
             elif line[-1] == '[wmic process end]':
                 is_wmic = False
                 continue
+        except StopIteration:
+            break # Finished with all lines
 
-            if not is_wmic:
-                # Ignore data from the psperf.bat if the agent has this feature builtin
-                if use_wmic_info and len(line[1].split(",")) >= 10:
-                    use_wmic_info = False
-                if not use_wmic_info:
-                    # We need to determine the number of cpu_cores without the wmic_info
-                    if len(line) < 3:
-                        # On some rare instances the name of the process is missing
-                        # This line will be ignored
-                        continue
-                    if line[2].lower() == "system idle process":
-                        cpu_cores = int(line[1][1:-1].split(",")[9])
-                ps_result.append(line)
-            else:
-                row = dict(zip(wmic_headers, line))
-                # Row might be damaged. I've seen this agent output:
-                # Node - TILE-BUILDER02
-                # ERROR:
-                # Description = Quota violation
-                #
-                # Node,
-                if "Name" in row and "ProcessId" in row:
-                    wmic_info[(row["node"], row["Name"], row["ProcessId"])] = row
-
-    except StopIteration:
-        pass
+        if not is_wmic:
+            # Ignore data from the psperf.bat if the agent has this feature builtin
+            if use_wmic_info and len(line[1].split(",")) >= 10:
+                use_wmic_info = False
+            if not use_wmic_info:
+                # We need to determine the number of cpu_cores without the wmic_info
+                if len(line) < 3:
+                    # On some rare instances the name of the process is missing
+                    # This line will be ignored
+                    continue
+                if line[2].lower() == "system idle process":
+                    cpu_cores = int(line[1][1:-1].split(",")[9])
+            ps_result.append(line)
+        else:
+            row = dict(zip(wmic_headers, line))
+            # Row might be damaged. I've seen this agent output:
+            # Node - TILE-BUILDER02
+            # ERROR:
+            # Description = Quota violation
+            #
+            # Node,
+            if "Name" in row and "ProcessId" in row:
+                wmic_info[(row["node"], row["Name"], row["ProcessId"])] = row
 
 
     # Add wmic_info to process table, but only if present:
@@ -153,9 +227,41 @@ def parse_ps(info):
                     line[1:1] = [ "(unknown,%d,%d,0,%d,%d,%d,%d,%d,%d,)" %
                                     (virt, resi, pid, pagefile, userc, kernelc, handlec, threadc) ]
             info.append(line)
-        return cpu_cores, info
-    else:
-        return cpu_cores, info
+
+    return cpu_cores, info
+
+
+# This mainly formats the line[1] element which contains the process info (user,...)
+def ps_parse_process_entries(parsed):
+    # line[0] = node
+    # line[1] = process_info OR (if no process info available) = process name
+    for line in parsed:
+        process_info = line[1]
+        if process_info[0] == "(" and process_info[-1] == ")":
+            line[1] = tuple(process_info[1:-1].split(","))
+        else:
+            # Make number of columns in line consistent for discovery/check
+            line.insert(1, (None,))
+
+    return parsed
+
+
+# Produces a list of lists where each sub list is built as follows:
+# [
+#     [None, (u'root', u'35156', u'4372', u'00:00:05/2-14:14:49', u'1'), u'/sbin/init'],
+# ]
+# First element:  The node the data comes from in a cluster or None
+# Second element: The process info tuple (see ps.include: check_ps_common() for details on the elements)
+# Third element:  The process command line
+def parse_ps(info):
+    cpu_cores, parsed = ps_merge_wmic_info(info)
+
+    parsed = ps_parse_process_entries(parsed)
+
+    # Cleanup counters of processes which do not exist anymore
+    ps_cleanup_counters(parsed)
+
+    return cpu_cores, parsed
 
 
 def inventory_ps(info):

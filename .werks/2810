@@ -1,0 +1,10 @@
+Title: esx_vsphere_counters, winperf_phydisk: fixed exception on pnpgraph overview page
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449742812
+Class: fix
+
+These checks were using an incorrect template. This has been fixed.
+

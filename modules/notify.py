@@ -62,6 +62,7 @@ enable_rulebased_notifications = False
 notification_fallback_email    = ""
 notification_rules             = []
 notification_bulk_interval     = 10 # Check every 10 seconds for ripe bulks
+notification_plugin_timeout    = 60
 
 # Notification Spooling.
 
@@ -1116,6 +1117,9 @@ def path_to_notification_script(plugin):
 def call_notification_script(plugin, plugin_context):
     core_notification_log(plugin, plugin_context)
 
+    def plugin_log(s):
+        notify_log("     %s" % s)
+
     # The "Pseudo"-Plugin None means builtin plain email
     if not plugin:
         return notify_via_email(plugin_context)
@@ -1125,26 +1129,51 @@ def call_notification_script(plugin, plugin_context):
     if not path:
         return 2
 
-    # Export complete context to have all vars in environment.
-    # Existing vars are replaced, some already existing might remain
-    add_context_to_environment(plugin_context, "NOTIFY_")
+    plugin_log("executing %s" % path)
+    try:
+        set_notification_timeout()
+        p = subprocess.Popen([path], shell=False, stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT, env=notification_script_env(plugin_context))
 
-    notify_log("     executing %s" % path)
-    out = os.popen(path + " 2>&1 </dev/null")
-    for line in out:
-        notify_log("Output: %s" % line.rstrip().decode('utf-8'))
-    exitcode = out.close()
+        for line in p.stdout:
+            plugin_log("Output: %s" % line.rstrip().decode('utf-8'))
+
+        exitcode = p.returncode
+        clear_notification_timeout()
+    except NotificationTimeout:
+        plugin_log("Notification plugin did not finish within %d seconds. Terminating." %
+                                                                    notification_plugin_timeout)
+        p.kill()
+        exitcode = 1
+
     if exitcode:
-        notify_log("Plugin exited with code %d" % (exitcode >> 8))
+        plugin_log("Plugin exited with code %d" % exitcode)
     else:
         exitcode = 0
-
-    # Clear environment again.
-    remove_context_from_environment(plugin_context, "NOTIFY_")
 
     return exitcode
 
 
+# Construct the environment for the notification script
+def notification_script_env(plugin_context):
+    return dict(os.environ.items() + [("NOTIFY_" + k, v.encode("utf-8")) for k, v in plugin_context.items()])
+
+
+class NotificationTimeout(Exception):
+    pass
+
+
+def handle_notification_timeout(signum, frame):
+    raise NotificationTimeout()
+
+
+def set_notification_timeout():
+    signal.signal(signal.SIGALRM, handle_notification_timeout)
+    signal.alarm(notification_plugin_timeout)
+
+
+def clear_notification_timeout():
+    signal.alarm(0)
 
 #.
 #   .--Spooling------------------------------------------------------------.

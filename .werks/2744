@@ -1,0 +1,9 @@
+Title: waitmax now kills the whole process group and is a bit more robust.
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1448439662
+Class: fix
+
+

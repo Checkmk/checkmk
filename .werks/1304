@@ -1,0 +1,10 @@
+Title: mk_mysql: Agent plugin can now detect multiple instances running unter the same user
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447949700
+Class: feature
+
+In case that the agent plugin detects more then one running instance, the Name of the socket will be used as item.
+

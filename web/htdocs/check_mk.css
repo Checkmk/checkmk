@@ -463,7 +463,13 @@ table.valuespec_listof option[selected] {
 table.valuespec_listof .unused {
     display: none;
 }
-
+table.vs_duallist td {
+    width: 50%;
+}
+table.vs_duallist td select {
+    width: 100%;
+    height: 200px;
+}
 table.vs_duallist td.head {
     text-align:center;
 }
@@ -692,3 +698,4 @@ td.nowiki table {
 td.nowiki table td, td.nowiki table th {
     border: 1px solid #888;
 }
+

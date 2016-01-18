@@ -1,0 +1,236 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#
+# The ewon2005cd is a vpn that can also be used to expose data from a
+# secondary device via snmp. Unfortunately there is no way to reliably
+# identify that secondary device
+#
+
+ewon_discovery_rules = []
+
+
+# configuration for the tags used in Wagner OxyReduct devices
+# for analog measures, "levels" is provided as upper and lower bounds (warn and crit each)
+# for digital bitfields the "expected" bitmask is provided, that is: the bits we expect to see,
+#  Anything that doesn't match this mask causes a crit status.
+#  Note: bitmasks are specified most-significant-bit to least-significant bit
+#  Some symbols have special meaning:
+#    "?" - we don't care about this flag
+#    "*" - add the flag to the infotext but don't derive a state from it
+#    "+" - add the flag to the infotext if it is set but don't derive a state from it
+# Also, we provide the names of flags for proper info texts.
+oxyreduct_tag_map = {
+    1: {"name": "alarms",            "levels": (1, 2, -1, -1)},
+    2: {"name": "incidents",         "levels": (1, 2, -1, -1)},
+    3: {"name": "shutdown messages", "levels": (1, 2, -1, -1)},
+    4: {"flags": "00000????0000000",
+        "flag_names": [
+            "buzzer",         "light test", "luminous field", "optical alarm",
+            "accustic alarm", "",           "",               "",
+            "",               "warnings",   "shutdown",       "operation reports",
+            "incident",       "O2 high",    "O2 low",         "alarms",
+        ]},
+
+    5: {"flags": "00??????00000101",
+        "flag_names": [
+            "recovery",      "maintenance",       "",                 "",
+            "",              "",                  "",                 "",
+            "warnings",      "incidents",         "N2 to safe area",  "N2 from safe area",
+            "N2 via outlet", "N2 via compressor", "N2-supply locked", "N2-supply open"
+        ]},
+    6: {"name": "O2 minimum", "levels": (16, 17, 14, 13), "scale": 0.01, "unit": "%",
+        "perfvar": "o2_percentage", "condition_flag": (1, 15)},
+    7: {"flags": "?????000??00000*",
+        "flag_names": [
+            "",         "",               "",              "",
+            "",         "luminous field", "optical alarm", "acoustic alarm",
+            "",         "",               "warnings",      "operation report",
+            "shutdown", "incidents",      "alarm",         "O2 Sensor"
+        ]},
+    8: {"same_as": 6},
+    9: {"same_as": 7},
+    10: {"name": "O2 average", "levels": (16, 17, 14, 13), "scale": 0.01, "unit": "%",
+         "perfvar": "o2_percentage"},
+    11: {"name": "O2 target", "scale": 0.01, "unit": "%"},
+    12: {"name": "O2 for N2-in", "scale": 0.01, "unit": "%"},
+    13: {"name": "O2 for N2-out", "scale": 0.01, "unit": "%"},
+    14: {"name": "CO2 maximum", "levels": (1500, 2000, -1, -1), "unit": "ppm"},
+    15: {"flags": "????++++????++++",
+         "flag_names": [
+             "",                     "",                   "",                 "",
+             "air control shutdown", "air control closed", "air control open", "air control active",
+             "",                     "",                   "",                 "",
+             "valve shutdown",       "valve closed",       "valve open",       "valve active",
+         ]},
+    16: {"flags": "????++++????++++",
+         "flag_names": [
+             "",                         "",                       "",                     "",
+             "access shutdown",          "access closed",          "access open",          "access active",
+             "",                         "",                       "",                     "",
+             "air circulation shutdown", "air circulation closed", "air circulation open", "air circulation active",
+         ]},
+    17: {"flags": "??00++++0?000001",
+         "flag_names": [
+             "O2 ref sensors working", "O2 ref sensors projected", "BMZ quick reduction", "key switch active",
+             "mode BK3",               "mode BK2",                 "mode BK1",            "mode FB",
+             "operation mode change",  "",                         "warnings",            "operation reports",
+             "shutdown",               "incidents",                "alarm",               "active",
+         ]},
+}
+
+
+def inventory_oxyreduct(parsed):
+    discovered_names = set()
+    current_safe_area = []
+
+    for name, area_info in parsed.iteritems():
+        tagids = area_info.keys()
+        if min(tagids) < 10:
+            yield name, {}
+        else:
+            # for the "optional" rooms the lsb of the last bitmask says whether the room is used
+            flags = int(area_info[max(tagids)])
+            if flags % 2 == 1:
+                yield name, {}
+
+
+def check_oxyreduct(item, param, parsed):
+    def to_binary(n):
+        return ''.join(str(1 & int(n) >> i) for i in range(16)[::-1])
+
+    found = False
+    returned = False
+
+    if item in parsed:
+        for tagid, value in parsed[item].iteritems():
+            ref_tagid = tagid
+            found = True
+            if ref_tagid > 17:
+                ref_tagid = ((ref_tagid - 18) % 8) + 10
+
+            tag_params = oxyreduct_tag_map.get(ref_tagid)
+
+            # resolve tag parameters where multiple tags follow the same pattern
+            if "same_as" in tag_params:
+                ref_tag_id = tag_params["same_as"]
+                tag_params = oxyreduct_tag_map[ref_tag_id]
+
+            # if it's a measure, check levels
+            if "name" in tag_params:
+                if "condition_flag" in tag_params:
+                    condition_tagid = tagid + tag_params["condition_flag"][0]
+                    if not (int(parsed[item][condition_tagid]) & tag_params["condition_flag"][1]):
+                        continue
+                value = int(value)
+                unit = tag_params.get("unit", "")
+                status = 0
+                if "scale" in tag_params:
+                    value = float(value) * tag_params["scale"]
+
+                if "levels" in tag_params:
+                    warn, crit, warn_lower, crit_lower = tag_params["levels"]
+
+                    if (value >= crit) or (value <= crit_lower):
+                        status = 2
+                    elif (value >= warn) or (value <= warn_lower):
+                        status = 1
+                perfdata = []
+                if "perfvar" in tag_params:
+                    perfdata.append((tag_params["perfvar"], value))
+                yield status, "%s%s %s" % (value, unit, tag_params["name"]), perfdata
+                returned = True
+
+            # if it's a bitmask, try to determine if they are good flags
+            if "flags" in tag_params:
+                value_bin = to_binary(value)
+                for i in range(len(tag_params["flags"])):
+                    if value_bin[i] == "1":
+                        state = "active"
+                    else:
+                        state = "inactive"
+
+                    if tag_params["flags"][i] in ["1", "0"] and\
+                       tag_params["flags"][i] != value_bin[i]:
+                        returned = True
+                        yield 2, "%s %s" % (tag_params["flag_names"][i], state)
+                    elif tag_params["flags"][i] == "*":
+                        returned = True
+                        yield 0, "%s %s" % (tag_params["flag_names"][i], state)
+                    elif tag_params["flags"][i] == "+" and value_bin[i] == "1":
+                        returned = True
+                        yield 0, "%s" % tag_params["flag_names"][i]
+
+    if found and not returned:
+        yield 0, "no messages"
+
+
+def parse_ewon(info):
+    result = {}
+    for tagid, value, name in info:
+        result.setdefault(name, {})[int(tagid)] = value
+    return result
+
+def inventory_ewon(parsed):
+    settings = host_extra_conf(g_hostname, ewon_discovery_rules)
+    deviceName = None
+    if settings:
+        deviceName = settings[0]
+
+    yield "eWON Status", [deviceName]
+
+    if deviceName:
+        for res in globals()["inventory_%s" % deviceName](parsed):
+            yield res
+
+
+def check_ewon(item, param, parsed):
+    if item == "eWON Status":
+        if not param:
+            return 1, "This device requires configuration. Plese pick the device type."
+        else:
+            return 0, "Configured for %s" % param[0]
+
+    settings = host_extra_conf(g_hostname, ewon_discovery_rules)
+
+    if settings:
+        return globals()["check_%s" % settings[0]](item, param, parsed)
+
+
+check_info["ewon"] = {
+    "check_function"        : check_ewon,
+    "inventory_function"    : inventory_ewon,
+    "parse_function"        : parse_ewon,
+    "service_description"   : "%s",
+    "has_perfdata"          : True,
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.8284.2.1",
+    "snmp_info"             : (".1.3.6.1.4.1.8284.2.1.3.1.11.1", [2,  #tagCfgId
+                                                                  4,  #tagValue
+                                                                  16, #undocumented name field
+                                                                  ]
+                               )
+}
+

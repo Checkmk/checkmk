@@ -39,6 +39,7 @@ TableCommands::TableCommands()
 }
 
 
+// static
 void TableCommands::addColumns(Table *table, string prefix, int indirect_offset)
 {
     command cmd;

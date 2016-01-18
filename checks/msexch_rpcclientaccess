@@ -1,0 +1,68 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# source for these defaults:
+# https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
+factory_settings['msexch_rpcclientaccess_defaultlevels'] = {
+    'latency': {
+        'upper': (200.0, 250.0)
+    },
+    'requests': {
+        'upper': (30, 40)
+    }
+}
+
+
+def check_msexch_rpcclientaccess(item, params, parsed):
+    # despite the source being raw-data, the averaged latency is
+    # pre-processed
+    yield wmi_yield_raw_counter(parsed, item, "RPCAveragedLatency",
+                                label="ms average latency",
+                                perfvar="average_latency",
+                                levels=params['latency'])
+    yield wmi_yield_raw_persec(parsed, item, "RPCRequests",
+                               label=" RPC Requests",
+                               perfvar="requests_per_sec",
+                               levels=params['requests'])
+    yield wmi_yield_raw_counter(parsed, item, "UserCount",
+                                label=" users",
+                                perfvar="current_users")
+    yield wmi_yield_raw_counter(parsed, item, "ActiveUserCount",
+                                label=" active users",
+                                perfvar="active_users")
+
+
+check_info['msexch_rpcclientaccess'] = {
+    'inventory_function'      : inventory_wmi_table,
+    'check_function'          : check_msexch_rpcclientaccess,
+    'parse_function'          : parse_wmi_table,
+    'has_perfdata'            : True,
+    'service_description'     : "Exchange RPC Client Access %s",
+    'includes'                : ['wmi.include'],
+    'group'                   : 'msx_rpcclientaccess',
+    'default_levels_variable' : 'msexch_rpcclientaccess_defaultlevels'
+}

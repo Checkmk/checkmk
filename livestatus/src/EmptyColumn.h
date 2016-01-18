@@ -34,10 +34,10 @@ class Query;
 class EmptyColumn : public Column
 {
 public:
-    EmptyColumn(std::string name, std::string description) :
-        Column(name, description, -1) {}
-    int type() { return COLTYPE_STRING; }
-    void output(void *data, Query *);
+    EmptyColumn(std::string name, std::string description, int indirect_offset = -1, int extra_offset = -1) :
+        Column(name, description, indirect_offset, extra_offset) {}
+    int type() override { return COLTYPE_STRING; }
+    void output(void *data, Query *) override;
 };
 
 #endif // EmptyColumn_h

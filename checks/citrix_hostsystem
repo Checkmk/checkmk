@@ -24,6 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Example output from agent:
+# <<<citrix_hostsystem>>>
+# VMName rz1css01
+# CitrixPoolName RZ1XenPool01 - Cisco UCS
+
+# Note(1): The pool name is the same for all VMs on one host system
+# Note(2): for the same host and vm this section can appear
+# several times (with the same content).
+def parse_citrix_hostsystem(info):
+    parsed = { "vms"  : [], "pool" : "" }
+    for line in info:
+        if line[0] == "VMName":
+            vm = " ".join(line[1:])
+            if vm not in parsed["vms"]:
+                parsed["vms"].append(vm)
+        elif line[0] == "CitrixPoolName":
+            pool = " ".join(line[1:])
+            if not parsed["pool"]:
+                parsed["pool"] = pool
+    return parsed
+
 
 #   .--Host VMs------------------------------------------------------------.
 #   |              _   _           _    __     ____  __                    |
@@ -34,17 +55,14 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def inventory_citrix_hostsystem_vms(info):
-    if info:
+def inventory_citrix_hostsystem_vms(parsed):
+    if parsed["vms"]:
         return [ (None, None) ]
 
 
-def check_citrix_hostsystem_vms(_no_item, _no_params, info):
-    vmlist = []
-    for line in info:
-        if line[0] == "VMName":
-            vmlist.append(" ".join(line[1:]))
-    return 0, ("%d VMs running: " % len(vmlist)) + ", ".join(vmlist)
+def check_citrix_hostsystem_vms(_no_item, _no_params, parsed):
+    vmlist = parsed["vms"]
+    return 0, "%d VMs running: %s" % (len(vmlist), ", ".join(vmlist))
 
 
 check_info["citrix_hostsystem.vms"] = {
@@ -63,18 +81,17 @@ check_info["citrix_hostsystem.vms"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def inventory_citrix_hostsystem(info):
-    if info:
-        yield None, None
+def inventory_citrix_hostsystem(parsed):
+    if parsed["pool"]:
+        return [ (None, None) ]
 
 
-def check_citrix_hostsystem(_no_item, no_params, info):
-    for line in info:
-        if line[0] == "CitrixPoolName":
-            return 0, "Citrix Pool Name: " + " ".join(line[1:])
+def check_citrix_hostsystem(_no_item, no_params, parsed):
+    return 0, "Citrix Pool Name: %s" % parsed["pool"]
 
 
 check_info["citrix_hostsystem"] = {
+    "parse_function"            : parse_citrix_hostsystem,
     "inventory_function"        : inventory_citrix_hostsystem,
     "check_function"            : check_citrix_hostsystem,
     "service_description"       : "Citrix Host Info",

@@ -1,0 +1,14 @@
+Title: ps: Now able to monitor processes which contain + characters
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449067758
+Class: fix
+
+Any + character in process name, e.g <i>asm_diag_+ASM1</i> was interpreted
+as regular expression special character.
+
+Such processes could be found during the service discovery.
+The check function however, was unable to find this process again, because
+of the incorrect escaped + character.

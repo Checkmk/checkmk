@@ -158,9 +158,15 @@ unit_info["wh"] = {
 }
 
 unit_info["dbm"] = {
-    "title" : _("Decibel-milliwatts"),
+    "title"  : _("Decibel-milliwatts"),
     "symbol" : _("dBm"),
     "render" : lambda v: "%s %s" % (drop_dotzero(v), _("dBm")),
+}
+
+unit_info["dbmv"] = {
+    "title"  : _("Decibel-millivolt"),
+    "symbol" : _("dBmV"),
+    "render" : lambda v: "%s %s" % (drop_dotzero(v), _("dBmV")),
 }
 
 unit_info["db"] = {
@@ -465,7 +471,7 @@ metric_info["mem_used_percent"] = {
 
 metric_info["mem_perm_used"] = {
     "color": "#80ff40",
-    "title" : _("Perm used"),
+    "title" : _("Permanent Generation Memory"),
     "unit" : "bytes",
 }
 
@@ -932,6 +938,12 @@ metric_info["deviation_airflow"] = {
     "color" : "#60f020",
 }
 
+metric_info["health_perc"] = {
+    "title" : _("Health"),
+    "unit"  : "%",
+    "color" : "#ff6234",
+}
+
 # TODO: user -> cpu_util_user
 metric_info["user"] = {
     "title" : _("User"),
@@ -1120,6 +1132,12 @@ metric_info["output_signal_power_dbm"] = {
     "title" : _("Output power"),
     "unit"  : "dbm",
     "color" : "#2080c0",
+}
+
+metric_info["downstream_power"] = {
+    "title" : _("Downstream power"),
+    "unit"  : "dbmv",
+    "color" : "14/a",
 }
 
 metric_info["current"] = {
@@ -1482,6 +1500,12 @@ metric_info["children_system_time"] = {
 
 metric_info["sync_latency"] = {
     "title" : _("Sync latency"),
+    "unit"  : "s",
+    "color" : "#ffb080",
+}
+
+metric_info["mail_latency"] = {
+    "title" : _("Mail latency"),
     "unit"  : "s",
     "color" : "#ffb080",
 }
@@ -2625,7 +2649,72 @@ metric_info["managed_object_count"] = {
     "color" : "45/a"
 }
 
+metric_info["active_vpn_tunnels"] = {
+    "title" : _("Active VPN Tunnels"),
+    "unit"  : "count",
+    "color" : "43/a"
+}
 
+metric_info["active_vpn_users"] = {
+    "title" : _("Active VPN Users"),
+    "unit"  : "count",
+    "color" : "23/a"
+}
+
+metric_info["active_vpn_websessions"] = {
+    "title" : _("Active VPN Web Sessions"),
+    "unit"  : "count",
+    "color" : "33/a"
+}
+
+metric_info["o2_percentage"] = {
+    "title" : _("Current O2 percentage"),
+    "unit"  : "%",
+    "color" : "42/a"
+}
+
+metric_info["current_users"] = {
+    "title" : _("Current Users"),
+    "unit"  : "count",
+    "color" : "23/a"
+}
+
+metric_info["average_latency"] = {
+    "title" : _("Average Latency"),
+    "unit"  : "s",
+    "color" : "35/a"
+}
+
+metric_info["time_in_GC"] = {
+    "title" : _("Time spent in GC"),
+    "unit"  : "%",
+    "color" : "16/a"
+}
+
+metric_info["db_read_latency"] = {
+    "title" : _("Read latency"),
+    "unit"  : "s",
+    "color" : "35/a",
+}
+
+metric_info["db_read_recovery_latency"] = {
+    "title" : _("Read recovery latency"),
+    "unit"  : "s",
+    "color" : "31/a",
+}
+
+metric_info["db_write_latency"] = {
+    "title" : _("Write latency"),
+    "unit"  : "s",
+    "color" : "45/a",
+}
+
+
+metric_info["db_log_latency"] = {
+    "title" : _("Log latency"),
+    "unit"  : "s",
+    "color" : "25/a",
+}
 
 
 #.
@@ -3260,6 +3349,10 @@ check_metrics["check_mk-docsis_channels_upstream"] = {
     "frequency"  : { "scale" : 1000000.0 },
 }
 
+check_metrics["check_mk-docsis_channels_downstream"] = {
+    "power" : { "name" : "downstream_power" },
+}
+
 check_metrics["check_mk-zfs_arc_cache"]  = {
     "hit_ratio"     : { "name": "cache_hit_ratio", },
     "size"          : { "name": "caches", "scale" : MB },
@@ -3576,6 +3669,13 @@ perfometer_info.append({
 perfometer_info.append({
     "type"          : "logarithmic",
     "metric"        : "sync_latency",
+    "half_value"    : 5,
+    "exponent"      : 2,
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "mail_latency",
     "half_value"    : 5,
     "exponent"      : 2,
 })
@@ -4189,6 +4289,12 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type"      : "linear",
+    "segments"  : [ "health_perc" ],
+    "total"     : 100,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
     "segments"  : [ "deviation_calibration_point" ],
     "total"     : 10,
 })
@@ -4381,6 +4487,12 @@ perfometer_info.append({
     "type"     : "linear",
     "segments" : [ "storage_processor_util" ],
     "total"    : 100.0,
+})
+
+perfometer_info.append({
+    "type"     : "linear",
+    "segments" : [ "active_vpn_tunnels" ],
+    "total"    : "active_vpn_tunnels:max"
 })
 
 
@@ -5620,6 +5732,7 @@ graph_info.append({
     "scalars" : [
         "mem_perm_used:warn",
         "mem_perm_used:crit",
+        ("mem_perm_used:max#000000", _("Max Perm used")),
     ],
     "range" : (0, "mem_perm_used:max")
 })

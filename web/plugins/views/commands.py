@@ -36,7 +36,16 @@
 # - function that outputs the HTML input fields
 # - function that creates the nagios command and title
 
-# RESCHEDULE ACTIVE CHECKS
+
+#   .--Reschedule----------------------------------------------------------.
+#   |          ____                _              _       _                |
+#   |         |  _ \ ___  ___  ___| |__   ___  __| |_   _| | ___           |
+#   |         | |_) / _ \/ __|/ __| '_ \ / _ \/ _` | | | | |/ _ \          |
+#   |         |  _ <  __/\__ \ (__| | | |  __/ (_| | |_| | |  __/          |
+#   |         |_| \_\___||___/\___|_| |_|\___|\__,_|\__,_|_|\___|          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 def command_reschedule(cmdtag, spec, row, row_nr, total_rows):
     if html.var("_resched_checks"):
         spread = saveint(html.var("_resched_spread"))
@@ -73,7 +82,22 @@ multisite_commands.append({
 })
 
 
-# ENABLE/DISABLE NOTIFICATIONS
+#.
+#   .--Enable/Disable Notifications----------------------------------------.
+#   |           _____          ______  _           _     _                 |
+#   |          | ____|_ __    / /  _ \(_)___  __ _| |__ | | ___            |
+#   |          |  _| | '_ \  / /| | | | / __|/ _` | '_ \| |/ _ \           |
+#   |          | |___| | | |/ / | |_| | \__ \ (_| | |_) | |  __/           |
+#   |          |_____|_| |_/_/  |____/|_|___/\__,_|_.__/|_|\___|           |
+#   |                                                                      |
+#   |       _   _       _   _  __ _           _   _                        |
+#   |      | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __  ___        |
+#   |      |  \| |/ _ \| __| | |_| |/ __/ _` | __| |/ _ \| '_ \/ __|       |
+#   |      | |\  | (_) | |_| |  _| | (_| (_| | |_| | (_) | | | \__ \       |
+#   |      |_| \_|\___/ \__|_|_| |_|\___\__,_|\__|_|\___/|_| |_|___/       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 config.declare_permission("action.notifications",
         _("Enable/disable notifications"),
         _("Enable and disable notifications on hosts and services"),
@@ -98,7 +122,22 @@ multisite_commands.append({
 })
 
 
-# ENABLE/DISABLE ACTIVE CHECKS
+#.
+#   .--Enable/Disable Active Checks----------------------------------------.
+#   |           _____          ______  _           _     _                 |
+#   |          | ____|_ __    / /  _ \(_)___  __ _| |__ | | ___            |
+#   |          |  _| | '_ \  / /| | | | / __|/ _` | '_ \| |/ _ \           |
+#   |          | |___| | | |/ / | |_| | \__ \ (_| | |_) | |  __/           |
+#   |          |_____|_| |_/_/  |____/|_|___/\__,_|_.__/|_|\___|           |
+#   |                                                                      |
+#   |       _        _   _              ____ _               _             |
+#   |      / \   ___| |_(_)_   _____   / ___| |__   ___  ___| | _____      |
+#   |     / _ \ / __| __| \ \ / / _ \ | |   | '_ \ / _ \/ __| |/ / __|     |
+#   |    / ___ \ (__| |_| |\ V /  __/ | |___| | | |  __/ (__|   <\__ \     |
+#   |   /_/   \_\___|\__|_| \_/ \___|  \____|_| |_|\___|\___|_|\_\___/     |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 config.declare_permission("action.enablechecks",
         _("Enable/disable checks"),
         _("Enable and disable active or passive checks on hosts and services"),
@@ -123,7 +162,22 @@ multisite_commands.append({
 })
 
 
-# ENABLE/DISABLE PASSIVE CHECKS
+#.
+#   .--Enable/Disable Passive Checks---------------------------------------.
+#   |           _____          ______  _           _     _                 |
+#   |          | ____|_ __    / /  _ \(_)___  __ _| |__ | | ___            |
+#   |          |  _| | '_ \  / /| | | | / __|/ _` | '_ \| |/ _ \           |
+#   |          | |___| | | |/ / | |_| | \__ \ (_| | |_) | |  __/           |
+#   |          |_____|_| |_/_/  |____/|_|___/\__,_|_.__/|_|\___|           |
+#   |                                                                      |
+#   |   ____               _              ____ _               _           |
+#   |  |  _ \ __ _ ___ ___(_)_   _____   / ___| |__   ___  ___| | _____    |
+#   |  | |_) / _` / __/ __| \ \ / / _ \ | |   | '_ \ / _ \/ __| |/ / __|   |
+#   |  |  __/ (_| \__ \__ \ |\ V /  __/ | |___| | | |  __/ (__|   <\__ \   |
+#   |  |_|   \__,_|___/___/_| \_/ \___|  \____|_| |_|\___|\___|_|\_\___/   |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 def command_enable_passive(cmdtag, spec, row):
     if html.var("_enable_passive_checks"):
         return ("ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
@@ -144,7 +198,22 @@ multisite_commands.append({
 
 
 
-# CLEAR MODIFIED ATTRIBUTES
+#.
+#   .--Clear Modified Attributes-------------------------------------------.
+#   |            ____ _                   __  __           _               |
+#   |           / ___| | ___  __ _ _ __  |  \/  | ___   __| |              |
+#   |          | |   | |/ _ \/ _` | '__| | |\/| |/ _ \ / _` |              |
+#   |          | |___| |  __/ (_| | |    | |  | | (_) | (_| |_             |
+#   |           \____|_|\___|\__,_|_|    |_|  |_|\___/ \__,_(_)            |
+#   |                                                                      |
+#   |              _   _   _        _ _           _                        |
+#   |             / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___             |
+#   |            / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|            |
+#   |           / ___ \ |_| |_| |  | | |_) | |_| | ||  __/\__ \            |
+#   |          /_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___||___/            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 config.declare_permission("action.clearmodattr",
         _("Reset modified attributes"),
         _("Reset all manually modified attributes of a host or service (like disabled notifications)"),
@@ -162,7 +231,17 @@ multisite_commands.append({
          _("<b>clear the modified attributes</b> of"))),
 })
 
-# FAKE CHECKS
+
+#.
+#   .--Fake Checks---------------------------------------------------------.
+#   |         _____     _           ____ _               _                 |
+#   |        |  ___|_ _| | _____   / ___| |__   ___  ___| | _____          |
+#   |        | |_ / _` | |/ / _ \ | |   | '_ \ / _ \/ __| |/ / __|         |
+#   |        |  _| (_| |   <  __/ | |___| | | |  __/ (__|   <\__ \         |
+#   |        |_|  \__,_|_|\_\___|  \____|_| |_|\___|\___|_|\_\___/         |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 config.declare_permission("action.fakechecks",
         _("Fake check results"),
         _("Manually submit check results for host and service checks"),
@@ -172,7 +251,7 @@ def command_fake_checks(cmdtag, spec, row):
     for s in [0, 1, 2, 3]:
         statename = html.var("_fake_%d" % s)
         if statename:
-            pluginoutput = html.var_utf8("_fake_output").strip()
+            pluginoutput = html.get_unicode_input("_fake_output").strip()
             if not pluginoutput:
                 pluginoutput = _("Manually set to %s by %s") % (html.attrencode(statename), config.user_id)
             perfdata = html.var("_fake_perfdata")
@@ -226,7 +305,23 @@ multisite_commands.append({
     "action"      : command_fake_checks,
 })
 
-# SEND CUSTOM NOTIFICATION
+
+#.
+#   .--Custom Notifications------------------------------------------------.
+#   |                   ____          _                                    |
+#   |                  / ___|   _ ___| |_ ___  _ __ ___                    |
+#   |                 | |  | | | / __| __/ _ \| '_ ` _ \                   |
+#   |                 | |__| |_| \__ \ || (_) | | | | | |                  |
+#   |                  \____\__,_|___/\__\___/|_| |_| |_|                  |
+#   |                                                                      |
+#   |       _   _       _   _  __ _           _   _                        |
+#   |      | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __  ___        |
+#   |      |  \| |/ _ \| __| | |_| |/ __/ _` | __| |/ _ \| '_ \/ __|       |
+#   |      | |\  | (_) | |_| |  _| | (_| (_| | |_| | (_) | | | \__ \       |
+#   |      |_| \_|\___/ \__|_|_| |_|\___\__,_|\__|_|\___/|_| |_|___/       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 config.declare_permission("action.customnotification",
         _("Send custom notification"),
         _("Manually let the core send a notification to a host or service in order "
@@ -235,7 +330,7 @@ config.declare_permission("action.customnotification",
 
 def command_custom_notification(cmdtag, spec, row):
     if html.var("_customnotification"):
-        comment = html.var_utf8("_cusnot_comment")
+        comment = html.get_unicode_input("_cusnot_comment")
         broadcast = html.get_checkbox("_cusnot_broadcast") and 1 or 0
         forced = html.get_checkbox("_cusnot_forced") and 2 or 0
         command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % \
@@ -259,7 +354,17 @@ multisite_commands.append({
     "action"      : command_custom_notification,
 })
 
-# ACKNOWLEDGE
+
+#.
+#   .--Acknowledge---------------------------------------------------------.
+#   |       _        _                        _          _                 |
+#   |      / \   ___| | ___ __   _____      _| | ___  __| | __ _  ___      |
+#   |     / _ \ / __| |/ / '_ \ / _ \ \ /\ / / |/ _ \/ _` |/ _` |/ _ \     |
+#   |    / ___ \ (__|   <| | | | (_) \ V  V /| |  __/ (_| | (_| |  __/     |
+#   |   /_/   \_\___|_|\_\_| |_|\___/ \_/\_/ |_|\___|\__,_|\__, |\___|     |
+#   |                                                      |___/           |
+#   '----------------------------------------------------------------------'
+
 config.declare_permission("action.acknowledge",
         _("Acknowledge"),
         _("Acknowledge host and service problems and remove acknowledgements"),
@@ -278,7 +383,7 @@ def command_acknowledgement(cmdtag, spec, row):
             specs.append((site, spec, cmdtag))
 
     if html.var("_acknowledge"):
-        comment = html.var_utf8("_ack_comment")
+        comment = html.get_unicode_input("_ack_comment")
         if not comment:
             raise MKUserError("_ack_comment", _("You need to supply a comment."))
         if ";" in comment:
@@ -342,7 +447,16 @@ multisite_commands.append({
 })
 
 
-# COMMENTS
+#.
+#   .--Comments------------------------------------------------------------.
+#   |           ____                                     _                 |
+#   |          / ___|___  _ __ ___  _ __ ___   ___ _ __ | |_ ___           |
+#   |         | |   / _ \| '_ ` _ \| '_ ` _ \ / _ \ '_ \| __/ __|          |
+#   |         | |__| (_) | | | | | | | | | | |  __/ | | | |_\__ \          |
+#   |          \____\___/|_| |_| |_|_| |_| |_|\___|_| |_|\__|___/          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 config.declare_permission("action.addcomment",
         _("Add comments"),
         _("Add comments to hosts or services, and remove comments"),
@@ -350,7 +464,7 @@ config.declare_permission("action.addcomment",
 
 def command_comment(cmdtag, spec, row):
     if html.var("_add_comment"):
-        comment = html.var_utf8("_comment")
+        comment = html.get_unicode_input("_comment")
         if not comment:
             raise MKUserError("_comment", _("You need to supply a comment."))
         command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
@@ -370,39 +484,46 @@ multisite_commands.append({
     "action"      : command_comment,
 })
 
-# DOWNTIMES
+
+#.
+#   .--Downtimes-----------------------------------------------------------.
+#   |         ____                      _   _                              |
+#   |        |  _ \  _____      ___ __ | |_(_)_ __ ___   ___  ___          |
+#   |        | | | |/ _ \ \ /\ / / '_ \| __| | '_ ` _ \ / _ \/ __|         |
+#   |        | |_| | (_) \ V  V /| | | | |_| | | | | | |  __/\__ \         |
+#   |        |____/ \___/ \_/\_/ |_| |_|\__|_|_| |_| |_|\___||___/         |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 config.declare_permission("action.downtimes",
         _("Set/Remove Downtimes"),
         _("Schedule and remove downtimes on hosts and services"),
         [ "user", "admin" ])
 
 def command_downtime(cmdtag, spec, row):
+    try:
+        wato.recurring_downtimes_types
+        have_recurring_downtimes = True
+    except:
+        have_recurring_downtimes = False
+
     down_from = int(time.time())
     down_to = None
 
-    if html.get_checkbox("_down_do_recur"):
-        recurring_type = html.var("_down_recurring")
-        if recurring_type == "1":
-            title_start = _("schedule a hourly recurring")
-        elif recurring_type == "2":
-            title_start = _("schedule a daily recurring")
-        elif recurring_type == "3":
-            title_start = _("schedule a weekly recurring")
-        elif recurring_type == "4":
-            title_start = _("schedule a two-weekly recurring")
-        elif recurring_type == "5":
-            title_start = _("schedule a four-weekly recurring")
+    if have_recurring_downtimes and html.get_checkbox("_down_do_recur"):
+        recurring_type = int(html.var("_down_recurring"))
+        title_start = _("schedule a periodic downtime every %s") % wato.recurring_downtimes_types[recurring_type]
     else:
-        title_start = _("schedule an immediate")
+        title_start = _("schedule an immediate downtime")
 
     if html.var("_down_2h"):
         down_to = down_from + 7200
-        title = _("<b>%s 2-hour downtime</b> on") % title_start
+        title = _("<b>%s of 2 hours length</b> on") % title_start
 
     elif html.var("_down_today"):
         br = time.localtime(down_from)
         down_to = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
-        title = _("<b>%s downtime until 24:00:00</b> on") % title_start
+        title = _("<b>%s until 24:00:00</b> on") % title_start
 
     elif html.var("_down_week"):
         br = time.localtime(down_from)
@@ -410,7 +531,7 @@ def command_downtime(cmdtag, spec, row):
         days_plus = 6 - wday
         down_to = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
         down_to += days_plus * 24 * 3600
-        title = _("<b>%s downtime until sunday night</b> on") % title_start
+        title = _("<b>%s until sunday night</b> on") % title_start
 
     elif html.var("_down_month"):
         br = time.localtime(down_from)
@@ -421,12 +542,12 @@ def command_downtime(cmdtag, spec, row):
         else:
             new_year = br.tm_year
         down_to = time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, br.tm_isdst))
-        title = _("<b>%s downtime until end of month</b> on") % title_start
+        title = _("<b>%s until end of month</b> on") % title_start
 
     elif html.var("_down_year"):
         br = time.localtime(down_from)
         down_to = time.mktime((br.tm_year, 12, 31, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
-        title = _("<b>%s downtime until end of %d</b> on") % (title_start, br.tm_year)
+        title = _("<b>%s until end of %d</b> on") % (title_start, br.tm_year)
 
     elif html.var("_down_from_now"):
         try:
@@ -438,12 +559,12 @@ def command_downtime(cmdtag, spec, row):
             raise MKUserError("_down_minutes", _("Please enter a positive number of minutes."))
 
         down_to = time.time() + minutes * 60
-        title = _("<b>%s downtime for the next %d minutes</b> on" % (title_start, minutes))
+        title = _("<b>%s for the next %d minutes</b> on" % (title_start, minutes))
 
     elif html.var("_down_adhoc"):
         minutes = config.adhoc_downtime.get("duration",0)
         down_to = time.time() + minutes * 60
-        title = _("<b>%s downtime for the next %d minutes</b> on" % (title_start, minutes))
+        title = _("<b>%s for the next %d minutes</b> on" % (title_start, minutes))
 
     elif html.var("_down_custom"):
         down_from = html.get_datetime_input("_down_from")
@@ -479,7 +600,7 @@ def command_downtime(cmdtag, spec, row):
         if html.var("_down_adhoc"):
             comment = config.adhoc_downtime.get("comment","")
         else:
-            comment = html.var_utf8("_down_comment")
+            comment = html.get_unicode_input("_down_comment")
         if not comment:
             raise MKUserError("_down_comment", _("You need to supply a comment for your downtime."))
         if html.var("_down_flexible"):
@@ -588,17 +709,18 @@ def paint_downtime_buttons(what):
         html.write("<hr>")
         html.checkbox("_on_hosts", False, label=_('Schedule downtimes on the affected <b>hosts</b> instead of on the individual services'))
 
-    html.write("<hr>")
-    html.checkbox("_down_do_recur", False, label=_("Repeat this downtime on a regular base every"))
-    html.write(" ")
-    html.select("_down_recurring", [
-       ( "1", _("hour") ),
-       ( "2", _("day") ),
-       ( "3", _("week") ),
-       ( "4", _("second week") ),
-       ( "5", _("fourth week") ),
-    ], "3")
-    html.write(_("(This only works when using CMC)"))
+    try:
+        wato.recurring_downtimes_types # Check if this exists
+        have_recurring_downtimes = True
+    except:
+        have_recurring_downtimes = False
+
+    if have_recurring_downtimes:
+        html.write("<hr>")
+        html.checkbox("_down_do_recur", False, label=_("Repeat this downtime on a regular base every"))
+        html.write(" ")
+        html.select("_down_recurring", [ (str(k), v) for (k,v) in sorted(wato.recurring_downtimes_types.items())], "3")
+        html.write(_("(This only works when using CMC)"))
 
 
 
@@ -655,7 +777,8 @@ multisite_commands.append({
         _("remove"))
 })
 
-#   .--Stars *-------------------------------------------------------------.
+#.
+#   .--Stars * (Favorites)-------------------------------------------------.
 #   |                   ____  _                                            |
 #   |                  / ___|| |_ __ _ _ __ ___  __/\__                    |
 #   |                  \___ \| __/ _` | '__/ __| \    /                    |

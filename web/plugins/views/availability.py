@@ -388,7 +388,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
 
         # Columns with the actual availability data
         for (title, help), (text, css) in zip(av_table["cell_titles"], row["cells"]):
-            table.cell(title, text, css="narrow number " + css, help=help)
+            table.cell(title, text, css=css, help=help)
 
     if "summary" in av_table:
         table.row(css="summary")
@@ -401,7 +401,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
             table.cell("", "")
 
         for (title, help), (text, css) in zip(av_table["cell_titles"], av_table["summary"]):
-            table.cell(title, text, css="heading number " + css, help=help)
+            table.cell(title, text, css="heading " + css, help=help)
 
     return table.end() # returns Table data if fetch == True
 
@@ -715,6 +715,7 @@ def edit_annotation():
     annotation["service"] = service
     annotation["site"] = site_id
 
+    # FIXME: Why use plugging here? Can we clean this up?
     html.plug()
 
     title = _("Edit annotation of ") + hostname

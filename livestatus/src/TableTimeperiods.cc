@@ -39,6 +39,7 @@ TableTimeperiods::TableTimeperiods()
 }
 
 
+// static
 void TableTimeperiods::addColumns(Table *table, string prefix, int indirect_offset)
 {
     timeperiod tp;

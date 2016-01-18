@@ -75,6 +75,27 @@ if type timeout >/dev/null 2>&1 ; then
     export -f waitmax
 fi
 
+#
+# CHECK SECTIONS
+#
+
+function section_mem()
+{
+    echo '<<<mem>>>'
+    egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
+}
+
+function section_cpu()
+{
+    echo '<<<cpu>>>'
+    if [ $(uname -m) = "armv7l" ]; then
+        CPU_REGEX='^processor'
+    else
+        CPU_REGEX='^CPU|^processor'
+    fi
+    echo "$(cat /proc/loadavg) $(grep -E $CPU_REGEX < /proc/cpuinfo | wc -l)"
+}
+
 
 # Runs a command asynchronous by use of a cache file. Usage:
 # run_cached [-s] NAME MAXAGE
@@ -125,6 +146,38 @@ function run_cached () {
 # Make run_cached available for subshells (plugins, local checks, etc.)
 export -f run_cached
 
+# Implements Real-Time Check feature of the Check_MK agent which can send
+# some section data in 1 second resolution. Useful for fast notifications and
+# detailed graphing (if you configure your RRDs to this resolution).
+function run_real_time_checks()
+{
+    PIDFILE=$MK_VARDIR/real_time_checks.pid
+    echo $$ > $PIDFILE
+
+    . $MK_CONFDIR/real_time_checks.cfg
+
+    while true; do
+        # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
+        if [ ! -e $PIDFILE ] || [ $(<$PIDFILE) -ne $$ ] || [ $RTC_TIMEOUT -eq 0 ]; then
+            exit 1
+        fi
+
+        for SECTION in $RTC_SECTIONS; do
+            # Be aware of maximum packet size. Maybe we need to check the size of the section
+            # output and do some kind of nicer error handling.
+            # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
+            # dd is used to concatenate the output of all commands to a single write/block => udp packet
+            { echo -n 00 ;
+              date +%s | tr -d '\n' ;
+              export RTC_SECRET=$RTC_SECRET ; section_$SECTION | openssl enc -aes-256-cbc -pass env:RTC_SECRET -nosalt ;
+            } | dd bs=9999 iflag=fullblock 2>/dev/null >/dev/udp/$REMOTE/$RTC_PORT
+        done
+
+        sleep 1
+        RTC_TIMEOUT=$((RTC_TIMEOUT-1))
+    done
+}
+
 echo '<<<check_mk>>>'
 echo Version: 1.2.7i4
 echo AgentOS: linux
@@ -152,7 +205,7 @@ fi
 echo '<<<df>>>'
 # The exclusion list is getting a bit of a problem. -l should hide any remote FS but seems
 # to be all but working.
-excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs"
+excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs -x prl_fs"
 df -PTlk $excludefs | sed 1d
 
 # df inodes information
@@ -214,20 +267,13 @@ grep ^/dev < /proc/mounts
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
-ps ax -o user,vsz,rss,cputime,etime,pid,command --columns 10000 | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
+ps ax -o user:32,vsz,rss,cputime,etime,pid,command --columns 10000 | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
 
 # Memory usage
-echo '<<<mem>>>'
-egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
+section_mem
 
 # Load and number of processes
-echo '<<<cpu>>>'
-if [ $(uname -m) = "armv7l" ]; then
-    CPU_REGEX='^processor'
-else
-    CPU_REGEX='^CPU|^processor'
-fi
-echo "$(cat /proc/loadavg) $(grep -E $CPU_REGEX < /proc/cpuinfo | wc -l)"
+section_cpu
 
 # Uptime
 echo '<<<uptime>>>'
@@ -287,7 +333,7 @@ fi
 # Performancecounter Platten
 echo '<<<diskstat>>>'
 date +%s
-egrep ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*) ' < /proc/diskstats
+egrep ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*) ' < /proc/diskstats
 if type dmsetup >/dev/null ; then
     echo '[dmsetup_info]'
     dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
@@ -658,6 +704,19 @@ if type trd >/dev/null; then
    trd -s
 fi
 
+# Start new liveupdate process in background on each agent execution. Starting
+# a new live update process will terminate the old one automatically after
+# max. 1 sec.
+if [ -e $MK_CONFDIR/real_time_checks.cfg ]; then
+    if [ -z $REMOTE ]; then
+        echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
+    elif ! type openssl >/dev/null; then
+        echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
+    else
+        run_real_time_checks >/dev/null &
+    fi
+fi
+
 # MK's Remote Plugin Executor
 if [ -e "$MK_CONFDIR/mrpe.cfg" ]
 then
@@ -723,17 +782,22 @@ then
     done
 fi
 
+function is_valid_plugin () {
+    [[ -f "$1" && -x "$1" && ! "$1" =~ \.dpkg-(new|old|temp)$ ]] && true || false
+}
+
+
 # Local checks
 echo '<<<local>>>'
 if cd $LOCALDIR ; then
     for skript in $(ls) ; do
-        if [ -f "$skript" -a -x "$skript" ] ; then
+        if is_valid_plugin "$skript" ; then
             ./$skript
         fi
     done
     # Call some plugins only every X'th second
     for skript in [1-9]*/* ; do
-        if [ -x "$skript" ] ; then
+        if is_valid_plugin "$skript" ; then
             run_cached local_${skript//\//\\} ${skript%/*} "$skript"
         fi
     done
@@ -742,13 +806,13 @@ fi
 # Plugins
 if cd $PLUGINSDIR ; then
     for skript in $(ls) ; do
-        if [ -f "$skript" -a -x "$skript" ] ; then
+        if is_valid_plugin "$skript" ; then
             ./$skript
         fi
     done
     # Call some plugins only every Xth second
     for skript in [1-9]*/* ; do
-        if [ -x "$skript" ] ; then
+        if is_valid_plugin "$skript" ; then
             run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"
         fi
     done

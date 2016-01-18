@@ -28,7 +28,9 @@
 #include "config.h"  // IWYU pragma: keep
 #include <time.h>
 #include "nagios.h"
-
+#ifdef CMC
+struct command;
+#endif
 
 #define LOGCLASS_INFO              0 // all messages not in any other class
 #define LOGCLASS_ALERT             1 // alerts: the change service/host state
@@ -76,10 +78,10 @@ struct LogEntry
     char        *_text;      // points into msg
     char        *_host_name; // points into msg or is 0
     char        *_svc_desc;  // points into msg or is 0
-    char        *_command_name;
+    const char  *_command_name;
     char        *_contact_name;
     int         _state;
-    char        *_state_type;
+    const char  *_state_type;
     int         _attempt;
     char        *_check_output;
     char        *_comment;
@@ -92,8 +94,8 @@ struct LogEntry
     LogEntry(unsigned lineno, char *line);
     ~LogEntry();
     unsigned updateReferences();
-    static int serviceStateToInt(char *s);
-    static int hostStateToInt(char *s);
+    static int serviceStateToInt(const char *s);
+    static int hostStateToInt(const char *s);
 
 private:
     bool handleStatusEntry();

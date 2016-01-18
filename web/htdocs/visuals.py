@@ -49,9 +49,9 @@ import pagetypes # That will replace visuals.py one day
 
 loaded_with_language = False
 
-def load_plugins():
+def load_plugins(force):
     global loaded_with_language
-    if loaded_with_language == current_language:
+    if loaded_with_language == current_language and not force:
         return
 
     global visual_types
@@ -297,7 +297,7 @@ def page_list(what, title, visuals, custom_columns = [],
 
         try:
             if check_deletable_handler:
-                check_deletable_handler(visuals, delname)
+                check_deletable_handler(visuals, user_id, delname)
 
             c = html.confirm(_("Please confirm the deletion of \"%s\".") % deltitle)
             if c:
@@ -1261,7 +1261,7 @@ def get_singlecontext_vars(visual):
 def get_singlecontext_html_vars(visual):
     vars = get_singlecontext_vars(visual)
     for key in get_single_info_keys(visual):
-        val = html.var_utf8(key)
+        val = html.get_unicode_input(key)
         if val != None:
             vars[key] = val
     return vars

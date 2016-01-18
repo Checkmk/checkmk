@@ -28,18 +28,19 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "logger.h"
-#include "nagios.h"
 
 #ifdef CMC
 #include "Host.h"
+#else
+#include "nagios.h"
 #endif
 
 using std::string;
 
 
 HostFileColumn::HostFileColumn(string name, string description, const char *base_dir,
-               const char *suffix, int indirect_offset)
-    : BlobColumn(name, description, indirect_offset)
+               const char *suffix, int indirect_offset, int extra_offset)
+    : BlobColumn(name, description, indirect_offset, extra_offset)
     , _base_dir(base_dir)
     , _suffix(suffix)
 {
@@ -78,7 +79,7 @@ char *HostFileColumn::getBlob(void *data, int *size)
     }
 
     lseek(fd, 0, SEEK_SET);
-    char *buffer = (char *)malloc(*size);
+    char *buffer = static_cast<char *>(malloc(*size));
     if (!buffer) {
         close(fd);
         return 0;

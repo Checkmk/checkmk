@@ -1,0 +1,10 @@
+Title: heartbeat_crm: Fixed problem processing the state of clone set resources
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1448008073
+
+

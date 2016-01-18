@@ -1,0 +1,17 @@
+title: Old Cisco Devices: CPU utilization
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the CPU utilization of old Cisco devices
+ which do not support CPU information from CISCO-PROCESS-MIB,
+ e.g. 'Cisco Catalyst 3850 Series'.
+
+ Default levels are 80, 90 percent. These are configurable.
+
+perfdata:
+ The CPU utilization.
+
+inventory:
+ One service is created.

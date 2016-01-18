@@ -1,0 +1,11 @@
+Title: carel_uniflair_cooling: Check is now disabled
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449561953
+Class: fix
+
+User reported that this check delivers wrong information. It seems that the OIDs for the device has changed, or multiple devices uses the same oids.
+Until we know more, then scan function of this check is disabled. It will not longer appear on discovery.
+

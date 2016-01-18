@@ -118,6 +118,25 @@ register_rule(group + '/' + subgroup_inventory,
     match = 'first'
 )
 
+
+register_rule(group + '/' + subgroup_inventory,
+    varname = "ewon_discovery_rules",
+    title = _("EWON Discovery"),
+    help = _("The ewon vpn routers can rely data from a secondary device via snmp. "
+            "It doesn't however allow discovery of the device type relayed this way. "
+            "To allow interpretation of the data you need to pick the device manually."),
+    valuespec = DropdownChoice(
+        title = _("Device Type"),
+        label = _("Select device type"),
+        choices = [
+            (None, _("None selected")),
+            ("oxyreduct", _("Wagner OxyReduct")),
+        ],
+        default_value = None,
+    ),
+)
+
+
 #.
 #   .--Applications--------------------------------------------------------.
 #   |          _                _ _           _   _                        |
@@ -2148,6 +2167,48 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "sap_dialog",
+    ("SAP Dialog"),
+    Dictionary(
+        elements = [
+            ( "UsersLoggedIn",
+              Tuple(
+                  title = _("Number of Loggedin Users"),
+                  elements = [
+                      Integer(title = _("Warning at"),  label = _("Users")),
+                      Integer(title = _("Critical at"), label = _("Users"))
+                  ]
+              )
+            ),
+            ( "FrontEndNetTime",
+              Tuple(
+                  title = _("Frontend net time"),
+                  elements = [
+                     Float(title = _("Warning at"),  unit = _('ms') ),
+                     Float(title = _("Critical at"), unit = _('ms') )
+                  ]
+              )
+            ),
+            ( "ResponseTime",
+              Tuple(
+                  title = _("Response Time"),
+                  elements = [
+                     Float(title = _("Warning at"),  unit = _('ms') ),
+                     Float(title = _("Critical at"), unit = _('ms') )
+                  ]
+              )
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("System ID"),
+        help  = _("The SAP system ID."),
+    ),
+    match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "nginx_status",
     ("Nginx Status"),
     Dictionary(
@@ -2414,7 +2475,7 @@ register_check_parameters(
                   totext = "",
                   title = _("Do not alert on connection loss"),
                 )),
-                ( "war_states",
+                ( "warn_states",
                     ListChoice(
                         title = _("States treated as warning"),
                         choices = hivemanger_states,
@@ -2693,6 +2754,136 @@ register_check_parameters(
     "dict",
     has_inventory = False,
 )
+
+
+register_check_parameters(
+    subgroup_applications,
+    'msx_info_store',
+    _("MS Exchange Information Store"),
+    Dictionary(
+        title = _("Set Levels"),
+        elements = [
+            ('store_latency',
+             Tuple(
+                 title = _("Average latency for store requests"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 40.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 50.0)
+                 ]
+             )
+            ),
+            ('clienttype_latency',
+             Tuple(
+                 title = _("Average latency for client type requests"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 40.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 50.0)
+                 ]
+             )
+            ),
+            ('clienttype_requests',
+             Tuple(
+                 title = _("Maximum number of client type requests per second"),
+                 elements = [
+                     Integer(title = _("Warning at"),  unit = _('requests'), default_value = 60),
+                     Integer(title = _("Critical at"), unit = _('requests'), default_value = 70)
+                 ]
+             )
+             )
+        ],
+        optional_keys=[]
+    ),
+    TextAscii(title = _("Store"), help = _("Specify the name of a store (This is either a mailbox or public folder)")),
+    match_type = 'dict'
+)
+
+
+register_check_parameters(
+    subgroup_applications,
+    'msx_rpcclientaccess',
+    _("MS Exchange RPC Client Access"),
+    Dictionary(
+        title = _("Set Levels"),
+        elements = [
+            ('latency',
+             Tuple(
+                 title = _("Average latency for RPC requests"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 200.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 250.0)
+                 ]
+             )
+            ),
+            ('requests',
+             Tuple(
+                 title = _("Maximum number of RPC requests per second"),
+                 elements = [
+                     Integer(title = _("Warning at"),  unit = _('requests'), default_value = 30),
+                     Integer(title = _("Critical at"), unit = _('requests'), default_value = 40)
+                 ]
+             )
+             )
+        ],
+        optional_keys=[]
+    ),
+    None,
+    match_type = 'dict'
+)
+
+
+register_check_parameters(
+    subgroup_applications,
+    'msx_database',
+    _("MS Exchange Database"),
+    Dictionary(
+        title = _("Set Levels"),
+        elements = [
+            ('read_attached_latency',
+             Tuple(
+                 title = _("I/O Database Reads (Attached) Average Latency"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 200.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 250.0)
+                 ]
+             )
+             ),
+            ('read_recovery_latency',
+             Tuple(
+                 title = _("I/O Database Reads (Recovery) Average Latency"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 150.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 200.0)
+                 ]
+             )
+             ),
+            ('write_latency',
+             Tuple(
+                 title = _("I/O Database Writes (Attached) Average Latency"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 40.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 50.0)
+                 ]
+             )
+             ),
+            ('log_latency',
+             Tuple(
+                 title = _("I/O Log Writes Average Latency"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('ms'), default_value = 5.0),
+                     Float(title = _("Critical at"), unit = _('ms'), default_value = 10.0)
+                 ]
+             )
+             ),
+        ],
+        optional_keys=[]
+    ),
+    TextAscii(
+        title = _("Database Names"),
+        help = _("Specify database names that the rule should apply to"),
+    ),
+    match_type = 'dict'
+)
+
 
 def transform_msx_queues(params):
     if type(params) == tuple:
@@ -4504,7 +4695,7 @@ register_check_parameters(
             ( "core_util_time",
                 Tuple(
                     title = _("Alert on high utilization over an extended time period on a single "
-                              "core (windows only)"),
+                              "core"),
                     elements = [
                         Percentage(title = _("High utilization at "), default_value = 100.0),
                         Age(title = _("Warning after "), default_value = 5 * 60),
@@ -4513,18 +4704,21 @@ register_check_parameters(
                     help = _("A single thread fully utilizing a single core (potentially due to a bug) "
                             "may go unnoticed when only monitoring the total utilization of the CPU. "
                             "With this configuration, check_mk will alert if a single core is "
-                            "exceeding a utilization threshold over an extended period of time.")
+                            "exceeding a utilization threshold over an extended period of time."
+                            "This is currently only supported on linux and windows agents "
+                            "as well as devices monitored through the host-resource mib")
                 )
             ),
             ( "core_util_graph",
                 Checkbox(
-                    title = _("Graphs for individual cores (windows only)"),
+                    title = _("Graphs for individual cores"),
                     label = _("Enable performance graph for utilization of individual cores"),
                     help  = _("This adds another graph to the performance CPU utilization "
                             "details page, showing utilization of individual cores. "
                             "Please note that this graph may be impractical on "
                             "device with very many cores. "
-                            "This is currently only supported on windows.")
+                            "This is currently only supported on linux and windows agents "
+                            "as well as devices monitored through the host-resource mib")
                 ),
             ),
         ]
@@ -4870,6 +5064,30 @@ register_check_parameters(
                     title = _("State in case of non space error count is greater then 0: "),
                 ),
             ),
+         ]
+    ),
+    TextAscii(
+        title = _("Database SID"),
+        size = 12,
+        allow_empty = False),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "oracle_rman",
+    _("Oracle RMAN Backups"),
+    Dictionary(
+         elements = [
+             ("levels",
+                 Tuple(
+                     title = _("Maximum Age for RMAN backups"),
+                     elements = [
+                          Age(title = _("warning if older than"),  default_value = 1800),
+                          Age(title = _("critical if older than"), default_value = 3600),
+                     ]
+                 )
+             )
          ]
     ),
     TextAscii(
@@ -5299,6 +5517,22 @@ register_check_parameters(
     match_type = "dict",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "mssql_blocked_sessions",
+    _("MSSQL Blocked Sessions"),
+    Dictionary(
+        elements = [
+            ( "state",
+                MonitoringState(
+                    title = _("State of MSSQL Blocked Sessions is treated as"),
+                    default_value = 2,
+            )),
+        ],
+    ),
+    None,
+    "dict",
+)
 
 register_check_parameters(
     subgroup_applications,
@@ -5402,6 +5636,33 @@ register_check_parameters(
                 )
             ),
         ]),
+    TextAscii(
+        title = _("Instance"),
+        help = _("Only needed if you have multiple MySQL Instances on one server"),
+    ),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "mysql_slave",
+    _("MySQL Slave"),
+    Dictionary(
+        elements = [
+            ( "seconds_behind_master",
+                Tuple(
+                    title = _("Max. time behind the master"),
+                    help = _("Compares the time which the slave can be behind the master. "
+                             "This rule makes the check raise warning/critical states if the time is equal to "
+                             "or above the configured levels."),
+                    elements = [
+                       Age(title = _("Warning at")),
+                       Age(title = _("Critical at")),
+                    ]
+                )
+            ),
+        ],
+        optional_keys = None),
     TextAscii(
         title = _("Instance"),
         help = _("Only needed if you have multiple MySQL Instances on one server"),
@@ -5696,6 +5957,21 @@ register_check_parameters(
     match_type = "dict",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "asa_svc_sessions",
+    _("Cisco SSl VPN Client Sessions"),
+    Tuple(
+         title = _("Number of active sessions"),
+         help = _("This check monitors the current number of active sessions"),
+         elements = [
+             Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100),
+             Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
+          ],
+     ),
+    None,
+    match_type = "first",
+)
 
 register_check_parameters(
     subgroup_applications,
@@ -6405,6 +6681,21 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_applications,
+    "mail_latency",
+    _("Mail Latency"),
+    Tuple(
+        title = _("Upper levels for Mail Latency"),
+        elements = [
+            Age(title = _("Warning at"),  default_value = 40),
+            Age(title = _("Critical at"), default_value = 60),
+        ]),
+    None,
+    "first"
+)
+
+
+register_check_parameters(
     subgroup_storage,
     "zpool_status",
     _("ZFS storage pool status"),
@@ -6458,10 +6749,23 @@ register_check_parameters(
      subgroup_storage,
     "multipath",
     _("Linux and Solaris Multipath Count"),
-    Integer(
+    Alternative(
         help = _("This rules sets the expected number of active paths for a multipath LUN "
                  "on Linux and Solaris hosts"),
-        title = _("Expected number of active paths")),
+        title = _("Expected number of active paths"),
+        elements = [
+            Integer(
+                title = _("Expected number of active paths")),
+            Tuple(
+                title = _("Expected percentage of active paths"),
+                elements = [
+                    Percentage(
+                        title = _("Warning if less then")),
+                    Percentage(
+                        title = _("Critical if less then")),
+                    ]),
+        ]
+    ),
     TextAscii(
         title = _("Name of the MP LUN"),
         help = _("For Linux multipathing this is either the UUID (e.g. "
@@ -6776,6 +7080,38 @@ register_check_parameters(
                   elements = [
                       Percentage(title = _("Warning if above"),  unit = _("% usage"), allow_int = True, default_value=50),
                       Percentage(title = _("Critical if above"), unit = _("% usage"), allow_int = True, default_value=60)])),
+            ( "inodes_levels",
+                Alternative(
+                    title = _("Levels for Inodes"),
+                    help  = _("The number of remaining inodes on the filesystem. "
+                              "Please note that this setting has no effect on some filesystem checks."),
+                    elements = [
+                            Tuple(title = _("Percentage free"),
+                                  elements = [
+                                       Percentage(title = _("Warning if less than")),
+                                       Percentage(title = _("Critical if less than")),
+                                  ]
+                            ),
+                            Tuple(title = _("Absolute free"),
+                                  elements = [
+                                       Integer(title = _("Warning if less than"),  size = 10, unit = _("inodes"), minvalue = 0, default_value = 10000),
+                                       Integer(title = _("Critical if less than"), size = 10, unit = _("inodes"), minvalue = 0, default_value = 5000),
+                                  ]
+                            )
+                    ],
+                    default_value = (10.0, 5.0),
+                )
+            ),
+            ( "show_inodes",
+              DropdownChoice(
+                  title = _("Display inode usage in check output..."),
+                  choices = [
+                    ( "onproblem", _("Only in case of a problem")),
+                    ( "onlow",     _("Only in case of a problem or if inodes are below 50%")),
+                    ( "always",    _("Always")),
+                  ],
+                  default_value = "onlow",
+            )),
             (  "trend_range",
                Optional(
                    Integer(

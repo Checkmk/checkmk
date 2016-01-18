@@ -341,8 +341,7 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
         info = []
         at_least_one_without_exception = False
         exception_texts = []
-        global opt_use_cachefile
-        opt_use_cachefile = True
+        set_use_cachefile()
         is_snmp_error = False
         for node in nodes:
             # If an error with the agent occurs, we still can (and must)
@@ -988,14 +987,7 @@ def load_item_state(hostname):
     try:
         g_item_state = eval(file(filename).read())
     except:
-        # Try old syntax
-        try:
-            lines = file(filename).readlines()
-            for line in lines:
-                line = line.split()
-                g_item_state[' '.join(line[0:-2])] = ( int(line[-2]), int(line[-1]) )
-        except:
-            g_item_state = {}
+        g_item_state = {}
 
 
 def save_item_state(hostname):
@@ -1097,41 +1089,6 @@ def last_counter_wrap():
     return g_last_counter_wrap
 
 
-
-# Makes sure, that no counter with a give prefix is kept longer
-# than min_keep_seconds * 2. Counter is kept at least min_keep_seconds.
-def clear_counters(counter_name_prefix, min_keep_seconds):
-    global g_item_state
-
-    cleared_key = "last.cleared." + counter_name_prefix
-    if cleared_key in g_item_state:
-        last_cleared, none = g_item_state[cleared_key]
-        if last_cleared + min_keep_seconds > time.time():
-            return # recent enough
-    g_item_state[cleared_key] = (time.time(), None)
-
-    counters_to_delete = []
-    remove_if_min_keep_seconds = time.time() - min_keep_seconds
-
-    for name, state in g_item_state.iteritems():
-        if type(name) == tuple:
-            counter_name = name[0] # never needed, since only called by ps currently
-        else:
-            counter_name = name
-
-        if type(state) == tuple:
-            timestamp, value = state
-        else:
-            continue # unable to cleanup values without timestamp info, skip
-
-        if counter_name.startswith(counter_name_prefix):
-            if timestamp < remove_if_min_keep_seconds:
-                counters_to_delete.append(name)
-
-    for name in counters_to_delete:
-        del g_item_state[name]
-
-
 # Compute average by gliding exponential algorithm
 # itemname        : unique ID for storing this average until the next check
 # this_time       : timestamp of new value
@@ -1199,12 +1156,14 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     expected_version = agent_target_version(hostname)
 
-    # Exit state in various situations is confiugrable since 1.2.3i1
+    # Exit state in various situations is configurable since 1.2.3i1
     exit_spec = exit_code_spec(hostname)
 
     try:
         load_item_state(hostname)
-        agent_version, num_success, error_sections, problems = do_all_checks_on_host(hostname, ipaddress, only_check_types)
+        agent_version, num_success, error_sections, problems = \
+            do_all_checks_on_host(hostname, ipaddress, only_check_types)
+
         num_errors = len(error_sections)
         save_item_state(hostname)
         if problems:
@@ -1264,9 +1223,11 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     run_time = time.time() - start_time
     if check_mk_perfdata_with_times:
-        times = os.times()
         if opt_keepalive:
-            times = map(lambda a: a[0]-a[1], zip(times, g_initial_times))
+            times = get_keepalive_times()
+        else:
+            times = os.times()
+
         output += "execution time %.1f sec|execution_time=%.3f user_time=%.3f "\
                   "system_time=%.3f children_user_time=%.3f children_system_time=%.3f\n" %\
                 (run_time, run_time, times[0], times[1], times[2], times[3])
@@ -1360,14 +1321,15 @@ def parse_check_mk_version(v):
 
 # Loops over all checks for a host, gets the data, calls the check
 # function that examines that data and sends the result to the Core.
-def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
+def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_agent_version = True):
     global g_aggregated_service_results
     g_aggregated_service_results = {}
     global g_hostname
     g_hostname = hostname
     num_success = 0
     error_sections = set([])
-    check_table = get_precompiled_check_table(hostname, remove_duplicates=True, world=opt_keepalive and "active" or "config")
+    check_table = get_precompiled_check_table(hostname, remove_duplicates=True,
+                                    world=opt_keepalive and "active" or "config")
     problems = []
 
     parsed_infos = {} # temporary cache for section infos, maybe parsed
@@ -1482,19 +1444,24 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
 
     submit_aggregated_results(hostname)
 
-    try:
-        if is_tcp_host(hostname):
-            version_info = get_info_for_check(hostname, ipaddress, 'check_mk')
-            agent_version = version_info[0][1]
-        else:
-            agent_version = None
-    except MKAgentError, e:
-        g_broken_agent_hosts.add(hostname)
-        agent_version = "(unknown)"
-    except:
-        agent_version = "(unknown)"
+    if fetch_agent_version:
+        try:
+            if is_tcp_host(hostname):
+                version_info = get_info_for_check(hostname, ipaddress, 'check_mk')
+                agent_version = version_info[0][1]
+            else:
+                agent_version = None
+        except MKAgentError, e:
+            g_broken_agent_hosts.add(hostname)
+            agent_version = "(unknown)"
+        except:
+            agent_version = "(unknown)"
+    else:
+        agent_version = None
+
     error_sections = list(error_sections)
     error_sections.sort()
+
     return agent_version, num_success, error_sections, ", ".join(problems)
 
 
@@ -1603,9 +1570,12 @@ def write_crash_dump_snmp_info(crash_dir, hostname, check_type):
 
 
 def write_crash_dump_agent_output(crash_dir, hostname):
-    cachefile = tcp_cache_dir + "/" + hostname
-    if os.path.exists(cachefile):
-        file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
+    if "get_rtc_package" in globals():
+        file(crash_dir + "/agent_output", "w").write(get_rtc_package())
+    else:
+        cachefile = tcp_cache_dir + "/" + hostname
+        if os.path.exists(cachefile):
+            file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
 
 
 def pack_crash_dump(crash_dir):
@@ -1643,6 +1613,7 @@ def convert_check_info():
                     snmp_scan_functions.get(check_type,
                         snmp_scan_functions.get(basename)),
                 "handle_empty_info"       : False,
+                "handle_real_time_checks" : False,
                 "default_levels_variable" : check_default_levels.get(check_type),
                 "node_info"               : False,
                 "parse_function"          : None,
@@ -1657,6 +1628,7 @@ def convert_check_info():
             info.setdefault("snmp_info", None)
             info.setdefault("snmp_scan_function", None)
             info.setdefault("handle_empty_info", False)
+            info.setdefault("handle_real_time_checks", False)
             info.setdefault("default_levels_variable", None)
             info.setdefault("node_info", False)
             info.setdefault("extra_sections", [])
@@ -2000,6 +1972,11 @@ def worst_monitoring_state(status_a, status_b):
         return max(status_a, status_b)
 
 
+def set_use_cachefile(state=True):
+    global opt_use_cachefile, orig_opt_use_cachefile
+    orig_opt_use_cachefile = opt_use_cachefile
+    opt_use_cachefile = state
+
 
 #.
 #   .--Check helpers-------------------------------------------------------.
@@ -2201,6 +2178,13 @@ def get_nic_speed_human_readable(speed):
     except:
         pass
     return speed
+
+
+def get_timestamp_human_readable(timestamp):
+    if timestamp:
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(timestamp)))
+    else:
+        return "never"
 
 
 # Format time difference seconds into approximated

@@ -1,0 +1,32 @@
+Title: Reorganize BI configuration into packs, add contacts and permissions
+Level: 2
+Component: bi
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452766096
+Class: feature
+
+The WATO module for configuring Business Intelligence (BI) has been
+reorganized. The configuration is now split up into <b>Packs</b>. This has
+been made for two reasons:
+
+LI:It makes the configuration of large BI environments easier
+LI:It allows to delegate BI configuration to normal users
+
+Each pack contains rules and aggregations. A rule or aggregation in one pack
+<b>can</b> refer to rules in another pack.
+
+Each BI pack can have a list of contact groups. A new permission has been
+introduced: <i>Business Intelligence Rules and Aggregations</i>.  Per default
+this is set for normal users. It allows a normal user to configure rules
+and aggregations in a BI pack if that user is in one of the listed contact
+groups of that pack.
+
+A pack can have the checkbox <i>Allow all users to refer to rules contained
+in this pack</i> set. That way a user can use rule from a pack where he is
+not a contact for. So the admin can put some basic rules there that can be
+used but not changed by other.
+
+Your existing BI configuration will automatically be converted the next
+time you use the WATO Bi modul. All existing rules and aggregations will
+be put in to one BI pack with the name <i>Default Pack</i>.

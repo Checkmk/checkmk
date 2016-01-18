@@ -22,16 +22,15 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <string.h>
-#include <ctype.h>
-
 #include "strutil.h"
+#include <ctype.h>
+#include <stddef.h>
+#include <string.h>
 
 char *rstrip(char *c)
 {
     char *w = c + strlen(c) - 1;
-    while (w >= c && isspace(*w))
-        *w-- = '\0';
+    while (w >= c && isspace(*w)) *w-- = '\0';
     return c;
 }
 
@@ -41,11 +40,9 @@ char *lstrip(char *c)
     return c;
 }
 
-/* *c points to a string containing
-   white space separated columns. This method returns
-   a pointer to the zero-terminated next field. That
-   might be identical with *c itself. The pointer c
-   is then moved to the possible beginning of the
+/* *c points to a string containing white space separated columns. This method
+   returns a pointer to the zero-terminated next field. That might be identical
+   with *c itself. The pointer c is then moved to the possible beginning of the
    next field. */
 char *next_field(char **c)
 {
@@ -56,8 +53,8 @@ char *next_field(char **c)
         return 0; // found end of string -> no more field
     }
 
-    char *end = begin; // copy pointer, search end of field
-    while (*end && !isspace(*end)) end++;  // search for \0 or white space
+    char *end = begin;                    // copy pointer, search end of field
+    while (*end && !isspace(*end)) end++; // search for \0 or white space
     if (*end) { // string continues -> terminate field with '\0'
         *end = '\0';
         *c = end + 1; // skip to character right *after* '\0'
@@ -89,22 +86,17 @@ char *next_token(char **c, char delim)
 
 /* same as next_token() but returns "" instead of 0 if
    no tokens has been found */
-char *save_next_token(char **c, char delim)
+const char *save_next_token(char **c, char delim)
 {
-    if (!*c)
-        return (char *)"";
-
+    if (!*c) return "";
     char *result = next_token(c, delim);
-    if (result == 0)
-        return (char *)"";
-    else
-        return result;
+    return result ? result : "";
 }
 
 
 int ends_with(const char *a, const char *b)
 {
-    return !strcmp(a + strlen(a) - strlen(b), b);
+    size_t len_a = strlen(a);
+    size_t len_b = strlen(b);
+    return len_a >= len_b && strcmp(a + len_a - len_b, b) == 0;
 }
-
-

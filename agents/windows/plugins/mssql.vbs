@@ -41,7 +41,7 @@ Set FSO = CreateObject("Scripting.FileSystemObject")
 Set SHO = CreateObject("WScript.Shell")
 
 hostname = SHO.ExpandEnvironmentStrings("%COMPUTERNAME%")
-cfg_dir = "C:\check_mk_agent" 'SHO.ExpandEnvironmentStrings("%MK_CONFDIR%")
+cfg_dir = SHO.ExpandEnvironmentStrings("%MK_CONFDIR%")
 
 output = ""
 Sub addOutput(text)
@@ -117,7 +117,7 @@ If Err.Number <> 0 Then
             ' try MSSQL < 10
             Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement")
             If Err.Number <> 0 Then
-                addOutput( "Error: " & Err.Number & " " & Err.Description )
+                WScript.echo "Error: " & Err.Number & " " & Err.Description
                 Err.Clear()
                 wscript.quit()
             End If

@@ -37,7 +37,7 @@ public:
     TableContacts();
     const char *name() { return "contacts"; }
     void *findObject(char *objectspec);
-    void addColumns(Table *, std::string prefix, int indirect_offset);
+    static void addColumns(Table *, std::string prefix, int indirect_offset);
     void answerQuery(Query *query);
 };
 

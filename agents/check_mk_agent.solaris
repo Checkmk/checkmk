@@ -244,6 +244,11 @@ then
     /usr/bin/top | grep '^Memory:'
 fi
 
+if type prtdiag >/dev/null 2>&1
+    then
+        echo '<<<solaris_prtdiag:sep(10)>>>'
+        run_cached prtdiag 300 '/usr/sbin/prtdiag -v;echo "SerialNumber: $(sneep -t serial)";echo "PRTDIAG_OVERALL_STATE : $(echo $?)"'
+fi
 
 # TCP Connection stats
 echo '<<<tcp_conn_stats>>>'
@@ -293,6 +298,13 @@ then
     trd -s
 fi
 
+# Displaying Information About Faults or Defects
+# If there are no faults the output of this command will be empty.
+if type fmadm faulty > /dev/null 2>&1
+then
+    echo '<<<solaris_fmadm:sep(58)>>>'
+    fmadm faulty
+fi
 
 # MK's Remote Plugin Executor
 if test -f "$MK_CONFDIR/mrpe.cfg"

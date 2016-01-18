@@ -377,8 +377,11 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
                 else:
                     html.write('<th></th>')
 
-            for p in painters:
-                paint_header(view, p)
+            last_painter = painters[-1]
+            for painter in painters:
+                is_last_column_header = painter == last_painter
+                paint_header(view, painter, is_last_column_header)
+
             if n < num_columns:
                 html.write('<td class=gap></td>')
 
@@ -401,7 +404,6 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
         return members
 
 
-    index = 0
     visible_row_number = 0
     for row in rows:
         register_events(row) # needed for playing sounds
@@ -481,11 +483,11 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
         if show_checkboxes:
             render_checkbox_td(view, row, num_painters)
 
-        for p in painters:
-            paint(p, row)
+        last_painter = painters[-1]
+        for painter in painters:
+            paint(painter, row, is_last_painter=last_painter==painter)
 
         column += 1
-        index += 1
 
     if group_open:
         for i in range(column-1, num_columns):

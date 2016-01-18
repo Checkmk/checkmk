@@ -333,21 +333,21 @@ def iconpainter_columns(what, toplevel):
     return cols
 
 multisite_painters["service_icons"] = {
-    "title":   _("Service icons"),
-    "short":   _("Icons"),
+    "title"     : _("Service icons"),
+    "short"     : _("Icons"),
     "printable" : False, # does not contain printable text
-    "columns": iconpainter_columns("service", toplevel=True),
-    "groupby" : lambda row: "", # Do not account for in grouping
-    "paint":    lambda row: paint_icons("service", row)
+    "columns"   : lambda: iconpainter_columns("service", toplevel=True),
+    "groupby"   : lambda row: "", # Do not account for in grouping
+    "paint"     : lambda row: paint_icons("service", row)
 }
 
 multisite_painters["host_icons"] = {
-    "title":   _("Host icons"),
-    "short":   _("Icons"),
+    "title"     : _("Host icons"),
+    "short"     : _("Icons"),
     "printable" : False, # does not contain printable text
-    "columns": iconpainter_columns("host", toplevel=True),
-    "groupby" : lambda row: "", # Do not account for in grouping
-    "paint":    lambda row: paint_icons("host", row)
+    "columns"   : lambda: iconpainter_columns("host", toplevel=True),
+    "groupby"   : lambda row: "", # Do not account for in grouping
+    "paint"     : lambda row: paint_icons("host", row)
 }
 
 # -----------------------------------------------------------------------
@@ -1927,17 +1927,16 @@ multisite_painters["downtime_origin"] = {
 }
 
 def paint_downtime_recurring(row):
+    try:
+        wato.recurring_downtimes_types
+    except:
+        return "", _("(not supported)")
+
     r = row["downtime_recurring"]
-    return "", {
-        0: _("no"),
-        None: _("no"),
-        1: _("hourly"),
-        2: _("daily"),
-        3: _("weekly"),
-        4: _("two-weekly"),
-        5: _("four-weekly"),
-        999: _("every 5 minutes"),
-    }.get(r, _("(unknown)"))
+    if not r:
+        return "", _("no")
+    else:
+        return "", wato.recurring_downtimes_types.get(r, _("(unknown: %d)") % r)
 
 multisite_painters["downtime_recurring"] = {
     "title"   : _("Downtime recurring interval"),

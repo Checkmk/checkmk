@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
-
 # EXAMPLE DATA FROM: WDC SSC-D0128SC-2100
 #<<<smart>>>
 #/dev/sda ATA WDC_SSC-D0128SC-   1 Raw_Read_Error_Rate     0x000b   100   100   050    Pre-fail  Always       -       16777215
@@ -61,7 +59,7 @@ smart_stats_default_levels = {
    'udma_crcs':       (1,  1),
 }
 
-def parse_smart(info):
+def parse_smart_raw_values(info):
     disks = {}
     disk_name = None
 
@@ -79,6 +77,25 @@ def parse_smart(info):
     return disks
 
 
+def parse_smart_normalized_values(info):
+    disks = {}
+    disk_name = None
+
+    for line in info:
+        if len(line) >= 13:
+            if line[0] != disk_name:
+                disk_name = line[0]
+                disk = {}
+                disks[disk_name] = disk
+
+            field = line[4]
+            if field != "Unknown_Attribute":
+                value = int(line[6])
+                threshold = int(line[8])
+                disk[field] = value, threshold
+    return disks
+
+
 smart_stats_fields = [
     'Reallocated_Sector_Ct',
     'Spin_Retry_Count',
@@ -90,7 +107,7 @@ smart_stats_fields = [
     'UDMA_CRC_Error_Count', ]
 
 def inventory_smart_stats(info):
-    disks = parse_smart(info)
+    disks = parse_smart_raw_values(info)
     inventory = []
     for disk_name, disk in disks.items():
         for field in disk.keys():
@@ -103,7 +120,10 @@ def inventory_smart_stats(info):
 
 def check_smart_stats(item, params, info):
     # params is a snapshot of all counters at the point of time of inventory
-    disks = parse_smart(info)
+
+    disks = parse_smart_raw_values(info)
+    normalized = parse_smart_normalized_values(info)
+
     if item not in disks:
         return 3, "Disk not found"
     disk = disks[item]
@@ -127,11 +147,23 @@ def check_smart_stats(item, params, info):
             value = disk[field]
             infos.append("%s: %d%s" % (descr, value, unit))
             perfdata.append((field, value))
+
             if field in params:
                 ref_value = params[field]
-                if value > ref_value:
+
+                # For reallocated event counts we experienced to many reported errors for disks
+                # which still seem to be OK. The raw value increased by a small amount but the
+                # aggregated value remained at it's initial/ok state. So we use the aggregated
+                # value now. Only for this field.
+                if field == "Reallocated_Event_Count":
+                    infos[-1] += " (was %d during discovery; normalized value looks OK)" % ref_value
+                    norm_value, norm_threshold = normalized[item][field]
+                    if norm_value <= norm_threshold:
+                        state = 2
+
+                elif value > ref_value:
                     state = 2
-                    infos[-1] += " - was %d during inventory(!!)" % ref_value
+                    infos[-1] += "(!!) (was %d during discovery)" % ref_value
 
     return state, ", ".join(infos), perfdata
 
@@ -144,14 +176,14 @@ check_info["smart.stats"] = {
 
 
 def inventory_smart_temp(info):
-    disks = parse_smart(info)
+    disks = parse_smart_raw_values(info)
     for disk_name, disk in disks.iteritems():
         if "Temperature_Celsius" in disk:
             yield (disk_name, {})
 
 
 def check_smart_temp(item, params, info):
-    disks = parse_smart(info)
+    disks = parse_smart_raw_values(info)
 
     try:
         temperature = disks[item]["Temperature_Celsius"]

@@ -37,7 +37,8 @@
 #include "logger.h"
 
 #ifdef CMC
-#include "Core.h"
+#include "cmc.h"
+struct Core;
 extern Core *g_core;
 #endif
 
@@ -306,7 +307,7 @@ char *Logfile::readIntoBuffer(int *size)
     *size = o;
     lseek(fd, 0, SEEK_SET);
 
-    char *buffer = (char *)malloc(*size + 2); // add space for binary 0 at beginning and end
+    char *buffer = static_cast<char *>(malloc(*size + 2)); // add space for binary 0 at beginning and end
     if (!buffer) {
         logger(LOG_WARNING, "Cannot malloc buffer for reading %s: %s", _path, strerror(errno));
         close(fd);

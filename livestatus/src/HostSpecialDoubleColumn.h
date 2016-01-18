@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef ServiceSpecialDoubleColumn_h
-#define ServiceSpecialDoubleColumn_h
+#ifndef HostSpecialDoubleColumn_h
+#define HostSpecialDoubleColumn_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
@@ -37,9 +37,9 @@ class HostSpecialDoubleColumn : public DoubleColumn
     int _type;
 
 public:
-    HostSpecialDoubleColumn(std::string name, std::string description, int hsdc_type, int indirect)
-        : DoubleColumn(name, description, indirect) , _type(hsdc_type) {}
+    HostSpecialDoubleColumn(std::string name, std::string description, int hsdc_type, int indirect, int extra_offset = -1)
+        : DoubleColumn(name, description, indirect, extra_offset) , _type(hsdc_type) {}
     double getValue(void *data);
 };
 
-#endif // ServiceSpecialDoubleColumn_h
+#endif // HostSpecialDoubleColumn_h

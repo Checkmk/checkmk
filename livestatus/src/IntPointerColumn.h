@@ -25,16 +25,18 @@
 #ifndef IntPointerColumn_h
 #define IntPointerColumn_h
 
+#include "config.h" // IWYU pragma: keep
 #include "IntColumn.h"
 
-class IntPointerColumn : public IntColumn
-{
+class IntPointerColumn : public IntColumn {
     int *_number;
+
 public:
-    IntPointerColumn(std::string name, std::string description, int* number)
-        : IntColumn(name, description, -1), _number(number) {}
+    IntPointerColumn(std::string name, std::string description, int *number, int indirect_offset = -1, int extra_offset = -1)
+        : IntColumn(name, description, indirect_offset, extra_offset), _number(number)
+    {
+    }
     int32_t getValue(void *, Query *) { return *_number; }
 };
-
 
 #endif // IntPointerColumn_h

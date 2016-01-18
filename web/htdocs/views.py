@@ -32,10 +32,10 @@ from lib import *
 loaded_with_language = False
 
 # Load all view plugins
-def load_plugins():
+def load_plugins(force):
     global loaded_with_language
 
-    if loaded_with_language == current_language:
+    if loaded_with_language == current_language and not force:
         # always reload the hosttag painters, because new hosttags might have been
         # added during runtime
         load_host_tag_painters()
@@ -808,21 +808,26 @@ def get_needed_columns(view, painters):
     for entry in painters:
         painter = entry[0]
         linkview_name = entry[1]
-        columns += painter["columns"]
+
+        columns += get_painter_columns(painter)
+
         if linkview_name:
             linkview = views.get(linkview_name)
             if linkview:
                 for filt in [ visuals.get_filter(fn) for fn in visuals.get_single_info_keys(linkview) ]:
                     columns += filt.link_columns
 
-                # The site attribute is no column. Filter it out here
-                #if 'site' in columns:
-                #    columns.remove('site')
-
         if len(entry) > 2 and entry[2]:
             tt = entry[2]
-            columns += multisite_painters[tt]["columns"]
+            columns += get_painter_columns(multisite_painters[tt])
     return columns
+
+
+def get_painter_columns(painter):
+    if type(lambda: None) == type(painter["columns"]):
+        return painter["columns"]()
+    else:
+        return painter["columns"]
 
 
 # Display options are flags that control which elements of a
@@ -1098,6 +1103,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     else:
         rows = []
 
+
     # Apply non-Livestatus filters
     for filter in all_active_filters:
         rows = filter.filter_table(rows)
@@ -1199,7 +1205,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     html.show_user_errors()
 
     # Filter form
-    filter_isopen = html.var("filled_in") != "filter" and view.get("mustsearch")
+    filter_isopen = view.get("mustsearch") and not html.var("filled_in")
     if 'F' in display_options and len(show_filters) > 0:
         show_filter_form(filter_isopen, show_filters)
 
@@ -1516,12 +1522,12 @@ def show_context_links(thisview, show_filters, display_options,
                      hidden = not enable_commands)
         togglebutton_off("commands", "commands", hidden = enable_commands)
 
-        selection_enabled = enable_commands and enable_checkboxes
+        selection_enabled = (enable_commands and enable_checkboxes) or thisview.get("force_checkboxes")
         if not thisview.get("force_checkboxes"):
             toggler("checkbox", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"),
                     "location.href='%s';" % html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
                     show_checkboxes, hidden = True) # not selection_enabled)
-        togglebutton_off("checkbox", "checkbox", hidden = selection_enabled)
+        togglebutton_off("checkbox", "checkbox", hidden = not thisview.get("force_checkboxes"))
         html.javascript('g_selection_enabled = %s;' % (selection_enabled and 'true' or 'false'))
 
     if 'O' in display_options:
@@ -1543,13 +1549,12 @@ def show_context_links(thisview, show_filters, display_options,
         if html.has_var("host") \
            and config.wato_enabled \
            and config.may("wato.use") \
-           and (config.may("wato.hosts") or config.may("wato.seeall")) \
-           and wato.using_wato_hosts():
+           and (config.may("wato.hosts") or config.may("wato.seeall")):
             host = html.var("host")
             if host:
-                url = wato.link_to_host(host)
+                url = wato.link_to_host_by_name(host)
             else:
-                url = wato.link_to_path(html.var("wato_folder", ""))
+                url = wato.link_to_folder_by_path(html.var("wato_folder", ""))
             html.context_button(_("WATO"), url, "wato", id="wato",
                 bestof = config.context_buttons_to_show)
 
@@ -1765,7 +1770,7 @@ def allowed_for_datasource(collection, datasourcename):
 
     allowed = {}
     for name, item in collection.items():
-        columns = item["columns"]
+        columns = get_painter_columns(item)
         infos_needed = set([ c.split("_", 1)[0] for c in columns if c != "site" and c not in add_columns])
         if len(infos_needed.difference(infos_available)) == 0:
             allowed[name] = item
@@ -2053,13 +2058,20 @@ def execute_hooks(hook):
             else:
                 pass
 
-def paint(p, row, tdattrs=""):
+def paint(p, row, tdattrs="", is_last_painter=False):
     tdclass, content = prepare_paint(p, row)
+
+    if is_last_painter:
+        if tdclass == None:
+            tdclass = "last_col"
+        else:
+            tdclass += " last_col"
 
     if tdclass:
         html.write("<td %s class=\"%s\">%s</td>\n" % (tdattrs, tdclass, content))
     else:
         html.write("<td %s>%s</td>" % (tdattrs, content))
+    html.guitest_record_output("view", ("cell", content))
     return content != ""
 
 def paint_painter(painter, row):
@@ -2283,7 +2295,7 @@ def sort_url(view, painter, join_index):
 
     return ','.join(p)
 
-def paint_header(view, p):
+def paint_header(view, p, is_last_column_header=False):
     # The variable p is a tuple with the following components:
     # p[0] --> painter object, from multisite_painters[]
     # p[1] --> view name to link to or None (not needed here)
@@ -2304,7 +2316,7 @@ def paint_header(view, p):
     # Important for links:
     # - Add the display options (Keeping the same display options as current)
     # - Link to _self (Always link to the current frame)
-    thclass = ''
+    classes = []
     onclick = ''
     title = ''
     if 'L' in html.display_options \
@@ -2316,11 +2328,18 @@ def paint_header(view, p):
         if hasattr(html, 'title_display_options'):
             params.append(('display_options', html.title_display_options))
 
-        thclass = ' class="sort %s"' % get_primary_sorter_order(view, painter)
+        classes += [ "sort", get_primary_sorter_order(view, painter) ]
         onclick = ' onclick="location.href=\'%s\'"' % html.makeuri(params, 'sort')
         title   = ' title="%s"' % (_('Sort by %s') % t)
 
+    if is_last_column_header:
+        classes.append("last_col")
+
+    thclass = classes and (" class=\"%s\"" % " ".join(classes)) or ""
+
     html.write("<th%s%s%s>%s</th>" % (thclass, onclick, title, t))
+    html.guitest_record_output("view", ("header", title))
+
 
 def register_events(row):
     if config.sounds != []:
@@ -2343,7 +2362,7 @@ def group_value(row, group_painters):
             else:
                 group.append(groupvalfunc(row))
         else:
-            for c in p[0]["columns"]:
+            for c in get_painter_columns(p[0]):
                 group.append(row[c])
     return tuple(group)
 

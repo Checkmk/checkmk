@@ -25,23 +25,31 @@
 
 #include "Configuration.h"
 #include "stringutil.h"
+#include "PerfCounter.h"
+#include "logging.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
-
-extern void verbose(const char *format, ...);
 
 
 static const int CHECK_MK_AGENT_PORT = 6556;
+static const int REALTIME_DEFAULT_PORT = 6559;
 
 
 Configuration::Configuration(const Environment &env)
     : _enabled_sections(0xffffffff)
+    , _realtime_sections(0x0)
     , _port(CHECK_MK_AGENT_PORT)
+    , _realtime_port(REALTIME_DEFAULT_PORT)
     , _default_script_execution_mode(SYNC)
     , _default_script_async_execution(SEQUENTIAL)
+    , _passphrase()
+    , _realtime_timeout(90)
     , _crash_debug(false)
+    , _section_flush(true)
     , _logwatch_send_initial_entries(false)
     , _support_ipv6(true)
     , _environment(env)
@@ -56,13 +64,27 @@ Configuration::Configuration(const Environment &env)
     CollectorRegistry::instance().startFile();
     readConfigFile(configFileName(true));
 
+    // ensure only supported sections are enabled for realtime updates
+    _realtime_sections &= VALID_REALTIME_SECTIONS;
+
+    if ((_realtime_sections == 0) != (_passphrase.empty())) {
+        fprintf(stderr, "for realtime monitoring, both realtime sections and passphrase "
+                "have to be set and valid.");
+    }
+
     postProcessOnlyFrom();
 }
 
 
-bool Configuration::sectionEnabled(unsigned int section)
+unsigned long Configuration::enabledSections()
 {
-    return _enabled_sections & section;
+    return _enabled_sections;
+}
+
+
+unsigned long Configuration::realtimeSections()
+{
+    return _realtime_sections;
 }
 
 
@@ -75,12 +97,12 @@ std::string Configuration::configFileName(bool local) const
 }
 
 
-bool Configuration::parseCrashDebug(char *value)
+bool Configuration::parseBoolean(char *value, bool &parameter)
 {
     int s = parse_boolean(value);
     if (s == -1)
         return false;
-    _crash_debug = s;
+    parameter = s != 0;
     return true;
 }
 
@@ -99,10 +121,12 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
         _port = atoi(value);
         return true;
     }
+    else if (!strcmp(var, "realtime_port")) {
+        _realtime_port = atoi(value);
+        return true;
+    }
     else if (!strcmp(var, "ipv6")) {
-        int s = parse_boolean(value);
-        _support_ipv6 = s != 0;
-        return s != -1;
+        return parseBoolean(value, _support_ipv6);
     }
     else if (!strcmp(var, "execute")) {
         parseExecute(value);
@@ -132,118 +156,99 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
         return true;
     }
     else if (!strcmp(var, "crash_debug")) {
-        return parseCrashDebug(value);
+        return parseBoolean(value, _crash_debug);
     }
-    else if (!strcmp(var, "sections")) {
-        _enabled_sections = 0;
+    else if (!strcmp(var, "section_flush")) {
+        return parseBoolean(value, _section_flush);
+    }
+    else if (!strcmp(var, "sections")
+            || !strcmp(var, "realtime_sections")) {
+        bool read_rt_sections = strcmp(var, "realtime_sections") == 0;
+        unsigned long &mask = read_rt_sections ? _realtime_sections
+                                               : _enabled_sections;
+        // crashlog output always enabled for regular output, never for live output
+        mask = read_rt_sections ? 0 : SECTION_CRASHLOG;
         char *word;
         while ((word = next_word(&value))) {
             if (!strcmp(word, "check_mk"))
-                _enabled_sections |= SECTION_CHECK_MK;
+                mask |= SECTION_CHECK_MK;
             else if (!strcmp(word, "uptime"))
-                _enabled_sections |= SECTION_UPTIME;
+                mask |= SECTION_UPTIME;
             else if (!strcmp(word, "df"))
-                _enabled_sections |= SECTION_DF;
+                mask |= SECTION_DF;
             else if (!strcmp(word, "ps"))
-                _enabled_sections |= SECTION_PS;
+                mask |= SECTION_PS;
             else if (!strcmp(word, "mem"))
-                _enabled_sections |= SECTION_MEM;
+                mask |= SECTION_MEM;
             else if (!strcmp(word, "services"))
-                _enabled_sections |= SECTION_SERVICES;
+                mask |= SECTION_SERVICES;
             else if (!strcmp(word, "winperf"))
-                _enabled_sections |= SECTION_WINPERF;
+                mask |= SECTION_WINPERF;
+            else if (!strcmp(word, "winperf_processor"))
+                mask |= SECTION_WINPERF_CPU;
+            else if (!strcmp(word, "winperf_if"))
+                mask |= SECTION_WINPERF_IF;
+            else if (!strcmp(word, "winperf_phydisk"))
+                mask |= SECTION_WINPERF_PHYDISK;
+            else if (!strcmp(word, "perfcounter"))
+                mask |= SECTION_WINPERF_CONFIG;
             else if (!strcmp(word, "logwatch"))
-                _enabled_sections |= SECTION_LOGWATCH;
+                mask |= SECTION_LOGWATCH;
             else if (!strcmp(word, "logfiles"))
-                _enabled_sections |= SECTION_LOGFILES;
+                mask |= SECTION_LOGFILES;
             else if (!strcmp(word, "systemtime"))
-                _enabled_sections |= SECTION_SYSTEMTIME;
-            else if (!strcmp(word, "plugins"))
-                _enabled_sections |= SECTION_PLUGINS;
-            else if (!strcmp(word, "local"))
-                _enabled_sections |= SECTION_LOCAL;
+                mask |= SECTION_SYSTEMTIME;
+            else if (!strcmp(word, "plugins")) {
+                if (read_rt_sections) {
+                    verbose("ignored plugin section for realtime checks");
+                    // ... because of performance and because that code
+                    // is almost certainly not thread-safe currently
+                }
+                else {
+                    mask |= SECTION_PLUGINS;
+                }
+            }
+            else if (!strcmp(word, "local")) {
+                if (read_rt_sections) {
+                    verbose("ignored local section for realtime checks");
+                    // ... because of performance and because that code
+                    // is almost certainly not thread-safe currently
+                }
+                else {
+                    mask |= SECTION_LOCAL;
+                }
+            }
             else if (!strcmp(word, "spool"))
-                _enabled_sections |= SECTION_SPOOL;
+                mask |= SECTION_SPOOL;
             else if (!strcmp(word, "mrpe"))
-                _enabled_sections |= SECTION_MRPE;
+                mask |= SECTION_MRPE;
             else if (!strcmp(word, "fileinfo"))
-                _enabled_sections |= SECTION_FILEINFO;
+                mask |= SECTION_FILEINFO;
+            else if (!strcmp(word, "wmi_cpuload"))
+                mask |= SECTION_CPU;
+            else if (!strcmp(word, "msexch"))
+                mask |= SECTION_EXCHANGE;
+            else if (!strcmp(word, "dotnet_clrmemory"))
+                mask |= SECTION_DOTNET;
+            else if (!strcmp(word, "webservices"))
+                mask |= SECTION_WEBSERVICES;
             else {
                 fprintf(stderr, "Invalid section '%s'.\r\n", word);
                 return false;
             }
         }
         return true;
+    } else if (strcmp(var, "realtime_timeout") == 0) {
+        _realtime_timeout = strtol(value, 0, 10);
+        return true;
+    } else if (strcmp(var, "passphrase") == 0) {
+        _passphrase = value;
+        return true;
     }
 
     return false;
 }
 
-
-// retrieve the next line from a multi-sz registry key
-const TCHAR *get_next_multi_sz(const std::vector<TCHAR> &data, size_t &offset)
-{
-    const TCHAR *next = &data[offset];
-    size_t len = strlen(next);
-    if ((len == 0) || (offset + len > data.size())) {
-        // the second condition would only happen with an invalid registry value but that's not
-        // unheard of
-        return NULL;
-    } else {
-        offset += len + 1;
-        return next;
-    }
-}
-
-
-int Configuration::getCounterIdFromLang(const char *language, const char *counter_name)
-{
-    char regkey[512];
-    snprintf(regkey, sizeof(regkey), "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\%s", language);
-    HKEY hKey;
-    LONG result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, regkey, REG_MULTI_SZ, KEY_READ, &hKey);
-
-    // preflight
-    std::vector<TCHAR> szValueName;
-    DWORD dwcbData = 0;
-    RegQueryValueEx(hKey, "Counter", NULL, NULL, (LPBYTE)&szValueName[0], &dwcbData);
-    szValueName.resize(dwcbData);
-    // actual read op
-    RegQueryValueEx(hKey, "Counter", NULL, NULL, (LPBYTE) &szValueName[0], &dwcbData);
-    RegCloseKey (hKey);
-
-    if (result != ERROR_SUCCESS) {
-        return -1;
-    }
-
-    size_t offset = 0;
-    for(;;) {
-        const TCHAR *id = get_next_multi_sz(szValueName, offset);
-        const TCHAR *name = get_next_multi_sz(szValueName, offset);
-        if ((id == NULL) || (name == NULL)) {
-            break;
-        }
-        if (strcmp(name, counter_name) == 0) {
-            return strtol(id, NULL, 10);
-        }
-    }
-
-    return -1;
-}
-
-int Configuration::getPerfCounterId(const char *counter_name)
-{
-    int counter_id;
-    // Try to find it in current language
-    if ((counter_id = getCounterIdFromLang("CurrentLanguage", counter_name)) != -1)
-        return counter_id;
-
-    // Try to find it in english
-    if ((counter_id = getCounterIdFromLang("009", counter_name)) != -1)
-        return counter_id;
-
-    return -1;
-}
 
 bool Configuration::handleWinperfConfigVariable(char *var, char *value)
 {
@@ -262,7 +267,7 @@ bool Configuration::handleWinperfConfigVariable(char *var, char *value)
         for (unsigned int i = 0; i < strlen(value); i++)
             if (!isdigit(value[i])) {
                 is_digit = false;
-                int id = getPerfCounterId(value);
+                int id = PerfCounterObject::resolve_counter_name(value);
                 if (id == -1) {
                     fprintf(stderr, "No matching performance counter id found for %s.\n", value);
                     return false;
@@ -461,9 +466,9 @@ void Configuration::updateOrCreateLogwatchTextfile(const char *full_filename, gl
                     (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
 
                 if (file_id != textfile->file_id) {                // file has been changed
-                    verbose("File %s: id has changed from %s",
-                            full_filename, llu_to_string(textfile->file_id));
-                    verbose(" to %s\n", llu_to_string(file_id));
+                    verbose("File %s: id has changed from %" PRIu64,
+                            full_filename, textfile->file_id);
+                    verbose(" to %" PRIu64 "\n", file_id);
                     textfile->offset = 0;
                     textfile->file_id = file_id;
                 }

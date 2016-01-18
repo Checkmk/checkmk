@@ -27,10 +27,10 @@
 #include <time.h>
 #include <map>
 #include <utility>
+#include "mk/Mutex.h"
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "Logfile.h"
-#include "Mutex.h"
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
@@ -40,8 +40,10 @@
 #include "TableContacts.h"
 #include "TableHosts.h"
 #include "TableServices.h"
+
+#ifndef CMC
 #include "auth.h"
-#include "tables.h"
+#endif
 
 using mk::lock_guard;
 using mk::mutex;
@@ -58,6 +60,7 @@ TableLog::TableLog()
     addColumns(this, "", -1);
 }
 
+// static
 void TableLog::addColumns(Table *table, string prefix, int indirect_offset, bool add_host, bool add_services)
 {
     LogEntry *ref = 0;
@@ -99,11 +102,11 @@ void TableLog::addColumns(Table *table, string prefix, int indirect_offset, bool
 
     // join host and service tables
     if (add_host)
-        g_table_hosts->addColumns(table, "current_host_",    (char *)&(ref->_host)    - (char *)ref);
+        TableHosts::addColumns(table, "current_host_",    (char *)&(ref->_host)    - (char *)ref);
     if (add_services)
-        g_table_services->addColumns(table, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
-    g_table_contacts->addColumns(table, "current_contact_", (char *)&(ref->_contact) - (char *)ref);
-    g_table_commands->addColumns(table, "current_command_", (char *)&(ref->_command) - (char *)ref);
+        TableServices::addColumns(table, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
+    TableContacts::addColumns(table, "current_contact_", (char *)&(ref->_contact) - (char *)ref);
+    TableCommands::addColumns(table, "current_command_", (char *)&(ref->_command) - (char *)ref);
 }
 
 TableLog::~TableLog()

@@ -24,8 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# For legacy reasons
+blade_bx_fan_default_error_levels = (20, 10)    # percentages or errors!
 
-blade_bx_fan_default_error_levels = (50, 40)    # percentages or errors!
+factory_settings['blade_bx_powerfan_default_levels'] = {
+        "levels_lower" : ( 20, 10 ),
+        "levels"       : ( 80,  90 ),
+
+}
 
 blade_bx_status = { "1" : "unknow",
                     "2" : "disabled",
@@ -40,10 +46,16 @@ blade_bx_status = { "1" : "unknow",
 def inventory_blade_bx_powerfan(info):
     for line in  info:
         if line[1] != "8":
-            yield line[2], "blade_bx_fan_default_error_levels"
+            yield line[2],{}
 
 def check_blade_bx_powerfan(item, params, info):
-    warn_perc, crit_perc = params
+    if type(params) == dict:
+        warn_perc, crit_perc = params['levels']
+        warn_perc_up, crit_perc_up = params['levels_lower']
+    else:
+        warn_perc, crit_perc = params
+        warn_perc_up, crit_perc_up = None, None
+
     for index, status, descr, rpm, max_speed, speed, ctrlstate in info:
         if descr != item: continue
         he = 1
@@ -56,22 +68,22 @@ def check_blade_bx_powerfan(item, params, info):
             return (2, "Fan not present or poweroff", perfdata)
         elif status != "3":
             return (2, "Status not OK (Status %s)" % blade_bx_status[status] , perfdata)
-        elif speedperc_int <= crit_perc:
-            return (2, "Speed at %d%% of max (crit at %d%%)" % (speedperc_int, crit_perc), perfdata)
-        elif speedperc_int <= warn_perc:
-            return (1, "Speed at %d%% of max (warning at %d%%)" % (speedperc_int, warn_perc), perfdata)
+        elif speedperc_int <= crit_perc or (crit_perc_up and speedperc_int >= crit_perc_up):
+            return 2, "Speed at %d%% of max (crit at < %d%% or > %d%%)" % (speedperc_int, crit_perc, crit_perc_up ), perfdata
+        elif speedperc_int <= warn_perc or (warn_perc and speedperc_int >= warn_perc_up):
+            return 1, "Speed at %d%% of max (warning at < %d%% > %d%%)" % (speedperc_int, warn_perc, warn_perc_up), perfdata
         else:
             return (0, "Speed at %s RPM (%d%% of max)" % (rpm, speedperc_int), perfdata)
-        return (3, "Device %s not found in SNMP data %s " % (item, perfdata ) )
 
-    return (3, "Device %s not found in SNMP data" % item)
 
 
 check_info['blade_bx_powerfan'] = {
-    "check_function" : check_blade_bx_powerfan,
-    "inventory_function" : inventory_blade_bx_powerfan,
-    "service_description" : "Blade Cooling %s",
-    "has_perfdata" : True,
+    "check_function"          : check_blade_bx_powerfan,
+    "inventory_function"      : inventory_blade_bx_powerfan,
+    "service_description"     : "Blade Cooling %s",
+    "has_perfdata"            : True,
+    "group"                   : "hw_fans_perc",
+    "default_levels_variable" : "blade_bx_powerfan_default_levels",
     "snmp_info" : (".1.3.6.1.4.1.7244.1.1.1.3.3.1.1", [
                                                       1, #index
                                                       2, #status

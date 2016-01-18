@@ -1,0 +1,9 @@
+Title: jolokia_metrics.perm_gen: fixed wrong calculation of perf variables warn and crit
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1448623631
+Class: fix
+
+

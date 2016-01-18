@@ -59,11 +59,13 @@ def netapp_convert_to_if64(info):
             vif_list.append(name)
 
         # Reported by Clustermode
-        if "link-status" in values:
-            if values["link-status"] == "up":
-                values["state"] = "1"
-            else:
-                values["state"] = "2"
+        for status_key in [ "link-status", "operational-status" ]:
+            if status_key in values:
+                if values[status_key] == "up":
+                    values["state"] = "1"
+                else:
+                    values["state"] = "2"
+                break
 
         # Reported by Clustermode
         if "operational-speed" in values:

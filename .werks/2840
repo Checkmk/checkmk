@@ -1,0 +1,11 @@
+Title: barracuda_mail_latency, barracuda_mailqueues, barracuda_system_cpu_util: new checks for Barracuda SPAM Firewall Appliance
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1448459696
+Class: feature
+
+These checks monitor the active and deferred mail queues, the mail latency and the system cpu utilization
+of a Barrcuda SPAM Firewall Appliance.
+Moreover the barracuda_mailqueues check reports the incoming and daily sent mails.

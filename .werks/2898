@@ -1,0 +1,24 @@
+Title: smart: Using normalized value for determining reallocated events state
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452258418
+Class: fix
+
+The smart check often reported errors for disks which had just a small number of
+reallocated events but where the normalized state value (aggregated by hardware
+manufacturer logic) did not report an issue.
+
+This was caused by the logic of the check which stores values the agent reports
+during service discovery and continously checks the difference between these values
+and the current values reported by the disk. In this progress the "raw values" of
+the smartctl output were used for all attributes.
+
+But this seemed - at least for the "reallocated events count" - not a really good
+approach because the raw values may slightly change during regular operation. But
+small changes of the values does not necessarly mean a predicted failure. So we
+decided to change the logic only for the "reallocated events" now.
+
+Maybe we need to change it for the other values in the future. But for the moment
+only the single value interpretation was changed.

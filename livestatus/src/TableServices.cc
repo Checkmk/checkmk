@@ -48,7 +48,6 @@
 #include "TableServicegroups.h"
 #include "auth.h"
 #include "strutil.h"
-#include "tables.h"
 
 using std::string;
 
@@ -131,9 +130,10 @@ void TableServices::answerQuery(Query *query)
 
 
     // do we know the host?
-    char *host_name = (char *)query->findIndexFilter("host_name");
+    const char *host_name = static_cast<const char*>(query->findIndexFilter("host_name"));
     if (host_name) {
-        host *host = find_host(host_name);
+        // Older Nagios headers are not const-correct... :-P
+        host *host = find_host(const_cast<char*>(host_name));
         if (host) {
             servicesmember *mem = host->services;
             while (mem) {
@@ -198,14 +198,15 @@ TableServices::TableServices(bool by_group, bool by_hostgroup)
     struct servicebyhostgroup hgref;
     addColumns(this, "", -1, true);
     if (by_group) {
-        g_table_servicegroups->addColumns(this, "servicegroup_", (char *)&(sgref._servicegroup) - (char *)&sgref);
+        TableServicegroups::addColumns(this, "servicegroup_", (char *)&(sgref._servicegroup) - (char *)&sgref);
     }
     else if (by_hostgroup) {
-        g_table_hostgroups->addColumns(this, "hostgroup_", (char *)&(hgref._hostgroup) - (char *)&hgref);
+        TableHostgroups::addColumns(this, "hostgroup_", (char *)&(hgref._hostgroup) - (char *)&hgref);
     }
 }
 
 
+// static
 void TableServices::addColumns(Table *table, string prefix, int indirect_offset, bool add_hosts)
 {
     /* es fehlt noch: double-Spalten, unsigned long spalten, etliche weniger wichtige
@@ -398,7 +399,7 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
                 "A list of all comments of the service with id, author, comment, entry type and entry time", indirect_offset, false, true, true, true));
 
     if (add_hosts)
-        g_table_hosts->addColumns(this, "host_", (char *)(&svc.host_ptr) - ref);
+        TableHosts::addColumns(table, "host_", (char *)(&svc.host_ptr) - ref);
 
     table->addColumn(new CustomVarsColumn(prefix + "custom_variable_names",
                 "A list of the names of all custom variables of the service", (char *)(&svc.custom_variables) - ref, indirect_offset, CVT_VARNAMES));

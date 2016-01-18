@@ -24,6 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+# <<<sap:sep(9)>>>
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTime    249 msec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTimeDialog  249 msec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTimeDialogRFC   249 msec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTimeHTTP    9830    msec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/FrontendResponseTime    542 msec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/LongRunners 120 sec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTime(StandardTran.) 7   msec
+# sap_XYZ    1    50 Nagios/Allgemein/Intern/UsersLoggedIn   97  -
+# sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime    249 msec
+# sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Network Time/FrontEndNetTime 80  msec
+# sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Standardized Response Time/ResponseTime(StandardTran.)   7   msec
+# sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Users Logged On/UsersLoggedIn    97  -
+
+
+
 # This map converts between the SAP color codes (key values) and the
 # nagios state codes
 sap_nagios_state_map = [
@@ -51,7 +68,7 @@ def check_sap_dialog(item, params, info):
             dialog[key] = perfval, uom
 
     if not dialog:
-        # this isn't perfect. Sap data is delivered as piggyback output. Potentially mulitple
+        # this isn't perfect. Sap data is delivered as piggyback output. Potentially multiple
         # hosts can each send data for multiple sap instances. The data can also overlap.
         # This means technically we may not get here and report then incomplete data if one host is
         # down.
@@ -64,12 +81,19 @@ def check_sap_dialog(item, params, info):
         return s.replace('(', '_').replace(')', '_').replace(' ', '_').replace('.', '_').rstrip('_')
 
     # {'UsersLoggedIn': (2, '-'), 'ResponseTime(StandardTran.)': (6, 'msec'), 'FrontEndNetTime': (0, 'msec'), 'ResponseTime': (77, 'msec')}
-    perfdata = [ (perf_clean_key(k), v[0]) for k, v in dialog.items() ]
-    output = ', '.join([ '%s: %d%s' % (k, v[0], (v[1] != '-' and v[1] or '')) for k, v in dialog.items() ])
-    return (0, output, perfdata)
+    for key, value in dialog.items():
+        state = 0
+        if key in params:
+            warn, crit = params[key]
+            if value[0] >= crit:
+                state = 2
+            elif value[0] >= warn:
+                state = 1
+        yield state, "%s: %d%s" % (key, value[0], (value[1] != '-' and value[1] or '') ), [ (perf_clean_key(key), value[0]) ]
 
 check_info['sap.dialog'] = {
     "check_function"      : check_sap_dialog,
+    "group"               : "sap_dialog",
     "inventory_function"  : inventory_sap_dialog,
     "service_description" : "%s Dialog",
     "has_perfdata"        : True,

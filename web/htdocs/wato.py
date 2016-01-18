@@ -15009,7 +15009,7 @@ def execute_network_scan_job():
             found = do_remote_automation(config.site(folder.site_id()), "network-scan",
                                           [("folder", folder.path())])
 
-        if not type(found) == list:
+        if type(found) != list:
             raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
 
         add_scanned_hosts_to_folder(folder, found)

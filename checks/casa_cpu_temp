@@ -55,21 +55,7 @@ def check_casa_cpu_temp(item, params, parsed):
     if item in parsed:
         if parsed[item]["temp_status"] == "1":
             value  = float(parsed[item]["temp_value"]) / 10
-            levels_text = ""
-            error_text  = ""
-            warn, crit = None, None
-            if params:
-                warn, crit = params
-                levels_text = u"(warn/crit at %d/%d°C)" % params
-                if value > crit:
-                    state = 2
-                    error_text = "(!!)"
-                elif value > warn:
-                    state = 1
-                    error_text = "(!)"
-            perfdata.append( ("temp", value, warn, crit, 0, 100) )
-            infotext = u"Temperature is %.1f °C %s%s" % (value, error_text, levels_text)
-            return (state, infotext, perfdata)
+            return check_temperature(value, params, "case_cpu_temp_%s" % item)
         else:
             return (2, "Sensor failure!", [])
 

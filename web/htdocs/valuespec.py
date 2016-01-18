@@ -2771,6 +2771,10 @@ class Dictionary(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
         self._empty_text = kwargs.get("empty_text", _("(no parameters)"))
+        # Optionally a text can be specified to be shown by value_to_text()
+        # when the value equal the default value of the value spec. Normally
+        # the default values are shown.
+        self._default_text = kwargs.get("default_text", None)
         self._required_keys = kwargs.get("required_keys", [])
         self._ignored_keys = kwargs.get("ignored_keys", [])
         self._default_keys = kwargs.get("default_keys", []) # keys present in default value
@@ -2964,6 +2968,9 @@ class Dictionary(ValueSpec):
         oneline = self._render == "oneline"
         if not value:
             return self._empty_text
+
+        if self._default_text and value == self.default_value():
+            return self._default_text
 
         if not oneline:
             s = '<table class=vs_dict_text>'

@@ -71,3 +71,5 @@ def page_run_cron():
             import traceback
             logger(LOG_ERR, "Exception in cron_job [%s]:\n%s" %
                              (cron_job.__name__, traceback.format_exc()))
+
+    html.write("OK\n")

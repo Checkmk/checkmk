@@ -258,6 +258,7 @@
 
     BI:
     * 2882 Reorganize BI configuration into packs, add contacts and permissions...
+    * 2826 FIX: Disabled BI Aggregations no longer causing crashes when using "Precompile aggregations on demand"...
 
     Reporting & Availability:
     * 2823 FIX: Availability: Fixed division by zero error on rendering the availability table

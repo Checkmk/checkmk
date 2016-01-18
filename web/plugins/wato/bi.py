@@ -1061,6 +1061,11 @@ class ModeBIRules(ModeBI):
         self.must_be_contact_for_pack()
         if html.var("_del_rule"):
             ruleid = html.var("_del_rule")
+            aggr_refs, rule_refs, level = self.count_rule_references(ruleid)
+            if aggr_refs:
+                raise MKUserError(None, _("You cannot delete this rule: it is still used by aggregations."))
+            if rule_refs:
+                raise MKUserError(None, _("You cannot delete this rule: it is still used by other rules."))
             c = wato_confirm(_("Confirm rule deletion"),
                 _("Do you really want to delete the rule with "
                   "the id <b>%s</b>?") % ruleid)
@@ -1112,7 +1117,7 @@ class ModeBIRules(ModeBI):
                     tree_url = html.makeuri([("mode", "bi_rule_tree"), ("id", ruleid)])
                     html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"), "bitree")
                 if refs == 0:
-                    delete_url = html.makeactionuri([("mode", "bi_rules"), ("_del_rule", ruleid)])
+                    delete_url = html.makeactionuri_contextless([("mode", "bi_rules"), ("_del_rule", ruleid), ("pack", self._pack_id)])
                     html.icon_button(delete_url, _("Delete this rule"), "delete")
                 table.cell(_("Level"), level or "", css="number")
                 table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, ruleid))

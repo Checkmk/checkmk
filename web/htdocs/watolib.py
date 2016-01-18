@@ -209,7 +209,7 @@ def log_pending(status, linkinfo, what, message, user_id = None):
 
     # The latter one condition applies to slave sites
     # Otherwise slave sites would trigger the cmcrushd
-    if not is_distributed() and not has_distributed_wato_file():
+    if not is_distributed() and not is_slave_site():
         if status != SYNC:
             log_entry(linkinfo, what, message, "pending.log", user_id)
         cmc_rush_ahead()
@@ -368,6 +368,10 @@ class WithPermissionsAndAttributes(WithPermissions):
 
     def attribute(self, attrname, default_value=None):
         return self.attributes().get(attrname, default_value)
+
+
+    def set_attribute(self, attrname, value):
+        self._attributes[attrname] = value
 
 
     def has_explicit_attribute(self, attrname):
@@ -1351,6 +1355,19 @@ class Folder(BaseFolder):
         return self._locked_hosts
 
 
+    # Returns:
+    #  None:      No network scan is enabled.
+    #  timestamp: Next planned run according to config.
+    def next_network_scan_at(self):
+        if "network_scan" in self._attributes:
+            interval = self._attributes["network_scan"]["scan_interval"]
+            last_end = self._attributes.get("network_scan_result", {}).get("end", None)
+            if last_end == None:
+                return time.time()
+            else:
+                return last_end + interval
+
+
     # .-----------------------------------------------------------------------.
     # | MODIFICATIONS                                                         |
     # |                                                                       |
@@ -2182,6 +2199,12 @@ class Attribute:
     def paint(self, value, hostname):
         return "", value
 
+    # Whether or not the user is able to edit this attribute. If
+    # not, the value is shown read-only (when the user is permitted
+    # to see the attribute).
+    def may_edit(self):
+        return True
+
     # Wether or not to show this attribute in tables.
     # This value is set by declare_host_attribute
     def show_in_table(self):
@@ -2216,6 +2239,17 @@ class Attribute:
             return self._depends_on_roles
         except:
             return []
+
+    # Return information about whether or not either the
+    # inherited value or the default value should be shown
+    # for an attribute.
+    # _depends_on_roles is set by declare_host_attribute().
+    def show_inherited_value(self):
+        try:
+            return self._show_inherited_value
+        except:
+            return True
+
 
     # Return information about the host tags we depend on.
     # The method is usually not overridden, but the variable
@@ -2637,16 +2671,21 @@ g_host_attribute = {}
 
 # Declare attributes with this method
 def declare_host_attribute(a, show_in_table = True, show_in_folder = True,
-       topic = None, show_in_form = True, depends_on_tags = [], depends_on_roles = [], editable = True):
+       topic = None, show_in_form = True, depends_on_tags = [], depends_on_roles = [], editable = True,
+       show_inherited_value = True, may_edit = None):
 
     g_host_attributes.append((a, topic))
     g_host_attribute[a.name()] = a
-    a._show_in_table    = show_in_table
-    a._show_in_folder   = show_in_folder
-    a._show_in_form     = show_in_form
-    a._depends_on_tags  = depends_on_tags
-    a._depends_on_roles = depends_on_roles
-    a._editable         = editable
+    a._show_in_table        = show_in_table
+    a._show_in_folder       = show_in_folder
+    a._show_in_form         = show_in_form
+    a._show_inherited_value = show_inherited_value
+    a._depends_on_tags      = depends_on_tags
+    a._depends_on_roles     = depends_on_roles
+    a._editable             = editable
+
+    if may_edit:
+        a.may_edit = may_edit
 
 
 def undeclare_host_attribute(attrname):
@@ -3085,6 +3124,10 @@ def is_distributed(sites = None):
         if site.get("replication"):
             return True
     return False
+
+
+def is_wato_slave_site():
+    return has_distributed_wato_file()
 
 
 def has_wato_slave_sites():
@@ -4114,7 +4157,6 @@ def get_tag_conditions(varprefix=""):
             tag_list.append("!" + id)
 
     return tag_list
-
 
 
 #.

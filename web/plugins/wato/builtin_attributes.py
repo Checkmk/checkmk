@@ -136,3 +136,166 @@ def validate_host_parents(host):
 
 register_hook('validate-host', validate_host_parents)
 
+
+
+class NetworkScanAttribute(ValueSpecAttribute):
+    def __init__(self):
+        def get_all_user_ids():
+            return [ (user_id, "%s (%s)" % (user_id, user["alias"]))
+                     for user_id, user in userdb.load_users(lock = False).items() ]
+
+        ValueSpecAttribute.__init__(self, "network_scan",
+            Dictionary(
+                elements = [
+                    ("ip_ranges", ListOf(self._vs_ip_range(),
+                        title = _("IP ranges to scan"),
+                        add_label = _("Add new IP range"),
+                        text_if_empty = _("No IP range configured"),
+                    )),
+                    ("exclude_ranges", ListOf(self._vs_ip_range(),
+                        title = _("IP ranges to exclude"),
+                        add_label = _("Add new IP range"),
+                        text_if_empty = _("No exclude range configured"),
+                    )),
+                    ("scan_interval", Age(
+                        title = _("Scan interval"),
+                        display = [ "days", "hours" ],
+                        default_value = 60*60*24,
+                        min_value = 3600, # 1 hour
+                    )),
+                    ("max_parallel_pings", Integer(
+                        title = _("Parallel pings to send"),
+                        help = _("Set the maximum number of concurrent pings sent to target IP "
+                                 "addresses."),
+                        minvalue = 1,
+                        maxvalue = 200,
+                        default_value = 100,
+                    )),
+                    ("run_as", DropdownChoice(
+                        title = _("Run as"),
+                        help = _("Execute the network scan in the Check_MK user context of the "
+                                 "choosen user. This user needs the permission to add new hosts "
+                                 "to this folder."),
+                        choices = get_all_user_ids,
+                        default_value = lambda: config.user_id,
+                    )),
+                ],
+                title = _("Network Scan"),
+                help = _("For each folder an automatic network scan can be configured. It will "
+                         "try to detect new hosts in the configured IP ranges by sending pings "
+                         "to each IP address to check whether or not a host is using this ip "
+                         "address. Each new found host will be added to the current folder by "
+                         "it's hostname, when resolvable via DNS, or by it's IP address."),
+                optional_keys = ["max_parallel_pings"],
+                default_text = _("Not configured."),
+            )
+        )
+
+
+    def _vs_ip_range(self):
+        return CascadingDropdown(
+            choices = [
+                ("ip_range", _("IP-Range"), Tuple(
+                    elements = [
+                        IPv4Address(
+                            title = _("From:"),
+                        ),
+                        IPv4Address(
+                            title = _("To:"),
+                        ),
+                    ],
+                    orientation = "horizontal",
+                )),
+                ("ip_network", _("IP Network"), Tuple(
+                    elements = [
+                        IPv4Address(
+                            title = _("Network address:"),
+                        ),
+                        Integer(
+                            title = _("Netmask"),
+                            minvalue = 8,
+                            maxvalue = 30,
+                        ),
+                    ],
+                    orientation = "horizontal",
+                )),
+                ("ip_list", _("Explicit List of IP Addresses"), ListOfStrings(
+                    valuespec = IPv4Address(),
+                    orientation = "horizontal",
+                )),
+            ]
+        )
+
+
+declare_host_attribute(NetworkScanAttribute(),
+                       show_in_table = False,
+                       show_in_form = False,
+                       show_in_folder = True,
+                       show_inherited_value = False,
+                       may_edit = lambda: config.may("wato.manage_hosts"),
+                       topic = _("Network Scan"))
+
+
+
+class NetworkScanResultAttribute(ValueSpecAttribute):
+    def __init__(self):
+        ValueSpecAttribute.__init__(self, "network_scan_result",
+            Dictionary(
+                elements = [
+                    ("start", Alternative(
+                        title = _("Started"),
+                        elements = [
+                            FixedValue(None,
+                                totext = _("No scan has been started yet."),
+                            ),
+                            AbsoluteDate(
+                                include_time = True,
+                                default_value = 0,
+                            ),
+                        ],
+                    )),
+                    ("end", Alternative(
+                        title = _("Finished"),
+                        elements = [
+                            FixedValue(None,
+                                totext = _("No scan has finished yet."),
+                            ),
+                            AbsoluteDate(
+                                include_time = True,
+                                default_value = 0,
+                            ),
+                        ],
+                    )),
+                    ("state", Alternative(
+                        title = _("State"),
+                        elements = [
+                            FixedValue(None,
+                                totext = "", # Not started or currently running
+                            ),
+                            FixedValue(True,
+                                totext = _("Succeeded"),
+                            ),
+                            FixedValue(False,
+                                totext = _("Failed"),
+                            ),
+                        ],
+                    )),
+                    ("output", TextUnicode(
+                        title = _("Output"),
+                    )),
+                ],
+                title = _("Last Scan Result"),
+                optional_keys = [],
+                default_text = _("No scan performed yet."),
+            )
+        )
+
+
+
+declare_host_attribute(NetworkScanResultAttribute(),
+                       show_in_table = False,
+                       show_in_form = False,
+                       show_in_folder = True,
+                       show_inherited_value = False,
+                       editable = False,
+                       topic = _("Network Scan"))

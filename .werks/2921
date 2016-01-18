@@ -1,0 +1,10 @@
+Title: printer_supply_ricoh: check now tries to handle negative readings properly
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453105397
+Class: feature
+
+Negative values are used by the device to report "special" conditions. Unfortunately these aren't
+documented so current interpretation is only based on observation.

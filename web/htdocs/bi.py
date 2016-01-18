@@ -186,6 +186,8 @@ def aggregation_groups():
         # on demand: show all configured groups
         group_names = set([])
         for a in config.aggregations + config.host_aggregations:
+            if a[0] == config.DISABLED:
+                continue
             if type(a[0]) == list:
                 group_names.update(a[0])
             else:

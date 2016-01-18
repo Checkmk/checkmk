@@ -1,0 +1,11 @@
+Title: Disabled BI Aggregations no longer causing crashes when using "Precompile aggregations on demand"
+Level: 2
+Component: bi
+Compatible: compat
+Version: 1.2.7i3p6
+Date: 1453112096
+Class: fix
+
+This fixes the error <i>AttributeError: class DISABLED has no attribute 'lower'</i>, which is shown in
+the BI sidebar snapin or written to the file <i>~/var/log/web.log</i>.
+Because of this bug most of the aggregation views were empty.

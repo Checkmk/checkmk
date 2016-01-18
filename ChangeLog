@@ -30,6 +30,9 @@
     * 2815 FIX: Notification scripts: Fixed missing environment variables...
     * 2821 FIX: WATO rule based notifications: Validate regular expression for service conditions...
 
+    BI:
+    * 2826 FIX: Disabled BI Aggregations no longer causing crashes when using "Precompile aggregations on demand"...
+
     Reporting & Availability:
     * 2823 FIX: Availability: Fixed division by zero error on rendering the availability table
 

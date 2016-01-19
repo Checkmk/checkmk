@@ -14,6 +14,9 @@
     BI:
     * 2826 FIX: Disabled BI Aggregations no longer causing crashes when using "Precompile aggregations on demand"...
 
+    HW/SW-Inventory:
+    * 2827 FIX: win_disks, win_video: now able to detect multiple instances
+
 
 1.2.6p15:
     Core & Setup:

@@ -1,0 +1,10 @@
+Title: win_disks, win_video: now able to detect multiple instances
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6p16
+Date: 1453194865
+
+

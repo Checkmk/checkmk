@@ -60,12 +60,23 @@
 def inv_win_disks(info):
     node = inv_tree("hardware.storage.disks:")
     array = {}
+    first_varname = None
+
     for line in info:
         if len(line) > 2:
             line = [ line[0], ":".join(line[1:]) ]
         varname, value = line
         varname = re.sub(" *","", varname)
         value = re.sub("^ ", "", value)
+
+        if first_varname and varname == first_varname:
+            # Looks like we have a new instance
+            node.append(array)
+            array = {}
+
+        if not first_varname:
+            first_varname = varname
+
         if varname == "Manufacturer":
             array["vendor"] = value
         elif varname == "InterfaceType":

@@ -1382,7 +1382,11 @@ class html(GUITester):
     def debug(self, *x):
         import pprint
         for element in x:
-            self.lowlevel_write("<pre>%s</pre>\n" % self.attrencode(pprint.pformat(element)))
+            try:
+                formatted = pprint.pformat(element)
+            except UnicodeDecodeError:
+                formatted = repr(element)
+            self.lowlevel_write("<pre>%s</pre>\n" % self.attrencode(formatted))
 
 
     def has_cookie(self, varname):

@@ -1080,6 +1080,11 @@ class ModeBIRules(ModeBI):
 
 
     def page(self):
+        path = defaults.var_dir + "/foobar"
+        wert = { u"öms": u"Hälooöⴰⴱⴲⴳⴴⴵⴶ", "x" : range(10), "ö" : "Ja" }
+        config.write_settings_file(path, wert)
+        wert2 = eval(file(path).read())
+        html.debug((wert, wert2, wert==wert2))
         if not self._pack["aggregations"] and not self._pack["rules"]:
             new_url = self.url_to_pack([("mode", "bi_edit_rule")])
             menu_items = [

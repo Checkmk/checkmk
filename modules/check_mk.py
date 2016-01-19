@@ -293,7 +293,7 @@ try:
             load_module(module)
 
 except Exception, e:
-    sys.stderr.write("Cannot read file %s: %s\n" % (filename, e))
+    sys.stderr.write("Cannot read module %s: %s\n" % (module, e))
     sys.exit(5)
 
 

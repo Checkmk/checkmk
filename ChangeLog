@@ -40,6 +40,9 @@
     * 2862 FIX: Fixed handling of umlauts in mails send by the EC
     * 2893 FIX: Improved error handling of sending mails via Event Console
 
+    HW/SW-Inventory:
+    * 2827 FIX: win_disks, win_video: now able to detect multiple instances
+
 
 1.2.7i3p5:
     Core & Setup:

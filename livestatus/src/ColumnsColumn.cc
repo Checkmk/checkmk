@@ -27,8 +27,8 @@
 class Column;
 
 
-char *ColumnsColumn::getValue(void *data)
+const char *ColumnsColumn::getValue(void *data)
 {
     Column *column = static_cast<Column *>(data);
-    return (char *)_table_columns->getValue(column, _colcol);
+    return _table_columns->getValue(column, _colcol);
 }

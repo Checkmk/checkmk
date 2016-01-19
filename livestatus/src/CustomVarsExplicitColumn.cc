@@ -25,7 +25,7 @@
 #include "CustomVarsExplicitColumn.h"
 
 
-char *CustomVarsExplicitColumn::getValue(void *data)
+const char *CustomVarsExplicitColumn::getValue(void *data)
 {
     customvariablesmember *cvm = getCVM(data);
     while (cvm) {
@@ -33,7 +33,7 @@ char *CustomVarsExplicitColumn::getValue(void *data)
             return cvm->variable_value;
         cvm = cvm->next;
     }
-    return (char *)"";
+    return "";
 }
 
 customvariablesmember *CustomVarsExplicitColumn::getCVM(void *data)

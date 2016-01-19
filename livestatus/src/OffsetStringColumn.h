@@ -36,7 +36,7 @@ class OffsetStringColumn : public StringColumn
 public:
     OffsetStringColumn(std::string name, std::string description, int offset, int indirect_offset = -1, int extra_offset = -1)
         : StringColumn(name, description, indirect_offset, extra_offset), _offset(offset) {}
-    char *getValue(void *data);
+    const char *getValue(void *data) override;
     int offset() { return _offset; }
 };
 

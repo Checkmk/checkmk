@@ -38,7 +38,7 @@ class OffsetIntColumn : public IntColumn
 public:
     OffsetIntColumn(std::string name, std::string description, int offset, int indirect_offset = -1, int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset), _offset(offset) {}
-    int32_t getValue(void *data, Query *);
+    int32_t getValue(void *data, Query *) override;
 protected:
     int offset() { return _offset; }
 };

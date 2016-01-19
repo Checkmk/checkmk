@@ -44,7 +44,7 @@ class HostSpecialIntColumn : public IntColumn
 public:
     HostSpecialIntColumn(std::string name, std::string description, int hsic_type, int indirect_offset, int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset) , _type(hsic_type) {}
-    int32_t getValue(void *data, Query *);
+    int32_t getValue(void *data, Query *) override;
 };
 
 #endif // HostSpecialIntColumn_h

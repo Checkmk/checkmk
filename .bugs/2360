@@ -1,8 +1,11 @@
 Title: "Fake check results" on hosts doesn't work
 Component: multisite
-State: open
+Class: bug
+State: works4me
 Date: 2015-08-31 16:26:06
 Targetversion: 1.2.7
-Class: bug
 
 The "Fake check results" feature on hosts allows to set the status of the host to "up", "down" or "unreachable" but this has no effect, the host status stays as it was.
+2016-01-19 12:39:14: changed state open -> works4me
+Works for me. Could be be cause of Smart PING that updates the
+state *really* fast.

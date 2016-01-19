@@ -10495,6 +10495,7 @@ class UserSelection(DropdownChoice):
     def __init__(self, **kwargs):
         only_contacts = kwargs.get("only_contacts", False)
         kwargs["choices"] = generate_wato_users_elements_function(kwargs.get("none"), only_contacts = only_contacts)
+        kwargs["invalid_choice"] = "complain" # handle vanished users correctly!
         DropdownChoice.__init__(self, **kwargs)
 
     def value_to_text(self, value):

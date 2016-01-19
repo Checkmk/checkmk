@@ -10,3 +10,4 @@ tests
 state
 log
 .ycm_extra_conf.py
+.depend

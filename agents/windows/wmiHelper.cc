@@ -313,6 +313,25 @@ template <> string Variant::get() const
 }
 
 
+template <> float Variant::get() const
+{
+    switch (_value.vt) {
+        case VT_R4: return _value.fltVal;
+        default: throw ComTypeException(string("wrong value type requested: ") + to_string(_value.vt));
+    }
+}
+
+
+template <> double Variant::get() const
+{
+    switch (_value.vt) {
+        case VT_R4: return _value.fltVal;
+        case VT_R8: return _value.dblVal;
+        default: throw ComTypeException(string("wrong value type requested: ") + to_string(_value.vt));
+    }
+}
+
+
 VARTYPE Variant::type() const
 {
     return _value.vt;
@@ -331,6 +350,10 @@ template <> wstring Variant::get() const
     switch (_value.vt) {
         case VT_BSTR:
             return wstring(_value.bstrVal);
+        case VT_R4:
+            return std::to_wstring(get<float>());
+        case VT_R8:
+            return std::to_wstring(get<double>());
         case VT_I1:
         case VT_I2:
         case VT_I4:

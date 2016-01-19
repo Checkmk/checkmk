@@ -129,6 +129,7 @@ void Environment::determineDirectories(bool use_cwd)
     _state_directory   = assignDirectory("state");
     _temp_directory    = assignDirectory("temp");
     _log_directory     = assignDirectory("log");
+    _bin_directory     = _agent_directory + "\\bin";  // not created if missing
 
     _logwatch_statefile = _state_directory + "\\logstate.txt";
     _eventlog_statefile = _state_directory + "\\eventstate.txt";

@@ -76,15 +76,22 @@ Configuration::Configuration(const Environment &env)
 }
 
 
-unsigned long Configuration::enabledSections()
+unsigned long Configuration::enabledSections() const
 {
     return _enabled_sections;
 }
 
 
-unsigned long Configuration::realtimeSections()
+unsigned long Configuration::realtimeSections() const
 {
     return _realtime_sections;
+}
+
+
+void Configuration::disableSection(unsigned long section)
+{
+    _enabled_sections  &= ~section;
+    _realtime_sections &= ~section;
 }
 
 
@@ -232,6 +239,8 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value)
                 mask |= SECTION_DOTNET;
             else if (!strcmp(word, "webservices"))
                 mask |= SECTION_WEBSERVICES;
+            else if (!strcmp(word, "ohm"))
+                mask |= SECTION_OHM;
             else {
                 fprintf(stderr, "Invalid section '%s'.\r\n", word);
                 return false;

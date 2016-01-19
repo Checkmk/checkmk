@@ -54,7 +54,7 @@ static const unsigned int SECTION_DF              = 0x00000004;
 static const unsigned int SECTION_PS              = 0x00000008;
 static const unsigned int SECTION_MEM             = 0x00000010;
 static const unsigned int SECTION_SERVICES        = 0x00000020;
-// 0x40 up for grabs
+static const unsigned int SECTION_OHM             = 0x00000040;
 static const unsigned int SECTION_LOGWATCH        = 0x00000080;
 static const unsigned int SECTION_SYSTEMTIME      = 0x00000100;
 static const unsigned int SECTION_PLUGINS         = 0x00000200;
@@ -72,6 +72,8 @@ static const unsigned int SECTION_WINPERF_IF      = 0x00100000;
 static const unsigned int SECTION_WINPERF_CPU     = 0x00200000;
 static const unsigned int SECTION_WINPERF_PHYDISK = 0x00400000;
 static const unsigned int SECTION_WINPERF_CONFIG  = 0x00800000;
+
+
 static const unsigned int SECTION_WINPERF         = SECTION_WINPERF_IF
                                                   | SECTION_WINPERF_CPU
                                                   | SECTION_WINPERF_PHYDISK

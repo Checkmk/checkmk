@@ -79,6 +79,8 @@ template <> ULONG Variant::get() const;
 template <> ULONGLONG Variant::get() const;
 template <> std::string Variant::get() const;
 template <> std::wstring Variant::get() const;
+template <> float Variant::get() const;
+template <> double Variant::get() const;
 
 
 class ObjectWrapper {
@@ -169,6 +171,9 @@ class Helper
 public:
 
     Helper(LPCWSTR path = L"Root\\Cimv2");
+
+    Helper(const Helper &reference) = delete;
+
     ~Helper();
 
     Result query(LPCWSTR query);

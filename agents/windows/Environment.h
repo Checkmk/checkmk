@@ -46,6 +46,7 @@ public:
     const std::string &stateDirectory() const   { return _state_directory; }
     const std::string &tempDirectory() const    { return _temp_directory; }
     const std::string &logDirectory() const     { return _log_directory; }
+    const std::string &binDirectory() const     { return _bin_directory; }
 
     const std::string &logwatchStatefile() const { return _logwatch_statefile; }
     const std::string &eventlogStatefile() const { return _eventlog_statefile; }
@@ -78,6 +79,7 @@ private:
     std::string _state_directory;
     std::string _temp_directory;
     std::string _log_directory;
+    std::string _bin_directory;
 
     std::string _logwatch_statefile;
     std::string _eventlog_statefile;

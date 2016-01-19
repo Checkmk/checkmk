@@ -40,4 +40,4 @@ int pnpgraph_present(const std::string& host,
 std::string rrd_path(const std::string& host, const std::string& service,
                      const std::string& varname);
 
-#endif  // pnp4nagios_h
+#endif // pnp4nagios_h

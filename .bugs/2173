@@ -2,7 +2,7 @@ Title: WATO backup: Do not save configuration files which are derived from omd c
 Component: wato
 State: open
 Date: 2015-03-10 11:30:33
-Targetversion: 1.2.9
+Targetversion: future
 Class: bug
 
 Example:

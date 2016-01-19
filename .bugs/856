@@ -2,7 +2,7 @@ Title: Report scheduler doesn't pass "Group of Host" filter to the report
 Component: core
 State: open
 Date: 2015-12-15 16:20:50
-Targetversion: 1.2.7
+Targetversion: 1.2.8
 Class: bug
 
 If you create a Report with context "Hostgroup", add a View with Service

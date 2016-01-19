@@ -1135,7 +1135,7 @@ def parse_autochecks_file(hostname):
                 backslash = True
             elif c == quote:
                 quote = None # end of quoted string
-            elif c in [ '"', "'" ]:
+            elif c in [ '"', "'" ] and not quote:
                 quote = c # begin of quoted string
             elif quote:
                 continue
@@ -1149,6 +1149,7 @@ def parse_autochecks_file(hostname):
                 value = line[0:i]
                 rest = line[i+1:]
                 return value.strip(), rest
+
         return line.strip(), None
 
     path = "%s/%s.mk" % (autochecksdir, hostname)
@@ -1186,7 +1187,7 @@ def parse_autochecks_file(hostname):
             if len(parts) == 4:
                 parts = parts[1:] # drop hostname, legacy format with host in first column
             elif len(parts) != 3:
-                raise Exception("Invalid number of parts: %d" % len(parts))
+                raise Exception("Invalid number of parts: %d (%r)" % (len(parts), parts))
 
             checktypestring, itemstring, paramstring = parts
 

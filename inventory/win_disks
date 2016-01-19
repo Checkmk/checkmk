@@ -88,9 +88,11 @@ def inv_win_disks(info):
         elif varname == "SerialNumber":
             array["serial"] = value
         elif varname == "Size":
-            array["size"] = int(value)
+            if value != "":
+                array["size"] = int(value)
         elif varname == "MediaType":
-            array["type"] = value
+            if value != "":
+                array["type"] = value
         elif varname == "Signature":
             if value != "":
                 array["signature"] = int(value)

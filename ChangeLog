@@ -16,6 +16,7 @@
 
     HW/SW-Inventory:
     * 2827 FIX: win_disks, win_video: now able to detect multiple instances
+    * 2828 FIX: win_disks: now able to handle disks with missing size or media type information
 
 
 1.2.6p15:

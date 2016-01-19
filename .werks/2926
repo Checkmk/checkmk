@@ -1,0 +1,9 @@
+Title: Fix exception in WATO when a check man page has not catalog entry
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453205601
+Class: fix
+
+

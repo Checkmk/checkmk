@@ -2337,6 +2337,7 @@ def list_all_manuals():
     table.sort()
     print_table(['Check type', 'Title'], [tty_bold, tty_normal], table)
 
+
 def read_manpage_catalog():
     load_module("catalog")
     global g_manpage_catalog
@@ -2351,18 +2352,12 @@ def read_manpage_catalog():
         except Exception, e:
             if opt_debug:
                 raise
-            sys.stderr.write('ERROR: Skipping invalid manpage: %s: %s\n' % (checkname, e))
+            raise MKGeneralException('ERROR: Skipping invalid manpage: %s: %s\n' % (checkname, e))
             continue
 
-        try:
+        if "catalog" in parsed:
             cat = parsed["catalog"]
-        except KeyError:
-            if opt_debug:
-                raise
-            sys.stderr.write('ERROR: Skipping invalid manpage: %s (Catalog info missing)\n' % checkname)
-            continue
-
-        if not cat:
+        else:
             cat = [ "unsorted" ]
 
         if cat[0] == "os":
@@ -2554,7 +2549,10 @@ def load_manpage(checkname):
         header[key] = value.strip()
     header["agents"] = [ a.strip() for a in header["agents"].split(",") ]
 
+    if 'catalog' not in header:
+        header['catalog'] = [ 'unsorted' ]
     sections['header'] = header
+
     return sections
 
 

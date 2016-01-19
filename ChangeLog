@@ -283,6 +283,7 @@
     * 2667 FIX: solaris_mem: fix exception in inventory plugin
     * 2714 FIX: Fixed visibility of folding arrows by making them dark
     * 2439 FIX: solaris_prtdiag: Can now handle Oracle Corporation SUN FIRE X4170 M2 SERVER...
+    * 2827 FIX: win_disks, win_video: now able to detect multiple instances
 
 
 1.2.7i3:

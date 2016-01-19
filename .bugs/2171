@@ -1,7 +1,10 @@
 Title: windows agent: able to handle extensions with 2 characters (.py)
 Component: checks
-State: open
+Class: bug
+State: works4me
 Date: 2015-03-03 13:23:38
 Targetversion: future
-Class: bug
 
+
+2016-01-19 14:04:13: changed state open -> works4me
+Should meanwhile work.

@@ -1,10 +1,17 @@
-Title: logwatch: log entries with braces in names can not be shown in logwatch GUI
+Title: logwatch: several special characters will break links from logwatch icon
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2014-12-12 17:21:28
 Targetversion: 1.2.7
-Class: bug
 
-Braces are not removed from logwatch stored files. Logwatch-GUI does not
-handle this difference correctly.  e.g. mk_sap creates such logwatch files
+Brackets and quites and some other characters can be part of logfile names
+and thus appear in the paths below var/check_mk/logwatch. In the service
+descriptions these characters are removed.  This the icon pointing to the
+logwatch GUI does not work. E.g. mk_sap creates such logwatch files.
 
+Solution cannot be renaming the stored logfiles. Better would be, if the
+GUI more intelligently can find the actual files.
+
+2016-01-19 15:31:11: changed state open -> done
+Should work now. Files are now intelligently been found.

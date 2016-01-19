@@ -36,22 +36,22 @@ extern char     *macro_user[MAX_USER_MACROS];
 
 string OffsetStringMacroColumn::valueAsString(void *data, Query *)
 {
-    char *raw = getValue(data);
+    const char *raw = getValue(data);
     host *hst = getHost(data);
     service *svc = getService(data);
 
     // search for macro names, beginning with $
     string result = "";
-    char *scan = raw;
+    const char *scan = raw;
 
     while (*scan) {
-        char *dollar = strchr(scan, '$');
+        const char *dollar = strchr(scan, '$');
         if (!dollar) {
             result += scan;
             break;
         }
         result += string(scan, dollar - scan);
-        char *otherdollar = strchr(dollar + 1, '$');
+        const char *otherdollar = strchr(dollar + 1, '$');
         if (!otherdollar) { // unterminated macro, do not expand
             result += scan;
             break;

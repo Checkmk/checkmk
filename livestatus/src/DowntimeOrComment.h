@@ -114,4 +114,4 @@ struct Comment : public DowntimeOrComment
     explicit Comment(nebstruct_comment_struct *data);
 };
 
-#endif // Downtime_h
+#endif // DowntimeOrComment_h

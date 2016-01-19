@@ -45,7 +45,7 @@ class ColumnsColumn : public StringColumn
 public:
     ColumnsColumn(std::string name, std::string description, int colcol, TableColumns *tablecols, int indirect_offset = -1, int extra_offset = -1) :
         StringColumn(name, description, indirect_offset, extra_offset), _colcol(colcol), _table_columns(tablecols) {}
-    char *getValue(void *data);
+    const char *getValue(void *data) override;
 };
 
 #endif // ColumnsColumn_h

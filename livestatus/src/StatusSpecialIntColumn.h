@@ -41,7 +41,7 @@ public:
         : IntColumn(name, description, indirect_offset, extra_offset), _type(type)
     {
     }
-    int32_t getValue(void *, Query *);
+    int32_t getValue(void *, Query *) override;
 };
 
 #endif // StatusSpecialIntColumn_h

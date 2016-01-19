@@ -180,7 +180,7 @@ class ModeBI(WatoMode):
                 append_to = converted_aggregations
             append_to.append(self._convert_aggregation_to_bi(aggregation))
 
-        converted_pack = pack
+        converted_pack = pack.copy()
         converted_pack["aggregations"] = converted_aggregations
         converted_pack["host_aggregations"] = converted_host_aggregations
         converted_pack["rules"] = converted_rules

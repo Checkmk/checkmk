@@ -143,12 +143,12 @@ Call getWMIObject("Win32_SystemEnclosure",systemVars)
 ' Hard-Disk
 Call startSection("win_disks",58,timeUntil)
 diskVars = Array( "Manufacturer","InterfaceType","Model","Name","SerialNumber","Size","MediaType","Signature" )
-Call getWMIObject("Win32_diskDrive",systemVars)
+Call getWMIObject("Win32_diskDrive",diskVars)
 
 ' Graphics Adapter
 Call startSection("win_video",58,timeUntil)
 adapterVars = Array( "Name", "Description", "Caption", "AdapterCompatibility", "VideoModeDescription", "VideoProcessor", "DriverVersion", "DriverDate", "MaxMemorySupported")
-Call getWMIObject("Win32_VideoController",systemVars)
+Call getWMIObject("Win32_VideoController",adapterVars)
 
 ' Installed Software
 Call startSection("win_wmi_software",124,timeUntil)

@@ -4,6 +4,9 @@
     * 2861 FIX: hivemanager_devices: Fixed configuration of states to treat as WARN
     * 1317 FIX: fileinfo.groups: Fixed handling of $DATE pattern...
 
+    Multisite:
+    * 2830 FIX: Improved sorting in view column "Services colored according to state"...
+
     WATO:
     * 2825 FIX: Parameter overview page no longer raises an exception in certain scenarios...
 

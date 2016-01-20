@@ -638,6 +638,8 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
             raise MKSNMPError("Cannot fetch system description OID %s" % sys_descr_oid)
     else:
         # Fake OID values to prevent issues with a lot of scan functions
+        vverbose("       Skipping system description OID "
+                 "(Set .1.3.6.1.2.1.1.1.0 and .1.3.6.1.2.1.1.2.0 to \"\")\n")
         set_oid_cache(hostname, ".1.3.6.1.2.1.1.1.0", "")
         set_oid_cache(hostname, ".1.3.6.1.2.1.1.2.0", "")
 

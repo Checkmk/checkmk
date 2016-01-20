@@ -79,9 +79,13 @@ struct HostServiceState {
 
 
     const char  *_debug_info;
-    // Pointer to dynamically allocated strings (strdup) that live here.
-    // These pointers are 0, if there is no output (e.g. downtime)
+
+    // NOTE: _log_output is the *only* pointer in this class to an object we
+    // own, all other pointers are to foreign objects. This ownership is
+    // unfortunate and complicates things quite a lot, see the corresponding
+    // TODO in TableStateHistory::updateHostServiceState.
     char        *_log_output;
+
     const char  *_notification_period;  // may be "": -> no period known, we assume "always"
     const char  *_service_period;  // may be "": -> no period known, we assume "always"
     host        *_host;

@@ -636,10 +636,15 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
 
     vverbose("  SNMP scan:\n")
     if not in_binary_hostlist(hostname, snmp_without_sys_descr):
-        sys_descr_oid = ".1.3.6.1.2.1.1.1.0"
-        sys_descr = get_single_oid(hostname, ipaddress, sys_descr_oid)
-        if sys_descr == None:
-            raise MKSNMPError("Cannot fetch system description OID %s" % sys_descr_oid)
+        for oid, name in [ (".1.3.6.1.2.1.1.1.0", "system description"),
+                           (".1.3.6.1.2.1.1.2.0", "system object") ]:
+            value = get_single_oid(hostname, ipaddress, oid)
+            if value == None:
+                raise MKSNMPError(
+                    "Cannot fetch %s OID %s. This might be OK for some bogus devices. "
+                    "In that case please configure the ruleset \"Hosts without system "
+                    "description OID\" to tell Check_MK not to fetch the system "
+                    "description and system object OIDs." % (name, oid))
     else:
         # Fake OID values to prevent issues with a lot of scan functions
         vverbose("       Skipping system description OID "

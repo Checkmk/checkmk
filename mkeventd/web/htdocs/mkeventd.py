@@ -165,11 +165,11 @@ def daemon_running():
 # we put hostname|ipaddress into the host name field. The EC
 # recognizes this and unpacks the data correctly.
 def send_event(event):
-    # "<%PRI%>%TIMESTAMP% %HOSTNAME% %syslogtag% %msg%\n"
+    # "<%PRI%>@%TIMESTAMP%;%SL% %HOSTNAME% %syslogtag% %msg%\n"
     prio = (event["facility"] << 3) + event["priority"]
-    timestamp = time.strftime("%b %d %T", time.localtime())
-    rfc = "<%d>%s %s|%s %s: %s\n" % (
-        prio, timestamp, event["host"], event["ipaddress"], event["application"], event["text"])
+    rfc = "<%d>@%s;%d %s|%s %s: %s\n" % (
+        prio, int(time.time()), event["sl"], event["host"],
+        event["ipaddress"], event["application"], event["text"])
     if type(rfc) == unicode:
         rfc = rfc.encode("utf-8")
     pipe = file(pipe_path, "w")
@@ -268,6 +268,17 @@ def event_rule_matches_non_inverted(rule, event):
         p = event["priority"]
         if p < prio_from or p > prio_to:
             return _("The syslog priority is not in the required range.")
+
+    if "match_sl" in rule:
+        sl_from, sl_to = rule["match_sl"]
+        if sl_from > sl_to:
+            sl_to, sl_from = sl_from, sl_to
+        p = event.get("sl")
+        if p == None:
+            return _("No service level is set in event")
+
+        if p < sl_from or p > sl_to:
+            return _("Wrong service level %d (need %d..%d)" % (p, sl_from, sl_to))
 
     if "match_timeperiod" in rule:
         reason = check_timeperiod(rule["match_timeperiod"])

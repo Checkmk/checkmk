@@ -305,12 +305,16 @@ def check_discovery(hostname, ipaddress=None):
             output += "\n" + "\n".join(long_infotexts)
         output += "\n"
 
-    except (MKSNMPError, MKAgentError), e:
+    except (MKSNMPError, MKAgentError, MKGeneralException), e:
         output = "Discovery failed: %s\n" % e
         # Honor rule settings for "Status of the Check_MK service". In case of
         # a problem we assume a connection error here.
         spec = exit_code_spec(hostname)
-        status = spec.get("connection", 1)
+        if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
+            what = "connection"
+        else:
+            what = "exception"
+        status = spec.get(what, 1)
 
     except MKCheckTimeout:
         if opt_keepalive:
@@ -632,10 +636,15 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
 
     vverbose("  SNMP scan:\n")
     if not in_binary_hostlist(hostname, snmp_without_sys_descr):
-        sys_descr_oid = ".1.3.6.1.2.1.1.1.0"
-        sys_descr = get_single_oid(hostname, ipaddress, sys_descr_oid)
-        if sys_descr == None:
-            raise MKSNMPError("Cannot fetch system description OID %s" % sys_descr_oid)
+        for oid, name in [ (".1.3.6.1.2.1.1.1.0", "system description"),
+                           (".1.3.6.1.2.1.1.2.0", "system object") ]:
+            value = get_single_oid(hostname, ipaddress, oid)
+            if value == None:
+                raise MKSNMPError(
+                    "Cannot fetch %s OID %s. This might be OK for some bogus devices. "
+                    "In that case please configure the ruleset \"Hosts without system "
+                    "description OID\" to tell Check_MK not to fetch the system "
+                    "description and system object OIDs." % (name, oid))
     else:
         # Fake OID values to prevent issues with a lot of scan functions
         vverbose("       Skipping system description OID "

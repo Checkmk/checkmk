@@ -30,6 +30,10 @@
 # <<<symantec_av_updates>>>
 # 05/15/2015 rev. 1
 
+# <<<symantec_av_updates>>>
+# 09/18/15 rev. 1
+
+
 symantec_av_updates_default_levels = ( 259200, 345600 )
 
 
@@ -41,7 +45,10 @@ def check_symantec_av_updates( _no_item, params, info):
     warn, crit = params
     last_text = info[0][0]
     if '/' in last_text:
-        last_broken = time.strptime(last_text, "%m/%d/%Y")
+        if len(last_text) == 10:
+            last_broken = time.strptime(last_text, "%m/%d/%Y")
+        else:
+            last_broken = time.strptime(last_text, "%m/%d/%y")
     else:
         last_broken = time.strptime(last_text, "%d.%m.%Y")
 

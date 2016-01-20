@@ -14614,7 +14614,11 @@ def mode_check_manpage(phase):
     if phase == "title":
         if not re.match("^[a-zA-Z0-9_.]+$", check_type):
             raise Exception("Invalid check type")
+
         manpage = check_mk_local_automation("get-check-manpage", [ check_type ])
+        if manpage == None:
+            raise MKUserError(None, _("There is no manpage for this check."))
+
         html.set_cache("manpage", manpage)
         return _("Check plugin manual page") + " - " + manpage["header"]["title"]
 

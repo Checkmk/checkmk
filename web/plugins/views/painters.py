@@ -1480,7 +1480,13 @@ multisite_painters["num_services_pending"] = {
 
 def paint_service_list(row, columnname):
     h = "<div class=objectlist>"
-    for entry in row[columnname]:
+    def sort_key(entry):
+        if columnname.startswith("servicegroup"):
+            return entry[0].lower(), entry[1].lower()
+        else:
+            return entry[0].lower()
+
+    for entry in sorted(row[columnname], key = sort_key):
         if columnname.startswith("servicegroup"):
             host, svc, state, checked = entry
             text = host + " ~ " + svc

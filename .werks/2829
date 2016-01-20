@@ -1,0 +1,10 @@
+Title: filesystem checks: introduced default levels for inodes used (10%/5% free)
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i3p6
+Date: 1453293061
+
+Please note that these new default levels only apply to filesystems which report inode statistics.

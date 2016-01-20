@@ -194,6 +194,7 @@
     * 2927 FIX: Fix links to logwatch logfiles in case of several special characters in the name...
     * 2891 FIX: mcafee_av_client: fixed wrong params handling after WATO configuration
     * 2907 FIX: chrony: Fixed exception in discovery function when daemon is not running
+    * 2908 FIX: oracle_locks: Fixed handling of ORA- errors as sent from e.g. older AIX agents
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

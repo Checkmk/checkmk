@@ -305,12 +305,16 @@ def check_discovery(hostname, ipaddress=None):
             output += "\n" + "\n".join(long_infotexts)
         output += "\n"
 
-    except (MKSNMPError, MKAgentError), e:
+    except (MKSNMPError, MKAgentError, MKGeneralException), e:
         output = "Discovery failed: %s\n" % e
         # Honor rule settings for "Status of the Check_MK service". In case of
         # a problem we assume a connection error here.
         spec = exit_code_spec(hostname)
-        status = spec.get("connection", 1)
+        if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
+            what = "connection"
+        else:
+            what = "exception"
+        status = spec.get(what, 1)
 
     except MKCheckTimeout:
         if opt_keepalive:

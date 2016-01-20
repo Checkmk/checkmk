@@ -64,7 +64,7 @@ void InputBuffer::setFd(int fd)
 // (and maybe more). If this method returns IB_REQUEST_READ
 // then you can subsequently retrieve the lines of the
 // request with nextLine().
-int InputBuffer::readRequest()
+InputBuffer::Result InputBuffer::readRequest()
 {
     // Remember when we started waiting for a request. This
     // is needed for the idle_timeout. A connection may
@@ -100,16 +100,16 @@ int InputBuffer::readRequest()
             // further data into the buffer.
             if (_write_pointer < _end_pointer)
             {
-                int rd = readData(); // tries to read in further data into buffer
-                if (rd == IB_TIMEOUT) {
+                Result rd = readData(); // tries to read in further data into buffer
+                if (rd == Result::timeout) {
                     if (query_started) {
                         logger(LG_INFO, "Timeout of %d ms exceeded while reading query", g_query_timeout_msec);
-                        return IB_TIMEOUT;
+                        return Result::timeout;
                     }
                     // Check if we exceeded the maximum time between two queries
                     else if (timeout_reached(&start_of_idle, g_idle_timeout_msec)) {
                         logger(LG_INFO, "Idle timeout of %d ms exceeded. Going to close connection.", g_idle_timeout_msec);
-                        return IB_TIMEOUT;
+                        return Result::timeout;
                     }
                 }
 
@@ -117,27 +117,27 @@ int InputBuffer::readRequest()
                 // read an incomplete line. If the last thing we read was
                 // a linefeed, then we consider the current request to
                 // be valid, if it is not empty.
-                else if (rd == IB_END_OF_FILE && r == _read_pointer /* currently at beginning of a line */)
+                else if (rd == Result::eof && r == _read_pointer /* currently at beginning of a line */)
                 {
                     if (_requestlines.empty()) {
-                        return IB_END_OF_FILE; // empty request -> no request
+                        return Result::eof; // empty request -> no request
                     }
                     else {
                         // socket has been closed but request is complete
-                        return IB_REQUEST_READ;
+                        return Result::request_read;
                         // the current state is now:
                         // _read_pointer == r == _write_pointer => buffer is empty
                         // that way, if the main program tries to read the
-                        // next request, it will get an IB_UNEXPECTED_END_OF_FILE
+                        // next request, it will get an IB_UNEXPECTED_EOF
                     }
                 }
                 // if we are *not* at an end of line while reading
                 // a request, we got an invalid request.
-                else if (rd == IB_END_OF_FILE)
-                    return IB_UNEXPECTED_END_OF_FILE;
+                else if (rd == Result::eof)
+                    return Result::unexpected_eof;
 
                 // Other status codes
-                else if (rd == IB_SHOULD_TERMINATE)
+                else if (rd == Result::should_terminate)
                     return rd;
             }
             // OK. So no space is left in the buffer. But maybe at the
@@ -158,7 +158,7 @@ int InputBuffer::readRequest()
             // buffer is full, but still no end of line found => buffer is too small
             else {
                 logger(LG_INFO, "Error: maximum length of request line exceeded");
-                return IB_LINE_TOO_LONG;
+                return Result::line_too_long;
             }
         }
         else // end of line found
@@ -167,10 +167,10 @@ int InputBuffer::readRequest()
                 _read_pointer = r + 1;
                 // Was ist, wenn noch keine korrekte Zeile gelesen wurde?
                 if (_requestlines.size() == 0) {
-                    return IB_EMPTY_REQUEST;
+                    return Result::empty_request;
                 }
                 else
-                    return IB_REQUEST_READ;
+                    return Result::request_read;
             }
             else { // non-empty line: belongs to current request
                 storeRequestLine(_read_pointer, r - _read_pointer);
@@ -184,7 +184,7 @@ int InputBuffer::readRequest()
 
 // read at least *some* data. Return IB_TIMEOUT if that
 // lasts more than g_query_timeout_msec msecs.
-int InputBuffer::readData()
+InputBuffer::Result InputBuffer::readData()
 {
     struct timeval start;
     gettimeofday(&start, NULL);
@@ -193,7 +193,7 @@ int InputBuffer::readData()
     while (!*_termination_flag)
     {
         if (timeout_reached(&start, g_query_timeout_msec))
-            return IB_TIMEOUT;
+            return Result::timeout;
 
         tv.tv_sec  = READ_TIMEOUT_USEC / 1000000;
         tv.tv_usec = READ_TIMEOUT_USEC % 1000000;
@@ -207,18 +207,18 @@ int InputBuffer::readData()
         if (retval > 0 && FD_ISSET(_fd, &fds)) {
             ssize_t r = read(_fd, _write_pointer, _end_pointer - _write_pointer);
             if (r < 0) {
-                return IB_END_OF_FILE;
+                return Result::eof;
             }
             else if (r == 0) {
-                return IB_END_OF_FILE;
+                return Result::eof;
             }
             else {
                 _write_pointer += r;
-                return IB_DATA_READ;
+                return Result::data_read;
             }
         }
     }
-    return IB_SHOULD_TERMINATE;
+    return Result::should_terminate;
 }
 
 

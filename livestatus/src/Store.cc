@@ -133,9 +133,9 @@ void Store::registerDowntime(nebstruct_downtime_data *d)
 bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
 {
     output->reset();
-    int r = input->readRequest();
-    if (r != IB_REQUEST_READ) {
-        if (r != IB_END_OF_FILE)
+    InputBuffer::Result r = input->readRequest();
+    if (r != InputBuffer::Result::request_read) {
+        if (r != InputBuffer::Result::eof)
             output->setError(RESPONSE_CODE_INCOMPLETE_REQUEST,
                 "Client connection terminated while request still incomplete");
         return false;

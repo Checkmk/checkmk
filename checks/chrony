@@ -38,11 +38,15 @@ ntp_default_levels = (10, 200.0, 500.0) # stratum, ms offset
 # Root delay      : 0.027455 seconds
 # Root dispersion : 0.024512 seconds
 
+# <<<chrony>>>
+# 506 Cannot talk to daemon
+
 def parse_chrony(info):
     parsed = {}
     for line in info:
-        varname, value = " ".join(line).split(":", 1)
-        parsed[varname.strip()] = value.strip()
+        if ":" in line:
+            varname, value = " ".join(line).split(":", 1)
+            parsed[varname.strip()] = value.strip()
     return parsed
 
 # We monitor all servers we have reached at least once

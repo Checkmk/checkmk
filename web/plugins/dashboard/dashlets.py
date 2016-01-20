@@ -649,7 +649,16 @@ dashlet_types["view"] = {
 
 def dashlet_url(dashlet):
     if dashlet.get('show_in_iframe', True):
-        return dashlet['url']
+        try:
+            return dashlet['url']
+        except KeyError:
+            if "urlfunc" in dashlet:
+                raise MKUserError(None,
+                    _("You set the dashlet to use a dynamic URL rendering function. It seems "
+                      "that this function call failed. You may want to open the dashboard "
+                      "in debug mode to get more details."))
+            else:
+                raise
 
 def dashlet_url_validate(value, varprefix):
     if 'url' not in value and 'urlfunc' not in value:

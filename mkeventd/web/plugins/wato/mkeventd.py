@@ -1602,7 +1602,7 @@ def log_mkeventd(what, message):
     at_least_one = False
     if is_distributed():
         for site_id, site in config.sites.items():
-            if site.get("replicate_ec") and not site_is_local(site_id):
+            if site.get("replicate_ec") and not config.site_is_local(site_id):
                 update_replication_status(site_id, { "need_sync" : True })
                 remove_sync_snapshot(site_id)
                 at_least_one = True

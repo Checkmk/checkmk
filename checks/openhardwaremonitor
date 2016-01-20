@@ -80,8 +80,8 @@ def parse_openhardwaremonitor(info):
             # header line
             continue
         parent = dict_replace(parent, {"intelcpu": "cpu", "amdcpu": "cpu", "genericcpu": "cpu"})
-        name   = dict_replace(name, {"CPU ": ""})
-        full_name = parent.replace("/", "") + " " + name
+        name   = dict_replace(name, {"CPU ": "", "Temperature": ""})
+        full_name = (parent.replace("/", "") + " " + name).strip()
         result.setdefault(sensor_type, {})[full_name] = float(value)
     return result
 
@@ -120,8 +120,14 @@ def check_openhardwaremonitor(sensor_type, item, params, parsed):
     if item in parsed.get(sensor_type, {}):
         traits = type_trait(sensor_type)
         val = parsed[sensor_type][item] * traits['factor']
-        status_lower = expect_order(params['lower'][1], params['lower'][0], val)
-        status_upper = expect_order(val, params['upper'][0], params['upper'][1])
+        if 'lower' in params:
+            status_lower = expect_order(params['lower'][1], params['lower'][0], val)
+        else:
+            status_lower = 0
+        if 'upper' in params:
+            status_upper = expect_order(val, params['upper'][0], params['upper'][1])
+        else:
+            status_upper = 0
         perfdata = []
         if 'perf_var' in traits:
             perfdata = [(traits['perf_var'], val)]

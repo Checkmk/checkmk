@@ -1,0 +1,21 @@
+def cmctc_translate_status(status):
+    return {
+            4: 0,  # ok
+            7: 1,  # warning
+            8: 1,  # too low
+            9: 2   # too high
+            }.get(status, 3)
+
+def cmctc_translate_status_text(status):
+    return {
+       1 : "notAvail",
+       2 : "lost",
+       3 : "changed",
+       4 : "ok",
+       5 : "off",
+       6 : "on",
+       7 : "warning",
+       8 : "tooLow",
+       9 : "tooHigh",
+       }.get(status, "UNKNOWN")
+

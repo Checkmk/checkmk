@@ -99,6 +99,5 @@ check_info['cisco_temp_perf'] = {
                                6, # ciscoEnvMonTemperatureState
                                OID_END
                             ]),
-    "group"                 : "temperature_auto",
     "includes"              : ['cisco_sensor_item.include'],
 }

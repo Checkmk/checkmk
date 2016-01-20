@@ -237,6 +237,25 @@ NEGATE         = '@negate'       # negation in boolean lists
 
 # Renaming of service descriptions while keeping backward compatibility with
 # existing installations.
+# Synchronize with htdocs/wato.py and plugins/wato/check_mk_configuration.py!
+
+# Cleanup! .. some day
+def get_old_cmciii_temp_description(item):
+    if "Temperature" in item:
+        return False, item # old item format, no conversion
+
+    parts = item.split(" ")
+    if parts[0] == "Ambient":
+        return False, "%s Temperature" % parts[1]
+
+    elif len(parts) == 2:
+        return False, "%s %s.Temperature" % (parts[1], parts[0])
+
+    else:
+        if parts[1] == "LCP":
+            parts[1] = "Liquid_Cooling_Package"
+        return False, "%s %s.%s-Temperature" % (parts[1], parts[0], parts[2])
+
 old_service_descriptions = {
     "df"                               : "fs_%s",
     "df_netapp"                        : "fs_%s",
@@ -257,6 +276,23 @@ old_service_descriptions = {
     "ibm_svc_systemstats.iops"         : "IBM SVC IOPS %s Total",
     "ibm_svc_systemstats.disk_latency" : "IBM SVC Latency %s Total",
     "ibm_svc_systemstats.cache"        : "IBM SVC Cache Total",
+
+    "casa_cpu_temp"                    : "Temperature %s",
+    "cmciii.temp"                      : get_old_cmciii_temp_description,
+    "cmciii.psm_current"               : "%s",
+    "cmciii_lcp_airin"                 : "LCP Fanunit Air IN",
+    "cmciii_lcp_airout"                : "LCP Fanunit Air OUT",
+    "cmciii_lcp_water"                 : "LCP Fanunit Water %s",
+    "etherbox.temp"                    : "Sensor %s",
+    # While using the old description, don't append the item, even when discovered
+    # with the new check which creates an item.
+    "liebert_bat_temp"                 : lambda item: (False, "Battery Temp"),
+    "nvidia.temp"                      : "Temperature NVIDIA %s",
+    "ups_bat_temp"                     : "Temperature Battery %s",
+    "innovaphone_temp"                 : lambda item: (False, "Temperature"),
+    "enterasys_temp"                   : lambda item: (False, "Temperature"),
+    "raritan_emx"                      : "Rack %s",
+    "raritan_pdu_inlet"                : "Input Phase %s",
 }
 
 #.
@@ -1773,7 +1809,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
 
         if hosttags_match_taglist(hosttags, tags) and \
                in_extraconf_hostlist(hostlist, hostname):
-            descr = service_description(checkname, item)
+            descr = service_description(hostname, checkname, item)
             if service_ignored(hostname, checkname, descr):
                 return
             if hostname != host_of_clustered_service(hostname, descr):
@@ -1803,7 +1839,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
                 if len(entry) == 4:
                     entry = entry[1:] # drop hostname from g_singlehost_checks
                 checkname, item, params = entry
-                descr = service_description(checkname, item)
+                descr = service_description(node, checkname, item)
                 if hostname == host_of_clustered_service(node, descr):
                     cluster_params = compute_check_parameters(hostname, checkname, item, params)
                     handle_entry((hostname, checkname, item, cluster_params))
@@ -2133,23 +2169,28 @@ def sanitize_service_description(descr):
     return "".join([ c for c in descr if c not in nagios_illegal_chars ]).rstrip("\\")
 
 
-def service_description(check_type, item):
+def service_description(hostname, check_type, item):
     if check_type not in check_info:
         if item:
             return "Unimplmented check %s / %s" % (check_type, item)
         else:
             return "Unimplemented check %s" % check_type
 
-        # raise MKGeneralException("Unknown check type '%s'.\n"
-        #                         "Please use check_mk -L for a list of all check types.\n" % check_type)
-
-    # use user-supplied service description, of available
+    # use user-supplied service description, if available
+    add_item = True
     descr_format = service_descriptions.get(check_type)
     if not descr_format:
         # handle renaming for backward compatibility
         if check_type in old_service_descriptions and \
-           check_type not in use_new_descriptions_for:
-           descr_format = old_service_descriptions[check_type]
+            check_type not in use_new_descriptions_for:
+
+            # Can be a fucntion to generate the old description more flexible.
+            old_descr = old_service_descriptions[check_type]
+            if callable(old_descr):
+                add_item, descr_format = old_descr(item)
+            else:
+                descr_format = old_descr
+
         else:
             descr_format = check_info[check_type]["service_description"]
 
@@ -2162,18 +2203,25 @@ def service_description(check_type, item):
     # and trailing spaces in the configuration file.
 
     item_type = type(item)
-    if item_type in [ str, unicode ]:
+    if add_item and item_type in [ str, unicode, int, long ]:
         # Remove characters from item name that are banned by Nagios
-        item_safe = sanitize_service_description(item)
+        if item_type in [ str, unicode ]:
+            item_safe = sanitize_service_description(item)
+        else:
+            item_safe = str(item)
+
         if "%s" not in descr_format:
             descr_format += " %s"
-        return (descr_format % (item_safe,)).strip()
-    elif item_type in [ int, long ]:
-        if "%s" not in descr_format:
-            descr_format += " %s"
-        return (descr_format % (item,)).strip()
+
+        descr = descr_format % (item_safe,)
     else:
-        return descr_format.strip()
+        descr = descr_format
+
+    if "%s" in descr:
+        raise MKGeneralException("Found '%%s' in service description (Host: %s, Check type: %s, Item: %s). "
+                                 "Please try to rediscover the service to fix this issue." % (hostname, check_type, item))
+
+    return descr.strip()
 
 
 # Get rules for piggyback translation for that hostname
@@ -4700,7 +4748,7 @@ def compute_check_parameters(host, checktype, item, params):
         new_params.update(params)
         params = new_params
 
-    descr = service_description(checktype, item)
+    descr = service_description(host, checktype, item)
 
     # Get parameters configured via checkgroup_parameters
     entries = get_checkgroup_parameters(host, checktype, item)

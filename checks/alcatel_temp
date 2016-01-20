@@ -38,7 +38,7 @@ def inventory_alcatel_temp(info):
             if info[index][oid] != '0':
                 if with_slot:
                     yield "Slot %s %s" % (slot, name), {}
-	        else:
+                else:
                     yield name, {}
 
 def check_alcatel_temp(item, params, info):
@@ -55,7 +55,7 @@ def check_alcatel_temp(item, params, info):
         temp_celsius = int(info[slot_index][items[sensor]])
     except:
         return 3, "Sensor not found"
-    return check_temperature(temp_celsius, params)
+    return check_temperature(temp_celsius, params, "alcatel_temp_%s" % item)
 
 check_info["alcatel_temp"] = {
     "check_function"          : check_alcatel_temp,

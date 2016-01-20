@@ -280,7 +280,7 @@ def check_discovery(hostname, ipaddress=None):
                     count += 1
                     affected_check_types.setdefault(check_type, 0)
                     affected_check_types[check_type] += 1
-                    long_infotexts.append("%s: %s: %s" % (title, check_type, service_description(check_type, item)))
+                    long_infotexts.append("%s: %s: %s" % (title, check_type, service_description(hostname, check_type, item)))
 
             if affected_check_types:
                 info = ", ".join([ "%s:%d" % e for e in affected_check_types.items() ])
@@ -803,7 +803,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
             if type(item) == str:
                 item = decode_incoming_string(item)
 
-            description = service_description(check_type, item)
+            description = service_description(hostname, check_type, item)
             # make sanity check
             if len(description) == 0:
                 sys.stderr.write("%s: Check %s returned empty service description - ignoring it.\n" %
@@ -880,7 +880,7 @@ def get_node_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error):
 
     # Identify clustered services
     for (check_type, item), (check_source, paramstring) in services.items():
-        descr = service_description(check_type, item)
+        descr = service_description(hostname, check_type, item)
         if hostname != host_of_clustered_service(hostname, descr):
             if check_source == "vanished":
                 del services[(check_type, item)] # do not show vanished clustered services here
@@ -918,7 +918,7 @@ def merge_manual_services(services, hostname):
 
     # Handle disabled services -> "obsolete" and "ignored"
     for (check_type, item), (check_source, paramstring) in services.items():
-        descr = service_description(check_type, item)
+        descr = service_description(hostname, check_type, item)
         if service_ignored(hostname, check_type, descr):
             if check_source == "vanished":
                 new_source = "obsolete"
@@ -938,7 +938,7 @@ def get_cluster_services(hostname, use_caches, with_snmp_scan, on_error):
     for node in nodes:
         services = get_discovered_services(node, None, use_caches, with_snmp_scan, on_error)
         for (check_type, item), (check_source, paramstring) in services.items():
-            descr = service_description(check_type, item)
+            descr = service_description(hostname, check_type, item)
             if hostname == host_of_clustered_service(node, descr):
                 if (check_type, item) not in cluster_items:
                     cluster_items[(check_type, item)] = (check_source, paramstring)
@@ -981,7 +981,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             except:
                 raise MKGeneralException("Invalid check parameter string '%s'" % paramstring)
 
-            descr = service_description(check_type, item)
+            descr = service_description(hostname, check_type, item)
             global g_service_description
             g_service_description = descr
             infotype = check_type.split('.')[0]
@@ -1250,7 +1250,7 @@ def set_autochecks_of(hostname, new_items):
             new_autochecks = []
             existing = parse_autochecks_file(node)
             for check_type, item, paramstring in existing:
-                descr = service_description(check_type, item)
+                descr = service_description(node, check_type, item)
                 if hostname != host_of_clustered_service(node, descr):
                     new_autochecks.append((check_type, item, paramstring))
             for (check_type, item), paramstring in new_items.items():
@@ -1297,7 +1297,7 @@ def remove_autochecks_of_host(hostname):
     removed = 0
     new_items = []
     for check_type, item, paramstring in old_items:
-        descr = service_description(check_type, item)
+        descr = service_description(hostname, check_type, item)
         if hostname != host_of_clustered_service(hostname, descr):
             new_items.append((check_type, item, paramstring))
         else:

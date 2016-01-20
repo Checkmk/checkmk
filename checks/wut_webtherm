@@ -83,7 +83,7 @@ def inventory_wut_webtherm(parsed):
 
 def check_wut_webtherm(item, params, parsed):
     if item in parsed:
-        return check_temperature(parsed[item]["reading"], params)
+        return check_temperature(parsed[item]["reading"], params, "wut_webtherm_%s" % item)
 
 
 check_info["wut_webtherm"] = {
@@ -160,3 +160,6 @@ check_info["wut_webtherm.humidity"] = {
     "includes"                  : [ "humidity.include" ],
     "group"                     : "humidity",
 }
+
+#.
+

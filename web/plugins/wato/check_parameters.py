@@ -7400,7 +7400,50 @@ register_check_parameters(
                       ],
                       default_value = "usrdefault",
                 )),
-
+                ( "trend_compute",
+                  Dictionary(
+                      title = _("Trend computation"),
+                      label = _("Enable trend computation"),
+                      elements = [
+                          ( "period",
+                              Integer(
+                                  title = _("Observation period for temperature trend computation"),
+                                  default_value = 30,
+                                  minvalue = 5,
+                                  unit= _("minutes")
+                              )
+                              ),
+                          ( "trend_levels",
+                              Tuple(
+                                  title = _("Levels on temperature increase per period"),
+                                  elements = [
+                                      Integer(title = _("Warning at"), unit = u"°C / " + _("period"), default_value = 5),
+                                      Integer(title = _("Critical at"), unit = u"°C / " + _("period"), default_value = 10)
+                                  ]
+                              )
+                              ),
+                          ( "trend_levels_lower",
+                              Tuple(
+                                  title = _("Levels on temperature decrease per period"),
+                                  elements = [
+                                      Integer(title = _("Warning at"), unit = u"°C / " + _("period"), default_value = 5),
+                                      Integer(title = _("Critical at"), unit = u"°C / " + _("period"), default_value = 10)
+                                  ]
+                              )
+                              ),
+                          ( "trend_timeleft",
+                              Tuple(
+                                  title = _("Levels on the time left until a critical temperature (upper or lower) is reached"),
+                                  elements = [
+                                      Integer(title = _("Warning if below"), unit = _("minutes"), default_value = 240,),
+                                      Integer(title = _("Critical if below"), unit = _("minutes"), default_value = 120, ),
+                                  ]
+                              )
+                              )
+                      ],
+                      optional_keys = ["trend_levels", "trend_levels_lower", "trend_timeleft"],
+                  ),
+                ),
             ]
         ),
         forth = lambda v: type(v) == tuple and { "levels" : v } or v,
@@ -7426,7 +7469,8 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identifier of the thermal sensor.")),
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7441,7 +7485,8 @@ register_check_parameters(
             Integer(title = _("critical at"), unit = u"°C", default_value = 40),
         ]),
     None,
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7525,7 +7570,8 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identifier of the thermal sensor.")),
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7540,7 +7586,8 @@ register_check_parameters(
             Integer(title = _("critical at"), unit = u"°C", default_value = 40),
         ]),
     None,
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7556,7 +7603,8 @@ register_check_parameters(
     TextAscii(
         title = _("Hard disk device"),
         help = _("The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>.")),
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7848,7 +7896,8 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identificator of the thermal sensor.")),
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7895,7 +7944,8 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identifier of the thermal sensor.")),
-    "dict"
+    "dict",
+    deprecated=True,
 )
 ntp_params = \
     Tuple(

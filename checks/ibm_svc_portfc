@@ -61,6 +61,9 @@ def inventory_ibm_svc_portfc(info):
             yield item, None
 
 def check_ibm_svc_portfc(item, _no_params, info):
+    if not item.startswith("Port") and\
+            not item.startswith("Node"):
+        return 3, "check had an incompatible change, please re-discover services on this host"
     for line in info:
         if ( len(line) in (11, 12) and "Port %s" % line[0] == item) or \
                 ( len(line) == 14 and  "Node %s Slot %s Port %s" % (line[5], line[12], line[13]) ) == item:

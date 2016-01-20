@@ -33,7 +33,10 @@ factory_settings["bvip_link_default_levels"] = {
 
 
 def inventory_bvip_link(info):
-    return [(None, {})]
+    if info:
+        return [(None, {})]
+    else:
+        return []
 
 
 def check_bvip_link(_no_item, params, info):

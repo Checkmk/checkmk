@@ -117,7 +117,7 @@ def check_brocade_temp(item, params, info):
     converted = brocade_sensor_convert(info, "SLOT")
     for snmp_item, name, value in converted:
         if item == snmp_item:
-            return check_temperature(int(value), params)
+            return check_temperature(int(value), params, "brocade_temp_%s" % item)
 
 
 check_info["brocade.temp"] = {

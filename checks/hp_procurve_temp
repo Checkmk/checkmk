@@ -42,7 +42,7 @@ def inventory_hp_procurve_temp(info):
 def check_hp_procurve_temp(item, params, info):
     if len(info) == 1:
         temp, dev_unit = int(info[0][1][:-1]), info[0][1][-1].lower()
-        return check_temperature(temp, params, dev_unit)
+        return check_temperature(temp, params, "hp_procurve_temp_%s" % item, dev_unit)
 
 
 check_info['hp_procurve_temp'] = {

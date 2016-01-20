@@ -41,14 +41,20 @@ def parse_raritan_pdu_inlet(info):
                     parsed[phase][key] = (value, (state, raritan_pdu_sensor_states[sensor_state]))
                 else:
                     parsed[phase][key] = (value, None)
-
     return parsed
+
+
+def check_raritan_pdu_inlet(item, params, info):
+    if not item.startswith("Phase"):
+        item = "Phase %s" % item
+    for res in check_elphase(item, params, info):
+        yield res
 
 
 check_info['raritan_pdu_inlet'] = {
   "parse_function"      : parse_raritan_pdu_inlet,
   "inventory_function"  : inventory_elphase,
-  "check_function"      : check_elphase,
+  "check_function"      : check_raritan_pdu_inlet,
   "service_description" : "Input %s",
   "has_perfdata"        : True,
   "group"               : "el_inphase",

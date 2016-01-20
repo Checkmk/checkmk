@@ -283,10 +283,11 @@ def inventory_multipath(parsed):
 def check_multipath(item, target_numpaths, parsed):
     # Keys in parsed are the UUIDs. First assume that we are
     # looking for a UUID. Then fall back to aliases
-    # item.rstrip(): Check_MK Versions < 1.2.8 created autochecks with a whitespace 
-    # at the end of the item. With this fix we prevent serval hundreds of UKN after Update.
-    if item.rstrip() in parsed:
-        mmap = parsed[item.rstrip()]
+    if item in parsed:
+        mmap = parsed[item]
+    elif item.strip() in parsed:
+        # support items discovered before 1.2.7
+        mmap = parsed[item.strip()]
     else:
         for mmap in parsed.values():
             if mmap.get("alias") == item:

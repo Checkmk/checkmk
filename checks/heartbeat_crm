@@ -168,7 +168,7 @@ def check_heartbeat_crm(item, params, info):
             if numResources == params['num_resources']:
                 output += 'Resources: %d, ' % numResources
             else:
-                output += 'Resources: %d (Expected %d (!!)), ' % (numResources, params['num_ressources'])
+                output += 'Resources: %d (Expected %d (!!)), ' % (numResources, params['num_resources'])
                 status = 2
 
         return (status, output.rstrip(', '))

@@ -563,6 +563,9 @@ if type postconf >/dev/null ; then
         do
             count=$(find $postfix_queue_dir/$queue -type f | wc -l)
             size=$(du -s $postfix_queue_dir/$queue | awk '{print $1 }')
+            if [ -z "$size" ]; then
+                size=0
+            fi
             echo "QUEUE_${queue} $size $count"
         done
     fi

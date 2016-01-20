@@ -296,6 +296,7 @@
     * 2439 FIX: solaris_prtdiag: Can now handle Oracle Corporation SUN FIRE X4170 M2 SERVER...
     * 2827 FIX: win_disks, win_video: now able to detect multiple instances
     * 2828 FIX: win_disks: now able to handle disks with missing size or media type information
+    * 2906 FIX: Fixed crash in views containing special chars in HW/SW-Inventory based columns
 
 
 1.2.7i3:

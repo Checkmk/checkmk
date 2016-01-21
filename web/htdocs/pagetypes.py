@@ -871,12 +871,13 @@ class Overridable:
 
         def validate(page_dict):
             owner_user_id = html.var("owner", config.user_id)
+            page_name = page_dict["name"]
             if owner_user_id == config.user_id:
                 page = self.find_my_page(page_name)
             else:
                 page = self.find_foreign_page(owner_user_id, page_name)
             if page:
-                raise MKUserError("_p_name", _("You already have an with the ID <b>%s</b>") % page_dict["name"])
+                raise MKUserError("_p_name", _("You already have an element with the ID <b>%s</b>") % page_dict["name"])
 
         new_page_dict = forms.edit_valuespec(vs, page_dict, validate=validate)
         if new_page_dict != None:

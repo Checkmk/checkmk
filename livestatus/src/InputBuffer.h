@@ -26,10 +26,9 @@
 #define InputBuffer_h
 
 #include "config.h" // IWYU pragma: keep
+#include <stddef.h>
 #include <deque>
 #include <string>
-
-#define IB_BUFFER_SIZE 65536
 
 class InputBuffer {
 public:
@@ -51,11 +50,13 @@ public:
     std::string nextLine();
 
 private:
+    static const size_t buffer_size = 65536;
+
     int _fd;
     int *_termination_flag;
     typedef std::deque<std::string> _requestlines_t;
     _requestlines_t _requestlines;
-    char _readahead_buffer[IB_BUFFER_SIZE];
+    char _readahead_buffer[buffer_size];
     char *_read_pointer;
     char *_write_pointer;
     char *_end_pointer;

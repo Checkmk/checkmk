@@ -33,8 +33,12 @@
 
 using std::string;
 
+const size_t InputBuffer::buffer_size;
 
-#define READ_TIMEOUT_USEC 200000
+namespace {
+const int read_timeout_usec = 200000;
+}
+
 extern int g_query_timeout_msec;
 extern int g_idle_timeout_msec;
 
@@ -50,7 +54,7 @@ InputBuffer::InputBuffer(int *termination_flag)
 {
     _read_pointer = &_readahead_buffer[0];         // points to data not yet processed
     _write_pointer = _read_pointer;                // points to end of data in buffer
-    _end_pointer = _read_pointer + IB_BUFFER_SIZE; // points ot end of buffer
+    _end_pointer = _read_pointer + buffer_size;    // points ot end of buffer
 }
 
 void InputBuffer::setFd(int fd)
@@ -195,8 +199,8 @@ InputBuffer::Result InputBuffer::readData()
         if (timeout_reached(&start, g_query_timeout_msec))
             return Result::timeout;
 
-        tv.tv_sec  = READ_TIMEOUT_USEC / 1000000;
-        tv.tv_usec = READ_TIMEOUT_USEC % 1000000;
+        tv.tv_sec  = read_timeout_usec / 1000000;
+        tv.tv_usec = read_timeout_usec % 1000000;
 
         fd_set fds;
         FD_ZERO(&fds);

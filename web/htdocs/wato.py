@@ -7469,7 +7469,14 @@ def notification_rule_match_conditions():
                        title = _("Match only Event Console alerts"),
                        elements = [
                            ( "match_rule_id",
-                             ID(title = _("Match event rule"), label = _("Rule ID:"), size=12, allow_empty=False),
+                            Transform(
+                                ListOf(
+                                    ID(title = _("Match event rule"), label = _("Rule ID:"), size=12, allow_empty=False),
+                                    add_label = _("Add Rule ID"),
+                                    title = _("Rule IDs")
+                                ),
+                                forth = lambda x: isinstance(x, list) and x or [x]
+                            )
                            ),
                            ( "match_priority",
                              Tuple(

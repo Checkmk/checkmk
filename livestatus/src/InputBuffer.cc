@@ -62,17 +62,13 @@ pair<list<string>, InputBuffer::Result> failure(InputBuffer::Result r)
 }
 }
 
-// TODO: We need the suppression pragma below because _readahead_buffer is not
-// initialized in the constructor. Just replace all this manual fiddling with
-// pointers, offsets, etc. with vector.
-
-// cppcheck-suppress uninitMemberVar
 InputBuffer::InputBuffer(int fd, const int *termination_flag)
-    : _fd(fd), _termination_flag(termination_flag)
+    : _fd(fd)
+    , _termination_flag(termination_flag)
+    , _readahead_buffer(buffer_size)
 {
     _read_index = 0;          // points to data not yet processed
     _write_index = 0;         // points to end of data in buffer
-    _end_index = buffer_size; // points ot end of buffer
 }
 
 // read in data enough for one complete request (and maybe more).
@@ -111,7 +107,7 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
         {
             // Is there still space left in the buffer => read in
             // further data into the buffer.
-            if (_write_index < _end_index)
+            if (_write_index < _readahead_buffer.capacity())
             {
                 Result rd = readData(); // tries to read in further data into buffer
                 if (rd == Result::timeout) {
@@ -155,7 +151,7 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
             }
             // OK. So no space is left in the buffer. But maybe at the
             // *beginning* of the buffer is space left again. This is
-            // very probable if _write_index == _end_index. Most
+            // very probable if _write_index == _readahead_buffer.capacity(). Most
             // of the buffer's content is already processed. So we simply
             // shift the yet unprocessed data to the very left of the buffer.
             else if (_read_index > 0) {
@@ -224,7 +220,7 @@ InputBuffer::Result InputBuffer::readData()
 
         int retval = select(_fd + 1, &fds, NULL, NULL, &tv);
         if (retval > 0 && FD_ISSET(_fd, &fds)) {
-            ssize_t r = read(_fd, &_readahead_buffer[_write_index], _end_index - _write_index);
+            ssize_t r = read(_fd, &_readahead_buffer[_write_index], _readahead_buffer.capacity() - _write_index);
             if (r < 0) {
                 return Result::eof;
             }

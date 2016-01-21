@@ -30,6 +30,7 @@
 #include <list>
 #include <string>
 #include <utility>
+#include <vector>
 
 class InputBuffer {
 public:
@@ -52,10 +53,9 @@ private:
 
     int _fd;
     const int *_termination_flag;
-    char _readahead_buffer[buffer_size];
+    std::vector<char> _readahead_buffer;
     size_t _read_index;
     size_t _write_index;
-    size_t _end_index;
 
     Result readData();
 };

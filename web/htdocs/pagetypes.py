@@ -778,7 +778,7 @@ class Overridable:
                 # Title
                 table.cell(_('Title'))
                 title = _u(instance.title())
-                if isinstance(self, PageRenderer) and not instance.is_hidden():
+                if isinstance(instance, PageRenderer) and not instance.is_hidden():
                     html.write("<a href=\"%s.py?%s=%s\">%s</a>" %
                         (self.type_name(), self.ident_attr(), instance.name(), html.attrencode(instance.title())))
                 else:

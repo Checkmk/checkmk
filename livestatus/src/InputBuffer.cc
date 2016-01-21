@@ -39,9 +39,11 @@ using std::string;
 extern int g_query_timeout_msec;
 extern int g_idle_timeout_msec;
 
-const size_t InputBuffer::buffer_size;
-
 namespace {
+const size_t initial_buffer_size = 4096;
+// TODO: Make this configurable?
+const size_t maximum_buffer_size = 500 * 1024 * 1024;
+
 const int read_timeout_usec = 200000;
 
 bool timeout_reached(const struct timeval *start, int timeout_ms)
@@ -65,7 +67,7 @@ pair<list<string>, InputBuffer::Result> failure(InputBuffer::Result r)
 InputBuffer::InputBuffer(int fd, const int *termination_flag)
     : _fd(fd)
     , _termination_flag(termination_flag)
-    , _readahead_buffer(buffer_size)
+    , _readahead_buffer(initial_buffer_size)
 {
     _read_index = 0;          // points to data not yet processed
     _write_index = 0;         // points to end of data in buffer
@@ -164,10 +166,14 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
                 // continue -> still no data in buffer, but it will
                 // be read, as now is space
             }
-            // buffer is full, but still no end of line found => buffer is too small
+            // buffer is full, but still no end of line found
             else {
-                logger(LG_INFO, "Error: maximum length of request line exceeded");
-                return failure(Result::line_too_long);
+                size_t new_capacity = _readahead_buffer.capacity() * 2;
+                if (new_capacity > maximum_buffer_size) {
+                    logger(LG_INFO, "Error: maximum length of request line exceeded");
+                    return failure(Result::line_too_long);
+                }
+                _readahead_buffer.resize(new_capacity);
             }
         }
         else // end of line found

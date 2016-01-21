@@ -49,8 +49,6 @@ public:
     std::pair<std::list<std::string>, Result> readRequest();
 
 private:
-    static const size_t buffer_size = 65536;
-
     int _fd;
     const int *_termination_flag;
     std::vector<char> _readahead_buffer;

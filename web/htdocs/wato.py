@@ -10243,6 +10243,8 @@ def mode_edit_user(phase):
     load_notification_scripts()
 
     html.begin_form("user", method="POST")
+    html.prevent_password_auto_completion()
+
     forms.header(_("Identity"))
 
     # ID
@@ -10281,6 +10283,7 @@ def mode_edit_user(phase):
 
     forms.header(_("Security"))
     forms.section(_("Authentication"))
+
     is_automation = user.get("automation_secret", None) != None
     html.radiobutton("authmethod", "password", not is_automation,
                      _("Normal user login with password"))
@@ -13800,6 +13803,7 @@ def page_user_profile(change_pw=False):
         return attr in locked_attributes
 
     html.begin_form("profile", method="POST")
+    html.prevent_password_auto_completion()
     html.write('<div class=wato>')
     forms.header(_("Personal Settings"))
 

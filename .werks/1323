@@ -1,0 +1,10 @@
+Title: win_printers: Warning and Critical levels can now be set
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453382032
+Class: feature
+
+The change can be found in commit #67c90d81ee34114db1b12d2e0867bbd146a90716
+

@@ -44,14 +44,14 @@ public:
         timeout
     };
 
-    InputBuffer(int fd, int *termination_flag);
+    InputBuffer(int fd, const int *termination_flag);
     std::pair<std::list<std::string>, Result> readRequest();
 
 private:
     static const size_t buffer_size = 65536;
 
     int _fd;
-    int *_termination_flag;
+    const int *_termination_flag;
     char _readahead_buffer[buffer_size];
     size_t _read_index;
     size_t _write_index;

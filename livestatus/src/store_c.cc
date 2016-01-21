@@ -103,7 +103,7 @@ void delete_outputbuffer(void *ob)
     delete static_cast<OutputBuffer *>(ob);
 }
 
-void *create_inputbuffer(int fd, int *termination_flag)
+void *create_inputbuffer(int fd, const int *termination_flag)
 {
     return new InputBuffer(fd, termination_flag);
 }

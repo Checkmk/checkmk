@@ -67,7 +67,7 @@ pair<list<string>, InputBuffer::Result> failure(InputBuffer::Result r)
 // pointers, offsets, etc. with vector.
 
 // cppcheck-suppress uninitMemberVar
-InputBuffer::InputBuffer(int fd, int *termination_flag)
+InputBuffer::InputBuffer(int fd, const int *termination_flag)
     : _fd(fd), _termination_flag(termination_flag)
 {
     _read_index = 0;          // points to data not yet processed

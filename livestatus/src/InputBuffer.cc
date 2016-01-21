@@ -67,18 +67,12 @@ pair<list<string>, InputBuffer::Result> failure(InputBuffer::Result r)
 // pointers, offsets, etc. with vector.
 
 // cppcheck-suppress uninitMemberVar
-InputBuffer::InputBuffer(int *termination_flag)
-    : _fd(-1), _termination_flag(termination_flag)
+InputBuffer::InputBuffer(int fd, int *termination_flag)
+    : _fd(fd), _termination_flag(termination_flag)
 {
     _read_pointer = &_readahead_buffer[0];         // points to data not yet processed
     _write_pointer = _read_pointer;                // points to end of data in buffer
     _end_pointer = _read_pointer + buffer_size;    // points ot end of buffer
-}
-
-void InputBuffer::setFd(int fd)
-{
-    _fd = fd;
-    _read_pointer = _write_pointer = _readahead_buffer;
 }
 
 // read in data enough for one complete request (and maybe more).

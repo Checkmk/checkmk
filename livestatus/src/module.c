@@ -210,7 +210,6 @@ void *main_thread(void *data __attribute__ ((__unused__)))
 
 void *client_thread(void *data __attribute__ ((__unused__)))
 {
-    void *input_buffer = create_inputbuffer(&g_should_terminate);
     void *output_buffer = create_outputbuffer();
 
     while (!g_should_terminate) {
@@ -220,7 +219,7 @@ void *client_thread(void *data __attribute__ ((__unused__)))
         if (cc >= 0) {
             if (g_debug_level >= 2)
                 logger(LG_INFO, "Accepted client connection on fd %d", cc);
-            set_inputbuffer_fd(input_buffer, cc);
+            void *input_buffer = create_inputbuffer(cc, &g_should_terminate);
             int keepalive = 1;
             unsigned requestnr = 1;
             while (keepalive) {
@@ -231,12 +230,12 @@ void *client_thread(void *data __attribute__ ((__unused__)))
                 g_counters[COUNTER_REQUESTS]++;
                 requestnr ++;
             }
+            delete_inputbuffer(input_buffer);
             close(cc);
         }
         g_num_active_connections--;
     }
     delete_outputbuffer(output_buffer);
-    delete_inputbuffer(input_buffer);
     return voidp;
 }
 

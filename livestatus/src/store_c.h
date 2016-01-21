@@ -43,8 +43,7 @@ extern "C"
     void *create_outputbuffer();
     void flush_output_buffer(void *ob, int fd, int *termination_flag);
     void delete_outputbuffer(void *);
-    void *create_inputbuffer(int *termination_flag);
-    void set_inputbuffer_fd(void *, int fd);
+    void *create_inputbuffer(int fd, int *termination_flag);
     void delete_inputbuffer(void *);
     void queue_add_connection(int cc);
     int  queue_pop_connection();

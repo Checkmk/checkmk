@@ -44,8 +44,7 @@ public:
         timeout
     };
 
-    explicit InputBuffer(int *termination_flag);
-    void setFd(int fd);
+    InputBuffer(int fd, int *termination_flag);
     std::pair<std::list<std::string>, Result> readRequest();
 
 private:

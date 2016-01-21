@@ -70,9 +70,9 @@ pair<list<string>, InputBuffer::Result> failure(InputBuffer::Result r)
 InputBuffer::InputBuffer(int fd, int *termination_flag)
     : _fd(fd), _termination_flag(termination_flag)
 {
-    _read_pointer = 0;          // points to data not yet processed
-    _write_pointer = 0;         // points to end of data in buffer
-    _end_pointer = buffer_size; // points ot end of buffer
+    _read_index = 0;          // points to data not yet processed
+    _write_index = 0;         // points to end of data in buffer
+    _end_index = buffer_size; // points ot end of buffer
 }
 
 // read in data enough for one complete request (and maybe more).
@@ -90,28 +90,28 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
     // queries.
     bool query_started = false;
 
-    // _read_pointer points to the place in the buffer, where the
-    // next valid data begins. This data ends at _write_pointer.
+    // _read_index points to the place in the buffer, where the
+    // next valid data begins. This data ends at _write_index.
     // That data might have been read while reading the previous
     // request.
 
     // r is used to find the end of the line
-    size_t r = _read_pointer;
+    size_t r = _read_index;
 
     while (true)
     {
         // Try to find end of the current line in buffer
-        while (r < _write_pointer && _readahead_buffer[r] != '\n')
+        while (r < _write_index && _readahead_buffer[r] != '\n')
             r++; // now r is at end of data or at '\n'
 
         // If we cannot find the end of line in the data
         // already read, then we need to read new data from
         // the client.
-        if (r == _write_pointer)
+        if (r == _write_index)
         {
             // Is there still space left in the buffer => read in
             // further data into the buffer.
-            if (_write_pointer < _end_pointer)
+            if (_write_index < _end_index)
             {
                 Result rd = readData(); // tries to read in further data into buffer
                 if (rd == Result::timeout) {
@@ -130,7 +130,7 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
                 // read an incomplete line. If the last thing we read was
                 // a linefeed, then we consider the current request to
                 // be valid, if it is not empty.
-                else if (rd == Result::eof && r == _read_pointer /* currently at beginning of a line */)
+                else if (rd == Result::eof && r == _read_index /* currently at beginning of a line */)
                 {
                     if (request_lines.empty()) {
                         return failure(Result::eof); // empty request -> no request
@@ -139,7 +139,7 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
                         // socket has been closed but request is complete
                         return make_pair(request_lines, Result::request_read);
                         // the current state is now:
-                        // _read_pointer == r == _write_pointer => buffer is empty
+                        // _read_index == r == _write_index => buffer is empty
                         // that way, if the main program tries to read the
                         // next request, it will get an IB_UNEXPECTED_EOF
                     }
@@ -155,15 +155,15 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
             }
             // OK. So no space is left in the buffer. But maybe at the
             // *beginning* of the buffer is space left again. This is
-            // very probable if _write_pointer == _end_pointer. Most
+            // very probable if _write_index == _end_index. Most
             // of the buffer's content is already processed. So we simply
             // shift the yet unprocessed data to the very left of the buffer.
-            else if (_read_pointer > 0) {
-                int shift_by = _read_pointer;                     // distance to beginning of buffer
-                int size     = _write_pointer - _read_pointer;    // amount of data to shift
-                memmove(&_readahead_buffer[0], &_readahead_buffer[_read_pointer], size);
-                _read_pointer = 0;                                // unread data is now at the beginning
-                _write_pointer -= shift_by;                       // write pointer shifted to the left
+            else if (_read_index > 0) {
+                int shift_by = _read_index;                       // distance to beginning of buffer
+                int size     = _write_index - _read_index;        // amount of data to shift
+                memmove(&_readahead_buffer[0], &_readahead_buffer[_read_index], size);
+                _read_index = 0;                                  // unread data is now at the beginning
+                _write_index -= shift_by;                         // write pointer shifted to the left
                 r -= shift_by;                                    // current scan position also shift left
                 // continue -> still no data in buffer, but it will
                 // be read, as now is space
@@ -176,8 +176,8 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
         }
         else // end of line found
         {
-            if (_read_pointer == r) { // empty line found => end of request
-                _read_pointer = r + 1;
+            if (_read_index == r) { // empty line found => end of request
+                _read_index = r + 1;
                 // Was ist, wenn noch keine korrekte Zeile gelesen wurde?
                 if (request_lines.empty()) {
                     return failure(Result::empty_request);
@@ -186,16 +186,16 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
                     return make_pair(request_lines, Result::request_read);
             }
             else { // non-empty line: belongs to current request
-                int length = r - _read_pointer;
-                for (size_t end = r; end > _read_pointer && isspace(_readahead_buffer[--end]);)
+                int length = r - _read_index;
+                for (size_t end = r; end > _read_index && isspace(_readahead_buffer[--end]);)
                     length--;
                 if (length > 0)
-                    request_lines.push_back(string(&_readahead_buffer[_read_pointer], length));
+                    request_lines.push_back(string(&_readahead_buffer[_read_index], length));
                 else
                     logger(LG_INFO, "Warning ignoring line containing only whitespace");
                 query_started = true;
-                _read_pointer = r + 1;
-                r = _read_pointer;
+                _read_index = r + 1;
+                r = _read_index;
             }
         }
     }
@@ -224,7 +224,7 @@ InputBuffer::Result InputBuffer::readData()
 
         int retval = select(_fd + 1, &fds, NULL, NULL, &tv);
         if (retval > 0 && FD_ISSET(_fd, &fds)) {
-            ssize_t r = read(_fd, &_readahead_buffer[_write_pointer], _end_pointer - _write_pointer);
+            ssize_t r = read(_fd, &_readahead_buffer[_write_index], _end_index - _write_index);
             if (r < 0) {
                 return Result::eof;
             }
@@ -232,7 +232,7 @@ InputBuffer::Result InputBuffer::readData()
                 return Result::eof;
             }
             else {
-                _write_pointer += r;
+                _write_index += r;
                 return Result::data_read;
             }
         }

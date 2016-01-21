@@ -773,7 +773,7 @@ class Overridable:
                 ###     render_custom_buttons(visual_name, visual)
 
                 # Internal ID of instance (we call that 'name')
-                table.cell(_('ID'), instance.name())
+                table.cell(_('ID'), instance.name(), css="narrow")
 
                 # Title
                 table.cell(_('Title'))

@@ -2020,7 +2020,11 @@ def lookup_ipv4_address(hostname):
 def lookup_ipv6_address(hostname):
     return lookup_ip_address(hostname, 6)
 
-# Determine the IP address of a host
+# Determine the IP address of a host. It returns either an IP address,
+# or raise an exception when a hostname can not be resolved on the first
+# try to resolve a hostname. On later tries to resolve a hostname  it
+# returns None instead of raising an exception.
+# FIXME: This different handling is bad. Clean this up!
 def lookup_ip_address(hostname, family=None):
     if family == None: # choose primary family
         family = is_ipv6_primary(hostname) and 6 or 4
@@ -3280,11 +3284,21 @@ def get_cluster_attributes(hostname, nodes):
     attrs = {}
     node_ips_4 = []
     if is_ipv4_host(hostname):
-        node_ips_4 = [ ip_address_of(h, 4) for h in nodes ]
+        for h in nodes:
+            addr = ip_address_of(h, 4)
+            if addr != None:
+                node_ips_4.append(addr)
+            else:
+                node_ips_4.append(fallback_ip_for(hostname, 4))
 
     node_ips_6 = []
     if is_ipv6_host(hostname):
-        node_ips_6 = [ ip_address_of(h, 6) for h in nodes ]
+        for h in nodes:
+            addr = ip_address_of(h, 6)
+            if addr != None:
+                node_ips_6.append(addr)
+            else:
+                node_ips_6.append(fallback_ip_for(hostname, 6))
 
     if is_ipv6_primary(hostname):
         node_ips = node_ips_6
@@ -3307,8 +3321,8 @@ def ip_address_of(hostname, family=None):
             g_failed_ip_lookups.append(hostname)
             addr = fallback_ip_for(hostname, family)
             if not ignore_ip_lookup_failures:
-                configuration_warning("Cannot lookup IP address of '%s': %s, using "
-                                      "address %s instead" % (hostname, e, addr))
+                configuration_warning("Cannot lookup IP address of '%s' (%s). Using "
+                                      "address %s instead." % (hostname, e, addr))
             return addr
 
 

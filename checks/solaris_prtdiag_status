@@ -1,0 +1,56 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<solaris_prtdiag_status>>>
+# 0
+
+def inventory_solaris_prtdiag_status(info):
+    if info:
+        return [(None, None)]
+
+
+def check_solaris_prtdiag_status(_no_item, _no_params, info):
+    if not info:
+        return
+
+    # 0 No failures or errors are detected in the system.
+    # 1 Failures or errors are detected in the system.
+    state = int(info[0][0])
+    if int(info[0][0]) == 0:
+        return 0, "No failures or errors are reported"
+    else:
+        return 2, "Failures or errors are reported by the system. " \
+                  "Please check the output of \"prtdiag -v\" for details."
+
+check_info['solaris_prtdiag_status'] = {
+    "inventory_function"      : inventory_solaris_prtdiag_status,
+    "check_function"          : check_solaris_prtdiag_status,
+    "service_description"     : "Hardware Overall State"
+}
+
+
+

@@ -50,6 +50,10 @@ def inventory_hr_fs(info):
 
 def check_hr_fs(item, params, info):
     fslist = []
+
+    if "Label:" in item or "\\" in item:
+        return 3, "check had an incompatible change, please re-discover services on this host"
+
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
         hrdescr = fix_hr_fs_mountpoint(hrdescr)
         if "patterns" in params or item == hrdescr:

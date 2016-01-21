@@ -1225,14 +1225,14 @@ class Checkbox(ValueSpec):
 class DropdownChoice(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._choices = kwargs["choices"]
-        self._help_separator = kwargs.get("help_separator")
-        self._label = kwargs.get("label")
-        self._prefix_values = kwargs.get("prefix_values", False)
-        self._sorted = kwargs.get("sorted", False)
-        self._empty_text = kwargs.get("empty_text", _("There are no elements defined for this selection yet."))
-
-        self._no_preselect       = kwargs.get("no_preselect",       False)
+        self._choices            = kwargs["choices"]
+        self._help_separator     = kwargs.get("help_separator")
+        self._label              = kwargs.get("label")
+        self._prefix_values      = kwargs.get("prefix_values", False)
+        self._sorted             = kwargs.get("sorted", False)
+        self._empty_text         = kwargs.get("empty_text", _("There are no elements defined for this selection yet."))
+        self._invalid_choice     = kwargs.get("invalid_choice", "replace") # also possible: "complain"
+        self._no_preselect       = kwargs.get("no_preselect", False)
         self._no_preselect_value = kwargs.get("no_preselect_value", None)
         self._no_preselect_title = kwargs.get("no_preselect_title", "") # if not preselected
         self._no_preselect_error = kwargs.get("no_preselect_error", _("Please make a selection"))
@@ -1268,6 +1268,11 @@ class DropdownChoice(ValueSpec):
             options.append((str(n),) + entry[1:])
             if entry[0] == value:
                 defval = str(n)
+
+        if self._invalid_choice == "complain" and self._value_is_invalid(value):
+            defval = "invalid"
+            options.append((defval, _("(element does not exist anymore)")))
+
         if len(options) == 0:
             html.write(self._empty_text)
         elif len(options[0]) == 3:
@@ -1294,7 +1299,10 @@ class DropdownChoice(ValueSpec):
             val = entry[0]
             if sel == str(n):
                 return val
-        return self.default_value() # can only happen if user garbled URL or len(choices) == 0
+        if self._invalid_choice == "replace":
+            return self.default_value() # garbled URL or len(choices) == 0
+        else:
+            raise MKUserError(varprefix, _("The selected element is not longer available. Please select something else."))
 
     def validate_value(self, value, varprefix):
         if self._no_preselect and value == self._no_preselect_value:
@@ -1313,6 +1321,12 @@ class DropdownChoice(ValueSpec):
 
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
             (value, ", ".join([v for (v,t) in choices])))
+
+    def _value_is_invalid(self, value):
+        for entry in self.choices():
+            if entry[0] == value:
+                return False
+        return True
 
 
 # Special conveniance variant for monitoring states
@@ -2771,6 +2785,10 @@ class Dictionary(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
         self._empty_text = kwargs.get("empty_text", _("(no parameters)"))
+        # Optionally a text can be specified to be shown by value_to_text()
+        # when the value equal the default value of the value spec. Normally
+        # the default values are shown.
+        self._default_text = kwargs.get("default_text", None)
         self._required_keys = kwargs.get("required_keys", [])
         self._ignored_keys = kwargs.get("ignored_keys", [])
         self._default_keys = kwargs.get("default_keys", []) # keys present in default value
@@ -2964,6 +2982,9 @@ class Dictionary(ValueSpec):
         oneline = self._render == "oneline"
         if not value:
             return self._empty_text
+
+        if self._default_text and value == self.default_value():
+            return self._default_text
 
         if not oneline:
             s = '<table class=vs_dict_text>'

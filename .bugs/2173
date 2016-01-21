@@ -2,7 +2,7 @@ Title: WATO backup: Do not save configuration files which are derived from omd c
 Component: wato
 State: open
 Date: 2015-03-10 11:30:33
-Targetversion: 1.2.7
+Targetversion: future
 Class: bug
 
 Example:
@@ -17,3 +17,7 @@ Fix:
   OMD configuration into a info file
 - Upon snapshot restore, each backup domain checks if the requirements of this info file
   are fulfilled. If not, it raises a warning and the snapshot can not get applied.
+
+
+Hm. This whole WATO backup/snapshot system is broken. We need to find a more clean
+solution to all.

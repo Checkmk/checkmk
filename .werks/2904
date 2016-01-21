@@ -1,0 +1,10 @@
+Title: Improved error handling when custom url dashlets raise an exception
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453287618
+Class: fix
+
+Fixed whole dashboards crashes when a "Custom URL dashlet" using a "Custom URL
+rendering function" raise an exception while calling that function.

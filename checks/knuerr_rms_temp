@@ -32,11 +32,12 @@ factory_settings["knuerr_rms_temp_default_levels"] = {
 def inventory_knuerr_rms_temp(info):
     return [ ("Ambient", {}) ]
 
+def check_knuerr_rms_temp(_no_item, params, info):
+    return check_temperature(float(info[0][0]) / 10, params, "knuerr_rms_temp")
 
 check_info["knuerr_rms_temp"] = {
     "default_levels_variable"   : "knuerr_rms_temp_default_levels",
-    "check_function"            : lambda _no_item, params, info: \
-                                    check_temperature(float(info[0][0]) / 10, params),
+    "check_function"            : check_knuerr_rms_temp,
     "inventory_function"        : inventory_knuerr_rms_temp,
     "service_description"       : "Temperature %s",
     "has_perfdata"              : True,

@@ -280,7 +280,7 @@ def check_discovery(hostname, ipaddress=None):
                     count += 1
                     affected_check_types.setdefault(check_type, 0)
                     affected_check_types[check_type] += 1
-                    long_infotexts.append("%s: %s: %s" % (title, check_type, service_description(check_type, item)))
+                    long_infotexts.append("%s: %s: %s" % (title, check_type, service_description(hostname, check_type, item)))
 
             if affected_check_types:
                 info = ", ".join([ "%s:%d" % e for e in affected_check_types.items() ])
@@ -305,12 +305,16 @@ def check_discovery(hostname, ipaddress=None):
             output += "\n" + "\n".join(long_infotexts)
         output += "\n"
 
-    except (MKSNMPError, MKAgentError), e:
+    except (MKSNMPError, MKAgentError, MKGeneralException), e:
         output = "Discovery failed: %s\n" % e
         # Honor rule settings for "Status of the Check_MK service". In case of
         # a problem we assume a connection error here.
         spec = exit_code_spec(hostname)
-        status = spec.get("connection", 1)
+        if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
+            what = "connection"
+        else:
+            what = "exception"
+        status = spec.get(what, 1)
 
     except MKCheckTimeout:
         if opt_keepalive:
@@ -632,12 +636,19 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
 
     vverbose("  SNMP scan:\n")
     if not in_binary_hostlist(hostname, snmp_without_sys_descr):
-        sys_descr_oid = ".1.3.6.1.2.1.1.1.0"
-        sys_descr = get_single_oid(hostname, ipaddress, sys_descr_oid)
-        if sys_descr == None:
-            raise MKSNMPError("Cannot fetch system description OID %s" % sys_descr_oid)
+        for oid, name in [ (".1.3.6.1.2.1.1.1.0", "system description"),
+                           (".1.3.6.1.2.1.1.2.0", "system object") ]:
+            value = get_single_oid(hostname, ipaddress, oid)
+            if value == None:
+                raise MKSNMPError(
+                    "Cannot fetch %s OID %s. This might be OK for some bogus devices. "
+                    "In that case please configure the ruleset \"Hosts without system "
+                    "description OID\" to tell Check_MK not to fetch the system "
+                    "description and system object OIDs." % (name, oid))
     else:
         # Fake OID values to prevent issues with a lot of scan functions
+        vverbose("       Skipping system description OID "
+                 "(Set .1.3.6.1.2.1.1.1.0 and .1.3.6.1.2.1.1.2.0 to \"\")\n")
         set_oid_cache(hostname, ".1.3.6.1.2.1.1.1.0", "")
         set_oid_cache(hostname, ".1.3.6.1.2.1.1.2.0", "")
 
@@ -792,7 +803,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
             if type(item) == str:
                 item = decode_incoming_string(item)
 
-            description = service_description(check_type, item)
+            description = service_description(hostname, check_type, item)
             # make sanity check
             if len(description) == 0:
                 sys.stderr.write("%s: Check %s returned empty service description - ignoring it.\n" %
@@ -869,7 +880,7 @@ def get_node_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error):
 
     # Identify clustered services
     for (check_type, item), (check_source, paramstring) in services.items():
-        descr = service_description(check_type, item)
+        descr = service_description(hostname, check_type, item)
         if hostname != host_of_clustered_service(hostname, descr):
             if check_source == "vanished":
                 del services[(check_type, item)] # do not show vanished clustered services here
@@ -907,7 +918,7 @@ def merge_manual_services(services, hostname):
 
     # Handle disabled services -> "obsolete" and "ignored"
     for (check_type, item), (check_source, paramstring) in services.items():
-        descr = service_description(check_type, item)
+        descr = service_description(hostname, check_type, item)
         if service_ignored(hostname, check_type, descr):
             if check_source == "vanished":
                 new_source = "obsolete"
@@ -927,7 +938,7 @@ def get_cluster_services(hostname, use_caches, with_snmp_scan, on_error):
     for node in nodes:
         services = get_discovered_services(node, None, use_caches, with_snmp_scan, on_error)
         for (check_type, item), (check_source, paramstring) in services.items():
-            descr = service_description(check_type, item)
+            descr = service_description(hostname, check_type, item)
             if hostname == host_of_clustered_service(node, descr):
                 if (check_type, item) not in cluster_items:
                     cluster_items[(check_type, item)] = (check_source, paramstring)
@@ -970,7 +981,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             except:
                 raise MKGeneralException("Invalid check parameter string '%s'" % paramstring)
 
-            descr = service_description(check_type, item)
+            descr = service_description(hostname, check_type, item)
             global g_service_description
             g_service_description = descr
             infotype = check_type.split('.')[0]
@@ -1135,7 +1146,7 @@ def parse_autochecks_file(hostname):
                 backslash = True
             elif c == quote:
                 quote = None # end of quoted string
-            elif c in [ '"', "'" ]:
+            elif c in [ '"', "'" ] and not quote:
                 quote = c # begin of quoted string
             elif quote:
                 continue
@@ -1149,6 +1160,7 @@ def parse_autochecks_file(hostname):
                 value = line[0:i]
                 rest = line[i+1:]
                 return value.strip(), rest
+
         return line.strip(), None
 
     path = "%s/%s.mk" % (autochecksdir, hostname)
@@ -1186,7 +1198,7 @@ def parse_autochecks_file(hostname):
             if len(parts) == 4:
                 parts = parts[1:] # drop hostname, legacy format with host in first column
             elif len(parts) != 3:
-                raise Exception("Invalid number of parts: %d" % len(parts))
+                raise Exception("Invalid number of parts: %d (%r)" % (len(parts), parts))
 
             checktypestring, itemstring, paramstring = parts
 
@@ -1238,7 +1250,7 @@ def set_autochecks_of(hostname, new_items):
             new_autochecks = []
             existing = parse_autochecks_file(node)
             for check_type, item, paramstring in existing:
-                descr = service_description(check_type, item)
+                descr = service_description(node, check_type, item)
                 if hostname != host_of_clustered_service(node, descr):
                     new_autochecks.append((check_type, item, paramstring))
             for (check_type, item), paramstring in new_items.items():
@@ -1285,7 +1297,7 @@ def remove_autochecks_of_host(hostname):
     removed = 0
     new_items = []
     for check_type, item, paramstring in old_items:
-        descr = service_description(check_type, item)
+        descr = service_description(hostname, check_type, item)
         if hostname != host_of_clustered_service(hostname, descr):
             new_items.append((check_type, item, paramstring))
         else:

@@ -100,7 +100,7 @@ def inventory_solaris_fmadm(info):
     return [ (None, None) ]
 
 
-def check_solaris_fmadm(item, params, info):
+def check_solaris_fmadm(_no_item, params, info):
     if not info:
         return 0, "No faults detected"
 
@@ -122,5 +122,5 @@ def check_solaris_fmadm(item, params, info):
 check_info['solaris_fmadm'] = {
     'inventory_function'        : inventory_solaris_fmadm,
     'check_function'            : check_solaris_fmadm,
-    'service_description'       : 'Fault class',
+    'service_description'       : 'FMD Status',
 }

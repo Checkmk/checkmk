@@ -36,7 +36,7 @@ public:
         : IntColumn(name, description, indirect_offset, extra_offset), _number(number)
     {
     }
-    int32_t getValue(void *, Query *) { return *_number; }
+    int32_t getValue(void *, Query *) override { return *_number; }
 };
 
 #endif // IntPointerColumn_h

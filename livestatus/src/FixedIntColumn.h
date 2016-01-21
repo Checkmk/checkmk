@@ -36,7 +36,7 @@ public:
         : IntColumn(name, description, indirect_offset, extra_offset), _value(value)
     {
     }
-    int32_t getValue(void *, Query *) { return _value; }
+    int32_t getValue(void *, Query *) override { return _value; }
 };
 
 #endif // FixedIntColumn_h

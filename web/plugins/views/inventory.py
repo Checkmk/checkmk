@@ -787,7 +787,7 @@ def declare_invtable_columns(infoname, invpath, topic):
 def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc, render_func, filter_class):
     column = infoname + "_" + name
     if render_func == None:
-        paint = lambda row: ("", str(row.get(column)))
+        paint = lambda row: ("", "%s" % row.get(column))
     else:
         def paint(row):
             if column not in row:

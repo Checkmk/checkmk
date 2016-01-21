@@ -437,40 +437,40 @@ void TableStateHistory::answerQuery(Query *query)
                 // If this host/service is no longer availabe in nagios -> set to ""
                 if (state->_service != 0)
                     #ifdef CMC
-                    state->_notification_period = (char *)state->_service->notificationPeriod()->name();
+                    state->_notification_period = state->_service->notificationPeriod()->name();
                     #else
                     state->_notification_period = state->_service->notification_period;
                     #endif
                 else if (state->_host != 0)
                     #ifdef CMC
-                    state->_notification_period = (char *)state->_host->notificationPeriod()->name();
+                    state->_notification_period = state->_host->notificationPeriod()->name();
                     #else
                     state->_notification_period = state->_host->notification_period;
                     #endif
                 else
-                    state->_notification_period = (char *)"";
+                    state->_notification_period = "";
 
                 // If for some reason the notification period is missing set a default
                 if (state->_notification_period == NULL) {
-                     state->_notification_period = (char *)"";
+                     state->_notification_period = "";
                 }
 
                 // Same for service period. For Nagios this is a bit different, since this
                 // is no native field but just a custom variable
                 if (state->_service != 0)
                     #ifdef CMC
-                    state->_service_period = (char *)state->_service->servicePeriod()->name();
+                    state->_service_period = state->_service->servicePeriod()->name();
                     #else
-                    state->_service_period = (char *)getCustomVariable(state->_service->custom_variables, "SERVICE_PERIOD");
+                    state->_service_period = getCustomVariable(state->_service->custom_variables, "SERVICE_PERIOD");
                     #endif
                 else if (state->_host != 0)
                     #ifdef CMC
-                    state->_service_period = (char *)state->_host->servicePeriod()->name();
+                    state->_service_period = state->_host->servicePeriod()->name();
                     #else
-                    state->_service_period = (char *)getCustomVariable(state->_host->custom_variables, "SERVICE_PERIOD");
+                    state->_service_period = getCustomVariable(state->_host->custom_variables, "SERVICE_PERIOD");
                     #endif
                 else
-                    state->_service_period = (char *)"";
+                    state->_service_period = "";
 
 
                 // Determine initial in_notification_period status
@@ -785,6 +785,14 @@ int TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entr
             hs_state->_log_output = 0;
 
         else
+            // TODO: Do we really need to strdup? How are the lifetimes of entry
+            // and hs_state related? This is highly unclear. This strdup
+            // complicates things like hell, because HostServiceState owns
+            // _log_output because of it. If this is really needed (hopefully
+            // not), we should better change the type from a naked pointer to a
+            // unique_ptr, but this would mean introducing yet another Column
+            // subclass, because the Column framework is not flexible at all
+            // regarding the types it handles.
             hs_state->_log_output = entry->_check_output ? strdup(entry->_check_output) : 0;
     }
 

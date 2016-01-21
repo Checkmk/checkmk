@@ -1,0 +1,10 @@
+Title: Fix links to logwatch logfiles in case of several special characters in the name
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453213894
+Class: fix
+
+If you have logfile that contain brackets then now the icon from the logwatch service
+to the GUI works.

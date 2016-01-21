@@ -55,7 +55,7 @@ def page_crashed(what):
 
     show_context_buttons(what)
 
-    if html.check_transaction():
+    if html.has_var("_report") and html.check_transaction():
         details = handle_report_form(tardata)
     else:
         details = {}

@@ -29,14 +29,14 @@
 #include "StringColumn.h"
 
 class StringPointerColumn : public StringColumn {
-    char *_string;
+    const char *_string;
 
 public:
-    StringPointerColumn(std::string name, std::string description, char *string, int indirect_offset = -1, int extra_offset = -1)
+    StringPointerColumn(std::string name, std::string description, const char *string, int indirect_offset = -1, int extra_offset = -1)
         : StringColumn(name, description, indirect_offset, extra_offset), _string(string)
     {
     }
-    char *getValue(void *) { return _string; }
+    const char *getValue(void *) override { return _string; }
 };
 
 #endif // StringPointerColumn_h

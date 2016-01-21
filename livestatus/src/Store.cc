@@ -45,7 +45,9 @@
 
 using mk::lock_guard;
 using mk::mutex;
+using std::list;
 using std::make_pair;
+using std::pair;
 using std::string;
 
 extern int g_debug_level;
@@ -133,21 +135,23 @@ void Store::registerDowntime(nebstruct_downtime_data *d)
 bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
 {
     output->reset();
-    int r = input->readRequest();
-    if (r != IB_REQUEST_READ) {
-        if (r != IB_END_OF_FILE)
+    pair<list<string>, InputBuffer::Result> r = input->readRequest();
+    if (r.second != InputBuffer::Result::request_read) {
+        if (r.second != InputBuffer::Result::eof)
             output->setError(RESPONSE_CODE_INCOMPLETE_REQUEST,
                 "Client connection terminated while request still incomplete");
         return false;
     }
-    string l = input->nextLine();
+    list<string> &lines = r.first;
+    string l = lines.front();
+    lines.pop_front();
     const char *line = l.c_str();
     if (g_debug_level > 0)
         logger(LG_INFO, "Query: %s", line);
     if (!strncmp(line, "GET ", 4))
-        answerGetRequest(input, output, lstrip((char *)line + 4));
+        answerGetRequest(lines, output, lstrip((char *)line + 4));
     else if (!strcmp(line, "GET"))
-        answerGetRequest(input, output, ""); // only to get error message
+        answerGetRequest(lines, output, ""); // only to get error message
     else if (!strncmp(line, "COMMAND ", 8)) {
         answerCommandRequest(lstrip((char *)line + 8));
         output->setDoKeepalive(true);
@@ -177,7 +181,8 @@ void Store::answerCommandRequest(const char *command)
 }
 
 
-void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const char *tablename)
+void Store::answerGetRequest(list<string> &lines, OutputBuffer *output,
+                             const char *tablename)
 {
     output->reset();
     if (!tablename[0]) {
@@ -187,7 +192,7 @@ void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const cha
     if (!table) {
         output->setError(RESPONSE_CODE_NOT_FOUND, "Invalid GET request, no such table '%s'", tablename);
     }
-    Query query(input, output, table);
+    Query query(lines, output, table);
 
     if (table && !output->hasError()) {
         if (query.hasNoColumns()) {

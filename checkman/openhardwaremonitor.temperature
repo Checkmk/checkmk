@@ -1,0 +1,28 @@
+title: Hardware Sensors via OpenHardwareMonitor: Temperature
+agents: windows
+catalog: os/hardware
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors temperature sensors reported by the tool
+ OpenHardwareMonitor (http://openhardwaremonitor.org/). check_mk
+ includes a stripped down version of OpenHardwareMonitor without
+ a gui component which can be installed through the agent backery
+ or manually.
+ If the check_mks own version of ohm is used and installed correcty,
+ the windows agent will ensure it is run (and restarted) as
+ necessary.
+
+ All temperature sensors (cpu, hdd, ...) are handled through this
+ same check but different default levels are applied based on
+ device type:
+    cpu    - warn = 60, crit = 70
+    hdd    - warn = 40, crit = 50
+    others - warn = 70, crit = 80
+
+
+item:
+ The name of the sensor as reported by OpenHardwareMonitor
+
+inventory:
+ All available sensors are automatically inventorized.

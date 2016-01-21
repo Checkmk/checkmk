@@ -7469,7 +7469,14 @@ def notification_rule_match_conditions():
                        title = _("Match only Event Console alerts"),
                        elements = [
                            ( "match_rule_id",
-                             ID(title = _("Match event rule"), label = _("Rule ID:"), size=12, allow_empty=False),
+                            Transform(
+                                ListOf(
+                                    ID(title = _("Match event rule"), label = _("Rule ID:"), size=12, allow_empty=False),
+                                    add_label = _("Add Rule ID"),
+                                    title = _("Rule IDs")
+                                ),
+                                forth = lambda x: isinstance(x, list) and x or [x]
+                            )
                            ),
                            ( "match_priority",
                              Tuple(
@@ -10236,6 +10243,8 @@ def mode_edit_user(phase):
     load_notification_scripts()
 
     html.begin_form("user", method="POST")
+    html.prevent_password_auto_completion()
+
     forms.header(_("Identity"))
 
     # ID
@@ -10274,6 +10283,7 @@ def mode_edit_user(phase):
 
     forms.header(_("Security"))
     forms.section(_("Authentication"))
+
     is_automation = user.get("automation_secret", None) != None
     html.radiobutton("authmethod", "password", not is_automation,
                      _("Normal user login with password"))
@@ -10495,6 +10505,7 @@ class UserSelection(DropdownChoice):
     def __init__(self, **kwargs):
         only_contacts = kwargs.get("only_contacts", False)
         kwargs["choices"] = generate_wato_users_elements_function(kwargs.get("none"), only_contacts = only_contacts)
+        kwargs["invalid_choice"] = "complain" # handle vanished users correctly!
         DropdownChoice.__init__(self, **kwargs)
 
     def value_to_text(self, value):
@@ -11719,7 +11730,10 @@ def mode_ruleeditor(phase):
             html.context_button(only_host,
                 folder_preserving_link([("mode", "edit_host"), ("host", only_host)]), "host")
 
-        html.context_button(_("Ineffective rules"), folder_preserving_link([("mode", "ineffective_rules")]), "usedrulesets")
+        html.context_button(_("Ineffective rules"), folder_preserving_link([("mode", "ineffective_rules")]), "rulesets_ineffective")
+
+        html.context_button(_("Deprecated Rulesets"),
+                 folder_preserving_link([("mode", "rulesets"), ("group", "deprecated")]), "rulesets_deprecated")
         return
 
     elif phase == "action":
@@ -11885,6 +11899,8 @@ def mode_rulesets(phase, group=None):
     if not group:
         group = html.var("group") # obligatory
 
+    show_deprecated = html.var("deprecated") == "1"
+
     search = html.get_unicode_input("search")
     if search != None:
         search = search.strip().lower()
@@ -11897,6 +11913,13 @@ def mode_rulesets(phase, group=None):
         title = _("Manual Checks")
         help = _("Here you can create explicit checks that are not being created by the automatic service discovery.")
         only_used = False
+    elif group == "deprecated":
+        title = _("Deprecated Rulesets")
+        help = _("Here you can see a list of all deprecated rulesets (which are not used by Check_MK anymore). If "
+                 "you have defined some rules here, you might have to migrate the rules to their successors. Please "
+                 "refer to the release notes or context help of the rulesets for details.")
+        only_used = False
+        show_deprecated = True
     elif search != None:
         title = _("Rules matching") + ": " + html.attrencode(search)
         help = _("All rules that contain '%s' in their name") % html.attrencode(search)
@@ -11919,12 +11942,18 @@ def mode_rulesets(phase, group=None):
             home_button()
             if group != "static":
                 html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
+            else:
+                html.context_button(_("Deprecated Rulesets"),
+                    make_link([("mode", "rulesets"), ("group", "static"), ("host", only_host), ("deprecated", "1")]), "rulesets_deprecated")
             html.context_button(only_host,
                  folder_preserving_link([("mode", "edit_host"), ("host", only_host)]), "host")
         else:
             global_buttons()
             if group != "static":
                 html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
+            else:
+                html.context_button(_("Deprecated Rulesets"),
+                    make_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "1")]), "rulesets_deprecated")
             if config.may("wato.hosts") or config.may("wato.seeall"):
                 html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "folder")
             if group == "agents":
@@ -11959,7 +11988,10 @@ def mode_rulesets(phase, group=None):
 
     # Select matching rule groups while keeping their configured order
     groupnames = [ gn for gn, rulesets in g_rulespec_groups
-                   if only_used or search != None or gn == group or (group and gn.startswith(group + "/")) ]
+                   if only_used \
+                        or group == "deprecated" \
+                        or search != None\
+                        or gn == group or (group and gn.startswith(group + "/")) ]
 
     # In case of search we need to sort the groups since main chapters would
     # appear more than once otherwise.
@@ -11998,6 +12030,8 @@ def mode_rulesets(phase, group=None):
             if group != 'static' and groupname.startswith("static/"):
                 continue
             elif group == 'static' and not groupname.startswith("static/"):
+                continue
+            elif show_deprecated != rulespec["deprecated"]:
                 continue
 
             # Handle case where a host is specified
@@ -13023,8 +13057,6 @@ def save_rule(out, folder, rulespec, rule):
     out.write(" ),\n")
 
 
-
-
 def load_rulesets(folder):
     path = folder.rules_file_path()
 
@@ -13108,7 +13140,8 @@ FACTORY_DEFAULT_UNUSED = [] # means this ruleset is not used if no rule is enter
 def register_rule(group, varname, valuespec = None, title = None,
                   help = None, itemspec = None, itemtype = None, itemname = None,
                   itemhelp = None, itemenum = None,
-                  match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT):
+                  match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT,
+                  deprecated = False):
     if not itemname and itemtype == "service":
         itemname = _("Service")
 
@@ -13126,6 +13159,7 @@ def register_rule(group, varname, valuespec = None, title = None,
         "help"            : help or valuespec.help(),
         "optional"        : optional, # rule may be None (like only_hosts)
         "factory_default" : factory_default,
+        "deprecated"      : deprecated,
     }
 
     # Register group
@@ -13149,7 +13183,8 @@ def register_rule(group, varname, valuespec = None, title = None,
 # modular here, but we cannot put this function into the plugins file because
 # the order is not defined there.
 def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
-                               match_type, has_inventory=True, register_static_check=True):
+                               match_type, has_inventory=True, register_static_check=True,
+                               deprecated=False):
 
     if valuespec and isinstance(valuespec, Dictionary) and match_type != "dict":
         raise MKGeneralException("Check parameter definition for %s has type Dictionary, but match_type %s" %
@@ -13179,7 +13214,8 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
             itemname = itemname,
             itemhelp = itemhelp,
             itemenum = itemenum,
-            match = match_type)
+            match = match_type,
+            deprecated = deprecated)
 
     if register_static_check:
         # Register rule for static checks
@@ -13215,7 +13251,8 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
                 elements = elements,
             ),
             itemspec = itemspec,
-            match = "all")
+            match = "all",
+            deprecated = deprecated)
 
 # Registers notification parameters for a certain notification script,
 # e.g. "mail" or "sms". This will create:
@@ -13766,6 +13803,7 @@ def page_user_profile(change_pw=False):
         return attr in locked_attributes
 
     html.begin_form("profile", method="POST")
+    html.prevent_password_auto_completion()
     html.write('<div class=wato>')
     forms.header(_("Personal Settings"))
 
@@ -13886,32 +13924,46 @@ def create_sample_config():
         return
 
     # Global configuration settings
-    save_configuration_settings({
-        "use_new_descriptions_for": [
-            "df",
-            "df_netapp",
-            "df_netapp32",
-            "esx_vsphere_datastores",
-            "hr_fs",
-            "vms_diskstat.df",
-            "zfsget",
-            "ps",
-            "ps.perf",
-            "wmic_process",
-            "services",
-            "logwatch",
-            "cmk-inventory",
-            "hyperv_vms",
-            "ibm_svc_mdiskgrp",
-            "ibm_svc_system",
-            "ibm_svc_systemstats.diskio",
-            "ibm_svc_systemstats.iops",
-            "ibm_svc_systemstats.disk_latency",
-            "ibm_svc_systemstats.cache",
-        ],
-        "inventory_check_interval": 120,
-        "enable_rulebased_notifications": True,
-    })
+    save_configuration_settings(
+        {
+            "use_new_descriptions_for": [
+                "df",
+                "df_netapp",
+                "df_netapp32",
+                "esx_vsphere_datastores",
+                "hr_fs",
+                "vms_diskstat.df",
+                "zfsget",
+                "ps",
+                "ps.perf",
+                "wmic_process",
+                "services",
+                "logwatch",
+                "cmk-inventory",
+                "hyperv_vms",
+                "ibm_svc_mdiskgrp",
+                "ibm_svc_system",
+                "ibm_svc_systemstats.diskio",
+                "ibm_svc_systemstats.iops",
+                "ibm_svc_systemstats.disk_latency",
+                "ibm_svc_systemstats.cache",
+                "casa_cpu_temp",
+                "cmciii.temp",
+                "cmciii.psm_current",
+                "cmciii_lcp_airin",
+                "cmciii_lcp_airout",
+                "cmciii_lcp_water",
+                "etherbox",
+                "liebert_bat_temp",
+                "nvidia.temp",
+                "ups_bat_temp",
+                "innovaphone_temp",
+                "enterasys_temp",
+            ],
+            "inventory_check_interval": 120,
+            "enable_rulebased_notifications": True,
+        }
+    )
 
 
     # A contact group where everyone is member of
@@ -14613,7 +14665,11 @@ def mode_check_manpage(phase):
     if phase == "title":
         if not re.match("^[a-zA-Z0-9_.]+$", check_type):
             raise Exception("Invalid check type")
+
         manpage = check_mk_local_automation("get-check-manpage", [ check_type ])
+        if manpage == None:
+            raise MKUserError(None, _("There is no manpage for this check."))
+
         html.set_cache("manpage", manpage)
         return _("Check plugin manual page") + " - " + manpage["header"]["title"]
 
@@ -14962,6 +15018,271 @@ def read_agent_contents_file(root):
 
 
 #.
+#   .--Network Scan--------------------------------------------------------.
+#   |   _   _      _                      _      ____                      |
+#   |  | \ | | ___| |___      _____  _ __| | __ / ___|  ___ __ _ _ __      |
+#   |  |  \| |/ _ \ __\ \ /\ / / _ \| '__| |/ / \___ \ / __/ _` | '_ \     |
+#   |  | |\  |  __/ |_ \ V  V / (_) | |  |   <   ___) | (_| (_| | | | |    |
+#   |  |_| \_|\___|\__| \_/\_/ \___/|_|  |_|\_\ |____/ \___\__,_|_| |_|    |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | The WATO folders network scan for new hosts.                         |
+#   '----------------------------------------------------------------------'
+
+# Executed by the multisite cron job once a minute. Is only executed in the
+# master site. Finds the next folder to scan and starts it via WATO
+# automation. The result is written to the folder in the master site.
+def execute_network_scan_job():
+    if is_wato_slave_site():
+        return # Don't execute this job on slaves.
+
+    folder = find_folder_to_scan()
+    if not folder:
+        return # Nothing to do.
+
+    # We need to have the context of the user. The jobs are executed when
+    # config.login() has not been executed yet. So there is no user context
+    # available. Use the run_as attribute from the job config and revert
+    # the previous state after completion.
+    old_user = config.user_id
+    run_as = folder.attribute("network_scan")["run_as"]
+    if not userdb.user_exists(run_as):
+        raise MKGeneralException(_("The user %s used by the network "
+            "scan of the folder %s does not exist.") % (run_as, folder.title()))
+    config.login(folder.attribute("network_scan")["run_as"])
+
+    result = {
+        "start"  : time.time(),
+        "end"    : None,
+        "state"  : None,
+        "output" : "",
+    }
+
+    try:
+        if config.site_is_local(folder.site_id()):
+            found = do_network_scan(folder)
+        else:
+            found = do_remote_automation(config.site(folder.site_id()), "network-scan",
+                                          [("folder", folder.path())])
+
+        if type(found) != list:
+            raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
+
+        add_scanned_hosts_to_folder(folder, found)
+
+        result.update({
+            "state"  : True,
+            "output" : _("The network scan found %d new hosts.") % len(found),
+        })
+    except Exception, e:
+        result.update({
+            "state"  : False,
+            "output" : _("An exception occured: %s") % e,
+        })
+        import traceback
+        logger(LOG_ERR, "Exception in network scan:\n%s" % (traceback.format_exc()))
+
+    result["end"] = time.time()
+
+    save_network_scan_result(folder, result)
+
+    if old_user:
+        config.login(old_user)
+
+
+# Find the folder which network scan is longest waiting and return the
+# folder object.
+def find_folder_to_scan():
+    folder_to_scan = None
+    for folder_path, folder in Folder.all_folders().items():
+        scheduled_time = folder.next_network_scan_at()
+        if scheduled_time != None:
+            if folder_to_scan == None:
+                folder_to_scan = folder
+            elif folder_to_scan.next_network_scan_at() > folder.next_network_scan_at():
+                folder_to_scan = folder
+    return folder_to_scan
+
+
+def do_network_scan_automation():
+    folder_path = html.var("folder")
+    if folder_path == None:
+        raise MKGeneralException(_("Folder path is missing"))
+    folder = Folder.folder(folder_path)
+
+    return do_network_scan(folder)
+
+
+automation_commands["network-scan"] = do_network_scan_automation
+
+
+def add_scanned_hosts_to_folder(folder, found):
+    entries = []
+    for host_name, ipaddress in found:
+        attrs = {
+            "ipaddress"       : ipaddress,
+            "tag_criticality" : "offline",
+        }
+        entries.append((host_name, attrs, None))
+
+    folder.create_hosts(entries)
+
+
+def save_network_scan_result(folder, result):
+    folder.set_attribute("network_scan_result", result)
+    folder.save()
+
+
+# This is executed in the site the host is assigned to.
+# A list of tuples is returned where each tuple represents a new found host:
+# [(hostname, ipaddress), ...]
+def do_network_scan(folder):
+    ip_addresses = ip_addresses_to_scan(folder)
+    return scan_ip_addresses(folder, ip_addresses)
+
+
+def ip_addresses_to_scan(folder):
+    ip_range_specs = folder.attribute("network_scan")["ip_ranges"]
+    exclude_specs = folder.attribute("network_scan")["exclude_ranges"]
+
+    to_scan = ip_addresses_of_ranges(ip_range_specs)
+    exclude = ip_addresses_of_ranges(exclude_specs)
+
+    # Remove excludes from to_scan list
+    to_scan.difference_update(exclude)
+
+    # Reduce by all known host addresses
+    to_scan.difference_update(known_ip_addresses())
+
+    return to_scan
+
+
+# This will not scale well. Do you have a better idea?
+def known_ip_addresses():
+    addresses = []
+    for hostname, host in Host.all().items():
+        address = host.attribute("ipaddress")
+        if address:
+            addresses.append(address)
+    return addresses
+
+
+def ip_addresses_of_ranges(ip_ranges):
+    addresses = set([])
+
+    for ty, spec in ip_ranges:
+        if ty == "ip_range":
+            addresses.update(ip_addresses_of_range(spec))
+
+        elif ty == "ip_network":
+            addresses.update(ip_addresses_of_network(spec))
+
+        elif ty == "ip_list":
+            addresses.update(spec)
+
+    return addresses
+
+
+FULL_IPV4 = (2 ** 32) - 1
+
+
+def ip_addresses_of_range(spec):
+    first_int, last_int = map(ip_int_from_string, spec)
+
+    addresses = []
+
+    if first_int > last_int:
+        return addresses # skip wrong config
+
+    while first_int <= last_int:
+        addresses.append(string_from_ip_int(first_int))
+        first_int += 1
+        if first_int - 1 == FULL_IPV4: # stop on last IPv4 address
+            break
+
+    return addresses
+
+
+def mask_bits_to_int(n):
+    return (1 << (32 - n)) - 1
+
+
+def ip_addresses_of_network(spec):
+    net_addr, net_bits = spec
+
+    ip_int   = ip_int_from_string(net_addr)
+    mask_int = mask_bits_to_int(int(net_bits))
+    first = ip_int & (FULL_IPV4 ^ mask_int)
+    last = ip_int | (1 << (32 - int(net_bits))) - 1
+
+    return [ string_from_ip_int(i) for i in range(first + 1, last - 1) ]
+
+
+def ip_int_from_string(ip_str):
+    packed_ip = 0
+    octets = ip_str.split(".")
+    for oc in octets:
+        packed_ip = (packed_ip << 8) | int(oc)
+    return packed_ip
+
+
+def string_from_ip_int(ip_int):
+    octets = []
+    for _ in xrange(4):
+        octets.insert(0, str(ip_int & 0xFF))
+        ip_int >>=8
+    return ".".join(octets)
+
+
+def ping(address):
+    return os.system('ping -c2 -w2 %s >/dev/null 2>&1' % address) == 0
+
+
+def ping_worker(addresses, hosts):
+    while True:
+        try:
+            ipaddress = addresses.pop()
+        except IndexError:
+            break
+
+        if ping(ipaddress):
+            try:
+                host_name = socket.gethostbyaddr(ipaddress)[0]
+            except socket.error:
+                host_name = address
+
+            hosts.append((host_name, ipaddress))
+
+
+# Start ping threads till max parallel pings let threads do their work till all are done.
+# let threds also do name resolution. Return list of tuples (hostname, address).
+def scan_ip_addresses(folder, ip_addresses):
+    num_addresses = len(ip_addresses)
+
+    # dont start more threads than needed
+    parallel_pings = min(folder.attribute("network_scan").get("max_parallel_pings", 100), num_addresses)
+
+    # Initalize all workers
+    threads = []
+    found_hosts = []
+    import threading
+    for t_num in range(parallel_pings):
+        t = threading.Thread(target = ping_worker, args = [ip_addresses, found_hosts])
+        t.daemon = True
+        threads.append(t)
+        t.start()
+
+    # Now wait for all workers to finish
+    while threads:
+        for t in threads:
+            if not t.isAlive():
+                threads.remove(t)
+        time.sleep(1)
+
+    return found_hosts
+
+
+#.
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
@@ -15214,10 +15535,18 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
     if configured_host_tags():
         topics.append(_("Host tags"))
 
+    # Hide invisible attributes
+    def hide_attribute(for_what, attr):
+        if for_what in [ "host", "bulk" ] and not attr.show_in_form():
+            return True
+        elif for_what == "folder" and not attr.show_in_folder():
+            return True
+        return False
+
     # The remaining topics are shown in the order of the
     # appearance of the attribute declarations:
     for attr, topic in all_host_attributes():
-        if topic not in topics and attr.show_in_form():
+        if topic not in topics and not hide_attribute(for_what, attr):
             topics.append(topic)
 
     # Collect dependency mapping for attributes (attributes that are only
@@ -15249,15 +15578,8 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             if attrname in without_attributes:
                 continue # e.g. needed to skip ipaddress in CSV-Import
 
-            # Hide invisible attributes
-            hide_attribute = False
-            if for_what in [ "host", "bulk" ] and not attr.show_in_form():
-                hide_attribute = True
-            elif (for_what == "folder") and not attr.show_in_folder():
-                hide_attribute = True
-
             # Determine visibility information if this attribute is not always hidden
-            if not hide_attribute:
+            if not hide_attribute(for_what, attr):
                 depends_on_tags = attr.depends_on_tags()
                 depends_on_roles = attr.depends_on_roles()
                 # Add host tag dependencies, but only in host mode. In other
@@ -15297,23 +15619,25 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             inherited_from = None
             inherited_value = None
             has_inherited = False
+            container = None
 
-            if for_what == "host":
-                url = Folder.current().edit_url()
+            if attr.show_inherited_value():
+                if for_what == "host":
+                    url = Folder.current().edit_url()
 
-            container = parent # container is of type Folder
-            while container:
-                if attrname in container.attributes():
-                    url = container.edit_url()
-                    inherited_from = _("Inherited from ") + '<a href="%s">%s</a>' % (url, container.title())
-                    inherited_value = container.attributes()[attrname]
-                    has_inherited = True
-                    if topic == _("Host tags"):
-                        inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
-                    break
+                container = parent # container is of type Folder
+                while container:
+                    if attrname in container.attributes():
+                        url = container.edit_url()
+                        inherited_from = _("Inherited from ") + '<a href="%s">%s</a>' % (url, container.title())
+                        inherited_value = container.attributes()[attrname]
+                        has_inherited = True
+                        if topic == _("Host tags"):
+                            inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
+                        break
 
-                container = container.parent()
-                what = "folder"
+                    container = container.parent()
+                    what = "folder"
 
             if not container: # We are the root folder - we inherit the default values
                 inherited_from = _("Default value")
@@ -15366,7 +15690,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             else:
                 active = False
 
-            if not new and not attr.editable():
+            if not new and (not attr.editable() or not attr.may_edit()):
                 if active:
                     force_entry = True
                 else:
@@ -15390,7 +15714,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             else:
                 defvalue = attr.default_value()
 
-            if not new and not attr.editable():
+            if not new and (not attr.editable() or not attr.may_edit()):
                 # In edit mode only display non editable values, don't show the
                 # input fields
                 html.write('<div id="attr_hidden_%s" style="display:none">' % attrname)
@@ -15429,7 +15753,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                     value = values[0]
 
             elif for_what in [ "host", "folder" ]:
-                if not new and not attr.editable() and active:
+                if not new and (not attr.editable() or not attr.may_edit()) and active:
                     value = values[0]
                 else:
                     explanation = " (" + inherited_from + ")"

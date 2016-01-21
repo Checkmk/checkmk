@@ -2,7 +2,9 @@ Title: heartbeat_crm: parse old output, get at least in warning if unmanaged
 Component: checks
 State: open
 Date: 2015-02-20 15:29:17
-Targetversion: 1.2.7
+Targetversion: future
 Class: bug
 
-There are three example outputs in server-linux-heartbeat-{1,2,3} in our (MK's) archive.
+There are three example outputs in server-linux-heartbeat-{1,2,3} in our
+(MK's) archive.  in server-linux-heartbeat-2 there are some unmanaged
+nodes. Someone who understands this output needs to have a look.

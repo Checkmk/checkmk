@@ -2238,8 +2238,11 @@ class EventServer:
             # Variant 6: syslog message without date / host:
             # <5>SYSTEM_INFO: [WLAN-1] Triggering Background Scan
 
-            #Varian 7: logwatch.ec event forwarding
+            # Variant 7: logwatch.ec event forwarding
             # <78>@1341847712 Klapprechner /var/log/syslog: message....
+
+            # Variant 7a: Event simulation
+            # <%PRI%>@%TIMESTAMP%;%SL% %HOSTNAME% %syslogtag%: %msg%
 
             # Variant 8: syslog message from sophos firewall
             # <84>2015:03:25-12:02:06 gw pluto[7122]: listening for IKE messages
@@ -2263,8 +2266,16 @@ class EventServer:
                 event["priority"] = 5 # notice
 
             # Variant 7
-            if line[0] == '@' and line[11] == ' ':
-                timestamp, event['host'], line = line.split(' ', 2)
+            if line[0] == '@' and line[11] in [ ' ', ';' ]:
+                if line[11] == ' ':
+                    # Variant 7
+                    timestamp, event['host'], line = line.split(' ', 2)
+                else:
+                    # Variant 7a
+                    details, event['host'], line = line.split(' ', 2)
+                    timestamp, sl = details.split(';', 1)
+                    event["sl"] = int(sl)
+
                 event['time'] = float(timestamp[1:])
                 event.update(self.parse_syslog_info(line))
 

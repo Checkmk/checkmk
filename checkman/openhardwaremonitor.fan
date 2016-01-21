@@ -1,0 +1,24 @@
+title: Hardware Sensors via OpenHardwareMonitor: Fans
+agents: windows
+catalog: os/hardware
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors fan speed sensors reported by the tool
+ OpenHardwareMonitor (http://openhardwaremonitor.org/). check_mk
+ includes a stripped down version of OpenHardwareMonitor without
+ a gui component which can be installed through the agent backery
+ or manually.
+ If the check_mks own version of ohm is used and installed correcty,
+ the windows agent will ensure it is run (and restarted) as
+ necessary.
+
+ This check has configurable {WARN} and {CRIT} levels but by default
+ NO levels are used, because there is no way to discover if the
+ fan is even connected and whether fan control may halt it completely.
+
+item:
+ The name of the sensor as reported by OpenHardwareMonitor
+
+inventory:
+ All available sensors are automatically inventorized.

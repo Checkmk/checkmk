@@ -1,0 +1,192 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# <<<openhardwaremonitor:sep(44)>>>
+# Index,Name,Parent,SensorType,Value
+# 1,Available Memory,/ram,Data,3.009140
+# 0,CPU Total,/intelcpu/0,Load,1.953125
+# 0,Used Space,/hdd/0,Load,58.754211
+# 4,CPU Core #4,/intelcpu/0,Load,0.000000
+# 2,CPU Graphics,/intelcpu/0,Power,0.000000
+# 2,CPU Core #2,/intelcpu/0,Load,6.250000
+# 4,CPU Core #4,/intelcpu/0,Clock,3192.720947
+# 0,Bus Speed,/intelcpu/0,Clock,99.772530
+# 3,CPU DRAM,/intelcpu/0,Power,0.000000
+# 3,CPU Core #3,/intelcpu/0,Load,0.000000
+# 1,CPU Core #1,/intelcpu/0,Clock,3192.720947
+# 3,CPU Core #3,/intelcpu/0,Clock,3192.720947
+# 0,Memory,/ram,Load,24.763321
+# 0,Used Memory,/ram,Data,0.990425
+# 2,CPU Core #2,/intelcpu/0,Clock,3192.720947
+# 0,CPU Package,/intelcpu/0,Power,0.000000
+# 1,CPU Cores,/intelcpu/0,Power,0.000000
+# 1,CPU Core #1,/intelcpu/0,Load,1.562500
+
+
+# since the temperature sensors could be anything (cpu, gpu, hdd, psu) we need different
+# default levels per item type
+factory_settings['openhardwaremonitor_temperature_default_levels'] = {
+    "cpu": {
+        'levels': (60, 70)
+    },
+    "hdd": {
+        'levels': (40, 50)
+    },
+    "_default": {
+        'levels': (70, 80)
+    }
+}
+
+
+factory_settings['openhardwaremonitor_fan_default_levels'] = {
+    'lower' : (None, None),
+    'upper' : (None, None),
+}
+
+
+def parse_openhardwaremonitor(info):
+    def dict_replace(input, replacements):
+        pattern = regex(r'\b(' + '|'.join(replacements.keys()) + r')\b')
+        return pattern.sub(lambda x: replacements[x.group()], input)
+
+    result = {}
+
+    for index, name, parent, sensor_type, value in info:
+        if index == "Index":
+            # header line
+            continue
+        parent = dict_replace(parent, {"intelcpu": "cpu", "amdcpu": "cpu", "genericcpu": "cpu"})
+        name   = dict_replace(name, {"CPU ": "", "Temperature": ""})
+        full_name = (parent.replace("/", "") + " " + name).strip()
+        result.setdefault(sensor_type, {})[full_name] = float(value)
+    return result
+
+
+def type_trait(sensor_type):
+    return {
+        'Clock':       {'unit': "MHz", 'factor': 1.0, 'perf_var': 'clock'},
+        'Temperature': {'unit': "°C",  'factor': 1.0},
+        'Power':       {'unit': "W",   'factor': 1.0, 'perf_var': 'w'},
+        'Fan':         {'unit': "RPM", 'factor': 1.0},
+        # unused below here
+        'Voltage':     {'unit': "V",   'factor': 1.0},
+        'Load':        {'unit': "%",   'factor': 1.0},
+        'Flow':        {'unit': "L/h", 'factor': 1.0},
+        'Control':     {'unit': "%",   'factor': 1.0},
+        'Level':       {'unit': "%",   'factor': 1.0},
+        'Factor':      {'unit': "1",   'factor': 1.0},
+        'Data':        {'unit': "B",   'factor': 1073741824.0}
+    }[sensor_type]
+
+
+def inventory_openhardwaremonitor(sensor_type, parsed):
+    return [(key, {}) for key in parsed.get(sensor_type, {}).keys()]
+
+
+def check_openhardwaremonitor(sensor_type, item, params, parsed):
+    def worst_status(*args):
+        order = [0,1,3,2]
+        return sorted(args, key=lambda x: order[x], reverse=True)[0]
+
+    def expect_order(*args):
+        arglist = filter(lambda x: x != None, args)
+        sorted_by_val = sorted(enumerate(arglist), key=lambda x: x[1])
+        return max([abs(x[0] - x[1][0]) for x in enumerate(sorted_by_val)])
+
+    if item in parsed.get(sensor_type, {}):
+        traits = type_trait(sensor_type)
+        val = parsed[sensor_type][item] * traits['factor']
+        if 'lower' in params:
+            status_lower = expect_order(params['lower'][1], params['lower'][0], val)
+        else:
+            status_lower = 0
+        if 'upper' in params:
+            status_upper = expect_order(val, params['upper'][0], params['upper'][1])
+        else:
+            status_upper = 0
+        perfdata = []
+        if 'perf_var' in traits:
+            perfdata = [(traits['perf_var'], val)]
+
+        return (worst_status(status_lower, status_upper),
+                '%.1f %s' % (val, traits['unit']), perfdata)
+
+
+check_info['openhardwaremonitor'] = {
+    'inventory_function'  : lambda parsed: inventory_openhardwaremonitor('Clock', parsed),
+    'check_function'      : lambda item, params, parsed: check_openhardwaremonitor('Clock', item, params, parsed),
+    'parse_function'      : parse_openhardwaremonitor,
+    'has_perfdata'        : True,
+    'service_description' : "Clock %s",
+    'includes'            : ['wmi.include']
+}
+
+
+def check_openhardwaremonitor_temperature(item, params, parsed):
+    if not 'levels' in params:
+        found = False
+        for key, value in params.iteritems():
+            if key in item:
+                params = params[key]
+                found = True
+                break
+        if not found:
+            params = params["_default"]
+    if item in parsed.get('Temperature', {}):
+        traits = type_trait('Temperature')
+        val = parsed['Temperature'][item] * traits['factor']
+        return check_temperature(val, params)
+
+
+check_info['openhardwaremonitor.temperature'] = {
+    'inventory_function'      : lambda parsed: inventory_openhardwaremonitor('Temperature', parsed),
+    'check_function'          : check_openhardwaremonitor_temperature,
+    'has_perfdata'            : True,
+    'service_description'     : "Temperature %s",
+    'group'                   : 'temperature',
+    'default_levels_variable' : 'openhardwaremonitor_temperature_default_levels',
+    'includes'                : ['temperature.include']
+}
+
+
+check_info['openhardwaremonitor.power'] = {
+    'inventory_function'  : lambda parsed: inventory_openhardwaremonitor('Power', parsed),
+    'check_function'      : lambda item, params, parsed: check_openhardwaremonitor('Power', item, params, parsed),
+    'has_perfdata'        : True,
+    'service_description' : "Power %s",
+}
+
+
+check_info['openhardwaremonitor.fan'] = {
+    'inventory_function'      : lambda parsed: inventory_openhardwaremonitor('Fan', parsed),
+    'check_function'          : lambda item, params, parsed: check_openhardwaremonitor('Fan', item, params, parsed),
+    'has_perfdata'            : True,
+    'service_description'     : "Fan %s",
+    'default_levels_variable' : 'openhardwaremonitor_fan_default_levels',
+    'group'                   : 'hw_fans',
+}
+

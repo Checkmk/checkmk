@@ -373,26 +373,7 @@ def render_dashboard(name):
         # dashlets using the 'urlfunc' method will dynamically compute
         # an url (using HTML context variables at their wish).
         if "urlfunc" in dashlet:
-            urlfunc = dashlet['urlfunc']
-            # We need to support function pointers to be compatible to old dashboard plugin
-            # based definitions. The new dashboards use strings to reference functions within
-            # the global context or functions of a module. An example would be:
-            #
-            # urlfunc: "my_custom_url_rendering_function"
-            #
-            # or within a module:
-            #
-            # urlfunc: "my_module.render_my_url"
-            if type(urlfunc) == type(lambda x: x):
-                dashlet["url"] = urlfunc()
-            else:
-                if '.' in urlfunc:
-                    module_name, func_name = urlfunc.split('.', 1)
-                    module = __import__(module_name)
-                    fp = module.__dict__[func_name]
-                else:
-                    fp = globals()[urlfunc]
-                dashlet["url"] = fp()
+            gather_dashlet_url(dashlet)
 
         dashlet_type = dashlet_types[dashlet['type']]
 
@@ -571,6 +552,38 @@ def render_dashlet_content(nr, the_dashlet, stash_html_vars=True):
     finally:
         if stash_html_vars:
             html.unstash_vars()
+
+# Use the URL returned by urlfunc as dashlet URL
+#
+# We need to support function pointers to be compatible to old dashboard plugin
+# based definitions. The new dashboards use strings to reference functions within
+# the global context or functions of a module. An example would be:
+#
+# urlfunc: "my_custom_url_rendering_function"
+#
+# or within a module:
+#
+# urlfunc: "my_module.render_my_url"
+def gather_dashlet_url(dashlet):
+    try:
+        urlfunc = dashlet['urlfunc']
+        if type(urlfunc) == type(lambda x: x):
+            dashlet["url"] = urlfunc()
+        else:
+            if '.' in urlfunc:
+                module_name, func_name = urlfunc.split('.', 1)
+                module = __import__(module_name)
+                fp = module.__dict__[func_name]
+            else:
+                fp = globals()[urlfunc]
+            dashlet["url"] = fp()
+    except Exception, e:
+        # When an exception occurs the "url" key will be missing in the dashlet
+        # and an error is shown in the dashlet while rendering it. This is enough.
+        # For details the user can enable debugging.
+        if config.debug:
+            raise
+
 
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
 # where %d is its index (in board["dashlets"]). Javascript uses that id

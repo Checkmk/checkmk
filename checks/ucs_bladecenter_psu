@@ -181,7 +181,7 @@ def check_ucs_bladecenter_psu_chassis_temp(item, params, parsed):
                 "Module %s" % key.split()[-1],
                 float(values.get("AmbientTemp")),
             ))
-    return check_temperature_list(sensor_list, params)
+    return check_temperature_list(sensor_list, params, "ucs_bladecenter_psu_chassis_temp_%s" % item)
 
 
 check_info["ucs_bladecenter_psu.chassis_temp"] = {

@@ -69,7 +69,7 @@ def check_siemens_plc_temp(item, params, info):
     for line in info:
         if line[1] == "temp" and line[0]+" "+line[2] == item:
             temp = float(line[-1])
-            return check_temperature(temp, params)
+            return check_temperature(temp, params, "siemens_plc_%s" % item)
 
 
 check_info['siemens_plc.temp'] = {

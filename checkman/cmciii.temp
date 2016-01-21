@@ -6,8 +6,12 @@ distribution: check_mk
 description:
  This check monitors the temperature measured by various
  Rittal CMC-III units.
- No limits are set in the check, since limits are configured in the
- Rittal device itself. The state given by the Rittal device is
+ It only covers single-temperature sensors while fanunits (which
+ report 3 temperatures for inflowing air and 3 temperatures for
+ outflowing air) are covered by cmciii_lcp_airin, cmciii_lcp_airout
+ and cmciii.temp_in_out.
+ Limits are configured in the Rittal device itself but can be
+ overridden. The state given by the Rittal device is
  taken as the state of the check as follows:
  If the Rittal device returns {OK}, the check is {OK}. Otherwise
  the check is {CRIT}.
@@ -19,4 +23,4 @@ perfdata:
  One variable: the temperature
 
 inventory:
- All temperature sensors on all cmciii units are detected
+ All single temperature sensors on all cmciii units are detected

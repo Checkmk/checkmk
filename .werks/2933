@@ -1,0 +1,12 @@
+Title: openhardwaremonitor, check_mk_agent.windows: added agent support and check for monitoring hardware sensors through OpenHardwareMonitor
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453211015
+Class: feature
+
+The agent will now automatically pick up data from OHM if it's running OR if check_mk's own stripped
+down headless version of OHM is installed.
+In the latter case the agent will automatically start and stop OHM as needed.
+Data is retrieved through wmi.

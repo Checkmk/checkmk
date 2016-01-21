@@ -819,6 +819,11 @@ vs_mkeventd_event = Dictionary(
               default_value = 1,
           )
         ),
+        ("sl", DropdownChoice(
+            title = _("Service Level"),
+            choices = mkeventd.service_levels,
+            prefix_values = True,
+        )),
     ])
 
 
@@ -1115,6 +1120,7 @@ def show_event_simulator():
     else:
         return None
 
+
 def event_simulation_action():
     # Validation of input for rule simulation (no further action here)
     if html.var("simulate") or html.var("_generate"):
@@ -1129,6 +1135,7 @@ def event_simulation_action():
             raise MKUserError("event_p_host", _("Please specify a host name"))
         rfc = mkeventd.send_event(event)
         return None, "Test event generated and sent to Event Console.<br><pre>%s</pre>" % rfc
+
 
 def rule_pack_with_id(rule_packs, rule_pack_id):
     for nr, entry in enumerate(rule_packs):
@@ -1602,7 +1609,7 @@ def log_mkeventd(what, message):
     at_least_one = False
     if is_distributed():
         for site_id, site in config.sites.items():
-            if site.get("replicate_ec") and not site_is_local(site_id):
+            if site.get("replicate_ec") and not config.site_is_local(site_id):
                 update_replication_status(site_id, { "need_sync" : True })
                 remove_sync_snapshot(site_id)
                 at_least_one = True

@@ -103,14 +103,9 @@ void delete_outputbuffer(void *ob)
     delete static_cast<OutputBuffer *>(ob);
 }
 
-void *create_inputbuffer(int *termination_flag)
+void *create_inputbuffer(int fd, int *termination_flag)
 {
-    return new InputBuffer(termination_flag);
-}
-
-void set_inputbuffer_fd(void *ib, int fd)
-{
-    static_cast<InputBuffer *>(ib)->setFd(fd);
+    return new InputBuffer(fd, termination_flag);
 }
 
 void delete_inputbuffer(void *ib)

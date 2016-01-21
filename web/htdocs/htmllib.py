@@ -257,6 +257,13 @@ class html(GUITester):
         self.write("</form>\n")
         self.form_name = None
 
+    def prevent_password_auto_completion(self):
+        # These fields are not really used by the form. They are used to prevent the browsers
+        # from filling the default password and previous input fields in the form
+        # with password which are eventually saved in the browsers password store.
+        self.write("<input type=\"text\" style=\"display:none;\">")
+        self.write("<input style=\"display:none\" type=\"password\">")
+
     def form_submitted(self, form_name=None):
         if form_name:
             return self.var("filled_in") == form_name
@@ -1382,7 +1389,11 @@ class html(GUITester):
     def debug(self, *x):
         import pprint
         for element in x:
-            self.lowlevel_write("<pre>%s</pre>\n" % self.attrencode(pprint.pformat(element)))
+            try:
+                formatted = pprint.pformat(element)
+            except UnicodeDecodeError:
+                formatted = repr(element)
+            self.lowlevel_write("<pre>%s</pre>\n" % self.attrencode(formatted))
 
 
     def has_cookie(self, varname):

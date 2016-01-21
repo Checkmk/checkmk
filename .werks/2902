@@ -1,0 +1,31 @@
+Title: Hosts can now be added by regular network scans of configured IP ranges
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453126961
+Class: feature
+
+For each WATO folder a new attribute <i>Network Scan</i> can now be configured.
+This network scan will ping all IP addresses in all configured IP ranges in the
+configured interval for new reachable hosts / IP addresses. 
+
+When such a network scan of a folder discovers a new host, the discovery mechanism
+tries to resolve the host name via DNS. If found, it uses the DNS name as hostname.
+Otherwise the IP address will be used as host name. Then it will be created as new
+host and added to this folder.
+
+Hosts found by the network scan are added as disabled host. You can enable monitoring
+of these hosts by setting the <i>Criticality</i> host tag of this host to another
+value. Additionally you may want to configure other attributes like the agent type
+of this host before adding it to your regular monitoring.
+
+If you want to exclude a found host from your monitoring, add the IP address to the
+list of excluded IP addresses and then delete the found host from this folder.
+
+The result of a network scan is written to the <i>Last Scan Result<i> attribute
+of a folder. So if you like to know when the last scan for a folder was performed,
+take a look at that folders properties.
+
+If you experience issues with the network scan, take a look at the log of the Web GUI
+(<tt>var/log/web.log</tt>).

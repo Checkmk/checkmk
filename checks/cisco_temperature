@@ -159,7 +159,7 @@ def check_cisco_temperature(item, params, parsed):
         if type(parsed[item]) == tuple:
             return parsed[item]
         else:
-            return check_temperature(parsed[item]['temp'], params,
+            return check_temperature(parsed[item]['temp'], params, "cisco_temperature_%s" % item,
                         dev_levels = parsed[item]['dev_levels'],
                         dev_status = parsed[item]['dev_status'])
 

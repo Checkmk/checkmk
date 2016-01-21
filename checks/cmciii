@@ -156,55 +156,108 @@
 #                     'Status': 'Off',
 #                     'Value': '0'},
 
-# TODO: re.blub-Methoden ersetzen. Siehe Guidelines.
 
-def parse_cmciii_inputs(info): # Caveat: info ist hier nicht SNMP-info, sondern SNMP-info[0]
-    parsed = {}
-    for endoid, varname, value in info:
+#.
+#   .--state---------------------------------------------------------------.
+#   |                            _        _                                |
+#   |                        ___| |_ __ _| |_ ___                          |
+#   |                       / __| __/ _` | __/ _ \                         |
+#   |                       \__ \ || (_| | ||  __/                         |
+#   |                       |___/\__\__,_|\__\___|                         |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def parse_cmciii_inputs(info_inputs):
+    unit_items = {}
+    temperatures_group = None
+    for endoid, varname, value in info_inputs:
         unit, eid = endoid.split(".") # "1.8" -> "1"
         item_name, key = varname.rsplit(".", 1)
         item = (unit, item_name)
-        parsed.setdefault(item, {})[key] = value
-    return parsed
 
-# TODO: Umbenennen something cmciii
-def parse_units(info):      # Caveat: info ist hier nicht SNMP-info, sondern SNMP-info[1]
+        if temperatures_group:
+            if item_name.endswith("Temperature"):
+                unit_items[item][key] = value
+            elif item_name.endswith("-In"):
+                unit_items[temperatures_group].setdefault("In", {})[key] = value
+            elif item_name.endswith("-Out"):
+                unit_items[temperatures_group].setdefault("Out", {})[key] = value
+            else:
+                temperatures_group = None
+
+        if not temperatures_group:
+            unit_items.setdefault(item, {})[key] = value
+
+        if key == "DescName" and value.endswith("Temperatures"):
+            temperatures_group = item
+    return unit_items
+
+
+def parse_cmciii_units(info_units):
     units = []
     num = 0
-    for unit_type, descname, state in info:
+    for unit_type, descname, state in info_units:
         num =+ 1
         # no blanks in names since we use blanks in items
         # later to split between unit_name and item_name
-        descname = re.sub(" ", "_", descname)
-        if descname == '':
-            descname = unit_type+"-"+str(num)
+        descname = descname.replace(" ", "_")
+        if not descname:
+            descname = unit_type + "-" + str(num)
         units.append((unit_type, descname, state))
     return units
 
-# TODO: Umbenennen something cmciii
-def get_unit_number(units,unit_name):
-    namelist = map(list, zip(*units))[1]
-    if unit_name in namelist:
-        name = str(namelist.index(unit_name)+1)
-        return name 
 
-cmciii_snmp_info = [
-                        [ ".1.3.6.1.4.1.2606.7.4.2.2.1", [
-                            OID_END,
-                            3, # Variable names in this subtree, e.g. Temperature.SetPtHighAlarm
-                            10, # Actual values in this subtree
-                            ]
-                        ],
-                        [ ".1.3.6.1.4.1.2606.7.4.1.2.1", [
-                            2, # Type of unit
-                            3, # Descriptive name of unit
-                            6, # State
-                            ]
-                        ]
-                    ]
+def parse_cmciii(info):
+    return parse_cmciii_inputs(info[0]), parse_cmciii_units(info[1])
 
-cmciii_scan =  lambda oid: ".1.3.6.1.4.1.2606.7" in oid(".1.3.6.1.2.1.1.2.0")
 
+def inventory_cmciii_state(parsed):
+    for unit_type, unit_name, state in parsed[1]:
+        yield unit_name, None
+
+
+def check_cmciii_state(item, params, parsed):
+    units = parsed[1]
+    unit_number = cmciii_get_unit_number(units, item)
+    entry = units[int(unit_number) - 1]
+    states = {
+       '1' : (3, "not available"),
+       '2' : (0, "OK"),
+       '3' : (1, "detect"),
+       '4' : (2, "lost"),
+       '5' : (0, "changed"),
+       '6' : (2, "error"),
+    }
+    status, status_text = states[entry[2]]
+
+    return status, "Unit state is %s" % status_text
+
+
+check_info['cmciii'] = {
+    "check_function"      : check_cmciii_state,
+    "inventory_function"  : inventory_cmciii_state,
+    "service_description" : "State %s",
+    "parse_function"      : parse_cmciii,
+    "snmp_scan_function"  : lambda oid: ".1.3.6.1.4.1.2606.7" in oid(".1.3.6.1.2.1.1.2.0"),
+    "includes"            : [ "cmciii.include" ],
+    "snmp_info"           : [
+        [ ".1.3.6.1.4.1.2606.7.4.2.2.1", [
+            OID_END,
+            3, # Variable names in this subtree, e.g. Temperature.SetPtHighAlarm
+            10, # Actual values in this subtree
+            ]
+        ],
+        [ ".1.3.6.1.4.1.2606.7.4.1.2.1", [
+            2, # Type of unit
+            3, # Descriptive name of unit
+            6, # State
+            ]
+        ]
+    ]
+}
+
+#.
 #   .--psm current---------------------------------------------------------.
 #   |                                                           _          |
 #   |      _ __  ___ _ __ ___     ___ _   _ _ __ _ __ ___ _ __ | |_        |
@@ -215,58 +268,54 @@ cmciii_scan =  lambda oid: ".1.3.6.1.4.1.2606.7" in oid(".1.3.6.1.2.1.1.2.0")
 #   +----------------------------------------------------------------------+
 
 
-def inventory_cmciii_psm_current(info):
-    inventory = []
-    parsed = parse_cmciii_inputs(info[0])
-    units = parse_units(info[1])
-    for (unit, item_name), entry in parsed.iteritems():
+def inventory_cmciii_psm_current(parsed):
+    unit_items, units = parsed
+    for (unit, item_name), entry in unit_items.iteritems():
         unit_type, unit_name = units[int(unit)-1][0:2]
         if item_name.startswith("PSM_") and item_name.endswith(".Unit"):
-            item_name = re.sub(r'Unit$','Current',item_name)
-            inventory.append(  ("%s %s" % (unit_name, item_name), None)  )
-    return inventory
+            item_name = item_name[:-5]
+            yield "%s %s" % (unit_name, item_name), None
 
-def check_cmciii_psm_current(item, params, info):
+
+def check_cmciii_psm_current(item, params, parsed):
     unit_name, item_name = item.split(" ", 1)
-    itemtemp = re.sub(r'Current$','Unit',item_name)
-    parsed = parse_cmciii_inputs(info[0])
-    unit = get_unit_number(parse_units(info[1]), unit_name)
-    entry = parsed.get((unit, itemtemp))
-    if not entry:
-        return 3, "No such PSM found"
+    if item_name.endswith(".Current"):
+        #support for items dicovered in older check_mk versions
+        item_name = item_name[:-8]
 
-    descr = entry.get('DescName')
-    typ = entry.get('Unit Type')
-    status = entry.get('Status')
-    current = entry.get('Value')
-    serial = entry.get('Serial Number')
-    position = entry.get('Mounting Position')
-    max_current = entry.get('SetPtHighAlarm')
-    min_current = entry.get('SetPtLowAlarm')
-    if status == "OK":
-        state = 0
-        statind = ""
-    else:
-        state = 2
-        statind = status+" "
-    strom, einheit = current.split(" ")
-    max = max_current.split(" ")[0]
-    min = min_current.split(" ")[0]
+    item_name += ".Unit"
+    unit_items, units = parsed
+    unit = cmciii_get_unit_number(units, unit_name)
+    entry = unit_items.get((unit, item_name))
+    if entry:
+        descr       = entry['DescName']
+        typ         = entry['Unit Type']
+        status      = entry['Status']
+        current     = entry['Value'].split()[0]
+        serial      = entry['Serial Number']
+        position    = entry['Mounting Position']
+        max_current = float(entry['SetPtHighAlarm'].split()[0])
+        min_current = float(entry['SetPtLowAlarm'].split()[0])
+        if status == "OK":
+            state = 0
+            statind = ""
+        else:
+            state = 2
+            statind = status + " "
 
-    perfdata = [ ( "current", strom+einheit, 0, 0, min, max) ]
+        perfdata = [ ( "current", current, 0, 0, min_current, max_current) ]
 
-    infotext =  "%s%s: Current %s (%s/%s), Type %s, Serial %s, Position %s" \
-        % ( statind, descr, current, min_current, max_current, typ, serial, position)
+        infotext =  "%s%s: Current %s (%s/%s), Type %s, Serial %s, Position %s" \
+            % ( statind, descr, current, min_current, max_current, typ, serial, position)
 
-    return (state, infotext, perfdata)
+        return (state, infotext, perfdata)
+
 
 check_info['cmciii.psm_current'] = {
     "check_function"      : check_cmciii_psm_current,
     "inventory_function"  : inventory_cmciii_psm_current,
     "has_perfdata"        : True,
-    "service_description" : "%s",
-    "snmp_scan_function"  : cmciii_scan,
-    "snmp_info"           : cmciii_snmp_info,
+    "service_description" : "Current %s",
 }
 
 #.
@@ -279,21 +328,21 @@ check_info['cmciii.psm_current'] = {
 #   |           |_|                   |_|            |___/                 |
 #   +----------------------------------------------------------------------+
 
-def inventory_cmciii_psm_plugs(info):
+def inventory_cmciii_psm_plugs(parsed):
     inventory = []
-    parsed = parse_cmciii_inputs(info[0])
-    units = parse_units(info[1])
-    for (unit, item_name), entry in parsed.iteritems():
+    unit_items, units = parsed
+    plug_re = regex(r'^PSM_.*\.Plug\d$')
+    for (unit, item_name), entry in unit_items.iteritems():
         unit_type, unit_name = units[int(unit)-1][0:2]
-        if item_name.startswith("PSM_") and re.search(r'\.Plug\d$',item_name):
+        if plug_re.match(item_name):
             inventory.append(  ("%s %s" % (unit_name, item_name), None)  )
     return inventory
 
-def check_cmciii_psm_plugs(item, params, info):
+def check_cmciii_psm_plugs(item, params, parsed):
     unit_name, item_name = item.split(" ", 1)
-    parsed = parse_cmciii_inputs(info[0])
-    unit = get_unit_number(parse_units(info[1]), unit_name)
-    entry = parsed.get((unit, item_name))
+    unit_items, units = parsed
+    unit = cmciii_get_unit_number(units, unit_name)
+    entry = unit_items.get((unit, item_name))
     if not entry:
         return 3, "No such PSM_Plug found"
 
@@ -312,8 +361,6 @@ check_info['cmciii.psm_plugs'] = {
     "check_function"      : check_cmciii_psm_plugs,
     "inventory_function"  : inventory_cmciii_psm_plugs,
     "service_description" : "%s",
-    "snmp_scan_function"  : cmciii_scan,
-    "snmp_info"           : cmciii_snmp_info,
 }
 
 #.
@@ -326,22 +373,23 @@ check_info['cmciii.psm_plugs'] = {
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def inventory_cmciii_io(info):
+def inventory_cmciii_io(parsed):
     inventory = []
-    parsed = parse_cmciii_inputs(info[0])
-    units = parse_units(info[1])
-    for (unit, item_name), entry in parsed.iteritems():
+    unit_items, units = parsed
+
+    for (unit, item_name), entry in unit_items.iteritems():
         unit_type, unit_name = units[int(unit)-1][0:2]
-        if re.match(r'(Input|Output)',item_name) and re.match(r'CMCIII-IO', unit_type ):
+        if unit_type.startswith('CMCIII-IO') and\
+                (item_name.startswith('Input') or item_name.startswith('Output')):
             inventory.append(  ("%s %s" % (unit_name, item_name), None)  )
 
     return inventory
 
-def check_cmciii_io(item, params, info):
+def check_cmciii_io(item, params, parsed):
     unit_name, item_name = item.split(" ", 1)
-    parsed = parse_cmciii_inputs(info[0])
-    unit = get_unit_number(parse_units(info[1]), unit_name)
-    entry = parsed.get((unit, item_name))
+    unit_items, units = parsed
+    unit = cmciii_get_unit_number(units, unit_name)
+    entry = unit_items.get((unit, item_name))
     if not entry:
         return 3, "No such IO channel found"
 
@@ -384,8 +432,6 @@ check_info['cmciii.io'] = {
     "check_function"      : check_cmciii_io,
     "inventory_function"  : inventory_cmciii_io,
     "service_description" : "%s",
-    "snmp_scan_function"  : cmciii_scan,
-    "snmp_info"           : cmciii_snmp_info,
 }
 
 #.
@@ -398,21 +444,18 @@ check_info['cmciii.io'] = {
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def inventory_cmciii_access(info):
-    inventory = []
-    parsed = parse_cmciii_inputs(info[0])
-    units = parse_units(info[1])
-    for (unit, item_name), entry in parsed.iteritems():
+def inventory_cmciii_access(parsed):
+    unit_items, units = parsed
+    for (unit, item_name), entry in unit_items.iteritems():
         unit_type, unit_name = units[int(unit)-1][0:2]
         if item_name == "Access":
-            inventory.append( (unit_name+" Access", None) )
-    return inventory
+            yield unit_name + " Access", None
 
-def check_cmciii_access(item, params, info):
-    parsed = parse_cmciii_inputs(info[0])
-    unit_name = re.sub(r' Access','',item)
-    unit = get_unit_number(parse_units(info[1]), unit_name)
-    entry = parsed.get((unit, "Access"))
+def check_cmciii_access(item, params, parsed):
+    unit_items, units = parsed
+    unit_name = item.replace(' Access', '')
+    unit = cmciii_get_unit_number(units, unit_name)
+    entry = unit_items.get((unit, "Access"))
     if not entry:
         return 3, "No such Access data found"
 
@@ -438,8 +481,6 @@ check_info['cmciii.access'] = {
     "check_function"      : check_cmciii_access,
     "inventory_function"  : inventory_cmciii_access,
     "service_description" : "%s",
-    "snmp_scan_function"  : cmciii_scan,
-    "snmp_info"           : cmciii_snmp_info,
 }
 
 #.
@@ -452,52 +493,186 @@ check_info['cmciii.access'] = {
 #   |                                        |_|                           |
 #   +----------------------------------------------------------------------+
 
-def inventory_cmciii_temp(info):
-    inventory = []
-    parsed = parse_cmciii_inputs(info[0])
-    units = parse_units(info[1])
-    for (unit, item_name), entry in parsed.iteritems():
+
+# generate a name for a cmciii temperature item.
+# There are a few conditions the name has to fulfill:
+# a) It has to be presentable to the user
+# b) It has to be unique
+# c) If direction and spot are set, they have to be included in the name unmodified
+#    and as separate words
+# d) The word "Temperature" mustn't be included
+# e) the output name should start with a specification of the temperature
+#     "zone" (i.e. Ambient, CPU, System, External, ...)
+def format_cmciii_temp_name(unit_name, item_name, direction=None, spot=None):
+    unit_name = unit_name.replace('Liquid_Cooling_Package', 'LCP')
+    item_name = item_name.replace('Temperature', '').replace('.', ' ').strip(' .-')
+    for d in [ "In", "Out" ]:
+        if " " + d in item_name:
+            direction = d
+            item_name = item_name.replace(" " + d, "")
+    if not item_name:
+        item_name = "Ambient"
+    if direction is not None:
+        location = " %s %s" % (direction, spot or "")
+    else:
+        location = ""
+    result = "%s %s%s" % (item_name, unit_name, location)
+
+    return result.strip()
+
+
+def inventory_cmciii_temp(parsed):
+    entries, units = parsed
+    for (unit, item_name), entry in entries.iteritems():
         unit_type, unit_name = units[int(unit)-1][0:2]
-        if "Temperature" in item_name and "Air." not in item_name:
-            inventory.append(  ("%s %s" % (unit_name, item_name), None)  )
-    return inventory
+        if item_name.endswith("Temperature") and "Value" in entry.keys():
+            yield format_cmciii_temp_name(unit_name, item_name), {}
 
-def check_cmciii_temp(item, params, info):
-    unit_name, item_name = item.split(" ", 1)
-    parsed = parse_cmciii_inputs(info[0])
-    unit = get_unit_number(parse_units(info[1]), unit_name)
-    entry = parsed.get((unit, item_name))
-    if not entry:
-        return 3, "No such temperature data found"
 
-    def parse_temp(val):
-        if re.search(" B0 ", val):
-            # is encoded string
-            val = re.sub(" ","", val).decode("hex")
-        val, t_unit = val.split(" ", 1)
-        # omit special characters in unit, because they
-        # cause problems in rrdtools
-        t_unit = re.sub("[^\w]","", t_unit)
-        return float(val), t_unit
+def translate_cmciii_temp_status(status_name):
+    return {
+        "ok"       : 0,
+        "warning"  : 1,
+    }[status_name.lower()]
 
-    value, t_unit = parse_temp(entry.get('Value'))
-    highalarm = parse_temp(entry.get('SetPtHighAlarm'))[0]
-    highwarning = parse_temp(entry.get('SetPtHighWarning'))[0]
-    lowalarm = parse_temp(entry.get('SetPtLowAlarm'))[0]
-    lowwarning = parse_temp(entry.get('SetPtLowWarning'))[0]
 
-    return check_temperature(value, params, t_unit, (highwarning, highalarm), (lowwarning, lowalarm))
+def parse_cmciii_temp(val):
+    # TODO: This hack should not be neccessary anymore. Might just be
+    # due to a few garbled stored walks in our archive.
+    if " B0 " in val:
+        # is encoded string
+        val = val.replace(" ", "").decode("hex")
+    val, t_unit = val.split(" ", 1)
+    # omit special characters in unit, because they
+    # cause problems in rrdtools
+    regchar_re = regex(r'[^\w]')
+    t_unit = regchar_re.sub("", t_unit)
+    return float(val), t_unit
+
+
+def check_cmciii_temp(item, params, unit_items):
+    if params == None:
+        params = {} # compatibility to "old discovered" services
+    entries, units = unit_items
+    entry = None
+    unit_name = None
+
+    for (unit, item_name), candidate_entry in entries.iteritems():
+        unit_type, unit_name = units[int(unit) - 1][0:2]
+        if item_name.endswith("Temperature") and "Value" in candidate_entry.keys():
+            if format_cmciii_temp_name(unit_name, item_name) == item \
+               or unit_name + " " + item_name == item: # compatibility to "old discovered" services
+                entry = candidate_entry
+                break
+    if entry:
+        status = entry['Status']
+        offset = entry.get('Offset')  # Offset is indeed optional
+
+        value, t_unit = parse_cmciii_temp(entry['Value'])
+        highalarm = parse_cmciii_temp(entry['SetPtHighAlarm'])[0]
+        highwarning = parse_cmciii_temp(entry['SetPtHighWarning'])[0]
+        lowalarm = parse_cmciii_temp(entry['SetPtLowAlarm'])[0]
+        lowwarning = parse_cmciii_temp(entry['SetPtLowWarning'])[0]
+
+        status, message, perfdata = check_temperature(value, params, "cmciii_temp_%s" % item,
+                dev_unit=t_unit.lower(),
+                dev_levels=(highwarning, highalarm),
+                dev_levels_lower=(lowwarning, lowalarm),
+                dev_status=translate_cmciii_temp_status(status),
+                dev_status_name="Unit: %s" % status)
+
+        if offset:
+            # as far as I understand it the offset is a user-configurable
+            # value that was already applied to the temperature reading we
+            # received.
+            # Therefore, to get the actual temperature reading, the calculation
+            # would be: real_reading = value - offset_value
+            offset_value, offset_unit = parse_cmciii_temp(offset)
+            offset_value = float(offset_value)
+            # ignore zero-offsets
+            if abs(offset_value) > 0.001:
+                in_unit = offset_unit.lower()
+                out_unit = params.get("output_unit", "c")
+                message += " ; Offset: %.1f %s" %\
+                    (convert_unit_relative(offset_value, in_unit, out_unit),
+                     temp_unitsym[out_unit])
+
+        return status, message, perfdata
+
 
 check_info['cmciii.temp'] = {
     "check_function"      : check_cmciii_temp,
     "inventory_function"  : inventory_cmciii_temp,
-    "service_description" : "%s",
+    "service_description" : "Temperature %s",
     "has_perfdata"        : True,
-    "snmp_scan_function"  : cmciii_scan,
-    "snmp_info"           : cmciii_snmp_info,
-    "includes"            : [ "temperature.include" ],
     "group"               : "temperature",
+    "includes"            : [ "temperature.include" ]
 }
+
+
+def inventory_cmciii_temp_in_out(parsed):
+    unit_items, units = parsed
+
+    for (unit, item_name), entry in unit_items.iteritems():
+        unit_type, unit_name = units[int(unit)-1][0:2]
+        if item_name.endswith('Temperature'):
+            for direction in ["In", "Out"]:
+                for spot in ["Bottom", "Middle", "Top"]:
+                    if "%s-%s" % (direction, spot[:3]) in entry.keys():
+                        yield format_cmciii_temp_name(unit_name, item_name, direction, spot), {}
+
+
+# check for sensors that produces temperature levels in multiple spots
+def check_cmciii_temp_in_out(item, params, parsed):
+    unit_items, units = parsed
+
+    if " Out" in item:
+        direction = "Out"
+    else:
+        direction = "In"
+
+    if "Bottom" in item:
+        spot = "Bottom"
+    elif "Top" in item:
+        spot = "Top"
+    else:
+        spot = "Middle"
+
+    entry = None
+    unit_name = None
+
+    for (unit, item_name), candidate_entry in unit_items.iteritems():
+        unit_type, unit_name = units[int(unit) - 1][0:2]
+        if item_name.endswith("Temperature"):
+            if format_cmciii_temp_name(unit_name, item_name, direction, spot) == item:
+                entry = candidate_entry
+                break
+
+    if entry:
+        status = entry['Status']
+
+        value, t_unit = parse_cmciii_temp(entry["%s-%s" % (direction, spot[:3])])
+        highalarm     = parse_cmciii_temp(entry[direction]['SetPtHighAlarm'])[0]
+        highwarning   = parse_cmciii_temp(entry[direction]['SetPtHighWarning'])[0]
+        lowalarm      = parse_cmciii_temp(entry[direction]['SetPtLowAlarm'])[0]
+        lowwarning    = parse_cmciii_temp(entry[direction]['SetPtLowWarning'])[0]
+
+        return check_temperature(value, params, "cmciii_temp_in_out_%s" % item,
+                dev_unit=t_unit.lower(),
+                dev_levels=(highwarning, highalarm),
+                dev_levels_lower=(lowwarning, lowalarm),
+                dev_status=translate_cmciii_temp_status(status),
+                dev_status_name="Unit: %s" % status)
+
+check_info['cmciii.temp_in_out'] = {
+    "check_function"      : check_cmciii_temp_in_out,
+    "inventory_function"  : inventory_cmciii_temp_in_out,
+    "service_description" : "Temperature %s",
+    "has_perfdata"        : True,
+    "group"               : "temperature",
+    "includes"            : [ "temperature.include" ]
+}
+
 
 #.
 #   .--can current---------------------------------------------------------.
@@ -510,23 +685,22 @@ check_info['cmciii.temp'] = {
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-def inventory_cmciii_can_current(info):
+def inventory_cmciii_can_current(parsed):
     inventory = []
-    parsed = parse_cmciii_inputs(info[0])
-    units = parse_units(info[1])
-    for (unit, item_name), entry in parsed.iteritems():
+    unit_items, units = parsed
+    for (unit, item_name), entry in unit_items.iteritems():
         unit_type, unit_name = units[int(unit)-1][0:2]
         if item_name.startswith('System.CAN') and item_name.endswith('Current'):
             inventory.append(  ("%s %s" % (unit_name, item_name), None)  )
     return inventory
 
-def check_cmciii_can_current(item, params, info):
+def check_cmciii_can_current(item, params, parsed):
     unit_name, item_name = item.split(" ", 1)
-    parsed = parse_cmciii_inputs(info[0])
-    unit = get_unit_number(parse_units(info[1]), unit_name)
-    entry = parsed.get((unit, item_name))
+    unit_items, units = parsed
+    unit = cmciii_get_unit_number(units, unit_name)
+    entry = unit_items.get((unit, item_name))
     if not entry:
-        return 3, "No such temperature data found"
+        return
 
     descr = entry.get('DescName')
     status = entry.get('Status')
@@ -553,8 +727,6 @@ check_info['cmciii.can_current'] = {
     "inventory_function"  : inventory_cmciii_can_current,
     "service_description" : "%s",
     "has_perfdata"        : True,
-    "snmp_scan_function"  : cmciii_scan,
-    "snmp_info"           : cmciii_snmp_info,
 }
 
 #.
@@ -569,21 +741,20 @@ check_info['cmciii.can_current'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def inventory_cmciii_sensor(info):
+def inventory_cmciii_sensor(parsed):
     inventory = []
-    parsed = parse_cmciii_inputs(info[0])
-    units = parse_units(info[1])
-    for (unit, item_name), entry in parsed.iteritems():
+    unit_items, units = parsed
+    for (unit, item_name), entry in unit_items.iteritems():
         unit_type, unit_name = units[int(unit)-1][0:2]
-        if re.match(r'CMCIII-SEN', unit_type ):
+        if unit_type.startswith('CMCIII-SEN'):
             inventory.append((unit_name+" Sensor", None))
     return inventory
 
-def check_cmciii_sensor(item, params, info):
-    parsed = parse_cmciii_inputs(info[0])
+def check_cmciii_sensor(item, params, parsed):
+    unit_items, units = parsed
     unit_name = re.sub(r' Sensor','',item)
-    unit = get_unit_number(parse_units(info[1]), unit_name)
-    entry = parsed.get((unit, "Input"))
+    unit = cmciii_get_unit_number(units, unit_name)
+    entry = unit_items.get((unit, "Input"))
     if not entry:
         return 3, "No such sensor unit found"
 
@@ -600,54 +771,6 @@ check_info['cmciii.sensor'] = {
     "check_function"      : check_cmciii_sensor,
     "inventory_function"  : inventory_cmciii_sensor,
     "service_description" : "%s",
-    "snmp_scan_function"  : cmciii_scan,
-    "snmp_info"           : cmciii_snmp_info,
-}
-
-#.
-#   .--state---------------------------------------------------------------.
-#   |                            _        _                                |
-#   |                        ___| |_ __ _| |_ ___                          |
-#   |                       / __| __/ _` | __/ _ \                         |
-#   |                       \__ \ || (_| | ||  __/                         |
-#   |                       |___/\__\__,_|\__\___|                         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-def inventory_cmciii_state(info):
-    inventory = []
-    units = parse_units(info[1])
-    for unit_type, unit_name, state in units:
-        inventory.append((unit_name+" State", None))
-    return inventory
-
-def check_cmciii_state(item, params, info):
-    unit_name = re.sub(r' State','',item)
-    units = parse_units(info[1])
-    unit_number = get_unit_number(units, unit_name)
-    entry = units[int(unit_number)-1]
-    stati = {
-       1 : ( "not available", 3 ),
-       2 : ( "OK", 0 ),
-       3 : ( "detect", 1),
-       4 : ( "lost", 2),
-       5 : ( "changed", 0),
-       6 : ( "error", 2),
-    }
-    status = stati.get(saveint(entry[2]), ( "unknown", 3 ) )
-
-    infotext = "Device returns internal state \"%s\"" % status[0]
-    return (int(status[1]), infotext )
-
-
-check_info['cmciii.state'] = {
-    "check_function"      : check_cmciii_state,
-    "inventory_function"  : inventory_cmciii_state,
-    "service_description" : "%s",
-    "snmp_scan_function"  : cmciii_scan,
-    "snmp_info"           : cmciii_snmp_info,
 }
 
 #.
@@ -662,11 +785,10 @@ check_info['cmciii.state'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def inventory_cmciii_humidity(info):
+def inventory_cmciii_humidity(parsed):
     inventory = []
-    parsed = parse_cmciii_inputs(info[0])
-    units = parse_units(info[1])
-    for (unit, item_name), entry in parsed.iteritems():
+    unit_items, units = parsed
+    for (unit, item_name), entry in unit_items.iteritems():
         unit_type, unit_name = units[int(unit)-1][0:2]
         if item_name == 'Humidity' and unit_type == 'CMCIII-HUM':
             inventory.append(  ("%s %s" % (unit_name, item_name), None)  )
@@ -676,13 +798,13 @@ def inventory_cmciii_humidity(info):
 def parse_hum(val):
     return val.split(" ", 1)
 
-def check_cmciii_humidity(item, params, info):
+def check_cmciii_humidity(item, params, parsed):
     unit_name, item_name = item.split(" ", 1)
-    parsed = parse_cmciii_inputs(info[0])
-    unit = get_unit_number(parse_units(info[1]), unit_name)
-    entry = parsed.get((unit, item_name))
+    unit_items, units = parsed
+    unit = cmciii_get_unit_number(units, unit_name)
+    entry = unit_items.get((unit, item_name))
     if not entry:
-        return 3, "No such temperature data found"
+        return
 
     descr = entry.get('DescName')
     status = entry.get('Status')
@@ -711,8 +833,6 @@ check_info['cmciii.humidity'] = {
     "check_function"      : check_cmciii_humidity,
     "inventory_function"  : inventory_cmciii_humidity,
     "service_description" : "%s",
-    "snmp_scan_function"  : cmciii_scan,
-    "snmp_info"           : cmciii_snmp_info,
     "has_perfdata"        : True,
 }
 #.
@@ -725,12 +845,11 @@ check_info['cmciii.humidity'] = {
 #   |                    |_|                                               |
 #   '----------------------------------------------------------------------'
 
-def parse_cmciii_phase(info):
-    parsed = parse_cmciii_inputs(info[0])
-    units  = parse_units(info[1])
+def reparse_cmciii_phase(parsed):
+    inputs, units = parsed
 
     output = {}
-    for name, value in parsed.items():
+    for name, value in inputs.items():
         if name[1].find("Phase") != -1:
             device, phase, value_name  = name[1].split('.')
             unit_id = int( name[0])
@@ -740,14 +859,14 @@ def parse_cmciii_phase(info):
             output[(unit, device, phase)][value_name] = value
     return output
 
-def inventory_cmciii_phase(info):
-    parsed = parse_cmciii_phase(info)
+def inventory_cmciii_phase(parsed):
+    parsed = reparse_cmciii_phase(parsed)
     for (device, unit, phase), values in parsed.items():
         yield "%s %s Phase %s" % (device, unit, phase), {}
 
-def check_cmciii_phase(item, params, info):
+def check_cmciii_phase(item, params, parsed):
     device, unit, word, phase = item.split()
-    data = parse_cmciii_phase(info)[(device, unit, phase)]
+    data = reparse_cmciii_phase(parsed)[(device, unit, phase)]
 
     parsed = {}
     parsed[item] = {}
@@ -757,15 +876,13 @@ def check_cmciii_phase(item, params, info):
     #parsed[item]["appower"] = float(data['Current']['Value'].split()[0]), None
     parsed[item]["energy"]  = float(data['Energy']['Value'].split()[0]), None
 
-    return check_elphase(item, params, parsed)
+    return check_elphase(item, params, unit_items)
 
 check_info['cmciii.phase'] = {
     "check_function"      : check_cmciii_phase,
     "inventory_function"  : inventory_cmciii_phase,
     "service_description" : "Input %s",
     "has_perfdata"        : True,
-    "snmp_scan_function"  : cmciii_scan,
-    "snmp_info"           : cmciii_snmp_info,
     "includes"            : [ "elphase.include" ],
     "group"               : "el_inphase",
 }

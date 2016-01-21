@@ -66,8 +66,10 @@ public:
 
     Configuration(const Environment &env);
 
-    unsigned long enabledSections();
-    unsigned long realtimeSections();
+    unsigned long enabledSections() const;
+    unsigned long realtimeSections() const;
+
+    void disableSection(unsigned long section);
 
     int port() const { return _port; }
     int realtimePort() const { return _realtime_port; }

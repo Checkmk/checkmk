@@ -25,46 +25,39 @@
 #ifndef InputBuffer_h
 #define InputBuffer_h
 
-#include "config.h"  // IWYU pragma: keep
-#include <deque>
+#include "config.h" // IWYU pragma: keep
+#include <stddef.h>
+#include <list>
 #include <string>
+#include <utility>
 
+class InputBuffer {
+public:
+    enum class Result {
+        request_read,
+        data_read,
+        unexpected_eof,
+        should_terminate,
+        line_too_long,
+        eof,
+        empty_request,
+        timeout
+    };
 
-#define IB_REQUEST_READ               0
-#define IB_DATA_READ                  1
-#define IB_NO_MORE_REQUEST            2
-#define IB_UNEXPECTED_END_OF_FILE     3
-#define IB_SHOULD_TERMINATE           4
-#define IB_LINE_TOO_LONG              5
-#define IB_END_OF_FILE                6
-#define IB_EMPTY_REQUEST              7
-#define IB_TIMEOUT                    8
+    InputBuffer(int fd, int *termination_flag);
+    std::pair<std::list<std::string>, Result> readRequest();
 
-#define IB_BUFFER_SIZE            65536
+private:
+    static const size_t buffer_size = 65536;
 
-
-class InputBuffer
-{
     int _fd;
     int *_termination_flag;
-    typedef std::deque<std::string> _requestlines_t;
-    _requestlines_t _requestlines;
-    char _readahead_buffer[IB_BUFFER_SIZE];
+    char _readahead_buffer[buffer_size];
     char *_read_pointer;
     char *_write_pointer;
     char *_end_pointer;
 
-    // some buffer
-public:
-    explicit InputBuffer(int *termination_flag);
-    void setFd(int fd);
-    int readRequest();
-    bool moreLines() { return !_requestlines.empty(); }
-    std::string nextLine();
-
-private:
-    void storeRequestLine(char *line, int length);
-    int readData();
+    Result readData();
 };
 
 #endif // InputBuffer_h

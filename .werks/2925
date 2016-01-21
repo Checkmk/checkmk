@@ -1,0 +1,11 @@
+Title: Editing a notification rule for a missing user selected random other user
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453204832
+Class: fix
+
+This problem happened when a user was removed from the system but a
+notification rule still referred to that user. You cannot save any changes
+now unless you select another user or deselect the whole option now.

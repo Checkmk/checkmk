@@ -76,6 +76,7 @@
 #include "wmiHelper.h"
 #include "Thread.h"
 #include "logging.h"
+#include "OHMMonitor.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
@@ -142,6 +143,7 @@ void lowercase(char* value);
 void collect_script_data(script_execution_mode mode);
 void find_scripts(const Environment &env);
 void RunImmediate(const char *mode, int argc, char **argv);
+void prepare_sections(const Environment &env);
 
 
 //  .----------------------------------------------------------------------.
@@ -205,7 +207,32 @@ eventlog_state_t g_eventlog_state;
 
 bool   g_found_crash = false;
 
-wmi::Helper *g_wmi_helper = NULL;
+std::unique_ptr<OHMMonitor> g_ohmMonitor;
+
+class WMILookup {
+public:
+    static wmi::Helper &get(const std::wstring &path = L"Root\\Cimv2") {
+        WMILookup &inst = instance();
+        auto iter = inst._helpers.find(path);
+        if (iter == inst._helpers.end()) {
+            iter = inst._helpers.insert(
+                std::make_pair(path, std::unique_ptr<wmi::Helper>(new wmi::Helper(path.c_str())))).first;
+        }
+        return *iter->second;
+    }
+
+    static void clear() {
+        instance()._helpers.clear();
+    }
+private:
+    static WMILookup &instance() {
+        static WMILookup instance;
+        return instance;
+    }
+    WMILookup() {}
+private:
+    std::map<std::wstring, std::unique_ptr<wmi::Helper>> _helpers;
+};
 
 
 //  .----------------------------------------------------------------------.
@@ -1108,7 +1135,7 @@ void section_ps_wmi(OutputProxy &out)
 
     wmi::Result result;
     try {
-        result = g_wmi_helper->query(L"SELECT * FROM Win32_Process");
+        result = WMILookup::get().query(L"SELECT * FROM Win32_Process");
         bool more = result.valid();
        if (!more) {
             return;
@@ -1691,14 +1718,14 @@ void dump_wmi_table(OutputProxy &out, wmi::Result &result)
 }
 
 
-void output_wmi_table(OutputProxy &out, const wchar_t *table_name, const char *section_name,
+bool output_wmi_table(OutputProxy &out, const wchar_t *table_name, const char *section_name,
         bool as_subtable = false)
 {
-    wmi::Result result = g_wmi_helper->getClass(table_name);
+    wmi::Result result = WMILookup::get().getClass(table_name);
 
     if (!result.valid()) {
         crash_log("table %ls is empty or doesn't exist", table_name);
-        return;
+        return false;
     }
 
     if (as_subtable) {
@@ -1708,6 +1735,7 @@ void output_wmi_table(OutputProxy &out, const wchar_t *table_name, const char *s
         out.output("<<<%s:sep(44)>>>\n", section_name);
     }
     dump_wmi_table(out, result);
+    return true;
 }
 
 
@@ -1715,7 +1743,10 @@ void section_dotnet(OutputProxy &out)
 {
     crash_log("<<<dotnet_clrmemory>>>");
 
-    output_wmi_table(out, L"Win32_PerfRawData_NETFramework_NETCLRMemory", "dotnet_clrmemory");
+    if (!output_wmi_table(out, L"Win32_PerfRawData_NETFramework_NETCLRMemory", "dotnet_clrmemory")) {
+        crash_log("dotnet wmi table(s) missing or empty -> section disabled");
+        g_config->disableSection(SECTION_DOTNET);
+    }
 }
 
 
@@ -1724,12 +1755,16 @@ void section_cpu(OutputProxy &out)
     crash_log("<<<wmi_cpuload>>>");
 
     out.output("<<<wmi_cpuload:sep(44)>>>\n");
-    output_wmi_table(out, L"Win32_PerfRawData_PerfOS_System", "system_perf",     true);
-    output_wmi_table(out, L"Win32_ComputerSystem",            "computer_system", true);
+    if (!output_wmi_table(out, L"Win32_PerfRawData_PerfOS_System", "system_perf",     true) ||
+        !output_wmi_table(out, L"Win32_ComputerSystem",            "computer_system", true)) {
+        crash_log("cpuload related wmi tables missing or empty -> section disabled");
+        g_config->disableSection(SECTION_CPU);
+    }
 }
 
 void section_exchange(OutputProxy &out)
 {
+    bool any_section_valid = false;
     for (auto &data_source : {
             std::make_pair(L"MSExchangeActiveSync",          "msexch_activesync"),
             std::make_pair(L"MSExchangeAvailabilityService", "msexch_availability"),
@@ -1742,7 +1777,12 @@ void section_exchange(OutputProxy &out)
         std::wostringstream table_name;
         table_name << L"Win32_PerfRawData_" << data_source.first << L"_" << data_source.first;
         crash_log("<<<%s>>>", data_source.second);
-        output_wmi_table(out, table_name.str().c_str(), data_source.second);
+        any_section_valid |= output_wmi_table(out, table_name.str().c_str(), data_source.second);
+    }
+
+    if (!any_section_valid) {
+        crash_log("exchange wmi tables missing or empty -> section disabled");
+        g_config->disableSection(SECTION_EXCHANGE);
     }
 }
 
@@ -1751,7 +1791,41 @@ void section_webservices(OutputProxy &out)
 {
     crash_log("<<<wmi_webservices>>>");
 
-    output_wmi_table(out, L"Win32_PerfRawData_W3SVC_WebService", "wmi_webservices");
+    if (!output_wmi_table(out, L"Win32_PerfRawData_W3SVC_WebService", "wmi_webservices")) {
+        crash_log("webservices wmi table missing or empty -> section disabled");
+        g_config->disableSection(SECTION_WEBSERVICES);
+    }
+}
+
+
+void section_ohm(OutputProxy &out)
+{
+    crash_log("<<<openhardwaremonitor>>>");
+
+    wmi::Result result;
+    try {
+        result = WMILookup::get(L"Root\\OpenHardwareMonitor")
+        .query(L"SELECT Index, Name, Parent, SensorType, Value FROM Sensor");
+    } catch (const wmi::ComException &e) {
+        crash_log("failed to query ohm wmi-section: %s", e.what());
+    }
+
+    if (result.valid()) {
+        out.output("<<<openhardwaremonitor:sep(44)>>>\n");
+        dump_wmi_table(out, result);
+    }
+    else {
+        if (!g_ohmMonitor->checkAvailabe()) {
+            crash_log("ohm not installed or not runnable -> section disabled");
+            g_config->disableSection(SECTION_OHM);
+        }
+        else {
+            crash_log("ohm wmi table empty");
+        }
+        // if ohm was started here, we still don't query the data again this cycle
+        // because it's impossible to predict how long the ohm client takes to start
+        // up but it won't be instantanious
+    }
 }
 
 
@@ -3248,6 +3322,8 @@ DWORD WINAPI realtime_check_func(void *data_in)
 
 void do_adhoc(const Environment &env)
 {
+    prepare_sections(env);
+
     g_should_terminate = false;
 
     ListenSocket sock(g_config->port(), g_config->onlyFrom(), g_config->supportIPV6());
@@ -3351,6 +3427,8 @@ void find_scripts(const Environment &env)
 void output_data(OutputProxy &out, const Environment &env, unsigned long section_mask,
         bool section_flush)
 {
+    prepare_sections(env);
+
     // make sure, output of numbers is not localized
     setlocale(LC_ALL, "C");
 
@@ -3436,6 +3514,10 @@ void output_data(OutputProxy &out, const Environment &env, unsigned long section
         section_webservices(out);
         if (section_flush) out.flush();
     }
+    if ((section_mask & SECTION_OHM) != 0) {
+        section_ohm(out);
+        if (section_flush) out.flush();
+    }
 
     // Start data collection of SYNC scripts
     if (((section_mask & SECTION_PLUGINS) != 0)
@@ -3479,7 +3561,7 @@ void output_data(OutputProxy &out, const Environment &env, unsigned long section
 
 void cleanup()
 {
-    delete g_wmi_helper;
+    WMILookup::clear();
 
     if (eventlog_buffer_size > 0)
         delete [] eventlog_buffer;
@@ -3771,6 +3853,34 @@ void load_state(const Environment &env) {
 }
 
 
+// do initialization of global state required to generate section output
+void prepare_sections(const Environment &env)
+{
+    static bool already_run = false;
+    if (!already_run) {
+        already_run = true;
+        if (g_config->enabledSections() & SECTION_OHM) {
+            g_ohmMonitor.reset(new OHMMonitor(env));
+            bool available = false;
+            try {
+                wmi::Result result = WMILookup::get(L"Root\\OpenHardwareMonitor")
+                    .query(L"SELECT Index, Name, Parent, SensorType, Value FROM Sensor");
+                available = result.valid();
+            } catch (const wmi::ComException&) {
+                // query failed, probably the ohm wmi namespace doesn't exist
+            }
+
+            if (!available && !g_ohmMonitor->checkAvailabe()) {
+                crash_log("ohm not installed or not runnable -> section disabled");
+                g_config->disableSection(SECTION_OHM);
+            }
+        }
+
+        load_state(env);
+    }
+}
+
+
 void RunImmediate(const char *mode, int argc, char **argv)
 {
     // base directory structure on current working directory or registered dir (from registry)?
@@ -3778,15 +3888,6 @@ void RunImmediate(const char *mode, int argc, char **argv)
     Environment env(use_cwd);
 
     g_config = new Configuration(env);
-
-    try {
-        g_wmi_helper = new wmi::Helper();
-    } catch (const std::runtime_error &ex) {
-        fprintf(stderr, "Failed to initialize wmi: %s", ex.what());
-        exit(1);
-    }
-
-    load_state(env);
 
     if (!strcmp(mode, "test"))
         do_test(true, env);

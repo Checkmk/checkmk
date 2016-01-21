@@ -30,6 +30,8 @@ import views
 
 stylesheets = [ 'pages', 'status', 'logwatch' ]
 
+nagios_illegal_chars  = '`;~!$%^&*|\'"<>?,()='
+
 def level_name(level):
     if   level == 'W': return 'WARN'
     elif level == 'C': return 'CRIT'
@@ -49,13 +51,16 @@ def level_state(level):
 #   |          ___) | | | | (_) \ V  V /  | |__| (_) | (_| \__ \           |
 #   |         |____/|_| |_|\___/ \_/\_/   |_____\___/ \__, |___/           |
 #   |                                                 |___/                |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 def page_show():
     host = html.var('host')
     filename = html.var('file')
+    if "/" in host:
+        return
+
+    # Fix problem when URL is missing certain illegal characters
+    filename = form_file_to_ext(find_matching_logfile(host, form_file_to_int(filename)))
 
     # Acknowledging logs is supported on
     # a) all logs on all hosts
@@ -160,7 +165,30 @@ def ack_button(host = None, int_filename = None):
     else:
         label = _("Clear Logs")
 
-    html.context_button(label, html.makeactionuri([('_ack', '1')]), 'delete')
+    urivars = [('_ack', '1')]
+    if int_filename:
+        urivars.append(("file", int_filename))
+    html.context_button(label, html.makeactionuri(urivars), 'delete')
+
+
+# Tackle problem, where some characters are missing in the service
+# description
+def find_matching_logfile(host, filename):
+    dir_path = defaults.logwatch_dir + '/' + host + '/'
+    if os.path.exists(dir_path + filename):
+        return filename # Most common case
+
+    for logfile_name in os.listdir(dir_path):
+        if remove_illegal_service_characters(logfile_name) == filename:
+            return logfile_name
+
+    # Not found? Fall back to original name. Logfile might be cleared.
+    return filename
+
+
+def remove_illegal_service_characters(filename):
+    return "".join([ c for c in filename if c not in nagios_illegal_chars ])
+
 
 
 def show_file(host, filename):

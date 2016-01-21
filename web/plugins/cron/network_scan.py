@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,41 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent:
-# .
-# .
-# .
-# SPARC64-VII mode
-#
-# PRTDIAG_OVERALL_STATE : 0
-# SerialNumber: BDF112567
+import wato
 
-
-def inventory_solaris_prtdiag(info):
-    for line in info:
-        # We have to search in the agent section if we find
-        # that state
-        if line[0].startswith("PRTDIAG_OVERALL_STATE"):
-            return [(None, None)]
-
-def check_solaris_prtdiag(_no_item, _no_params, info):
-    for line in info:
-        if line[0].startswith("PRTDIAG_OVERALL_STATE"):
-            # 0 No failures or errors are detected in the system.
-            # 1 Failures or errors are detected in the system.
-            state = int(info[-1][0].split(':')[1])
-
-    # If we not find the status in the agent output, raise error
-    if state == 0:
-        return 0, "No failures or errors are detected in the system"
-    else:
-        return 2, "Failures or errors are detected in the system, please check details via prtdiag -v"
-
-check_info['solaris_prtdiag'] = {
-    "inventory_function"      : inventory_solaris_prtdiag,
-    "check_function"          : check_solaris_prtdiag,
-    "service_description"     : "Hardware Overall State"
-}
-
-
-
+multisite_cronjobs.append(wato.execute_network_scan_job)

@@ -53,9 +53,9 @@ private:
     int _fd;
     int *_termination_flag;
     char _readahead_buffer[buffer_size];
-    char *_read_pointer;
-    char *_write_pointer;
-    char *_end_pointer;
+    size_t _read_pointer;
+    size_t _write_pointer;
+    size_t _end_pointer;
 
     Result readData();
 };

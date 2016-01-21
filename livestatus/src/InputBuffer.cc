@@ -70,9 +70,9 @@ pair<list<string>, InputBuffer::Result> failure(InputBuffer::Result r)
 InputBuffer::InputBuffer(int fd, int *termination_flag)
     : _fd(fd), _termination_flag(termination_flag)
 {
-    _read_pointer = &_readahead_buffer[0];         // points to data not yet processed
-    _write_pointer = _read_pointer;                // points to end of data in buffer
-    _end_pointer = _read_pointer + buffer_size;    // points ot end of buffer
+    _read_pointer = 0;          // points to data not yet processed
+    _write_pointer = 0;         // points to end of data in buffer
+    _end_pointer = buffer_size; // points ot end of buffer
 }
 
 // read in data enough for one complete request (and maybe more).
@@ -96,12 +96,12 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
     // request.
 
     // r is used to find the end of the line
-    char *r = _read_pointer;
+    size_t r = _read_pointer;
 
     while (true)
     {
         // Try to find end of the current line in buffer
-        while (r < _write_pointer && r[0] != '\n')
+        while (r < _write_pointer && _readahead_buffer[r] != '\n')
             r++; // now r is at end of data or at '\n'
 
         // If we cannot find the end of line in the data
@@ -158,11 +158,11 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
             // very probable if _write_pointer == _end_pointer. Most
             // of the buffer's content is already processed. So we simply
             // shift the yet unprocessed data to the very left of the buffer.
-            else if (_read_pointer > _readahead_buffer) {
-                int shift_by = _read_pointer - _readahead_buffer; // distance to beginning of buffer
+            else if (_read_pointer > 0) {
+                int shift_by = _read_pointer;                     // distance to beginning of buffer
                 int size     = _write_pointer - _read_pointer;    // amount of data to shift
-                memmove(_readahead_buffer, _read_pointer, size);
-                _read_pointer = _readahead_buffer;                // unread data is now at the beginning
+                memmove(&_readahead_buffer[0], &_readahead_buffer[_read_pointer], size);
+                _read_pointer = 0;                                // unread data is now at the beginning
                 _write_pointer -= shift_by;                       // write pointer shifted to the left
                 r -= shift_by;                                    // current scan position also shift left
                 // continue -> still no data in buffer, but it will
@@ -186,12 +186,11 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
                     return make_pair(request_lines, Result::request_read);
             }
             else { // non-empty line: belongs to current request
-                // storeRequestLine(_read_pointer, r - _read_pointer);
                 int length = r - _read_pointer;
-                for (char *end = r; end > _read_pointer && isspace(*--end);)
+                for (size_t end = r; end > _read_pointer && isspace(_readahead_buffer[--end]);)
                     length--;
                 if (length > 0)
-                    request_lines.push_back(string(_read_pointer, length));
+                    request_lines.push_back(string(&_readahead_buffer[_read_pointer], length));
                 else
                     logger(LG_INFO, "Warning ignoring line containing only whitespace");
                 query_started = true;
@@ -225,7 +224,7 @@ InputBuffer::Result InputBuffer::readData()
 
         int retval = select(_fd + 1, &fds, NULL, NULL, &tv);
         if (retval > 0 && FD_ISSET(_fd, &fds)) {
-            ssize_t r = read(_fd, _write_pointer, _end_pointer - _write_pointer);
+            ssize_t r = read(_fd, &_readahead_buffer[_write_pointer], _end_pointer - _write_pointer);
             if (r < 0) {
                 return Result::eof;
             }

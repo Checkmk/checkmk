@@ -1,4 +1,4 @@
-Title: solaris_prtdiag: New Check for Solaris Hardware State based on prtdiag
+Title: solaris_prtdiag_status: New Check for Solaris Hardware State based on prtdiag
 Level: 1
 Component: checks
 Compatible: compat

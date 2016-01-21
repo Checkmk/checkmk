@@ -46,6 +46,17 @@ then
     echo "<<<solaris_uname:sep(61):persist($UNTIL)>>>"
     uname -X
 
+    if type prtdiag > /dev/null; then
+        echo "<<<solaris_prtdiag:sep(10):persist($UNTIL)>>>"
+        if type sneep >/dev/null 2>&1; then
+            SN=$(sneep -t serial)
+        else
+            SN=$(smbios -t SMB_TYPE_SYSTEM | grep 'Serial Number:' | awk '{print $3}')
+        fi
+        echo "SerialNumber: $SN"
+        prtdiag -v
+    fi
+
     if type psrinfo > /dev/null; then
         echo "<<<solaris_psrinfo:persist($UNTIL)>>>"
         psrinfo -p -v

@@ -35,7 +35,6 @@
 #include "Aggregator.h"
 #include "Column.h"
 #include "Filter.h"
-#include "InputBuffer.h"
 #include "NegatingFilter.h"
 #include "NullColumn.h"
 #include "OringFilter.h"
@@ -53,32 +52,31 @@ extern int g_debug_level;
 extern unsigned long g_max_response_size;
 extern int g_data_encoding;
 
+using std::list;
 using std::string;
 using std::vector;
 
-Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
-    _output(output),
-    _table(table),
-    _auth_user(0),
-    _wait_timeout(0),
-    _wait_trigger(0),
-    _wait_object(0),
-    _field_separator(";"),
-    _dataset_separator("\n"),
-    _list_separator(","),
-    _host_service_separator("|"),
-    _show_column_headers(true),
-    _need_ds_separator(false),
-    _output_format(OUTPUT_FORMAT_CSV),
-    _limit(-1),
-    _time_limit(-1),
-    _time_limit_timeout(0),
-    _current_line(0),
-    _timezone_offset(0)
+Query::Query(list<string> &lines, OutputBuffer *output, Table *table)
+    : _output(output)
+    , _table(table)
+    , _auth_user(0)
+    , _wait_timeout(0)
+    , _wait_trigger(0)
+    , _wait_object(0)
+    , _field_separator(";")
+    , _dataset_separator("\n")
+    , _list_separator(",")
+    , _host_service_separator("|")
+    , _show_column_headers(true)
+    , _need_ds_separator(false)
+    , _output_format(OUTPUT_FORMAT_CSV)
+    , _limit(-1)
+    , _time_limit(-1)
+    , _time_limit_timeout(0)
+    , _current_line(0)
+    , _timezone_offset(0)
 {
-    while (input->moreLines())
-    {
-        string line = input->nextLine();
+    for (auto &line : lines) {
         vector<char> line_copy(line.begin(), line.end());
         line_copy.push_back(0);
         char *buffer = &line_copy[0];

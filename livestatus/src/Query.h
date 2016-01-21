@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
 #include <time.h>
+#include <list>
 #include <map>
 #include <string>
 #include <vector>
@@ -37,7 +38,6 @@
 class Aggregator;
 class Column;
 class Filter;
-class InputBuffer;
 class OutputBuffer;
 class StatsColumn;
 class Table;
@@ -94,7 +94,7 @@ class Query
     _stats_groups_t _stats_groups;
 
 public:
-    Query(InputBuffer *, OutputBuffer *out, Table *);
+    Query(std::list<std::string> &lines, OutputBuffer *out, Table *);
     ~Query();
     bool processDataset(void *);
     bool timelimitReached();

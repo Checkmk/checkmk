@@ -31,18 +31,36 @@
 #include <unistd.h>
 #include "logger.h"
 
+using std::list;
+using std::make_pair;
+using std::pair;
 using std::string;
+
+extern int g_query_timeout_msec;
+extern int g_idle_timeout_msec;
 
 const size_t InputBuffer::buffer_size;
 
 namespace {
 const int read_timeout_usec = 200000;
+
+bool timeout_reached(const struct timeval *start, int timeout_ms)
+{
+    if (timeout_ms == 0)
+        return false; // timeout disabled
+
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    int64_t elapsed = (now.tv_sec - start->tv_sec) * 1000000;
+    elapsed += now.tv_usec - start->tv_usec;
+    return elapsed / 1000 >= timeout_ms;
 }
 
-extern int g_query_timeout_msec;
-extern int g_idle_timeout_msec;
-
-bool timeout_reached(const struct timeval *, int);
+pair<list<string>, InputBuffer::Result> failure(InputBuffer::Result r)
+{
+    return make_pair(list<string>(), r);
+}
+}
 
 // TODO: We need the suppression pragma below because _readahead_buffer is not
 // initialized in the constructor. Just replace all this manual fiddling with
@@ -61,15 +79,12 @@ void InputBuffer::setFd(int fd)
 {
     _fd = fd;
     _read_pointer = _write_pointer = _readahead_buffer;
-    _requestlines.clear();
 }
 
-// read in data enough for one complete request
-// (and maybe more). If this method returns IB_REQUEST_READ
-// then you can subsequently retrieve the lines of the
-// request with nextLine().
-InputBuffer::Result InputBuffer::readRequest()
+// read in data enough for one complete request (and maybe more).
+pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
 {
+    std::list<std::string> request_lines;
     // Remember when we started waiting for a request. This
     // is needed for the idle_timeout. A connection may
     // not be idle longer than that value.
@@ -108,12 +123,12 @@ InputBuffer::Result InputBuffer::readRequest()
                 if (rd == Result::timeout) {
                     if (query_started) {
                         logger(LG_INFO, "Timeout of %d ms exceeded while reading query", g_query_timeout_msec);
-                        return Result::timeout;
+                        return failure(Result::timeout);
                     }
                     // Check if we exceeded the maximum time between two queries
                     else if (timeout_reached(&start_of_idle, g_idle_timeout_msec)) {
                         logger(LG_INFO, "Idle timeout of %d ms exceeded. Going to close connection.", g_idle_timeout_msec);
-                        return Result::timeout;
+                        return failure(Result::timeout);
                     }
                 }
 
@@ -123,12 +138,12 @@ InputBuffer::Result InputBuffer::readRequest()
                 // be valid, if it is not empty.
                 else if (rd == Result::eof && r == _read_pointer /* currently at beginning of a line */)
                 {
-                    if (_requestlines.empty()) {
-                        return Result::eof; // empty request -> no request
+                    if (request_lines.empty()) {
+                        return failure(Result::eof); // empty request -> no request
                     }
                     else {
                         // socket has been closed but request is complete
-                        return Result::request_read;
+                        return make_pair(request_lines, Result::request_read);
                         // the current state is now:
                         // _read_pointer == r == _write_pointer => buffer is empty
                         // that way, if the main program tries to read the
@@ -138,11 +153,11 @@ InputBuffer::Result InputBuffer::readRequest()
                 // if we are *not* at an end of line while reading
                 // a request, we got an invalid request.
                 else if (rd == Result::eof)
-                    return Result::unexpected_eof;
+                    return failure(Result::unexpected_eof);
 
                 // Other status codes
                 else if (rd == Result::should_terminate)
-                    return rd;
+                    return failure(rd);
             }
             // OK. So no space is left in the buffer. But maybe at the
             // *beginning* of the buffer is space left again. This is
@@ -162,7 +177,7 @@ InputBuffer::Result InputBuffer::readRequest()
             // buffer is full, but still no end of line found => buffer is too small
             else {
                 logger(LG_INFO, "Error: maximum length of request line exceeded");
-                return Result::line_too_long;
+                return failure(Result::line_too_long);
             }
         }
         else // end of line found
@@ -170,14 +185,21 @@ InputBuffer::Result InputBuffer::readRequest()
             if (_read_pointer == r) { // empty line found => end of request
                 _read_pointer = r + 1;
                 // Was ist, wenn noch keine korrekte Zeile gelesen wurde?
-                if (_requestlines.size() == 0) {
-                    return Result::empty_request;
+                if (request_lines.empty()) {
+                    return failure(Result::empty_request);
                 }
                 else
-                    return Result::request_read;
+                    return make_pair(request_lines, Result::request_read);
             }
             else { // non-empty line: belongs to current request
-                storeRequestLine(_read_pointer, r - _read_pointer);
+                // storeRequestLine(_read_pointer, r - _read_pointer);
+                int length = r - _read_pointer;
+                for (char *end = r; end > _read_pointer && isspace(*--end);)
+                    length--;
+                if (length > 0)
+                    request_lines.push_back(string(_read_pointer, length));
+                else
+                    logger(LG_INFO, "Warning ignoring line containing only whitespace");
                 query_started = true;
                 _read_pointer = r + 1;
                 r = _read_pointer;
@@ -223,34 +245,4 @@ InputBuffer::Result InputBuffer::readData()
         }
     }
     return Result::should_terminate;
-}
-
-
-void InputBuffer::storeRequestLine(char *line, int length)
-{
-    char *end = line + length;
-    while (end > line && isspace(*--end)) length--;
-    if (length > 0)
-        _requestlines.push_back(string(line, length));
-    else
-        logger(LG_INFO, "Warning ignoring line containing only whitespace");
-}
-
-string InputBuffer::nextLine()
-{
-    string s = _requestlines.front();
-    _requestlines.pop_front();
-    return s;
-}
-
-bool timeout_reached(const struct timeval *start, int timeout_ms)
-{
-    if (timeout_ms == 0)
-        return false; // timeout disabled
-
-    struct timeval now;
-    gettimeofday(&now, NULL);
-    int64_t elapsed = (now.tv_sec - start->tv_sec) * 1000000;
-    elapsed += now.tv_usec - start->tv_usec;
-    return elapsed / 1000 >= timeout_ms;
 }

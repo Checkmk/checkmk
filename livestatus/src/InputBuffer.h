@@ -27,8 +27,9 @@
 
 #include "config.h" // IWYU pragma: keep
 #include <stddef.h>
-#include <deque>
+#include <list>
 #include <string>
+#include <utility>
 
 class InputBuffer {
 public:
@@ -45,23 +46,18 @@ public:
 
     explicit InputBuffer(int *termination_flag);
     void setFd(int fd);
-    Result readRequest();
-    bool moreLines() { return !_requestlines.empty(); }
-    std::string nextLine();
+    std::pair<std::list<std::string>, Result> readRequest();
 
 private:
     static const size_t buffer_size = 65536;
 
     int _fd;
     int *_termination_flag;
-    typedef std::deque<std::string> _requestlines_t;
-    _requestlines_t _requestlines;
     char _readahead_buffer[buffer_size];
     char *_read_pointer;
     char *_write_pointer;
     char *_end_pointer;
 
-    void storeRequestLine(char *line, int length);
     Result readData();
 };
 

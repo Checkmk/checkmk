@@ -1,3 +1,5 @@
+1.2.6p17:
+
 1.2.6p16:
     Core & Setup:
     * 2936 FIX: fixed service discovery failed if item name contains quote character

@@ -1,0 +1,56 @@
+Title: LDAP: Simplified automatic sync logic
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453478149
+Class: fix
+
+By default once an LDAP connection has been configured the LDAP synchronization
+was performed automatically in background in different situations:
+
+<ul>
+<li>During regular page processing (every 5 minutes)</li>
+<li>When opening the users configuration page</li>
+<li>Before activating the changed configuration</li>
+<li>On a remote site, when it receives a new configuration</li>
+</ul>
+
+This was configuable using the config option <i>Automatic User Synchronization</i>.
+
+One problem with the default configuration was that it enabled the
+sync also for slave sites in distributed environments. Having the
+sync enabled on a slave site a change in LDAP would trigger a change
+on the slave site which is then preventing further activating of
+changes from the master. One had to drop this change entry manually
+to solve this situation.
+
+Another problem was that such LDAP sync was executed in some kind
+of random way when any HTTP request could trigger it. This felt odd
+in cases where the LDAP sync could take a longer time when for example
+saving of a view took 50 seconds instead of less than one second.
+
+The sync during activating of the configuration was slowing down the
+workflow when the sync took longer.
+
+So we decided to change the automatic user synchronization to work
+this way now:
+
+It is now scheduled by the generic multisite cron job which is executed
+once a minute. The LDAP sync then triggered and starts when the previous
+synchronization has finished more than 5 minutes before. This interval
+can still be configured for each LDAP connection.
+
+The new default configuration is that the automatic LDAP synchronization
+is performed only on the master site in distributed setups. But you can
+change the option <i>Automatic User Synchronization</i> to either <i>On
+all sites</i> to make it be executed on all your sites or completely
+disable the automatic synchronization.
+
+You have the option to change this setting for individual sites using
+the site specific global settings.
+
+Once at least one LDAP connection is configured the <i>Sync Users</i>
+button is shown on the users page. It can be used to trigger the
+user synchronization manually.
+

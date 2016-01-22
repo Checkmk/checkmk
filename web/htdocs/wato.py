@@ -5895,13 +5895,15 @@ def vs_ldap_connection(new):
             default_keys = ['email', 'alias', 'auth_expire' ],
         )),
         ("cache_livetime", Age(
-            title = _('Cache Livetime'),
-            help  = _('This option defines the maximum age for using the cached LDAP data. The time of the '
-                      'last LDAP synchronization is saved and checked on every request to the multisite '
-                      'interface. Once the cache gets outdated, a new synchronization job is started.<br><br>'
+            title = _('Sync Interval'),
+            help  = _('This option defines the interval of the LDAP synchronization. This setting is only '
+                      'used by sites which have the '
+                      '<a href="wato.py?mode=edit_configvar&varname=userdb_automatic_sync">Automatic User '
+                      'Synchronization</a> enabled.<br><br>'
                       'Please note: Passwords of the users are never stored in WATO and therefor never cached!'),
-            minvalue = 1,
+            minvalue = 60,
             default_value = 300,
+            display = ["days", "hours", "minutes" ],
         )),
         ("debug_log", Checkbox(
             title = _("Connection Diagnostics"),
@@ -9834,18 +9836,12 @@ def mode_users(phase):
         global_buttons()
         html.context_button(_("New User"), folder_preserving_link([("mode", "edit_user")]), "new")
         html.context_button(_("Custom Attributes"), folder_preserving_link([("mode", "user_attrs")]), "custom_attr")
-        if 'wato_users' not in config.userdb_automatic_sync:
+        if userdb.sync_possible():
             html.context_button(_("Sync Users"), html.makeactionuri([("_sync", 1)]), "replicate")
         if config.may("general.notify"):
             html.context_button(_("Notify Users"), 'notify.py', "notification")
         html.context_button(_("LDAP Connections"), folder_preserving_link([("mode", "ldap_config")]), "ldap")
         return
-
-    # Execute all connectors synchronisations of users. This must be done before
-    # loading the users, because it might modify the users list. But don't execute
-    # it during actions, this should save some time.
-    if phase != "action" and 'wato_users' in config.userdb_automatic_sync:
-        userdb.hook_sync(add_to_changelog = True)
 
     roles = userdb.load_roles()
     users = filter_hidden_users(userdb.load_users(lock = phase == 'action' and html.var('_delete')))

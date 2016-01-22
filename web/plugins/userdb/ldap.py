@@ -1037,8 +1037,8 @@ class LDAPUserConnector(UserConnector):
         return user_locked(user_id)
 
 
-    # Is called on every multisite http request
-    def on_page_load(self):
+    # Is called once a minute by the multisite cron job call
+    def on_cron_job(self):
         if self.sync_is_needed():
             try:
                 self.do_sync(False, None)

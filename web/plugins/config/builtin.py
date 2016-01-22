@@ -223,7 +223,7 @@ guitests_enabled = False
 #     \___/|___/\___|_|  |____/|____/
 #
 
-userdb_automatic_sync = [ 'wato_users', 'page', 'wato_pre_activate_changes', 'wato_snapshot_pushed' ]
+userdb_automatic_sync = "master"
 
 # Holds dicts defining user connector instances and their properties
 user_connections = []

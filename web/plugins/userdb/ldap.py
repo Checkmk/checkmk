@@ -906,11 +906,6 @@ class LDAPUserConnector(UserConnector):
         self.log('SYNC STARTED')
         self.log('  SYNC PLUGINS: %s' % ', '.join(self._config['active_plugins'].keys()))
 
-        # Unused at the moment, always sync all users
-        #filt = None
-        #if only_username:
-        #    filt = '(%s=%s)' % (self.user_id_attr(), only_username)
-
         ldap_users = self.get_users()
 
         import wato
@@ -938,6 +933,9 @@ class LDAPUserConnector(UserConnector):
         for user_id, ldap_user in ldap_users.items():
             mode_create, user = load_user(user_id)
             user_connection_id = cleanup_connection_id(user.get('connector'))
+
+            if only_username and user_id != only_username:
+                continue # Only one user should be synced, skip others.
 
             # Name conflict: Found a user that has an equal name, but is not controlled
             # by this connector. Don't sync it. When an LDAP connection suffix is configured

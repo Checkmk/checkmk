@@ -63,7 +63,7 @@
 
 # inventory function
 def inventory_zpool_status(info):
-    if " ".join(info[0]) == "no pools available":
+    if not info or " ".join(info[0]) == "no pools available":
         return []
     return [(None, None)]
 

@@ -104,8 +104,9 @@ def cleanup_connection_id(connection_id):
 
     # Old Check_MK used a static "ldap" connector id for all LDAP users.
     # Since Check_MK now supports multiple LDAP connections, the ID has
-    # been changed to "default"
-    if connection_id == 'ldap':
+    # been changed to "default". But only transform this when there is
+    # no connection existing with the id LDAP.
+    if connection_id == 'ldap' and not get_connection('ldap'):
         connection_id = 'default'
 
     return connection_id

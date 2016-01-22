@@ -1,0 +1,10 @@
+Title: LDAP: Fixed broken sync for LDAP connections named "ldap"
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453472773
+Class: fix
+
+Custom LDAP connections created with the ID "ldap" could not synchronize
+users correctly.

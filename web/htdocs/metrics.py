@@ -34,7 +34,7 @@
 # unit:               The definition-dict of a unit like in unit_info
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
-import math, time, colorsys, shlex
+import math, time, colorsys, shlex, operator
 import config, defaults, pagetypes, table
 from lib import *
 from valuespec import *

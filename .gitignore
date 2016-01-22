@@ -20,3 +20,5 @@ check-mk-agent-*.msi
 RemoteSystemsTempFiles
 .directory
 .DS_Store
+tags
+.ropeproject

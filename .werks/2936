@@ -1,0 +1,9 @@
+Title: fixed service discovery failed if item name contains quote character
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.6p16
+Date: 1453449454
+Class: fix
+
+

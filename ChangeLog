@@ -1,4 +1,7 @@
 1.2.6p16:
+    Core & Setup:
+    * 2936 FIX: fixed service discovery failed if item name contains quote character
+
     Checks & Agents:
     * 2807 FIX: check_mail_loop: POP3 protocol wasn't working at all
     * 2861 FIX: hivemanager_devices: Fixed configuration of states to treat as WARN

@@ -763,21 +763,20 @@ def parse_autochecks_file(hostname):
         for i, c in enumerate(line):
             if backslash:
                 backslash = False
-                continue
             elif c == '\\':
                 backslash = True
             elif c == quote:
                 quote = None # end of quoted string
+            elif quote:
+                pass
             elif c in [ '"', "'" ]:
                 quote = c # begin of quoted string
-            elif quote:
-                continue
             elif c in [ '(', '{', '[' ]:
                 bracklev += 1
             elif c in [ ')', '}', ']' ]:
                 bracklev -= 1
             elif bracklev > 0:
-                continue
+                pass
             elif c == ',':
                 value = line[0:i]
                 rest = line[i+1:]

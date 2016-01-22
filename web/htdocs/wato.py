@@ -6005,6 +6005,7 @@ def mode_edit_ldap_connection(phase):
     html.write('<div id=ldap>')
     html.write('<table><tr><td>')
     html.begin_form("connection", method="POST")
+    html.prevent_password_auto_completion()
     vs.render_input("connection", connection_cfg)
     vs.set_focus("connection")
     html.button("_save", _("Save"))

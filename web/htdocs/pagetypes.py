@@ -167,6 +167,9 @@ class Base:
     def description(self):
         return self._.get("description", "")
 
+    def is_empty(self):
+        return False
+
     # Default values for the creation dialog can be overridden by the
     # sub class.
     @classmethod
@@ -324,6 +327,14 @@ class PageRenderer:
             raise MKGeneralException(_("Cannot find %s with the name %s") % (
                         self.phrase("title"), name))
         page.render()
+
+
+    # Links for the sidebar
+    @classmethod
+    def sidebar_links(self):
+        for page in self.pages():
+            if not page.is_empty() and not page.is_hidden():
+                yield page.topic(), page.title(), page.page_url()
 
 
 
@@ -692,10 +703,10 @@ class Overridable:
 
         ### if render_custom_context_buttons:
         ###     render_custom_context_buttons()
-        ### for other_what, info in visual_types.items():
-        ###     if what != other_what:
-        ###         html.context_button(info["plural_title"].title(), 'edit_%s.py' % other_what, other_what[:-1])
-        ### html.end_context_buttons()
+
+        for other_type_name, other_pagetype in page_types.items():
+            if self.type_name() != other_type_name:
+                html.context_button(other_pagetype.phrase("title_plural").title(), '%ss.py' % other_type_name, other_type_name)
         html.end_context_buttons()
 
         # Deletion
@@ -1018,11 +1029,17 @@ def declare(page_type):
     page_type.declare_overriding_permissions()
     page_types[page_type.type_name()] = page_type
 
+
 def page_type(page_type_name):
     return page_types[page_type_name]
 
+
 def has_page_type(page_type_name):
     return page_type_name in page_types
+
+
+def all_page_types():
+    return page_types
 
 
 # Global module functions for the integration into the rest of the code

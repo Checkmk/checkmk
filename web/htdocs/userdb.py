@@ -438,7 +438,7 @@ def save_users(profiles):
     core_custom_macros =  [ k for k,o in user_attributes.items() if o.get('add_custom_macro') ]
     for user in profiles.keys():
         for macro in core_custom_macros:
-            if profiles[user].get(macro):
+            if macro in profiles[user]:
                 profiles[user]['_'+macro] = profiles[user][macro]
 
     multisite_custom_values = [ k for k,v in user_attributes.items() if v["domain"] == "multisite" ]

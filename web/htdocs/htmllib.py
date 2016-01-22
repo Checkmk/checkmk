@@ -437,6 +437,8 @@ class html(GUITester):
 
         if target:
             target = 'target="%s" ' % target
+        else:
+            target = ""
 
         if cssclass:
             cssclass = 'class="%s" ' % cssclass

@@ -862,18 +862,22 @@ multisite_painters["svc_group_memberlist"] = {
     "paint"   : paint_service_group_memberlist,
 }
 
-def paint_graph(row):
-    import metrics
+def paint_time_graph(row):
     if metrics.new_style_graphs_possible():
-        try:
-            css, htmlcode = paint_time_graph(row)
-            if htmlcode:
-                return css, htmlcode
-        except NameError:
-            if config.debug:
-                raise
-            pass
+        return paint_time_graph_new_style(row)
+    else:
+        return paint_time_graph_pnp(row)
 
+
+def paint_time_graph_new_style(row):
+    timerange_spec = get_painter_option("pnp_timerange")
+    vs = multisite_painter_options["pnp_timerange"]['valuespec']
+    start_time, end_time = map(int, vs.compute_range(timerange_spec)[0])
+    return "", metrics.render_time_graphs_from_host_service_row(row, start_time, end_time, font_size=11,
+                       show_legend=True, show_controls=True)
+
+
+def paint_time_graph_pnp(row):
     sitename = row["site"]
     host = row["host_name"]
     service = row.get("service_description", "_HOST_")
@@ -905,7 +909,7 @@ multisite_painters["svc_pnpgraph" ] = {
     "title"   : _("Service Graphs"),
     "columns" : [ "host_name", "service_description", "service_perf_data", "service_metrics", "service_check_command" ],
     "options" : [ 'pnp_timerange' ],
-    "paint"   : paint_graph,
+    "paint"   : paint_time_graph,
     "printable" : False,
 }
 
@@ -1259,7 +1263,7 @@ multisite_painters["host_pnpgraph" ] = {
     "short"   : _("PNP graph"),
     "columns" : [ "host_name", "host_perf_data", "host_metrics", "host_check_command" ],
     "options" : [ 'pnp_timerange' ],
-    "paint"   : paint_graph,
+    "paint"   : paint_time_graph,
     "printable" : False,
 }
 

@@ -326,7 +326,7 @@ def pnp_icon(row, what):
 
     # TODO: Import in function is not good
     import metrics
-    if not hasattr(metrics, 'render_graph_html'):
+    if not hasattr(metrics, 'render_graph_from_template_html'):
         # Directly ask PNP for all data, don't try to use the new graph fetching mechanism
         # to keep the number of single requests low
         hover_content_func = 'pnp_hover_contents(\'%s\')' % pnp_popup_url(row, what)

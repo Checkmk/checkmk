@@ -818,7 +818,7 @@ function render_pnp_graphs(container, site, host, service, pnpview, base_url, pn
 
 function hover_graph(site, host_name, service)
 {
-    var c = get_url_sync('show_graph.py?site='+encodeURIComponent(site)
+    var c = get_url_sync('host_service_graph_popup.py?site='+encodeURIComponent(site)
                        +'&host_name='+encodeURIComponent(host_name)
                        +'&service='+encodeURIComponent(service));
 

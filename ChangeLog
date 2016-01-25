@@ -207,6 +207,7 @@
     * 2912 FIX: mk_oracle mk_oracle.aix: Fixed handling of DBs which names end with "_[NUMBER]"...
     * 2948 FIX: oracle_tablespaces: Fixed exception when section contained empty line
     * 2949 FIX: oracle_logswitches oracle_sessions oracle_version: Improved handling of legacy oracle plugin error cases
+    * 2950 FIX: citrix_controller.sessions: Fixed crash in case active/inactive infos are missing
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

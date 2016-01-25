@@ -210,6 +210,7 @@
     * 2950 FIX: citrix_controller.sessions: Fixed crash in case active/inactive infos are missing
     * 2951 FIX: ibm_svc_disks: Fixed exception with disks having a TB capacity
     * 2952 FIX: netextreme_psu_out: Fixed crash in case of phase can not be found anymore
+    * 2953 FIX: netextreme_psu_in: Fixed discovery of Power Supply Input checks
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

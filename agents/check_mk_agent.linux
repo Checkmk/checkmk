@@ -778,13 +778,38 @@ then
                 grep -Ev '^[[:space:]]*($|#)' "$include" | \
                 while read descr cmdline
                 do
+                    interval=
+                    if [[ $cmdline =~ \(([^\)]*)\)[[:space:]](.*) ]]
+                    then
+                        parameters=${BASH_REMATCH[1]}
+                        cmdline=${BASH_REMATCH[2]}
+
+                        # split multiple parameter assignments
+                        IFS=':' read -a parlist <<< $parameters
+                        for par in "${parlist[@]}"
+                        do
+                            # split each assignment
+                            IFS='=' read key value <<< $par
+                            if [ "$key" = "interval" ]
+                            then
+                                interval=$value
+                            # no other parameters supported currently
+                            fi
+                        done
+                    fi
+
                     PLUGIN=${cmdline%% *}
 
                     if [ -n "$PREFIX" ] ; then
                         cmdline="$PREFIX\"$cmdline\""
                     fi
 
-                    OUTPUT=$(eval "$cmdline")
+                    if [ -z "$interval" ]
+                    then
+                        OUTPUT=$(eval "$cmdline")
+                    else
+                        OUTPUT=$(run_cached $descr $interval "$cmdline")
+                    fi
                     echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
                     echo
                 done

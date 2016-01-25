@@ -289,19 +289,54 @@ register_check_parameters(
     match_type = "dict",
 )
 
+
+def transform_websphere_mq(source):
+    if isinstance(source, tuple):
+        return {"message_count": source}
+    else:
+        return source
+
 register_check_parameters(
     subgroup_applications,
     "websphere_mq",
     _("Maximum number of messages in Websphere Message Queues"),
-    Tuple(
-      title = _('Maximum number of messages'),
-          elements = [
-             Integer(title = _("Warning at"), default_value = 1000 ),
-             Integer(title = _("Critical at"), default_value = 1200 ),
-          ]
+    Transform(
+        Dictionary(
+            elements = [
+                ("message_count",
+                 Tuple(
+                     title = _('Maximum number of messages'),
+                     elements = [
+                         Integer(title = _("Warning at"), default_value = 1000 ),
+                         Integer(title = _("Critical at"), default_value = 1200 ),
+                     ]
+                 )),
+                ("status",
+                 Dictionary(
+                     title = _('Override check state based on channel state'),
+                     elements = [
+                         ("STOPPED",  MonitoringState(
+                             title = _("State when channel is stopped"),
+                             default_value = 1)),
+                         ("RETRYING", MonitoringState(
+                             title = _("State when channel is retrying"),
+                             default_value = 2)),
+                         ("RUNNING",  MonitoringState(
+                             title = _("State when channel is running"),
+                             default_value = 0)),
+                         ("other",    MonitoringState(
+                             title = _("State when channel status is unknown"),
+                             default_value = 2)),
+                     ],
+                     optional_keys = []
+                 )),
+            ],
+            optional_keys = ["status"]
+        ),
+        forth = transform_websphere_mq
     ),
     TextAscii(title = _("Name of Channel or Queue")),
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(

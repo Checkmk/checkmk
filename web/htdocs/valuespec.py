@@ -1935,7 +1935,7 @@ class RelativeDate(OptionalDropdownChoice):
 
 # A ValueSpec for editing a date. The date is
 # represented as a UNIX timestamp x where x % seconds_per_day
-# is zero (or will be ignored if non-zero), as long es
+# is zero (or will be ignored if non-zero), as long as
 # include_time is not set to True
 class AbsoluteDate(ValueSpec):
     def __init__(self, **kwargs):
@@ -1946,6 +1946,11 @@ class AbsoluteDate(ValueSpec):
         self._format = kwargs.get("format", self._include_time and "%F %T" or "%F")
         self._default_value = kwargs.get("default_value", None)
         self._allow_empty = kwargs.get('allow_empty', False)
+        # The default is that "None" means show current date/time in the
+        # input fields. This option changes the input fields to be empty by default
+        # and makes the value able to be None when no time is set.
+        # FIXME: Shouldn't this be the default?
+        self._none_means_empty = kwargs.get("none_means_empty", False)
 
     def default_value(self):
         if self._default_value != None:
@@ -1963,6 +1968,8 @@ class AbsoluteDate(ValueSpec):
         return self.default_value()
 
     def split_date(self, value):
+        if self._none_means_empty and value == None:
+            return (None,) * 6
         lt = time.localtime(value)
         return lt.tm_year, lt.tm_mon, lt.tm_mday, \
                lt.tm_hour, lt.tm_min, lt.tm_sec

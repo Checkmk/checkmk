@@ -529,8 +529,11 @@ class html(GUITester):
         self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % what)
         self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % what)
 
+
     def number_input(self, varname, deflt = "", size=8, style="", submit=None):
-        self.text_input(varname, str(deflt), "number", size=size, style=style, submit=submit)
+        if deflt != None:
+            deflt = str(deflt)
+        self.text_input(varname, deflt, "number", size=size, style=style, submit=submit)
 
 
     # Needed if input elements are put into forms without the helper

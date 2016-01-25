@@ -1,0 +1,10 @@
+Title: websphere_mq_channels: check outcome based on channel state is now configurable
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453731797
+Class: feature
+
+The agent reports channel states as "RUNNING", "STOPPED" or "RETRYING", which will by default
+make the check state become {OK}, {WARN} or {CRIT} respectively. Now this can be changed.

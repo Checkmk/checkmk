@@ -31,6 +31,7 @@ import wato
 
 loaded_with_language = False
 builtin_dashboards = {}
+builtin_dashboards_transformed = False
 dashlet_types = {}
 
 # Declare constants to be used in the definitions of the dashboards
@@ -57,8 +58,8 @@ def load_plugins(force):
 
     # Load plugins for dashboards. Currently these files
     # just may add custom dashboards by adding to builtin_dashboards.
-    load_web_plugins("dashboard", globals())
     builtin_dashboards_transformed = False
+    load_web_plugins("dashboard", globals())
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins

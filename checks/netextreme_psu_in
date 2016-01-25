@@ -36,10 +36,12 @@ factory_settings["netextreme_psu_in_default_levels"] = {
 
 def parse_netextreme_psu_in(info):
     parsed = {}
-    for psu_index, psu_voltage_str, psu_usage_str, psu_factor_str in info:
-        parsed["Input %s" % psu_index] = {
-            "power"   : float(psu_usage_str) * pow(10, int(psu_factor_str)),
-        }
+    for psu_index, psu_usage_str, psu_factor_str in info:
+        power = float(psu_usage_str) * pow(10, int(psu_factor_str))
+        if power > 0:
+            parsed["Input %s" % psu_index] = {
+                "power"   : power,
+            }
     return parsed
 
 

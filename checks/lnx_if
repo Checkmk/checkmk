@@ -58,19 +58,22 @@ check_includes['lnx_if'] = [ "if.include" ]
 
 linux_nic_check = "lnx_if"
 
-def if_lnx_convert_to_if64(info):
+def if_lnx_extract_nic_info(info):
     nic_info = {}
     current_nic = None
     index = 0
     lines = iter(info)
-    try:
-        iplink_stats = {}
-        while True:
+    iplink_stats = {}
+    while True:
+        try:
             line = lines.next()
+        except StopIteration:
+            break
 
-            # This extra info from 'ip link' is used as fallback in case ethtool is missing
-            if line[0].startswith("[start_iplink]"):
-                iplink_stats = {}
+        # This extra info from 'ip link' is used as fallback in case ethtool is missing
+        if line[0].startswith("[start_iplink]"):
+            iplink_stats = {}
+            try:
                 while True:
                     line = lines.next()
                     if line[0].startswith("[end_iplink]"):
@@ -85,36 +88,36 @@ def if_lnx_convert_to_if64(info):
                         iplink_stats[nic_name].update(dict(zip(status_info[3::2], status_info[4::2])))
                     except: # In case of parse errors we simply ignore these lines
                         pass
+            except StopIteration:
+                break
 
-            # Be careful! On clustered hosts we have more than one perf-counters section
-            # and ethtool section. This needs to be handled. Sadly we have no section
-            # headers. Try to detect it by data format.
-            if line[0].startswith('['):
-                current_nic = line[0][1:-1]
-                index += 1
-                nic_info[current_nic]['index'] = index
-                # The iplink_stats are only used within the perf-counters
-                # The (optional) ethtool section invalidates this info, otherwise it would
-                # be incorrectly reused in a followup section of another cluster node
-                # When the ethtool section is missing the data is also reset by the next [start_iplink]
-                iplink_stats = {}
-            elif len(line) == 2 and len(line[1].split()) >= 16:
-                # This looks like a perf-counter line
-                nic = line[0]
-                nic_info[nic] = { "counters": map(int, line[1].split()) }
-                if nic in iplink_stats:
-                    nic_info[nic]['iplink_stats'] = iplink_stats[nic]
-            else:
-                # ethtool data line
-                nic_info[current_nic][line[0].strip()] = ":".join(line[1:]).strip()
+        # Be careful! On clustered hosts we have more than one perf-counters section
+        # and ethtool section. This needs to be handled. Sadly we have no section
+        # headers. Try to detect it by data format.
+        if line[0].startswith('['):
+            current_nic = line[0][1:-1]
+            index += 1
+            nic_info[current_nic]['index'] = index
+            # The iplink_stats are only used within the perf-counters
+            # The (optional) ethtool section invalidates this info, otherwise it would
+            # be incorrectly reused in a followup section of another cluster node
+            # When the ethtool section is missing the data is also reset by the next [start_iplink]
+            iplink_stats = {}
+        elif len(line) == 2 and len(line[1].split()) >= 16:
+            # This looks like a perf-counter line
+            nic = line[0]
+            nic_info[nic] = { "counters": map(int, line[1].split()) }
+            if nic in iplink_stats:
+                nic_info[nic]['iplink_stats'] = iplink_stats[nic]
+        elif current_nic:
+            # ethtool data line
+            nic_info[current_nic][line[0].strip()] = ":".join(line[1:]).strip()
 
-    except StopIteration:
-        pass
+    return nic_info
 
-    # if index is 0 we either have found no nics or no information
-    # from ethtool is present. In the latter case we continue and
-    # just monitor the performance. We set the state to 'unknown'
-    # in that case.
+
+def if_lnx_convert_to_if64(info):
+    nic_info = if_lnx_extract_nic_info(info)
 
     if_table = []
     index = 0

@@ -37,7 +37,7 @@ def inventory_netextreme_temp(info):
 
 
 def check_netextreme_temp(item, params, info):
-    return check_temperature(float(info[0][0]), params)
+    return check_temperature(float(info[0][0]), params, "netextreme_temp_System")
 
 
 check_info['netextreme_temp'] = {

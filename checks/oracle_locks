@@ -44,14 +44,13 @@ def check_oracle_locks(item, params, info):
     for line in info:
         warn, crit = params["levels"]
 
-        # Skip over line before ORA- errors (e.g. sent by AIX agent from 2014)
-        if line == ["ERROR:"]:
-            continue
-
-        if line[0].startswith('ORA-'):
-            return (3, 'Found error in agent output "%s"' % ' '.join(line))
-
         if line[0] == item and line[1] != '':
+            err = oracle_handle_ora_errors(line)
+            if err == False:
+                continue
+            elif isinstance(err, tuple):
+                return err
+
             sid, sidnr, serial, machine, program, process, osuser, ctime, \
             object_owner, object_name = line
 

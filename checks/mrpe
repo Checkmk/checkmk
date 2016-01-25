@@ -33,6 +33,7 @@ def inventory_mrpe(info):
             item = line[1]
         else:
             item = line[0]
+        item = urllib.unquote(item)
         items.append((item, None))
     return items
 
@@ -56,7 +57,7 @@ def check_mrpe(item, params, info):
             line = line[1:]
         else:
             check_name = None
-        if line[0] == item:
+        if urllib.unquote(line[0]) == item:
             try:
                 state = int(line[1])
             except:

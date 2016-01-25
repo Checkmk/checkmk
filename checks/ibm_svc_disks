@@ -61,17 +61,26 @@ def check_ibm_svc_disks(_no_item, params, info):
         did, status, error_sequence_number, use, tech_type,\
         capacity, mdisk_id, mdisk_name, member_id, enclosure_id,\
         slot_id, node_id, node_name = line[:13]
+
         disk = {}
         disk['identifier'] = "Enclosure: %s, Slot: %s, Type: %s" % ( enclosure_id, slot_id, tech_type )
+
         if capacity.endswith('GB'):
             disk['capacity'] = float(capacity[:-2]) * 1024 * 1024 * 1024
-        # Failure State can be found here,
-        # also spare is a state here
+        elif capacity.endswith('TB'):
+            disk['capacity'] = float(capacity[:-2]) * 1024 * 1024 * 1024 * 1024
+        elif capacity.endswith('PB'):
+            disk['capacity'] = float(capacity[:-2]) * 1024 * 1024 * 1024 * 1024 * 1024
+
+        # Failure State can be found here, also spare is a state here
         disk['state'] = use
         if status == "offline" and use != "failed":
             disk['state'] = "offline"
+
         disk['type'] = "" # We dont have a type
+
         disks.append(disk)
+
     return check_filer_disks(disks, params)
 
 check_info["ibm_svc_disks"] = {

@@ -129,7 +129,10 @@ def check_citrix_controller_sessions(_no_item, params, info):
     if params == None:
         params = {}
 
-    session = {}
+    session = {
+        "active"   : 0,
+        "inactive" : 0,
+    }
     for line in info:
         if line[0] == "TotalFarmActiveSessions":
             session["active"] = int(line[1])

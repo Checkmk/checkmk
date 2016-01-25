@@ -109,7 +109,7 @@ def if_lnx_extract_nic_info(info):
             nic_info[nic] = { "counters": map(int, line[1].split()) }
             if nic in iplink_stats:
                 nic_info[nic]['iplink_stats'] = iplink_stats[nic]
-        else:
+        elif current_nic:
             # ethtool data line
             nic_info[current_nic][line[0].strip()] = ":".join(line[1:]).strip()
 

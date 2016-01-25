@@ -205,6 +205,7 @@
     * 2910 FIX: heartbeat_crm: Fixed crash in case of "number of resources" paramters have been configured
     * 2911 FIX: mysql.innodb_io: Fixed crash in case averaging is set to 0 minutes
     * 2912 FIX: mk_oracle mk_oracle.aix: Fixed handling of DBs which names end with "_[NUMBER]"...
+    * 2948 FIX: oracle_tablespaces: Fixed exception when section contained empty line
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

@@ -37,6 +37,9 @@
 # This function returns a tuple when an ORA-* message has been found.
 # It returns False if this line should be skipped by the check.
 def oracle_handle_ora_errors(line):
+    if len(line) == 1:
+        return
+
     # Handle error output from new agent
     if line[1] == 'FAILURE':
         if len(line) >= 3 and line[2].startswith("ORA-"):

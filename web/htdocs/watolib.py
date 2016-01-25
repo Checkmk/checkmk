@@ -209,7 +209,7 @@ def log_pending(status, linkinfo, what, message, user_id = None):
 
     # The latter one condition applies to slave sites
     # Otherwise slave sites would trigger the cmcrushd
-    if not is_distributed() and not is_slave_site():
+    if not is_distributed() and not is_wato_slave_site():
         if status != SYNC:
             log_entry(linkinfo, what, message, "pending.log", user_id)
         cmc_rush_ahead()

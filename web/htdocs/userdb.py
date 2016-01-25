@@ -1033,7 +1033,7 @@ def userdb_sync_job_enabled():
         return False # not enabled at all
 
     import wato # FIXME: Cleanup!
-    if cfg == "master" and wato.is_slave_site():
+    if cfg == "master" and wato.is_wato_slave_site():
         return False
 
     return True

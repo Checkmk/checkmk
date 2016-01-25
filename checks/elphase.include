@@ -37,6 +37,9 @@ def inventory_elphase(parsed):
 #     }
 # }
 def check_elphase(item, params, parsed):
+    if item not in parsed:
+        return # Item not found in SNMP data
+
     def tostring(value):
         if type(value) == int:
             return "%d" % value

@@ -209,6 +209,7 @@
     * 2949 FIX: oracle_logswitches oracle_sessions oracle_version: Improved handling of legacy oracle plugin error cases
     * 2950 FIX: citrix_controller.sessions: Fixed crash in case active/inactive infos are missing
     * 2951 FIX: ibm_svc_disks: Fixed exception with disks having a TB capacity
+    * 2952 FIX: netextreme_psu_out: Fixed crash in case of phase can not be found anymore
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

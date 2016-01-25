@@ -863,18 +863,44 @@ multisite_painters["svc_group_memberlist"] = {
 }
 
 def paint_time_graph(row):
-    if metrics.new_style_graphs_possible():
-        return paint_time_graph_new_style(row)
+    if metrics.cmk_graphs_possible():
+        return paint_time_graph_cmk(row)
     else:
         return paint_time_graph_pnp(row)
 
 
-def paint_time_graph_new_style(row, show_timerange_selection=False):
+def paint_time_graph_cmk(row, show_timeranges=False):
+    graph_specification = (
+        "template", {
+            "site"                : row["site"],
+            "host_name"           : row["host_name"],
+            "service_description" : row.get("service_description", "_HOST_"),
+    })
+
+    graph_data_range = {
+        "time_range" : get_graph_timerange_from_painter_options()
+    }
+
+    graph_render_options = {
+        "font_size"       : 11,
+        "show_controls"   : True,
+        "show_service"    : False,
+        "show_legend"     : True,
+        "resizable"       : True,
+        "interaction"     : True,
+    }
+
+    return "", metrics.render_graphs_from_specification_html(
+            graph_specification,
+            graph_data_range,
+            graph_render_options,
+            show_timeranges)
+
+
+def get_graph_timerange_from_painter_options():
     timerange_spec = get_painter_option("pnp_timerange")
     vs = multisite_painter_options["pnp_timerange"]['valuespec']
-    start_time, end_time = map(int, vs.compute_range(timerange_spec)[0])
-    return "", metrics.render_time_graphs_from_host_service_row(row, start_time, end_time, font_size=11,
-                       show_legend=True, show_controls=True, show_timerange_selection=True)
+    return map(int, vs.compute_range(timerange_spec)[0])
 
 
 def paint_time_graph_pnp(row):
@@ -895,8 +921,7 @@ def paint_time_graph_pnp(row):
     from_ts, to_ts = 'null', 'null'
     if pnp_timerange != None:
         if pnp_timerange[0] != 'pnp_view':
-            vs = multisite_painter_options["pnp_timerange"]['valuespec']
-            from_ts, to_ts = map(int, vs.compute_range(pnp_timerange)[0])
+            from_ts, to_ts = get_graph_timerange_from_painter_options()
         else:
             pnpview = pnp_timerange[1]
 
@@ -905,6 +930,7 @@ def paint_time_graph_pnp(row):
                           (container_id, container_id, sitename, host, service, pnpview,
                            defaults.url_prefix + "check_mk/", pnp_url, with_link, _('Add this graph to...'), from_ts, to_ts)
 
+
 multisite_painters["svc_pnpgraph" ] = {
     "title"   : _("Service Graphs"),
     "columns" : [ "host_name", "service_description", "service_perf_data", "service_metrics", "service_check_command" ],
@@ -912,6 +938,7 @@ multisite_painters["svc_pnpgraph" ] = {
     "paint"   : paint_time_graph,
     "printable" : False,
 }
+
 
 def paint_check_manpage(row):
     command = row["service_check_command"]

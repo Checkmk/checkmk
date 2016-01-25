@@ -340,7 +340,7 @@ def pnp_graph_icon_link(row, what):
     if 'X' not in html.display_options:
         return ""
 
-    if not metrics.new_style_graphs_possible():
+    if not metrics.cmk_graphs_possible():
         return pnp_url(row, what)
     else:
         return new_graphing_url(row, what)
@@ -349,7 +349,7 @@ def pnp_graph_icon_link(row, what):
 def pnp_icon(row, what):
     url = pnp_graph_icon_link(row, what)
 
-    if not metrics.new_style_graphs_possible():
+    if not metrics.cmk_graphs_possible():
         # Directly ask PNP for all data, don't try to use the new graph fetching mechanism
         # to keep the number of single requests low
         hover_content_func = 'pnp_hover_contents(\'%s\')' % pnp_popup_url(row, what)

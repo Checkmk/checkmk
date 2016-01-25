@@ -153,6 +153,7 @@ def handler(req, fields = None, is_profiling = False):
             html.show_error(e)
             html.footer()
 
+
         # Some exception need to set a specific HTTP status code
         if ty == MKUnauthenticatedException:
             response_code = apache.HTTP_UNAUTHORIZED

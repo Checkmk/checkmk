@@ -869,12 +869,12 @@ def paint_time_graph(row):
         return paint_time_graph_pnp(row)
 
 
-def paint_time_graph_new_style(row):
+def paint_time_graph_new_style(row, show_timerange_selection=False):
     timerange_spec = get_painter_option("pnp_timerange")
     vs = multisite_painter_options["pnp_timerange"]['valuespec']
     start_time, end_time = map(int, vs.compute_range(timerange_spec)[0])
     return "", metrics.render_time_graphs_from_host_service_row(row, start_time, end_time, font_size=11,
-                       show_legend=True, show_controls=True)
+                       show_legend=True, show_controls=True, show_timerange_selection=True)
 
 
 def paint_time_graph_pnp(row):

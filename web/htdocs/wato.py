@@ -604,8 +604,8 @@ def show_subfolder_infos(subfolder):
         cgalias = groups.get(pg, {'alias': pg})['alias']
         html.icon(_("Contactgroups that have permission on this folder"), "contactgroups")
         html.write(' %s<br>' % cgalias)
-        if num > 1 and len(perm_groups) > 4:
-            html.write(_('<i>%d more contact groups</i><br>') % (len(perm_groups) - num - 1))
+        if num > 1 and len(permitted_groups) > 4:
+            html.write(_('<i>%d more contact groups</i><br>') % (len(permitted_groups) - num - 1))
             break
 
     num_hosts = subfolder.num_hosts_recursively()

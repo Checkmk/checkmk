@@ -1,0 +1,9 @@
+Title: showing subfolder info in WATO if there are more than four groups
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453732849
+Class: fix
+
+

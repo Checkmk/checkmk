@@ -288,6 +288,7 @@
     * 2905 FIX: Check plugins: Non existant man pages now result in helpful error messages
     * 2943 FIX: Preventing issues with password completion of browsers on user and profile edit pages
     * 2831 FIX: Removing a previously set custom attribute for a contact did not work as intented...
+    * 2973 FIX: showing subfolder info in WATO if there are more than four groups
 
     Notifications:
     * 2811 Mail notifications: Now able to add Host/Service Notes Url...

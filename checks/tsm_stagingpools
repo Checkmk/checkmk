@@ -42,20 +42,34 @@ factory_settings["tsm_stagingpools_default_levels"] = {
     "free_below" : 70,
 }
 
-def inventory_tsm_stagingpools(info):
+# The agent plugin sometimes seems to mix two lines together some times.
+# detect and fix that.
+def parse_tsm_stagingpools(info):
+    parsed = []
+    for line in info:
+        if len(line) == 6:
+            parsed.append(line[:3])
+            parsed.append(line[3:])
+        else:
+            parsed.append(line)
+    return parsed
+
+
+def inventory_tsm_stagingpools(parsed):
     items = set([])
-    for inst, pool, util in info:
+    for inst, pool, util in parsed:
         if inst == "default":
             items.add(pool)
         else:
             items.add(inst + " / " + pool)
     return [ (item, "tsm_stagingpools_default_levels") for item in items ]
 
-def check_tsm_stagingpools(item, params, info):
+
+def check_tsm_stagingpools(item, params, parsed):
     num_tapes = 0
     num_free_tapes = 0
     utilization = 0.0 # in relation to one tape size
-    for inst, pool, util in info:
+    for inst, pool, util in parsed:
         if inst + " / " + pool == item or pool == item:
             util = float(util) / 100.0
             utilization += util
@@ -91,6 +105,7 @@ def check_tsm_stagingpools(item, params, info):
 
 
 check_info['tsm_stagingpools'] = {
+    "parse_function"          : parse_tsm_stagingpools,
     "check_function"          : check_tsm_stagingpools,
     "inventory_function"      : inventory_tsm_stagingpools,
     "service_description"     : "TSM Stagingpool %s",

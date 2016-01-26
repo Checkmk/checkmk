@@ -338,6 +338,7 @@ void Query::parseStatsAndOrLine(char *line, int andor)
     if (!value) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER, "Missing value for Stats%s: need non-zero integer number",
                 andor == ANDOR_OR ? "Or" : "And");
+        return;
     }
 
     int number = atoi(value);

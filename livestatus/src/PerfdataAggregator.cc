@@ -140,6 +140,10 @@ void PerfdataAggregator::output(Query *q)
                 else
                     value = sqrt((it->second._sumq - (it->second._aggr * it->second._aggr) / it->second._count)/(it->second._count - 1));
                 break;
+            default:
+                value = 0; // should never happen, but the real problem is that
+                           // _operation should beetter be a scoped enumeration.
+                break;
         }
         snprintf(format, sizeof(format), "%s=%.8f", it->first.c_str(), value);
         if (it != _aggr.begin())

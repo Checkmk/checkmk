@@ -66,13 +66,13 @@ def check_mssql_tablespaces(item, params, info):
 
         output   = []
         perfdata = []
-        for key, label, value, uom in [
-                ('size',        'Size',              float(line[2]), line[3]),
-                ('unallocated', 'Unallocated Space', float(line[4]), line[5]),
-                ('reserved',    'Reserved Space',    float(line[6]), line[7]),
-                ('data',        'Data',              float(line[8]), line[9]),
-                ('indexes',     'Indexes',           float(line[10]), line[11]),
-                ('unused',      'Unused',            float(line[12]), line[13]),
+        for key,                label,               value,           uom,      lower_bounds in [
+                ('size',        'Size',              float(line[2]),  line[3],  False),
+                ('unallocated', 'Unallocated Space', float(line[4]),  line[5],  True),
+                ('reserved',    'Reserved Space',    float(line[6]),  line[7],  False),
+                ('data',        'Data',              float(line[8]),  line[9],  False),
+                ('indexes',     'Indexes',           float(line[10]), line[11], False),
+                ('unused',      'Unused',            float(line[12]), line[13], False),
             ]:
             if uom == 'KB':
                 val_bytes = value * 1024
@@ -86,12 +86,13 @@ def check_mssql_tablespaces(item, params, info):
             warn, crit = params.get(key, (None, None))
             error_label = ""
             if warn and crit:
-                levels = "(warn/crit at %s/%s)" % \
-                (get_bytes_human_readable(warn), get_bytes_human_readable(crit))
-                if val_bytes > crit:
+                levels = "(warn/crit %s %s/%s)" % \
+                (lower_bounds and "below" or "at",
+                 get_bytes_human_readable(warn), get_bytes_human_readable(crit))
+                if lower_bounds and val_bytes <= crit or not lower_bounds and val_bytes >= crit:
                     state = 2
                     error_label += levels + "(!!)"
-                elif val_bytes > warn:
+                elif lower_bounds and val_bytes <= warn or not lower_bounds and val_bytes >= warn:
                     state = max(state, 1)
                     error_label += levels +"(!)"
 

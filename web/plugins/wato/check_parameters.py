@@ -5427,8 +5427,8 @@ register_check_parameters(
             Tuple(
                 title = _("Unallocated Space"),
                 elements = [
-                  Filesize(title = _("Warning at")),
-                  Filesize(title = _("Critical at"))
+                  Filesize(title = _("Warning below")),
+                  Filesize(title = _("Critical below"))
                 ]
             )),
             ("reserved",

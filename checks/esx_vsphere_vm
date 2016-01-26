@@ -238,7 +238,10 @@ def inventory_esx_vsphere_vm_guest_tools(info):
 def check_esx_vsphere_vm_guest_tools(_no_item, params, info):
     data = esx_vsphere_vm_convert(info)
 
-    vm_status = data['guest.toolsVersionStatus'][0]
+    try:
+        vm_status = data['guest.toolsVersionStatus'][0]
+    except KeyError:
+        return
 
     guest_tools_map = {
         "guestToolsCurrent":      (0, "VMware Tools are installed and the version is current"),

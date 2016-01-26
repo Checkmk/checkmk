@@ -221,6 +221,7 @@
     * 2959 FIX: apt: Made check more robust against invalid agent data
     * 2960 FIX: tsm_stagingpools: Fixed exception in case of garbled agent output
     * 2961 FIX: tsm_sessions: Fixed crash in cae of client name contains spaces
+    * 2962 FIX: esx_vsphere_vm.guest_tools: Fixed exception in case no version info is available
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

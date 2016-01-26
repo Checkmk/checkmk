@@ -39,8 +39,15 @@ def check_tsm_sessions(item, params, info):
     for entry in info:
         if len(entry) == 4:
             sid, client_name, proc_state, wait = entry
+
+        elif len(entry) > 4:
+            sid = entry[0]
+            proc_state, wait = entry[-2:]
+            client_name = " ".join(entry[1:-2])
+
         else:
             sid, proc_state, wait = entry
+
         if proc_state in ['RecvW', 'MediaW']:
             wait = saveint(wait)
             if wait >= crit:
@@ -49,7 +56,7 @@ def check_tsm_sessions(item, params, info):
             elif wait >= warn:
                 state = max(state, 1)
                 count += 1
-    return state, "%d sessions to long in RecvW or MediaW state" % count
+    return state, "%d sessions too long in RecvW or MediaW state" % count
 
 
 check_info["tsm_sessions"] = {

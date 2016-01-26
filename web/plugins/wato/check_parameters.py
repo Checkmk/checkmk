@@ -299,7 +299,7 @@ def transform_websphere_mq(source):
 register_check_parameters(
     subgroup_applications,
     "websphere_mq",
-    _("Maximum number of messages in Websphere Message Queues"),
+    _("Websphere Message Queues"),
     Transform(
         Dictionary(
             elements = [
@@ -313,7 +313,7 @@ register_check_parameters(
                  )),
                 ("status",
                  Dictionary(
-                     title = _('Override check state based on channel state'),
+                     title = _('Override check state based on channel state (only for channels)'),
                      elements = [
                          ("STOPPED",  MonitoringState(
                              title = _("State when channel is stopped"),
@@ -331,7 +331,6 @@ register_check_parameters(
                      optional_keys = []
                  )),
             ],
-            optional_keys = ["status"]
         ),
         forth = transform_websphere_mq
     ),

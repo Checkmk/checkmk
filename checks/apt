@@ -44,10 +44,21 @@ factory_settings["apt_default_levels"] = {
     "security" : 2,
 }
 
+# Check that the apt section is in valid format of mk_apt plugin and not
+# from the apt agent plugin which can be found on the Check_MK exchange.
+def apt_valid_info(info):
+    return info and len(info[0]) == 1 and len(info[0][0].split(None, 3)) == 4
+
+
 def inventory_apt(info):
-    yield None, {}
+    if apt_valid_info(info):
+        yield None, {}
+
 
 def check_apt(_no_item, params, info):
+    if not apt_valid_info(info):
+        return
+
     sec_regex = regex("^[^\\(]*\\(.* (Debian-Security:|Ubuntu:[^/]*/[^-]*-security)")
     updates = []
     sec_updates = []

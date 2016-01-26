@@ -1,0 +1,9 @@
+Title: apt: Made check more robust against invalid agent data
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453810466
+Class: fix
+
+

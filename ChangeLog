@@ -217,6 +217,7 @@
     * 2955 FIX: cpu.loads: Fixed monitoring on some AIX systems
     * 2939 FIX: winperf_phydisk: fixed permanent stall state if windows reports several disks with the same drive letter...
     * 2957 FIX: Renamed Lotus Domino Task Inventory rule to Lotus Domino Task Discovery
+    * 2958 FIX: domino_tasks: Fixed broken discovery and check
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

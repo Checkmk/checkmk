@@ -1,0 +1,9 @@
+Title: domino_tasks: Fixed broken discovery and check
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453808840
+Class: fix
+
+

@@ -271,7 +271,6 @@ def inventory_ps(info):
 
 def check_ps(item, params, info):
     (cpu_cores, parsed), mem_info, solaris_mem_info, statgrab_mem_info = info
-    # ps_info, mem_info, solaris_mem_info, statgrab_mem_info = info
     if mem_info:
         total_ram = parse_proc_meminfo_bytes(mem_info).get("MemTotal")
     elif solaris_mem_info:

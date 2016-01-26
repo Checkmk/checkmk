@@ -42,13 +42,28 @@
 inv_domino_tasks_rules = []
 inv_domino_tasks = []
 
-def inventory_domino_tasks(info):
-    return inventory_ps_common(inv_domino_tasks, inv_domino_tasks_rules, info)
+# Bring the SNMP data in the format expected by the common ps functions.
+# e.g.:
+# [None, (u'root', u'185292', u'5804', u'00:00:02/03:33:13', u'1'), u'/sbin/init', u'splash']
+def parse_domino_tasks(info):
+    parsed = []
+    for line in info:
+        node, task_name = line
+        # node, process_info, command_line
+        parsed.append((node, (None,), task_name))
+    return parsed
 
-def check_domino_tasks(item, params, info):
-    return check_ps_common( item, params, info, info_name = "Tasks" )
+
+def inventory_domino_tasks(parsed):
+    return inventory_ps_common(inv_domino_tasks, inv_domino_tasks_rules, parsed)
+
+
+def check_domino_tasks(item, params, parsed):
+    return check_ps_common(item, params, parsed, info_name = "Tasks")
+
 
 check_info['domino_tasks'] = {
+    "parse_function"      : parse_domino_tasks,
     "check_function"      : check_domino_tasks,
     "inventory_function"  : inventory_domino_tasks,
     "has_perfdata"        : True,

@@ -3546,6 +3546,9 @@ check_metrics["check_mk-ps.perf"] = ps_translation
 #   |  Definition of Perf-O-Meters                                         |
 #   '----------------------------------------------------------------------'
 
+# If multiple Perf-O-Meters apply, the first applicable Perf-O-Meter in the list will
+# be the one appearing in the GUI.
+
 # Types of Perf-O-Meters:
 # linear      -> multiple values added from left to right
 # logarithmic -> one value in a logarithmic scale

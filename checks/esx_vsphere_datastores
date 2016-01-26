@@ -42,7 +42,13 @@ def esx_vsphere_datastores_parse(info):
             store = {}
             stores[name] = store
         else:
-            key, value = line
+            # Seems that the url attribute can have an empty value
+            if len(line) == 1:
+                key = line[0].strip()
+                value = None
+            else:
+                key, value = line
+
             if key == "accessible":
                 value = value.lower() == "true"
             elif key in [ "capacity", "freeSpace", "uncommitted" ]:

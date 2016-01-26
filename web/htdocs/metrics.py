@@ -1219,7 +1219,7 @@ def render_graph_pnp(graph_template, translated_metrics):
 def cmk_graphs_possible():
     try:
         render_graph_html
-        return browser_supports_canvas() and not html.is_mobile()
+        return not config.force_pnp_graphing and browser_supports_canvas() and not html.is_mobile()
     except:
         return False
 

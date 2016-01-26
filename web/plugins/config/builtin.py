@@ -210,6 +210,9 @@ escape_plugin_output = True
 # Virtual host trees for the "Virtual Host Trees" snapin
 virtual_host_trees = []
 
+# Fall back to PNP4Nagios as graphing GUI even on CEE
+force_pnp_graphing = False
+
 # Target email address for "Crashed Check" page
 crash_report_target = "feedback@check-mk.org"
 

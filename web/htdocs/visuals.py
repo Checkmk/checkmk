@@ -1382,7 +1382,6 @@ def transform_old_visual(visual):
 # TODO: Remove this code as soon as everything is moved over to pagetypes.py
 def ajax_popup_add():
     add_type = html.var("add_type")
-    html.debug(add_type)
 
     html.write("<ul>")
     pagetypes.render_addto_popup(add_type)

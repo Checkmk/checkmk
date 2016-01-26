@@ -1,0 +1,11 @@
+Title: winperf_phydisk: fixed permanent stall state if windows reports several disks with the same drive letter
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453793706
+Class: fix
+
+It's not completely clear what makes windows report statistics for multiple disks with the same
+letter but it was observed to happen in the wild. Most probably it is related to dynamic disks where
+one drive spans multiple physikal disks.

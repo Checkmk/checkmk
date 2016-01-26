@@ -214,6 +214,7 @@
     * 2953 FIX: netextreme_psu_in: Fixed discovery of Power Supply Input checks
     * 2954 FIX: netextreme_temp: Fixed temperature checking
     * 2955 FIX: cpu.loads: Fixed monitoring on some AIX systems
+    * 2939 FIX: winperf_phydisk: fixed permanent stall state if windows reports several disks with the same drive letter...
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

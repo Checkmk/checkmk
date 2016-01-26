@@ -1357,9 +1357,9 @@ register_rule(group + '/' + subgroup_inventory,
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inv_domino_tasks_rules",
-    title     = _('Lotus Domino Task Inventory'),
-    help      = _("Keep in mind that all configuration parameters in this rule are only applied during the "
-                  "hosts inventory. Any changes later on require a host re-inventory"),
+    title     = _('Lotus Domino Task Discovery'),
+    help      = _("This rule controls the discovery of tasks on Lotus Domino systems. "
+                  "Any changes later on require a host re-discovery"),
     valuespec = Dictionary(
         elements = [
             ('descr', TextAscii(

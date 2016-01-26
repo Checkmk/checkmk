@@ -4508,6 +4508,10 @@ perfometer_info.append({
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
 
+# Beware: The order of the list elements of graph_info is actually important.
+# It determines the order of graphs of a service, which in turn is used by
+# the report definitions to determine which graph to include.
+
 # Order of metrics in graph definitions important if you use only 'area':
 # The first one must be the bigger one, then descending.
 # Example: ('tablespace_size', 'area'),

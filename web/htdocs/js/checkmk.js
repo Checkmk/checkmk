@@ -713,7 +713,7 @@ function pnp_response_handler(data, code) {
         response = eval(code);
         for(var i = 0; i < response.length; i++) {
             var view = data['view'] == '' ? '0' : data['view'];
-            create_graph(data, '&' + response[i]['image_url'].replace('#', '%23').replace('&view='+view, ''));
+            create_pnp_graph(data, '&' + response[i]['image_url'].replace('#', '%23').replace('&view='+view, ''));
         }
         view = null;
         i = null;
@@ -739,11 +739,11 @@ function pnp_response_handler(data, code) {
 // Fallback bei doofer/keiner Antwort
 function fallback_graphs(data) {
     for(var s = 0; s < 8; s++) {
-        create_graph(data, '&host=' + data['host'] + '&srv=' + data['service'] + '&source=' + s);
+        create_pnp_graph(data, '&host=' + data['host'] + '&srv=' + data['service'] + '&source=' + s);
     }
 }
 
-function create_graph(data, params) {
+function create_pnp_graph(data, params) {
     var urlvars = params + '&theme=multisite&baseurl='+data['base_url'];
 
     if (typeof(data['start']) !== 'undefined' && typeof(data['end']) !== 'undefined')

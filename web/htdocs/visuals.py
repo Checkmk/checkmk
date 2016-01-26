@@ -281,8 +281,10 @@ def page_list(what, title, visuals, custom_columns = [],
             html.context_button(info["plural_title"].title(), 'edit_%s.py' % other_what, other_what[:-1])
 
     # TODO: We hack in those visuals that already have been moved to pagetypes here
-    html.context_button(_("Graph Collections"), "graph_collections.py", "graph_collection")
-    html.context_button(_("Custom Graphs"), "custom_graphs.py", "custom_graph")
+    if pagetypes.has_page_type("graph_collection"):
+        html.context_button(_("Graph Collections"), "graph_collections.py", "graph_collection")
+    if pagetypes.has_page_type("custom_graph"):
+        html.context_button(_("Custom Graphs"), "custom_graphs.py", "custom_graph")
     html.context_button(_("Bookmark Lists"), "bookmark_lists.py", "bookmark_list")
 
     html.end_context_buttons()

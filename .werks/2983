@@ -1,0 +1,10 @@
+Title: netapp_api_disk: fixed exception when disks were not included in the raid
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453821511
+Class: fix
+
+Some disks on the netapp filer have the raid-state set to unknown and
+had no physical space information available. The check was unable to handle this.

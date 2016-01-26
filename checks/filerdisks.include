@@ -47,7 +47,7 @@ def check_filer_disks(disks, params):
     prefaild_parity_disk_count   = 0
 
     for disk in disks:
-        total_capacity += disk["capacity"]
+        total_capacity += disk.get("capacity", 0)
         for what in state.keys():
             if disk['state'] == what:
                 state[what].append(disk)

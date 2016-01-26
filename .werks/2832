@@ -1,0 +1,12 @@
+Title: netscaler_vserver: improved check output for unknown protocols
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453803324
+Class: feature
+
+This check now also shows the internal code number for the service
+type in the check output, e.g. serviceUnknown(50), in case it is not
+in the well known services list.
+

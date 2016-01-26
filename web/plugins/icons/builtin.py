@@ -294,12 +294,6 @@ multisite_icons_and_actions['realhost'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def has_new_graphing():
-    # TODO: Import in function is not good
-    import metrics
-    return hasattr(metrics, 'render_graph_from_template_html') \
-            and metrics.new_style_graphs_possible()
-
 
 # Intelligent Links to PNP4Nagios 0.6.X
 def pnp_url(row, what, how = 'graph'):
@@ -346,7 +340,7 @@ def pnp_graph_icon_link(row, what):
     if 'X' not in html.display_options:
         return ""
 
-    if not has_new_graphing():
+    if not metrics.new_style_graphs_possible():
         return pnp_url(row, what)
     else:
         return new_graphing_url(row, what)
@@ -355,7 +349,7 @@ def pnp_graph_icon_link(row, what):
 def pnp_icon(row, what):
     url = pnp_graph_icon_link(row, what)
 
-    if not has_new_graphing():
+    if not metrics.new_style_graphs_possible():
         # Directly ask PNP for all data, don't try to use the new graph fetching mechanism
         # to keep the number of single requests low
         hover_content_func = 'pnp_hover_contents(\'%s\')' % pnp_popup_url(row, what)

@@ -2452,7 +2452,7 @@ function handle_popup_close(event) {
 // url_vars:    vars are added to ajax_popup_*.py calls for rendering the popup menu
 function toggle_popup(event, trigger_obj, ident, what, data, url_vars)
 {
-    var url_vars = typeof(url_vars) === "undefined" ? '' : '?'+url_vars;
+    var url_vars = !url_vars ? '' : '?'+url_vars;
 
     if(!event)
         event = window.event;

@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, livestatus, time, os, re, pprint, time
-import weblib, traceback, forms, valuespec, inventory, visuals
+import weblib, traceback, forms, valuespec, inventory, visuals, metrics
 from lib import *
 
 # Datastructures and functions needed before plugins can be loaded

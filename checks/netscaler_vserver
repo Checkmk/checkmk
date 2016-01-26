@@ -101,8 +101,8 @@ def check_netscaler_vserver(item, _no_params, info):
                     health_state = 1
                 yield health_state, "Health at: %s%%" % health_perc, [("health_perc", health_perc, None, None, 0, 100)]
 
-            yield 0, "Type: %s" % netscaler_vserver_entitytypes.get(svr_entitytype , "unknown")
-            yield 0, "Protocol: %s" % netscaler_vserver_types.get(svr_type, "serviceUnknown")
+            yield 0, "Type: %s" % netscaler_vserver_entitytypes.get(svr_entitytype , "unknown (%s)" % svr_entitytype)
+            yield 0, "Protocol: %s" % netscaler_vserver_types.get(svr_type, "serviceUnknown (%s)" % svr_type)
             yield 0, "Socket: %s:%s" % (ip, port)
 
 check_info["netscaler_vserver"] = {

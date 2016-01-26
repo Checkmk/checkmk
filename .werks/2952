@@ -1,0 +1,9 @@
+Title: netextreme_psu_out: Fixed crash in case of phase can not be found anymore
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453729176
+Class: fix
+
+

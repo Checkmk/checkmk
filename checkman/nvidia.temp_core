@@ -1,0 +1,35 @@
+title: Temperatures of NVIDIA graphics card
+agents: linux
+catalog: os/hardware
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors the temperatures of the
+ GPU core temperatur of an NVIDIA graphics card using the
+ command line tool {nvidia-settings}. The check only works
+ if that tool is installed and a X server is running on
+ display {:0}.
+
+item:
+ The name of the sensor as reported by {nvidia-settings -q all}
+
+perfdata:
+ One variable: the current temperature in degrees celsius.
+
+inventory:
+ All available temperature sensors are automatically inventorized except
+ for the core which is handled in nvidia.temp_core
+
+
+[parameters]
+warning (int): temperature at which a warning level is triggered
+critical (int): critical level for temperature
+
+[configuration]
+parameters(dict): parameters is a dictionary with the following keys
+
+ {"levels"}: a tuple of upper warning and critical levels for the temperature. This is preset to (60,65)
+
+ {"output_unit"}: "c", "f" or "k", the check will output the temperature in the specified unit. If this is not set, output is in degrees Celsius.
+
+ {"input_unit"}: "c, "f" or "k". By default, the check interprets the sensor value according to the unit sent by the device. This key allows to override this. Use carefully, as this may lead to a misinterpreted temperature. Should only be used if the device reports its unit incorrectly.

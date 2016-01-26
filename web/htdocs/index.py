@@ -29,7 +29,7 @@ import sys, os, pprint, __builtin__
 import i18n
 import livestatus
 import modules
-import defaults, config, login, userdb
+import defaults, config, login
 from lib import *
 from html_mod_python import *
 
@@ -60,10 +60,6 @@ def handler(req, fields = None, is_profiling = False):
             handler = modules.get_handler("noauth:" + html.myfile, page_not_found)
             if handler != page_not_found:
                 try:
-                    # Call userdb page hooks which are executed on a regular base to e.g. syncronize
-                    # information withough explicit user triggered actions
-                    userdb.hook_page()
-
                     handler()
                 except Exception, e:
                     html.write(str(e))
@@ -102,10 +98,6 @@ def handler(req, fields = None, is_profiling = False):
             # whether or not the user is an automation user (which is allowed to use transid=-1)
             if html.var("_secret"):
                 login.check_auth_automation()
-
-        # Call userdb page hooks which are executed on a regular base to e.g. syncronize
-        # information withough explicit user triggered actions
-        userdb.hook_page()
 
         # Set all permissions, read site config, and similar stuff
         config.login(html.user)

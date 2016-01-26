@@ -245,9 +245,8 @@ then
 fi
 
 if type prtdiag >/dev/null 2>&1
-    then
-        echo '<<<solaris_prtdiag:sep(10)>>>'
-        run_cached prtdiag 300 '/usr/sbin/prtdiag -v;echo "SerialNumber: $(sneep -t serial)";echo "PRTDIAG_OVERALL_STATE : $(echo $?)"'
+then
+    run_cached -s solaris_prtdiag_status 300 '/usr/sbin/prtdiag; echo $?'
 fi
 
 # TCP Connection stats
@@ -313,7 +312,33 @@ then
     grep -v '^ *#' "$MK_CONFDIR/mrpe.cfg" | grep -v '^ *$' | \
     while read descr cmdline
     do
-        OUTPUT=$($cmdline)
+        interval=
+        if [[ $cmdline =~ \(([^\)]*)\)[[:space:]](.*) ]]
+        then
+            parameters=${BASH_REMATCH[1]}
+            cmdline=${BASH_REMATCH[2]}
+
+            # split multiple parameter assignments
+            IFS=':' read -a parlist <<< $parameters
+            for par in "${parlist[@]}"
+            do
+                # split each assignment
+                IFS='=' read key value <<< $par
+                if [ "$key" = "interval" ]
+                then
+                    interval=$value
+                # no other parameters supported currently
+                fi
+            done
+        fi
+
+        if [ -z "$interval" ]
+        then
+            OUTPUT=$($cmdline)
+        else
+            OUTPUT=$(run_cached $descr $interval "$cmdline")
+        fi
+
         echo "$descr $? $OUTPUT"
     done
 fi

@@ -98,14 +98,23 @@ def active_connections():
     return get_connections(only_enabled=True)
 
 
+# When at least one LDAP connection is defined and active a sync is possible
+def sync_possible():
+    for connection_id, connection in active_connections():
+        if connection.type() == "ldap":
+            return True
+    return False
+
+
 def cleanup_connection_id(connection_id):
     if connection_id is None:
         connection_id = 'htpasswd'
 
     # Old Check_MK used a static "ldap" connector id for all LDAP users.
     # Since Check_MK now supports multiple LDAP connections, the ID has
-    # been changed to "default"
-    if connection_id == 'ldap':
+    # been changed to "default". But only transform this when there is
+    # no connection existing with the id LDAP.
+    if connection_id == 'ldap' and not get_connection('ldap'):
         connection_id = 'default'
 
     return connection_id
@@ -219,6 +228,33 @@ def on_failed_login(username):
 
 root_dir      = defaults.check_mk_configdir + "/wato/"
 multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
+
+# Old vs:
+#ListChoice(
+#    title = _('Automatic User Synchronization'),
+#    help  = _('By default the users are synchronized automatically in several situations. '
+#              'The sync is started when opening the "Users" page in configuration and '
+#              'during each page rendering. Each connector can then specify if it wants to perform '
+#              'any actions. For example the LDAP connector will start the sync once the cached user '
+#              'information are too old.'),
+#    default_value = [ 'wato_users', 'page', 'wato_pre_activate_changes', 'wato_snapshot_pushed' ],
+#    choices       = [
+#        ('page',                      _('During regular page processing')),
+#        ('wato_users',                _('When opening the users\' configuration page')),
+#        ('wato_pre_activate_changes', _('Before activating the changed configuration')),
+#        ('wato_snapshot_pushed',      _('On a remote site, when it receives a new configuration')),
+#    ],
+#    allow_empty   = True,
+#),
+def transform_userdb_automatic_sync(val):
+    if val == []:
+        return None
+
+    elif type(val) == list and val:
+        return "all"
+
+    else:
+        return val
 
 #.
 #   .-Users----------------------------------------------------------------.
@@ -438,7 +474,7 @@ def save_users(profiles):
     core_custom_macros =  [ k for k,o in user_attributes.items() if o.get('add_custom_macro') ]
     for user in profiles.keys():
         for macro in core_custom_macros:
-            if profiles[user].get(macro):
+            if macro in profiles[user]:
                 profiles[user]['_'+macro] = profiles[user][macro]
 
     multisite_custom_values = [ k for k,v in user_attributes.items() if v["domain"] == "multisite" ]
@@ -840,9 +876,10 @@ class UserConnector(object):
     def is_locked(self, user_id):
         return False
 
-    # Optional: Hook function can be registered here to be xecuted
-    # on each call to a multisite page, even on ajax requests etc.
-    def on_page_load(self):
+    # Optional: Hook function can be registered here to be executed
+    # on each call to the multisite cron job page which is normally
+    # executed once a minute.
+    def on_cron_job(self):
         pass
 
     # Optional: Hook function can be registered here to be xecuted
@@ -949,9 +986,10 @@ def hook_save(users):
             else:
                 show_exception(connection_id, _("Error during saving"), e)
 
+
 # This function registers general stuff, which is independet of the single
-# connectors to each page load. It is exectued AFTER all other page hooks.
-def general_page_hook():
+# connectors to each page load. It is exectued AFTER all other connections jobs.
+def general_userdb_job():
     # Working around the problem that the auth.php file needed for multisite based
     # authorization of external addons might not exist when setting up a new installation
     # We assume: Each user must visit this login page before using the multisite based
@@ -966,26 +1004,40 @@ def general_page_hook():
     if not os.path.exists(serials_file) or os.path.getsize(serials_file) == 0:
         save_users(load_users(lock = True))
 
+
 # Hook function can be registered here to execute actions on a "regular" base without
 # user triggered action. This hook is called on each page load.
 # Catch all exceptions and log them to apache error log. Let exceptions raise trough
 # when debug mode is enabled.
-def hook_page():
-    if 'page' not in config.userdb_automatic_sync:
+def execute_userdb_job():
+    if not userdb_sync_job_enabled():
         return
 
     for connection_id, connection in active_connections():
         try:
-            connection.on_page_load()
+            connection.on_cron_job()
         except:
             if config.debug:
                 raise
             else:
                 import traceback
-                logger(LOG_ERR, 'Exception (%s, page handler): %s' %
+                logger(LOG_ERR, 'Exception (%s, userdb_job): %s' %
                             (connection_id, traceback.format_exc()))
 
-    general_page_hook()
+    general_userdb_job()
+
+
+def userdb_sync_job_enabled():
+    cfg = transform_userdb_automatic_sync(config.userdb_automatic_sync)
+    if cfg == None:
+        return False # not enabled at all
+
+    import wato # FIXME: Cleanup!
+    if cfg == "master" and wato.is_wato_slave_site():
+        return False
+
+    return True
+
 
 def ajax_sync():
     try:

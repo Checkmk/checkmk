@@ -33,7 +33,7 @@ def inventory_mbg_lantime_ng_temp(info):
         return[ ("System", {}) ]
 
 def check_mbg_lantime_ng_temp(item, params, info):
-    return check_temperature(float(info[0][0]), params)
+    return check_temperature(float(info[0][0]), params, "mbg_lantime_ng_temp_%s" % item)
 
 check_info["mbg_lantime_ng_temp"] = {
     "check_function"          : check_mbg_lantime_ng_temp,

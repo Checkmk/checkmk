@@ -1,0 +1,9 @@
+Title: qlogic_fcport: now supports QLogic FC Switch SANBox 5802 series
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453713134
+Class: feature
+
+

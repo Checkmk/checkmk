@@ -721,7 +721,7 @@ def rbn_match_event_console(rule, context):
         if match_ec != False:
 
             # Match Event Console rule ID
-            if "match_rule_id" in match_ec and context["EC_RULE_ID"] != match_ec["match_rule_id"]:
+            if "match_rule_id" in match_ec and context["EC_RULE_ID"] not in match_ec["match_rule_id"]:
                 return "EC Event has rule ID '%s', but '%s' is required" % (
                     context["EC_RULE_ID"], match_ec["match_rule_id"])
 

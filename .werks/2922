@@ -1,4 +1,4 @@
-Title: check_mk_agent.linux: mrpe sections can now be cached
+Title: check_mk_agent.linux, check_mk_agent.solaris: mrpe sections can now be cached
 Level: 1
 Component: checks
 Compatible: compat
@@ -6,11 +6,10 @@ Version: 1.2.7i4
 Date: 1453198668
 Class: feature
 
-In the mrpe configuration (for linux systems only!) an optional parameter list can now be specified
-between service description and commandline in the following format:
+In the mrpe configuration (for linux and solaris systems only!) an optional parameter list can now
+be specified between service description and commandline in the following format:
 description (interval=300) /command/line
 The only supported parameter for now is interval. This activates caching fo the mrpe section and
 specifies the interval at which the cache should be refreshed.
 
 Existing mrpe configurations continue to work without change.
-This works only with the linux agent.

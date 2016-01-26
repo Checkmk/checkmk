@@ -122,7 +122,7 @@ multisite_layouts["dataset"] = {
 #   |  The boxed layout is useful in views with a width > 1, boxes are     |
 #   |  stacked in columns and can have different sizes.                    |
 #   '----------------------------------------------------------------------'
-def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show_checkboxes):
+def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show_checkboxes, css_class=None):
 
     repeat_heading_every = 20 # in case column_headers is "repeat"
 
@@ -230,7 +230,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
         init_rowselect(view)
 
     # render table
-    html.write("<table class=boxlayout><tr>")
+    html.write("<table class=\"boxlayout%s\"><tr>" % (css_class and " "+css_class or ""))
     for column in columns:
         html.write("<td class=boxcolumn>")
         for header, rows in column:
@@ -242,6 +242,26 @@ multisite_layouts["boxed"] = {
     "title"  : _("Balanced boxes"),
     "render" : render_grouped_boxes,
     "group"  : True,
+    "checkboxes" : True,
+}
+
+#.
+#   .--Graph Boxes---------------------------------------------------------.
+#   |        ____                 _       ____                             |
+#   |       / ___|_ __ __ _ _ __ | |__   | __ )  _____  _____  ___         |
+#   |      | |  _| '__/ _` | '_ \| '_ \  |  _ \ / _ \ \/ / _ \/ __|        |
+#   |      | |_| | | | (_| | |_) | | | | | |_) | (_) >  <  __/\__ \        |
+#   |       \____|_|  \__,_| .__/|_| |_| |____/ \___/_/\_\___||___/        |
+#   |                      |_|                                             |
+#   +----------------------------------------------------------------------+
+#   | Same as balanced boxes layout but adds a cs class graph to the box   |
+#   '----------------------------------------------------------------------'
+
+
+multisite_layouts["boxed_graph"] = {
+    "title"      : _("Balanced graph boxes"),
+    "render"     : lambda *args: render_grouped_boxes(*args + ("graph",)),
+    "group"      : True,
     "checkboxes" : True,
 }
 

@@ -84,7 +84,7 @@ def inventory_kentix_amp_sensors(parsed, params):
 
 def check_kentix_amp_sensors_temperature(item, params, parsed):
     if item in parsed:
-        return check_temperature(parsed[item]['temp'], params)
+        return check_temperature(parsed[item]['temp'], params, "kentix_amp_sensors_%s" % item)
 
 
 check_info['kentix_amp_sensors'] = {

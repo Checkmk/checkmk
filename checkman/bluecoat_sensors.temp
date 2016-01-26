@@ -1,0 +1,19 @@
+title: Blue Coat Security Gateway: Hardware Temperature Sensors
+agents: snmp
+catalog: hw/network/bluecoat
+license: GPL
+distribution: check_mk
+description:
+  Checks by SNMP the temperature sensors of Blue Coat Security Gateways.
+
+  Returns {OK} if an ok status is reported by SNMP and {CRIT} on any
+  other status.
+
+item:
+ The sensor description as returned by SNMP
+
+perfdata:
+  One number: The measured value.
+
+inventory:
+  Finds one service for each temperature sensor.

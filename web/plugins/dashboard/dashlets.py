@@ -414,7 +414,7 @@ function dashboard_render_graph(nr, site, host_name, service, source, timerange)
     var c_w = inner.clientWidth;
     var c_h = inner.clientHeight;
 
-    call_ajax("show_graph.py?site="+encodeURIComponent(site)
+    call_ajax("host_service_graph_dashlet.py?site="+encodeURIComponent(site)
                           +"&host_name="+encodeURIComponent(host_name)
                           +"&service="+encodeURIComponent(service)
                           +"&source="+encodeURIComponent(source)

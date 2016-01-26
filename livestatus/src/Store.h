@@ -26,6 +26,7 @@
 #define Store_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <list>
 #include <map>
 #include <string>
 #include "mk/Mutex.h"
@@ -86,7 +87,8 @@ public:
 
 private:
     Table *findTable(std::string name);
-    void answerGetRequest(InputBuffer *, OutputBuffer *, const char *);
+    void answerGetRequest(std::list<std::string> &lines, OutputBuffer *,
+                          const char *);
     void answerCommandRequest(const char *);
 };
 

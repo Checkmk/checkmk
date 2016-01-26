@@ -347,32 +347,38 @@ check_info["wagner_titanus_topsense.airflow_deviation"] = {
 #   |                                               |_|                    |
 #   '----------------------------------------------------------------------'
 
-wagner_titanus_topsense_temperature_default_values = (30, 35)
+factory_settings["wagner_titanus_topsense_temperature_default_values"] = {
+    "levels"    : (30, 35),
+}
 
 def inventory_wagner_titanus_topsense_temp(info):
-    return [ ("1", "wagner_titanus_topsense_temperature_default_values"),
-             ("2", "wagner_titanus_topsense_temperature_default_values") ]
+    return [ ("Ambient 1", {}),
+             ("Ambient 2", {}) ]
 
 def check_wagner_titanus_topsense_temp(item, params, info):
     parsed = parse_wagner_titanus_topsens(info)
-    if item == "1":
+    if not item.startswith("Ambient"):
+        item = "Ambient %s" % item
+
+    if item == "Ambient 1":
         temp = float(parsed[2][0][6])
-    elif item == "2":
+    elif item == "Ambient 2":
         temp = float(parsed[2][0][7])
     else:
         return
 
-    return check_temperature(temp, params)
+    return check_temperature(temp, params, "wagner_titanus_topsense_%s" % item)
 
 check_info["wagner_titanus_topsense.temp"] = {
-    "check_function"        : check_wagner_titanus_topsense_temp,
-    "inventory_function"    : inventory_wagner_titanus_topsense_temp,
-    "service_description"   : "Temperature %s",
-    "has_perfdata"          : True,
-    "group"                 : "room_temperature",
-    "snmp_info"             : wagner_titanus_topsense_info,
-    "snmp_scan_function"    : wagner_titanus_topsense_scan,
-    "includes"              : [ "temperature.include" ],
+    "check_function"         : check_wagner_titanus_topsense_temp,
+    "default_levels_variable": "wagner_titanus_topsense_temperature_default_values",
+    "inventory_function"     : inventory_wagner_titanus_topsense_temp,
+    "service_description"    : "Temperature %s",
+    "has_perfdata"           : True,
+    "group"                  : "temperature",
+    "snmp_info"              : wagner_titanus_topsense_info,
+    "snmp_scan_function"     : wagner_titanus_topsense_scan,
+    "includes"               : [ "temperature.include" ],
 }
 
 #.

@@ -219,8 +219,7 @@ def sort_by_title(folders):
 
 
 def render_wato_foldertree():
-    is_slave_site = not wato.is_distributed() and os.path.exists(defaults.check_mk_configdir + "/distributed_wato.mk")
-    if not is_slave_site:
+    if not wato.is_wato_slave_site():
         if not config.wato_enabled:
             html.write(_("WATO is disabled."))
             return False

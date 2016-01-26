@@ -1657,7 +1657,7 @@ multisite_builtin_views.update({
              'sorters': [('site', False),
                          ('site_host', False),
                          ('svcdescr', False)],
-             'linktitle': _('Graphs'),
+             'linktitle': _('Host graphs'),
              'title': _('Graphs for host'),
               },
 'recentsvc': {'browser_reload': 30,

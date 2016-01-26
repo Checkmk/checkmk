@@ -604,8 +604,8 @@ def show_subfolder_infos(subfolder):
         cgalias = groups.get(pg, {'alias': pg})['alias']
         html.icon(_("Contactgroups that have permission on this folder"), "contactgroups")
         html.write(' %s<br>' % cgalias)
-        if num > 1 and len(perm_groups) > 4:
-            html.write(_('<i>%d more contact groups</i><br>') % (len(perm_groups) - num - 1))
+        if num > 1 and len(permitted_groups) > 4:
+            html.write(_('<i>%d more contact groups</i><br>') % (len(permitted_groups) - num - 1))
             break
 
     num_hosts = subfolder.num_hosts_recursively()
@@ -5895,13 +5895,15 @@ def vs_ldap_connection(new):
             default_keys = ['email', 'alias', 'auth_expire' ],
         )),
         ("cache_livetime", Age(
-            title = _('Cache Livetime'),
-            help  = _('This option defines the maximum age for using the cached LDAP data. The time of the '
-                      'last LDAP synchronization is saved and checked on every request to the multisite '
-                      'interface. Once the cache gets outdated, a new synchronization job is started.<br><br>'
+            title = _('Sync Interval'),
+            help  = _('This option defines the interval of the LDAP synchronization. This setting is only '
+                      'used by sites which have the '
+                      '<a href="wato.py?mode=edit_configvar&varname=userdb_automatic_sync">Automatic User '
+                      'Synchronization</a> enabled.<br><br>'
                       'Please note: Passwords of the users are never stored in WATO and therefor never cached!'),
-            minvalue = 1,
+            minvalue = 60,
             default_value = 300,
+            display = ["days", "hours", "minutes" ],
         )),
         ("debug_log", Checkbox(
             title = _("Connection Diagnostics"),
@@ -6005,6 +6007,7 @@ def mode_edit_ldap_connection(phase):
     html.write('<div id=ldap>')
     html.write('<table><tr><td>')
     html.begin_form("connection", method="POST")
+    html.prevent_password_auto_completion()
     vs.render_input("connection", connection_cfg)
     vs.set_focus("connection")
     html.button("_save", _("Save"))
@@ -7469,7 +7472,14 @@ def notification_rule_match_conditions():
                        title = _("Match only Event Console alerts"),
                        elements = [
                            ( "match_rule_id",
-                             ID(title = _("Match event rule"), label = _("Rule ID:"), size=12, allow_empty=False),
+                            Transform(
+                                ListOf(
+                                    ID(title = _("Match event rule"), label = _("Rule ID:"), size=12, allow_empty=False),
+                                    add_label = _("Add Rule ID"),
+                                    title = _("Rule IDs")
+                                ),
+                                forth = lambda x: isinstance(x, list) and x or [x]
+                            )
                            ),
                            ( "match_priority",
                              Tuple(
@@ -9826,18 +9836,12 @@ def mode_users(phase):
         global_buttons()
         html.context_button(_("New User"), folder_preserving_link([("mode", "edit_user")]), "new")
         html.context_button(_("Custom Attributes"), folder_preserving_link([("mode", "user_attrs")]), "custom_attr")
-        if 'wato_users' not in config.userdb_automatic_sync:
+        if userdb.sync_possible():
             html.context_button(_("Sync Users"), html.makeactionuri([("_sync", 1)]), "replicate")
         if config.may("general.notify"):
             html.context_button(_("Notify Users"), 'notify.py', "notification")
         html.context_button(_("LDAP Connections"), folder_preserving_link([("mode", "ldap_config")]), "ldap")
         return
-
-    # Execute all connectors synchronisations of users. This must be done before
-    # loading the users, because it might modify the users list. But don't execute
-    # it during actions, this should save some time.
-    if phase != "action" and 'wato_users' in config.userdb_automatic_sync:
-        userdb.hook_sync(add_to_changelog = True)
 
     roles = userdb.load_roles()
     users = filter_hidden_users(userdb.load_users(lock = phase == 'action' and html.var('_delete')))
@@ -10236,6 +10240,8 @@ def mode_edit_user(phase):
     load_notification_scripts()
 
     html.begin_form("user", method="POST")
+    html.prevent_password_auto_completion()
+
     forms.header(_("Identity"))
 
     # ID
@@ -10274,6 +10280,7 @@ def mode_edit_user(phase):
 
     forms.header(_("Security"))
     forms.section(_("Authentication"))
+
     is_automation = user.get("automation_secret", None) != None
     html.radiobutton("authmethod", "password", not is_automation,
                      _("Normal user login with password"))
@@ -11720,7 +11727,10 @@ def mode_ruleeditor(phase):
             html.context_button(only_host,
                 folder_preserving_link([("mode", "edit_host"), ("host", only_host)]), "host")
 
-        html.context_button(_("Ineffective rules"), folder_preserving_link([("mode", "ineffective_rules")]), "usedrulesets")
+        html.context_button(_("Ineffective rules"), folder_preserving_link([("mode", "ineffective_rules")]), "rulesets_ineffective")
+
+        html.context_button(_("Deprecated Rulesets"),
+                 folder_preserving_link([("mode", "rulesets"), ("group", "deprecated")]), "rulesets_deprecated")
         return
 
     elif phase == "action":
@@ -11886,6 +11896,8 @@ def mode_rulesets(phase, group=None):
     if not group:
         group = html.var("group") # obligatory
 
+    show_deprecated = html.var("deprecated") == "1"
+
     search = html.get_unicode_input("search")
     if search != None:
         search = search.strip().lower()
@@ -11898,6 +11910,13 @@ def mode_rulesets(phase, group=None):
         title = _("Manual Checks")
         help = _("Here you can create explicit checks that are not being created by the automatic service discovery.")
         only_used = False
+    elif group == "deprecated":
+        title = _("Deprecated Rulesets")
+        help = _("Here you can see a list of all deprecated rulesets (which are not used by Check_MK anymore). If "
+                 "you have defined some rules here, you might have to migrate the rules to their successors. Please "
+                 "refer to the release notes or context help of the rulesets for details.")
+        only_used = False
+        show_deprecated = True
     elif search != None:
         title = _("Rules matching") + ": " + html.attrencode(search)
         help = _("All rules that contain '%s' in their name") % html.attrencode(search)
@@ -11920,12 +11939,18 @@ def mode_rulesets(phase, group=None):
             home_button()
             if group != "static":
                 html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
+            else:
+                html.context_button(_("Deprecated Rulesets"),
+                    make_link([("mode", "rulesets"), ("group", "static"), ("host", only_host), ("deprecated", "1")]), "rulesets_deprecated")
             html.context_button(only_host,
                  folder_preserving_link([("mode", "edit_host"), ("host", only_host)]), "host")
         else:
             global_buttons()
             if group != "static":
                 html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
+            else:
+                html.context_button(_("Deprecated Rulesets"),
+                    make_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "1")]), "rulesets_deprecated")
             if config.may("wato.hosts") or config.may("wato.seeall"):
                 html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "folder")
             if group == "agents":
@@ -11960,7 +11985,10 @@ def mode_rulesets(phase, group=None):
 
     # Select matching rule groups while keeping their configured order
     groupnames = [ gn for gn, rulesets in g_rulespec_groups
-                   if only_used or search != None or gn == group or (group and gn.startswith(group + "/")) ]
+                   if only_used \
+                        or group == "deprecated" \
+                        or search != None\
+                        or gn == group or (group and gn.startswith(group + "/")) ]
 
     # In case of search we need to sort the groups since main chapters would
     # appear more than once otherwise.
@@ -11999,6 +12027,8 @@ def mode_rulesets(phase, group=None):
             if group != 'static' and groupname.startswith("static/"):
                 continue
             elif group == 'static' and not groupname.startswith("static/"):
+                continue
+            elif show_deprecated != rulespec["deprecated"]:
                 continue
 
             # Handle case where a host is specified
@@ -13024,8 +13054,6 @@ def save_rule(out, folder, rulespec, rule):
     out.write(" ),\n")
 
 
-
-
 def load_rulesets(folder):
     path = folder.rules_file_path()
 
@@ -13109,7 +13137,8 @@ FACTORY_DEFAULT_UNUSED = [] # means this ruleset is not used if no rule is enter
 def register_rule(group, varname, valuespec = None, title = None,
                   help = None, itemspec = None, itemtype = None, itemname = None,
                   itemhelp = None, itemenum = None,
-                  match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT):
+                  match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT,
+                  deprecated = False):
     if not itemname and itemtype == "service":
         itemname = _("Service")
 
@@ -13127,6 +13156,7 @@ def register_rule(group, varname, valuespec = None, title = None,
         "help"            : help or valuespec.help(),
         "optional"        : optional, # rule may be None (like only_hosts)
         "factory_default" : factory_default,
+        "deprecated"      : deprecated,
     }
 
     # Register group
@@ -13150,7 +13180,8 @@ def register_rule(group, varname, valuespec = None, title = None,
 # modular here, but we cannot put this function into the plugins file because
 # the order is not defined there.
 def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
-                               match_type, has_inventory=True, register_static_check=True):
+                               match_type, has_inventory=True, register_static_check=True,
+                               deprecated=False):
 
     if valuespec and isinstance(valuespec, Dictionary) and match_type != "dict":
         raise MKGeneralException("Check parameter definition for %s has type Dictionary, but match_type %s" %
@@ -13180,7 +13211,8 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
             itemname = itemname,
             itemhelp = itemhelp,
             itemenum = itemenum,
-            match = match_type)
+            match = match_type,
+            deprecated = deprecated)
 
     if register_static_check:
         # Register rule for static checks
@@ -13216,7 +13248,8 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
                 elements = elements,
             ),
             itemspec = itemspec,
-            match = "all")
+            match = "all",
+            deprecated = deprecated)
 
 # Registers notification parameters for a certain notification script,
 # e.g. "mail" or "sms". This will create:
@@ -13767,6 +13800,7 @@ def page_user_profile(change_pw=False):
         return attr in locked_attributes
 
     html.begin_form("profile", method="POST")
+    html.prevent_password_auto_completion()
     html.write('<div class=wato>')
     forms.header(_("Personal Settings"))
 
@@ -13887,32 +13921,46 @@ def create_sample_config():
         return
 
     # Global configuration settings
-    save_configuration_settings({
-        "use_new_descriptions_for": [
-            "df",
-            "df_netapp",
-            "df_netapp32",
-            "esx_vsphere_datastores",
-            "hr_fs",
-            "vms_diskstat.df",
-            "zfsget",
-            "ps",
-            "ps.perf",
-            "wmic_process",
-            "services",
-            "logwatch",
-            "cmk-inventory",
-            "hyperv_vms",
-            "ibm_svc_mdiskgrp",
-            "ibm_svc_system",
-            "ibm_svc_systemstats.diskio",
-            "ibm_svc_systemstats.iops",
-            "ibm_svc_systemstats.disk_latency",
-            "ibm_svc_systemstats.cache",
-        ],
-        "inventory_check_interval": 120,
-        "enable_rulebased_notifications": True,
-    })
+    save_configuration_settings(
+        {
+            "use_new_descriptions_for": [
+                "df",
+                "df_netapp",
+                "df_netapp32",
+                "esx_vsphere_datastores",
+                "hr_fs",
+                "vms_diskstat.df",
+                "zfsget",
+                "ps",
+                "ps.perf",
+                "wmic_process",
+                "services",
+                "logwatch",
+                "cmk-inventory",
+                "hyperv_vms",
+                "ibm_svc_mdiskgrp",
+                "ibm_svc_system",
+                "ibm_svc_systemstats.diskio",
+                "ibm_svc_systemstats.iops",
+                "ibm_svc_systemstats.disk_latency",
+                "ibm_svc_systemstats.cache",
+                "casa_cpu_temp",
+                "cmciii.temp",
+                "cmciii.psm_current",
+                "cmciii_lcp_airin",
+                "cmciii_lcp_airout",
+                "cmciii_lcp_water",
+                "etherbox",
+                "liebert_bat_temp",
+                "nvidia.temp",
+                "ups_bat_temp",
+                "innovaphone_temp",
+                "enterasys_temp",
+            ],
+            "inventory_check_interval": 120,
+            "enable_rulebased_notifications": True,
+        }
+    )
 
 
     # A contact group where everyone is member of
@@ -14614,7 +14662,11 @@ def mode_check_manpage(phase):
     if phase == "title":
         if not re.match("^[a-zA-Z0-9_.]+$", check_type):
             raise Exception("Invalid check type")
+
         manpage = check_mk_local_automation("get-check-manpage", [ check_type ])
+        if manpage == None:
+            raise MKUserError(None, _("There is no manpage for this check."))
+
         html.set_cache("manpage", manpage)
         return _("Check plugin manual page") + " - " + manpage["header"]["title"]
 

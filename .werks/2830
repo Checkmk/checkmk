@@ -1,0 +1,10 @@
+Title: Improved sorting in view column "Services colored according to state"
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453296945
+Class: fix
+
+The sorting of this view column was quite random.
+It has been changed to case-insensitive hostname/service description sorting.

@@ -257,6 +257,13 @@ class html(GUITester):
         self.write("</form>\n")
         self.form_name = None
 
+    def prevent_password_auto_completion(self):
+        # These fields are not really used by the form. They are used to prevent the browsers
+        # from filling the default password and previous input fields in the form
+        # with password which are eventually saved in the browsers password store.
+        self.write("<input type=\"text\" style=\"display:none;\">")
+        self.write("<input style=\"display:none\" type=\"password\">")
+
     def form_submitted(self, form_name=None):
         if form_name:
             return self.var("filled_in") == form_name
@@ -430,6 +437,8 @@ class html(GUITester):
 
         if target:
             target = 'target="%s" ' % target
+        else:
+            target = ""
 
         if cssclass:
             cssclass = 'class="%s" ' % cssclass
@@ -520,8 +529,11 @@ class html(GUITester):
         self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % what)
         self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % what)
 
+
     def number_input(self, varname, deflt = "", size=8, style="", submit=None):
-        self.text_input(varname, str(deflt), "number", size=size, style=style, submit=submit)
+        if deflt != None:
+            deflt = str(deflt)
+        self.text_input(varname, deflt, "number", size=size, style=style, submit=submit)
 
 
     # Needed if input elements are put into forms without the helper
@@ -1058,7 +1070,8 @@ class html(GUITester):
 
             self.popup_trigger(
                 self.render_icon("menu", _("Add this view to..."), cssclass="statusicon iconbutton"),
-                'add_visual', 'add_visual', data=[mode_name, encoded_vars, {'name': self.var('view_name')}])
+                'add_visual', 'add_visual', data=[mode_name, encoded_vars, {'name': self.var('view_name')}],
+                url_vars=[("add_type", "view")])
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:

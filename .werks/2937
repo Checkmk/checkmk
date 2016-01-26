@@ -1,0 +1,13 @@
+Title: mrpe: check now supports service descriptions using percent-encoded characters
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i4
+Date: 1453724472
+Class: feature
+
+mrpe services can now contain any character using percent encoding. This is particularly useful to
+include spaces in the service description as that was previously impossible due to the way mrpe.cfg
+was parsed.
+This change is incompatible as any %xx sequence will now be converted whereas it was previously
+included in the service description as unchanged.

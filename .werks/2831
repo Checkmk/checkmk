@@ -1,0 +1,12 @@
+Title: Removing a previously set custom attribute for a contact did not work as intented
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453457638
+Class: fix
+
+The mechanism resetting a custom attribute to its default value was not working properly.
+In the GUI you could see that the attribute was correctly unset.
+However, the configuration for the monitoring core still used the old configured value..
+This has been fixed.

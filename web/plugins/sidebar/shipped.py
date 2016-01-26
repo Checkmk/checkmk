@@ -29,8 +29,6 @@ import pagetypes, table
 from valuespec import *
 from lib import *
 
-
-#.
 #   .--About---------------------------------------------------------------.
 #   |                       _    _                 _                       |
 #   |                      / \  | |__   ___  _   _| |_                     |
@@ -110,10 +108,11 @@ def render_views():
                     bulletlink(title, 'dashboard.py?name=%s' % name, onclick = "return wato_views_clicked(this)")
 
         # TODO: One day pagestypes should handle the complete snapin.
-        if pagetypes.has_page_type("graph_collection"):
-            for t, title, url in pagetypes.page_type("graph_collection").sidebar_links():
-                if t == topic:
-                    bulletlink(title, url)
+        for page_type in pagetypes.all_page_types().values():
+            if issubclass(page_type, pagetypes.PageRenderer):
+                for t, title, url in page_type.sidebar_links():
+                    if t == topic:
+                        bulletlink(title, url)
 
         if not first: # at least one item rendered
             html.end_foldable_container()

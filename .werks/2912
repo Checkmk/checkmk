@@ -1,0 +1,14 @@
+Title: mk_oracle mk_oracle.aix: Fixed handling of DBs which names end with "_[NUMBER]"
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453369163
+Class: fix
+
+The agent plugin did not compute the ORACLE_SID_SHORT correctly in case of databases
+named like this:
+
+DB Instance Name = TESTDBDB
+Instance RAC Knoten 1: TESTDB_1DB
+Instance RAC Knoten 2: TESTDB_2

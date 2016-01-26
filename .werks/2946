@@ -1,0 +1,12 @@
+Title: LDAP: User created during login does not trigger full user synchronisation anymore
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453473922
+Class: fix
+
+Previously, when a LDAP user logged in for the first time and the user was not created
+by an LDAP sync before, it triggered a full LDAP sync which might have created a lot
+of other users. This has been changed now to only synchronize this single user based
+on the sync configuration.

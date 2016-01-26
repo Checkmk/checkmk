@@ -501,16 +501,10 @@ config.declare_permission("action.downtimes",
         [ "user", "admin" ])
 
 def command_downtime(cmdtag, spec, row):
-    try:
-        wato.recurring_downtimes_types
-        have_recurring_downtimes = True
-    except:
-        have_recurring_downtimes = False
-
     down_from = int(time.time())
     down_to = None
 
-    if have_recurring_downtimes and html.get_checkbox("_down_do_recur"):
+    if has_recurring_downtimes() and html.get_checkbox("_down_do_recur"):
         recurring_type = int(html.var("_down_recurring"))
         title_start = _("schedule a periodic downtime every %s") % wato.recurring_downtimes_types[recurring_type]
     else:
@@ -611,8 +605,7 @@ def command_downtime(cmdtag, spec, row):
             duration = 0
 
         if html.get_checkbox("_down_do_recur"):
-            recurring = int(html.var("_down_recurring"))
-            fixed_and_recurring = recurring * 2 + fixed
+            fixed_and_recurring = recurring_type * 2 + fixed
         else:
             fixed_and_recurring = fixed
 
@@ -665,7 +658,6 @@ def get_child_hosts(site, hosts, recurse):
 
 
 def paint_downtime_buttons(what):
-
     html.write(_('Downtime Comment')+": ")
     html.text_input("_down_comment", "", size=60, submit="")
     html.write("<hr>")
@@ -707,21 +699,27 @@ def paint_downtime_buttons(what):
         html.checkbox("_include_childs_recurse", False, label=_('Do this recursively'))
     elif what == "service":
         html.write("<hr>")
-        html.checkbox("_on_hosts", False, label=_('Schedule downtimes on the affected <b>hosts</b> instead of on the individual services'))
+        html.checkbox("_on_hosts", False, label=_('Schedule downtimes on the affected '
+                                                  '<b>hosts</b> instead of on the individual '
+                                                  'services'))
 
-    try:
-        wato.recurring_downtimes_types # Check if this exists
-        have_recurring_downtimes = True
-    except:
-        have_recurring_downtimes = False
-
-    if have_recurring_downtimes:
+    if has_recurring_downtimes():
         html.write("<hr>")
-        html.checkbox("_down_do_recur", False, label=_("Repeat this downtime on a regular base every"))
+        html.checkbox("_down_do_recur", False,
+                      label=_("Repeat this downtime on a regular base every"))
         html.write(" ")
-        html.select("_down_recurring", [ (str(k), v) for (k,v) in sorted(wato.recurring_downtimes_types.items())], "3")
+        recurring_selections = [ (str(k), v) for (k,v) in
+                                 sorted(wato.recurring_downtimes_types.items())]
+        html.select("_down_recurring", recurring_selections, "3")
         html.write(_("(This only works when using CMC)"))
 
+
+def has_recurring_downtimes():
+    try:
+        wato.recurring_downtimes_types # Check if this exists
+        return True
+    except NameError:
+        return False
 
 
 multisite_commands.append({
@@ -755,26 +753,20 @@ multisite_commands.append({
 multisite_commands.append({
     "tables"      : [ "downtime" ],
     "permission"  : "action.downtimes",
-    "title"       : _("Downtimes"),
-    "render"      : lambda: \
-        html.button("_remove_downtimes", _("Remove")),
-    "action"      : lambda cmdtag, spec, row: \
-      html.has_var("_remove_downtimes") and \
-      ( "DEL_%s_DOWNTIME;%d" % (cmdtag, spec),
-        _("remove"))
+    "title"       : _("Remove downtimes"),
+    "render"      : lambda: html.button("_remove_downtimes", _("Remove")),
+    "action"      : lambda cmdtag, spec, row: html.has_var("_remove_downtimes") and \
+                           ( "DEL_%s_DOWNTIME;%d" % (cmdtag, spec), _("remove"))
 })
 
 # REMOVE COMMENTS (table comments)
 multisite_commands.append({
     "tables"      : [ "comment" ],
     "permission"  : "action.addcomment",
-    "title"       : _("Comments"),
-    "render"      : lambda: \
-        html.button("_remove_comments", _("Remove")),
-    "action"      : lambda cmdtag, spec, row: \
-      html.has_var("_remove_comments") and \
-      ( "DEL_%s_COMMENT;%d" % (cmdtag, spec),
-        _("remove"))
+    "title"       : _("Remove comments"),
+    "render"      : lambda: html.button("_remove_comments", _("Remove")),
+    "action"      : lambda cmdtag, spec, row: html.has_var("_remove_comments") and \
+                            ( "DEL_%s_COMMENT;%d" % (cmdtag, spec), _("remove"))
 })
 
 #.

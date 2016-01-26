@@ -31,11 +31,17 @@
 oracle_logswitches_default_levels = (-1, -1, 50, 100)
 
 def inventory_oracle_logswitches(info):
+    oracle_handle_ora_errors_discovery(info)
     return [ (line[0], "oracle_logswitches_default_levels") for line in info if len(line) >= 2 ]
 
 def check_oracle_logswitches(item, params, info):
     for line in info:
         if line[0] == item:
+            err = oracle_handle_ora_errors(line)
+            if err == False:
+                continue
+            elif isinstance(err, tuple):
+                return err
 
             locrit, lowarn, warn, crit = params
             logswitches = int(line[1])

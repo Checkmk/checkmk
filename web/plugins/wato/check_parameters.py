@@ -289,19 +289,54 @@ register_check_parameters(
     match_type = "dict",
 )
 
+
+def transform_websphere_mq(source):
+    if isinstance(source, tuple):
+        return {"message_count": source}
+    else:
+        return source
+
 register_check_parameters(
     subgroup_applications,
     "websphere_mq",
     _("Maximum number of messages in Websphere Message Queues"),
-    Tuple(
-      title = _('Maximum number of messages'),
-          elements = [
-             Integer(title = _("Warning at"), default_value = 1000 ),
-             Integer(title = _("Critical at"), default_value = 1200 ),
-          ]
+    Transform(
+        Dictionary(
+            elements = [
+                ("message_count",
+                 Tuple(
+                     title = _('Maximum number of messages'),
+                     elements = [
+                         Integer(title = _("Warning at"), default_value = 1000 ),
+                         Integer(title = _("Critical at"), default_value = 1200 ),
+                     ]
+                 )),
+                ("status",
+                 Dictionary(
+                     title = _('Override check state based on channel state'),
+                     elements = [
+                         ("STOPPED",  MonitoringState(
+                             title = _("State when channel is stopped"),
+                             default_value = 1)),
+                         ("RETRYING", MonitoringState(
+                             title = _("State when channel is retrying"),
+                             default_value = 2)),
+                         ("RUNNING",  MonitoringState(
+                             title = _("State when channel is running"),
+                             default_value = 0)),
+                         ("other",    MonitoringState(
+                             title = _("State when channel status is unknown"),
+                             default_value = 2)),
+                     ],
+                     optional_keys = []
+                 )),
+            ],
+            optional_keys = ["status"]
+        ),
+        forth = transform_websphere_mq
     ),
     TextAscii(title = _("Name of Channel or Queue")),
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(
@@ -4505,23 +4540,81 @@ register_check_parameters(
     ),
     match_type = "first",
 )
+
+def windows_printer_queues_forth(old):
+    default = {
+        "levels"        : (None, None),
+        "warn_states"   : [ 8, 11 ],
+        "crit_states"   : [ 9, 10 ],
+      }
+    if type(old) == tuple:
+        default['levels'] = old
+    if type(old) == dict:
+        return old
+    return default
+        
 register_check_parameters(
     subgroup_printing,
     "windows_printer_queues",
     _("Number of open jobs of a printer on windows" ),
     Transform(
-        Optional(
-            Tuple(
-                help = _("This rule is applied to the number of print jobs "
-                         "currently waiting in windows printer queue."),
-                elements = [
-                    Integer(title = _("Warning at"), unit = _("jobs"), default_value = 40),
-                    Integer(title = _("Critical at"), unit = _("jobs"), default_value = 60),
+        Dictionary(
+            title = _("Windows Printer Configuration"),
+            elements = [
+                ( "levels", 
+                    Tuple(
+                        title = _("Levels for the number of print jobs"),
+                        help = _("This rule is applied to the number of print jobs "
+                                 "currently waiting in windows printer queue."),
+                        elements = [
+                            Integer(title = _("Warning at"), unit = _("jobs"), default_value = 40),
+                            Integer(title = _("Critical at"), unit = _("jobs"), default_value = 60),
+                        ]
+                    ),
+                ),
+                ("crit_states", 
+                    ListChoice(
+                        title = _("States who should lead to critical"),
+                        choices = [
+                            ( 0,  "Unkown"),
+                            ( 1,  "Other"),
+                            ( 2,  "No Error"),
+                            ( 3,  "Low Paper"),
+                            ( 4,  "No Paper"),
+                            ( 5,  "Low Toner"),
+                            ( 6,  "No Toner"),
+                            ( 7,  "Door Open"),
+                            ( 8,  "Jammed"),
+                            ( 9,  "Offline"),
+                            ( 10, "Service Requested"),
+                            ( 11, "Output Bin Full"),
+                            ],
+                        default_value = [9, 10], 
+                        )
+                 ),
+                ("warn_states", 
+                    ListChoice(
+                        title = _("States who should lead to warning"),
+                        choices = [
+                            ( 0,  "Unkown"),
+                            ( 1,  "Other"),
+                            ( 2,  "No Error"),
+                            ( 3,  "Low Paper"),
+                            ( 4,  "No Paper"),
+                            ( 5,  "Low Toner"),
+                            ( 6,  "No Toner"),
+                            ( 7,  "Door Open"),
+                            ( 8,  "Jammed"),
+                            ( 9,  "Offline"),
+                            ( 10, "Service Requested"),
+                            ( 11, "Output Bin Full"),
+                            ],
+                        default_value = [8, 11], 
+                        )
+                 ),
                 ]
-            ),
-            label=_('Enable thresholds on the number of jobs'),
         ),
-        forth = lambda old: old != (None, None) and old or None,
+        forth = windows_printer_queues_forth,
     ),
     TextAscii(
         title = _("Printer Name"),
@@ -7400,7 +7493,50 @@ register_check_parameters(
                       ],
                       default_value = "usrdefault",
                 )),
-
+                ( "trend_compute",
+                  Dictionary(
+                      title = _("Trend computation"),
+                      label = _("Enable trend computation"),
+                      elements = [
+                          ( "period",
+                              Integer(
+                                  title = _("Observation period for temperature trend computation"),
+                                  default_value = 30,
+                                  minvalue = 5,
+                                  unit= _("minutes")
+                              )
+                              ),
+                          ( "trend_levels",
+                              Tuple(
+                                  title = _("Levels on temperature increase per period"),
+                                  elements = [
+                                      Integer(title = _("Warning at"), unit = u"°C / " + _("period"), default_value = 5),
+                                      Integer(title = _("Critical at"), unit = u"°C / " + _("period"), default_value = 10)
+                                  ]
+                              )
+                              ),
+                          ( "trend_levels_lower",
+                              Tuple(
+                                  title = _("Levels on temperature decrease per period"),
+                                  elements = [
+                                      Integer(title = _("Warning at"), unit = u"°C / " + _("period"), default_value = 5),
+                                      Integer(title = _("Critical at"), unit = u"°C / " + _("period"), default_value = 10)
+                                  ]
+                              )
+                              ),
+                          ( "trend_timeleft",
+                              Tuple(
+                                  title = _("Levels on the time left until a critical temperature (upper or lower) is reached"),
+                                  elements = [
+                                      Integer(title = _("Warning if below"), unit = _("minutes"), default_value = 240,),
+                                      Integer(title = _("Critical if below"), unit = _("minutes"), default_value = 120, ),
+                                  ]
+                              )
+                              )
+                      ],
+                      optional_keys = ["trend_levels", "trend_levels_lower", "trend_timeleft"],
+                  ),
+                ),
             ]
         ),
         forth = lambda v: type(v) == tuple and { "levels" : v } or v,
@@ -7426,7 +7562,8 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identifier of the thermal sensor.")),
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7441,7 +7578,8 @@ register_check_parameters(
             Integer(title = _("critical at"), unit = u"°C", default_value = 40),
         ]),
     None,
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7525,7 +7663,8 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identifier of the thermal sensor.")),
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7540,7 +7679,8 @@ register_check_parameters(
             Integer(title = _("critical at"), unit = u"°C", default_value = 40),
         ]),
     None,
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7556,7 +7696,8 @@ register_check_parameters(
     TextAscii(
         title = _("Hard disk device"),
         help = _("The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>.")),
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7848,7 +7989,8 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identificator of the thermal sensor.")),
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(
@@ -7895,7 +8037,8 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identifier of the thermal sensor.")),
-    "dict"
+    "dict",
+    deprecated=True,
 )
 ntp_params = \
     Tuple(

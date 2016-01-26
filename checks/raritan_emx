@@ -86,11 +86,21 @@ def inventory_raritan_emx_temp(parsed):
 
 
 def check_raritan_emx_temp(item, params, parsed):
+    if "Temperature" in item:
+        # old style (pre 1.2.8) item name, convert
+        item = "Rack " + item.replace(" Temperature", "")
+    elif "Fan Speed" in item:
+        item = "Rack " + item.replace(" Fan Speed", "")
+        return check_raritan_emx_fan(item, params, parsed)
+    elif "Door Contact" in item:
+        item = "Rack " + item.replace(" Door Contact DC", "")
+        return check_raritan_sensors_binary(item, params, parsed)
+
     if item in parsed:
         rack_value = parsed[item]["rack_value"]
         rack_unit  = parsed[item]["rack_unit"]
         state, state_readable = parsed[item]["state"]
-        return check_temperature(rack_value, params,
+        return check_temperature(rack_value, params, item,
                                  dev_unit=rack_unit, dev_status = state,
                                  dev_status_name = state_readable)
 
@@ -154,3 +164,4 @@ check_info['raritan_emx.binary'] = {
     "check_function"        : check_raritan_sensors_binary,
     "service_description"   : "Door %s",
 }
+

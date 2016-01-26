@@ -772,7 +772,8 @@ function create_graph(data, params) {
                 toggle_popup(event, this, 'add_visual', 'add_visual',
                     ['pnpgraph',
                      { 'host': host, 'service': service },
-                     { 'timerange': view, 'source': source }]
+                     { 'timerange': view, 'source': source }],
+                    "add_type=pnpgraph"
                 );
             }
         }(data['host'], data['service'], view, source);
@@ -818,7 +819,7 @@ function render_pnp_graphs(container, site, host, service, pnpview, base_url, pn
 
 function hover_graph(site, host_name, service)
 {
-    var c = get_url_sync('show_graph.py?site='+encodeURIComponent(site)
+    var c = get_url_sync('host_service_graph_popup.py?site='+encodeURIComponent(site)
                        +'&host_name='+encodeURIComponent(host_name)
                        +'&service='+encodeURIComponent(service));
 
@@ -2452,7 +2453,7 @@ function handle_popup_close(event) {
 // url_vars:    vars are added to ajax_popup_*.py calls for rendering the popup menu
 function toggle_popup(event, trigger_obj, ident, what, data, url_vars)
 {
-    var url_vars = typeof(url_vars) === "undefined" ? '' : '?'+url_vars;
+    var url_vars = !url_vars ? '' : '?'+url_vars;
 
     if(!event)
         event = window.event;

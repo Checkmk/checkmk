@@ -37,6 +37,13 @@
 # This function returns a tuple when an ORA-* message has been found.
 # It returns False if this line should be skipped by the check.
 def oracle_handle_ora_errors(line):
+    if len(line) == 1:
+        return
+
+    legacy_error = oracle_handle_legacy_ora_errors(line)
+    if legacy_error:
+        return legacy_error
+
     # Handle error output from new agent
     if line[1] == 'FAILURE':
         if len(line) >= 3 and line[2].startswith("ORA-"):
@@ -51,3 +58,20 @@ def oracle_handle_ora_errors(line):
         return (3, 'Found error in agent output "%s"' % ' '.join(line[1:]))
 
 
+def oracle_handle_legacy_ora_errors(line):
+    # Skip over line before ORA- errors (e.g. sent by AIX agent from 2014)
+    if line == ["ERROR:"]:
+        return False
+
+    if line[0].startswith('ORA-'):
+        return (3, 'Found error in agent output "%s"' % ' '.join(line))
+
+
+# Fully prevent creation of services when an error is found.
+def oracle_handle_ora_errors_discovery(info):
+    for line in info:
+        err = oracle_handle_ora_errors(line)
+        if err == False:
+            continue
+        elif isinstance(err, tuple):
+            raise MKGeneralException(err[1])

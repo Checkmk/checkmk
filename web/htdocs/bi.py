@@ -1215,7 +1215,7 @@ def get_status_info(required_hosts):
 # that need to be fetched in any case
 def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetch_parents = True, bygroup=False):
     columns = [ "name", "host_name", "state", "hard_state", "plugin_output", "scheduled_downtime_depth",
-                "acknowledged", "services_with_fullstate", "parents" ] + add_columns
+                "host_in_service_period", "acknowledged", "services_with_fullstate", "parents" ] + add_columns
 
     html.live.set_only_sites(only_sites)
     html.live.set_prepend_site(True)

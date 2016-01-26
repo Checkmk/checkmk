@@ -167,6 +167,9 @@ class Base:
     def description(self):
         return self._.get("description", "")
 
+    def is_empty(self):
+        return False
+
     # Default values for the creation dialog can be overridden by the
     # sub class.
     @classmethod
@@ -324,6 +327,14 @@ class PageRenderer:
             raise MKGeneralException(_("Cannot find %s with the name %s") % (
                         self.phrase("title"), name))
         page.render()
+
+
+    # Links for the sidebar
+    @classmethod
+    def sidebar_links(self):
+        for page in self.pages():
+            if not page.is_empty() and not page.is_hidden():
+                yield page.topic(), page.title(), page.page_url()
 
 
 
@@ -692,10 +703,10 @@ class Overridable:
 
         ### if render_custom_context_buttons:
         ###     render_custom_context_buttons()
-        ### for other_what, info in visual_types.items():
-        ###     if what != other_what:
-        ###         html.context_button(info["plural_title"].title(), 'edit_%s.py' % other_what, other_what[:-1])
-        ### html.end_context_buttons()
+
+        for other_type_name, other_pagetype in page_types.items():
+            if self.type_name() != other_type_name:
+                html.context_button(other_pagetype.phrase("title_plural").title(), '%ss.py' % other_type_name, other_type_name)
         html.end_context_buttons()
 
         # Deletion
@@ -773,12 +784,12 @@ class Overridable:
                 ###     render_custom_buttons(visual_name, visual)
 
                 # Internal ID of instance (we call that 'name')
-                table.cell(_('ID'), instance.name())
+                table.cell(_('ID'), instance.name(), css="narrow")
 
                 # Title
                 table.cell(_('Title'))
                 title = _u(instance.title())
-                if isinstance(self, PageRenderer) and not instance.is_hidden():
+                if isinstance(instance, PageRenderer) and not instance.is_hidden():
                     html.write("<a href=\"%s.py?%s=%s\">%s</a>" %
                         (self.type_name(), self.ident_attr(), instance.name(), html.attrencode(instance.title())))
                 else:
@@ -871,12 +882,13 @@ class Overridable:
 
         def validate(page_dict):
             owner_user_id = html.var("owner", config.user_id)
+            page_name = page_dict["name"]
             if owner_user_id == config.user_id:
                 page = self.find_my_page(page_name)
             else:
                 page = self.find_foreign_page(owner_user_id, page_name)
             if page:
-                raise MKUserError("_p_name", _("You already have an with the ID <b>%s</b>") % page_dict["name"])
+                raise MKUserError("_p_name", _("You already have an element with the ID <b>%s</b>") % page_dict["name"])
 
         new_page_dict = forms.edit_valuespec(vs, page_dict, validate=validate)
         if new_page_dict != None:
@@ -931,6 +943,12 @@ class Container:
     @classmethod
     def sanitize(self, d):
         d.setdefault("elements", [])
+
+    # Which kind of elements are allowed to be added to this container?
+    # Defaulting to all possible elements.
+    @classmethod
+    def may_contain(self, element_type_name):
+        return True
 
     def elements(self):
         return self._["elements"]
@@ -1017,11 +1035,17 @@ def declare(page_type):
     page_type.declare_overriding_permissions()
     page_types[page_type.type_name()] = page_type
 
+
 def page_type(page_type_name):
     return page_types[page_type_name]
 
+
 def has_page_type(page_type_name):
     return page_type_name in page_types
+
+
+def all_page_types():
+    return page_types
 
 
 # Global module functions for the integration into the rest of the code
@@ -1039,9 +1063,7 @@ def page_handlers():
     return page_handlers
 
 
-def render_addto_popup():
+def render_addto_popup(add_type):
     for page_type in page_types.values():
-        # TODO: Wie sorgen wir dafür, dass nur geeignete Elemente zum hinzufügen
-        # angeboten werden? Eine View in eine GraphCollection macht keinen Sinn...
-        if issubclass(page_type, Container):
+        if issubclass(page_type, Container) and page_type.may_contain(add_type):
             page_type.render_addto_popup()

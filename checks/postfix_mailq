@@ -95,8 +95,15 @@ def check_postfix_mailq(_no_item, params, info):
         # new extended version of agent output
         if line[0].startswith("QUEUE_"):
             queue = line[0].split("_")[1]
-            size   = int(line[1]) # in bytes
-            length = int(line[2]) # number of mails
+
+            # Deal with old agent (pre 1.2.8) which did not send size
+            # infos in case of different error cases
+            if len(line) == 2:
+                size   = 0
+                length = int(line[1]) # number of mails
+            else:
+                size   = int(line[1]) # in bytes
+                length = int(line[2]) # number of mails
             infotext = "%s queue length is %d" % (queue, length)
             if queue == "deferred":
                 length_var = "length"

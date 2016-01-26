@@ -294,6 +294,7 @@ multisite_icons_and_actions['realhost'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 # Intelligent Links to PNP4Nagios 0.6.X
 def pnp_url(row, what, how = 'graph'):
     sitename = row["site"]
@@ -315,31 +316,56 @@ def pnp_url(row, what, how = 'graph'):
                         html.urlencode(site["url_prefix"])
     return url
 
+
 def pnp_popup_url(row, what):
     return pnp_url(row, what, 'popup')
 
-def pnp_icon(row, what):
-    if 'X' in html.display_options:
-        url = pnp_url(row, what)
-    else:
-        url = ""
 
-    # TODO: Import in function is not good
-    import metrics
-    if not hasattr(metrics, 'render_graph_html'):
+def new_graphing_url(row, what):
+    site_id = row["site"]
+
+    urivars = [
+        ("view_name", "service_graphs"),
+        ("siteopt",   site_id),
+        ("host",      row["host_name"]),
+    ]
+
+    if what == "service":
+        urivars.append(("service", row["service_description"]))
+
+    return html.makeuri_contextless(urivars, filename="view.py")
+
+
+def pnp_graph_icon_link(row, what):
+    if 'X' not in html.display_options:
+        return ""
+
+    if not metrics.new_style_graphs_possible():
+        return pnp_url(row, what)
+    else:
+        return new_graphing_url(row, what)
+
+
+def pnp_icon(row, what):
+    url = pnp_graph_icon_link(row, what)
+
+    if not metrics.new_style_graphs_possible():
         # Directly ask PNP for all data, don't try to use the new graph fetching mechanism
         # to keep the number of single requests low
         hover_content_func = 'pnp_hover_contents(\'%s\')' % pnp_popup_url(row, what)
     else:
         hover_content_func = 'hover_graph(\'%s\', \'%s\', \'%s\')' % \
                                 (row['site'], row['host_name'], row.get('service_description', '_HOST_').replace("\\", "\\\\"))
+
     return '<a href="%s" onmouseover="show_hover_menu(event, %s)" ' \
            'onmouseout="hide_hover_menu()">%s</a>' % (url, hover_content_func, html.render_icon('pnp', ''))
+
 
 def paint_pnp_graph(what, row, tags, host_custom_vars):
     pnpgraph_present = row[what + "_pnpgraph_present"]
     if pnpgraph_present == 1:
         return pnp_icon(row, what)
+
 
 multisite_icons_and_actions['perfgraph'] = {
     'columns':         [ 'pnpgraph_present' ],

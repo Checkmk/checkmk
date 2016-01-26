@@ -279,9 +279,11 @@ def page_list(what, title, visuals, custom_columns = [],
     for other_what, info in visual_types.items():
         if what != other_what:
             html.context_button(info["plural_title"].title(), 'edit_%s.py' % other_what, other_what[:-1])
+
     # TODO: We hack in those visuals that already have been moved to pagetypes here
-    html.context_button(_("Graph collections"), "graph_collections.py", "graph_collection")
-    html.context_button(_("Bookmarks lists"), "bookmark_lists.py", "bookmark_list")
+    html.context_button(_("Graph Collections"), "graph_collections.py", "graph_collection")
+    html.context_button(_("Custom Graphs"), "custom_graphs.py", "custom_graph")
+    html.context_button(_("Bookmark Lists"), "bookmark_lists.py", "bookmark_list")
 
     html.end_context_buttons()
 
@@ -1379,8 +1381,11 @@ def transform_old_visual(visual):
 
 # TODO: Remove this code as soon as everything is moved over to pagetypes.py
 def ajax_popup_add():
+    add_type = html.var("add_type")
+    html.debug(add_type)
+
     html.write("<ul>")
-    pagetypes.render_addto_popup()
+    pagetypes.render_addto_popup(add_type)
 
     for visual_type_name, visual_type in visual_types.items():
         if "popup_add_handler" in visual_type:

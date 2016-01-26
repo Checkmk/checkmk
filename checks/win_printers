@@ -31,10 +31,16 @@
 # WH1_BC_O3_UPS                         0                   3                   0
 
 
+factory_settings['win_printer_default_levels'] = {
+        "levels"        : (None, None),
+        "warn_states"   : [ 8, 11 ],
+        "crit_states"   : [ 9, 10 ],
+}
+
 def inventory_win_printers(info):
     for line in info:
         if line[-1] != '9': # Do not discovery offline printers
-            yield " ".join(line[:-3]), None
+            yield " ".join(line[:-3]), {}
 
 def check_win_printers(item, params, info):
     status_map = {
@@ -61,10 +67,17 @@ def check_win_printers(item, params, info):
         11 : "Output Bin Full"
     }
 
-    if params == None:
-        warn, crit = None, None
+    if type(params) != dict:
+        # Legacy params:
+        if params == None:
+            warn, crit = None, None
+        else:
+            warn, crit = params
+        params = {}
+        params['crit_states'] = [9,10]
+        params['warn_states'] = [8,11]
     else:
-        warn, crit = params
+        warn, crit = params['levels']
 
     for line in info:
         name = " ".join(line[:-3])
@@ -73,10 +86,10 @@ def check_win_printers(item, params, info):
             current_jobs, status, error = map(int, line[-3:])
 
             error_text = ""
-            if error in [ 9, 10 ]:
+            if error in params['crit_states']:
                 state = 2
                 error_text = "Error State: %s(!!)" %  error_map[error]
-            elif error in [ 8, 11 ]:
+            elif error in params['warn_states']:
                 state = 1
                 error_text = "Error State: %s(!)" % error_map[error]
 
@@ -94,10 +107,11 @@ def check_win_printers(item, params, info):
     return 3, "Printer not found in agent output"
 
 check_info["win_printers"] = {
-    "check_function"        : check_win_printers,
-    "group"                 : "windows_printer_queues",
-    "inventory_function"    : inventory_win_printers,
-    "service_description"   : "Printer %s",
-    "has_perfdata"          : False,
+    "check_function"         : check_win_printers,
+    "group"                  : "windows_printer_queues",
+    "inventory_function"     : inventory_win_printers,
+    "service_description"    : "Printer %s",
+    "has_perfdata"           : False,
+    "default_level_variable" : "win_printer_default_levels",
 }
 

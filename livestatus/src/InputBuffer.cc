@@ -31,213 +31,20 @@
 #include <unistd.h>
 #include "logger.h"
 
+using std::list;
+using std::make_pair;
+using std::pair;
 using std::string;
 
-
-#define READ_TIMEOUT_USEC 200000
 extern int g_query_timeout_msec;
 extern int g_idle_timeout_msec;
 
-bool timeout_reached(const struct timeval *, int);
+namespace {
+const size_t initial_buffer_size = 4096;
+// TODO: Make this configurable?
+const size_t maximum_buffer_size = 500 * 1024 * 1024;
 
-// TODO: We need the suppression pragma below because _readahead_buffer is not
-// initialized in the constructor. Just replace all this manual fiddling with
-// pointers, offsets, etc. with vector.
-
-// cppcheck-suppress uninitMemberVar
-InputBuffer::InputBuffer(int *termination_flag)
-    : _fd(-1), _termination_flag(termination_flag)
-{
-    _read_pointer = &_readahead_buffer[0];         // points to data not yet processed
-    _write_pointer = _read_pointer;                // points to end of data in buffer
-    _end_pointer = _read_pointer + IB_BUFFER_SIZE; // points ot end of buffer
-}
-
-void InputBuffer::setFd(int fd)
-{
-    _fd = fd;
-    _read_pointer = _write_pointer = _readahead_buffer;
-    _requestlines.clear();
-}
-
-// read in data enough for one complete request
-// (and maybe more). If this method returns IB_REQUEST_READ
-// then you can subsequently retrieve the lines of the
-// request with nextLine().
-int InputBuffer::readRequest()
-{
-    // Remember when we started waiting for a request. This
-    // is needed for the idle_timeout. A connection may
-    // not be idle longer than that value.
-    struct timeval start_of_idle; // Waiting for the first line
-    gettimeofday(&start_of_idle, NULL);
-
-    // Remember if we have read some part of the query. During
-    // a query the timeout is another (short) than between
-    // queries.
-    bool query_started = false;
-
-    // _read_pointer points to the place in the buffer, where the
-    // next valid data begins. This data ends at _write_pointer.
-    // That data might have been read while reading the previous
-    // request.
-
-    // r is used to find the end of the line
-    char *r = _read_pointer;
-
-    while (true)
-    {
-        // Try to find end of the current line in buffer
-        while (r < _write_pointer && r[0] != '\n')
-            r++; // now r is at end of data or at '\n'
-
-        // If we cannot find the end of line in the data
-        // already read, then we need to read new data from
-        // the client.
-        if (r == _write_pointer)
-        {
-            // Is there still space left in the buffer => read in
-            // further data into the buffer.
-            if (_write_pointer < _end_pointer)
-            {
-                int rd = readData(); // tries to read in further data into buffer
-                if (rd == IB_TIMEOUT) {
-                    if (query_started) {
-                        logger(LG_INFO, "Timeout of %d ms exceeded while reading query", g_query_timeout_msec);
-                        return IB_TIMEOUT;
-                    }
-                    // Check if we exceeded the maximum time between two queries
-                    else if (timeout_reached(&start_of_idle, g_idle_timeout_msec)) {
-                        logger(LG_INFO, "Idle timeout of %d ms exceeded. Going to close connection.", g_idle_timeout_msec);
-                        return IB_TIMEOUT;
-                    }
-                }
-
-                // Are we at end of file? That is only an error, if we've
-                // read an incomplete line. If the last thing we read was
-                // a linefeed, then we consider the current request to
-                // be valid, if it is not empty.
-                else if (rd == IB_END_OF_FILE && r == _read_pointer /* currently at beginning of a line */)
-                {
-                    if (_requestlines.empty()) {
-                        return IB_END_OF_FILE; // empty request -> no request
-                    }
-                    else {
-                        // socket has been closed but request is complete
-                        return IB_REQUEST_READ;
-                        // the current state is now:
-                        // _read_pointer == r == _write_pointer => buffer is empty
-                        // that way, if the main program tries to read the
-                        // next request, it will get an IB_UNEXPECTED_END_OF_FILE
-                    }
-                }
-                // if we are *not* at an end of line while reading
-                // a request, we got an invalid request.
-                else if (rd == IB_END_OF_FILE)
-                    return IB_UNEXPECTED_END_OF_FILE;
-
-                // Other status codes
-                else if (rd == IB_SHOULD_TERMINATE)
-                    return rd;
-            }
-            // OK. So no space is left in the buffer. But maybe at the
-            // *beginning* of the buffer is space left again. This is
-            // very probable if _write_pointer == _end_pointer. Most
-            // of the buffer's content is already processed. So we simply
-            // shift the yet unprocessed data to the very left of the buffer.
-            else if (_read_pointer > _readahead_buffer) {
-                int shift_by = _read_pointer - _readahead_buffer; // distance to beginning of buffer
-                int size     = _write_pointer - _read_pointer;    // amount of data to shift
-                memmove(_readahead_buffer, _read_pointer, size);
-                _read_pointer = _readahead_buffer;                // unread data is now at the beginning
-                _write_pointer -= shift_by;                       // write pointer shifted to the left
-                r -= shift_by;                                    // current scan position also shift left
-                // continue -> still no data in buffer, but it will
-                // be read, as now is space
-            }
-            // buffer is full, but still no end of line found => buffer is too small
-            else {
-                logger(LG_INFO, "Error: maximum length of request line exceeded");
-                return IB_LINE_TOO_LONG;
-            }
-        }
-        else // end of line found
-        {
-            if (_read_pointer == r) { // empty line found => end of request
-                _read_pointer = r + 1;
-                // Was ist, wenn noch keine korrekte Zeile gelesen wurde?
-                if (_requestlines.size() == 0) {
-                    return IB_EMPTY_REQUEST;
-                }
-                else
-                    return IB_REQUEST_READ;
-            }
-            else { // non-empty line: belongs to current request
-                storeRequestLine(_read_pointer, r - _read_pointer);
-                query_started = true;
-                _read_pointer = r + 1;
-                r = _read_pointer;
-            }
-        }
-    }
-}
-
-// read at least *some* data. Return IB_TIMEOUT if that
-// lasts more than g_query_timeout_msec msecs.
-int InputBuffer::readData()
-{
-    struct timeval start;
-    gettimeofday(&start, NULL);
-
-    struct timeval tv;
-    while (!*_termination_flag)
-    {
-        if (timeout_reached(&start, g_query_timeout_msec))
-            return IB_TIMEOUT;
-
-        tv.tv_sec  = READ_TIMEOUT_USEC / 1000000;
-        tv.tv_usec = READ_TIMEOUT_USEC % 1000000;
-
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(_fd, &fds);
-
-
-        int retval = select(_fd + 1, &fds, NULL, NULL, &tv);
-        if (retval > 0 && FD_ISSET(_fd, &fds)) {
-            ssize_t r = read(_fd, _write_pointer, _end_pointer - _write_pointer);
-            if (r < 0) {
-                return IB_END_OF_FILE;
-            }
-            else if (r == 0) {
-                return IB_END_OF_FILE;
-            }
-            else {
-                _write_pointer += r;
-                return IB_DATA_READ;
-            }
-        }
-    }
-    return IB_SHOULD_TERMINATE;
-}
-
-
-void InputBuffer::storeRequestLine(char *line, int length)
-{
-    char *end = line + length;
-    while (end > line && isspace(*--end)) length--;
-    if (length > 0)
-        _requestlines.push_back(string(line, length));
-    else
-        logger(LG_INFO, "Warning ignoring line containing only whitespace");
-}
-
-string InputBuffer::nextLine()
-{
-    string s = _requestlines.front();
-    _requestlines.pop_front();
-    return s;
-}
+const int read_timeout_usec = 200000;
 
 bool timeout_reached(const struct timeval *start, int timeout_ms)
 {
@@ -249,4 +56,188 @@ bool timeout_reached(const struct timeval *start, int timeout_ms)
     int64_t elapsed = (now.tv_sec - start->tv_sec) * 1000000;
     elapsed += now.tv_usec - start->tv_usec;
     return elapsed / 1000 >= timeout_ms;
+}
+
+pair<list<string>, InputBuffer::Result> failure(InputBuffer::Result r)
+{
+    return make_pair(list<string>(), r);
+}
+}
+
+InputBuffer::InputBuffer(int fd, const int *termination_flag)
+    : _fd(fd)
+    , _termination_flag(termination_flag)
+    , _readahead_buffer(initial_buffer_size)
+{
+    _read_index = 0;          // points to data not yet processed
+    _write_index = 0;         // points to end of data in buffer
+}
+
+// read in data enough for one complete request (and maybe more).
+pair<list<string>, InputBuffer::Result> InputBuffer::readRequest()
+{
+    std::list<std::string> request_lines;
+    // Remember when we started waiting for a request. This
+    // is needed for the idle_timeout. A connection may
+    // not be idle longer than that value.
+    struct timeval start_of_idle; // Waiting for the first line
+    gettimeofday(&start_of_idle, NULL);
+
+    // Remember if we have read some part of the query. During
+    // a query the timeout is another (short) than between
+    // queries.
+    bool query_started = false;
+
+    // _read_index points to the place in the buffer, where the
+    // next valid data begins. This data ends at _write_index.
+    // That data might have been read while reading the previous
+    // request.
+
+    // r is used to find the end of the line
+    size_t r = _read_index;
+
+    while (true)
+    {
+        // Try to find end of the current line in buffer
+        while (r < _write_index && _readahead_buffer[r] != '\n')
+            r++; // now r is at end of data or at '\n'
+
+        // If we cannot find the end of line in the data
+        // already read, then we need to read new data from
+        // the client.
+        if (r == _write_index)
+        {
+            // Is there still space left in the buffer => read in
+            // further data into the buffer.
+            if (_write_index < _readahead_buffer.capacity())
+            {
+                Result rd = readData(); // tries to read in further data into buffer
+                if (rd == Result::timeout) {
+                    if (query_started) {
+                        logger(LG_INFO, "Timeout of %d ms exceeded while reading query", g_query_timeout_msec);
+                        return failure(Result::timeout);
+                    }
+                    // Check if we exceeded the maximum time between two queries
+                    else if (timeout_reached(&start_of_idle, g_idle_timeout_msec)) {
+                        logger(LG_INFO, "Idle timeout of %d ms exceeded. Going to close connection.", g_idle_timeout_msec);
+                        return failure(Result::timeout);
+                    }
+                }
+
+                // Are we at end of file? That is only an error, if we've
+                // read an incomplete line. If the last thing we read was
+                // a linefeed, then we consider the current request to
+                // be valid, if it is not empty.
+                else if (rd == Result::eof && r == _read_index /* currently at beginning of a line */)
+                {
+                    if (request_lines.empty()) {
+                        return failure(Result::eof); // empty request -> no request
+                    }
+                    else {
+                        // socket has been closed but request is complete
+                        return make_pair(request_lines, Result::request_read);
+                        // the current state is now:
+                        // _read_index == r == _write_index => buffer is empty
+                        // that way, if the main program tries to read the
+                        // next request, it will get an IB_UNEXPECTED_EOF
+                    }
+                }
+                // if we are *not* at an end of line while reading
+                // a request, we got an invalid request.
+                else if (rd == Result::eof)
+                    return failure(Result::unexpected_eof);
+
+                // Other status codes
+                else if (rd == Result::should_terminate)
+                    return failure(rd);
+            }
+            // OK. So no space is left in the buffer. But maybe at the
+            // *beginning* of the buffer is space left again. This is
+            // very probable if _write_index == _readahead_buffer.capacity(). Most
+            // of the buffer's content is already processed. So we simply
+            // shift the yet unprocessed data to the very left of the buffer.
+            else if (_read_index > 0) {
+                int shift_by = _read_index;                       // distance to beginning of buffer
+                int size     = _write_index - _read_index;        // amount of data to shift
+                memmove(&_readahead_buffer[0], &_readahead_buffer[_read_index], size);
+                _read_index = 0;                                  // unread data is now at the beginning
+                _write_index -= shift_by;                         // write pointer shifted to the left
+                r -= shift_by;                                    // current scan position also shift left
+                // continue -> still no data in buffer, but it will
+                // be read, as now is space
+            }
+            // buffer is full, but still no end of line found
+            else {
+                size_t new_capacity = _readahead_buffer.capacity() * 2;
+                if (new_capacity > maximum_buffer_size) {
+                    logger(LG_INFO, "Error: maximum length of request line exceeded");
+                    return failure(Result::line_too_long);
+                }
+                _readahead_buffer.resize(new_capacity);
+            }
+        }
+        else // end of line found
+        {
+            if (_read_index == r) { // empty line found => end of request
+                _read_index = r + 1;
+                // Was ist, wenn noch keine korrekte Zeile gelesen wurde?
+                if (request_lines.empty()) {
+                    return failure(Result::empty_request);
+                }
+                else
+                    return make_pair(request_lines, Result::request_read);
+            }
+            else { // non-empty line: belongs to current request
+                int length = r - _read_index;
+                for (size_t end = r; end > _read_index && isspace(_readahead_buffer[--end]);)
+                    length--;
+                if (length > 0)
+                    request_lines.push_back(string(&_readahead_buffer[_read_index], length));
+                else
+                    logger(LG_INFO, "Warning ignoring line containing only whitespace");
+                query_started = true;
+                _read_index = r + 1;
+                r = _read_index;
+            }
+        }
+    }
+}
+
+// read at least *some* data. Return IB_TIMEOUT if that
+// lasts more than g_query_timeout_msec msecs.
+InputBuffer::Result InputBuffer::readData()
+{
+    struct timeval start;
+    gettimeofday(&start, NULL);
+
+    struct timeval tv;
+    while (!*_termination_flag)
+    {
+        if (timeout_reached(&start, g_query_timeout_msec))
+            return Result::timeout;
+
+        tv.tv_sec  = read_timeout_usec / 1000000;
+        tv.tv_usec = read_timeout_usec % 1000000;
+
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(_fd, &fds);
+
+
+        int retval = select(_fd + 1, &fds, NULL, NULL, &tv);
+        if (retval > 0 && FD_ISSET(_fd, &fds)) {
+            ssize_t r = read(_fd, &_readahead_buffer[_write_index], _readahead_buffer.capacity() - _write_index);
+            if (r < 0) {
+                return Result::eof;
+            }
+            else if (r == 0) {
+                return Result::eof;
+            }
+            else {
+                _write_index += r;
+                return Result::data_read;
+            }
+        }
+    }
+    return Result::should_terminate;
 }

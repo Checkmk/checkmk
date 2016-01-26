@@ -944,6 +944,12 @@ class Container:
     def sanitize(self, d):
         d.setdefault("elements", [])
 
+    # Which kind of elements are allowed to be added to this container?
+    # Defaulting to all possible elements.
+    @classmethod
+    def may_contain(self, element_type_name):
+        return True
+
     def elements(self):
         return self._["elements"]
 
@@ -1057,9 +1063,7 @@ def page_handlers():
     return page_handlers
 
 
-def render_addto_popup():
+def render_addto_popup(add_type):
     for page_type in page_types.values():
-        # TODO: Wie sorgen wir dafür, dass nur geeignete Elemente zum hinzufügen
-        # angeboten werden? Eine View in eine GraphCollection macht keinen Sinn...
-        if issubclass(page_type, Container):
+        if issubclass(page_type, Container) and page_type.may_contain(add_type):
             page_type.render_addto_popup()

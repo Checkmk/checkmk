@@ -772,7 +772,8 @@ function create_graph(data, params) {
                 toggle_popup(event, this, 'add_visual', 'add_visual',
                     ['pnpgraph',
                      { 'host': host, 'service': service },
-                     { 'timerange': view, 'source': source }]
+                     { 'timerange': view, 'source': source }],
+                    "add_type=pnpgraph"
                 );
             }
         }(data['host'], data['service'], view, source);

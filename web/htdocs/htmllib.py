@@ -1070,7 +1070,8 @@ class html(GUITester):
 
             self.popup_trigger(
                 self.render_icon("menu", _("Add this view to..."), cssclass="statusicon iconbutton"),
-                'add_visual', 'add_visual', data=[mode_name, encoded_vars, {'name': self.var('view_name')}])
+                'add_visual', 'add_visual', data=[mode_name, encoded_vars, {'name': self.var('view_name')}],
+                url_vars=[("add_type", "view")])
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:

@@ -1275,6 +1275,7 @@ def mode_edit_host(phase, new, is_cluster):
         html.write("<div class=info>" + lock_message + "</div>")
 
     html.begin_form("edit_host", method="POST")
+    html.prevent_password_auto_completion()
 
     # host name
     forms.header(_("General Properties"))

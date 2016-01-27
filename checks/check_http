@@ -124,6 +124,9 @@ def check_http_arguments(params):
         if settings['expect_regex'][2]:
             args += ' --invert-regex'
 
+    if settings.get("extended_perfdata"):
+        args += ' --extended-perfdata'
+
     if "post_data" in settings:
         data, content_type = settings["post_data"]
         args += ' -P %s -T %s' % \

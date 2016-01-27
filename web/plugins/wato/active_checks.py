@@ -973,6 +973,14 @@ register_rule(group,
                                              "to the checked URL and this clickable."),
                                 )
                             ),
+                            ("extended_perfdata", FixedValue(
+                                value = True,
+                                totext = _("Extended perfdata"),
+                                title = _("Record additional performance data"),
+                                help = _("This option makes the HTTP check produce more detailed performance data values "
+                                         "like the connect time, header time, time till first byte received and the "
+                                         "transfer time."),
+                            )),
                         ]
                     ),
 

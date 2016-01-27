@@ -1,0 +1,11 @@
+title: Palo Alto Firewall: Status
+agents: snmp
+catalog: hw/network/palo_alto
+license: GPL
+distribution: check_mk
+description:
+ Displays the current firmware version, HA mode, local HA state
+ and peer HA state. This check is purely informative and always OK.
+
+inventory:
+ Creates one service per Palo Alto firewall.

@@ -76,6 +76,23 @@ register_rule(group + "/" + subgroup_networking,
         ),
         match="dict")
 
+register_check_parameters(
+    subgroup_networking,
+    "palo_alto_sessions",
+    "Palo Alto Active Sessions",
+    Dictionary(
+        elements = [
+            ("levels_sessions_used",
+            Tuple(
+                title = "Levels for sessions used",
+                elements = [
+                    Integer(title = "Warning at", default_value = 60, unit = u"%"),
+                    Integer(title = "Critical at", default_value = 70, unit = u"%"),
+                ])),
+        ]),
+    None,
+    "dict"
+)
 
 #.
 #   .--Inventory-----------------------------------------------------------.

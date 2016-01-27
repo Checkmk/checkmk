@@ -2722,6 +2722,35 @@ metric_info["db_log_latency"] = {
     "color" : "25/a",
 }
 
+metric_info["total_active_sessions"] = {
+    "title" : _("Total Active Sessions"),
+    "unit"  : "count",
+    "color" : "#888888",
+}
+
+metric_info["tcp_active_sessions"] = {
+    "title" : _("Active TCP Sessions"),
+    "unit"  : "count",
+    "color" : "#888800",
+}
+
+metric_info["udp_active_sessions"] = {
+    "title" : _("Active UDP sessions"),
+    "unit"  : "count",
+    "color" : "#880088",
+}
+
+metric_info["icmp_active_sessions"] = {
+    "title" : _("Active ICMP Sessions"),
+    "unit"  : "count",
+    "color" : "#008888"
+}
+
+metric_info["sslproxy_active_sessions"] = {
+    "title" : _("Active SSL Proxy sessions"),
+    "unit"  : "count",
+    "color" : "#11FF11",
+}
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -5748,4 +5777,13 @@ graph_info.append({
         ("mem_perm_used:max#000000", _("Max Perm used")),
     ],
     "range" : (0, "mem_perm_used:max")
+})
+
+graph_info.append({
+    "title"     : _("Palo Alto Sessions"),
+    "metrics"   : [ ("tcp_active_sessions", "area"),
+                    ("udp_active_sessions", "stack"),
+                    ("icmp_active_sessions", "stack"),
+                    ("sslproxy_active_sessions", "stack"),
+                ],
 })

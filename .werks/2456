@@ -1,0 +1,9 @@
+Title: palo_alto, palo_alto_sessions: Two new checks for Palo Alto firewalls.
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453918050
+Class: feature
+
+

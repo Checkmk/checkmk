@@ -1,0 +1,15 @@
+title: Palo Alto Firewall: Sessions
+agents: snmp
+catalog: hw/network/palo_alto
+license: GPL
+distribution: check_mk
+description:
+ Checks the current session load in terms of active sessions
+ compared to supported sessions.
+
+inventory:
+ Creates one service per Palo Alto firewall.
+
+perfdata:
+ The total active sessions, as well as active tcp, udp, icmp and
+ sslproxy sessions.

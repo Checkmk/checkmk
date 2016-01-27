@@ -714,12 +714,7 @@ def show_filter(f):
         f.display()
         html.write('</div>')
     else:
-        html.write('<div class="floatfilter %s">' % (f.double_height() and "double" or "single"))
-        html.write('<div class=legend>%s</div>' % f.title)
-        html.write('<div class=content>')
-        f.display()
-        html.write("</div>")
-        html.write("</div>")
+        visuals.show_filter(f)
 
 
 def show_filter_form(is_open, filters):

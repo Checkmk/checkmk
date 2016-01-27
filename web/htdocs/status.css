@@ -324,46 +324,11 @@ td.goodflag {
     color: #080;
 }
 
-table.data td.buttons {
-    white-space: nowrap;
-    width: 1%;
-}
-
 table.data td.buttons.visuals {
     width: 75px;
 }
-table.data td.count {
-    text-align: right;
-    font-weight: bold;
-    font-family: sans-serif;
-}
 table.data .state0 *, table.data .state2 *, table.data .state3 * {
     color: white;
-}
-
-table.data td.number {
-    text-align: right;
-    white-space: nowrap;
-}
-
-table.data td.nobr {
-    white-space: nowrap;
-}
-
-table.data td.center {
-    text-align: center;
-}
-
-table.data td.unused {
-    color: #888;
-    text-shadow: 1px 1px 0.5px #fff;
-}
-
-td.narrow {
-    width: 10px;
-}
-td.wide {
-    width: 100%;
 }
 
 td.icons {

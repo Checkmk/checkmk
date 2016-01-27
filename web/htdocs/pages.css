@@ -304,6 +304,47 @@ table.data th:last-child {
     border-right-style: none;
 }
 
+table.data tr:nth-child(odd) { background-color: #eee; }
+table.data tr:nth-child(even) { background-color: #ddd; }
+
+table.data td.buttons {
+    white-space: nowrap;
+    width: 1%;
+}
+
+table.data td.count {
+    text-align: right;
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+table.data td.number {
+    text-align: right;
+    white-space: nowrap;
+}
+
+table.data td.nobr {
+    white-space: nowrap;
+}
+
+table.data td.center {
+    text-align: center;
+}
+
+table.data td.unused {
+    color: #888;
+    text-shadow: 1px 1px 0.5px #fff;
+}
+
+td.narrow {
+    width: 10px;
+}
+td.wide {
+    width: 100%;
+}
+
+
+
 /* Two-lined header, for example in WATO: ChangeLog->Site Status */
 table.data tr.dualheader th {
     border-bottom: 1px solid #ccc;

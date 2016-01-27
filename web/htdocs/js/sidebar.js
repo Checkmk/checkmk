@@ -403,13 +403,13 @@ function debug(s) {
 // but without scrolling. The height of the header and footer divs need
 // to be treated here.
 var g_just_resizing = 0;
-function setSidebarHeight() {
+function set_sidebar_size() {
     var oHeader  = document.getElementById('side_header');
     var oContent = document.getElementById('side_content');
     var oFooter  = document.getElementById('side_footer');
     var height   = pageHeight();
 
-    // Resize sidebar frame on Chrome (and other webkit browsers)
+    // Resize sidebar frame on Chrome (and other webkit browsers).
     if (isWebkit()) {
         var oldcols = parent.document.body.cols.split(",");
         var oldwidth = parseInt(oldcols[0]);
@@ -417,7 +417,7 @@ function setSidebarHeight() {
         // Note: previously this was "var width = oHeader.clientWidth;" and worked
         // fine. It stopped working - probably with new Chrome versions. We do not
         // know yet if the new way also works on old Chrome versions.
-        var target_width = parseInt(oldwidth * 280.0 / width);
+        var target_width = parseInt(oldwidth * sidebar_width() / width);
         var newcols = target_width.toString() + ",*";
         parent.document.body.cols = newcols;
     }
@@ -528,31 +528,34 @@ function dragScroll(event) {
   return false;
 }
 
+function sidebar_width()
+{
+    if (g_sidebar_folded)
+        return 10;
+    else
+        return 280;
+}
+
 function fold_sidebar()
 {
     g_sidebar_folded = true;
     document.getElementById('check_mk_sidebar').style.position = "relative";
     document.getElementById('check_mk_sidebar').style.left = "-265px";
     document.getElementById('side_footer').style.display = "none";
-    if (isWebkit()) {
-        var oldcols = parent.document.body.cols.split(",");
-        var oldwidth = parseInt(oldcols[0]);
-        var new_width = 10.0 / 280.0 * oldwidth;
-        parent.document.body.cols = new_width.toString() + ",*";
-    }
-    else
-        parent.document.body.cols = "10,*";
+    document.getElementById('side_version').style.display = "none";
+    parent.document.body.cols = sidebar_width() + ",*";
     get_url('sidebar_fold.py?fold=yes');
 }
 
 
 function unfold_sidebar()
 {
+    g_sidebar_folded = false;
     document.getElementById('check_mk_sidebar').style.position = "";
     document.getElementById('check_mk_sidebar').style.left = "0";
     document.getElementById('side_footer').style.display = "";
-    parent.document.body.cols = "280,*";
-    g_sidebar_folded = false;
+    document.getElementById('side_version').style.display = "";
+    parent.document.body.cols = sidebar_width() + ",*";
     get_url('sidebar_fold.py?fold=');
 }
 

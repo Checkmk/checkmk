@@ -269,6 +269,7 @@
     * 2966 FIX: Quicksearch: Fixed sorting of results when not only searching for hosts
     * 2967 FIX: Hosts/Services: Hiding action menu trigger for empty menus
     * 2968 FIX: Closing quicksearch results when moving mouse out of sidebar area
+    * 2969 FIX: Fixed folding of sidebar in Google Chrome
 
     WATO:
     * 2442 WATO remove host: improved cleanup of obsolete host files...

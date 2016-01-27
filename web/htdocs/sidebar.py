@@ -249,7 +249,7 @@ def page_side():
     html.write('<body class="side')
     if config.screenshotmode:
         html.write(" screenshotmode")
-    html.write('" onload="initScrollPos(); setSidebarHeight(); init_messages(%s);" '
+    html.write('" onload="initScrollPos(); set_sidebar_size(); init_messages(%s);" '
                'onunload="storeScrollPos()">\n' % interval)
     html.write('<div id="check_mk_sidebar">\n')
 
@@ -285,11 +285,11 @@ def page_side():
         html.write("sidebar_restart_time = %s\n" % time.time())
     html.write("sidebar_update_interval = %0.2f;\n" % config.sidebar_update_interval)
     html.write("registerEdgeListeners();\n")
-    html.write("setSidebarHeight();\n")
+    html.write("set_sidebar_size();\n")
     html.write("refresh_snapins = %r;\n" % refresh_snapins)
     html.write("restart_snapins = %r;\n" % restart_snapins)
     html.write("sidebar_scheduler();\n")
-    html.write("window.onresize = function() { setSidebarHeight(); };\n")
+    html.write("window.onresize = function() { set_sidebar_size(); };\n")
     html.write("if (contentFrameAccessible()) { update_content_location(); };\n")
     html.write("</script>\n")
 

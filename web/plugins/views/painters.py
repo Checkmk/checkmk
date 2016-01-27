@@ -876,19 +876,8 @@ def paint_time_graph_cmk(row, show_timeranges=False):
             "host_name"           : row["host_name"],
             "service_description" : row.get("service_description", "_HOST_"),
     })
-
-    graph_data_range = {
-        "time_range" : get_graph_timerange_from_painter_options()
-    }
-
-    graph_render_options = {
-        "font_size"       : 11,
-        "show_controls"   : True,
-        "show_service"    : False,
-        "show_legend"     : True,
-        "resizable"       : True,
-        "interaction"     : True,
-    }
+    graph_data_range = { "time_range" : get_graph_timerange_from_painter_options() }
+    graph_render_options = {}
 
     return "", metrics.render_graphs_from_specification_html(
             graph_specification,

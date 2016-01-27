@@ -1,0 +1,9 @@
+Title: Hosts/Services: Hiding action menu trigger for empty menus
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453888557
+Class: fix
+
+

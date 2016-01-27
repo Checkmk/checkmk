@@ -308,6 +308,10 @@ def paint_icons(what, row):
     return "icons", output
 
 
+# toplevel may be
+#  True to get only columns for top level icons
+#  False to get only columns for dropdown menu icons
+#  None to get columns for all active icons
 def iconpainter_columns(what, toplevel):
     cols = set(['site',
                 'host_name',
@@ -323,7 +327,7 @@ def iconpainter_columns(what, toplevel):
         ])
 
     for icon_id, icon in get_multisite_icons().items():
-        if toplevel == icon['toplevel']:
+        if toplevel == None or toplevel == icon['toplevel']:
             if 'columns' in icon:
                 cols.update([ what + '_' + c for c in icon['columns'] ])
             cols.update([ "host_" + c for c in icon.get("host_columns", [])])
@@ -336,7 +340,7 @@ multisite_painters["service_icons"] = {
     "title"     : _("Service icons"),
     "short"     : _("Icons"),
     "printable" : False, # does not contain printable text
-    "columns"   : lambda: iconpainter_columns("service", toplevel=True),
+    "columns"   : lambda: iconpainter_columns("service", toplevel=None),
     "groupby"   : lambda row: "", # Do not account for in grouping
     "paint"     : lambda row: paint_icons("service", row)
 }
@@ -345,7 +349,7 @@ multisite_painters["host_icons"] = {
     "title"     : _("Host icons"),
     "short"     : _("Icons"),
     "printable" : False, # does not contain printable text
-    "columns"   : lambda: iconpainter_columns("host", toplevel=True),
+    "columns"   : lambda: iconpainter_columns("host", toplevel=None),
     "groupby"   : lambda row: "", # Do not account for in grouping
     "paint"     : lambda row: paint_icons("host", row)
 }

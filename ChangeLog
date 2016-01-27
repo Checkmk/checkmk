@@ -267,6 +267,7 @@
     * 2956 FIX: Fixed exception on "Availability of Single-Host Aggregations view
     * 2965 FIX: Fixed HTML code shown in filter selection of favorite hosts filter
     * 2966 FIX: Quicksearch: Fixed sorting of results when not only searching for hosts
+    * 2967 FIX: Hosts/Services: Hiding action menu trigger for empty menus
 
     WATO:
     * 2442 WATO remove host: improved cleanup of obsolete host files...

@@ -678,6 +678,9 @@ class Overridable:
             config.declare_permission(permname, page.title(),
                              page.description(), ['admin','user','guest'])
 
+    @classmethod
+    def custom_list_buttons(self, instance):
+        pass
 
     @classmethod
     def page_list(self):
@@ -779,9 +782,7 @@ class Overridable:
                 if instance.may_delete():
                     html.icon_button(instance.delete_url(), _("Delete!"), "delete")
 
-                ### # Custom buttons - visual specific
-                ### if render_custom_buttons:
-                ###     render_custom_buttons(visual_name, visual)
+                self.custom_list_buttons(instance)
 
                 # Internal ID of instance (we call that 'name')
                 table.cell(_('ID'), instance.name(), css="narrow")

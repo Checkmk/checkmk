@@ -8805,9 +8805,18 @@ def mode_sites(phase):
             if is_distributed(test_sites):
                 # Make sure that site is not being used by hosts and folders
                 if delid in Folder.root_folder().all_site_ids():
+                    search_url = html.makeactionuri([
+                        ("_change_site",     "1"),
+                        ("host_search_site", delid),
+                        ("host_search",      "1"),
+                        ("folder",           ""),
+                        ("mode",             "search"),
+                        ("filled_in",        "edit_host"),
+                    ])
                     raise MKUserError(None,
-                        _("You cannot delete this connection. "
-                          "It has folders/hosts assigned to it."))
+                        _("You cannot delete this connection. It has folders/hosts "
+                          "assigned to it. You can use the <a href=\"%s\">host "
+                          "search</a> to get a list of the hosts.") % search_url)
 
             c = wato_confirm(_("Confirm deletion of site %s" % delid),
                              _("Do you really want to delete the connection to the site %s?" % delid))

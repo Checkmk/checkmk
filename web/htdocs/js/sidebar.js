@@ -81,11 +81,16 @@ function registerEdgeListeners(obj) {
             continue;
 
         if (window.addEventListener)
-            edges[i].addEventListener("mousemove", stop_snapin_dragging, false);
+            edges[i].addEventListener("mousemove", on_mouse_leave, false);
         else
-            edges[i].onmousemove = stop_snapin_dragging;
+            edges[i].onmousemove = on_mouse_leave;
     }
     edges = null;
+}
+
+function on_mouse_leave(e) {
+    mkSearchClose();
+    return stop_snapin_dragging(e);
 }
 
 function stop_snapin_dragging(e) {

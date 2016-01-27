@@ -1,0 +1,9 @@
+Title: Closing quicksearch results when moving mouse out of sidebar area
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453889297
+Class: fix
+
+

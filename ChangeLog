@@ -225,6 +225,7 @@
     * 2963 FIX: esx_vsphere_datastores: Deal with empty url attribute of datastores
     * 2983 FIX: netapp_api_disk: fixed exception when disks were not included in the raid...
     * 2971 FIX: heartbeat_crm: Is now compatible with more forms of crm_mon output formats
+    * 2972 FIX: df: Filesystem trends: Outputting less senseless time left in case of nearly 0 growth
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

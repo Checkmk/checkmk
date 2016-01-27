@@ -33,7 +33,9 @@ DISTNAME           := $(NAME)-$(VERSION)
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12
 
-CLANG_FORMAT       := clang-format-3.7
+CLANG_VERSION      := 3.8
+CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
+SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 CPPCHECK           := cppcheck
 DOXYGEN            := doxygen
 IWYU               := include-what-you-use
@@ -67,9 +69,9 @@ FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix mkeventd/src/,*.cc *.c *.h))
 
 .PHONY: all check-binaries check check-permissions check-spaces check-version \
-        clean cppcheck dist documentation format headers healspaces help iwyu \
-        minify-js mk-eventd mk-livestatus mrproper optimize-images packages \
-        setup setversion version
+        clang-analyzer clean cppcheck dist documentation format headers \
+        healspaces help iwyu minify-js mk-eventd mk-livestatus mrproper \
+        optimize-images packages setup setversion version
 
 all: dist packages
 
@@ -243,7 +245,7 @@ minify-js:
 	fi
 
 clean:
-	rm -rf api dist.tmp rpm.topdir *.rpm *.deb *.exe \
+	rm -rf api clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       mkeventd-*.tar.gz mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js
@@ -259,6 +261,11 @@ setup:
 iwyu:
 	$(MAKE) -C livestatus clean
 	$(MAKE) -C livestatus CC=$(IWYU) CXX=$(IWYU) -k
+
+# Not really perfect rules, but better than nothing
+clang-analyzer:
+	$(MAKE) -C livestatus clean
+	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE)
 
 cppcheck:
 	$(CPPCHECK) --quiet --enable=all --max-configs=20 --inline-suppr --template=gcc -I livestatus/src -I livestatus livestatus

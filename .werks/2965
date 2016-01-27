@@ -1,0 +1,9 @@
+Title: Fixed HTML code shown in filter selection of favorite hosts filter
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453886763
+Class: fix
+
+

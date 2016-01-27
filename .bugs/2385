@@ -1,8 +1,11 @@
 Title: Resize of sidebar while zooming not working on all versions of Chromium browser
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2015-11-02 11:10:57
 Targetversion: future
-Class: bug
 
 This happens on Ubuntu 14.04 with Version 44.0.2403.89 Ubuntu 14.04 (64-bit).
+
+2016-01-27 11:25:10: changed state open -> done
+fixed.

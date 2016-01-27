@@ -691,7 +691,7 @@ if mkeventd_enabled:
         for action_id, title in mkeventd.action_choices(omit_hidden = True):
             if html.var("_action_" + action_id):
                 return "ACTION;%s;%s;%s" % (row["event_id"], config.user_id, action_id), \
-                  (_("execute that action &quot;%s&quot") % title)
+                  (_("execute that action \"%s\"") % title)
 
     multisite_commands.append({
         "tables"      : [ "event" ],

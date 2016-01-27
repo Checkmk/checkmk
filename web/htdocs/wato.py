@@ -2934,6 +2934,7 @@ def mode_search(phase):
 
     ## # Show search form
     html.begin_form("edit_host", method="GET")
+    html.prevent_password_auto_completion()
     forms.header(_("General Properties"))
     forms.section(_("Hostname"))
     html.text_input("host_search_host")
@@ -8804,9 +8805,18 @@ def mode_sites(phase):
             if is_distributed(test_sites):
                 # Make sure that site is not being used by hosts and folders
                 if delid in Folder.root_folder().all_site_ids():
+                    search_url = html.makeactionuri([
+                        ("_change_site",     "1"),
+                        ("host_search_site", delid),
+                        ("host_search",      "1"),
+                        ("folder",           ""),
+                        ("mode",             "search"),
+                        ("filled_in",        "edit_host"),
+                    ])
                     raise MKUserError(None,
-                        _("You cannot delete this connection. "
-                          "It has folders/hosts assigned to it."))
+                        _("You cannot delete this connection. It has folders/hosts "
+                          "assigned to it. You can use the <a href=\"%s\">host "
+                          "search</a> to get a list of the hosts.") % search_url)
 
             c = wato_confirm(_("Confirm deletion of site %s" % delid),
                              _("Do you really want to delete the connection to the site %s?" % delid))
@@ -11941,7 +11951,7 @@ def mode_rulesets(phase, group=None):
                 html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
             else:
                 html.context_button(_("Deprecated Rulesets"),
-                    make_link([("mode", "rulesets"), ("group", "static"), ("host", only_host), ("deprecated", "1")]), "rulesets_deprecated")
+                    folder_preserving_link([("mode", "rulesets"), ("group", "static"), ("host", only_host), ("deprecated", "1")]), "rulesets_deprecated")
             html.context_button(only_host,
                  folder_preserving_link([("mode", "edit_host"), ("host", only_host)]), "host")
         else:
@@ -11950,7 +11960,7 @@ def mode_rulesets(phase, group=None):
                 html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
             else:
                 html.context_button(_("Deprecated Rulesets"),
-                    make_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "1")]), "rulesets_deprecated")
+                    folder_preserving_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "1")]), "rulesets_deprecated")
             if config.may("wato.hosts") or config.may("wato.seeall"):
                 html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "folder")
             if group == "agents":

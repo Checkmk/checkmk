@@ -813,6 +813,16 @@ def declare_filter(sort_index, f, comment = None):
     f.comment = comment
     f.sort_index = sort_index
 
+
+def show_filter(f):
+    html.write('<div class="floatfilter %s">' % (f.double_height() and "double" or "single"))
+    html.write('<div class=legend>%s</div>' % html.attrencode(f.title))
+    html.write('<div class=content>')
+    f.display()
+    html.write("</div>")
+    html.write("</div>")
+
+
 # Base class for all filters
 # name:          The unique id of that filter. This id is e.g. used in the
 #                persisted view configuration
@@ -1084,7 +1094,8 @@ class VisualFilterList(ListOfMultiple):
                     self._filters[fname] = fspecs[fname]._filter
 
         # Convert to list and sort them!
-        fspecs = sorted(fspecs.items(), key=lambda x: (x[1]._filter.sort_index, x[1].title()))
+        fspecs = sorted(fspecs.items(),
+            key=lambda x: (x[1]._filter.sort_index, x[1].title()))
 
         kwargs.setdefault('title', _('Filters'))
         kwargs.setdefault('add_label', _('Add filter'))
@@ -1118,12 +1129,7 @@ class VisualFilter(ValueSpec):
             self._filter.set_value(value)
 
         # A filter can not be used twice on a page, because the varprefix is not used
-        html.write('<div class="floatfilter %s">' % (self._filter.double_height() and "double" or "single"))
-        html.write('<div class=legend>%s</div>' % self._filter.title)
-        html.write('<div class=content>')
-        self._filter.display()
-        html.write("</div>")
-        html.write("</div>")
+        show_filter(self._filter)
 
     def value_to_text(self, value):
         # FIXME: optimize. Needed?

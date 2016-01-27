@@ -1,9 +1,9 @@
 Title: Perfdata varname of df should be fixed to 'size'
 Component: checks
-State: open
+Class: cleanup
+State: wontfix
 Date: 2012-07-28 20:07:03
 Targetversion: 1.2.3i1
-Class: cleanup
 
 Currently the fs check uses the name of the mount point as the variable name
 for the filesystem performance data.  In the case of Windows mount points
@@ -12,3 +12,6 @@ there is a backslash included which makes everything problematic.
 There is just one drawback: People with multiple RRDs will loose their
 filesystem history once again... :-( For some time we could offer an option
 that switches to the old format.
+
+2016-01-26 15:08:30: changed state open -> wontfix
+This problem is not really problematic anymore. Won't change anything here.

@@ -1058,7 +1058,7 @@ class FilterStarred(FilterTristate):
         icon = '<img class="icon inline" src="images/icon_starred.png"> '
         FilterTristate.__init__(self,
             name   = what + "_favorites",
-            title  = icon  + (what == "host" and _("Favorite Hosts") or _("Favorite Services")),
+            title  = HTML(icon  + (what == "host" and _("Favorite Hosts") or _("Favorite Services"))),
             info   = what,
             column = what + "_favorite", # Column, not used
             deflt  = -1,

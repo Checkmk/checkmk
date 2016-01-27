@@ -249,7 +249,7 @@ def page_side():
     html.write('<body class="side')
     if config.screenshotmode:
         html.write(" screenshotmode")
-    html.write('" onload="initScrollPos(); setSidebarHeight(); init_messages(%s);" '
+    html.write('" onload="initScrollPos(); set_sidebar_size(); init_messages(%s);" '
                'onunload="storeScrollPos()">\n' % interval)
     html.write('<div id="check_mk_sidebar">\n')
 
@@ -285,11 +285,11 @@ def page_side():
         html.write("sidebar_restart_time = %s\n" % time.time())
     html.write("sidebar_update_interval = %0.2f;\n" % config.sidebar_update_interval)
     html.write("registerEdgeListeners();\n")
-    html.write("setSidebarHeight();\n")
+    html.write("set_sidebar_size();\n")
     html.write("refresh_snapins = %r;\n" % refresh_snapins)
     html.write("restart_snapins = %r;\n" % restart_snapins)
     html.write("sidebar_scheduler();\n")
-    html.write("window.onresize = function() { setSidebarHeight(); };\n")
+    html.write("window.onresize = function() { set_sidebar_size(); };\n")
     html.write("if (contentFrameAccessible()) { update_content_location(); };\n")
     html.write("</script>\n")
 
@@ -305,7 +305,8 @@ def render_snapin(name, state):
     render_snapin_styles(snapin)
 
     html.write("<div id=\"snapin_container_%s\" class=snapin>\n" % name)
-    if state == "closed":
+    # When not permitted to open/close snapins, the snapins are always opened
+    if state == "closed" and config.may("general.configure_sidebar"):
         style = ' style="display:none"'
         headclass = "closed"
         minimaxi = "maxi"
@@ -326,13 +327,13 @@ def render_snapin(name, state):
         html.write(">")
 
 
-    # Icon for mini/maximizing, does not need permission
-    html.write('<div class="minisnapin">')
-    iconbutton(minimaxi + "snapin", None,
-               "side", "toggle_sidebar_snapin(this, '%s')" % toggle_url, 'snapin_'+name)
-    html.write('</div>')
-
     if config.may("general.configure_sidebar"):
+        # Icon for mini/maximizing
+        html.write('<div class="minisnapin">')
+        iconbutton(minimaxi + "snapin", None,
+                   "side", "toggle_sidebar_snapin(this, '%s')" % toggle_url, 'snapin_'+name)
+        html.write('</div>')
+
         # Button for closing (removing) a snapin
         html.write('<div class="closesnapin">')
         iconbutton("closesnapin", "sidebar_openclose.py?name=%s&state=off" % name,
@@ -340,9 +341,13 @@ def render_snapin(name, state):
         html.write('</div>')
 
     # The heading. A click on the heading mini/maximizes the snapin
-    html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" "
-               "onmouseover=\"this.style.cursor='pointer'\" "
-               "onmouseout=\"this.style.cursor='auto'\">%s</b>" % (toggle_url, snapin["title"]))
+    if config.may("general.configure_sidebar"):
+        toggle_actions = " onclick=\"toggle_sidebar_snapin(this,'%s')\"" \
+                         " onmouseover=\"this.style.cursor='pointer'\"" \
+                         " onmouseout=\"this.style.cursor='auto'" % toggle_url
+    else:
+        toggle_actions = ""
+    html.write("<b class=heading%s>%s</b>" % (toggle_actions, snapin["title"]))
 
     # End of header
     html.write("</div>")
@@ -841,7 +846,8 @@ def search_livestatus(used_filters):
         data.sort(cmp = sort_fctn)
         return sorted_data
 
-    if len(used_filters) == 1 and used_filters[0][0] != "hosts":
+    search_types = list(set(map(lambda x: x[0], used_filters)))
+    if len(used_filters) > 1 and search_types != ["hosts"]:
         data = sort_data(data)
 
     return data

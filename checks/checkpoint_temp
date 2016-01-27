@@ -44,6 +44,7 @@ def check_checkpoint_temp(item, params, info):
         if format_item_checkpoint_temp(name) == item:
             unit = unit.replace("degree", "").strip().lower()
             return check_temperature(float(value), params,
+                                     "checkpoint_temp_%s" % item,
                                      dev_unit=unit,
                                      dev_status=checkpoint_sensorstatus_to_nagios[dev_status])
 

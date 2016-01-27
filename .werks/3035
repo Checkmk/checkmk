@@ -1,0 +1,9 @@
+Title: Fixed broken graph preview when hovering graph icon in Check_MK Raw Edition
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453912145
+Class: fix
+
+

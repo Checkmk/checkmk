@@ -356,7 +356,7 @@ def pnp_icon(row, what):
     if not metrics.cmk_graphs_possible():
         # Directly ask PNP for all data, don't try to use the new graph fetching mechanism
         # to keep the number of single requests low
-        hover_content_func = 'pnp_hover_contents(\'%s\')' % pnp_popup_url(row, what)
+        hover_content_func = 'fetch_pnp_hover_contents(\'%s\')' % pnp_popup_url(row, what)
     else:
         hover_content_func = 'hover_graph(\'%s\', \'%s\', \'%s\')' % \
                                 (row['site'], row['host_name'], row.get('service_description', '_HOST_').replace("\\", "\\\\"))

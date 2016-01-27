@@ -275,6 +275,7 @@
     * 2968 FIX: Closing quicksearch results when moving mouse out of sidebar area
     * 2969 FIX: Fixed folding of sidebar in Google Chrome
     * 2970 FIX: Users now allowed to modify the sidebar (e.g. guests) can now not fold snapins anymore
+    * 3035 FIX: Fixed broken graph preview when hovering graph icon in Check_MK Raw Edition
 
     WATO:
     * 2442 WATO remove host: improved cleanup of obsolete host files...

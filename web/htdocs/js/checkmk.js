@@ -830,21 +830,27 @@ function hover_graph(site, host_name, service)
                        +'&service='+encodeURIComponent(service));
 
     if (c.indexOf('pnp4nagios') !== -1) {
-        // fallback to pnp graph handling
-        var c = get_url_sync(c);
-        // It is possible that, if using multisite based authentication, pnp sends a 302 redirect
-        // to the login page which is transparently followed by XmlHttpRequest. There is no chance
-        // to catch the redirect. So we try to check the response content. If it does not contain
-        // the expected code, simply display an error message.
-        if (c.indexOf('/image?') === -1) {
-            // Error! unexpected response
-            c = '<div class="error"> '
-              + 'ERROR: Received an unexpected response '
-              + 'while trying to display the PNP-Graphs. Maybe there is a problem with the '
-              + 'authentication.</div>';
-        }
+        // fallback to pnp graph handling (received an URL by the get_url_sync())
+        return fetch_pnp_hover_contents(c);
     }
 
+    return c;
+}
+
+function fetch_pnp_hover_contents(url)
+{
+    var c = get_url_sync(url);
+    // It is possible that, if using multisite based authentication, pnp sends a 302 redirect
+    // to the login page which is transparently followed by XmlHttpRequest. There is no chance
+    // to catch the redirect. So we try to check the response content. If it does not contain
+    // the expected code, simply display an error message.
+    if (c.indexOf('/image?') === -1) {
+        // Error! unexpected response
+        c = '<div class="error"> '
+          + 'ERROR: Received an unexpected response '
+          + 'while trying to display the PNP-Graphs. Maybe there is a problem with the '
+          + 'authentication.</div>';
+    }
     return c;
 }
 

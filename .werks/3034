@@ -1,0 +1,9 @@
+Title: cups_queues: Fixed bug when no user name available for a print job
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453906110
+Class: fix
+
+

@@ -47,6 +47,7 @@
 
 unit_info[""] = {
     "title"  : "",
+    "description" : _("Floating point numnber"),
     "symbol" : "",
     "render" : lambda v: "%.1f" % v,
 }
@@ -61,6 +62,7 @@ unit_info["count"] = {
 # value ranges from 0.0 ... 100.0
 unit_info["%"] = {
     "title"  : _("%"),
+    "description" : _("Percentage (0...100)"),
     "symbol" : _("%"),
     "render" : lambda v: percent_human_redable(v, 3),
 }
@@ -68,6 +70,7 @@ unit_info["%"] = {
 # Similar as %, but value ranges from 0.0 ... 1.0
 unit_info["ratio"] = {
     "title"  : _("%"),
+    "description" : _("Percentage given in range (0...1)"),
     "symbol" : _("%"),
     "render_scale" : 100.0, # Scale by this before rendering if "render" not being used
     "render" : lambda v: percent_human_redable(v, 3),
@@ -75,6 +78,7 @@ unit_info["ratio"] = {
 
 unit_info["s"] = {
     "title"    : _("sec"),
+    "description" : _("Timespan or Duration in seconds"),
     "symbol"   : _("s"),
     "render"   : age_human_readable,
     "stepping" : "time", # for vertical graph labels
@@ -82,6 +86,7 @@ unit_info["s"] = {
 
 unit_info["1/s"] = {
     "title" : _("per second"),
+    "description" : _("Frequency (displayed in events/s)"),
     "symbol" : _("/s"),
     "render" : lambda v: "%s%s" % (drop_dotzero(v), _("/s")),
 }
@@ -89,6 +94,7 @@ unit_info["1/s"] = {
 unit_info["hz"] = {
     "title"  : _("Hz"),
     "symbol" : _("Hz"),
+    "description" : _("Frequency (displayed in Hz)"),
     "render" : lambda v : physical_precision(v, 3, _("Hz")),
 }
 

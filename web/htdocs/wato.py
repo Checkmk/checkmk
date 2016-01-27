@@ -2934,6 +2934,7 @@ def mode_search(phase):
 
     ## # Show search form
     html.begin_form("edit_host", method="GET")
+    html.prevent_password_auto_completion()
     forms.header(_("General Properties"))
     forms.section(_("Hostname"))
     html.text_input("host_search_host")

@@ -306,14 +306,15 @@ def render_snapin(name, state):
 
     html.write("<div id=\"snapin_container_%s\" class=snapin>\n" % name)
     # When not permitted to open/close snapins, the snapins are always opened
-    if state == "closed" and config.may("general.configure_sidebar"):
-        style = ' style="display:none"'
-        headclass = "closed"
-        minimaxi = "maxi"
-    else:
+    if state == "open" or not config.may("general.configure_sidebar"):
         style = ""
         headclass = "open"
         minimaxi = "mini"
+    else:
+        style = ' style="display:none"'
+        headclass = "closed"
+        minimaxi = "maxi"
+
     toggle_url = "sidebar_openclose.py?name=%s&state=" % name
 
     html.write('<div class="head %s" ' % headclass)
@@ -344,7 +345,7 @@ def render_snapin(name, state):
     if config.may("general.configure_sidebar"):
         toggle_actions = " onclick=\"toggle_sidebar_snapin(this,'%s')\"" \
                          " onmouseover=\"this.style.cursor='pointer'\"" \
-                         " onmouseout=\"this.style.cursor='auto'" % toggle_url
+                         " onmouseout=\"this.style.cursor='auto'\"" % toggle_url
     else:
         toggle_actions = ""
     html.write("<b class=heading%s>%s</b>" % (toggle_actions, snapin["title"]))

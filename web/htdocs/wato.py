@@ -11951,7 +11951,7 @@ def mode_rulesets(phase, group=None):
                 html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
             else:
                 html.context_button(_("Deprecated Rulesets"),
-                    make_link([("mode", "rulesets"), ("group", "static"), ("host", only_host), ("deprecated", "1")]), "rulesets_deprecated")
+                    folder_preserving_link([("mode", "rulesets"), ("group", "static"), ("host", only_host), ("deprecated", "1")]), "rulesets_deprecated")
             html.context_button(only_host,
                  folder_preserving_link([("mode", "edit_host"), ("host", only_host)]), "host")
         else:
@@ -11960,7 +11960,7 @@ def mode_rulesets(phase, group=None):
                 html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
             else:
                 html.context_button(_("Deprecated Rulesets"),
-                    make_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "1")]), "rulesets_deprecated")
+                    folder_preserving_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "1")]), "rulesets_deprecated")
             if config.may("wato.hosts") or config.may("wato.seeall"):
                 html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "folder")
             if group == "agents":

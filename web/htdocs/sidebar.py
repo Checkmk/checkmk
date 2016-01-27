@@ -841,7 +841,8 @@ def search_livestatus(used_filters):
         data.sort(cmp = sort_fctn)
         return sorted_data
 
-    if len(used_filters) == 1 and used_filters[0][0] != "hosts":
+    search_types = list(set(map(lambda x: x[0], used_filters)))
+    if len(used_filters) > 1 and search_types != ["hosts"]:
         data = sort_data(data)
 
     return data

@@ -1,0 +1,9 @@
+Title: Quicksearch: Fixed sorting of results when not only searching for hosts
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453887925
+Class: fix
+
+

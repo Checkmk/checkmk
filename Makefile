@@ -245,7 +245,7 @@ minify-js:
 	fi
 
 clean:
-	rm -rf api dist.tmp rpm.topdir *.rpm *.deb *.exe \
+	rm -rf api clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       mkeventd-*.tar.gz mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js

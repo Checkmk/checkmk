@@ -439,7 +439,11 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved
                 hours_left = space_left / trend * range
                 timeleft = levels.get("trend_timeleft")
                 def format_hours(hours):
-                    if hours > 4 * 7 * 24: # 4 weeks
+                    if hours > 365 * 24:
+                        return "more than a year"
+                    elif hours > 90 * 24:
+                        return "%0d months" % (hours/ (30 * 24))
+                    elif hours > 4 * 7 * 24: # 4 weeks
                         return "%0d weeks" % (hours/ (7 * 24))
                     elif hours > 7 * 24:   # 1 week
                         return "%0.1f weeks" % (hours/ (7 * 24))

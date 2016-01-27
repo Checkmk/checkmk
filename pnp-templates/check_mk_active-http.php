@@ -51,4 +51,26 @@ $def[2] .= ""
  . "GPRINT:size:AVERAGE:\"%3.0lf Bytes AVERAGE \" "
 ;
 
+for ( $idx = 3; $idx < count ( $RRDFILE ); $idx++ ) {
+  preg_match ( "/(?<=_time_)[a-z]*(?=.rrd)/", $RRDFILE[$idx], $matches );
+  if ( strtolower ( $matches[0] ) == "ssl" ) {
+    $ds_name = strtoupper ( $matches[0] ) . " Time";
+  }
+  else {
+    $ds_name = ucwords ( $matches[0] ) . " Time";
+  }
+
+  $opt[$idx] = "-X0 --vertical-label \"" . $ds_name . " (ms)\"  --title \"" . $ds_name . " (ms)\" ";
+  $def[$idx] = ""
+   . "DEF:var1=" . $RRDFILE[$idx] . ":" . $DS[$idx] . ":MAX "
+   . "CDEF:ms=var1,1000,* "
+   . "AREA:ms#66ccff:\"" . $ds_name . " \" "
+   . "LINE1:ms#000000:\"\" "
+   . "GPRINT:ms:LAST:\"%3.3lg ms LAST \" "
+   . "GPRINT:ms:MAX:\"%3.3lg ms MAX \" "
+   . "GPRINT:ms:AVERAGE:\"%3.3lg ms AVERAGE \" "
+  ;
+}
+
+
 ?>

@@ -305,7 +305,8 @@ def render_snapin(name, state):
     render_snapin_styles(snapin)
 
     html.write("<div id=\"snapin_container_%s\" class=snapin>\n" % name)
-    if state == "closed":
+    # When not permitted to open/close snapins, the snapins are always opened
+    if state == "closed" and config.may("general.configure_sidebar"):
         style = ' style="display:none"'
         headclass = "closed"
         minimaxi = "maxi"
@@ -326,13 +327,13 @@ def render_snapin(name, state):
         html.write(">")
 
 
-    # Icon for mini/maximizing, does not need permission
-    html.write('<div class="minisnapin">')
-    iconbutton(minimaxi + "snapin", None,
-               "side", "toggle_sidebar_snapin(this, '%s')" % toggle_url, 'snapin_'+name)
-    html.write('</div>')
-
     if config.may("general.configure_sidebar"):
+        # Icon for mini/maximizing
+        html.write('<div class="minisnapin">')
+        iconbutton(minimaxi + "snapin", None,
+                   "side", "toggle_sidebar_snapin(this, '%s')" % toggle_url, 'snapin_'+name)
+        html.write('</div>')
+
         # Button for closing (removing) a snapin
         html.write('<div class="closesnapin">')
         iconbutton("closesnapin", "sidebar_openclose.py?name=%s&state=off" % name,
@@ -340,9 +341,13 @@ def render_snapin(name, state):
         html.write('</div>')
 
     # The heading. A click on the heading mini/maximizes the snapin
-    html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" "
-               "onmouseover=\"this.style.cursor='pointer'\" "
-               "onmouseout=\"this.style.cursor='auto'\">%s</b>" % (toggle_url, snapin["title"]))
+    if config.may("general.configure_sidebar"):
+        toggle_actions = " onclick=\"toggle_sidebar_snapin(this,'%s')\"" \
+                         " onmouseover=\"this.style.cursor='pointer'\"" \
+                         " onmouseout=\"this.style.cursor='auto'" % toggle_url
+    else:
+        toggle_actions = ""
+    html.write("<b class=heading%s>%s</b>" % (toggle_actions, snapin["title"]))
 
     # End of header
     html.write("</div>")

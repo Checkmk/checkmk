@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import mkeventd
-from  valuespec import *
+from valuespec import *
 
 try:
     mkeventd_enabled = config.mkeventd_enabled
@@ -495,7 +495,7 @@ if mkeventd_enabled:
         "paint"   : lambda row: ("", mkeventd.phase_names.get(row["event_phase"], ''))
     }
 
-    def paint_event_icons(row):
+    def render_event_phase_icons(row):
         phase = row["event_phase"]
         if phase == "ack":
             title = _("This event has been acknowledged.")
@@ -504,8 +504,33 @@ if mkeventd_enabled:
         elif phase == "delayed":
             title = _("The action of this event is still delayed in the hope of a cancelling event.")
         else:
+            return ''
+        return html.render_icon(phase, help=title)
+
+    def render_delete_event_icons(row):
+        if config.may("mkeventd.delete"):
+            # Found no cleaner way to get the view. Sorry.
+            view = get_view_by_name(html.var("view_name"))
+            urlvars = [
+                ("filled_in", "actions"),
+                ("actions", "yes"),
+                ("_do_actions", "yes"),
+                ("_row_id", row_id(view, row)),
+                ("_delete_event", _("Archive Event")),
+                ("_show_result", "0"),
+            ]
+            url = html.makeactionuri(urlvars)
+            return html.render_icon_button(url, _("Archive this event"), "delete")
+        else:
+            return ''
+
+    def paint_event_icons(row):
+        htmlcode =  render_event_phase_icons(row)
+        htmlcode += render_delete_event_icons(row)
+        if htmlcode:
+            return "icons", htmlcode
+        else:
             return "", ""
-        return 'icons', '<img class=icon title="%s" src="images/icon_%s.png">' % (title, phase)
 
     multisite_painters["event_icons"] = {
         "title"   : _("Event Icons"),
@@ -514,6 +539,7 @@ if mkeventd_enabled:
         "columns" : [ "event_phase" ],
         "paint"   : paint_event_icons,
     }
+
 
     def paint_event_contact_groups(row):
         cgs = row.get("event_contact_groups")

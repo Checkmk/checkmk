@@ -1211,6 +1211,11 @@ def render_view(view, rows, datasource, group_painters, painters,
         if show_checkboxes and html.do_actions():
             rows = filter_selected_rows(view, rows, weblib.get_rowselection('view-' + view['name']))
 
+        # There are one shot actions which only want to affect one row, filter the rows
+        # by this id during actions
+        if html.has_var("_row_id") and html.do_actions():
+            rows = filter_by_row_id(view, rows)
+
         if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
             try:
                 # Create URI with all actions variables removed
@@ -1994,9 +1999,21 @@ def do_actions(view, what, action_rows, backurl):
                 weblib.selection_id()
                 backurl += "&selection=" + html.var("selection")
                 message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view with checkboxes reset'))
+            if html.var("_show_result") == "0":
+                html.immediate_browser_redirect(0.5, backurl)
         html.message(message)
 
     return True
+
+
+def filter_by_row_id(view, rows):
+    wanted_row_id = html.var("_row_id")
+
+    for row in rows:
+        if row_id(view, row) == wanted_row_id:
+            return [row]
+    return []
+
 
 def filter_selected_rows(view, rows, selected_ids):
     action_rows = []
@@ -2165,11 +2182,9 @@ def link_to_view(content, row, view_name):
 def docu_link(topic, text):
     return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)
 
+# Calculates a uniq id for each data row which identifies the current
+# row accross different page loadings.
 def row_id(view, row):
-    '''
-    Calculates a uniq id for each data row which identifies the current
-    row accross different page loadings.
-    '''
     key = ''
     for col in multisite_datasources[view['datasource']]['idkeys']:
         key += '~%s' % row[col]

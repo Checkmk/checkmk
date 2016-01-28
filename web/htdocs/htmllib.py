@@ -337,7 +337,7 @@ class html(GUITester):
 
     def makeuri_contextless(self, vars, filename=None):
         if not filename:
-	    filename = self.myfile + ".py"
+            filename = self.myfile + ".py"
         if vars:
             return filename + "?" + self.urlencode_vars(vars)
         else:

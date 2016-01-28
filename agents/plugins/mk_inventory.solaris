@@ -51,7 +51,7 @@ then
         if type sneep >/dev/null 2>&1; then
             SN=$(sneep -t serial)
         else
-            SN=$(smbios -t SMB_TYPE_SYSTEM | grep 'Serial Number:' | awk '{print $3}')
+            SN=$(smbios -t SMB_TYPE_SYSTEM | grep 'Serial Number:' | awk '{print substr($0, index($0,$3))}')
         fi
         echo "SerialNumber: $SN"
         prtdiag -v

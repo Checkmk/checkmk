@@ -1,0 +1,10 @@
+Title: mk_inventory.solaris: improved detection of serial number for solaris_prtdiag plugin
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453986550
+Class: feature
+
+The agent plugin is now able to detect serial numbers with spaces.
+

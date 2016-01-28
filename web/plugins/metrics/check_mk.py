@@ -191,7 +191,7 @@ unit_info["%/m"] = {
 unit_info["bar"] = {
     "title"     : _("Bar"),
     "symbol"    : _("bar"),
-    "render"    : lambda v: physical_precision(v, 6, _("bar")),
+    "render"    : lambda v: physical_precision(v, 4, _("bar")),
 }
 
 unit_info["pa"] = {

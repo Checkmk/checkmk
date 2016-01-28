@@ -1,0 +1,10 @@
+Title: dell_om_disks: non-raid state is no longer treated as a critical problem
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453987797
+Class: fix
+
+Disks that have been configured to not be used in a raid are apparently reported as state non-raid.
+This was reported as a critical issue although it's probably intentional.

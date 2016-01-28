@@ -62,6 +62,7 @@ def check_dell_om_disks(item, _no_params, info):
          6  : 'Degraded',
          7  : 'Recovering',
          11 : 'Removed',
+         13 : 'non-raid',
          15 : 'Resynching',
          22 : 'Replacing', # FIXME: this one is not defined in the OMSA MIBs
          24 : 'Rebuilding',
@@ -93,7 +94,7 @@ def check_dell_om_disks(item, _no_params, info):
             if dstate in [ 40, 35, 34, 26, 7, 4]:
                 state = 1
                 label = "(!)"
-            elif dstate not in [ 3, 1 ]:
+            elif dstate not in [ 3, 1, 13 ]:
                 state = 2
                 label = "(!!)"
 

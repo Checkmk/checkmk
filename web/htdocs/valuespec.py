@@ -3577,7 +3577,7 @@ class Color(ValueSpec):
             "}).setHex(\"%s\");</script>" % (varprefix, varprefix, varprefix,
                                          self._on_change or "", value)
 
-        html.popup_trigger(indicator, varprefix + '_popup', menu_content=menu_content)
+        html.popup_trigger(indicator, varprefix + '_popup', menu_content=menu_content, cssclass="colorpicker")
 
 
 

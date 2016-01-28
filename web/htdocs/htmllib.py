@@ -1028,9 +1028,9 @@ class html(GUITester):
         else:
             self.status_icons[img] = tooltip
 
-    def render_popup_trigger(self, content, ident, what=None, data=None, url_vars=None, style=None, menu_content=None):
+    def render_popup_trigger(self, content, ident, what=None, data=None, url_vars=None, style=None, menu_content=None, cssclass=None):
         style = style and (' style="%s"' % style) or ""
-        src = '<div class="popup_trigger" id="popup_trigger_%s"%s>\n' % (ident, style)
+        src = '<div class="popup_trigger%s" id="popup_trigger_%s"%s>\n' % (cssclass and (" " + cssclass) or "", ident, style)
         onclick = 'toggle_popup(event, this, \'%s\', %s, %s, %s, %s)' % \
                     (ident, what and  "'"+what+"'" or 'null',
                      data and self.attrencode(json.dumps(data)) or 'null',

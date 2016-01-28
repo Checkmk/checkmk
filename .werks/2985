@@ -26,8 +26,8 @@ Note:
 If the MongoDB is running as a replica set most of the agent sections are sent to
 a piggyback host named after the replication set. You can find the replica name
 in the agent output under &lt;&lt;&lt;&lt;{replicaname}&gt;&gt;&gt;&gt;.
-So you need to create a host named {replicaname} and execute a service discovery.<br>
-Reason:<br><br>
+So you need to create a host named {replicaname} and execute a service discovery.<br><br>
+Reason:<br>
 A MongoDB replica set consists of n-Hosts. All of these hosts have the mk_mongodb plugin installed.
 There is a primary host in this replica set which sends the complete plugin information.
 The secondary and arbiter hosts will only send a subset of this data.

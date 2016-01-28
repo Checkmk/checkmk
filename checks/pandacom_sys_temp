@@ -33,7 +33,7 @@ def inventory_pandacom_sys_temp(info):
 
 
 def check_pandacom_sys_temp(item, params, info):
-    return check_temperature(int(info[0][0]), params)
+    return check_temperature(int(info[0][0]), params, "pandacom_sys_%s" % item)
 
 
 check_info['pandacom_sys_temp'] = {

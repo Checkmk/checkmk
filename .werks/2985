@@ -1,0 +1,36 @@
+Title: MongoDB: Introduced agent plugin and some checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453996031
+Class: feature
+
+After installing the mk_mongodb agent plugin on the target system, the following new
+checks are available:
+
+<table>
+<tr><th>Check</th><th>Description</th></tr>
+<tr> <td>mongodb_asserts</td><td>Monitors the rate of various assert types</td> </tr>
+<tr> <td>mongodb_connections</td><td>Monitors the number of connections</td> </tr>
+<tr> <td>mongodb_collections</td><td>Monitors the collection size</td> </tr>
+<tr> <td>mongodb_counters</td><td>Monitors the number of MongoDB operations</td> </tr>
+<tr> <td>mongodb_flushing</td><td>Monitors the flush time</td> </tr>
+<tr> <td>mongodb_locks</td><td>Monitors the number of locks</td> </tr>
+<tr> <td>mongodb_mem</td><td>Monitors the resident, virtual and mapped memory</td> </tr>
+<tr> <td>mongodb_replica</td><td>Show replica information </td> </tr>
+<tr> <td>mongodb_instance</td><td>Shows instance information</td> </tr>
+</table>
+
+Note:
+If the MongoDB is running as a replica set most of the agent sections are sent to
+a piggyback host named after the replication set. You can find the replica name
+in the agent output under &lt;&lt;&lt;&lt;{replicaname}&gt;&gt;&gt;&gt;.
+So you need to create a host named {replicaname} and execute a service discovery.<br><br>
+Reason:<br>
+A MongoDB replica set consists of n-Hosts. All of these hosts have the mk_mongodb plugin installed.
+There is a primary host in this replica set which sends the complete plugin information.
+The secondary and arbiter hosts will only send a subset of this data.
+Since the primary host might change over time, we cannot put all discovered services on
+the current primary host. If the host changes to secondary mode later on, all services
+would be gone.

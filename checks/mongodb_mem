@@ -1,0 +1,73 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# ------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# ------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<mongodb_mem>>>
+# resident 856
+# supported True
+# virtual 6100
+# mappedWithJournal 5374
+# mapped 2687
+# bits 64
+# note fields vary by platform
+# page_faults 86
+# heap_usage_bytes 65501032
+
+def inventory_mongodb_mem(info):
+    return [(None, {})]
+
+def check_mongodb_mem(_no_item, params, info):
+    info_dict = dict(map(lambda x: (x[0], " ".join(x[1:])), info))
+    resident_bytes = int(info_dict["resident"]) * 1024 **2
+
+    for what in [ "resident", "virtual", "mapped" ]:
+        value_bytes = int(info_dict[what]) * 1024 **2
+        warn, crit = None, None
+        state = 0
+        if "%s_levels" % what in params:
+            warn, crit = params["%s_levels" % what]
+            if value_bytes >= crit:
+                state = 2
+            elif value_bytes >= warn:
+                state = 1
+        yield state, "%s usage: %s" % (what.title(), get_bytes_human_readable(value_bytes)),\
+                    [ ("process_%s_size" % what, value_bytes, warn, crit) ]
+
+    # MongoDB doc: If virtual value is significantly larger than mapped (e.g. 3 or more times),
+    #              this may indicate a memory leak.
+    virtual_bytes  = float(info_dict["virtual"])
+    mapped_bytes   = float(info_dict["mapped"])
+    virt_mapped_factor = virtual_bytes / mapped_bytes
+    if virt_mapped_factor >= 3:
+        yield 1, "Virtual size is %.1f times the mapped size (Possible memory leak)" % virt_mapped_factor
+
+check_info['mongodb_mem'] = {
+    "inventory_function"      : inventory_mongodb_mem,
+    "check_function"          : check_mongodb_mem,
+    "service_description"     : "Memory used MongoDB",
+    "group"                   : "mongodb_mem",
+    "has_perfdata"            : True
+}
+

@@ -1,0 +1,74 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# ------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# ------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<mongodb_flushing>>>
+# average_ms 1.28893335892
+# last_ms 0
+# flushed 36479
+
+def inventory_mongodb_flushing(info):
+    # This check has no default parameters
+    # The average/last flush time highly depends on the size of the mongodb setup
+    return [(None, {})]
+
+def check_mongodb_flushing(_no_item, params, info):
+    info_dict = dict(info)
+
+    last_ms       = float(info_dict["last_ms"])
+    avg_ms_plugin = float(info_dict["average_ms"])
+    flushed       = int(info_dict["flushed"])
+
+    if "average_time" in params:
+        warn, crit, avg_interval = params["average_time"]
+        avg_ms_compute = get_average("flushes", time.time(), last_ms, avg_interval)
+        state = 0
+        if avg_ms_compute >= crit:
+            state = 2
+        elif avg_ms_compute >= warn:
+            state = 1
+        yield state, "Average flush time over %s minutes: %.2f ms" % (avg_interval, avg_ms_compute)
+
+    state = 0
+    warn, crit = None, None
+    if "last_time" in params:
+        warn, crit = params["last_time"]
+        if last_ms >= crit:
+            state = 2
+        elif last_ms >= warn:
+            state = 1
+    yield state, "Last flush time: %s ms" % last_ms, [ ("flush_time", last_ms / 1000.0, warn, crit) ]
+
+    yield 0, "Flushes since restart: %s" % flushed, [ ("flushed", flushed) ]
+    yield 0, "Average flush time since restart: %.2f ms" % avg_ms_plugin, [ ("avg_flush_time", avg_ms_plugin) ]
+
+
+check_info['mongodb_flushing'] = {
+    "inventory_function"      : inventory_mongodb_flushing,
+    "check_function"          : check_mongodb_flushing,
+    "service_description"     : "MongoDB Flushing",
+    "group"                   : "mongodb_flushing",
+    "has_perfdata"            : True,
+}

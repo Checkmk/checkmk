@@ -752,6 +752,12 @@ metric_info["process_resident_size"] = {
     "color" : "14/a",
 }
 
+metric_info["process_mapped_size"] = {
+    "title" : _("Mapped size"),
+    "unit"  : "bytes",
+    "color" : "12/a",
+}
+
 metric_info["mem_heap"] = {
     "title" : _("Heap memory usage"),
     "unit"  : "bytes",
@@ -824,6 +830,14 @@ metric_info["threads_busy"] = {
     "unit"  : "count",
     "color" : "34/a",
 }
+
+for what, color in [ ("msg", "12"), ("rollovers", "13"), ("regular", "14"),
+                     ("warning", "15"), ("user", "16") ]:
+    metric_info["assert_%s" % what] = {
+        "title" : _("%s Asserts") % what.title(),
+        "unit"  : "count",
+        "color" : "%s/a" % color,
+    }
 
 metric_info["vol_context_switches"] = {
     "title" : _("Voluntary context switches"),
@@ -3063,6 +3077,8 @@ check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = df_translation
 check_metrics["check_mk-netapp_api_volume"]                     = df_translation
 check_metrics["check_mk-emc_isilon_quota"]                      = df_translation
 check_metrics["check_mk-emc_isilon_ifs"]                        = df_translation
+check_metrics["check_mk-mongodb_collections"]                   = df_translation
+
 
 # in=0;;;0; inucast=0;;;; innucast=0;;;; indisc=0;;;; inerr=0;0.01;0.1;; out=0;;;0; outucast=0;;;; outnucast=0;;;; outdisc=0;;;; outerr=0;0.01;0.1;; outqlen=0;;;0;
 if_translation = {
@@ -5653,7 +5669,10 @@ graph_info.append({
     "metrics" : [
         ( "process_resident_size", "area" ),
         ( "process_virtual_size", "stack" ),
-    ]
+        ( "process_resident_size", "area" ),
+        ( "process_mapped_size", "stack" ),
+    ],
+    "optional_metrics": [ "process_mapped_size" ]
 })
 
 graph_info.append({

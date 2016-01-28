@@ -1,0 +1,16 @@
+title: SQL Statistics values for MSSQL
+agents: windows
+catalog: app/mssql
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors various rates from the SQL statistics object.
+
+item:
+ The MSSQL object, instance and counter names separated by spaces.
+
+perfdata:
+ The current rate of the counter as delivered by the SQL statistics object.
+
+inventory:
+ One separate check for each counter will be created.

@@ -734,6 +734,29 @@ register_check_parameters(
     match_type = "dict",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "mssql_stats",
+    _("MSSQL Statistics"),
+    Dictionary(
+        elements = [
+            ( "batch_requests/sec", Tuple(title = _("Batch Requests/sec"),
+                elements = [ Float(title = _("warning at"), unit = _("/sec"), default_value = 100000.0 ),
+                             Float(title = _("critical at"), unit = _("/sec"), default_value = 200000.0 ),])),
+            ( "sql_compilations/sec", Tuple(title = _("SQL Compilations/sec"),
+                elements = [ Float(title = _("warning at"), unit = _("/sec"), default_value = 10000.0),
+                             Float(title = _("critical at"), unit = _("/sec"), default_value = 20000.0),])),
+            ( "sql_re-compilations/sec", Tuple(title = _("SQL Re-Compilations/sec"),
+                elements = [ Float(title = _("warning at"), unit = _("/sec"), default_value = 10000.0),
+                             Float(title = _("critical at"), unit = _("/sec"), default_value = 200.0),])),
+        ],
+    ),
+    TextAscii(
+       title = _("Counter ID"),
+    ),
+    "dict",
+)
+
 #.
 #   .--Environment---------------------------------------------------------.
 #   |     _____            _                                      _        |

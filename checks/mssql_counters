@@ -219,6 +219,40 @@ check_info['mssql_counters.locks'] = {
 }
 
 
+def check_mssql_counters_sqlstats(item, params, info):
+    for line in info:
+        if mssql_counters_item(line, True) == item:
+            counter_type = item.split()[-1]
+            rate = float(line[-1])
+            status = 0
+            infotext = "%.1f/sec" % rate
+
+            perfdata = [ (counter_type, rate) ]
+
+            if params.get(counter_type):
+                warn, crit = params[counter_type]
+                levelstext = " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
+                if rate >= crit:
+                    status = 2
+                    infotext += levelstext
+                elif rate >= warn:
+                    status = 1
+                    infotext += levelstext
+
+            return status, infotext, perfdata
+
+
+check_info["mssql_counters.sqlstats"] = {
+    "check_function"        : check_mssql_counters_sqlstats,
+    "inventory_function"    : lambda info: inventory_mssql_counters(info,
+        [ "batch_requests/sec", "sql_compilations/sec", "sql_re-compilations/sec" ],
+        perc_w_base = False, add_counter_name = True, dflt = {}),
+    "service_description"   : "%s",
+    "has_perfdata"          : True,
+    "group"                 : "mssql_stats",
+}
+
+
 #.
 #   .--File Sizes----------------------------------------------------------.
 #   |                _____ _ _        ____  _                              |

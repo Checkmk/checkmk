@@ -890,6 +890,113 @@ register_check_parameters(
     match_type = "first",
 )
 
+register_check_parameters(
+    subgroup_storage,
+    "mongodb_flushing",
+    _("MongoDB Flushes"),
+    Dictionary(
+        elements = [
+            ("average_time",  Tuple(
+                                title = _("Average flush time"),
+                                elements = [
+                                    Integer(title = _("Warning at"), unit = "ms", default_value = 50),
+                                    Integer(title = _("Critical at"), unit = "ms", default_value = 100),
+                                    Integer(title = _("Time interval"), unit = "minutes", default_value = 10),
+                                ]),
+            ),
+            ("last_time",  Tuple(
+                                title = _("Last flush time"),
+                                elements = [
+                                    Integer(title = _("Warning at"), unit = "ms", default_value = 50),
+                                    Integer(title = _("Critical at"), unit = "ms", default_value = 100),
+                                ]),
+            ),
+        ]
+    ),
+    None,
+    match_type = "dict"
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "mongodb_asserts",
+    _("MongoDB Assert Rates"),
+    Dictionary(
+        elements = [
+            ("%s_assert_rate" % what, Tuple(
+                                title = _("%s rate" % what.title()),
+                                elements = [
+                                    Float(title = _("Warning at"), unit = _("Asserts / s"),  default_value = 1.0),
+                                    Float(title = _("Critical at"), unit = _("Asserts / s"), default_value = 2.0),
+                                ])
+            ) for what in ["msg", "rollovers", "regular", "warning", "user"]
+        ],
+    ),
+    None,
+    match_type = "dict"
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "mongodb_mem",
+    _("MongoDB Memory"),
+    Dictionary(
+        title = _("MongoDB Memory"),
+        elements = [
+            ( "resident_levels",
+               Tuple(
+                 title = _("Resident memory usage"),
+                 help = _("The value of resident is roughly equivalent to the amount of RAM, "
+                          "currently used by the database process. In normal use this value tends to grow. "
+                          "In dedicated database servers this number tends to approach the total amount of system memory."),
+                 elements = [
+                     Filesize(title = _("Warning at"), default_value = 1 * 1024**3),
+                     Filesize(title = _("Critical at"), default_value = 2 * 1024**3),
+                 ],
+            )),
+            ( "mapped_levels",
+               Tuple(
+                 title = _("Mapped memory usage"),
+                 help = _("The value of mapped shows the amount of mapped memory by the database. "
+                          "Because MongoDB uses memory-mapped files, this value is likely to be to be "
+                          "roughly equivalent to the total size of your database or databases."),
+                 elements = [
+                     Filesize(title = _("Warning at"), default_value = 1 * 1024**3),
+                     Filesize(title = _("Critical at"), default_value = 2 * 1024**3),
+                 ],
+            )),
+            ( "virtual_levels",
+               Tuple(
+                 title = _("Virtual memory usage"),
+                 help = _("Virtual displays the quantity of virtual memory used by the mongod process. "),
+                 elements = [
+                     Filesize(title = _("Warning at"), default_value = 2 * 1024**3),
+                     Filesize(title = _("Critical at"), default_value = 4 * 1024**3),
+                 ],
+            )),
+        ]
+    ),
+    None,
+    match_type = "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "mongodb_locks",
+    _("MongoDB Locks"),
+    Dictionary(
+        elements = [
+            ("%s_locks" % what, Tuple(
+                title = _("%s Locks" % what.title().replace("_", " ")),
+                elements = [
+                    Integer(title = _("Warning at"),  minvalue = 0),
+                    Integer(title = _("Critical at"), minvalue = 0),
+            ])) for what in ["clients_readers", "clients_writers", "clients_total",
+                             "queue_readers", "queue_writers", "queue_total"]],
+    ),
+    None,
+    match_type = "dict"
+)
 
 #.
 #   .--Unsorted--(Don't create new stuff here!)----------------------------.
@@ -3080,57 +3187,7 @@ def transform_filesystem_free(value):
             result.append((item[0], tuple_convert(item[1])))
         return result
 
-
-filesystem_elements = [
-    ("levels",
-        Alternative(
-            title = _("Levels for filesystem"),
-            show_alternative_title = True,
-            default_value = (80.0, 90.0),
-            match = match_dual_level_type,
-            elements = [
-                   get_free_used_dynamic_valuespec("used", "filesystem"),
-                   Transform(
-                            get_free_used_dynamic_valuespec("free", "filesystem", default_value = (20.0, 10.0)),
-                            title = _("Levels for filesystem free space"),
-                            allow_empty = False,
-                            forth = transform_filesystem_free,
-                            back  = transform_filesystem_free
-                    )
-                ]
-                )
-    ),
-    # Beware: this is a nasty hack that helps us to detect new-style paramters.
-    # Something hat has todo with float/int conversion and has not been documented
-    # by the one who implemented this.
-    ( "flex_levels",
-      FixedValue(
-          None,
-          totext = "",
-          title = "",
-          )),
-    ( "show_levels",
-      DropdownChoice(
-          title = _("Display warn/crit levels in check output..."),
-          choices = [
-            ( "onproblem", _("Only if the status is non-OK")),
-            ( "onmagic",   _("If the status is non-OK or a magic factor is set")),
-            ( "always",    _("Always") ),
-          ],
-          default_value = "onmagic",
-    )),
-    ( "show_reserved",
-      DropdownChoice(
-          title = _("Show space reserved for the <tt>root</tt> user"),
-          help = _("Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
-                   "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
-                   "With this option you can have Check_MK display the current amount of reserved but yet unused "
-                   "space."),
-          choices = [
-            ( True, _("Show reserved space") ),
-            ( False, _("Do now show reserved space") ),
-         ]
-    )),
+fs_inodes_elements = [
     ( "inodes_levels",
         Alternative(
             title = _("Levels for Inodes"),
@@ -3162,7 +3219,10 @@ filesystem_elements = [
             ( "always",    _("Always")),
           ],
           default_value = "onlow",
-    )),
+    ))
+]
+
+fs_magic_elements = [
     (  "magic",
        Float(
           title = _("Magic factor (automatic level adaptation for large filesystems)"),
@@ -3182,7 +3242,10 @@ filesystem_elements = [
                    "the magic factor and the filesystem is very small."),
           elements = [
               Percentage(title = _("Warning at"),  unit = _("% usage"), allow_int = True, default_value=50),
-              Percentage(title = _("Critical at"), unit = _("% usage"), allow_int = True, default_value=60)])),
+              Percentage(title = _("Critical at"), unit = _("% usage"), allow_int = True, default_value=60)]))
+]
+
+fs_trend_elements = [
     (  "trend_range",
        Optional(
            Integer(
@@ -3223,8 +3286,68 @@ filesystem_elements = [
       Checkbox(
           title = _("Trend performance data"),
           label = _("Enable generation of performance data from trends"))),
-
 ]
+
+# Note: This hack is only required on very old filesystem checks (prior August 2013)
+fs_levels_elements_hack = [
+    # Beware: this is a nasty hack that helps us to detect new-style parameters.
+    # Something hat has todo with float/int conversion and has not been documented
+    # by the one who implemented this.
+    ( "flex_levels",
+      FixedValue(
+          None,
+          totext = "",
+          title = "",
+          )),
+]
+
+fs_levels_elements = [
+    ("levels",
+        Alternative(
+            title = _("Levels for filesystem"),
+            show_alternative_title = True,
+            default_value = (80.0, 90.0),
+            match = match_dual_level_type,
+            elements = [
+                   get_free_used_dynamic_valuespec("used", "filesystem"),
+                   Transform(
+                            get_free_used_dynamic_valuespec("free", "filesystem", default_value = (20.0, 10.0)),
+                            title = _("Levels for filesystem free space"),
+                            allow_empty = False,
+                            forth = transform_filesystem_free,
+                            back  = transform_filesystem_free
+                    )
+                ]
+                )
+    ),
+    ( "show_levels",
+      DropdownChoice(
+          title = _("Display warn/crit levels in check output..."),
+          choices = [
+            ( "onproblem", _("Only if the status is non-OK")),
+            ( "onmagic",   _("If the status is non-OK or a magic factor is set")),
+            ( "always",    _("Always") ),
+          ],
+          default_value = "onmagic",
+    ))]
+
+fs_reserved_elements = [
+    ( "show_reserved",
+      DropdownChoice(
+          title = _("Show space reserved for the <tt>root</tt> user"),
+          help = _("Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
+                   "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
+                   "With this option you can have Check_MK display the current amount of reserved but yet unused "
+                   "space."),
+          choices = [
+            ( True, _("Show reserved space") ),
+            ( False, _("Do now show reserved space") ),
+         ]
+    ))
+]
+
+filesystem_elements = fs_levels_elements + fs_levels_elements_hack + fs_reserved_elements +\
+                      fs_inodes_elements + fs_magic_elements + fs_trend_elements
 
 register_check_parameters(
     subgroup_storage,
@@ -3239,6 +3362,19 @@ register_check_parameters(
         help = _("For Linux/UNIX systems, specify the mount point, for Windows systems "
                  "the drive letter uppercase followed by a colon and a slash, e.g. <tt>C:/</tt>"),
         allow_empty = False),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "mongodb_collections",
+    _("MongoDB Collection Size"),
+    Dictionary(
+        elements = fs_levels_elements + fs_trend_elements
+    ),
+    TextAscii(
+        title = _("Collection name"),
+    ),
     "dict"
 )
 
@@ -5828,7 +5964,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_applications,
     "db_connections",
-    _("Database Connections (PostgreSQL)"),
+    _("Database Connections (PostgreSQL/MongoDB)"),
     Dictionary(
         help = _("This rule allows you to configure the number of maximum concurrent "
                 "connections for a given database."),

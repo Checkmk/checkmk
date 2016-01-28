@@ -106,6 +106,7 @@ manpage_catalog_titles = {
         "apache"        : "Apache Webserver",
         "activemq"      : "Apache ActiveMQ",
         "db2"           : "IBM DB2",
+        "mongodb"       : "MongoDB",
         "citrix"        : "Citrix",
         "netscaler"     : "Citrix Netscaler",
         "exchange"      : "Microsoft Exchange",

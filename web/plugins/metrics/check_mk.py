@@ -3584,6 +3584,12 @@ check_metrics["check_mk-smart.stats"] = {
 check_metrics["check_mk-ps"] = ps_translation
 check_metrics["check_mk-ps.perf"] = ps_translation
 
+check_metrics["check_mk-mssql_counters.sqlstats"] = {
+    "batch_requests/sec"        : { "name" : "requests_per_second" },
+    "sql_compilations/sec"      : { "name" : "requests_per_second" },
+    "sql_re-compilations/sec"   : { "name" : "requests_per_second" },
+}
+
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.

@@ -2461,12 +2461,13 @@ function handle_popup_close(event) {
 // trigger_obj: DOM object of trigger object (e.g. icon)
 // ident:       page global uinique identifier of the popup
 // what:        type of popup (used for constructing webservice url 'ajax_popup_'+what+'.py')
+//              This can be null for fixed content popup windows. In this case
+//              "data" and "url_vars" are not used and can be left null.
+//              The static content of the menu is given in the "menu_content" parameter.
 // data:        json data which can be used by actions in popup menus
 // url_vars:    vars are added to ajax_popup_*.py calls for rendering the popup menu
-function toggle_popup(event, trigger_obj, ident, what, data, url_vars)
+function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_content)
 {
-    var url_vars = !url_vars ? '' : '?'+url_vars;
-
     if(!event)
         event = window.event;
     var container = trigger_obj.parentNode;
@@ -2489,19 +2490,26 @@ function toggle_popup(event, trigger_obj, ident, what, data, url_vars)
     container.appendChild(menu);
     fix_popup_menu_position(event, menu);
 
-    popup_data = data;
+    // update the menus contents using a webservice
+    if (what) {
+        popup_data = data;
 
-    menu.innerHTML = '<img src="images/icon_loading.gif" class=icon>';
+        menu.innerHTML = '<img src="images/icon_loading.gif" class=icon>';
 
-    // populate the menu using a webservice, because the list of dashboards
-    // is not known in the javascript code. But it might have been cached
-    // before. In this case do not perform a second request.
-    // LM: Don't use the cache for the moment. There might be too many situations where
-    // we don't want the popup to be cached.
-    //if (ident in popup_contents)
-    //    menu.innerHTML = popup_contents[ident];
-    //else
-    get_url('ajax_popup_'+what+'.py'+url_vars, handle_render_popup_contents, [ident, event]);
+        // populate the menu using a webservice, because the list of dashboards
+        // is not known in the javascript code. But it might have been cached
+        // before. In this case do not perform a second request.
+        // LM: Don't use the cache for the moment. There might be too many situations where
+        // we don't want the popup to be cached.
+        //if (ident in popup_contents)
+        //    menu.innerHTML = popup_contents[ident];
+        //else
+        var url_vars = !url_vars ? '' : '?'+url_vars;
+        get_url('ajax_popup_'+what+'.py'+url_vars, handle_render_popup_contents, [ident, event]);
+    } else {
+        menu.innerHTML = menu_content;
+        executeJSbyObject(menu);
+    }
 }
 
 function handle_render_popup_contents(data, response_text)

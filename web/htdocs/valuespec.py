@@ -3544,3 +3544,60 @@ class TimeofdayRanges(Transform):
             **args
         )
 
+
+
+class Color(ValueSpec):
+    def __init__(self, **kwargs):
+        kwargs["regex"] = "#[0-9]{3,6}"
+        kwargs["regex_error"] = _("The color needs to be given in hex format.")
+        ValueSpec.__init__(self, **kwargs)
+        self._on_change = kwargs.get("on_change")
+
+
+    def render_input(self, varprefix, value):
+        if not value:
+            value = "#FFFFFF"
+
+        html.javascript_file("colorpicker")
+
+        # Holds the actual value for form submission
+        html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var = True)
+
+        indicator = "<div id=\"%s_preview\" style=\"background-color:%s\" " \
+                    "class=\"cp-preview\"></div>" % (varprefix, value)
+
+        menu_content = "<div id=\"%s_picker\" class=\"cp-small\"></div>" % varprefix
+
+        menu_content += "<script language=\"javascript\">" \
+            "ColorPicker(document.getElementById(\"%s_picker\")," \
+            "            function(hex, hsv, rgb) {" \
+            "               document.getElementById(\"%s_value\").value = hex;" \
+            "               document.getElementById(\"%s_preview\").style.backgroundColor = hex;" \
+            "               %s" \
+            "}).setHex(\"%s\");</script>" % (varprefix, varprefix, varprefix,
+                                         self._on_change or "", value)
+
+        html.popup_trigger(indicator, varprefix + '_popup', menu_content=menu_content)
+
+
+
+    def from_html_vars(self, varprefix):
+        color = html.var(varprefix + '_value')
+        if color == '':
+            return None
+        else:
+            return color
+
+
+    def value_to_text(self, value):
+        return value
+
+
+    def validate_datatype(self, value, varprefix):
+        if value is not None and type(value) != str:
+            raise MKUserError(varprefix, _("The type is %s, but should be str") % type(value))
+
+
+    def validate_value(self, value, varprefix):
+        if not self._allow_empty and not value:
+            raise MKUserError(varprefix, _("You need to select a color."))

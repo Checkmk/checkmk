@@ -40,7 +40,7 @@ def trigger_automation_timeout(signum, stackframe):
 
 def do_automation(cmd, args):
     # Handle generic arguments (currently only the optional timeout argument)
-    if args[0] == "--timeout":
+    if len(args) > 1 and args[0] == "--timeout":
         args.pop(0)
         timeout = int(args.pop(0))
 

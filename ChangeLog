@@ -1,4 +1,7 @@
 1.2.6p17:
+    Event Console:
+    * 2986 FIX: Event Console: Text elements of events are now correctly quoted in shell scripts...
+
 
 1.2.6p16:
     Core & Setup:

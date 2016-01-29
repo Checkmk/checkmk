@@ -1,0 +1,16 @@
+Title: Event Console: Text elements of events are now correctly quoted in shell scripts
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6p17
+Date: 1454069066
+
+Text elements (message, comment, contact, etc.) of an event may contain <i>'</i> and <i>"</i>.
+The previous event console had troubles evaluating these event. Some shell scripts even got stuck..
+
+For example: <tt>TEXT=my"text</tt><br>
+Shell script: <tt>echo $TEXT$ > /tmp/mylog</tt><br>
+The actual command looks like <tt>echo my"text > /tmp/mylog</tt><br> -&gt; broken command.
+

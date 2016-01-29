@@ -1,0 +1,15 @@
+Title: Terminate datasource programs when check timeout occurs
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454069860
+Class: fix
+
+When using datasource programs, e.g. for checking by SSH, the Check_MK
+process could be terminated by a reached timeout leaving the launched
+subprocesses open. This might have caused in processes being too long
+open, running and consuming resources.
+
+The datasource program process and it's sub processes are now cleaned
+up when a check timeout occures.

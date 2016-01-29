@@ -772,10 +772,14 @@ def get_agent_info_program(commandline):
 
     vverbose("Calling external program %s\n" % commandline)
     try:
-        p = subprocess.Popen(commandline, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        p = subprocess.Popen(commandline, shell = True, stdout = subprocess.PIPE,
+                             stderr = subprocess.PIPE, preexec_fn=os.setsid)
         stdout, stderr = p.communicate()
         exitstatus = p.returncode
     except MKTimeout:
+        # On timeout exception try to stop the process to prevent child process "leakage"
+        if p:
+            os.killpg(os.getpgid(p.pid), signal.SIGTERM)
         raise
 
     except Exception, e:

@@ -849,3 +849,34 @@ register_rule(group,
     factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
+register_rule(group,
+    "special_agents:tinkerforge",
+    Dictionary(
+        title = _("Settings for Tinkerforge agent"),
+        elements = [
+            ( "port",
+            Integer(
+                title = _('TCP port number'),
+                help = _('Port number that AppDynamics is listening on. The default is 8090.'),
+                default_value = 4223,
+                minvalue = 1,
+                maxvalue = 65535
+            )
+            ),
+            ( "segment_display_uid",
+            TextAscii(
+                title = _("7-segment display uid"),
+            )
+            ),
+            ( "segment_display_brightness",
+            Integer(
+                title = _("7-segment display brightness"),
+                minvalue = 0,
+                maxvalue = 7
+            )
+            )
+        ],
+    ),
+    title = _("Tinkerforge"),
+    match = 'first')
+

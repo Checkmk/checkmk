@@ -1,0 +1,9 @@
+Title: Fixed invalid error message when creating service group assignment rule without having service groups
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454076806
+Class: fix
+
+

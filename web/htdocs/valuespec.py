@@ -3106,6 +3106,14 @@ class ElementSelection(ValueSpec):
         ValueSpec.custom_validate(self, value, varprefix)
 
     def validate_datatype(self, value, varprefix):
+        self.load_elements()
+        # When no elements exists the default value is None and e.g. in wato.mode_edit_rule()
+        # handed over to validate_datatype() before rendering the input form. Disable the
+        # validation in this case to prevent validation errors. A helpful message is shown
+        # during render_input()
+        if len(self._elements) == 0 and value == None:
+            return
+
         if type(value) != str:
             raise MKUserError(varprefix, _("The datatype must be str (string), but is %s") % type_name(value))
 

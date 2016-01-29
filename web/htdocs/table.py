@@ -240,7 +240,7 @@ def end():
         rows = rows[:limit]
 
     if not do_csv:
-        html.write('<table class="data')
+        html.write('<table class="data oddeven')
         if "css" in table:
             html.write(" %s" % table["css"])
         html.write('">\n')

@@ -340,6 +340,13 @@ td.wide {
     width: 100%;
 }
 
+table.data.oddeven > tbody > tr:nth-child(odd) {
+    background-color: #eee;
+}
+
+table.data.oddeven > tbody > tr:nth-child(even) {
+    background-color: #ddd;
+}
 
 
 /* Two-lined header, for example in WATO: ChangeLog->Site Status */

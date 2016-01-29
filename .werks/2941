@@ -1,0 +1,19 @@
+Title: tinkerforge, tinkerforge.ambient, tinkerforge.humidity, tinkerforge.motion, tinkerforge.temperature: new checks to monitor tinkerforge sensors
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454078086
+Class: feature
+
+Tinkerforge is a manufacturer of buildings blocks (include many sensor blocks) that can be combined
+and assembled freely. The assembled devices can be connected to via usb, ethernet or wifi.
+The current range of checks supports the blocks (so called bricklets) included in the
+"Server Room Monitoring"-kit:
+ - Ambient Light sensor
+ - Humidity sensor
+ - Motion sensor
+ - Temperature sensor
+ - Master brick
+
+The plugin can also be configured to display sensor readings on the integrated 7-segment display.

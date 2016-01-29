@@ -1,0 +1,15 @@
+title: Tinkerforge sensor bricklet: Ambient
+agents: special
+catalog: hw/environment/tinkerforge
+license: GPL
+distribution: check_mk
+description:
+ This check monitors ambient light bricklets on any tinkerforge stack.
+ Brightness levels can be configured including the options to have
+ predictive levels.
+
+item:
+ The item name is based on the bricks position inside the stack.
+
+inventory:
+ All ambient light bricklets are automatically inventorized.

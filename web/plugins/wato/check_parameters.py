@@ -888,6 +888,60 @@ register_check_parameters(
 )
 
 
+register_check_parameters(
+    subgroup_environment,
+    'brightness',
+    _("Brightness Levels"),
+    Levels(
+        title = _("Brightness"),
+        unit = _("lx"),
+        default_value = None,
+        default_difference = (2.0, 4.0),
+        default_levels = (50.0, 100.0),
+    ),
+    TextAscii(
+        title = _("Sensor name"),
+        help = _("The identifier of the sensor."),
+    ),
+    match_type = "dict",
+)
+
+
+register_check_parameters(
+    subgroup_environment,
+    'motion',
+    _("Motion Detectors"),
+    Dictionary(
+        elements = [
+            ("time_periods",
+             Dictionary(
+                 title = _("Time periods"),
+                 help = _("Specifiy time ranges during which no motion is expected. "
+                          "Outside these times, the motion detector will always be in "
+                          "state OK"),
+                 elements = [
+                     (day_id, TimeofdayRanges(count = 3, title = day_str))
+                     for day_id,       day_str in [
+                         ("monday",    _("Monday")),
+                         ("tuesday",   _("Tuesday")),
+                         ("wednesday", _("Wednesday")),
+                         ("thursday",  _("Thursday")),
+                         ("friday",    _("Friday")),
+                         ("saturday",  _("Saturday")),
+                         ("sunday",    _("Sunday"))
+                     ]
+                 ],
+                 optional_keys = []
+             )
+             ),
+        ]
+    ),
+    TextAscii(
+        title = _("Sensor name"),
+        help = _("The identifier of the sensor."),
+    ),
+    match_type = "dict"
+)
 
 #.
 #   .--Storage-------------------------------------------------------------.

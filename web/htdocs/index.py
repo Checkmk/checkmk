@@ -157,8 +157,6 @@ def handler(req, fields = None, is_profiling = False):
         # Some exception need to set a specific HTTP status code
         if ty == MKUnauthenticatedException:
             response_code = apache.HTTP_UNAUTHORIZED
-        elif ty == livestatus.MKLivestatusNotFoundError:
-            response_code = apache.HTTP_NOT_FOUND
         elif ty == livestatus.MKLivestatusException:
             response_code = apache.HTTP_BAD_GATEWAY
 

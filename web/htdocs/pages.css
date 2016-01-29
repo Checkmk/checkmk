@@ -304,8 +304,8 @@ table.data th:last-child {
     border-right-style: none;
 }
 
-table.data tr:nth-child(odd) { background-color: #eee; }
-table.data tr:nth-child(even) { background-color: #ddd; }
+table.data > tbody > tr:nth-child(odd) { background-color: #eee; }
+table.data > tbody > tr:nth-child(even) { background-color: #ddd; }
 
 table.data td.buttons {
     white-space: nowrap;
@@ -473,6 +473,11 @@ table.groupheader {
     margin: 0px;
     border: 0px;
     padding: 6px 0px 3px 0px;
+}
+
+table.data tr.groupheader,
+table.data tr.groupheader.td {
+    background-color: transparent;
 }
 
 tr.groupheader td {

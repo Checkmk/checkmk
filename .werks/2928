@@ -1,0 +1,11 @@
+Title: Fix display of rule set Do hardware/software Inventory
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454059333
+Class: fix
+
+When you selected one of the two options for setting the state then
+this was correctly saved but not correctly displayed in the rule table
+nor when editing the rule again. This has been fixed.

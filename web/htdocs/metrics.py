@@ -353,6 +353,30 @@ def parse_perf_data(perf_data_string, check_command=None):
     return perf_data, check_command
 
 
+# Get translation info for one performance var.
+def perfvar_translation(perfvar_nr, perfvar_name, check_command):
+    cm = check_metrics.get(check_command, {})
+
+    translation_entry = {} # Default: no translation neccessary
+
+    if perfvar_name in cm:
+        translation_entry = cm[perfvar_name]
+    else:
+        for orig_varname, te in cm.items():
+            if orig_varname[0] == "~" and regex(orig_varname[1:]).match(perfvar_name): # Regex entry
+                translation_entry = te
+                break
+
+    metric_name = translation_entry.get("name", perfvar_name)
+    scale = translation_entry.get("scale", 1.0)
+
+    return {
+        "name"       : metric_name,
+        "scale"      : scale,
+        "auto_graph" : translation_entry.get("auto_graph", True)
+    }
+
+
 
 # Convert Ascii-based performance data as output from a check plugin
 # into floating point numbers, do scaling if neccessary.
@@ -360,27 +384,15 @@ def parse_perf_data(perf_data_string, check_command=None):
 # Result for this example:
 # { "temp" : "value" : 48.1, "warn" : 70, "crit" : 80, "unit" : { ... } }
 def translate_metrics(perf_data, check_command):
-    cm = check_metrics.get(check_command, {})
-
     translated_metrics = {}
     color_index = 0
     for nr, entry in enumerate(perf_data):
         varname = entry[0]
         value_text = entry[1]
 
-        translation_entry = {} # Default: no translation neccessary
+        translation_entry = perfvar_translation(nr, varname, check_command)
+        metric_name = translation_entry["name"]
 
-        if varname in cm:
-            translation_entry = cm[varname]
-        else:
-            for orig_varname, te in cm.items():
-                if orig_varname[0] == "~" and regex(orig_varname[1:]).match(varname): # Regex entry
-                    translation_entry = te
-                    break
-
-
-        # Translate name
-        metric_name = translation_entry.get("name", varname)
         if metric_name in translated_metrics:
             continue # ignore duplicate value
 
@@ -396,18 +408,15 @@ def translate_metrics(perf_data, check_command):
             mi = metric_info[metric_name].copy()
             mi["color"] = parse_color_into_hexrgb(mi["color"])
 
-        # Optional scaling
-        scale = translation_entry.get("scale", 1.0)
-
         new_entry = {
-            "value"      : float_or_int(value_text) * scale,
+            "value"      : float_or_int(value_text) * translation_entry["scale"],
             "orig_name"  : varname,
-            "scale"      : scale, # needed for graph definitions
+            "scale"      : translation_entry["scale"], # needed for graph definitions
             "scalar"     : {},
         }
 
         # Do not create graphs for ungraphed metrics if listed here
-        new_entry["auto_graph"] = translation_entry.get("auto_graph", True)
+        new_entry["auto_graph"] = translation_entry["auto_graph"]
 
         # Add warn, crit, min, max
         for index, key in [ (3, "warn"), (4, "crit"), (5, "min"), (6, "max") ]:
@@ -416,7 +425,7 @@ def translate_metrics(perf_data, check_command):
             elif entry[index]:
                 try:
                     value = float_or_int(entry[index])
-                    new_entry["scalar"][key] = value * scale
+                    new_entry["scalar"][key] = value * translation_entry["scale"]
                 except:
                     if config.debug:
                         raise
@@ -425,6 +434,7 @@ def translate_metrics(perf_data, check_command):
 
         new_entry.update(mi)
         new_entry["unit"] = unit_info[new_entry["unit"]]
+
         translated_metrics[metric_name] = new_entry
         # TODO: warn, crit, min, max
         # if entry[2]:

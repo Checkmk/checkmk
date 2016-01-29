@@ -11,5 +11,5 @@ The previous event console had troubles evaluating these event. Some shell scrip
 
 For example: <tt>TEXT=my"text</tt><br>
 Shell script: <tt>echo $TEXT$ > /tmp/mylog</tt><br>
-The actual command looks like <tt>echo my"text > /tmp/mylog</tt><br> -&gt; broken command.
+The actual command looks like <tt>echo my"text > /tmp/mylog</tt> -&gt; broken command.
 

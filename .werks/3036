@@ -1,0 +1,17 @@
+Title: Bulk discovery steps are now timing out short before HTTP request timeout
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454066902
+Class: fix
+
+The bulk discovery could cause stability issues by consuming too much resources on
+the monitoring server. This could be caused in case the single discovery steps take
+longer than the configured timeout of the web server service the Check_MK GUI. In
+case a request (discovery step) took longer than the request timeout, the browser
+request was timing out and the next discovery step was started while the former
+discovery process of Check_MK was still running. If this happened multiple times,
+like several hundret times, this could consume all system memory and causing a lot
+of CPU load which may result in an unstable monitoring server. Only a restart of
+the whole sites web server could fix this situation.

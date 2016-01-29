@@ -3317,8 +3317,13 @@ def mode_bulk_discovery(phase):
                 if not html.get_checkbox("ignore_errors"):
                     arguments = [ "@raiseerrors" ] + arguments
 
+                timeout = html.request_timeout()
+                # To have a chance to print an error reduce the timeout a bit
+                timeout = int(timeout * 0.8)
+
                 unlock_exclusive() # Avoid freezing WATO when hosts do not respond timely
-                counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
+                counts, failed_hosts = check_mk_automation(site_id, "inventory",
+                                                           arguments, timeout=timeout)
                 lock_exclusive()
                 Folder.invalidate_caches()
                 folder = Folder.folder(folderpath)
@@ -9488,9 +9493,11 @@ def page_automation():
     command = html.var("command")
     if command == "checkmk-automation":
         cmk_command = html.var("automation")
-        args   = mk_eval(html.var("arguments"))
-        indata = mk_eval(html.var("indata"))
-        result = check_mk_local_automation(cmk_command, args, indata)
+        args        = mk_eval(html.var("arguments"))
+        indata      = mk_eval(html.var("indata"))
+        stdin_data  = mk_eval(html.var("stdin_data"))
+        timeout     = mk_eval(html.var("timeout"))
+        result = check_mk_local_automation(cmk_command, args, indata, stdin_data, timeout)
         html.write(repr(result))
 
     elif command == "push-snapshot":

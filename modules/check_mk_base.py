@@ -262,8 +262,10 @@ class MKSNMPError(Exception):
 class MKSkipCheck(Exception):
     pass
 
-# Timeout in keepalive mode.
-class MKCheckTimeout(Exception):
+# This signal is raised when a previously configured timeout is reached.
+# It is used during keepalive mode. It is also used by the automations
+# which have a timeout set.
+class MKTimeout(Exception):
     pass
 
 
@@ -494,7 +496,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
     if is_tcp_host(hostname):
         try:
             output = get_agent_info(hostname, ipaddress, max_cache_age)
-        except MKCheckTimeout:
+        except MKTimeout:
             raise
 
         except Exception, e:
@@ -773,6 +775,9 @@ def get_agent_info_program(commandline):
         p = subprocess.Popen(commandline, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         stdout, stderr = p.communicate()
         exitstatus = p.returncode
+    except MKTimeout:
+        raise
+
     except Exception, e:
         raise MKAgentError("Could not execute '%s': %s" % (exepath, e))
 
@@ -827,7 +832,7 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
         return output
     except MKAgentError, e:
         raise
-    except MKCheckTimeout:
+    except MKTimeout:
         raise
     except Exception, e:
         raise MKAgentError("Cannot get data from TCP port %s:%d: %s" %
@@ -1202,7 +1207,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
                 output += "Agent version %s, " % agent_version
             status = 0
 
-    except MKCheckTimeout:
+    except MKTimeout:
         raise
 
     except MKGeneralException, e:

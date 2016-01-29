@@ -201,6 +201,9 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
                 raise MKGeneralException("Unknown check source '%s'" % check_source)
         set_autochecks_of(hostname, new_items)
 
+    except MKTimeout:
+        raise # let general timeout through
+
     except Exception, e:
         if opt_debug:
             raise
@@ -316,7 +319,7 @@ def check_discovery(hostname, ipaddress=None):
             what = "exception"
         status = spec.get(what, 1)
 
-    except MKCheckTimeout:
+    except MKTimeout:
         if opt_keepalive:
             raise
         else:
@@ -615,7 +618,7 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error,
             try:
                 for item, paramstring in discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
                     discovered_services.append((check_type, item, paramstring))
-            except (KeyboardInterrupt, MKAgentError, MKSNMPError, MKCheckTimeout):
+            except (KeyboardInterrupt, MKAgentError, MKSNMPError, MKTimeout):
                 raise
             except Exception, e:
                 if opt_debug:

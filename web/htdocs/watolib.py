@@ -3066,11 +3066,12 @@ def get_url(url, insecure, user=None, password=None, params = '', post_data = No
 
     return response_body
 
-def check_mk_remote_automation(siteid, command, args, indata):
+def check_mk_remote_automation(siteid, command, args, indata, stdin_data=None, timeout=None):
     site = config.site(siteid)
     if "secret" not in site:
         raise MKGeneralException(_("Cannot access site %s - you are not logged in.")
            % site.get("alias", siteid))
+
     # If the site is not up-to-date, synchronize it first.
     repstatus = load_replication_status()
     if repstatus.get(siteid, {}).get("need_sync"):
@@ -3080,9 +3081,11 @@ def check_mk_remote_automation(siteid, command, args, indata):
     response = do_remote_automation(
         config.site(siteid), "checkmk-automation",
         [
-            ("automation", command),   # The Check_MK automation command
-            ("arguments", mk_repr(args)),  # The arguments for the command
-            ("indata", mk_repr(indata)), # The input data
+            ("automation", command),             # The Check_MK automation command
+            ("arguments",  mk_repr(args)),       # The arguments for the command
+            ("indata",     mk_repr(indata)),     # The input data
+            ("stdin_data", mk_repr(stdin_data)), # The input data for stdin
+            ("timeout",    mk_repr(indata)),     # The timeout
         ])
     return response
 
@@ -3888,14 +3891,17 @@ class MKAutomationException(Exception):
         Exception.__init__(self, msg)
 
 
-def check_mk_automation(siteid, command, args=[], indata=""):
+def check_mk_automation(siteid, command, args=[], indata="", stdin_data=None, timeout=None):
     if not siteid or config.site_is_local(siteid):
-        return check_mk_local_automation(command, args, indata)
+        return check_mk_local_automation(command, args, indata, stdin_data, timeout)
     else:
-        return check_mk_remote_automation(siteid, command, args, indata)
+        return check_mk_remote_automation(siteid, command, args, indata, stdin_data, timeout)
 
 
-def check_mk_local_automation(command, args=[], indata="", stdin_data=None):
+def check_mk_local_automation(command, args=[], indata="", stdin_data=None, timeout=None):
+    if timeout:
+        args = [ "--timeout", "%d" % timeout ] + args
+
     # Gather the command to use for executing --automation calls to check_mk
     # - First try to use the check_mk_automation option from the defaults
     # - When not set try to detect the command for OMD or non OMD installations

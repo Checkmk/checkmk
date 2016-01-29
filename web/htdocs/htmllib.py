@@ -921,6 +921,9 @@ class html(GUITester):
     def http_redirect(self, url):
         raise MKGeneralException("http_redirect not implemented")
 
+    def request_timeout(self):
+        raise MKGeneralException("request_timeout not implemented")
+
     def set_browser_redirect(self, secs, url):
         self.browser_reload   = secs
         self.browser_redirect = url

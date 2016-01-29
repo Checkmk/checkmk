@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import signal
 
 class MKAutomationError(Exception):
     def __init__(self, reason):
@@ -31,7 +32,24 @@ class MKAutomationError(Exception):
     def __str__(self):
         return self.reason
 
+
+def trigger_automation_timeout(signum, stackframe):
+    raise MKTimeout("Action timed out. The timeout of %d "
+                    "seconds was reached." % MKTimeout.timeout)
+
+
 def do_automation(cmd, args):
+    # Handle generic arguments (currently only the optional timeout argument)
+    if args[0] == "--timeout":
+        args.pop(0)
+        timeout = int(args.pop(0))
+
+        if timeout:
+            MKTimeout.timeout = timeout
+            signal.signal(signal.SIGALRM, trigger_automation_timeout)
+            signal.alarm(timeout)
+
+
     try:
         if cmd == "get-configuration":
             read_config_files(with_conf_d=False)
@@ -103,7 +121,7 @@ def do_automation(cmd, args):
             else:
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
-    except MKAutomationError, e:
+    except (MKAutomationError, MKTimeout), e:
         sys.stderr.write("%s\n" % e)
         if opt_debug:
             raise

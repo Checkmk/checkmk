@@ -66,6 +66,11 @@ class html_mod_python(htmllib.html):
         self.set_output_format(self.var("output_format", "html"))
 
 
+    # The web servers configured request timeout (Timeout in case of apache)
+    def request_timeout(self):
+        return int(self.req.server.timeout)
+
+
     def guitest_fake_login(self, user_id):
         config.login(user_id)
         self.user = user_id

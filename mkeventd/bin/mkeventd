@@ -3242,6 +3242,29 @@ def do_event_actions(actions, event, is_cancelling):
 
 # Rule actions are currently done synchronously. Actions should
 # not hang for more than a couple of ms.
+
+def get_quoted_event(event):
+    new_event = {}
+    fields_to_quote = [ "application", "match_groups", "text", "comment", "contact" ]
+    for key, value in event.items():
+        if key not in fields_to_quote:
+            new_event[key] = value
+        else:
+            try:
+                if type(value) in [list, tuple]:
+                    new_value = map(quote_shell_string, value)
+                    if type(value) == tuple:
+                        new_value = tuple(value)
+                else:
+                    new_value = quote_shell_string(value)
+                new_event[key] = new_value
+            except Exception, e:
+                # If anything unforeseen happens, we use the intial value
+                new_event[key] = value
+                log("Unable to quote event text %r: %r, %r" % (key,value, e))
+
+    return new_event
+
 def do_event_action(action, event, user=""):
     if action["disabled"]:
         log("Skipping disabled action %s." % action["id"])
@@ -3256,7 +3279,7 @@ def do_event_action(action, event, user=""):
             send_email(to, subject, body)
             log_event_history(event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
-            execute_script(substitute_event_tags(settings["script"], event))
+            execute_script(substitute_event_tags(settings["script"], get_quoted_event(event)))
             log_event_history(event, "SCRIPT", user, action['id'])
         else:
             log("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))

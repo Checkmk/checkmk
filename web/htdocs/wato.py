@@ -1877,39 +1877,7 @@ def rename_host_in_multisite(oldname, newname):
 
 
 def rename_host_in_bi(oldname, newname):
-    renamed = 0
-    aggregations, rules = load_bi_rules()
-    for aggregation in aggregations:
-        renamed += rename_host_in_bi_aggregation(aggregation, oldname, newname)
-    for rule in rules.values():
-        renamed += rename_host_in_bi_rule(rule, oldname, newname)
-    if renamed:
-        save_bi_rules(aggregations, rules)
-        return [ "bi" ] * renamed
-    else:
-        return []
-
-
-def rename_host_in_bi_aggregation(aggregation, oldname, newname):
-    node = aggregation["node"]
-    if node[0] == 'call':
-        if rename_host_in_list(aggregation["node"][1][1], oldname, newname):
-            return 1
-    return 0
-
-
-def rename_host_in_bi_rule(rule, oldname, newname):
-    renamed = 0
-    nodes = rule["nodes"]
-    for nr, node in enumerate(nodes):
-        if node[0] in [ "host", "service", "remaining" ]:
-            if node[1][0] == oldname:
-                nodes[nr] = (node[0], ( newname, ) + node[1][1:])
-                renamed = 1
-        elif node[0] == "call":
-            if rename_host_in_list(node[1][1], oldname, newname):
-                renamed = 1
-    return renamed
+    return BIHostRenamer().rename_host(oldname, newname)
 
 
 def rename_hosts_in_check_mk(renamings):

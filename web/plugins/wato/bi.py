@@ -143,7 +143,6 @@ class ModeBI(WatoMode):
                 }
 
 
-
         except Exception, e:
             if config.debug:
                 raise
@@ -1694,3 +1693,60 @@ modes.update({
     "bi_edit_aggregation": (["bi_rules"], ModeBIEditAggregation),
 })
 
+
+#.
+#   .--Rename Hosts--------------------------------------------------------.
+#   |   ____                                   _   _           _           |
+#   |  |  _ \ ___ _ __   __ _ _ __ ___   ___  | | | | ___  ___| |_ ___     |
+#   |  | |_) / _ \ '_ \ / _` | '_ ` _ \ / _ \ | |_| |/ _ \/ __| __/ __|    |
+#   |  |  _ <  __/ | | | (_| | | | | | |  __/ |  _  | (_) \__ \ |_\__ \    |
+#   |  |_| \_\___|_| |_|\__,_|_| |_| |_|\___| |_| |_|\___/|___/\__|___/    |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Class just for renaming hosts in the BI configuration.              |
+#   '----------------------------------------------------------------------'
+
+class BIHostRenamer(ModeBI):
+    def __init__(self):
+        ModeBI.__init__(self)
+
+    def rename_host(self, oldname, newname):
+        renamed = 0
+        for pack in self._packs.values():
+            renamed += self.rename_host_in_pack(pack, oldname, newname)
+        if renamed:
+            self.save_config()
+            return [ "bi" ] * renamed
+        else:
+            return []
+
+
+    def rename_host_in_pack(self, pack, oldname, newname):
+        renamed = 0
+        for aggregation in pack["aggregations"]:
+            renamed += self.rename_host_in_aggregation(aggregation, oldname, newname)
+        for rule in pack["rules"].values():
+            renamed += self.rename_host_in_rule(rule, oldname, newname)
+        return renamed
+
+
+    def rename_host_in_aggregation(self, aggregation, oldname, newname):
+        node = aggregation["node"]
+        if node[0] == 'call':
+            if rename_host_in_list(aggregation["node"][1][1], oldname, newname):
+                return 1
+        return 0
+
+
+    def rename_host_in_rule(self, rule, oldname, newname):
+        renamed = 0
+        nodes = rule["nodes"]
+        for nr, node in enumerate(nodes):
+            if node[0] in [ "host", "service", "remaining" ]:
+                if node[1][0] == oldname:
+                    nodes[nr] = (node[0], ( newname, ) + node[1][1:])
+                    renamed = 1
+            elif node[0] == "call":
+                if rename_host_in_list(node[1][1], oldname, newname):
+                    renamed = 1
+        return renamed

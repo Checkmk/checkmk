@@ -349,15 +349,16 @@ class html(GUITester):
     def makeactionuri_contextless(self, addvars, filename=None):
         return self.makeuri_contextless(addvars + [("_transid", self.get_transid())], filename=filename)
 
-    def image_button(self, varname, title, cssclass = ''):
+    def image_button(self, varname, title, cssclass = '', style=None):
         if not self.mobile:
-            self.write('<label for="%s" class="image_button">' % self.attrencode(varname))
+            self.write('<label for="%s" class="image_button"%s>' %
+               (self.attrencode(varname), style and (" style=\"%s\"" % style) or ""))
         self.raw_button(varname, title, cssclass)
         if not self.mobile:
             self.write('</label>')
 
-    def button(self, *args):
-        self.image_button(*args)
+    def button(self, *args, **kwargs):
+        self.image_button(*args, **kwargs)
 
 
     def raw_button(self, varname, title, cssclass=""):

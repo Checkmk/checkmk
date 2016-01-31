@@ -2567,7 +2567,8 @@ class Alternative(ValueSpec):
         self._match = kwargs.get("match") # custom match function, returns index in elements
         self._style = kwargs.get("style", "radio") # alternative: "dropdown"
         self._show_alternative_title = kwargs.get("show_alternative_title")
-        self._on_change = kwargs.get("on_change") # currently only working for select
+        self._on_change = kwargs.get("on_change") # currently only working for style="dropdown"
+        self._orientation = kwargs.get("orientation", "vertical") # or horizontal: for style="dropdown"
 
     # Return the alternative (i.e. valuespec)
     # that matches the datatype of a given value. We assume
@@ -2600,8 +2601,11 @@ class Alternative(ValueSpec):
         onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(options))
         if self._on_change:
             onchange += self._on_change
+        if self._orientation == "horizontal":
+            html.write("<table><tr><td>")
         html.select(varprefix + "_use", options, sel_option, onchange)
-        html.write("&nbsp;")
+        if self._orientation == "vertical":
+            html.write("&nbsp;")
 
         for nr, vs in enumerate(self._elements):
             if str(nr) == sel_option:
@@ -2611,11 +2615,16 @@ class Alternative(ValueSpec):
                 disp = "none"
                 cur_val = vs.default_value()
 
+            if self._orientation == "horizontal":
+                html.write("</td><td>")
             html.write('<span id="%s_%s_sub" style="display: %s">' %
                     (varprefix, nr, disp))
             html.help(vs.help())
             vs.render_input(varprefix + "_%d" % nr, cur_val)
             html.write("</span>")
+
+        if self._orientation == "horizontal":
+            html.write("</td></tr></table>")
 
     def render_input_radio(self, varprefix, value):
         mvs = self.matching_alternative(value)

@@ -597,7 +597,7 @@ table.data td .cp-preview {
     top: 2px;
 }
 
-.picker-wrapper, 
+.picker-wrapper,
 .slide-wrapper {
     position: relative;
     float: left;
@@ -642,6 +642,11 @@ table.data td .cp-preview {
     height: 2px;
     left: 0px;
     background-color: black;
+}
+
+div.popup_trigger.colorpicker .popup_menu {
+    top: 17px;
+    left: 26px;
 }
 
 /*--Werks------------------------------------------------------------------.

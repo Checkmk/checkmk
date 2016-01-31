@@ -356,7 +356,6 @@ def parse_perf_data(perf_data_string, check_command=None):
 # Get translation info for one performance var.
 def perfvar_translation(perfvar_nr, perfvar_name, check_command):
     cm = check_metrics.get(check_command, {})
-
     translation_entry = {} # Default: no translation neccessary
 
     if perfvar_name in cm:

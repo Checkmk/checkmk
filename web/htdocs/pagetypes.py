@@ -354,6 +354,11 @@ class PageRenderer:
 
 class Overridable:
     @classmethod
+    def sanitize(self, d):
+        d.setdefault("public", False)
+
+
+    @classmethod
     def parameters(self, clazz):
         if clazz.has_overriding_permission("publish"):
             return [( _("General Properties"), [

@@ -1407,13 +1407,27 @@ def host_service_graph_dashlet_pnp(site, host_name, service_description, source)
 #   |  Renders a simple table with all metrics of a host or service        |
 #   '----------------------------------------------------------------------'
 
-def render_metrics_table(translated_metrics):
+def render_metrics_table(translated_metrics, host_name, service_description):
     output = "<table class=metricstable>"
     for metric_name, metric in sorted(translated_metrics.items(), cmp=lambda a,b: cmp(a[1]["title"], b[1]["title"])):
         output += "<tr>"
         output += "<td class=color><div class=color style=\"background-color: %s\"></div></td>" % metric["color"]
         output += "<td>%s:</td>" % metric["title"]
         output += "<td class=value>%s</td>" % metric["unit"]["render"](metric["value"])
+        if cmk_graphs_possible():
+            output += "<td>"
+            output += html.render_popup_trigger(
+                html.render_icon("custom_graph", help=_("Add this metric to a custom graph"), cssclass="iconbutton"),
+                ident = "add_metric_to_graph_" + host_name + ";" + service_description,
+                what = "add_metric_to_custom_graph",
+                url_vars = [
+                    ("host", host_name),
+                    ("service", service_description),
+                    ("metric", metric_name),
+                    ("back_url", "HIRN MIST TODO"),
+                ]
+            )
+            output += "</td>"
         output += "</tr>"
     output += "</table>"
     return output

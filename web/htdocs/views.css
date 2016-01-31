@@ -805,9 +805,3 @@ td.if_state.if_not_available {
     color: black;
     background-color: #cccccc;
 }
-
-/* metrics table in painter svc_metrics */
-table.metricstable td.value {
-    padding-left: 10px;
-    text-align: right;
-}

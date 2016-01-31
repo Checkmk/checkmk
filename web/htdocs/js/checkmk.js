@@ -2439,6 +2439,9 @@ function close_popup()
         menu = null;
     }
     popup_id = null;
+
+    if (on_popup_close)
+        eval(on_popup_close);
 }
 
 // Registerd as click handler on the page while the popup menu is opened
@@ -2466,9 +2469,12 @@ function handle_popup_close(event) {
 //              The static content of the menu is given in the "menu_content" parameter.
 // data:        json data which can be used by actions in popup menus
 // url_vars:    vars are added to ajax_popup_*.py calls for rendering the popup menu
-function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_content)
+var on_popup_close = null;
+function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_content, onclose)
 {
-    if(!event)
+    on_popup_close = onclose;
+
+    if (!event)
         event = window.event;
     var container = trigger_obj.parentNode;
 
@@ -2476,7 +2482,8 @@ function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_cont
         if (popup_id === ident) {
             close_popup();
             return; // same icon clicked: just close the menu
-        } else {
+        }
+        else {
             close_popup();
         }
     }

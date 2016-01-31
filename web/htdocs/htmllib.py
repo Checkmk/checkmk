@@ -1032,14 +1032,15 @@ class html(GUITester):
         else:
             self.status_icons[img] = tooltip
 
-    def render_popup_trigger(self, content, ident, what=None, data=None, url_vars=None, style=None, menu_content=None, cssclass=None):
+    def render_popup_trigger(self, content, ident, what=None, data=None, url_vars=None, style=None, menu_content=None, cssclass=None, onclose=None):
         style = style and (' style="%s"' % style) or ""
         src = '<div class="popup_trigger%s" id="popup_trigger_%s"%s>\n' % (cssclass and (" " + cssclass) or "", ident, style)
-        onclick = 'toggle_popup(event, this, \'%s\', %s, %s, %s, %s)' % \
+        onclick = 'toggle_popup(event, this, \'%s\', %s, %s, %s, %s, %s)' % \
                     (ident, what and  "'"+what+"'" or 'null',
                      data and self.attrencode(json.dumps(data)) or 'null',
                      url_vars and "'"+self.urlencode_vars(url_vars)+"'" or 'null',
-                     menu_content and "'"+self.attrencode(menu_content)+"'" or 'null')
+                     menu_content and "'"+self.attrencode(menu_content)+"'" or 'null',
+                     onclose and "'%s'" % onclose.replace("'", "\\'") or 'null')
         src += '<a class="popup_trigger" href="javascript:void(0)" onclick="%s">\n' % onclick
         src += content
         src += '</a>'

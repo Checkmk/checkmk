@@ -1236,6 +1236,7 @@ class DropdownChoice(ValueSpec):
         self._no_preselect_value = kwargs.get("no_preselect_value", None)
         self._no_preselect_title = kwargs.get("no_preselect_title", "") # if not preselected
         self._no_preselect_error = kwargs.get("no_preselect_error", _("Please make a selection"))
+        self._on_change          = kwargs.get("on_change")
 
     def choices(self):
         result = []
@@ -1279,9 +1280,9 @@ class DropdownChoice(ValueSpec):
             html.icon_select(varprefix, options, defval)
         else:
             if not self._sorted:
-                html.select(varprefix, options, defval)
+                html.select(varprefix, options, defval, onchange=self._on_change)
             else:
-                html.sorted_select(varprefix, options, defval)
+                html.sorted_select(varprefix, options, defval, onchange=self._on_change)
 
     def value_to_text(self, value):
         for entry in self.choices():
@@ -2566,6 +2567,7 @@ class Alternative(ValueSpec):
         self._match = kwargs.get("match") # custom match function, returns index in elements
         self._style = kwargs.get("style", "radio") # alternative: "dropdown"
         self._show_alternative_title = kwargs.get("show_alternative_title")
+        self._on_change = kwargs.get("on_change") # currently only working for select
 
     # Return the alternative (i.e. valuespec)
     # that matches the datatype of a given value. We assume
@@ -2596,6 +2598,8 @@ class Alternative(ValueSpec):
                 sel_option = str(nr)
             options.append((str(nr), vs.title()))
         onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(options))
+        if self._on_change:
+            onchange += self._on_change
         html.select(varprefix + "_use", options, sel_option, onchange)
         html.write("&nbsp;")
 

@@ -513,17 +513,30 @@ multisite_painters["svc_plugin_output"] = {
     "paint"   : lambda row: paint_stalified(row, format_plugin_output(row["service_plugin_output"], row)),
     "sorter"  : 'svcoutput',
 }
+
 multisite_painters["svc_long_plugin_output"] = {
     "title"   : _("Long output of check plugin (multiline)"),
     "short"   : _("Status detail"),
     "columns" : ["service_long_plugin_output"],
     "paint"   : lambda row: paint_stalified(row, format_plugin_output(row["service_long_plugin_output"], row).replace('\\n', '<br>').replace('\n', '<br>')),
 }
+
 multisite_painters["svc_perf_data"] = {
-    "title" : _("Service performance data"),
+    "title" : _("Service performance data (source code)"),
     "short" : _("Perfdata"),
     "columns" : ["service_perf_data"],
     "paint" : lambda row: paint_stalified(row, row["service_perf_data"])
+}
+
+def paint_service_metrics(row):
+    translated_metrics = metrics.translate_metrics(*metrics.parse_perf_data(row["service_perf_data"], row["service_check_command"]))
+    return "", metrics.render_metrics_table(translated_metrics)
+
+multisite_painters["svc_metrics"] = {
+    "title" : _("Service Metrics"),
+    "short" : _("Metrics"),
+    "columns" : [ "service_check_command", "service_perf_data"],
+    "paint" : paint_service_metrics,
 }
 
 def get_perfdata_nth_value(row, n, remove_unit = False):

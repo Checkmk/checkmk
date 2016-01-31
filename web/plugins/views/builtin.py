@@ -1251,7 +1251,7 @@ multisite_builtin_views.update({
                   ('svc_long_plugin_output',    None),
                   ('perfometer',                None),
                   ('svc_pnpgraph',              None),
-                  ('svc_perf_data',             None),
+                  ('svc_metrics',               None),
                   ('svc_in_downtime',           None),
                   ('svc_in_notifper',           None),
 
@@ -1276,6 +1276,7 @@ multisite_builtin_views.update({
                   ('svc_group_memberlist',      None),
                   ('svc_servicelevel',          None),
                   ('svc_check_command',         None),
+                  ('svc_perf_data',             None),
                   ('svc_custom_vars',           None),
                   ('check_manpage',             None),
                   ('svc_custom_notes',          None),

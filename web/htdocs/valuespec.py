@@ -3594,11 +3594,9 @@ class Color(ValueSpec):
             "            function(hex, hsv, rgb) {" \
             "               document.getElementById(\"%s_value\").value = hex;" \
             "               document.getElementById(\"%s_preview\").style.backgroundColor = hex;" \
-            "               %s" \
-            "}).setHex(\"%s\");</script>" % (varprefix, varprefix, varprefix,
-                                         self._on_change or "", value)
+            "}).setHex(\"%s\");</script>" % (varprefix, varprefix, varprefix, value)
 
-        html.popup_trigger(indicator, varprefix + '_popup', menu_content=menu_content, cssclass="colorpicker")
+        html.popup_trigger(indicator, varprefix + '_popup', menu_content=menu_content, cssclass="colorpicker", onclose=self._on_change)
 
 
 

@@ -47,7 +47,7 @@
 
 unit_info[""] = {
     "title"  : "",
-    "description" : _("Floating point numnber"),
+    "description" : _("Floating point number"),
     "symbol" : "",
     "render" : lambda v: "%.1f" % v,
 }

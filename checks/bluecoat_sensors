@@ -32,9 +32,6 @@
 # celsius(5)
 # rpm(6)
 
-# TODO: Put temperature into a sub check. Otherwise it is not
-# configurable via WATO.
-
 def inventory_bluecoat_sensors(info, temp):
     for name, reading, status, scale, unit in info:
         # temperature sensor is unit 5.
@@ -43,13 +40,6 @@ def inventory_bluecoat_sensors(info, temp):
 
 
 def check_bluecoat_sensors(item, params, info, temp):
-
-    # other(1)
-    # truthvalue(2)
-    # specialEnum(3)
-    # volts(4)
-    # celsius(5)
-    # rpm(6)
     for name, reading, status, scale, unit in info:
         # if the service was discovered before the update,
         # the temp-subcheck will not have discovered anything as it didn't
@@ -59,8 +49,9 @@ def check_bluecoat_sensors(item, params, info, temp):
             name = name.replace(" temperature", "")
         if name == item:
             value = float(reading) * 10 ** float(scale)
-            if unit == '5':
-                return check_temperature(value, {}, "bluecoat_sensors_%s" % item, status != '1' and 2 or 0)
+            if temp and unit == '5':
+                return check_temperature(value, params,
+                                         "bluecoat_sensors_%s" % item, status != '1' and 2 or 0)
             elif unit == '4':
                 varname = "voltage"
                 unitname = " V"
@@ -93,5 +84,6 @@ check_info["bluecoat_sensors.temp"] = {
     'service_description' : 'Temperature %s',
     'has_perfdata'        : True,
     'includes'            : [ "temperature.include" ],
+    'group'               : "temperature",
 }
 

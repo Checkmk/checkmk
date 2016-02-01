@@ -348,6 +348,9 @@ table.data.oddeven > tbody > tr:nth-child(even) {
     background-color: #ddd;
 }
 
+table.data.oddeven > tbody > tr.groupheader {
+    background-color: transparent;
+}
 
 /* Two-lined header, for example in WATO: ChangeLog->Site Status */
 table.data tr.dualheader th {

@@ -67,9 +67,14 @@ def load_plugins(force):
     load_web_plugins("metrics", globals())
     loaded_with_language = current_language
 
+    fixup_unit_into()
+
+
+def fixup_unit_into():
     # create back link from each unit to its id.
     for unit_id, unit in unit_info.items():
         unit["id"] = unit_id
+        unit.setdefault("description", unit["title"])
 
 
 #.

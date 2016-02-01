@@ -305,7 +305,9 @@ fi
 # Current state of bonding interfaces
 if [ -e /proc/net/bonding ] ; then
     echo '<<<lnx_bonding:sep(58)>>>'
-    pushd /proc/net/bonding > /dev/null ; head -v -n 1000 * ; popd
+    pushd /proc/net/bonding > /dev/null
+    head -v -n 1000 *
+    popd > /dev/null
 fi
 
 # Same for Open vSwitch bonding

@@ -973,14 +973,28 @@ class Container:
     # The popup for "Add to ...", e.g. for adding a graph to a report
     # or dashboard. This is needed for page types with the aspect "ElementContainer".
     @classmethod
-    def render_addto_popup(self):
+    def render_addto_popup(self, added_type):
+        if not self.may_contain(added_type):
+            return
+
         pages = self.pages()
         if pages:
-            html.write('<li><span>%s:</span></li>' % self.phrase("add_to"))
+            self.render_addto_popup_title(self.phrase("add_to"))
             for page in pages:
-                html.write('<li><a href="javascript:void(0)" '
-                           'onclick="pagetype_add_to_container(\'%s\', \'%s\'); reload_sidebar();"><img src="images/icon_%s.png"> %s</a></li>' %
-                           (self.type_name(), page.name(), self.type_name(), page.title()))
+                self.render_addto_popup_entry(self.type_name(), page.name(), page.title())
+
+
+    # Helper functions for layouting the add-to popup
+    @classmethod
+    def render_addto_popup_title(self, title):
+        html.write('<li><span>%s:</span></li>' % title)
+
+
+    @classmethod
+    def render_addto_popup_entry(self, type_name, name, title):
+        html.write('<li><a href="javascript:void(0)" '
+                   'onclick="pagetype_add_to_container(\'%s\', \'%s\'); reload_sidebar();"><img src="images/icon_%s.png"> %s</a></li>' %
+                   (type_name, name, type_name, title))
 
 
     # Callback for the Javascript function pagetype_add_to_container(). The
@@ -997,9 +1011,11 @@ class Container:
 
         page_type = page_types[page_type_name]
         target_page, need_sidebar_reload = page_type.add_element_via_popup(page_name, element_type, create_info)
+        # Redirect user to tha page this displays the thing we just added to
         if target_page:
-            # Redirect user to that page
-            html.write(target_page.page_url())
+            if type(target_page) != str:
+                target_page = target_page.page_url()
+            html.write(target_page)
         html.write("\n%s" % (need_sidebar_reload and "true" or "false"))
 
 
@@ -1069,7 +1085,7 @@ def page_handlers():
     return page_handlers
 
 
-def render_addto_popup(add_type):
+def render_addto_popup(added_type):
     for page_type in page_types.values():
-        if issubclass(page_type, Container) and page_type.may_contain(add_type):
-            page_type.render_addto_popup()
+        if issubclass(page_type, Container):
+            page_type.render_addto_popup(added_type)

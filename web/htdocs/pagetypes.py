@@ -898,15 +898,15 @@ class Overridable:
 
         new_page_dict = forms.edit_valuespec(vs, page_dict, validate=validate)
         if new_page_dict != None:
+            # Take over keys from previous value that are specific to the page type
+            # and not edited here.
+            if mode in ("edit", "clone"):
+                for key, value in page_dict.items():
+                    new_page_dict.setdefault(key, value)
+
             owner = html.var("owner", config.user_id)
             new_page_dict["owner"] = owner
             new_page = self(new_page_dict)
-
-            if mode in ("edit", "clone"):
-                # Take over non-editable keys from previous version
-                for key in page_dict:
-                    if key not in new_page_dict:
-                        new_page_dict[key] = page_dict[key]
 
             self.add_page(new_page)
             self.save_user_instances(owner)

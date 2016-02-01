@@ -25,7 +25,7 @@
 #ifndef InputBuffer_h
 #define InputBuffer_h
 
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 #include <stddef.h>
 #include <list>
 #include <string>
@@ -58,4 +58,4 @@ private:
     Result readData();
 };
 
-#endif // InputBuffer_h
+#endif  // InputBuffer_h

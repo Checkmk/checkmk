@@ -25,7 +25,7 @@
 #ifndef waittriggers_h
 #define waittriggers_h
 
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,4 +59,4 @@ int trigger_wait_until(struct trigger *which, const struct timespec *abstime);
 }
 #endif
 
-#endif // waittriggers_h
+#endif  // waittriggers_h

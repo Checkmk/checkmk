@@ -23,17 +23,17 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ContactgroupsColumn.h"
-#include "nagios.h"
 #include "Query.h"
+#include "nagios.h"
 
-void ContactgroupsColumn::output(void *data, Query *query)
-{
+void ContactgroupsColumn::output(void *data, Query *query) {
     query->outputBeginList();
 
     if (data) {
         data = shiftPointer(data);
         if (data) {
-            contactgroupsmember *cgm = *(contactgroupsmember **)((char *)data + _offset);
+            contactgroupsmember *cgm =
+                *(contactgroupsmember **)((char *)data + _offset);
             bool first = true;
             while (cgm) {
                 contactgroup *cg = (contactgroup *)cgm->group_ptr;
@@ -50,30 +50,27 @@ void ContactgroupsColumn::output(void *data, Query *query)
     query->outputEndList();
 }
 
-void *ContactgroupsColumn::getNagiosObject(char *name)
-{
+void *ContactgroupsColumn::getNagiosObject(char *name) {
     return find_contactgroup(name);
 }
 
-bool ContactgroupsColumn::isNagiosMember(void *data, void *nagobject)
-{
-    if (!nagobject || !data)
-        return false;
+bool ContactgroupsColumn::isNagiosMember(void *data, void *nagobject) {
+    if (!nagobject || !data) return false;
 
     // data is already shifted (_indirect_offset is taken into account)
     // But _offset needs still to be accounted for
-    contactgroupsmember *cgm = *(contactgroupsmember **)((char *)data + _offset);
+    contactgroupsmember *cgm =
+        *(contactgroupsmember **)((char *)data + _offset);
 
     while (cgm) {
-        if (cgm->group_ptr == nagobject)
-            return true;
+        if (cgm->group_ptr == nagobject) return true;
         cgm = cgm->next;
     }
     return false;
 }
 
-bool ContactgroupsColumn::isEmpty(void *data)
-{
-    contactgroupsmember *cgm = *(contactgroupsmember **)((char *)data + _offset);
+bool ContactgroupsColumn::isEmpty(void *data) {
+    contactgroupsmember *cgm =
+        *(contactgroupsmember **)((char *)data + _offset);
     return cgm == 0;
 }

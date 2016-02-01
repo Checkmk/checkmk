@@ -38,45 +38,45 @@ class Query;
 struct HostServiceState;
 struct LogEntry;
 
-
 #define CLASSMASK_STATEHIST 0xC6
 
-
-class TableStateHistory : public Table
-{
-    int      _query_timeframe;
-    Query   *_query;
-    int      _since;
-    int      _until;
+class TableStateHistory : public Table {
+    int _query_timeframe;
+    Query *_query;
+    int _since;
+    int _until;
 
     // Notification periods information, name: active(1)/inactive(0)
     typedef std::map<std::string, int> _notification_periods_t;
-    _notification_periods_t  _notification_periods;
+    _notification_periods_t _notification_periods;
 
     // Helper functions to traverse through logfiles
-    _logfiles_t::iterator         _it_logs;
-    logfile_entries_t            *_entries;
-    logfile_entries_t::iterator   _it_entries;
-    LogEntry                     *_current_entry;
+    _logfiles_t::iterator _it_logs;
+    logfile_entries_t *_entries;
+    logfile_entries_t::iterator _it_entries;
+    LogEntry *_current_entry;
 
 protected:
-    bool     _abort_query;
+    bool _abort_query;
 
 public:
     TableStateHistory();
     const char *name() { return "statehist"; }
     const char *prefixname() { return "statehist_"; }
     bool isAuthorized(contact *ctc, void *data);
-    void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
+    void handleNewMessage(Logfile *logfile, time_t since, time_t until,
+                          unsigned logclasses);
     void answerQuery(Query *query);
-    Column *column(const char *colname); // override in order to handle current_
-    int updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *state, const bool only_update);
+    Column *column(
+        const char *colname);  // override in order to handle current_
+    int updateHostServiceState(Query *query, const LogEntry *entry,
+                               HostServiceState *state, const bool only_update);
     static void addColumns(Table *);
 
 private:
-    LogEntry* getPreviousLogentry();
-    LogEntry* getNextLogentry();
-    void      process(Query *query, HostServiceState *hs_state);
+    LogEntry *getPreviousLogentry();
+    LogEntry *getNextLogentry();
+    void process(Query *query, HostServiceState *hs_state);
 };
 
-#endif // TableStateHistory_h
+#endif  // TableStateHistory_h

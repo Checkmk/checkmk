@@ -26,20 +26,19 @@
 #define Livestatus_h
 
 #include <stdio.h>
-#include <vector>
 #include <string>
+#include <vector>
 
 // simple C++ API for accessing Livestatus from C++,
 // currently supports only UNIX sockets, no TCP. But
 // this is only a simple enhancement.
 
-class Livestatus
-{
+class Livestatus {
     int _connection;
     FILE *_file;
 
 public:
-    Livestatus() : _connection(-1), _file(0) {};
+    Livestatus() : _connection(-1), _file(0){};
     ~Livestatus();
     void connectUNIX(const char *socketpath);
     bool isConnected() const { return _connection >= 0; };
@@ -48,7 +47,4 @@ public:
     std::vector<std::string> *nextRow();
 };
 
-
-
-#endif // Livestatus_h
-
+#endif  // Livestatus_h

@@ -36,58 +36,52 @@
 using std::map;
 using std::pair;
 
-
-void DownCommColumn::output(void *data, Query *query)
-{
+void DownCommColumn::output(void *data, Query *query) {
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
     query->outputBeginList();
-    data = shiftPointer(data); // points to host or service
-    if (data)
-    {
+    data = shiftPointer(data);  // points to host or service
+    if (data) {
         bool first = true;
 
-        for (map<pair<unsigned long, bool>, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
-                it != table->entriesIteratorEnd();
-                ++it)
-        {
-            unsigned long id     = it->first.first;
-            bool is_service       =  it->first.second;
-            DowntimeOrComment *dt =  it->second;
+        for (map<pair<unsigned long, bool>, DowntimeOrComment *>::iterator it =
+                 table->entriesIteratorBegin();
+             it != table->entriesIteratorEnd(); ++it) {
+            unsigned long id = it->first.first;
+            bool is_service = it->first.second;
+            DowntimeOrComment *dt = it->second;
 
             bool found_match = false;
 
-            if (!is_service){
-                if (dt->_host->name == static_cast<host*>(data)->name)
+            if (!is_service) {
+                if (dt->_host->name == static_cast<host *>(data)->name)
                     found_match = true;
-            }
-            else
-                if ( dt->_service->description == static_cast<service*>(data)->description &&
-                     dt->_service->host_name == static_cast<service*>(data)->host_name )
-                    found_match = true;
+            } else if (dt->_service->description ==
+                           static_cast<service *>(data)->description &&
+                       dt->_service->host_name ==
+                           static_cast<service *>(data)->host_name)
+                found_match = true;
 
-            if (found_match)
-            {
+            if (found_match) {
                 if (first)
                     first = false;
                 else
                     query->outputListSeparator();
-                if (_with_info)
-                {
+                if (_with_info) {
                     query->outputBeginSublist();
                     query->outputUnsignedLong(id);
                     query->outputSublistSeparator();
                     query->outputString(dt->_author_name);
                     query->outputSublistSeparator();
                     query->outputString(dt->_comment);
-                    if(_with_extra_info && !_is_downtime) {
+                    if (_with_extra_info && !_is_downtime) {
                         query->outputSublistSeparator();
-                        query->outputInteger(static_cast<Comment*>(dt)->_entry_type);
+                        query->outputInteger(
+                            static_cast<Comment *>(dt)->_entry_type);
                         query->outputSublistSeparator();
                         query->outputTime(dt->_entry_time);
                     }
                     query->outputEndSublist();
-                }
-                else
+                } else
                     query->outputUnsignedLong(id);
             }
         }
@@ -95,38 +89,35 @@ void DownCommColumn::output(void *data, Query *query)
     query->outputEndList();
 }
 
-void *DownCommColumn::getNagiosObject(char *name)
-{
+void *DownCommColumn::getNagiosObject(char *name) {
     unsigned long id = strtoul(name, 0, 10);
-    return reinterpret_cast<void *>(static_cast<uintptr_t>(id)); // Hack. Convert number into pointer.
+    return reinterpret_cast<void *>(
+        static_cast<uintptr_t>(id));  // Hack. Convert number into pointer.
 }
 
-bool DownCommColumn::isNagiosMember(void *data, void *member)
-{
+bool DownCommColumn::isNagiosMember(void *data, void *member) {
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
     // data points to a host or service
     // member is not a pointer, but an unsigned int (hack)
-    int64_t id = (int64_t)member; // Hack. Convert it back.
+    int64_t id = (int64_t)member;  // Hack. Convert it back.
     DowntimeOrComment *dt = table->findEntry(id, _is_service);
     return dt != 0 &&
-        ( dt->_service == static_cast<service *>(data) || (dt->_service == 0 && dt->_host == static_cast<host *>(data)));
+           (dt->_service == static_cast<service *>(data) ||
+            (dt->_service == 0 && dt->_host == static_cast<host *>(data)));
 }
 
-bool DownCommColumn::isEmpty(void *data)
-{
+bool DownCommColumn::isEmpty(void *data) {
     if (!data) return true;
 
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
-    for (map<pair<unsigned long, bool>, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
-            it != table->entriesIteratorEnd();
-            ++it)
-    {
+    for (map<pair<unsigned long, bool>, DowntimeOrComment *>::iterator it =
+             table->entriesIteratorBegin();
+         it != table->entriesIteratorEnd(); ++it) {
         DowntimeOrComment *dt = it->second;
         if ((void *)dt->_service == data ||
-                (dt->_service == 0 && dt->_host == data))
-        {
+            (dt->_service == 0 && dt->_host == data)) {
             return false;
         }
     }
-    return true; // empty
+    return true;  // empty
 }

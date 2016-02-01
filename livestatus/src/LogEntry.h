@@ -32,64 +32,63 @@
 struct command;
 #endif
 
-#define LOGCLASS_INFO              0 // all messages not in any other class
-#define LOGCLASS_ALERT             1 // alerts: the change service/host state
-#define LOGCLASS_PROGRAM           2 // important programm events (restart, ...)
-#define LOGCLASS_NOTIFICATION      3 // host/service notifications
-#define LOGCLASS_PASSIVECHECK      4 // passive checks
-#define LOGCLASS_COMMAND           5 // external commands
-#define LOGCLASS_STATE             6 // initial or current states
-#define LOGCLASS_TEXT              7 // specific text passages. e.g "logging initial states"
-                                     // TODO: This LOGCLASS sets different logclasses on match -> fix this
-#define LOGCLASS_INVALID  0x7fffffff // never stored
-#define LOGCLASS_ALL          0xffff
+#define LOGCLASS_INFO 0          // all messages not in any other class
+#define LOGCLASS_ALERT 1         // alerts: the change service/host state
+#define LOGCLASS_PROGRAM 2       // important programm events (restart, ...)
+#define LOGCLASS_NOTIFICATION 3  // host/service notifications
+#define LOGCLASS_PASSIVECHECK 4  // passive checks
+#define LOGCLASS_COMMAND 5       // external commands
+#define LOGCLASS_STATE 6         // initial or current states
+#define LOGCLASS_TEXT 7  // specific text passages. e.g "logging initial states"
+// TODO: This LOGCLASS sets different logclasses on match -> fix this
+#define LOGCLASS_INVALID 0x7fffffff  // never stored
+#define LOGCLASS_ALL 0xffff
 
 enum LogEntryType {
-    NONE                      = 0,
-    ALERT_HOST                = 1,
-    ALERT_SERVICE             = 2,
-    DOWNTIME_ALERT_HOST       = 3,
-    DOWNTIME_ALERT_SERVICE    = 4,
-    STATE_HOST                = 5,
-    STATE_HOST_INITIAL        = 6,
-    STATE_SERVICE             = 7,
-    STATE_SERVICE_INITIAL     = 8,
-    FLAPPING_HOST             = 9,
-    FLAPPING_SERVICE          = 10,
-    TIMEPERIOD_TRANSITION     = 11,
-    CORE_STARTING             = 12,
-    CORE_STOPPING             = 13,
-    LOG_VERSION               = 14,
-    LOG_INITIAL_STATES        = 15,
-    ACKNOWLEDGE_ALERT_HOST    = 16,
+    NONE = 0,
+    ALERT_HOST = 1,
+    ALERT_SERVICE = 2,
+    DOWNTIME_ALERT_HOST = 3,
+    DOWNTIME_ALERT_SERVICE = 4,
+    STATE_HOST = 5,
+    STATE_HOST_INITIAL = 6,
+    STATE_SERVICE = 7,
+    STATE_SERVICE_INITIAL = 8,
+    FLAPPING_HOST = 9,
+    FLAPPING_SERVICE = 10,
+    TIMEPERIOD_TRANSITION = 11,
+    CORE_STARTING = 12,
+    CORE_STOPPING = 13,
+    LOG_VERSION = 14,
+    LOG_INITIAL_STATES = 15,
+    ACKNOWLEDGE_ALERT_HOST = 16,
     ACKNOWLEDGE_ALERT_SERVICE = 17,
 };
 
-struct LogEntry
-{
-    unsigned     _lineno;      // line number in file
-    time_t       _time;
-    unsigned     _logclass;
+struct LogEntry {
+    unsigned _lineno;  // line number in file
+    time_t _time;
+    unsigned _logclass;
     LogEntryType _type;
-    char        *_complete;  // copy of complete unsplit message
-    char        *_options;   // points into _complete after ':'
-    char        *_msg;       // split up with binary zeroes
-    unsigned     _msglen;    // size of _msg
-    char        *_text;      // points into msg
-    char        *_host_name; // points into msg or is 0
-    char        *_svc_desc;  // points into msg or is 0
-    const char  *_command_name;
-    char        *_contact_name;
-    int         _state;
-    const char  *_state_type;
-    int         _attempt;
-    char        *_check_output;
-    char        *_comment;
+    char *_complete;   // copy of complete unsplit message
+    char *_options;    // points into _complete after ':'
+    char *_msg;        // split up with binary zeroes
+    unsigned _msglen;  // size of _msg
+    char *_text;       // points into msg
+    char *_host_name;  // points into msg or is 0
+    char *_svc_desc;   // points into msg or is 0
+    const char *_command_name;
+    char *_contact_name;
+    int _state;
+    const char *_state_type;
+    int _attempt;
+    char *_check_output;
+    char *_comment;
 
-    host        *_host;
-    service     *_service;
-    contact     *_contact;
-    command     *_command;
+    host *_host;
+    service *_service;
+    contact *_contact;
+    command *_command;
 
     LogEntry(unsigned lineno, char *line);
     ~LogEntry();
@@ -109,4 +108,4 @@ private:
     bool handleTextEntry();
 };
 
-#endif // LogEntry_h
+#endif  // LogEntry_h

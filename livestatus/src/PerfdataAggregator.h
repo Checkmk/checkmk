@@ -32,15 +32,13 @@
 class Query;
 class StringColumn;  // lines 32-32
 
-
 struct perf_aggr {
     double _aggr;
     double _count;
     double _sumq;
 };
 
-class PerfdataAggregator : public Aggregator
-{
+class PerfdataAggregator : public Aggregator {
     StringColumn *_column;
     typedef std::map<std::string, perf_aggr> _aggr_t;
     _aggr_t _aggr;
@@ -54,5 +52,4 @@ private:
     void consumeVariable(const char *varname, double value);
 };
 
-#endif // PerfdataAggregator_h
-
+#endif  // PerfdataAggregator_h

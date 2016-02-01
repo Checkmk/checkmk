@@ -30,17 +30,16 @@
 class DoubleColumn;
 class Query;
 
-
-class DoubleAggregator : public Aggregator
-{
+class DoubleAggregator : public Aggregator {
     DoubleColumn *_column;
     double _aggr;
     double _sumq;
+
 public:
-    DoubleAggregator(DoubleColumn *c, int o) :
-        Aggregator(o), _column(c), _aggr(0), _sumq(0) {}
+    DoubleAggregator(DoubleColumn *c, int o)
+        : Aggregator(o), _column(c), _aggr(0), _sumq(0) {}
     void consume(void *data, Query *);
     void output(Query *);
 };
 
-#endif // DoubleAggregator_h
+#endif  // DoubleAggregator_h

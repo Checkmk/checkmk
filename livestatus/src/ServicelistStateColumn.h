@@ -32,35 +32,36 @@
 #include "nagios.h"
 class Query;
 
+#define SLSC_NUM_OK 0
+#define SLSC_NUM_WARN 1
+#define SLSC_NUM_CRIT 2
+#define SLSC_NUM_UNKNOWN 3
+#define SLSC_NUM_PENDING 4
+#define SLSC_WORST_STATE -2
 
-#define SLSC_NUM_OK             0
-#define SLSC_NUM_WARN           1
-#define SLSC_NUM_CRIT           2
-#define SLSC_NUM_UNKNOWN        3
-#define SLSC_NUM_PENDING        4
-#define SLSC_WORST_STATE       -2
+#define SLSC_NUM_HARD_OK (0 + 64)
+#define SLSC_NUM_HARD_WARN (1 + 64)
+#define SLSC_NUM_HARD_CRIT (2 + 64)
+#define SLSC_NUM_HARD_UNKNOWN (3 + 64)
+#define SLSC_WORST_HARD_STATE (-2 + 64)
 
-#define SLSC_NUM_HARD_OK       ( 0 + 64)
-#define SLSC_NUM_HARD_WARN     ( 1 + 64)
-#define SLSC_NUM_HARD_CRIT     ( 2 + 64)
-#define SLSC_NUM_HARD_UNKNOWN  ( 3 + 64)
-#define SLSC_WORST_HARD_STATE  (-2 + 64)
+#define SLSC_NUM -1
 
-#define SLSC_NUM               -1
-
-
-class ServicelistStateColumn : public IntColumn
-{
+class ServicelistStateColumn : public IntColumn {
     int _offset;
     int _logictype;
 
 public:
-    ServicelistStateColumn(std::string name, std::string description, int logictype, int offset, int indirect_offset, int extra_offset = -1)
-        : IntColumn(name, description, indirect_offset, extra_offset), _offset(offset), _logictype(logictype) {}
+    ServicelistStateColumn(std::string name, std::string description,
+                           int logictype, int offset, int indirect_offset,
+                           int extra_offset = -1)
+        : IntColumn(name, description, indirect_offset, extra_offset)
+        , _offset(offset)
+        , _logictype(logictype) {}
     int32_t getValue(void *data, Query *) override;
     servicesmember *getMembers(void *data);
     static int32_t getValue(int logictype, servicesmember *services, Query *);
     static bool svcStateIsWorse(int32_t state1, int32_t state2);
 };
 
-#endif // ServicelistStateColumn_h
+#endif  // ServicelistStateColumn_h

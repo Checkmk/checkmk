@@ -22,21 +22,17 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #include "OHMMonitor.h"
 #include "logging.h"
 #include "types.h"
 
-
 OHMMonitor::OHMMonitor(const Environment &env)
-    : _exe_path(env.binDirectory() + "\\OpenHardwareMonitorCLI.exe")
-{
-    _available = ::GetFileAttributesA(_exe_path.c_str()) != INVALID_FILE_ATTRIBUTES;
+    : _exe_path(env.binDirectory() + "\\OpenHardwareMonitorCLI.exe") {
+    _available =
+        ::GetFileAttributesA(_exe_path.c_str()) != INVALID_FILE_ATTRIBUTES;
 }
 
-
-OHMMonitor::~OHMMonitor()
-{
+OHMMonitor::~OHMMonitor() {
     if (_current_process != INVALID_HANDLE_VALUE) {
         DWORD exitCode = 0;
         if (!::GetExitCodeProcess(_current_process, &exitCode)) {
@@ -52,26 +48,17 @@ OHMMonitor::~OHMMonitor()
     }
 }
 
-
-HANDLE dev_null()
-{
+HANDLE dev_null() {
     SECURITY_ATTRIBUTES secattr = {};
     secattr.nLength = sizeof(SECURITY_ATTRIBUTES);
     secattr.lpSecurityDescriptor = NULL;
     secattr.bInheritHandle = TRUE;
-    return ::CreateFile(
-            TEXT("nul:"),
-            GENERIC_READ | GENERIC_WRITE,
-            FILE_SHARE_READ | FILE_SHARE_WRITE,
-            &secattr,
-            OPEN_EXISTING,
-            0,
-            nullptr);
+    return ::CreateFile(TEXT("nul:"), GENERIC_READ | GENERIC_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE, &secattr,
+                        OPEN_EXISTING, 0, nullptr);
 }
 
-
-bool OHMMonitor::checkAvailabe()
-{
+bool OHMMonitor::checkAvailabe() {
     if (!_available) {
         return false;
     }
@@ -85,7 +72,8 @@ bool OHMMonitor::checkAvailabe()
             _current_process = INVALID_HANDLE_VALUE;
         } else {
             if (exitCode != STILL_ACTIVE) {
-                crash_log("OHM process ended with exit code %" PRIudword, exitCode);
+                crash_log("OHM process ended with exit code %" PRIudword,
+                          exitCode);
                 ::CloseHandle(_current_process);
                 _current_process = INVALID_HANDLE_VALUE;
             }
@@ -98,31 +86,20 @@ bool OHMMonitor::checkAvailabe()
         si.dwFlags |= STARTF_USESTDHANDLES;
         si.hStdOutput = si.hStdError = dev_null();
 
-        OnScopeExit([&si] () { CloseHandle(si.hStdOutput); });
+        OnScopeExit([&si]() { CloseHandle(si.hStdOutput); });
 
         PROCESS_INFORMATION pi = {};
 
-        if (!::CreateProcessA(
-                    _exe_path.c_str(),
-                    nullptr,
-                    nullptr,
-                    nullptr,
-                    TRUE,
-                    0,
-                    nullptr,
-                    nullptr,
-                    &si,
-                    &pi
-                    )) {
+        if (!::CreateProcessA(_exe_path.c_str(), nullptr, nullptr, nullptr,
+                              TRUE, 0, nullptr, nullptr, &si, &pi)) {
             crash_log("failed to run %s", _exe_path.c_str());
             return false;
-        }
-        else {
+        } else {
             _current_process = pi.hProcess;
-            crash_log("started %s (pid %lu)", _exe_path.c_str(), pi.dwProcessId);
+            crash_log("started %s (pid %lu)", _exe_path.c_str(),
+                      pi.dwProcessId);
             ::CloseHandle(pi.hThread);
         }
     }
     return true;
 }
-

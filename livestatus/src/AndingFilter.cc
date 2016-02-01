@@ -28,25 +28,16 @@
 #include "Query.h"
 #include "logger.h"
 
-
-AndingFilter::~AndingFilter()
-{
+AndingFilter::~AndingFilter() {
     for (_subfilters_t::iterator it = _subfilters.begin();
-            it != _subfilters.end();
-            ++it)
-    {
+         it != _subfilters.end(); ++it) {
         delete *it;
     }
 }
 
-void AndingFilter::addSubfilter(Filter *f)
-{
-    _subfilters.push_back(f);
-}
+void AndingFilter::addSubfilter(Filter *f) { _subfilters.push_back(f); }
 
-
-Filter *AndingFilter::stealLastSubfiler()
-{
+Filter *AndingFilter::stealLastSubfiler() {
     if (_subfilters.size() == 0)
         return 0;
     else {
@@ -56,68 +47,54 @@ Filter *AndingFilter::stealLastSubfiler()
     }
 }
 
-
-bool AndingFilter::accepts(void *data)
-{
+bool AndingFilter::accepts(void *data) {
     for (_subfilters_t::iterator it = _subfilters.begin();
-            it != _subfilters.end();
-            ++it)
-    {
+         it != _subfilters.end(); ++it) {
         Filter *filter = *it;
-        if (!filter->accepts(data))
-            return false;
+        if (!filter->accepts(data)) return false;
     }
     return true;
 }
 
-void *AndingFilter::findIndexFilter(const char *columnname)
-{
+void *AndingFilter::findIndexFilter(const char *columnname) {
     for (_subfilters_t::iterator it = _subfilters.begin();
-            it != _subfilters.end();
-            ++it)
-    {
+         it != _subfilters.end(); ++it) {
         Filter *filter = *it;
         void *refvalue = filter->indexFilter(columnname);
-        if (refvalue)
-            return refvalue;
+        if (refvalue) return refvalue;
     }
     return 0;
 }
 
-void AndingFilter::findIntLimits(const char *columnname, int *lower, int *upper)
-{
+void AndingFilter::findIntLimits(const char *columnname, int *lower,
+                                 int *upper) {
     for (_subfilters_t::iterator it = _subfilters.begin();
-            it != _subfilters.end();
-            ++it)
-    {
+         it != _subfilters.end(); ++it) {
         Filter *filter = *it;
         filter->findIntLimits(columnname, lower, upper);
     }
 }
 
-bool AndingFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
-{
+bool AndingFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
     bool optimized = false;
     for (_subfilters_t::iterator it = _subfilters.begin();
-            it != _subfilters.end();
-            ++it)
-    {
+         it != _subfilters.end(); ++it) {
         Filter *filter = *it;
-        if (filter->optimizeBitmask(columnname, mask))
-            optimized = true;
+        if (filter->optimizeBitmask(columnname, mask)) optimized = true;
     }
     return optimized;
 }
 
-void AndingFilter::combineFilters(int count, int andor)
-{
+void AndingFilter::combineFilters(int count, int andor) {
     if (count > (int)_subfilters.size()) {
-        logger(LG_INFO, "Cannot combine %d filters with '%s': only %" PRIuMAX " are on stack",
-               count, andor == ANDOR_AND ? "AND" : "OR", static_cast<uintmax_t>(_subfilters.size()));
+        logger(LG_INFO, "Cannot combine %d filters with '%s': only %" PRIuMAX
+                        " are on stack",
+               count, andor == ANDOR_AND ? "AND" : "OR",
+               static_cast<uintmax_t>(_subfilters.size()));
         return;
     }
 
-    AndingFilter *andorfilter; // OringFilter is subclassed from AndingFilter
+    AndingFilter *andorfilter;  // OringFilter is subclassed from AndingFilter
     if (andor == ANDOR_AND)
         andorfilter = new AndingFilter();
     else

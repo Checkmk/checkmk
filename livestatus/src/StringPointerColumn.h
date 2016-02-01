@@ -25,18 +25,19 @@
 #ifndef StringPointerColumn_h
 #define StringPointerColumn_h
 
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 #include "StringColumn.h"
 
 class StringPointerColumn : public StringColumn {
     const char *_string;
 
 public:
-    StringPointerColumn(std::string name, std::string description, const char *string, int indirect_offset = -1, int extra_offset = -1)
-        : StringColumn(name, description, indirect_offset, extra_offset), _string(string)
-    {
-    }
+    StringPointerColumn(std::string name, std::string description,
+                        const char *string, int indirect_offset = -1,
+                        int extra_offset = -1)
+        : StringColumn(name, description, indirect_offset, extra_offset)
+        , _string(string) {}
     const char *getValue(void *) override { return _string; }
 };
 
-#endif // StringPointerColumn_h
+#endif  // StringPointerColumn_h

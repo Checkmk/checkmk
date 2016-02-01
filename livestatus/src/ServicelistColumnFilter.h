@@ -30,17 +30,16 @@
 #include "Filter.h"
 class ServicelistColumn;
 
-
-class ServicelistColumnFilter : public Filter
-{
+class ServicelistColumnFilter : public Filter {
     ServicelistColumn *_servicelist_column;
     int _opid;
     std::string _ref_host;
     std::string _ref_service;
 
 public:
-    ServicelistColumnFilter(ServicelistColumn *column, int opid, char *refvalue);
+    ServicelistColumnFilter(ServicelistColumn *column, int opid,
+                            char *refvalue);
     bool accepts(void *data);
 };
 
-#endif // ServicelistColumnFilter_h
+#endif  // ServicelistColumnFilter_h

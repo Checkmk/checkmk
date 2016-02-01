@@ -34,8 +34,7 @@ extern char g_mk_inventory_path[];
 #define MK_INVENTORY_PATH g_mk_inventory_path
 #endif
 
-int mk_inventory_last(const char *host)
-{
+int mk_inventory_last(const char *host) {
     char path[4096];
     snprintf(path, sizeof(path), "%s/%s", MK_INVENTORY_PATH, host);
     struct stat st;
@@ -45,8 +44,7 @@ int mk_inventory_last(const char *host)
         return st.st_mtime;
 }
 
-int mk_inventory_last_of_all()
-{
+int mk_inventory_last_of_all() {
     // Check_MK Inventory touches the file ".last" after each inventory
     return mk_inventory_last(".last");
 }

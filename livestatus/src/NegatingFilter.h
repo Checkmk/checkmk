@@ -28,9 +28,9 @@
 #include "config.h"  // IWYU pragma: keep
 #include "Filter.h"
 
-class NegatingFilter : public Filter
-{
+class NegatingFilter : public Filter {
     Filter *_filter;
+
 public:
     explicit NegatingFilter(Filter *filter) : _filter(filter) {}
     ~NegatingFilter() { delete _filter; }
@@ -39,6 +39,4 @@ public:
     bool accepts(void *data) { return !_filter->accepts(data); }
 };
 
-
-#endif // NegatingFilter_h
-
+#endif  // NegatingFilter_h

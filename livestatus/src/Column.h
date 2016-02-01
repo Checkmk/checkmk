@@ -30,19 +30,16 @@
 class Filter;
 class Query;
 
+#define COLTYPE_INT 0
+#define COLTYPE_DOUBLE 1
+#define COLTYPE_STRING 2
+#define COLTYPE_LIST 3
+#define COLTYPE_TIME 4
+#define COLTYPE_DICT 5
+#define COLTYPE_BLOB 6
+#define COLTYPE_NULL 7
 
-#define COLTYPE_INT     0
-#define COLTYPE_DOUBLE  1
-#define COLTYPE_STRING  2
-#define COLTYPE_LIST    3
-#define COLTYPE_TIME    4
-#define COLTYPE_DICT    5
-#define COLTYPE_BLOB    6
-#define COLTYPE_NULL    7
-
-
-class Column
-{
+class Column {
     std::string _name;
     std::string _description;
     int _indirect_offset;
@@ -61,8 +58,10 @@ public:
     virtual std::string valueAsString(void *, Query *) { return "invalid"; }
     virtual int type() = 0;
     virtual void output(void *data, Query *) = 0;
-    virtual bool mustDelete() { return false; } // true for dynamic Columns to be deleted after Query
+    virtual bool mustDelete() {
+        return false;
+    }  // true for dynamic Columns to be deleted after Query
     virtual Filter *createFilter(int, char *) { return 0; }
 };
 
-#endif // Column_h
+#endif  // Column_h

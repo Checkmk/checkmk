@@ -29,17 +29,18 @@
 #include <string>
 #include "DoubleColumn.h"
 
-
-class OffsetDoubleColumn : public DoubleColumn
-{
+class OffsetDoubleColumn : public DoubleColumn {
     int _offset;
+
 public:
-    OffsetDoubleColumn(std::string name, std::string description,
-                       int offset, int indirect_offset = -1, int extra_offset = -1)
-        : DoubleColumn(name, description, indirect_offset, extra_offset), _offset(offset) {}
+    OffsetDoubleColumn(std::string name, std::string description, int offset,
+                       int indirect_offset = -1, int extra_offset = -1)
+        : DoubleColumn(name, description, indirect_offset, extra_offset)
+        , _offset(offset) {}
     double getValue(void *data);
+
 protected:
     int offset() { return _offset; }
 };
 
-#endif // OffsetDoubleColumn_h
+#endif  // OffsetDoubleColumn_h

@@ -30,9 +30,7 @@
 #include "Filter.h"
 class HostlistColumn;
 
-
-class HostlistColumnFilter : public Filter
-{
+class HostlistColumnFilter : public Filter {
     HostlistColumn *_hostlist_column;
     int _opid;
     std::string _ref_value;
@@ -43,4 +41,4 @@ public:
     bool accepts(void *data);
 };
 
-#endif // HostlistColumnFilter_h
+#endif  // HostlistColumnFilter_h

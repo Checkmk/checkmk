@@ -24,11 +24,8 @@
 
 #include "OffsetIntColumn.h"
 
-
-int32_t OffsetIntColumn::getValue(void *data, Query *)
-{
-    if (!data)
-        return 0;
+int32_t OffsetIntColumn::getValue(void *data, Query *) {
+    if (!data) return 0;
 
     char *p = (char *)shiftPointer(data);
     if (p)

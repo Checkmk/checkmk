@@ -28,7 +28,6 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 
-
 std::string pnp_cleanup(const std::string& name);
 
 int pnpgraph_present(const std::string& host,
@@ -40,4 +39,4 @@ int pnpgraph_present(const std::string& host,
 std::string rrd_path(const std::string& host, const std::string& service,
                      const std::string& varname);
 
-#endif // pnp4nagios_h
+#endif  // pnp4nagios_h

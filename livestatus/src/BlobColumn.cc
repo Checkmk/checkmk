@@ -26,15 +26,12 @@
 #include <stdlib.h>
 #include "Query.h"
 
-
-void BlobColumn::output(void *data, Query *query)
-{
+void BlobColumn::output(void *data, Query *query) {
     int size;
     char *buffer = getBlob(data, &size);
     if (buffer) {
         query->outputBlob(buffer, size);
         free(buffer);
-    }
-    else
+    } else
         query->outputBlob("", 0);
 }

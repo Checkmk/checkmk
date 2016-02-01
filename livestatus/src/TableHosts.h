@@ -31,18 +31,18 @@
 #include "nagios.h"  // IWYU pragma: keep
 class Query;
 
-
-class TableHosts : public Table
-{
+class TableHosts : public Table {
     bool _by_group;
+
 public:
     explicit TableHosts(bool by_group);
     const char *name() { return _by_group ? "hostsbygroup" : "hosts"; }
     const char *prefixname() { return "hosts"; }
     bool isAuthorized(contact *ctc, void *data);
     void *findObject(char *objectspec);
-    static void addColumns(Table *, std::string prefix, int indirect_offset, int extra_offset = -1);
+    static void addColumns(Table *, std::string prefix, int indirect_offset,
+                           int extra_offset = -1);
     void answerQuery(Query *query);
 };
 
-#endif // TableHosts_h
+#endif  // TableHosts_h

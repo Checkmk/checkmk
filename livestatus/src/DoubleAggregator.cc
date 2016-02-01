@@ -28,20 +28,19 @@
 #include "Query.h"
 #include "StatsColumn.h"
 
-
 /* SORRY: This file is copy&pasted from IntAggregator.
    I hate copy & paste. But I also dislike complicating
    stuff by using C++ templates and the like.
  */
 
-void DoubleAggregator::consume(void *data, Query *)
-{
+void DoubleAggregator::consume(void *data, Query *) {
     _count++;
     double value = _column->getValue(data);
     switch (_operation) {
         case STATS_OP_SUM:
         case STATS_OP_AVG:
-            _aggr += value; break;
+            _aggr += value;
+            break;
 
         case STATS_OP_MIN:
             if (_count == 1)
@@ -69,9 +68,7 @@ void DoubleAggregator::consume(void *data, Query *)
     }
 }
 
-
-void DoubleAggregator::output(Query *q)
-{
+void DoubleAggregator::output(Query *q) {
     switch (_operation) {
         case STATS_OP_SUM:
         case STATS_OP_MIN:
@@ -92,7 +89,8 @@ void DoubleAggregator::output(Query *q)
             if (_count <= 1)
                 q->outputDouble(0.0);
             else
-                q->outputDouble(sqrt((_sumq - (_aggr * _aggr) / _count)/(_count - 1)));
+                q->outputDouble(
+                    sqrt((_sumq - (_aggr * _aggr) / _count) / (_count - 1)));
             break;
     }
 }

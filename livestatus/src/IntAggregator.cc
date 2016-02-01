@@ -28,15 +28,14 @@
 #include "Query.h"
 #include "StatsColumn.h"
 
-
-void IntAggregator::consume(void *data, Query *query)
-{
+void IntAggregator::consume(void *data, Query *query) {
     _count++;
     int32_t value = _column->getValue(data, query);
     switch (_operation) {
         case STATS_OP_SUM:
         case STATS_OP_AVG:
-            _aggr += value; break;
+            _aggr += value;
+            break;
 
         case STATS_OP_SUMINV:
         case STATS_OP_AVGINV:
@@ -64,9 +63,7 @@ void IntAggregator::consume(void *data, Query *query)
     }
 }
 
-
-void IntAggregator::output(Query *q)
-{
+void IntAggregator::output(Query *q) {
     switch (_operation) {
         case STATS_OP_SUM:
         case STATS_OP_MIN:
@@ -90,7 +87,9 @@ void IntAggregator::output(Query *q)
             if (_count <= 1)
                 q->outputDouble(0.0);
             else
-                q->outputDouble(sqrt((_sumq - ((double)_aggr * (double)_aggr) / _count)/(_count - 1)));
+                q->outputDouble(
+                    sqrt((_sumq - ((double)_aggr * (double)_aggr) / _count) /
+                         (_count - 1)));
             break;
     }
 }

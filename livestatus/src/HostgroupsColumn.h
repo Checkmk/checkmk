@@ -32,20 +32,22 @@
 #include "nagios.h"
 class Query;
 
-
-class HostgroupsColumn : public ListColumn
-{
+class HostgroupsColumn : public ListColumn {
     int _offset;
+
 public:
-    HostgroupsColumn(std::string name, std::string description, int offset, int indirect_offset, int extra_offset = -1)
-        : ListColumn(name, description, indirect_offset, extra_offset), _offset(offset) {}
+    HostgroupsColumn(std::string name, std::string description, int offset,
+                     int indirect_offset, int extra_offset = -1)
+        : ListColumn(name, description, indirect_offset, extra_offset)
+        , _offset(offset) {}
     int type() override { return COLTYPE_LIST; }
     void output(void *, Query *) override;
-    void *getNagiosObject(char *name) override; // return pointer to host group
+    void *getNagiosObject(char *name) override;  // return pointer to host group
     bool isNagiosMember(void *data, void *nagobject) override;
     bool isEmpty(void *data) override;
+
 private:
     objectlist *getData(void *);
 };
 
-#endif // HostgroupsColumn_h
+#endif  // HostgroupsColumn_h

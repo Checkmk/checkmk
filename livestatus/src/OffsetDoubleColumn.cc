@@ -25,9 +25,7 @@
 #include "OffsetDoubleColumn.h"
 #include <string.h>
 
-
-double OffsetDoubleColumn::getValue(void *data)
-{
+double OffsetDoubleColumn::getValue(void *data) {
     if (!data) return 0;
     char *p = static_cast<char *>(shiftPointer(data));
     if (!p) return 0;

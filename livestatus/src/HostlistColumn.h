@@ -32,18 +32,20 @@
 class Filter;
 class Query;
 
-
-class HostlistColumn : public Column
-{
-    int  _offset;
+class HostlistColumn : public Column {
+    int _offset;
     bool _show_state;
+
 public:
-    HostlistColumn(std::string name, std::string description, int offset, int indirect_offset, bool show_state, int extra_offset = -1)
-        : Column(name, description, indirect_offset, extra_offset), _offset(offset), _show_state(show_state) {}
+    HostlistColumn(std::string name, std::string description, int offset,
+                   int indirect_offset, bool show_state, int extra_offset = -1)
+        : Column(name, description, indirect_offset, extra_offset)
+        , _offset(offset)
+        , _show_state(show_state) {}
     int type() override { return COLTYPE_LIST; }
     void output(void *, Query *) override;
     Filter *createFilter(int opid, char *value) override;
     hostsmember *getMembers(void *data);
 };
 
-#endif // HostlistColumn_h
+#endif  // HostlistColumn_h

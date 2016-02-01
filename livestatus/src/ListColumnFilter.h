@@ -29,13 +29,11 @@
 #include "Filter.h"
 class ListColumn;
 
-
-class ListColumnFilter : public Filter
-{
+class ListColumnFilter : public Filter {
     ListColumn *_column;
     void *_ref_member;
     int _opid;
-    bool _empty_ref; // distinct from unknown ref
+    bool _empty_ref;  // distinct from unknown ref
 
 public:
     ListColumnFilter(ListColumn *column, int opid, char *value);
@@ -43,4 +41,4 @@ public:
     void *indexFilter(const char *columnname);
 };
 
-#endif // ListColumnFilter_h
+#endif  // ListColumnFilter_h

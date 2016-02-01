@@ -29,17 +29,17 @@
 #include <string>
 #include "BlobColumn.h"
 
-
-class HostFileColumn : public BlobColumn
-{
+class HostFileColumn : public BlobColumn {
     std::string _base_dir;
     std::string _suffix;
+
 public:
-    HostFileColumn(std::string name, std::string description, const char *base_dir,
-                   const char *suffice, int indirect_offset, int extra_offset = -1);
+    HostFileColumn(std::string name, std::string description,
+                   const char *base_dir, const char *suffice,
+                   int indirect_offset, int extra_offset = -1);
 
     // returns a buffer to be freed afterwards!!
     char *getBlob(void *data, int *size) override;
 };
 
-#endif // HostFileColumn_h
+#endif  // HostFileColumn_h

@@ -25,8 +25,4 @@
 #include "EmptyColumn.h"
 #include "Query.h"
 
-
-void EmptyColumn::output(void *, Query *query)
-{
-    query->outputString("");
-}
+void EmptyColumn::output(void *, Query *query) { query->outputString(""); }

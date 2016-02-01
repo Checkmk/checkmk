@@ -29,15 +29,16 @@
 #include <string>
 #include "StringColumn.h"
 
-
-class OffsetStringColumn : public StringColumn
-{
+class OffsetStringColumn : public StringColumn {
     int _offset;
+
 public:
-    OffsetStringColumn(std::string name, std::string description, int offset, int indirect_offset = -1, int extra_offset = -1)
-        : StringColumn(name, description, indirect_offset, extra_offset), _offset(offset) {}
+    OffsetStringColumn(std::string name, std::string description, int offset,
+                       int indirect_offset = -1, int extra_offset = -1)
+        : StringColumn(name, description, indirect_offset, extra_offset)
+        , _offset(offset) {}
     const char *getValue(void *data) override;
     int offset() { return _offset; }
 };
 
-#endif // OffsetStringColumn_h
+#endif  // OffsetStringColumn_h

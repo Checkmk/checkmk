@@ -25,19 +25,15 @@
 #include "HostgroupsColumn.h"
 #include "Query.h"
 
-
-objectlist *HostgroupsColumn::getData(void *data)
-{
+objectlist *HostgroupsColumn::getData(void *data) {
     if (data) {
         data = shiftPointer(data);
-        if (data)
-            return *(objectlist **)((char *)data + _offset);
+        if (data) return *(objectlist **)((char *)data + _offset);
     }
     return 0;
 }
 
-void HostgroupsColumn::output(void *data, Query *query)
-{
+void HostgroupsColumn::output(void *data, Query *query) {
     query->outputBeginList();
     objectlist *list = getData(data);
     if (list) {
@@ -55,30 +51,25 @@ void HostgroupsColumn::output(void *data, Query *query)
     query->outputEndList();
 }
 
-void *HostgroupsColumn::getNagiosObject(char *name)
-{
+void *HostgroupsColumn::getNagiosObject(char *name) {
     return find_hostgroup(name);
 }
 
-bool HostgroupsColumn::isNagiosMember(void *data, void *nagobject)
-{
-    if (!nagobject || !data)
-        return false;
+bool HostgroupsColumn::isNagiosMember(void *data, void *nagobject) {
+    if (!nagobject || !data) return false;
 
     // data is already shifted (_indirect_offset is taken into account)
     // But _offset needs still to be accounted for
     objectlist *list = *(objectlist **)((char *)data + _offset);
 
     while (list) {
-        if (list->object_ptr == nagobject)
-            return true;
+        if (list->object_ptr == nagobject) return true;
         list = list->next;
     }
     return false;
 }
 
-bool HostgroupsColumn::isEmpty(void *data)
-{
+bool HostgroupsColumn::isEmpty(void *data) {
     objectlist *list = *(objectlist **)((char *)data + _offset);
     return list == 0;
 }

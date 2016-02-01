@@ -25,15 +25,11 @@
 #include "HostServiceState.h"
 #include <stdlib.h>
 
-
-HostServiceState::~HostServiceState()
-{
-    if (_log_output != 0)
-        free(_log_output);
+HostServiceState::~HostServiceState() {
+    if (_log_output != 0) free(_log_output);
 }
 
-void HostServiceState::computePerStateDurations()
-{
+void HostServiceState::computePerStateDurations() {
     _duration_state_UNMONITORED = 0;
     _duration_part_UNMONITORED = 0;
     _duration_state_OK = 0;

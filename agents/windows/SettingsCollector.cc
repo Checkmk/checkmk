@@ -22,34 +22,20 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #include "SettingsCollector.h"
 
+Collector::Collector() { CollectorRegistry::instance().reg(this); }
 
-Collector::Collector()
-{
-    CollectorRegistry::instance().reg(this);
-}
+Collector::~Collector() { CollectorRegistry::instance().unreg(this); }
 
-
-Collector::~Collector()
-{
-    CollectorRegistry::instance().unreg(this);
-}
-
-
-CollectorRegistry &CollectorRegistry::instance()
-{
+CollectorRegistry &CollectorRegistry::instance() {
     static CollectorRegistry instance;
     return instance;
 }
 
-
-void CollectorRegistry::startFile()
-{
-    for (std::set<Collector*>::iterator iter = _collectors.begin();
-            iter != _collectors.end(); ++iter) {
+void CollectorRegistry::startFile() {
+    for (std::set<Collector *>::iterator iter = _collectors.begin();
+         iter != _collectors.end(); ++iter) {
         (*iter)->startFile();
     }
 }
-

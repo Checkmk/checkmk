@@ -1,98 +1,81 @@
 #include "Crypto.h"
+#include <stdexcept>
 #include "Environment.h"
 #include "stringutil.h"
 #include "types.h"
-#include <stdexcept>
 
-
-void checked(BOOL result, const char *failMessage)
-{
+void checked(BOOL result, const char *failMessage) {
     if (!result) {
         throw win_exception(failMessage);
     }
 }
 
-
-Crypto::Crypto()
-    : _algorithm(DEFAULT_ALGORITHM)
-{
+Crypto::Crypto() : _algorithm(DEFAULT_ALGORITHM) {
     _provider = initContext();
     _key = genKey(KEY_LEN_DEFAULT);
     configureKey();
 }
 
-
 Crypto::Crypto(const std::string &password, KeyLength key_length)
-    : _algorithm(DEFAULT_ALGORITHM)
-{
+    : _algorithm(DEFAULT_ALGORITHM) {
     _provider = initContext();
     deriveOpenSSLKey(password, key_length, 1);
     configureKey();
 }
 
-
 Crypto::Crypto(const BYTE *key, DWORD key_size)
-    : _algorithm(DEFAULT_ALGORITHM)
-{
+    : _algorithm(DEFAULT_ALGORITHM) {
     _provider = initContext();
     _key = importKey(key, key_size);
     configureKey();
 }
 
-
-Crypto::~Crypto()
-{
+Crypto::~Crypto() {
     releaseKey(_key);
     releaseContext();
 }
 
-
-DWORD Crypto::encrypt(BYTE *input, DWORD input_size, DWORD buffer_size, BOOL fin)
-{
+DWORD Crypto::encrypt(BYTE *input, DWORD input_size, DWORD buffer_size,
+                      BOOL fin) {
     if (!::CryptEncrypt(_key, 0, fin, 0, input, &input_size, buffer_size)) {
         throw win_exception("failed to encrypt data");
     }
     return input_size;
 }
 
-
-DWORD Crypto::decrypt(BYTE *input, DWORD input_size, BOOL fin)
-{
+DWORD Crypto::decrypt(BYTE *input, DWORD input_size, BOOL fin) {
     if (!::CryptDecrypt(_key, 0, fin, 0, input, &input_size)) {
         throw win_exception("failed to decrypt data");
     }
     return input_size;
 }
 
-
-HCRYPTPROV Crypto::initContext()
-{
+HCRYPTPROV Crypto::initContext() {
     HCRYPTPROV result;
 
-    // this actually matches all versions before vista but since we can't support aes
-    // on win2k anyway, xp and 2003 are the only relevant versions from the pre-Vista era
+    // this actually matches all versions before vista but since we can't
+    // support aes
+    // on win2k anyway, xp and 2003 are the only relevant versions from the
+    // pre-Vista era
 
-//    bool win_xp = Environment::winVersion() < 0x0600;
+    //    bool win_xp = Environment::winVersion() < 0x0600;
 
     BOOL res;
 
-    if ((_algorithm == CALG_AES_128)
-        || (_algorithm == CALG_AES_192)
-        || (_algorithm == CALG_AES_256)) {
-        res = ::CryptAcquireContext(&result, NULL,
-                MS_ENH_RSA_AES_PROV,
-                PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
+    if ((_algorithm == CALG_AES_128) || (_algorithm == CALG_AES_192) ||
+        (_algorithm == CALG_AES_256)) {
+        res = ::CryptAcquireContext(&result, NULL, MS_ENH_RSA_AES_PROV,
+                                    PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
+    } else {
+        res = ::CryptAcquireContext(&result, NULL, MS_DEF_PROV, PROV_RSA_FULL,
+                                    CRYPT_VERIFYCONTEXT);
     }
-    else {
-        res = ::CryptAcquireContext(&result, NULL,
-                MS_DEF_PROV,
-                PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-    }
-/*
-    if (!res && (::GetLastError() == static_cast<DWORD>(NTE_BAD_KEYSET))) {
-        res = ::CryptAcquireContext(&result, NULL, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_NEWKEYSET);
-    }
-*/
+    /*
+        if (!res && (::GetLastError() == static_cast<DWORD>(NTE_BAD_KEYSET))) {
+            res = ::CryptAcquireContext(&result, NULL, MS_DEF_PROV,
+       PROV_RSA_FULL, CRYPT_NEWKEYSET);
+        }
+    */
     if (!res) {
         throw win_exception("failed to acquire context");
     }
@@ -100,41 +83,32 @@ HCRYPTPROV Crypto::initContext()
     return result;
 }
 
-
-void Crypto::configureKey()
-{
+void Crypto::configureKey() {
     DWORD mode = CRYPT_MODE_CBC;
-    if (!::CryptSetKeyParam(_key, KP_MODE, (BYTE*)&mode, 0)) {
+    if (!::CryptSetKeyParam(_key, KP_MODE, (BYTE *)&mode, 0)) {
         throw win_exception("failed to set cbc mode");
     }
 
     // in fact, pkcs5 seems to be the only padding supported by MS bundled CSPs?
     mode = PKCS5_PADDING;
-    if (!::CryptSetKeyParam(_key, KP_PADDING, (BYTE*)&mode, 0)) {
+    if (!::CryptSetKeyParam(_key, KP_PADDING, (BYTE *)&mode, 0)) {
         throw win_exception("failed to set padding");
     }
 }
 
+void Crypto::releaseContext() { ::CryptReleaseContext(_provider, 0); }
 
-void Crypto::releaseContext()
-{
-    ::CryptReleaseContext(_provider, 0);
-}
-
-
-HCRYPTKEY Crypto::genKey(KeyLength key_length) const
-{
+HCRYPTKEY Crypto::genKey(KeyLength key_length) const {
     HCRYPTKEY result;
-    if (!::CryptGenKey(_provider, _algorithm, key_length | CRYPT_EXPORTABLE, &result)) {
+    if (!::CryptGenKey(_provider, _algorithm, key_length | CRYPT_EXPORTABLE,
+                       &result)) {
         throw std::runtime_error(get_win_error_as_string());
     }
 
     return result;
 }
 
-
-HCRYPTKEY Crypto::importKey(const BYTE *key, DWORD key_size) const
-{
+HCRYPTKEY Crypto::importKey(const BYTE *key, DWORD key_size) const {
     // the key structure we pass to the api needs to be "decorated"
     std::vector<BYTE> key_blob;
 
@@ -145,51 +119,56 @@ HCRYPTKEY Crypto::importKey(const BYTE *key, DWORD key_size) const
     hdr.reserved = 0;
     hdr.aiKeyAlg = _algorithm;
 
-    BYTE *insert_ptr = reinterpret_cast<BYTE*>(&hdr);
-    key_blob.insert(key_blob.end(), insert_ptr, insert_ptr + sizeof(BLOBHEADER));
+    BYTE *insert_ptr = reinterpret_cast<BYTE *>(&hdr);
+    key_blob.insert(key_blob.end(), insert_ptr,
+                    insert_ptr + sizeof(BLOBHEADER));
 
     // insert size field
-    insert_ptr = reinterpret_cast<BYTE*>(&key_size);
+    insert_ptr = reinterpret_cast<BYTE *>(&key_size);
     key_blob.insert(key_blob.end(), insert_ptr, insert_ptr + sizeof(DWORD));
 
     // insert the actual key
     key_blob.insert(key_blob.end(), key, key + key_size);
 
     HCRYPTKEY result;
-    if (!::CryptImportKey(_provider, &key_blob[0], key_blob.size(), 0, 0, &result)) {
+    if (!::CryptImportKey(_provider, &key_blob[0], key_blob.size(), 0, 0,
+                          &result)) {
         throw win_exception("failed to import key");
     }
     return result;
 }
 
-
-size_t Crypto::keySize(ALG_ID algorithm)
-{
+size_t Crypto::keySize(ALG_ID algorithm) {
     switch (algorithm) {
-        case CALG_AES_128: return 128;
-        case CALG_AES_192: return 192;
-        case CALG_AES_256: return 256;
-        default: throw std::runtime_error("can't derive key size for that algorithm");
+        case CALG_AES_128:
+            return 128;
+        case CALG_AES_192:
+            return 192;
+        case CALG_AES_256:
+            return 256;
+        default:
+            throw std::runtime_error(
+                "can't derive key size for that algorithm");
     }
 }
 
-void Crypto::deriveOpenSSLKey(const std::string &password,
-                              KeyLength key_length,
-                              int iterations)
-{
+void Crypto::deriveOpenSSLKey(const std::string &password, KeyLength key_length,
+                              int iterations) {
     HCRYPTHASH hash_template;
 
     checked(::CryptCreateHash(_provider, HASH_ALGORITHM, 0, 0, &hash_template),
             "failed to create hash");
 
-    OnScopeExit hashDeleter([hash_template] () { ::CryptDestroyHash(hash_template); });
+    OnScopeExit hashDeleter(
+        [hash_template]() { ::CryptDestroyHash(hash_template); });
 
     std::vector<BYTE> buffer;
 
-    { // limit scope fo hash_size_size
+    {  // limit scope fo hash_size_size
         DWORD hash_size;
         DWORD hash_size_size = sizeof(DWORD);
-        checked(::CryptGetHashParam(hash_template, HP_HASHSIZE, (BYTE*)&hash_size, &hash_size_size, 0),
+        checked(::CryptGetHashParam(hash_template, HP_HASHSIZE,
+                                    (BYTE *)&hash_size, &hash_size_size, 0),
                 "failed to retrieve hash size");
         buffer.resize(hash_size);
     }
@@ -211,7 +190,8 @@ void Crypto::deriveOpenSSLKey(const std::string &password,
         checked(::CryptDuplicateHash(hash_template, 0, 0, &hash),
                 "failed to duplicate hash");
 
-        // after the first iteration, include the hash from the previous iteration
+        // after the first iteration, include the hash from the previous
+        // iteration
         if (first_iteration) {
             first_iteration = false;
         } else {
@@ -219,14 +199,15 @@ void Crypto::deriveOpenSSLKey(const std::string &password,
                     "failed to hash data");
         }
         // include password in hash (duh!)
-        checked(::CryptHashData(hash, (BYTE*)&password[0], password.size(), 0),
+        checked(::CryptHashData(hash, (BYTE *)&password[0], password.size(), 0),
                 "failed to hash data");
 
         // TODO include salt
 
         DWORD buffer_size = buffer.size();
-        checked(::CryptGetHashParam(hash, HP_HASHVAL, &buffer[0], &buffer_size, 0),
-                "failed to retrieve hash");
+        checked(
+            ::CryptGetHashParam(hash, HP_HASHVAL, &buffer[0], &buffer_size, 0),
+            "failed to retrieve hash");
 
         for (int i = 1; i < iterations; ++i) {
             HCRYPTHASH hash_inner;
@@ -235,24 +216,28 @@ void Crypto::deriveOpenSSLKey(const std::string &password,
             checked(::CryptHashData(hash_inner, &buffer[0], buffer.size(), 0),
                     "failed to hash data");
             buffer_size = buffer.size();
-            checked(::CryptGetHashParam(hash_inner, HP_HASHVAL, &buffer[0], &buffer_size, 0),
+            checked(::CryptGetHashParam(hash_inner, HP_HASHVAL, &buffer[0],
+                                        &buffer_size, 0),
                     "failed to retrieve hash");
         }
 
         size_t usable_bytes = buffer.size();
-        size_t key_bytes = std::min<size_t>(usable_bytes, key.size() - key_offset);
+        size_t key_bytes =
+            std::min<size_t>(usable_bytes, key.size() - key_offset);
         if (key_bytes > 0) {
             memcpy(&key[key_offset], &buffer[0], key_bytes);
             key_offset += key_bytes;
             if (key_offset == key.size()) {
-                // apply key. we do this right away so that we can query the necessary
+                // apply key. we do this right away so that we can query the
+                // necessary
                 // size for the iv and don't need own logic to deduce it.
                 _key = importKey(&key[0], key.size());
                 iv.resize(blockSize() / 8);
             }
         }
         if (usable_bytes > key_bytes) {
-            size_t iv_bytes = std::min<size_t>(usable_bytes - key_bytes, iv.size() - iv_offset);
+            size_t iv_bytes = std::min<size_t>(usable_bytes - key_bytes,
+                                               iv.size() - iv_offset);
             memcpy(&iv[iv_offset], &buffer[key_bytes], iv_bytes);
             iv_offset += iv_bytes;
         }
@@ -262,15 +247,9 @@ void Crypto::deriveOpenSSLKey(const std::string &password,
     checked(::CryptSetKeyParam(_key, KP_IV, &iv[0], 0), "failed to set IV");
 }
 
+void Crypto::releaseKey(HCRYPTKEY key) { ::CryptDestroyKey(key); }
 
-void Crypto::releaseKey(HCRYPTKEY key)
-{
-    ::CryptDestroyKey(key);
-}
-
-
-std::vector<BYTE> Crypto::getKey() const
-{
+std::vector<BYTE> Crypto::getKey() const {
     std::vector<BYTE> result;
 
     DWORD key_size = 0;
@@ -279,7 +258,8 @@ std::vector<BYTE> Crypto::getKey() const
     }
 
     result.resize(key_size);
-    if (!::CryptExportKey(_key, 0, PLAINTEXTKEYBLOB, 0, &result[0], &key_size)) {
+    if (!::CryptExportKey(_key, 0, PLAINTEXTKEYBLOB, 0, &result[0],
+                          &key_size)) {
         throw win_exception("failed to export key");
     }
 
@@ -287,24 +267,19 @@ std::vector<BYTE> Crypto::getKey() const
     return std::vector<BYTE>(result.begin() + sizeof(BLOBHEADER), result.end());
 }
 
-
-DWORD Crypto::blockSize() const
-{
+DWORD Crypto::blockSize() const {
     DWORD block_length;
     DWORD param_length = sizeof(block_length);
-    if (!::CryptGetKeyParam(_key, KP_BLOCKLEN, (BYTE*)&block_length, &param_length, 0)) {
+    if (!::CryptGetKeyParam(_key, KP_BLOCKLEN, (BYTE *)&block_length,
+                            &param_length, 0)) {
         throw win_exception("failed to query block length");
     }
     return block_length;
 }
 
-
-void Crypto::random(BYTE *buffer, size_t buffer_size)
-{
-    if (!::CryptGenRandom(_provider,
-                static_cast<DWORD>(buffer_size),
-                static_cast<BYTE*>(buffer))) {
+void Crypto::random(BYTE *buffer, size_t buffer_size) {
+    if (!::CryptGenRandom(_provider, static_cast<DWORD>(buffer_size),
+                          static_cast<BYTE *>(buffer))) {
         throw win_exception("failed to generate random data");
     }
 }
-

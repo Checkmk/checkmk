@@ -33,13 +33,11 @@ using mk::unique_lock;
 
 namespace {
 
-struct trigger *to_trigger(condition_variable *c)
-{
+struct trigger *to_trigger(condition_variable *c) {
     return reinterpret_cast<struct trigger *>(c);
 }
 
-condition_variable *from_trigger(struct trigger *c)
-{
+condition_variable *from_trigger(struct trigger *c) {
     return reinterpret_cast<condition_variable *>(c);
 }
 
@@ -55,48 +53,39 @@ condition_variable cond_command;
 condition_variable cond_program;
 }
 
-struct trigger *trigger_all()
-{
+struct trigger *trigger_all() {
     return to_trigger(&cond_all);
 }
 
-struct trigger *trigger_check()
-{
+struct trigger *trigger_check() {
     return to_trigger(&cond_check);
 }
 
-struct trigger *trigger_state()
-{
+struct trigger *trigger_state() {
     return to_trigger(&cond_state);
 }
 
-struct trigger *trigger_log()
-{
+struct trigger *trigger_log() {
     return to_trigger(&cond_log);
 }
 
-struct trigger *trigger_downtime()
-{
+struct trigger *trigger_downtime() {
     return to_trigger(&cond_downtime);
 }
 
-struct trigger *trigger_comment()
-{
+struct trigger *trigger_comment() {
     return to_trigger(&cond_comment);
 }
 
-struct trigger *trigger_command()
-{
+struct trigger *trigger_command() {
     return to_trigger(&cond_command);
 }
 
-struct trigger *trigger_program()
-{
+struct trigger *trigger_program() {
     return to_trigger(&cond_program);
 }
 
-struct trigger *trigger_find(const char *name)
-{
+struct trigger *trigger_find(const char *name) {
     if (strcmp(name, "all") == 0) return trigger_all();
     if (strcmp(name, "check") == 0) return trigger_check();
     if (strcmp(name, "state") == 0) return trigger_state();
@@ -108,25 +97,21 @@ struct trigger *trigger_find(const char *name)
     return 0;
 }
 
-const char *trigger_all_names()
-{
+const char *trigger_all_names() {
     return "all, check, state, log, downtime, comment, command and program";
 }
 
-void trigger_notify_all(struct trigger *which)
-{
+void trigger_notify_all(struct trigger *which) {
     from_trigger(trigger_all())->notify_all();
     from_trigger(which)->notify_all();
 }
 
-void trigger_wait(struct trigger *which)
-{
+void trigger_wait(struct trigger *which) {
     unique_lock<mutex> ul(g_wait_mutex);
     from_trigger(which)->wait(ul);
 }
 
-int trigger_wait_until(struct trigger *which, const struct timespec *abstime)
-{
+int trigger_wait_until(struct trigger *which, const struct timespec *abstime) {
     unique_lock<mutex> ul(g_wait_mutex);
     return from_trigger(which)->wait_until(ul, abstime) == mk::no_timeout;
 }

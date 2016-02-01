@@ -31,29 +31,27 @@
 #include <time.h>
 #include "nagios.h"
 
-
 extern char g_logfile_path[];
 pthread_t g_mainthread_id;
 FILE *g_logfile = 0;
 
-void open_logfile()
-{
+void open_logfile() {
     g_logfile = fopen(g_logfile_path, "a");
-    g_mainthread_id = pthread_self(); /* needed to determine main thread later */
+    g_mainthread_id =
+        pthread_self(); /* needed to determine main thread later */
     if (!g_logfile)
-        logger(LG_WARN, "Cannot open logfile %s: %s", g_logfile_path, strerror(errno));
+        logger(LG_WARN, "Cannot open logfile %s: %s", g_logfile_path,
+               strerror(errno));
 }
 
-void close_logfile()
-{
+void close_logfile() {
     if (g_logfile) {
         fclose(g_logfile);
         g_logfile = 0;
     }
 }
 
-void logger(int priority, const char *loginfo, ...)
-{
+void logger(int priority, const char *loginfo, ...) {
     va_list ap;
     va_start(ap, loginfo);
 
@@ -64,8 +62,7 @@ void logger(int priority, const char *loginfo, ...)
         vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer),
                   loginfo, ap);
         write_to_all_logs(buffer, priority);
-    }
-    else {
+    } else {
         if (g_logfile) {
             /* write date/time */
             char timestring[64];

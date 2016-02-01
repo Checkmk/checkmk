@@ -1,20 +1,18 @@
-#include "wmiHelper.h"
-#include "stringutil.h"
-#include <string>
 #include <algorithm>
+#include <string>
+#include "stringutil.h"
+#include "wmiHelper.h"
 
-
-void print_usage(const char *exe_name)
-{
-    printf("Usage: %s action [action specific parameters]"
-            "\n\ttree                    - print the whole wmi namespace tree"
-            "\n\tcsv <namespace> <class> - print the whole class table in csv format"
-            , exe_name);
+void print_usage(const char *exe_name) {
+    printf(
+        "Usage: %s action [action specific parameters]"
+        "\n\ttree                    - print the whole wmi namespace tree"
+        "\n\tcsv <namespace> <class> - print the whole class table in csv "
+        "format",
+        exe_name);
 }
 
-
-void print_namespace(const std::wstring &path, int depth = 0)
-{
+void print_namespace(const std::wstring &path, int depth = 0) {
     wmi::Helper helper(path.c_str());
 
     std::string offset = std::string(depth * 2, ' ');
@@ -44,7 +42,6 @@ void print_namespace(const std::wstring &path, int depth = 0)
     }
 }
 
-
 void print_table(const std::string &ns, const std::string &pattern) {
     wmi::Helper helper(to_utf16(ns.c_str()).c_str());
 
@@ -58,7 +55,8 @@ void print_table(const std::string &ns, const std::string &pattern) {
         try {
             if (globmatch(pattern.c_str(), to_utf8(name.c_str()).c_str())) {
                 printf("<<<%ls>>>\n", name.c_str());
-                wmi::Result sub_result = helper.query((std::wstring(L"SELECT * FROM ") + name).c_str());
+                wmi::Result sub_result = helper.query(
+                    (std::wstring(L"SELECT * FROM ") + name).c_str());
                 bool first = true;
                 bool sub_more = sub_result.valid();
                 if (!sub_more) {
@@ -72,11 +70,11 @@ void print_table(const std::string &ns, const std::string &pattern) {
                     }
                     std::vector<std::wstring> values = sub_result.names();
                     // resolve all table keys to their value on this row.
-                    std::transform(values.begin(), values.end(), values.begin(),
-                            [&sub_result] (const std::wstring &name) {
+                    std::transform(
+                        values.begin(), values.end(), values.begin(),
+                        [&sub_result](const std::wstring &name) {
                             return sub_result.get<std::wstring>(name.c_str());
-                            }
-                            );
+                        });
                     printf("%ls\n", join(values, L",").c_str());
 
                     sub_more = sub_result.next();
@@ -89,9 +87,7 @@ void print_table(const std::string &ns, const std::string &pattern) {
     }
 }
 
-
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     if (argc < 2) {
         print_usage(argv[0]);
         return 1;

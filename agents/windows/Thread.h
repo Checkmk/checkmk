@@ -22,43 +22,32 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #ifndef Thread_h
 #define Thread_h
 
-
-#include "logging.h"
 #include <windows.h>
 #include <functional>
 #include <memory>
-
+#include "logging.h"
 
 class Thread {
-
 public:
-
-    typedef DWORD WINAPI (*ThreadFunc)(void*);
+    typedef DWORD WINAPI (*ThreadFunc)(void *);
 
 private:
-
     ThreadFunc _func;
-    HANDLE _thread_handle { INVALID_HANDLE_VALUE };
+    HANDLE _thread_handle{INVALID_HANDLE_VALUE};
     void *_data;
 
 private:
-
-    Thread(const Thread&) = delete;
-    static void nop(void*) {}
+    Thread(const Thread &) = delete;
+    static void nop(void *) {}
 
 public:
-
     // the caller keeps ownership
     template <typename T>
     Thread(ThreadFunc func, T &data)
-    : _func(func)
-    , _data(static_cast<void*>(&data))
-    {
-    }
+        : _func(func), _data(static_cast<void *>(&data)) {}
 
     ~Thread();
 
@@ -71,9 +60,6 @@ public:
     // return true if the thread was stated. If this is false,
     // a call to join would throw an exception
     bool wasStarted() const;
-
 };
 
-
-#endif // Thread_h
-
+#endif  // Thread_h

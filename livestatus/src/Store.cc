@@ -53,17 +53,15 @@ using std::string;
 extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
 
-
 Store::Store()
-  : _log_cache(g_max_cached_messages)
-  , _table_hosts(false)
-  , _table_hostsbygroup(true)
-  , _table_services(false, false)
-  , _table_servicesbygroup(true, false)
-  , _table_servicesbyhostgroup(false, true)
-  , _table_downtimes(true)
-  , _table_comments(false)
-{
+    : _log_cache(g_max_cached_messages)
+    , _table_hosts(false)
+    , _table_hostsbygroup(true)
+    , _table_services(false, false)
+    , _table_servicesbygroup(true, false)
+    , _table_servicesbyhostgroup(false, true)
+    , _table_downtimes(true)
+    , _table_comments(false) {
     _tables.insert(make_pair("columns", &_table_columns));
     _tables.insert(make_pair("commands", &_table_commands));
     _tables.insert(make_pair("comments", &_table_comments));
@@ -76,7 +74,8 @@ Store::Store()
     _tables.insert(make_pair("log", &_table_log));
     _tables.insert(make_pair("servicegroups", &_table_servicegroups));
     _tables.insert(make_pair("servicesbygroup", &_table_servicesbygroup));
-    _tables.insert(make_pair("servicesbyhostgroup", &_table_servicesbyhostgroup));
+    _tables.insert(
+        make_pair("servicesbyhostgroup", &_table_servicesbyhostgroup));
     _tables.insert(make_pair("services", &_table_services));
     _tables.insert(make_pair("statehist", &_table_statehistory));
     _tables.insert(make_pair("status", &_table_status));
@@ -99,21 +98,14 @@ Store::Store()
     g_table_statehistory = &_table_statehistory;
     g_table_columns = &_table_columns;
 
-    for (_tables_t::iterator it = _tables.begin();
-            it != _tables.end();
-            ++it)
-    {
+    for (_tables_t::iterator it = _tables.begin(); it != _tables.end(); ++it) {
         _table_columns.addTable(it->second);
     }
 }
 
-Store::~Store()
-{
-}
+Store::~Store() {}
 
-
-Table *Store::findTable(string name)
-{
+Table *Store::findTable(string name) {
     _tables_t::iterator it = _tables.find(name);
     if (it == _tables.end())
         return 0;
@@ -121,24 +113,21 @@ Table *Store::findTable(string name)
         return it->second;
 }
 
-
-void Store::registerComment(nebstruct_comment_data *d)
-{
+void Store::registerComment(nebstruct_comment_data *d) {
     _table_comments.addComment(d);
 }
 
-void Store::registerDowntime(nebstruct_downtime_data *d)
-{
+void Store::registerDowntime(nebstruct_downtime_data *d) {
     _table_downtimes.addDowntime(d);
 }
 
-bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
-{
+bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
     output->reset();
     pair<list<string>, InputBuffer::Result> r = input->readRequest();
     if (r.second != InputBuffer::Result::request_read) {
         if (r.second != InputBuffer::Result::eof)
-            output->setError(RESPONSE_CODE_INCOMPLETE_REQUEST,
+            output->setError(
+                RESPONSE_CODE_INCOMPLETE_REQUEST,
                 "Client connection terminated while request still incomplete");
         return false;
     }
@@ -146,30 +135,29 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
     string l = lines.front();
     lines.pop_front();
     const char *line = l.c_str();
-    if (g_debug_level > 0)
-        logger(LG_INFO, "Query: %s", line);
+    if (g_debug_level > 0) logger(LG_INFO, "Query: %s", line);
     if (!strncmp(line, "GET ", 4))
         answerGetRequest(lines, output, lstrip((char *)line + 4));
     else if (!strcmp(line, "GET"))
-        answerGetRequest(lines, output, ""); // only to get error message
+        answerGetRequest(lines, output, "");  // only to get error message
     else if (!strncmp(line, "COMMAND ", 8)) {
         answerCommandRequest(lstrip((char *)line + 8));
         output->setDoKeepalive(true);
-    }
-    else if (!strncmp(line, "LOGROTATE", 9)) {
+    } else if (!strncmp(line, "LOGROTATE", 9)) {
         logger(LG_INFO, "Forcing logfile rotation");
         rotate_log_file(time(0));
-        schedule_new_event(EVENT_LOG_ROTATION,1,get_next_log_rotation_time(),0,0,(void *)get_next_log_rotation_time,1,NULL,NULL,0);
-    }
-    else {
+        schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
+                           0, 0, (void *)get_next_log_rotation_time, 1, NULL,
+                           NULL, 0);
+    } else {
         logger(LG_INFO, "Invalid request '%s'", line);
-        output->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid request method");
+        output->setError(RESPONSE_CODE_INVALID_REQUEST,
+                         "Invalid request method");
     }
     return output->doKeepalive();
 }
 
-void Store::answerCommandRequest(const char *command)
-{
+void Store::answerCommandRequest(const char *command) {
     lock_guard<mutex> lg(_command_mutex);
 #ifdef NAGIOS4
     process_external_command1((char *)command);
@@ -180,17 +168,17 @@ void Store::answerCommandRequest(const char *command)
 #endif
 }
 
-
 void Store::answerGetRequest(list<string> &lines, OutputBuffer *output,
-                             const char *tablename)
-{
+                             const char *tablename) {
     output->reset();
     if (!tablename[0]) {
-        output->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid GET request, missing tablename");
+        output->setError(RESPONSE_CODE_INVALID_REQUEST,
+                         "Invalid GET request, missing tablename");
     }
     Table *table = findTable(tablename);
     if (!table) {
-        output->setError(RESPONSE_CODE_NOT_FOUND, "Invalid GET request, no such table '%s'", tablename);
+        output->setError(RESPONSE_CODE_NOT_FOUND,
+                         "Invalid GET request, no such table '%s'", tablename);
     }
     Query query(lines, output, table);
 
@@ -205,8 +193,11 @@ void Store::answerGetRequest(list<string> &lines, OutputBuffer *output,
         table->answerQuery(&query);
         query.finish();
         gettimeofday(&after, 0);
-        unsigned long ustime = (after.tv_sec - before.tv_sec) * 1000000 + (after.tv_usec - before.tv_usec);
+        unsigned long ustime = (after.tv_sec - before.tv_sec) * 1000000 +
+                               (after.tv_usec - before.tv_usec);
         if (g_debug_level > 0)
-            logger(LG_INFO, "Time to process request: %lu us. Size of answer: %d bytes", ustime, output->size());
+            logger(LG_INFO,
+                   "Time to process request: %lu us. Size of answer: %d bytes",
+                   ustime, output->size());
     }
 }

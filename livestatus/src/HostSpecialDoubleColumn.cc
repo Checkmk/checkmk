@@ -26,21 +26,20 @@
 #include <time.h>
 #include "nagios.h"
 
+extern int interval_length;
 
-extern int      interval_length;
-
-double HostSpecialDoubleColumn::getValue(void *data)
-{
+double HostSpecialDoubleColumn::getValue(void *data) {
     data = shiftPointer(data);
     if (!data) return 0;
 
-    host *hst  = static_cast<host *>(data);
+    host *hst = static_cast<host *>(data);
 
     switch (_type) {
-        case HSDC_STALENESS:
-        {
-            return (time(0) - hst->last_check) / ((hst->check_interval == 0 ? 1 : hst->check_interval) * interval_length);
+        case HSDC_STALENESS: {
+            return (time(0) - hst->last_check) /
+                   ((hst->check_interval == 0 ? 1 : hst->check_interval) *
+                    interval_length);
         }
     }
-    return -1; // Never reached
+    return -1;  // Never reached
 }

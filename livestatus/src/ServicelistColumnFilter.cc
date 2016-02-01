@@ -32,31 +32,31 @@
 
 using std::string;
 
-
 #define HOSTSERVICE_SEPARATOR '|'
 
-    ServicelistColumnFilter::ServicelistColumnFilter(ServicelistColumn *column, int opid, char *refvalue)
-: _servicelist_column(column), _opid(opid)
-{
+ServicelistColumnFilter::ServicelistColumnFilter(ServicelistColumn *column,
+                                                 int opid, char *refvalue)
+    : _servicelist_column(column), _opid(opid) {
     if (abs(_opid) == OP_EQUAL && !refvalue[0])
-        return; // test for emptiness is allowed
+        return;  // test for emptiness is allowed
 
-
-    // ref_value must be of from hostname HOSTSERVICE_SEPARATOR service_description
+    // ref_value must be of from hostname HOSTSERVICE_SEPARATOR
+    // service_description
     char *sep = index(refvalue, HOSTSERVICE_SEPARATOR);
     if (!sep) {
-        logger(LG_INFO, "Invalid reference value for service list membership. Must be 'hostname%cservicename'", HOSTSERVICE_SEPARATOR);
+        logger(LG_INFO,
+               "Invalid reference value for service list membership. Must be "
+               "'hostname%cservicename'",
+               HOSTSERVICE_SEPARATOR);
         _ref_host = "";
         _ref_service = "";
-    }
-    else {
+    } else {
         _ref_host = string(refvalue, sep - refvalue);
         _ref_service = sep + 1;
     }
 }
 
-bool ServicelistColumnFilter::accepts(void *data)
-{
+bool ServicelistColumnFilter::accepts(void *data) {
     // data points to a primary data object. We need to extract
     // a pointer to a service list
     servicesmember *mem = _servicelist_column->getMembers(data);
@@ -80,7 +80,10 @@ bool ServicelistColumnFilter::accepts(void *data)
         case OP_LESS:
             return !is_member;
         default:
-            logger(LG_INFO, "Sorry, Operator %s for service lists lists not implemented.", op_names_plus_8[_opid]);
+            logger(
+                LG_INFO,
+                "Sorry, Operator %s for service lists lists not implemented.",
+                op_names_plus_8[_opid]);
             return true;
     }
 }

@@ -29,11 +29,11 @@
 #include <stdint.h>
 class Query;
 
-class Aggregator
-{
+class Aggregator {
 protected:
-    int      _operation;
+    int _operation;
     uint32_t _count;
+
 public:
     explicit Aggregator(int o) : _operation(o), _count(0) {}
     virtual ~Aggregator() {}
@@ -41,6 +41,4 @@ public:
     virtual void output(Query *) = 0;
 };
 
-
-#endif // Aggregator_h
-
+#endif  // Aggregator_h

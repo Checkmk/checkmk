@@ -31,20 +31,20 @@
 #include "IntColumn.h"
 class Query;
 
+#define HSIC_REAL_HARD_STATE 0
+#define HSIC_PNP_GRAPH_PRESENT 1
+#define HSIC_MK_INVENTORY_LAST 2
 
-#define HSIC_REAL_HARD_STATE      0
-#define HSIC_PNP_GRAPH_PRESENT    1
-#define HSIC_MK_INVENTORY_LAST    2
-
-
-class HostSpecialIntColumn : public IntColumn
-{
+class HostSpecialIntColumn : public IntColumn {
     int _type;
 
 public:
-    HostSpecialIntColumn(std::string name, std::string description, int hsic_type, int indirect_offset, int extra_offset = -1)
-        : IntColumn(name, description, indirect_offset, extra_offset) , _type(hsic_type) {}
+    HostSpecialIntColumn(std::string name, std::string description,
+                         int hsic_type, int indirect_offset,
+                         int extra_offset = -1)
+        : IntColumn(name, description, indirect_offset, extra_offset)
+        , _type(hsic_type) {}
     int32_t getValue(void *data, Query *) override;
 };
 
-#endif // HostSpecialIntColumn_h
+#endif  // HostSpecialIntColumn_h

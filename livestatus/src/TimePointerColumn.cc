@@ -26,14 +26,11 @@
 #include "Query.h"
 #include "TimeColumnFilter.h"
 
-
-void TimePointerColumn::output(void *data, Query *query)
-{
+void TimePointerColumn::output(void *data, Query *query) {
     query->outputTime(getValue(data, query));
 }
 
-Filter *TimePointerColumn::createFilter(int operator_id, char *value)
-{
+Filter *TimePointerColumn::createFilter(int operator_id, char *value) {
     // The TimeColumnFilter applies the timezone offset
     // from the Localtime: header
     return new TimeColumnFilter(this, operator_id, value);

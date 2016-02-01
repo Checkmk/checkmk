@@ -26,14 +26,10 @@
 #include <stddef.h>
 #include "nagios.h"
 
-
-bool ContactgroupsMemberColumn::isNagiosMember(void *cg, void *ctc)
-{
+bool ContactgroupsMemberColumn::isNagiosMember(void *cg, void *ctc) {
     contactsmember *mem;
-    for (mem = ((contactgroup *)cg)->members; mem != NULL; mem = mem->next)
-    {
-        if (mem->contact_ptr == ctc)
-            return true;
+    for (mem = ((contactgroup *)cg)->members; mem != NULL; mem = mem->next) {
+        if (mem->contact_ptr == ctc) return true;
     }
     return false;
 }

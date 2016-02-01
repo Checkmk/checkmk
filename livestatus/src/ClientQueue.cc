@@ -31,17 +31,11 @@ using mk::mutex;
 using mk::unique_lock;
 using std::for_each;
 
-ClientQueue::ClientQueue()
-{
-}
+ClientQueue::ClientQueue() {}
 
-ClientQueue::~ClientQueue()
-{
-    for_each(_queue.begin(), _queue.end(), close);
-}
+ClientQueue::~ClientQueue() { for_each(_queue.begin(), _queue.end(), close); }
 
-void ClientQueue::addConnection(int fd)
-{
+void ClientQueue::addConnection(int fd) {
     {
         lock_guard<mutex> lg(_mutex);
         _queue.push_back(fd);
@@ -49,9 +43,7 @@ void ClientQueue::addConnection(int fd)
     _cond.notify_one();
 }
 
-
-int ClientQueue::popConnection()
-{
+int ClientQueue::popConnection() {
     unique_lock<mutex> ul(_mutex);
     while (_queue.empty()) _cond.wait(ul);
     int fd = _queue.front();
@@ -59,8 +51,6 @@ int ClientQueue::popConnection()
     return fd;
 }
 
-// Note: What we *really* want here is the functionality of notify_all_at_thread_exit.
-void ClientQueue::wakeupAll()
-{
-    _cond.notify_all();
-}
+// Note: What we *really* want here is the functionality of
+// notify_all_at_thread_exit.
+void ClientQueue::wakeupAll() { _cond.notify_all(); }

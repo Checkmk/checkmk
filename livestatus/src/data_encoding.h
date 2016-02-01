@@ -25,10 +25,10 @@
 #ifndef data_encoding_h
 #define data_encoding_h
 
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 
-#define ENCODING_UTF8   0
+#define ENCODING_UTF8 0
 #define ENCODING_LATIN1 1
-#define ENCODING_MIXED  2
+#define ENCODING_MIXED 2
 
-#endif // data_encoding_h
+#endif  // data_encoding_h

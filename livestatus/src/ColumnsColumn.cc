@@ -26,9 +26,7 @@
 #include "TableColumns.h"
 class Column;
 
-
-const char *ColumnsColumn::getValue(void *data)
-{
+const char *ColumnsColumn::getValue(void *data) {
     Column *column = static_cast<Column *>(data);
     return _table_columns->getValue(column, _colcol);
 }

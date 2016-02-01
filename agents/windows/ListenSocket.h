@@ -22,27 +22,23 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #ifndef ListenSocket_h
 #define ListenSocket_h
 
-
 #include <winsock2.h>
 #include <ws2ipdef.h>
-#include "types.h"
 #include <string>
-
+#include "types.h"
 
 class ListenSocket {
-
     SOCKET _socket;
     only_from_t _source_whitelist;
     bool _supports_ipv4;
     bool _use_ipv6;
 
 public:
-
-    ListenSocket(int port, const only_from_t &source_whitelist, bool supportIPV6);
+    ListenSocket(int port, const only_from_t &source_whitelist,
+                 bool supportIPV6);
     ~ListenSocket();
 
     bool supportsIPV4() const;
@@ -56,13 +52,9 @@ public:
     static std::string readableIP(const sockaddr_storage *address);
 
 private:
-
     SOCKET init_listen_socket(int port);
     bool check_only_from(sockaddr *ip);
     sockaddr *create_sockaddr(int *addr_len);
-
 };
 
-
-#endif // ListenSocket_h
-
+#endif  // ListenSocket_h

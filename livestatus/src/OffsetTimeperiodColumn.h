@@ -22,7 +22,6 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #ifndef OffsetTimeperiodColumn_h
 #define OffsetTimeperiodColumn_h
 
@@ -32,12 +31,11 @@
 #include "OffsetIntColumn.h"
 class Query;
 
-
-class OffsetTimeperiodColumn : public OffsetIntColumn
-{
+class OffsetTimeperiodColumn : public OffsetIntColumn {
 public:
-    OffsetTimeperiodColumn(std::string, std::string, int, int indirect_offset = -1, int extra_offset = -1);
+    OffsetTimeperiodColumn(std::string, std::string, int,
+                           int indirect_offset = -1, int extra_offset = -1);
     int32_t getValue(void *data, Query *) override;
 };
 
-#endif // OffsetTimeperiodColumn_h
+#endif  // OffsetTimeperiodColumn_h

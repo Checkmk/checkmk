@@ -74,15 +74,13 @@ Query::Query(list<string> &lines, OutputBuffer *output, Table *table)
     , _time_limit(-1)
     , _time_limit_timeout(0)
     , _current_line(0)
-    , _timezone_offset(0)
-{
+    , _timezone_offset(0) {
     for (auto &line : lines) {
         vector<char> line_copy(line.begin(), line.end());
         line_copy.push_back(0);
         char *buffer = &line_copy[0];
         rstrip(buffer);
-        if (g_debug_level > 0)
-            logger(LG_INFO, "Query: %s", buffer);
+        if (g_debug_level > 0) logger(LG_INFO, "Query: %s", buffer);
         if (!strncmp(buffer, "Filter:", 7))
             parseFilterLine(lstrip(buffer + 7), true);
 
@@ -161,24 +159,21 @@ Query::Query(list<string> &lines, OutputBuffer *output, Table *table)
         else if (!strncmp(buffer, "Localtime:", 10))
             parseLocaltimeLine(lstrip(buffer + 10));
 
-
         else if (!buffer[0])
             break;
 
         else {
-            output->setError(RESPONSE_CODE_INVALID_HEADER, "Undefined request header '%s'", buffer);
+            output->setError(RESPONSE_CODE_INVALID_HEADER,
+                             "Undefined request header '%s'", buffer);
             break;
         }
     }
 }
 
-Query::~Query()
-{
+Query::~Query() {
     // delete dynamic columns
-    for (_columns_t::iterator it = _columns.begin();
-        it != _columns.end();
-        ++it)
-    {
+    for (_columns_t::iterator it = _columns.begin(); it != _columns.end();
+         ++it) {
         Column *column = *it;
         if (column->mustDelete()) {
             delete column;
@@ -187,51 +182,37 @@ Query::~Query()
 
     // delete dummy-columns
     for (_columns_t::iterator it = _dummy_columns.begin();
-         it != _dummy_columns.end();
-         ++it)
-    {
+         it != _dummy_columns.end(); ++it) {
         delete *it;
     }
 
     // delete stats columns
     for (_stats_columns_t::iterator it = _stats_columns.begin();
-         it != _stats_columns.end();
-         ++it)
-    {
+         it != _stats_columns.end(); ++it) {
         delete *it;
     }
 }
 
-Column *Query::createDummyColumn(const char *name)
-{
+Column *Query::createDummyColumn(const char *name) {
     Column *col = new NullColumn(name, "Non existing column");
     _dummy_columns.push_back(col);
     return col;
 }
 
+void Query::addColumn(Column *column) { _columns.push_back(column); }
 
-void Query::addColumn(Column *column)
-{
-    _columns.push_back(column);
-}
-
-void Query::setError(int error_code, const char* msg)
-{
+void Query::setError(int error_code, const char *msg) {
     _output->setError(error_code, msg);
 }
 
-bool Query::hasNoColumns()
-{
-    return _columns.size() == 0 && !doStats();
-}
+bool Query::hasNoColumns() { return _columns.size() == 0 && !doStats(); }
 
-int Query::lookupOperator(const char *opname)
-{
+int Query::lookupOperator(const char *opname) {
     int opid;
     int negate = 1;
     if (opname[0] == '!') {
         negate = -1;
-        opname ++;
+        opname++;
     }
 
     if (!strcmp(opname, "="))
@@ -249,49 +230,47 @@ int Query::lookupOperator(const char *opname)
     else if (!strcmp(opname, ">=")) {
         opid = OP_LESS;
         negate = -negate;
-    }
-    else if (!strcmp(opname, "<=")) {
+    } else if (!strcmp(opname, "<=")) {
         opid = OP_GREATER;
         negate = -negate;
-    }
-    else
+    } else
         opid = OP_INVALID;
     return negate * opid;
 }
 
-Filter *Query::createFilter(Column *column, int operator_id, char *value)
-{
+Filter *Query::createFilter(Column *column, int operator_id, char *value) {
     Filter *filter = column->createFilter(operator_id, value);
     if (!filter)
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "cannot create filter on table %s", _table->name());
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "cannot create filter on table %s", _table->name());
     else if (filter->hasError()) {
-        _output->setError(filter->errorCode(), "error in Filter header: %s", filter->errorMessage().c_str());
+        _output->setError(filter->errorCode(), "error in Filter header: %s",
+                          filter->errorMessage().c_str());
         delete filter;
         filter = 0;
-    }
-    else {
+    } else {
         filter->setQuery(this);
         filter->setColumn(column);
     }
     return filter;
 }
 
-
-void Query::parseAndOrLine(char *line, int andor, bool filter)
-{
+void Query::parseAndOrLine(char *line, int andor, bool filter) {
     char *value = next_field(&line);
     if (!value) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Missing value for %s%s: need non-zero integer number",
-                filter ? "" : "WaitCondition",
-                andor == ANDOR_OR ? "Or" : "And");
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            "Missing value for %s%s: need non-zero integer number",
+            filter ? "" : "WaitCondition", andor == ANDOR_OR ? "Or" : "And");
         return;
     }
 
     int number = atoi(value);
     if (!isdigit(value[0]) || number <= 0) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for %s%s: need non-zero integer number",
-                filter ? "" : "WaitCondition",
-                andor == ANDOR_OR ? "Or" : "And");
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            "Invalid value for %s%s: need non-zero integer number",
+            filter ? "" : "WaitCondition", andor == ANDOR_OR ? "Or" : "And");
         return;
     }
     if (filter)
@@ -300,12 +279,12 @@ void Query::parseAndOrLine(char *line, int andor, bool filter)
         _wait_condition.combineFilters(number, andor);
 }
 
-void Query::parseNegateLine(char *line, bool filter)
-{
+void Query::parseNegateLine(char *line, bool filter) {
     if (next_field(&line)) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER,
-                filter ? "Negate: does not take any arguments"
-                : "WaitConditionNegate: does not take any arguments");
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            filter ? "Negate: does not take any arguments"
+                   : "WaitConditionNegate: does not take any arguments");
         return;
     }
 
@@ -313,14 +292,15 @@ void Query::parseNegateLine(char *line, bool filter)
     if (filter) {
         to_negate = _filter.stealLastSubfiler();
         if (!to_negate) {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "Negate: no Filter: header to negate");
+            _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                              "Negate: no Filter: header to negate");
             return;
         }
-    }
-    else {
+    } else {
         to_negate = _wait_condition.stealLastSubfiler();
         if (!to_negate) {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "Negate: no Wait:-condition negate");
+            _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                              "Negate: no Wait:-condition negate");
             return;
         }
     }
@@ -331,62 +311,71 @@ void Query::parseNegateLine(char *line, bool filter)
         _wait_condition.addSubfilter(negated);
 }
 
-
-void Query::parseStatsAndOrLine(char *line, int andor)
-{
+void Query::parseStatsAndOrLine(char *line, int andor) {
     char *value = next_field(&line);
     if (!value) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Missing value for Stats%s: need non-zero integer number",
-                andor == ANDOR_OR ? "Or" : "And");
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            "Missing value for Stats%s: need non-zero integer number",
+            andor == ANDOR_OR ? "Or" : "And");
         return;
     }
 
     int number = atoi(value);
     if (!isdigit(value[0]) || number <= 0) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for Stats%s: need non-zero integer number",
-                andor == ANDOR_OR ? "Or" : "And");
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            "Invalid value for Stats%s: need non-zero integer number",
+            andor == ANDOR_OR ? "Or" : "And");
         return;
     }
 
     // The last 'number' StatsColumns must be of type STATS_OP_COUNT
-    AndingFilter *anding = (andor == ANDOR_OR) ? new OringFilter() : new AndingFilter();
+    AndingFilter *anding =
+        (andor == ANDOR_OR) ? new OringFilter() : new AndingFilter();
     while (number > 0) {
         if (_stats_columns.size() == 0) {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid count for Stats%s: too few Stats: headers available",
-                    andor == ANDOR_OR ? "Or" : "And");
+            _output->setError(
+                RESPONSE_CODE_INVALID_HEADER,
+                "Invalid count for Stats%s: too few Stats: headers available",
+                andor == ANDOR_OR ? "Or" : "And");
             delete anding;
             return;
         }
 
         StatsColumn *col = _stats_columns.back();
         if (col->operation() != STATS_OP_COUNT) {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "Can use Stats%s only on Stats: headers of filter type",
-                    andor == ANDOR_OR ? "Or" : "And");
+            _output->setError(
+                RESPONSE_CODE_INVALID_HEADER,
+                "Can use Stats%s only on Stats: headers of filter type",
+                andor == ANDOR_OR ? "Or" : "And");
             delete anding;
             return;
         }
         anding->addSubfilter(col->stealFilter());
         delete col;
         _stats_columns.pop_back();
-        number --;
+        number--;
     }
     _stats_columns.push_back(new StatsColumn(0, anding, STATS_OP_COUNT));
 }
 
-
-void Query::parseStatsNegateLine(char *line)
-{
+void Query::parseStatsNegateLine(char *line) {
     if (next_field(&line)) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "StatsNegate: does not take any arguments");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "StatsNegate: does not take any arguments");
         return;
     }
     if (_stats_columns.size() == 0) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "StatsNegate: no Stats: headers available");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "StatsNegate: no Stats: headers available");
         return;
     }
     StatsColumn *col = _stats_columns.back();
     if (col->operation() != STATS_OP_COUNT) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Can use StatsNegate only on Stats: headers of filter type");
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            "Can use StatsNegate only on Stats: headers of filter type");
         return;
     }
     NegatingFilter *negated = new NegatingFilter(col->stealFilter());
@@ -395,10 +384,8 @@ void Query::parseStatsNegateLine(char *line)
     _stats_columns.push_back(new StatsColumn(0, negated, STATS_OP_COUNT));
 }
 
-void Query::parseStatsLine(char *line)
-{
-    if (!_table)
-        return;
+void Query::parseStatsLine(char *line) {
+    if (!_table) return;
 
     // first token is either aggregation operator or column name
     char *col_or_op = next_field(&line);
@@ -430,42 +417,49 @@ void Query::parseStatsLine(char *line)
         // aggregation operator is followed by column name
         column_name = next_field(&line);
         if (!column_name) {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "missing column name in stats header");
+            _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                              "missing column name in stats header");
             return;
         }
     }
 
     Column *column = _table->column(column_name);
     if (!column) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid stats header: table '%s' has no column '%s'", _table->name(), column_name);
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "invalid stats header: table '%s' has no column '%s'",
+                          _table->name(), column_name);
         return;
     }
 
     StatsColumn *stats_col;
-    if (operation == STATS_OP_COUNT)
-    {
+    if (operation == STATS_OP_COUNT) {
         char *operator_name = next_field(&line);
         if (!operator_name) {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid stats header: missing operator after table '%s'", column_name);
+            _output->setError(
+                RESPONSE_CODE_INVALID_HEADER,
+                "invalid stats header: missing operator after table '%s'",
+                column_name);
             return;
         }
         int operator_id = lookupOperator(operator_name);
         if (operator_id == OP_INVALID) {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid stats operator '%s'", operator_name);
+            _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                              "invalid stats operator '%s'", operator_name);
             return;
         }
         char *value = lstrip(line);
         if (!value) {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid stats: missing value after operator '%s'", operator_name);
+            _output->setError(
+                RESPONSE_CODE_INVALID_HEADER,
+                "invalid stats: missing value after operator '%s'",
+                operator_name);
             return;
         }
 
         Filter *filter = createFilter(column, operator_id, value);
-        if (!filter)
-            return;
+        if (!filter) return;
         stats_col = new StatsColumn(column, filter, operation);
-    }
-    else
+    } else
         stats_col = new StatsColumn(column, 0, operation);
     _stats_columns.push_back(stats_col);
 
@@ -474,11 +468,8 @@ void Query::parseStatsLine(char *line)
     _show_column_headers = false;
 }
 
-
-void Query::parseFilterLine(char *line, bool is_filter)
-{
-    if (!_table)
-        return;
+void Query::parseFilterLine(char *line, bool is_filter) {
+    if (!_table) return;
 
     char *column_name = next_field(&line);
     if (!column_name) {
@@ -488,23 +479,31 @@ void Query::parseFilterLine(char *line, bool is_filter)
 
     Column *column = _table->column(column_name);
     if (!column) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid filter: table '%s' has no column '%s'", _table->name(), column_name);
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "invalid filter: table '%s' has no column '%s'",
+                          _table->name(), column_name);
         return;
     }
 
     char *operator_name = next_field(&line);
     if (!operator_name) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid filter header: missing operator after table '%s'", column_name);
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            "invalid filter header: missing operator after table '%s'",
+            column_name);
         return;
     }
     int operator_id = lookupOperator(operator_name);
     if (operator_id == OP_INVALID) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid filter operator '%s'", operator_name);
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "invalid filter operator '%s'", operator_name);
         return;
     }
     char *value = lstrip(line);
     if (!value) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid filter: missing value after operator '%s'", operator_name);
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "invalid filter: missing value after operator '%s'",
+                          operator_name);
         return;
     }
 
@@ -517,44 +516,44 @@ void Query::parseFilterLine(char *line, bool is_filter)
     }
 }
 
-void Query::parseAuthUserHeader(char *line)
-{
-    if (!_table)
-        return;
+void Query::parseAuthUserHeader(char *line) {
+    if (!_table) return;
     _auth_user = find_contact(line);
     if (!_auth_user) {
         // Do not handle this as error any more. In a multi site setup
         // not all users might be present on all sites by design.
         _auth_user = UNKNOWN_AUTH_USER;
-        // _output->setError(RESPONSE_CODE_UNAUTHORIZED, "AuthUser: no such user '%s'", line);
+        // _output->setError(RESPONSE_CODE_UNAUTHORIZED, "AuthUser: no such user
+        // '%s'", line);
     }
-
 }
 
-void Query::parseStatsGroupLine(char *line)
-{
-    logger(LOG_WARNING, "Warning: StatsGroupBy is deprecated. "
-                        "Please use Columns instead.");
+void Query::parseStatsGroupLine(char *line) {
+    logger(LOG_WARNING,
+           "Warning: StatsGroupBy is deprecated. "
+           "Please use Columns instead.");
     parseColumnsLine(line);
 }
 
-
-void Query::parseColumnsLine(char *line)
-{
-    if (!_table)
-        return;
+void Query::parseColumnsLine(char *line) {
+    if (!_table) return;
     char *column_name;
     while (0 != (column_name = next_field(&line))) {
         Column *column = _table->column(column_name);
         if (column)
             _columns.push_back(column);
         else {
-            logger(LOG_WARNING, "Replacing non-existing column '%s' with null column", column_name);
+            logger(LOG_WARNING,
+                   "Replacing non-existing column '%s' with null column",
+                   column_name);
             // Do not fail any longer. We might want to make this configurable.
-            // But not failing has the advantage that an updated GUI, that expects new columns,
-            // will be able to keep compatibility with older Livestatus versions.
+            // But not failing has the advantage that an updated GUI, that
+            // expects new columns,
+            // will be able to keep compatibility with older Livestatus
+            // versions.
             // _output->setError(RESPONSE_CODE_INVALID_HEADER,
-            //       "Table '%s' has no column '%s'", _table->name(), column_name);
+            //       "Table '%s' has no column '%s'", _table->name(),
+            //       column_name);
             Column *col = createDummyColumn(column_name);
             _columns.push_back(col);
         }
@@ -562,9 +561,7 @@ void Query::parseColumnsLine(char *line)
     _show_column_headers = false;
 }
 
-
-void Query::parseSeparatorsLine(char *line)
-{
+void Query::parseSeparatorsLine(char *line) {
     char dssep = 0, fieldsep = 0, listsep = 0, hssep = 0;
     char *token = next_field(&line);
     if (token) dssep = atoi(token);
@@ -582,21 +579,22 @@ void Query::parseSeparatorsLine(char *line)
     //       || fieldsep == hssep
     //       || listsep == hssep)
     // {
-    //    _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid Separators: need four different integers");
+    //    _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid Separators:
+    //    need four different integers");
     //    return;
     // }
-    _dataset_separator      = string(&dssep, 1);
-    _field_separator        = string(&fieldsep, 1);
-    _list_separator         = string(&listsep, 1);
+    _dataset_separator = string(&dssep, 1);
+    _field_separator = string(&fieldsep, 1);
+    _list_separator = string(&listsep, 1);
     _host_service_separator = string(&hssep, 1);
 }
 
-void Query::parseOutputFormatLine(char *line)
-{
+void Query::parseOutputFormatLine(char *line) {
     char *format = next_field(&line);
     if (!format) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER,
-               "Missing output format. Only 'csv' and 'json' are available.");
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            "Missing output format. Only 'csv' and 'json' are available.");
         return;
     }
 
@@ -607,16 +605,17 @@ void Query::parseOutputFormatLine(char *line)
     else if (!strcmp(format, "python"))
         _output_format = OUTPUT_FORMAT_PYTHON;
     else
-        _output->setError(RESPONSE_CODE_INVALID_HEADER,
-               "Invalid output format. Only 'csv' and 'json' are available.");
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            "Invalid output format. Only 'csv' and 'json' are available.");
 }
 
-void Query::parseColumnHeadersLine(char *line)
-{
+void Query::parseColumnHeadersLine(char *line) {
     char *value = next_field(&line);
     if (!value) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER,
-              "Missing value for ColumnHeaders: must be 'on' or 'off'");
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            "Missing value for ColumnHeaders: must be 'on' or 'off'");
         return;
     }
 
@@ -625,16 +624,16 @@ void Query::parseColumnHeadersLine(char *line)
     else if (!strcmp(value, "off"))
         _show_column_headers = false;
     else
-        _output->setError(RESPONSE_CODE_INVALID_HEADER,
-              "Invalid value for ColumnHeaders: must be 'on' or 'off'");
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            "Invalid value for ColumnHeaders: must be 'on' or 'off'");
 }
 
-void Query::parseKeepAliveLine(char *line)
-{
+void Query::parseKeepAliveLine(char *line) {
     char *value = next_field(&line);
     if (!value) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
-                "Missing value for KeepAlive: must be 'on' or 'off'");
+                          "Missing value for KeepAlive: must be 'on' or 'off'");
         return;
     }
 
@@ -644,15 +643,15 @@ void Query::parseKeepAliveLine(char *line)
         _output->setDoKeepalive(false);
     else
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
-                "Invalid value for KeepAlive: must be 'on' or 'off'");
+                          "Invalid value for KeepAlive: must be 'on' or 'off'");
 }
 
-void Query::parseResponseHeaderLine(char *line)
-{
+void Query::parseResponseHeaderLine(char *line) {
     char *value = next_field(&line);
     if (!value) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER,
-                "Missing value for ResponseHeader: must be 'off' or 'fixed16'");
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            "Missing value for ResponseHeader: must be 'off' or 'fixed16'");
         return;
     }
 
@@ -661,38 +660,39 @@ void Query::parseResponseHeaderLine(char *line)
     else if (!strcmp(value, "fixed16"))
         _output->setResponseHeader(RESPONSE_HEADER_FIXED16);
     else
-        _output->setError(RESPONSE_CODE_INVALID_HEADER,
-                "Invalid value '%s' for ResponseHeader: must be 'off' or 'fixed16'", value);
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            "Invalid value '%s' for ResponseHeader: must be 'off' or 'fixed16'",
+            value);
 }
 
-void Query::parseLimitLine(char *line)
-{
+void Query::parseLimitLine(char *line) {
     char *value = next_field(&line);
     if (!value) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Header Limit: missing value");
-    }
-    else {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "Header Limit: missing value");
+    } else {
         int limit = atoi(value);
         if (!isdigit(value[0]) || limit < 0)
-            _output->setError(RESPONSE_CODE_INVALID_HEADER,
-                    "Invalid value for Limit: must be non-negative integer");
+            _output->setError(
+                RESPONSE_CODE_INVALID_HEADER,
+                "Invalid value for Limit: must be non-negative integer");
         else
             _limit = limit;
     }
 }
 
-
-void Query::parseTimelimitLine(char *line)
-{
+void Query::parseTimelimitLine(char *line) {
     char *value = next_field(&line);
     if (!value) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Header Timelimit: missing value");
-    }
-    else {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "Header Timelimit: missing value");
+    } else {
         int timelimit = atoi(value);
         if (!isdigit(value[0]) || timelimit < 0)
             _output->setError(RESPONSE_CODE_INVALID_HEADER,
-                    "Invalid value for Timelimit: must be non-negative integer (seconds)");
+                              "Invalid value for Timelimit: must be "
+                              "non-negative integer (seconds)");
         else {
             _time_limit = timelimit;
             _time_limit_timeout = time(0) + _time_limit;
@@ -700,28 +700,27 @@ void Query::parseTimelimitLine(char *line)
     }
 }
 
-
-void Query::parseWaitTimeoutLine(char *line)
-{
+void Query::parseWaitTimeoutLine(char *line) {
     char *value = next_field(&line);
     if (!value) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitTimeout: missing value");
-    }
-    else {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "WaitTimeout: missing value");
+    } else {
         int timeout = atoi(value);
         if (!isdigit(value[0]) || timeout < 0)
-            _output->setError(RESPONSE_CODE_INVALID_HEADER,
-                    "Invalid value for WaitTimeout: must be non-negative integer");
+            _output->setError(
+                RESPONSE_CODE_INVALID_HEADER,
+                "Invalid value for WaitTimeout: must be non-negative integer");
         else
             _wait_timeout = timeout;
     }
 }
 
-void Query::parseWaitTriggerLine(char *line)
-{
+void Query::parseWaitTriggerLine(char *line) {
     char *value = next_field(&line);
     if (!value) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitTrigger: missing keyword");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "WaitTrigger: missing keyword");
         return;
     }
     struct trigger *t = trigger_find(value);
@@ -734,24 +733,24 @@ void Query::parseWaitTriggerLine(char *line)
     _wait_trigger = t;
 }
 
-void Query::parseWaitObjectLine(char *line)
-{
-    if (!_table)
-        return;
+void Query::parseWaitObjectLine(char *line) {
+    if (!_table) return;
 
     char *objectspec = lstrip(line);
     _wait_object = _table->findObject(objectspec);
     if (!_wait_object) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER,
-                "WaitObject: object '%s' not found or not supported by this table", objectspec);
+        _output->setError(
+            RESPONSE_CODE_INVALID_HEADER,
+            "WaitObject: object '%s' not found or not supported by this table",
+            objectspec);
     }
 }
 
-void Query::parseLocaltimeLine(char *line)
-{
+void Query::parseLocaltimeLine(char *line) {
     char *value = next_field(&line);
     if (!value) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Header Localtime: missing value");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "Header Localtime: missing value");
         return;
     }
     time_t their_time = atoi(value);
@@ -765,60 +764,51 @@ void Query::parseLocaltimeLine(char *line)
     // or less synchronized and that the time offset is only due to being
     // in different time zones.
     int full = dif / 1800;
-    int rem  = dif % 1800;
+    int rem = dif % 1800;
     if (rem <= -900)
-        full --;
+        full--;
     else if (rem >= 900)
-        full ++;
+        full++;
     if (full >= 48 || full <= -48) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
-                "Invalid Localtime header: timezone difference greater then 24 hours");
+                          "Invalid Localtime header: timezone difference "
+                          "greater then 24 hours");
         return;
     }
     _timezone_offset = full * 1800;
     if (g_debug_level >= 2) {
-        logger(LG_INFO, "Timezone difference is %.1f hours", _timezone_offset / 3600.0);
+        logger(LG_INFO, "Timezone difference is %.1f hours",
+               _timezone_offset / 3600.0);
     }
 }
 
+bool Query::doStats() { return _stats_columns.size() > 0; }
 
-bool Query::doStats()
-{
-    return _stats_columns.size() > 0;
-}
-
-
-void Query::start()
-{
+void Query::start() {
     doWait();
 
     _need_ds_separator = false;
 
-    if (_output_format != OUTPUT_FORMAT_CSV)
-        _output->addChar('[');
+    if (_output_format != OUTPUT_FORMAT_CSV) _output->addChar('[');
 
-    if (doStats())
-    {
-        // if we have no StatsGroupBy: column, we allocate one only row of Aggregators,
+    if (doStats()) {
+        // if we have no StatsGroupBy: column, we allocate one only row of
+        // Aggregators,
         // directly in _stats_aggregators. When grouping the rows of aggregators
         // will be created each time a new group is found.
-        if (_columns.size() == 0)
-        {
+        if (_columns.size() == 0) {
             _stats_aggregators = new Aggregator *[_stats_columns.size()];
-            for (unsigned i=0; i<_stats_columns.size(); i++)
+            for (unsigned i = 0; i < _stats_columns.size(); i++)
                 _stats_aggregators[i] = _stats_columns[i]->createAggregator();
         }
     }
 
-    if (_show_column_headers)
-    {
+    if (_show_column_headers) {
         outputDatasetBegin();
         bool first = true;
 
-        for (_columns_t::iterator it = _columns.begin();
-                it != _columns.end();
-                ++it)
-        {
+        for (_columns_t::iterator it = _columns.begin(); it != _columns.end();
+             ++it) {
             if (first)
                 first = false;
             else
@@ -831,16 +821,14 @@ void Query::start()
         int col = 1;
         char colheader[32];
         for (_stats_columns_t::iterator it = _stats_columns.begin();
-                it != _stats_columns.end();
-                ++it)
-        {
+             it != _stats_columns.end(); ++it) {
             if (first)
                 first = false;
             else
                 outputFieldSeparator();
             snprintf(colheader, 32, "stats_%d", col);
             outputString(colheader);
-            col ++;
+            col++;
         }
 
         outputDatasetEnd();
@@ -848,40 +836,40 @@ void Query::start()
     }
 }
 
-
-bool Query::timelimitReached()
-{
+bool Query::timelimitReached() {
     if (_time_limit >= 0 && time(0) >= _time_limit_timeout) {
-        logger(LG_INFO, "Maximum query time of %d seconds exceeded!", _time_limit);
-        _output->setError(RESPONSE_CODE_LIMIT_EXCEEDED, "Maximum query time of %d seconds exceeded!", _time_limit);
+        logger(LG_INFO, "Maximum query time of %d seconds exceeded!",
+               _time_limit);
+        _output->setError(RESPONSE_CODE_LIMIT_EXCEEDED,
+                          "Maximum query time of %d seconds exceeded!",
+                          _time_limit);
         return true;
-    }
-    else
+    } else
         return false;
 }
 
-bool Query::processDataset(void *data)
-{
+bool Query::processDataset(void *data) {
     if (_output->size() > g_max_response_size) {
-        logger(LG_INFO, "Maximum response size of %lu bytes exceeded!", g_max_response_size);
-        // _output->setError(RESPONSE_CODE_LIMIT_EXCEEDED, "Maximum response size of %d reached", g_max_response_size);
+        logger(LG_INFO, "Maximum response size of %lu bytes exceeded!",
+               g_max_response_size);
+        // _output->setError(RESPONSE_CODE_LIMIT_EXCEEDED, "Maximum response
+        // size of %d reached", g_max_response_size);
         // currently we only log an error into the log file and do
         // not abort the query. We handle it like Limit:
         return false;
     }
 
-    if (_filter.accepts(data) && (!_auth_user || _table->isAuthorized(_auth_user, data))) {
+    if (_filter.accepts(data) &&
+        (!_auth_user || _table->isAuthorized(_auth_user, data))) {
         _current_line++;
-        if (_limit >= 0 && (int)_current_line > _limit)
-            return false;
+        if (_limit >= 0 && (int)_current_line > _limit) return false;
 
-        // When we reach the time limit we let the query fail. Otherwise the user will
+        // When we reach the time limit we let the query fail. Otherwise the
+        // user will
         // not know that the answer is incomplete.
-        if (timelimitReached())
-            return false;
+        if (timelimitReached()) return false;
 
-        if (doStats())
-        {
+        if (doStats()) {
             Aggregator **aggr;
             // When doing grouped stats, we need to fetch/create a row
             // of aggregators for the current group
@@ -889,18 +877,15 @@ bool Query::processDataset(void *data)
                 _stats_group_spec_t groupspec;
                 computeStatsGroupSpec(groupspec, data);
                 aggr = getStatsGroup(groupspec);
-            }
-            else
+            } else
                 aggr = _stats_aggregators;
 
-            for (unsigned i=0; i<_stats_columns.size(); i++)
+            for (unsigned i = 0; i < _stats_columns.size(); i++)
                 aggr[i]->consume(data, this);
 
             // No output is done while processing the data, we only
             // collect stats.
-        }
-        else
-        {
+        } else {
             // output data of current row
             if (_need_ds_separator && _output_format != OUTPUT_FORMAT_CSV)
                 _output->addBuffer(",\n", 2);
@@ -909,11 +894,8 @@ bool Query::processDataset(void *data)
 
             outputDatasetBegin();
             for (_columns_t::iterator it = _columns.begin();
-                    it != _columns.end();
-                    ++it)
-            {
-                if (it != _columns.begin())
-                    outputFieldSeparator();
+                 it != _columns.end(); ++it) {
+                if (it != _columns.begin()) outputFieldSeparator();
                 Column *column = *it;
                 column->output(data, this);
             }
@@ -923,16 +905,13 @@ bool Query::processDataset(void *data)
     return true;
 }
 
-void Query::finish()
-{
+void Query::finish() {
     // grouped stats
-    if (doStats() && _columns.size() > 0)
-    {
-        // output values of all stats groups (output has been post poned until now)
+    if (doStats() && _columns.size() > 0) {
+        // output values of all stats groups (output has been post poned until
+        // now)
         for (_stats_groups_t::iterator it = _stats_groups.begin();
-                it != _stats_groups.end();
-                ++it)
-        {
+             it != _stats_groups.end(); ++it) {
             if (_need_ds_separator && _output_format != OUTPUT_FORMAT_CSV)
                 _output->addBuffer(",\n", 2);
             else
@@ -944,9 +923,7 @@ void Query::finish()
             _stats_group_spec_t groupspec = it->first;
             bool first = true;
             for (_stats_group_spec_t::iterator iit = groupspec.begin();
-                    iit != groupspec.end();
-                    ++iit)
-            {
+                 iit != groupspec.end(); ++iit) {
                 if (!first)
                     outputFieldSeparator();
                 else
@@ -955,10 +932,10 @@ void Query::finish()
             }
 
             Aggregator **aggr = it->second;
-            for (unsigned i=0; i<_stats_columns.size(); i++) {
+            for (unsigned i = 0; i < _stats_columns.size(); i++) {
                 outputFieldSeparator();
                 aggr[i]->output(this);
-                delete aggr[i]; // not needed any more
+                delete aggr[i];  // not needed any more
             }
             outputDatasetEnd();
             delete[] aggr;
@@ -973,10 +950,8 @@ void Query::finish()
             _need_ds_separator = true;
 
         outputDatasetBegin();
-        for (unsigned i=0; i<_stats_columns.size(); i++)
-        {
-            if (i > 0)
-                outputFieldSeparator();
+        for (unsigned i = 0; i < _stats_columns.size(); i++) {
+            if (i > 0) outputFieldSeparator();
             _stats_aggregators[i]->output(this);
             delete _stats_aggregators[i];
         }
@@ -985,86 +960,71 @@ void Query::finish()
     }
 
     // normal query
-    if (_output_format != OUTPUT_FORMAT_CSV)
-        _output->addBuffer("]\n", 2);
+    if (_output_format != OUTPUT_FORMAT_CSV) _output->addBuffer("]\n", 2);
 }
 
-
-void *Query::findIndexFilter(const char *columnname)
-{
+void *Query::findIndexFilter(const char *columnname) {
     return _filter.findIndexFilter(columnname);
 }
 
-void Query::findIntLimits(const char *columnname, int *lower, int *upper)
-{
+void Query::findIntLimits(const char *columnname, int *lower, int *upper) {
     return _filter.findIntLimits(columnname, lower, upper);
 }
 
-void Query::optimizeBitmask(const char *columnname, uint32_t *bitmask)
-{
+void Query::optimizeBitmask(const char *columnname, uint32_t *bitmask) {
     _filter.optimizeBitmask(columnname, bitmask);
 }
 
 // output helpers, called from columns
-void Query::outputDatasetBegin()
-{
-    if (_output_format != OUTPUT_FORMAT_CSV)
-        _output->addChar('[');
+void Query::outputDatasetBegin() {
+    if (_output_format != OUTPUT_FORMAT_CSV) _output->addChar('[');
 }
 
-void Query::outputDatasetEnd()
-{
+void Query::outputDatasetEnd() {
     if (_output_format == OUTPUT_FORMAT_CSV)
-        _output->addBuffer(_dataset_separator.c_str(), _dataset_separator.size());
+        _output->addBuffer(_dataset_separator.c_str(),
+                           _dataset_separator.size());
     else
         _output->addChar(']');
 }
 
-void Query::outputFieldSeparator()
-{
+void Query::outputFieldSeparator() {
     if (_output_format == OUTPUT_FORMAT_CSV)
         _output->addBuffer(_field_separator.c_str(), _field_separator.size());
     else
         _output->addChar(',');
 }
 
-void Query::outputInteger(int32_t value)
-{
+void Query::outputInteger(int32_t value) {
     char buf[32];
     int l = snprintf(buf, 32, "%d", value);
     _output->addBuffer(buf, l);
 }
 
-void Query::outputInteger64(int64_t value)
-{
+void Query::outputInteger64(int64_t value) {
     char buf[32];
-    int l = snprintf(buf, 32, "%lld", (long long int )value);
+    int l = snprintf(buf, 32, "%lld", (long long int)value);
     _output->addBuffer(buf, l);
 }
 
-void Query::outputTime(int32_t value)
-{
+void Query::outputTime(int32_t value) {
     value += _timezone_offset;
     outputInteger(value);
 }
 
-
-void Query::outputUnsignedLong(unsigned long value)
-{
+void Query::outputUnsignedLong(unsigned long value) {
     char buf[64];
     int l = snprintf(buf, sizeof(buf), "%lu", value);
     _output->addBuffer(buf, l);
 }
 
-void Query::outputCounter(counter_t value)
-{
+void Query::outputCounter(counter_t value) {
     char buf[64];
     int l = snprintf(buf, sizeof(buf), "%llu", (unsigned long long)value);
     _output->addBuffer(buf, l);
 }
 
-void Query::outputDouble(double value)
-{
+void Query::outputDouble(double value) {
     if (isnan(value))
         outputNull();
     else {
@@ -1074,33 +1034,28 @@ void Query::outputDouble(double value)
     }
 }
 
-void Query::outputNull()
-{
+void Query::outputNull() {
     if (_output_format == OUTPUT_FORMAT_CSV) {
         // output empty cell
-    }
-    else if (_output_format == OUTPUT_FORMAT_PYTHON)
+    } else if (_output_format == OUTPUT_FORMAT_PYTHON)
         _output->addBuffer("None", 4);
     else
-        _output->addBuffer("null", 4); // JSON
+        _output->addBuffer("null", 4);  // JSON
 }
 
-void Query::outputAsciiEscape(char value)
-{
+void Query::outputAsciiEscape(char value) {
     char buf[8];
     snprintf(buf, sizeof(buf), "\\%03o", value);
     _output->addBuffer(buf, 4);
 }
 
-void Query::outputUnicodeEscape(unsigned value)
-{
+void Query::outputUnicodeEscape(unsigned value) {
     char buf[8];
     snprintf(buf, sizeof(buf), "\\u%04x", value);
     _output->addBuffer(buf, 6);
 }
 
-void Query::outputBlob(const char *buffer, int size)
-{
+void Query::outputBlob(const char *buffer, int size) {
     if (_output_format != OUTPUT_FORMAT_CSV)
         outputString(buffer, size);
     else
@@ -1109,21 +1064,19 @@ void Query::outputBlob(const char *buffer, int size)
 
 // len = -1 -> use strlen(), len >= 0: consider
 // output as blob, do not handle UTF-8.
-void Query::outputString(const char *value, int len)
-{
+void Query::outputString(const char *value, int len) {
     if (!value) {
-        if (_output_format != OUTPUT_FORMAT_CSV)
-            _output->addBuffer("\"\"", 2);
+        if (_output_format != OUTPUT_FORMAT_CSV) _output->addBuffer("\"\"", 2);
         return;
     }
 
     else if (_output_format == OUTPUT_FORMAT_CSV)
         _output->addString(value);
 
-    else // JSON
+    else  // JSON
     {
         if (_output_format == OUTPUT_FORMAT_PYTHON && len < 0)
-            _output->addChar('u'); // mark strings as unicode
+            _output->addChar('u');  // mark strings as unicode
         _output->addChar('"');
         const char *r = value;
         int chars_left = len >= 0 ? len : strlen(r);
@@ -1138,15 +1091,16 @@ void Query::outputString(const char *value, int len)
 
             // Output ASCII characters unencoded
             else if (*r >= 32 || len >= 0) {
-                if (*r == '"' || *r == '\\')
-                    _output->addChar('\\');
+                if (*r == '"' || *r == '\\') _output->addChar('\\');
                 _output->addChar(*r);
             }
 
             // interprete two-Byte UTF-8 sequences in mode 'utf8' and 'mixed'
-            else if ((g_data_encoding == ENCODING_UTF8 || g_data_encoding == ENCODING_MIXED)
-                    && ((*r & 0xE0) == 0xC0)) {
-                outputUnicodeEscape(((*r & 31) << 6) | (*(r+1) & 0x3F)); // 2 byte encoding
+            else if ((g_data_encoding == ENCODING_UTF8 ||
+                      g_data_encoding == ENCODING_MIXED) &&
+                     ((*r & 0xE0) == 0xC0)) {
+                outputUnicodeEscape(((*r & 31) << 6) |
+                                    (*(r + 1) & 0x3F));  // 2 byte encoding
                 r++;
                 chars_left--;
             }
@@ -1157,14 +1111,15 @@ void Query::outputString(const char *value, int len)
                 if ((*r & 0xF0) == 0xE0) {
                     if (chars_left < 3) {
                         if (g_debug_level >= 2)
-                            logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
-                        break; // end of string. No use in continuing
-                    }
-                    else {
-                        outputUnicodeEscape(
-                                ((*r     & 0x0F) << 12 |
-                                 (*(r+1) & 0x3F) <<  6 |
-                                 (*(r+2) & 0x3F)));
+                            logger(LG_INFO,
+                                   "Ignoring invalid UTF-8 sequence in string "
+                                   "'%s'",
+                                   value);
+                        break;  // end of string. No use in continuing
+                    } else {
+                        outputUnicodeEscape(((*r & 0x0F) << 12 |
+                                             (*(r + 1) & 0x3F) << 6 |
+                                             (*(r + 2) & 0x3F)));
                         r += 2;
                         chars_left -= 2;
                     }
@@ -1173,28 +1128,31 @@ void Query::outputString(const char *value, int len)
                 else if ((*r & 0xF8) == 0xF0) {
                     if (chars_left < 4) {
                         if (g_debug_level >= 2)
-                            logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
-                        break; // end of string. No use in continuing
-                    }
-                    else {
+                            logger(LG_INFO,
+                                   "Ignoring invalid UTF-8 sequence in string "
+                                   "'%s'",
+                                   value);
+                        break;  // end of string. No use in continuing
+                    } else {
                         outputUnicodeEscape(
-                                ((*r     & 0x07) << 18 |
-                                 (*(r+1) & 0x3F) <<  6 |
-                                 (*(r+2) & 0x3F) <<  6 |
-                                 (*(r+3) & 0x3F)));
+                            ((*r & 0x07) << 18 | (*(r + 1) & 0x3F) << 6 |
+                             (*(r + 2) & 0x3F) << 6 | (*(r + 3) & 0x3F)));
                         r += 3;
                         chars_left -= 3;
                     }
-                }
-                else {
+                } else {
                     if (g_debug_level >= 2)
-                        logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
+                        logger(LG_INFO,
+                               "Ignoring invalid UTF-8 sequence in string '%s'",
+                               value);
                 }
             }
 
-            // in latin1 and mixed mode interprete all other non-ASCII characters as latin1
+            // in latin1 and mixed mode interprete all other non-ASCII
+            // characters as latin1
             else {
-                outputUnicodeEscape((unsigned)((int)*r + 256)); // assume latin1 encoding
+                outputUnicodeEscape(
+                    (unsigned)((int)*r + 256));  // assume latin1 encoding
             }
 
             r++;
@@ -1204,110 +1162,85 @@ void Query::outputString(const char *value, int len)
     }
 }
 
-void Query::outputBeginList()
-{
-    if (_output_format != OUTPUT_FORMAT_CSV)
-        _output->addChar('[');
+void Query::outputBeginList() {
+    if (_output_format != OUTPUT_FORMAT_CSV) _output->addChar('[');
 }
 
-void Query::outputListSeparator()
-{
+void Query::outputListSeparator() {
     if (_output_format == OUTPUT_FORMAT_CSV)
         _output->addBuffer(_list_separator.c_str(), _list_separator.size());
     else
         _output->addChar(',');
 }
 
-void Query::outputEndList()
-{
-    if (_output_format != OUTPUT_FORMAT_CSV)
-        _output->addChar(']');
+void Query::outputEndList() {
+    if (_output_format != OUTPUT_FORMAT_CSV) _output->addChar(']');
 }
 
-void Query::outputBeginSublist()
-{
-    if (_output_format != OUTPUT_FORMAT_CSV)
-        _output->addChar('[');
+void Query::outputBeginSublist() {
+    if (_output_format != OUTPUT_FORMAT_CSV) _output->addChar('[');
 }
 
-void Query::outputSublistSeparator()
-{
+void Query::outputSublistSeparator() {
     if (_output_format == OUTPUT_FORMAT_CSV)
-        _output->addBuffer(_host_service_separator.c_str(), _host_service_separator.size());
+        _output->addBuffer(_host_service_separator.c_str(),
+                           _host_service_separator.size());
     else
         _output->addChar(',');
 }
 
-void Query::outputEndSublist()
-{
-    if (_output_format != OUTPUT_FORMAT_CSV)
-        _output->addChar(']');
+void Query::outputEndSublist() {
+    if (_output_format != OUTPUT_FORMAT_CSV) _output->addChar(']');
 }
 
-void Query::outputBeginDict()
-{
-    if (_output_format != OUTPUT_FORMAT_CSV)
-        _output->addChar('{');
+void Query::outputBeginDict() {
+    if (_output_format != OUTPUT_FORMAT_CSV) _output->addChar('{');
 }
 
-void Query::outputDictSeparator()
-{
-    outputListSeparator();
-}
+void Query::outputDictSeparator() { outputListSeparator(); }
 
-void Query::outputDictValueSeparator()
-{
+void Query::outputDictValueSeparator() {
     if (_output_format == OUTPUT_FORMAT_CSV)
-        _output->addBuffer(_host_service_separator.c_str(), _host_service_separator.size());
+        _output->addBuffer(_host_service_separator.c_str(),
+                           _host_service_separator.size());
     else
         _output->addChar(':');
 }
 
-void Query::outputEndDict()
-{
-    if (_output_format != OUTPUT_FORMAT_CSV)
-        _output->addChar('}');
+void Query::outputEndDict() {
+    if (_output_format != OUTPUT_FORMAT_CSV) _output->addChar('}');
 }
 
-
-Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec)
-{
+Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec) {
     _stats_groups_t::iterator it = _stats_groups.find(groupspec);
     if (it == _stats_groups.end()) {
         Aggregator **aggr = new Aggregator *[_stats_columns.size()];
-        for (unsigned i=0; i<_stats_columns.size(); i++)
+        for (unsigned i = 0; i < _stats_columns.size(); i++)
             aggr[i] = _stats_columns[i]->createAggregator();
         _stats_groups.insert(make_pair(groupspec, aggr));
         return aggr;
-    }
-    else
+    } else
         return it->second;
 }
 
-void Query::computeStatsGroupSpec(Query::_stats_group_spec_t &groupspec, void *data)
-{
-    for (_columns_t::iterator it = _columns.begin();
-            it != _columns.end();
-            ++it)
-    {
+void Query::computeStatsGroupSpec(Query::_stats_group_spec_t &groupspec,
+                                  void *data) {
+    for (_columns_t::iterator it = _columns.begin(); it != _columns.end();
+         ++it) {
         Column *column = *it;
         groupspec.push_back(column->valueAsString(data, this));
     }
 }
 
-
-void Query::doWait()
-{
+void Query::doWait() {
     // If no wait condition and no trigger is set,
     // we do not wait at all.
-    if (_wait_condition.numFilters() == 0 && _wait_trigger == 0)
-        return;
+    if (_wait_condition.numFilters() == 0 && _wait_trigger == 0) return;
 
     // If a condition is set, we check the condition. If it
     // is already true, we do not need to way
     if (_wait_condition.numFilters() > 0 &&
-            _wait_condition.accepts(_wait_object))
-    {
+        _wait_condition.accepts(_wait_object)) {
         if (g_debug_level >= 2)
             logger(LG_INFO, "Wait condition true, no waiting neccessary");
         return;
@@ -1315,8 +1248,7 @@ void Query::doWait()
 
     // No wait on specified trigger. If no trigger was specified
     // we use WT_ALL as default trigger.
-    if (_wait_trigger == 0)
-        _wait_trigger = trigger_all();
+    if (_wait_trigger == 0) _wait_trigger = trigger_all();
 
     struct timeval now;
     gettimeofday(&now, NULL);
@@ -1324,23 +1256,24 @@ void Query::doWait()
     timeout.tv_sec = now.tv_sec + (_wait_timeout / 1000);
     timeout.tv_nsec = now.tv_usec * 1000 + 1000 * 1000 * (_wait_timeout % 1000);
     if (timeout.tv_nsec > 1000000000) {
-        timeout.tv_sec ++;
+        timeout.tv_sec++;
         timeout.tv_nsec -= 1000000000;
     }
 
     do {
         if (_wait_timeout == 0) {
             if (g_debug_level >= 2)
-                logger(LG_INFO, "Waiting unlimited until condition becomes true");
+                logger(LG_INFO,
+                       "Waiting unlimited until condition becomes true");
             trigger_wait(_wait_trigger);
-        }
-        else {
+        } else {
             if (g_debug_level >= 2)
-                logger(LG_INFO, "Waiting %d ms or until condition becomes true", _wait_timeout);
+                logger(LG_INFO, "Waiting %d ms or until condition becomes true",
+                       _wait_timeout);
             if (!trigger_wait_until(_wait_trigger, &timeout)) {
                 if (g_debug_level >= 2)
                     logger(LG_INFO, "WaitTimeout after %d ms", _wait_timeout);
-                return; // timeout occurred. do not wait any longer
+                return;  // timeout occurred. do not wait any longer
             }
         }
     } while (!_wait_condition.accepts(_wait_object));

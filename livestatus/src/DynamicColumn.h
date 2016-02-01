@@ -29,21 +29,25 @@
 #include <string>
 class Column;
 
-
-class DynamicColumn
-{
+class DynamicColumn {
     std::string _name;
     std::string _description;
-    int    _indirect_offset;
-    int    _extra_offset;
+    int _indirect_offset;
+    int _extra_offset;
+
 public:
-    DynamicColumn(std::string name, std::string description, int indirect_offset, int extra_offset) :
-        _name(name), _description(description), _indirect_offset(indirect_offset), _extra_offset(extra_offset) {}
+    DynamicColumn(std::string name, std::string description,
+                  int indirect_offset, int extra_offset)
+        : _name(name)
+        , _description(description)
+        , _indirect_offset(indirect_offset)
+        , _extra_offset(extra_offset) {}
     virtual ~DynamicColumn();
     const char *name() const { return _name.c_str(); }
     const char *description() const { return _description.c_str(); }
     Column *createColumn(const char *arguments);
-    virtual Column *createColumn(int indirect_offset, int extra_offset, const char *arguments) = 0;
+    virtual Column *createColumn(int indirect_offset, int extra_offset,
+                                 const char *arguments) = 0;
 };
 
-#endif // DynamicColumn_h
+#endif  // DynamicColumn_h

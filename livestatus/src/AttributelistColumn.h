@@ -25,14 +25,13 @@
 #ifndef AttributelistColumn_h
 #define AttributelistColumn_h
 
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
 #include <string>
 #include "Column.h"
 #include "IntColumn.h"
 class Filter;
 class Query;
-
 
 /* Since this column can be of type COLTYPE_INT, it must
    be a subclass of IntColumn, since StatsColumn assumes
@@ -47,11 +46,10 @@ public:
     AttributelistColumn(std::string name, std::string description, int offset,
                         int indirect_offset, bool show_list,
                         int extra_offset = -1, int extra_extra_offset = -1)
-        : IntColumn(name, description, indirect_offset, extra_offset, extra_extra_offset)
+        : IntColumn(name, description, indirect_offset, extra_offset,
+                    extra_extra_offset)
         , _offset(offset)
-        , _show_list(show_list)
-    {
-    }
+        , _show_list(show_list) {}
 
     // API of Column
     int type() override { return _show_list ? COLTYPE_LIST : COLTYPE_INT; }
@@ -64,4 +62,4 @@ public:
     unsigned long getValue(void *data);
 };
 
-#endif // AttributelistColumn_h
+#endif  // AttributelistColumn_h

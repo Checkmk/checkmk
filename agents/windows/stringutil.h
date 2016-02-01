@@ -22,14 +22,14 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #ifndef stringutil_h
 #define stringutil_h
 
-#include <vector>
-#include <string>
 #include <sstream>
-// umm, this is a C header, not actually part of C++ until C++11. This may be a problem in older
+#include <string>
+#include <vector>
+// umm, this is a C header, not actually part of C++ until C++11. This may be a
+// problem in older
 // MSVCs
 #include <stdint.h>
 
@@ -37,13 +37,11 @@
 #include <windows.h>
 #endif
 
-
-
 char *lstrip(char *s);
 void rstrip(char *s);
 char *strip(char *s);
 
-std::vector<const char*> split_line(char *pos, int (*split_pred)(int));
+std::vector<const char *> split_line(char *pos, int (*split_pred)(int));
 char *next_word(char **line);
 
 unsigned long long string_to_llu(const char *s);
@@ -65,8 +63,8 @@ bool ci_equal(const std::string &lhs, const std::string &rhs);
 bool globmatch(const char *pattern, const char *astring);
 
 template <typename T>
-std::basic_string<T> join(const std::vector<std::basic_string<T>> &input, const T *sep)
-{
+std::basic_string<T> join(const std::vector<std::basic_string<T>> &input,
+                          const T *sep) {
     std::basic_ostringstream<T> stream;
     bool first = true;
 
@@ -81,7 +79,6 @@ std::basic_string<T> join(const std::vector<std::basic_string<T>> &input, const 
     return stream.str();
 }
 
-
 #ifdef _WIN32
 std::string get_win_error_as_string(DWORD error_id = ::GetLastError());
 #endif
@@ -90,22 +87,21 @@ std::string get_win_error_as_string(DWORD error_id = ::GetLastError());
 #if _cplusplus < 201103L
 
 namespace std {
-    template <typename T>
-    std::wstring to_wstring(const T &source) {
-        std::wostringstream str;
-        str << source;
-        return str.str();
-    }
-
-    template <typename T>
-    std::string to_string(const T &source) {
-        std::ostringstream str;
-        str << source;
-        return str.str();
-    }
+template <typename T>
+std::wstring to_wstring(const T &source) {
+    std::wostringstream str;
+    str << source;
+    return str.str();
 }
 
-#endif // _cplusplus < 201103L
+template <typename T>
+std::string to_string(const T &source) {
+    std::ostringstream str;
+    str << source;
+    return str.str();
+}
+}
 
+#endif  // _cplusplus < 201103L
 
-#endif // stringutil_h
+#endif  // stringutil_h

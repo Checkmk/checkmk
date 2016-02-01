@@ -25,7 +25,7 @@
 #ifndef tables_h
 #define tables_h
 
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 
 #ifndef EXTERN
 #define EXTERN extern
@@ -62,4 +62,4 @@ EXTERN TableStateHistory *g_table_statehistory;
 class TableColumns;
 EXTERN TableColumns *g_table_columns;
 
-#endif // tables_h
+#endif  // tables_h

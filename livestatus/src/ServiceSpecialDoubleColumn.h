@@ -29,17 +29,18 @@
 #include <string>
 #include "DoubleColumn.h"
 
-
 #define SSDC_STALENESS 1
 
-class ServiceSpecialDoubleColumn : public DoubleColumn
-{
+class ServiceSpecialDoubleColumn : public DoubleColumn {
     int _type;
 
 public:
-    ServiceSpecialDoubleColumn(std::string name, std::string description, int ssdc_type, int indirect, int extra_offset = -1)
-        : DoubleColumn(name, description, indirect, extra_offset) , _type(ssdc_type) {}
+    ServiceSpecialDoubleColumn(std::string name, std::string description,
+                               int ssdc_type, int indirect,
+                               int extra_offset = -1)
+        : DoubleColumn(name, description, indirect, extra_offset)
+        , _type(ssdc_type) {}
     double getValue(void *data);
 };
 
-#endif // ServiceSpecialDoubleColumn_h
+#endif  // ServiceSpecialDoubleColumn_h

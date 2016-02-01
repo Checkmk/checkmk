@@ -32,18 +32,21 @@
 #include "nagios.h"
 class Query;
 
-
-class CustomTimeperiodColumn : public IntColumn
-{
-    int _offset; // within data structure (differs from host/service)
+class CustomTimeperiodColumn : public IntColumn {
+    int _offset;  // within data structure (differs from host/service)
     std::string _varname;
 
 public:
-    CustomTimeperiodColumn(std::string name, std::string description, int offset, int indirect_offset, const char *varname, int extra_offset = -1)
-        : IntColumn(name, description, indirect_offset, extra_offset),  _offset(offset), _varname(varname) {}
+    CustomTimeperiodColumn(std::string name, std::string description,
+                           int offset, int indirect_offset, const char *varname,
+                           int extra_offset = -1)
+        : IntColumn(name, description, indirect_offset, extra_offset)
+        , _offset(offset)
+        , _varname(varname) {}
     int32_t getValue(void *data, Query *) override;
+
 private:
     customvariablesmember *getCVM(void *data);
 };
 
-#endif // CustomTimeperiodColumn_h
+#endif  // CustomTimeperiodColumn_h

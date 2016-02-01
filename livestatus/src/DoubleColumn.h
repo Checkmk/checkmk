@@ -31,11 +31,10 @@
 class Filter;
 class Query;
 
-
-class DoubleColumn : public Column
-{
+class DoubleColumn : public Column {
 public:
-    DoubleColumn(std::string name, std::string description, int indirect_offset, int extra_offset)
+    DoubleColumn(std::string name, std::string description, int indirect_offset,
+                 int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
     virtual double getValue(void *data) = 0;
     void output(void *, Query *) override;
@@ -44,4 +43,4 @@ public:
     Filter *createFilter(int operator_id, char *value) override;
 };
 
-#endif // DoubleColumn_h
+#endif  // DoubleColumn_h

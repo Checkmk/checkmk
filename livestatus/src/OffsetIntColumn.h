@@ -31,16 +31,18 @@
 #include "IntColumn.h"
 class Query;
 
-
-class OffsetIntColumn : public IntColumn
-{
+class OffsetIntColumn : public IntColumn {
     int _offset;
+
 public:
-    OffsetIntColumn(std::string name, std::string description, int offset, int indirect_offset = -1, int extra_offset = -1)
-        : IntColumn(name, description, indirect_offset, extra_offset), _offset(offset) {}
+    OffsetIntColumn(std::string name, std::string description, int offset,
+                    int indirect_offset = -1, int extra_offset = -1)
+        : IntColumn(name, description, indirect_offset, extra_offset)
+        , _offset(offset) {}
     int32_t getValue(void *data, Query *) override;
+
 protected:
     int offset() { return _offset; }
 };
 
-#endif // OffsetIntColumn_h
+#endif  // OffsetIntColumn_h

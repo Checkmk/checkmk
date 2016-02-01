@@ -29,12 +29,10 @@
 #include <stdint.h>
 #include "AndingFilter.h"
 
-
-class OringFilter : public AndingFilter
-{
+class OringFilter : public AndingFilter {
 public:
     bool accepts(void *data);
     bool optimizeBitmask(const char *columnname, uint32_t *mask);
 };
 
-#endif // OringFilter_h
+#endif  // OringFilter_h

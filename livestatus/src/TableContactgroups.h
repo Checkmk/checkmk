@@ -30,15 +30,14 @@
 #include "Table.h"
 class Query;
 
-
-class TableContactgroups : public Table
-{
+class TableContactgroups : public Table {
 public:
     TableContactgroups();
     const char *name() { return "contactgroups"; }
     void *findObject(char *objectspec);
     void answerQuery(Query *query);
-    static void addColumns(Table *table, std::string prefix, int indirect_offset);
+    static void addColumns(Table *table, std::string prefix,
+                           int indirect_offset);
 };
 
-#endif // TableContactgroups_h
+#endif  // TableContactgroups_h

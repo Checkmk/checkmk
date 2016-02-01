@@ -22,15 +22,13 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #include "logging.h"
-#include <cstdio>
-#include <cstdarg>
-#include <string>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <windows.h>
-
+#include <cstdarg>
+#include <cstdio>
+#include <string>
 
 extern bool verbose_mode;
 extern char g_crash_log[256];
@@ -43,11 +41,8 @@ extern HANDLE g_crashlogMutex;
 HANDLE g_connectionlog_file = INVALID_HANDLE_VALUE;
 struct timeval g_crashlog_start;
 
-
-void verbose(const char *format, ...)
-{
-    if (!verbose_mode)
-        return;
+void verbose(const char *format, ...) {
+    if (!verbose_mode) return;
 
     va_list ap;
     va_start(ap, format);
@@ -58,7 +53,6 @@ void verbose(const char *format, ...)
     fflush(stdout);
 }
 
-
 // .-----------------------------------------------------------------------.
 // |       ____               _       ____       _                         |
 // |      / ___|_ __ __ _ ___| |__   |  _ \  ___| |__  _   _  __ _         |
@@ -68,30 +62,32 @@ void verbose(const char *format, ...)
 // |                                                         |___/         |
 // '-----------------------------------------------------------------------'
 
-void open_crash_log(const std::string &log_directory)
-{
+void open_crash_log(const std::string &log_directory) {
     struct stat buf;
 
     WaitForSingleObject(g_crashlogMutex, INFINITE);
 
-    snprintf(g_crash_log, sizeof(g_crash_log), "%s\\crash.log", log_directory.c_str());
-    snprintf(g_connection_log, sizeof(g_connection_log), "%s\\connection.log", log_directory.c_str());
-    snprintf(g_success_log, sizeof(g_success_log), "%s\\success.log", log_directory.c_str());
+    snprintf(g_crash_log, sizeof(g_crash_log), "%s\\crash.log",
+             log_directory.c_str());
+    snprintf(g_connection_log, sizeof(g_connection_log), "%s\\connection.log",
+             log_directory.c_str());
+    snprintf(g_success_log, sizeof(g_success_log), "%s\\success.log",
+             log_directory.c_str());
 
     // rename left over log if exists (means crash found)
     if (0 == stat(g_connection_log, &buf)) {
         // rotate to up to 9 crash log files
         char rotate_path_from[256];
         char rotate_path_to[256];
-        for (int i=9; i>=1; i--) {
-            snprintf(rotate_path_to, sizeof(rotate_path_to),
-                    "%s\\crash-%d.log", log_directory.c_str(), i);
-            if (i>1)
+        for (int i = 9; i >= 1; i--) {
+            snprintf(rotate_path_to, sizeof(rotate_path_to), "%s\\crash-%d.log",
+                     log_directory.c_str(), i);
+            if (i > 1)
                 snprintf(rotate_path_from, sizeof(rotate_path_from),
-                        "%s\\crash-%d.log", log_directory.c_str(), i-1);
+                         "%s\\crash-%d.log", log_directory.c_str(), i - 1);
             else
                 snprintf(rotate_path_from, sizeof(rotate_path_from),
-                        "%s\\crash.log", log_directory.c_str());
+                         "%s\\crash.log", log_directory.c_str());
             unlink(rotate_path_to);
             rename(rotate_path_from, rotate_path_to);
         }
@@ -101,12 +97,12 @@ void open_crash_log(const std::string &log_directory)
 
     // Threads are not allowed to access the crash_log
     g_connectionlog_file = CreateFile(TEXT(g_connection_log),
-        GENERIC_WRITE,            // open for writing
-        FILE_SHARE_READ,          // do not share
-        NULL,                     // no security
-        CREATE_ALWAYS,            // existing file only
-        FILE_ATTRIBUTE_NORMAL,    // normal file
-        NULL);
+                                      GENERIC_WRITE,    // open for writing
+                                      FILE_SHARE_READ,  // do not share
+                                      NULL,             // no security
+                                      CREATE_ALWAYS,    // existing file only
+                                      FILE_ATTRIBUTE_NORMAL,  // normal file
+                                      NULL);
     gettimeofday(&g_crashlog_start, 0);
     time_t now = time(0);
     struct tm *t = localtime(&now);
@@ -116,8 +112,7 @@ void open_crash_log(const std::string &log_directory)
     ReleaseMutex(g_crashlogMutex);
 }
 
-void close_crash_log()
-{
+void close_crash_log() {
     if (g_connectionlog_file) {
         WaitForSingleObject(g_crashlogMutex, INFINITE);
         crash_log("Closing crash log (no crash this time)");
@@ -129,8 +124,7 @@ void close_crash_log()
     }
 }
 
-void crash_log(const char *format, ...)
-{
+void crash_log(const char *format, ...) {
     WaitForSingleObject(g_crashlogMutex, INFINITE);
     struct timeval tv;
 
@@ -138,16 +132,18 @@ void crash_log(const char *format, ...)
     if (g_connectionlog_file != INVALID_HANDLE_VALUE) {
         gettimeofday(&tv, 0);
         long int ellapsed_usec = tv.tv_usec - g_crashlog_start.tv_usec;
-        long int ellapsed_sec  = tv.tv_sec - g_crashlog_start.tv_sec;
+        long int ellapsed_sec = tv.tv_sec - g_crashlog_start.tv_sec;
         if (ellapsed_usec < 0) {
             ellapsed_usec += 1000000;
-            ellapsed_sec --;
+            ellapsed_sec--;
         }
 
         DWORD dwBytesWritten = 0;
-        snprintf(buffer, sizeof(buffer), "%ld.%06ld ", ellapsed_sec, ellapsed_usec);
+        snprintf(buffer, sizeof(buffer), "%ld.%06ld ", ellapsed_sec,
+                 ellapsed_usec);
         DWORD dwBytesToWrite = (DWORD)strlen(buffer);
-        WriteFile(g_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten, NULL);
+        WriteFile(g_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten,
+                  NULL);
 
         va_list ap;
         va_start(ap, format);
@@ -155,11 +151,11 @@ void crash_log(const char *format, ...)
         va_end(ap);
 
         dwBytesToWrite = (DWORD)strlen(buffer);
-        WriteFile(g_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten, NULL);
+        WriteFile(g_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten,
+                  NULL);
 
         WriteFile(g_connectionlog_file, "\r\n", 2, &dwBytesWritten, NULL);
         FlushFileBuffers(g_connectionlog_file);
     }
     ReleaseMutex(g_crashlogMutex);
 }
-

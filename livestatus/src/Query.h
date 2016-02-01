@@ -42,51 +42,48 @@ class OutputBuffer;
 class StatsColumn;
 class Table;
 
-
-#define OUTPUT_FORMAT_CSV    0
-#define OUTPUT_FORMAT_JSON   1
+#define OUTPUT_FORMAT_CSV 0
+#define OUTPUT_FORMAT_JSON 1
 #define OUTPUT_FORMAT_PYTHON 2
 
-#define RESPONSE_HEADER_OFF     0
+#define RESPONSE_HEADER_OFF 0
 #define RESPONSE_HEADER_FIXED16 1
-#define RESPONSE_HEADER_HTTP    2 // not yet implemented
+#define RESPONSE_HEADER_HTTP 2  // not yet implemented
 
-#define ANDOR_OR     0
-#define ANDOR_AND    1
+#define ANDOR_OR 0
+#define ANDOR_AND 1
 #define ANDOR_NEGATE 2
 
-
-class Query
-{
+class Query {
     OutputBuffer *_output;
-    Table        *_table;
-    AndingFilter  _filter;
-    contact      *_auth_user;
-    AndingFilter  _wait_condition;
-    unsigned      _wait_timeout;
+    Table *_table;
+    AndingFilter _filter;
+    contact *_auth_user;
+    AndingFilter _wait_condition;
+    unsigned _wait_timeout;
     struct trigger *_wait_trigger;
-    void         *_wait_object;
-    std::string   _field_separator;
-    std::string   _dataset_separator;
-    std::string   _list_separator;
-    std::string   _host_service_separator;
-    bool          _show_column_headers;
-    bool          _need_ds_separator;
-    int           _output_format;
-    int           _limit;
-    int           _time_limit;
-    time_t        _time_limit_timeout;
-    unsigned      _current_line;
-    int           _timezone_offset;
+    void *_wait_object;
+    std::string _field_separator;
+    std::string _dataset_separator;
+    std::string _list_separator;
+    std::string _host_service_separator;
+    bool _show_column_headers;
+    bool _need_ds_separator;
+    int _output_format;
+    int _limit;
+    int _time_limit;
+    time_t _time_limit_timeout;
+    unsigned _current_line;
+    int _timezone_offset;
 
     // normal queries
     typedef std::vector<Column *> _columns_t;
     _columns_t _columns;
-    _columns_t _dummy_columns; // dynamically allocated. Must delete them.
+    _columns_t _dummy_columns;  // dynamically allocated. Must delete them.
 
     // stats queries
     typedef std::vector<StatsColumn *> _stats_columns_t;
-    _stats_columns_t _stats_columns; // must also delete
+    _stats_columns_t _stats_columns;  // must also delete
     Aggregator **_stats_aggregators;
 
     typedef std::vector<std::string> _stats_group_spec_t;
@@ -103,7 +100,7 @@ public:
     void setDefaultColumns(const char *);
     void addColumn(Column *column);
     void setShowColumnHeaders(bool x) { _show_column_headers = x; }
-    void setError(int error_code, const char * msg);
+    void setError(int error_code, const char *msg);
     bool hasNoColumns();
     contact *authUser() { return _auth_user; }
     void outputDatasetBegin();
@@ -118,7 +115,7 @@ public:
     void outputNull();
     void outputAsciiEscape(char value);
     void outputUnicodeEscape(unsigned value);
-    void outputString(const char *, int size=-1);
+    void outputString(const char *, int size = -1);
     void outputBlob(const char *buffer, int size);
     void outputBeginList();
     void outputListSeparator();
@@ -167,4 +164,4 @@ private:
     Column *createDummyColumn(const char *name);
 };
 
-#endif // Query_h
+#endif  // Query_h

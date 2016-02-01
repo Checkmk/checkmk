@@ -22,14 +22,14 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 /* Methods for specified the path to the pipe of
    mkeventd:
@@ -47,22 +47,18 @@
 
 */
 
-int file_exists(char *path)
-{
+int file_exists(char *path) {
     struct stat st;
     return (0 == stat(path, &st));
 }
 
-
-char *append_str(char *str, char *dest)
-{
+char *append_str(char *str, char *dest) {
     int len = strlen(str);
     memcpy(dest, str, len);
     return dest + len;
 }
 
-char *append_int(long n, char *dest)
-{
+char *append_int(long n, char *dest) {
     static char digits[] = "0123456789";
     char buf[32];
     buf[31] = 0;
@@ -73,13 +69,11 @@ char *append_int(long n, char *dest)
     return append_str(b, dest);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     if (argc < 2) {
         write(2, "Usage: mkevent [-P PIPE] 'Text of the messsage'\n", 48);
         exit(1);
     }
-
 
     char path_to_pipe[256];
     path_to_pipe[0] = 0;
@@ -96,10 +90,10 @@ int main(int argc, char **argv)
         if (omd_root) {
             strncpy(path_to_pipe, omd_root, 128);
             strcat(path_to_pipe, "/tmp/run/mkeventd/events");
-        }
-        else if (!strncmp(argv[0], "/omd/sites/", 11)) {
+        } else if (!strncmp(argv[0], "/omd/sites/", 11)) {
             bzero(path_to_pipe, sizeof(path_to_pipe));
-            strncpy(path_to_pipe, argv[0], strlen(argv[0]) - 11); /* cut off bin/mkevent */
+            strncpy(path_to_pipe, argv[0],
+                    strlen(argv[0]) - 11); /* cut off bin/mkevent */
             strcat(path_to_pipe, "tmp/run/mkeventd/events");
         }
     }
@@ -111,38 +105,35 @@ int main(int argc, char **argv)
     if (argc > 9 && !strcmp(argv[1], "-n")) {
         /* Arguments: -n FACILITY REMOTE STATE HOST SERVICE MESSAGE */
         /* SERVICE is empty for host notification */
-        int facility   = atoi(argv[2]);
-        remote   = argv[3];
-        int state      = atoi(argv[4]);
+        int facility = atoi(argv[2]);
+        remote = argv[3];
+        int state = atoi(argv[4]);
         char *hostname = argv[5];
-        char *service  = argv[6];
-        char *text     = argv[7];
-        char *sl_text  = argv[8];
-        char *contact  = argv[9];
+        char *service = argv[6];
+        char *text = argv[7];
+        char *sl_text = argv[8];
+        char *contact = argv[9];
 
         /* If this is a service and sl/contact is unset then we use
            the values of the host that are coming as arg 10 and 11 */
-        if (sl_text[0] == '$' && argc > 11)
-            sl_text = argv[10];
-        if (contact[0] == '$' && argc > 11)
-            contact = argv[11];
+        if (sl_text[0] == '$' && argc > 11) sl_text = argv[10];
+        if (contact[0] == '$' && argc > 11) contact = argv[11];
 
         int sl = atoi(sl_text);
-        if (contact[0] == '$')
-            contact = "";
+        if (contact[0] == '$') contact = "";
 
         int priority;
         if (state == 0)
             priority = 5;
         else {
             if (!service[0])
-                state += 1; // shift host states in order to map service states
+                state += 1;  // shift host states in order to map service states
             if (state == 1)
-                priority = 4; // warn
+                priority = 4;  // warn
             else if (state == 3)
-                priority = 3; // map UNKNOWN/UNREAD to err
+                priority = 3;  // map UNKNOWN/UNREAD to err
             else
-                priority = 2; // CRIT/DOWN goes to crit
+                priority = 2;  // CRIT/DOWN goes to crit
         }
 
         char *w = message;
@@ -160,12 +151,11 @@ int main(int argc, char **argv)
         w = append_str(hostname, w);
         *w++ = ' ';
         w = append_str(service[0] ? service : "HOST", w);
-        *w ++ = ':';
-        *w ++ = ' ';
+        *w++ = ':';
+        *w++ = ' ';
         w = append_str(text, w);
         *w = 0;
-    }
-    else {
+    } else {
         strncpy(message, argv[1], sizeof(message));
     }
 
@@ -174,20 +164,23 @@ int main(int argc, char **argv)
     int fd;
     if (!file_exists(path_to_pipe) && remote[0]) {
         if (!isdigit(remote[0])) {
-            write(1, "ERROR: Please specify the remote host as IPv4 address, not '", 60);
+            write(
+                1,
+                "ERROR: Please specify the remote host as IPv4 address, not '",
+                60);
             write(1, remote, strlen(remote));
             write(1, "'\n", 2);
             exit(1);
         }
         fd = socket(AF_INET, SOCK_DGRAM, 0);
         struct sockaddr_in servaddr;
-        bzero(&servaddr,sizeof(servaddr));
+        bzero(&servaddr, sizeof(servaddr));
         servaddr.sin_family = AF_INET;
         servaddr.sin_addr.s_addr = inet_addr(remote);
         servaddr.sin_port = htons(514);
-        sendto(fd, message, strlen(message), 0, (struct sockaddr *)&servaddr,sizeof(servaddr));
-    }
-    else {
+        sendto(fd, message, strlen(message), 0, (struct sockaddr *)&servaddr,
+               sizeof(servaddr));
+    } else {
         fd = open(path_to_pipe, O_WRONLY);
         if (fd < 0) {
             strcpy(message, "Cannot open event pipe ");
@@ -201,4 +194,3 @@ int main(int argc, char **argv)
     close(fd);
     return 0;
 }
-

@@ -35,8 +35,7 @@ static pid_t g_pid = 0;
 static int g_timeout = 0;
 static int g_signum = SIGTERM;
 
-static void out(const char *buf)
-{
+static void out(const char *buf) {
     size_t bytes_to_write = strlen(buf);
     while (bytes_to_write > 0) {
         ssize_t written = write(STDERR_FILENO, buf, bytes_to_write);
@@ -49,8 +48,7 @@ static void out(const char *buf)
     }
 }
 
-static void exit_with(const char *message, int err, int status)
-{
+static void exit_with(const char *message, int err, int status) {
     out(message);
     if (err != 0) {
         out(": ");
@@ -60,8 +58,7 @@ static void exit_with(const char *message, int err, int status)
     exit(status);
 }
 
-static void version()
-{
+static void version() {
     exit_with(
         "waitmax version 1.1\n"
         "Copyright Mathias Kettner 2008\n"
@@ -72,8 +69,7 @@ static void version()
         0, 0);
 }
 
-static void usage(int status)
-{
+static void usage(int status) {
     exit_with(
         "Usage: waitmax [-s SIGNUM] MAXTIME PROGRAM [ARGS...]\n"
         "\n"
@@ -87,8 +83,7 @@ static void usage(int status)
         0, status);
 }
 
-static void kill_group(pid_t pid, int signum)
-{
+static void kill_group(pid_t pid, int signum) {
     /* The child might have become a process group leader itself, so send the
        signal directly to it. */
     kill(pid, signum);
@@ -100,8 +95,7 @@ static void kill_group(pid_t pid, int signum)
     kill(0, signum);
 }
 
-static void signalhandler(int signum)
-{
+static void signalhandler(int signum) {
     if (signum == SIGALRM) {
         /* The child took too long, so remember that we timed out and send the
            configured signal instead of SIGALRM. */
@@ -119,8 +113,7 @@ static void signalhandler(int signum)
     if (signum != SIGKILL && signum != SIGCONT) kill_group(g_pid, SIGCONT);
 }
 
-static void setup_signal_handlers()
-{
+static void setup_signal_handlers() {
     struct sigaction sa;
     sigemptyset(&sa.sa_mask);
     sa.sa_handler = signalhandler;
@@ -142,8 +135,7 @@ static void setup_signal_handlers()
     sigaction(SIGCHLD, &sa, NULL);
 }
 
-static void unblock_signal(int signum)
-{
+static void unblock_signal(int signum) {
     sigset_t signals_to_unblock;
     sigemptyset(&signals_to_unblock);
     sigaddset(&signals_to_unblock, signum);
@@ -156,16 +148,19 @@ static struct option long_options[] = {{"version", no_argument, 0, 'V'},
                                        {"signal", required_argument, 0, 's'},
                                        {0, 0, 0, 0}};
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     /* Note: setenv calls malloc, and 'diet' warns about that. */
     if (getenv("POSIXLY_CORRECT") == NULL) putenv("POSIXLY_CORRECT=true");
     int ret;
     while ((ret = getopt_long(argc, argv, "Vhs:", long_options, NULL)) != -1) {
         switch (ret) {
-            case 'V': version(); break;
+            case 'V':
+                version();
+                break;
 
-            case 'h': usage(0); break;
+            case 'h':
+                usage(0);
+                break;
 
             case 's':
                 g_signum = atoi(optarg);
@@ -173,7 +168,9 @@ int main(int argc, char **argv)
                     exit_with("Signalnumber must be between 1 and 32.", 0, 1);
                 break;
 
-            default: usage(1); break;
+            default:
+                usage(1);
+                break;
         }
     }
 

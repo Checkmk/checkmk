@@ -30,14 +30,13 @@
 #include "Table.h"
 class Query;
 
-
-class TableTimeperiods : public Table
-{
+class TableTimeperiods : public Table {
 public:
     TableTimeperiods();
     const char *name() { return "timeperiods"; }
     void answerQuery(Query *query);
-    static void addColumns(Table *table, std::string prefix, int indirect_offset);
+    static void addColumns(Table *table, std::string prefix,
+                           int indirect_offset);
 };
 
-#endif // TableTimeperiods_h
+#endif  // TableTimeperiods_h

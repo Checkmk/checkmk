@@ -22,18 +22,15 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #include "Thread.h"
-#include "stringutil.h"
 #include <windows.h>
 #include <stdexcept>
+#include "stringutil.h"
 
+extern void crash_log(const char *format, ...)
+    __attribute__((format(gnu_printf, 1, 2)));
 
-extern void crash_log(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
-
-
-Thread::~Thread()
-{
+Thread::~Thread() {
     if (_thread_handle != INVALID_HANDLE_VALUE) {
         DWORD exitCode;
         ::GetExitCodeThread(_thread_handle, &exitCode);
@@ -45,9 +42,7 @@ Thread::~Thread()
     }
 }
 
-
-int Thread::join() const
-{
+int Thread::join() const {
     if (_thread_handle == INVALID_HANDLE_VALUE) {
         throw std::runtime_error("thread not started");
     }
@@ -61,9 +56,7 @@ int Thread::join() const
     return static_cast<int>(exitCode);
 }
 
-
-void Thread::start()
-{
+void Thread::start() {
     if (wasStarted()) {
         throw std::runtime_error("thread already started");
     }
@@ -73,8 +66,6 @@ void Thread::start()
     }
 }
 
-
-bool Thread::wasStarted() const
-{
+bool Thread::wasStarted() const {
     return _thread_handle != INVALID_HANDLE_VALUE;
 }

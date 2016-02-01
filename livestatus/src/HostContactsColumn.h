@@ -30,14 +30,14 @@
 #include "Column.h"
 #include "ContactsColumn.h"
 
-
-class HostContactsColumn : public ContactsColumn
-{
+class HostContactsColumn : public ContactsColumn {
 public:
-    HostContactsColumn(std::string name, std::string description, int indirect_offset, int extra_offset = -1)
-        : ContactsColumn(name, description, indirect_offset, extra_offset = -1) {}
+    HostContactsColumn(std::string name, std::string description,
+                       int indirect_offset, int extra_offset = -1)
+        : ContactsColumn(name, description, indirect_offset,
+                         extra_offset = -1) {}
     int type() override { return COLTYPE_LIST; }
     bool isNagiosMember(void *data, void *member) override;
 };
 
-#endif // HostContactsColumn_h
+#endif  // HostContactsColumn_h

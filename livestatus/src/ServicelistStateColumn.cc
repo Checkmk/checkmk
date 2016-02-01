@@ -26,30 +26,31 @@
 #include "Query.h"
 #include "TableServices.h"
 
-
 extern TableServices *g_table_services;
 
-
 // return true if state1 is worse than state2
-bool ServicelistStateColumn::svcStateIsWorse(int32_t state1, int32_t state2)
-{
-    if (state1 == 0) return false;        // OK is worse than nothing
-    else if (state2 == 0) return true;    // everything else is worse then OK
-    else if (state2 == 2) return false;   // nothing is worse than CRIT
-    else if (state1 == 2) return true;    // state1 is CRIT, state2 not
-    else return (state1 > state2);        // both or WARN or UNKNOWN
+bool ServicelistStateColumn::svcStateIsWorse(int32_t state1, int32_t state2) {
+    if (state1 == 0)
+        return false;  // OK is worse than nothing
+    else if (state2 == 0)
+        return true;  // everything else is worse then OK
+    else if (state2 == 2)
+        return false;  // nothing is worse than CRIT
+    else if (state1 == 2)
+        return true;  // state1 is CRIT, state2 not
+    else
+        return (state1 > state2);  // both or WARN or UNKNOWN
 }
 
-servicesmember *ServicelistStateColumn::getMembers(void *data)
-{
+servicesmember *ServicelistStateColumn::getMembers(void *data) {
     data = shiftPointer(data);
     if (!data) return 0;
 
     return *(servicesmember **)((char *)data + _offset);
 }
 
-int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem, Query *query)
-{
+int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem,
+                                         Query *query) {
     contact *auth_user = query->authUser();
     int32_t result = 0;
 
@@ -62,27 +63,23 @@ int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem, Que
             if (logictype >= 60) {
                 state = svc->last_hard_state;
                 lt -= 64;
-            }
-            else
+            } else
                 state = svc->current_state;
 
             has_been_checked = svc->has_been_checked;
 
             switch (lt) {
                 case SLSC_WORST_STATE:
-                    if (svcStateIsWorse(state, result))
-                        result = state;
+                    if (svcStateIsWorse(state, result)) result = state;
                     break;
                 case SLSC_NUM:
                     result++;
                     break;
                 case SLSC_NUM_PENDING:
-                    if (!has_been_checked)
-                        result++;
+                    if (!has_been_checked) result++;
                     break;
                 default:
-                    if (has_been_checked && state == lt)
-                        result++;
+                    if (has_been_checked && state == lt) result++;
                     break;
             }
         }
@@ -91,9 +88,7 @@ int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem, Que
     return result;
 }
 
-
-int32_t ServicelistStateColumn::getValue(void *data, Query *query)
-{
+int32_t ServicelistStateColumn::getValue(void *data, Query *query) {
     servicesmember *mem = getMembers(data);
     return getValue(_logictype, mem, query);
 }

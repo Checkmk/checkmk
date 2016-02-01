@@ -26,9 +26,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-
-void Filter::setError(unsigned code, const char *format, ...)
-{
+void Filter::setError(unsigned code, const char *format, ...) {
     char buffer[8192];
     va_list ap;
     va_start(ap, format);

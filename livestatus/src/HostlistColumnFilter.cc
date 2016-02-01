@@ -29,9 +29,7 @@
 #include "nagios.h"
 #include "opids.h"
 
-
-bool HostlistColumnFilter::accepts(void *data)
-{
+bool HostlistColumnFilter::accepts(void *data) {
     // data points to a primary data object. We need to extract
     // a pointer to a host list
     hostsmember *mem = _hostlist_column->getMembers(data);
@@ -43,8 +41,7 @@ bool HostlistColumnFilter::accepts(void *data)
     bool is_member = false;
     while (mem) {
         char *host_name = mem->host_name;
-        if (!host_name)
-            host_name = mem->host_ptr->name;
+        if (!host_name) host_name = mem->host_ptr->name;
 
         if (host_name == _ref_value) {
             is_member = true;
@@ -58,7 +55,9 @@ bool HostlistColumnFilter::accepts(void *data)
         case OP_LESS:
             return !is_member;
         default:
-            logger(LG_INFO, "Sorry, Operator %s for host lists lists not implemented.", op_names_plus_8[_opid]);
+            logger(LG_INFO,
+                   "Sorry, Operator %s for host lists lists not implemented.",
+                   op_names_plus_8[_opid]);
             return true;
     }
 }

@@ -29,13 +29,11 @@
 #include "Table.h"
 class Query;
 
-
-class TableStatus : public Table
-{
+class TableStatus : public Table {
 public:
     TableStatus();
     const char *name() { return "status"; }
     void answerQuery(Query *query);
 };
 
-#endif // TableStatus_h
+#endif  // TableStatus_h

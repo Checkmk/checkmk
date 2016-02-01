@@ -30,22 +30,23 @@
 #include "StringColumn.h"
 class TableColumns;
 
-
 #define COLCOL_TABLE 1
-#define COLCOL_NAME  2
+#define COLCOL_NAME 2
 #define COLCOL_DESCR 3
-#define COLCOL_TYPE  4
+#define COLCOL_TYPE 4
 
-
-class ColumnsColumn : public StringColumn
-{
+class ColumnsColumn : public StringColumn {
     int _colcol;
     TableColumns *_table_columns;
 
 public:
-    ColumnsColumn(std::string name, std::string description, int colcol, TableColumns *tablecols, int indirect_offset = -1, int extra_offset = -1) :
-        StringColumn(name, description, indirect_offset, extra_offset), _colcol(colcol), _table_columns(tablecols) {}
+    ColumnsColumn(std::string name, std::string description, int colcol,
+                  TableColumns *tablecols, int indirect_offset = -1,
+                  int extra_offset = -1)
+        : StringColumn(name, description, indirect_offset, extra_offset)
+        , _colcol(colcol)
+        , _table_columns(tablecols) {}
     const char *getValue(void *data) override;
 };
 
-#endif // ColumnsColumn_h
+#endif  // ColumnsColumn_h

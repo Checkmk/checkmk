@@ -25,18 +25,18 @@
 #ifndef FixedIntColumn_h
 #define FixedIntColumn_h
 
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 #include "IntColumn.h"
 
 class FixedIntColumn : public IntColumn {
     int32_t _value;
 
 public:
- FixedIntColumn(std::string name, std::string description, int value, int indirect_offset = -1, int extra_offset = -1)
-        : IntColumn(name, description, indirect_offset, extra_offset), _value(value)
-    {
-    }
+    FixedIntColumn(std::string name, std::string description, int value,
+                   int indirect_offset = -1, int extra_offset = -1)
+        : IntColumn(name, description, indirect_offset, extra_offset)
+        , _value(value) {}
     int32_t getValue(void *, Query *) override { return _value; }
 };
 
-#endif // FixedIntColumn_h
+#endif  // FixedIntColumn_h

@@ -31,15 +31,13 @@
 class Column;
 class Query;
 
-
-class Filter
-{
-    std::string _error_message; // Error in constructor
+class Filter {
+    std::string _error_message;  // Error in constructor
     unsigned _error_code;
     Column *_column;
 
 protected:
-    Query *_query; // needed by TimeOffsetFilter (currently)
+    Query *_query;  // needed by TimeOffsetFilter (currently)
     void setError(unsigned code, const char *format, ...);
 
 public:
@@ -59,4 +57,4 @@ public:
     virtual bool optimizeBitmask(const char *, uint32_t *) { return false; }
 };
 
-#endif // Filter_h
+#endif  // Filter_h

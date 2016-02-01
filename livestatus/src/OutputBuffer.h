@@ -31,18 +31,16 @@
 
 #define INITIAL_OUTPUT_BUFFER_SIZE 1
 
-#define RESPONSE_CODE_OK                 200
-#define RESPONSE_CODE_INVALID_HEADER     400
-#define RESPONSE_CODE_UNAUTHORIZED       403
-#define RESPONSE_CODE_NOT_FOUND          404
-#define RESPONSE_CODE_LIMIT_EXCEEDED     413
+#define RESPONSE_CODE_OK 200
+#define RESPONSE_CODE_INVALID_HEADER 400
+#define RESPONSE_CODE_UNAUTHORIZED 403
+#define RESPONSE_CODE_NOT_FOUND 404
+#define RESPONSE_CODE_LIMIT_EXCEEDED 413
 #define RESPONSE_CODE_INCOMPLETE_REQUEST 451
-#define RESPONSE_CODE_INVALID_REQUEST    452
-#define RESPONSE_CODE_UNKNOWN_COLUMN     450
+#define RESPONSE_CODE_INVALID_REQUEST 452
+#define RESPONSE_CODE_UNKNOWN_COLUMN 450
 
-
-class OutputBuffer
-{
+class OutputBuffer {
     char *_buffer;
     char *_writepos;
     char *_end;
@@ -54,8 +52,8 @@ class OutputBuffer
 
     // We use dynamically allocated memory => disable copy/assignment
     // TODO: Just use vector instead of all this manual fiddling...
-    OutputBuffer(const OutputBuffer&);
-    OutputBuffer& operator=(const OutputBuffer&);
+    OutputBuffer(const OutputBuffer &);
+    OutputBuffer &operator=(const OutputBuffer &);
 
 public:
     OutputBuffer();
@@ -79,4 +77,4 @@ private:
     void writeData(int fd, int *, const char *, size_t);
 };
 
-#endif // OutputBuffer_h
+#endif  // OutputBuffer_h

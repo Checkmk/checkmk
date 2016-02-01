@@ -31,9 +31,7 @@
 #include "nagios.h"  // IWYU pragma: keep
 class Query;
 
-
-class TableHostgroups : public Table
-{
+class TableHostgroups : public Table {
 public:
     TableHostgroups();
     const char *name() { return "hostgroups"; }
@@ -43,4 +41,4 @@ public:
     void answerQuery(Query *query);
 };
 
-#endif // TableHostgroups_h
+#endif  // TableHostgroups_h

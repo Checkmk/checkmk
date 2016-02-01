@@ -30,14 +30,15 @@
 #include "OffsetStringMacroColumn.h"
 #include "nagios.h"  // IWYU pragma: keep
 
-
-class OffsetStringHostMacroColumn : public OffsetStringMacroColumn
-{
+class OffsetStringHostMacroColumn : public OffsetStringMacroColumn {
 public:
-    OffsetStringHostMacroColumn(std::string name, std::string description, int offset, int indirect_offset = -1, int extra_offset = -1) :
-        OffsetStringMacroColumn(name, description, offset, indirect_offset, extra_offset) {}
+    OffsetStringHostMacroColumn(std::string name, std::string description,
+                                int offset, int indirect_offset = -1,
+                                int extra_offset = -1)
+        : OffsetStringMacroColumn(name, description, offset, indirect_offset,
+                                  extra_offset) {}
     host *getHost(void *data) override;
     service *getService(void *data) override;
 };
 
-#endif // OffsetStringHostMacroColumn_h
+#endif  // OffsetStringHostMacroColumn_h

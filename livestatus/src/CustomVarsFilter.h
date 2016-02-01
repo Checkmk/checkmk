@@ -31,9 +31,7 @@
 #include "Filter.h"
 class CustomVarsColumn;
 
-
-class CustomVarsFilter : public Filter
-{
+class CustomVarsFilter : public Filter {
     CustomVarsColumn *_column;
     int _opid;
     bool _negate;
@@ -49,4 +47,4 @@ public:
     bool accepts(void *data);
 };
 
-#endif // CustomVarsFilter_h
+#endif  // CustomVarsFilter_h

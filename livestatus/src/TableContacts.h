@@ -30,9 +30,7 @@
 #include "Table.h"
 class Query;
 
-
-class TableContacts : public Table
-{
+class TableContacts : public Table {
 public:
     TableContacts();
     const char *name() { return "contacts"; }
@@ -41,4 +39,4 @@ public:
     void answerQuery(Query *query);
 };
 
-#endif // TableContacts_h
+#endif  // TableContacts_h

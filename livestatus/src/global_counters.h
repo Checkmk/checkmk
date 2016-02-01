@@ -34,23 +34,23 @@ extern "C" {
 #endif
 
 #ifndef EXTERN
-# define EXTERN extern
+#define EXTERN extern
 #endif
 
 typedef uint64_t counter_t;
 
-#define COUNTER_NEB_CALLBACKS        0
-#define COUNTER_REQUESTS             1
-#define COUNTER_CONNECTIONS          2
-#define COUNTER_SERVICE_CHECKS       3
-#define COUNTER_HOST_CHECKS          4
-#define COUNTER_FORKS                5
-#define COUNTER_LOG_MESSAGES         6
-#define COUNTER_COMMANDS             7
-#define COUNTER_LIVECHECKS           8
-#define COUNTER_LIVECHECK_OVERFLOWS  9
-#define COUNTER_OVERFLOWS           10
-#define NUM_COUNTERS                11
+#define COUNTER_NEB_CALLBACKS 0
+#define COUNTER_REQUESTS 1
+#define COUNTER_CONNECTIONS 2
+#define COUNTER_SERVICE_CHECKS 3
+#define COUNTER_HOST_CHECKS 4
+#define COUNTER_FORKS 5
+#define COUNTER_LOG_MESSAGES 6
+#define COUNTER_COMMANDS 7
+#define COUNTER_LIVECHECKS 8
+#define COUNTER_LIVECHECK_OVERFLOWS 9
+#define COUNTER_OVERFLOWS 10
+#define NUM_COUNTERS 11
 
 EXTERN counter_t g_counters[NUM_COUNTERS];
 EXTERN counter_t g_last_counter[NUM_COUNTERS];

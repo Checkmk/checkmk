@@ -29,7 +29,6 @@
 
 using std::string;
 
-
 // Note: If the path is not empty, it always ends with '/', see
 // livestatus_parse_arguments.
 extern char* g_pnp_path;
@@ -47,35 +46,31 @@ string replace_all(const string& str, const string& chars, char replacement) {
 }
 }  // namespace
 
-
-string pnp_cleanup(const string& name)
-{
+string pnp_cleanup(const string& name) {
     return replace_all(name, " /\\:", '_');
 }
-
 
 int pnpgraph_present(const string& host, const string& service) {
     string pnp_path(g_pnp_path);
     if (pnp_path.empty()) return -1;
     string path(pnp_path.append(pnp_cleanup(host))
-                         .append("/")
-                         .append(pnp_cleanup(service))
-                         .append(".xml"));
+                    .append("/")
+                    .append(pnp_cleanup(service))
+                    .append(".xml"));
     return access(path.c_str(), R_OK) == 0 ? 1 : 0;
 }
 
-
 string rrd_path(const string& host, const string& service,
-                     const string& varname) {
+                const string& varname) {
     string pnp_path(g_pnp_path);
     if (pnp_path.empty()) return "";
     string path(pnp_path.append("/")
-                         .append(pnp_cleanup(host))
-                         .append("/")
-                         .append(pnp_cleanup(service))
-                         .append("_")
-                         .append(pnp_cleanup(varname))
-                         .append(".rrd"));
+                    .append(pnp_cleanup(host))
+                    .append("/")
+                    .append(pnp_cleanup(service))
+                    .append("_")
+                    .append(pnp_cleanup(varname))
+                    .append(".rrd"));
     struct stat st;
     return stat(path.c_str(), &st) == 0 ? path : "";
 }

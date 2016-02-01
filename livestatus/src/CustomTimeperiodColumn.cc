@@ -26,24 +26,21 @@
 #include "TimeperiodsCache.h"
 class Query;
 
-
 extern TimeperiodsCache *g_timeperiods_cache;
 
 // Get the name of a timeperiod from a custom variable and
 // lookup the current state of that period
-int32_t CustomTimeperiodColumn::getValue(void *data, Query *)
-{
+int32_t CustomTimeperiodColumn::getValue(void *data, Query *) {
     customvariablesmember *cvm = getCVM(data);
     while (cvm) {
         if (cvm->variable_name == _varname)
             return g_timeperiods_cache->inTimeperiod(cvm->variable_value);
         cvm = cvm->next;
     }
-    return 1; // assume 7X24
+    return 1;  // assume 7X24
 }
 
-customvariablesmember *CustomTimeperiodColumn::getCVM(void *data)
-{
+customvariablesmember *CustomTimeperiodColumn::getCVM(void *data) {
     if (!data) return 0;
     data = shiftPointer(data);
     if (!data) return 0;

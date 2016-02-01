@@ -29,20 +29,15 @@
 
 using std::string;
 
-
-void IntColumn::output(void *data, Query *query)
-{
+void IntColumn::output(void *data, Query *query) {
     query->outputInteger(getValue(data, query));
 }
 
-Filter *IntColumn::createFilter(int operator_id, char *value)
-{
+Filter *IntColumn::createFilter(int operator_id, char *value) {
     return new IntColumnFilter(this, operator_id, value);
 }
 
-
-string IntColumn::valueAsString(void *data, Query *query)
-{
+string IntColumn::valueAsString(void *data, Query *query) {
     char i[16];
     snprintf(i, sizeof(i), "%d", getValue(data, query));
     return i;

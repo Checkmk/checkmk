@@ -31,9 +31,7 @@
 #include "Filter.h"
 class StringColumn;
 
-
-class StringColumnFilter : public Filter
-{
+class StringColumnFilter : public Filter {
     StringColumn *_column;
     std::string _ref_string;
     int _opid;
@@ -47,4 +45,4 @@ public:
     void *indexFilter(const char *column);
 };
 
-#endif // StringColumnFilter_h
+#endif  // StringColumnFilter_h

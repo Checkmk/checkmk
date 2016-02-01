@@ -27,8 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-
 int mk_inventory_last(const char *host);
 int mk_inventory_last_of_all();
 
-#endif // mk_inventory_h
+#endif  // mk_inventory_h

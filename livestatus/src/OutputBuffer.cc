@@ -38,21 +38,15 @@
 
 #define WRITE_TIMEOUT_USEC 100000
 
-OutputBuffer::OutputBuffer()
-  : _max_size(INITIAL_OUTPUT_BUFFER_SIZE)
-{
+OutputBuffer::OutputBuffer() : _max_size(INITIAL_OUTPUT_BUFFER_SIZE) {
     _buffer = static_cast<char *>(malloc(_max_size));
     _end = _buffer + _max_size;
     reset();
 }
 
-OutputBuffer::~OutputBuffer()
-{
-    free(_buffer);
-}
+OutputBuffer::~OutputBuffer() { free(_buffer); }
 
-void OutputBuffer::reset()
-{
+void OutputBuffer::reset() {
     _writepos = _buffer;
     _response_header = RESPONSE_HEADER_OFF;
     _response_code = RESPONSE_CODE_OK;
@@ -60,20 +54,17 @@ void OutputBuffer::reset()
     _error_message = "";
 }
 
-void OutputBuffer::addChar(char c)
-{
+void OutputBuffer::addChar(char c) {
     needSpace(1);
     *_writepos++ = c;
 }
 
-void OutputBuffer::addString(const char *s)
-{
+void OutputBuffer::addString(const char *s) {
     int l = strlen(s);
     addBuffer(s, l);
 }
 
-void OutputBuffer::addBuffer(const char *buf, unsigned len)
-{
+void OutputBuffer::addBuffer(const char *buf, unsigned len) {
     needSpace(len);
     memcpy(_writepos, buf, len);
     _writepos += len;
@@ -81,17 +72,16 @@ void OutputBuffer::addBuffer(const char *buf, unsigned len)
 
 // TODO: All this code is highly error-prone due to overflow, failed allocations
 // etc. We should just use vector instead.
-void OutputBuffer::needSpace(unsigned len)
-{
-    if (_writepos + len > _end)
-    {
+void OutputBuffer::needSpace(unsigned len) {
+    if (_writepos + len > _end) {
         unsigned s = size();
         unsigned needed = s + len;
-        while (_max_size < needed) // double, until enough space
+        while (_max_size < needed)  // double, until enough space
             _max_size *= 2;
 
-        char* new_buffer = static_cast<char*>(realloc(_buffer, _max_size));
-        // It's better to crash voluntarily than overwriting random memory later.
+        char *new_buffer = static_cast<char *>(realloc(_buffer, _max_size));
+        // It's better to crash voluntarily than overwriting random memory
+        // later.
         if (!new_buffer) abort();
 
         _buffer = new_buffer;
@@ -100,17 +90,14 @@ void OutputBuffer::needSpace(unsigned len)
     }
 }
 
-void OutputBuffer::flush(int fd, int *termination_flag)
-{
-    if (_response_header == RESPONSE_HEADER_FIXED16)
-    {
+void OutputBuffer::flush(int fd, int *termination_flag) {
+    if (_response_header == RESPONSE_HEADER_FIXED16) {
         const char *buffer = _buffer;
         int s = size();
 
         // if response code is not OK, output error
         // message instead of data
-        if (_response_code != RESPONSE_CODE_OK)
-        {
+        if (_response_code != RESPONSE_CODE_OK) {
             buffer = _error_message.c_str();
             s = _error_message.size();
         }
@@ -119,17 +106,14 @@ void OutputBuffer::flush(int fd, int *termination_flag)
         snprintf(header, sizeof(header), "%03u %11d\n", _response_code, s);
         writeData(fd, termination_flag, header, 16);
         writeData(fd, termination_flag, buffer, s);
-    }
-    else {
+    } else {
         writeData(fd, termination_flag, _buffer, size());
     }
     reset();
 }
 
-
 void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
-                             size_t bytes_to_write)
-{
+                             size_t bytes_to_write) {
     while (!*termination_flag && bytes_to_write > 0) {
         struct timeval tv;
         tv.tv_sec = WRITE_TIMEOUT_USEC / 1000000;
@@ -154,11 +138,9 @@ void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
     }
 }
 
-void OutputBuffer::setError(unsigned code, const char *format, ...)
-{
+void OutputBuffer::setError(unsigned code, const char *format, ...) {
     // only the first error is being returned
-    if (_error_message == "")
-    {
+    if (_error_message == "") {
         char buffer[8192];
         va_list ap;
         va_start(ap, format);

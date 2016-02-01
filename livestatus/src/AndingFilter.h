@@ -31,9 +31,7 @@
 #include <memory>
 #include "Filter.h"
 
-
-class AndingFilter : public Filter
-{
+class AndingFilter : public Filter {
 public:
     typedef std::deque<Filter *> _subfilters_t;
 
@@ -56,4 +54,4 @@ public:
     bool optimizeBitmask(const char *columnname, uint32_t *mask);
 };
 
-#endif // AndingFilter_h
+#endif  // AndingFilter_h

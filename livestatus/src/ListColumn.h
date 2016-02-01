@@ -30,12 +30,11 @@
 #include "Column.h"
 class Filter;
 
-
-class ListColumn : public Column
-{
+class ListColumn : public Column {
 public:
-    ListColumn(std::string name, std::string description, int indirect_offset, int extra_offset) :
-        Column(name, description, indirect_offset, extra_offset) {}
+    ListColumn(std::string name, std::string description, int indirect_offset,
+               int extra_offset)
+        : Column(name, description, indirect_offset, extra_offset) {}
     int type() override { return COLTYPE_LIST; }
     virtual void *getNagiosObject(char *name) = 0;
     virtual bool isNagiosMember(void *data, void *member) = 0;
@@ -43,4 +42,4 @@ public:
     Filter *createFilter(int opid, char *value) override;
 };
 
-#endif // ListColumn_h
+#endif  // ListColumn_h

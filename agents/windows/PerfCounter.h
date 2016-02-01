@@ -22,21 +22,17 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #ifndef PerfCounter_h
 #define PerfCounter_h
 
-
-#include <vector>
-#include <string>
 #include <windows.h>
-
+#include <string>
+#include <vector>
 
 // Wrapper for a single counter
 // Attention: objects of this type become invalid when
 //   the corresponding PerfCounterObject is destroyed
 class PerfCounter {
-
     friend class PerfCounterObject;
 
     PERF_COUNTER_DEFINITION *_counter;
@@ -46,51 +42,43 @@ class PerfCounter {
                        // the instance-specific data
 
 public:
-
     std::string typeName() const;
-    std::vector<ULONGLONG> values(const std::vector<PERF_INSTANCE_DEFINITION*> &instances) const;
+    std::vector<ULONGLONG> values(
+        const std::vector<PERF_INSTANCE_DEFINITION *> &instances) const;
     DWORD titleIndex() const;
     DWORD offset() const;
 
 private:
-
     PerfCounter(PERF_COUNTER_DEFINITION *counter, BYTE *datablock);
     ULONGLONG extractValue(PERF_COUNTER_BLOCK *block) const;
-
 };
-
 
 // Wrapper to deal with performance counters.
 // Documentation is here:
 // http://msdn.microsoft.com/en-us/library/aa373178(VS.85).aspx
 class PerfCounterObject {
-
     std::vector<BYTE> _buffer;
     PERF_OBJECT_TYPE *_object;
     BYTE *_datablock;
 
 public:
-
     typedef std::vector<std::pair<int, std::string>> CounterList;
 
 public:
-
     PerfCounterObject(unsigned counter_base_number);
 
     bool isEmpty() const;
 
-    std::vector<PERF_INSTANCE_DEFINITION*> instances() const;
+    std::vector<PERF_INSTANCE_DEFINITION *> instances() const;
     std::vector<std::wstring> instanceNames() const;
     std::vector<PerfCounter> counters() const;
 
     static CounterList counter_list(const char *language);
-    static int resolve_counter_name(const char *name, const char *language = NULL);
+    static int resolve_counter_name(const char *name,
+                                    const char *language = NULL);
 
 private:
-
     PERF_OBJECT_TYPE *findObject(DWORD counter_index);
-
 };
 
-#endif // PerfCounter_h
-
+#endif  // PerfCounter_h

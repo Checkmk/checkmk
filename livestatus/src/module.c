@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 // IWYU pragma: no_include <bits/socket_type.h>
+#include "config.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -39,7 +40,6 @@
 #include <time.h>
 #include <unistd.h>
 #include "auth.h"
-#include "config.h"
 #include "data_encoding.h"
 #include "global_counters.h"
 #include "livestatus.h"
@@ -50,15 +50,16 @@
 #include "waittriggers.h"
 
 #ifndef AF_LOCAL
-#define   AF_LOCAL AF_UNIX
+#define AF_LOCAL AF_UNIX
 #endif
 #ifndef PF_LOCAL
-#define   PF_LOCAL PF_UNIX
+#define PF_LOCAL PF_UNIX
 #endif
 
 // usually - but not always - in sys/un.h
 #ifndef SUN_LEN
-# define SUN_LEN(ptr) ((size_t) (((struct sockaddr_un *) 0)->sun_path) + strlen ((ptr)->sun_path))
+#define SUN_LEN(ptr) \
+    ((size_t)(((struct sockaddr_un *)0)->sun_path) + strlen((ptr)->sun_path))
 #endif
 
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
@@ -66,22 +67,24 @@ NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 extern int event_broker_options;
 #else
 extern unsigned long event_broker_options;
-#endif // NAGIOS4
+#endif  // NAGIOS4
 extern int enable_environment_macros;
 extern char *log_file;
 
-int g_idle_timeout_msec = 300 * 1000; /* maximum idle time for connection in keep alive state */
-int g_query_timeout_msec = 10 * 1000;      /* maximum time for reading a query */
+int g_idle_timeout_msec =
+    300 * 1000; /* maximum idle time for connection in keep alive state */
+int g_query_timeout_msec = 10 * 1000; /* maximum time for reading a query */
 
-int g_num_clientthreads = 10;     /* allow 10 concurrent connections per default */
-int g_num_queued_connections = 0;     /* current number of queued connections (for statistics) */
-int g_num_active_connections = 0;     /* current number of active connections (for statistics) */
+int g_num_clientthreads = 10; /* allow 10 concurrent connections per default */
+int g_num_queued_connections =
+    0; /* current number of queued connections (for statistics) */
+int g_num_active_connections =
+    0; /* current number of active connections (for statistics) */
 size_t g_thread_stack_size = 65536; /* stack size of threads */
 extern int g_disable_statehist_filtering;
 
 #define false 0
 #define true 1
-
 
 void *g_nagios_handle;
 int g_unix_socket = -1;
@@ -89,15 +92,16 @@ int g_max_fd_ever = 0;
 char g_socket_path[4096];
 char pnp_path_storage[4096];
 char *g_pnp_path = pnp_path_storage;
-char g_mk_inventory_path[4096]; // base path of Check_MK inventor files
+char g_mk_inventory_path[4096];  // base path of Check_MK inventor files
 char g_logfile_path[4096];
 int g_debug_level = 0;
 int g_should_terminate = false;
 pthread_t g_mainthread_id;
 pthread_t *g_clientthread_id;
 unsigned long g_max_cached_messages = 500000;
-unsigned long g_max_lines_per_logfile = 1000000; // do never read more than that number of lines from a logfile
-unsigned long g_max_response_size = 100 * 1024 * 1024; // limit answer to 10 MB
+unsigned long g_max_lines_per_logfile =
+    1000000;  // do never read more than that number of lines from a logfile
+unsigned long g_max_response_size = 100 * 1024 * 1024;  // limit answer to 10 MB
 int g_thread_running = 0;
 int g_thread_pid = 0;
 int g_service_authorization = AUTH_LOOSE;
@@ -110,43 +114,32 @@ extern struct service *service_list;
 extern scheduled_downtime *scheduled_downtime_list;
 extern int log_initial_states;
 
-
 int g_num_hosts;
 int g_num_services;
 
-
-void count_hosts()
-{
+void count_hosts() {
     g_num_hosts = 0;
     host *h = (host *)host_list;
     while (h) {
-        g_num_hosts ++;
+        g_num_hosts++;
         h = h->next;
     }
 }
 
-void count_services()
-{
+void count_services() {
     g_num_services = 0;
     service *s = (service *)service_list;
     while (s) {
-        g_num_services ++;
+        g_num_services++;
         s = s->next;
     }
 }
 
+void *voidp;
 
+void livestatus_count_fork() { g_counters[COUNTER_FORKS]++; }
 
-void* voidp;
-
-void livestatus_count_fork()
-{
-    g_counters[COUNTER_FORKS]++;
-}
-
-
-void livestatus_cleanup_after_fork()
-{
+void livestatus_cleanup_after_fork() {
     // 4.2.2010: Deactivate the cleanup function. It might cause
     // more trouble than it tries to avoid. It might lead to a deadlock
     // with Nagios' fork()-mechanism...
@@ -166,27 +159,23 @@ void livestatus_cleanup_after_fork()
     // Es sind ja auch Dateideskriptoren offen, die von Threads gehalten
     // werden und nicht mehr in der Queue sind. Und in store_deinit()
     // wird mit mutexes rumgemacht....
-    for (i=3; i < g_max_fd_ever; i++) {
-        if (0 == fstat(i, &st) && S_ISSOCK(st.st_mode))
-        {
+    for (i = 3; i < g_max_fd_ever; i++) {
+        if (0 == fstat(i, &st) && S_ISSOCK(st.st_mode)) {
             close(i);
         }
     }
 }
 
-
-void *main_thread(void *data __attribute__ ((__unused__)))
-{
+void *main_thread(void *data __attribute__((__unused__))) {
     g_thread_pid = getpid();
-    while (!g_should_terminate)
-    {
+    while (!g_should_terminate) {
         do_statistics();
         if (g_thread_pid != getpid()) {
             logger(LG_INFO, "I'm not the main process but %d!", getpid());
             // return;
         }
         struct timeval tv;
-        tv.tv_sec  = 2;
+        tv.tv_sec = 2;
         tv.tv_usec = 500 * 1000;
 
         fd_set fds;
@@ -195,11 +184,11 @@ void *main_thread(void *data __attribute__ ((__unused__)))
         int retval = select(g_unix_socket + 1, &fds, NULL, NULL, &tv);
         if (retval > 0 && FD_ISSET(g_unix_socket, &fds)) {
             int cc = accept(g_unix_socket, NULL, NULL);
-            if (cc > g_max_fd_ever)
-                g_max_fd_ever = cc;
+            if (cc > g_max_fd_ever) g_max_fd_ever = cc;
             if (fcntl(cc, F_SETFD, FD_CLOEXEC) < 0)
-                logger(LG_INFO, "Cannot set FD_CLOEXEC on client socket: %s", strerror(errno));
-            queue_add_connection(cc); // closes fd
+                logger(LG_INFO, "Cannot set FD_CLOEXEC on client socket: %s",
+                       strerror(errno));
+            queue_add_connection(cc);  // closes fd
             g_num_queued_connections++;
             g_counters[COUNTER_CONNECTIONS]++;
         }
@@ -208,8 +197,7 @@ void *main_thread(void *data __attribute__ ((__unused__)))
     return voidp;
 }
 
-void *client_thread(void *data __attribute__ ((__unused__)))
-{
+void *client_thread(void *data __attribute__((__unused__))) {
     void *output_buffer = create_outputbuffer();
 
     while (!g_should_terminate) {
@@ -224,11 +212,12 @@ void *client_thread(void *data __attribute__ ((__unused__)))
             unsigned requestnr = 1;
             while (keepalive) {
                 if (g_debug_level >= 2 && requestnr > 1)
-                    logger(LG_INFO, "Handling request %d on same connection", requestnr);
+                    logger(LG_INFO, "Handling request %d on same connection",
+                           requestnr);
                 keepalive = store_answer_request(input_buffer, output_buffer);
                 flush_output_buffer(output_buffer, cc, &g_should_terminate);
                 g_counters[COUNTER_REQUESTS]++;
-                requestnr ++;
+                requestnr++;
             }
             delete_inputbuffer(input_buffer);
             close(cc);
@@ -239,41 +228,45 @@ void *client_thread(void *data __attribute__ ((__unused__)))
     return voidp;
 }
 
-void start_threads()
-{
+void start_threads() {
     count_hosts();
     count_services();
 
     if (!g_thread_running) {
         /* start thread that listens on socket */
-        pthread_atfork(livestatus_count_fork, NULL, livestatus_cleanup_after_fork);
+        pthread_atfork(livestatus_count_fork, NULL,
+                       livestatus_cleanup_after_fork);
         pthread_create(&g_mainthread_id, 0, main_thread, (void *)0);
         if (g_debug_level > 0)
             logger(LG_INFO, "Starting %d client threads", g_num_clientthreads);
 
         int t;
-        g_clientthread_id = (pthread_t *)malloc(sizeof(pthread_t) * g_num_clientthreads);
+        g_clientthread_id =
+            (pthread_t *)malloc(sizeof(pthread_t) * g_num_clientthreads);
         pthread_attr_t attr;
         pthread_attr_init(&attr);
         size_t defsize;
-        if (g_debug_level >= 2 && 0 == pthread_attr_getstacksize(&attr, &defsize))
+        if (g_debug_level >= 2 &&
+            0 == pthread_attr_getstacksize(&attr, &defsize))
             logger(LG_INFO, "Default stack size is %lu", defsize);
         if (0 != pthread_attr_setstacksize(&attr, g_thread_stack_size))
-            logger(LG_INFO, "Error: Cannot set thread stack size to %lu", g_thread_stack_size);
+            logger(LG_INFO, "Error: Cannot set thread stack size to %lu",
+                   g_thread_stack_size);
         else {
             if (g_debug_level >= 2)
-                logger(LG_INFO, "Setting thread stack size to %lu", g_thread_stack_size);
+                logger(LG_INFO, "Setting thread stack size to %lu",
+                       g_thread_stack_size);
         }
-        for (t=0; t < g_num_clientthreads; t++)
-            pthread_create(&g_clientthread_id[t], &attr, client_thread, (void *)0);
+        for (t = 0; t < g_num_clientthreads; t++)
+            pthread_create(&g_clientthread_id[t], &attr, client_thread,
+                           (void *)0);
 
         g_thread_running = 1;
         pthread_attr_destroy(&attr);
     }
 }
 
-void terminate_threads()
-{
+void terminate_threads() {
     if (g_thread_running) {
         g_should_terminate = true;
         logger(LG_INFO, "Waiting for main to terminate...");
@@ -281,37 +274,36 @@ void terminate_threads()
         logger(LG_INFO, "Waiting for client threads to terminate...");
         queue_wakeup_all();
         int t;
-        for (t=0; t < g_num_clientthreads; t++) {
+        for (t = 0; t < g_num_clientthreads; t++) {
             if (0 != pthread_join(g_clientthread_id[t], NULL))
                 logger(LG_INFO, "Warning: could not join thread no. %d", t);
         }
         if (g_debug_level > 0)
-            logger(LG_INFO, "Main thread + %d client threads have finished", g_num_clientthreads);
+            logger(LG_INFO, "Main thread + %d client threads have finished",
+                   g_num_clientthreads);
         g_thread_running = 0;
         g_should_terminate = false;
     }
     free(g_clientthread_id);
 }
 
-int open_unix_socket()
-{
+int open_unix_socket() {
     struct stat st;
     if (0 == stat(g_socket_path, &st)) {
         if (0 == unlink(g_socket_path)) {
-            logger(LG_DEBUG , "Removed old left over socket file %s", g_socket_path);
-        }
-        else {
+            logger(LG_DEBUG, "Removed old left over socket file %s",
+                   g_socket_path);
+        } else {
             logger(LG_ALERT, "Cannot remove in the way file %s: %s",
-                    g_socket_path, strerror(errno));
+                   g_socket_path, strerror(errno));
             return false;
         }
     }
 
     g_unix_socket = socket(PF_LOCAL, SOCK_STREAM, 0);
     g_max_fd_ever = g_unix_socket;
-    if (g_unix_socket < 0)
-    {
-        logger(LG_CRIT , "Unable to create UNIX socket: %s", strerror(errno));
+    if (g_unix_socket < 0) {
+        logger(LG_CRIT, "Unable to create UNIX socket: %s", strerror(errno));
         return false;
     }
 
@@ -323,23 +315,26 @@ int open_unix_socket()
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_LOCAL;
     strncpy(sockaddr.sun_path, g_socket_path, sizeof(sockaddr.sun_path));
-    if (bind(g_unix_socket, (struct sockaddr *) &sockaddr, SUN_LEN(&sockaddr)) < 0)
-    {
-        logger(LG_ERR , "Unable to bind adress %s to UNIX socket: %s",
-                g_socket_path, strerror(errno));
+    if (bind(g_unix_socket, (struct sockaddr *)&sockaddr, SUN_LEN(&sockaddr)) <
+        0) {
+        logger(LG_ERR, "Unable to bind adress %s to UNIX socket: %s",
+               g_socket_path, strerror(errno));
         close(g_unix_socket);
         return false;
     }
 
-    // Make writable group members (fchmod didn't do nothing for me. Don't know why!)
+    // Make writable group members (fchmod didn't do nothing for me. Don't know
+    // why!)
     if (0 != chmod(g_socket_path, 0660)) {
-        logger(LG_ERR , "Cannot chown unix socket at %s to 0660: %s", g_socket_path, strerror(errno));
+        logger(LG_ERR, "Cannot chown unix socket at %s to 0660: %s",
+               g_socket_path, strerror(errno));
         close(g_unix_socket);
         return false;
     }
 
     if (0 != listen(g_unix_socket, 3 /* backlog */)) {
-        logger(LG_ERR , "Cannot listen to unix socket at %s: %s", g_socket_path, strerror(errno));
+        logger(LG_ERR, "Cannot listen to unix socket at %s: %s", g_socket_path,
+               strerror(errno));
         close(g_unix_socket);
         return false;
     }
@@ -347,11 +342,9 @@ int open_unix_socket()
     if (g_debug_level > 0)
         logger(LG_INFO, "Opened UNIX socket %s\n", g_socket_path);
     return true;
-
 }
 
-void close_unix_socket()
-{
+void close_unix_socket() {
     unlink(g_socket_path);
     if (g_unix_socket >= 0) {
         close(g_unix_socket);
@@ -359,23 +352,20 @@ void close_unix_socket()
     }
 }
 
-int broker_host(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
-{
+int broker_host(int event_type __attribute__((__unused__)),
+                void *data __attribute__((__unused__))) {
     g_counters[COUNTER_NEB_CALLBACKS]++;
     return 0;
 }
 
-
-int broker_check(int event_type, void *data)
-{
+int broker_check(int event_type, void *data) {
     int result = NEB_OK;
     if (event_type == NEBCALLBACK_SERVICE_CHECK_DATA) {
         nebstruct_service_check_data *c = (nebstruct_service_check_data *)data;
         if (c->type == NEBTYPE_SERVICECHECK_PROCESSED) {
             g_counters[COUNTER_SERVICE_CHECKS]++;
         }
-    }
-    else if (event_type == NEBCALLBACK_HOST_CHECK_DATA) {
+    } else if (event_type == NEBCALLBACK_HOST_CHECK_DATA) {
         nebstruct_host_check_data *c = (nebstruct_host_check_data *)data;
         if (c->type == NEBTYPE_HOSTCHECK_PROCESSED) {
             g_counters[COUNTER_HOST_CHECKS]++;
@@ -385,9 +375,7 @@ int broker_check(int event_type, void *data)
     return result;
 }
 
-
-int broker_comment(int event_type __attribute__ ((__unused__)), void *data)
-{
+int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     nebstruct_comment_data *co = (nebstruct_comment_data *)data;
     store_register_comment(co);
     g_counters[COUNTER_NEB_CALLBACKS]++;
@@ -395,8 +383,7 @@ int broker_comment(int event_type __attribute__ ((__unused__)), void *data)
     return 0;
 }
 
-int broker_downtime(int event_type __attribute__ ((__unused__)), void *data)
-{
+int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     nebstruct_downtime_data *dt = (nebstruct_downtime_data *)data;
     store_register_downtime(dt);
     g_counters[COUNTER_NEB_CALLBACKS]++;
@@ -404,18 +391,17 @@ int broker_downtime(int event_type __attribute__ ((__unused__)), void *data)
     return 0;
 }
 
-int broker_log(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
-{
-
+int broker_log(int event_type __attribute__((__unused__)),
+               void *data __attribute__((__unused__))) {
     g_counters[COUNTER_NEB_CALLBACKS]++;
     g_counters[COUNTER_LOG_MESSAGES]++;
     trigger_notify_all(trigger_log());
     return 0;
 }
 
-int broker_command(int event_type __attribute__ ((__unused__)), void *data)
-{
-    nebstruct_external_command_data *sc = (nebstruct_external_command_data *)data;
+int broker_command(int event_type __attribute__((__unused__)), void *data) {
+    nebstruct_external_command_data *sc =
+        (nebstruct_external_command_data *)data;
     if (sc->type == NEBTYPE_EXTERNALCOMMAND_START)
         g_counters[COUNTER_COMMANDS]++;
     g_counters[COUNTER_NEB_CALLBACKS]++;
@@ -423,25 +409,24 @@ int broker_command(int event_type __attribute__ ((__unused__)), void *data)
     return 0;
 }
 
-int broker_state(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
-{
+int broker_state(int event_type __attribute__((__unused__)),
+                 void *data __attribute__((__unused__))) {
     g_counters[COUNTER_NEB_CALLBACKS]++;
     trigger_notify_all(trigger_state());
     return 0;
 }
 
-int broker_program(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
-{
+int broker_program(int event_type __attribute__((__unused__)),
+                   void *data __attribute__((__unused__))) {
     g_counters[COUNTER_NEB_CALLBACKS]++;
     trigger_notify_all(trigger_program());
     return 0;
 }
 
-char* get_downtime_comment(char* host_name, char* svc_desc)
-{
-    char* comment;
+char *get_downtime_comment(char *host_name, char *svc_desc) {
+    char *comment;
     int matches = 0;
-    scheduled_downtime* dt_list = scheduled_downtime_list;
+    scheduled_downtime *dt_list = scheduled_downtime_list;
     while (dt_list != NULL) {
         if (dt_list->type == HOST_DOWNTIME) {
             if (strcmp(dt_list->host_name, host_name) == 0) {
@@ -450,26 +435,28 @@ char* get_downtime_comment(char* host_name, char* svc_desc)
             }
         }
         if (svc_desc != NULL && dt_list->type == SERVICE_DOWNTIME) {
-            if( strcmp(dt_list->host_name, host_name) == 0
-                    && strcmp(dt_list->service_description, svc_desc) == 0) {
+            if (strcmp(dt_list->host_name, host_name) == 0 &&
+                strcmp(dt_list->service_description, svc_desc) == 0) {
                 matches++;
                 comment = dt_list->comment;
             }
         }
         dt_list = dt_list->next;
     }
-    return matches == 0 ? "No comment" : matches > 1 ? "Multiple Downtime Comments" : comment;
+    return matches == 0 ? "No comment"
+                        : matches > 1 ? "Multiple Downtime Comments" : comment;
 }
 
-void livestatus_log_initial_states()
-{
+void livestatus_log_initial_states() {
     // Log DOWNTIME hosts
     host *h = (host *)host_list;
     char buffer[8192];
 
     while (h) {
         if (h->scheduled_downtime_depth > 0) {
-            snprintf(buffer, sizeof(buffer), "HOST DOWNTIME ALERT: %s;STARTED;%s", h->name, get_downtime_comment(h->name, NULL));
+            snprintf(buffer, sizeof(buffer),
+                     "HOST DOWNTIME ALERT: %s;STARTED;%s", h->name,
+                     get_downtime_comment(h->name, NULL));
             write_to_all_logs(buffer, LG_INFO);
         }
         h = h->next;
@@ -478,8 +465,10 @@ void livestatus_log_initial_states()
     service *s = (service *)service_list;
     while (s) {
         if (s->scheduled_downtime_depth > 0) {
-            snprintf(buffer, sizeof(buffer), "SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name, s->description,
-                    get_downtime_comment(s->host_name, s->description));
+            snprintf(buffer, sizeof(buffer),
+                     "SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name,
+                     s->description,
+                     get_downtime_comment(s->host_name, s->description));
             write_to_all_logs(buffer, LG_INFO);
         }
         s = s->next;
@@ -488,27 +477,24 @@ void livestatus_log_initial_states()
     log_timeperiods_cache();
 }
 
-
-int broker_event(int event_type __attribute__ ((__unused__)), void *data)
-{
+int broker_event(int event_type __attribute__((__unused__)), void *data) {
     g_counters[COUNTER_NEB_CALLBACKS]++;
-    struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
-    if (ts->event_type == EVENT_LOG_ROTATION)
-    {
-        if (g_thread_running == 1 )
+    struct nebstruct_timed_event_struct *ts =
+        (struct nebstruct_timed_event_struct *)data;
+    if (ts->event_type == EVENT_LOG_ROTATION) {
+        if (g_thread_running == 1)
             livestatus_log_initial_states();
         else if (log_initial_states == 1)
-            write_to_all_logs("logging initial states", LG_INFO); // initial info during startup
+            write_to_all_logs("logging initial states",
+                              LG_INFO);  // initial info during startup
     }
     update_timeperiods_cache(ts->timestamp.tv_sec);
     return 0;
 }
 
-
-
-int broker_process(int event_type __attribute__ ((__unused__)), void *data)
-{
-    struct nebstruct_process_struct *ps = (struct nebstruct_process_struct *)data;
+int broker_process(int event_type __attribute__((__unused__)), void *data) {
+    struct nebstruct_process_struct *ps =
+        (struct nebstruct_process_struct *)data;
     if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART) {
         update_timeperiods_cache(time(0));
         start_threads();
@@ -516,111 +502,149 @@ int broker_process(int event_type __attribute__ ((__unused__)), void *data)
     return 0;
 }
 
-
-int verify_event_broker_options()
-{
+int verify_event_broker_options() {
     int errors = 0;
     if (!(event_broker_options & BROKER_PROGRAM_STATE)) {
-        logger( LG_CRIT, "need BROKER_PROGRAM_STATE (%i) event_broker_option enabled to work.", BROKER_PROGRAM_STATE );
+        logger(LG_CRIT,
+               "need BROKER_PROGRAM_STATE (%i) event_broker_option enabled to "
+               "work.",
+               BROKER_PROGRAM_STATE);
         errors++;
     }
     if (!(event_broker_options & BROKER_TIMED_EVENTS)) {
-        logger( LG_CRIT, "need BROKER_TIMED_EVENTS (%i) event_broker_option enabled to work.", BROKER_TIMED_EVENTS );
+        logger(LG_CRIT,
+               "need BROKER_TIMED_EVENTS (%i) event_broker_option enabled to "
+               "work.",
+               BROKER_TIMED_EVENTS);
         errors++;
     }
     if (!(event_broker_options & BROKER_SERVICE_CHECKS)) {
-        logger( LG_CRIT, "need BROKER_SERVICE_CHECKS (%i) event_broker_option enabled to work.", BROKER_SERVICE_CHECKS );
+        logger(LG_CRIT,
+               "need BROKER_SERVICE_CHECKS (%i) event_broker_option enabled to "
+               "work.",
+               BROKER_SERVICE_CHECKS);
         errors++;
     }
     if (!(event_broker_options & BROKER_HOST_CHECKS)) {
-        logger( LG_CRIT, "need BROKER_HOST_CHECKS (%i) event_broker_option enabled to work.", BROKER_HOST_CHECKS );
+        logger(
+            LG_CRIT,
+            "need BROKER_HOST_CHECKS (%i) event_broker_option enabled to work.",
+            BROKER_HOST_CHECKS);
         errors++;
     }
     if (!(event_broker_options & BROKER_LOGGED_DATA)) {
-        logger( LG_CRIT, "need BROKER_LOGGED_DATA (%i) event_broker_option enabled to work.", BROKER_LOGGED_DATA );
+        logger(
+            LG_CRIT,
+            "need BROKER_LOGGED_DATA (%i) event_broker_option enabled to work.",
+            BROKER_LOGGED_DATA);
         errors++;
     }
     if (!(event_broker_options & BROKER_COMMENT_DATA)) {
-        logger( LG_CRIT, "need BROKER_COMMENT_DATA (%i) event_broker_option enabled to work.", BROKER_COMMENT_DATA );
+        logger(LG_CRIT,
+               "need BROKER_COMMENT_DATA (%i) event_broker_option enabled to "
+               "work.",
+               BROKER_COMMENT_DATA);
         errors++;
     }
     if (!(event_broker_options & BROKER_DOWNTIME_DATA)) {
-        logger( LG_CRIT, "need BROKER_DOWNTIME_DATA (%i) event_broker_option enabled to work.", BROKER_DOWNTIME_DATA );
+        logger(LG_CRIT,
+               "need BROKER_DOWNTIME_DATA (%i) event_broker_option enabled to "
+               "work.",
+               BROKER_DOWNTIME_DATA);
         errors++;
     }
     if (!(event_broker_options & BROKER_STATUS_DATA)) {
-        logger( LG_CRIT, "need BROKER_STATUS_DATA (%i) event_broker_option enabled to work.", BROKER_STATUS_DATA );
+        logger(
+            LG_CRIT,
+            "need BROKER_STATUS_DATA (%i) event_broker_option enabled to work.",
+            BROKER_STATUS_DATA);
         errors++;
     }
     if (!(event_broker_options & BROKER_ADAPTIVE_DATA)) {
-        logger( LG_CRIT, "need BROKER_ADAPTIVE_DATA (%i) event_broker_option enabled to work.", BROKER_ADAPTIVE_DATA );
+        logger(LG_CRIT,
+               "need BROKER_ADAPTIVE_DATA (%i) event_broker_option enabled to "
+               "work.",
+               BROKER_ADAPTIVE_DATA);
         errors++;
     }
     if (!(event_broker_options & BROKER_EXTERNALCOMMAND_DATA)) {
-        logger( LG_CRIT, "need BROKER_EXTERNALCOMMAND_DATA (%i) event_broker_option enabled to work.", BROKER_EXTERNALCOMMAND_DATA );
+        logger(LG_CRIT,
+               "need BROKER_EXTERNALCOMMAND_DATA (%i) event_broker_option "
+               "enabled to work.",
+               BROKER_EXTERNALCOMMAND_DATA);
         errors++;
     }
     if (!(event_broker_options & BROKER_STATECHANGE_DATA)) {
-        logger( LG_CRIT, "need BROKER_STATECHANGE_DATA (%i) event_broker_option enabled to work.", BROKER_STATECHANGE_DATA );
+        logger(LG_CRIT,
+               "need BROKER_STATECHANGE_DATA (%i) event_broker_option enabled "
+               "to work.",
+               BROKER_STATECHANGE_DATA);
         errors++;
     }
 
     return errors == 0;
 }
 
-void register_callbacks()
-{
-    neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA,      g_nagios_handle, 0, broker_host); // Needed to start threads
-    neb_register_callback(NEBCALLBACK_COMMENT_DATA,          g_nagios_handle, 0, broker_comment); // dynamic data
-    neb_register_callback(NEBCALLBACK_DOWNTIME_DATA,         g_nagios_handle, 0, broker_downtime); // dynamic data
-    neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA,    g_nagios_handle, 0, broker_check); // only for statistics
-    neb_register_callback(NEBCALLBACK_HOST_CHECK_DATA,       g_nagios_handle, 0, broker_check); // only for statistics
-    neb_register_callback(NEBCALLBACK_LOG_DATA,              g_nagios_handle, 0, broker_log); // only for trigger 'log'
-    neb_register_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, g_nagios_handle, 0, broker_command); // only for trigger 'command'
-    neb_register_callback(NEBCALLBACK_STATE_CHANGE_DATA,     g_nagios_handle, 0, broker_state); // only for trigger 'state'
-    neb_register_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, g_nagios_handle, 0, broker_program); // only for trigger 'program'
-    neb_register_callback(NEBCALLBACK_PROCESS_DATA,          g_nagios_handle, 0, broker_process); // used for starting threads
-    neb_register_callback(NEBCALLBACK_TIMED_EVENT_DATA,      g_nagios_handle, 0, broker_event); // used for timeperiods cache
+void register_callbacks() {
+    neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA, g_nagios_handle, 0,
+                          broker_host);  // Needed to start threads
+    neb_register_callback(NEBCALLBACK_COMMENT_DATA, g_nagios_handle, 0,
+                          broker_comment);  // dynamic data
+    neb_register_callback(NEBCALLBACK_DOWNTIME_DATA, g_nagios_handle, 0,
+                          broker_downtime);  // dynamic data
+    neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA, g_nagios_handle, 0,
+                          broker_check);  // only for statistics
+    neb_register_callback(NEBCALLBACK_HOST_CHECK_DATA, g_nagios_handle, 0,
+                          broker_check);  // only for statistics
+    neb_register_callback(NEBCALLBACK_LOG_DATA, g_nagios_handle, 0,
+                          broker_log);  // only for trigger 'log'
+    neb_register_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, g_nagios_handle, 0,
+                          broker_command);  // only for trigger 'command'
+    neb_register_callback(NEBCALLBACK_STATE_CHANGE_DATA, g_nagios_handle, 0,
+                          broker_state);  // only for trigger 'state'
+    neb_register_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, g_nagios_handle, 0,
+                          broker_program);  // only for trigger 'program'
+    neb_register_callback(NEBCALLBACK_PROCESS_DATA, g_nagios_handle, 0,
+                          broker_process);  // used for starting threads
+    neb_register_callback(NEBCALLBACK_TIMED_EVENT_DATA, g_nagios_handle, 0,
+                          broker_event);  // used for timeperiods cache
 }
 
-void deregister_callbacks()
-{
-    neb_deregister_callback(NEBCALLBACK_HOST_STATUS_DATA,      broker_host);
-    neb_deregister_callback(NEBCALLBACK_COMMENT_DATA,          broker_comment);
-    neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA,         broker_downtime);
-    neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA,    broker_check);
-    neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA,       broker_check);
-    neb_deregister_callback(NEBCALLBACK_LOG_DATA,              broker_log);
+void deregister_callbacks() {
+    neb_deregister_callback(NEBCALLBACK_HOST_STATUS_DATA, broker_host);
+    neb_deregister_callback(NEBCALLBACK_COMMENT_DATA, broker_comment);
+    neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA, broker_downtime);
+    neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA, broker_check);
+    neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA, broker_check);
+    neb_deregister_callback(NEBCALLBACK_LOG_DATA, broker_log);
     neb_deregister_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, broker_command);
-    neb_deregister_callback(NEBCALLBACK_STATE_CHANGE_DATA,     broker_state);
+    neb_deregister_callback(NEBCALLBACK_STATE_CHANGE_DATA, broker_state);
     neb_deregister_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, broker_program);
-    neb_deregister_callback(NEBCALLBACK_PROCESS_DATA,          broker_program);
-    neb_deregister_callback(NEBCALLBACK_TIMED_EVENT_DATA,      broker_event);
+    neb_deregister_callback(NEBCALLBACK_PROCESS_DATA, broker_program);
+    neb_deregister_callback(NEBCALLBACK_TIMED_EVENT_DATA, broker_event);
 }
 
-void check_path(const char *name, char *path)
-{
+void check_path(const char *name, char *path) {
     struct stat st;
     if (0 == stat(path, &st)) {
         if (0 != access(path, R_OK)) {
-            logger(LG_ERR, "%s '%s' not readable. Please fix permissions.", name, path);
-            path[0] = 0; // disable
+            logger(LG_ERR, "%s '%s' not readable. Please fix permissions.",
+                   name, path);
+            path[0] = 0;  // disable
         }
-    }
-    else {
+    } else {
         logger(LG_ERR, "%s '%s' not existing!", name, path);
-        path[0] = 0; // disable
+        path[0] = 0;  // disable
     }
 }
 
-
-void livestatus_parse_arguments(const char *args_orig)
-{
+void livestatus_parse_arguments(const char *args_orig) {
     /* set default socket path */
     strncpy(g_socket_path, DEFAULT_SOCKET_PATH, sizeof(g_socket_path));
 
     /* set default path to our logfile to be in the same path as nagios.log */
-    strncpy(g_logfile_path, log_file, sizeof(g_logfile_path) - 16 /* len of "livestatus.log" */);
+    strncpy(g_logfile_path, log_file,
+            sizeof(g_logfile_path) - 16 /* len of "livestatus.log" */);
     char *slash = strrchr(g_logfile_path, '/');
     if (!slash)
         strcpy(g_logfile_path, "/tmp/livestatus.log");
@@ -630,55 +654,55 @@ void livestatus_parse_arguments(const char *args_orig)
     /* there is no default PNP path */
     g_pnp_path[0] = 0;
 
-    if (!args_orig)
-        return; // no arguments, use default options
+    if (!args_orig) return;  // no arguments, use default options
 
     char *args = strdup(args_orig);
     char *token;
-    while (0 != (token = next_field(&args)))
-    {
+    while (0 != (token = next_field(&args))) {
         /* find = */
         char *part = token;
         char *left = next_token(&part, '=');
         char *right = next_token(&part, 0);
         if (!right) {
             strncpy(g_socket_path, left, sizeof(g_socket_path));
-        }
-        else {
+        } else {
             if (!strcmp(left, "debug")) {
                 g_debug_level = atoi(right);
                 logger(LG_INFO, "Setting debug level to %d", g_debug_level);
-            }
-            else if (!strcmp(left, "log_file")) {
+            } else if (!strcmp(left, "log_file")) {
                 strncpy(g_logfile_path, right, sizeof(g_logfile_path));
-            }
-            else if (!strcmp(left, "max_cached_messages")) {
+            } else if (!strcmp(left, "max_cached_messages")) {
                 g_max_cached_messages = strtoul(right, 0, 10);
-                logger(LG_INFO, "Setting max number of cached log messages to %lu", g_max_cached_messages);
-            }
-            else if (!strcmp(left, "max_lines_per_logfile")) {
+                logger(LG_INFO,
+                       "Setting max number of cached log messages to %lu",
+                       g_max_cached_messages);
+            } else if (!strcmp(left, "max_lines_per_logfile")) {
                 g_max_lines_per_logfile = strtoul(right, 0, 10);
-                logger(LG_INFO, "Setting max number lines per logfile to %lu", g_max_lines_per_logfile);
-            }
-            else if (!strcmp(left, "thread_stack_size")) {
+                logger(LG_INFO, "Setting max number lines per logfile to %lu",
+                       g_max_lines_per_logfile);
+            } else if (!strcmp(left, "thread_stack_size")) {
                 g_thread_stack_size = strtoul(right, 0, 10);
-                logger(LG_INFO, "Setting size of thread stacks to %lu", g_thread_stack_size);
-            }
-            else if (!strcmp(left, "max_response_size")) {
+                logger(LG_INFO, "Setting size of thread stacks to %lu",
+                       g_thread_stack_size);
+            } else if (!strcmp(left, "max_response_size")) {
                 g_max_response_size = strtoul(right, 0, 10);
-                logger(LG_INFO, "Setting maximum response size to %lu bytes (%.1f MB)",
-                        g_max_response_size, g_max_response_size / (1024.0*1024.0));
-            }
-            else if (!strcmp(left, "num_client_threads")) {
+                logger(LG_INFO,
+                       "Setting maximum response size to %lu bytes (%.1f MB)",
+                       g_max_response_size,
+                       g_max_response_size / (1024.0 * 1024.0));
+            } else if (!strcmp(left, "num_client_threads")) {
                 int c = atoi(right);
                 if (c <= 0 || c > 1000)
-                    logger(LG_INFO, "Error: Cannot set num_client_threads to %d. Must be > 0 and <= 1000", c);
+                    logger(LG_INFO,
+                           "Error: Cannot set num_client_threads to %d. Must "
+                           "be > 0 and <= 1000",
+                           c);
                 else {
-                    logger(LG_INFO, "Setting number of client threads to %d", c);
+                    logger(LG_INFO, "Setting number of client threads to %d",
+                           c);
                     g_num_clientthreads = c;
                 }
-            }
-            else if (!strcmp(left, "query_timeout")) {
+            } else if (!strcmp(left, "query_timeout")) {
                 int c = atoi(right);
                 if (c < 0)
                     logger(LG_INFO, "Error: query_timeout must be >= 0");
@@ -687,10 +711,11 @@ void livestatus_parse_arguments(const char *args_orig)
                     if (c == 0)
                         logger(LG_INFO, "Disabled query timeout!");
                     else
-                        logger(LG_INFO, "Setting timeout for reading a query to %d ms", c);
+                        logger(LG_INFO,
+                               "Setting timeout for reading a query to %d ms",
+                               c);
                 }
-            }
-            else if (!strcmp(left, "idle_timeout")) {
+            } else if (!strcmp(left, "idle_timeout")) {
                 int c = atoi(right);
                 if (c < 0)
                     logger(LG_INFO, "Error: idle_timeout must be >= 0");
@@ -701,39 +726,44 @@ void livestatus_parse_arguments(const char *args_orig)
                     else
                         logger(LG_INFO, "Setting idle timeout to %d ms", c);
                 }
-            }
-            else if (!strcmp(left, "service_authorization")) {
+            } else if (!strcmp(left, "service_authorization")) {
                 if (!strcmp(right, "strict"))
                     g_service_authorization = AUTH_STRICT;
                 else if (!strcmp(right, "loose"))
                     g_service_authorization = AUTH_LOOSE;
                 else {
-                    logger(LG_INFO, "Invalid service authorization mode. Allowed are strict and loose.");
+                    logger(LG_INFO,
+                           "Invalid service authorization mode. Allowed are "
+                           "strict and loose.");
                 }
-            }
-            else if (!strcmp(left, "group_authorization")) {
+            } else if (!strcmp(left, "group_authorization")) {
                 if (!strcmp(right, "strict"))
                     g_group_authorization = AUTH_STRICT;
                 else if (!strcmp(right, "loose"))
                     g_group_authorization = AUTH_LOOSE;
                 else {
-                    logger(LG_INFO, "Invalid group authorization mode. Allowed are strict and loose.");
+                    logger(LG_INFO,
+                           "Invalid group authorization mode. Allowed are "
+                           "strict and loose.");
                 }
-            }
-            else if (!strcmp(left, "pnp_path")) {
+            } else if (!strcmp(left, "pnp_path")) {
                 strncpy(g_pnp_path, right, sizeof(pnp_path_storage) - 1);
                 // make sure, that trailing slash is always there
                 if (right[strlen(right) - 1] != '/')
-                    strncat(g_pnp_path, "/",  sizeof(pnp_path_storage) - strlen(g_pnp_path) - 1 );
+                    strncat(g_pnp_path, "/",
+                            sizeof(pnp_path_storage) - strlen(g_pnp_path) - 1);
                 check_path("PNP perfdata directory", g_pnp_path);
-            }
-            else if (!strcmp(left, "mk_inventory_path")) {
-                strncpy(g_mk_inventory_path, right, sizeof(g_mk_inventory_path) - 1);
+            } else if (!strcmp(left, "mk_inventory_path")) {
+                strncpy(g_mk_inventory_path, right,
+                        sizeof(g_mk_inventory_path) - 1);
                 if (right[strlen(right) - 1] != '/')
-                    strncat(g_mk_inventory_path, "/",  sizeof(g_mk_inventory_path) - strlen(g_mk_inventory_path) - 1 ); // make sure, that trailing slash is always there
+                    strncat(g_mk_inventory_path, "/",
+                            sizeof(g_mk_inventory_path) -
+                                strlen(g_mk_inventory_path) -
+                                1);  // make sure, that trailing slash is always
+                                     // there
                 check_path("Check_MK Inventory directory", g_mk_inventory_path);
-            }
-            else if (!strcmp(left, "data_encoding")) {
+            } else if (!strcmp(left, "data_encoding")) {
                 if (!strcmp(right, "utf8"))
                     g_data_encoding = ENCODING_UTF8;
                 else if (!strcmp(right, "latin1"))
@@ -741,17 +771,17 @@ void livestatus_parse_arguments(const char *args_orig)
                 else if (!strcmp(right, "mixed"))
                     g_data_encoding = ENCODING_MIXED;
                 else {
-                    logger(LG_INFO, "Invalid data_encoding %s. Allowed are utf8, latin1 and mixed.", right);
+                    logger(LG_INFO,
+                           "Invalid data_encoding %s. Allowed are utf8, latin1 "
+                           "and mixed.",
+                           right);
                 }
-            }
-            else if (!strcmp(left, "livecheck")) {
-                logger(LG_INFO, "Livecheck has been removed from Livestatus. Sorry.");
-            }
-            else if (!strcmp(left, "disable_statehist_filtering"))
-            {
+            } else if (!strcmp(left, "livecheck")) {
+                logger(LG_INFO,
+                       "Livecheck has been removed from Livestatus. Sorry.");
+            } else if (!strcmp(left, "disable_statehist_filtering")) {
                 g_disable_statehist_filtering = atoi(right);
-            }
-            else {
+            } else {
                 logger(LG_INFO, "Ignoring invalid option %s=%s", left, right);
             }
         }
@@ -759,46 +789,49 @@ void livestatus_parse_arguments(const char *args_orig)
     // free(args); won't free, since we use pointers?
 }
 
-void omd_advertize()
-{
+void omd_advertize() {
     char *omd_site = getenv("OMD_SITE");
     if (omd_site) {
         if (g_debug_level > 0)
             logger(LG_INFO, "Running on OMD site %s. Cool.", omd_site);
-    }
-    else {
-        logger(LG_INFO, "Hint: please try out OMD - the Open Monitoring Distribution");
+    } else {
+        logger(LG_INFO,
+               "Hint: please try out OMD - the Open Monitoring Distribution");
         logger(LG_INFO, "Please visit OMD at http://omdistro.org");
     }
 }
 
-
 /* this function gets called when the module is loaded by the event broker */
 /* cppcheck-suppress unusedFunction */
-int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *handle)
-{
+int nebmodule_init(int flags __attribute__((__unused__)), char *args,
+                   void *handle) {
     g_nagios_handle = handle;
     livestatus_parse_arguments(args);
     open_logfile();
 
-    logger(LG_INFO, "Livestatus %s by Mathias Kettner. Socket: '%s'", VERSION, g_socket_path);
+    logger(LG_INFO, "Livestatus %s by Mathias Kettner. Socket: '%s'", VERSION,
+           g_socket_path);
     logger(LG_INFO, "Please visit us at http://mathias-kettner.de/");
 
     omd_advertize();
 
-    if (!open_unix_socket())
-        return 1;
+    if (!open_unix_socket()) return 1;
 
     if (!verify_event_broker_options()) {
         logger(LG_CRIT, "Fatal: bailing out. Please fix event_broker_options.");
-        logger(LG_CRIT, "Hint: your event_broker_options are set to %d. Try setting it to -1.", event_broker_options);
+        logger(LG_CRIT,
+               "Hint: your event_broker_options are set to %d. Try setting it "
+               "to -1.",
+               event_broker_options);
         return 1;
-    }
-    else if (g_debug_level > 0)
-        logger(LG_INFO, "Your event_broker_options are sufficient for livestatus..");
+    } else if (g_debug_level > 0)
+        logger(LG_INFO,
+               "Your event_broker_options are sufficient for livestatus..");
 
     if (enable_environment_macros == 1)
-        logger(LG_INFO, "Warning: environment_macros are enabled. This might decrease the overall nagios performance");
+        logger(LG_INFO,
+               "Warning: environment_macros are enabled. This might decrease "
+               "the overall nagios performance");
 
     store_init();
     register_callbacks();
@@ -809,14 +842,14 @@ int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *han
        thread the first time one of our callbacks is called. Before
        that happens, we haven't got any data anyway... */
 
-    logger(LG_INFO, "Finished initialization. Further log messages go to %s", g_logfile_path);
+    logger(LG_INFO, "Finished initialization. Further log messages go to %s",
+           g_logfile_path);
     return 0;
 }
 
-
 /* cppcheck-suppress unusedFunction */
-int nebmodule_deinit(int flags __attribute__ ((__unused__)), int reason __attribute__ ((__unused__)))
-{
+int nebmodule_deinit(int flags __attribute__((__unused__)),
+                     int reason __attribute__((__unused__))) {
     logger(LG_INFO, "deinitializing");
     terminate_threads();
     close_unix_socket();
@@ -825,4 +858,3 @@ int nebmodule_deinit(int flags __attribute__ ((__unused__)), int reason __attrib
     close_logfile();
     return 0;
 }
-

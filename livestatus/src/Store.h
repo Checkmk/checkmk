@@ -29,7 +29,6 @@
 #include <list>
 #include <map>
 #include <string>
-#include "mk/Mutex.h"
 #include "LogCache.h"
 #include "TableColumns.h"
 #include "TableCommands.h"
@@ -44,32 +43,31 @@
 #include "TableStateHistory.h"
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
+#include "mk/Mutex.h"
 #include "nagios.h"
 class InputBuffer;
 class OutputBuffer;
 class Table;
 
-
-class Store
-{
-    LogCache           _log_cache;
-    TableContacts      _table_contacts;
-    TableCommands      _table_commands;
-    TableHostgroups    _table_hostgroups;
-    TableHosts         _table_hosts;
-    TableHosts         _table_hostsbygroup;
+class Store {
+    LogCache _log_cache;
+    TableContacts _table_contacts;
+    TableCommands _table_commands;
+    TableHostgroups _table_hostgroups;
+    TableHosts _table_hosts;
+    TableHosts _table_hostsbygroup;
     TableServicegroups _table_servicegroups;
-    TableServices      _table_services;
-    TableServices      _table_servicesbygroup;
-    TableServices      _table_servicesbyhostgroup;
-    TableTimeperiods   _table_timeperiods;
+    TableServices _table_services;
+    TableServices _table_servicesbygroup;
+    TableServices _table_servicesbyhostgroup;
+    TableTimeperiods _table_timeperiods;
     TableContactgroups _table_contactgroups;
-    TableDownComm      _table_downtimes;
-    TableDownComm      _table_comments;
-    TableStatus        _table_status;
-    TableLog           _table_log;
-    TableStateHistory  _table_statehistory;
-    TableColumns       _table_columns;
+    TableDownComm _table_downtimes;
+    TableDownComm _table_comments;
+    TableStatus _table_status;
+    TableLog _table_log;
+    TableStateHistory _table_statehistory;
+    TableColumns _table_columns;
 
     typedef std::map<std::string, Table *> _tables_t;
     _tables_t _tables;
@@ -79,7 +77,7 @@ class Store
 public:
     Store();
     ~Store();
-    LogCache* logCache() { return &_log_cache; };
+    LogCache *logCache() { return &_log_cache; };
     void registerHostgroup(hostgroup *);
     void registerComment(nebstruct_comment_data *);
     void registerDowntime(nebstruct_downtime_data *);
@@ -92,4 +90,4 @@ private:
     void answerCommandRequest(const char *);
 };
 
-#endif // Store_h
+#endif  // Store_h

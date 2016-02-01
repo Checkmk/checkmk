@@ -31,11 +31,10 @@
 class Column;
 class Query;
 
-
-class TableColumns : public Table
-{
+class TableColumns : public Table {
     typedef std::vector<Table *> _tables_t;
     _tables_t _tables;
+
 public:
     TableColumns();
     const char *name() { return "columns"; }
@@ -45,4 +44,4 @@ public:
     const char *tableNameOf(Column *column);
 };
 
-#endif // TableColumns_h
+#endif  // TableColumns_h

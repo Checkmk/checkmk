@@ -31,17 +31,18 @@
 #include "IntColumn.h"
 class Query;
 
-
 #define SSIC_PNP_GRAPH_PRESENT 1
 
-class ServiceSpecialIntColumn : public IntColumn
-{
+class ServiceSpecialIntColumn : public IntColumn {
     int _type;
 
 public:
-    ServiceSpecialIntColumn(std::string name, std::string description, int ssic_type, int indirect_offset, int extra_offset = -1)
-        : IntColumn(name, description, indirect_offset, extra_offset) , _type(ssic_type) {}
+    ServiceSpecialIntColumn(std::string name, std::string description,
+                            int ssic_type, int indirect_offset,
+                            int extra_offset = -1)
+        : IntColumn(name, description, indirect_offset, extra_offset)
+        , _type(ssic_type) {}
     int32_t getValue(void *data, Query *) override;
 };
 
-#endif // ServiceSpecialIntColumn_h
+#endif  // ServiceSpecialIntColumn_h

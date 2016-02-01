@@ -22,16 +22,14 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #include <string>
 
 // log messages to stdout if verbose mode is active
-void verbose(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
+void verbose(const char *format, ...) __attribute__((format(gnu_printf, 1, 2)));
 
 // log messages to the crash log file if crash_log is active
-void crash_log(const char *format, ...) __attribute__ ((format (gnu_printf, 1, 2)));
+void crash_log(const char *format, ...)
+    __attribute__((format(gnu_printf, 1, 2)));
 
 void open_crash_log(const std::string &log_directory);
 void close_crash_log();
-
-

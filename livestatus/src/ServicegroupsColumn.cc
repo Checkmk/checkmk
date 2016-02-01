@@ -25,19 +25,15 @@
 #include "ServicegroupsColumn.h"
 #include "Query.h"
 
-
-objectlist *ServicegroupsColumn::getData(void *data)
-{
+objectlist *ServicegroupsColumn::getData(void *data) {
     if (data) {
         data = shiftPointer(data);
-        if (data)
-            return *(objectlist **)((char *)data + _offset);
+        if (data) return *(objectlist **)((char *)data + _offset);
     }
     return 0;
 }
 
-void ServicegroupsColumn::output(void *data, Query *query)
-{
+void ServicegroupsColumn::output(void *data, Query *query) {
     query->outputBeginList();
     objectlist *list = getData(data);
     if (list) {
@@ -55,25 +51,21 @@ void ServicegroupsColumn::output(void *data, Query *query)
     query->outputEndList();
 }
 
-void *ServicegroupsColumn::getNagiosObject(char *name)
-{
+void *ServicegroupsColumn::getNagiosObject(char *name) {
     return find_servicegroup(name);
 }
 
-bool ServicegroupsColumn::isNagiosMember(void *data, void *nagobject)
-{
+bool ServicegroupsColumn::isNagiosMember(void *data, void *nagobject) {
     // data is already shifted
     objectlist *list = *(objectlist **)((char *)data + _offset);
     while (list) {
-        if (list->object_ptr == nagobject)
-            return true;
+        if (list->object_ptr == nagobject) return true;
         list = list->next;
     }
     return false;
 }
 
-bool ServicegroupsColumn::isEmpty(void *data)
-{
+bool ServicegroupsColumn::isEmpty(void *data) {
     objectlist *list = *(objectlist **)((char *)data + _offset);
     return list == 0;
 }

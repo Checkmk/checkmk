@@ -26,9 +26,7 @@
 #include "nagios.h"
 #include "pnp4nagios.h"
 
-
-int32_t ServiceSpecialIntColumn::getValue(void *data, Query *)
-{
+int32_t ServiceSpecialIntColumn::getValue(void *data, Query *) {
     data = shiftPointer(data);
     if (!data) return 0;
 
@@ -37,5 +35,5 @@ int32_t ServiceSpecialIntColumn::getValue(void *data, Query *)
         case SSIC_PNP_GRAPH_PRESENT:
             return pnpgraph_present(svc->host_ptr->name, svc->description);
     }
-    return -1; // never reached
+    return -1;  // never reached
 }

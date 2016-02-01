@@ -36,17 +36,11 @@ using mk::mutex;
 
 extern timeperiod *timeperiod_list;
 
-TimeperiodsCache::TimeperiodsCache()
-{
-    _cache_time = 0;
-}
+TimeperiodsCache::TimeperiodsCache() { _cache_time = 0; }
 
+TimeperiodsCache::~TimeperiodsCache() {}
 
-TimeperiodsCache::~TimeperiodsCache()
-{
-}
-
-void TimeperiodsCache::logCurrentTimeperiods(){
+void TimeperiodsCache::logCurrentTimeperiods() {
     lock_guard<mutex> lg(_cache_lock);
     time_t now = time(0);
     // Loop over all timeperiods and compute if we are
@@ -59,7 +53,7 @@ void TimeperiodsCache::logCurrentTimeperiods(){
         bool is_in = 0 == check_time_against_period(now, tp);
         // check previous state and log transition if state has changed
         _cache_t::iterator it = _cache.find(tp);
-        if (it == _cache.end()) { // first entry
+        if (it == _cache.end()) {  // first entry
             logTransition(tp->name, -1, is_in ? 1 : 0);
             _cache.insert(make_pair(tp, is_in));
         }
@@ -68,8 +62,7 @@ void TimeperiodsCache::logCurrentTimeperiods(){
     }
 }
 
-void TimeperiodsCache::update(time_t now)
-{
+void TimeperiodsCache::update(time_t now) {
     lock_guard<mutex> lg(_cache_lock);
 
     // update cache only once a minute. The timeperiod
@@ -90,11 +83,10 @@ void TimeperiodsCache::update(time_t now)
 
         // check previous state and log transition if state has changed
         _cache_t::iterator it = _cache.find(tp);
-        if (it == _cache.end()) { // first entry
+        if (it == _cache.end()) {  // first entry
             logTransition(tp->name, -1, is_in ? 1 : 0);
             _cache.insert(make_pair(tp, is_in));
-        }
-        else if (it->second != is_in) {
+        } else if (it->second != is_in) {
             logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
             it->second = is_in;
         }
@@ -105,30 +97,30 @@ void TimeperiodsCache::update(time_t now)
     if (num_periods > 0)
         _cache_time = minutes;
     else
-        logger(LG_INFO, "Timeperiod cache not updated, there are no timeperiods (yet)");
+        logger(LG_INFO,
+               "Timeperiod cache not updated, there are no timeperiods (yet)");
 }
 
-bool TimeperiodsCache::inTimeperiod(const char *tpname)
-{
+bool TimeperiodsCache::inTimeperiod(const char *tpname) {
     timeperiod *tp = timeperiod_list;
     while (tp) {
-        if (!strcmp(tpname, tp->name))
-            return inTimeperiod(tp);
+        if (!strcmp(tpname, tp->name)) return inTimeperiod(tp);
         tp = tp->next;
     }
-    return 1; // unknown timeperiod is assumed to be 7X24
+    return 1;  // unknown timeperiod is assumed to be 7X24
 }
 
-
-bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
-{
+bool TimeperiodsCache::inTimeperiod(timeperiod *tp) {
     lock_guard<mutex> lg(_cache_lock);
     _cache_t::iterator it = _cache.find(tp);
     bool is_in;
     if (it != _cache.end())
         is_in = it->second;
     else {
-        logger(LG_INFO, "No timeperiod information available for %s. Assuming out of period.", tp->name);
+        logger(LG_INFO,
+               "No timeperiod information available for %s. Assuming out of "
+               "period.",
+               tp->name);
         is_in = false;
         // Problem: The method check_time_against_period is to a high
         // degree not thread safe. In the current situation Icinga is
@@ -139,10 +131,9 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
     return is_in;
 }
 
-
-void TimeperiodsCache::logTransition(char *name, int from, int to)
-{
+void TimeperiodsCache::logTransition(char *name, int from, int to) {
     char buffer[256];
-    snprintf(buffer, sizeof(buffer), "TIMEPERIOD TRANSITION: %s;%d;%d", name, from, to);
+    snprintf(buffer, sizeof(buffer), "TIMEPERIOD TRANSITION: %s;%d;%d", name,
+             from, to);
     write_to_all_logs(buffer, LOG_INFO);
 }

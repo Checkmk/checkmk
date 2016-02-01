@@ -27,19 +27,16 @@
 #include "Query.h"
 #include "TableHosts.h"
 
-
 extern TableHosts *g_table_hosts;
 
-hostsmember *HostlistColumn::getMembers(void *data)
-{
+hostsmember *HostlistColumn::getMembers(void *data) {
     data = shiftPointer(data);
     if (!data) return 0;
 
     return *(hostsmember **)((char *)data + _offset);
 }
 
-void HostlistColumn::output(void *data, Query *query)
-{
+void HostlistColumn::output(void *data, Query *query) {
     query->outputBeginList();
     contact *auth_user = query->authUser();
     hostsmember *mem = getMembers(data);
@@ -69,7 +66,6 @@ void HostlistColumn::output(void *data, Query *query)
     query->outputEndList();
 }
 
-Filter *HostlistColumn::createFilter(int opid, char *value)
-{
+Filter *HostlistColumn::createFilter(int opid, char *value) {
     return new HostlistColumnFilter(this, opid, value);
 }

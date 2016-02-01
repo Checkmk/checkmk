@@ -25,7 +25,7 @@
 #ifndef strutil_h
 #define strutil_h
 
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,4 +42,4 @@ char *next_field(char **line);
 }
 #endif
 
-#endif // strutil_h
+#endif  // strutil_h

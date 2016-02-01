@@ -26,34 +26,26 @@
 #include <deque>
 #include "Filter.h"
 
-
-bool OringFilter::accepts(void *data)
-{
+bool OringFilter::accepts(void *data) {
     for (_subfilters_t::iterator it = _subfilters.begin();
-            it != _subfilters.end();
-            ++it)
-    {
+         it != _subfilters.end(); ++it) {
         Filter *filter = *it;
-        if (filter->accepts(data))
-            return true;
+        if (filter->accepts(data)) return true;
     }
     return false;
 }
 
-bool OringFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
-{
+bool OringFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
     // We can only optimize, if *all* subfilters are filters for the
     // same column.
     uint32_t m = 0;
 
     for (_subfilters_t::iterator it = _subfilters.begin();
-            it != _subfilters.end();
-            ++it)
-    {
+         it != _subfilters.end(); ++it) {
         Filter *filter = *it;
         uint32_t mm = 0xffffffff;
         if (!filter->optimizeBitmask(columnname, &mm))
-            return false; // wrong column
+            return false;  // wrong column
         m |= mm;
     }
     *mask &= m;

@@ -26,17 +26,13 @@
 #include "Query.h"
 #include "nagios.h"
 
-
 extern contact *contact_list;
 
-
-void *ContactsColumn::getNagiosObject(char *name)
-{
+void *ContactsColumn::getNagiosObject(char *name) {
     return (void *)find_contact(name);
 }
 
-void ContactsColumn::output(void *data, Query *query)
-{
+void ContactsColumn::output(void *data, Query *query) {
     query->outputBeginList();
     data = shiftPointer(data);
 
@@ -58,13 +54,10 @@ void ContactsColumn::output(void *data, Query *query)
     query->outputEndList();
 }
 
-
-bool ContactsColumn::isEmpty(void *svc)
-{
+bool ContactsColumn::isEmpty(void *svc) {
     contact *ct = contact_list;
     while (ct) {
-        if (isNagiosMember(svc, ct))
-            return false;
+        if (isNagiosMember(svc, ct)) return false;
         ct = ct->next;
     }
     return true;

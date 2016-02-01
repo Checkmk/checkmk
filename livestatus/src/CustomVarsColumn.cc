@@ -27,10 +27,7 @@
 #include "CustomVarsFilter.h"
 #include "Query.h"
 
-
-void CustomVarsColumn::output(void *data, Query *query)
-{
-
+void CustomVarsColumn::output(void *data, Query *query) {
     if (_what == CVT_DICT)
         query->outputBeginDict();
     else
@@ -64,39 +61,32 @@ void CustomVarsColumn::output(void *data, Query *query)
         query->outputEndList();
 }
 
-Filter *CustomVarsColumn::createFilter(int opid, char *value)
-{
+Filter *CustomVarsColumn::createFilter(int opid, char *value) {
     return new CustomVarsFilter(this, opid, value);
 }
 
-
-customvariablesmember *CustomVarsColumn::getCVM(void *data)
-{
+customvariablesmember *CustomVarsColumn::getCVM(void *data) {
     if (!data) return 0;
     data = shiftPointer(data);
     if (!data) return 0;
     return *(customvariablesmember **)((char *)data + _offset);
 }
 
-
-bool CustomVarsColumn::contains(void *data, const char *value)
-{
+bool CustomVarsColumn::contains(void *data, const char *value) {
     customvariablesmember *cvm = getCVM(data);
     while (cvm) {
-        char *ref = _what == CVT_VARNAMES ? cvm->variable_name : cvm->variable_value;
-        if (!strcmp(ref, value))
-            return true;
+        char *ref =
+            _what == CVT_VARNAMES ? cvm->variable_name : cvm->variable_value;
+        if (!strcmp(ref, value)) return true;
         cvm = cvm->next;
     }
     return false;
 }
 
-char *CustomVarsColumn::getVariable(void *data, const char *varname)
-{
+char *CustomVarsColumn::getVariable(void *data, const char *varname) {
     customvariablesmember *cvm = getCVM(data);
     while (cvm) {
-        if (!strcmp(cvm->variable_name, varname))
-            return cvm->variable_value;
+        if (!strcmp(cvm->variable_name, varname)) return cvm->variable_value;
         cvm = cvm->next;
     }
     return 0;

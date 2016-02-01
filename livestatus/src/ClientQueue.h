@@ -31,14 +31,14 @@
 #include "mk/ConditionVariable.h"
 #include "mk/Mutex.h"
 
-class ClientQueue
-{
+class ClientQueue {
 public:
     ClientQueue();
     ~ClientQueue();
     void addConnection(int);
     int popConnection();
     void wakeupAll();
+
 private:
     typedef std::deque<int> _queue_t;
     _queue_t _queue;
@@ -46,4 +46,4 @@ private:
     mk::condition_variable _cond;
 };
 
-#endif // ClientQueue_h
+#endif  // ClientQueue_h

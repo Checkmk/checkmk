@@ -32,12 +32,12 @@
 class Filter;
 class Query;
 
-
-class OffsetStringMacroColumn : public OffsetStringColumn
-{
+class OffsetStringMacroColumn : public OffsetStringColumn {
 public:
-    OffsetStringMacroColumn(std::string name, std::string description, int offset, int indirect_offset, int extra_offset) :
-        OffsetStringColumn(name, description, offset, indirect_offset, extra_offset) {}
+    OffsetStringMacroColumn(std::string name, std::string description,
+                            int offset, int indirect_offset, int extra_offset)
+        : OffsetStringColumn(name, description, offset, indirect_offset,
+                             extra_offset) {}
     // reimplement several functions from StringColumn
 
     std::string valueAsString(void *data, Query *) override;
@@ -47,9 +47,11 @@ public:
     // overriden by host and service macro columns
     virtual host *getHost(void *) = 0;
     virtual service *getService(void *) = 0;
+
 private:
     const char *expandMacro(const char *macroname, host *hst, service *svc);
-    const char *expandCustomVariables(const char *varname, customvariablesmember *custvars);
+    const char *expandCustomVariables(const char *varname,
+                                      customvariablesmember *custvars);
 };
 
-#endif // OffsetStringMacroColumn_h
+#endif  // OffsetStringMacroColumn_h

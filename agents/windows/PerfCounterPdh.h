@@ -22,10 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #ifndef PerfCounterPdh_h
 #define PerfCounterPdh_h
-
 
 /**
  *
@@ -34,39 +32,36 @@
  *
  */
 
-
 #define WIN32_LEAN_AND_MEAN
+#include <pdh.h>
 #include <windows.h>
 #include <map>
-#include <vector>
 #include <string>
 #include <utility>
-#include <pdh.h>
-
+#include <vector>
 
 typedef std::vector<std::wstring> StringList;
 
-
 class PerfCounterQuery {
-
     HQUERY _query;
     std::map<std::wstring, HCOUNTER> _counter;
     std::map<std::wstring, int> _perf_name_index;
     std::map<std::wstring, std::wstring> _translation_map;
 
 public:
-
     PerfCounterQuery();
 
     ~PerfCounterQuery();
 
     HCOUNTER addCounter(const std::wstring &path);
 
-    static std::wstring makePath(const std::wstring &object, const std::wstring instance,
-            const std::wstring &counter);
+    static std::wstring makePath(const std::wstring &object,
+                                 const std::wstring instance,
+                                 const std::wstring &counter);
 
     // enumerates all counters for the specified object
-    std::pair<StringList, StringList> enumerateObject(LPCWSTR object_name) const;
+    std::pair<StringList, StringList> enumerateObject(
+        LPCWSTR object_name) const;
 
     StringList enumerateObjects() const;
 
@@ -76,10 +71,6 @@ public:
     std::wstring counterValue(HCOUNTER counter) const;
 
     std::wstring trans(const std::wstring &local_name) const;
-
 };
 
-
-
-#endif // PerfCounterPdh_h
-
+#endif  // PerfCounterPdh_h

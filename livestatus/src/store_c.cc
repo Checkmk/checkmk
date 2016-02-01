@@ -29,20 +29,17 @@
 #include "Store.h"
 #include "TimeperiodsCache.h"
 
-
 Store *g_store = 0;
 ClientQueue *g_client_queue = 0;
 TimeperiodsCache *g_timeperiods_cache = 0;
 
-void store_init()
-{
-        g_store = new Store();
+void store_init() {
+    g_store = new Store();
     g_client_queue = new ClientQueue();
     g_timeperiods_cache = new TimeperiodsCache();
 }
 
-void store_deinit()
-{
+void store_deinit() {
     if (g_store) {
         delete g_store;
         g_store = 0;
@@ -57,67 +54,39 @@ void store_deinit()
     }
 }
 
-void queue_add_connection(int cc)
-{
-    g_client_queue->addConnection(cc);
-}
+void queue_add_connection(int cc) { g_client_queue->addConnection(cc); }
 
-int queue_pop_connection()
-{
-    return g_client_queue->popConnection();
-}
+int queue_pop_connection() { return g_client_queue->popConnection(); }
 
-void queue_wakeup_all()
-{
-    return g_client_queue->wakeupAll();
-}
+void queue_wakeup_all() { return g_client_queue->wakeupAll(); }
 
-
-void store_register_comment(nebstruct_comment_data *d)
-{
+void store_register_comment(nebstruct_comment_data *d) {
     g_store->registerComment(d);
 }
 
-void store_register_downtime(nebstruct_downtime_data *d)
-{
+void store_register_downtime(nebstruct_downtime_data *d) {
     g_store->registerDowntime(d);
 }
 
-int store_answer_request(void *ib, void *ob)
-{
-    return g_store->answerRequest(static_cast<InputBuffer *>(ib), static_cast<OutputBuffer *>(ob));
+int store_answer_request(void *ib, void *ob) {
+    return g_store->answerRequest(static_cast<InputBuffer *>(ib),
+                                  static_cast<OutputBuffer *>(ob));
 }
 
-void *create_outputbuffer()
-{
-    return new OutputBuffer();
-}
+void *create_outputbuffer() { return new OutputBuffer(); }
 
-void flush_output_buffer(void *ob, int fd, int *termination_flag)
-{
+void flush_output_buffer(void *ob, int fd, int *termination_flag) {
     static_cast<OutputBuffer *>(ob)->flush(fd, termination_flag);
 }
 
-void delete_outputbuffer(void *ob)
-{
-    delete static_cast<OutputBuffer *>(ob);
-}
+void delete_outputbuffer(void *ob) { delete static_cast<OutputBuffer *>(ob); }
 
-void *create_inputbuffer(int fd, const int *termination_flag)
-{
+void *create_inputbuffer(int fd, const int *termination_flag) {
     return new InputBuffer(fd, termination_flag);
 }
 
-void delete_inputbuffer(void *ib)
-{
-    delete static_cast<InputBuffer *>(ib);
-}
+void delete_inputbuffer(void *ib) { delete static_cast<InputBuffer *>(ib); }
 
-void update_timeperiods_cache(time_t now)
-{
-    g_timeperiods_cache->update(now);
-}
+void update_timeperiods_cache(time_t now) { g_timeperiods_cache->update(now); }
 
-void log_timeperiods_cache(){
-        g_timeperiods_cache->logCurrentTimeperiods();
-}
+void log_timeperiods_cache() { g_timeperiods_cache->logCurrentTimeperiods(); }

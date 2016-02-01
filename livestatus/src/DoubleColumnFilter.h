@@ -29,9 +29,7 @@
 #include "Filter.h"
 class DoubleColumn;
 
-
-class DoubleColumnFilter : public Filter
-{
+class DoubleColumnFilter : public Filter {
     DoubleColumn *_column;
     double _ref_value;
     int _opid;
@@ -42,4 +40,4 @@ public:
     bool accepts(void *data);
 };
 
-#endif // DoubleColumnFilter_h
+#endif  // DoubleColumnFilter_h

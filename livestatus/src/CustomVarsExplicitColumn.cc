@@ -24,20 +24,16 @@
 
 #include "CustomVarsExplicitColumn.h"
 
-
-const char *CustomVarsExplicitColumn::getValue(void *data)
-{
+const char *CustomVarsExplicitColumn::getValue(void *data) {
     customvariablesmember *cvm = getCVM(data);
     while (cvm) {
-        if (cvm->variable_name == _varname)
-            return cvm->variable_value;
+        if (cvm->variable_name == _varname) return cvm->variable_value;
         cvm = cvm->next;
     }
     return "";
 }
 
-customvariablesmember *CustomVarsExplicitColumn::getCVM(void *data)
-{
+customvariablesmember *CustomVarsExplicitColumn::getCVM(void *data) {
     if (!data) return 0;
     data = shiftPointer(data);
     if (!data) return 0;

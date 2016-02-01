@@ -25,8 +25,7 @@
 #include "HostContactsColumn.h"
 #include "nagios.h"
 
-
-bool HostContactsColumn::isNagiosMember(void *hst, void *ctc)
-{
-    return is_contact_for_host(static_cast<host *>(hst), static_cast<contact *>(ctc));
+bool HostContactsColumn::isNagiosMember(void *hst, void *ctc) {
+    return is_contact_for_host(static_cast<host *>(hst),
+                               static_cast<contact *>(ctc));
 }

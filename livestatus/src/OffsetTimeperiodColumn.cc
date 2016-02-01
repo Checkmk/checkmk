@@ -28,21 +28,17 @@
 
 using std::string;
 
-
 extern TimeperiodsCache *g_timeperiods_cache;
 
+OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description,
+                                               int offset, int indirect_offset,
+                                               int extra_offset)
+    : OffsetIntColumn(name, description, offset, indirect_offset,
+                      extra_offset) {}
 
-OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description, int offset, int indirect_offset, int extra_offset)
-    : OffsetIntColumn(name, description, offset, indirect_offset, extra_offset)
-{
-}
-
-
-int32_t OffsetTimeperiodColumn::getValue(void *data, Query *)
-{
+int32_t OffsetTimeperiodColumn::getValue(void *data, Query *) {
     data = shiftPointer(data);
-    if (!data)
-        return 0;
+    if (!data) return 0;
 
     timeperiod *tp;
     if (offset() == -1)
@@ -50,9 +46,8 @@ int32_t OffsetTimeperiodColumn::getValue(void *data, Query *)
     else
         tp = *(timeperiod **)((char *)data + offset());
 
-
     if (!tp)
-        return 1; // no timeperiod set -> Nagios assumes 7x24
+        return 1;  // no timeperiod set -> Nagios assumes 7x24
     else if (g_timeperiods_cache->inTimeperiod(tp))
         return 1;
     else

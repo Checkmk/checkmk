@@ -37,22 +37,18 @@
 
 using std::string;
 
-
-HostFileColumn::HostFileColumn(string name, string description, const char *base_dir,
-               const char *suffix, int indirect_offset, int extra_offset)
+HostFileColumn::HostFileColumn(string name, string description,
+                               const char *base_dir, const char *suffix,
+                               int indirect_offset, int extra_offset)
     : BlobColumn(name, description, indirect_offset, extra_offset)
     , _base_dir(base_dir)
-    , _suffix(suffix)
-{
-}
+    , _suffix(suffix) {}
 
 // returns a buffer to be freed afterwards!! Return 0
 // in size of a missing file
-char *HostFileColumn::getBlob(void *data, int *size)
-{
+char *HostFileColumn::getBlob(void *data, int *size) {
     *size = 0;
-    if (!_base_dir[0])
-        return 0; // Path is not configured
+    if (!_base_dir[0]) return 0;  // Path is not configured
 
     data = shiftPointer(data);
     if (!data) return 0;
@@ -64,7 +60,8 @@ char *HostFileColumn::getBlob(void *data, int *size)
 #endif
 
     char path[4096];
-    snprintf(path, sizeof(path), "%s/%s%s", _base_dir.c_str(), host_name, _suffix.c_str());
+    snprintf(path, sizeof(path), "%s/%s%s", _base_dir.c_str(), host_name,
+             _suffix.c_str());
     int fd = open(path, O_RDONLY);
     if (fd < 0) {
         return 0;

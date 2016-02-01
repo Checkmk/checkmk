@@ -22,31 +22,24 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #include "OutputProxy.h"
-#include "logging.h"
-#include <cstdarg>
 #include <winsock2.h>
-
+#include <cstdarg>
+#include "logging.h"
 
 // urgh
 extern volatile bool g_should_terminate;
 
+FileOutputProxy::FileOutputProxy(FILE *file) : _file(file) {}
 
-FileOutputProxy::FileOutputProxy(FILE *file)
-    : _file(file)
-{}
-
-void FileOutputProxy::output(const char *format, ...)
-{
+void FileOutputProxy::output(const char *format, ...) {
     va_list ap;
     va_start(ap, format);
     vfprintf(_file, format, ap);
     va_end(ap);
 }
 
-void FileOutputProxy::writeBinary(const char *buffer, size_t size)
-{
+void FileOutputProxy::writeBinary(const char *buffer, size_t size) {
     fwrite(buffer, 1, size, _file);
 }
 
@@ -54,22 +47,14 @@ void FileOutputProxy::flush() {
     // nop
 }
 
-
 BufferedSocketProxy::BufferedSocketProxy(SOCKET socket, size_t buffer_size)
-    : _socket(socket)
-{
+    : _socket(socket) {
     _buffer.resize(buffer_size);
 }
 
+void BufferedSocketProxy::setSocket(SOCKET socket) { _socket = socket; }
 
-void BufferedSocketProxy::setSocket(SOCKET socket)
-{
-    _socket = socket;
-}
-
-
-void BufferedSocketProxy::output(const char *format, ...)
-{
+void BufferedSocketProxy::output(const char *format, ...) {
     va_list ap;
     va_start(ap, format);
 
@@ -91,18 +76,14 @@ void BufferedSocketProxy::output(const char *format, ...)
     _length += written_len;
 }
 
-
-void BufferedSocketProxy::writeBinary(const char *buffer, size_t size)
-{
+void BufferedSocketProxy::writeBinary(const char *buffer, size_t size) {
     if (_buffer.size() - _length >= size) {
         memcpy(&_buffer[0] + _length, buffer, size);
         _length += size;
     }
 }
 
-
-void BufferedSocketProxy::flush()
-{
+void BufferedSocketProxy::flush() {
     int tries = 10;
     while ((_length > 0) && (tries > 0)) {
         --tries;
@@ -118,38 +99,31 @@ void BufferedSocketProxy::flush()
     }
 }
 
-
-bool BufferedSocketProxy::flushInt()
-{
+bool BufferedSocketProxy::flushInt() {
     bool error = false;
     size_t offset = 0;
     while (!g_should_terminate) {
-        ssize_t result = send(_socket, &_buffer[0] + offset, _length - offset, 0);
+        ssize_t result =
+            send(_socket, &_buffer[0] + offset, _length - offset, 0);
         if (result == SOCKET_ERROR) {
             int error = WSAGetLastError();
             if (error == WSAEINTR) {
                 continue;
-            }
-            else if (error == WSAEINPROGRESS) {
+            } else if (error == WSAEINPROGRESS) {
                 continue;
-            }
-            else if (error == WSAEWOULDBLOCK) {
+            } else if (error == WSAEWOULDBLOCK) {
                 verbose("send to socket would block");
                 error = true;
                 break;
-            }
-            else {
-                verbose("send to socket failed with error code %d",
-                        error);
+            } else {
+                verbose("send to socket failed with error code %d", error);
                 error = true;
                 break;
             }
-        }
-        else if (result == 0) {
+        } else if (result == 0) {
             // nothing written, which means the socket-cache is
-            // probably full 
-        }
-        else {
+            // probably full
+        } else {
             offset += result;
         }
 
@@ -163,22 +137,15 @@ bool BufferedSocketProxy::flushInt()
     return !error;
 }
 
-
-EncryptingBufferedSocketProxy::EncryptingBufferedSocketProxy(SOCKET socket,
-        const std::string &passphrase, size_t buffer_size)
-    : BufferedSocketProxy(socket, buffer_size)
-    , _crypto(passphrase)
-{
-
+EncryptingBufferedSocketProxy::EncryptingBufferedSocketProxy(
+    SOCKET socket, const std::string &passphrase, size_t buffer_size)
+    : BufferedSocketProxy(socket, buffer_size), _crypto(passphrase) {
     _blockSize = _crypto.blockSize();
 
     _plain.resize(_blockSize * 8);
 }
 
-
-void EncryptingBufferedSocketProxy::output(const char *format, ...)
-{
-
+void EncryptingBufferedSocketProxy::output(const char *format, ...) {
     va_list ap;
     va_start(ap, format);
 
@@ -198,11 +165,13 @@ void EncryptingBufferedSocketProxy::output(const char *format, ...)
         size_t push_size = (_written / _blockSize) * _blockSize;
         std::vector<char> push_buf(_plain);
 
-        DWORD required_size = _crypto.encrypt(NULL, push_size, push_buf.size(), false);
+        DWORD required_size =
+            _crypto.encrypt(NULL, push_size, push_buf.size(), false);
         if (required_size > push_buf.size()) {
             push_buf.resize(required_size);
         }
-        _crypto.encrypt(reinterpret_cast<BYTE*>(&push_buf[0]), push_size, push_buf.size(), false);
+        _crypto.encrypt(reinterpret_cast<BYTE *>(&push_buf[0]), push_size,
+                        push_buf.size(), false);
         writeBinary(&push_buf[0], required_size);
 
         memmove(&_plain[0], &_plain[push_size], _written - push_size);
@@ -210,16 +179,13 @@ void EncryptingBufferedSocketProxy::output(const char *format, ...)
     }
 }
 
-
-void EncryptingBufferedSocketProxy::flush()
-{
+void EncryptingBufferedSocketProxy::flush() {
     // this assumes the plain buffer is large enouph for one measly block
-    DWORD required_size = _crypto.encrypt(reinterpret_cast<BYTE*>(&(_plain)[0]), _written,
-                                          _plain.size(), true);
+    DWORD required_size = _crypto.encrypt(
+        reinterpret_cast<BYTE *>(&(_plain)[0]), _written, _plain.size(), true);
     writeBinary(&_plain[0], required_size);
 
     _written = 0;
 
     BufferedSocketProxy::flush();
 }
-

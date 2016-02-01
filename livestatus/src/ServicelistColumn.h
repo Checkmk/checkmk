@@ -32,21 +32,26 @@
 class Filter;
 class Query;
 
-
-class ServicelistColumn : public Column
-{
+class ServicelistColumn : public Column {
     int _offset;
     bool _show_host;
     int _info_depth;
+
 public:
-    ServicelistColumn(std::string name, std::string description, int offset, int indirect_offset, bool show_host, int info_depth, int extra_offset = -1)
-        : Column(name, description, indirect_offset, extra_offset), _offset(offset), _show_host(show_host), _info_depth(info_depth) {}
+    ServicelistColumn(std::string name, std::string description, int offset,
+                      int indirect_offset, bool show_host, int info_depth,
+                      int extra_offset = -1)
+        : Column(name, description, indirect_offset, extra_offset)
+        , _offset(offset)
+        , _show_host(show_host)
+        , _info_depth(info_depth) {}
     int type() override { return COLTYPE_LIST; };
     void output(void *, Query *) override;
     Filter *createFilter(int opid, char *value) override;
     servicesmember *getMembers(void *data);
+
 private:
     int inCustomTimeperiod(service *svc, const char *varname);
 };
 
-#endif // ServicelistColumn_h
+#endif  // ServicelistColumn_h

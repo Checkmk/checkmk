@@ -30,18 +30,21 @@
 #include "StringColumn.h"
 #include "nagios.h"
 
-
-class CustomVarsExplicitColumn : public StringColumn
-{
-    int _offset; // within data structure (differs from host/service)
+class CustomVarsExplicitColumn : public StringColumn {
+    int _offset;  // within data structure (differs from host/service)
     std::string _varname;
 
 public:
-    CustomVarsExplicitColumn(std::string name, std::string description, int offset, int indirect_offset, const char *varname, int extra_offset = -1)
-        : StringColumn(name, description, indirect_offset, extra_offset),  _offset(offset), _varname(varname) {}
+    CustomVarsExplicitColumn(std::string name, std::string description,
+                             int offset, int indirect_offset,
+                             const char *varname, int extra_offset = -1)
+        : StringColumn(name, description, indirect_offset, extra_offset)
+        , _offset(offset)
+        , _varname(varname) {}
     const char *getValue(void *data) override;
+
 private:
     customvariablesmember *getCVM(void *data);
 };
 
-#endif // CustomVarsExplicitColumn_h
+#endif  // CustomVarsExplicitColumn_h

@@ -30,18 +30,17 @@
 #include "Filter.h"
 class AttributelistColumn;
 
-
-class AttributelistFilter : public Filter
-{
+class AttributelistFilter : public Filter {
     AttributelistColumn *_column;
     int _opid;
     bool _negate;
     unsigned long _ref;
 
 public:
-    AttributelistFilter(AttributelistColumn *column, int opid, unsigned long ref) :
-        _column(column), _opid(abs(opid)), _negate(opid < 0), _ref(ref) {}
+    AttributelistFilter(AttributelistColumn *column, int opid,
+                        unsigned long ref)
+        : _column(column), _opid(abs(opid)), _negate(opid < 0), _ref(ref) {}
     bool accepts(void *data);
 };
 
-#endif // AttributelistFilter_h
+#endif  // AttributelistFilter_h

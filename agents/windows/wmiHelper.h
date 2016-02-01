@@ -22,77 +22,72 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #ifndef wmiHelper_h
 #define wmiHelper_h
 
-
-#include <stdexcept>
-#include <windows.h>
 #include <wbemidl.h>
-#include <vector>
+#include <windows.h>
 #include <memory>
 #include <sstream>
-
+#include <stdexcept>
+#include <vector>
 
 std::string to_utf8(const wchar_t *string);
 
-
 namespace wmi {
-
 
 struct ComException : public std::runtime_error {
     ComException(const std::string &message, HRESULT result);
     static std::string resolveError(HRESULT result);
+
 private:
     static IErrorInfo *getErrorInfo();
     std::string toStringHex(HRESULT res);
 };
 
-
 struct ComTypeException : public std::runtime_error {
     ComTypeException(const std::string &message);
 };
 
-
-class Variant
-{
-
+class Variant {
     VARIANT _value;
 
 public:
-
     Variant(const VARIANT &val);
     ~Variant();
 
-    template <typename T> T get() const;
+    template <typename T>
+    T get() const;
 
     VARTYPE type() const;
 
 private:
 };
 
-
-template <> int Variant::get() const;
-template <> bool Variant::get() const;
-template <> ULONG Variant::get() const;
-template <> ULONGLONG Variant::get() const;
-template <> std::string Variant::get() const;
-template <> std::wstring Variant::get() const;
-template <> float Variant::get() const;
-template <> double Variant::get() const;
-
+template <>
+int Variant::get() const;
+template <>
+bool Variant::get() const;
+template <>
+ULONG Variant::get() const;
+template <>
+ULONGLONG Variant::get() const;
+template <>
+std::string Variant::get() const;
+template <>
+std::wstring Variant::get() const;
+template <>
+float Variant::get() const;
+template <>
+double Variant::get() const;
 
 class ObjectWrapper {
-
     friend class Helper;
 
 protected:
-
     std::shared_ptr<IWbemClassObject> _current;
 
 public:
-
     ObjectWrapper(IWbemClassObject *object);
 
     ObjectWrapper(const ObjectWrapper &reference);
@@ -106,37 +101,34 @@ public:
     int typeId(const wchar_t *key) const;
 
     // retrieve the value at the specified column key in the current row.
-    // if the value can't be converted to the specified data type, an exception is
+    // if the value can't be converted to the specified data type, an exception
+    // is
     // thrown.
-    template <typename T> T get(const wchar_t *key) const;
+    template <typename T>
+    T get(const wchar_t *key) const;
 
 private:
-
     // not implemented
     ObjectWrapper &operator=(const ObjectWrapper &reference);
 
     VARIANT getVarByKey(const wchar_t *key) const;
-
 };
 
-
-template <typename T> T ObjectWrapper::get(const wchar_t *key) const
-{
+template <typename T>
+T ObjectWrapper::get(const wchar_t *key) const {
     Variant value(getVarByKey(key));
     try {
         return value.get<T>();
     } catch (const ComTypeException &e) {
-        throw ComTypeException(std::string("failed to retrieve ") + to_utf8(key) + ": " + e.what());
+        throw ComTypeException(std::string("failed to retrieve ") +
+                               to_utf8(key) + ": " + e.what());
     }
 }
 
-
-class Result : public ObjectWrapper
-{
-    std::shared_ptr<IEnumWbemClassObject> _enumerator { NULL };
+class Result : public ObjectWrapper {
+    std::shared_ptr<IEnumWbemClassObject> _enumerator{NULL};
 
 public:
-
     Result();
     Result(IEnumWbemClassObject *enumerator);
     Result(const Result &reference);
@@ -147,9 +139,11 @@ public:
     std::vector<std::wstring> names() const;
 
     // proceed to the next element.
-    // returns true on success, false if there are no more elements. An exception
+    // returns true on success, false if there are no more elements. An
+    // exception
     // is thrown if an error happens (i.e. timeout in the query).
-    // unless true is returned, the current element is not changed, to once the end
+    // unless true is returned, the current element is not changed, to once the
+    // end
     // of the result has been reached, the iterator stays there.
     bool next();
 
@@ -157,19 +151,14 @@ public:
     // once a result is valid it remains so, it doesn't become invalid
     // if an error during iteration happens or the last row has been reached.
     bool valid() const;
-
 };
 
-
-class Helper
-{
-
+class Helper {
     IWbemLocator *_locator;
     IWbemServices *_services;
     std::wstring _path;
 
 public:
-
     Helper(LPCWSTR path = L"Root\\Cimv2");
 
     Helper(const Helper &reference) = delete;
@@ -179,11 +168,9 @@ public:
     Result query(LPCWSTR query);
     Result getClass(LPCWSTR className);
 
-
     ObjectWrapper call(ObjectWrapper &result, LPCWSTR method);
 
 private:
-
     // get a locator that is used to look up WMI namespaces
     IWbemLocator *getWBEMLocator();
 
@@ -192,9 +179,8 @@ private:
 
     // sets authentication information on the services proxy
     void setProxyBlanket(IWbemServices *services);
-
 };
 
-} // namespace wmi
+}  // namespace wmi
 
-#endif // wmiHelper_h
+#endif  // wmiHelper_h

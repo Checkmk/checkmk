@@ -29,47 +29,36 @@
 #include "ColumnsColumn.h"
 #include "Query.h"
 
-
-TableColumns::TableColumns()
-{
-    addColumn(new ColumnsColumn("table",
-                "The name of the table",       COLCOL_TABLE, this));
-    addColumn(new ColumnsColumn("name",
-                "The name of the column within the table",        COLCOL_NAME,  this));
-    addColumn(new ColumnsColumn("description",
-                "A description of the column", COLCOL_DESCR, this));
-    addColumn(new ColumnsColumn("type",
-                "The data type of the column (int, float, string, list)",        COLCOL_TYPE,  this));
+TableColumns::TableColumns() {
+    addColumn(new ColumnsColumn("table", "The name of the table", COLCOL_TABLE,
+                                this));
+    addColumn(new ColumnsColumn(
+        "name", "The name of the column within the table", COLCOL_NAME, this));
+    addColumn(new ColumnsColumn("description", "A description of the column",
+                                COLCOL_DESCR, this));
+    addColumn(new ColumnsColumn(
+        "type", "The data type of the column (int, float, string, list)",
+        COLCOL_TYPE, this));
 }
 
-void TableColumns::addTable(Table *table)
-{
-    _tables.push_back(table);
-}
+void TableColumns::addTable(Table *table) { _tables.push_back(table); }
 
-void TableColumns::answerQuery(Query *query)
-{
-    for (_tables_t::iterator it = _tables.begin();
-            it != _tables.end();
-            ++it)
-    {
+void TableColumns::answerQuery(Query *query) {
+    for (_tables_t::iterator it = _tables.begin(); it != _tables.end(); ++it) {
         Table *table = *it;
         Table::_columns_t *columns = table->columns();
         for (Table::_columns_t::iterator it = columns->begin();
-                it != columns->end();
-                ++it)
-        {
+             it != columns->end(); ++it) {
             if (!query->processDataset(it->second)) break;
         }
     }
 }
 
-const char *TableColumns::getValue(Column *column, int colcol)
-{
-    static const char *typenames[8] = { "int", "float", "string", "list", "time", "dict", "blob", "null" };
+const char *TableColumns::getValue(Column *column, int colcol) {
+    static const char *typenames[8] = {"int",  "float", "string", "list",
+                                       "time", "dict",  "blob",   "null"};
 
-    switch (colcol)
-    {
+    switch (colcol) {
         case COLCOL_TABLE:
             return tableNameOf(column);
         case COLCOL_NAME:
@@ -83,16 +72,12 @@ const char *TableColumns::getValue(Column *column, int colcol)
     return "";
 }
 
-const char *TableColumns::tableNameOf(Column *column)
-{
-    for (_tables_t::iterator it = _tables.begin();
-            it != _tables.end();
-            ++it)
-    {
+const char *TableColumns::tableNameOf(Column *column) {
+    for (_tables_t::iterator it = _tables.begin(); it != _tables.end(); ++it) {
         Table *table = *it;
         if (table->hasColumn(column)) {
             return table->name();
         }
     }
-    return ""; // never reached if no bug
+    return "";  // never reached if no bug
 }

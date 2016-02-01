@@ -29,21 +29,17 @@
 #include "TableServices.h"
 #include "TimeperiodsCache.h"
 
-
 extern TimeperiodsCache *g_timeperiods_cache;
 extern TableServices *g_table_services;
 
-
-servicesmember *ServicelistColumn::getMembers(void *data)
-{
+servicesmember *ServicelistColumn::getMembers(void *data) {
     data = shiftPointer(data);
     if (!data) return 0;
 
     return *(servicesmember **)((char *)data + _offset);
 }
 
-void ServicelistColumn::output(void *data, Query *query)
-{
+void ServicelistColumn::output(void *data, Query *query) {
     query->outputBeginList();
     contact *auth_user = query->authUser();
     servicesmember *mem = getMembers(data);
@@ -59,8 +55,7 @@ void ServicelistColumn::output(void *data, Query *query)
             // show only service name => no sublist
             if (!_show_host && _info_depth == 0)
                 query->outputString(svc->description);
-            else
-            {
+            else {
                 query->outputBeginSublist();
                 if (_show_host) {
                     query->outputString(svc->host_name);
@@ -89,7 +84,8 @@ void ServicelistColumn::output(void *data, Query *query)
                     query->outputSublistSeparator();
                     query->outputInteger(svc->problem_has_been_acknowledged);
                     query->outputSublistSeparator();
-                    query->outputInteger(inCustomTimeperiod(svc, "SERVICE_PERIOD"));
+                    query->outputInteger(
+                        inCustomTimeperiod(svc, "SERVICE_PERIOD"));
                 }
                 query->outputEndSublist();
             }
@@ -99,19 +95,16 @@ void ServicelistColumn::output(void *data, Query *query)
     query->outputEndList();
 }
 
-Filter *ServicelistColumn::createFilter(int opid, char *value)
-{
+Filter *ServicelistColumn::createFilter(int opid, char *value) {
     return new ServicelistColumnFilter(this, opid, value);
 }
 
-
-int ServicelistColumn::inCustomTimeperiod(service *svc, const char *varname)
-{
+int ServicelistColumn::inCustomTimeperiod(service *svc, const char *varname) {
     customvariablesmember *cvm = svc->custom_variables;
     while (cvm) {
         if (!(strcmp(cvm->variable_name, varname)))
             return g_timeperiods_cache->inTimeperiod(cvm->variable_value);
         cvm = cvm->next;
     }
-    return 1; // assume 7X24
+    return 1;  // assume 7X24
 }

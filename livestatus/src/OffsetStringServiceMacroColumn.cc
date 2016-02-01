@@ -24,9 +24,7 @@
 
 #include "OffsetStringServiceMacroColumn.h"
 
-
-host *OffsetStringServiceMacroColumn::getHost(void *data)
-{
+host *OffsetStringServiceMacroColumn::getHost(void *data) {
     service *svc = getService(data);
     if (svc)
         return svc->host_ptr;
@@ -34,7 +32,6 @@ host *OffsetStringServiceMacroColumn::getHost(void *data)
         return 0;
 }
 
-service *OffsetStringServiceMacroColumn::getService(void *data)
-{
+service *OffsetStringServiceMacroColumn::getService(void *data) {
     return static_cast<service *>(shiftPointer(data));
 }

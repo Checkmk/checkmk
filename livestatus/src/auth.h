@@ -28,13 +28,11 @@
 #include "config.h"  // IWYU pragma: keep
 #include "nagios.h"  // IWYU pragma: keep
 
-
-#define AUTH_LOOSE  0
+#define AUTH_LOOSE 0
 #define AUTH_STRICT 1
 
 // Dummy pointer for unknown user (not no user)
 #define UNKNOWN_AUTH_USER reinterpret_cast<contact *>(0xdeadbeaf)
-
 
 extern int g_service_authorization;
 extern int g_group_authorization;
@@ -42,9 +40,9 @@ extern int g_group_authorization;
 #ifdef __cplusplus
 extern "C" {
 #endif
-  int is_authorized_for(contact *ctc, host *host, service *svc);
+int is_authorized_for(contact *ctc, host *host, service *svc);
 #ifdef __cplusplus
 }
 #endif
 
-#endif // auth_h
+#endif  // auth_h

@@ -26,8 +26,7 @@
 // into the "Application" eventlog (at your own risk). Compile it with
 // 'make crash'
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     char *p = 0x00000000;
     *p = 17;
 }

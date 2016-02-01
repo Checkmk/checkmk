@@ -27,14 +27,11 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
-#include <sys/types.h>
 #include <string>
 #include "Filter.h"
 class IntColumn;
 
-
-class IntColumnFilter : public Filter
-{
+class IntColumnFilter : public Filter {
     IntColumn *_column;
     int _opid;
     bool _negate;
@@ -42,10 +39,10 @@ class IntColumnFilter : public Filter
 
 public:
     IntColumnFilter(IntColumn *column, int opid, char *value);
-    virtual int32_t convertRefValue(); // see TimeColumnFilter
+    virtual int32_t convertRefValue();  // see TimeColumnFilter
     bool accepts(void *data);
     void findIntLimits(const char *columnname, int *lower, int *upper);
     bool optimizeBitmask(const char *columnname, uint32_t *mask);
 };
 
-#endif // IntColumnFilter_h
+#endif  // IntColumnFilter_h

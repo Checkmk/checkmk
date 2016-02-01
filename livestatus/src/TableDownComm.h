@@ -33,9 +33,7 @@
 class Query;
 struct DowntimeOrComment;
 
-
-class TableDownComm : public Table
-{
+class TableDownComm : public Table {
     const char *_name;
 
     typedef std::pair<unsigned long, bool> dc_key;
@@ -57,4 +55,4 @@ public:
     _entries_t::iterator entriesIteratorEnd() { return _entries.end(); }
 };
 
-#endif // TableDownComm_h
+#endif  // TableDownComm_h

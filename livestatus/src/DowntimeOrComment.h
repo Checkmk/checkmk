@@ -29,7 +29,6 @@
 #include <time.h>
 #include "nagios.h"  // IWYU pragma: keep
 
-
 /* The structs for downtime and comment are so similar, that
    we handle them with the same logic */
 
@@ -79,39 +78,36 @@
    }nebstruct_comment_data;
  */
 
-struct DowntimeOrComment
-{
-    int           _type;
-    host         *_host;
-    service      *_service;
-    time_t        _entry_time;
-    char *        _author_name;
-    char*         _comment;
+struct DowntimeOrComment {
+    int _type;
+    host *_host;
+    service *_service;
+    time_t _entry_time;
+    char *_author_name;
+    char *_comment;
     unsigned long _id;
-    int           _is_service;
+    int _is_service;
 
     DowntimeOrComment(nebstruct_downtime_struct *data, unsigned long id);
     virtual ~DowntimeOrComment();
 };
 
-struct Downtime : public DowntimeOrComment
-{
-    time_t        _start_time;
-    time_t        _end_time;
-    int           _fixed;
-    int           _duration;
-    int           _triggered_by;
+struct Downtime : public DowntimeOrComment {
+    time_t _start_time;
+    time_t _end_time;
+    int _fixed;
+    int _duration;
+    int _triggered_by;
     explicit Downtime(nebstruct_downtime_struct *data);
 };
 
-struct Comment : public DowntimeOrComment
-{
-    time_t        _expire_time;
-    int           _persistent;
-    int           _source;
-    int           _entry_type;
-    int           _expires;
+struct Comment : public DowntimeOrComment {
+    time_t _expire_time;
+    int _persistent;
+    int _source;
+    int _entry_type;
+    int _expires;
     explicit Comment(nebstruct_comment_struct *data);
 };
 
-#endif // DowntimeOrComment_h
+#endif  // DowntimeOrComment_h

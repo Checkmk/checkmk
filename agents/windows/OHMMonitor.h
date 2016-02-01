@@ -22,14 +22,11 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #pragma once
-
 
 #include <windows.h>
 #include <string>
 #include "Environment.h"
-
 
 /**
  * Ensure the Open Hardware Monitor is running (if it's available)
@@ -37,11 +34,11 @@
 class OHMMonitor {
     std::string _exe_path;
     bool _available;
-    HANDLE _current_process { INVALID_HANDLE_VALUE };
+    HANDLE _current_process{INVALID_HANDLE_VALUE};
+
 public:
     OHMMonitor(const Environment &env);
     ~OHMMonitor();
 
     bool checkAvailabe();
 };
-

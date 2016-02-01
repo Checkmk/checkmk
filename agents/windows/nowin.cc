@@ -26,8 +26,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     if (argc != 2) {
         fprintf(stderr, "Usage: %s MINUTES\n", argv[0]);
         exit(1);
@@ -45,4 +44,3 @@ int main(int argc, char **argv)
     strftime(out, sizeof(out), "%Y-%m-%d %H:%M", t);
     printf("%s\n", out);
 }
-

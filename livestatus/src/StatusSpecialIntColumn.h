@@ -25,7 +25,7 @@
 #ifndef StatusSpecialIntColumn_h
 #define StatusSpecialIntColumn_h
 
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
 #include <string>
 #include "IntColumn.h"
@@ -37,11 +37,11 @@ class StatusSpecialIntColumn : public IntColumn {
     int _type;
 
 public:
-    StatusSpecialIntColumn(std::string name, std::string description, int type, int indirect_offset = -1, int extra_offset = -1)
-        : IntColumn(name, description, indirect_offset, extra_offset), _type(type)
-    {
-    }
+    StatusSpecialIntColumn(std::string name, std::string description, int type,
+                           int indirect_offset = -1, int extra_offset = -1)
+        : IntColumn(name, description, indirect_offset, extra_offset)
+        , _type(type) {}
     int32_t getValue(void *, Query *) override;
 };
 
-#endif // StatusSpecialIntColumn_h
+#endif  // StatusSpecialIntColumn_h

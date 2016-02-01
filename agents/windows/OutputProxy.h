@@ -22,16 +22,13 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #ifndef OutputProxy_h
 #define OutputProxy_h
 
-
+#include <winsock2.h>
 #include <cstdio>
 #include <vector>
-#include <winsock2.h>
 #include "Crypto.h"
-
 
 class OutputProxy {
 public:
@@ -42,9 +39,9 @@ public:
     virtual void flush() = 0;
 };
 
-
 class FileOutputProxy : public OutputProxy {
     FILE *_file;
+
 public:
     FileOutputProxy(FILE *file);
 
@@ -53,26 +50,22 @@ public:
     virtual void flush() override;
 };
 
-
 class BufferedSocketProxy : public OutputProxy {
-
     SOCKET _socket;
     std::vector<char> _buffer;
-    size_t _length { 0 };
+    size_t _length{0};
     size_t _collect_size;
 
 protected:
-
     std::vector<char> &buffer() { return _buffer; }
     size_t length() const { return _length; }
 
 public:
-
-    static const size_t DEFAULT_BUFFER_SIZE  = 16384L;
+    static const size_t DEFAULT_BUFFER_SIZE = 16384L;
 
 public:
-
-    BufferedSocketProxy(SOCKET socket, size_t buffer_size = DEFAULT_BUFFER_SIZE);
+    BufferedSocketProxy(SOCKET socket,
+                        size_t buffer_size = DEFAULT_BUFFER_SIZE);
 
     void setSocket(SOCKET socket);
 
@@ -81,20 +74,16 @@ public:
     virtual void flush() override;
 
 protected:
-
     bool flushInt();
 
 private:
-
     BufferedSocketProxy(const BufferedSocketProxy &reference) = delete;
-    BufferedSocketProxy &operator=(const BufferedSocketProxy &reference) = delete;
-
+    BufferedSocketProxy &operator=(const BufferedSocketProxy &reference) =
+        delete;
 };
-
 
 // can you feel the java?
 class EncryptingBufferedSocketProxy : public BufferedSocketProxy {
-
     Crypto _crypto;
 
     std::vector<char> _plain;
@@ -102,16 +91,12 @@ class EncryptingBufferedSocketProxy : public BufferedSocketProxy {
     size_t _written;
 
 public:
-
     EncryptingBufferedSocketProxy(SOCKET socket, const std::string &passphrase,
-            size_t buffer_size = DEFAULT_BUFFER_SIZE);
+                                  size_t buffer_size = DEFAULT_BUFFER_SIZE);
 
     virtual void output(const char *format, ...) override;
     // writeBinary is NOT overridden so calls to it are not encrypted!
     virtual void flush() override;
-
 };
 
-
-#endif // OutputProxy_h
-
+#endif  // OutputProxy_h

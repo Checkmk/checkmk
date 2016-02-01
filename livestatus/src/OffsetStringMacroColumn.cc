@@ -32,10 +32,9 @@ class Filter;
 
 using std::string;
 
-extern char     *macro_user[MAX_USER_MACROS];
+extern char *macro_user[MAX_USER_MACROS];
 
-string OffsetStringMacroColumn::valueAsString(void *data, Query *)
-{
+string OffsetStringMacroColumn::valueAsString(void *data, Query *) {
     const char *raw = getValue(data);
     host *hst = getHost(data);
     service *svc = getService(data);
@@ -52,7 +51,7 @@ string OffsetStringMacroColumn::valueAsString(void *data, Query *)
         }
         result += string(scan, dollar - scan);
         const char *otherdollar = strchr(dollar + 1, '$');
-        if (!otherdollar) { // unterminated macro, do not expand
+        if (!otherdollar) {  // unterminated macro, do not expand
             result += scan;
             break;
         }
@@ -61,27 +60,25 @@ string OffsetStringMacroColumn::valueAsString(void *data, Query *)
         if (replacement)
             result += replacement;
         else
-            result += string(dollar, otherdollar - dollar + 1); // leave macro unexpanded
+            result += string(
+                dollar, otherdollar - dollar + 1);  // leave macro unexpanded
         scan = otherdollar + 1;
     }
     return result;
 }
 
-
-void OffsetStringMacroColumn::output(void *data, Query *query)
-{
+void OffsetStringMacroColumn::output(void *data, Query *query) {
     string s = valueAsString(data, query);
     query->outputString(s.c_str());
 }
 
-Filter *OffsetStringMacroColumn::createFilter(int, char *)
-{
+Filter *OffsetStringMacroColumn::createFilter(int, char *) {
     logger(LG_INFO, "Sorry. No filtering on macro columns implemented yet");
-    return new AndingFilter(); // always true
+    return new AndingFilter();  // always true
 }
 
-const char *OffsetStringMacroColumn::expandMacro(const char *macroname, host *hst, service *svc)
-{
+const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
+                                                 host *hst, service *svc) {
     // host macros
     if (!strcmp(macroname, "HOSTNAME"))
         return hst->name;
@@ -98,13 +95,13 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname, host *hs
     else if (!strcmp(macroname, "HOSTPERFDATA"))
         return hst->perf_data;
     else if (!strcmp(macroname, "HOSTCHECKCOMMAND"))
-    #ifndef NAGIOS4
+#ifndef NAGIOS4
         return hst->host_check_command;
-    #else
+#else
         return hst->check_command;
-    #endif // NAGIOS4
+#endif  // NAGIOS4
 
-    else if (!strncmp(macroname, "_HOST", 5)) // custom macro
+    else if (!strncmp(macroname, "_HOST", 5))  // custom macro
         return expandCustomVariables(macroname + 5, hst->custom_variables);
 
     // service macros
@@ -120,12 +117,12 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname, host *hs
         else if (!strcmp(macroname, "SERVICEPERFDATA"))
             return svc->perf_data;
         else if (!strcmp(macroname, "SERVICECHECKCOMMAND"))
-        #ifndef NAGIOS4
+#ifndef NAGIOS4
             return svc->service_check_command;
-        #else
+#else
             return svc->check_command;
-        #endif // NAGIOS4
-        else if (!strncmp(macroname, "_SERVICE", 8)) // custom macro
+#endif                                                // NAGIOS4
+        else if (!strncmp(macroname, "_SERVICE", 8))  // custom macro
             return expandCustomVariables(macroname + 8, svc->custom_variables);
     }
 
@@ -140,11 +137,9 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname, host *hs
     return 0;
 }
 
-
-const char *OffsetStringMacroColumn::expandCustomVariables(const char *varname, customvariablesmember *custvars)
-{
-    while (custvars)
-    {
+const char *OffsetStringMacroColumn::expandCustomVariables(
+    const char *varname, customvariablesmember *custvars) {
+    while (custvars) {
         if (!strcasecmp(varname, custvars->variable_name))
             return custvars->variable_value;
         custvars = custvars->next;

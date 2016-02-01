@@ -25,8 +25,6 @@
 #include "ListColumn.h"
 #include "ListColumnFilter.h"
 
-
-Filter *ListColumn::createFilter(int opid, char *value)
-{
+Filter *ListColumn::createFilter(int opid, char *value) {
     return new ListColumnFilter(this, opid, value);
 }

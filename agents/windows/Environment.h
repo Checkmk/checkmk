@@ -22,51 +22,46 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #ifndef Environment_h
 #define Environment_h
 
 #include <string>
 
-class Environment
-{
+class Environment {
 public:
-
     Environment(bool use_cwd);
 
-    const std::string &hostname() const          { return _hostname; }
+    const std::string &hostname() const { return _hostname; }
 
-    const std::string &currentDirectory() const  { return _current_directory; }
-    const std::string &agentDirectory() const    { return _agent_directory; }
+    const std::string &currentDirectory() const { return _current_directory; }
+    const std::string &agentDirectory() const { return _agent_directory; }
 
     const std::string &pluginsDirectory() const { return _plugins_directory; }
-    const std::string &configDirectory() const  { return _config_directory; }
-    const std::string &localDirectory() const   { return _local_directory; }
-    const std::string &spoolDirectory() const   { return _spool_directory; }
-    const std::string &stateDirectory() const   { return _state_directory; }
-    const std::string &tempDirectory() const    { return _temp_directory; }
-    const std::string &logDirectory() const     { return _log_directory; }
-    const std::string &binDirectory() const     { return _bin_directory; }
+    const std::string &configDirectory() const { return _config_directory; }
+    const std::string &localDirectory() const { return _local_directory; }
+    const std::string &spoolDirectory() const { return _spool_directory; }
+    const std::string &stateDirectory() const { return _state_directory; }
+    const std::string &tempDirectory() const { return _temp_directory; }
+    const std::string &logDirectory() const { return _log_directory; }
+    const std::string &binDirectory() const { return _bin_directory; }
 
     const std::string &logwatchStatefile() const { return _logwatch_statefile; }
     const std::string &eventlogStatefile() const { return _eventlog_statefile; }
 
 public:
-
     static bool isWinNt();
 
-    // return windows version as a combined value, with major version in the upper 8 bits
+    // return windows version as a combined value, with major version in the
+    // upper 8 bits
     // and minor in the lower bits, i.e. 0x0501 for windows xp (32-bit)
     static uint16_t winVersion();
 
 private:
-
     void getAgentDirectory(char *buffer, int size, bool use_cwd);
     void determineDirectories(bool use_cwd);
     std::string assignDirectory(const char *name);
 
 private:
-
     std::string _hostname;
 
     std::string _agent_directory;
@@ -83,8 +78,6 @@ private:
 
     std::string _logwatch_statefile;
     std::string _eventlog_statefile;
-
 };
 
-
-#endif // Environment_h
+#endif  // Environment_h

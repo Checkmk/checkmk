@@ -27,14 +27,13 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-
-#define OP_INVALID       0
-#define OP_EQUAL         1 // =
-#define OP_REGEX         2 // ~
-#define OP_EQUAL_ICASE   3 // =~
-#define OP_REGEX_ICASE   4 // ~~
-#define OP_GREATER       5 // >
-#define OP_LESS          6 // <
+#define OP_INVALID 0
+#define OP_EQUAL 1        // =
+#define OP_REGEX 2        // ~
+#define OP_EQUAL_ICASE 3  // =~
+#define OP_REGEX_ICASE 4  // ~~
+#define OP_GREATER 5      // >
+#define OP_LESS 6         // <
 
 extern const char *op_names_plus_8[];
 
@@ -42,4 +41,4 @@ extern const char *op_names_plus_8[];
 // The negation is represented by negating the value of the operator.
 // Example >= is represented as -6 (- OP_LESS)
 
-#endif // opids_h
+#endif  // opids_h

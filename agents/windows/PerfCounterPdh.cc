@@ -22,24 +22,22 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #include "PerfCounterPdh.h"
-#include "stringutil.h"
-#include <windows.h>
-#include <stdio.h>
 #include <pdhmsg.h>
+#include <stdio.h>
+#include <windows.h>
 #include <sstream>
+#include "stringutil.h"
 
 #include <ctime>
 
-
 // retrieve the next line from a multi-sz registry key
-LPCWSTR get_next_multi_sz(const std::vector<wchar_t> &data, size_t &offset)
-{
+LPCWSTR get_next_multi_sz(const std::vector<wchar_t> &data, size_t &offset) {
     LPCWSTR next = &data[offset];
     size_t len = wcslen(next);
     if ((len == 0) || (offset + len > data.size())) {
-        // the second condition would only happen with an invalid registry value but that's not
+        // the second condition would only happen with an invalid registry value
+        // but that's not
         // unheard of
         return NULL;
     } else {
@@ -48,36 +46,31 @@ LPCWSTR get_next_multi_sz(const std::vector<wchar_t> &data, size_t &offset)
     }
 }
 
-
-std::vector<wchar_t> retrieve_perf_data(LPCWSTR name, bool local)
-{
+std::vector<wchar_t> retrieve_perf_data(LPCWSTR name, bool local) {
     std::vector<wchar_t> result;
     DWORD counters_size = 0;
 
-    HKEY key = local ? HKEY_PERFORMANCE_NLSTEXT
-                     : HKEY_PERFORMANCE_TEXT;
+    HKEY key = local ? HKEY_PERFORMANCE_NLSTEXT : HKEY_PERFORMANCE_TEXT;
 
     // preflight
-    ::RegQueryValueExW(key, name, NULL, NULL,
-            (LPBYTE)&result[0], &counters_size);
+    ::RegQueryValueExW(key, name, NULL, NULL, (LPBYTE)&result[0],
+                       &counters_size);
 
     result.resize(counters_size);
     // actual read op
-    ::RegQueryValueExW(key, name, NULL, NULL,
-            (LPBYTE)&result[0], &counters_size);
+    ::RegQueryValueExW(key, name, NULL, NULL, (LPBYTE)&result[0],
+                       &counters_size);
 
     return result;
 }
 
-
-std::map<int, std::wstring> perf_id_map(bool local)
-{
+std::map<int, std::wstring> perf_id_map(bool local) {
     std::vector<wchar_t> names = retrieve_perf_data(L"Counter", local);
 
     std::map<int, std::wstring> result;
 
     size_t offset = 0;
-    for(;;) {
+    for (;;) {
         LPCWSTR id = get_next_multi_sz(names, offset);
         LPCWSTR name = get_next_multi_sz(names, offset);
         if ((id == NULL) || (name == NULL)) {
@@ -90,15 +83,13 @@ std::map<int, std::wstring> perf_id_map(bool local)
     return result;
 }
 
-
-std::map<std::wstring, int> perf_name_map(bool local)
-{
+std::map<std::wstring, int> perf_name_map(bool local) {
     std::vector<wchar_t> names = retrieve_perf_data(L"Counter", local);
 
     std::map<std::wstring, int> result;
 
     size_t offset = 0;
-    for(;;) {
+    for (;;) {
         LPCWSTR id = get_next_multi_sz(names, offset);
         LPCWSTR name = get_next_multi_sz(names, offset);
         if ((id == NULL) || (name == NULL)) {
@@ -111,18 +102,15 @@ std::map<std::wstring, int> perf_name_map(bool local)
     return result;
 }
 
-
-std::wstring resolve_perf_id(int id)
-{
+std::wstring resolve_perf_id(int id) {
     std::wstring result;
     DWORD buffer_size = 0;
 
-    PDH_STATUS status = PdhLookupPerfNameByIndexW(
-            NULL, id, &result[0], &buffer_size);
+    PDH_STATUS status =
+        PdhLookupPerfNameByIndexW(NULL, id, &result[0], &buffer_size);
     if ((DWORD)status == PDH_MORE_DATA) {
         result.resize(buffer_size);
-        status = PdhLookupPerfNameByIndexW(
-                NULL, id, &result[0], &buffer_size);
+        status = PdhLookupPerfNameByIndexW(NULL, id, &result[0], &buffer_size);
     }
 
     if ((DWORD)status != ERROR_SUCCESS) {
@@ -131,9 +119,7 @@ std::wstring resolve_perf_id(int id)
     return result;
 }
 
-
-PerfCounterQuery::PerfCounterQuery()
-{
+PerfCounterQuery::PerfCounterQuery() {
     PDH_STATUS status = PdhOpenQuery(nullptr, 0, &_query);
     if (status != ERROR_SUCCESS) {
         std::ostringstream err;
@@ -152,20 +138,13 @@ PerfCounterQuery::PerfCounterQuery()
     }
 }
 
+PerfCounterQuery::~PerfCounterQuery() { PdhCloseQuery(_query); }
 
-PerfCounterQuery::~PerfCounterQuery()
-{
-    PdhCloseQuery(_query);
-}
-
-
-HCOUNTER PerfCounterQuery::addCounter(const std::wstring &path)
-{
+HCOUNTER PerfCounterQuery::addCounter(const std::wstring &path) {
     auto iter = _counter.find(path);
     if (iter != _counter.end()) {
         return iter->second;
-    }
-    else {
+    } else {
         HCOUNTER counter;
         PDH_STATUS status = PdhAddCounterW(_query, path.c_str(), 0, &counter);
         if (status != ERROR_SUCCESS) {
@@ -176,33 +155,28 @@ HCOUNTER PerfCounterQuery::addCounter(const std::wstring &path)
     }
 }
 
-
-std::wstring PerfCounterQuery::makePath(const std::wstring &object, const std::wstring instance,
-            const std::wstring &counter)
-{
+std::wstring PerfCounterQuery::makePath(const std::wstring &object,
+                                        const std::wstring instance,
+                                        const std::wstring &counter) {
     std::wostringstream result;
-    result << "\\" << object << "(" << instance << ")" << "\\" << counter;
+    result << "\\" << object << "(" << instance << ")"
+           << "\\" << counter;
     return result.str();
 }
 
-
-std::pair<StringList, StringList> PerfCounterQuery::enumerateObject(LPCWSTR object_name_in) const
-{
+std::pair<StringList, StringList> PerfCounterQuery::enumerateObject(
+    LPCWSTR object_name_in) const {
     std::wstring counterlist_buffer;
     std::wstring instancelist_buffer;
 
-    DWORD counterlist_size  = 0;
+    DWORD counterlist_size = 0;
     DWORD instancelist_size = 0;
 
     std::wstring object_name(object_name_in);
 
     PDH_STATUS status = PdhEnumObjectItemsW(
-        NULL, NULL,
-        object_name.c_str(),
-        &counterlist_buffer[0],
-        &counterlist_size,
-        &instancelist_buffer[0],
-        &instancelist_size,
+        NULL, NULL, object_name.c_str(), &counterlist_buffer[0],
+        &counterlist_size, &instancelist_buffer[0], &instancelist_size,
         PERF_DETAIL_WIZARD, 0);
 
     if ((DWORD)status == PDH_CSTATUS_NO_OBJECT) {
@@ -213,13 +187,9 @@ std::pair<StringList, StringList> PerfCounterQuery::enumerateObject(LPCWSTR obje
             // and continue with that
             object_name = resolve_perf_id(iter->second);
             status = PdhEnumObjectItemsW(
-                    NULL, NULL,
-                    object_name.c_str(),
-                    &counterlist_buffer[0],
-                    &counterlist_size,
-                    &instancelist_buffer[0],
-                    &instancelist_size,
-                    PERF_DETAIL_WIZARD, 0);
+                NULL, NULL, object_name.c_str(), &counterlist_buffer[0],
+                &counterlist_size, &instancelist_buffer[0], &instancelist_size,
+                PERF_DETAIL_WIZARD, 0);
         }
     }
 
@@ -235,14 +205,10 @@ std::pair<StringList, StringList> PerfCounterQuery::enumerateObject(LPCWSTR obje
     counterlist_buffer.resize(counterlist_size);
     instancelist_buffer.resize(instancelist_size);
 
-    status = PdhEnumObjectItemsW(
-            NULL, NULL,
-            object_name.c_str(),
-            &counterlist_buffer[0],
-            &counterlist_size,
-            &instancelist_buffer[0],
-            &instancelist_size,
-            PERF_DETAIL_WIZARD, 0);
+    status = PdhEnumObjectItemsW(NULL, NULL, object_name.c_str(),
+                                 &counterlist_buffer[0], &counterlist_size,
+                                 &instancelist_buffer[0], &instancelist_size,
+                                 PERF_DETAIL_WIZARD, 0);
 
     if (status != ERROR_SUCCESS) {
         throw std::runtime_error(get_win_error_as_string(status));
@@ -251,42 +217,42 @@ std::pair<StringList, StringList> PerfCounterQuery::enumerateObject(LPCWSTR obje
     StringList counterlist;
 
     // the buffer contains a zero-terminted list of zero-terminated strings
-    for (LPCWSTR iter = &counterlist_buffer[0]; *iter != L'\0'; iter += wcslen(iter) + 1) {
+    for (LPCWSTR iter = &counterlist_buffer[0]; *iter != L'\0';
+         iter += wcslen(iter) + 1) {
         counterlist.push_back(iter);
-/*        auto translation = _translation_map.find(iter);
-        if (translation != _translation_map.end()) {
-            counterlist.push_back(translation->second);
-        } else {
-            counterlist.push_back(iter);
-        }*/
+        /*        auto translation = _translation_map.find(iter);
+                if (translation != _translation_map.end()) {
+                    counterlist.push_back(translation->second);
+                } else {
+                    counterlist.push_back(iter);
+                }*/
     }
 
     StringList instancelist;
 
-    for (LPCWSTR iter = &instancelist_buffer[0]; *iter != L'\0'; iter += wcslen(iter) + 1) {
+    for (LPCWSTR iter = &instancelist_buffer[0]; *iter != L'\0';
+         iter += wcslen(iter) + 1) {
         instancelist.push_back(iter);
     }
 
     return std::make_pair(counterlist, instancelist);
 }
 
-
-StringList PerfCounterQuery::enumerateObjects() const
-{
+StringList PerfCounterQuery::enumerateObjects() const {
     std::vector<wchar_t> buffer;
     DWORD buffer_size = 0;
 
     // this call can take several seconds, as it refreshes the whole list of
     // performance counters
     PDH_STATUS status = PdhEnumObjectsW(NULL, NULL, &buffer[0], &buffer_size,
-            PERF_DETAIL_WIZARD, TRUE);
+                                        PERF_DETAIL_WIZARD, TRUE);
 
     if ((DWORD)status == PDH_MORE_DATA) {
         // documentation says to add 1 to the buffer size on winxp.
         ++buffer_size;
         buffer.resize(buffer_size);
         status = PdhEnumObjectsW(NULL, NULL, &buffer[0], &buffer_size,
-            PERF_DETAIL_WIZARD, FALSE);
+                                 PERF_DETAIL_WIZARD, FALSE);
     }
 
     StringList result;
@@ -307,19 +273,17 @@ StringList PerfCounterQuery::enumerateObjects() const
     }
 }
 
-
-void PerfCounterQuery::execute()
-{
+void PerfCounterQuery::execute() {
     PDH_STATUS status = PdhCollectQueryData(_query);
 
-    if (((DWORD)status != ERROR_SUCCESS) && ((DWORD)status != PDH_NO_MORE_DATA)) {
+    if (((DWORD)status != ERROR_SUCCESS) &&
+        ((DWORD)status != PDH_NO_MORE_DATA)) {
         printf("query status: %x\n", (DWORD)status);
         throw std::runtime_error(get_win_error_as_string(status));
     }
 }
 
-std::wstring PerfCounterQuery::counterValue(LPCWSTR name) const
-{
+std::wstring PerfCounterQuery::counterValue(LPCWSTR name) const {
     auto iter = _counter.find(name);
     if (iter == _counter.end()) {
         throw std::runtime_error("invalid counter name");
@@ -328,48 +292,71 @@ std::wstring PerfCounterQuery::counterValue(LPCWSTR name) const
     return counterValue(iter->second);
 }
 
-
-std::wstring type_name(DWORD type_id)
-{
+std::wstring type_name(DWORD type_id) {
     switch (type_id) {
-        case PERF_COUNTER_COUNTER:            return L"counter";
-        case PERF_COUNTER_TIMER:              return L"timer";
-        case PERF_COUNTER_QUEUELEN_TYPE:      return L"queuelen_type";
-        case PERF_COUNTER_BULK_COUNT:         return L"bulk_count";
-        case PERF_COUNTER_TEXT:               return L"text";
-        case PERF_COUNTER_RAWCOUNT:           return L"rawcount";
-        case PERF_COUNTER_LARGE_RAWCOUNT:     return L"large_rawcount";
-        case PERF_COUNTER_RAWCOUNT_HEX:       return L"rawcount_hex";
-        case PERF_COUNTER_LARGE_RAWCOUNT_HEX: return L"large_rawcount_HEX";
-        case PERF_SAMPLE_FRACTION:            return L"sample_fraction";
-        case PERF_SAMPLE_COUNTER:             return L"sample_counter";
-        case PERF_COUNTER_NODATA:             return L"nodata";
-        case PERF_COUNTER_TIMER_INV:          return L"timer_inv";
-        case PERF_SAMPLE_BASE:                return L"sample_base";
-        case PERF_AVERAGE_TIMER:              return L"average_timer";
-        case PERF_AVERAGE_BASE:               return L"average_base";
-        case PERF_AVERAGE_BULK:               return L"average_bulk";
-        case PERF_100NSEC_TIMER:              return L"100nsec_timer";
-        case PERF_100NSEC_TIMER_INV:          return L"100nsec_timer_inv";
-        case PERF_COUNTER_MULTI_TIMER:        return L"multi_timer";
-        case PERF_COUNTER_MULTI_TIMER_INV:    return L"multi_timer_inV";
-        case PERF_COUNTER_MULTI_BASE:         return L"multi_base";
-        case PERF_100NSEC_MULTI_TIMER:        return L"100nsec_multi_timer";
-        case PERF_100NSEC_MULTI_TIMER_INV:    return L"100nsec_multi_timer_inV";
-        case PERF_RAW_FRACTION:               return L"raw_fraction";
-        case PERF_RAW_BASE:                   return L"raw_base";
-        case PERF_ELAPSED_TIME:               return L"elapsed_time";
+        case PERF_COUNTER_COUNTER:
+            return L"counter";
+        case PERF_COUNTER_TIMER:
+            return L"timer";
+        case PERF_COUNTER_QUEUELEN_TYPE:
+            return L"queuelen_type";
+        case PERF_COUNTER_BULK_COUNT:
+            return L"bulk_count";
+        case PERF_COUNTER_TEXT:
+            return L"text";
+        case PERF_COUNTER_RAWCOUNT:
+            return L"rawcount";
+        case PERF_COUNTER_LARGE_RAWCOUNT:
+            return L"large_rawcount";
+        case PERF_COUNTER_RAWCOUNT_HEX:
+            return L"rawcount_hex";
+        case PERF_COUNTER_LARGE_RAWCOUNT_HEX:
+            return L"large_rawcount_HEX";
+        case PERF_SAMPLE_FRACTION:
+            return L"sample_fraction";
+        case PERF_SAMPLE_COUNTER:
+            return L"sample_counter";
+        case PERF_COUNTER_NODATA:
+            return L"nodata";
+        case PERF_COUNTER_TIMER_INV:
+            return L"timer_inv";
+        case PERF_SAMPLE_BASE:
+            return L"sample_base";
+        case PERF_AVERAGE_TIMER:
+            return L"average_timer";
+        case PERF_AVERAGE_BASE:
+            return L"average_base";
+        case PERF_AVERAGE_BULK:
+            return L"average_bulk";
+        case PERF_100NSEC_TIMER:
+            return L"100nsec_timer";
+        case PERF_100NSEC_TIMER_INV:
+            return L"100nsec_timer_inv";
+        case PERF_COUNTER_MULTI_TIMER:
+            return L"multi_timer";
+        case PERF_COUNTER_MULTI_TIMER_INV:
+            return L"multi_timer_inV";
+        case PERF_COUNTER_MULTI_BASE:
+            return L"multi_base";
+        case PERF_100NSEC_MULTI_TIMER:
+            return L"100nsec_multi_timer";
+        case PERF_100NSEC_MULTI_TIMER_INV:
+            return L"100nsec_multi_timer_inV";
+        case PERF_RAW_FRACTION:
+            return L"raw_fraction";
+        case PERF_RAW_BASE:
+            return L"raw_base";
+        case PERF_ELAPSED_TIME:
+            return L"elapsed_time";
         default: {
-                     std::wostringstream str;
-                     str << L"type(" << std::hex << type_id << L")";
-                     return str.str();
-                 } break;
+            std::wostringstream str;
+            str << L"type(" << std::hex << type_id << L")";
+            return str.str();
+        } break;
     }
 }
 
-
-std::wstring PerfCounterQuery::counterValue(HCOUNTER counter) const
-{
+std::wstring PerfCounterQuery::counterValue(HCOUNTER counter) const {
     DWORD type;
     PDH_RAW_COUNTER value;
 
@@ -387,8 +374,7 @@ std::wstring PerfCounterQuery::counterValue(HCOUNTER counter) const
     return str.str();
 }
 
-std::wstring PerfCounterQuery::trans(const std::wstring &local_name) const
-{
+std::wstring PerfCounterQuery::trans(const std::wstring &local_name) const {
     auto iter = _translation_map.find(local_name);
     if (iter != _translation_map.end()) {
         return iter->second;
@@ -396,4 +382,3 @@ std::wstring PerfCounterQuery::trans(const std::wstring &local_name) const
         return local_name;
     }
 }
-

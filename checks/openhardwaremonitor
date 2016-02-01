@@ -159,7 +159,7 @@ def check_openhardwaremonitor_temperature(item, params, parsed):
     if item in parsed.get('Temperature', {}):
         traits = type_trait('Temperature')
         val = parsed['Temperature'][item] * traits['factor']
-        return check_temperature(val, params)
+        return check_temperature(val, params, "openhardwaremonitor_%s" % item)
 
 
 check_info['openhardwaremonitor.temperature'] = {

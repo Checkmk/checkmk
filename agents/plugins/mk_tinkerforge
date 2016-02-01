@@ -126,13 +126,13 @@ def print_generic(settings, sensor_type, ident, factor, unit, *values):
 def print_ambient_light(conn, settings, uid):
     from tinkerforge.bricklet_ambient_light import BrickletAmbientLight
     br = BrickletAmbientLight(uid, conn)
-    print_generic(settings, "ambient", br.get_identity(), 0.1, "L", br.get_illuminance())
+    print_generic(settings, "ambient", br.get_identity(), 0.01, "L", br.get_illuminance())
 
 
 def print_ambient_light_v2(conn, settings, uid):
     from tinkerforge.bricklet_ambient_light_v2 import BrickletAmbientLightV2
     br = BrickletAmbientLightV2(uid, conn)
-    print_generic(settings, "ambient", br.get_identity(), 0.1, "L", br.get_illuminance())
+    print_generic(settings, "ambient", br.get_identity(), 0.01, "L", br.get_illuminance())
 
 
 def print_temperature(conn, settings, uid):

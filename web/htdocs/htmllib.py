@@ -136,7 +136,19 @@ class html(GUITester):
         return self.mobile
 
     def get_user_agent(self):
-        return self.req.headers_in.get('User-Agent', '')
+        raise MKGeneralException("get_user_agent not implemented")
+
+    def get_referer(self):
+        raise MKGeneralException("get_referer not implemented")
+
+    def request_timeout(self):
+        raise MKGeneralException("request_timeout not implemented")
+
+    def is_ssl_request(self):
+        raise MKGeneralException("is_ssl_request not implemented")
+
+    def request_method(self):
+        raise MKGeneralException("request_method not implemented")
 
     def set_page_context(self, c):
         self.page_context = c
@@ -921,9 +933,6 @@ class html(GUITester):
 
     def http_redirect(self, url):
         raise MKGeneralException("http_redirect not implemented")
-
-    def request_timeout(self):
-        raise MKGeneralException("request_timeout not implemented")
 
     def set_browser_redirect(self, secs, url):
         self.browser_reload   = secs

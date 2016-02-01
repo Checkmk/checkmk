@@ -1,0 +1,17 @@
+Title: Added more useful debugging infos to crash reports
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454336335
+Class: feature
+
+We added the following generic infos to all crash reports:
+
+- Python version
+- Local variables of crash raising function
+
+This has been added to GUI crashes:
+
+- Request method (POST/GET)
+- Page referer

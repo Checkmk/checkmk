@@ -1519,14 +1519,17 @@ def is_manual_check(hostname, check_type, item):
 def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text):
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
+    import inspect
     crash_info = {
         "crash_type"    : "check",
         "time"          : time.time(),
         "os"            : get_os_info(),
         "version"       : check_mk_version,
+        "python_version": sys.version,
         "exc_type"      : exc_type.__name__,
         "exc_value"     : "%s" % exc_value,
         "exc_traceback" : traceback.extract_tb(exc_traceback),
+        "local_vars"    : inspect.trace()[-1][0].f_locals,
         "details"    : {
             "check_output"  : text,
             "host"          : hostname,

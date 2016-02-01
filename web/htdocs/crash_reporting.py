@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import subprocess, base64, time, pprint, traceback, tarfile, cStringIO, sys
+import inspect
 from lib import *
 from valuespec import *
 import table, defaults, config, userdb, forms
@@ -270,12 +271,20 @@ def show_crash_report(info):
     html.write("<td>%s</td></tr>" % html.attrencode(info["os"]))
     html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Check_MK Version"))
     html.write("<td>%s</td></tr>" % html.attrencode(info["version"]))
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Exception"))
+    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Python Version"))
+    html.write("<td>%s</td></tr>" % html.attrencode(info.get("python_version", _("Unknown"))))
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Exception"))
     html.write("<td><pre>%s (%s)</pre></td></tr>" % (html.attrencode(info["exc_type"]),
                                                      html.attrencode(info["exc_value"])))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Traceback"))
+    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Traceback"))
     html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_traceback(info["exc_traceback"])))
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Local Variables"))
+    html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_local_vars(info["local_vars"])))
     html.write("</table>")
+
+
+def format_local_vars(local_vars):
+    return pprint.pformat(local_vars)
 
 
 def show_crashed_check_details(info):
@@ -334,13 +343,17 @@ def show_gui_crash_details(info):
     html.write("<table class=\"data\">")
     html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("Page"))
     html.write("<td>%s</td></tr>" % html.attrencode(details["page"]))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("HTTP Parameters"))
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Request Method"))
+    html.write("<td>%s</td></tr>" % html.attrencode(details.get("request_method", _("Unknown"))))
+    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("HTTP Parameters"))
     html.write("<td>")
     html.debug_vars(vars=details["vars"], hide_with_mouse=False)
     html.write("</td></tr>")
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Referer"))
+    html.write("<td>%s</td></tr>" % html.attrencode(details.get("referer", _("Unknown"))))
     html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Username"))
     html.write("<td>%s</td></tr>" % html.attrencode(details["username"]))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("User-Agent"))
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("User Agent"))
     html.write("<td>%s</td></tr>" % html.attrencode(details["user_agent"]))
     html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Mobile GUI"))
     html.write("<td>%s</td></tr>" % html.attrencode(details["is_mobile"]))
@@ -372,6 +385,11 @@ def show_agent_output(tardata):
         output_box(_("Agent output"), agent_output)
 
 
+# FIXME: Maybe we need to introduce some kind of size limit
+def get_local_vars_of_last_exception():
+    return inspect.trace()[-1][0].f_locals
+
+
 # Slightly duplicate code with modules/check_mk_base.py. Maybe create some kind of central library?
 def create_crash_dump_info_file(tar):
     exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -381,17 +399,21 @@ def create_crash_dump_info_file(tar):
         "time"          : time.time(),
         "os"            : get_os_info(),
         "version"       : defaults.check_mk_version,
+        "python_version": sys.version,
         "exc_type"      : exc_type.__name__,
         "exc_value"     : "%s" % exc_value,
         "exc_traceback" : traceback.extract_tb(exc_traceback),
+        "local_vars"    : get_local_vars_of_last_exception(),
         "details"    : {
             "page"           : html.myfile+".py",
             "vars"           : html.vars,
             "username"       : html.user,
             "user_agent"     : html.get_user_agent(),
+            "referer"        : html.get_referer(),
             "is_mobile"      : html.is_mobile(),
             "is_ssl_request" : html.is_ssl_request(),
             "language"       : config.get_language(),
+            "request_method" : html.request_method(),
         },
     }
 

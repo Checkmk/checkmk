@@ -71,6 +71,22 @@ class html_mod_python(htmllib.html):
         return int(self.req.server.timeout)
 
 
+    def request_method(self):
+        return self.req.method
+
+
+    def is_ssl_request(self):
+        return self.get_request_header('X-Forwarded-Proto') == 'https'
+
+
+    def get_user_agent(self):
+        return self.req.headers_in.get('User-Agent', '')
+
+
+    def get_referer(self):
+        return self.req.headers_in.get('Referer', '')
+
+
     def guitest_fake_login(self, user_id):
         config.login(user_id)
         self.user = user_id
@@ -164,10 +180,6 @@ class html_mod_python(htmllib.html):
 
     def get_request_header(self, key, deflt=None):
         return self.req.headers_in.get(key, deflt)
-
-
-    def is_ssl_request(self):
-        return self.get_request_header('X-Forwarded-Proto') == 'https'
 
 
     def set_cookie(self, varname, value, expires = None):

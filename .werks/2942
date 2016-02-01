@@ -1,0 +1,14 @@
+Title: juniper_cpu_util: new check replaces juniper_cpu which was reporting incorrect values
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.7i4
+Date: 1454322353
+Class: fix
+
+The juniper_cpu check was reporting cpu load as utilization. The load readings from the
+juniper device can't be used as the number of cpu cores is unknown.
+
+juniper_cpu has been obsoleted, will no longer report data and will disappear upon
+re-discovery.
+juniper_cpu_util takes its place and reports the actual utilization.

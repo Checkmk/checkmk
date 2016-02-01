@@ -4,7 +4,9 @@ catalog: hw/network/juniper
 license: GPL
 distribution: check_mk
 description:
- Check CPU utilization of the last 1/5/15 minutes in percent on Juniper devices.
+ This check is obsoleted by juniper_cpu_util!
+ The check was reporting load readings, not utilization! Those load readings
+ aren't actualy usable as the number of cores processing that load isn't known.
 
 perfdata:
  util1: The CPU utilization of the last 1 minutes in percent.
@@ -12,7 +14,7 @@ perfdata:
  util15: The CPU utilization of the last 15 minutes in percent.
 
 inventory:
- One service for each Routing Engine will be creted
+ Since this check is obsolete, no items are discovered
 
 [parameters]
 warning (int): The percentage of CPU utilization that triggers a warning level.

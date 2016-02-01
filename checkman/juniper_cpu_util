@@ -1,0 +1,11 @@
+title: CPU utilization of juniper devices
+agents: snmp
+catalog: hw/network/juniper
+license: GPL
+distribution: check_mk
+description:
+ Check CPU utilizationin percent on Juniper devices.
+ This check replaces the older and broken juniper_cpu check.
+
+inventory:
+ One service for each Routing Engine will be creted

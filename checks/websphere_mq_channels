@@ -67,7 +67,7 @@ def check_websphere_mq_channels(item, params, info):
             yield (state, "%d/%d Messages" % (messages, max_messages),
                     [ ('messages', messages, warn, crit, 0, max_messages) ])
 
-            state = params['status'].get(status, 2)
+            state = params['status'].get(status, params['status'].get('other', 2))
             yield state, "Channel State: %s" % status, []
 
 

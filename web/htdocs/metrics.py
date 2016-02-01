@@ -281,6 +281,8 @@ def mix_colors(a, b):
        in zip(a, b)
     ])
 
+def render_color_icon(color):
+    return "<div class=color style=\"background-color: %s\"></div>" % color
 
 #.
 #   .--Evaluation----------------------------------------------------------.
@@ -1416,7 +1418,7 @@ def render_metrics_table(translated_metrics, host_name, service_description):
     output = "<table class=metricstable>"
     for metric_name, metric in sorted(translated_metrics.items(), cmp=lambda a,b: cmp(a[1]["title"], b[1]["title"])):
         output += "<tr>"
-        output += "<td class=color><div class=color style=\"background-color: %s\"></div></td>" % metric["color"]
+        output += "<td class=color>%s</td>" % render_color_icon(metric["color"])
         output += "<td>%s:</td>" % metric["title"]
         output += "<td class=value>%s</td>" % metric["unit"]["render"](metric["value"])
         if cmk_graphs_possible():

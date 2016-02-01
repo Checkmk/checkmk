@@ -71,7 +71,7 @@ def inventory_etherbox2_temp(parsed):
 
 def check_etherbox2_temp(item, params, parsed):
     if item in parsed:
-        return check_temperature(parsed[item], params)
+        return check_temperature(parsed[item], params, "etherbox2_%s" % item)
 
 
 check_info['etherbox2_temp'] = {

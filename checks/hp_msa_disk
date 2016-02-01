@@ -216,7 +216,7 @@ def check_hp_msa_disk_temp(item, params, parsed):
     for key, values in parsed.items():
         disks.append( (key, float( values["temperature-numeric"] )) )
 
-    return check_temperature_list(disks, params)
+    return check_temperature_list(disks, params, "hp_msa_disk_temp_%s" % item)
 
 
 check_info['hp_msa_disk.temp'] = {

@@ -159,7 +159,7 @@ def inventory_hp_msa_psu_temp(parsed):
 
 def check_hp_msa_psu_temp(item, params, parsed):
     if item in parsed:
-        return check_temperature(float(parsed[item]["dctemp"]), params)
+        return check_temperature(float(parsed[item]["dctemp"]), params, "hp_msa_psu_temp_%s" % item)
 
 
 check_info['hp_msa_psu.temp'] = {

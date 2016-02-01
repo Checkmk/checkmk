@@ -38,7 +38,7 @@ def inventory_artec_temp(info):
 
 
 def check_artec_temp(item, params, info):
-    return check_temperature(int(info[0][0]), params)
+    return check_temperature(int(info[0][0]), params, "artec_%s" % item)
 
 
 check_info['artec_temp'] = {

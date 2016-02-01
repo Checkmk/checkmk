@@ -189,7 +189,8 @@ def inventory_janitza_umg_temp(parsed):
 def check_janitza_umg_temp(item, params, parsed):
     idx = int(item) - 1
     if len(parsed["Temperature"]) > idx:
-        return check_temperature(float(parsed["Temperature"][idx]) / 10.0, params)
+        return check_temperature(float(parsed["Temperature"][idx]) / 10.0, params,
+                                 "janitza_umg_%s" % item)
 
 
 check_info['janitza_umg.temp'] = {

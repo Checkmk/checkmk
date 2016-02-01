@@ -34,7 +34,7 @@ def inventory_isilon_temp(info, is_cpu):
 def check_isilon_temp(item, params, info):
     for sensor_name, value in info:
         if item == isilon_temp_item_name(sensor_name):
-            return check_temperature(float(value), params)
+            return check_temperature(float(value), params, "isilon_%s" % item)
 
 # Expected sensor names:
 # "Temp Until CPU Throttle (CPU 0)"

@@ -35,7 +35,7 @@ def inventory_ipr400_temp(info):
         yield "Ambient", None
 
 def check_ipr400_temp(item, params, info):
-    return check_temperature(int(info[0][0]), params)
+    return check_temperature(int(info[0][0]), params, "ipr400_temp_%s" % item)
 
 check_info["ipr400_temp"] = {
     "check_function"          : check_ipr400_temp,

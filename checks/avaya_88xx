@@ -65,7 +65,7 @@ def check_avaya_88xx(item, params, parsed):
     if len(sensors) < int(item):
         return
 
-    return check_temperature(int(sensors[int(item)]), params)
+    return check_temperature(int(sensors[int(item)]), params, "avaya_88xx_%s" % item)
 
 check_info["avaya_88xx"] = {
     'parse_function':       parse_avaya_88xx,

@@ -1,0 +1,17 @@
+Title: Removed all summary_hosts related filters from shipped views
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454406525
+Class: fix
+
+The so called summary hosts which were only rarely used is a feature we are about to deprecate
+in the coming 1.2.9 release. As preparation for this we are now removing the hard coded default
+filters from the views shipped with Check_MK.
+
+We assume that nearly no users will be affected from this since most users simply don't have
+any summary host defined. If you have summary hosts configured you are requested to migrate
+your configuration. To make the views work again, most of them were filtering out the summary
+hosts, you need to add this filter again on your own to the view by editing it with the view
+editor.

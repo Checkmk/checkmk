@@ -73,7 +73,6 @@ builtin_dashboards["main"] = {
                     'hst2': 'on',
                     'hstp': '',
                 },
-                'summary_host': {'is_summary_host': '0'},
                 'host_acknowledged': {'is_host_acknowledged': '0'},
                 'host_scheduled_downtime_depth': {'is_host_scheduled_downtime_depth': '0'},
             },
@@ -111,7 +110,6 @@ builtin_dashboards["main"] = {
             'group_painters': [],
             'context': {
                 'service_acknowledged': {'is_service_acknowledged': '0'},
-                'summary_host': {'is_summary_host': '0'},
                 'in_downtime': {'is_in_downtime': '0'},
                 'hoststate': {'hst0': 'on',
                               'hst1': '',
@@ -244,7 +242,6 @@ builtin_dashboards["simple_problems"] = {
             'context': {
                 'host_acknowledged': {'is_host_acknowledged': '0'},
                 'host_scheduled_downtime_depth': {'is_host_scheduled_downtime_depth': '0'},
-                'summary_host': {'is_summary_host': '0'},
                 'hoststate': {'hst0': '',
                               'hst1': 'on',
                               'hst2': 'on',
@@ -284,7 +281,6 @@ builtin_dashboards["simple_problems"] = {
             'group_painters': [],
             'context': {
                 'service_acknowledged': {'is_service_acknowledged': '0'},
-                'summary_host': {'is_summary_host': '0'},
                 'in_downtime': {'is_in_downtime': '0'},
                 'hoststate': {'hst0': 'on',
                               'hst1': '',

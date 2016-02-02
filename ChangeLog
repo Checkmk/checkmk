@@ -288,6 +288,7 @@
     * 2969 FIX: Fixed folding of sidebar in Google Chrome
     * 2970 FIX: Users now allowed to modify the sidebar (e.g. guests) can now not fold snapins anymore
     * 3035 FIX: Fixed broken graph preview when hovering graph icon in Check_MK Raw Edition
+    * 3040 FIX: Removed all summary_hosts related filters from shipped views...
 
     WATO:
     * 2442 WATO remove host: improved cleanup of obsolete host files...

@@ -75,7 +75,6 @@ multisite_builtin_views.update({
                   ('is_service_acknowledged', '-1'),
                   ('host', ''),
                   ('is_service_active_checks_enabled', '-1'),
-                  ('is_summary_host', '-1'),
                   ('service', ''),
                   ('check_command', ''),
                   ('st0', 'on'),
@@ -129,7 +128,7 @@ multisite_builtin_views.update({
     'mobile_svcproblems': mobile_view({
         'datasource': 'services',
         'group_painters': [],
-        'hard_filters': ['summary_host', 'in_downtime'],
+        'hard_filters': ['in_downtime'],
         'hard_filtervars': [
 	    ('is_in_downtime', '0'),
             ('st0', ''),
@@ -141,7 +140,6 @@ multisite_builtin_views.update({
             ('hst1', ''),
             ('hst2', ''),
             ('hstp', 'on'),
-            ('is_summary_host', '0')
          ],
         'hide_filters': [],
         'layout': 'mobilelist',
@@ -173,7 +171,7 @@ multisite_builtin_views.update({
     'mobile_svcproblems_unack': mobile_view({
         'datasource': 'services',
         'group_painters': [],
-        'hard_filters': ['summary_host', 'in_downtime', 'service_acknowledged'],
+        'hard_filters': ['in_downtime', 'service_acknowledged'],
         'hard_filtervars': [
             ('is_service_in_notification_period', '-1'),
             ('hst0', 'on'),
@@ -186,7 +184,6 @@ multisite_builtin_views.update({
             ('hdst2', 'on'),
             ('hdst3', 'on'),
             ('hdstp', 'on'),
-            ('is_summary_host', '0'),
             ('st0', ''),
             ('st1', 'on'),
             ('st2', 'on'),
@@ -384,7 +381,7 @@ multisite_builtin_views.update({
      'mobile_hostproblems': mobile_view({
                   'datasource': 'hosts',
                   'group_painters': [('host_state', None)],
-                  'hard_filters': ['host_scheduled_downtime_depth', 'summary_host'],
+                  'hard_filters': ['host_scheduled_downtime_depth'],
                   'hard_filtervars': [
 		      ('is_host_scheduled_downtime_depth', '0'),
                       ('is_host_in_notification_period', '-1'),
@@ -394,7 +391,6 @@ multisite_builtin_views.update({
                       ('hstp', ''),
                       ('is_host_acknowledged', '-1'),
                       ('host', ''),
-                      ('is_summary_host', '0'),
                       ('opthostgroup', '')
                    ],
                   'hide_filters': [],
@@ -424,7 +420,7 @@ multisite_builtin_views.update({
      'mobile_hostproblems_unack': mobile_view({
                   'datasource': 'hosts',
                   'group_painters': [('host_state', None)],
-                  'hard_filters': ['host_scheduled_downtime_depth', 'summary_host', 'host_acknowledged'],
+                  'hard_filters': ['host_scheduled_downtime_depth', 'host_acknowledged'],
                   'hard_filtervars': [
 		      ('is_host_scheduled_downtime_depth', '0'),
                       ('is_host_in_notification_period', '-1'),
@@ -434,7 +430,6 @@ multisite_builtin_views.update({
                       ('hstp', ''),
                       ('is_host_acknowledged', '0'),
                       ('host', ''),
-                      ('is_summary_host', '0'),
                       ('opthostgroup', '')],
                   'hide_filters': [],
                   'layout': 'mobilelist',

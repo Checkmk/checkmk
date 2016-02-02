@@ -320,7 +320,7 @@ sidebar_snapins["summary_hosts"] = {
     "description" : _("A summary state of all summary hosts (summary hosts hold "
                       "aggregated service states and are a feature of Check_MK)"),
     "render" : lambda: render_hosts("summary"),
-    "allowed" : [ "user", "admin", "guest" ],
+    "allowed" : [],
     "refresh" : True,
     "styles" : snapin_allhosts_styles,
 }

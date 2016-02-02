@@ -1,0 +1,16 @@
+Title: esx_vsphere_counters: Improved accuracy of all counter values
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454407189
+Class: fix
+
+In the previous versions the esx_vsphere_counter checks only got
+the last real time sample from the ESX system, which always represents
+a fixed interval of 20 seconds.<br>
+With this update the agent vsphere now queries the last n-samples.
+The number of samples is determined out of the agents check interval.<br>
+Some of the counter checks have been rewritten to handle the increased
+amount of data. Most of the values are simply processed to an average value,
+with the expection of the latency, which uses the maximum value.

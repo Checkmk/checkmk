@@ -85,15 +85,19 @@ def check_esx_vsphere_counters_diskio(item, params, parsed):
     values['write_ios']        = 0
     values['latency']          = 0
 
+
     for what in ["read", "write"]:
         if "disk.%s" % what in parsed and "" in parsed["disk.%s" % what]:
-            values['%s_throughput' % what] = int(parsed["disk.%s" % what][""][0][0]) * 1024
+            values['%s_throughput' % what] = int(esx_vsphere_get_average(parsed["disk.%s" % what][""][0][0]) * 1024)
 
         for instance, info in parsed["disk.number%s" % what.title()].items():
-            values["%s_ios" % what] += int(info[0][0])
+            values["%s_ios" % what] += int(esx_vsphere_get_average(info[0][0]))
 
     if "disk.deviceLatency" in parsed:
-        values["latency"] = max(map(lambda x: int(x[0][0]), parsed["disk.deviceLatency"].values())) / 1000.0
+        highest_latency = 0
+        for entry in parsed["disk.deviceLatency"].values():
+            highest_latency = max(highest_latency, max(map(int, entry[0][0])))
+        values["latency"] = highest_latency / 1000.0
 
     return check_diskstat_dict(item, params, {"SUMMARY" : values})
 
@@ -117,20 +121,30 @@ check_info['esx_vsphere_counters.diskio'] = {
 #   +----------------------------------------------------------------------+
 
 # Example output:
-# datastore.read|4c4ece34-3d60f64f-1584-0022194fe902|0|kiloBytesPerSecond
-# datastore.read|4c4ece5b-f1461510-2932-0022194fe902|0|kiloBytesPerSecond
-# datastore.numberReadAveraged|511e4e86-1c009d48-19d2-bc305bf54b07|0|number
-# datastore.numberWriteAveraged|4c4ece34-3d60f64f-1584-0022194fe902|0|number
-# datastore.totalReadLatency|511e4e86-1c009d48-19d2-bc305bf54b07|0|millisecond
-# datastore.totalWriteLatency|4c4ece34-3d60f64f-1584-0022194fe902|0|millisecond
+# datastore.read|4c4ece34-3d60f64f-1584-0022194fe902|0#1#2|kiloBytesPerSecond
+# datastore.read|4c4ece5b-f1461510-2932-0022194fe902|0#4#5|kiloBytesPerSecond
+# datastore.numberReadAveraged|511e4e86-1c009d48-19d2-bc305bf54b07|0#0#0|number
+# datastore.numberWriteAveraged|4c4ece34-3d60f64f-1584-0022194fe902|0#0#1|number
+# datastore.totalReadLatency|511e4e86-1c009d48-19d2-bc305bf54b07|0#5#5|millisecond
+# datastore.totalWriteLatency|4c4ece34-3d60f64f-1584-0022194fe902|0#2#7|millisecond
 
 def parse_esx_vsphere_counters(info):
     parsed = {}
-    for counter, instance, value, unit in info:
+    # The data reported by the ESX system is split into multiple real time samples with
+    # a fixed duration of 20 seconds. A check interval of one minute reports 3 samples
+    # The esx_vsphere_counters checks need to figure out by themselves how to handle this data
+    for counter, instance, multivalues, unit in info:
+        values = multivalues.split("#")
         parsed.setdefault(counter, {})
         parsed[counter].setdefault(instance, [])
-        parsed[counter][instance].append((value, unit))
+        parsed[counter][instance].append((values, unit))
     return parsed
+
+def esx_vsphere_get_average(values):
+    if not values:
+        return 0
+    int_values = map(int, values)
+    return sum(int_values) / float(len(int_values))
 
 # esx datastores are either shown by human readable name (if available) or by the uid
 def esx_vsphere_counters_get_item_mapping(parsed):
@@ -140,7 +154,7 @@ def esx_vsphere_counters_get_item_mapping(parsed):
 
     for instance, values in parsed.get("datastore.name", {}).items():
         if instance in map_instance_to_item and values[0][0] != "":
-            map_instance_to_item[instance] = values[0][0].replace(" ", "_")
+            map_instance_to_item[instance] = values[0][0][-1].replace(" ", "_")
     return map_instance_to_item
 
 def inventory_esx_vsphere_counters_datastoreio(parsed):
@@ -154,17 +168,19 @@ def check_esx_vsphere_counters_datastoreio(item, params, parsed):
     datastores = {}
     item_mapping = esx_vsphere_counters_get_item_mapping(parsed)
 
-    for new_name, name, scaling in [ ("read_throughput",  "datastore.read",                                  1024),
-                                     ("write_throughput", "datastore.write",                                 1024),
-                                     ("read_ios",         "datastore.datastoreReadIops",                        1),
-                                     ("write_ios",        "datastore.datastoreWriteIops",                       1),
-                                     ("latency",          "datastore.sizeNormalizedDatastoreLatency", 1/1000000.0) ]:
+    for new_name, eval_function, name, scaling in [
+                ("read_throughput",  lambda x: int(esx_vsphere_get_average(x)), "datastore.read",                                  1024),
+                ("write_throughput", lambda x: int(esx_vsphere_get_average(x)), "datastore.write",                                 1024),
+                ("read_ios",         lambda x: int(esx_vsphere_get_average(x)), "datastore.datastoreReadIops",                        1),
+                ("write_ios",        lambda x: int(esx_vsphere_get_average(x)), "datastore.datastoreWriteIops",                       1),
+                ("latency",          lambda x: max(map(int, x)),                "datastore.sizeNormalizedDatastoreLatency", 1/1000000.0) ]:
         field_data = parsed.get(name, {})
 
         for instance, values in field_data.items():
             item_name = item_mapping[instance]
             datastores.setdefault(item_name, {})
-            datastores[item_name][new_name] = int(values[0][0]) * scaling
+            value = eval_function(values[0][0])
+            datastores[item_name][new_name] = value * scaling
 
     return check_diskstat_dict(item, params, datastores)
 
@@ -203,9 +219,9 @@ def convert_esx_counters_if(parsed):
             for instance, values in instances.items():
                 by_item.setdefault(instance, {})
                 if name == "net.macaddress":
-                    by_item[instance][name[4:]] = values[0][0]
+                    by_item[instance][name[4:]] = values[0][0][-1]
                 else:
-                    by_item[instance][name[4:]] = int(values[0][0])
+                    by_item[instance][name[4:]] = int(esx_vsphere_get_average(values[0][0]))
 
     # Example of by_item:
     # {
@@ -349,7 +365,7 @@ def check_esx_vsphere_counters_uptime(_no_item, params, parsed):
     if "sys.uptime" not in parsed:
         raise MKCounterWrapped("Counter data is missing")
 
-    return check_uptime_seconds(params, int(parsed["sys.uptime"][""][0][0]))
+    return check_uptime_seconds(params, int(parsed["sys.uptime"][""][0][0][-1]))
 
 
 check_info['esx_vsphere_counters.uptime'] = {
@@ -409,7 +425,7 @@ def check_esx_vsphere_counters_ramdisk(item, params, parsed):
                     return 3, 'Unhandled ramdisk found (%s)' % name
                 else:
                     continue
-            used_mb  = float(parsed["sys.resourceMemConsumed"][instance][0][0]) / 1000
+            used_mb  = float(parsed["sys.resourceMemConsumed"][instance][0][0][-1]) / 1000
             avail_mb = size_mb - used_mb
             ramdisks.append((name, size_mb, avail_mb, 0))
 

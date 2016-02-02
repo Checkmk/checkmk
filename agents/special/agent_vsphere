@@ -154,7 +154,7 @@ telegram_list = {
 
      "perfcounterdata":
          '<ns1:QueryPerf xsi:type="ns1:QueryPerfRequestType"><ns1:_this type="PerformanceManager">%(perfManager)s</ns1:_this>'\
-         '<ns1:querySpec><ns1:entity type="HostSystem">%(esxhost)s</ns1:entity><ns1:maxSample>1</ns1:maxSample>%(counters)s'\
+         '<ns1:querySpec><ns1:entity type="HostSystem">%(esxhost)s</ns1:entity><ns1:maxSample>%(samples)s</ns1:maxSample>%(counters)s'\
          '<ns1:intervalId>20</ns1:intervalId></ns1:querySpec></ns1:QueryPerf>',
 
      "networksystem":
@@ -831,7 +831,6 @@ opt_pysphere            = False
 opt_tracefile           = None
 opt_host_pwr_display    = None
 opt_vm_pwr_display      = None
-opt_tracefile           = None
 opt_spaces              = "underscore"
 opt_no_cert             = False
 
@@ -990,9 +989,10 @@ if tracefile:
                     (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
 
 
-host_cookie_path = None
-server_cookie    = None
-server_handle    = None
+host_cookie_path        = None
+last_cookie_access_time = None
+server_cookie           = None
+server_handle           = None
 
 class MKQueryServerException(Exception):
     pass
@@ -1009,7 +1009,6 @@ if "OMD_SITE" in os.environ:
 def delete_server_cookie():
     if host_cookie_path and os.path.exists(host_cookie_path):
         os.unlink(host_cookie_path)
-    #    os.rename(host_cookie_path, "%s.invalid.%d" % (host_cookie_path, time.time()))
 
 def query_server(payload, payload_params = {}):
     # Finalize payload
@@ -1118,7 +1117,8 @@ def login():
     global server_cookie
 
     if host_cookie_path and os.path.exists(host_cookie_path):
-        server_cookie = file("%s/cookie.%s" % (cookie_path, host_address), "r").read()
+        last_update = int(os.stat(host_cookie_path).st_mtime)
+        server_cookie = file(host_cookie_path, "r").read()
     else:
         payload = telegram_list["login"]
         reply_code, repy_msg, reply_headers, reply_data = \
@@ -1146,6 +1146,14 @@ def login():
 
 connect_to_server()
 retrieve_basic_info()
+
+# The cookie access time is required to determine the agents check interval
+# This is required later on by the performancecounters. Depending on the
+# interval we need more or less real-time samples
+if host_cookie_path and os.path.exists(host_cookie_path):
+    last_cookie_access_time = os.stat(host_cookie_path).st_mtime
+    os.utime(host_cookie_path, None) # Touch the cookie file, whenever it is accessed
+
 login()
 
 if not error:
@@ -1165,6 +1173,26 @@ if not error:
             output("<<<esx_systeminfo>>>")
             for entry in systeminfo.items():
                 output("%s %s" % entry)
+
+
+            #############################
+            # Determine available host systems
+            #############################
+            hostsystems = {}
+
+            reply_code, reply_msg, reply_headers, hostsystems_response = query_server(telegram_list["hostsystems"])
+            elements = get_pattern('<obj type="HostSystem">(.*?)</obj>.*?<val xsi:type="xsd:string">(.*?)</val>', hostsystems_response)
+
+            # On some ESX systems the cookie login does not work as expected, when the agent_vsphere
+            # is called only once or twice a day. The cookie is somehow outdated, but there is no authentification
+            # failed message. Instead, the query simply returns an empty data set..
+            # We try to detect this here (there is always a hostsystem) and raise a MKQueryServerException
+            # which forces a new login
+            if not elements:
+                raise MKQueryServerException("Login cookie is no longer valid")
+
+            for hostsystem, name in elements:
+                hostsystems[hostsystem] = name
 
             ###########################
             # Licenses
@@ -1188,18 +1216,6 @@ if not error:
                 output("<<<esx_vsphere_licenses:sep(9)>>>")
                 for license, values in licenses.items():
                     output("%s\t%s %s" % (license, values["used"], values["total"]))
-
-            #############################
-            # Determine available host systems
-            #############################
-            hostsystems = {}
-
-            reply_code, reply_msg, reply_headers, hostsystems_response = query_server(telegram_list["hostsystems"])
-            elements = get_pattern('<obj type="HostSystem">(.*?)</obj>.*?<val xsi:type="xsd:string">(.*?)</val>', hostsystems_response)
-
-            for hostsystem, name in elements:
-                hostsystems[hostsystem] = name
-
 
             ###########################
             # Datastores
@@ -1265,7 +1281,16 @@ if not error:
                     counters_syntax[key] = { "name": nameInfo, "group": groupInfo, "unit": unitInfo }
 
 
-                # We need to query each ESX host system separately..
+                # Determine the needed number of real-time samples
+                # One real-time sample is 20 seconds -> With a check interval of 1 minute we need the last 3 samples
+                # Longer check intervals require even more samples... n-minutes * 3
+                # We set the max_samples hard cap to 180 (1 hour)
+                # An ESX system does not offer more than one hour of real time samples, anyway.
+                max_samples = 3
+                if last_cookie_access_time:
+                    timedelta = time.time() - last_cookie_access_time
+                    max_samples = min(180, max(1, int(timedelta) / 2))
+
                 hostnames = hostsystems.keys()
                 counter_data_payload = telegram_list["perfcounterdata"]
                 for idx, host in enumerate(hostnames):
@@ -1289,12 +1314,18 @@ if not error:
                             counter_data.append("<ns1:metricId><ns1:counterId>%d</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>" % (entry, instance))
                     counters_value = {}
                     reply_code, reply_msg, reply_headers, counter_data_response = \
-                        query_server(counter_data_payload, payload_params = { "esxhost": host, "counters": "".join(counter_data) })
-                    elements = get_pattern("<id><counterId>(.*?)</counterId><instance>(.*?)</instance></id><value>(.*?)</value>", counter_data_response)
-
-                    for counter, instance, value in elements:
+                        query_server(counter_data_payload, payload_params = { "esxhost": host, "counters": "".join(counter_data), "samples": max_samples })
+                    # Python regex only supports up to 100 match groups in a regex..
+                    # We are only extracting the whole value line and split it later on
+                    # This is a perfect candidate for "Catastrophic Backtracking" :)
+                    # Someday we should replace all of these get_pattern calls with
+                    # one of these new and fancy xml parsers I've heard from
+                    elements = get_pattern("<id><counterId>(.*?)</counterId><instance>(.*?)</instance></id>(%s)" % ("<value>.*?</value>" * max_samples), counter_data_response)
+                    for entry in elements:
+                        counter, instance, valuestring = entry
+                        values = get_pattern("<value>(.*?)</value>", valuestring)
                         if counter in counters_syntax:
-                            counters_value["%s.%s" % (counter, instance)] = { "id": counter, "instance": instance, "value": value }
+                            counters_value["%s.%s" % (counter, instance)] = { "id": counter, "instance": instance, "value": "#".join(values)}
 
                     output("<<<esx_vsphere_counters:sep(124)>>>")
                     counters_output = {}
@@ -1609,6 +1640,7 @@ if not error:
             # There was a problem during the query.
             # It is possible that the server cookie got invalid.
             # We are delete the cookie and start a second run
+            vsphere_output = []    # Reset current output
             delete_server_cookie()
             login()
             continue # do a second run

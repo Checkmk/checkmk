@@ -239,6 +239,7 @@
             NOTE: Please refer to the migration notes!
     * 3063 FIX: mcaffee_av_client: plugin didn't work with 32-bit av software installed on 64-bit system
     * 3064 FIX: netscaler_health: no longer discovers non-running fans (i.e. in virtual appliances)
+    * 2987 FIX: esx_vsphere_counters: Improved accuracy of all counter values...
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

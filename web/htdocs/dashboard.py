@@ -1074,6 +1074,8 @@ def page_edit_dashlet():
                 dashlet.update(type_properties)
 
             elif handle_input_func:
+                # The returned dashlet must be equal to the parameter! It is not replaced/re-added
+                # to the dashboard object. FIXME TODO: Clean this up!
                 dashlet = handle_input_func(ident, dashlet)
 
             if context_specs:

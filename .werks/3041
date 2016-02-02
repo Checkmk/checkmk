@@ -1,0 +1,9 @@
+Title: Fixed deselecting view checkbox options like "Always show checkboxes" in dashboard embedded views
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454421727
+Class: fix
+
+

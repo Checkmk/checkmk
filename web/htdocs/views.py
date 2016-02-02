@@ -642,9 +642,17 @@ def transform_valuespec_value_to_view(view):
         # at the moment.
         if ident == 'view':
             if "options" in attrs:
+                # First set all options to false
+                for option in dict(view_editor_options()).keys():
+                    view[option] = False
+
+                # Then set the selected single options
                 for option in attrs['options']:
                     view[option] = True
+
+                # And cleanup
                 del attrs['options']
+
             view.update(attrs)
             del view["view"]
 

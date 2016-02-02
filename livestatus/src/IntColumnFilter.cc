@@ -76,7 +76,7 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower,
     /* [lower, upper[ is some interval. This filter might restrict
        that interval to a smaller interval.
      */
-    int opref = _opid * (_negate != false ? -1 : 1);
+    int opref = _opid * (_negate ? -1 : 1);
     switch (opref) {
         case OP_EQUAL:
             if (ref_value >= *lower && ref_value < *upper) {
@@ -128,7 +128,7 @@ bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
     // by the filter.
     uint32_t bit = 1 << ref_value;
 
-    int opref = _opid * (_negate != false ? -1 : 1);
+    int opref = _opid * (_negate ? -1 : 1);
     switch (opref) {
         case OP_EQUAL:
             *mask &= bit;  // bit must be set

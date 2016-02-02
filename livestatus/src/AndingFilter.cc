@@ -38,7 +38,7 @@ AndingFilter::~AndingFilter() {
 void AndingFilter::addSubfilter(Filter *f) { _subfilters.push_back(f); }
 
 Filter *AndingFilter::stealLastSubfiler() {
-    if (_subfilters.size() == 0)
+    if (_subfilters.empty())
         return 0;
     else {
         Filter *l = _subfilters.back();

@@ -205,7 +205,7 @@ void Query::setError(int error_code, const char *msg) {
     _output->setError(error_code, msg);
 }
 
-bool Query::hasNoColumns() { return _columns.size() == 0 && !doStats(); }
+bool Query::hasNoColumns() { return _columns.empty() && !doStats(); }
 
 int Query::lookupOperator(const char *opname) {
     int opid;
@@ -334,7 +334,7 @@ void Query::parseStatsAndOrLine(char *line, int andor) {
     AndingFilter *anding =
         (andor == ANDOR_OR) ? new OringFilter() : new AndingFilter();
     while (number > 0) {
-        if (_stats_columns.size() == 0) {
+        if (_stats_columns.empty()) {
             _output->setError(
                 RESPONSE_CODE_INVALID_HEADER,
                 "Invalid count for Stats%s: too few Stats: headers available",
@@ -366,7 +366,7 @@ void Query::parseStatsNegateLine(char *line) {
                           "StatsNegate: does not take any arguments");
         return;
     }
-    if (_stats_columns.size() == 0) {
+    if (_stats_columns.empty()) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
                           "StatsNegate: no Stats: headers available");
         return;
@@ -782,7 +782,7 @@ void Query::parseLocaltimeLine(char *line) {
     }
 }
 
-bool Query::doStats() { return _stats_columns.size() > 0; }
+bool Query::doStats() { return !_stats_columns.empty(); }
 
 void Query::start() {
     doWait();
@@ -796,7 +796,7 @@ void Query::start() {
         // Aggregators,
         // directly in _stats_aggregators. When grouping the rows of aggregators
         // will be created each time a new group is found.
-        if (_columns.size() == 0) {
+        if (_columns.empty()) {
             _stats_aggregators = new Aggregator *[_stats_columns.size()];
             for (unsigned i = 0; i < _stats_columns.size(); i++)
                 _stats_aggregators[i] = _stats_columns[i]->createAggregator();
@@ -873,7 +873,7 @@ bool Query::processDataset(void *data) {
             Aggregator **aggr;
             // When doing grouped stats, we need to fetch/create a row
             // of aggregators for the current group
-            if (_columns.size() > 0) {
+            if (!_columns.empty()) {
                 _stats_group_spec_t groupspec;
                 computeStatsGroupSpec(groupspec, data);
                 aggr = getStatsGroup(groupspec);
@@ -907,7 +907,7 @@ bool Query::processDataset(void *data) {
 
 void Query::finish() {
     // grouped stats
-    if (doStats() && _columns.size() > 0) {
+    if (doStats() && !_columns.empty()) {
         // output values of all stats groups (output has been post poned until
         // now)
         for (_stats_groups_t::iterator it = _stats_groups.begin();

@@ -310,7 +310,7 @@ def parse_perf_data(perf_data_string, check_command=None):
     check_command = check_command.split("!")[0]
 
     if not perf_data_string:
-        return None, check_command
+        return [], check_command
 
     # Split the perf data string into parts. Preserve quoted strings!
     try:

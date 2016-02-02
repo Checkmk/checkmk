@@ -310,7 +310,7 @@ bool LogEntry::handleExternalCommandEntry() {
         _logclass = LOGCLASS_COMMAND;
         char *scan = _text;
         _text = next_token(&scan, ':');
-        return true;  // TODO: join with host/service information?
+        return true;  // TODO(mk): join with host/service information?
         /* Damit wir die restlichen Spalten ordentlich befuellen, braeuchten
            wir eine komplette Liste von allen external commands und
            deren Parameteraufbau. Oder gibt es hier auch eine bessere

@@ -72,7 +72,8 @@ void OutputBuffer::addBuffer(const char *buf, unsigned len) {
     _writepos += len;
 }
 
-// TODO: All this code is highly error-prone due to overflow, failed allocations
+// TODO(sp): All this code is highly error-prone due to overflow, failed
+// allocations
 // etc. We should just use vector instead.
 void OutputBuffer::needSpace(unsigned len) {
     if (_writepos + len > _end) {

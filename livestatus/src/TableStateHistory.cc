@@ -831,8 +831,8 @@ int TableStateHistory::updateHostServiceState(Query *query,
             hs_state->_log_output = 0;
 
         else
-            // TODO: Do we really need to strdup? How are the lifetimes of entry
-            // and hs_state related? This is highly unclear. This strdup
+            // TODO(sp): Do we really need to strdup? How are the lifetimes of
+            // entry and hs_state related? This is highly unclear. This strdup
             // complicates things like hell, because HostServiceState owns
             // _log_output because of it. If this is really needed (hopefully
             // not), we should better change the type from a naked pointer to a

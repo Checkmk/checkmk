@@ -48,7 +48,7 @@ void TableTimeperiods::addColumns(Table *table, string prefix,
     table->addColumn(new OffsetTimeperiodColumn(
         prefix + "in", "Wether we are currently in this period (0/1)", -1,
         indirect_offset));
-    // TODO: add days and exceptions
+    // TODO(mk): add days and exceptions
 }
 
 void TableTimeperiods::answerQuery(Query *query) {

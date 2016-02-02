@@ -41,7 +41,7 @@ extern int g_idle_timeout_msec;
 
 namespace {
 const size_t initial_buffer_size = 4096;
-// TODO: Make this configurable?
+// TODO(sp): Make this configurable?
 const size_t maximum_buffer_size = 500 * 1024 * 1024;
 
 const int read_timeout_usec = 200000;

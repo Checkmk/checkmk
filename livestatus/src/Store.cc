@@ -35,7 +35,7 @@
 #include "logger.h"
 #include "strutil.h"
 
-// TODO: Remove this hack.
+// TODO(sp): Remove this hack.
 #ifdef EXTERN
 #undef EXTERN
 #endif

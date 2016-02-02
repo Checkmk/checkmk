@@ -35,7 +35,7 @@ extern char* g_pnp_path;
 
 namespace {
 
-// TODO: Move this to some kind of C++ string utility file.
+// TODO(sp): Move this to some kind of C++ string utility file.
 string replace_all(const string& str, const string& chars, char replacement) {
     string result(str);
     size_t i = 0;

@@ -1,0 +1,19 @@
+Title: Fixed configuring the sender of mails (Text and HTML mails)
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454422472
+Class: fix
+
+It is now really possible to configure the sender name and address
+of notifications using the rule based notifications. This was not
+completely working as sendmail was called with the wrong arguments
+(-f instead of -F).
+
+The from address can now be configured like this:
+
+Company Mointoring <monitoring@example.com>
+
+Tested with sendmail compatibility version from postfix.
+

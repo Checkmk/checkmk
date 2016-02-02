@@ -385,9 +385,39 @@ def show_agent_output(tardata):
         output_box(_("Agent output"), agent_output)
 
 
-# FIXME: Maybe we need to introduce some kind of size limit
 def get_local_vars_of_last_exception():
-    return inspect.trace()[-1][0].f_locals
+    local_vars = {}
+    for key, val in inspect.trace()[-1][0].f_locals.items():
+        local_vars[key] = format_var_for_export(val)
+    return local_vars
+
+
+def format_var_for_export(val):
+    if inspect.isclass(val) or inspect.isroutine(val) or type(val).__name__ == "instance":
+        return "%s" % val
+
+    elif isinstance(val, dict):
+        for item_key, item_val in val.items():
+            val[item_key] = format_var_for_export(item_val)
+
+    elif isinstance(val, list):
+        for index, item in enumerate(val):
+            val[index] = format_var_for_export(item)
+
+    elif isinstance(val, tuple):
+        new_val = ()
+        for item in val:
+            new_val += (format_var_for_export(item),)
+        val = new_val
+
+    # Check and limit size
+    if type(val) in (str, unicode):
+        size_limit = 1024*1024
+        size = len(val)
+        if size > size_limit:
+            val = val[:size_limit] + "... (%d bytes stripped)" % (size - size_limit)
+
+    return val
 
 
 # Slightly duplicate code with modules/check_mk_base.py. Maybe create some kind of central library?

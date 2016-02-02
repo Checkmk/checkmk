@@ -36,6 +36,8 @@
 #include "Query.h"
 #include "logger.h"
 
+using std::string;
+
 #define WRITE_TIMEOUT_USEC 100000
 
 OutputBuffer::OutputBuffer() : _max_size(INITIAL_OUTPUT_BUFFER_SIZE) {
@@ -146,9 +148,8 @@ void OutputBuffer::setError(unsigned code, const char *format, ...) {
         va_start(ap, format);
         vsnprintf(buffer, sizeof(buffer) - 1, format, ap);
         logger(LG_INFO, "error: %s", buffer);
-        strcat(buffer, "\n");
         va_end(ap);
-        _error_message = buffer;
+        _error_message = string(buffer) + "\n";
         _response_code = code;
     }
 }

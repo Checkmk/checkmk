@@ -64,6 +64,14 @@ div.dashlet div.dashlet_inner {
     background-color: #cbd6da;
 }
 
+div.dashlet div.dashlet_inner.err {
+    color: #000;
+}
+
+div.dashlet div.dashlet_inner.err div {
+    padding: 10px;
+}
+
 div.dashlet iframe {
     border-style: none;
 }

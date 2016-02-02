@@ -262,7 +262,7 @@ def page_dashboard():
     if name not in available_dashboards:
         raise MKGeneralException(_("The requested dashboard can not be found."))
 
-    render_dashboard(name)
+    draw_dashboard(name)
 
 def add_wato_folder_to_url(url, wato_folder):
     if not wato_folder:
@@ -317,7 +317,7 @@ def load_dashboard_with_cloning(name, edit = True):
     return board
 
 # Actual rendering function
-def render_dashboard(name):
+def draw_dashboard(name):
     mode = 'display'
     if html.var('edit') == '1':
         mode = 'edit'
@@ -332,7 +332,6 @@ def render_dashboard(name):
     # WATO subfolder or file. This could be a configurable feature in
     # future, but currently we assume, that *all* dashboards are filename
     # sensitive.
-
     wato_folder = html.var("wato_folder")
 
     title = visuals.visual_title('dashboard', board)
@@ -355,156 +354,37 @@ def render_dashboard(name):
 
     html.write("<div id=dashboard class=\"dashboard_%s\">\n" % name) # Container of all dashlets
 
-    used_types = list(set([ d['type'] for d in board['dashlets'] ]))
+    dashlet_javascripts(board)
+    dashlet_styles(board)
 
-    # Render dashlet custom scripts
-    scripts = '\n'.join([ dashlet_types[ty]['script'] for ty in used_types if dashlet_types[ty].get('script') ])
-    if scripts:
-        html.javascript(scripts)
-
-    # Render dashlet custom styles
-    styles = '\n'.join([ dashlet_types[ty]['styles'] for ty in used_types if dashlet_types[ty].get('styles') ])
-    if styles:
-        html.write("<style>\n%s\n</style>\n" % styles)
-
-    refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript
-    dashlets_js      = []
-    on_resize        = [] # javascript function to execute after ressizing the dashlet
+    global g_refresh_dashlets, g_dashlets_js, g_on_resize
+    g_refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript
+    g_dashlets_js      = []
+    g_on_resize        = [] # javascript function to execute after ressizing the dashlet
     for nr, dashlet in enumerate(board["dashlets"]):
-        # dashlets using the 'urlfunc' method will dynamically compute
-        # an url (using HTML context variables at their wish).
-        if "urlfunc" in dashlet:
+        dashlet_container_begin(nr, dashlet)
+
+        try:
             gather_dashlet_url(dashlet)
 
-        dashlet_type = dashlet_types[dashlet['type']]
+            register_for_refresh(name, nr, dashlet, wato_folder)
+            register_for_on_resize(nr, dashlet)
 
-        # dashlets using the 'url' method will be refreshed by us. Those
-        # dashlets using static content (such as an iframe) will not be
-        # refreshed by us but need to do that themselves.
-        if "url" in dashlet or ('render' in dashlet_type and dashlet_type.get('refresh')):
-            url = dashlet.get("url", "dashboard_dashlet.py?name="+name+"&id="+ str(nr))
-            refresh = dashlet.get("refresh", dashlet_type.get("refresh"))
-            if refresh:
-                action = None
-                if 'on_refresh' in dashlet_type:
-                    try:
-                        action = 'function() {%s}' % dashlet_type['on_refresh'](nr, dashlet)
-                    except Exception, e:
-                        # Ignore the exceptions in non debug mode, assuming the exception also occures
-                        # while dashlet rendering, which is then shown in the dashlet itselfs.
-                        if config.debug:
-                            raise
-                else:
-                    # FIXME: remove add_wato_folder_to_url
-                    action = '"%s"' % add_wato_folder_to_url(url, wato_folder) # url to dashboard_dashlet.py
+            draw_dashlet(name, board, nr, dashlet, wato_folder)
+        except MKUserError, e:
+            dashlet_error(nr, dashlet, e)
+        except Exception, e:
+            if config.debug:
+                import traceback
+                detail = traceback.format_exc()
+            else:
+                detail = e
+            dashlet_error(nr, dashlet, detail)
 
-                if action:
-                    refresh_dashlets.append('[%d, %d, %s]' % (nr, refresh, action))
+        dashlet_container_end()
+        set_dashlet_dimensions(dashlet)
 
-
-        # Update the dashlets context with the dashboard global context when there are
-        # useful information
-        add_url_vars = apply_global_context(board, dashlet)
-
-        # Paint the dashlet's HTML code
-        render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars)
-
-        if 'on_resize' in dashlet_type:
-            try:
-                on_resize.append('%d: function() {%s}' % (nr, dashlet_type['on_resize'](nr, dashlet)))
-            except Exception, e:
-                # Ignore the exceptions in non debug mode, assuming the exception also occures
-                # while dashlet rendering, which is then shown in the dashlet itselfs.
-                if config.debug:
-                    raise
-
-        dimensions = {
-            'x' : dashlet['position'][0],
-            'y' : dashlet['position'][1]
-        }
-        if dashlet_type.get('resizable', True):
-            dimensions['w'] = dashlet['size'][0]
-            dimensions['h'] = dashlet['size'][1]
-        else:
-            dimensions['w'] = dashlet_type['size'][0]
-            dimensions['h'] = dashlet_type['size'][1]
-        dashlets_js.append(dimensions)
-
-    # Show the edit menu to all users which are allowed to edit dashboards
-    if config.may("general.edit_dashboards"):
-        html.write('<ul id="controls" class="menu" style="display:none">\n')
-
-        if board['owner'] != config.user_id:
-            # Not owned dashboards must be cloned before being able to edit. Do not switch to
-            # edit mode using javascript, use the URL with edit=1. When this URL is opened,
-            # the dashboard will be cloned for this user
-            html.write('<li><a href="%s">%s</a></li>\n' % (html.makeuri([('edit', 1)]), _('Edit Dashboard')))
-
-        else:
-            #
-            # Add dashlet menu
-            #
-
-            display = html.var('edit') == '1' and 'block' or 'none'
-            html.write('<li id="control_add" class="sublink" style="display:%s" '
-                       'onmouseover="show_submenu(\'control_add\')"><a href="javascript:void(0)">'
-                       '<img src="images/dashboard_menuarrow.png" />%s</a>\n' % (display, _('Add dashlet')))
-
-            # The dashlet types which can be added to the view
-            html.write('<ul id="control_add_sub" class="menu sub" style="display:none">\n')
-
-            add_existing_view_type = dashlet_types['view'].copy()
-            add_existing_view_type['title'] = _('Existing View')
-            add_existing_view_type['add_urlfunc'] = lambda: 'create_view_dashlet.py?name=%s&create=0&back=%s' % \
-                                                            (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')])))
-
-            choices = [ ('view', add_existing_view_type) ]
-            choices += sorted(dashlet_types.items(), key = lambda x: x[1].get('sort_index', 0))
-
-            for ty, dashlet_type in choices:
-                if dashlet_type.get('selectable', True):
-                    url = html.makeuri([('type', ty), ('back', html.makeuri([('edit', '1')]))], filename = 'edit_dashlet.py')
-                    if 'add_urlfunc' in dashlet_type:
-                        url = dashlet_type['add_urlfunc']()
-                    html.write('<li><a href="%s"><img src="images/dashlet_%s.png" />%s</a></li>\n' %
-                                                                (url, ty, dashlet_type['title']))
-            html.write('</ul>\n')
-
-            html.write('</li>\n')
-
-            #
-            # Properties link
-            #
-
-            html.write('<li><a href="edit_dashboard.py?load_name=%s&back=%s" '
-                       'onmouseover="hide_submenus();" ><img src="images/trans.png" />%s</a></li>\n' %
-                (name, html.urlencode(html.makeuri([])), _('Properties')))
-
-            #
-            # Stop editing
-            #
-
-            display = html.var('edit') == '1' and 'block' or 'none'
-            html.write('<li id="control_view" style="display:%s"><a href="javascript:void(0)" '
-                       'onmouseover="hide_submenus();" '
-                       'onclick="toggle_dashboard_edit(false)"><img src="images/trans.png" />%s</a></li>\n' %
-                            (display, _('Stop Editing')))
-
-            #
-            # Enable editing link
-            #
-
-            display = html.var('edit') != '1' and 'block' or 'none'
-            html.write('<li id="control_edit" style="display:%s"><a href="javascript:void(0)" '
-                       'onclick="toggle_dashboard_edit(true)"><img src="images/trans.png" />%s</a></li>\n' %
-                            (display, _('Edit Dashboard')))
-
-        html.write("</ul>\n")
-
-        html.icon_button(None, _('Edit the Dashboard'), 'dashboard_controls', 'controls_toggle',
-                        onclick = 'void(0)')
-
-    html.write("</div>\n")
+    dashboard_edit_controls(name, board, dashlet_types)
 
     # Put list of all autorefresh-dashlets into Javascript and also make sure,
     # that the dashbaord is painted initially. The resize handler will make sure
@@ -529,15 +409,38 @@ calculate_dashboard();
 window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
     """ % (MAX, GROW, raster, header_height, screen_margin, dashlet_padding, dashlet_min_size,
-           corner_overlap, ','.join(refresh_dashlets), ','.join(on_resize),
-           name, board['mtime'], repr(dashlets_js)))
+           corner_overlap, ','.join(g_refresh_dashlets), ','.join(g_on_resize),
+           name, board['mtime'], repr(g_dashlets_js)))
 
     if mode == 'edit':
         html.javascript('toggle_dashboard_edit(true)')
 
     html.body_end() # omit regular footer with status icons, etc.
 
-def render_dashlet_content(nr, the_dashlet, stash_html_vars=True):
+
+def dashlet_error(nr, dashlet, msg):
+    html.write('<div class="dashlet_inner background err" id="dashlet_inner_%d">' % (nr))
+    html.write("<div>")
+    html.write(_('Problem while rendering dashlet %d of type %s: ') % (nr, dashlet["type"]))
+    html.write(html.attrencode(msg).replace("\n", "<br>")+"</div>")
+    html.write("</div>")
+
+
+def dashlet_container_begin(nr, dashlet):
+    dashlet_type = get_dashlet_type(dashlet)
+
+    classes = ['dashlet', dashlet['type']]
+    if dashlet_type.get('resizable', True):
+        classes.append('resizable')
+
+    html.write('<div class="%s" id="dashlet_%d">' % (' '.join(classes), nr))
+
+
+def dashlet_container_end():
+    html.write("</div>\n")
+
+
+def draw_dashlet_content(nr, the_dashlet, stash_html_vars=True):
     if stash_html_vars:
         html.stash_vars()
         html.del_all_vars()
@@ -554,6 +457,159 @@ def render_dashlet_content(nr, the_dashlet, stash_html_vars=True):
         if stash_html_vars:
             html.unstash_vars()
 
+
+def dashboard_edit_controls(name, board, dashlet_types):
+    # Show the edit menu to all users which are allowed to edit dashboards
+    if not config.may("general.edit_dashboards"):
+        return
+
+    html.write('<ul id="controls" class="menu" style="display:none">\n')
+
+    if board['owner'] != config.user_id:
+        # Not owned dashboards must be cloned before being able to edit. Do not switch to
+        # edit mode using javascript, use the URL with edit=1. When this URL is opened,
+        # the dashboard will be cloned for this user
+        html.write('<li><a href="%s">%s</a></li>\n' % (html.makeuri([('edit', 1)]), _('Edit Dashboard')))
+
+    else:
+        #
+        # Add dashlet menu
+        #
+
+        display = html.var('edit') == '1' and 'block' or 'none'
+        html.write('<li id="control_add" class="sublink" style="display:%s" '
+                   'onmouseover="show_submenu(\'control_add\')"><a href="javascript:void(0)">'
+                   '<img src="images/dashboard_menuarrow.png" />%s</a>\n' % (display, _('Add dashlet')))
+
+        # The dashlet types which can be added to the view
+        html.write('<ul id="control_add_sub" class="menu sub" style="display:none">\n')
+
+        add_existing_view_type = dashlet_types['view'].copy()
+        add_existing_view_type['title'] = _('Existing View')
+        add_existing_view_type['add_urlfunc'] = lambda: 'create_view_dashlet.py?name=%s&create=0&back=%s' % \
+                                                        (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')])))
+
+        choices = [ ('view', add_existing_view_type) ]
+        choices += sorted(dashlet_types.items(), key = lambda x: x[1].get('sort_index', 0))
+
+        for ty, dashlet_type in choices:
+            if dashlet_type.get('selectable', True):
+                url = html.makeuri([('type', ty), ('back', html.makeuri([('edit', '1')]))], filename = 'edit_dashlet.py')
+                if 'add_urlfunc' in dashlet_type:
+                    url = dashlet_type['add_urlfunc']()
+                html.write('<li><a href="%s"><img src="images/dashlet_%s.png" />%s</a></li>\n' %
+                                                            (url, ty, dashlet_type['title']))
+        html.write('</ul>\n')
+
+        html.write('</li>\n')
+
+        #
+        # Properties link
+        #
+
+        html.write('<li><a href="edit_dashboard.py?load_name=%s&back=%s" '
+                   'onmouseover="hide_submenus();" ><img src="images/trans.png" />%s</a></li>\n' %
+            (name, html.urlencode(html.makeuri([])), _('Properties')))
+
+        #
+        # Stop editing
+        #
+
+        display = html.var('edit') == '1' and 'block' or 'none'
+        html.write('<li id="control_view" style="display:%s"><a href="javascript:void(0)" '
+                   'onmouseover="hide_submenus();" '
+                   'onclick="toggle_dashboard_edit(false)"><img src="images/trans.png" />%s</a></li>\n' %
+                        (display, _('Stop Editing')))
+
+        #
+        # Enable editing link
+        #
+
+        display = html.var('edit') != '1' and 'block' or 'none'
+        html.write('<li id="control_edit" style="display:%s"><a href="javascript:void(0)" '
+                   'onclick="toggle_dashboard_edit(true)"><img src="images/trans.png" />%s</a></li>\n' %
+                        (display, _('Edit Dashboard')))
+
+    html.write("</ul>\n")
+
+    html.icon_button(None, _('Edit the Dashboard'), 'dashboard_controls', 'controls_toggle',
+                    onclick = 'void(0)')
+
+    html.write("</div>\n")
+
+
+# Render dashlet custom scripts
+def dashlet_javascripts(board):
+    scripts = '\n'.join([ ty['script'] for ty in used_dashlet_types(board) if ty.get('script') ])
+    if scripts:
+        html.javascript(scripts)
+
+
+# Render dashlet custom styles
+def dashlet_styles(board):
+    styles = '\n'.join([ ty['styles'] for ty in used_dashlet_types(board) if ty.get('styles') ])
+    if styles:
+        html.write("<style>\n%s\n</style>\n" % styles)
+
+
+def used_dashlet_types(board):
+    type_names = list(set([ d['type'] for d in board['dashlets'] ]))
+    return [ dashlet_types[ty] for ty in type_names ]
+
+
+# dashlets using the 'url' method will be refreshed by us. Those
+# dashlets using static content (such as an iframe) will not be
+# refreshed by us but need to do that themselves.
+def register_for_refresh(name, nr, dashlet, wato_folder):
+    dashlet_type = get_dashlet_type(dashlet)
+    if "url" in dashlet or ('render' in dashlet_type and dashlet_type.get('refresh')):
+        url = dashlet.get("url", "dashboard_dashlet.py?name="+name+"&id="+ str(nr))
+        refresh = dashlet.get("refresh", dashlet_type.get("refresh"))
+        if refresh:
+            action = None
+            if 'on_refresh' in dashlet_type:
+                try:
+                    action = 'function() {%s}' % dashlet_type['on_refresh'](nr, dashlet)
+                except Exception, e:
+                    # Ignore the exceptions in non debug mode, assuming the exception also occures
+                    # while dashlet rendering, which is then shown in the dashlet itselfs.
+                    if config.debug:
+                        raise
+            else:
+                # FIXME: remove add_wato_folder_to_url
+                action = '"%s"' % add_wato_folder_to_url(url, wato_folder) # url to dashboard_dashlet.py
+
+            if action:
+                g_refresh_dashlets.append('[%d, %d, %s]' % (nr, refresh, action))
+
+
+def register_for_on_resize(nr, dashlet):
+    dashlet_type = get_dashlet_type(dashlet)
+    if 'on_resize' in dashlet_type:
+        g_on_resize.append('%d: function() {%s}' % (nr, dashlet_type['on_resize'](nr, dashlet)))
+
+
+def set_dashlet_dimensions(dashlet):
+    dashlet_type = get_dashlet_type(dashlet)
+    dimensions = {
+        'x' : dashlet['position'][0],
+        'y' : dashlet['position'][1]
+    }
+
+    if dashlet_type.get('resizable', True):
+        dimensions['w'] = dashlet['size'][0]
+        dimensions['h'] = dashlet['size'][1]
+    else:
+        dimensions['w'] = dashlet_type['size'][0]
+        dimensions['h'] = dashlet_type['size'][1]
+
+    g_dashlets_js.append(dimensions)
+
+
+def get_dashlet_type(dashlet):
+    return dashlet_types[dashlet["type"]]
+
+
 # Use the URL returned by urlfunc as dashlet URL
 #
 # We need to support function pointers to be compatible to old dashboard plugin
@@ -566,38 +622,30 @@ def render_dashlet_content(nr, the_dashlet, stash_html_vars=True):
 #
 # urlfunc: "my_module.render_my_url"
 def gather_dashlet_url(dashlet):
-    try:
-        urlfunc = dashlet['urlfunc']
-        if type(urlfunc) == type(lambda x: x):
-            dashlet["url"] = urlfunc()
+    # dashlets using the 'urlfunc' method will dynamically compute
+    # an url (using HTML context variables at their wish).
+    if "urlfunc" not in dashlet:
+        return
+
+    urlfunc = dashlet['urlfunc']
+    if type(urlfunc) == type(lambda x: x):
+        dashlet["url"] = urlfunc()
+    else:
+        if '.' in urlfunc:
+            module_name, func_name = urlfunc.split('.', 1)
+            module = __import__(module_name)
+            fp = module.__dict__[func_name]
         else:
-            if '.' in urlfunc:
-                module_name, func_name = urlfunc.split('.', 1)
-                module = __import__(module_name)
-                fp = module.__dict__[func_name]
-            else:
-                fp = globals()[urlfunc]
-            dashlet["url"] = fp()
-    except Exception, e:
-        # When an exception occurs the "url" key will be missing in the dashlet
-        # and an error is shown in the dashlet while rendering it. This is enough.
-        # For details the user can enable debugging.
-        if config.debug:
-            raise
+            fp = globals()[urlfunc]
+        dashlet["url"] = fp()
 
 
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
 # where %d is its index (in board["dashlets"]). Javascript uses that id
 # for the resizing. Within that div there is an inner div containing the
 # actual dashlet content.
-def render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars):
-    dashlet_type = dashlet_types[dashlet['type']]
-
-    classes = ['dashlet', dashlet['type']]
-    if dashlet_type.get('resizable', True):
-        classes.append('resizable')
-
-    html.write('<div class="%s" id="dashlet_%d">' % (' '.join(classes), nr))
+def draw_dashlet(name, board, nr, dashlet, wato_folder):
+    dashlet_type = get_dashlet_type(dashlet)
 
     # Get the title of the dashlet type (might be dynamically defined)
     title = dashlet_type.get('title')
@@ -617,51 +665,43 @@ def render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars):
         bg = ""
     html.write('<div class="dashlet_inner%s" id="dashlet_inner_%d">' % (bg, nr))
 
-    try:
-        # Optional way to render a dynamic iframe URL
-        if "iframe_urlfunc" in dashlet_type:
-            url = dashlet_type["iframe_urlfunc"](dashlet)
-            if url != None:
-                dashlet["iframe"] = url
+    # Optional way to render a dynamic iframe URL
+    if "iframe_urlfunc" in dashlet_type:
+        url = dashlet_type["iframe_urlfunc"](dashlet)
+        if url != None:
+            dashlet["iframe"] = url
 
-        elif "iframe_render" in dashlet_type:
-            dashlet["iframe"] = html.makeuri_contextless([
-                ('name', name),
-                ('id', nr),
-                ('mtime', board['mtime'])] + add_url_vars, filename = "dashboard_dashlet.py")
+    elif "iframe_render" in dashlet_type:
+        dashlet["iframe"] = html.makeuri_contextless([
+            ('name', name),
+            ('id', nr),
+            ('mtime', board['mtime'])] + apply_global_context(board, dashlet),
+            filename = "dashboard_dashlet.py")
 
-        # The content is rendered only if it is fixed. In the
-        # other cases the initial (re)-size will paint the content.
-        if "render" in dashlet_type:
-            render_dashlet_content(nr, dashlet)
+    # The content is rendered only if it is fixed. In the
+    # other cases the initial (re)-size will paint the content.
+    if "render" in dashlet_type:
+        draw_dashlet_content(nr, dashlet)
 
-        elif "content" in dashlet: # fixed content
-            html.write(dashlet["content"])
+    elif "content" in dashlet: # fixed content
+        html.write(dashlet["content"])
 
-        elif "iframe" in dashlet: # fixed content containing iframe
-            if not dashlet.get("reload_on_resize"):
-                url = add_wato_folder_to_url(dashlet["iframe"], wato_folder)
-            else:
-                url = 'about:blank'
-
-            # Fix of iPad >:-P
-            html.write('<div style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch;">')
-            html.write('<iframe id="dashlet_iframe_%d" allowTransparency="true" frameborder="0" width="100%%" '
-                       'height="100%%" src="%s"> </iframe>' % (nr, url))
-            html.write('</div>')
-            if dashlet.get("reload_on_resize"):
-                html.javascript('reload_on_resize["%d"] = "%s"' %
-                                (nr, add_wato_folder_to_url(dashlet["iframe"], wato_folder)))
-    except MKUserError, e:
-        html.write('Problem while rendering the dashlet: %s' % html.attrencode(e))
-    except Exception, e:
-        if config.debug:
-            import traceback
-            html.write(traceback.format_exc().replace('\n', '<br>\n'))
+    elif "iframe" in dashlet: # fixed content containing iframe
+        if not dashlet.get("reload_on_resize"):
+            url = add_wato_folder_to_url(dashlet["iframe"], wato_folder)
         else:
-            html.write('Problem while rendering the dashlet: %s' % html.attrencode(e))
+            url = 'about:blank'
 
-    html.write("</div></div>\n")
+        # Fix of iPad >:-P
+        html.write('<div style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch;">')
+        html.write('<iframe id="dashlet_iframe_%d" allowTransparency="true" frameborder="0" width="100%%" '
+                   'height="100%%" src="%s"> </iframe>' % (nr, url))
+        html.write('</div>')
+        if dashlet.get("reload_on_resize"):
+            html.javascript('reload_on_resize["%d"] = "%s"' %
+                            (nr, add_wato_folder_to_url(dashlet["iframe"], wato_folder)))
+
+    html.write("</div>")
 
 #.
 #   .--Draw Dashlet--------------------------------------------------------.
@@ -711,7 +751,7 @@ def ajax_dashlet():
 
     if the_dashlet['type'] not in dashlet_types:
         raise MKGeneralException(_('The requested dashlet type does not exist.'))
-    render_dashlet_content(ident, the_dashlet, stash_html_vars=False)
+    draw_dashlet_content(ident, the_dashlet, stash_html_vars=False)
 
 #.
 #   .--Dashboard List------------------------------------------------------.

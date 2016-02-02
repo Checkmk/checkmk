@@ -59,7 +59,7 @@ bool timeout_reached(const struct timeval *start, int timeout_ms) {
 pair<list<string>, InputBuffer::Result> failure(InputBuffer::Result r) {
     return make_pair(list<string>(), r);
 }
-}
+} // namespace
 
 InputBuffer::InputBuffer(int fd, const int *termination_flag)
     : _fd(fd)

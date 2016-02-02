@@ -68,7 +68,7 @@ factory_settings["netscaler_health_fan_default_levels"] = {
 
 def inventory_netscaler_health_fan(info):
     for name, value in info:
-        if name.endswith("Speed"):
+        if name.endswith("Speed") and value != "0":
            yield name[:-5], {}
 
 def check_netscaler_health_fan(item, params, info):

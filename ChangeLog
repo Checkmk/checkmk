@@ -238,6 +238,7 @@
     * 2942 FIX: juniper_cpu_util: new check replaces juniper_cpu which was reporting incorrect values...
             NOTE: Please refer to the migration notes!
     * 3063 FIX: mcaffee_av_client: plugin didn't work with 32-bit av software installed on 64-bit system
+    * 3064 FIX: netscaler_health: no longer discovers non-running fans (i.e. in virtual appliances)
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

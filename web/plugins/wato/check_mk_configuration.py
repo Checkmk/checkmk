@@ -298,6 +298,7 @@ register_configvar(group,
                     allow_empty = False,
                     custom_order = True,
                     choices = virtual_host_tree_choices,
+                    rows = 10,
                 )
             ]
         ),

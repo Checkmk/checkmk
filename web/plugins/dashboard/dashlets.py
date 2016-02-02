@@ -351,7 +351,10 @@ def dashlet_graph_reload_js(nr, dashlet):
     else:
         html.live.set_prepend_site(True)
         query = "GET hosts\nFilter: name = %s\nColumns: name" % lqencode(host)
-        site = html.live.query_column(query)[0]
+        try:
+            site = html.live.query_column(query)[0]
+        except IndexError:
+            raise MKUserError("host", _("The host could not be found on any active site."))
         html.live.set_prepend_site(False)
 
     # New graphs which have been added via "add to visual" option don't have a timerange

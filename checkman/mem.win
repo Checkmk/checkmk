@@ -5,7 +5,30 @@ license: GPL
 distribution: check_mk
 description:
  This check measures the current usage of physical RAM and
- of the Windows page file.
+ of the commit charge.
+ The "commit charge" was previously confusingly named "pagefile".
+ Please note that Microsoft themselves use this naming in
+ some applications.
+
+ Due to how windows optimizes memory management, physical memory
+ is in practice almost always fully utilized. The Memory usage this
+ check displays says how much memory is actually required by processes,
+ in contrast to caches that could be freed if the need arises.
+
+ In the same vein windows may hold data in ram and pagefile at the same
+ time or it may hold data in the pagefile even when there is ram available,
+ when it determines this may improve performance.
+ As a result, the real pagefile usage is not only hard to
+ determine, it's also utterly useless when we want to determine
+ resource usage on the system.
+
+ The commit charge instead tells us how much of the memory used in
+ total (RAM + swap) is really required, ignoring overlap and caches.
+ Commit Charge minus Memory Usage is approximately the amount
+ of the pagefile used for "relevant" data, but further optimizations
+ may lead to offsets (to the point where Commit Charge - Memory Usage
+ can be negative).
+
 
 item:
  {None}
@@ -32,7 +55,7 @@ examples:
 
 perfdata:
  Two variables: {memory}: the current memory usage in MB, {pagefile}: the
- current page file usage in MB.
+ current commit charge in MB.
 
 [parameters]
 parameters (dict): This check uses a dictionary as parameter. The following
@@ -42,7 +65,7 @@ parameters (dict): This check uses a dictionary as parameter. The following
  (e.g. {80.0}) are interpreted as percentages of {used} space. Integer values
  (e.g. {2048}) are interpreted as MB of {free} space.
 
- {"pagefile"} Warning and critical levels for page file usage. The same
+ {"pagefile"} Warning and critical levels for commit charge. The same
  rules apply as for {memory}.
 
  {"average"} This optional parameters sets a value in minutes for averaging.

@@ -1,0 +1,9 @@
+Title: mem.win: renamed "Pagefile" to "Commit Charge" to clarify what the number actually expresses
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454422778
+Class: fix
+
+Please see the manpage for a short explanation on what the numbers actually express.

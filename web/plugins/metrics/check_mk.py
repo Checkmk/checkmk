@@ -469,6 +469,12 @@ metric_info["mem_used"] = {
     "unit" : "bytes",
 }
 
+metric_info["pagefile_used"] = {
+    "color": "#408f20",
+    "title" : _("Commit Charge"),
+    "unit" : "bytes",
+}
+
 metric_info["mem_used_percent"] = {
     "color": "#80ff40",
     "title" : _("RAM used"),

@@ -439,9 +439,9 @@ def check_mem_windows(item, params, info):
     MB = 1024.0 * 1024
     now = time.time()
 
-    for title, what, paramname in [
-        ( "Memory",    "Mem",  "memory" ),
-        ( "Page file", "Page", "pagefile" )]:
+    for title,             what,   paramname in [
+        ("Memory usage",  "Mem",  "memory"),
+        ("Commit Charge", "Page", "pagefile")]:
         total_kb = meminfo[what + "Total"]
         free_kb  = meminfo[what + "Free"]
         used_kb  = total_kb - free_kb
@@ -449,7 +449,7 @@ def check_mem_windows(item, params, info):
         free_mb  = free_kb / 1024.0
         perc     = 100.0 * used_kb / total_kb
 
-        infotext = "%s usage: %.1f%% (%.1f/%.1f GB)" % \
+        infotext = "%s: %.1f%% (%.1f/%.1f GB)" % \
                 (title, perc, used_kb / MB, total_kb / MB)
 
         if type(params[paramname]) == tuple:

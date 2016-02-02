@@ -1298,7 +1298,7 @@ void section_ps(OutputProxy &out) {
                 }
 
                 //// Note: CPU utilization is determined out of usermodetime and
-                ///kernelmodetime
+                /// kernelmodetime
                 out.output("(%s,%" PRIu64 ",%" PRIu64 ",%d,%lu,%" PRIu64
                            ",%" PRIu64 ",%" PRIu64 ",%lu,%lu)\t%s\n",
                            user.c_str(), virtual_size / 1024,

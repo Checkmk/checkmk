@@ -51,7 +51,7 @@ condition_variable cond_downtime;
 condition_variable cond_comment;
 condition_variable cond_command;
 condition_variable cond_program;
-} // namespace
+}  // namespace
 
 struct trigger *trigger_all() {
     return to_trigger(&cond_all);

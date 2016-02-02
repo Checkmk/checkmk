@@ -690,16 +690,17 @@ int TableStateHistory::updateHostServiceState(Query *query,
             _notification_periods.find(hs_state->_notification_period);
         if (it_status != _notification_periods.end()) {
             hs_state->_in_notification_period = it_status->second;
-        } else  // No notification period information available -> within
-                // notification period
+        } else
+            // No notification period information available -> within
+            // notification period
             hs_state->_in_notification_period = 1;
 
         // Same for service period
         it_status = _notification_periods.find(hs_state->_service_period);
         if (it_status != _notification_periods.end()) {
             hs_state->_in_service_period = it_status->second;
-        } else  // No service period information available -> within service
-                // period
+        } else
+            // No service period information available -> within service period
             hs_state->_in_service_period = 1;
     }
 

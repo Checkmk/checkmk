@@ -555,6 +555,11 @@ class Overridable:
         return sorted(pages.values(), cmp = lambda a, b: cmp(a.title(), b.title()))
 
 
+    @classmethod
+    def page_choices(self):
+        return [(page.name(), page.title()) for page in self.pages()]
+
+
     # Find a page by name, implements shadowing and
     # publishing und overriding by admins
     @classmethod

@@ -1249,20 +1249,31 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
 	return
 
     if dashlet_type == "pnpgraph":
-        # Context will always be None here, but the graph reference (in params)
-        # will contain it. Example:
+        # Context will always be None here, but the graph_specification (in params)
+        # will contain it. Transform the data to the format needed by the dashlets.
 
+        # Example:
         # params = [ 'template', {'service_description': 'CPU load', 'site': 'mysite',
         #                         'graph_index': 0, 'host_name': 'server123'}])
-        graph_info = params[1]
+        graph_specification = params[1]
         if params[0] == "template":
             context = {
-                "host" : graph_info["host_name"]
+                "host" : graph_specification["host_name"]
             }
-            if graph_info.get("service_description") != "_HOST_":
-                context["service"] = graph_info["service_description"]
+            if graph_specification.get("service_description") != "_HOST_":
+                context["service"] = graph_specification["service_description"]
             params = {
-                "source" : graph_info["graph_index"] + 1
+                "source" : graph_specification["graph_index"] + 1
+            }
+
+        elif params[0] == "custom":
+            # Override the dashlet type here. It would be better to get the
+            # correct dashlet type from the menu. But this does not seem to
+            # be a trivial change.
+            dashlet_type = "custom_graph"
+            context = {}
+            params = {
+                "custom_graph": params[1],
             }
 
 
@@ -1286,8 +1297,9 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
         # save the original context and override the context provided by the view
         context = dashlet['context']
         load_view_into_dashlet(dashlet, len(dashboard['dashlets']), view_name, add_context=context)
-    elif dashlet_type == "pnpgraph":
-        # The "add to visual" popup does not provide a timerang information,
+
+    elif dashlet_type in [ "pnpgraph", "custom_graph" ]:
+        # The "add to visual" popup does not provide a timerange information,
         # but this is not an optional value. Set it to 25h initially.
         dashlet.setdefault("timerange", "1")
 

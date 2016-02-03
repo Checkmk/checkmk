@@ -322,6 +322,7 @@ class PageRenderer:
     @classmethod
     def page_show(self):
         name = html.var(self.ident_attr())
+        self.load()
         page = self.find_page(name)
         if not page:
             raise MKGeneralException(_("Cannot find %s with the name %s") % (
@@ -564,8 +565,6 @@ class Overridable:
     # publishing und overriding by admins
     @classmethod
     def find_page(self, name):
-        self.load()
-
         mine = None
         forced = None
         builtin = None
@@ -613,6 +612,7 @@ class Overridable:
     @classmethod
     def builtin_pages(self):
         return {}
+
 
     # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
     # mergt diese mit den übergebenen eingebauten
@@ -1030,6 +1030,7 @@ class Container:
         self.need_overriding_permission("edit")
 
         need_sidebar_reload = False
+        self.load()
         page = self.find_page(page_name)
         if not page.is_mine():
             page = page.clone()

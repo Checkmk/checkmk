@@ -52,7 +52,7 @@ void TimeperiodsCache::logCurrentTimeperiods() {
     while (tp) {
         bool is_in = 0 == check_time_against_period(now, tp);
         // check previous state and log transition if state has changed
-        _cache_t::iterator it = _cache.find(tp);
+        auto it = _cache.find(tp);
         if (it == _cache.end()) {  // first entry
             logTransition(tp->name, -1, is_in ? 1 : 0);
             _cache.insert(make_pair(tp, is_in));
@@ -82,7 +82,7 @@ void TimeperiodsCache::update(time_t now) {
         bool is_in = 0 == check_time_against_period(now, tp);
 
         // check previous state and log transition if state has changed
-        _cache_t::iterator it = _cache.find(tp);
+        auto it = _cache.find(tp);
         if (it == _cache.end()) {  // first entry
             logTransition(tp->name, -1, is_in ? 1 : 0);
             _cache.insert(make_pair(tp, is_in));
@@ -112,7 +112,7 @@ bool TimeperiodsCache::inTimeperiod(const char *tpname) {
 
 bool TimeperiodsCache::inTimeperiod(timeperiod *tp) {
     lock_guard<mutex> lg(_cache_lock);
-    _cache_t::iterator it = _cache.find(tp);
+    auto it = _cache.find(tp);
     bool is_in;
     if (it != _cache.end())
         is_in = it->second;

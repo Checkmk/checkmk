@@ -29,8 +29,7 @@
 #include "logger.h"
 
 AndingFilter::~AndingFilter() {
-    for (_subfilters_t::iterator it = _subfilters.begin();
-         it != _subfilters.end(); ++it) {
+    for (auto it = _subfilters.begin(); it != _subfilters.end(); ++it) {
         delete *it;
     }
 }
@@ -48,8 +47,7 @@ Filter *AndingFilter::stealLastSubfiler() {
 }
 
 bool AndingFilter::accepts(void *data) {
-    for (_subfilters_t::iterator it = _subfilters.begin();
-         it != _subfilters.end(); ++it) {
+    for (auto it = _subfilters.begin(); it != _subfilters.end(); ++it) {
         Filter *filter = *it;
         if (!filter->accepts(data)) return false;
     }
@@ -57,8 +55,7 @@ bool AndingFilter::accepts(void *data) {
 }
 
 void *AndingFilter::findIndexFilter(const char *columnname) {
-    for (_subfilters_t::iterator it = _subfilters.begin();
-         it != _subfilters.end(); ++it) {
+    for (auto it = _subfilters.begin(); it != _subfilters.end(); ++it) {
         Filter *filter = *it;
         void *refvalue = filter->indexFilter(columnname);
         if (refvalue) return refvalue;
@@ -68,8 +65,7 @@ void *AndingFilter::findIndexFilter(const char *columnname) {
 
 void AndingFilter::findIntLimits(const char *columnname, int *lower,
                                  int *upper) {
-    for (_subfilters_t::iterator it = _subfilters.begin();
-         it != _subfilters.end(); ++it) {
+    for (auto it = _subfilters.begin(); it != _subfilters.end(); ++it) {
         Filter *filter = *it;
         filter->findIntLimits(columnname, lower, upper);
     }
@@ -77,8 +73,7 @@ void AndingFilter::findIntLimits(const char *columnname, int *lower,
 
 bool AndingFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
     bool optimized = false;
-    for (_subfilters_t::iterator it = _subfilters.begin();
-         it != _subfilters.end(); ++it) {
+    for (auto it = _subfilters.begin(); it != _subfilters.end(); ++it) {
         Filter *filter = *it;
         if (filter->optimizeBitmask(columnname, mask)) optimized = true;
     }

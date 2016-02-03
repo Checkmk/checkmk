@@ -108,8 +108,7 @@ bool LogCache::logCachePreChecks() {
 
 void LogCache::forgetLogfiles() {
     logger(LOG_INFO, "Logfile cache: flushing complete cache.");
-    for (_logfiles_t::iterator it = _logfiles.begin(); it != _logfiles.end();
-         ++it) {
+    for (auto it = _logfiles.begin(); it != _logfiles.end(); ++it) {
         delete it->second;
     }
     _logfiles.clear();
@@ -147,7 +146,7 @@ void LogCache::updateLogfileIndex() {
 }
 
 void LogCache::scanLogfile(char *path, bool watch) {
-    Logfile *logfile = new Logfile(path, watch);
+    auto logfile = new Logfile(path, watch);
     time_t since = logfile->since();
     if (since) {
         // make sure that no entry with that 'since' is existing yet.
@@ -212,7 +211,7 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t, time_t,
     // The end of this loop must be reached by 'break'. At least one logfile
     // must be the current logfile. So now 'it' points to the current logfile.
     // We save that pointer for later.
-    _logfiles_t::iterator queryit = it;
+    auto queryit = it;
 
     // [2] Delete message classes irrelevent to current query
     // Starting from the current logfile (wo broke out of the

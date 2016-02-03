@@ -43,8 +43,7 @@ void DownCommColumn::output(void *data, Query *query) {
     if (data) {
         bool first = true;
 
-        for (map<pair<unsigned long, bool>, DowntimeOrComment *>::iterator it =
-                 table->entriesIteratorBegin();
+        for (auto it = table->entriesIteratorBegin();
              it != table->entriesIteratorEnd(); ++it) {
             unsigned long id = it->first.first;
             bool is_service = it->first.second;
@@ -110,8 +109,7 @@ bool DownCommColumn::isEmpty(void *data) {
     if (!data) return true;
 
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
-    for (map<pair<unsigned long, bool>, DowntimeOrComment *>::iterator it =
-             table->entriesIteratorBegin();
+    for (auto it = table->entriesIteratorBegin();
          it != table->entriesIteratorEnd(); ++it) {
         DowntimeOrComment *dt = it->second;
         if ((void *)dt->_service == data ||

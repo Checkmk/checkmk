@@ -27,8 +27,7 @@
 #include "Filter.h"
 
 bool OringFilter::accepts(void *data) {
-    for (_subfilters_t::iterator it = _subfilters.begin();
-         it != _subfilters.end(); ++it) {
+    for (auto it = _subfilters.begin(); it != _subfilters.end(); ++it) {
         Filter *filter = *it;
         if (filter->accepts(data)) return true;
     }
@@ -40,8 +39,7 @@ bool OringFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
     // same column.
     uint32_t m = 0;
 
-    for (_subfilters_t::iterator it = _subfilters.begin();
-         it != _subfilters.end(); ++it) {
+    for (auto it = _subfilters.begin(); it != _subfilters.end(); ++it) {
         Filter *filter = *it;
         uint32_t mm = 0xffffffff;
         if (!filter->optimizeBitmask(columnname, &mm))

@@ -116,8 +116,7 @@ TableDownComm::TableDownComm(bool is_downtime) {
 }
 
 TableDownComm::~TableDownComm() {
-    for (_entries_t::iterator it = _entries.begin(); it != _entries.end();
-         ++it) {
+    for (auto it = _entries.begin(); it != _entries.end(); ++it) {
         delete it->second;
     }
 }
@@ -144,7 +143,7 @@ void TableDownComm::addDowntime(nebstruct_downtime_data *data) {
 
 void TableDownComm::add(DowntimeOrComment *data) {
     dc_key tmp_key = make_pair(data->_id, data->_service != nullptr);
-    _entries_t::iterator it = _entries.find(tmp_key);
+    auto it = _entries.find(tmp_key);
 
     // might be update -> delete previous data set
     if (it != _entries.end()) {
@@ -156,7 +155,7 @@ void TableDownComm::add(DowntimeOrComment *data) {
 
 void TableDownComm::remove(DowntimeOrComment *data) {
     dc_key tmp_key = make_pair(data->_id, data->_service != nullptr);
-    _entries_t::iterator it = _entries.find(tmp_key);
+    auto it = _entries.find(tmp_key);
     if (it == _entries.end())
         logger(LG_INFO, "Cannot delete non-existing downtime/comment %lu",
                data->_id);
@@ -180,7 +179,7 @@ bool TableDownComm::isAuthorized(contact *ctc, void *data) {
 
 DowntimeOrComment *TableDownComm::findEntry(unsigned long id, bool is_service) {
     dc_key tmp_key = make_pair(id, is_service);
-    _entries_t::iterator it = _entries.find(tmp_key);
+    auto it = _entries.find(tmp_key);
     if (it != _entries.end()) {
         return it->second;
     } else

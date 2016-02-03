@@ -172,8 +172,7 @@ Query::Query(list<string> &lines, OutputBuffer *output, Table *table)
 
 Query::~Query() {
     // delete dynamic columns
-    for (_columns_t::iterator it = _columns.begin(); it != _columns.end();
-         ++it) {
+    for (auto it = _columns.begin(); it != _columns.end(); ++it) {
         Column *column = *it;
         if (column->mustDelete()) {
             delete column;
@@ -181,14 +180,12 @@ Query::~Query() {
     }
 
     // delete dummy-columns
-    for (_columns_t::iterator it = _dummy_columns.begin();
-         it != _dummy_columns.end(); ++it) {
+    for (auto it = _dummy_columns.begin(); it != _dummy_columns.end(); ++it) {
         delete *it;
     }
 
     // delete stats columns
-    for (_stats_columns_t::iterator it = _stats_columns.begin();
-         it != _stats_columns.end(); ++it) {
+    for (auto it = _stats_columns.begin(); it != _stats_columns.end(); ++it) {
         delete *it;
     }
 }
@@ -378,7 +375,7 @@ void Query::parseStatsNegateLine(char *line) {
             "Can use StatsNegate only on Stats: headers of filter type");
         return;
     }
-    NegatingFilter *negated = new NegatingFilter(col->stealFilter());
+    auto negated = new NegatingFilter(col->stealFilter());
     delete col;
     _stats_columns.pop_back();
     _stats_columns.push_back(new StatsColumn(nullptr, negated, STATS_OP_COUNT));
@@ -807,8 +804,7 @@ void Query::start() {
         outputDatasetBegin();
         bool first = true;
 
-        for (_columns_t::iterator it = _columns.begin(); it != _columns.end();
-             ++it) {
+        for (auto it = _columns.begin(); it != _columns.end(); ++it) {
             if (first)
                 first = false;
             else
@@ -820,8 +816,8 @@ void Query::start() {
         // Output dummy headers for stats columns
         int col = 1;
         char colheader[32];
-        for (_stats_columns_t::iterator it = _stats_columns.begin();
-             it != _stats_columns.end(); ++it) {
+        for (auto it = _stats_columns.begin(); it != _stats_columns.end();
+             ++it) {
             if (first)
                 first = false;
             else
@@ -893,8 +889,7 @@ bool Query::processDataset(void *data) {
                 _need_ds_separator = true;
 
             outputDatasetBegin();
-            for (_columns_t::iterator it = _columns.begin();
-                 it != _columns.end(); ++it) {
+            for (auto it = _columns.begin(); it != _columns.end(); ++it) {
                 if (it != _columns.begin()) outputFieldSeparator();
                 Column *column = *it;
                 column->output(data, this);
@@ -910,8 +905,7 @@ void Query::finish() {
     if (doStats() && !_columns.empty()) {
         // output values of all stats groups (output has been post poned until
         // now)
-        for (_stats_groups_t::iterator it = _stats_groups.begin();
-             it != _stats_groups.end(); ++it) {
+        for (auto it = _stats_groups.begin(); it != _stats_groups.end(); ++it) {
             if (_need_ds_separator && _output_format != OUTPUT_FORMAT_CSV)
                 _output->addBuffer(",\n", 2);
             else
@@ -922,8 +916,7 @@ void Query::finish() {
             // output group columns first
             _stats_group_spec_t groupspec = it->first;
             bool first = true;
-            for (_stats_group_spec_t::iterator iit = groupspec.begin();
-                 iit != groupspec.end(); ++iit) {
+            for (auto iit = groupspec.begin(); iit != groupspec.end(); ++iit) {
                 if (!first)
                     outputFieldSeparator();
                 else
@@ -1212,9 +1205,9 @@ void Query::outputEndDict() {
 }
 
 Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec) {
-    _stats_groups_t::iterator it = _stats_groups.find(groupspec);
+    auto it = _stats_groups.find(groupspec);
     if (it == _stats_groups.end()) {
-        Aggregator **aggr = new Aggregator *[_stats_columns.size()];
+        auto aggr = new Aggregator *[_stats_columns.size()];
         for (unsigned i = 0; i < _stats_columns.size(); i++)
             aggr[i] = _stats_columns[i]->createAggregator();
         _stats_groups.insert(make_pair(groupspec, aggr));
@@ -1225,8 +1218,7 @@ Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec) {
 
 void Query::computeStatsGroupSpec(Query::_stats_group_spec_t &groupspec,
                                   void *data) {
-    for (_columns_t::iterator it = _columns.begin(); it != _columns.end();
-         ++it) {
+    for (auto it = _columns.begin(); it != _columns.end(); ++it) {
         Column *column = *it;
         groupspec.push_back(column->valueAsString(data, this));
     }

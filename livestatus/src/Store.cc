@@ -98,7 +98,7 @@ Store::Store()
     g_table_statehistory = &_table_statehistory;
     g_table_columns = &_table_columns;
 
-    for (_tables_t::iterator it = _tables.begin(); it != _tables.end(); ++it) {
+    for (auto it = _tables.begin(); it != _tables.end(); ++it) {
         _table_columns.addTable(it->second);
     }
 }
@@ -106,7 +106,7 @@ Store::Store()
 Store::~Store() {}
 
 Table *Store::findTable(string name) {
-    _tables_t::iterator it = _tables.find(name);
+    auto it = _tables.find(name);
     if (it == _tables.end())
         return nullptr;
     else

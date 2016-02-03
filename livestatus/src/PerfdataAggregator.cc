@@ -62,7 +62,7 @@ void PerfdataAggregator::consume(void *data, Query *) {
 }
 
 void PerfdataAggregator::consumeVariable(const char *varname, double value) {
-    _aggr_t::iterator it = _aggr.find(varname);
+    auto it = _aggr.find(varname);
     if (it == _aggr.end()) {  // first entry
         perf_aggr new_entry;
         new_entry._aggr = value;

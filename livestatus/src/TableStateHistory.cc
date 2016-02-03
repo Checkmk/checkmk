@@ -213,7 +213,7 @@ LogEntry *TableStateHistory::getNextLogentry() {
     if (_it_entries != _entries->end()) ++_it_entries;
 
     while (_it_entries == _entries->end()) {
-        _logfiles_t::iterator _it_logs_cpy = _it_logs;
+        auto _it_logs_cpy = _it_logs;
         if (++_it_logs_cpy == g_store->logCache()->logfiles()->end()) {
             return nullptr;
         } else {
@@ -235,7 +235,7 @@ void TableStateHistory::answerQuery(Query *query) {
     AndingFilter *orig_filter = query->filter();
 
     if (!g_disable_statehist_filtering) {
-        deque<Filter *>::iterator it = orig_filter->begin();
+        auto it = orig_filter->begin();
         while (it != orig_filter->end()) {
             Filter *filter = *it;
             Column *column = filter->column();
@@ -297,7 +297,7 @@ void TableStateHistory::answerQuery(Query *query) {
     // Switch to last logfile (we have at least one)
     _it_logs = g_store->logCache()->logfiles()->end();
     --_it_logs;
-    _logfiles_t::iterator newest_log = _it_logs;
+    auto newest_log = _it_logs;
 
     // Now find the log where 'since' starts.
     while (_it_logs != g_store->logCache()->logfiles()->begin() &&
@@ -343,7 +343,7 @@ void TableStateHistory::answerQuery(Query *query) {
             // Reached start of query timeframe. From now on let's produce real
             // output
             // Update _from time of every state entry
-            state_info_t::iterator it_hst = state_info.begin();
+            auto it_hst = state_info.begin();
             while (it_hst != state_info.end()) {
                 it_hst->second->_from = _since;
                 it_hst->second->_until = _since;
@@ -356,7 +356,7 @@ void TableStateHistory::answerQuery(Query *query) {
             !(entry->_type == STATE_SERVICE_INITIAL ||
               entry->_type == STATE_HOST_INITIAL)) {
             // Set still unknown hosts / services to unmonitored
-            state_info_t::iterator it_hst = state_info.begin();
+            auto it_hst = state_info.begin();
             while (it_hst != state_info.end()) {
                 HostServiceState *hst = it_hst->second;
                 if (hst->_may_no_longer_exist) {
@@ -402,7 +402,7 @@ void TableStateHistory::answerQuery(Query *query) {
 
                 // Find state object for this host/service
                 HostServiceState *state;
-                state_info_t::iterator it_hst = state_info.find(key);
+                auto it_hst = state_info.find(key);
                 if (it_hst == state_info.end()) {
                     // Create state object that we also need for filtering right
                     // now
@@ -429,8 +429,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     // needed for service states
                     if (entry->_svc_desc) {
                         bool filtered_out = false;
-                        for (object_filter_t::iterator it =
-                                 object_filter.begin();
+                        for (auto it = object_filter.begin();
                              it != object_filter.end(); ++it) {
                             Filter *filter = *it;
                             if (!filter->accepts(state)) {
@@ -448,7 +447,7 @@ void TableStateHistory::answerQuery(Query *query) {
 
                     // Host/Service relations
                     if (state->_is_host) {
-                        state_info_t::iterator it_inh = state_info.begin();
+                        auto it_inh = state_info.begin();
                         while (it_inh != state_info.end()) {
                             if (it_inh->second->_host == state->_host) {
                                 state->_services.push_back(it_inh->second);
@@ -456,8 +455,7 @@ void TableStateHistory::answerQuery(Query *query) {
                             ++it_inh;
                         }
                     } else {
-                        state_info_t::iterator it_inh =
-                            state_info.find(state->_host);
+                        auto it_inh = state_info.find(state->_host);
                         if (it_inh != state_info.end())
                             it_inh->second->_services.push_back(state);
                     }
@@ -536,8 +534,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     // If this key is a service try to find its host and apply
                     // its _in_host_downtime and _host_down parameters
                     if (!state->_is_host) {
-                        state_info_t::iterator my_host =
-                            state_info.find(state->_host);
+                        auto my_host = state_info.find(state->_host);
                         if (my_host != state_info.end()) {
                             state->_in_host_downtime =
                                 my_host->second->_in_host_downtime;
@@ -561,8 +558,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 if (entry->_type == ALERT_HOST || entry->_type == STATE_HOST ||
                     entry->_type == DOWNTIME_ALERT_HOST) {
                     if (state_changed != 0) {
-                        HostServices::iterator it_svc =
-                            state->_services.begin();
+                        auto it_svc = state->_services.begin();
                         while (it_svc != state->_services.end()) {
                             updateHostServiceState(query, entry, *it_svc,
                                                    only_update);
@@ -589,7 +585,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 }
 
                 _notification_periods[tp_name] = atoi(tp_state);
-                state_info_t::iterator it_hst = state_info.begin();
+                auto it_hst = state_info.begin();
                 while (it_hst != state_info.end()) {
                     updateHostServiceState(query, entry, it_hst->second,
                                            only_update);
@@ -607,7 +603,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 // longer available after
                 // a nagios startup. If it still exists an INITIAL HOST/SERVICE
                 // state entry will follow up shortly.
-                state_info_t::iterator it_hst = state_info.begin();
+                auto it_hst = state_info.begin();
                 while (it_hst != state_info.end()) {
                     if (!it_hst->second->_has_vanished) {
                         it_hst->second->_last_known_time = entry->_time;
@@ -622,7 +618,7 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     // Create final reports
-    state_info_t::iterator it_hst = state_info.begin();
+    auto it_hst = state_info.begin();
     if (!_abort_query) {
         while (it_hst != state_info.end()) {
             HostServiceState *hst = it_hst->second;

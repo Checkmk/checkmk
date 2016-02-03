@@ -49,20 +49,18 @@ void Table::addDynamicColumn(DynamicColumn *dyncol) {
 }
 
 Table::~Table() {
-    for (_columns_t::iterator it = _columns.begin(); it != _columns.end();
-         ++it) {
+    for (auto it = _columns.begin(); it != _columns.end(); ++it) {
         delete it->second;
     }
 
-    for (_dynamic_columns_t::iterator it = _dynamic_columns.begin();
-         it != _dynamic_columns.end(); ++it) {
+    for (auto it = _dynamic_columns.begin(); it != _dynamic_columns.end();
+         ++it) {
         delete it->second;
     }
 }
 
 void Table::addAllColumnsToQuery(Query *q) {
-    for (_columns_t::iterator it = _columns.begin(); it != _columns.end();
-         ++it) {
+    for (auto it = _columns.begin(); it != _columns.end(); ++it) {
         q->addColumn(it->second);
     }
 }
@@ -86,7 +84,7 @@ Column *Table::column(const char *colname) {
     if (strchr(colname, ':')) return dynamicColumn(colname);
 
     // First try exact match
-    _columns_t::iterator it = _columns.find(string(colname));
+    auto it = _columns.find(string(colname));
     if (it != _columns.end()) return it->second;
 
     // Now we try to readd the removed prefix. That way we tackle the
@@ -109,7 +107,7 @@ Column *Table::dynamicColumn(const char *colname_with_args) {
 
     const char *argstring = sep_pos + 1;
 
-    _dynamic_columns_t::iterator it = _dynamic_columns.find(name);
+    auto it = _dynamic_columns.find(name);
     if (it != _dynamic_columns.end())
         return it->second->createColumn(argstring);
 
@@ -119,8 +117,7 @@ Column *Table::dynamicColumn(const char *colname_with_args) {
 
 bool Table::hasColumn(Column *col) {
     // this is not very efficient but seldomly used
-    for (_columns_t::iterator it = _columns.begin(); it != _columns.end();
-         ++it) {
+    for (auto it = _columns.begin(); it != _columns.end(); ++it) {
         if (col == it->second) return true;
     }
     return false;

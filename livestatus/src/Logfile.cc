@@ -92,8 +92,7 @@ Logfile::~Logfile() {
 }
 
 void Logfile::flush() {
-    for (logfile_entries_t::iterator it = _entries.begin();
-         it != _entries.end(); ++it)
+    for (auto it = _entries.begin(); it != _entries.end(); ++it)
         delete it->second;
 
     _entries.clear();
@@ -174,8 +173,7 @@ long Logfile::freeMessages(unsigned logclasses) {
     // container invalidates the iterator pointing to it. The solution is the
     // usual post-increment idiom, see Scott Meyers' "Effective STL", item 9
     // ("Choose carefully among erasing options.").
-    for (logfile_entries_t::iterator it = _entries.begin();
-         it != _entries.end();) {
+    for (auto it = _entries.begin(); it != _entries.end();) {
         LogEntry *entry = it->second;
         if ((1 << entry->_logclass) & logclasses) {
             delete entry;
@@ -190,7 +188,7 @@ long Logfile::freeMessages(unsigned logclasses) {
 }
 
 bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses) {
-    LogEntry *entry = new LogEntry(lineno, _linebuffer);
+    auto entry = new LogEntry(lineno, _linebuffer);
     // ignored invalid lines
     if (entry->_logclass == LOGCLASS_INVALID) {
         delete entry;
@@ -229,7 +227,7 @@ bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since,
     load(logcache, since, until,
          logclasses);  // make sure all messages are present
     uint64_t sincekey = makeKey(since, 0);
-    logfile_entries_t::iterator it = _entries.lower_bound(sincekey);
+    auto it = _entries.lower_bound(sincekey);
     while (it != _entries.end()) {
         LogEntry *entry = it->second;
         if (entry->_time >= until) return false;          // end found
@@ -246,7 +244,7 @@ bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since,
     load(logcache, since, until,
          logclasses);  // make sure all messages are present
     uint64_t untilkey = makeKey(until, 999999999);
-    logfile_entries_t::iterator it = _entries.upper_bound(untilkey);
+    auto it = _entries.upper_bound(untilkey);
     while (it != _entries.begin()) {
         --it;
         LogEntry *entry = it->second;

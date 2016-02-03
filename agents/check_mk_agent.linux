@@ -97,15 +97,34 @@ function section_cpu()
 }
 
 
+function run_mrpe() {
+    local descr=$1
+    shift
+    local cmdline="$@"
+
+    echo '<<<mrpe>>>'
+
+    PLUGIN=${cmdline%% *}
+    OUTPUT=$(eval "$cmdline")
+
+    echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+    echo
+}
+
+export -f run_mrpe
+
 # Runs a command asynchronous by use of a cache file. Usage:
 # run_cached [-s] NAME MAXAGE
 #   -s creates the section header <<<$NAME>>>
+#   -m mrpe-mode: stores exit code with the cache
 #   NAME is the name of the section (also used as cache file name)
 #   MAXAGE is the maximum cache livetime in seconds
 function run_cached () {
     local NOW=$(date +%s)
     local section=
+    local mrpe=0
     if [ "$1" = -s ] ; then local section="echo '<<<$2:cached($NOW,$3)>>>' ; " ; shift ; fi
+    if [ "$1" = -m ] ; then local mrpe=1 ; shift ; fi
     local NAME=$1
     local MAXAGE=$2
     shift 2
@@ -139,7 +158,11 @@ function run_cached () {
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
         # When the command fails, the output is throws away ignored
-        echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash >/dev/null 2>&1 &
+        if [ $mrpe -eq 1 ] ; then
+            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; run_mrpe $NAME $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash >/dev/null 2>&1 &
+        else
+            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash >/dev/null 2>&1 &
+        fi
     fi
 }
 
@@ -725,7 +748,6 @@ fi
 # MK's Remote Plugin Executor
 if [ -e "$MK_CONFDIR/mrpe.cfg" ]
 then
-    echo '<<<mrpe>>>'
     grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
     while read descr cmdline
     do
@@ -740,7 +762,9 @@ then
             for par in "${parlist[@]}"
             do
                 # split each assignment
-                IFS='=' read key value <<< $par
+                key=$(echo $par | cut -d= -f1)
+                value=$(echo $par | cut -d= -f2)
+
                 if [ "$key" = "interval" ]
                 then
                     interval=$value
@@ -749,16 +773,12 @@ then
             done
         fi
 
-        PLUGIN=${cmdline%% *}
         if [ -z "$interval" ]
         then
-            OUTPUT=$(eval "$cmdline")
+            run_mrpe $descr "$cmdline"
         else
-            OUTPUT=$(run_cached $descr $interval "$cmdline")
+            run_cached -m $descr $interval "\'$cmdline\'"
         fi
-
-        echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-        echo
     done
 fi
 
@@ -776,7 +796,6 @@ then
 
             # mrpe includes
             if [ "$type" == "mrpe" ] ; then
-                echo "<<<mrpe>>>"
                 grep -Ev '^[[:space:]]*($|#)' "$include" | \
                 while read descr cmdline
                 do
@@ -800,20 +819,15 @@ then
                         done
                     fi
 
-                    PLUGIN=${cmdline%% *}
-
                     if [ -n "$PREFIX" ] ; then
-                        cmdline="$PREFIX\"$cmdline\""
+                        cmdline="$PREFIX\'$cmdline\'"
                     fi
-
                     if [ -z "$interval" ]
                     then
-                        OUTPUT=$(eval "$cmdline")
+                        run_mrpe $descr "$cmdline"
                     else
-                        OUTPUT=$(run_cached $descr $interval "$cmdline")
+                        run_cached -m $descr $interval "$cmdline"
                     fi
-                    echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-                    echo
                 done
 
             # local and plugin includes

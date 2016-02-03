@@ -55,9 +55,27 @@ function file_age() {
 }
 
 
+function run_mrpe() {
+    local descr=$1
+    shift
+    local cmdline="$@"
+
+    echo '<<<mrpe>>>'
+
+    OUTPUT=$(eval "$cmdline")
+
+    echo -n "$descr $? $OUTPUT" | tr \\n \\1
+    echo
+}
+
+export -f run_mrpe
+
+
 # Runs a command asynchronous by use of a cache file
 function run_cached () {
+    local mrpe=0
     if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
+    if [ "$1" = -m ] ; then local mrpe=1 ; shift ; fi
     local NAME=$1
     local MAXAGE=$2
     shift 2
@@ -86,7 +104,11 @@ function run_cached () {
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
-        echo "set -o noclobber ; exec > $CACHEFILE.new || exit 1 ; $CMDLINE && mv $CACHEFILE.new $CACHEFILE || rm -f $CACHEFILE $CACHEFILE.new" | nohup bash 2>/dev/null &
+        if [ $mrpe -eq 1 ] ; then
+            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; run_mrpe $NAME $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash >/dev/null 2>&1 &
+        else
+            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash >/dev/null 2>&1 &
+        fi
     fi
 }
 
@@ -323,7 +345,9 @@ then
             for par in "${parlist[@]}"
             do
                 # split each assignment
-                IFS='=' read key value <<< $par
+                key=$(echo $par | cut -d= -f1)
+                value=$(echo $par | cut -d= -f2)
+
                 if [ "$key" = "interval" ]
                 then
                     interval=$value
@@ -334,12 +358,10 @@ then
 
         if [ -z "$interval" ]
         then
-            OUTPUT=$($cmdline)
+            run_mrpe $descr "$cmdline"
         else
-            OUTPUT=$(run_cached $descr $interval "$cmdline")
+            run_cached -m $descr $interval "\'$cmdline\'"
         fi
-
-        echo "$descr $? $OUTPUT"
     done
 fi
 

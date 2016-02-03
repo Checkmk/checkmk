@@ -1,0 +1,9 @@
+Title: Fixed garbled notifications page on page reload after an action has been performed
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454503973
+Class: fix
+
+

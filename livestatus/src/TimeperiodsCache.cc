@@ -38,7 +38,7 @@ extern timeperiod *timeperiod_list;
 
 TimeperiodsCache::TimeperiodsCache() { _cache_time = 0; }
 
-TimeperiodsCache::~TimeperiodsCache() {}
+TimeperiodsCache::~TimeperiodsCache() = default;
 
 void TimeperiodsCache::logCurrentTimeperiods() {
     lock_guard<mutex> lg(_cache_lock);

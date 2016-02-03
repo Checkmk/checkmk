@@ -103,7 +103,7 @@ Store::Store()
     }
 }
 
-Store::~Store() {}
+Store::~Store() = default;
 
 Table *Store::findTable(string name) {
     auto it = _tables.find(name);

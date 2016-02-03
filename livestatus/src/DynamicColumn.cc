@@ -24,7 +24,7 @@
 
 #include "DynamicColumn.h"
 
-DynamicColumn::~DynamicColumn() {}
+DynamicColumn::~DynamicColumn() = default;
 
 Column *DynamicColumn::createColumn(const char *arguments) {
     return createColumn(_indirect_offset, _extra_offset, arguments);

@@ -130,7 +130,7 @@ void TableLog::addColumns(Table *table, string prefix, int indirect_offset,
                               (char *)&(ref->_command) - (char *)ref);
 }
 
-TableLog::~TableLog() {}
+TableLog::~TableLog() = default;
 
 void TableLog::answerQuery(Query *query) {
     lock_guard<mutex> lg(g_store->logCache()->_lock);

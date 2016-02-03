@@ -1248,6 +1248,24 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
 	# Exceptions do not work here.
 	return
 
+    if dashlet_type == "pnpgraph":
+        # Context will always be None here, but the graph reference (in params)
+        # will contain it. Example:
+
+        # params = [ 'template', {'service_description': 'CPU load', 'site': 'mysite',
+        #                         'graph_index': 0, 'host_name': 'server123'}])
+        graph_info = params[1]
+        if params[0] == "template":
+            context = {
+                "host" : graph_info["host_name"]
+            }
+            if graph_info.get("service_description") != "_HOST_":
+                context["service"] = graph_info["service_description"]
+            params = {
+                "source" : graph_info["graph_index"] + 1
+            }
+
+
     load_dashboards(lock=True)
 
     if dashboard_name not in available_dashboards:

@@ -1,0 +1,11 @@
+Title: veeam_backup_status: Fixed wrong date format reported by agent
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454507896
+Class: fix
+
+Fixing an exception during date parsing of the agent output. This has been
+fixed in the agent, you should update it. But the current check has also
+been made compatible to the old output.

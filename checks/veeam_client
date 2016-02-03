@@ -103,13 +103,20 @@ def check_veeam_client(item, params, parsed):
 
     infotexts.append("Size (%s): %s" % ("/".join(size_legend), "/ ".join(size_info)))
 
+
+    # Bugged agent plugins were reporting . instead of : as separator for
+    # the time. This has been fixed in the agent, but be compatible to old agent.
+    timesep = ":"
+    if "StopTime" in data and timesep not in data['StopTime']:
+        timesep = "."
+
     # Check Stop time in any case, that we can catch hanging backups
     if "StopTime" not in data:
         state = 2
         infotexts.append("No complete Backup(!!)")
     # If the Backup currently is running, the stop time is strange.
-    elif data['StopTime'] != "01.01.1900 00:00:00":
-        stop_time = time.mktime(time.strptime( data['StopTime'], "%d.%m.%Y %H:%M:%S"))
+    elif data['StopTime'] != "01.01.1900 00"+timesep+"00"+timesep+"00":
+        stop_time = time.mktime(time.strptime( data['StopTime'], "%d.%m.%Y %H"+timesep+"%M"+timesep+"%S"))
         now = time.time()
         age =  now - stop_time
         warn, crit = params['age']

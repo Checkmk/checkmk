@@ -53,10 +53,10 @@ foreach ($myJob in $myBackupJobs)
 	$myJobLastSession = $myJob.FindLastSession()
 
 	$myJobCreationTime = ""
-	$myJobCreationTime = $myJobLastSession.CreationTime |  get-date -Format "dd.MM.yyyy HH:mm:ss"  -ErrorAction SilentlyContinue
+	$myJobCreationTime = $myJobLastSession.CreationTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
 
 	$myJobEndTime = ""
-	$myJobEndTime = $myJobLastSession.EndTime |  get-date -Format "dd.MM.yyyy HH:mm:ss"  -ErrorAction SilentlyContinue
+	$myJobEndTime = $myJobLastSession.EndTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
 
 	$myJobsText = "$myJobsText" + "$myJobName" + "`t" + "$myJobType" + "`t" + "$myJobLastState" + "`t" + "$myJobLastResult" + "`t" + "$myJobCreationTime" + "`t" + "$myJobEndTime" + "`n"
 
@@ -109,12 +109,12 @@ foreach ($myJob in $myBackupJobs)
 		$myTaskText = "$myTaskText" + "TransferedSizeByte" + "`t" + "$myTaskTransferedSize" + "`n"
 
 		$myTaskStartTime = ""
-		$myTaskStartTime = $myTask.Progress.StartTime |  get-date -Format "dd.MM.yyyy HH:mm:ss"  -ErrorAction SilentlyContinue
+		$myTaskStartTime = $myTask.Progress.StartTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
 
 		$myTaskText = "$myTaskText" + "StartTime" + "`t" + "$myTaskStartTime" + "`n"
 
 		$myTaskStopTime = ""
-		$myTaskStopTime = $myTask.Progress.StopTime |  get-date -Format "dd.MM.yyyy HH:mm:ss"  -ErrorAction SilentlyContinue
+		$myTaskStopTime = $myTask.Progress.StopTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
 
 		$myTaskText = "$myTaskText" + "StopTime" + "`t" + "$myTaskStopTime" + "`n"
 

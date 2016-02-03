@@ -14022,8 +14022,7 @@ def create_sample_config():
     save_notification_rules(notification_rules)
 
     if "create_cee_sample_config" in globals():
-            create_cee_sample_config()
-
+        create_cee_sample_config()
 
     # Make sure the host tag attributes are immediately declared!
     config.wato_host_tags = wato_host_tags

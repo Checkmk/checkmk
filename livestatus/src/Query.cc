@@ -172,22 +172,14 @@ Query::Query(list<string> &lines, OutputBuffer *output, Table *table)
 
 Query::~Query() {
     // delete dynamic columns
-    for (auto it = _columns.begin(); it != _columns.end(); ++it) {
-        Column *column = *it;
+    for (auto column : _columns) {
         if (column->mustDelete()) {
             delete column;
         }
     }
 
-    // delete dummy-columns
-    for (auto it = _dummy_columns.begin(); it != _dummy_columns.end(); ++it) {
-        delete *it;
-    }
-
-    // delete stats columns
-    for (auto it = _stats_columns.begin(); it != _stats_columns.end(); ++it) {
-        delete *it;
-    }
+    for (auto &dummy_column : _dummy_columns) delete dummy_column;
+    for (auto &stats_column : _stats_columns) delete stats_column;
 }
 
 Column *Query::createDummyColumn(const char *name) {
@@ -804,12 +796,11 @@ void Query::start() {
         outputDatasetBegin();
         bool first = true;
 
-        for (auto it = _columns.begin(); it != _columns.end(); ++it) {
+        for (auto column : _columns) {
             if (first)
                 first = false;
             else
                 outputFieldSeparator();
-            Column *column = *it;
             outputString(column->name());
         }
 
@@ -905,7 +896,7 @@ void Query::finish() {
     if (doStats() && !_columns.empty()) {
         // output values of all stats groups (output has been post poned until
         // now)
-        for (auto it = _stats_groups.begin(); it != _stats_groups.end(); ++it) {
+        for (auto &stats_group : _stats_groups) {
             if (_need_ds_separator && _output_format != OUTPUT_FORMAT_CSV)
                 _output->addBuffer(",\n", 2);
             else
@@ -914,17 +905,17 @@ void Query::finish() {
             outputDatasetBegin();
 
             // output group columns first
-            _stats_group_spec_t groupspec = it->first;
+            _stats_group_spec_t groupspec = stats_group.first;
             bool first = true;
-            for (auto iit = groupspec.begin(); iit != groupspec.end(); ++iit) {
+            for (auto &iit : groupspec) {
                 if (!first)
                     outputFieldSeparator();
                 else
                     first = false;
-                outputString((*iit).c_str());
+                outputString(iit.c_str());
             }
 
-            Aggregator **aggr = it->second;
+            Aggregator **aggr = stats_group.second;
             for (unsigned i = 0; i < _stats_columns.size(); i++) {
                 outputFieldSeparator();
                 aggr[i]->output(this);
@@ -1218,8 +1209,7 @@ Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec) {
 
 void Query::computeStatsGroupSpec(Query::_stats_group_spec_t &groupspec,
                                   void *data) {
-    for (auto it = _columns.begin(); it != _columns.end(); ++it) {
-        Column *column = *it;
+    for (auto column : _columns) {
         groupspec.push_back(column->valueAsString(data, this));
     }
 }

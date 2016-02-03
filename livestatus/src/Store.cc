@@ -98,8 +98,8 @@ Store::Store()
     g_table_statehistory = &_table_statehistory;
     g_table_columns = &_table_columns;
 
-    for (auto it = _tables.begin(); it != _tables.end(); ++it) {
-        _table_columns.addTable(it->second);
+    for (auto &table : _tables) {
+        _table_columns.addTable(table.second);
     }
 }
 

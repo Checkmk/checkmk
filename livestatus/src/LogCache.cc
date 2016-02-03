@@ -108,9 +108,7 @@ bool LogCache::logCachePreChecks() {
 
 void LogCache::forgetLogfiles() {
     logger(LOG_INFO, "Logfile cache: flushing complete cache.");
-    for (auto it = _logfiles.begin(); it != _logfiles.end(); ++it) {
-        delete it->second;
-    }
+    for (auto &logfile : _logfiles) delete logfile.second;
     _logfiles.clear();
     num_cached_log_messages = 0;
 }

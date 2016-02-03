@@ -29,9 +29,7 @@
 #include "logger.h"
 
 AndingFilter::~AndingFilter() {
-    for (auto it = _subfilters.begin(); it != _subfilters.end(); ++it) {
-        delete *it;
-    }
+    for (auto &subfilter : _subfilters) delete subfilter;
 }
 
 void AndingFilter::addSubfilter(Filter *f) { _subfilters.push_back(f); }
@@ -47,16 +45,14 @@ Filter *AndingFilter::stealLastSubfiler() {
 }
 
 bool AndingFilter::accepts(void *data) {
-    for (auto it = _subfilters.begin(); it != _subfilters.end(); ++it) {
-        Filter *filter = *it;
+    for (auto filter : _subfilters) {
         if (!filter->accepts(data)) return false;
     }
     return true;
 }
 
 void *AndingFilter::findIndexFilter(const char *columnname) {
-    for (auto it = _subfilters.begin(); it != _subfilters.end(); ++it) {
-        Filter *filter = *it;
+    for (auto filter : _subfilters) {
         void *refvalue = filter->indexFilter(columnname);
         if (refvalue) return refvalue;
     }
@@ -65,16 +61,14 @@ void *AndingFilter::findIndexFilter(const char *columnname) {
 
 void AndingFilter::findIntLimits(const char *columnname, int *lower,
                                  int *upper) {
-    for (auto it = _subfilters.begin(); it != _subfilters.end(); ++it) {
-        Filter *filter = *it;
+    for (auto filter : _subfilters) {
         filter->findIntLimits(columnname, lower, upper);
     }
 }
 
 bool AndingFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
     bool optimized = false;
-    for (auto it = _subfilters.begin(); it != _subfilters.end(); ++it) {
-        Filter *filter = *it;
+    for (auto filter : _subfilters) {
         if (filter->optimizeBitmask(columnname, mask)) optimized = true;
     }
     return optimized;

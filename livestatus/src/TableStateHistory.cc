@@ -213,8 +213,8 @@ LogEntry *TableStateHistory::getNextLogentry() {
     if (_it_entries != _entries->end()) ++_it_entries;
 
     while (_it_entries == _entries->end()) {
-        auto _it_logs_cpy = _it_logs;
-        if (++_it_logs_cpy == g_store->logCache()->logfiles()->end()) {
+        auto it_logs_cpy = _it_logs;
+        if (++it_logs_cpy == g_store->logCache()->logfiles()->end()) {
             return nullptr;
         } else {
             ++_it_logs;
@@ -429,9 +429,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     // needed for service states
                     if (entry->_svc_desc) {
                         bool filtered_out = false;
-                        for (auto it = object_filter.begin();
-                             it != object_filter.end(); ++it) {
-                            Filter *filter = *it;
+                        for (auto filter : object_filter) {
                             if (!filter->accepts(state)) {
                                 filtered_out = true;
                                 break;

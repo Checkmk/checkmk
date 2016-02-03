@@ -49,19 +49,18 @@ void Table::addDynamicColumn(DynamicColumn *dyncol) {
 }
 
 Table::~Table() {
-    for (auto it = _columns.begin(); it != _columns.end(); ++it) {
-        delete it->second;
+    for (auto &column : _columns) {
+        delete column.second;
     }
 
-    for (auto it = _dynamic_columns.begin(); it != _dynamic_columns.end();
-         ++it) {
-        delete it->second;
+    for (auto &dynamic_column : _dynamic_columns) {
+        delete dynamic_column.second;
     }
 }
 
 void Table::addAllColumnsToQuery(Query *q) {
-    for (auto it = _columns.begin(); it != _columns.end(); ++it) {
-        q->addColumn(it->second);
+    for (auto &column : _columns) {
+        q->addColumn(column.second);
     }
 }
 
@@ -117,8 +116,8 @@ Column *Table::dynamicColumn(const char *colname_with_args) {
 
 bool Table::hasColumn(Column *col) {
     // this is not very efficient but seldomly used
-    for (auto it = _columns.begin(); it != _columns.end(); ++it) {
-        if (col == it->second) return true;
+    for (auto &column : _columns) {
+        if (col == column.second) return true;
     }
     return false;
 }

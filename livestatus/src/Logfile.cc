@@ -92,8 +92,7 @@ Logfile::~Logfile() {
 }
 
 void Logfile::flush() {
-    for (auto it = _entries.begin(); it != _entries.end(); ++it)
-        delete it->second;
+    for (auto &entry : _entries) delete entry.second;
 
     _entries.clear();
     _logclasses_read = 0;

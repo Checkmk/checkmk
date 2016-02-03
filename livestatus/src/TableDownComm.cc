@@ -116,9 +116,7 @@ TableDownComm::TableDownComm(bool is_downtime) {
 }
 
 TableDownComm::~TableDownComm() {
-    for (auto it = _entries.begin(); it != _entries.end(); ++it) {
-        delete it->second;
-    }
+    for (auto &entry : _entries) delete entry.second;
 }
 
 void TableDownComm::addComment(nebstruct_comment_data *data) {

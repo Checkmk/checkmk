@@ -44,11 +44,10 @@ TableColumns::TableColumns() {
 void TableColumns::addTable(Table *table) { _tables.push_back(table); }
 
 void TableColumns::answerQuery(Query *query) {
-    for (auto it = _tables.begin(); it != _tables.end(); ++it) {
-        Table *table = *it;
+    for (auto table : _tables) {
         Table::_columns_t *columns = table->columns();
-        for (auto it = columns->begin(); it != columns->end(); ++it) {
-            if (!query->processDataset(it->second)) break;
+        for (auto &column : *columns) {
+            if (!query->processDataset(column.second)) break;
         }
     }
 }
@@ -72,8 +71,7 @@ const char *TableColumns::getValue(Column *column, int colcol) {
 }
 
 const char *TableColumns::tableNameOf(Column *column) {
-    for (auto it = _tables.begin(); it != _tables.end(); ++it) {
-        Table *table = *it;
+    for (auto table : _tables) {
         if (table->hasColumn(column)) {
             return table->name();
         }

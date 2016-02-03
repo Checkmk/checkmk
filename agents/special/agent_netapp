@@ -683,7 +683,7 @@ else:
         snapshots_elements = volume_snapshots.child_get("snapshots")
         if snapshots_elements:
             print format_dict(dict_reserved, prefix = "volume_snapshot %s" % name, as_line  = True)
-            print format_config(snapshot_elements, "volume_snapshot", name,
+            print format_config(snapshots_elements, "volume_snapshot", name,
                                 config_report = ["volume_snapshot", "percentage-of-total-blocks", "cumulative-total"])
 
 

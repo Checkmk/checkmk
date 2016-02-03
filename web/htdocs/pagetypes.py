@@ -475,6 +475,9 @@ class Overridable:
     def list_url(self):
         return "%ss.py" % self.type_name()
 
+    def after_create_url(self):
+        return None # where redirect after a create should go
+
     @classmethod
     def context_button_list(self):
         html.context_button(self.phrase("title_plural"), self.list_url(), self.type_name())
@@ -901,7 +904,7 @@ class Overridable:
             if page:
                 raise MKUserError("_p_name", _("You already have an element with the ID <b>%s</b>") % page_dict["name"])
 
-        new_page_dict = forms.edit_valuespec(vs, page_dict, validate=validate)
+        new_page_dict = forms.edit_valuespec(vs, page_dict, validate=validate, focus="_p_title")
         if new_page_dict != None:
             # Take over keys from previous value that are specific to the page type
             # and not edited here.
@@ -915,7 +918,12 @@ class Overridable:
 
             self.add_page(new_page)
             self.save_user_instances(owner)
-            html.immediate_browser_redirect(1, back_url)
+            if mode == "create":
+                redirect_url = new_page.after_create_url() or back_url
+            else:
+                redirect_url = back_url
+
+            html.immediate_browser_redirect(0.5, redirect_url)
             html.message(_('Your changes haven been saved.'))
             # Reload sidebar.TODO: This code logically belongs to PageRenderer. How
             # can we simply move it there?

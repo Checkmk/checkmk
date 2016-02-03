@@ -24,6 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 #   .--Overview------------------------------------------------------------.
 #   |              ___                       _                             |
 #   |             / _ \__   _____ _ ____   _(_) _____      __              |
@@ -361,8 +366,15 @@ def dashlet_graph_reload_js(nr, dashlet):
     # configured. So we assume the default timerange here by default.
     timerange = dashlet.get('timerange', '1')
 
-    return 'dashboard_render_graph(%d, \'%s\', \'%s\', \'%s\', \'%s\', \'%s\')' % \
-            (nr, site, host, service, dashlet["source"], timerange)
+    graph_specification = ("template", {
+        "site"                : site,
+        "host_name"           : host,
+        "service_description" : service,
+        "graph_index"         : dashlet["source"] -1,
+    })
+
+    return "dashboard_render_graph(%d, %s, '%s')" % \
+            (nr, json.dumps(graph_specification), timerange)
 
 
 dashlet_types["pnpgraph"] = {
@@ -410,22 +422,22 @@ dashlet_types["pnpgraph"] = {
     "on_refresh"   : dashlet_graph_reload_js,
     "script": """
 var dashlet_offsets = {};
-function dashboard_render_graph(nr, site, host_name, service, source, timerange)
+function dashboard_render_graph(nr, graph_specification, timerange)
 {
     // Get the target size for the graph from the inner dashlet container
     var inner = document.getElementById('dashlet_inner_' + nr);
     var c_w = inner.clientWidth;
     var c_h = inner.clientHeight;
 
-    call_ajax("host_service_graph_dashlet.py?site="+encodeURIComponent(site)
-                          +"&host_name="+encodeURIComponent(host_name)
-                          +"&service="+encodeURIComponent(service)
-                          +"&source="+encodeURIComponent(source)
-                          +"&timerange="+encodeURIComponent(timerange)
-                          +"&width="+c_w
-                          +"&height="+c_h
-                          +"&id="+nr
-                          +"&what=dashlet", {
+    var post_data = "spec=" + encodeURIComponent(JSON.stringify(graph_specification))
+                  + "&timerange=" + encodeURIComponent(timerange)
+                  + "&width=" + c_w
+                  + "&height=" + c_h
+                  + "&id=" + nr;
+
+    call_ajax("graph_dashlet.py", {
+        post_data        : post_data,
+        method           : "POST",
         response_handler : handle_dashboard_render_graph_response,
         handler_data     : nr,
     });

@@ -1351,22 +1351,25 @@ def host_service_graph_popup_pnp(site, host_name, service_description):
 #   |  This page handler is called by graphs embedded in a dashboard.      |
 #   '----------------------------------------------------------------------'
 
-def page_host_service_graph_dashlet():
+def page_graph_dashlet():
+    spec = html.var("spec")
+    if not spec:
+        raise MKUserError("spec", _("Missing spec parameter"))
+
+    graph_specification = json.loads(html.var("spec"))
+
     if cmk_graphs_possible():
-        func = host_service_graph_dashlet_cmk
+        host_service_graph_dashlet_cmk(graph_specification)
+    elif graph_specification[0] == "template":
+        host_service_graph_dashlet_pnp(graph_specification)
     else:
-        func = host_service_graph_dashlet_pnp
-
-    site = html.var('site')
-    host_name = html.var('host_name')
-    service_description = html.var('service')
-    source = int(html.var("source"))
-    return func(site, host_name, service_description, source)
+        html.write(_("This graph can not be rendered."))
 
 
-def host_service_graph_dashlet_cmk(site, host_name, service_description, source):
+def host_service_graph_dashlet_cmk(graph_specification):
     size = (int(((float(html.var("width")) - 49 - 5)/html_size_per_ex)),
             int((float(html.var("height")) - 23)/html_size_per_ex))
+
     graph_render_options = {
         "size"          : size,
         "font_size"     : 8,
@@ -1375,26 +1378,23 @@ def host_service_graph_dashlet_cmk(site, host_name, service_description, source)
         "resizable"     : False,
     }
 
+    # FIXME: html.var("timerange") ???
     end_time = time.time()
     start_time = end_time - 8 * 3600
     graph_data_range = {
         "time_range" : (start_time, end_time),
     }
 
-    graph_specification = (
-        "template", {
-            "site"                : site,
-            "host_name"           : host_name,
-            "service_description" : service_description,
-    })
-
     html_code = render_graphs_from_specification_html(graph_specification, graph_data_range, graph_render_options)
     html.write(html_code)
 
 
-def host_service_graph_dashlet_pnp(site, host_name, service_description, source):
-    pnp_host   = pnp_cleanup(host_name)
-    pnp_svc    = pnp_cleanup(service_description)
+def host_service_graph_dashlet_pnp(graph_specification):
+    site = graph_specification[1]["site"]
+    source = int(graph_specification[1]["graph_index"])
+
+    pnp_host   = pnp_cleanup(graph_specification[1]["host_name"])
+    pnp_svc    = pnp_cleanup(graph_specification[1]["service_description"])
     url_prefix = html.site_status[site]["site"]["url_prefix"]
 
     html.write(url_prefix + "pnp4nagios/index.php/image?host=%s&srv=%s&source=%d&view=%s&theme=multisite" % \

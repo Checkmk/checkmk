@@ -64,7 +64,7 @@ pagehandlers.update({
    "view"                     : views.page_view,
    "ajax_inv_render_tree"     : views.ajax_inv_render_tree,
    "host_service_graph_popup" : metrics.page_host_service_graph_popup,
-   "host_service_graph_dashlet" : metrics.page_host_service_graph_dashlet,
+   "graph_dashlet"            : metrics.page_graph_dashlet,
    "ajax_set_rowselection"    : weblib.ajax_set_rowselection,
    "prediction_graph"         : prediction.page_graph,
    "logwatch"                 : logwatch.page_show,

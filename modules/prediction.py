@@ -29,85 +29,29 @@
 # Export data from an RRD file. This requires an up-to-date
 # version of the rrdtools.
 
-def rrd_export(filename, ds, cf, fromtime, untiltime, rrdcached=None):
-    # rrdtool xport --json -s 1361554418 -e 1361640814 --step 60 DEF:x=/omd/sites/heute/X.rrd:1:AVERAGE XPORT:x:HIRNI
-    cmd = "rrdtool xport --json -s %d -e %d --step 60 " % (fromtime, untiltime)
-    if rrdcached and os.path.exists(rrdcached):
-        cmd += "--daemon '%s' " % rrdcached
-    cmd += " DEF:x=%s:%s:%s XPORT:x 2>&1" % (filename, ds, cf)
-    # if opt_debug:
-    #     sys.stderr.write("Running %s\n" % cmd)
-    f = os.popen(cmd)
-    output = f.read()
-    exit_code = f.close()
-    if exit_code:
-        raise MKGeneralException("Cannot fetch RRD data: %s" % output)
 
-    # Parse without json module (this is not always available)
-    # Our data begins at "data: [...". The sad thing: names are not
-    # quoted here. Don't know why. We fake this by defining variables.
-    about = "about"
-    meta = "meta"
-    start = "start"
-    step = "step"
-    end = "end"
-    legend = "legend"
-    data = "data"
-    null = None
-
-    # begin = output.index("data:")
-    # data_part = output[begin + 5:-2]
-    data = eval(output)
-
-    return data["meta"]["step"], [ x[0] for x in data["data"] ]
-
-
-def find_ds_in_pnp_xmlfile(xml_file, varname):
-    ds = None
-    name = None
-    for line in file(xml_file):
-        line = line.strip()
-        if line.startswith("<DS>"):
-            ds = line[4:].split('<')[0]
-            if name == varname:
-                return int(ds)
-        elif line.startswith("<LABEL>"):
-            name = line[7:].split('<')[0]
-            if ds and name == varname:
-                return int(ds)
-            else:
-                ds = None
-        elif line == '<DATASOURCE>':
-            ds = None
-            name = None
-
-
+# Fetch RRD historic metrics data of a specific service. returns a tuple
+# of (step, [value1, value2, ...])
 def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
-    global rrdcached_socket
-    rrd_base = "%s/%s/%s" % (rrd_path, pnp_cleanup(hostname),
-             pnp_cleanup(service_description))
-    # First try PNP storage type MULTIPLE
-    rrd_file = rrd_base + "_%s.rrd" % pnp_cleanup(varname)
-    ds = 1
-    if not os.path.exists(rrd_file):
-        # We need to look into the XML file of PNP in order to
-        # find the correct DS number.
-        xml_file = rrd_base + ".xml"
-        if not os.path.exists(xml_file):
-            raise MKGeneralException("Cannot do prediction: XML file %s missing" % xml_file)
-        rrd_file = rrd_base + ".rrd"
-        if not os.path.exists(rrd_file):
-            raise MKGeneralException("Cannot do prediction: RRD file missing")
+    step = 1
+    rpn = "%s.%s" % (varname, cf.lower()) # "MAX" -> "max"
+    lql = "GET services\n" \
+          "Columns: rrddata:m1:%s:%d:%d:%d\n" \
+          "OutputFormat: python\n" \
+          "Filter: host_name = %s\n" \
+          "Filter: description = %s\n" % (
+             rpn, fromtime, untiltime, step, hostname, service_description)
+    try:
+        response = eval(simple_livestatus_query(lql))[0][0]
+    except Exception, e:
+        if opt_debug:
+            raise
+        raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)
 
-        # Let's parse the XML file in a silly, but fast way, that does
-        # not need any further module.
-        ds = find_ds_in_pnp_xmlfile(xml_file, varname)
-        if ds == None:
-            raise MKGeneralException("Cannot do prediction: variable %s not known" % varname)
+    real_fromtime, real_untiltime, step = response[:3]
+    values = response[3:]
+    return step, values
 
-    if omd_root and not rrdcached_socket:
-        rrdcached_socket = omd_root + "/tmp/run/rrdcached.sock"
-    return rrd_export(rrd_file, ds, cf, fromtime, untiltime, rrdcached_socket)
 
 
 daynames = [ "monday", "tuesday", "wednesday", "thursday",
@@ -172,9 +116,8 @@ def get_prediction_timegroup(t, period_info):
     until_time = t - rel_time + period_info["slice"]
     return timegroup, from_time, until_time, rel_time
 
-def compute_prediction(pred_file, timegroup, params, period_info, from_time, dsname, cf):
-    import math
 
+def compute_prediction(pred_file, timegroup, params, period_info, from_time, dsname, cf):
     # Collect all slices back into the past until the time horizon
     # is reached
     begin = from_time
@@ -206,7 +149,6 @@ def compute_prediction(pred_file, timegroup, params, period_info, from_time, dsn
     num_points = len(slices[0][2])
     consolidated = []
     for i in xrange(num_points):
-        # print "PUNKT %d --------------------------------------" % i
         point_line = []
         for from_time, scale, data in slices:
             idx = int(i / float(scale))

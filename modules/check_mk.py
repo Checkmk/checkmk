@@ -137,8 +137,8 @@ tcp_cache_dir                      = var_dir + '/cache'
 logwatch_dir                       = var_dir + '/logwatch'
 www_group                          = None # unset
 logwatch_notes_url                 = "/nagios/logwatch.php?host=%s&file=%s"
-rrdcached_socket                   = None # used by prediction.py
-rrd_path                           = None # used by prediction.py
+rrdcached_socket                   = None
+rrd_path                           = None
 
 # Stuff for supporting Nagios
 check_result_path                  = '/usr/local/nagios/var/spool/checkresults'

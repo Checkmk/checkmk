@@ -2,7 +2,7 @@ Title: new windows agent: eventlog monitoring should be able to process cleared 
 Component: checks
 State: open
 Date: 2015-07-30 16:04:54
-Targetversion: future
+Targetversion: 1.2.8
 Class: bug
 
 If someone clears the event log with the event viewer, the windows agent

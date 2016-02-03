@@ -783,10 +783,6 @@ class Overridable:
                 # Actions
                 table.cell(_('Actions'), css = 'buttons visuals')
 
-                # Edit
-                if instance.may_edit():
-                    html.icon_button(instance.edit_url(), _("Edit"), "edit")
-
                 # Clone / Customize
                 buttontext = _("Create a customized copy of this")
                 html.icon_button(instance.clone_url(), buttontext, "new_" + self.type_name())
@@ -794,6 +790,10 @@ class Overridable:
                 # Delete
                 if instance.may_delete():
                     html.icon_button(instance.delete_url(), _("Delete!"), "delete")
+
+                # Edit
+                if instance.may_edit():
+                    html.icon_button(instance.edit_url(), _("Edit"), "edit")
 
                 self.custom_list_buttons(instance)
 

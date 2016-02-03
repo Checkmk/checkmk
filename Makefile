@@ -39,6 +39,7 @@ SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 CPPCHECK           := cppcheck
 DOXYGEN            := doxygen
 IWYU               := include-what-you-use
+BEAR               := bear-fixed
 
 # File to pack into livestatus-$(VERSION).tar.gz
 LIVESTATUS_SOURCES := configure aclocal.m4 config.guess config.h.in config.sub \
@@ -245,7 +246,7 @@ minify-js:
 	fi
 
 clean:
-	rm -rf api clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
+	rm -rf api clang-analyzer compile_commands.json dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       mkeventd-*.tar.gz mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js
@@ -255,7 +256,11 @@ mrproper:
 	git clean -xfd -e .bugs 2>/dev/null || git clean -xfd
 
 setup:
-	sudo apt-get install figlet pngcrush slimit
+	sudo apt-get install figlet pngcrush slimit bear
+
+compile_commands.json: $(FILES_TO_FORMAT)
+	$(MAKE) -C livestatus clean
+	$(BEAR) $(MAKE) -C livestatus -j8
 
 # Not really perfect rules, but better than nothing
 iwyu:

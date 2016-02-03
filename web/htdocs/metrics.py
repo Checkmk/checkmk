@@ -1389,7 +1389,6 @@ def host_service_graph_dashlet_cmk(site, host_name, service_description, source)
     })
 
     html_code = render_graphs_from_specification_html(graph_specification, graph_data_range, graph_render_options)
-    html.log(html_code)
     html.write(html_code)
 
 

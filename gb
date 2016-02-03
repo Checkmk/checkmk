@@ -211,7 +211,7 @@ def list_bug(bug):
         bold = ""
     lines, cols = get_tty_size()
     title = bug["title"][:cols - 45]
-    sys.stdout.write("#%04d %-8s %-9s %-10s %s%-8s%s %s%s%s\n" %
+    sys.stdout.write("#%04d %-8s %-9s %-12s %s%-8s%s %s%s%s\n" %
             (int(bug["id"]),
              bug_state(bug),
              bug["class"], bug["component"], tty_bold,

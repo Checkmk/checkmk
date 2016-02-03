@@ -188,7 +188,10 @@ def edit_valuespec(vs, value, buttontext=None, method="GET", varprefix="",
     html.button("save", buttontext)
     html.del_var("filled_in") # Should be ignored be hidden_fields, but I do not dare to change it there
     html.hidden_fields()
-    vs.set_focus(varprefix)
+    if focus:
+        html.set_focus(focus)
+    else:
+        vs.set_focus(varprefix)
     html.end_form()
 
 # New functions for painting forms

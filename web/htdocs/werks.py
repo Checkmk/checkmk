@@ -100,6 +100,7 @@ def handle_acknowledgement():
             acknowledge_werk(werk)
             html.message(HTML(_("Werk %s - %s has been acknowledged.") % (render_werk_id(werk, with_link=True), render_werk_title(werk))))
             html.reload_sidebar()
+            load_werks() # reload ack states after modification
 
     elif html.var("_ack_all"):
         if (html.confirm(_("Do you really want to acknowledge <b>all</b> incompatible werks?"), method="GET")):
@@ -107,6 +108,7 @@ def handle_acknowledgement():
             acknowledge_all_werks()
             html.message(_("%d incompatible Werks have been acknowledged.") % num)
             html.reload_sidebar()
+            load_werks() # reload ack states after modification
 
     render_unacknowleged_werks()
 

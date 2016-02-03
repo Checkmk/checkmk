@@ -11726,7 +11726,7 @@ def mode_ruleeditor(phase):
     else:
         html.write("<h3>%s: %s</h3>" % (_("Host"), only_host))
 
-    search_form(_("Search for rules: "), "rulesets")
+    search_form(_("Search for rules sets: "), "rulesets")
 
     # Group names are separated with "/" into main group and optional subgroup.
     # Do not lose carefully manually crafted order of groups!
@@ -11945,7 +11945,7 @@ def mode_rulesets(phase, group=None):
         Folder.current().show_breadcrump(keepvarnames = ["mode", "local", "group"])
 
     if search != None or group == 'static':
-        search_form(_("Search for rules: "), group != "static" and "rulesets")
+        search_form(_("Search for rule sets: "), group != "static" and "rulesets")
 
     if help != None:
         help = "".join(help.split("\n", 1)[1:]).strip()

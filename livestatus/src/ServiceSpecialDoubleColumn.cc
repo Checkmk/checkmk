@@ -31,7 +31,7 @@ extern int interval_length;
 
 double ServiceSpecialDoubleColumn::getValue(void *data) {
     data = shiftPointer(data);
-    if (!data) return 0;
+    if (data == nullptr) return 0;
 
     service *svc = static_cast<service *>(data);
     switch (_type) {
@@ -44,14 +44,14 @@ double ServiceSpecialDoubleColumn::getValue(void *data) {
             // check_mk PASSIVE CHECK without check interval uses
             // the check interval of its check-mk service
             bool is_cmk_passive =
-                !strncmp(svc->check_command_ptr->name, "check_mk-", 9);
+                strncmp(svc->check_command_ptr->name, "check_mk-", 9) == 0;
             if (is_cmk_passive) {
                 host *host = svc->host_ptr;
                 servicesmember *svc_member = host->services;
                 while (svc_member != nullptr) {
                     service *tmp_svc = svc_member->service_ptr;
-                    if (!strncmp(tmp_svc->check_command_ptr->name, "check-mk",
-                                 9)) {
+                    if (strncmp(tmp_svc->check_command_ptr->name, "check-mk",
+                                9) == 0) {
                         return check_result_age /
                                ((tmp_svc->check_interval == 0
                                      ? 1

@@ -26,9 +26,9 @@
 #include "Query.h"
 
 objectlist *ServicegroupsColumn::getData(void *data) {
-    if (data) {
+    if (data != nullptr) {
         data = shiftPointer(data);
-        if (data) return *(objectlist **)((char *)data + _offset);
+        if (data != nullptr) return *(objectlist **)((char *)data + _offset);
     }
     return nullptr;
 }
@@ -36,9 +36,9 @@ objectlist *ServicegroupsColumn::getData(void *data) {
 void ServicegroupsColumn::output(void *data, Query *query) {
     query->outputBeginList();
     objectlist *list = getData(data);
-    if (list) {
+    if (list != nullptr) {
         bool first = true;
-        while (list) {
+        while (list != nullptr) {
             servicegroup *sg = (servicegroup *)list->object_ptr;
             if (!first)
                 query->outputListSeparator();
@@ -58,7 +58,7 @@ void *ServicegroupsColumn::getNagiosObject(char *name) {
 bool ServicegroupsColumn::isNagiosMember(void *data, void *nagobject) {
     // data is already shifted
     objectlist *list = *(objectlist **)((char *)data + _offset);
-    while (list) {
+    while (list != nullptr) {
         if (list->object_ptr == nagobject) return true;
         list = list->next;
     }

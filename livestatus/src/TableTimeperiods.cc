@@ -53,7 +53,7 @@ void TableTimeperiods::addColumns(Table *table, string prefix,
 
 void TableTimeperiods::answerQuery(Query *query) {
     timeperiod *tp = timeperiod_list;
-    while (tp) {
+    while (tp != nullptr) {
         if (!query->processDataset(tp)) break;
         tp = tp->next;
     }

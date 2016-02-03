@@ -190,8 +190,8 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
                     return make_pair(request_lines, Result::request_read);
             } else {  // non-empty line: belongs to current request
                 int length = r - _read_index;
-                for (size_t end = r;
-                     end > _read_index && isspace(_readahead_buffer[--end]);)
+                for (size_t end = r; end > _read_index &&
+                                     (isspace(_readahead_buffer[--end]) != 0);)
                     length--;
                 if (length > 0)
                     request_lines.push_back(
@@ -214,7 +214,7 @@ InputBuffer::Result InputBuffer::readData() {
     gettimeofday(&start, nullptr);
 
     struct timeval tv;
-    while (!*_termination_flag) {
+    while (*_termination_flag == 0) {
         if (timeout_reached(&start, g_query_timeout_msec))
             return Result::timeout;
 

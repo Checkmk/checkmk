@@ -29,7 +29,7 @@
 
 int32_t HostSpecialIntColumn::getValue(void *data, Query *) {
     data = shiftPointer(data);
-    if (!data) return 0;
+    if (data == nullptr) return 0;
 
     host *hst = static_cast<host *>(data);
     switch (_type) {

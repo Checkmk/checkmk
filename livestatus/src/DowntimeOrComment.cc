@@ -34,7 +34,7 @@ DowntimeOrComment::DowntimeOrComment(nebstruct_downtime_struct *dt,
     , _comment(strdup(dt->comment_data))
     , _id(id) {
     _host = find_host(dt->host_name);
-    if (dt->service_description) {
+    if (dt->service_description != nullptr) {
         _service = find_service(dt->host_name, dt->service_description);
         _is_service = 1;
     } else {

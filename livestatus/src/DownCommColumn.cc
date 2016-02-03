@@ -40,7 +40,7 @@ void DownCommColumn::output(void *data, Query *query) {
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
     query->outputBeginList();
     data = shiftPointer(data);  // points to host or service
-    if (data) {
+    if (data != nullptr) {
         bool first = true;
 
         for (auto it = table->entriesIteratorBegin();
@@ -106,7 +106,7 @@ bool DownCommColumn::isNagiosMember(void *data, void *member) {
 }
 
 bool DownCommColumn::isEmpty(void *data) {
-    if (!data) return true;
+    if (data == nullptr) return true;
 
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
     for (auto it = table->entriesIteratorBegin();

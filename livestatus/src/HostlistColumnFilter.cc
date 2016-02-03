@@ -39,9 +39,9 @@ bool HostlistColumnFilter::accepts(void *data) {
         return (mem == nullptr) == (_opid == OP_EQUAL);
 
     bool is_member = false;
-    while (mem) {
+    while (mem != nullptr) {
         char *host_name = mem->host_name;
-        if (!host_name) host_name = mem->host_ptr->name;
+        if (host_name == nullptr) host_name = mem->host_ptr->name;
 
         if (host_name == _ref_value) {
             is_member = true;

@@ -122,7 +122,7 @@ void LogCache::updateLogfileIndex() {
 
     DIR *dir = opendir(log_archive_path);
 
-    if (dir) {
+    if (dir != nullptr) {
         char abspath[4096];
         struct dirent *ent, *result;
         int len = offsetof(struct dirent, d_name) +
@@ -146,7 +146,7 @@ void LogCache::updateLogfileIndex() {
 void LogCache::scanLogfile(char *path, bool watch) {
     auto logfile = new Logfile(path, watch);
     time_t since = logfile->since();
-    if (since) {
+    if (since != 0) {
         // make sure that no entry with that 'since' is existing yet.
         // under normal circumstances this never happens. But the
         // user might have copied files around.

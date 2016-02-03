@@ -28,7 +28,7 @@
 
 int32_t ServiceSpecialIntColumn::getValue(void *data, Query *) {
     data = shiftPointer(data);
-    if (!data) return 0;
+    if (data == nullptr) return 0;
 
     service *svc = static_cast<service *>(data);
     switch (_type) {

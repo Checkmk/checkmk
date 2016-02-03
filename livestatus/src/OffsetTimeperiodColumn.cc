@@ -38,7 +38,7 @@ OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description,
 
 int32_t OffsetTimeperiodColumn::getValue(void *data, Query *) {
     data = shiftPointer(data);
-    if (!data) return 0;
+    if (data == nullptr) return 0;
 
     timeperiod *tp;
     if (offset() == -1)
@@ -46,7 +46,7 @@ int32_t OffsetTimeperiodColumn::getValue(void *data, Query *) {
     else
         tp = *(timeperiod **)((char *)data + offset());
 
-    if (!tp)
+    if (tp == nullptr)
         return 1;  // no timeperiod set -> Nagios assumes 7x24
     else if (g_timeperiods_cache->inTimeperiod(tp))
         return 1;

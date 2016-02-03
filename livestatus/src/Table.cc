@@ -37,7 +37,7 @@ void Table::addColumn(Column *col) {
     // already exists. Delete that column in that
     // case. (For example needed for TableLog->TableHosts,
     // which both define host_name.
-    if (column(col->name())) {
+    if (column(col->name()) != nullptr) {
         delete col;
     } else {
         _columns.insert(make_pair(col->name(), col));
@@ -73,14 +73,14 @@ Column *Table::column(const char *colname) {
     // Multisite seems to query "service_service_description". We can fix this
     // in newer versions, but need to be compatible. So we need a "while" here,
     // not just an "if".
-    while (!strncmp(colname, prefixname(), prefix_len - 1) &&
+    while ((strncmp(colname, prefixname(), prefix_len - 1) == 0) &&
            colname[prefix_len - 1] == '_') {
         colname += prefix_len;
     }
 
     // If the colum name contains a ':' then we have a dynamic
     // column with column arguments
-    if (strchr(colname, ':')) return dynamicColumn(colname);
+    if (strchr(colname, ':') != nullptr) return dynamicColumn(colname);
 
     // First try exact match
     auto it = _columns.find(string(colname));

@@ -38,7 +38,8 @@ StringColumnFilter::StringColumnFilter(StringColumn *column, int opid,
     , _negate(opid < 0)
     , _regex(nullptr) {
     if (_opid == OP_REGEX || _opid == OP_REGEX_ICASE) {
-        if (strchr(value, '{') || strchr(value, '}')) {
+        if ((strchr(value, '{') != nullptr) ||
+            (strchr(value, '}') != nullptr)) {
             setError(
                 RESPONSE_CODE_INVALID_HEADER,
                 "disallowed regular expression '%s': must not contain { or }",
@@ -58,7 +59,7 @@ StringColumnFilter::StringColumnFilter(StringColumn *column, int opid,
 }
 
 StringColumnFilter::~StringColumnFilter() {
-    if (_regex) {
+    if (_regex != nullptr) {
         regfree(_regex);
         delete _regex;
     }
@@ -67,7 +68,7 @@ StringColumnFilter::~StringColumnFilter() {
 bool StringColumnFilter::accepts(void *data) {
     bool pass = true;
     const char *act_string = _column->getValue(data);
-    if (!act_string)
+    if (act_string == nullptr)
         act_string =
             "";  // e.g. current_service_perf_data in host entry in log table
 
@@ -76,7 +77,7 @@ bool StringColumnFilter::accepts(void *data) {
             pass = _ref_string == act_string;
             break;
         case OP_EQUAL_ICASE:
-            pass = !strcasecmp(_ref_string.c_str(), act_string);
+            pass = (strcasecmp(_ref_string.c_str(), act_string) == 0);
             break;
         case OP_REGEX:
         case OP_REGEX_ICASE:
@@ -99,7 +100,7 @@ bool StringColumnFilter::accepts(void *data) {
 }
 
 void *StringColumnFilter::indexFilter(const char *column) {
-    if (_opid == OP_EQUAL && !strcmp(column, _column->name()))
+    if (_opid == OP_EQUAL && (strcmp(column, _column->name()) == 0))
         return (void *)_ref_string.c_str();
     else
         return nullptr;

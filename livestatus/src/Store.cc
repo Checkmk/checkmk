@@ -136,14 +136,14 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
     lines.pop_front();
     const char *line = l.c_str();
     if (g_debug_level > 0) logger(LG_INFO, "Query: %s", line);
-    if (!strncmp(line, "GET ", 4))
+    if (strncmp(line, "GET ", 4) == 0)
         answerGetRequest(lines, output, lstrip((char *)line + 4));
-    else if (!strcmp(line, "GET"))
+    else if (strcmp(line, "GET") == 0)
         answerGetRequest(lines, output, "");  // only to get error message
-    else if (!strncmp(line, "COMMAND ", 8)) {
+    else if (strncmp(line, "COMMAND ", 8) == 0) {
         answerCommandRequest(lstrip((char *)line + 8));
         output->setDoKeepalive(true);
-    } else if (!strncmp(line, "LOGROTATE", 9)) {
+    } else if (strncmp(line, "LOGROTATE", 9) == 0) {
         logger(LG_INFO, "Forcing logfile rotation");
         rotate_log_file(time(nullptr));
         schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
@@ -171,18 +171,18 @@ void Store::answerCommandRequest(const char *command) {
 void Store::answerGetRequest(list<string> &lines, OutputBuffer *output,
                              const char *tablename) {
     output->reset();
-    if (!tablename[0]) {
+    if (tablename[0] == 0) {
         output->setError(RESPONSE_CODE_INVALID_REQUEST,
                          "Invalid GET request, missing tablename");
     }
     Table *table = findTable(tablename);
-    if (!table) {
+    if (table == nullptr) {
         output->setError(RESPONSE_CODE_NOT_FOUND,
                          "Invalid GET request, no such table '%s'", tablename);
     }
     Query query(lines, output, table);
 
-    if (table && !output->hasError()) {
+    if ((table != nullptr) && !output->hasError()) {
         if (query.hasNoColumns()) {
             table->addAllColumnsToQuery(&query);
             query.setShowColumnHeaders(true);

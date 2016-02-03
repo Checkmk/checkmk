@@ -27,7 +27,7 @@
 #include "StringColumnFilter.h"
 
 void StringColumn::output(void *data, Query *query) {
-    if (data)
+    if (data != nullptr)
         query->outputString(getValue(data));
     else
         query->outputString(nullptr);

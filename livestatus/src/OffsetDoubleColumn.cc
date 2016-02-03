@@ -26,9 +26,9 @@
 #include <string.h>
 
 double OffsetDoubleColumn::getValue(void *data) {
-    if (!data) return 0;
+    if (data == nullptr) return 0;
     char *p = static_cast<char *>(shiftPointer(data));
-    if (!p) return 0;
+    if (p == nullptr) return 0;
     double d;
     memcpy(&d, p + _offset, sizeof(d));
     return d;

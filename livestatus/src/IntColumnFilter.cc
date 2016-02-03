@@ -63,7 +63,7 @@ bool IntColumnFilter::accepts(void *data) {
 
 void IntColumnFilter::findIntLimits(const char *columnname, int *lower,
                                     int *upper) {
-    if (strcmp(columnname, _column->name())) {
+    if (strcmp(columnname, _column->name()) != 0) {
         return;  // wrong column
     }
     if (*lower >= *upper) {
@@ -117,7 +117,7 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower,
 bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
     int32_t ref_value = convertRefValue();
 
-    if (strcmp(columnname, _column->name())) {
+    if (strcmp(columnname, _column->name()) != 0) {
         return false;  // wrong column
     }
 
@@ -141,7 +141,7 @@ bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
         case -OP_LESS:  // >=
             bit >>= 1;
         case OP_GREATER:
-            while (bit) {
+            while (bit != 0u) {
                 *mask &= ~bit;
                 bit >>= 1;
             }

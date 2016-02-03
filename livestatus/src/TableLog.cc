@@ -186,7 +186,8 @@ bool TableLog::isAuthorized(contact *ctc, void *data) {
     service *svc = entry->_service;
     host *hst = entry->_host;
 
-    if (hst || svc) return is_authorized_for(ctc, hst, svc);
+    if ((hst != nullptr) || (svc != nullptr))
+        return is_authorized_for(ctc, hst, svc) != 0;
     // suppress entries for messages that belong to
     // hosts that do not exist anymore.
     else if (entry->_logclass == LOGCLASS_ALERT ||
@@ -201,7 +202,7 @@ bool TableLog::isAuthorized(contact *ctc, void *data) {
 Column *TableLog::column(const char *colname) {
     // First try to find column in the usual way
     Column *col = Table::column(colname);
-    if (col) return col;
+    if (col != nullptr) return col;
 
     // Now try with prefix "current_", since our joined
     // tables have this prefix in order to make clear that

@@ -43,7 +43,7 @@ static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
 
 hostsmember *HostlistStateColumn::getMembers(void *data) {
     data = shiftPointer(data);
-    if (!data) return nullptr;
+    if (data == nullptr) return nullptr;
 
     return *(hostsmember **)((char *)data + _offset);
 }
@@ -54,9 +54,10 @@ int32_t HostlistStateColumn::getValue(void *data, Query *query) {
     int32_t result = 0;
     int state;
 
-    while (mem) {
+    while (mem != nullptr) {
         host *hst = mem->host_ptr;
-        if (!auth_user || g_table_hosts->isAuthorized(auth_user, hst)) {
+        if ((auth_user == nullptr) ||
+            g_table_hosts->isAuthorized(auth_user, hst)) {
             switch (_logictype) {
                 case HLSC_NUM_SVC_PENDING:
                 case HLSC_NUM_SVC_OK:
@@ -78,13 +79,13 @@ int32_t HostlistStateColumn::getValue(void *data, Query *query) {
                 case HLSC_NUM_HST_UP:
                 case HLSC_NUM_HST_DOWN:
                 case HLSC_NUM_HST_UNREACH:
-                    if (hst->has_been_checked &&
+                    if ((hst->has_been_checked != 0) &&
                         hst->current_state == _logictype - HLSC_NUM_HST_UP)
                         result++;
                     break;
 
                 case HLSC_NUM_HST_PENDING:
-                    if (!hst->has_been_checked) result++;
+                    if (hst->has_been_checked == 0) result++;
                     break;
 
                 case HLSC_NUM_HST:

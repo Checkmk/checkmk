@@ -44,7 +44,7 @@ bool ServicelistStateColumn::svcStateIsWorse(int32_t state1, int32_t state2) {
 
 servicesmember *ServicelistStateColumn::getMembers(void *data) {
     data = shiftPointer(data);
-    if (!data) return nullptr;
+    if (data == nullptr) return nullptr;
 
     return *(servicesmember **)((char *)data + _offset);
 }
@@ -54,9 +54,10 @@ int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem,
     contact *auth_user = query->authUser();
     int32_t result = 0;
 
-    while (mem) {
+    while (mem != nullptr) {
         service *svc = mem->service_ptr;
-        if (!auth_user || g_table_services->isAuthorized(auth_user, svc)) {
+        if ((auth_user == nullptr) ||
+            g_table_services->isAuthorized(auth_user, svc)) {
             int lt = logictype;
             int state;
             int has_been_checked;
@@ -76,10 +77,10 @@ int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem,
                     result++;
                     break;
                 case SLSC_NUM_PENDING:
-                    if (!has_been_checked) result++;
+                    if (has_been_checked == 0) result++;
                     break;
                 default:
-                    if (has_been_checked && state == lt) result++;
+                    if ((has_been_checked != 0) && state == lt) result++;
                     break;
             }
         }

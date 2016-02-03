@@ -63,7 +63,7 @@ struct al_entry al_entries[] = {
 
 unsigned long AttributelistColumn::getValue(void *data) {
     data = shiftPointer(data);
-    if (!data) return 0;
+    if (data == nullptr) return 0;
 
 #ifdef CMC
     return *(uint16_t *)((char *)data + _offset);
@@ -78,8 +78,8 @@ void AttributelistColumn::output(void *data, Query *query) {
         unsigned i = 0;
         bool first = true;
         query->outputBeginSublist();
-        while (al_entries[i].name) {
-            if (mask & al_entries[i].bitvalue) {
+        while (al_entries[i].name != nullptr) {
+            if ((mask & al_entries[i].bitvalue) != 0u) {
                 if (!first)
                     query->outputSublistSeparator();
                 else
@@ -103,21 +103,21 @@ string AttributelistColumn::valueAsString(void *data, Query *) {
 
 Filter *AttributelistColumn::createFilter(int opid, char *value) {
     unsigned long ref = 0;
-    if (isdigit(value[0]))
+    if (isdigit(value[0]) != 0)
         ref = strtoul(value, nullptr, 10);
     else {
         char *scan = value;
         char *t;
-        while ((t = next_token(&scan, ','))) {
+        while ((t = next_token(&scan, ',')) != nullptr) {
             unsigned i = 0;
-            while (al_entries[i].name) {
-                if (!strcmp(t, al_entries[i].name)) {
+            while (al_entries[i].name != nullptr) {
+                if (strcmp(t, al_entries[i].name) == 0) {
                     ref |= al_entries[i].bitvalue;
                     break;
                 }
                 i++;
             }
-            if (!al_entries[i].name) {
+            if (al_entries[i].name == nullptr) {
                 logger(LG_INFO,
                        "Ignoring invalid value '%s' for attribute list", t);
             }

@@ -26,9 +26,9 @@
 #include "Query.h"
 
 objectlist *HostgroupsColumn::getData(void *data) {
-    if (data) {
+    if (data != nullptr) {
         data = shiftPointer(data);
-        if (data) return *(objectlist **)((char *)data + _offset);
+        if (data != nullptr) return *(objectlist **)((char *)data + _offset);
     }
     return nullptr;
 }
@@ -36,9 +36,9 @@ objectlist *HostgroupsColumn::getData(void *data) {
 void HostgroupsColumn::output(void *data, Query *query) {
     query->outputBeginList();
     objectlist *list = getData(data);
-    if (list) {
+    if (list != nullptr) {
         bool first = true;
-        while (list) {
+        while (list != nullptr) {
             hostgroup *sg = (hostgroup *)list->object_ptr;
             if (!first)
                 query->outputListSeparator();
@@ -56,13 +56,13 @@ void *HostgroupsColumn::getNagiosObject(char *name) {
 }
 
 bool HostgroupsColumn::isNagiosMember(void *data, void *nagobject) {
-    if (!nagobject || !data) return false;
+    if ((nagobject == nullptr) || (data == nullptr)) return false;
 
     // data is already shifted (_indirect_offset is taken into account)
     // But _offset needs still to be accounted for
     objectlist *list = *(objectlist **)((char *)data + _offset);
 
-    while (list) {
+    while (list != nullptr) {
         if (list->object_ptr == nagobject) return true;
         list = list->next;
     }

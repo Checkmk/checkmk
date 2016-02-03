@@ -72,18 +72,18 @@ void TableServices::answerQuery(Query *query) {
 
         // When g_group_authorization is set to AUTH_STRICT we need to pre-check
         // if every service of this group is visible to the _auth_user
-        bool requires_precheck =
-            query->authUser() && g_group_authorization == AUTH_STRICT;
+        bool requires_precheck = (query->authUser() != nullptr) &&
+                                 g_group_authorization == AUTH_STRICT;
 
-        while (sgroup) {
+        while (sgroup != nullptr) {
             bool show_sgroup = true;
             sg._servicegroup = sgroup;
             servicesmember *mem = sgroup->members;
             if (requires_precheck) {
-                while (mem) {
-                    if (!is_authorized_for(query->authUser(),
-                                           mem->service_ptr->host_ptr,
-                                           mem->service_ptr)) {
+                while (mem != nullptr) {
+                    if (is_authorized_for(query->authUser(),
+                                          mem->service_ptr->host_ptr,
+                                          mem->service_ptr) == 0) {
                         show_sgroup = false;
                         break;
                     }
@@ -93,7 +93,7 @@ void TableServices::answerQuery(Query *query) {
 
             if (show_sgroup) {
                 mem = sgroup->members;
-                while (mem) {
+                while (mem != nullptr) {
                     memcpy(&sg._service, mem->service_ptr, sizeof(service));
                     if (!query->processDataset(&sg)) break;
                     mem = mem->next;
@@ -108,13 +108,13 @@ void TableServices::answerQuery(Query *query) {
     else if (_by_hostgroup) {
         hostgroup *hgroup = hostgroup_list;
         servicebyhostgroup shg;
-        while (hgroup) {
+        while (hgroup != nullptr) {
             shg._hostgroup = hgroup;
             hostsmember *mem = hgroup->members;
-            while (mem) {
+            while (mem != nullptr) {
                 host *hst = mem->host_ptr;
                 servicesmember *smem = hst->services;
-                while (smem) {
+                while (smem != nullptr) {
                     service *svc = smem->service_ptr;
                     memcpy(&shg._service, svc, sizeof(service));
                     if (!query->processDataset(&shg)) break;
@@ -130,12 +130,12 @@ void TableServices::answerQuery(Query *query) {
     // do we know the host?
     const char *host_name =
         static_cast<const char *>(query->findIndexFilter("host_name"));
-    if (host_name) {
+    if (host_name != nullptr) {
         // Older Nagios headers are not const-correct... :-P
         host *host = find_host(const_cast<char *>(host_name));
-        if (host) {
+        if (host != nullptr) {
             servicesmember *mem = host->services;
-            while (mem) {
+            while (mem != nullptr) {
                 if (!query->processDataset(mem->service_ptr)) break;
                 mem = mem->next;
             }
@@ -145,9 +145,9 @@ void TableServices::answerQuery(Query *query) {
 
     // do we know the service group?
     servicegroup *sgroup = (servicegroup *)query->findIndexFilter("groups");
-    if (sgroup) {
+    if (sgroup != nullptr) {
         servicesmember *mem = sgroup->members;
-        while (mem) {
+        while (mem != nullptr) {
             if (!query->processDataset(mem->service_ptr)) break;
             mem = mem->next;
         }
@@ -156,12 +156,12 @@ void TableServices::answerQuery(Query *query) {
 
     // do we know the host group?
     hostgroup *hgroup = (hostgroup *)query->findIndexFilter("host_groups");
-    if (hgroup) {
+    if (hgroup != nullptr) {
         hostsmember *mem = hgroup->members;
-        while (mem) {
+        while (mem != nullptr) {
             host *host = mem->host_ptr;
             servicesmember *smem = host->services;
-            while (smem) {
+            while (smem != nullptr) {
                 if (!query->processDataset(smem->service_ptr)) break;
                 smem = smem->next;
             }
@@ -172,7 +172,7 @@ void TableServices::answerQuery(Query *query) {
 
     // no index -> iterator over *all* services
     service *svc = service_list;
-    while (svc) {
+    while (svc != nullptr) {
         if (!query->processDataset(svc)) break;
         svc = svc->next;
     }
@@ -180,7 +180,7 @@ void TableServices::answerQuery(Query *query) {
 
 bool TableServices::isAuthorized(contact *ctc, void *data) {
     service *svc = static_cast<service *>(data);
-    return is_authorized_for(ctc, svc->host_ptr, svc);
+    return is_authorized_for(ctc, svc->host_ptr, svc) != 0;
 }
 
 TableServices::TableServices(bool by_group, bool by_hostgroup)
@@ -590,7 +590,7 @@ void *TableServices::findObject(char *objectspec) {
     // the problem that host name containing spaces will not work.
     // For that reason we alternatively allow a semicolon as a separator.
     char *semicolon = strchr(objectspec, ';');
-    if (semicolon) {
+    if (semicolon != nullptr) {
         *semicolon = 0;
         host_name = rstrip(objectspec);
         description = rstrip(semicolon + 1);

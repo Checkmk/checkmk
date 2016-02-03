@@ -81,85 +81,85 @@ Query::Query(list<string> &lines, OutputBuffer *output, Table *table)
         char *buffer = &line_copy[0];
         rstrip(buffer);
         if (g_debug_level > 0) logger(LG_INFO, "Query: %s", buffer);
-        if (!strncmp(buffer, "Filter:", 7))
+        if (strncmp(buffer, "Filter:", 7) == 0)
             parseFilterLine(lstrip(buffer + 7), true);
 
-        else if (!strncmp(buffer, "Or:", 3))
+        else if (strncmp(buffer, "Or:", 3) == 0)
             parseAndOrLine(lstrip(buffer + 3), ANDOR_OR, true);
 
-        else if (!strncmp(buffer, "And:", 4))
+        else if (strncmp(buffer, "And:", 4) == 0)
             parseAndOrLine(lstrip(buffer + 4), ANDOR_AND, true);
 
-        else if (!strncmp(buffer, "Negate:", 7))
+        else if (strncmp(buffer, "Negate:", 7) == 0)
             parseNegateLine(lstrip(buffer + 7), true);
 
-        else if (!strncmp(buffer, "StatsOr:", 8))
+        else if (strncmp(buffer, "StatsOr:", 8) == 0)
             parseStatsAndOrLine(lstrip(buffer + 8), ANDOR_OR);
 
-        else if (!strncmp(buffer, "StatsAnd:", 9))
+        else if (strncmp(buffer, "StatsAnd:", 9) == 0)
             parseStatsAndOrLine(lstrip(buffer + 9), ANDOR_AND);
 
-        else if (!strncmp(buffer, "StatsNegate:", 12))
+        else if (strncmp(buffer, "StatsNegate:", 12) == 0)
             parseStatsNegateLine(lstrip(buffer + 12));
 
-        else if (!strncmp(buffer, "Stats:", 6))
+        else if (strncmp(buffer, "Stats:", 6) == 0)
             parseStatsLine(lstrip(buffer + 6));
 
-        else if (!strncmp(buffer, "StatsGroupBy:", 13))
+        else if (strncmp(buffer, "StatsGroupBy:", 13) == 0)
             parseStatsGroupLine(lstrip(buffer + 13));
 
-        else if (!strncmp(buffer, "Columns:", 8))
+        else if (strncmp(buffer, "Columns:", 8) == 0)
             parseColumnsLine(lstrip(buffer + 8));
 
-        else if (!strncmp(buffer, "ColumnHeaders:", 14))
+        else if (strncmp(buffer, "ColumnHeaders:", 14) == 0)
             parseColumnHeadersLine(lstrip(buffer + 14));
 
-        else if (!strncmp(buffer, "Limit:", 6))
+        else if (strncmp(buffer, "Limit:", 6) == 0)
             parseLimitLine(lstrip(buffer + 6));
 
-        else if (!strncmp(buffer, "Timelimit:", 10))
+        else if (strncmp(buffer, "Timelimit:", 10) == 0)
             parseTimelimitLine(lstrip(buffer + 10));
 
-        else if (!strncmp(buffer, "AuthUser:", 9))
+        else if (strncmp(buffer, "AuthUser:", 9) == 0)
             parseAuthUserHeader(lstrip(buffer + 9));
 
-        else if (!strncmp(buffer, "Separators:", 11))
+        else if (strncmp(buffer, "Separators:", 11) == 0)
             parseSeparatorsLine(lstrip(buffer + 11));
 
-        else if (!strncmp(buffer, "OutputFormat:", 13))
+        else if (strncmp(buffer, "OutputFormat:", 13) == 0)
             parseOutputFormatLine(lstrip(buffer + 13));
 
-        else if (!strncmp(buffer, "ResponseHeader:", 15))
+        else if (strncmp(buffer, "ResponseHeader:", 15) == 0)
             parseResponseHeaderLine(lstrip(buffer + 15));
 
-        else if (!strncmp(buffer, "KeepAlive:", 10))
+        else if (strncmp(buffer, "KeepAlive:", 10) == 0)
             parseKeepAliveLine(lstrip(buffer + 10));
 
-        else if (!strncmp(buffer, "WaitCondition:", 14))
+        else if (strncmp(buffer, "WaitCondition:", 14) == 0)
             parseFilterLine(lstrip(buffer + 14), false);
 
-        else if (!strncmp(buffer, "WaitConditionAnd:", 17))
+        else if (strncmp(buffer, "WaitConditionAnd:", 17) == 0)
             parseAndOrLine(lstrip(buffer + 17), ANDOR_AND, false);
 
-        else if (!strncmp(buffer, "WaitConditionOr:", 16))
+        else if (strncmp(buffer, "WaitConditionOr:", 16) == 0)
             parseAndOrLine(lstrip(buffer + 16), ANDOR_OR, false);
 
-        else if (!strncmp(buffer, "WaitConditionNegate:", 20))
+        else if (strncmp(buffer, "WaitConditionNegate:", 20) == 0)
             parseNegateLine(lstrip(buffer + 20), false);
 
-        else if (!strncmp(buffer, "WaitTrigger:", 12))
+        else if (strncmp(buffer, "WaitTrigger:", 12) == 0)
             parseWaitTriggerLine(lstrip(buffer + 12));
 
-        else if (!strncmp(buffer, "WaitObject:", 11))
+        else if (strncmp(buffer, "WaitObject:", 11) == 0)
             parseWaitObjectLine(lstrip(buffer + 11));
 
-        else if (!strncmp(buffer, "WaitTimeout:", 12))
+        else if (strncmp(buffer, "WaitTimeout:", 12) == 0)
             parseWaitTimeoutLine(lstrip(buffer + 12));
 
-        else if (!strncmp(buffer, "Localtime:", 10))
+        else if (strncmp(buffer, "Localtime:", 10) == 0)
             parseLocaltimeLine(lstrip(buffer + 10));
 
-        else if (!buffer[0])
+        else if (buffer[0] == 0)
             break;
 
         else {
@@ -204,22 +204,22 @@ int Query::lookupOperator(const char *opname) {
         opname++;
     }
 
-    if (!strcmp(opname, "="))
+    if (strcmp(opname, "=") == 0)
         opid = OP_EQUAL;
-    else if (!strcmp(opname, "~"))
+    else if (strcmp(opname, "~") == 0)
         opid = OP_REGEX;
-    else if (!strcmp(opname, "=~"))
+    else if (strcmp(opname, "=~") == 0)
         opid = OP_EQUAL_ICASE;
-    else if (!strcmp(opname, "~~"))
+    else if (strcmp(opname, "~~") == 0)
         opid = OP_REGEX_ICASE;
-    else if (!strcmp(opname, ">"))
+    else if (strcmp(opname, ">") == 0)
         opid = OP_GREATER;
-    else if (!strcmp(opname, "<"))
+    else if (strcmp(opname, "<") == 0)
         opid = OP_LESS;
-    else if (!strcmp(opname, ">=")) {
+    else if (strcmp(opname, ">=") == 0) {
         opid = OP_LESS;
         negate = -negate;
-    } else if (!strcmp(opname, "<=")) {
+    } else if (strcmp(opname, "<=") == 0) {
         opid = OP_GREATER;
         negate = -negate;
     } else
@@ -229,7 +229,7 @@ int Query::lookupOperator(const char *opname) {
 
 Filter *Query::createFilter(Column *column, int operator_id, char *value) {
     Filter *filter = column->createFilter(operator_id, value);
-    if (!filter)
+    if (filter == nullptr)
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
                           "cannot create filter on table %s", _table->name());
     else if (filter->hasError()) {
@@ -246,7 +246,7 @@ Filter *Query::createFilter(Column *column, int operator_id, char *value) {
 
 void Query::parseAndOrLine(char *line, int andor, bool filter) {
     char *value = next_field(&line);
-    if (!value) {
+    if (value == nullptr) {
         _output->setError(
             RESPONSE_CODE_INVALID_HEADER,
             "Missing value for %s%s: need non-zero integer number",
@@ -255,7 +255,7 @@ void Query::parseAndOrLine(char *line, int andor, bool filter) {
     }
 
     int number = atoi(value);
-    if (!isdigit(value[0]) || number <= 0) {
+    if ((isdigit(value[0]) == 0) || number <= 0) {
         _output->setError(
             RESPONSE_CODE_INVALID_HEADER,
             "Invalid value for %s%s: need non-zero integer number",
@@ -269,7 +269,7 @@ void Query::parseAndOrLine(char *line, int andor, bool filter) {
 }
 
 void Query::parseNegateLine(char *line, bool filter) {
-    if (next_field(&line)) {
+    if (next_field(&line) != nullptr) {
         _output->setError(
             RESPONSE_CODE_INVALID_HEADER,
             filter ? "Negate: does not take any arguments"
@@ -280,14 +280,14 @@ void Query::parseNegateLine(char *line, bool filter) {
     Filter *to_negate;
     if (filter) {
         to_negate = _filter.stealLastSubfiler();
-        if (!to_negate) {
+        if (to_negate == nullptr) {
             _output->setError(RESPONSE_CODE_INVALID_HEADER,
                               "Negate: no Filter: header to negate");
             return;
         }
     } else {
         to_negate = _wait_condition.stealLastSubfiler();
-        if (!to_negate) {
+        if (to_negate == nullptr) {
             _output->setError(RESPONSE_CODE_INVALID_HEADER,
                               "Negate: no Wait:-condition negate");
             return;
@@ -302,7 +302,7 @@ void Query::parseNegateLine(char *line, bool filter) {
 
 void Query::parseStatsAndOrLine(char *line, int andor) {
     char *value = next_field(&line);
-    if (!value) {
+    if (value == nullptr) {
         _output->setError(
             RESPONSE_CODE_INVALID_HEADER,
             "Missing value for Stats%s: need non-zero integer number",
@@ -311,7 +311,7 @@ void Query::parseStatsAndOrLine(char *line, int andor) {
     }
 
     int number = atoi(value);
-    if (!isdigit(value[0]) || number <= 0) {
+    if ((isdigit(value[0]) == 0) || number <= 0) {
         _output->setError(
             RESPONSE_CODE_INVALID_HEADER,
             "Invalid value for Stats%s: need non-zero integer number",
@@ -350,7 +350,7 @@ void Query::parseStatsAndOrLine(char *line, int andor) {
 }
 
 void Query::parseStatsNegateLine(char *line) {
-    if (next_field(&line)) {
+    if (next_field(&line) != nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
                           "StatsNegate: does not take any arguments");
         return;
@@ -374,29 +374,29 @@ void Query::parseStatsNegateLine(char *line) {
 }
 
 void Query::parseStatsLine(char *line) {
-    if (!_table) return;
+    if (_table == nullptr) return;
 
     // first token is either aggregation operator or column name
     char *col_or_op = next_field(&line);
-    if (!col_or_op) {
+    if (col_or_op == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER, "empty stats line");
         return;
     }
 
     int operation = STATS_OP_COUNT;
-    if (!strcmp(col_or_op, "sum"))
+    if (strcmp(col_or_op, "sum") == 0)
         operation = STATS_OP_SUM;
-    else if (!strcmp(col_or_op, "min"))
+    else if (strcmp(col_or_op, "min") == 0)
         operation = STATS_OP_MIN;
-    else if (!strcmp(col_or_op, "max"))
+    else if (strcmp(col_or_op, "max") == 0)
         operation = STATS_OP_MAX;
-    else if (!strcmp(col_or_op, "avg"))
+    else if (strcmp(col_or_op, "avg") == 0)
         operation = STATS_OP_AVG;
-    else if (!strcmp(col_or_op, "std"))
+    else if (strcmp(col_or_op, "std") == 0)
         operation = STATS_OP_STD;
-    else if (!strcmp(col_or_op, "suminv"))
+    else if (strcmp(col_or_op, "suminv") == 0)
         operation = STATS_OP_SUMINV;
-    else if (!strcmp(col_or_op, "avginv"))
+    else if (strcmp(col_or_op, "avginv") == 0)
         operation = STATS_OP_AVGINV;
 
     char *column_name;
@@ -405,7 +405,7 @@ void Query::parseStatsLine(char *line) {
     else {
         // aggregation operator is followed by column name
         column_name = next_field(&line);
-        if (!column_name) {
+        if (column_name == nullptr) {
             _output->setError(RESPONSE_CODE_INVALID_HEADER,
                               "missing column name in stats header");
             return;
@@ -413,7 +413,7 @@ void Query::parseStatsLine(char *line) {
     }
 
     Column *column = _table->column(column_name);
-    if (!column) {
+    if (column == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
                           "invalid stats header: table '%s' has no column '%s'",
                           _table->name(), column_name);
@@ -423,7 +423,7 @@ void Query::parseStatsLine(char *line) {
     StatsColumn *stats_col;
     if (operation == STATS_OP_COUNT) {
         char *operator_name = next_field(&line);
-        if (!operator_name) {
+        if (operator_name == nullptr) {
             _output->setError(
                 RESPONSE_CODE_INVALID_HEADER,
                 "invalid stats header: missing operator after table '%s'",
@@ -437,7 +437,7 @@ void Query::parseStatsLine(char *line) {
             return;
         }
         char *value = lstrip(line);
-        if (!value) {
+        if (value == nullptr) {
             _output->setError(
                 RESPONSE_CODE_INVALID_HEADER,
                 "invalid stats: missing value after operator '%s'",
@@ -446,7 +446,7 @@ void Query::parseStatsLine(char *line) {
         }
 
         Filter *filter = createFilter(column, operator_id, value);
-        if (!filter) return;
+        if (filter == nullptr) return;
         stats_col = new StatsColumn(column, filter, operation);
     } else
         stats_col = new StatsColumn(column, nullptr, operation);
@@ -458,16 +458,16 @@ void Query::parseStatsLine(char *line) {
 }
 
 void Query::parseFilterLine(char *line, bool is_filter) {
-    if (!_table) return;
+    if (_table == nullptr) return;
 
     char *column_name = next_field(&line);
-    if (!column_name) {
+    if (column_name == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER, "empty filter line");
         return;
     }
 
     Column *column = _table->column(column_name);
-    if (!column) {
+    if (column == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
                           "invalid filter: table '%s' has no column '%s'",
                           _table->name(), column_name);
@@ -475,7 +475,7 @@ void Query::parseFilterLine(char *line, bool is_filter) {
     }
 
     char *operator_name = next_field(&line);
-    if (!operator_name) {
+    if (operator_name == nullptr) {
         _output->setError(
             RESPONSE_CODE_INVALID_HEADER,
             "invalid filter header: missing operator after table '%s'",
@@ -489,7 +489,7 @@ void Query::parseFilterLine(char *line, bool is_filter) {
         return;
     }
     char *value = lstrip(line);
-    if (!value) {
+    if (value == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
                           "invalid filter: missing value after operator '%s'",
                           operator_name);
@@ -497,7 +497,7 @@ void Query::parseFilterLine(char *line, bool is_filter) {
     }
 
     Filter *filter = createFilter(column, operator_id, value);
-    if (filter) {
+    if (filter != nullptr) {
         if (is_filter)
             _filter.addSubfilter(filter);
         else
@@ -506,9 +506,9 @@ void Query::parseFilterLine(char *line, bool is_filter) {
 }
 
 void Query::parseAuthUserHeader(char *line) {
-    if (!_table) return;
+    if (_table == nullptr) return;
     _auth_user = find_contact(line);
-    if (!_auth_user) {
+    if (_auth_user == nullptr) {
         // Do not handle this as error any more. In a multi site setup
         // not all users might be present on all sites by design.
         _auth_user = UNKNOWN_AUTH_USER;
@@ -525,11 +525,11 @@ void Query::parseStatsGroupLine(char *line) {
 }
 
 void Query::parseColumnsLine(char *line) {
-    if (!_table) return;
+    if (_table == nullptr) return;
     char *column_name;
     while (nullptr != (column_name = next_field(&line))) {
         Column *column = _table->column(column_name);
-        if (column)
+        if (column != nullptr)
             _columns.push_back(column);
         else {
             logger(LOG_WARNING,
@@ -553,13 +553,13 @@ void Query::parseColumnsLine(char *line) {
 void Query::parseSeparatorsLine(char *line) {
     char dssep = 0, fieldsep = 0, listsep = 0, hssep = 0;
     char *token = next_field(&line);
-    if (token) dssep = atoi(token);
+    if (token != nullptr) dssep = atoi(token);
     token = next_field(&line);
-    if (token) fieldsep = atoi(token);
+    if (token != nullptr) fieldsep = atoi(token);
     token = next_field(&line);
-    if (token) listsep = atoi(token);
+    if (token != nullptr) listsep = atoi(token);
     token = next_field(&line);
-    if (token) hssep = atoi(token);
+    if (token != nullptr) hssep = atoi(token);
 
     // if (dssep == fieldsep
     //       || dssep == listsep
@@ -580,18 +580,18 @@ void Query::parseSeparatorsLine(char *line) {
 
 void Query::parseOutputFormatLine(char *line) {
     char *format = next_field(&line);
-    if (!format) {
+    if (format == nullptr) {
         _output->setError(
             RESPONSE_CODE_INVALID_HEADER,
             "Missing output format. Only 'csv' and 'json' are available.");
         return;
     }
 
-    if (!strcmp(format, "csv"))
+    if (strcmp(format, "csv") == 0)
         _output_format = OUTPUT_FORMAT_CSV;
-    else if (!strcmp(format, "json"))
+    else if (strcmp(format, "json") == 0)
         _output_format = OUTPUT_FORMAT_JSON;
-    else if (!strcmp(format, "python"))
+    else if (strcmp(format, "python") == 0)
         _output_format = OUTPUT_FORMAT_PYTHON;
     else
         _output->setError(
@@ -601,16 +601,16 @@ void Query::parseOutputFormatLine(char *line) {
 
 void Query::parseColumnHeadersLine(char *line) {
     char *value = next_field(&line);
-    if (!value) {
+    if (value == nullptr) {
         _output->setError(
             RESPONSE_CODE_INVALID_HEADER,
             "Missing value for ColumnHeaders: must be 'on' or 'off'");
         return;
     }
 
-    if (!strcmp(value, "on"))
+    if (strcmp(value, "on") == 0)
         _show_column_headers = true;
-    else if (!strcmp(value, "off"))
+    else if (strcmp(value, "off") == 0)
         _show_column_headers = false;
     else
         _output->setError(
@@ -620,15 +620,15 @@ void Query::parseColumnHeadersLine(char *line) {
 
 void Query::parseKeepAliveLine(char *line) {
     char *value = next_field(&line);
-    if (!value) {
+    if (value == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
                           "Missing value for KeepAlive: must be 'on' or 'off'");
         return;
     }
 
-    if (!strcmp(value, "on"))
+    if (strcmp(value, "on") == 0)
         _output->setDoKeepalive(true);
-    else if (!strcmp(value, "off"))
+    else if (strcmp(value, "off") == 0)
         _output->setDoKeepalive(false);
     else
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
@@ -637,16 +637,16 @@ void Query::parseKeepAliveLine(char *line) {
 
 void Query::parseResponseHeaderLine(char *line) {
     char *value = next_field(&line);
-    if (!value) {
+    if (value == nullptr) {
         _output->setError(
             RESPONSE_CODE_INVALID_HEADER,
             "Missing value for ResponseHeader: must be 'off' or 'fixed16'");
         return;
     }
 
-    if (!strcmp(value, "off"))
+    if (strcmp(value, "off") == 0)
         _output->setResponseHeader(RESPONSE_HEADER_OFF);
-    else if (!strcmp(value, "fixed16"))
+    else if (strcmp(value, "fixed16") == 0)
         _output->setResponseHeader(RESPONSE_HEADER_FIXED16);
     else
         _output->setError(
@@ -657,12 +657,12 @@ void Query::parseResponseHeaderLine(char *line) {
 
 void Query::parseLimitLine(char *line) {
     char *value = next_field(&line);
-    if (!value) {
+    if (value == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
                           "Header Limit: missing value");
     } else {
         int limit = atoi(value);
-        if (!isdigit(value[0]) || limit < 0)
+        if ((isdigit(value[0]) == 0) || limit < 0)
             _output->setError(
                 RESPONSE_CODE_INVALID_HEADER,
                 "Invalid value for Limit: must be non-negative integer");
@@ -673,12 +673,12 @@ void Query::parseLimitLine(char *line) {
 
 void Query::parseTimelimitLine(char *line) {
     char *value = next_field(&line);
-    if (!value) {
+    if (value == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
                           "Header Timelimit: missing value");
     } else {
         int timelimit = atoi(value);
-        if (!isdigit(value[0]) || timelimit < 0)
+        if ((isdigit(value[0]) == 0) || timelimit < 0)
             _output->setError(RESPONSE_CODE_INVALID_HEADER,
                               "Invalid value for Timelimit: must be "
                               "non-negative integer (seconds)");
@@ -691,12 +691,12 @@ void Query::parseTimelimitLine(char *line) {
 
 void Query::parseWaitTimeoutLine(char *line) {
     char *value = next_field(&line);
-    if (!value) {
+    if (value == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
                           "WaitTimeout: missing value");
     } else {
         int timeout = atoi(value);
-        if (!isdigit(value[0]) || timeout < 0)
+        if ((isdigit(value[0]) == 0) || timeout < 0)
             _output->setError(
                 RESPONSE_CODE_INVALID_HEADER,
                 "Invalid value for WaitTimeout: must be non-negative integer");
@@ -707,7 +707,7 @@ void Query::parseWaitTimeoutLine(char *line) {
 
 void Query::parseWaitTriggerLine(char *line) {
     char *value = next_field(&line);
-    if (!value) {
+    if (value == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
                           "WaitTrigger: missing keyword");
         return;
@@ -723,11 +723,11 @@ void Query::parseWaitTriggerLine(char *line) {
 }
 
 void Query::parseWaitObjectLine(char *line) {
-    if (!_table) return;
+    if (_table == nullptr) return;
 
     char *objectspec = lstrip(line);
     _wait_object = _table->findObject(objectspec);
-    if (!_wait_object) {
+    if (_wait_object == nullptr) {
         _output->setError(
             RESPONSE_CODE_INVALID_HEADER,
             "WaitObject: object '%s' not found or not supported by this table",
@@ -737,7 +737,7 @@ void Query::parseWaitObjectLine(char *line) {
 
 void Query::parseLocaltimeLine(char *line) {
     char *value = next_field(&line);
-    if (!value) {
+    if (value == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
                           "Header Localtime: missing value");
         return;
@@ -847,7 +847,7 @@ bool Query::processDataset(void *data) {
     }
 
     if (_filter.accepts(data) &&
-        (!_auth_user || _table->isAuthorized(_auth_user, data))) {
+        ((_auth_user == nullptr) || _table->isAuthorized(_auth_user, data))) {
         _current_line++;
         if (_limit >= 0 && (int)_current_line > _limit) return false;
 
@@ -1049,7 +1049,7 @@ void Query::outputBlob(const char *buffer, int size) {
 // len = -1 -> use strlen(), len >= 0: consider
 // output as blob, do not handle UTF-8.
 void Query::outputString(const char *value, int len) {
-    if (!value) {
+    if (value == nullptr) {
         if (_output_format != OUTPUT_FORMAT_CSV) _output->addBuffer("\"\"", 2);
         return;
     }
@@ -1064,7 +1064,7 @@ void Query::outputString(const char *value, int len) {
         _output->addChar('"');
         const char *r = value;
         int chars_left = len >= 0 ? len : strlen(r);
-        while (*r) {
+        while (*r != 0) {
             // Always escape control characters (1..31)
             if (*r < 32 && *r >= 0) {
                 if (len < 0)
@@ -1252,7 +1252,7 @@ void Query::doWait() {
             if (g_debug_level >= 2)
                 logger(LG_INFO, "Waiting %d ms or until condition becomes true",
                        _wait_timeout);
-            if (!trigger_wait_until(_wait_trigger, &timeout)) {
+            if (trigger_wait_until(_wait_trigger, &timeout) == 0) {
                 if (g_debug_level >= 2)
                     logger(LG_INFO, "WaitTimeout after %d ms", _wait_timeout);
                 return;  // timeout occurred. do not wait any longer

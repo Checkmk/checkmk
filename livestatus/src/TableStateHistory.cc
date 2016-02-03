@@ -69,8 +69,8 @@ extern Store *g_store;
 
 #ifndef CMC
 const char *getCustomVariable(customvariablesmember *cvm, const char *name) {
-    while (cvm) {
-        if (!strcmp(cvm->variable_name, name)) return cvm->variable_value;
+    while (cvm != nullptr) {
+        if (strcmp(cvm->variable_name, name) == 0) return cvm->variable_value;
         cvm = cvm->next;
     }
     return "";
@@ -234,16 +234,16 @@ void TableStateHistory::answerQuery(Query *query) {
     object_filter_t object_filter;
     AndingFilter *orig_filter = query->filter();
 
-    if (!g_disable_statehist_filtering) {
+    if (g_disable_statehist_filtering == 0) {
         auto it = orig_filter->begin();
         while (it != orig_filter->end()) {
             Filter *filter = *it;
             Column *column = filter->column();
-            if (column) {
+            if (column != nullptr) {
                 const char *column_name = column->name();
-                if (!strncmp(column_name, "current_", 8) ||
-                    !strncmp(column_name, "host_", 5) ||
-                    !strncmp(column_name, "service_", 8)) {
+                if ((strncmp(column_name, "current_", 8) == 0) ||
+                    (strncmp(column_name, "host_", 5) == 0) ||
+                    (strncmp(column_name, "service_", 8) == 0)) {
                     object_filter.push_back(filter);
                     // logger(LOG_NOTICE, "Nehme Column: %s", column_name);
                 } else {
@@ -427,7 +427,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     // Note: we currently do not filter out hosts since they
                     // might be
                     // needed for service states
-                    if (entry->_svc_desc) {
+                    if (entry->_svc_desc != nullptr) {
                         bool filtered_out = false;
                         for (auto filter : object_filter) {
                             if (!filter->accepts(state)) {
@@ -571,7 +571,8 @@ void TableStateHistory::answerQuery(Query *query) {
                 char *buffer = strdup(entry->_options);
                 char *tp_name = strtok_r(buffer, ";", &save_ptr);
                 char *tp_state = strtok_r(nullptr, ";", &save_ptr);
-                if (tp_state) tp_state = strtok_r(nullptr, ";", &save_ptr);
+                if (tp_state != nullptr)
+                    tp_state = strtok_r(nullptr, ";", &save_ptr);
 
                 if (tp_state == nullptr) {
                     // This line is broken...
@@ -633,7 +634,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 hst->_state = -1;
                 hst->_until = hst->_time;
                 hst->_debug_info = "UNMONITORED";
-                if (hst->_log_output) free(hst->_log_output);
+                if (hst->_log_output != nullptr) free(hst->_log_output);
                 hst->_log_output = nullptr;
             }
 
@@ -676,7 +677,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         hs_state->_in_notification_period = 0;
         hs_state->_in_service_period = 0;
         hs_state->_is_flapping = 0;
-        if (hs_state->_log_output) free(hs_state->_log_output);
+        if (hs_state->_log_output != nullptr) free(hs_state->_log_output);
         hs_state->_log_output = nullptr;
 
         // Apply latest notification period information and set the host_state
@@ -725,13 +726,14 @@ int TableStateHistory::updateHostServiceState(Query *query,
                 if (hs_state->_state != entry->_state) {
                     if (!only_update) process(query, hs_state);
                     hs_state->_state = entry->_state;
-                    hs_state->_host_down = entry->_state > 0;
+                    hs_state->_host_down = static_cast<int>(entry->_state > 0);
                     hs_state->_debug_info = "HOST STATE";
                 } else
                     state_changed = 0;
-            } else if (hs_state->_host_down != (entry->_state > 0)) {
+            } else if (hs_state->_host_down !=
+                       static_cast<int>(entry->_state > 0)) {
                 if (!only_update) process(query, hs_state);
-                hs_state->_host_down = entry->_state > 0;
+                hs_state->_host_down = static_cast<int>(entry->_state > 0);
                 hs_state->_debug_info = "SVC HOST STATE";
             }
             break;
@@ -748,7 +750,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         }
         case DOWNTIME_ALERT_HOST: {
             int downtime_active =
-                !strncmp(entry->_state_type, "STARTED", 7) ? 1 : 0;
+                strncmp(entry->_state_type, "STARTED", 7) == 0 ? 1 : 0;
 
             if (hs_state->_in_host_downtime != downtime_active) {
                 if (!only_update) process(query, hs_state);
@@ -763,7 +765,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         }
         case DOWNTIME_ALERT_SERVICE: {
             int downtime_active =
-                !strncmp(entry->_state_type, "STARTED", 7) ? 1 : 0;
+                strncmp(entry->_state_type, "STARTED", 7) == 0 ? 1 : 0;
             if (hs_state->_in_downtime != downtime_active) {
                 if (!only_update) process(query, hs_state);
                 hs_state->_debug_info = "DOWNTIME SERVICE";
@@ -774,7 +776,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         case FLAPPING_HOST:
         case FLAPPING_SERVICE: {
             int flapping_active =
-                !strncmp(entry->_state_type, "STARTED", 7) ? 1 : 0;
+                strncmp(entry->_state_type, "STARTED", 7) == 0 ? 1 : 0;
             if (hs_state->_is_flapping != flapping_active) {
                 if (!only_update) process(query, hs_state);
                 hs_state->_debug_info = "FLAPPING ";
@@ -792,8 +794,8 @@ int TableStateHistory::updateHostServiceState(Query *query,
 
             // if no _host pointer is available the initial status of
             // _in_notification_period (1) never changes
-            if (hs_state->_host &&
-                !strcmp(tp_name, hs_state->_notification_period)) {
+            if ((hs_state->_host != nullptr) &&
+                (strcmp(tp_name, hs_state->_notification_period) == 0)) {
                 int new_status = atoi(tp_state);
                 if (new_status != hs_state->_in_notification_period) {
                     if (!only_update) process(query, hs_state);
@@ -802,8 +804,8 @@ int TableStateHistory::updateHostServiceState(Query *query,
                 }
             }
             // same for service period
-            if (hs_state->_host &&
-                !strcmp(tp_name, hs_state->_service_period)) {
+            if ((hs_state->_host != nullptr) &&
+                (strcmp(tp_name, hs_state->_service_period) == 0)) {
                 int new_status = atoi(tp_state);
                 if (new_status != hs_state->_in_service_period) {
                     if (!only_update) process(query, hs_state);
@@ -817,12 +819,12 @@ int TableStateHistory::updateHostServiceState(Query *query,
     }
 
     if (entry->_type != TIMEPERIOD_TRANSITION) {
-        if (hs_state->_log_output) free(hs_state->_log_output);
+        if (hs_state->_log_output != nullptr) free(hs_state->_log_output);
 
         if ((entry->_type == STATE_HOST_INITIAL ||
              entry->_type == STATE_SERVICE_INITIAL) &&
             (entry->_check_output != nullptr &&
-             !strcmp(entry->_check_output, "(null)")))
+             (strcmp(entry->_check_output, "(null)") == 0)))
             hs_state->_log_output = nullptr;
 
         else
@@ -834,8 +836,9 @@ int TableStateHistory::updateHostServiceState(Query *query,
             // unique_ptr, but this would mean introducing yet another Column
             // subclass, because the Column framework is not flexible at all
             // regarding the types it handles.
-            hs_state->_log_output =
-                entry->_check_output ? strdup(entry->_check_output) : nullptr;
+            hs_state->_log_output = entry->_check_output != nullptr
+                                        ? strdup(entry->_check_output)
+                                        : nullptr;
     }
 
     return state_changed;
@@ -885,8 +888,8 @@ bool TableStateHistory::isAuthorized(contact *ctc, void *data) {
     service *svc = entry->_service;
     host *hst = entry->_host;
 
-    if (hst || svc)
-        return is_authorized_for(ctc, hst, svc);
+    if ((hst != nullptr) || (svc != nullptr))
+        return is_authorized_for(ctc, hst, svc) != 0;
     else
         return false;
 }
@@ -894,7 +897,7 @@ bool TableStateHistory::isAuthorized(contact *ctc, void *data) {
 Column *TableStateHistory::column(const char *colname) {
     // First try to find column in the usual way
     Column *col = Table::column(colname);
-    if (col) return col;
+    if (col != nullptr) return col;
 
     // Now try with prefix "current_", since our joined
     // tables have this prefix in order to make clear that

@@ -163,7 +163,7 @@ void TableHostgroups::addColumns(Table *table, string prefix,
 
 void TableHostgroups::answerQuery(Query *query) {
     hostgroup *hg = hostgroup_list;
-    while (hg) {
+    while (hg != nullptr) {
         if (!query->processDataset(hg)) break;
         hg = hg->next;
     }
@@ -178,7 +178,7 @@ bool TableHostgroups::isAuthorized(contact *ctc, void *data) {
 
     hostgroup *hg = (hostgroup *)data;
     hostsmember *mem = hg->members;
-    while (mem) {
+    while (mem != nullptr) {
         host *hst = mem->host_ptr;
         bool is = g_table_hosts->isAuthorized(ctc, hst);
         if (is && g_group_authorization == AUTH_LOOSE)

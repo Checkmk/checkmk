@@ -85,7 +85,7 @@ void OutputBuffer::needSpace(unsigned len) {
         char *new_buffer = static_cast<char *>(realloc(_buffer, _max_size));
         // It's better to crash voluntarily than overwriting random memory
         // later.
-        if (!new_buffer) abort();
+        if (new_buffer == nullptr) abort();
 
         _buffer = new_buffer;
         _writepos = _buffer + s;
@@ -117,7 +117,7 @@ void OutputBuffer::flush(int fd, int *termination_flag) {
 
 void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
                              size_t bytes_to_write) {
-    while (!*termination_flag && bytes_to_write > 0) {
+    while ((*termination_flag == 0) && bytes_to_write > 0) {
         struct timeval tv;
         tv.tv_sec = WRITE_TIMEOUT_USEC / 1000000;
         tv.tv_usec = WRITE_TIMEOUT_USEC % 1000000;

@@ -37,13 +37,13 @@ using std::string;
 ServicelistColumnFilter::ServicelistColumnFilter(ServicelistColumn *column,
                                                  int opid, char *refvalue)
     : _servicelist_column(column), _opid(opid) {
-    if (abs(_opid) == OP_EQUAL && !refvalue[0])
+    if (abs(_opid) == OP_EQUAL && (refvalue[0] == 0))
         return;  // test for emptiness is allowed
 
     // ref_value must be of from hostname HOSTSERVICE_SEPARATOR
     // service_description
     char *sep = index(refvalue, HOSTSERVICE_SEPARATOR);
-    if (!sep) {
+    if (sep == nullptr) {
         logger(LG_INFO,
                "Invalid reference value for service list membership. Must be "
                "'hostname%cservicename'",
@@ -66,7 +66,7 @@ bool ServicelistColumnFilter::accepts(void *data) {
         return (mem == nullptr) == (_opid == OP_EQUAL);
 
     bool is_member = false;
-    while (mem) {
+    while (mem != nullptr) {
         service *svc = mem->service_ptr;
         if (svc->host_name == _ref_host && svc->description == _ref_service) {
             is_member = true;

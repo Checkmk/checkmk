@@ -40,15 +40,15 @@ void store_init() {
 }
 
 void store_deinit() {
-    if (g_store) {
+    if (g_store != nullptr) {
         delete g_store;
         g_store = nullptr;
     }
-    if (g_client_queue) {
+    if (g_client_queue != nullptr) {
         delete g_client_queue;
         g_client_queue = nullptr;
     }
-    if (g_timeperiods_cache) {
+    if (g_timeperiods_cache != nullptr) {
         delete g_timeperiods_cache;
         g_timeperiods_cache = nullptr;
     }
@@ -69,8 +69,8 @@ void store_register_downtime(nebstruct_downtime_data *d) {
 }
 
 int store_answer_request(void *ib, void *ob) {
-    return g_store->answerRequest(static_cast<InputBuffer *>(ib),
-                                  static_cast<OutputBuffer *>(ob));
+    return static_cast<int>(g_store->answerRequest(
+        static_cast<InputBuffer *>(ib), static_cast<OutputBuffer *>(ob)));
 }
 
 void *create_outputbuffer() { return new OutputBuffer(); }

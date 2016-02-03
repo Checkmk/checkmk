@@ -54,7 +54,7 @@ bool AndingFilter::accepts(void *data) {
 void *AndingFilter::findIndexFilter(const char *columnname) {
     for (auto filter : _subfilters) {
         void *refvalue = filter->indexFilter(columnname);
-        if (refvalue) return refvalue;
+        if (refvalue != nullptr) return refvalue;
     }
     return nullptr;
 }
@@ -88,7 +88,7 @@ void AndingFilter::combineFilters(int count, int andor) {
         andorfilter = new AndingFilter();
     else
         andorfilter = new OringFilter();
-    while (count--) {
+    while ((count--) != 0) {
         andorfilter->addSubfilter(_subfilters.back());
         _subfilters.pop_back();
     }

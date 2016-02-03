@@ -35,7 +35,7 @@
 #include "strutil.h"
 
 StatsColumn::~StatsColumn() {
-    if (_filter) delete _filter;
+    if (_filter != nullptr) delete _filter;
 }
 
 Aggregator *StatsColumn::createAggregator() {
@@ -47,7 +47,7 @@ Aggregator *StatsColumn::createAggregator() {
         return new DoubleAggregator(static_cast<DoubleColumn *>(_column),
                                     _operation);
     else if (_column->type() == COLTYPE_STRING and
-             ends_with(_column->name(), "perf_data"))
+             (ends_with(_column->name(), "perf_data") != 0))
         return new PerfdataAggregator(static_cast<StringColumn *>(_column),
                                       _operation);
     else  // unaggregateble column

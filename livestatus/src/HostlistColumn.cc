@@ -31,7 +31,7 @@ extern TableHosts *g_table_hosts;
 
 hostsmember *HostlistColumn::getMembers(void *data) {
     data = shiftPointer(data);
-    if (!data) return nullptr;
+    if (data == nullptr) return nullptr;
 
     return *(hostsmember **)((char *)data + _offset);
 }
@@ -42,9 +42,10 @@ void HostlistColumn::output(void *data, Query *query) {
     hostsmember *mem = getMembers(data);
 
     bool first = true;
-    while (mem) {
+    while (mem != nullptr) {
         host *hst = mem->host_ptr;
-        if (!auth_user || g_table_hosts->isAuthorized(auth_user, hst)) {
+        if ((auth_user == nullptr) ||
+            g_table_hosts->isAuthorized(auth_user, hst)) {
             if (!first)
                 query->outputListSeparator();
             else

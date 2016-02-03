@@ -36,7 +36,7 @@ void CustomVarsColumn::output(void *data, Query *query) {
     customvariablesmember *cvm = getCVM(data);
 
     bool first = true;
-    while (cvm) {
+    while (cvm != nullptr) {
         if (first)
             first = false;
         else if (_what == CVT_DICT)
@@ -66,18 +66,18 @@ Filter *CustomVarsColumn::createFilter(int opid, char *value) {
 }
 
 customvariablesmember *CustomVarsColumn::getCVM(void *data) {
-    if (!data) return nullptr;
+    if (data == nullptr) return nullptr;
     data = shiftPointer(data);
-    if (!data) return nullptr;
+    if (data == nullptr) return nullptr;
     return *(customvariablesmember **)((char *)data + _offset);
 }
 
 bool CustomVarsColumn::contains(void *data, const char *value) {
     customvariablesmember *cvm = getCVM(data);
-    while (cvm) {
+    while (cvm != nullptr) {
         char *ref =
             _what == CVT_VARNAMES ? cvm->variable_name : cvm->variable_value;
-        if (!strcmp(ref, value)) return true;
+        if (strcmp(ref, value) == 0) return true;
         cvm = cvm->next;
     }
     return false;
@@ -85,8 +85,9 @@ bool CustomVarsColumn::contains(void *data, const char *value) {
 
 char *CustomVarsColumn::getVariable(void *data, const char *varname) {
     customvariablesmember *cvm = getCVM(data);
-    while (cvm) {
-        if (!strcmp(cvm->variable_name, varname)) return cvm->variable_value;
+    while (cvm != nullptr) {
+        if (strcmp(cvm->variable_name, varname) == 0)
+            return cvm->variable_value;
         cvm = cvm->next;
     }
     return nullptr;

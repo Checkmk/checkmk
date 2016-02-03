@@ -43,8 +43,8 @@ LogEntry::LogEntry(unsigned lineno, char *line) {
 
     // pointer to options (everything after ':')
     _options = _complete;
-    while (*_options && *_options != ':') _options++;
-    if (*_options)  // line contains colon
+    while ((*_options != 0) && *_options != ':') _options++;
+    if (*_options != 0)  // line contains colon
     {
         _options++;                           // skip ':'
         while (*_options == ' ') _options++;  // skip space after ':'
@@ -99,9 +99,9 @@ bool LogEntry::handleStatusEntry() {
     //    }
 
     // HOST states
-    if (!strncmp(_text, "INITIAL HOST STATE: ", 20) ||
-        !strncmp(_text, "CURRENT HOST STATE: ", 20) ||
-        !strncmp(_text, "HOST ALERT: ", 12)) {
+    if ((strncmp(_text, "INITIAL HOST STATE: ", 20) == 0) ||
+        (strncmp(_text, "CURRENT HOST STATE: ", 20) == 0) ||
+        (strncmp(_text, "HOST ALERT: ", 12) == 0)) {
         if (_text[0] == 'H') {
             _logclass = LOGCLASS_ALERT;
             _type = ALERT_HOST;
@@ -123,7 +123,7 @@ bool LogEntry::handleStatusEntry() {
         _attempt = atoi(save_next_token(&scan, ';'));
         _check_output = next_token(&scan, ';');
         return true;
-    } else if (!strncmp(_text, "HOST DOWNTIME ALERT: ", 21)) {
+    } else if (strncmp(_text, "HOST DOWNTIME ALERT: ", 21) == 0) {
         _logclass = LOGCLASS_ALERT;
         _type = DOWNTIME_ALERT_HOST;
         char *scan = _text;
@@ -134,7 +134,7 @@ bool LogEntry::handleStatusEntry() {
         _state_type = next_token(&scan, ';');
         _comment = next_token(&scan, ';');
         return true;
-    } else if (!strncmp(_text, "HOST ACKNOWLEDGE ALERT: ", 24)) {
+    } else if (strncmp(_text, "HOST ACKNOWLEDGE ALERT: ", 24) == 0) {
         _logclass = LOGCLASS_ALERT;
         _type = ACKNOWLEDGE_ALERT_HOST;
         char *scan = _text;
@@ -146,7 +146,7 @@ bool LogEntry::handleStatusEntry() {
         _contact_name = next_token(&scan, ';');
         _comment = next_token(&scan, ';');
         return true;
-    } else if (!strncmp(_text, "HOST FLAPPING ALERT: ", 21)) {
+    } else if (strncmp(_text, "HOST FLAPPING ALERT: ", 21) == 0) {
         _logclass = LOGCLASS_ALERT;
         _type = FLAPPING_HOST;
         char *scan = _text;
@@ -160,9 +160,9 @@ bool LogEntry::handleStatusEntry() {
     }
 
     // SERVICE states
-    else if (!strncmp(_text, "INITIAL SERVICE STATE: ", 23) ||
-             !strncmp(_text, "CURRENT SERVICE STATE: ", 23) ||
-             !strncmp(_text, "SERVICE ALERT: ", 15)) {
+    else if ((strncmp(_text, "INITIAL SERVICE STATE: ", 23) == 0) ||
+             (strncmp(_text, "CURRENT SERVICE STATE: ", 23) == 0) ||
+             (strncmp(_text, "SERVICE ALERT: ", 15) == 0)) {
         if (_text[0] == 'S') {
             _logclass = LOGCLASS_ALERT;
             _type = ALERT_SERVICE;
@@ -186,7 +186,7 @@ bool LogEntry::handleStatusEntry() {
         return true;
     }
 
-    else if (!strncmp(_text, "SERVICE DOWNTIME ALERT: ", 24)) {
+    else if (strncmp(_text, "SERVICE DOWNTIME ALERT: ", 24) == 0) {
         _logclass = LOGCLASS_ALERT;
         _type = DOWNTIME_ALERT_SERVICE;
         char *scan = _text;
@@ -200,7 +200,7 @@ bool LogEntry::handleStatusEntry() {
         return true;
     }
 
-    else if (!strncmp(_text, "SERVICE ACKNOWLEDGE ALERT: ", 27)) {
+    else if (strncmp(_text, "SERVICE ACKNOWLEDGE ALERT: ", 27) == 0) {
         _logclass = LOGCLASS_ALERT;
         _type = ACKNOWLEDGE_ALERT_SERVICE;
         char *scan = _text;
@@ -215,7 +215,7 @@ bool LogEntry::handleStatusEntry() {
         return true;
     }
 
-    else if (!strncmp(_text, "SERVICE FLAPPING ALERT: ", 24)) {
+    else if (strncmp(_text, "SERVICE FLAPPING ALERT: ", 24) == 0) {
         _logclass = LOGCLASS_ALERT;
         _type = FLAPPING_SERVICE;
         char *scan = _text;
@@ -229,7 +229,7 @@ bool LogEntry::handleStatusEntry() {
         return true;
     }
 
-    else if (!strncmp(_text, "TIMEPERIOD TRANSITION: ", 23)) {
+    else if (strncmp(_text, "TIMEPERIOD TRANSITION: ", 23) == 0) {
         _logclass = LOGCLASS_STATE;
         _type = TIMEPERIOD_TRANSITION;
         return true;
@@ -247,8 +247,8 @@ bool LogEntry::handleStatusEntry() {
 // HOST NOTIFICATION: omdadmin;localhost;DOWN;check-mk-notify;Manually set to
 // Down by omdadmin
 bool LogEntry::handleNotificationEntry() {
-    if (!strncmp(_text, "HOST NOTIFICATION: ", 19) ||
-        !strncmp(_text, "SERVICE NOTIFICATION: ", 22)) {
+    if ((strncmp(_text, "HOST NOTIFICATION: ", 19) == 0) ||
+        (strncmp(_text, "SERVICE NOTIFICATION: ", 22) == 0)) {
         _logclass = LOGCLASS_NOTIFICATION;
         bool svc = _text[0] == 'S';
         char *scan = _text;
@@ -287,8 +287,8 @@ bool LogEntry::handleNotificationEntry() {
 }
 
 bool LogEntry::handlePassiveCheckEntry() {
-    if (!strncmp(_text, "PASSIVE SERVICE CHECK: ", 23) ||
-        !strncmp(_text, "PASSIVE HOST CHECK: ", 20)) {
+    if ((strncmp(_text, "PASSIVE SERVICE CHECK: ", 23) == 0) ||
+        (strncmp(_text, "PASSIVE HOST CHECK: ", 20) == 0)) {
         _logclass = LOGCLASS_PASSIVECHECK;
         bool svc = _text[8] == 'S';
         char *scan = _text;
@@ -306,7 +306,7 @@ bool LogEntry::handlePassiveCheckEntry() {
 }
 
 bool LogEntry::handleExternalCommandEntry() {
-    if (!strncmp(_text, "EXTERNAL COMMAND:", 17)) {
+    if (strncmp(_text, "EXTERNAL COMMAND:", 17) == 0) {
         _logclass = LOGCLASS_COMMAND;
         char *scan = _text;
         _text = next_token(&scan, ':');
@@ -320,12 +320,12 @@ bool LogEntry::handleExternalCommandEntry() {
 }
 
 bool LogEntry::handleTextEntry() {
-    if (!strncmp(_text, "LOG VERSION: 2.0", 16)) {
+    if (strncmp(_text, "LOG VERSION: 2.0", 16) == 0) {
         _logclass = LOGCLASS_PROGRAM;
         _type = LOG_VERSION;
         return true;
-    } else if (!strncmp(_text, "logging initial states", 22) ||
-               !strncmp(_text, "logging intitial states", 23)) {
+    } else if ((strncmp(_text, "logging initial states", 22) == 0) ||
+               (strncmp(_text, "logging intitial states", 23) == 0)) {
         _logclass = LOGCLASS_PROGRAM;
         _type = LOG_INITIAL_STATES;
         return true;
@@ -334,17 +334,18 @@ bool LogEntry::handleTextEntry() {
 }
 
 bool LogEntry::handleProgrammEntry() {
-    if (strstr(_text, "starting...") || strstr(_text, "active mode...")) {
+    if ((strstr(_text, "starting...") != nullptr) ||
+        (strstr(_text, "active mode...") != nullptr)) {
         _logclass = LOGCLASS_PROGRAM;
         _type = CORE_STARTING;
         return true;
-    } else if (strstr(_text, "shutting down...") ||
-               strstr(_text, "Bailing out") ||
-               strstr(_text, "standby mode...")) {
+    } else if ((strstr(_text, "shutting down...") != nullptr) ||
+               (strstr(_text, "Bailing out") != nullptr) ||
+               (strstr(_text, "standby mode...") != nullptr)) {
         _logclass = LOGCLASS_PROGRAM;
         _type = CORE_STOPPING;
         return true;
-    } else if (strstr(_text, "restarting...")) {
+    } else if (strstr(_text, "restarting...") != nullptr) {
         _logclass = LOGCLASS_PROGRAM;
         return true;
     }
@@ -352,7 +353,7 @@ bool LogEntry::handleProgrammEntry() {
 }
 
 int LogEntry::serviceStateToInt(const char *s) {
-    if (!s) return 3;  // can happen at garbled log line
+    if (s == nullptr) return 3;  // can happen at garbled log line
 
     const char *last = s + strlen(s) - 1;
     if (*last == ')') last--;
@@ -375,7 +376,7 @@ int LogEntry::serviceStateToInt(const char *s) {
 }
 
 int LogEntry::hostStateToInt(const char *s) {
-    if (!s) return 2;  // can happen at garbled log line
+    if (s == nullptr) return 2;  // can happen at garbled log line
 
     const char *last = s + strlen(s) - 1;
     if (*last == ')')  // handle CUSTOM (UP) and DOWNTIMESTOPPED (DOWN)
@@ -398,19 +399,19 @@ int LogEntry::hostStateToInt(const char *s) {
 
 unsigned LogEntry::updateReferences() {
     unsigned updated = 0;
-    if (_host_name) {
+    if (_host_name != nullptr) {
         _host = find_host(_host_name);
         updated++;
     }
-    if (_svc_desc) {
+    if (_svc_desc != nullptr) {
         _service = find_service(_host_name, _svc_desc);
         updated++;
     }
-    if (_contact_name) {
+    if (_contact_name != nullptr) {
         _contact = find_contact(_contact_name);
         updated++;
     }
-    if (_command_name) {
+    if (_command_name != nullptr) {
         // Older Nagios headers are not const-correct... :-P
         _command = find_command(const_cast<char *>(_command_name));
         updated++;

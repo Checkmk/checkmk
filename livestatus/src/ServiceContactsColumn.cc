@@ -27,5 +27,5 @@
 
 bool ServiceContactsColumn::isNagiosMember(void *svc, void *ctc) {
     return is_contact_for_service(static_cast<service *>(svc),
-                                  static_cast<contact *>(ctc));
+                                  static_cast<contact *>(ctc)) != 0;
 }

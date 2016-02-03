@@ -44,13 +44,14 @@ void PerfdataAggregator::consume(void *data, Query *) {
     while (nullptr != (entry = next_field(&scan))) {
         char *start_of_varname = entry;
         char *place_of_equal = entry;
-        while (*place_of_equal && *place_of_equal != '=') place_of_equal++;
-        if (!*place_of_equal) continue;  // ignore invalid perfdata
-        *place_of_equal = 0;             // terminate varname
+        while ((*place_of_equal != 0) && *place_of_equal != '=')
+            place_of_equal++;
+        if (*place_of_equal == 0) continue;  // ignore invalid perfdata
+        *place_of_equal = 0;                 // terminate varname
         char *start_of_number = place_of_equal + 1;
         char *end_of_number = start_of_number;
-        while (*end_of_number &&
-               (isdigit(*end_of_number) || *end_of_number == '.'))
+        while ((*end_of_number != 0) &&
+               ((isdigit(*end_of_number) != 0) || *end_of_number == '.'))
             end_of_number++;
         if (start_of_number == end_of_number) continue;  // empty number
         *end_of_number = 0;                              // terminate number

@@ -34,7 +34,7 @@ extern TableServices *g_table_services;
 
 servicesmember *ServicelistColumn::getMembers(void *data) {
     data = shiftPointer(data);
-    if (!data) return nullptr;
+    if (data == nullptr) return nullptr;
 
     return *(servicesmember **)((char *)data + _offset);
 }
@@ -45,9 +45,10 @@ void ServicelistColumn::output(void *data, Query *query) {
     servicesmember *mem = getMembers(data);
 
     bool first = true;
-    while (mem) {
+    while (mem != nullptr) {
         service *svc = mem->service_ptr;
-        if (!auth_user || g_table_services->isAuthorized(auth_user, svc)) {
+        if ((auth_user == nullptr) ||
+            g_table_services->isAuthorized(auth_user, svc)) {
             if (!first)
                 query->outputListSeparator();
             else
@@ -101,9 +102,10 @@ Filter *ServicelistColumn::createFilter(int opid, char *value) {
 
 int ServicelistColumn::inCustomTimeperiod(service *svc, const char *varname) {
     customvariablesmember *cvm = svc->custom_variables;
-    while (cvm) {
-        if (!(strcmp(cvm->variable_name, varname)))
-            return g_timeperiods_cache->inTimeperiod(cvm->variable_value);
+    while (cvm != nullptr) {
+        if ((strcmp(cvm->variable_name, varname)) == 0)
+            return static_cast<int>(
+                g_timeperiods_cache->inTimeperiod(cvm->variable_value));
         cvm = cvm->next;
     }
     return 1;  // assume 7X24

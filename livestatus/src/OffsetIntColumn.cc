@@ -25,10 +25,10 @@
 #include "OffsetIntColumn.h"
 
 int32_t OffsetIntColumn::getValue(void *data, Query *) {
-    if (!data) return 0;
+    if (data == nullptr) return 0;
 
     char *p = (char *)shiftPointer(data);
-    if (p)
+    if (p != nullptr)
         return *(int *)(p + _offset);
     else
         return 0;

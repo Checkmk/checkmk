@@ -65,12 +65,12 @@ void TableServicegroups::addColumns(Table *table, string prefix,
     table->addColumn(new ServicelistColumn(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
-        (char *)(&sgr.members) - ref, indirect_offset, true, false));
+        (char *)(&sgr.members) - ref, indirect_offset, true, 0));
     table->addColumn(new ServicelistColumn(
         prefix + "members_with_state",
         "A list of all members of the service group with state and "
         "has_been_checked",
-        (char *)(&sgr.members) - ref, indirect_offset, true, true));
+        (char *)(&sgr.members) - ref, indirect_offset, true, 1));
 
     table->addColumn(new ServicelistStateColumn(
         prefix + "worst_service_state",
@@ -120,7 +120,7 @@ void TableServicegroups::addColumns(Table *table, string prefix,
 
 void TableServicegroups::answerQuery(Query *query) {
     servicegroup *sg = servicegroup_list;
-    while (sg) {
+    while (sg != nullptr) {
         if (!query->processDataset(sg)) break;
         sg = sg->next;
     }
@@ -135,7 +135,7 @@ bool TableServicegroups::isAuthorized(contact *ctc, void *data) {
 
     servicegroup *sg = (servicegroup *)data;
     servicesmember *mem = sg->members;
-    while (mem) {
+    while (mem != nullptr) {
         service *svc = mem->service_ptr;
         bool is = g_table_services->isAuthorized(ctc, svc);
         if (is && g_group_authorization == AUTH_LOOSE)

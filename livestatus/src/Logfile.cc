@@ -110,7 +110,7 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
     // are missing.
     if (_watch) {
         file = fopen(_path, "r");
-        if (!file) {
+        if (file == nullptr) {
             logger(LG_INFO, "Cannot open logfile '%s'", _path);
             return;
         }
@@ -120,13 +120,13 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
 
         // file might have grown. Read all classes that we already
         // have read to the end of the file
-        if (_logclasses_read) {
+        if (_logclasses_read != 0u) {
             fsetpos(file, &_read_pos);  // continue at previous end
             loadRange(file, _logclasses_read, logcache, since, until,
                       logclasses);
             fgetpos(file, &_read_pos);
         }
-        if (missing_types) {
+        if (missing_types != 0u) {
             fseek(file, 0, SEEK_SET);
             _lineno = 0;
             loadRange(file, missing_types, logcache, since, until, logclasses);
@@ -138,7 +138,7 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
         if (missing_types == 0) return;
 
         file = fopen(_path, "r");
-        if (!file) {
+        if (file == nullptr) {
             logger(LG_INFO, "Cannot open logfile '%s'", _path);
             return;
         }
@@ -152,7 +152,7 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
 
 void Logfile::loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
                         time_t since, time_t until, unsigned logclasses) {
-    while (fgets(_linebuffer, MAX_LOGLINE, file)) {
+    while (fgets(_linebuffer, MAX_LOGLINE, file) != nullptr) {
         if (_lineno >= g_max_lines_per_logfile) {
             logger(LG_ERR, "More than %lu lines in %s. Ignoring the rest!",
                    g_max_lines_per_logfile, this->_path);
@@ -174,7 +174,7 @@ long Logfile::freeMessages(unsigned logclasses) {
     // ("Choose carefully among erasing options.").
     for (auto it = _entries.begin(); it != _entries.end();) {
         LogEntry *entry = it->second;
-        if ((1 << entry->_logclass) & logclasses) {
+        if (((1 << entry->_logclass) & logclasses) != 0u) {
             delete entry;
             _entries.erase(it++);
             freed++;
@@ -193,7 +193,7 @@ bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses) {
         delete entry;
         return false;
     }
-    if ((1 << entry->_logclass) & logclasses) {
+    if (((1 << entry->_logclass) & logclasses) != 0u) {
         uint64_t key = makeKey(entry->_time, lineno);
         if (_entries.find(key) == _entries.end())
             _entries.insert(make_pair(key, entry));
@@ -299,7 +299,7 @@ char *Logfile::readIntoBuffer(int *size) {
 
     char *buffer = static_cast<char *>(
         malloc(*size + 2));  // add space for binary 0 at beginning and end
-    if (!buffer) {
+    if (buffer == nullptr) {
         logger(LOG_WARNING, "Cannot malloc buffer for reading %s: %s", _path,
                strerror(errno));
         close(fd);

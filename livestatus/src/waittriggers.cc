@@ -113,5 +113,6 @@ void trigger_wait(struct trigger *which) {
 
 int trigger_wait_until(struct trigger *which, const struct timespec *abstime) {
     unique_lock<mutex> ul(g_wait_mutex);
-    return from_trigger(which)->wait_until(ul, abstime) == mk::no_timeout;
+    return static_cast<int>(from_trigger(which)->wait_until(ul, abstime) ==
+                            mk::no_timeout);
 }

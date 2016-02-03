@@ -61,7 +61,7 @@ struct hostbygroup {
 };
 
 bool TableHosts::isAuthorized(contact *ctc, void *data) {
-    return is_authorized_for(ctc, static_cast<host *>(data), nullptr);
+    return is_authorized_for(ctc, static_cast<host *>(data), nullptr) != 0;
 }
 
 TableHosts::TableHosts(bool by_group) : _by_group(by_group) {
@@ -646,17 +646,17 @@ void TableHosts::answerQuery(Query *query) {
 
         // When g_group_authorization is set to AUTH_STRICT we need to pre-check
         // if every host of this group is visible to the _auth_user
-        bool requires_precheck =
-            query->authUser() && g_group_authorization == AUTH_STRICT;
+        bool requires_precheck = (query->authUser() != nullptr) &&
+                                 g_group_authorization == AUTH_STRICT;
 
-        while (hgroup) {
+        while (hgroup != nullptr) {
             bool show_hgroup = true;
             hg._hostgroup = hgroup;
             hostsmember *mem = hgroup->members;
             if (requires_precheck) {
-                while (mem) {
-                    if (!is_authorized_for(query->authUser(), mem->host_ptr,
-                                           nullptr)) {
+                while (mem != nullptr) {
+                    if (is_authorized_for(query->authUser(), mem->host_ptr,
+                                          nullptr) == 0) {
                         show_hgroup = false;
                         break;
                     }
@@ -666,7 +666,7 @@ void TableHosts::answerQuery(Query *query) {
 
             if (show_hgroup) {
                 mem = hgroup->members;
-                while (mem) {
+                while (mem != nullptr) {
                     memcpy(&hg._host, mem->host_ptr, sizeof(host));
                     if (!query->processDataset(&hg)) break;
                     mem = mem->next;
@@ -679,9 +679,9 @@ void TableHosts::answerQuery(Query *query) {
 
     // do we know the host group?
     hostgroup *hgroup = (hostgroup *)query->findIndexFilter("groups");
-    if (hgroup) {
+    if (hgroup != nullptr) {
         hostsmember *mem = hgroup->members;
-        while (mem) {
+        while (mem != nullptr) {
             if (!query->processDataset(mem->host_ptr)) break;
             mem = mem->next;
         }
@@ -690,7 +690,7 @@ void TableHosts::answerQuery(Query *query) {
 
     // no index -> linear search over all hosts
     host *hst = host_list;
-    while (hst) {
+    while (hst != nullptr) {
         if (!query->processDataset(hst)) break;
         hst = hst->next;
     }

@@ -29,13 +29,13 @@
 #include "opids.h"
 
 ListColumnFilter::ListColumnFilter(ListColumn *column, int opid, char *value)
-    : _column(column), _opid(opid), _empty_ref(!value[0]) {
+    : _column(column), _opid(opid), _empty_ref(value[0] == 0) {
     _ref_member = _column->getNagiosObject(value);
 }
 
 bool ListColumnFilter::accepts(void *data) {
     data = _column->shiftPointer(data);
-    if (!data) return false;
+    if (data == nullptr) return false;
     bool is_member = _column->isNagiosMember(data, _ref_member);
     switch (_opid) {
         case -OP_LESS: /* !< means >= means 'contains' */
@@ -58,7 +58,7 @@ bool ListColumnFilter::accepts(void *data) {
 }
 
 void *ListColumnFilter::indexFilter(const char *columnname) {
-    if (_opid == -OP_LESS && !strcmp(columnname, _column->name()))
+    if (_opid == -OP_LESS && (strcmp(columnname, _column->name()) == 0))
         return _ref_member;
     else
         return nullptr;

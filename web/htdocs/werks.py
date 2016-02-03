@@ -322,7 +322,7 @@ werk_table_option_entries = [
        "single",
        TextUnicode(
            title = _("Werk title or content"),
-           size = 44,
+           size = 41,
        ),
        ""
      ),

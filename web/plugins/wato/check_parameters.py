@@ -422,8 +422,9 @@ register_check_parameters(
                   title = _("Averaging"),
                   help = _("When this option is activated then the block rate is being "
                            "averaged <b>before</b> the levels are being applied."),
-                  unit = _("min"),
+                  unit = _("minutes"),
                   default_value = 3,
+                  minvalue = 1,
                   label = _("Compute average over last "),
             )),
         ],
@@ -490,8 +491,9 @@ register_check_parameters(
                   help = _("When this option is activated then the packet rates are being "
                            "averaged <b>before</b> the levels are being applied. Setting this to zero will "
                            "deactivate averaging."),
-                  unit = _("min"),
+                  unit = _("minutes"),
                   default_value = 3,
+                  minvalue = 1,
                   label = _("Compute average over last "),
                   )),
              ( "fragment",
@@ -3946,7 +3948,7 @@ register_check_parameters(
                               "errors and traffic are applied to the averaged value. That "
                               "way you can make the check react only on long-time changes, "
                               "not on one-minute events."),
-                     label = _("minutes"),
+                     unit = _("minutes"),
                      minvalue = 1,
                  )
                ),
@@ -5010,7 +5012,8 @@ register_check_parameters(
                   title = _("Averaging"),
                   help = _("When this option is activated then the CPU utilization is being "
                            "averaged <b>before</b> the levels are being applied."),
-                  unit = "min",
+                  unit = _("minutes"),
+                  minvalue = 1,
                   default_value = 15,
                   label = _("Compute average over last "),
             )),
@@ -5928,7 +5931,9 @@ register_check_parameters(
                            "of the disk throughput is computed and the levels for read "
                            "and write will be applied to the average instead of the current "
                            "value."),
-                 unit = "min"))
+                  minvalue = 1,
+                  default_value = 5,
+                  unit = _("minutes")))
         ]),
     TextAscii(
         title = _("Instance"),
@@ -6815,7 +6820,9 @@ register_check_parameters(
                            "of the disk throughput is computed and the levels for read "
                            "and write will be applied to the average instead of the current "
                            "value."),
-                 unit = "min")),
+                  default_value = 5,
+                  minvalue = 1,
+                  unit = _("minutes"))),
             ( "latency",
               Tuple(
                   title = _("IO Latency"),

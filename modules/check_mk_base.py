@@ -1430,9 +1430,9 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
                 dont_submit = True
 
             except Exception, e:
-                result = 3, create_crash_dump(hostname, checkname, item, params, description, info), []
                 if opt_debug:
                     raise
+                result = 3, create_crash_dump(hostname, checkname, item, params, description, info), []
 
             if not dont_submit:
                 # Now add information about the age of the data in the agent

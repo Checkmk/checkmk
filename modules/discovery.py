@@ -331,10 +331,10 @@ def check_discovery(hostname, ipaddress=None):
         raise
 
     except Exception, e:
-        output = create_crash_dump(hostname, "discovery", None, None, "Check_MK Discovery", [])\
-            .replace("Crash dump:\n", "Crash dump:\\n")
         if opt_debug:
             raise
+        output = create_crash_dump(hostname, "discovery", None, None, "Check_MK Discovery", [])\
+            .replace("Crash dump:\n", "Crash dump:\\n")
         # Honor rule settings for "Status of the Check_MK service". In case of
         # a problem we assume a connection error here.
         spec = exit_code_spec(hostname)

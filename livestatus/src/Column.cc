@@ -22,14 +22,16 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include <utility>
+
 #include "Column.h"
 
 using std::string;
 
 Column::Column(string name, string description, int indirect_offset,
                int extra_offset, int extra_extra_offset)
-    : _name(name)
-    , _description(description)
+    : _name(std::move(name))
+    , _description(std::move(description))
     , _indirect_offset(indirect_offset)
     , _extra_offset(extra_offset)
     , _extra_extra_offset(extra_extra_offset) {}

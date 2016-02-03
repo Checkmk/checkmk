@@ -99,10 +99,14 @@ def handle_acknowledgement():
         if werk["compatible"] == "incomp_unack":
             acknowledge_werk(werk)
             html.message(HTML(_("Werk %s - %s has been acknowledged.") % (render_werk_id(werk, with_link=True), render_werk_title(werk))))
+            html.reload_sidebar()
 
     elif html.var("_ack_all"):
         if (html.confirm(_("Do you really want to acknowledge <b>all</b> incompatible werks?"), method="GET")):
+            num = len(unacknowledged_incompatible_werks())
             acknowledge_all_werks()
+            html.message(_("%d incompatible Werks have been acknowledged.") % num)
+            html.reload_sidebar()
 
     render_unacknowleged_werks()
 
@@ -177,9 +181,14 @@ def may_acknowledge():
 
 
 def acknowledge_werk(werk):
+    acknowledge_werks([werk])
+
+
+def acknowledge_werks(werks):
     config.need_permission("general.acknowledge_werks")
     ack_ids = load_acknowledgements()
-    ack_ids.append(werk["id"])
+    for werk in werks:
+        ack_ids.append(werk["id"])
     werk["compatible"] = "incomp_ack"
     save_acknowledgements(ack_ids)
 
@@ -189,12 +198,7 @@ def save_acknowledgements(acknowledged_werks):
 
 
 def acknowledge_all_werks():
-    num = 0
-    for werk in g_werks.values():
-        if werk["compatible"] == "incomp_unack":
-            acknowledge_werk(werk)
-            num += 1
-    html.message(_("%d incompatible Werks have been acknowledged.") % num)
+    acknowledge_werks(unacknowledged_incompatible_werks())
 
 
 def werk_is_pre_127(werk):

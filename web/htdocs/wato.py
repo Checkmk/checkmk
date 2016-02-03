@@ -14035,6 +14035,11 @@ def create_sample_config():
         except:
             pass # silently ignore building errors here
 
+    # This is not really the correct place for such kind of action, but the best place we could
+    # find to execute it only for new created sites.
+    import werks
+    werks.acknowledge_all_werks()
+
 #.
 #   .--Pattern Editor------------------------------------------------------.
 #   |   ____       _   _                    _____    _ _ _                 |

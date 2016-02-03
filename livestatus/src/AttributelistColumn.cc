@@ -94,7 +94,7 @@ void AttributelistColumn::output(void *data, Query *query) {
     }
 }
 
-string AttributelistColumn::valueAsString(void *data, Query *) {
+string AttributelistColumn::valueAsString(void *data, Query * /*unused*/) {
     unsigned long mask = getValue(data);
     char s[16];
     snprintf(s, 16, "%lu", mask);

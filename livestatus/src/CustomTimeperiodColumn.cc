@@ -30,7 +30,7 @@ extern TimeperiodsCache *g_timeperiods_cache;
 
 // Get the name of a timeperiod from a custom variable and
 // lookup the current state of that period
-int32_t CustomTimeperiodColumn::getValue(void *data, Query *) {
+int32_t CustomTimeperiodColumn::getValue(void *data, Query * /*unused*/) {
     customvariablesmember *cvm = getCVM(data);
     while (cvm != nullptr) {
         if (cvm->variable_name == _varname)

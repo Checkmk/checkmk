@@ -37,7 +37,7 @@ Filter *DoubleColumn::createFilter(int operator_id, char *value) {
     return new DoubleColumnFilter(this, operator_id, value);
 }
 
-string DoubleColumn::valueAsString(void *data, Query *) {
+string DoubleColumn::valueAsString(void *data, Query * /*unused*/) {
     char buf[64];
     snprintf(buf, sizeof(buf), "%.10e", getValue(data));
     return buf;

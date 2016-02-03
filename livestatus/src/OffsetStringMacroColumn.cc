@@ -34,7 +34,7 @@ using std::string;
 
 extern char *macro_user[MAX_USER_MACROS];
 
-string OffsetStringMacroColumn::valueAsString(void *data, Query *) {
+string OffsetStringMacroColumn::valueAsString(void *data, Query * /*unused*/) {
     const char *raw = getValue(data);
     host *hst = getHost(data);
     service *svc = getService(data);
@@ -72,7 +72,8 @@ void OffsetStringMacroColumn::output(void *data, Query *query) {
     query->outputString(s.c_str());
 }
 
-Filter *OffsetStringMacroColumn::createFilter(int, char *) {
+Filter *OffsetStringMacroColumn::createFilter(int /*operator_id*/,
+                                              char * /*value*/) {
     logger(LG_INFO, "Sorry. No filtering on macro columns implemented yet");
     return new AndingFilter();  // always true
 }

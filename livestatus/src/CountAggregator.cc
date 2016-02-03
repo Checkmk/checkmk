@@ -26,7 +26,7 @@
 #include "Filter.h"
 #include "Query.h"
 
-void CountAggregator::consume(void *data, Query *) {
+void CountAggregator::consume(void *data, Query * /*unused*/) {
     // _filter is 0 --> no filter, accept all data
     if ((_filter == nullptr) || _filter->accepts(data)) _count++;
 }

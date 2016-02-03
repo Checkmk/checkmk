@@ -209,7 +209,8 @@ bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses) {
     }
 }
 
-logfile_entries_t *Logfile::getEntriesFromQuery(Query *, LogCache *logcache,
+logfile_entries_t *Logfile::getEntriesFromQuery(Query * /*unused*/,
+                                                LogCache *logcache,
                                                 time_t since, time_t until,
                                                 unsigned logclasses) {
     updateReferences();  // Make sure existing references to objects point to

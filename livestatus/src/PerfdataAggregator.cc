@@ -36,7 +36,7 @@
 
 using std::string;
 
-void PerfdataAggregator::consume(void *data, Query *) {
+void PerfdataAggregator::consume(void *data, Query * /*unused*/) {
     char *perf_data = strdup(_column->getValue(data));
     char *scan = perf_data;
 

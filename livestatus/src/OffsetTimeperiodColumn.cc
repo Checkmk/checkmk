@@ -36,7 +36,7 @@ OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description,
     : OffsetIntColumn(name, description, offset, indirect_offset,
                       extra_offset) {}
 
-int32_t OffsetTimeperiodColumn::getValue(void *data, Query *) {
+int32_t OffsetTimeperiodColumn::getValue(void *data, Query * /*unused*/) {
     data = shiftPointer(data);
     if (data == nullptr) return 0;
 

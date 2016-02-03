@@ -25,4 +25,4 @@
 #include "NullColumn.h"
 #include "Query.h"
 
-void NullColumn::output(void *, Query *query) { query->outputNull(); }
+void NullColumn::output(void * /*data*/, Query *query) { query->outputNull(); }

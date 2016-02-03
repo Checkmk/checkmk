@@ -35,7 +35,7 @@ class HostFileColumn : public BlobColumn {
 
 public:
     HostFileColumn(std::string name, std::string description,
-                   const char *base_dir, const char *suffice,
+                   const char *base_dir, const char *suffix,
                    int indirect_offset, int extra_offset = -1);
 
     // returns a buffer to be freed afterwards!!

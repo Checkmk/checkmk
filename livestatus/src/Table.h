@@ -45,7 +45,7 @@ private:
 public:
     Table() {}
     virtual ~Table();
-    virtual Column *column(const char *name);
+    virtual Column *column(const char *colname);
     Column *dynamicColumn(const char *colname_with_args);
     virtual void answerQuery(Query *) = 0;
     virtual const char *name() = 0;

@@ -91,7 +91,7 @@ class Query {
     _stats_groups_t _stats_groups;
 
 public:
-    Query(std::list<std::string> &lines, OutputBuffer *out, Table *);
+    Query(std::list<std::string> &lines, OutputBuffer *output, Table *);
     ~Query();
     bool processDataset(void *);
     bool timelimitReached();
@@ -115,7 +115,7 @@ public:
     void outputNull();
     void outputAsciiEscape(char value);
     void outputUnicodeEscape(unsigned value);
-    void outputString(const char *, int size = -1);
+    void outputString(const char *, int len = -1);
     void outputBlob(const char *buffer, int size);
     void outputBeginList();
     void outputListSeparator();
@@ -140,7 +140,7 @@ private:
     Aggregator **getStatsGroup(_stats_group_spec_t &groupspec);
     void computeStatsGroupSpec(_stats_group_spec_t &groupspec, void *data);
     Filter *createFilter(Column *column, int operator_id, char *value);
-    void parseFilterLine(char *line, bool filter /* and not cond */);
+    void parseFilterLine(char *line, bool is_filter /* and not cond */);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
     void parseAndOrLine(char *line, int andor, bool filter /* and not cond */);

@@ -70,7 +70,8 @@ public:
     Column *column(
         const char *colname);  // override in order to handle current_
     int updateHostServiceState(Query *query, const LogEntry *entry,
-                               HostServiceState *state, const bool only_update);
+                               HostServiceState *hs_state,
+                               const bool only_update);
     static void addColumns(Table *);
 
 private:

@@ -36,7 +36,7 @@ class DoubleColumnFilter : public Filter {
     bool _negate;
 
 public:
-    DoubleColumnFilter(DoubleColumn *_column, int opid, char *value);
+    DoubleColumnFilter(DoubleColumn *column, int opid, char *value);
     bool accepts(void *data);
 };
 

@@ -88,7 +88,7 @@ struct DowntimeOrComment {
     unsigned long _id;
     int _is_service;
 
-    DowntimeOrComment(nebstruct_downtime_struct *data, unsigned long id);
+    DowntimeOrComment(nebstruct_downtime_struct *dt, unsigned long id);
     virtual ~DowntimeOrComment();
 };
 
@@ -98,7 +98,7 @@ struct Downtime : public DowntimeOrComment {
     int _fixed;
     int _duration;
     int _triggered_by;
-    explicit Downtime(nebstruct_downtime_struct *data);
+    explicit Downtime(nebstruct_downtime_struct *dt);
 };
 
 struct Comment : public DowntimeOrComment {
@@ -107,7 +107,7 @@ struct Comment : public DowntimeOrComment {
     int _source;
     int _entry_type;
     int _expires;
-    explicit Comment(nebstruct_comment_struct *data);
+    explicit Comment(nebstruct_comment_struct *co);
 };
 
 #endif  // DowntimeOrComment_h

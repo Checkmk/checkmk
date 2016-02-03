@@ -38,7 +38,7 @@ public:
         : ListColumn(name, description, indirect_offset, extra_offset) {}
     int type() override { return COLTYPE_LIST; }
     void *getNagiosObject(char *name) override;
-    bool isEmpty(void *data) override;
+    bool isEmpty(void *svc) override;
     void output(void *, Query *) override;
 };
 

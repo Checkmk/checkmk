@@ -37,7 +37,7 @@ public:
         : ContactsColumn(name, description, indirect_offset,
                          extra_offset = -1) {}
     int type() override { return COLTYPE_LIST; }
-    bool isNagiosMember(void *data, void *member) override;
+    bool isNagiosMember(void *hst, void *ctc) override;
 };
 
 #endif  // HostContactsColumn_h

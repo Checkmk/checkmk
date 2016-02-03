@@ -60,7 +60,7 @@ public:
         , _logictype(logictype) {}
     int32_t getValue(void *data, Query *) override;
     servicesmember *getMembers(void *data);
-    static int32_t getValue(int logictype, servicesmember *services, Query *);
+    static int32_t getValue(int logictype, servicesmember *mem, Query *);
     static bool svcStateIsWorse(int32_t state1, int32_t state2);
 };
 

@@ -40,7 +40,7 @@ extern int g_group_authorization;
 #ifdef __cplusplus
 extern "C" {
 #endif
-int is_authorized_for(contact *ctc, host *host, service *svc);
+int is_authorized_for(contact *ctc, host *hst, service *svc);
 #ifdef __cplusplus
 }
 #endif

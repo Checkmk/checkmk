@@ -39,7 +39,7 @@ class StringColumnFilter : public Filter {
     regex_t *_regex;
 
 public:
-    StringColumnFilter(StringColumn *_column, int opid, char *value);
+    StringColumnFilter(StringColumn *column, int opid, char *value);
     ~StringColumnFilter();
     bool accepts(void *data);
     void *indexFilter(const char *column);

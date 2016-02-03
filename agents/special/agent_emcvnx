@@ -39,7 +39,7 @@
 # <-mirrorview><-snapviews><-sancopy><-reserved> <-cloneview><-metalun>
 # <-migration><-ioportconfig> <-fastcache><-backendbus>
 
-import sys, os, getopt, re
+import sys, os, getopt, re, subprocess
 
 import inspect, pprint # FOR DEBUGGING
 
@@ -175,19 +175,25 @@ else:
 # check_mk section of agent output
 #
 
-print "<<<check_mk>>>"
-cmd=basecmd + "getall -sp"
+cmd = basecmd + "getall -sp"
 if opt_debug:
     sys.stderr.write("executing external command: %s\n" % cmd)
 
 cmdout = []
-for line in os.popen(cmd).readlines():
+try:
+    p = subprocess.Popen(cmd)
+except OSError:
+    sys.stderr.write("Failed to execute \"%s\". Maybe \"naviseccli\" is missing.\n" % cmd)
+    sys.exit(1)
+
+for line in p.stdout.readlines():
     line = line.strip()
     cmdout.append(line)
     tokens = re.split("\s+", line)
     if tokens[0] == "Agent" and tokens[1] == "Rev:":
         emcvnx_version = "_".join(tokens[2:])
 
+print "<<<check_mk>>>"
 print "Version: %s" % emcvnx_version
 
 # maybe we could fill AgentOS: by reading "Model:" line of naviseccli output

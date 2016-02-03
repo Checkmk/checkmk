@@ -1,0 +1,9 @@
+Title: agent_emcvnx: Fixed error handling in case of missing naviseccli command
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454501841
+Class: fix
+
+

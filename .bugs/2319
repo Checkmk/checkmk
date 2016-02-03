@@ -2,7 +2,7 @@ Title: Event Console actions fail on non printable chars in event
 Component: ec
 State: open
 Date: 2015-10-29 09:45:52
-Targetversion: 1.2.6
+Targetversion: 1.2.8
 Class: bug
 
 When e.g. a trap contains a \0, eventually raised script

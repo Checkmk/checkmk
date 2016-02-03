@@ -2,7 +2,10 @@ Title: Windows Agent may fail to read large event logs
 Component: checks
 State: open
 Date: 2015-11-06 11:48:19
-Targetversion: future
+Targetversion: 1.2.8
 Class: bug
 
-Due to a bug in the ReadEventLog function (kb 177199) reading large event logs may fail. This could be worked around in the agent by using sequential read and a manual seek to the right offset but we'd have to check the performance implications.
+Due to a bug in the ReadEventLog function (kb 177199) reading large event logs
+may fail. This could be worked around in the agent by using sequential read
+and a manual seek to the right offset but we'd have to check the performance
+implications.

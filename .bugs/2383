@@ -2,7 +2,7 @@ Title: WATO dialog for host creation shows folder contact group attributes
 Component: wato
 State: open
 Date: 2015-10-30 10:16:25
-Targetversion: future
+Targetversion: 1.2.8
 Class: bug
 
 Permissions..

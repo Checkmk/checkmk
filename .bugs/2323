@@ -1,8 +1,8 @@
 Title: On clean sites "X unacknowledged" werks are shown
 Component: multisite
-State: open
+State: done
 Date: 2015-11-20 14:09:47
-Targetversion: 1.2.7
+Targetversion: future
 Class: bug
 
 In fresh installed sites, all unacknowledged werks in this version need to be acknowledged

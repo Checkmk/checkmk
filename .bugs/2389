@@ -2,7 +2,7 @@ Title: Logout problem after site copy
 Component: multisite
 State: open
 Date: 2015-10-14 14:56:27
-Targetversion: 1.2.6
+Targetversion: 1.2.8
 Class: bug
 
 If one monitoring sites is copied with omd cp, the logout will not work.

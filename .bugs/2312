@@ -2,6 +2,6 @@ Title: Notifications: on exception send a notification mail to fallback address
 Component: notifcation
 State: open
 Date: 2015-04-09 10:09:22
-Targetversion: 1.2.7
+Targetversion: future
 Class: bug
 

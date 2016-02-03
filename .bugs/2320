@@ -2,7 +2,7 @@ Title: Interval configured in "regular service discovery" is handled differently
 Component: core
 State: open
 Date: 2015-10-29 16:07:59
-Targetversion: 1.2.6
+Targetversion: 1.2.8
 Class: bug
 
 The global settings interval is used only as normal interval on cmc(?) and

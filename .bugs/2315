@@ -2,7 +2,7 @@ Title: Interval for SNMP-Checks rule affects manual calls on command line
 Component: core
 State: open
 Date: 2015-04-21 12:24:49
-Targetversion: 1.2.6
+Targetversion: future
 Class: bug
 
 The rule "Interval for SNMP-Checks", which is meant to customize the check

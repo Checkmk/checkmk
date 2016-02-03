@@ -2,7 +2,7 @@ Title: cmk --rrd-convert does not take service desription into account
 Component: core
 State: open
 Date: 2015-08-31 10:18:59
-Targetversion: 1.2.7
+Targetversion: 1.2.8
 Class: bug
 
 Create a rule for all services beginning with CPU. But it affects

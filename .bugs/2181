@@ -2,7 +2,7 @@ Title: visuals.load should only load data of existing users
 Component: multisite
 State: open
 Date: 2016-01-22 12:04:33
-Targetversion: future
+Targetversion: 1.2.8
 Class: bug
 
 The visual.load function also loads the directories of no longer existing users.

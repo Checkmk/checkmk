@@ -2,7 +2,7 @@ Title: Automatic removal of duplicate services SNMP vs. Agent can fail
 Component: core
 State: open
 Date: 2015-03-03 10:32:56
-Targetversion: 1.2.6
+Targetversion: 1.2.8
 Class: bug
 
 Situtation:

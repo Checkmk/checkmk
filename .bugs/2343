@@ -1,8 +1,8 @@
 Title: cmk --inventory-as-check does not take into account disabled services
-Component: ore
+Component: core
 State: open
 Date: 2015-07-15 16:09:54
-Targetversion: 1.2.7
+Targetversion: 1.2.8
 Class: bug
 
 If I disable the 'Log .*$' Services with a 'Disable Services' rule,

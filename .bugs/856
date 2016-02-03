@@ -8,4 +8,4 @@ Class: bug
 If you create a Report with context "Hostgroup", add a View with Service
 errors, this will work but not when the report is used in the scheduler. If
 the scheduler is used, the report shows all systems regradless of the given
-hostgroup
+hostgroup.

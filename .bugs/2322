@@ -1,8 +1,8 @@
 Title: H/W-SW-Check consumes a lot of active check check helpers
 Component: inv
-State: open
+State: nastiness
 Date: 2015-11-20 09:04:40
-Targetversion: 1.2.7
+Targetversion: future
 Class: bug
 
 The HW/SW-Check is consuming a lot of load because it is realized as active

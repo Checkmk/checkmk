@@ -2,10 +2,10 @@ Title: check_bi_aggr: $HOSTNAME$ in aggregation name does not work correctly wit
 Component: checks
 State: open
 Date: 2015-09-21 15:43:27
-Targetversion: 1.2.6
+Targetversion: 1.2.8
 Class: bug
 
 If you use $HOSTNAME$ as part of the aggregation name (just as the online help
-suggests), then the correct aggregation is being queried, but the service description
-contains <tt>HOSTNAME</tt> instead of the actual host name. So the expansion
-of <tt>$HOSTNAME</tt> in the service description does not work.
+suggests), then the correct aggregation is being queried, but the service
+description contains <tt>HOSTNAME</tt> instead of the actual host name. So
+the expansion of <tt>$HOSTNAME</tt> in the service description does not work.

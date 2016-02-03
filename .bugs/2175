@@ -2,7 +2,7 @@ Title: DropdownChoice: Selects incorrect value if the list of options changes
 Component: multisite
 State: open
 Date: 2015-07-02 09:36:51
-Targetversion: 1.2.8
+Targetversion: future
 Class: bug
 
 1) Go to BI Rule editor

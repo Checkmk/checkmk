@@ -2,7 +2,7 @@ Title: If check files are available in local, we must not read in those in share
 Component: core
 State: open
 Date: 2015-10-27 17:14:55
-Targetversion: future
+Targetversion: 1.2.8
 Class: bug
 
 When creating precompiled Nagios files this is already exactly the implemented

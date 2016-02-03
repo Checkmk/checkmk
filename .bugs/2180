@@ -2,7 +2,7 @@ Title: Edit views shows elements of no longer existing users
 Component: multisite
 State: open
 Date: 2016-01-20 14:05:15
-Targetversion: future
+Targetversion: 1.2.8
 Class: bug
 
 1) Edit view as omdadmin

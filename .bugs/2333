@@ -1,6 +1,6 @@
 Title: wmic_if: Error messages from parse error go into foreign sections
 Component: checks
-State: open
+State: wontfix
 Date: 2015-04-20 14:39:07
 Targetversion: future
 Class: bug
@@ -16,3 +16,5 @@ In some unclear situations wmic_if creates error messages like this:
 
 These messages go into the previous section since the section header
 seems not to be output.
+
+--> This plugin is obsolete. The agent now outputs the information itself.

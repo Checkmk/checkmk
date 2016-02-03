@@ -2262,6 +2262,24 @@ def camelcase_to_underscored(name):
             result += c
     return result
 
+
+# Return plain response from local Livestatus - without any parsing
+def simple_livestatus_query(lql):
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.connect(livestatus_unix_socket)
+    # We just get the currently inactive timeperiods. All others
+    # (also non-existing) are considered to be active
+    s.send(lql)
+    s.shutdown(socket.SHUT_WR)
+    response = ""
+    while True:
+        chunk = s.recv(4096)
+        if not chunk:
+            break
+        response += chunk
+    return response
+
+
 # Check if a timeperiod is currently active. We have no other way than
 # doing a Livestatus query. This is not really nice, but if you have a better
 # idea, please tell me...
@@ -2270,14 +2288,8 @@ def check_timeperiod(timeperiod):
     # Let exceptions happen, they will be handled upstream.
     if g_inactive_timerperiods == None:
         try:
-            import socket
-            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            s.connect(livestatus_unix_socket)
-            # We just get the currently inactive timeperiods. All others
-            # (also non-existing) are considered to be active
-            s.send("GET timeperiods\nColumns: name\nFilter: in = 0\n")
-            s.shutdown(socket.SHUT_WR)
-            g_inactive_timerperiods = s.recv(10000000).splitlines()
+            response = simple_livestatus_query("GET timeperiods\nColumns: name\nFilter: in = 0\n")
+            g_inactive_timerperiods = response.splitlines()
         except Exception, e:
             if opt_debug:
                 raise
@@ -2286,6 +2298,7 @@ def check_timeperiod(timeperiod):
                 return True
 
     return timeperiod not in g_inactive_timerperiods
+
 
 # retrive the service level that applies to the calling check.
 def get_effective_service_level():

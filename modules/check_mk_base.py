@@ -2283,7 +2283,7 @@ def check_timeperiod(timeperiod):
                 raise
             else:
                 # If the query is not successful better skip this check then fail
-                return False
+                return True
 
     return timeperiod not in g_inactive_timerperiods
 

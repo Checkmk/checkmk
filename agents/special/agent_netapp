@@ -678,12 +678,12 @@ else:
         dict_reserved["size-total"]       = volume.child_get_string("size-total")
         dict_reserved["percent-reserved"] = volume_snapshots_reserved.child_get_string("percent-reserved")
         dict_reserved["blocks-reserved"]  = volume_snapshots_reserved.child_get_string("blocks-reserved")
-        snapshots_elements = volume_snapshots.child_get("snapshots")
 
+        volume_snapshots   = server.invoke("snapshot-list-info", "target-name", name, "target-type", "volume")
+        snapshots_elements = volume_snapshots.child_get("snapshots")
         if snapshots_elements:
-            volume_snapshots = server.invoke("snapshot-list-info", "target-name", name, "target-type", "volume")
             print format_dict(dict_reserved, prefix = "volume_snapshot %s" % name, as_line  = True)
-            print format_config(volume_snapshots.child_get("snapshots"), "volume_snapshot", name,
+            print format_config(snapshot_elements, "volume_snapshot", name,
                                 config_report = ["volume_snapshot", "percentage-of-total-blocks", "cumulative-total"])
 
 

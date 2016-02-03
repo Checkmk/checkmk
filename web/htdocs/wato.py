@@ -11712,8 +11712,8 @@ def mode_ruleeditor(phase):
             html.context_button(only_host,
                 folder_preserving_link([("mode", "edit_host"), ("host", only_host)]), "host")
 
+        html.context_button(_("Used Rulesets"), folder_preserving_link([("mode", "rulesets"), ("group", "used")]), "usedrulesets")
         html.context_button(_("Ineffective rules"), folder_preserving_link([("mode", "ineffective_rules")]), "rulesets_ineffective")
-
         html.context_button(_("Deprecated Rulesets"),
                  folder_preserving_link([("mode", "rulesets"), ("group", "deprecated")]), "rulesets_deprecated")
         return
@@ -11736,14 +11736,10 @@ def mode_ruleeditor(phase):
         if main_group not in groupnames:
             groupnames.append(main_group)
     menu = []
-    for groupname in groupnames + ["used"]:
+    for groupname in groupnames:
         url = folder_preserving_link([("mode", "rulesets"), ("group", groupname),
                          ("host", only_host), ("local", only_local)])
-        if groupname == "used":
-            title = _("Used Rulesets")
-            help = _("Show only modified rulesets<br>(all rulesets with at least one rule)")
-            icon = "usedrulesets"
-        elif groupname == "static": # these have moved into their own WATO module
+        if groupname == "static": # these have moved into their own WATO module
             continue
         else:
             title, help = g_rulegroups.get(groupname, (groupname, ""))

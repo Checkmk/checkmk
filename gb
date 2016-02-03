@@ -52,11 +52,11 @@ def get_tty_size():
         pass
     return (24, 99999)
 
-grep_colors = [ 
+grep_colors = [
    tty_bold + tty_magenta,
    tty_bold + tty_cyan,
    tty_bold + tty_green,
-] 
+]
 
 def bail_out(text):
     sys.stderr.write(text + "\n")
@@ -119,14 +119,14 @@ def bug_is_modified(bugid):
 
 
 def load_bug(bugid):
-    bug = { 
+    bug = {
         "id"             : bugid,
         "state"          : "unknown",
         "title"          : "unknown",
         "component"      : "general",
         "targetversion"  : "future",
     }
-    
+
     f = file(str(bugid))
     for line in f:
         line = line.strip()
@@ -168,7 +168,7 @@ def add_comment(bug, title, comment):
     bug["description"] += """
 %s: %s
 %s""" % (time.strftime("%F %T"), title, comment)
-    
+
 
 
 def usage():
@@ -214,7 +214,7 @@ def list_bug(bug):
     sys.stdout.write("#%04d %-8s %-9s %-10s %s%-8s%s %s%s%s\n" %
             (int(bug["id"]),
              bug_state(bug),
-             bug["class"], bug["component"], tty_bold, 
+             bug["class"], bug["component"], tty_bold,
              bug["targetversion"], tty_normal, bold, title, tty_normal))
 
 def show_bug(bug):
@@ -222,6 +222,12 @@ def show_bug(bug):
     sys.stdout.write("\n%s\n" % bug["description"])
 
 def main_list(args, format):
+    if "--ids" in args:
+        args.remove("--ids")
+        show_only_ids = True
+    else:
+        show_only_ids = False
+
     bugs = g_bugs.values()
 
     # arguments are tags from state, component and class. Multiple values
@@ -238,8 +244,8 @@ def main_list(args, format):
 
         hit = False
         for tp, values in [
-          ( "component",      components ), 
-          ( "state",          states ), 
+          ( "component",      components ),
+          ( "state",          states ),
           ( "class",          classes ),
           ( "targetversion",  targetversions),
           ]:
@@ -268,7 +274,7 @@ def main_list(args, format):
         if not skip:
             newbugs.append(bug)
     bugs = newbugs
-            
+
     # Sort
     if sort:
         newbugs.sort(sort)
@@ -278,7 +284,10 @@ def main_list(args, format):
     # Output
     if format == "console":
         for bug in bugs:
-            list_bug(bug)
+            if show_only_ids:
+                print bug["id"]
+            else:
+                list_bug(bug)
     else:
         output_csv(bugs)
 
@@ -331,7 +340,7 @@ def main_show(args):
         ids = [ g_last_bug ]
     elif ids[0] == 'all':
         ids = [ id for (id, bug) in g_bugs.items() ]
-        
+
     for id in ids:
         if id != ids[0]:
             sys.stdout.write("-------------------------------------------------------------------------------\n")
@@ -349,7 +358,7 @@ def get_input(what, default = ""):
         return default
     else:
         return value
-    
+
 def get_long_input(what):
     sys.stdout.write("Enter %s. End with CTRL-D.\n" % what)
     usertext = sys.stdin.read()
@@ -383,7 +392,7 @@ def input_choice(what, choices):
                 ctc[c] = choice
                 texts.append(choice.replace(c, tty_bold + c + tty_normal, 1))
                 break
-    
+
     while True:
         sys.stdout.write("%s (%s): " % (what, ", ".join(texts)))
         sys.stdout.flush()
@@ -407,7 +416,7 @@ def main_new(args):
     bug["class"]         = input_choice("Class",     classes)
     bug["component"]     = input_choice("Component", components)
     bug["targetversion"] = input_choice("Target Version", targetversions)
-    
+
     bug["description"] = get_long_input("description")
     g_bugs[bug["id"]] = bug
     save_bug(bug)
@@ -466,7 +475,7 @@ def grep(line, kw, n):
     else:
         col = grep_colors[n % len(grep_colors)]
         return line[0:i] + col + line[i:i+len(kw)] + tty_normal + line[i+len(kw):]
-    
+
 
 def main_grep(args):
     if '-v' in args:
@@ -524,7 +533,7 @@ def main_edit(args):
             bail_out("No last bug. Please specify id.")
 
     else:
-        ids = args[0] 
+        ids = args[0]
     if not os.path.exists(ids):
         bail_out("No bug with this id.")
     editor = os.getenv("EDITOR")
@@ -605,12 +614,12 @@ def main_fetch_ids(args):
         bail_out("Cannot commit.")
 
 
-#                    _       
-#    _ __ ___   __ _(_)_ __  
-#   | '_ ` _ \ / _` | | '_ \ 
+#                    _
+#    _ __ ___   __ _(_)_ __
+#   | '_ ` _ \ / _` | | '_ \
 #   | | | | | | (_| | | | | |
 #   |_| |_| |_|\__,_|_|_| |_|
-#                            
+#
 
 goto_bugsdir()
 load_config()
@@ -635,7 +644,7 @@ commands = {
   "ids"     : main_fetch_ids,
 }
 
-hits = [] 
+hits = []
 for name, func in commands.items():
     if name == cmd:
         hits = [ (name, func) ]

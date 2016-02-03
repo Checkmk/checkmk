@@ -29,9 +29,6 @@
 # Export data from an RRD file. This requires an up-to-date
 # version of the rrdtools.
 
-def debug(x):
-    import pprint ; pprint.pprint(x)
-
 def rrd_export(filename, ds, cf, fromtime, untiltime, rrdcached=None):
     # rrdtool xport --json -s 1361554418 -e 1361640814 --step 60 DEF:x=/omd/sites/heute/X.rrd:1:AVERAGE XPORT:x:HIRNI
     cmd = "rrdtool xport --json -s %d -e %d --step 60 " % (fromtime, untiltime)
@@ -64,6 +61,7 @@ def rrd_export(filename, ds, cf, fromtime, untiltime, rrdcached=None):
 
     return data["meta"]["step"], [ x[0] for x in data["data"] ]
 
+
 def find_ds_in_pnp_xmlfile(xml_file, varname):
     ds = None
     name = None
@@ -82,6 +80,7 @@ def find_ds_in_pnp_xmlfile(xml_file, varname):
         elif line == '<DATASOURCE>':
             ds = None
             name = None
+
 
 def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
     global rrdcached_socket
@@ -109,6 +108,7 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
     if omd_root and not rrdcached_socket:
         rrdcached_socket = omd_root + "/tmp/run/rrdcached.sock"
     return rrd_export(rrd_file, ds, cf, fromtime, untiltime, rrdcached_socket)
+
 
 daynames = [ "monday", "tuesday", "wednesday", "thursday",
              "friday", "saturday", "sunday"]

@@ -36,7 +36,7 @@ bool HostlistColumnFilter::accepts(void *data) {
 
     // test for empty list
     if (abs(_opid) == OP_EQUAL && _ref_value == "")
-        return (mem == 0) == (_opid == OP_EQUAL);
+        return (mem == nullptr) == (_opid == OP_EQUAL);
 
     bool is_member = false;
     while (mem) {

@@ -30,7 +30,7 @@ objectlist *ServicegroupsColumn::getData(void *data) {
         data = shiftPointer(data);
         if (data) return *(objectlist **)((char *)data + _offset);
     }
-    return 0;
+    return nullptr;
 }
 
 void ServicegroupsColumn::output(void *data, Query *query) {
@@ -67,5 +67,5 @@ bool ServicegroupsColumn::isNagiosMember(void *data, void *nagobject) {
 
 bool ServicegroupsColumn::isEmpty(void *data) {
     objectlist *list = *(objectlist **)((char *)data + _offset);
-    return list == 0;
+    return list == nullptr;
 }

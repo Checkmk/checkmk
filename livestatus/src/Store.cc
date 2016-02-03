@@ -108,7 +108,7 @@ Store::~Store() {}
 Table *Store::findTable(string name) {
     _tables_t::iterator it = _tables.find(name);
     if (it == _tables.end())
-        return 0;
+        return nullptr;
     else
         return it->second;
 }
@@ -145,10 +145,10 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
         output->setDoKeepalive(true);
     } else if (!strncmp(line, "LOGROTATE", 9)) {
         logger(LG_INFO, "Forcing logfile rotation");
-        rotate_log_file(time(0));
+        rotate_log_file(time(nullptr));
         schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
-                           0, 0, (void *)get_next_log_rotation_time, 1, NULL,
-                           NULL, 0);
+                           0, 0, (void *)get_next_log_rotation_time, 1, nullptr,
+                           nullptr, 0);
     } else {
         logger(LG_INFO, "Invalid request '%s'", line);
         output->setError(RESPONSE_CODE_INVALID_REQUEST,
@@ -188,11 +188,11 @@ void Store::answerGetRequest(list<string> &lines, OutputBuffer *output,
             query.setShowColumnHeaders(true);
         }
         struct timeval before, after;
-        gettimeofday(&before, 0);
+        gettimeofday(&before, nullptr);
         query.start();
         table->answerQuery(&query);
         query.finish();
-        gettimeofday(&after, 0);
+        gettimeofday(&after, nullptr);
         unsigned long ustime = (after.tv_sec - before.tv_sec) * 1000000 +
                                (after.tv_usec - before.tv_usec);
         if (g_debug_level > 0)

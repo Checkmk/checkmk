@@ -59,10 +59,10 @@ using std::vector;
 Query::Query(list<string> &lines, OutputBuffer *output, Table *table)
     : _output(output)
     , _table(table)
-    , _auth_user(0)
+    , _auth_user(nullptr)
     , _wait_timeout(0)
-    , _wait_trigger(0)
-    , _wait_object(0)
+    , _wait_trigger(nullptr)
+    , _wait_object(nullptr)
     , _field_separator(";")
     , _dataset_separator("\n")
     , _list_separator(",")
@@ -247,7 +247,7 @@ Filter *Query::createFilter(Column *column, int operator_id, char *value) {
         _output->setError(filter->errorCode(), "error in Filter header: %s",
                           filter->errorMessage().c_str());
         delete filter;
-        filter = 0;
+        filter = nullptr;
     } else {
         filter->setQuery(this);
         filter->setColumn(column);
@@ -357,7 +357,7 @@ void Query::parseStatsAndOrLine(char *line, int andor) {
         _stats_columns.pop_back();
         number--;
     }
-    _stats_columns.push_back(new StatsColumn(0, anding, STATS_OP_COUNT));
+    _stats_columns.push_back(new StatsColumn(nullptr, anding, STATS_OP_COUNT));
 }
 
 void Query::parseStatsNegateLine(char *line) {
@@ -381,7 +381,7 @@ void Query::parseStatsNegateLine(char *line) {
     NegatingFilter *negated = new NegatingFilter(col->stealFilter());
     delete col;
     _stats_columns.pop_back();
-    _stats_columns.push_back(new StatsColumn(0, negated, STATS_OP_COUNT));
+    _stats_columns.push_back(new StatsColumn(nullptr, negated, STATS_OP_COUNT));
 }
 
 void Query::parseStatsLine(char *line) {
@@ -460,7 +460,7 @@ void Query::parseStatsLine(char *line) {
         if (!filter) return;
         stats_col = new StatsColumn(column, filter, operation);
     } else
-        stats_col = new StatsColumn(column, 0, operation);
+        stats_col = new StatsColumn(column, nullptr, operation);
     _stats_columns.push_back(stats_col);
 
     /* Default to old behaviour: do not output column headers if we
@@ -538,7 +538,7 @@ void Query::parseStatsGroupLine(char *line) {
 void Query::parseColumnsLine(char *line) {
     if (!_table) return;
     char *column_name;
-    while (0 != (column_name = next_field(&line))) {
+    while (nullptr != (column_name = next_field(&line))) {
         Column *column = _table->column(column_name);
         if (column)
             _columns.push_back(column);
@@ -695,7 +695,7 @@ void Query::parseTimelimitLine(char *line) {
                               "non-negative integer (seconds)");
         else {
             _time_limit = timelimit;
-            _time_limit_timeout = time(0) + _time_limit;
+            _time_limit_timeout = time(nullptr) + _time_limit;
         }
     }
 }
@@ -724,7 +724,7 @@ void Query::parseWaitTriggerLine(char *line) {
         return;
     }
     struct trigger *t = trigger_find(value);
-    if (t == 0) {
+    if (t == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER,
                           "WaitTrigger: invalid trigger '%s'. Allowed are %s.",
                           value, trigger_all_names());
@@ -754,7 +754,7 @@ void Query::parseLocaltimeLine(char *line) {
         return;
     }
     time_t their_time = atoi(value);
-    time_t our_time = time(0);
+    time_t our_time = time(nullptr);
 
     // compute offset to be *added* each time we output our time and
     // *substracted* from reference value by filter headers
@@ -837,7 +837,7 @@ void Query::start() {
 }
 
 bool Query::timelimitReached() {
-    if (_time_limit >= 0 && time(0) >= _time_limit_timeout) {
+    if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
         logger(LG_INFO, "Maximum query time of %d seconds exceeded!",
                _time_limit);
         _output->setError(RESPONSE_CODE_LIMIT_EXCEEDED,
@@ -1235,7 +1235,7 @@ void Query::computeStatsGroupSpec(Query::_stats_group_spec_t &groupspec,
 void Query::doWait() {
     // If no wait condition and no trigger is set,
     // we do not wait at all.
-    if (_wait_condition.numFilters() == 0 && _wait_trigger == 0) return;
+    if (_wait_condition.numFilters() == 0 && _wait_trigger == nullptr) return;
 
     // If a condition is set, we check the condition. If it
     // is already true, we do not need to way
@@ -1248,10 +1248,10 @@ void Query::doWait() {
 
     // No wait on specified trigger. If no trigger was specified
     // we use WT_ALL as default trigger.
-    if (_wait_trigger == 0) _wait_trigger = trigger_all();
+    if (_wait_trigger == nullptr) _wait_trigger = trigger_all();
 
     struct timeval now;
-    gettimeofday(&now, NULL);
+    gettimeofday(&now, nullptr);
     struct timespec timeout;
     timeout.tv_sec = now.tv_sec + (_wait_timeout / 1000);
     timeout.tv_nsec = now.tv_usec * 1000 + 1000 * 1000 * (_wait_timeout % 1000);

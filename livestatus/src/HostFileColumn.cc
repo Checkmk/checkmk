@@ -48,10 +48,10 @@ HostFileColumn::HostFileColumn(string name, string description,
 // in size of a missing file
 char *HostFileColumn::getBlob(void *data, int *size) {
     *size = 0;
-    if (!_base_dir[0]) return 0;  // Path is not configured
+    if (!_base_dir[0]) return nullptr;  // Path is not configured
 
     data = shiftPointer(data);
-    if (!data) return 0;
+    if (!data) return nullptr;
 
 #ifdef CMC
     const char *host_name = static_cast<Host *>(data)->_name;
@@ -64,7 +64,7 @@ char *HostFileColumn::getBlob(void *data, int *size) {
              _suffix.c_str());
     int fd = open(path, O_RDONLY);
     if (fd < 0) {
-        return 0;
+        return nullptr;
     }
 
     *size = lseek(fd, 0, SEEK_END);
@@ -72,14 +72,14 @@ char *HostFileColumn::getBlob(void *data, int *size) {
         close(fd);
         *size = 0;
         logger(LG_WARN, "Cannot seek to end of file %s", path);
-        return 0;
+        return nullptr;
     }
 
     lseek(fd, 0, SEEK_SET);
     char *buffer = static_cast<char *>(malloc(*size));
     if (!buffer) {
         close(fd);
-        return 0;
+        return nullptr;
     }
 
     ssize_t read_bytes = read(fd, buffer, *size);
@@ -87,7 +87,7 @@ char *HostFileColumn::getBlob(void *data, int *size) {
     if (read_bytes != *size) {
         logger(LG_WARN, "Cannot read %d from %s", *size, path);
         free(buffer);
-        return 0;
+        return nullptr;
     }
 
     return buffer;

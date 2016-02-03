@@ -34,7 +34,7 @@ extern TableServices *g_table_services;
 
 servicesmember *ServicelistColumn::getMembers(void *data) {
     data = shiftPointer(data);
-    if (!data) return 0;
+    if (!data) return nullptr;
 
     return *(servicesmember **)((char *)data + _offset);
 }

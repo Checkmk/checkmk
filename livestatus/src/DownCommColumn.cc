@@ -90,7 +90,7 @@ void DownCommColumn::output(void *data, Query *query) {
 }
 
 void *DownCommColumn::getNagiosObject(char *name) {
-    unsigned long id = strtoul(name, 0, 10);
+    unsigned long id = strtoul(name, nullptr, 10);
     return reinterpret_cast<void *>(
         static_cast<uintptr_t>(id));  // Hack. Convert number into pointer.
 }
@@ -101,9 +101,9 @@ bool DownCommColumn::isNagiosMember(void *data, void *member) {
     // member is not a pointer, but an unsigned int (hack)
     int64_t id = (int64_t)member;  // Hack. Convert it back.
     DowntimeOrComment *dt = table->findEntry(id, _is_service);
-    return dt != 0 &&
-           (dt->_service == static_cast<service *>(data) ||
-            (dt->_service == 0 && dt->_host == static_cast<host *>(data)));
+    return dt != nullptr && (dt->_service == static_cast<service *>(data) ||
+                             (dt->_service == nullptr &&
+                              dt->_host == static_cast<host *>(data)));
 }
 
 bool DownCommColumn::isEmpty(void *data) {
@@ -115,7 +115,7 @@ bool DownCommColumn::isEmpty(void *data) {
          it != table->entriesIteratorEnd(); ++it) {
         DowntimeOrComment *dt = it->second;
         if ((void *)dt->_service == data ||
-            (dt->_service == 0 && dt->_host == data)) {
+            (dt->_service == nullptr && dt->_host == data)) {
             return false;
         }
     }

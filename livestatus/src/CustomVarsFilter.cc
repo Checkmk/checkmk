@@ -40,7 +40,7 @@ CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column, int opid,
     , _opid(abs(opid))
     , _negate(opid < 0)
     , _ref_text(value)
-    , _regex(0) {
+    , _regex(nullptr) {
     // Prepare part in case of DICT filter
     if (_column->type() == COLTYPE_DICT) {
         /* Filter for custom_variables:
@@ -72,7 +72,7 @@ with spaces
                     setError(RESPONSE_CODE_INVALID_HEADER,
                              "invalid regular expression '%s'", value);
                     delete _regex;
-                    _regex = 0;
+                    _regex = nullptr;
                 }
             }
         }
@@ -102,7 +102,8 @@ bool CustomVarsFilter::accepts(void *data) {
                 break;
             case OP_REGEX:
             case OP_REGEX_ICASE:
-                pass = _regex != 0 && 0 == regexec(_regex, act_string, 0, 0, 0);
+                pass = _regex != nullptr &&
+                       0 == regexec(_regex, act_string, 0, nullptr, 0);
                 break;
             case OP_GREATER:
                 pass = 0 > strcmp(_ref_string.c_str(), act_string);

@@ -43,7 +43,7 @@ static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
 
 hostsmember *HostlistStateColumn::getMembers(void *data) {
     data = shiftPointer(data);
-    if (!data) return 0;
+    if (!data) return nullptr;
 
     return *(hostsmember **)((char *)data + _offset);
 }

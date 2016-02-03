@@ -44,7 +44,7 @@ bool ServicelistStateColumn::svcStateIsWorse(int32_t state1, int32_t state2) {
 
 servicesmember *ServicelistStateColumn::getMembers(void *data) {
     data = shiftPointer(data);
-    if (!data) return 0;
+    if (!data) return nullptr;
 
     return *(servicesmember **)((char *)data + _offset);
 }

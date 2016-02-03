@@ -28,7 +28,7 @@
 
 bool ContactgroupsMemberColumn::isNagiosMember(void *cg, void *ctc) {
     contactsmember *mem;
-    for (mem = ((contactgroup *)cg)->members; mem != NULL; mem = mem->next) {
+    for (mem = ((contactgroup *)cg)->members; mem != nullptr; mem = mem->next) {
         if (mem->contact_ptr == ctc) return true;
     }
     return false;

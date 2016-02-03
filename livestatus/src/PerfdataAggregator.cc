@@ -41,7 +41,7 @@ void PerfdataAggregator::consume(void *data, Query *) {
     char *scan = perf_data;
 
     char *entry;
-    while (0 != (entry = next_field(&scan))) {
+    while (nullptr != (entry = next_field(&scan))) {
         char *start_of_varname = entry;
         char *place_of_equal = entry;
         while (*place_of_equal && *place_of_equal != '=') place_of_equal++;
@@ -54,7 +54,7 @@ void PerfdataAggregator::consume(void *data, Query *) {
             end_of_number++;
         if (start_of_number == end_of_number) continue;  // empty number
         *end_of_number = 0;                              // terminate number
-        double value = strtod(start_of_number, 0);
+        double value = strtod(start_of_number, nullptr);
         consumeVariable(start_of_varname, value);
     }
 

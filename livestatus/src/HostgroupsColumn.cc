@@ -30,7 +30,7 @@ objectlist *HostgroupsColumn::getData(void *data) {
         data = shiftPointer(data);
         if (data) return *(objectlist **)((char *)data + _offset);
     }
-    return 0;
+    return nullptr;
 }
 
 void HostgroupsColumn::output(void *data, Query *query) {
@@ -71,5 +71,5 @@ bool HostgroupsColumn::isNagiosMember(void *data, void *nagobject) {
 
 bool HostgroupsColumn::isEmpty(void *data) {
     objectlist *list = *(objectlist **)((char *)data + _offset);
-    return list == 0;
+    return list == nullptr;
 }

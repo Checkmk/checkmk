@@ -81,7 +81,7 @@ TableStateHistory::TableStateHistory() { addColumns(this); }
 
 // static
 void TableStateHistory::addColumns(Table *table) {
-    HostServiceState *ref = 0;
+    HostServiceState *ref = nullptr;
     table->addColumn(new OffsetTimeColumn(
         "time", "Time of the log event (seconds since 1/1/1970)",
         (char *)&(ref->_time) - (char *)ref, -1));
@@ -196,7 +196,7 @@ LogEntry *TableStateHistory::getPreviousLogentry() {
     while (_it_entries == _entries->begin()) {
         // open previous logfile
         if (_it_logs == g_store->logCache()->logfiles()->begin())
-            return 0;
+            return nullptr;
         else {
             --_it_logs;
             _entries = _it_logs->second->getEntriesFromQuery(
@@ -215,7 +215,7 @@ LogEntry *TableStateHistory::getNextLogentry() {
     while (_it_entries == _entries->end()) {
         _logfiles_t::iterator _it_logs_cpy = _it_logs;
         if (++_it_logs_cpy == g_store->logCache()->logfiles()->end()) {
-            return 0;
+            return nullptr;
         } else {
             ++_it_logs;
             _entries = _it_logs->second->getEntriesFromQuery(
@@ -272,7 +272,7 @@ void TableStateHistory::answerQuery(Query *query) {
 
     _query = query;
     _since = 0;
-    _until = time(0) + 1;
+    _until = time(nullptr) + 1;
 
     // Optimize time interval for the query. In log querys
     // there should always be a time range in form of one
@@ -332,7 +332,7 @@ void TableStateHistory::answerQuery(Query *query) {
     bool only_update = true;
     bool in_nagios_initial_states = false;
 
-    while (0 != (entry = getNextLogentry())) {
+    while (nullptr != (entry = getNextLogentry())) {
         if (_abort_query) break;
 
         if (entry->_time >= _until) {
@@ -367,7 +367,7 @@ void TableStateHistory::answerQuery(Query *query) {
             in_nagios_initial_states = false;
         }
 
-        HostServiceKey key = 0;
+        HostServiceKey key = nullptr;
         bool is_service = false;
         switch (entry->_type) {
             case NONE:
@@ -392,7 +392,7 @@ void TableStateHistory::answerQuery(Query *query) {
             case FLAPPING_HOST: {
                 if (!is_service) key = entry->_host;
 
-                if (key == 0) continue;
+                if (key == nullptr) continue;
 
                 if (object_blacklist.find(key) != object_blacklist.end()) {
                     // Host/Service is not needed for this query and has already
@@ -407,7 +407,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     // Create state object that we also need for filtering right
                     // now
                     state = new HostServiceState();
-                    state->_is_host = entry->_svc_desc == 0;
+                    state->_is_host = entry->_svc_desc == nullptr;
                     state->_host = entry->_host;
                     state->_service = entry->_service;
 #ifdef CMC
@@ -417,8 +417,9 @@ void TableStateHistory::answerQuery(Query *query) {
 #else
                     state->_host_name = entry->_host->name;
                     state->_service_description =
-                        entry->_service != 0 ? entry->_service->description
-                                             : "";
+                        entry->_service != nullptr
+                            ? entry->_service->description
+                            : "";
 #endif
 
                     // No state found. Now check if this host/services is
@@ -468,7 +469,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     // Get notification period of host/service
                     // If this host/service is no longer availabe in nagios ->
                     // set to ""
-                    if (state->_service != 0)
+                    if (state->_service != nullptr)
 #ifdef CMC
                         state->_notification_period =
                             state->_service->notificationPeriod()->name();
@@ -476,7 +477,7 @@ void TableStateHistory::answerQuery(Query *query) {
                         state->_notification_period =
                             state->_service->notification_period;
 #endif
-                    else if (state->_host != 0)
+                    else if (state->_host != nullptr)
 #ifdef CMC
                         state->_notification_period =
                             state->_host->notificationPeriod()->name();
@@ -489,14 +490,14 @@ void TableStateHistory::answerQuery(Query *query) {
 
                     // If for some reason the notification period is missing set
                     // a default
-                    if (state->_notification_period == NULL) {
+                    if (state->_notification_period == nullptr) {
                         state->_notification_period = "";
                     }
 
                     // Same for service period. For Nagios this is a bit
                     // different, since this
                     // is no native field but just a custom variable
-                    if (state->_service != 0)
+                    if (state->_service != nullptr)
 #ifdef CMC
                         state->_service_period =
                             state->_service->servicePeriod()->name();
@@ -505,7 +506,7 @@ void TableStateHistory::answerQuery(Query *query) {
                             getCustomVariable(state->_service->custom_variables,
                                               "SERVICE_PERIOD");
 #endif
-                    else if (state->_host != 0)
+                    else if (state->_host != nullptr)
 #ifdef CMC
                         state->_service_period =
                             state->_host->servicePeriod()->name();
@@ -575,10 +576,10 @@ void TableStateHistory::answerQuery(Query *query) {
                 char *save_ptr;
                 char *buffer = strdup(entry->_options);
                 char *tp_name = strtok_r(buffer, ";", &save_ptr);
-                char *tp_state = strtok_r(NULL, ";", &save_ptr);
-                if (tp_state) tp_state = strtok_r(NULL, ";", &save_ptr);
+                char *tp_state = strtok_r(nullptr, ";", &save_ptr);
+                if (tp_state) tp_state = strtok_r(nullptr, ";", &save_ptr);
 
-                if (tp_state == NULL) {
+                if (tp_state == nullptr) {
                     // This line is broken...
                     logger(LOG_WARNING,
                            "Error: Invalid syntax of TIMEPERIOD TRANSITION: %s",
@@ -639,7 +640,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 hst->_until = hst->_time;
                 hst->_debug_info = "UNMONITORED";
                 if (hst->_log_output) free(hst->_log_output);
-                hst->_log_output = 0;
+                hst->_log_output = nullptr;
             }
 
             hst->_time = _until - 1;
@@ -682,7 +683,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         hs_state->_in_service_period = 0;
         hs_state->_is_flapping = 0;
         if (hs_state->_log_output) free(hs_state->_log_output);
-        hs_state->_log_output = 0;
+        hs_state->_log_output = nullptr;
 
         // Apply latest notification period information and set the host_state
         // to unmonitored
@@ -792,8 +793,8 @@ int TableStateHistory::updateHostServiceState(Query *query,
             char *save_ptr;
             char *buffer = strdup(entry->_options);
             char *tp_name = strtok_r(buffer, ";", &save_ptr);
-            strtok_r(NULL, ";", &save_ptr);
-            char *tp_state = strtok_r(NULL, ";", &save_ptr);
+            strtok_r(nullptr, ";", &save_ptr);
+            char *tp_state = strtok_r(nullptr, ";", &save_ptr);
 
             // if no _host pointer is available the initial status of
             // _in_notification_period (1) never changes
@@ -826,9 +827,9 @@ int TableStateHistory::updateHostServiceState(Query *query,
 
         if ((entry->_type == STATE_HOST_INITIAL ||
              entry->_type == STATE_SERVICE_INITIAL) &&
-            (entry->_check_output != 0 &&
+            (entry->_check_output != nullptr &&
              !strcmp(entry->_check_output, "(null)")))
-            hs_state->_log_output = 0;
+            hs_state->_log_output = nullptr;
 
         else
             // TODO(sp): Do we really need to strdup? How are the lifetimes of
@@ -840,7 +841,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
             // subclass, because the Column framework is not flexible at all
             // regarding the types it handles.
             hs_state->_log_output =
-                entry->_check_output ? strdup(entry->_check_output) : 0;
+                entry->_check_output ? strdup(entry->_check_output) : nullptr;
     }
 
     return state_changed;

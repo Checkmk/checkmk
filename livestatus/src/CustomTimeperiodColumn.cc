@@ -41,8 +41,8 @@ int32_t CustomTimeperiodColumn::getValue(void *data, Query *) {
 }
 
 customvariablesmember *CustomTimeperiodColumn::getCVM(void *data) {
-    if (!data) return 0;
+    if (!data) return nullptr;
     data = shiftPointer(data);
-    if (!data) return 0;
+    if (!data) return nullptr;
     return *(customvariablesmember **)((char *)data + _offset);
 }

@@ -66,9 +66,9 @@ Filter *CustomVarsColumn::createFilter(int opid, char *value) {
 }
 
 customvariablesmember *CustomVarsColumn::getCVM(void *data) {
-    if (!data) return 0;
+    if (!data) return nullptr;
     data = shiftPointer(data);
-    if (!data) return 0;
+    if (!data) return nullptr;
     return *(customvariablesmember **)((char *)data + _offset);
 }
 
@@ -89,5 +89,5 @@ char *CustomVarsColumn::getVariable(void *data, const char *varname) {
         if (!strcmp(cvm->variable_name, varname)) return cvm->variable_value;
         cvm = cvm->next;
     }
-    return 0;
+    return nullptr;
 }

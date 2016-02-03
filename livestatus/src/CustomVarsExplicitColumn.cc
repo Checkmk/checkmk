@@ -34,8 +34,8 @@ const char *CustomVarsExplicitColumn::getValue(void *data) {
 }
 
 customvariablesmember *CustomVarsExplicitColumn::getCVM(void *data) {
-    if (!data) return 0;
+    if (!data) return nullptr;
     data = shiftPointer(data);
-    if (!data) return 0;
+    if (!data) return nullptr;
     return *(customvariablesmember **)((char *)data + _offset);
 }

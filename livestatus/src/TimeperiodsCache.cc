@@ -42,7 +42,7 @@ TimeperiodsCache::~TimeperiodsCache() {}
 
 void TimeperiodsCache::logCurrentTimeperiods() {
     lock_guard<mutex> lg(_cache_lock);
-    time_t now = time(0);
+    time_t now = time(nullptr);
     // Loop over all timeperiods and compute if we are
     // currently in. Detect the case where no time periods
     // are known (yet!). This might be the case when a timed

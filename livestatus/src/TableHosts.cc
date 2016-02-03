@@ -61,7 +61,7 @@ struct hostbygroup {
 };
 
 bool TableHosts::isAuthorized(contact *ctc, void *data) {
-    return is_authorized_for(ctc, static_cast<host *>(data), 0);
+    return is_authorized_for(ctc, static_cast<host *>(data), nullptr);
 }
 
 TableHosts::TableHosts(bool by_group) : _by_group(by_group) {
@@ -656,7 +656,7 @@ void TableHosts::answerQuery(Query *query) {
             if (requires_precheck) {
                 while (mem) {
                     if (!is_authorized_for(query->authUser(), mem->host_ptr,
-                                           0)) {
+                                           nullptr)) {
                         show_hgroup = false;
                         break;
                     }

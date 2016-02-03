@@ -36,7 +36,7 @@ StringColumnFilter::StringColumnFilter(StringColumn *column, int opid,
     , _ref_string(value)
     , _opid(abs(opid))
     , _negate(opid < 0)
-    , _regex(0) {
+    , _regex(nullptr) {
     if (_opid == OP_REGEX || _opid == OP_REGEX_ICASE) {
         if (strchr(value, '{') || strchr(value, '}')) {
             setError(
@@ -51,7 +51,7 @@ StringColumnFilter::StringColumnFilter(StringColumn *column, int opid,
                 setError(RESPONSE_CODE_INVALID_HEADER,
                          "invalid regular expression '%s'", value);
                 delete _regex;
-                _regex = 0;
+                _regex = nullptr;
             }
         }
     }
@@ -80,7 +80,8 @@ bool StringColumnFilter::accepts(void *data) {
             break;
         case OP_REGEX:
         case OP_REGEX_ICASE:
-            pass = _regex != 0 && 0 == regexec(_regex, act_string, 0, 0, 0);
+            pass = _regex != nullptr &&
+                   0 == regexec(_regex, act_string, 0, nullptr, 0);
             break;
         case OP_GREATER:
             pass = 0 > strcmp(_ref_string.c_str(), act_string);
@@ -101,5 +102,5 @@ void *StringColumnFilter::indexFilter(const char *column) {
     if (_opid == OP_EQUAL && !strcmp(column, _column->name()))
         return (void *)_ref_string.c_str();
     else
-        return 0;
+        return nullptr;
 }

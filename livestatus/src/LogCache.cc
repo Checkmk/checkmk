@@ -117,7 +117,7 @@ void LogCache::forgetLogfiles() {
 }
 
 void LogCache::updateLogfileIndex() {
-    _last_index_update = time(0);
+    _last_index_update = time(nullptr);
     // We need to find all relevant logfiles. This includes
     // directory.
     // the current nagios.log and all files in the archive
@@ -132,7 +132,7 @@ void LogCache::updateLogfileIndex() {
                   pathconf(log_archive_path, _PC_NAME_MAX) + 1;
         ent = static_cast<struct dirent *>(malloc(len));
 
-        while (0 == readdir_r(dir, ent, &result) && result != 0) {
+        while (0 == readdir_r(dir, ent, &result) && result != nullptr) {
             if (ent->d_name[0] != '.') {
                 snprintf(abspath, sizeof(abspath), "%s/%s", log_archive_path,
                          ent->d_name);

@@ -50,7 +50,7 @@ bool timeout_reached(const struct timeval *start, int timeout_ms) {
     if (timeout_ms == 0) return false;  // timeout disabled
 
     struct timeval now;
-    gettimeofday(&now, NULL);
+    gettimeofday(&now, nullptr);
     int64_t elapsed = (now.tv_sec - start->tv_sec) * 1000000;
     elapsed += now.tv_usec - start->tv_usec;
     return elapsed / 1000 >= timeout_ms;
@@ -76,7 +76,7 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
     // is needed for the idle_timeout. A connection may
     // not be idle longer than that value.
     struct timeval start_of_idle;  // Waiting for the first line
-    gettimeofday(&start_of_idle, NULL);
+    gettimeofday(&start_of_idle, nullptr);
 
     // Remember if we have read some part of the query. During
     // a query the timeout is another (short) than between
@@ -211,7 +211,7 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
 // lasts more than g_query_timeout_msec msecs.
 InputBuffer::Result InputBuffer::readData() {
     struct timeval start;
-    gettimeofday(&start, NULL);
+    gettimeofday(&start, nullptr);
 
     struct timeval tv;
     while (!*_termination_flag) {
@@ -225,7 +225,7 @@ InputBuffer::Result InputBuffer::readData() {
         FD_ZERO(&fds);
         FD_SET(_fd, &fds);
 
-        int retval = select(_fd + 1, &fds, NULL, NULL, &tv);
+        int retval = select(_fd + 1, &fds, nullptr, nullptr, &tv);
         if (retval > 0 && FD_ISSET(_fd, &fds)) {
             ssize_t r = read(_fd, &_readahead_buffer[_write_index],
                              _readahead_buffer.capacity() - _write_index);

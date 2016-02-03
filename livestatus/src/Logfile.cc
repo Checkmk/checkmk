@@ -105,7 +105,7 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
     // HIER KOENNTE ICH FLUSHEN, WENN g_active_world nicht mehr stimmt
 
     unsigned missing_types = logclasses & ~_logclasses_read;
-    FILE *file = 0;
+    FILE *file = nullptr;
     // The current logfile has the _watch flag set to true.
     // In that case, if the logfile has grown, we need to
     // load the rest of the file, even if no logclasses
@@ -286,7 +286,7 @@ char *Logfile::readIntoBuffer(int *size) {
     if (fd < 0) {
         logger(LOG_WARNING, "Cannot open %s for reading: %s", _path,
                strerror(errno));
-        return 0;
+        return nullptr;
     }
 
     off_t o = lseek(fd, 0, SEEK_END);
@@ -294,7 +294,7 @@ char *Logfile::readIntoBuffer(int *size) {
         logger(LOG_WARNING, "Cannot seek to end of %s: %s", _path,
                strerror(errno));
         close(fd);
-        return 0;
+        return nullptr;
     }
 
     *size = o;
@@ -306,7 +306,7 @@ char *Logfile::readIntoBuffer(int *size) {
         logger(LOG_WARNING, "Cannot malloc buffer for reading %s: %s", _path,
                strerror(errno));
         close(fd);
-        return 0;
+        return nullptr;
     }
 
     ssize_t r = read(fd, buffer + 1, *size);
@@ -315,13 +315,13 @@ char *Logfile::readIntoBuffer(int *size) {
                strerror(errno));
         free(buffer);
         close(fd);
-        return 0;
+        return nullptr;
     } else if (r != *size) {
         logger(LOG_WARNING, "Read only %" PRIdMAX " out of %d bytes from %s",
                static_cast<intmax_t>(r), *size, _path);
         free(buffer);
         close(fd);
-        return 0;
+        return nullptr;
     }
     buffer[0] = 0;
     buffer[*size + 1] = 0;  // zero-terminate

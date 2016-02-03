@@ -59,7 +59,7 @@ TableLog::TableLog() { addColumns(this, "", -1); }
 // static
 void TableLog::addColumns(Table *table, string prefix, int indirect_offset,
                           bool add_host, bool add_services) {
-    LogEntry *ref = 0;
+    LogEntry *ref = nullptr;
     table->addColumn(new OffsetTimeColumn(
         prefix + "time", "Time of the log event (UNIX timestamp)",
         (char *)&(ref->_time) - (char *)ref, indirect_offset));
@@ -137,7 +137,7 @@ void TableLog::answerQuery(Query *query) {
     g_store->logCache()->logCachePreChecks();
 
     int since = 0;
-    int until = time(0) + 1;
+    int until = time(nullptr) + 1;
     // Optimize time interval for the query. In log querys
     // there should always be a time range in form of one
     // or two filter expressions over time. We use that

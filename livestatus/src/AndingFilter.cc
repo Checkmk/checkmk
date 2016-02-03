@@ -39,7 +39,7 @@ void AndingFilter::addSubfilter(Filter *f) { _subfilters.push_back(f); }
 
 Filter *AndingFilter::stealLastSubfiler() {
     if (_subfilters.empty())
-        return 0;
+        return nullptr;
     else {
         Filter *l = _subfilters.back();
         _subfilters.pop_back();
@@ -63,7 +63,7 @@ void *AndingFilter::findIndexFilter(const char *columnname) {
         void *refvalue = filter->indexFilter(columnname);
         if (refvalue) return refvalue;
     }
-    return 0;
+    return nullptr;
 }
 
 void AndingFilter::findIntLimits(const char *columnname, int *lower,

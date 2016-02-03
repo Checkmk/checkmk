@@ -61,5 +61,5 @@ void *ListColumnFilter::indexFilter(const char *columnname) {
     if (_opid == -OP_LESS && !strcmp(columnname, _column->name()))
         return _ref_member;
     else
-        return 0;
+        return nullptr;
 }

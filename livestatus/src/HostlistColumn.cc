@@ -31,7 +31,7 @@ extern TableHosts *g_table_hosts;
 
 hostsmember *HostlistColumn::getMembers(void *data) {
     data = shiftPointer(data);
-    if (!data) return 0;
+    if (!data) return nullptr;
 
     return *(hostsmember **)((char *)data + _offset);
 }

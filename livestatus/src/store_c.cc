@@ -29,9 +29,9 @@
 #include "Store.h"
 #include "TimeperiodsCache.h"
 
-Store *g_store = 0;
-ClientQueue *g_client_queue = 0;
-TimeperiodsCache *g_timeperiods_cache = 0;
+Store *g_store = nullptr;
+ClientQueue *g_client_queue = nullptr;
+TimeperiodsCache *g_timeperiods_cache = nullptr;
 
 void store_init() {
     g_store = new Store();
@@ -42,15 +42,15 @@ void store_init() {
 void store_deinit() {
     if (g_store) {
         delete g_store;
-        g_store = 0;
+        g_store = nullptr;
     }
     if (g_client_queue) {
         delete g_client_queue;
-        g_client_queue = 0;
+        g_client_queue = nullptr;
     }
     if (g_timeperiods_cache) {
         delete g_timeperiods_cache;
-        g_timeperiods_cache = 0;
+        g_timeperiods_cache = nullptr;
     }
 }
 

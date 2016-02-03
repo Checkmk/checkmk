@@ -29,7 +29,7 @@ host *OffsetStringServiceMacroColumn::getHost(void *data) {
     if (svc)
         return svc->host_ptr;
     else
-        return 0;
+        return nullptr;
 }
 
 service *OffsetStringServiceMacroColumn::getService(void *data) {

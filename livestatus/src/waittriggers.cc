@@ -94,7 +94,7 @@ struct trigger *trigger_find(const char *name) {
     if (strcmp(name, "comment") == 0) return trigger_comment();
     if (strcmp(name, "command") == 0) return trigger_command();
     if (strcmp(name, "program") == 0) return trigger_program();
-    return 0;
+    return nullptr;
 }
 
 const char *trigger_all_names() {

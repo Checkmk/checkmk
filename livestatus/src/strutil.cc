@@ -47,7 +47,7 @@ char *next_field(char **c) {
     char *begin = lstrip(*c);  // skip leading spaces
     if (!*begin) {
         *c = begin;
-        return 0;  // found end of string -> no more field
+        return nullptr;  // found end of string -> no more field
     }
 
     char *end = begin;                     // copy pointer, search end of field
@@ -65,7 +65,7 @@ char *next_token(char **c, char delim) {
     char *begin = *c;
     if (!*begin) {
         *c = begin;
-        return 0;
+        return nullptr;
     }
 
     char *end = begin;

@@ -126,7 +126,7 @@ void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
         FD_ZERO(&fds);
         FD_SET(fd, &fds);
 
-        int retval = select(fd + 1, NULL, &fds, NULL, &tv);
+        int retval = select(fd + 1, nullptr, &fds, nullptr, &tv);
         if (retval > 0 && FD_ISSET(fd, &fds)) {
             ssize_t bytes_written = write(fd, buffer, bytes_to_write);
             if (bytes_written == -1) {

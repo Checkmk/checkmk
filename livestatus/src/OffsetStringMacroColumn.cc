@@ -134,7 +134,7 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 const char *OffsetStringMacroColumn::expandCustomVariables(
@@ -144,5 +144,5 @@ const char *OffsetStringMacroColumn::expandCustomVariables(
             return custvars->variable_value;
         custvars = custvars->next;
     }
-    return 0;
+    return nullptr;
 }

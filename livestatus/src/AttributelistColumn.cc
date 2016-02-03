@@ -59,7 +59,7 @@ struct al_entry al_entries[] = {
     {"check_timeperiod", MODATTR_CHECK_TIMEPERIOD},
     {"custom_variable", MODATTR_CUSTOM_VARIABLE},
     {"notification_timeperiod", MODATTR_NOTIFICATION_TIMEPERIOD},
-    {0, 0}};
+    {nullptr, 0}};
 
 unsigned long AttributelistColumn::getValue(void *data) {
     data = shiftPointer(data);
@@ -104,7 +104,7 @@ string AttributelistColumn::valueAsString(void *data, Query *) {
 Filter *AttributelistColumn::createFilter(int opid, char *value) {
     unsigned long ref = 0;
     if (isdigit(value[0]))
-        ref = strtoul(value, 0, 10);
+        ref = strtoul(value, nullptr, 10);
     else {
         char *scan = value;
         char *t;

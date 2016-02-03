@@ -36,7 +36,7 @@ double ServiceSpecialDoubleColumn::getValue(void *data) {
     service *svc = static_cast<service *>(data);
     switch (_type) {
         case SSDC_STALENESS: {
-            time_t check_result_age = time(0) - svc->last_check;
+            time_t check_result_age = time(nullptr) - svc->last_check;
             if (svc->check_interval != 0)
                 return check_result_age /
                        (svc->check_interval * interval_length);
@@ -48,7 +48,7 @@ double ServiceSpecialDoubleColumn::getValue(void *data) {
             if (is_cmk_passive) {
                 host *host = svc->host_ptr;
                 servicesmember *svc_member = host->services;
-                while (svc_member != 0) {
+                while (svc_member != nullptr) {
                     service *tmp_svc = svc_member->service_ptr;
                     if (!strncmp(tmp_svc->check_command_ptr->name, "check-mk",
                                  9)) {

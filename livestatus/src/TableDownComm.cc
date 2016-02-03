@@ -44,7 +44,7 @@ TableDownComm::TableDownComm(bool is_downtime) {
     else
         _name = "comments";
 
-    DowntimeOrComment *ref = 0;
+    DowntimeOrComment *ref = nullptr;
     addColumn(new OffsetStringColumn(
         "author", is_downtime ? "The contact that scheduled the downtime"
                               : "The contact that entered the comment",
@@ -69,7 +69,7 @@ TableDownComm::TableDownComm(bool is_downtime) {
         (char *)&(ref->_is_service) - (char *)ref));
 
     if (is_downtime) {
-        Downtime *ref = 0;
+        Downtime *ref = nullptr;
         addColumn(new OffsetTimeColumn(
             "start_time", "The start time of the downtime as UNIX timestamp",
             (char *)&(ref->_start_time) - (char *)ref));
@@ -88,7 +88,7 @@ TableDownComm::TableDownComm(bool is_downtime) {
             "was not triggered by another downtime",
             (char *)&(ref->_triggered_by) - (char *)ref));
     } else {
-        Comment *ref = 0;
+        Comment *ref = nullptr;
         addColumn(new OffsetIntColumn(
             "persistent", "Whether this comment is persistent (0/1)",
             (char *)&(ref->_persistent) - (char *)ref));
@@ -143,7 +143,7 @@ void TableDownComm::addDowntime(nebstruct_downtime_data *data) {
 }
 
 void TableDownComm::add(DowntimeOrComment *data) {
-    dc_key tmp_key = make_pair(data->_id, data->_service != 0);
+    dc_key tmp_key = make_pair(data->_id, data->_service != nullptr);
     _entries_t::iterator it = _entries.find(tmp_key);
 
     // might be update -> delete previous data set
@@ -155,7 +155,7 @@ void TableDownComm::add(DowntimeOrComment *data) {
 }
 
 void TableDownComm::remove(DowntimeOrComment *data) {
-    dc_key tmp_key = make_pair(data->_id, data->_service != 0);
+    dc_key tmp_key = make_pair(data->_id, data->_service != nullptr);
     _entries_t::iterator it = _entries.find(tmp_key);
     if (it == _entries.end())
         logger(LG_INFO, "Cannot delete non-existing downtime/comment %lu",
@@ -184,5 +184,5 @@ DowntimeOrComment *TableDownComm::findEntry(unsigned long id, bool is_service) {
     if (it != _entries.end()) {
         return it->second;
     } else
-        return 0;
+        return nullptr;
 }

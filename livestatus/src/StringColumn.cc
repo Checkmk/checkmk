@@ -30,7 +30,7 @@ void StringColumn::output(void *data, Query *query) {
     if (data)
         query->outputString(getValue(data));
     else
-        query->outputString(0);
+        query->outputString(nullptr);
 }
 
 Filter *StringColumn::createFilter(int operator_id, char *value) {

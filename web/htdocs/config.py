@@ -251,13 +251,15 @@ def login(u):
         user_baserole_id = "guest"
 
     # Prepare user object
-    global user, user_alias
+    global user, user_alias, user_email
     if u in multisite_users:
         user = multisite_users[u]
         user_alias = user.get("alias", user_id)
+        user_email = user.get("email", user_id)
     else:
         user = { "roles" : user_role_ids }
         user_alias = user_id
+        user_email = user_email
 
     # Prepare cache of already computed permissions
     global user_permissions
@@ -292,9 +294,10 @@ def login_super_user():
     user_baserole_id = "admin"
 
     # Prepare user object
-    global user, user_alias
+    global user, user_alias, user_email
     user = { "roles" : "admin" }
     user_alias = "Superuser for unauthenticated pages"
+    user_email = "admin"
 
     # Prepare cache of already computed permissions
     global user_permissions

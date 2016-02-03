@@ -4250,7 +4250,7 @@ def shell_quote(s):
 
 
 def do_git_commit():
-    author = shell_quote("%s <%s>" % (config.user_id, config.user_alias))
+    author = shell_quote("%s <%s>" % (config.user_id, config.user_email))
     git_dir = defaults.default_config_dir + "/.git"
     if not os.path.exists(git_dir):
         git_command(["init"])

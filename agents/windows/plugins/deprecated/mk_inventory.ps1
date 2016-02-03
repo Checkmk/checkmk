@@ -81,7 +81,7 @@ Get-WmiObject Win32_Product -ComputerName $name | foreach-object { write-host -s
 write-host "<<<win_reg_uninstall:sep(124):persist($until)>>>"
 $paths = @("HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall")
 foreach ($path in $paths) {
-    Get-ChildItem $path -Recurse | foreach-object {  $path2 = $path+"\"+$_.PSChildName; get-ItemProperty -path $path2 |
+    Get-ChildItem $path | foreach-object {  $path2 = $path+"\"+$_.PSChildName; get-ItemProperty -path $path2 |
 
         foreach-object {
         $Publisher = $_.Publisher -replace "`0", ""

@@ -647,9 +647,9 @@ void livestatus_parse_arguments(const char *args_orig) {
             sizeof(g_logfile_path) - 16 /* len of "livestatus.log" */);
     char *slash = strrchr(g_logfile_path, '/');
     if (!slash)
-        strcpy(g_logfile_path, "/tmp/livestatus.log");
+        strncpy(g_logfile_path, "/tmp/livestatus.log", 20);
     else
-        strcpy(slash + 1, "livestatus.log");
+        strncpy(slash + 1, "livestatus.log", 15);
 
     /* there is no default PNP path */
     g_pnp_path[0] = 0;

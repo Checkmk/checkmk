@@ -200,6 +200,7 @@ def save_acknowledgements(acknowledged_werks):
 
 
 def acknowledge_all_werks():
+    load_werks()
     acknowledge_werks(unacknowledged_incompatible_werks())
 
 

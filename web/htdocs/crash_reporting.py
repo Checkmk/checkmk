@@ -393,10 +393,7 @@ def get_local_vars_of_last_exception():
 
 
 def format_var_for_export(val):
-    if inspect.isclass(val) or inspect.isroutine(val) or type(val).__name__ == "instance":
-        return "%s" % val
-
-    elif isinstance(val, dict):
+    if isinstance(val, dict):
         for item_key, item_val in val.items():
             val[item_key] = format_var_for_export(item_val)
 
@@ -418,6 +415,14 @@ def format_var_for_export(val):
             val = val[:size_limit] + "... (%d bytes stripped)" % (size - size_limit)
 
     return val
+
+
+# The default JSON encoder raises an exception when detecting unknown types. For the crash
+# reporting it is totally ok to have some string representations of the objects.
+class RobustJSONEncoder(json.JSONEncoder):
+    # Are there cases where no __str__ is available? if so, we should do something like %r
+    def default(self, o):
+        return "%s" % o
 
 
 # Slightly duplicate code with modules/check_mk_base.py. Maybe create some kind of central library?
@@ -448,7 +453,7 @@ def create_crash_dump_info_file(tar):
     }
 
     content = cStringIO.StringIO()
-    content.write(json.dumps(crash_info))
+    content.write(json.dumps(crash_info, cls=RobustJSONEncoder))
     content.seek(0)
 
     tarinfo = tarfile.TarInfo(name="crash.info")

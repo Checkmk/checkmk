@@ -1516,10 +1516,42 @@ def is_manual_check(hostname, check_type, item):
     return (check_type, item) in manual_checks
 
 
+def format_var_for_export(val):
+    if isinstance(val, dict):
+        for item_key, item_val in val.items():
+            val[item_key] = format_var_for_export(item_val)
+
+    elif isinstance(val, list):
+        for index, item in enumerate(val):
+            val[index] = format_var_for_export(item)
+
+    elif isinstance(val, tuple):
+        new_val = ()
+        for item in val:
+            new_val += (format_var_for_export(item),)
+        val = new_val
+
+    # Check and limit size
+    if type(val) in (str, unicode):
+        size_limit = 1024*1024
+        size = len(val)
+        if size > size_limit:
+            val = val[:size_limit] + "... (%d bytes stripped)" % (size - size_limit)
+
+    return val
+
+
+def get_local_vars_of_last_exception():
+    local_vars = {}
+    import inspect
+    for key, val in inspect.trace()[-1][0].f_locals.items():
+        local_vars[key] = format_var_for_export(val)
+    return local_vars
+
+
 def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text):
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
-    import inspect
     crash_info = {
         "crash_type"    : "check",
         "time"          : time.time(),
@@ -1529,7 +1561,7 @@ def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, d
         "exc_type"      : exc_type.__name__,
         "exc_value"     : "%s" % exc_value,
         "exc_traceback" : traceback.extract_tb(exc_traceback),
-        "local_vars"    : inspect.trace()[-1][0].f_locals,
+        "local_vars"    : get_local_vars_of_last_exception(),
         "details"    : {
             "check_output"  : text,
             "host"          : hostname,
@@ -1549,7 +1581,15 @@ def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, d
     except ImportError:
         import json
 
-    file(crash_dir+"/crash.info", "w").write(json.dumps(crash_info)+"\n")
+
+    # The default JSON encoder raises an exception when detecting unknown types. For the crash
+    # reporting it is totally ok to have some string representations of the objects.
+    class RobustJSONEncoder(json.JSONEncoder):
+        # Are there cases where no __str__ is available? if so, we should do something like %r
+        def default(self, o):
+            return "%s" % o
+
+    file(crash_dir+"/crash.info", "w").write(json.dumps(crash_info, cls=RobustJSONEncoder)+"\n")
 
 
 def get_os_info():

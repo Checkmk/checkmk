@@ -111,25 +111,33 @@ std::string PerfCounter::typeName() const {
 
 ULONGLONG PerfCounter::extractValue(PERF_COUNTER_BLOCK *block) const {
     unsigned offset = _counter->CounterOffset;
-    int size = _counter->CounterSize;
     BYTE *pData = ((BYTE *)block) + offset;
 
-    if (_counter->CounterType & PERF_SIZE_DWORD) {
-        return static_cast<ULONGLONG>(*(DWORD *)block);
-    } else if (_counter->CounterType & PERF_SIZE_LARGE) {
-        return *(UNALIGNED ULONGLONG *)pData;
-    }
-    // handle other data generically. This is wrong in some situation.
-    // Once upon a time in future we might implement a conversion as
-    // described in
-    // http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
-    else if (size == 4) {
-        return static_cast<ULONGLONG>(*(DWORD *)pData);
-    } else if (size == 8) {
-        DWORD *data_at = (DWORD *)pData;
-        return (DWORDLONG)*data_at + ((DWORDLONG) * (data_at + 1) << 32);
-    } else {
-        return 0ULL;
+    static const DWORD PERF_SIZE_MASK = 0x00000300;
+
+    switch (_counter->CounterType & PERF_SIZE_MASK) {
+        case PERF_SIZE_DWORD:
+            return static_cast<ULONGLONG>(*(DWORD *)block);
+        case PERF_SIZE_LARGE:
+            return *(UNALIGNED ULONGLONG *)pData;
+        case PERF_SIZE_ZERO:
+            return 0ULL;
+        default: {  // PERF_SIZE_VARIABLE_LEN
+            // handle other data generically. This is wrong in some situation.
+            // Once upon a time in future we might implement a conversion as
+            // described in
+            // http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
+            int size = _counter->CounterSize;
+            if (size == 4) {
+                return static_cast<ULONGLONG>(*(DWORD *)pData);
+            } else if (size == 8) {
+                DWORD *data_at = (DWORD *)pData;
+                return (DWORDLONG)*data_at +
+                       ((DWORDLONG) * (data_at + 1) << 32);
+            } else {
+                return 0ULL;
+            }
+        } break;
     }
 }
 

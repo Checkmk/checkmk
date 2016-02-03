@@ -1,0 +1,9 @@
+Title: windows agent: 32-bit performance counters were not returned correctly
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454510131
+Class: fix
+
+

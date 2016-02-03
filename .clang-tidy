@@ -1,0 +1,37 @@
+---
+# Classification of the excludes:
+#
+#   * unclear, need to figure out if we want that:
+#       * cert-err58-cpp ("construction of 'foo' with static storage duration may throw an exception that cannot be caught")
+#       * cppcoreguidelines-pro-bounds-array-to-pointer-decay ("do not implicitly decay an array into a pointer; consider using gsl::array_view or an explicit cast instead")
+#       * cppcoreguidelines-pro-bounds-constant-array-index ("do not use array subscript when the index is not an integer constant expression; use gsl::at() instead")
+#       * cppcoreguidelines-pro-bounds-pointer-arithmetic ("do not use pointer arithmetic")
+#       * google-runtime-int ("consider replacing 'unsigned long' with 'uint64'")
+#
+#   * undesirable checks:
+#       * cppcoreguidelines-pro-type-static-cast-downcast ("do not use static_cast to downcast from a base to a derived class; use dynamic_cast instead")
+#       * llvm-include-order ("#includes are not sorted properly")
+#
+#   * desirable checks, but hard to fix currently:
+#       * cert-dcl50-cpp ("do not define a C-style variadic function; consider using a function parameter pack or currying instead")
+#       * cppcoreguidelines-pro-type-vararg ("do not call c-style vararg functions")
+#
+#   * desirable checks, but some places need to be suppressed:
+#       * cppcoreguidelines-pro-type-const-cast ("do not use const_cast")
+#
+#   * desirable checks, but not yet fixed:
+#       * cppcoreguidelines-pro-type-cstyle-cast ("do not use C-style cast to convert between unrelated types")
+#       * cppcoreguidelines-pro-type-reinterpret-cast ("do not use reinterpret_cast")
+#       * google-readability-braces-around-statements ("statement should be inside braces")
+#       * google-readability-casting ("C-style casts are discouraged; use reinterpret_cast")
+#       * readability-braces-around-statements ("statement should be inside braces")
+#       * readability-else-after-return ("don't use else after return")
+#       * readability-implicit-bool-cast ("implicit cast 'foo' -> bool")
+#       * readability-inconsistent-declaration-parameter-name ("function 'foo' has a definition with different parameter names")
+#       * readability-named-parameter ("all parameters should be named in a function")
+#
+Checks: '*,-cert-dcl50-cpp,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-cstyle-cast,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-vararg,-google-readability-braces-around-statements,-google-readability-casting,-google-runtime-int,-llvm-include-order,-readability-braces-around-statements,-readability-else-after-return,-readability-implicit-bool-cast,-readability-inconsistent-declaration-parameter-name,-readability-named-parameter'
+CheckOptions:
+  - key:             google-readability-namespace-comments.SpacesBeforeComments
+    value:           '1'
+...

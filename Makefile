@@ -35,6 +35,7 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
 
 CLANG_VERSION      := 3.8
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
+CLANG_TIDY         := clang-tidy-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 CPPCHECK           := cppcheck
 DOXYGEN            := doxygen
@@ -70,9 +71,9 @@ FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix mkeventd/src/,*.cc *.c *.h))
 
 .PHONY: all check-binaries check check-permissions check-spaces check-version \
-        clang-analyzer clean cppcheck dist documentation format headers \
-        healspaces help iwyu minify-js mk-eventd mk-livestatus mrproper \
-        optimize-images packages setup setversion version
+        clang-analyzer clang-tidy clean cppcheck dist documentation format \
+        headers healspaces help iwyu minify-js mk-eventd mk-livestatus \
+        mrproper optimize-images packages setup setversion version
 
 all: dist packages
 
@@ -261,6 +262,9 @@ setup:
 compile_commands.json: $(FILES_TO_FORMAT)
 	$(MAKE) -C livestatus clean
 	$(BEAR) $(MAKE) -C livestatus -j8
+
+clang-tidy: compile_commands.json
+	./compiled_sources | xargs $(CLANG_TIDY)
 
 # Not really perfect rules, but better than nothing
 iwyu:

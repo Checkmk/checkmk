@@ -1,0 +1,27 @@
+title: Hardware Sensors via OpenHardwareMonitor: S.M.A.R.T.
+agents: windows
+catalog: os/hardware
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors hard disk health via S.M.A.R.T. as reported by the
+ tool OpenHardwareMonitor (http://openhardwaremonitor.org/).
+ Please note that OHM reports aggregated S.M.A.R.T. attributes, not raw
+ values.
+ This check will only pick up on disks where it has support for at least
+ one of the reported attributes.
+ Currently supported attributes are:
+   - Remaining Life
+
+ check_mk includes a stripped down version of OpenHardwareMonitor without
+ a gui component which can be installed through the agent backery
+ or manually.
+ If the check_mks own version of ohm is used and installed correcty,
+ the windows agent will ensure it is run (and restarted) as
+ necessary.
+
+item:
+ The id of the disk as reported by OpenHardwareMonitor
+
+inventory:
+ All disks that report a supported smart reading are inventorized.

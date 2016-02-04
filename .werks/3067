@@ -1,0 +1,10 @@
+Title: openhardwaremonitor.smart: initial support for S.M.A.R.T. harddisk health monitoring via OpenHardwareMonitor
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454574976
+Class: feature
+
+OHM reports aggregated health attributes and the check will only pick up on those it currently
+supports (only one so far). This will be extended over time.

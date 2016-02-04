@@ -1059,6 +1059,33 @@ register_check_parameters(
     match_type = "dict"
 )
 
+
+register_check_parameters(
+    subgroup_storage,
+    "openhardwaremonitor_smart",
+    _("OpenHardwareMonitor S.M.A.R.T."),
+    Dictionary(
+        elements = [
+            ( "remaining_life",
+             Tuple(
+                 title = _("Remaining Life"),
+                 help = _("Estimatede remaining health of the disk based on other readings."),
+                 elements = [
+                     Percentage(title = _("Warning below"),  default_value = 30),
+                     Percentage(title = _("Critical below"), default_value = 10),
+                 ],
+             )
+             ),
+        ]
+    ),
+    TextAscii(
+        title = _("Device Name"),
+        help = _("Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."),
+    ),
+    match_type = "dict"
+)
+
+
 register_check_parameters(
     subgroup_applications,
     "mongodb_locks",
@@ -1076,6 +1103,8 @@ register_check_parameters(
     None,
     match_type = "dict"
 )
+
+
 
 #.
 #   .--Unsorted--(Don't create new stuff here!)----------------------------.
@@ -4783,7 +4812,7 @@ def windows_printer_queues_forth(old):
     if type(old) == dict:
         return old
     return default
-        
+
 register_check_parameters(
     subgroup_printing,
     "windows_printer_queues",
@@ -4792,7 +4821,7 @@ register_check_parameters(
         Dictionary(
             title = _("Windows Printer Configuration"),
             elements = [
-                ( "levels", 
+                ( "levels",
                     Tuple(
                         title = _("Levels for the number of print jobs"),
                         help = _("This rule is applied to the number of print jobs "
@@ -4803,7 +4832,7 @@ register_check_parameters(
                         ]
                     ),
                 ),
-                ("crit_states", 
+                ("crit_states",
                     ListChoice(
                         title = _("States who should lead to critical"),
                         choices = [
@@ -4820,10 +4849,10 @@ register_check_parameters(
                             ( 10, "Service Requested"),
                             ( 11, "Output Bin Full"),
                             ],
-                        default_value = [9, 10], 
+                        default_value = [9, 10],
                         )
                  ),
-                ("warn_states", 
+                ("warn_states",
                     ListChoice(
                         title = _("States who should lead to warning"),
                         choices = [
@@ -4840,7 +4869,7 @@ register_check_parameters(
                             ( 10, "Service Requested"),
                             ( 11, "Output Bin Full"),
                             ],
-                        default_value = [8, 11], 
+                        default_value = [8, 11],
                         )
                  ),
                 ]

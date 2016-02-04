@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ContactgroupsMemberColumn.h"
-#include <stddef.h>
 #include "nagios.h"
 
 bool ContactgroupsMemberColumn::isNagiosMember(void *cg, void *ctc) {

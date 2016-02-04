@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableColumns.h"
-#include <map>
 #include <utility>
 #include "Column.h"
 #include "ColumnsColumn.h"

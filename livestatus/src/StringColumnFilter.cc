@@ -101,7 +101,9 @@ bool StringColumnFilter::accepts(void *data) {
 
 void *StringColumnFilter::indexFilter(const char *column) {
     if (_opid == OP_EQUAL && (strcmp(column, _column->name()) == 0)) {
-        return (void *)_ref_string.c_str();
+        // TODO(sp) The cast looks very dubious, but the whole void* story is
+        // quite dangerous...
+        return const_cast<char *>(_ref_string.c_str());
     } else {
         return nullptr;
     }

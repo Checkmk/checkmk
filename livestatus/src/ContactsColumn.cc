@@ -28,9 +28,7 @@
 
 extern contact *contact_list;
 
-void *ContactsColumn::getNagiosObject(char *name) {
-    return (void *)find_contact(name);
-}
+void *ContactsColumn::getNagiosObject(char *name) { return find_contact(name); }
 
 void ContactsColumn::output(void *data, Query *query) {
     query->outputBeginList();

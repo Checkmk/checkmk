@@ -281,7 +281,7 @@ TableStatus::TableStatus() {
         &num_cached_log_messages));
     addColumn(new StringPointerColumn("livestatus_version",
                                       "The version of the MK Livestatus module",
-                                      (char *)VERSION));
+                                      VERSION));
     addColumn(new IntPointerColumn(
         "livestatus_active_connections",
         "The current number of active connections to MK Livestatus",

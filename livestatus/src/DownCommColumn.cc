@@ -118,7 +118,7 @@ bool DownCommColumn::isEmpty(void *data) {
     for (auto it = table->entriesIteratorBegin();
          it != table->entriesIteratorEnd(); ++it) {
         DowntimeOrComment *dt = it->second;
-        if ((void *)dt->_service == data ||
+        if (dt->_service == data ||
             (dt->_service == nullptr && dt->_host == data)) {
             return false;
         }

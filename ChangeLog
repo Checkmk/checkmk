@@ -246,6 +246,7 @@
     * 3043 FIX: agent_emcvnx: Fixed error handling in case of missing naviseccli command
     * 3045 FIX: veeam_backup_status: Fixed wrong date format reported by agent...
     * 3066 FIX: windows agent: 32-bit performance counters were not returned correctly
+    * 3068 FIX: ps: added performance graphs for process handle count (windows only)
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

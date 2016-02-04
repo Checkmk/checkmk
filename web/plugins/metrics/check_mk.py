@@ -764,6 +764,12 @@ metric_info["process_mapped_size"] = {
     "color" : "12/a",
 }
 
+metric_info["process_handles"] = {
+    "title" : _("Process handles"),
+    "unit"  : "count",
+    "color" : "32/a",
+}
+
 metric_info["mem_heap"] = {
     "title" : _("Heap memory usage"),
     "unit"  : "bytes",

@@ -458,8 +458,10 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
         extended_perfdata = ps_has_extended_perfdata(parsed[0][1])
 
     if extended_perfdata:
-        perfdata += [ ("vsz", virtual_size),
-                      ("rss", resident_size)]
+        warn_vsz, crit_vsz = params.get("virtual_levels", (None, None))
+        warn_rss, crit_rss = params.get("resident_levels", (None, None))
+        perfdata += [ ("vsz", virtual_size, warn_rss, crit_rss),
+                      ("rss", resident_size, warn_rss, crit_rss)]
         perfdata.append(("pcpu", percent_cpu, warn_cpu, crit_cpu))
 
     infotext = "%d %s" % (count, info_name)
@@ -538,6 +540,9 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
                 elif handle_count >= warn_handle:
                     state = max(state, 1)
                     infotext += "(!)"
+            else:
+                warn_handle, crit_handle = None, None
+            perfdata.append(("process_handles", handle_count, warn_handle, crit_handle))
 
     # Check how long the process is running
     if min_elapsed != None:

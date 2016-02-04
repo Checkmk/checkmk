@@ -51,11 +51,13 @@ with spaces
          */
         const char *cstr = _ref_text.c_str();
         const char *search_space = cstr;
-        while ((*search_space != 0) && (isspace(*search_space) == 0))
+        while ((*search_space != 0) && (isspace(*search_space) == 0)) {
             search_space++;
+        }
         _ref_varname = string(cstr, search_space - cstr);
-        while ((*search_space != 0) && (isspace(*search_space) != 0))
+        while ((*search_space != 0) && (isspace(*search_space) != 0)) {
             search_space++;
+        }
         _ref_string = search_space;
 
         // Prepare regular expression
@@ -93,8 +95,9 @@ bool CustomVarsFilter::accepts(void *data) {
     if (_column->type() == COLTYPE_DICT) {
         const char *act_string =
             _column->getVariable(data, _ref_varname.c_str());
-        if (act_string == nullptr) act_string = "";
-
+        if (act_string == nullptr) {
+            act_string = "";
+        }
         bool pass = true;
         switch (_opid) {
             case OP_EQUAL:

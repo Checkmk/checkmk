@@ -123,7 +123,9 @@ void TableContacts::addColumns(Table *table, string prefix,
 void TableContacts::answerQuery(Query *query) {
     contact *ct = contact_list;
     while (ct != nullptr) {
-        if (!query->processDataset(ct)) break;
+        if (!query->processDataset(ct)) {
+            break;
+        }
         ct = ct->next;
     }
 }

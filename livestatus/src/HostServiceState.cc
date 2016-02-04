@@ -26,7 +26,9 @@
 #include <stdlib.h>
 
 HostServiceState::~HostServiceState() {
-    if (_log_output != nullptr) free(_log_output);
+    if (_log_output != nullptr) {
+        free(_log_output);
+    }
 }
 
 void HostServiceState::computePerStateDurations() {

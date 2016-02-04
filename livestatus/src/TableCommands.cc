@@ -49,7 +49,9 @@ void TableCommands::addColumns(Table *table, string prefix,
 void TableCommands::answerQuery(Query *query) {
     command *cmd = command_list;
     while (cmd != nullptr) {
-        if (!query->processDataset(cmd)) break;
+        if (!query->processDataset(cmd)) {
+            break;
+        }
         cmd = cmd->next;
     }
 }

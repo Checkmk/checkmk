@@ -59,7 +59,9 @@ void debug(const char *loginfo, ...) {
     // a symlink attack otherwise...
     return;
 
-    if (g_debug_level >= 3) return;
+    if (g_debug_level >= 3) {
+        return;
+    }
 
     FILE *x = fopen("/tmp/livestatus.log", "a+");
     va_list ap;
@@ -108,7 +110,9 @@ bool LogCache::logCachePreChecks() {
 
 void LogCache::forgetLogfiles() {
     logger(LOG_INFO, "Logfile cache: flushing complete cache.");
-    for (auto &logfile : _logfiles) delete logfile.second;
+    for (auto &logfile : _logfiles) {
+        delete logfile.second;
+    }
     _logfiles.clear();
     num_cached_log_messages = 0;
 }
@@ -139,8 +143,9 @@ void LogCache::updateLogfileIndex() {
         }
         free(ent);
         closedir(dir);
-    } else
+    } else {
         logger(LG_INFO, "Cannot open log archive '%s'", log_archive_path);
+    }
 }
 
 void LogCache::scanLogfile(char *path, bool watch) {
@@ -150,14 +155,15 @@ void LogCache::scanLogfile(char *path, bool watch) {
         // make sure that no entry with that 'since' is existing yet.
         // under normal circumstances this never happens. But the
         // user might have copied files around.
-        if (_logfiles.find(since) == _logfiles.end())
+        if (_logfiles.find(since) == _logfiles.end()) {
             _logfiles.insert(make_pair(since, logfile));
-        else {
+        } else {
             logger(LG_WARN, "Ignoring duplicate logfile %s", path);
             delete logfile;
         }
-    } else
+    } else {
         delete logfile;
+    }
 }
 
 /* This method is called each time a log message is loaded
@@ -171,8 +177,9 @@ void LogCache::scanLogfile(char *path, bool watch) {
 void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
                                 time_t /*unused*/, unsigned logclasses) {
     if (static_cast<unsigned long>(++num_cached_log_messages) <=
-        _max_cached_messages)
+        _max_cached_messages) {
         return;  // current message count still allowed, everything ok
+    }
 
     /* Memory checking an freeing consumes CPU ressources. We save
        ressources, by avoiding to make the memory check each time
@@ -181,8 +188,9 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
        the number of messages loaded into memory has not grown
        by at least CHECK_MEM_CYCLE messages */
     if (static_cast<unsigned long>(num_cached_log_messages) <
-        _num_at_last_check + CHECK_MEM_CYCLE)
+        _num_at_last_check + CHECK_MEM_CYCLE) {
         return;  // Do not check this time
+    }
 
     // [1] Begin by deleting old logfiles
     // Begin deleting with the oldest logfile available
@@ -217,9 +225,10 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
     for (; it != _logfiles.end(); ++it) {
         Logfile *log = it->second;
         if (log->numEntries() > 0 && (log->classesRead() & ~logclasses) != 0) {
-            if (g_debug_level > 2)
+            if (g_debug_level > 2) {
                 debug("Freeing classes 0x%02x of file %s", ~logclasses,
                       log->path());
+            }
             long freed = log->freeMessages(~logclasses);  // flush only messages
                                                           // not needed for
                                                           // current query
@@ -254,7 +263,8 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
     // despite the fact that there are still too many messages
     // loaded.
 
-    if (g_debug_level > 2)
+    if (g_debug_level > 2) {
         debug("Cannot unload more messages. Still %d loaded (max is %d)",
               num_cached_log_messages, _max_cached_messages);
+    }
 }

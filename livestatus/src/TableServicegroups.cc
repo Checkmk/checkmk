@@ -121,7 +121,9 @@ void TableServicegroups::addColumns(Table *table, string prefix,
 void TableServicegroups::answerQuery(Query *query) {
     servicegroup *sg = servicegroup_list;
     while (sg != nullptr) {
-        if (!query->processDataset(sg)) break;
+        if (!query->processDataset(sg)) {
+            break;
+        }
         sg = sg->next;
     }
 }
@@ -131,17 +133,20 @@ void *TableServicegroups::findObject(char *objectspec) {
 }
 
 bool TableServicegroups::isAuthorized(contact *ctc, void *data) {
-    if (ctc == UNKNOWN_AUTH_USER) return false;
+    if (ctc == UNKNOWN_AUTH_USER) {
+        return false;
+    }
 
     servicegroup *sg = (servicegroup *)data;
     servicesmember *mem = sg->members;
     while (mem != nullptr) {
         service *svc = mem->service_ptr;
         bool is = g_table_services->isAuthorized(ctc, svc);
-        if (is && g_group_authorization == AUTH_LOOSE)
+        if (is && g_group_authorization == AUTH_LOOSE) {
             return true;
-        else if (!is && g_group_authorization == AUTH_STRICT)
+        } else if (!is && g_group_authorization == AUTH_STRICT) {
             return false;
+        }
         mem = mem->next;
     }
     return true;

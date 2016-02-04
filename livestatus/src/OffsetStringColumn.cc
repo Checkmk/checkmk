@@ -25,10 +25,13 @@
 #include "OffsetStringColumn.h"
 
 const char *OffsetStringColumn::getValue(void *data) {
-    if (data == nullptr) return "";
-
+    if (data == nullptr) {
+        return "";
+    }
     char *p = (char *)shiftPointer(data);
-    if (p == nullptr) return "";
+    if (p == nullptr) {
+        return "";
+    }
     const char *s = *(char **)(p + _offset);
     return s != nullptr ? s : "";
 }

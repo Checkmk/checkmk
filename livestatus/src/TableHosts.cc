@@ -668,7 +668,9 @@ void TableHosts::answerQuery(Query *query) {
                 mem = hgroup->members;
                 while (mem != nullptr) {
                     memcpy(&hg._host, mem->host_ptr, sizeof(host));
-                    if (!query->processDataset(&hg)) break;
+                    if (!query->processDataset(&hg)) {
+                        break;
+                    }
                     mem = mem->next;
                 }
             }
@@ -682,7 +684,9 @@ void TableHosts::answerQuery(Query *query) {
     if (hgroup != nullptr) {
         hostsmember *mem = hgroup->members;
         while (mem != nullptr) {
-            if (!query->processDataset(mem->host_ptr)) break;
+            if (!query->processDataset(mem->host_ptr)) {
+                break;
+            }
             mem = mem->next;
         }
         return;
@@ -691,7 +695,9 @@ void TableHosts::answerQuery(Query *query) {
     // no index -> linear search over all hosts
     host *hst = host_list;
     while (hst != nullptr) {
-        if (!query->processDataset(hst)) break;
+        if (!query->processDataset(hst)) {
+            break;
+        }
         hst = hst->next;
     }
 }

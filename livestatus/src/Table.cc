@@ -80,11 +80,15 @@ Column *Table::column(const char *colname) {
 
     // If the colum name contains a ':' then we have a dynamic
     // column with column arguments
-    if (strchr(colname, ':') != nullptr) return dynamicColumn(colname);
+    if (strchr(colname, ':') != nullptr) {
+        return dynamicColumn(colname);
+    }
 
     // First try exact match
     auto it = _columns.find(string(colname));
-    if (it != _columns.end()) return it->second;
+    if (it != _columns.end()) {
+        return it->second;
+    }
 
     // Now we try to readd the removed prefix. That way we tackle the
     // problem with the column "service_period". Here the prefix service_
@@ -94,10 +98,11 @@ Column *Table::column(const char *colname) {
     with_prefix += colname;
 
     it = _columns.find(with_prefix);
-    if (it != _columns.end())
+    if (it != _columns.end()) {
         return it->second;
-    else
+    } else {
         return nullptr;
+    }
 }
 
 Column *Table::dynamicColumn(const char *colname_with_args) {
@@ -107,17 +112,20 @@ Column *Table::dynamicColumn(const char *colname_with_args) {
     const char *argstring = sep_pos + 1;
 
     auto it = _dynamic_columns.find(name);
-    if (it != _dynamic_columns.end())
+    if (it != _dynamic_columns.end()) {
         return it->second->createColumn(argstring);
 
-    else
+    } else {
         return nullptr;
+    }
 }
 
 bool Table::hasColumn(Column *col) {
     // this is not very efficient but seldomly used
     for (auto &column : _columns) {
-        if (col == column.second) return true;
+        if (col == column.second) {
+            return true;
+        }
     }
     return false;
 }

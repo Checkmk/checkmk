@@ -35,13 +35,16 @@ bool HostlistColumnFilter::accepts(void *data) {
     hostsmember *mem = _hostlist_column->getMembers(data);
 
     // test for empty list
-    if (abs(_opid) == OP_EQUAL && _ref_value == "")
+    if (abs(_opid) == OP_EQUAL && _ref_value == "") {
         return (mem == nullptr) == (_opid == OP_EQUAL);
+    }
 
     bool is_member = false;
     while (mem != nullptr) {
         char *host_name = mem->host_name;
-        if (host_name == nullptr) host_name = mem->host_ptr->name;
+        if (host_name == nullptr) {
+            host_name = mem->host_ptr->name;
+        }
 
         if (host_name == _ref_value) {
             is_member = true;

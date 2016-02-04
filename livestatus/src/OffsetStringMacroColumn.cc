@@ -57,11 +57,12 @@ string OffsetStringMacroColumn::valueAsString(void *data, Query * /*unused*/) {
         }
         string macroname = string(dollar + 1, otherdollar - dollar - 1);
         const char *replacement = expandMacro(macroname.c_str(), hst, svc);
-        if (replacement != nullptr)
+        if (replacement != nullptr) {
             result += replacement;
-        else
+        } else {
             result += string(
                 dollar, otherdollar - dollar + 1);  // leave macro unexpanded
+        }
         scan = otherdollar + 1;
     }
     return result;
@@ -81,50 +82,51 @@ Filter *OffsetStringMacroColumn::createFilter(int /*operator_id*/,
 const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
                                                  host *hst, service *svc) {
     // host macros
-    if (strcmp(macroname, "HOSTNAME") == 0)
+    if (strcmp(macroname, "HOSTNAME") == 0) {
         return hst->name;
-    else if (strcmp(macroname, "HOSTDISPLAYNAME") == 0)
+    } else if (strcmp(macroname, "HOSTDISPLAYNAME") == 0) {
         return hst->display_name;
-    else if (strcmp(macroname, "HOSTALIAS") == 0)
+    } else if (strcmp(macroname, "HOSTALIAS") == 0) {
         return hst->alias;
-    else if (strcmp(macroname, "HOSTADDRESS") == 0)
+    } else if (strcmp(macroname, "HOSTADDRESS") == 0) {
         return hst->address;
-    else if (strcmp(macroname, "HOSTOUTPUT") == 0)
+    } else if (strcmp(macroname, "HOSTOUTPUT") == 0) {
         return hst->plugin_output;
-    else if (strcmp(macroname, "LONGHOSTOUTPUT") == 0)
+    } else if (strcmp(macroname, "LONGHOSTOUTPUT") == 0) {
         return hst->long_plugin_output;
-    else if (strcmp(macroname, "HOSTPERFDATA") == 0)
+    } else if (strcmp(macroname, "HOSTPERFDATA") == 0) {
         return hst->perf_data;
-    else if (strcmp(macroname, "HOSTCHECKCOMMAND") == 0)
+    } else if (strcmp(macroname, "HOSTCHECKCOMMAND") == 0) {
 #ifndef NAGIOS4
         return hst->host_check_command;
 #else
         return hst->check_command;
 #endif  // NAGIOS4
 
-    else if (strncmp(macroname, "_HOST", 5) == 0)  // custom macro
+    } else if (strncmp(macroname, "_HOST", 5) == 0) {  // custom macro
         return expandCustomVariables(macroname + 5, hst->custom_variables);
 
-    // service macros
-    else if (svc != nullptr) {
-        if (strcmp(macroname, "SERVICEDESC") == 0)
+        // service macros
+    } else if (svc != nullptr) {
+        if (strcmp(macroname, "SERVICEDESC") == 0) {
             return svc->description;
-        else if (strcmp(macroname, "SERVICEDISPLAYNAME") == 0)
+        } else if (strcmp(macroname, "SERVICEDISPLAYNAME") == 0) {
             return svc->display_name;
-        else if (strcmp(macroname, "SERVICEOUTPUT") == 0)
+        } else if (strcmp(macroname, "SERVICEOUTPUT") == 0) {
             return svc->plugin_output;
-        else if (strcmp(macroname, "LONGSERVICEOUTPUT") == 0)
+        } else if (strcmp(macroname, "LONGSERVICEOUTPUT") == 0) {
             return svc->long_plugin_output;
-        else if (strcmp(macroname, "SERVICEPERFDATA") == 0)
+        } else if (strcmp(macroname, "SERVICEPERFDATA") == 0) {
             return svc->perf_data;
-        else if (strcmp(macroname, "SERVICECHECKCOMMAND") == 0)
+        } else if (strcmp(macroname, "SERVICECHECKCOMMAND") == 0) {
 #ifndef NAGIOS4
             return svc->service_check_command;
 #else
             return svc->check_command;
-#endif                                                    // NAGIOS4
-        else if (strncmp(macroname, "_SERVICE", 8) == 0)  // custom macro
+#endif                                                        // NAGIOS4
+        } else if (strncmp(macroname, "_SERVICE", 8) == 0) {  // custom macro
             return expandCustomVariables(macroname + 8, svc->custom_variables);
+        }
     }
 
     // USER macros
@@ -141,8 +143,9 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
 const char *OffsetStringMacroColumn::expandCustomVariables(
     const char *varname, customvariablesmember *custvars) {
     while (custvars != nullptr) {
-        if (strcasecmp(varname, custvars->variable_name) == 0)
+        if (strcasecmp(varname, custvars->variable_name) == 0) {
             return custvars->variable_value;
+        }
         custvars = custvars->next;
     }
     return nullptr;

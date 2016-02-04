@@ -39,9 +39,10 @@ void open_logfile() {
     g_logfile = fopen(g_logfile_path, "a");
     g_mainthread_id =
         pthread_self(); /* needed to determine main thread later */
-    if (!g_logfile)
+    if (!g_logfile) {
         logger(LG_WARN, "Cannot open logfile %s: %s", g_logfile_path,
                strerror(errno));
+    }
 }
 
 void close_logfile() {

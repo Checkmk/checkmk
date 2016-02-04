@@ -69,7 +69,9 @@ void TimeperiodsCache::update(time_t now) {
     // definitions have 1 minute as granularity, so a
     // 1sec resultion is not needed.
     int minutes = now / 60;
-    if (minutes == _cache_time) return;
+    if (minutes == _cache_time) {
+        return;
+    }
 
     // Loop over all timeperiods and compute if we are
     // currently in. Detect the case where no time periods
@@ -94,17 +96,20 @@ void TimeperiodsCache::update(time_t now) {
         tp = tp->next;
         num_periods++;
     }
-    if (num_periods > 0)
+    if (num_periods > 0) {
         _cache_time = minutes;
-    else
+    } else {
         logger(LG_INFO,
                "Timeperiod cache not updated, there are no timeperiods (yet)");
+    }
 }
 
 bool TimeperiodsCache::inTimeperiod(const char *tpname) {
     timeperiod *tp = timeperiod_list;
     while (tp != nullptr) {
-        if (strcmp(tpname, tp->name) == 0) return inTimeperiod(tp);
+        if (strcmp(tpname, tp->name) == 0) {
+            return inTimeperiod(tp);
+        }
         tp = tp->next;
     }
     return true;  // unknown timeperiod is assumed to be 7X24
@@ -114,9 +119,9 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp) {
     lock_guard<mutex> lg(_cache_lock);
     auto it = _cache.find(tp);
     bool is_in;
-    if (it != _cache.end())
+    if (it != _cache.end()) {
         is_in = it->second;
-    else {
+    } else {
         logger(LG_INFO,
                "No timeperiod information available for %s. Assuming out of "
                "period.",

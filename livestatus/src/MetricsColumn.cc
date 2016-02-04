@@ -27,7 +27,9 @@
 
 void MetricsColumn::output(void *data, Query *query) {
     data = shiftPointer(data);
-    if (data == nullptr) return;
+    if (data == nullptr) {
+        return;
+    }
 
     query->outputBeginList();
     query->outputEndList();

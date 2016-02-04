@@ -43,17 +43,19 @@ void DoubleAggregator::consume(void *data, Query * /*unused*/) {
             break;
 
         case STATS_OP_MIN:
-            if (_count == 1)
+            if (_count == 1) {
                 _aggr = value;
-            else if (value < _aggr)
+            } else if (value < _aggr) {
                 _aggr = value;
+            }
             break;
 
         case STATS_OP_MAX:
-            if (_count == 1)
+            if (_count == 1) {
                 _aggr = value;
-            else if (value > _aggr)
+            } else if (value > _aggr) {
                 _aggr = value;
+            }
             break;
 
         case STATS_OP_STD:
@@ -79,18 +81,20 @@ void DoubleAggregator::output(Query *q) {
 
         case STATS_OP_AVG:
         case STATS_OP_AVGINV:
-            if (_count == 0)
+            if (_count == 0) {
                 q->outputDouble(0.0);
-            else
+            } else {
                 q->outputDouble(_aggr / _count);
+            }
             break;
 
         case STATS_OP_STD:
-            if (_count <= 1)
+            if (_count <= 1) {
                 q->outputDouble(0.0);
-            else
+            } else {
                 q->outputDouble(
                     sqrt((_sumq - (_aggr * _aggr) / _count) / (_count - 1)));
+            }
             break;
     }
 }

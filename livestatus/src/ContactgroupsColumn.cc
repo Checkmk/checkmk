@@ -37,10 +37,11 @@ void ContactgroupsColumn::output(void *data, Query *query) {
             bool first = true;
             while (cgm != nullptr) {
                 contactgroup *cg = (contactgroup *)cgm->group_ptr;
-                if (!first)
+                if (!first) {
                     query->outputListSeparator();
-                else
+                } else {
                     first = false;
+                }
                 query->outputString(cg->group_name);
                 cgm = cgm->next;
             }
@@ -55,7 +56,9 @@ void *ContactgroupsColumn::getNagiosObject(char *name) {
 }
 
 bool ContactgroupsColumn::isNagiosMember(void *data, void *nagobject) {
-    if ((nagobject == nullptr) || (data == nullptr)) return false;
+    if ((nagobject == nullptr) || (data == nullptr)) {
+        return false;
+    }
 
     // data is already shifted (_indirect_offset is taken into account)
     // But _offset needs still to be accounted for
@@ -63,7 +66,9 @@ bool ContactgroupsColumn::isNagiosMember(void *data, void *nagobject) {
         *(contactgroupsmember **)((char *)data + _offset);
 
     while (cgm != nullptr) {
-        if (cgm->group_ptr == nagobject) return true;
+        if (cgm->group_ptr == nagobject) {
+            return true;
+        }
         cgm = cgm->next;
     }
     return false;

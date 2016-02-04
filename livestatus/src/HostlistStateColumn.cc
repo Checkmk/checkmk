@@ -29,21 +29,24 @@
 extern TableServices *g_table_hosts;
 
 static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
-    if (state1 == 0)
+    if (state1 == 0) {
         return false;  // UP is worse than nothing
-    else if (state2 == 0)
+    } else if (state2 == 0) {
         return true;  // everything else is worse then UP
-    else if (state2 == 1)
+    } else if (state2 == 1) {
         return false;  // nothing is worse than DOWN
-    else if (state1 == 1)
+    } else if (state1 == 1) {
         return true;  // state1 is DOWN, state2 not
-    else
+    } else {
         return false;  // both are UNREACHABLE
+    }
 }
 
 hostsmember *HostlistStateColumn::getMembers(void *data) {
     data = shiftPointer(data);
-    if (data == nullptr) return nullptr;
+    if (data == nullptr) {
+        return nullptr;
+    }
 
     return *(hostsmember **)((char *)data + _offset);
 }
@@ -72,20 +75,25 @@ int32_t HostlistStateColumn::getValue(void *data, Query *query) {
                 case HLSC_WORST_SVC_STATE:
                     state = ServicelistStateColumn::getValue(
                         _logictype, hst->services, query);
-                    if (ServicelistStateColumn::svcStateIsWorse(state, result))
+                    if (ServicelistStateColumn::svcStateIsWorse(state,
+                                                                result)) {
                         result = state;
+                    }
                     break;
 
                 case HLSC_NUM_HST_UP:
                 case HLSC_NUM_HST_DOWN:
                 case HLSC_NUM_HST_UNREACH:
                     if ((hst->has_been_checked != 0) &&
-                        hst->current_state == _logictype - HLSC_NUM_HST_UP)
+                        hst->current_state == _logictype - HLSC_NUM_HST_UP) {
                         result++;
+                    }
                     break;
 
                 case HLSC_NUM_HST_PENDING:
-                    if (hst->has_been_checked == 0) result++;
+                    if (hst->has_been_checked == 0) {
+                        result++;
+                    }
                     break;
 
                 case HLSC_NUM_HST:
@@ -93,8 +101,9 @@ int32_t HostlistStateColumn::getValue(void *data, Query *query) {
                     break;
 
                 case HLSC_WORST_HST_STATE:
-                    if (hst_state_is_worse(hst->current_state, result))
+                    if (hst_state_is_worse(hst->current_state, result)) {
                         result = hst->current_state;
+                    }
                     break;
             }
         }

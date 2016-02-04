@@ -27,8 +27,9 @@
 #include "global_counters.h"
 
 void GlobalCountersColumn::output(void * /*data*/, Query *query) {
-    if (_do_average)
+    if (_do_average) {
         query->outputDouble(g_counter_rate[_counter_index]);
-    else
+    } else {
         query->outputCounter(g_counters[_counter_index]);
+    }
 }

@@ -33,17 +33,22 @@ extern TimeperiodsCache *g_timeperiods_cache;
 int32_t CustomTimeperiodColumn::getValue(void *data, Query * /*unused*/) {
     customvariablesmember *cvm = getCVM(data);
     while (cvm != nullptr) {
-        if (cvm->variable_name == _varname)
+        if (cvm->variable_name == _varname) {
             return static_cast<int32_t>(
                 g_timeperiods_cache->inTimeperiod(cvm->variable_value));
+        }
         cvm = cvm->next;
     }
     return 1;  // assume 7X24
 }
 
 customvariablesmember *CustomTimeperiodColumn::getCVM(void *data) {
-    if (data == nullptr) return nullptr;
+    if (data == nullptr) {
+        return nullptr;
+    }
     data = shiftPointer(data);
-    if (data == nullptr) return nullptr;
+    if (data == nullptr) {
+        return nullptr;
+    }
     return *(customvariablesmember **)((char *)data + _offset);
 }

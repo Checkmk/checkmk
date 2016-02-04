@@ -72,10 +72,11 @@ ssize_t read_with_timeout(int from, char *buffer, int size, int us) {
     tv.tv_sec = us / 1000000;
     tv.tv_usec = us % 1000000;
     int retval = select(from + 1, &fds, 0, 0, &tv);
-    if (retval > 0)
+    if (retval > 0) {
         return read(from, buffer, size);
-    else
+    } else {
         return -2;
+    }
 }
 
 void *copy_thread(void *info) {
@@ -94,7 +95,9 @@ void *copy_thread(void *info) {
                     strerror(errno));
             break;
         } else if (r == 0) {
-            if (ti->should_shutdown) shutdown(to, SHUT_WR);
+            if (ti->should_shutdown) {
+                shutdown(to, SHUT_WR);
+            }
             if (ti->terminate_on_read_eof) {
                 exit(0);
                 return voidp;

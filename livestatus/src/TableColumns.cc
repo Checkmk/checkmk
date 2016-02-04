@@ -47,7 +47,9 @@ void TableColumns::answerQuery(Query *query) {
     for (auto table : _tables) {
         Table::_columns_t *columns = table->columns();
         for (auto &column : *columns) {
-            if (!query->processDataset(column.second)) break;
+            if (!query->processDataset(column.second)) {
+                break;
+            }
         }
     }
 }

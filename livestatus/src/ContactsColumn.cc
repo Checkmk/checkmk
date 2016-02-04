@@ -42,10 +42,11 @@ void ContactsColumn::output(void *data, Query *query) {
         contact *ctc = contact_list;
         while (ctc != nullptr) {
             if (isNagiosMember(data, ctc)) {
-                if (first)
+                if (first) {
                     first = false;
-                else
+                } else {
                     query->outputListSeparator();
+                }
                 query->outputString(ctc->name);
             }
             ctc = ctc->next;
@@ -57,7 +58,9 @@ void ContactsColumn::output(void *data, Query *query) {
 bool ContactsColumn::isEmpty(void *svc) {
     contact *ct = contact_list;
     while (ct != nullptr) {
-        if (isNagiosMember(svc, ct)) return false;
+        if (isNagiosMember(svc, ct)) {
+            return false;
+        }
         ct = ct->next;
     }
     return true;

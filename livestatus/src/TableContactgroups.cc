@@ -53,7 +53,9 @@ void TableContactgroups::addColumns(Table *table, string prefix,
 void TableContactgroups::answerQuery(Query *query) {
     contactgroup *cg = contactgroup_list;
     while (cg != nullptr) {
-        if (!query->processDataset(cg)) break;
+        if (!query->processDataset(cg)) {
+            break;
+        }
         cg = cg->next;
     }
 }

@@ -43,17 +43,19 @@ void IntAggregator::consume(void *data, Query *query) {
             break;
 
         case STATS_OP_MIN:
-            if (_count == 1)
+            if (_count == 1) {
                 _aggr = value;
-            else if (value < _aggr)
+            } else if (value < _aggr) {
                 _aggr = value;
+            }
             break;
 
         case STATS_OP_MAX:
-            if (_count == 1)
+            if (_count == 1) {
                 _aggr = value;
-            else if (value > _aggr)
+            } else if (value > _aggr) {
                 _aggr = value;
+            }
             break;
 
         case STATS_OP_STD:
@@ -84,12 +86,13 @@ void IntAggregator::output(Query *q) {
             break;
 
         case STATS_OP_STD:
-            if (_count <= 1)
+            if (_count <= 1) {
                 q->outputDouble(0.0);
-            else
+            } else {
                 q->outputDouble(
                     sqrt((_sumq - ((double)_aggr * (double)_aggr) / _count) /
                          (_count - 1)));
+            }
             break;
     }
 }

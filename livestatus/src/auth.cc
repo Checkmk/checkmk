@@ -25,7 +25,9 @@
 #include "auth.h"
 
 int is_authorized_for(contact *ctc, host *hst, service *svc) {
-    if (ctc == UNKNOWN_AUTH_USER) return 0;
+    if (ctc == UNKNOWN_AUTH_USER) {
+        return 0;
+    }
 
     if (svc != nullptr) {
         if (g_service_authorization == AUTH_STRICT) {

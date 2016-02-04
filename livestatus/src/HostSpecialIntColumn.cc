@@ -29,17 +29,20 @@
 
 int32_t HostSpecialIntColumn::getValue(void *data, Query * /*unused*/) {
     data = shiftPointer(data);
-    if (data == nullptr) return 0;
+    if (data == nullptr) {
+        return 0;
+    }
 
     host *hst = static_cast<host *>(data);
     switch (_type) {
         case HSIC_REAL_HARD_STATE:
-            if (hst->current_state == 0)
+            if (hst->current_state == 0) {
                 return 0;
-            else if (hst->state_type == 1)
+            } else if (hst->state_type == 1) {
                 return hst->current_state;  // we have reached a hard state
-            else
+            } else {
                 return hst->last_hard_state;
+            }
 
         case HSIC_PNP_GRAPH_PRESENT:
             return pnpgraph_present(hst->name);

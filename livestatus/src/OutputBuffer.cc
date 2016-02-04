@@ -79,13 +79,16 @@ void OutputBuffer::needSpace(unsigned len) {
     if (_writepos + len > _end) {
         unsigned s = size();
         unsigned needed = s + len;
-        while (_max_size < needed)  // double, until enough space
+        while (_max_size < needed) {  // double, until enough space
             _max_size *= 2;
+        }
 
         char *new_buffer = static_cast<char *>(realloc(_buffer, _max_size));
         // It's better to crash voluntarily than overwriting random memory
         // later.
-        if (new_buffer == nullptr) abort();
+        if (new_buffer == nullptr) {
+            abort();
+        }
 
         _buffer = new_buffer;
         _writepos = _buffer + s;

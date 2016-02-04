@@ -117,13 +117,15 @@ void TableLog::addColumns(Table *table, string prefix, int indirect_offset,
         (char *)&(ref->_command_name) - (char *)ref, indirect_offset));
 
     // join host and service tables
-    if (add_host)
+    if (add_host) {
         TableHosts::addColumns(table, "current_host_",
                                (char *)&(ref->_host) - (char *)ref);
-    if (add_services)
+    }
+    if (add_services) {
         TableServices::addColumns(table, "current_service_",
                                   (char *)&(ref->_service) - (char *)ref,
                                   false /* no hosts table */);
+    }
     TableContacts::addColumns(table, "current_contact_",
                               (char *)&(ref->_contact) - (char *)ref);
     TableCommands::addColumns(table, "current_command_",
@@ -149,7 +151,9 @@ void TableLog::answerQuery(Query *query) {
     // We want to load only those log type that are queried.
     uint32_t classmask = LOGCLASS_ALL;
     query->optimizeBitmask("class", &classmask);
-    if (classmask == 0) return;
+    if (classmask == 0) {
+        return;
+    }
 
     /* This code start with the oldest log entries. I'm going
        to change this and start with the newest. That way,
@@ -166,17 +170,22 @@ void TableLog::answerQuery(Query *query) {
     // here: For each logfile we only know the time of the *first* entry,
     // not that of the last.
     while (it != g_store->logCache()->logfiles()->begin() &&
-           it->first > until)       // while logfiles are too new...
-        --it;                       // go back in history
-    if (it->first > until) return;  // all logfiles are too new
+           it->first > until) {  // while logfiles are too new...
+        --it;                    // go back in history
+    }
+    if (it->first > until) {
+        return;  // all logfiles are too new
+    }
 
     while (true) {
         Logfile *log = it->second;
         if (!log->answerQueryReverse(query, g_store->logCache(), since, until,
-                                     classmask))
+                                     classmask)) {
             break;  // end of time range found
-        if (it == g_store->logCache()->logfiles()->begin())
+        }
+        if (it == g_store->logCache()->logfiles()->begin()) {
             break;  // this was the oldest one
+        }
         --it;
     }
 }
@@ -186,23 +195,26 @@ bool TableLog::isAuthorized(contact *ctc, void *data) {
     service *svc = entry->_service;
     host *hst = entry->_host;
 
-    if ((hst != nullptr) || (svc != nullptr))
+    if ((hst != nullptr) || (svc != nullptr)) {
         return is_authorized_for(ctc, hst, svc) != 0;
-    // suppress entries for messages that belong to
-    // hosts that do not exist anymore.
-    else if (entry->_logclass == LOGCLASS_ALERT ||
-             entry->_logclass == LOGCLASS_NOTIFICATION ||
-             entry->_logclass == LOGCLASS_PASSIVECHECK ||
-             entry->_logclass == LOGCLASS_STATE)
+        // suppress entries for messages that belong to
+        // hosts that do not exist anymore.
+    } else if (entry->_logclass == LOGCLASS_ALERT ||
+               entry->_logclass == LOGCLASS_NOTIFICATION ||
+               entry->_logclass == LOGCLASS_PASSIVECHECK ||
+               entry->_logclass == LOGCLASS_STATE) {
         return false;
-    else
+    } else {
         return true;
+    }
 }
 
 Column *TableLog::column(const char *colname) {
     // First try to find column in the usual way
     Column *col = Table::column(colname);
-    if (col != nullptr) return col;
+    if (col != nullptr) {
+        return col;
+    }
 
     // Now try with prefix "current_", since our joined
     // tables have this prefix in order to make clear that

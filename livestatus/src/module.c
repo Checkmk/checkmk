@@ -184,10 +184,13 @@ void *main_thread(void *data __attribute__((__unused__))) {
         int retval = select(g_unix_socket + 1, &fds, NULL, NULL, &tv);
         if (retval > 0 && FD_ISSET(g_unix_socket, &fds)) {
             int cc = accept(g_unix_socket, NULL, NULL);
-            if (cc > g_max_fd_ever) g_max_fd_ever = cc;
-            if (fcntl(cc, F_SETFD, FD_CLOEXEC) < 0)
+            if (cc > g_max_fd_ever) {
+                g_max_fd_ever = cc;
+            }
+            if (fcntl(cc, F_SETFD, FD_CLOEXEC) < 0) {
                 logger(LG_INFO, "Cannot set FD_CLOEXEC on client socket: %s",
                        strerror(errno));
+            }
             queue_add_connection(cc);  // closes fd
             g_num_queued_connections++;
             g_counters[COUNTER_CONNECTIONS]++;
@@ -205,15 +208,17 @@ void *client_thread(void *data __attribute__((__unused__))) {
         g_num_queued_connections--;
         g_num_active_connections++;
         if (cc >= 0) {
-            if (g_debug_level >= 2)
+            if (g_debug_level >= 2) {
                 logger(LG_INFO, "Accepted client connection on fd %d", cc);
+            }
             void *input_buffer = create_inputbuffer(cc, &g_should_terminate);
             int keepalive = 1;
             unsigned requestnr = 1;
             while (keepalive) {
-                if (g_debug_level >= 2 && requestnr > 1)
+                if (g_debug_level >= 2 && requestnr > 1) {
                     logger(LG_INFO, "Handling request %d on same connection",
                            requestnr);
+                }
                 keepalive = store_answer_request(input_buffer, output_buffer);
                 flush_output_buffer(output_buffer, cc, &g_should_terminate);
                 g_counters[COUNTER_REQUESTS]++;
@@ -237,8 +242,9 @@ void start_threads() {
         pthread_atfork(livestatus_count_fork, NULL,
                        livestatus_cleanup_after_fork);
         pthread_create(&g_mainthread_id, 0, main_thread, (void *)0);
-        if (g_debug_level > 0)
+        if (g_debug_level > 0) {
             logger(LG_INFO, "Starting %d client threads", g_num_clientthreads);
+        }
 
         int t;
         g_clientthread_id =
@@ -247,19 +253,22 @@ void start_threads() {
         pthread_attr_init(&attr);
         size_t defsize;
         if (g_debug_level >= 2 &&
-            0 == pthread_attr_getstacksize(&attr, &defsize))
+            0 == pthread_attr_getstacksize(&attr, &defsize)) {
             logger(LG_INFO, "Default stack size is %lu", defsize);
-        if (0 != pthread_attr_setstacksize(&attr, g_thread_stack_size))
+        }
+        if (0 != pthread_attr_setstacksize(&attr, g_thread_stack_size)) {
             logger(LG_INFO, "Error: Cannot set thread stack size to %lu",
                    g_thread_stack_size);
-        else {
-            if (g_debug_level >= 2)
+        } else {
+            if (g_debug_level >= 2) {
                 logger(LG_INFO, "Setting thread stack size to %lu",
                        g_thread_stack_size);
+            }
         }
-        for (t = 0; t < g_num_clientthreads; t++)
+        for (t = 0; t < g_num_clientthreads; t++) {
             pthread_create(&g_clientthread_id[t], &attr, client_thread,
                            (void *)0);
+        }
 
         g_thread_running = 1;
         pthread_attr_destroy(&attr);
@@ -275,12 +284,14 @@ void terminate_threads() {
         queue_wakeup_all();
         int t;
         for (t = 0; t < g_num_clientthreads; t++) {
-            if (0 != pthread_join(g_clientthread_id[t], NULL))
+            if (0 != pthread_join(g_clientthread_id[t], NULL)) {
                 logger(LG_INFO, "Warning: could not join thread no. %d", t);
+            }
         }
-        if (g_debug_level > 0)
+        if (g_debug_level > 0) {
             logger(LG_INFO, "Main thread + %d client threads have finished",
                    g_num_clientthreads);
+        }
         g_thread_running = 0;
         g_should_terminate = false;
     }
@@ -308,8 +319,9 @@ int open_unix_socket() {
     }
 
     // Imortant: close on exec -> check plugins must not inherit it!
-    if (fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) < 0)
+    if (fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) < 0) {
         logger(LG_INFO, "Cannot set FD_CLOEXEC on socket: %s", strerror(errno));
+    }
 
     // Bind it to its address. This creates the file with the name g_socket_path
     struct sockaddr_un sockaddr;
@@ -339,8 +351,9 @@ int open_unix_socket() {
         return false;
     }
 
-    if (g_debug_level > 0)
+    if (g_debug_level > 0) {
         logger(LG_INFO, "Opened UNIX socket %s\n", g_socket_path);
+    }
     return true;
 }
 
@@ -402,8 +415,9 @@ int broker_log(int event_type __attribute__((__unused__)),
 int broker_command(int event_type __attribute__((__unused__)), void *data) {
     nebstruct_external_command_data *sc =
         (nebstruct_external_command_data *)data;
-    if (sc->type == NEBTYPE_EXTERNALCOMMAND_START)
+    if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) {
         g_counters[COUNTER_COMMANDS]++;
+    }
     g_counters[COUNTER_NEB_CALLBACKS]++;
     trigger_notify_all(trigger_command());
     return 0;
@@ -482,11 +496,12 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
     struct nebstruct_timed_event_struct *ts =
         (struct nebstruct_timed_event_struct *)data;
     if (ts->event_type == EVENT_LOG_ROTATION) {
-        if (g_thread_running == 1)
+        if (g_thread_running == 1) {
             livestatus_log_initial_states();
-        else if (log_initial_states == 1)
+        } else if (log_initial_states == 1) {
             write_to_all_logs("logging initial states",
                               LG_INFO);  // initial info during startup
+        }
     }
     update_timeperiods_cache(ts->timestamp.tv_sec);
     return 0;
@@ -646,15 +661,18 @@ void livestatus_parse_arguments(const char *args_orig) {
     strncpy(g_logfile_path, log_file,
             sizeof(g_logfile_path) - 16 /* len of "livestatus.log" */);
     char *slash = strrchr(g_logfile_path, '/');
-    if (!slash)
+    if (!slash) {
         strncpy(g_logfile_path, "/tmp/livestatus.log", 20);
-    else
+    } else {
         strncpy(slash + 1, "livestatus.log", 15);
+    }
 
     /* there is no default PNP path */
     g_pnp_path[0] = 0;
 
-    if (!args_orig) return;  // no arguments, use default options
+    if (!args_orig) {
+        return;  // no arguments, use default options
+    }
 
     char *args = strdup(args_orig);
     char *token;
@@ -692,56 +710,58 @@ void livestatus_parse_arguments(const char *args_orig) {
                        g_max_response_size / (1024.0 * 1024.0));
             } else if (!strcmp(left, "num_client_threads")) {
                 int c = atoi(right);
-                if (c <= 0 || c > 1000)
+                if (c <= 0 || c > 1000) {
                     logger(LG_INFO,
                            "Error: Cannot set num_client_threads to %d. Must "
                            "be > 0 and <= 1000",
                            c);
-                else {
+                } else {
                     logger(LG_INFO, "Setting number of client threads to %d",
                            c);
                     g_num_clientthreads = c;
                 }
             } else if (!strcmp(left, "query_timeout")) {
                 int c = atoi(right);
-                if (c < 0)
+                if (c < 0) {
                     logger(LG_INFO, "Error: query_timeout must be >= 0");
-                else {
+                } else {
                     g_query_timeout_msec = c;
-                    if (c == 0)
+                    if (c == 0) {
                         logger(LG_INFO, "Disabled query timeout!");
-                    else
+                    } else {
                         logger(LG_INFO,
                                "Setting timeout for reading a query to %d ms",
                                c);
+                    }
                 }
             } else if (!strcmp(left, "idle_timeout")) {
                 int c = atoi(right);
-                if (c < 0)
+                if (c < 0) {
                     logger(LG_INFO, "Error: idle_timeout must be >= 0");
-                else {
+                } else {
                     g_idle_timeout_msec = c;
-                    if (c == 0)
+                    if (c == 0) {
                         logger(LG_INFO, "Disabled idle timeout!");
-                    else
+                    } else {
                         logger(LG_INFO, "Setting idle timeout to %d ms", c);
+                    }
                 }
             } else if (!strcmp(left, "service_authorization")) {
-                if (!strcmp(right, "strict"))
+                if (!strcmp(right, "strict")) {
                     g_service_authorization = AUTH_STRICT;
-                else if (!strcmp(right, "loose"))
+                } else if (!strcmp(right, "loose")) {
                     g_service_authorization = AUTH_LOOSE;
-                else {
+                } else {
                     logger(LG_INFO,
                            "Invalid service authorization mode. Allowed are "
                            "strict and loose.");
                 }
             } else if (!strcmp(left, "group_authorization")) {
-                if (!strcmp(right, "strict"))
+                if (!strcmp(right, "strict")) {
                     g_group_authorization = AUTH_STRICT;
-                else if (!strcmp(right, "loose"))
+                } else if (!strcmp(right, "loose")) {
                     g_group_authorization = AUTH_LOOSE;
-                else {
+                } else {
                     logger(LG_INFO,
                            "Invalid group authorization mode. Allowed are "
                            "strict and loose.");
@@ -749,28 +769,30 @@ void livestatus_parse_arguments(const char *args_orig) {
             } else if (!strcmp(left, "pnp_path")) {
                 strncpy(g_pnp_path, right, sizeof(pnp_path_storage) - 1);
                 // make sure, that trailing slash is always there
-                if (right[strlen(right) - 1] != '/')
+                if (right[strlen(right) - 1] != '/') {
                     strncat(g_pnp_path, "/",
                             sizeof(pnp_path_storage) - strlen(g_pnp_path) - 1);
+                }
                 check_path("PNP perfdata directory", g_pnp_path);
             } else if (!strcmp(left, "mk_inventory_path")) {
                 strncpy(g_mk_inventory_path, right,
                         sizeof(g_mk_inventory_path) - 1);
-                if (right[strlen(right) - 1] != '/')
+                if (right[strlen(right) - 1] != '/') {
                     strncat(g_mk_inventory_path, "/",
                             sizeof(g_mk_inventory_path) -
                                 strlen(g_mk_inventory_path) -
                                 1);  // make sure, that trailing slash is always
-                                     // there
+                }
+                // there
                 check_path("Check_MK Inventory directory", g_mk_inventory_path);
             } else if (!strcmp(left, "data_encoding")) {
-                if (!strcmp(right, "utf8"))
+                if (!strcmp(right, "utf8")) {
                     g_data_encoding = ENCODING_UTF8;
-                else if (!strcmp(right, "latin1"))
+                } else if (!strcmp(right, "latin1")) {
                     g_data_encoding = ENCODING_LATIN1;
-                else if (!strcmp(right, "mixed"))
+                } else if (!strcmp(right, "mixed")) {
                     g_data_encoding = ENCODING_MIXED;
-                else {
+                } else {
                     logger(LG_INFO,
                            "Invalid data_encoding %s. Allowed are utf8, latin1 "
                            "and mixed.",
@@ -792,8 +814,9 @@ void livestatus_parse_arguments(const char *args_orig) {
 void omd_advertize() {
     char *omd_site = getenv("OMD_SITE");
     if (omd_site) {
-        if (g_debug_level > 0)
+        if (g_debug_level > 0) {
             logger(LG_INFO, "Running on OMD site %s. Cool.", omd_site);
+        }
     } else {
         logger(LG_INFO,
                "Hint: please try out OMD - the Open Monitoring Distribution");
@@ -815,7 +838,9 @@ int nebmodule_init(int flags __attribute__((__unused__)), char *args,
 
     omd_advertize();
 
-    if (!open_unix_socket()) return 1;
+    if (!open_unix_socket()) {
+        return 1;
+    }
 
     if (!verify_event_broker_options()) {
         logger(LG_CRIT, "Fatal: bailing out. Please fix event_broker_options.");
@@ -824,14 +849,16 @@ int nebmodule_init(int flags __attribute__((__unused__)), char *args,
                "to -1.",
                event_broker_options);
         return 1;
-    } else if (g_debug_level > 0)
+    } else if (g_debug_level > 0) {
         logger(LG_INFO,
                "Your event_broker_options are sufficient for livestatus..");
+    }
 
-    if (enable_environment_macros == 1)
+    if (enable_environment_macros == 1) {
         logger(LG_INFO,
                "Warning: environment_macros are enabled. This might decrease "
                "the overall nagios performance");
+    }
 
     store_init();
     register_callbacks();

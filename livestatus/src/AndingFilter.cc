@@ -29,15 +29,17 @@
 #include "logger.h"
 
 AndingFilter::~AndingFilter() {
-    for (auto &subfilter : _subfilters) delete subfilter;
+    for (auto &subfilter : _subfilters) {
+        delete subfilter;
+    }
 }
 
 void AndingFilter::addSubfilter(Filter *f) { _subfilters.push_back(f); }
 
 Filter *AndingFilter::stealLastSubfiler() {
-    if (_subfilters.empty())
+    if (_subfilters.empty()) {
         return nullptr;
-    else {
+    } else {
         Filter *l = _subfilters.back();
         _subfilters.pop_back();
         return l;
@@ -46,7 +48,9 @@ Filter *AndingFilter::stealLastSubfiler() {
 
 bool AndingFilter::accepts(void *data) {
     for (auto filter : _subfilters) {
-        if (!filter->accepts(data)) return false;
+        if (!filter->accepts(data)) {
+            return false;
+        }
     }
     return true;
 }
@@ -54,7 +58,9 @@ bool AndingFilter::accepts(void *data) {
 void *AndingFilter::findIndexFilter(const char *columnname) {
     for (auto filter : _subfilters) {
         void *refvalue = filter->indexFilter(columnname);
-        if (refvalue != nullptr) return refvalue;
+        if (refvalue != nullptr) {
+            return refvalue;
+        }
     }
     return nullptr;
 }
@@ -69,7 +75,9 @@ void AndingFilter::findIntLimits(const char *columnname, int *lower,
 bool AndingFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
     bool optimized = false;
     for (auto filter : _subfilters) {
-        if (filter->optimizeBitmask(columnname, mask)) optimized = true;
+        if (filter->optimizeBitmask(columnname, mask)) {
+            optimized = true;
+        }
     }
     return optimized;
 }
@@ -84,10 +92,11 @@ void AndingFilter::combineFilters(int count, int andor) {
     }
 
     AndingFilter *andorfilter;  // OringFilter is subclassed from AndingFilter
-    if (andor == ANDOR_AND)
+    if (andor == ANDOR_AND) {
         andorfilter = new AndingFilter();
-    else
+    } else {
         andorfilter = new OringFilter();
+    }
     while ((count--) != 0) {
         andorfilter->addSubfilter(_subfilters.back());
         _subfilters.pop_back();

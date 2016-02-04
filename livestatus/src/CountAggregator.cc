@@ -28,7 +28,9 @@
 
 void CountAggregator::consume(void *data, Query * /*unused*/) {
     // _filter is 0 --> no filter, accept all data
-    if ((_filter == nullptr) || _filter->accepts(data)) _count++;
+    if ((_filter == nullptr) || _filter->accepts(data)) {
+        _count++;
+    }
 }
 
 void CountAggregator::output(Query *q) { q->outputInteger(_count); }

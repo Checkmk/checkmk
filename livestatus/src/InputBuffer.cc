@@ -47,7 +47,9 @@ const size_t maximum_buffer_size = 500 * 1024 * 1024;
 const int read_timeout_usec = 200000;
 
 bool timeout_reached(const struct timeval *start, int timeout_ms) {
-    if (timeout_ms == 0) return false;  // timeout disabled
+    if (timeout_ms == 0) {
+        return false;  // timeout disabled
+    }
 
     struct timeval now;
     gettimeofday(&now, nullptr);
@@ -93,8 +95,9 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
 
     while (true) {
         // Try to find end of the current line in buffer
-        while (r < _write_index && _readahead_buffer[r] != '\n')
+        while (r < _write_index && _readahead_buffer[r] != '\n') {
             r++;  // now r is at end of data or at '\n'
+        }
 
         // If we cannot find the end of line in the data
         // already read, then we need to read new data from
@@ -144,12 +147,13 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
                 }
                 // if we are *not* at an end of line while reading
                 // a request, we got an invalid request.
-                else if (rd == Result::eof)
+                else if (rd == Result::eof) {
                     return failure(Result::unexpected_eof);
 
-                // Other status codes
-                else if (rd == Result::should_terminate)
+                    // Other status codes
+                } else if (rd == Result::should_terminate) {
                     return failure(rd);
+                }
             }
             // OK. So no space is left in the buffer. But maybe at the
             // *beginning* of the buffer is space left again. This is
@@ -186,19 +190,23 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
                 // Was ist, wenn noch keine korrekte Zeile gelesen wurde?
                 if (request_lines.empty()) {
                     return failure(Result::empty_request);
-                } else
+                } else {
                     return make_pair(request_lines, Result::request_read);
+                }
             } else {  // non-empty line: belongs to current request
                 int length = r - _read_index;
-                for (size_t end = r; end > _read_index &&
-                                     (isspace(_readahead_buffer[--end]) != 0);)
+                for (size_t end = r;
+                     end > _read_index &&
+                     (isspace(_readahead_buffer[--end]) != 0);) {
                     length--;
-                if (length > 0)
+                }
+                if (length > 0) {
                     request_lines.push_back(
                         string(&_readahead_buffer[_read_index], length));
-                else
+                } else {
                     logger(LG_INFO,
                            "Warning ignoring line containing only whitespace");
+                }
                 query_started = true;
                 _read_index = r + 1;
                 r = _read_index;
@@ -215,8 +223,9 @@ InputBuffer::Result InputBuffer::readData() {
 
     struct timeval tv;
     while (*_termination_flag == 0) {
-        if (timeout_reached(&start, g_query_timeout_msec))
+        if (timeout_reached(&start, g_query_timeout_msec)) {
             return Result::timeout;
+        }
 
         tv.tv_sec = read_timeout_usec / 1000000;
         tv.tv_usec = read_timeout_usec % 1000000;

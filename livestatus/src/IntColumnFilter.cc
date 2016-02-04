@@ -82,15 +82,17 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower,
             if (ref_value >= *lower && ref_value < *upper) {
                 *lower = ref_value;
                 *upper = ref_value + 1;
-            } else
+            } else {
                 *lower = *upper;
+            }
             return;
 
         case -OP_EQUAL:
-            if (ref_value == *lower)
+            if (ref_value == *lower) {
                 *lower = *lower + 1;
-            else if (ref_value == *upper - 1)
+            } else if (ref_value == *upper - 1) {
                 *upper = *upper - 1;
+            }
             return;
 
         case OP_GREATER:
@@ -101,15 +103,21 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower,
             return;
 
         case OP_LESS:
-            if (ref_value < *upper) *upper = ref_value;
+            if (ref_value < *upper) {
+                *upper = ref_value;
+            }
             return;
 
         case -OP_GREATER:  // LESS OR EQUAL
-            if (ref_value < *upper - 1) *upper = ref_value + 1;
+            if (ref_value < *upper - 1) {
+                *upper = ref_value + 1;
+            }
             return;
 
         case -OP_LESS:  // GREATER OR EQUAL
-            if (ref_value > *lower) *lower = ref_value;
+            if (ref_value > *lower) {
+                *lower = ref_value;
+            }
             return;
     }
 }
@@ -121,8 +129,9 @@ bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
         return false;  // wrong column
     }
 
-    if (ref_value < 0 || ref_value > 31)
+    if (ref_value < 0 || ref_value > 31) {
         return true;  // not optimizable by 32bit bit mask
+    }
 
     // Our task is to remove those bits from mask that are deselected
     // by the filter.
@@ -148,12 +157,16 @@ bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
             return true;
 
         case -OP_GREATER:  // <=
-            if (ref_value == 31) return true;
+            if (ref_value == 31) {
+                return true;
+            }
             bit <<= 1;
         case OP_LESS:
             while (true) {
                 *mask &= ~bit;
-                if (bit == 0x80000000) return true;
+                if (bit == 0x80000000) {
+                    return true;
+                }
                 bit <<= 1;
             }
             return true;

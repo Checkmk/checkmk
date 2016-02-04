@@ -92,7 +92,9 @@ Logfile::~Logfile() {
 }
 
 void Logfile::flush() {
-    for (auto &entry : _entries) delete entry.second;
+    for (auto &entry : _entries) {
+        delete entry.second;
+    }
 
     _entries.clear();
     _logclasses_read = 0;
@@ -116,7 +118,9 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
         }
         // If we read this file for the first time, we initialize
         // the current file position to 0
-        if (_lineno == 0) fgetpos(file, &_read_pos);
+        if (_lineno == 0) {
+            fgetpos(file, &_read_pos);
+        }
 
         // file might have grown. Read all classes that we already
         // have read to the end of the file
@@ -135,7 +139,9 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
         }
         fclose(file);
     } else {
-        if (missing_types == 0) return;
+        if (missing_types == 0) {
+            return;
+        }
 
         file = fopen(_path, "r");
         if (file == nullptr) {
@@ -195,9 +201,9 @@ bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses) {
     }
     if (((1 << entry->_logclass) & logclasses) != 0u) {
         uint64_t key = makeKey(entry->_time, lineno);
-        if (_entries.find(key) == _entries.end())
+        if (_entries.find(key) == _entries.end()) {
             _entries.insert(make_pair(key, entry));
-        else {  // this should never happen. The lineno must be unique!
+        } else {  // this should never happen. The lineno must be unique!
             logger(LG_ERR, "Strange: duplicate logfile line %s", _linebuffer);
             delete entry;
             return false;
@@ -230,8 +236,12 @@ bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since,
     auto it = _entries.lower_bound(sincekey);
     while (it != _entries.end()) {
         LogEntry *entry = it->second;
-        if (entry->_time >= until) return false;          // end found
-        if (!query->processDataset(entry)) return false;  // limit exceeded
+        if (entry->_time >= until) {
+            return false;  // end found
+        }
+        if (!query->processDataset(entry)) {
+            return false;  // limit exceeded
+        }
         ++it;
     }
     return true;
@@ -248,8 +258,12 @@ bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since,
     while (it != _entries.begin()) {
         --it;
         LogEntry *entry = it->second;
-        if (entry->_time < since) return false;           // end found
-        if (!query->processDataset(entry)) return false;  // limit exceeded
+        if (entry->_time < since) {
+            return false;  // end found
+        }
+        if (!query->processDataset(entry)) {
+            return false;  // limit exceeded
+        }
     }
     return true;
 }

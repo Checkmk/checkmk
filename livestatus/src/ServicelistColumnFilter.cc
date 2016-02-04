@@ -37,8 +37,9 @@ using std::string;
 ServicelistColumnFilter::ServicelistColumnFilter(ServicelistColumn *column,
                                                  int opid, char *refvalue)
     : _servicelist_column(column), _opid(opid) {
-    if (abs(_opid) == OP_EQUAL && (refvalue[0] == 0))
+    if (abs(_opid) == OP_EQUAL && (refvalue[0] == 0)) {
         return;  // test for emptiness is allowed
+    }
 
     // ref_value must be of from hostname HOSTSERVICE_SEPARATOR
     // service_description
@@ -62,8 +63,9 @@ bool ServicelistColumnFilter::accepts(void *data) {
     servicesmember *mem = _servicelist_column->getMembers(data);
 
     // test for empty list
-    if (abs(_opid) == OP_EQUAL && _ref_host == "")
+    if (abs(_opid) == OP_EQUAL && _ref_host == "") {
         return (mem == nullptr) == (_opid == OP_EQUAL);
+    }
 
     bool is_member = false;
     while (mem != nullptr) {

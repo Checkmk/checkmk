@@ -29,12 +29,16 @@
 
 char *rstrip(char *c) {
     char *w = c + strlen(c) - 1;
-    while (w >= c && (isspace(*w) != 0)) *w-- = '\0';
+    while (w >= c && (isspace(*w) != 0)) {
+        *w-- = '\0';
+    }
     return c;
 }
 
 char *lstrip(char *c) {
-    while (isspace(*c) != 0) c++;
+    while (isspace(*c) != 0) {
+        c++;
+    }
     return c;
 }
 
@@ -51,13 +55,15 @@ char *next_field(char **c) {
     }
 
     char *end = begin;  // copy pointer, search end of field
-    while ((*end != 0) && (isspace(*end) == 0))
-        end++;        // search for \0 or white space
+    while ((*end != 0) && (isspace(*end) == 0)) {
+        end++;  // search for \0 or white space
+    }
     if (*end != 0) {  // string continues -> terminate field with '\0'
         *end = '\0';
         *c = end + 1;  // skip to character right *after* '\0'
-    } else
+    } else {
         *c = end;  // no more field, point to '\0'
+    }
     return begin;
 }
 
@@ -70,19 +76,24 @@ char *next_token(char **c, char delim) {
     }
 
     char *end = begin;
-    while ((*end != 0) && *end != delim) end++;
+    while ((*end != 0) && *end != delim) {
+        end++;
+    }
     if (*end != 0) {
         *end = 0;
         *c = end + 1;
-    } else
+    } else {
         *c = end;
+    }
     return begin;
 }
 
 /* same as next_token() but returns "" instead of 0 if
    no tokens has been found */
 const char *save_next_token(char **c, char delim) {
-    if (*c == nullptr) return "";
+    if (*c == nullptr) {
+        return "";
+    }
     char *result = next_token(c, delim);
     return result != nullptr ? result : "";
 }

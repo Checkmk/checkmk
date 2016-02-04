@@ -68,10 +68,10 @@ StringColumnFilter::~StringColumnFilter() {
 bool StringColumnFilter::accepts(void *data) {
     bool pass = true;
     const char *act_string = _column->getValue(data);
-    if (act_string == nullptr)
+    if (act_string == nullptr) {
         act_string =
             "";  // e.g. current_service_perf_data in host entry in log table
-
+    }
     switch (_opid) {
         case OP_EQUAL:
             pass = _ref_string == act_string;
@@ -100,8 +100,9 @@ bool StringColumnFilter::accepts(void *data) {
 }
 
 void *StringColumnFilter::indexFilter(const char *column) {
-    if (_opid == OP_EQUAL && (strcmp(column, _column->name()) == 0))
+    if (_opid == OP_EQUAL && (strcmp(column, _column->name()) == 0)) {
         return (void *)_ref_string.c_str();
-    else
+    } else {
         return nullptr;
+    }
 }

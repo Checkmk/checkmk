@@ -30,6 +30,7 @@ int32_t TimeColumnFilter::convertRefValue() {
     if (_query != nullptr) {
         int32_t timezone_offset = _query->timezoneOffset();
         return ref_remote - timezone_offset;
-    } else
+    } else {
         return ref_remote;  // should never happen
+    }
 }

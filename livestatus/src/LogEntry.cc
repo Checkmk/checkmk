@@ -35,19 +35,25 @@ LogEntry::LogEntry(unsigned lineno, char *line) {
     // make a copy of the message and strip trailing newline
     _msg = strdup(line);
     _msglen = strlen(line);
-    while (_msglen > 0 && _msg[_msglen - 1] == '\n') _msg[--_msglen] = '\0';
+    while (_msglen > 0 && _msg[_msglen - 1] == '\n') {
+        _msg[--_msglen] = '\0';
 
-    // keep unsplitted copy of the message (needs lots of memory,
-    // maybe we could optimize that one day...)
+        // keep unsplitted copy of the message (needs lots of memory,
+        // maybe we could optimize that one day...)
+    }
     _complete = strdup(_msg);
 
     // pointer to options (everything after ':')
     _options = _complete;
-    while ((*_options != 0) && *_options != ':') _options++;
+    while ((*_options != 0) && *_options != ':') {
+        _options++;
+    }
     if (*_options != 0)  // line contains colon
     {
-        _options++;                           // skip ':'
-        while (*_options == ' ') _options++;  // skip space after ':'
+        _options++;  // skip ':'
+        while (*_options == ' ') {
+            _options++;  // skip space after ':'
+        }
     }
 
     // [1260722267] xxx - extract timestamp, validate message
@@ -257,15 +263,18 @@ bool LogEntry::handleNotificationEntry() {
 
         _contact_name = next_token(&scan, ';');
         _host_name = next_token(&scan, ';');
-        if (svc) _svc_desc = next_token(&scan, ';');
+        if (svc) {
+            _svc_desc = next_token(&scan, ';');
+        }
 
         _state_type = save_next_token(&scan, ';');
         _command_name = next_token(&scan, ';');
 
-        if (svc)
+        if (svc) {
             _state = serviceStateToInt(_state_type);
-        else
+        } else {
             _state = hostStateToInt(_state_type);
+        }
 
         // If that state is not parsable then we assume that the order
         // is swapped
@@ -273,10 +282,11 @@ bool LogEntry::handleNotificationEntry() {
             const char *swap = _state_type;
             _state_type = _command_name;
             _command_name = swap;
-            if (svc)
+            if (svc) {
                 _state = serviceStateToInt(_state_type);
-            else
+            } else {
                 _state = hostStateToInt(_state_type);
+            }
         }
 
         _check_output = next_token(&scan, ';');
@@ -296,7 +306,9 @@ bool LogEntry::handlePassiveCheckEntry() {
         scan++;
 
         _host_name = next_token(&scan, ';');
-        if (svc) _svc_desc = next_token(&scan, ';');
+        if (svc) {
+            _svc_desc = next_token(&scan, ';');
+        }
         _state = atoi(save_next_token(&scan, ';'));
         _check_output = next_token(&scan, ';');
         return true;
@@ -353,10 +365,14 @@ bool LogEntry::handleProgrammEntry() {
 }
 
 int LogEntry::serviceStateToInt(const char *s) {
-    if (s == nullptr) return 3;  // can happen at garbled log line
+    if (s == nullptr) {
+        return 3;  // can happen at garbled log line
+    }
 
     const char *last = s + strlen(s) - 1;
-    if (*last == ')') last--;
+    if (*last == ')') {
+        last--;
+    }
 
     // WARN, CRITICAL, OK, UNKNOWN, RECOVERY
     switch (*last) {
@@ -376,11 +392,14 @@ int LogEntry::serviceStateToInt(const char *s) {
 }
 
 int LogEntry::hostStateToInt(const char *s) {
-    if (s == nullptr) return 2;  // can happen at garbled log line
+    if (s == nullptr) {
+        return 2;  // can happen at garbled log line
+    }
 
     const char *last = s + strlen(s) - 1;
-    if (*last == ')')  // handle CUSTOM (UP) and DOWNTIMESTOPPED (DOWN)
+    if (*last == ')') {  // handle CUSTOM (UP) and DOWNTIMESTOPPED (DOWN)
         last--;
+    }
 
     // UP, DOWN, UNREACHABLE, RECOVERY
     switch (*last) {

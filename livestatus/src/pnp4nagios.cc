@@ -52,7 +52,9 @@ string pnp_cleanup(const string& name) {
 
 int pnpgraph_present(const string& host, const string& service) {
     string pnp_path(g_pnp_path);
-    if (pnp_path.empty()) return -1;
+    if (pnp_path.empty()) {
+        return -1;
+    }
     string path(pnp_path.append(pnp_cleanup(host))
                     .append("/")
                     .append(pnp_cleanup(service))
@@ -63,7 +65,9 @@ int pnpgraph_present(const string& host, const string& service) {
 string rrd_path(const string& host, const string& service,
                 const string& varname) {
     string pnp_path(g_pnp_path);
-    if (pnp_path.empty()) return "";
+    if (pnp_path.empty()) {
+        return "";
+    }
     string path(pnp_path.append("/")
                     .append(pnp_cleanup(host))
                     .append("/")

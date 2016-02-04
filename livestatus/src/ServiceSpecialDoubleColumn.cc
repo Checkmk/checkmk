@@ -31,15 +31,18 @@ extern int interval_length;
 
 double ServiceSpecialDoubleColumn::getValue(void *data) {
     data = shiftPointer(data);
-    if (data == nullptr) return 0;
+    if (data == nullptr) {
+        return 0;
+    }
 
     service *svc = static_cast<service *>(data);
     switch (_type) {
         case SSDC_STALENESS: {
             time_t check_result_age = time(nullptr) - svc->last_check;
-            if (svc->check_interval != 0)
+            if (svc->check_interval != 0) {
                 return check_result_age /
                        (svc->check_interval * interval_length);
+            }
 
             // check_mk PASSIVE CHECK without check interval uses
             // the check interval of its check-mk service

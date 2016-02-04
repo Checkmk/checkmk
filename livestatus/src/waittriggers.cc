@@ -86,14 +86,30 @@ struct trigger *trigger_program() {
 }
 
 struct trigger *trigger_find(const char *name) {
-    if (strcmp(name, "all") == 0) return trigger_all();
-    if (strcmp(name, "check") == 0) return trigger_check();
-    if (strcmp(name, "state") == 0) return trigger_state();
-    if (strcmp(name, "log") == 0) return trigger_log();
-    if (strcmp(name, "downtime") == 0) return trigger_downtime();
-    if (strcmp(name, "comment") == 0) return trigger_comment();
-    if (strcmp(name, "command") == 0) return trigger_command();
-    if (strcmp(name, "program") == 0) return trigger_program();
+    if (strcmp(name, "all") == 0) {
+        return trigger_all();
+    }
+    if (strcmp(name, "check") == 0) {
+        return trigger_check();
+    }
+    if (strcmp(name, "state") == 0) {
+        return trigger_state();
+    }
+    if (strcmp(name, "log") == 0) {
+        return trigger_log();
+    }
+    if (strcmp(name, "downtime") == 0) {
+        return trigger_downtime();
+    }
+    if (strcmp(name, "comment") == 0) {
+        return trigger_comment();
+    }
+    if (strcmp(name, "command") == 0) {
+        return trigger_command();
+    }
+    if (strcmp(name, "program") == 0) {
+        return trigger_program();
+    }
     return nullptr;
 }
 

@@ -38,10 +38,11 @@ int mk_inventory_last(const char *host) {
     char path[4096];
     snprintf(path, sizeof(path), "%s/%s", MK_INVENTORY_PATH, host);
     struct stat st;
-    if (0 != stat(path, &st))
+    if (0 != stat(path, &st)) {
         return 0;
-    else
+    } else {
         return st.st_mtime;
+    }
 }
 
 int mk_inventory_last_of_all() {

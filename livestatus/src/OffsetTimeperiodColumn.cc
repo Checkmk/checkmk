@@ -38,18 +38,22 @@ OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description,
 
 int32_t OffsetTimeperiodColumn::getValue(void *data, Query * /*unused*/) {
     data = shiftPointer(data);
-    if (data == nullptr) return 0;
+    if (data == nullptr) {
+        return 0;
+    }
 
     timeperiod *tp;
-    if (offset() == -1)
+    if (offset() == -1) {
         tp = (timeperiod *)data;
-    else
+    } else {
         tp = *(timeperiod **)((char *)data + offset());
+    }
 
-    if (tp == nullptr)
+    if (tp == nullptr) {
         return 1;  // no timeperiod set -> Nagios assumes 7x24
-    else if (g_timeperiods_cache->inTimeperiod(tp))
+    } else if (g_timeperiods_cache->inTimeperiod(tp)) {
         return 1;
-    else
+    } else {
         return 0;
+    }
 }

@@ -30,7 +30,9 @@ extern int interval_length;
 
 double HostSpecialDoubleColumn::getValue(void *data) {
     data = shiftPointer(data);
-    if (data == nullptr) return 0;
+    if (data == nullptr) {
+        return 0;
+    }
 
     host *hst = static_cast<host *>(data);
 

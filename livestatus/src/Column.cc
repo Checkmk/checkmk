@@ -37,17 +37,26 @@ Column::Column(string name, string description, int indirect_offset,
     , _extra_extra_offset(extra_extra_offset) {}
 
 void *Column::shiftPointer(void *data) {
-    if (data == nullptr) return nullptr;
+    if (data == nullptr) {
+        return nullptr;
+    }
     if (_indirect_offset >= 0) {
         data = *((void **)((char *)data + _indirect_offset));
     }
 
-    if (data == nullptr) return nullptr;
-    if (_extra_offset >= 0) data = *((void **)((char *)data + _extra_offset));
+    if (data == nullptr) {
+        return nullptr;
+    }
+    if (_extra_offset >= 0) {
+        data = *((void **)((char *)data + _extra_offset));
+    }
 
-    if (data == nullptr) return nullptr;
-    if (_extra_extra_offset >= 0)
+    if (data == nullptr) {
+        return nullptr;
+    }
+    if (_extra_extra_offset >= 0) {
         data = *((void **)((char *)data + _extra_extra_offset));
+    }
 
     return data;
 }

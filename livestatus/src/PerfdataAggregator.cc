@@ -44,17 +44,23 @@ void PerfdataAggregator::consume(void *data, Query * /*unused*/) {
     while (nullptr != (entry = next_field(&scan))) {
         char *start_of_varname = entry;
         char *place_of_equal = entry;
-        while ((*place_of_equal != 0) && *place_of_equal != '=')
+        while ((*place_of_equal != 0) && *place_of_equal != '=') {
             place_of_equal++;
-        if (*place_of_equal == 0) continue;  // ignore invalid perfdata
-        *place_of_equal = 0;                 // terminate varname
+        }
+        if (*place_of_equal == 0) {
+            continue;  // ignore invalid perfdata
+        }
+        *place_of_equal = 0;  // terminate varname
         char *start_of_number = place_of_equal + 1;
         char *end_of_number = start_of_number;
         while ((*end_of_number != 0) &&
-               ((isdigit(*end_of_number) != 0) || *end_of_number == '.'))
+               ((isdigit(*end_of_number) != 0) || *end_of_number == '.')) {
             end_of_number++;
-        if (start_of_number == end_of_number) continue;  // empty number
-        *end_of_number = 0;                              // terminate number
+        }
+        if (start_of_number == end_of_number) {
+            continue;  // empty number
+        }
+        *end_of_number = 0;  // terminate number
         double value = strtod(start_of_number, nullptr);
         consumeVariable(start_of_varname, value);
     }
@@ -84,11 +90,15 @@ void PerfdataAggregator::consumeVariable(const char *varname, double value) {
                 break;
 
             case STATS_OP_MIN:
-                if (value < it->second._aggr) it->second._aggr = value;
+                if (value < it->second._aggr) {
+                    it->second._aggr = value;
+                }
                 break;
 
             case STATS_OP_MAX:
-                if (value > it->second._aggr) it->second._aggr = value;
+                if (value > it->second._aggr) {
+                    it->second._aggr = value;
+                }
                 break;
 
             case STATS_OP_STD:
@@ -114,20 +124,22 @@ void PerfdataAggregator::output(Query *q) {
 
             case STATS_OP_AVG:
             case STATS_OP_AVGINV:
-                if (it->second._count == 0)
+                if (it->second._count == 0) {
                     value = 0.00;
-                else
+                } else {
                     value = it->second._aggr / it->second._count;
+                }
                 break;
 
             case STATS_OP_STD:
-                if (it->second._count <= 1)
+                if (it->second._count <= 1) {
                     value = 0.0;
-                else
+                } else {
                     value = sqrt((it->second._sumq -
                                   (it->second._aggr * it->second._aggr) /
                                       it->second._count) /
                                  (it->second._count - 1));
+                }
                 break;
             default:
                 value = 0;  // should never happen, but the real problem is that
@@ -135,7 +147,9 @@ void PerfdataAggregator::output(Query *q) {
                 break;
         }
         snprintf(format, sizeof(format), "%s=%.8f", it->first.c_str(), value);
-        if (it != _aggr.begin()) perf_data += " ";
+        if (it != _aggr.begin()) {
+            perf_data += " ";
+        }
         perf_data += format;
     }
     q->outputString(perf_data.c_str());

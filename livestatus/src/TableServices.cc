@@ -95,7 +95,9 @@ void TableServices::answerQuery(Query *query) {
                 mem = sgroup->members;
                 while (mem != nullptr) {
                     memcpy(&sg._service, mem->service_ptr, sizeof(service));
-                    if (!query->processDataset(&sg)) break;
+                    if (!query->processDataset(&sg)) {
+                        break;
+                    }
                     mem = mem->next;
                 }
             }
@@ -117,7 +119,9 @@ void TableServices::answerQuery(Query *query) {
                 while (smem != nullptr) {
                     service *svc = smem->service_ptr;
                     memcpy(&shg._service, svc, sizeof(service));
-                    if (!query->processDataset(&shg)) break;
+                    if (!query->processDataset(&shg)) {
+                        break;
+                    }
                     smem = smem->next;
                 }
                 mem = mem->next;
@@ -136,7 +140,9 @@ void TableServices::answerQuery(Query *query) {
         if (host != nullptr) {
             servicesmember *mem = host->services;
             while (mem != nullptr) {
-                if (!query->processDataset(mem->service_ptr)) break;
+                if (!query->processDataset(mem->service_ptr)) {
+                    break;
+                }
                 mem = mem->next;
             }
         }
@@ -148,7 +154,9 @@ void TableServices::answerQuery(Query *query) {
     if (sgroup != nullptr) {
         servicesmember *mem = sgroup->members;
         while (mem != nullptr) {
-            if (!query->processDataset(mem->service_ptr)) break;
+            if (!query->processDataset(mem->service_ptr)) {
+                break;
+            }
             mem = mem->next;
         }
         return;
@@ -162,7 +170,9 @@ void TableServices::answerQuery(Query *query) {
             host *host = mem->host_ptr;
             servicesmember *smem = host->services;
             while (smem != nullptr) {
-                if (!query->processDataset(smem->service_ptr)) break;
+                if (!query->processDataset(smem->service_ptr)) {
+                    break;
+                }
                 smem = smem->next;
             }
             mem = mem->next;
@@ -173,7 +183,9 @@ void TableServices::answerQuery(Query *query) {
     // no index -> iterator over *all* services
     service *svc = service_list;
     while (svc != nullptr) {
-        if (!query->processDataset(svc)) break;
+        if (!query->processDataset(svc)) {
+            break;
+        }
         svc = svc->next;
     }
 }
@@ -546,8 +558,9 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
                            "author, comment, entry type and entry time",
                            indirect_offset, false, true, true, true));
 
-    if (add_hosts)
+    if (add_hosts) {
         TableHosts::addColumns(table, "host_", (char *)(&svc.host_ptr) - ref);
+    }
 
     table->addColumn(new CustomVarsColumn(
         prefix + "custom_variable_names",

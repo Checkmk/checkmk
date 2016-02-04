@@ -51,11 +51,12 @@ void do_statistics() {
             double new_rate = (double)delta_value / (double)delta_time;
             double old_rate = g_counter_rate[i];
             double avg_rate;
-            if (old_rate == 0)
+            if (old_rate == 0) {
                 avg_rate = new_rate;
-            else
+            } else {
                 avg_rate =
                     old_rate * (1.0 - RATING_WEIGHT) + new_rate * RATING_WEIGHT;
+            }
             g_counter_rate[i] = avg_rate;
             g_last_counter[i] = g_counters[i];
         }

@@ -39,11 +39,11 @@ using std::make_pair;
 // locked with a mutex
 
 TableDownComm::TableDownComm(bool is_downtime) {
-    if (is_downtime)
+    if (is_downtime) {
         _name = "downtimes";
-    else
+    } else {
         _name = "comments";
-
+    }
     DowntimeOrComment *ref = nullptr;
     addColumn(new OffsetStringColumn(
         "author", is_downtime ? "The contact that scheduled the downtime"
@@ -116,7 +116,9 @@ TableDownComm::TableDownComm(bool is_downtime) {
 }
 
 TableDownComm::~TableDownComm() {
-    for (auto &entry : _entries) delete entry.second;
+    for (auto &entry : _entries) {
+        delete entry.second;
+    }
 }
 
 void TableDownComm::addComment(nebstruct_comment_data *data) {
@@ -154,10 +156,10 @@ void TableDownComm::add(DowntimeOrComment *data) {
 void TableDownComm::remove(DowntimeOrComment *data) {
     dc_key tmp_key = make_pair(data->_id, data->_service != nullptr);
     auto it = _entries.find(tmp_key);
-    if (it == _entries.end())
+    if (it == _entries.end()) {
         logger(LG_INFO, "Cannot delete non-existing downtime/comment %lu",
                data->_id);
-    else {
+    } else {
         delete it->second;
         _entries.erase(it);
     }
@@ -166,7 +168,9 @@ void TableDownComm::remove(DowntimeOrComment *data) {
 void TableDownComm::answerQuery(Query *query) {
     for (_entries_t::const_iterator it = _entries.begin(); it != _entries.end();
          ++it) {
-        if (!query->processDataset(it->second)) break;
+        if (!query->processDataset(it->second)) {
+            break;
+        }
     }
 }
 
@@ -180,6 +184,7 @@ DowntimeOrComment *TableDownComm::findEntry(unsigned long id, bool is_service) {
     auto it = _entries.find(tmp_key);
     if (it != _entries.end()) {
         return it->second;
-    } else
+    } else {
         return nullptr;
+    }
 }

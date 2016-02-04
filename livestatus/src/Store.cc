@@ -107,10 +107,11 @@ Store::~Store() = default;
 
 Table *Store::findTable(string name) {
     auto it = _tables.find(name);
-    if (it == _tables.end())
+    if (it == _tables.end()) {
         return nullptr;
-    else
+    } else {
         return it->second;
+    }
 }
 
 void Store::registerComment(nebstruct_comment_data *d) {
@@ -125,22 +126,25 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
     output->reset();
     pair<list<string>, InputBuffer::Result> r = input->readRequest();
     if (r.second != InputBuffer::Result::request_read) {
-        if (r.second != InputBuffer::Result::eof)
+        if (r.second != InputBuffer::Result::eof) {
             output->setError(
                 RESPONSE_CODE_INCOMPLETE_REQUEST,
                 "Client connection terminated while request still incomplete");
+        }
         return false;
     }
     list<string> &lines = r.first;
     string l = lines.front();
     lines.pop_front();
     const char *line = l.c_str();
-    if (g_debug_level > 0) logger(LG_INFO, "Query: %s", line);
-    if (strncmp(line, "GET ", 4) == 0)
+    if (g_debug_level > 0) {
+        logger(LG_INFO, "Query: %s", line);
+    }
+    if (strncmp(line, "GET ", 4) == 0) {
         answerGetRequest(lines, output, lstrip((char *)line + 4));
-    else if (strcmp(line, "GET") == 0)
+    } else if (strcmp(line, "GET") == 0) {
         answerGetRequest(lines, output, "");  // only to get error message
-    else if (strncmp(line, "COMMAND ", 8) == 0) {
+    } else if (strncmp(line, "COMMAND ", 8) == 0) {
         answerCommandRequest(lstrip((char *)line + 8));
         output->setDoKeepalive(true);
     } else if (strncmp(line, "LOGROTATE", 9) == 0) {
@@ -195,9 +199,10 @@ void Store::answerGetRequest(list<string> &lines, OutputBuffer *output,
         gettimeofday(&after, nullptr);
         unsigned long ustime = (after.tv_sec - before.tv_sec) * 1000000 +
                                (after.tv_usec - before.tv_usec);
-        if (g_debug_level > 0)
+        if (g_debug_level > 0) {
             logger(LG_INFO,
                    "Time to process request: %lu us. Size of answer: %d bytes",
                    ustime, output->size());
+        }
     }
 }

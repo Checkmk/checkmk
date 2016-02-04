@@ -164,7 +164,9 @@ void TableHostgroups::addColumns(Table *table, string prefix,
 void TableHostgroups::answerQuery(Query *query) {
     hostgroup *hg = hostgroup_list;
     while (hg != nullptr) {
-        if (!query->processDataset(hg)) break;
+        if (!query->processDataset(hg)) {
+            break;
+        }
         hg = hg->next;
     }
 }
@@ -174,17 +176,20 @@ void *TableHostgroups::findObject(char *objectspec) {
 }
 
 bool TableHostgroups::isAuthorized(contact *ctc, void *data) {
-    if (ctc == UNKNOWN_AUTH_USER) return false;
+    if (ctc == UNKNOWN_AUTH_USER) {
+        return false;
+    }
 
     hostgroup *hg = (hostgroup *)data;
     hostsmember *mem = hg->members;
     while (mem != nullptr) {
         host *hst = mem->host_ptr;
         bool is = g_table_hosts->isAuthorized(ctc, hst);
-        if (is && g_group_authorization == AUTH_LOOSE)
+        if (is && g_group_authorization == AUTH_LOOSE) {
             return true;
-        else if (!is && g_group_authorization == AUTH_STRICT)
+        } else if (!is && g_group_authorization == AUTH_STRICT) {
             return false;
+        }
         mem = mem->next;
     }
     return true;

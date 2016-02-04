@@ -52,19 +52,22 @@ void DownCommColumn::output(void *data, Query *query) {
             bool found_match = false;
 
             if (!is_service) {
-                if (dt->_host->name == static_cast<host *>(data)->name)
+                if (dt->_host->name == static_cast<host *>(data)->name) {
                     found_match = true;
+                }
             } else if (dt->_service->description ==
                            static_cast<service *>(data)->description &&
                        dt->_service->host_name ==
-                           static_cast<service *>(data)->host_name)
+                           static_cast<service *>(data)->host_name) {
                 found_match = true;
+            }
 
             if (found_match) {
-                if (first)
+                if (first) {
                     first = false;
-                else
+                } else {
                     query->outputListSeparator();
+                }
                 if (_with_info) {
                     query->outputBeginSublist();
                     query->outputUnsignedLong(id);
@@ -80,8 +83,9 @@ void DownCommColumn::output(void *data, Query *query) {
                         query->outputTime(dt->_entry_time);
                     }
                     query->outputEndSublist();
-                } else
+                } else {
                     query->outputUnsignedLong(id);
+                }
             }
         }
     }
@@ -106,7 +110,9 @@ bool DownCommColumn::isNagiosMember(void *data, void *member) {
 }
 
 bool DownCommColumn::isEmpty(void *data) {
-    if (data == nullptr) return true;
+    if (data == nullptr) {
+        return true;
+    }
 
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
     for (auto it = table->entriesIteratorBegin();

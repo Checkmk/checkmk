@@ -48,10 +48,14 @@ HostFileColumn::HostFileColumn(string name, string description,
 // in size of a missing file
 char *HostFileColumn::getBlob(void *data, int *size) {
     *size = 0;
-    if (_base_dir[0] == 0) return nullptr;  // Path is not configured
+    if (_base_dir[0] == 0) {
+        return nullptr;  // Path is not configured
+    }
 
     data = shiftPointer(data);
-    if (data == nullptr) return nullptr;
+    if (data == nullptr) {
+        return nullptr;
+    }
 
 #ifdef CMC
     const char *host_name = static_cast<Host *>(data)->_name;

@@ -45,7 +45,9 @@ void ClientQueue::addConnection(int fd) {
 
 int ClientQueue::popConnection() {
     unique_lock<mutex> ul(_mutex);
-    while (_queue.empty()) _cond.wait(ul);
+    while (_queue.empty()) {
+        _cond.wait(ul);
+    }
     int fd = _queue.front();
     _queue.pop_front();
     return fd;

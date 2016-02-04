@@ -27,15 +27,21 @@
 const char *CustomVarsExplicitColumn::getValue(void *data) {
     customvariablesmember *cvm = getCVM(data);
     while (cvm != nullptr) {
-        if (cvm->variable_name == _varname) return cvm->variable_value;
+        if (cvm->variable_name == _varname) {
+            return cvm->variable_value;
+        }
         cvm = cvm->next;
     }
     return "";
 }
 
 customvariablesmember *CustomVarsExplicitColumn::getCVM(void *data) {
-    if (data == nullptr) return nullptr;
+    if (data == nullptr) {
+        return nullptr;
+    }
     data = shiftPointer(data);
-    if (data == nullptr) return nullptr;
+    if (data == nullptr) {
+        return nullptr;
+    }
     return *(customvariablesmember **)((char *)data + _offset);
 }

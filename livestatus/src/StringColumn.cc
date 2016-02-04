@@ -27,10 +27,11 @@
 #include "StringColumnFilter.h"
 
 void StringColumn::output(void *data, Query *query) {
-    if (data != nullptr)
+    if (data != nullptr) {
         query->outputString(getValue(data));
-    else
+    } else {
         query->outputString(nullptr);
+    }
 }
 
 Filter *StringColumn::createFilter(int operator_id, char *value) {

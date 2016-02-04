@@ -28,7 +28,9 @@
 objectlist *ServicegroupsColumn::getData(void *data) {
     if (data != nullptr) {
         data = shiftPointer(data);
-        if (data != nullptr) return *(objectlist **)((char *)data + _offset);
+        if (data != nullptr) {
+            return *(objectlist **)((char *)data + _offset);
+        }
     }
     return nullptr;
 }
@@ -40,10 +42,11 @@ void ServicegroupsColumn::output(void *data, Query *query) {
         bool first = true;
         while (list != nullptr) {
             servicegroup *sg = (servicegroup *)list->object_ptr;
-            if (!first)
+            if (!first) {
                 query->outputListSeparator();
-            else
+            } else {
                 first = false;
+            }
             query->outputString(sg->group_name);
             list = list->next;
         }
@@ -59,7 +62,9 @@ bool ServicegroupsColumn::isNagiosMember(void *data, void *nagobject) {
     // data is already shifted
     objectlist *list = *(objectlist **)((char *)data + _offset);
     while (list != nullptr) {
-        if (list->object_ptr == nagobject) return true;
+        if (list->object_ptr == nagobject) {
+            return true;
+        }
         list = list->next;
     }
     return false;

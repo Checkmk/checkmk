@@ -14,13 +14,13 @@
 #
 #   * desirable checks, but hard to fix currently:
 #       * cert-dcl50-cpp ("do not define a C-style variadic function; consider using a function parameter pack or currying instead")
+#       * cppcoreguidelines-pro-type-reinterpret-cast ("do not use reinterpret_cast")
 #       * cppcoreguidelines-pro-type-vararg ("do not call c-style vararg functions")
 #
 #   * desirable checks, but some places need to be suppressed:
 #       * cppcoreguidelines-pro-type-const-cast ("do not use const_cast")
 #
 #   * desirable checks, but not yet fixed:
-#       * cppcoreguidelines-pro-type-reinterpret-cast ("do not use reinterpret_cast")
 #       * readability-else-after-return ("don't use else after return")
 #
 Checks: '*,-cert-dcl50-cpp,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-vararg,-google-runtime-int,-llvm-include-order,-readability-else-after-return'

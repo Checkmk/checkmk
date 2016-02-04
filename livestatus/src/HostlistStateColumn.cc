@@ -31,15 +31,17 @@ extern TableServices *g_table_hosts;
 static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
     if (state1 == 0) {
         return false;  // UP is worse than nothing
-    } else if (state2 == 0) {
-        return true;  // everything else is worse then UP
-    } else if (state2 == 1) {
-        return false;  // nothing is worse than DOWN
-    } else if (state1 == 1) {
-        return true;  // state1 is DOWN, state2 not
-    } else {
-        return false;  // both are UNREACHABLE
     }
+    if (state2 == 0) {
+        return true;  // everything else is worse then UP
+    }
+    if (state2 == 1) {
+        return false;  // nothing is worse than DOWN
+    }
+    if (state1 == 1) {
+        return true;  // state1 is DOWN, state2 not
+    }
+    return false;  // both are UNREACHABLE
 }
 
 hostsmember *HostlistStateColumn::getMembers(void *data) {

@@ -52,9 +52,9 @@ int32_t OffsetTimeperiodColumn::getValue(void *data, Query * /*unused*/) {
 
     if (tp == nullptr) {
         return 1;  // no timeperiod set -> Nagios assumes 7x24
-    } else if (g_timeperiods_cache->inTimeperiod(tp)) {
-        return 1;
-    } else {
-        return 0;
     }
+    if (g_timeperiods_cache->inTimeperiod(tp)) {
+        return 1;
+    }
+    return 0;
 }

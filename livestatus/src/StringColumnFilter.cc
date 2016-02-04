@@ -104,7 +104,6 @@ void *StringColumnFilter::indexFilter(const char *column) {
         // TODO(sp) The cast looks very dubious, but the whole void* story is
         // quite dangerous...
         return const_cast<char *>(_ref_string.c_str());
-    } else {
-        return nullptr;
     }
+    return nullptr;
 }

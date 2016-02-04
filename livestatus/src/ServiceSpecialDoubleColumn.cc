@@ -65,11 +65,10 @@ double ServiceSpecialDoubleColumn::getValue(void *data) {
                 }
                 return 1;  // Shouldnt happen! We always expect a check-mk
                            // service
-            } else         // Other non-cmk passive and active checks without
+            }              // Other non-cmk passive and active checks without
                            // check_interval
-            {
-                return check_result_age / interval_length;
-            }
+
+            return check_result_age / interval_length;
         }
     }
     return -1;  // Never reached

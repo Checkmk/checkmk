@@ -39,11 +39,10 @@ void AndingFilter::addSubfilter(Filter *f) { _subfilters.push_back(f); }
 Filter *AndingFilter::stealLastSubfiler() {
     if (_subfilters.empty()) {
         return nullptr;
-    } else {
-        Filter *l = _subfilters.back();
-        _subfilters.pop_back();
-        return l;
     }
+    Filter *l = _subfilters.back();
+    _subfilters.pop_back();
+    return l;
 }
 
 bool AndingFilter::accepts(void *data) {

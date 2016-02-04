@@ -109,9 +109,8 @@ Table *Store::findTable(string name) {
     auto it = _tables.find(name);
     if (it == _tables.end()) {
         return nullptr;
-    } else {
-        return it->second;
     }
+    return it->second;
 }
 
 void Store::registerComment(nebstruct_comment_data *d) {

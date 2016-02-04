@@ -204,7 +204,6 @@ DowntimeOrComment *TableDownComm::findEntry(unsigned long id, bool is_service) {
     auto it = _entries.find(tmp_key);
     if (it != _entries.end()) {
         return it->second;
-    } else {
-        return nullptr;
     }
+    return nullptr;
 }

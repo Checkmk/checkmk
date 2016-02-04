@@ -129,7 +129,8 @@ bool LogEntry::handleStatusEntry() {
         _attempt = atoi(save_next_token(&scan, ';'));
         _check_output = next_token(&scan, ';');
         return true;
-    } else if (strncmp(_text, "HOST DOWNTIME ALERT: ", 21) == 0) {
+    }
+    if (strncmp(_text, "HOST DOWNTIME ALERT: ", 21) == 0) {
         _logclass = LOGCLASS_ALERT;
         _type = DOWNTIME_ALERT_HOST;
         char *scan = _text;
@@ -140,7 +141,8 @@ bool LogEntry::handleStatusEntry() {
         _state_type = next_token(&scan, ';');
         _comment = next_token(&scan, ';');
         return true;
-    } else if (strncmp(_text, "HOST ACKNOWLEDGE ALERT: ", 24) == 0) {
+    }
+    if (strncmp(_text, "HOST ACKNOWLEDGE ALERT: ", 24) == 0) {
         _logclass = LOGCLASS_ALERT;
         _type = ACKNOWLEDGE_ALERT_HOST;
         char *scan = _text;
@@ -152,7 +154,8 @@ bool LogEntry::handleStatusEntry() {
         _contact_name = next_token(&scan, ';');
         _comment = next_token(&scan, ';');
         return true;
-    } else if (strncmp(_text, "HOST FLAPPING ALERT: ", 21) == 0) {
+    }
+    if (strncmp(_text, "HOST FLAPPING ALERT: ", 21) == 0) {
         _logclass = LOGCLASS_ALERT;
         _type = FLAPPING_HOST;
         char *scan = _text;
@@ -166,9 +169,9 @@ bool LogEntry::handleStatusEntry() {
     }
 
     // SERVICE states
-    else if ((strncmp(_text, "INITIAL SERVICE STATE: ", 23) == 0) ||
-             (strncmp(_text, "CURRENT SERVICE STATE: ", 23) == 0) ||
-             (strncmp(_text, "SERVICE ALERT: ", 15) == 0)) {
+    if ((strncmp(_text, "INITIAL SERVICE STATE: ", 23) == 0) ||
+        (strncmp(_text, "CURRENT SERVICE STATE: ", 23) == 0) ||
+        (strncmp(_text, "SERVICE ALERT: ", 15) == 0)) {
         if (_text[0] == 'S') {
             _logclass = LOGCLASS_ALERT;
             _type = ALERT_SERVICE;
@@ -192,7 +195,7 @@ bool LogEntry::handleStatusEntry() {
         return true;
     }
 
-    else if (strncmp(_text, "SERVICE DOWNTIME ALERT: ", 24) == 0) {
+    if (strncmp(_text, "SERVICE DOWNTIME ALERT: ", 24) == 0) {
         _logclass = LOGCLASS_ALERT;
         _type = DOWNTIME_ALERT_SERVICE;
         char *scan = _text;
@@ -206,7 +209,7 @@ bool LogEntry::handleStatusEntry() {
         return true;
     }
 
-    else if (strncmp(_text, "SERVICE ACKNOWLEDGE ALERT: ", 27) == 0) {
+    if (strncmp(_text, "SERVICE ACKNOWLEDGE ALERT: ", 27) == 0) {
         _logclass = LOGCLASS_ALERT;
         _type = ACKNOWLEDGE_ALERT_SERVICE;
         char *scan = _text;
@@ -221,7 +224,7 @@ bool LogEntry::handleStatusEntry() {
         return true;
     }
 
-    else if (strncmp(_text, "SERVICE FLAPPING ALERT: ", 24) == 0) {
+    if (strncmp(_text, "SERVICE FLAPPING ALERT: ", 24) == 0) {
         _logclass = LOGCLASS_ALERT;
         _type = FLAPPING_SERVICE;
         char *scan = _text;
@@ -235,7 +238,7 @@ bool LogEntry::handleStatusEntry() {
         return true;
     }
 
-    else if (strncmp(_text, "TIMEPERIOD TRANSITION: ", 23) == 0) {
+    if (strncmp(_text, "TIMEPERIOD TRANSITION: ", 23) == 0) {
         _logclass = LOGCLASS_STATE;
         _type = TIMEPERIOD_TRANSITION;
         return true;
@@ -336,8 +339,9 @@ bool LogEntry::handleTextEntry() {
         _logclass = LOGCLASS_PROGRAM;
         _type = LOG_VERSION;
         return true;
-    } else if ((strncmp(_text, "logging initial states", 22) == 0) ||
-               (strncmp(_text, "logging intitial states", 23) == 0)) {
+    }
+    if ((strncmp(_text, "logging initial states", 22) == 0) ||
+        (strncmp(_text, "logging intitial states", 23) == 0)) {
         _logclass = LOGCLASS_PROGRAM;
         _type = LOG_INITIAL_STATES;
         return true;
@@ -351,13 +355,15 @@ bool LogEntry::handleProgrammEntry() {
         _logclass = LOGCLASS_PROGRAM;
         _type = CORE_STARTING;
         return true;
-    } else if ((strstr(_text, "shutting down...") != nullptr) ||
-               (strstr(_text, "Bailing out") != nullptr) ||
-               (strstr(_text, "standby mode...") != nullptr)) {
+    }
+    if ((strstr(_text, "shutting down...") != nullptr) ||
+        (strstr(_text, "Bailing out") != nullptr) ||
+        (strstr(_text, "standby mode...") != nullptr)) {
         _logclass = LOGCLASS_PROGRAM;
         _type = CORE_STOPPING;
         return true;
-    } else if (strstr(_text, "restarting...") != nullptr) {
+    }
+    if (strstr(_text, "restarting...") != nullptr) {
         _logclass = LOGCLASS_PROGRAM;
         return true;
     }

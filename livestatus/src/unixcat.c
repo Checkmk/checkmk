@@ -74,9 +74,8 @@ ssize_t read_with_timeout(int from, char *buffer, int size, int us) {
     int retval = select(from + 1, &fds, 0, 0, &tv);
     if (retval > 0) {
         return read(from, buffer, size);
-    } else {
-        return -2;
     }
+    return -2;
 }
 
 void *copy_thread(void *info) {

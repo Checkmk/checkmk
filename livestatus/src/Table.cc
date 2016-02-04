@@ -100,9 +100,8 @@ Column *Table::column(const char *colname) {
     it = _columns.find(with_prefix);
     if (it != _columns.end()) {
         return it->second;
-    } else {
-        return nullptr;
     }
+    return nullptr;
 }
 
 Column *Table::dynamicColumn(const char *colname_with_args) {
@@ -114,10 +113,8 @@ Column *Table::dynamicColumn(const char *colname_with_args) {
     auto it = _dynamic_columns.find(name);
     if (it != _dynamic_columns.end()) {
         return it->second->createColumn(argstring);
-
-    } else {
-        return nullptr;
     }
+    return nullptr;
 }
 
 bool Table::hasColumn(Column *col) {

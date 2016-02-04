@@ -231,14 +231,11 @@ bool TableLog::isAuthorized(contact *ctc, void *data) {
         return is_authorized_for(ctc, hst, svc) != 0;
         // suppress entries for messages that belong to
         // hosts that do not exist anymore.
-    } else if (entry->_logclass == LOGCLASS_ALERT ||
-               entry->_logclass == LOGCLASS_NOTIFICATION ||
-               entry->_logclass == LOGCLASS_PASSIVECHECK ||
-               entry->_logclass == LOGCLASS_STATE) {
-        return false;
-    } else {
-        return true;
     }
+    return !(entry->_logclass == LOGCLASS_ALERT ||
+             entry->_logclass == LOGCLASS_NOTIFICATION ||
+             entry->_logclass == LOGCLASS_PASSIVECHECK ||
+             entry->_logclass == LOGCLASS_STATE);
 }
 
 Column *TableLog::column(const char *colname) {

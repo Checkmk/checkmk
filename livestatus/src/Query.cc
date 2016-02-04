@@ -875,9 +875,8 @@ bool Query::timelimitReached() {
                           "Maximum query time of %d seconds exceeded!",
                           _time_limit);
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 bool Query::processDataset(void *data) {
@@ -1124,7 +1123,7 @@ void Query::outputString(const char *value, int len) {
         return;
     }
 
-    else if (_output_format == OUTPUT_FORMAT_CSV) {
+    if (_output_format == OUTPUT_FORMAT_CSV) {
         _output->addString(value);
 
     } else  // JSON
@@ -1296,9 +1295,8 @@ Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec) {
         }
         _stats_groups.insert(make_pair(groupspec, aggr));
         return aggr;
-    } else {
-        return it->second;
     }
+    return it->second;
 }
 
 void Query::computeStatsGroupSpec(Query::_stats_group_spec_t &groupspec,

@@ -116,8 +116,7 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
                         return failure(Result::timeout);
                     }
                     // Check if we exceeded the maximum time between two queries
-                    else if (timeout_reached(&start_of_idle,
-                                             g_idle_timeout_msec)) {
+                    if (timeout_reached(&start_of_idle, g_idle_timeout_msec)) {
                         logger(LG_INFO,
                                "Idle timeout of %d ms exceeded. Going to close "
                                "connection.",
@@ -136,14 +135,14 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
                     if (request_lines.empty()) {
                         return failure(
                             Result::eof);  // empty request -> no request
-                    } else {
-                        // socket has been closed but request is complete
-                        return make_pair(request_lines, Result::request_read);
-                        // the current state is now:
-                        // _read_index == r == _write_index => buffer is empty
-                        // that way, if the main program tries to read the
-                        // next request, it will get an IB_UNEXPECTED_EOF
                     }
+                    // socket has been closed but request is complete
+                    return make_pair(request_lines, Result::request_read);
+                    // the current state is now:
+                    // _read_index == r == _write_index => buffer is empty
+                    // that way, if the main program tries to read the
+                    // next request, it will get an IB_UNEXPECTED_EOF
+
                 }
                 // if we are *not* at an end of line while reading
                 // a request, we got an invalid request.
@@ -190,27 +189,25 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
                 // Was ist, wenn noch keine korrekte Zeile gelesen wurde?
                 if (request_lines.empty()) {
                     return failure(Result::empty_request);
-                } else {
-                    return make_pair(request_lines, Result::request_read);
                 }
-            } else {  // non-empty line: belongs to current request
-                int length = r - _read_index;
-                for (size_t end = r;
-                     end > _read_index &&
-                     (isspace(_readahead_buffer[--end]) != 0);) {
-                    length--;
-                }
-                if (length > 0) {
-                    request_lines.push_back(
-                        string(&_readahead_buffer[_read_index], length));
-                } else {
-                    logger(LG_INFO,
-                           "Warning ignoring line containing only whitespace");
-                }
-                query_started = true;
-                _read_index = r + 1;
-                r = _read_index;
+                return make_pair(request_lines, Result::request_read);
+
+            }  // non-empty line: belongs to current request
+            int length = r - _read_index;
+            for (size_t end = r; end > _read_index &&
+                                 (isspace(_readahead_buffer[--end]) != 0);) {
+                length--;
             }
+            if (length > 0) {
+                request_lines.push_back(
+                    string(&_readahead_buffer[_read_index], length));
+            } else {
+                logger(LG_INFO,
+                       "Warning ignoring line containing only whitespace");
+            }
+            query_started = true;
+            _read_index = r + 1;
+            r = _read_index;
         }
     }
 }
@@ -240,12 +237,12 @@ InputBuffer::Result InputBuffer::readData() {
                              _readahead_buffer.capacity() - _write_index);
             if (r < 0) {
                 return Result::eof;
-            } else if (r == 0) {
-                return Result::eof;
-            } else {
-                _write_index += r;
-                return Result::data_read;
             }
+            if (r == 0) {
+                return Result::eof;
+            }
+            _write_index += r;
+            return Result::data_read;
         }
     }
     return Result::should_terminate;

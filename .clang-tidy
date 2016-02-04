@@ -20,10 +20,7 @@
 #   * desirable checks, but some places need to be suppressed:
 #       * cppcoreguidelines-pro-type-const-cast ("do not use const_cast")
 #
-#   * desirable checks, but not yet fixed:
-#       * readability-else-after-return ("don't use else after return")
-#
-Checks: '*,-cert-dcl50-cpp,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-vararg,-google-runtime-int,-llvm-include-order,-readability-else-after-return'
+Checks: '*,-cert-dcl50-cpp,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-vararg,-google-runtime-int,-llvm-include-order'
 CheckOptions:
   - key:             google-readability-namespace-comments.SpacesBeforeComments
     value:           '1'

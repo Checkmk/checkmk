@@ -209,10 +209,9 @@ bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses) {
             return false;
         }
         return true;
-    } else {
-        delete entry;
-        return false;
     }
+    delete entry;
+    return false;
 }
 
 logfile_entries_t *Logfile::getEntriesFromQuery(Query * /*unused*/,
@@ -328,7 +327,8 @@ char *Logfile::readIntoBuffer(int *size) {
         free(buffer);
         close(fd);
         return nullptr;
-    } else if (r != *size) {
+    }
+    if (r != *size) {
         logger(LOG_WARNING, "Read only %" PRIdMAX " out of %d bytes from %s",
                static_cast<intmax_t>(r), *size, _path);
         free(buffer);

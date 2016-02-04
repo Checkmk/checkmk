@@ -151,7 +151,8 @@ bool TableServicegroups::isAuthorized(contact *ctc, void *data) {
         bool is = g_table_services->isAuthorized(ctc, svc);
         if (is && g_group_authorization == AUTH_LOOSE) {
             return true;
-        } else if (!is && g_group_authorization == AUTH_STRICT) {
+        }
+        if (!is && g_group_authorization == AUTH_STRICT) {
             return false;
         }
         mem = mem->next;

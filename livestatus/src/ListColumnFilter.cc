@@ -63,7 +63,6 @@ bool ListColumnFilter::accepts(void *data) {
 void *ListColumnFilter::indexFilter(const char *columnname) {
     if (_opid == -OP_LESS && (strcmp(columnname, _column->name()) == 0)) {
         return _ref_member;
-    } else {
-        return nullptr;
     }
+    return nullptr;
 }

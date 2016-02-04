@@ -34,17 +34,15 @@ int is_authorized_for(contact *ctc, host *hst, service *svc) {
             return static_cast<int>(
                 (is_contact_for_service(svc, ctc) != 0) ||
                 (is_escalated_contact_for_service(svc, ctc) != 0));
-        } else {  // AUTH_LOOSE
-            return static_cast<int>(
-                (is_contact_for_host(hst, ctc) != 0) ||
-                (is_escalated_contact_for_host(hst, ctc) != 0) ||
-                (is_contact_for_service(svc, ctc) != 0) ||
-                (is_escalated_contact_for_service(svc, ctc) != 0));
-        }
+        }  // AUTH_LOOSE
+        return static_cast<int>(
+            (is_contact_for_host(hst, ctc) != 0) ||
+            (is_escalated_contact_for_host(hst, ctc) != 0) ||
+            (is_contact_for_service(svc, ctc) != 0) ||
+            (is_escalated_contact_for_service(svc, ctc) != 0));
     }
     // Entries for hosts
-    else {
-        return static_cast<int>((is_contact_for_host(hst, ctc) != 0) ||
-                                (is_escalated_contact_for_host(hst, ctc) != 0));
-    }
+
+    return static_cast<int>((is_contact_for_host(hst, ctc) != 0) ||
+                            (is_escalated_contact_for_host(hst, ctc) != 0));
 }

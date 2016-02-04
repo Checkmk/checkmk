@@ -256,13 +256,11 @@ LogEntry *TableStateHistory::getPreviousLogentry() {
         // open previous logfile
         if (_it_logs == g_store->logCache()->logfiles()->begin()) {
             return nullptr;
-        } else {
-            --_it_logs;
-            _entries = _it_logs->second->getEntriesFromQuery(
-                _query, g_store->logCache(), _since, _until,
-                CLASSMASK_STATEHIST);
-            _it_entries = _entries->end();
         }
+        --_it_logs;
+        _entries = _it_logs->second->getEntriesFromQuery(
+            _query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
+        _it_entries = _entries->end();
     }
 
     return (--_it_entries)->second;
@@ -277,13 +275,11 @@ LogEntry *TableStateHistory::getNextLogentry() {
         auto it_logs_cpy = _it_logs;
         if (++it_logs_cpy == g_store->logCache()->logfiles()->end()) {
             return nullptr;
-        } else {
-            ++_it_logs;
-            _entries = _it_logs->second->getEntriesFromQuery(
-                _query, g_store->logCache(), _since, _until,
-                CLASSMASK_STATEHIST);
-            _it_entries = _entries->begin();
         }
+        ++_it_logs;
+        _entries = _it_logs->second->getEntriesFromQuery(
+            _query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
+        _it_entries = _entries->begin();
     }
     return _it_entries->second;
 }
@@ -998,9 +994,8 @@ bool TableStateHistory::isAuthorized(contact *ctc, void *data) {
 
     if ((hst != nullptr) || (svc != nullptr)) {
         return is_authorized_for(ctc, hst, svc) != 0;
-    } else {
-        return false;
     }
+    return false;
 }
 
 Column *TableStateHistory::column(const char *colname) {

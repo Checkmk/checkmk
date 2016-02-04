@@ -125,18 +125,16 @@ bool CustomVarsFilter::accepts(void *data) {
                 break;
         }
         return pass != _negate;
-
-    } else {
-        bool is_member = _column->contains(data, _ref_text.c_str());
-        switch (_opid) {
-            case OP_LESS:
-                return (!is_member) == (!_negate);
-            default:
-                logger(LG_INFO,
-                       "Sorry, Operator %s for custom variable lists not "
-                       "implemented.",
-                       op_names_plus_8[_opid]);
-                return true;
-        }
+    }
+    bool is_member = _column->contains(data, _ref_text.c_str());
+    switch (_opid) {
+        case OP_LESS:
+            return (!is_member) == (!_negate);
+        default:
+            logger(LG_INFO,
+                   "Sorry, Operator %s for custom variable lists not "
+                   "implemented.",
+                   op_names_plus_8[_opid]);
+            return true;
     }
 }

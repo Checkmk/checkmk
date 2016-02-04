@@ -849,7 +849,8 @@ int nebmodule_init(int flags __attribute__((__unused__)), char *args,
                "to -1.",
                event_broker_options);
         return 1;
-    } else if (g_debug_level > 0) {
+    }
+    if (g_debug_level > 0) {
         logger(LG_INFO,
                "Your event_broker_options are sufficient for livestatus..");
     }

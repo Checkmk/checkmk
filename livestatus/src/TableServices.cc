@@ -107,7 +107,7 @@ void TableServices::answerQuery(Query *query) {
     }
 
     // Table servicesbyhostgroup iterates of hostgroups and hosts
-    else if (_by_hostgroup) {
+    if (_by_hostgroup) {
         hostgroup *hgroup = hostgroup_list;
         servicebyhostgroup shg;
         while (hgroup != nullptr) {

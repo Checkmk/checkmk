@@ -40,9 +40,8 @@ int mk_inventory_last(const char *host) {
     struct stat st;
     if (0 != stat(path, &st)) {
         return 0;
-    } else {
-        return st.st_mtime;
     }
+    return st.st_mtime;
 }
 
 int mk_inventory_last_of_all() {

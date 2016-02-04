@@ -32,15 +32,17 @@ extern TableServices *g_table_services;
 bool ServicelistStateColumn::svcStateIsWorse(int32_t state1, int32_t state2) {
     if (state1 == 0) {
         return false;  // OK is worse than nothing
-    } else if (state2 == 0) {
-        return true;  // everything else is worse then OK
-    } else if (state2 == 2) {
-        return false;  // nothing is worse than CRIT
-    } else if (state1 == 2) {
-        return true;  // state1 is CRIT, state2 not
-    } else {
-        return (state1 > state2);  // both or WARN or UNKNOWN
     }
+    if (state2 == 0) {
+        return true;  // everything else is worse then OK
+    }
+    if (state2 == 2) {
+        return false;  // nothing is worse than CRIT
+    }
+    if (state1 == 2) {
+        return true;  // state1 is CRIT, state2 not
+    }
+    return (state1 > state2);  // both or WARN or UNKNOWN
 }
 
 servicesmember *ServicelistStateColumn::getMembers(void *data) {

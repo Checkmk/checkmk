@@ -43,17 +43,18 @@ StatsColumn::~StatsColumn() {
 Aggregator *StatsColumn::createAggregator() {
     if (_operation == STATS_OP_COUNT) {
         return new CountAggregator(_filter);
-    } else if (_column->type() == COLTYPE_INT ||
-               _column->type() == COLTYPE_TIME) {
+    }
+    if (_column->type() == COLTYPE_INT || _column->type() == COLTYPE_TIME) {
         return new IntAggregator(static_cast<IntColumn *>(_column), _operation);
-    } else if (_column->type() == COLTYPE_DOUBLE) {
+    }
+    if (_column->type() == COLTYPE_DOUBLE) {
         return new DoubleAggregator(static_cast<DoubleColumn *>(_column),
                                     _operation);
-    } else if (_column->type() == COLTYPE_STRING and
-               (ends_with(_column->name(), "perf_data") != 0)) {
+    }
+    if (_column->type() == COLTYPE_STRING and
+        (ends_with(_column->name(), "perf_data") != 0)) {
         return new PerfdataAggregator(static_cast<StringColumn *>(_column),
                                       _operation);
-    } else {  // unaggregateble column
-        return new CountAggregator(_filter);
-    }
+    }  // unaggregateble column
+    return new CountAggregator(_filter);
 }

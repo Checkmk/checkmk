@@ -247,6 +247,7 @@
     * 3045 FIX: veeam_backup_status: Fixed wrong date format reported by agent...
     * 3066 FIX: windows agent: 32-bit performance counters were not returned correctly
     * 3068 FIX: ps: added performance graphs for process handle count (windows only)
+    * 3069 FIX: unitrend_backup: fixed broken plugin output
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

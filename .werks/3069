@@ -1,0 +1,10 @@
+Title: unitrend_backup: fixed broken plugin output
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1454590092
+
+

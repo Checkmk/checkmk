@@ -67,8 +67,10 @@ unsigned long AttributelistColumn::getValue(void *data) {
         return 0;
     }
 
+// TODO(sp) Why on earth do we have different types here?
 #ifdef CMC
-    return *(uint16_t *)((char *)data + _offset);
+    return *reinterpret_cast<uint16_t *>(reinterpret_cast<char *>(data) +
+                                         _offset);
 #else
     return *reinterpret_cast<unsigned long *>(reinterpret_cast<char *>(data) +
                                               _offset);

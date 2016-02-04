@@ -476,8 +476,9 @@ void TableStateHistory::answerQuery(Query *query) {
                     state->_service = entry->_service;
 #ifdef CMC
                     state->_host_name = entry->_host->_name;
-                    state->_service_description =
-                        entry->_service != 0 ? entry->_service->_name : "";
+                    state->_service_description = entry->_service != nullptr
+                                                      ? entry->_service->_name
+                                                      : "";
 #else
                     state->_host_name = entry->_host->name;
                     state->_service_description =
@@ -993,7 +994,7 @@ bool TableStateHistory::isAuthorized(contact *ctc, void *data) {
     host *hst = entry->_host;
 
     if ((hst != nullptr) || (svc != nullptr)) {
-        return is_authorized_for(ctc, hst, svc) != 0;
+        return static_cast<int>(is_authorized_for(ctc, hst, svc)) != 0;
     }
     return false;
 }

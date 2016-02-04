@@ -93,9 +93,8 @@ void DownCommColumn::output(void *data, Query *query) {
 }
 
 void *DownCommColumn::getNagiosObject(char *name) {
-    unsigned long id = strtoul(name, nullptr, 10);
-    return reinterpret_cast<void *>(
-        static_cast<uintptr_t>(id));  // Hack. Convert number into pointer.
+    // Hack. Convert number into pointer.
+    return static_cast<char *>(nullptr) + strtoul(name, nullptr, 10);
 }
 
 bool DownCommColumn::isNagiosMember(void *data, void *member) {

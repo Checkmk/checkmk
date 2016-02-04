@@ -228,7 +228,7 @@ bool TableLog::isAuthorized(contact *ctc, void *data) {
     host *hst = entry->_host;
 
     if ((hst != nullptr) || (svc != nullptr)) {
-        return is_authorized_for(ctc, hst, svc) != 0;
+        return static_cast<int>(is_authorized_for(ctc, hst, svc)) != 0;
         // suppress entries for messages that belong to
         // hosts that do not exist anymore.
     }

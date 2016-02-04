@@ -47,9 +47,8 @@ using std::make_pair;
 extern unsigned long g_max_lines_per_logfile;
 
 // TODO(sp): We need the suppression pragma below because _readpos and
-// _linebuffer
-// is not initialized in the constructor. Just replace all this manual fiddling
-// with pointers, offsets, etc. with vector.
+// _linebuffer is not initialized in the constructor. Just replace all this
+// manual fiddling with pointers, offsets, etc. with vector.
 
 // cppcheck-suppress uninitMemberVar
 Logfile::Logfile(const char *path, bool watch)
@@ -58,7 +57,7 @@ Logfile::Logfile(const char *path, bool watch)
     , _watch(watch)
     , _lineno(0)
 #ifdef CMC
-    , _world(0)
+    , _world(nullptr)
 #endif
     , _logclasses_read(0) {
     int fd = open(path, O_RDONLY);
@@ -277,9 +276,9 @@ void Logfile::updateReferences() {
     // active configuration world, then update all references
     if (_world != g_live_world) {
         unsigned num = 0;
-        for (logfile_entries_t::iterator it = _entries.begin();
-             it != _entries.end(); ++it)
-            num += it->second->updateReferences();
+        for (auto &entry : _entries) {
+            num += entry.second->updateReferences();
+        }
         logger(LOG_NOTICE,
                "Updated %u log cache references of %s to new world.", num,
                _path);

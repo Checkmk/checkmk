@@ -94,7 +94,7 @@ foreach ($item in $exe_paths)
 {
     if ((Test-Path $item -pathType container))
     {
-        Get-ChildItem -Path $item -include *.exe -Recurse | foreach-object { write-host -separator $separator $_.Fullname, $_.LastWriteTime, $_.Length, $_.VersionInfo.FileDescription, $_.VersionInfo.ProduktVersion, $_.VersionInfo.ProduktName }
+        Get-ChildItem -Path $item -include *.exe -Recurse | foreach-object { write-host -separator $separator $_.Fullname, $_.LastWriteTime, $_.Length, $_.VersionInfo.FileDescription, $_.VersionInfo.ProductVersion, $_.VersionInfo.ProductName }
     }
 }
 

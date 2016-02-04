@@ -102,7 +102,8 @@ bool DownCommColumn::isNagiosMember(void *data, void *member) {
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
     // data points to a host or service
     // member is not a pointer, but an unsigned int (hack)
-    int64_t id = (int64_t)member;  // Hack. Convert it back.
+    unsigned long id = static_cast<unsigned long>(
+        reinterpret_cast<uintptr_t>(member));  // Hack. Convert it back.
     DowntimeOrComment *dt = table->findEntry(id, _is_service);
     return dt != nullptr && (dt->_service == static_cast<service *>(data) ||
                              (dt->_service == nullptr &&

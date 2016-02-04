@@ -112,9 +112,10 @@ void *copy_thread(void *info) {
         while (bytes_to_write > 0) {
             ssize_t bytes_written = write(to, buffer, bytes_to_write);
             if (bytes_written == -1) {
+                uintmax_t b = bytes_to_write;
                 fprintf(stderr,
-                        "Error: Cannot write %" PRIuMAX " bytes to %d: %s\n",
-                        (uintmax_t)bytes_to_write, to, strerror(errno));
+                        "Error: Cannot write %" PRIuMAX " bytes to %d: %s\n", b,
+                        to, strerror(errno));
                 break;
             }
             buffer += bytes_written;

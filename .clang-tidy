@@ -22,10 +22,9 @@
 #   * desirable checks, but not yet fixed:
 #       * cppcoreguidelines-pro-type-cstyle-cast ("do not use C-style cast to convert between unrelated types")
 #       * cppcoreguidelines-pro-type-reinterpret-cast ("do not use reinterpret_cast")
-#       * google-readability-casting ("C-style casts are discouraged; use reinterpret_cast")
 #       * readability-else-after-return ("don't use else after return")
 #
-Checks: '*,-cert-dcl50-cpp,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-cstyle-cast,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-vararg,-google-readability-casting,-google-runtime-int,-llvm-include-order,-readability-else-after-return'
+Checks: '*,-cert-dcl50-cpp,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-cstyle-cast,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-vararg,-google-runtime-int,-llvm-include-order,-readability-else-after-return'
 CheckOptions:
   - key:             google-readability-namespace-comments.SpacesBeforeComments
     value:           '1'

@@ -83,7 +83,7 @@ bool AndingFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
 }
 
 void AndingFilter::combineFilters(int count, int andor) {
-    if (count > (int)_subfilters.size()) {
+    if (count > static_cast<int>(_subfilters.size())) {
         logger(LG_INFO, "Cannot combine %d filters with '%s': only %" PRIuMAX
                         " are on stack",
                count, andor == ANDOR_AND ? "AND" : "OR",

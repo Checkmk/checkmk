@@ -28,10 +28,10 @@ const char *OffsetStringColumn::getValue(void *data) {
     if (data == nullptr) {
         return "";
     }
-    char *p = (char *)shiftPointer(data);
+    char *p = reinterpret_cast<char *>(shiftPointer(data));
     if (p == nullptr) {
         return "";
     }
-    const char *s = *(char **)(p + _offset);
+    const char *s = *reinterpret_cast<char **>(p + _offset);
     return s != nullptr ? s : "";
 }

@@ -49,7 +49,8 @@ servicesmember *ServicelistStateColumn::getMembers(void *data) {
         return nullptr;
     }
 
-    return *(servicesmember **)((char *)data + _offset);
+    return *reinterpret_cast<servicesmember **>(reinterpret_cast<char *>(data) +
+                                                _offset);
 }
 
 int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem,

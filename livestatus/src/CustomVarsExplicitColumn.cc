@@ -43,5 +43,6 @@ customvariablesmember *CustomVarsExplicitColumn::getCVM(void *data) {
     if (data == nullptr) {
         return nullptr;
     }
-    return *(customvariablesmember **)((char *)data + _offset);
+    return *reinterpret_cast<customvariablesmember **>(
+        reinterpret_cast<char *>(data) + _offset);
 }

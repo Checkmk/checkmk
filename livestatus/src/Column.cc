@@ -41,21 +41,24 @@ void *Column::shiftPointer(void *data) {
         return nullptr;
     }
     if (_indirect_offset >= 0) {
-        data = *((void **)((char *)data + _indirect_offset));
+        data = *(reinterpret_cast<void **>(reinterpret_cast<char *>(data) +
+                                           _indirect_offset));
     }
 
     if (data == nullptr) {
         return nullptr;
     }
     if (_extra_offset >= 0) {
-        data = *((void **)((char *)data + _extra_offset));
+        data = *(reinterpret_cast<void **>(reinterpret_cast<char *>(data) +
+                                           _extra_offset));
     }
 
     if (data == nullptr) {
         return nullptr;
     }
     if (_extra_extra_offset >= 0) {
-        data = *((void **)((char *)data + _extra_extra_offset));
+        data = *(reinterpret_cast<void **>(reinterpret_cast<char *>(data) +
+                                           _extra_extra_offset));
     }
 
     return data;

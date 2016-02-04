@@ -37,13 +37,13 @@ TableCommands::TableCommands() { addColumns(this, "", -1); }
 void TableCommands::addColumns(Table *table, string prefix,
                                int indirect_offset) {
     command cmd;
-    char *ref = (char *)&cmd;
-    table->addColumn(
-        new OffsetStringColumn(prefix + "name", "The name of the command",
-                               (char *)(&cmd.name) - ref, indirect_offset));
+    char *ref = reinterpret_cast<char *>(&cmd);
+    table->addColumn(new OffsetStringColumn(
+        prefix + "name", "The name of the command",
+        reinterpret_cast<char *>(&cmd.name) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "line", "The shell command line",
-        (char *)(&cmd.command_line) - ref, indirect_offset));
+        reinterpret_cast<char *>(&cmd.command_line) - ref, indirect_offset));
 }
 
 void TableCommands::answerQuery(Query *query) {

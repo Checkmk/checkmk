@@ -38,13 +38,13 @@ TableTimeperiods::TableTimeperiods() { addColumns(this, "", -1); }
 void TableTimeperiods::addColumns(Table *table, string prefix,
                                   int indirect_offset) {
     timeperiod tp;
-    char *ref = (char *)&tp;
-    table->addColumn(
-        new OffsetStringColumn(prefix + "name", "The name of the timeperiod",
-                               (char *)(&tp.name) - ref, indirect_offset));
-    table->addColumn(
-        new OffsetStringColumn(prefix + "alias", "The alias of the timeperiod",
-                               (char *)(&tp.alias) - ref, indirect_offset));
+    char *ref = reinterpret_cast<char *>(&tp);
+    table->addColumn(new OffsetStringColumn(
+        prefix + "name", "The name of the timeperiod",
+        reinterpret_cast<char *>(&tp.name) - ref, indirect_offset));
+    table->addColumn(new OffsetStringColumn(
+        prefix + "alias", "The alias of the timeperiod",
+        reinterpret_cast<char *>(&tp.alias) - ref, indirect_offset));
     table->addColumn(new OffsetTimeperiodColumn(
         prefix + "in", "Wether we are currently in this period (0/1)", -1,
         indirect_offset));

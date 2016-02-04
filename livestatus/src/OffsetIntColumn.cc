@@ -29,9 +29,9 @@ int32_t OffsetIntColumn::getValue(void *data, Query * /*unused*/) {
         return 0;
     }
 
-    char *p = (char *)shiftPointer(data);
+    char *p = reinterpret_cast<char *>(shiftPointer(data));
     if (p != nullptr) {
-        return *(int *)(p + _offset);
+        return *reinterpret_cast<int *>(p + _offset);
     } else {
         return 0;
     }

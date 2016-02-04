@@ -141,18 +141,19 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
         logger(LG_INFO, "Query: %s", line);
     }
     if (strncmp(line, "GET ", 4) == 0) {
-        answerGetRequest(lines, output, lstrip((char *)line + 4));
+        answerGetRequest(lines, output, lstrip(const_cast<char *>(line) + 4));
     } else if (strcmp(line, "GET") == 0) {
         answerGetRequest(lines, output, "");  // only to get error message
     } else if (strncmp(line, "COMMAND ", 8) == 0) {
-        answerCommandRequest(lstrip((char *)line + 8));
+        answerCommandRequest(lstrip(const_cast<char *>(line) + 8));
         output->setDoKeepalive(true);
     } else if (strncmp(line, "LOGROTATE", 9) == 0) {
         logger(LG_INFO, "Forcing logfile rotation");
         rotate_log_file(time(nullptr));
         schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
-                           0, 0, (void *)get_next_log_rotation_time, 1, nullptr,
-                           nullptr, 0);
+                           0, 0,
+                           reinterpret_cast<void *>(get_next_log_rotation_time),
+                           1, nullptr, nullptr, 0);
     } else {
         logger(LG_INFO, "Invalid request '%s'", line);
         output->setError(RESPONSE_CODE_INVALID_REQUEST,
@@ -168,7 +169,7 @@ void Store::answerCommandRequest(const char *command) {
 #else
     int buffer_items = -1;
     /* int ret = */
-    submit_external_command((char *)command, &buffer_items);
+    submit_external_command(const_cast<char *>(command), &buffer_items);
 #endif
 }
 

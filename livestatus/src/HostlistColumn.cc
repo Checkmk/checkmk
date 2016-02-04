@@ -35,7 +35,8 @@ hostsmember *HostlistColumn::getMembers(void *data) {
         return nullptr;
     }
 
-    return *(hostsmember **)((char *)data + _offset);
+    return *reinterpret_cast<hostsmember **>(reinterpret_cast<char *>(data) +
+                                             _offset);
 }
 
 void HostlistColumn::output(void *data, Query *query) {

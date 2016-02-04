@@ -86,111 +86,168 @@ void TableStateHistory::addColumns(Table *table) {
     HostServiceState *ref = nullptr;
     table->addColumn(new OffsetTimeColumn(
         "time", "Time of the log event (seconds since 1/1/1970)",
-        (char *)&(ref->_time) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_time)) - reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(
         new OffsetIntColumn("lineno", "The number of the line in the log file",
-                            (char *)&(ref->_lineno) - (char *)ref, -1));
+                            reinterpret_cast<char *>(&(ref->_lineno)) -
+                                reinterpret_cast<char *>(ref),
+                            -1));
     table->addColumn(new OffsetTimeColumn(
         "from", "Start time of state (seconds since 1/1/1970)",
-        (char *)&(ref->_from) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_from)) - reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetTimeColumn(
         "until", "End time of state (seconds since 1/1/1970)",
-        (char *)&(ref->_until) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_until)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(
         new OffsetIntColumn("duration", "Duration of state (until - from)",
-                            (char *)&(ref->_duration) - (char *)ref, -1));
+                            reinterpret_cast<char *>(&(ref->_duration)) -
+                                reinterpret_cast<char *>(ref),
+                            -1));
     table->addColumn(new OffsetDoubleColumn(
         "duration_part", "Duration part in regard to the query timeframe",
-        (char *)(&ref->_duration_part) - (char *)ref, -1));
+        reinterpret_cast<char *>(&ref->_duration_part) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetIntColumn(
         "state",
         "The state of the host or service in question - OK(0) / WARNING(1) / "
         "CRITICAL(2) / UNKNOWN(3) / UNMONITORED(-1)",
-        (char *)&(ref->_state) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_state)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetIntColumn(
         "host_down", "Shows if the host of this service is down",
-        (char *)&(ref->_host_down) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_host_down)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetIntColumn(
         "in_downtime", "Shows if the host or service is in downtime",
-        (char *)&(ref->_in_downtime) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_in_downtime)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetIntColumn(
         "in_host_downtime", "Shows if the host of this service is in downtime",
-        (char *)&(ref->_in_host_downtime) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_in_host_downtime)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetIntColumn(
         "is_flapping", "Shows if the host or service is flapping",
-        (char *)&(ref->_is_flapping) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_is_flapping)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetIntColumn(
         "in_notification_period",
         "Shows if the host or service is within its notification period",
-        (char *)&(ref->_in_notification_period) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_in_notification_period)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetStringColumn(
         "notification_period",
         "The notification period of the host or service in question",
-        (char *)&(ref->_notification_period) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_notification_period)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetIntColumn(
         "in_service_period",
         "Shows if the host or service is within its service period",
-        (char *)&(ref->_in_service_period) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_in_service_period)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetStringColumn(
         "service_period",
         "The service period of the host or service in question",
-        (char *)&(ref->_service_period) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_service_period)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(
         new OffsetStringColumn("debug_info", "Debug information",
-                               (char *)&(ref->_debug_info) - (char *)ref, -1));
-    table->addColumn(
-        new OffsetStringColumn("host_name", "Host name",
-                               (char *)&(ref->_host_name) - (char *)ref, -1));
+                               reinterpret_cast<char *>(&(ref->_debug_info)) -
+                                   reinterpret_cast<char *>(ref),
+                               -1));
+    table->addColumn(new OffsetStringColumn(
+        "host_name", "Host name", reinterpret_cast<char *>(&(ref->_host_name)) -
+                                      reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetStringColumn(
         "service_description", "Description of the service",
-        (char *)&(ref->_service_description) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_service_description)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetStringColumn(
         "log_output", "Logfile output relevant for this state",
-        (char *)&(ref->_log_output) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_log_output)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetIntColumn(
         "duration_ok", "OK duration of state ( until - from )",
-        (char *)&(ref->_duration_state_OK) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_duration_state_OK)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetDoubleColumn(
         "duration_part_ok", "OK duration part in regard to the query timeframe",
-        (char *)(&ref->_duration_part_OK) - (char *)ref, -1));
+        reinterpret_cast<char *>(&ref->_duration_part_OK) -
+            reinterpret_cast<char *>(ref),
+        -1));
 
     table->addColumn(new OffsetIntColumn(
         "duration_warning", "WARNING duration of state (until - from)",
-        (char *)&(ref->_duration_state_WARNING) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_duration_state_WARNING)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetDoubleColumn(
         "duration_part_warning",
         "WARNING duration part in regard to the query timeframe",
-        (char *)(&ref->_duration_part_WARNING) - (char *)ref, -1));
+        reinterpret_cast<char *>(&ref->_duration_part_WARNING) -
+            reinterpret_cast<char *>(ref),
+        -1));
 
     table->addColumn(new OffsetIntColumn(
         "duration_critical", "CRITICAL duration of state (until - from)",
-        (char *)&(ref->_duration_state_CRITICAL) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_duration_state_CRITICAL)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetDoubleColumn(
         "duration_part_critical",
         "CRITICAL duration part in regard to the query timeframe",
-        (char *)(&ref->_duration_part_CRITICAL) - (char *)ref, -1));
+        reinterpret_cast<char *>(&ref->_duration_part_CRITICAL) -
+            reinterpret_cast<char *>(ref),
+        -1));
 
     table->addColumn(new OffsetIntColumn(
         "duration_unknown", "UNKNOWN duration of state (until - from)",
-        (char *)&(ref->_duration_state_UNKNOWN) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_duration_state_UNKNOWN)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetDoubleColumn(
         "duration_part_unknown",
         "UNKNOWN duration part in regard to the query timeframe",
-        (char *)(&ref->_duration_part_UNKNOWN) - (char *)ref, -1));
+        reinterpret_cast<char *>(&ref->_duration_part_UNKNOWN) -
+            reinterpret_cast<char *>(ref),
+        -1));
 
     table->addColumn(new OffsetIntColumn(
         "duration_unmonitored", "UNMONITORED duration of state (until - from)",
-        (char *)&(ref->_duration_state_UNMONITORED) - (char *)ref, -1));
+        reinterpret_cast<char *>(&(ref->_duration_state_UNMONITORED)) -
+            reinterpret_cast<char *>(ref),
+        -1));
     table->addColumn(new OffsetDoubleColumn(
         "duration_part_unmonitored",
         "UNMONITORED duration part in regard to the query timeframe",
-        (char *)(&ref->_duration_part_UNMONITORED) - (char *)ref, -1));
+        reinterpret_cast<char *>(&ref->_duration_part_UNMONITORED) -
+            reinterpret_cast<char *>(ref),
+        -1));
 
     // join host and service tables
     TableHosts::addColumns(table, "current_host_",
-                           (char *)&(ref->_host) - (char *)ref);
+                           reinterpret_cast<char *>(&(ref->_host)) -
+                               reinterpret_cast<char *>(ref));
     TableServices::addColumns(table, "current_service_",
-                              (char *)&(ref->_service) - (char *)ref,
+                              reinterpret_cast<char *>(&(ref->_service)) -
+                                  reinterpret_cast<char *>(ref),
                               false /* no hosts table */);
 }
 
@@ -897,8 +954,8 @@ int TableStateHistory::updateHostServiceState(Query *query,
 
 void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
     hs_state->_duration = hs_state->_until - hs_state->_from;
-    hs_state->_duration_part =
-        (double)hs_state->_duration / (double)_query_timeframe;
+    hs_state->_duration_part = static_cast<double>(hs_state->_duration) /
+                               static_cast<double>(_query_timeframe);
 
     bzero(&hs_state->_duration_state_UNMONITORED,
           sizeof(time_t) * 5 + sizeof(double) * 5);

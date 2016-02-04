@@ -70,7 +70,8 @@ unsigned long AttributelistColumn::getValue(void *data) {
 #ifdef CMC
     return *(uint16_t *)((char *)data + _offset);
 #else
-    return *(unsigned long *)((char *)data + _offset);
+    return *reinterpret_cast<unsigned long *>(reinterpret_cast<char *>(data) +
+                                              _offset);
 #endif
 }
 

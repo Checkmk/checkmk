@@ -894,7 +894,7 @@ bool Query::processDataset(void *data) {
     if (_filter.accepts(data) &&
         ((_auth_user == nullptr) || _table->isAuthorized(_auth_user, data))) {
         _current_line++;
-        if (_limit >= 0 && (int)_current_line > _limit) {
+        if (_limit >= 0 && static_cast<int>(_current_line) > _limit) {
             return false;
         }
 
@@ -1052,7 +1052,7 @@ void Query::outputInteger(int32_t value) {
 
 void Query::outputInteger64(int64_t value) {
     char buf[32];
-    int l = snprintf(buf, 32, "%lld", (long long int)value);
+    int l = snprintf(buf, 32, "%lld", static_cast<long long int>(value));
     _output->addBuffer(buf, l);
 }
 
@@ -1069,7 +1069,8 @@ void Query::outputUnsignedLong(unsigned long value) {
 
 void Query::outputCounter(counter_t value) {
     char buf[64];
-    int l = snprintf(buf, sizeof(buf), "%llu", (unsigned long long)value);
+    int l = snprintf(buf, sizeof(buf), "%llu",
+                     static_cast<unsigned long long>(value));
     _output->addBuffer(buf, l);
 }
 
@@ -1138,7 +1139,7 @@ void Query::outputString(const char *value, int len) {
             // Always escape control characters (1..31)
             if (*r < 32 && *r >= 0) {
                 if (len < 0) {
-                    outputUnicodeEscape((unsigned)*r);
+                    outputUnicodeEscape(static_cast<unsigned>(*r));
                 } else {
                     outputAsciiEscape(*r);
                 }
@@ -1211,8 +1212,8 @@ void Query::outputString(const char *value, int len) {
             // in latin1 and mixed mode interprete all other non-ASCII
             // characters as latin1
             else {
-                outputUnicodeEscape(
-                    (unsigned)((int)*r + 256));  // assume latin1 encoding
+                outputUnicodeEscape(static_cast<unsigned>(
+                    static_cast<int>(*r) + 256));  // assume latin1 encoding
             }
 
             r++;

@@ -150,7 +150,8 @@ void TableServices::answerQuery(Query *query) {
     }
 
     // do we know the service group?
-    servicegroup *sgroup = (servicegroup *)query->findIndexFilter("groups");
+    servicegroup *sgroup =
+        reinterpret_cast<servicegroup *>(query->findIndexFilter("groups"));
     if (sgroup != nullptr) {
         servicesmember *mem = sgroup->members;
         while (mem != nullptr) {
@@ -163,7 +164,8 @@ void TableServices::answerQuery(Query *query) {
     }
 
     // do we know the host group?
-    hostgroup *hgroup = (hostgroup *)query->findIndexFilter("host_groups");
+    hostgroup *hgroup =
+        reinterpret_cast<hostgroup *>(query->findIndexFilter("host_groups"));
     if (hgroup != nullptr) {
         hostsmember *mem = hgroup->members;
         while (mem != nullptr) {
@@ -203,10 +205,12 @@ TableServices::TableServices(bool by_group, bool by_hostgroup)
     if (by_group) {
         TableServicegroups::addColumns(
             this, "servicegroup_",
-            (char *)&(sgref._servicegroup) - (char *)&sgref);
+            reinterpret_cast<char *>(&(sgref._servicegroup)) -
+                reinterpret_cast<char *>(&sgref));
     } else if (by_hostgroup) {
         TableHostgroups::addColumns(
-            this, "hostgroup_", (char *)&(hgref._hostgroup) - (char *)&hgref);
+            this, "hostgroup_", reinterpret_cast<char *>(&(hgref._hostgroup)) -
+                                    reinterpret_cast<char *>(&hgref));
     }
 }
 
@@ -218,22 +222,24 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
        Spalte. Und: die Servicegruppen */
 
     service svc;
-    const char *ref = (const char *)&svc;
+    const char *ref = reinterpret_cast<const char *>(&svc);
     table->addColumn(new OffsetStringColumn(
         prefix + "description", "Description of the service (also used as key)",
-        (char *)(&svc.description) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.description) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "display_name",
         "An optional display name (not used by Nagios standard web pages)",
-        (char *)(&svc.display_name) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.display_name) - ref, indirect_offset));
 #ifndef NAGIOS4
     table->addColumn(new OffsetStringColumn(
         prefix + "check_command", "Nagios command used for active checks",
-        (char *)(&svc.service_check_command) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.service_check_command) - ref,
+        indirect_offset));
     table->addColumn(new OffsetStringServiceMacroColumn(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
-        (char *)(&svc.service_check_command) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.service_check_command) - ref,
+        indirect_offset));
 #else
     table->addColumn(new OffsetStringColumn(
         prefix + "check_command", "Nagios command used for active checks",
@@ -245,177 +251,194 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 #endif
     table->addColumn(new OffsetStringColumn(
         prefix + "event_handler", "Nagios command used as event handler",
-        (char *)(&svc.event_handler) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.event_handler) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "plugin_output", "Output of the last check plugin",
-        (char *)(&svc.plugin_output) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.plugin_output) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "long_plugin_output",
         "Unabbreviated output of the last check plugin",
-        (char *)(&svc.long_plugin_output) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.long_plugin_output) - ref,
+        indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "perf_data", "Performance data of the last check plugin",
-        (char *)(&svc.perf_data) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.perf_data) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "notification_period",
         "The name of the notification period of the service. It this is empty, "
         "service problems are always notified.",
-        (char *)(&svc.notification_period) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.notification_period) - ref,
+        indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "check_period",
         "The name of the check period of the service. It this is empty, the "
         "service is always checked.",
-        (char *)(&svc.check_period) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.check_period) - ref, indirect_offset));
     table->addColumn(new CustomVarsExplicitColumn(
         prefix + "service_period",
         "The name of the service period of the service",
-        (char *)(&svc.custom_variables) - ref, indirect_offset,
+        reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
         "SERVICE_PERIOD"));
     table->addColumn(new OffsetStringColumn(
         prefix + "notes", "Optional notes about the service",
-        (char *)(&svc.notes) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.notes) - ref, indirect_offset));
     table->addColumn(new OffsetStringServiceMacroColumn(
         prefix + "notes_expanded",
         "The notes with (the most important) macros expanded",
-        (char *)(&svc.notes) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.notes) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "notes_url",
         "An optional URL for additional notes about the service",
-        (char *)(&svc.notes_url) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.notes_url) - ref, indirect_offset));
     table->addColumn(new OffsetStringServiceMacroColumn(
         prefix + "notes_url_expanded",
         "The notes_url with (the most important) macros expanded",
-        (char *)(&svc.notes_url) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.notes_url) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "action_url",
         "An optional URL for actions or custom information about the service",
-        (char *)(&svc.action_url) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.action_url) - ref, indirect_offset));
     table->addColumn(new OffsetStringServiceMacroColumn(
         prefix + "action_url_expanded",
         "The action_url with (the most important) macros expanded",
-        (char *)(&svc.action_url) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.action_url) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "icon_image",
         "The name of an image to be used as icon in the web interface",
-        (char *)(&svc.icon_image) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.icon_image) - ref, indirect_offset));
     table->addColumn(new OffsetStringServiceMacroColumn(
         prefix + "icon_image_expanded",
         "The icon_image with (the most important) macros expanded",
-        (char *)(&svc.icon_image) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.icon_image) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "icon_image_alt",
         "An alternative text for the icon_image for browsers not displaying "
         "icons",
-        (char *)(&svc.icon_image_alt) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.icon_image_alt) - ref, indirect_offset));
 
     table->addColumn(new OffsetIntColumn(
         prefix + "initial_state", "The initial state of the service",
-        (char *)&svc.initial_state - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.initial_state) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "max_check_attempts", "The maximum number of check attempts",
-        (char *)&svc.max_attempts - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.max_attempts) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "current_attempt", "The number of the current check attempt",
-        (char *)&svc.current_attempt - ref, indirect_offset));
-    table->addColumn(
-        new OffsetIntColumn(prefix + "state",
-                            "The current state of the service (0: OK, 1: WARN, "
-                            "2: CRITICAL, 3: UNKNOWN)",
-                            (char *)&svc.current_state - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.current_attempt) - ref, indirect_offset));
+    table->addColumn(new OffsetIntColumn(
+        prefix + "state",
+        "The current state of the service (0: OK, 1: WARN, "
+        "2: CRITICAL, 3: UNKNOWN)",
+        reinterpret_cast<char *>(&svc.current_state) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "has_been_checked",
         "Whether the service already has been checked (0/1)",
-        (char *)&svc.has_been_checked - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.has_been_checked) - ref,
+        indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "last_state", "The last state of the service",
-        (char *)&svc.last_state - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.last_state) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "last_hard_state", "The last hard state of the service",
-        (char *)&svc.last_hard_state - ref, indirect_offset));
-    table->addColumn(
-        new OffsetIntColumn(prefix + "state_type",
-                            "The type of the current state (0: soft, 1: hard)",
-                            (char *)&svc.state_type - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.last_hard_state) - ref, indirect_offset));
+    table->addColumn(new OffsetIntColumn(
+        prefix + "state_type",
+        "The type of the current state (0: soft, 1: hard)",
+        reinterpret_cast<char *>(&svc.state_type) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "check_type",
         "The type of the last check (0: active, 1: passive)",
-        (char *)&svc.check_type - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.check_type) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "acknowledged",
         "Whether the current service problem has been acknowledged (0/1)",
-        (char *)&svc.problem_has_been_acknowledged - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.problem_has_been_acknowledged) - ref,
+        indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "acknowledgement_type",
         "The type of the acknownledgement (0: none, 1: normal, 2: sticky)",
-        (char *)&svc.acknowledgement_type - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.acknowledgement_type) - ref,
+        indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "no_more_notifications",
         "Whether to stop sending notifications (0/1)",
-        (char *)(&svc.no_more_notifications) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.no_more_notifications) - ref,
+        indirect_offset));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_state_change",
         "The time of the last state change (Unix timestamp)",
-        (char *)&svc.last_state_change - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.last_state_change) - ref,
+        indirect_offset));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_time_ok",
         "The last time the service was OK (Unix timestamp)",
-        (char *)&svc.last_time_ok - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.last_time_ok) - ref, indirect_offset));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_time_warning",
         "The last time the service was in WARNING state (Unix timestamp)",
-        (char *)&svc.last_time_warning - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.last_time_warning) - ref,
+        indirect_offset));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_time_critical",
         "The last time the service was CRITICAL (Unix timestamp)",
-        (char *)&svc.last_time_critical - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.last_time_critical) - ref,
+        indirect_offset));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_time_unknown",
         "The last time the service was UNKNOWN (Unix timestamp)",
-        (char *)&svc.last_time_unknown - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.last_time_unknown) - ref,
+        indirect_offset));
 
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_check", "The time of the last check (Unix timestamp)",
-        (char *)&svc.last_check - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.last_check) - ref, indirect_offset));
     table->addColumn(new OffsetTimeColumn(
         prefix + "next_check",
         "The scheduled time of the next check (Unix timestamp)",
-        (char *)&svc.next_check - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.next_check) - ref, indirect_offset));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_notification",
         "The time of the last notification (Unix timestamp)",
-        (char *)&svc.last_notification - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.last_notification) - ref,
+        indirect_offset));
     table->addColumn(new OffsetTimeColumn(
         prefix + "next_notification",
         "The time of the next notification (Unix timestamp)",
-        (char *)&svc.next_notification - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.next_notification) - ref,
+        indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "current_notification_number",
         "The number of the current notification",
-        (char *)&svc.current_notification_number - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.current_notification_number) - ref,
+        indirect_offset));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_state_change",
         "The time of the last state change - soft or hard (Unix timestamp)",
-        (char *)&svc.last_state_change - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.last_state_change) - ref,
+        indirect_offset));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_hard_state_change",
         "The time of the last hard state change (Unix timestamp)",
-        (char *)&svc.last_hard_state_change - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.last_hard_state_change) - ref,
+        indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "scheduled_downtime_depth",
         "The number of scheduled downtimes the service is currently in",
-        (char *)(&svc.scheduled_downtime_depth) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.scheduled_downtime_depth) - ref,
+        indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "is_flapping", "Whether the service is flapping (0/1)",
-        (char *)(&svc.is_flapping) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.is_flapping) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "checks_enabled",
         "Whether active checks are enabled for the service (0/1)",
-        (char *)(&svc.checks_enabled) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.checks_enabled) - ref, indirect_offset));
 #ifndef NAGIOS4
     table->addColumn(new OffsetIntColumn(
         prefix + "accept_passive_checks",
         "Whether the service accepts passive checks (0/1)",
-        (char *)(&svc.accept_passive_service_checks) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.accept_passive_service_checks) - ref,
+        indirect_offset));
 #else
     table->addColumn(new OffsetIntColumn(
         prefix + "accept_passive_checks",
@@ -425,41 +448,46 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
     table->addColumn(new OffsetIntColumn(
         prefix + "event_handler_enabled",
         "Whether and event handler is activated for the service (0/1)",
-        (char *)(&svc.event_handler_enabled) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.event_handler_enabled) - ref,
+        indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "notifications_enabled",
         "Whether notifications are enabled for the service (0/1)",
-        (char *)(&svc.notifications_enabled) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.notifications_enabled) - ref,
+        indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "process_performance_data",
         "Whether processing of performance data is enabled for the service "
         "(0/1)",
-        (char *)(&svc.process_performance_data) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.process_performance_data) - ref,
+        indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "is_executing",
         "is there a service check currently running... (0/1)",
-        (char *)(&svc.is_executing) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.is_executing) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "active_checks_enabled",
         "Whether active checks are enabled for the service (0/1)",
-        (char *)(&svc.checks_enabled) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.checks_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "check_options",
         "The current check option, forced, normal, freshness... (0/1)",
-        (char *)(&svc.check_options) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.check_options) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "flap_detection_enabled",
         "Whether flap detection is enabled for the service (0/1)",
-        (char *)(&svc.flap_detection_enabled) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.flap_detection_enabled) - ref,
+        indirect_offset));
     table->addColumn(new OffsetIntColumn(
         prefix + "check_freshness",
         "Whether freshness checks are activated (0/1)",
-        (char *)(&svc.check_freshness) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.check_freshness) - ref, indirect_offset));
 #ifndef NAGIOS4
     table->addColumn(new OffsetIntColumn(
         prefix + "obsess_over_service",
         "Whether 'obsess_over_service' is enabled for the service (0/1)",
-        (char *)(&svc.obsess_over_service) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.obsess_over_service) - ref,
+        indirect_offset));
 #else
     table->addColumn(new OffsetIntColumn(
         prefix + "obsess_over_service",
@@ -469,11 +497,13 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
     table->addColumn(new AttributelistColumn(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
-        (char *)(&svc.modified_attributes) - ref, indirect_offset, false));
+        reinterpret_cast<char *>(&svc.modified_attributes) - ref,
+        indirect_offset, false));
     table->addColumn(new AttributelistColumn(
         prefix + "modified_attributes_list",
         "A list of all modified attributes",
-        (char *)(&svc.modified_attributes) - ref, indirect_offset, true));
+        reinterpret_cast<char *>(&svc.modified_attributes) - ref,
+        indirect_offset, true));
     table->addColumn(new ServiceSpecialIntColumn(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",
@@ -487,51 +517,58 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
         prefix + "check_interval",
         "Number of basic interval lengths between two scheduled checks of the "
         "service",
-        (char *)(&svc.check_interval) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.check_interval) - ref, indirect_offset));
     table->addColumn(new OffsetDoubleColumn(
         prefix + "retry_interval",
         "Number of basic interval lengths between checks when retrying after a "
         "soft error",
-        (char *)(&svc.retry_interval) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.retry_interval) - ref, indirect_offset));
     table->addColumn(new OffsetDoubleColumn(
         prefix + "notification_interval",
         "Interval of periodic notification or 0 if its off",
-        (char *)(&svc.notification_interval) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.notification_interval) - ref,
+        indirect_offset));
     table->addColumn(new OffsetDoubleColumn(
         prefix + "first_notification_delay",
         "Delay before the first notification",
-        (char *)(&svc.first_notification_delay) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.first_notification_delay) - ref,
+        indirect_offset));
     table->addColumn(new OffsetDoubleColumn(
         prefix + "low_flap_threshold", "Low threshold of flap detection",
-        (char *)(&svc.low_flap_threshold) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.low_flap_threshold) - ref,
+        indirect_offset));
     table->addColumn(new OffsetDoubleColumn(
         prefix + "high_flap_threshold", "High threshold of flap detection",
-        (char *)(&svc.high_flap_threshold) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.high_flap_threshold) - ref,
+        indirect_offset));
     table->addColumn(new OffsetDoubleColumn(
         prefix + "latency",
         "Time difference between scheduled check time and actual check time",
-        (char *)(&svc.latency) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.latency) - ref, indirect_offset));
     table->addColumn(new OffsetDoubleColumn(
         prefix + "execution_time",
         "Time the service check needed for execution",
-        (char *)(&svc.execution_time) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.execution_time) - ref, indirect_offset));
     table->addColumn(new OffsetDoubleColumn(
         prefix + "percent_state_change", "Percent state change",
-        (char *)(&svc.percent_state_change) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.percent_state_change) - ref,
+        indirect_offset));
 
     table->addColumn(new OffsetTimeperiodColumn(
         prefix + "in_check_period",
         "Whether the service is currently in its check period (0/1)",
-        (char *)&svc.check_period_ptr - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.check_period_ptr) - ref,
+        indirect_offset));
     table->addColumn(new CustomTimeperiodColumn(
         prefix + "in_service_period",
         "Whether this service is currently in its service period (0/1)",
-        (char *)(&svc.custom_variables) - ref, indirect_offset,
+        reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
         "SERVICE_PERIOD"));
     table->addColumn(new OffsetTimeperiodColumn(
         prefix + "in_notification_period",
         "Whether the service is currently in its notification period (0/1)",
-        (char *)&svc.notification_period_ptr - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.notification_period_ptr) - ref,
+        indirect_offset));
 
     table->addColumn(new ServiceContactsColumn(prefix + "contacts",
                                                "A list of all contacts of the "
@@ -559,28 +596,33 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
                            indirect_offset, false, true, true, true));
 
     if (add_hosts) {
-        TableHosts::addColumns(table, "host_", (char *)(&svc.host_ptr) - ref);
+        TableHosts::addColumns(table, "host_",
+                               reinterpret_cast<char *>(&svc.host_ptr) - ref);
     }
 
     table->addColumn(new CustomVarsColumn(
         prefix + "custom_variable_names",
         "A list of the names of all custom variables of the service",
-        (char *)(&svc.custom_variables) - ref, indirect_offset, CVT_VARNAMES));
+        reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
+        CVT_VARNAMES));
     table->addColumn(new CustomVarsColumn(
         prefix + "custom_variable_values",
         "A list of the values of all custom variable of the service",
-        (char *)(&svc.custom_variables) - ref, indirect_offset, CVT_VALUES));
+        reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
+        CVT_VALUES));
     table->addColumn(new CustomVarsColumn(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        (char *)(&svc.custom_variables) - ref, indirect_offset, CVT_DICT));
+        reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
+        CVT_DICT));
 
     table->addColumn(new ServicegroupsColumn(
         prefix + "groups", "A list of all service groups the service is in",
-        (char *)(&svc.servicegroups_ptr) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.servicegroups_ptr) - ref,
+        indirect_offset));
     table->addColumn(new ContactgroupsColumn(
         prefix + "contact_groups",
         "A list of all contact groups this service is in",
-        (char *)(&svc.contact_groups) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.contact_groups) - ref, indirect_offset));
 
     table->addColumn(new MetricsColumn(
         prefix + "metrics",

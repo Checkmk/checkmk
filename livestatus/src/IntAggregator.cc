@@ -39,7 +39,7 @@ void IntAggregator::consume(void *data, Query *query) {
 
         case STATS_OP_SUMINV:
         case STATS_OP_AVGINV:
-            _sumq += 1.0 / (double)value;
+            _sumq += 1.0 / static_cast<double>(value);
             break;
 
         case STATS_OP_MIN:
@@ -60,7 +60,7 @@ void IntAggregator::consume(void *data, Query *query) {
 
         case STATS_OP_STD:
             _aggr += value;
-            _sumq += (double)value * (double)value;
+            _sumq += static_cast<double>(value) * static_cast<double>(value);
             break;
     }
 }
@@ -89,9 +89,11 @@ void IntAggregator::output(Query *q) {
             if (_count <= 1) {
                 q->outputDouble(0.0);
             } else {
-                q->outputDouble(
-                    sqrt((_sumq - ((double)_aggr * (double)_aggr) / _count) /
-                         (_count - 1)));
+                q->outputDouble(sqrt(
+                    (_sumq -
+                     (static_cast<double>(_aggr) * static_cast<double>(_aggr)) /
+                         _count) /
+                    (_count - 1)));
             }
             break;
     }

@@ -216,12 +216,12 @@ TableStatus::TableStatus() {
         &check_external_commands));
     addColumn(new TimePointerColumn(
         "program_start", "The time of the last program start as UNIX timestamp",
-        (int *)&program_start));
+        reinterpret_cast<int *>(&program_start)));
 #ifndef NAGIOS4
     addColumn(new TimePointerColumn(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp",
-        (int *)&last_command_check));
+        reinterpret_cast<int *>(&last_command_check)));
 #else
     int dummy = 0;
     addColumn(new TimePointerColumn("last_command_check",
@@ -229,18 +229,17 @@ TableStatus::TableStatus() {
                                     "as UNIX timestamp (placeholder)",
                                     &dummy));
 #endif  // NAGIOS4
-    addColumn(new TimePointerColumn("last_log_rotation",
-                                    "Time time of the last log file rotation",
-                                    (int *)&last_log_rotation));
+    addColumn(new TimePointerColumn(
+        "last_log_rotation", "Time time of the last log file rotation",
+        reinterpret_cast<int *>(&last_log_rotation)));
     addColumn(new IntPointerColumn(
         "interval_length", "The default interval length from nagios.cfg",
-        (int *)&interval_length));
+        &interval_length));
 
     addColumn(new IntPointerColumn("num_hosts", "The total number of hosts",
-                                   (int *)&g_num_hosts));
-    addColumn(new IntPointerColumn("num_services",
-                                   "The total number of services",
-                                   (int *)&g_num_services));
+                                   &g_num_hosts));
+    addColumn(new IntPointerColumn(
+        "num_services", "The total number of services", &g_num_services));
 
     addColumn(new StringPointerColumn("program_version",
                                       "The version of the monitoring daemon",

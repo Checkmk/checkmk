@@ -38,7 +38,8 @@ servicesmember *ServicelistColumn::getMembers(void *data) {
         return nullptr;
     }
 
-    return *(servicesmember **)((char *)data + _offset);
+    return *reinterpret_cast<servicesmember **>(reinterpret_cast<char *>(data) +
+                                                _offset);
 }
 
 void ServicelistColumn::output(void *data, Query *query) {

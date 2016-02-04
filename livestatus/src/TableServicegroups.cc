@@ -44,78 +44,85 @@ TableServicegroups::TableServicegroups() { addColumns(this, "", -1); }
 void TableServicegroups::addColumns(Table *table, string prefix,
                                     int indirect_offset) {
     servicegroup sgr;
-    char *ref = (char *)&sgr;
+    char *ref = reinterpret_cast<char *>(&sgr);
     table->addColumn(new OffsetStringColumn(
         prefix + "name", "The name of the service group",
-        (char *)(&sgr.group_name) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.group_name) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "alias", "An alias of the service group",
-        (char *)(&sgr.alias) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.alias) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "notes", "Optional additional notes about the service group",
-        (char *)(&sgr.notes) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.notes) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "notes_url",
         "An optional URL to further notes on the service group",
-        (char *)(&sgr.notes_url) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.notes_url) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
         prefix + "action_url",
         "An optional URL to custom notes or actions on the service group",
-        (char *)(&sgr.action_url) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.action_url) - ref, indirect_offset));
     table->addColumn(new ServicelistColumn(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
-        (char *)(&sgr.members) - ref, indirect_offset, true, 0));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, true,
+        0));
     table->addColumn(new ServicelistColumn(
         prefix + "members_with_state",
         "A list of all members of the service group with state and "
         "has_been_checked",
-        (char *)(&sgr.members) - ref, indirect_offset, true, 1));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, true,
+        1));
 
     table->addColumn(new ServicelistStateColumn(
         prefix + "worst_service_state",
         "The worst soft state of all of the groups services (OK <= WARN <= "
         "UNKNOWN <= CRIT)",
-        SLSC_WORST_STATE, (char *)(&sgr.members) - ref, indirect_offset));
+        SLSC_WORST_STATE, reinterpret_cast<char *>(&sgr.members) - ref,
+        indirect_offset));
     table->addColumn(new ServicelistStateColumn(
         prefix + "num_services", "The total number of services in the group",
-        SLSC_NUM, (char *)(&sgr.members) - ref, indirect_offset));
+        SLSC_NUM, reinterpret_cast<char *>(&sgr.members) - ref,
+        indirect_offset));
     table->addColumn(new ServicelistStateColumn(
         prefix + "num_services_ok",
         "The number of services in the group that are OK", SLSC_NUM_OK,
-        (char *)(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(new ServicelistStateColumn(
         prefix + "num_services_warn",
         "The number of services in the group that are WARN", SLSC_NUM_WARN,
-        (char *)(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(new ServicelistStateColumn(
         prefix + "num_services_crit",
         "The number of services in the group that are CRIT", SLSC_NUM_CRIT,
-        (char *)(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(new ServicelistStateColumn(
         prefix + "num_services_unknown",
         "The number of services in the group that are UNKNOWN",
-        SLSC_NUM_UNKNOWN, (char *)(&sgr.members) - ref, indirect_offset));
+        SLSC_NUM_UNKNOWN, reinterpret_cast<char *>(&sgr.members) - ref,
+        indirect_offset));
     table->addColumn(new ServicelistStateColumn(
         prefix + "num_services_pending",
         "The number of services in the group that are PENDING",
-        SLSC_NUM_PENDING, (char *)(&sgr.members) - ref, indirect_offset));
+        SLSC_NUM_PENDING, reinterpret_cast<char *>(&sgr.members) - ref,
+        indirect_offset));
     table->addColumn(new ServicelistStateColumn(
         prefix + "num_services_hard_ok",
         "The number of services in the group that are OK", SLSC_NUM_HARD_OK,
-        (char *)(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(new ServicelistStateColumn(
         prefix + "num_services_hard_warn",
         "The number of services in the group that are WARN", SLSC_NUM_HARD_WARN,
-        (char *)(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(new ServicelistStateColumn(
         prefix + "num_services_hard_crit",
         "The number of services in the group that are CRIT", SLSC_NUM_HARD_CRIT,
-        (char *)(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(new ServicelistStateColumn(
         prefix + "num_services_hard_unknown",
         "The number of services in the group that are UNKNOWN",
-        SLSC_NUM_HARD_UNKNOWN, (char *)(&sgr.members) - ref, indirect_offset));
+        SLSC_NUM_HARD_UNKNOWN, reinterpret_cast<char *>(&sgr.members) - ref,
+        indirect_offset));
 }
 
 void TableServicegroups::answerQuery(Query *query) {
@@ -137,7 +144,7 @@ bool TableServicegroups::isAuthorized(contact *ctc, void *data) {
         return false;
     }
 
-    servicegroup *sg = (servicegroup *)data;
+    servicegroup *sg = reinterpret_cast<servicegroup *>(data);
     servicesmember *mem = sg->members;
     while (mem != nullptr) {
         service *svc = mem->service_ptr;

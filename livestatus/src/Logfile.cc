@@ -269,7 +269,7 @@ bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since,
 }
 
 uint64_t Logfile::makeKey(time_t t, unsigned lineno) {
-    return (uint64_t)((uint64_t)t << 32) | (uint64_t)lineno;
+    return (static_cast<uint64_t>(t) << 32) | static_cast<uint64_t>(lineno);
 }
 
 void Logfile::updateReferences() {

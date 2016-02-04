@@ -29,7 +29,8 @@ objectlist *HostgroupsColumn::getData(void *data) {
     if (data != nullptr) {
         data = shiftPointer(data);
         if (data != nullptr) {
-            return *(objectlist **)((char *)data + _offset);
+            return *reinterpret_cast<objectlist **>(
+                reinterpret_cast<char *>(data) + _offset);
         }
     }
     return nullptr;
@@ -41,7 +42,7 @@ void HostgroupsColumn::output(void *data, Query *query) {
     if (list != nullptr) {
         bool first = true;
         while (list != nullptr) {
-            hostgroup *sg = (hostgroup *)list->object_ptr;
+            hostgroup *sg = reinterpret_cast<hostgroup *>(list->object_ptr);
             if (!first) {
                 query->outputListSeparator();
             } else {
@@ -65,7 +66,8 @@ bool HostgroupsColumn::isNagiosMember(void *data, void *nagobject) {
 
     // data is already shifted (_indirect_offset is taken into account)
     // But _offset needs still to be accounted for
-    objectlist *list = *(objectlist **)((char *)data + _offset);
+    objectlist *list = *reinterpret_cast<objectlist **>(
+        reinterpret_cast<char *>(data) + _offset);
 
     while (list != nullptr) {
         if (list->object_ptr == nagobject) {
@@ -77,6 +79,7 @@ bool HostgroupsColumn::isNagiosMember(void *data, void *nagobject) {
 }
 
 bool HostgroupsColumn::isEmpty(void *data) {
-    objectlist *list = *(objectlist **)((char *)data + _offset);
+    objectlist *list = *reinterpret_cast<objectlist **>(
+        reinterpret_cast<char *>(data) + _offset);
     return list == nullptr;
 }

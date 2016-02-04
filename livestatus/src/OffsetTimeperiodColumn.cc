@@ -44,9 +44,10 @@ int32_t OffsetTimeperiodColumn::getValue(void *data, Query * /*unused*/) {
 
     timeperiod *tp;
     if (offset() == -1) {
-        tp = (timeperiod *)data;
+        tp = reinterpret_cast<timeperiod *>(data);
     } else {
-        tp = *(timeperiod **)((char *)data + offset());
+        tp = *reinterpret_cast<timeperiod **>(reinterpret_cast<char *>(data) +
+                                              offset());
     }
 
     if (tp == nullptr) {

@@ -48,70 +48,90 @@ TableDownComm::TableDownComm(bool is_downtime) {
     addColumn(new OffsetStringColumn(
         "author", is_downtime ? "The contact that scheduled the downtime"
                               : "The contact that entered the comment",
-        (char *)&(ref->_author_name) - (char *)ref));
-    addColumn(new OffsetStringColumn("comment", "A comment text",
-                                     (char *)&(ref->_comment) - (char *)ref));
+        reinterpret_cast<char *>(&(ref->_author_name)) -
+            reinterpret_cast<char *>(ref)));
+    addColumn(
+        new OffsetStringColumn("comment", "A comment text",
+                               reinterpret_cast<char *>(&(ref->_comment)) -
+                                   reinterpret_cast<char *>(ref)));
     addColumn(new OffsetIntColumn(
         "id", is_downtime ? "The id of the downtime" : "The id of the comment",
-        (char *)&(ref->_id) - (char *)ref));
+        reinterpret_cast<char *>(&(ref->_id)) - reinterpret_cast<char *>(ref)));
     addColumn(new OffsetTimeColumn(
         "entry_time", "The time the entry was made as UNIX timestamp",
-        (char *)&(ref->_entry_time) - (char *)ref));
+        reinterpret_cast<char *>(&(ref->_entry_time)) -
+            reinterpret_cast<char *>(ref)));
     addColumn(new OffsetIntColumn(
         "type",
         is_downtime
             ? "The type of the downtime: 0 if it is active, 1 if it is pending"
             : "The type of the comment: 1 is host, 2 is service",
-        (char *)&(ref->_type) - (char *)ref));
+        reinterpret_cast<char *>(&(ref->_type)) -
+            reinterpret_cast<char *>(ref)));
     addColumn(new OffsetIntColumn(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service",
-        (char *)&(ref->_is_service) - (char *)ref));
+        reinterpret_cast<char *>(&(ref->_is_service)) -
+            reinterpret_cast<char *>(ref)));
 
     if (is_downtime) {
         Downtime *ref = nullptr;
         addColumn(new OffsetTimeColumn(
             "start_time", "The start time of the downtime as UNIX timestamp",
-            (char *)&(ref->_start_time) - (char *)ref));
+            reinterpret_cast<char *>(&(ref->_start_time)) -
+                reinterpret_cast<char *>(ref)));
         addColumn(new OffsetTimeColumn(
             "end_time", "The end time of the downtime as UNIX timestamp",
-            (char *)&(ref->_end_time) - (char *)ref));
+            reinterpret_cast<char *>(&(ref->_end_time)) -
+                reinterpret_cast<char *>(ref)));
         addColumn(new OffsetIntColumn(
             "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible",
-            (char *)&(ref->_fixed) - (char *)ref));
-        addColumn(new OffsetIntColumn("duration",
-                                      "The duration of the downtime in seconds",
-                                      (char *)&(ref->_duration) - (char *)ref));
+            reinterpret_cast<char *>(&(ref->_fixed)) -
+                reinterpret_cast<char *>(ref)));
+        addColumn(new OffsetIntColumn(
+            "duration", "The duration of the downtime in seconds",
+            reinterpret_cast<char *>(&(ref->_duration)) -
+                reinterpret_cast<char *>(ref)));
         addColumn(new OffsetIntColumn(
             "triggered_by",
             "The id of the downtime this downtime was triggered by or 0 if it "
             "was not triggered by another downtime",
-            (char *)&(ref->_triggered_by) - (char *)ref));
+            reinterpret_cast<char *>(&(ref->_triggered_by)) -
+                reinterpret_cast<char *>(ref)));
     } else {
         Comment *ref = nullptr;
         addColumn(new OffsetIntColumn(
             "persistent", "Whether this comment is persistent (0/1)",
-            (char *)&(ref->_persistent) - (char *)ref));
+            reinterpret_cast<char *>(&(ref->_persistent)) -
+                reinterpret_cast<char *>(ref)));
         addColumn(new OffsetIntColumn(
             "source",
             "The source of the comment (0 is internal and 1 is external)",
-            (char *)&(ref->_persistent) - (char *)ref));
+            reinterpret_cast<char *>(&(ref->_persistent)) -
+                reinterpret_cast<char *>(ref)));
         addColumn(
             new OffsetIntColumn("entry_type",
                                 "The type of the comment: 1 is user, 2 is "
                                 "downtime, 3 is flap and 4 is acknowledgement",
-                                (char *)&(ref->_entry_type) - (char *)ref));
-        addColumn(new OffsetIntColumn("expires", "Whether this comment expires",
-                                      (char *)&(ref->_expires) - (char *)ref));
+                                reinterpret_cast<char *>(&(ref->_entry_type)) -
+                                    reinterpret_cast<char *>(ref)));
+        addColumn(
+            new OffsetIntColumn("expires", "Whether this comment expires",
+                                reinterpret_cast<char *>(&(ref->_expires)) -
+                                    reinterpret_cast<char *>(ref)));
         addColumn(new OffsetTimeColumn(
             "expire_time",
             "The time of expiry of this comment as a UNIX timestamp",
-            (char *)&(ref->_expire_time) - (char *)ref));
+            reinterpret_cast<char *>(&(ref->_expire_time)) -
+                reinterpret_cast<char *>(ref)));
     }
 
-    TableHosts::addColumns(this, "host_", (char *)&(ref->_host) - (char *)ref);
+    TableHosts::addColumns(this, "host_",
+                           reinterpret_cast<char *>(&(ref->_host)) -
+                               reinterpret_cast<char *>(ref));
     TableServices::addColumns(this, "service_",
-                              (char *)&(ref->_service) - (char *)ref,
+                              reinterpret_cast<char *>(&(ref->_service)) -
+                                  reinterpret_cast<char *>(ref),
                               false /* no hosts table */);
 }
 

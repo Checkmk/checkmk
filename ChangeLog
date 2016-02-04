@@ -1,4 +1,7 @@
 1.2.6p17:
+    Checks & Agents:
+    * 3069 FIX: unitrend_backup: fixed broken plugin output
+
     Event Console:
     * 2986 FIX: Event Console: Text elements of events are now correctly quoted in shell scripts...
 

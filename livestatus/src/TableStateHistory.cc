@@ -289,12 +289,9 @@ void TableStateHistory::answerQuery(Query *query) {
     // check attributes of current hosts and services
     typedef deque<Filter *> object_filter_t;
     object_filter_t object_filter;
-    AndingFilter *orig_filter = query->filter();
 
     if (g_disable_statehist_filtering == 0) {
-        auto it = orig_filter->begin();
-        while (it != orig_filter->end()) {
-            Filter *filter = *it;
+        for (auto filter : *query->filter()) {
             Column *column = filter->column();
             if (column != nullptr) {
                 const char *column_name = column->name();
@@ -309,7 +306,6 @@ void TableStateHistory::answerQuery(Query *query) {
             } else {
                 // logger(LOG_NOTICE, "Mist: Filter ohne Column");
             }
-            ++it;
         }
     }
 
@@ -401,13 +397,10 @@ void TableStateHistory::answerQuery(Query *query) {
         }
         if (only_update && entry->_time >= _since) {
             // Reached start of query timeframe. From now on let's produce real
-            // output
-            // Update _from time of every state entry
-            auto it_hst = state_info.begin();
-            while (it_hst != state_info.end()) {
-                it_hst->second->_from = _since;
-                it_hst->second->_until = _since;
-                ++it_hst;
+            // output. Update _from time of every state entry
+            for (auto &it_hst : state_info) {
+                it_hst.second->_from = _since;
+                it_hst.second->_until = _since;
             }
             only_update = false;
         }
@@ -416,13 +409,11 @@ void TableStateHistory::answerQuery(Query *query) {
             !(entry->_type == STATE_SERVICE_INITIAL ||
               entry->_type == STATE_HOST_INITIAL)) {
             // Set still unknown hosts / services to unmonitored
-            auto it_hst = state_info.begin();
-            while (it_hst != state_info.end()) {
-                HostServiceState *hst = it_hst->second;
+            for (auto &it_hst : state_info) {
+                HostServiceState *hst = it_hst.second;
                 if (hst->_may_no_longer_exist) {
                     hst->_has_vanished = true;
                 }
-                ++it_hst;
             }
             in_nagios_initial_states = false;
         }
@@ -510,12 +501,10 @@ void TableStateHistory::answerQuery(Query *query) {
 
                     // Host/Service relations
                     if (state->_is_host) {
-                        auto it_inh = state_info.begin();
-                        while (it_inh != state_info.end()) {
-                            if (it_inh->second->_host == state->_host) {
-                                state->_services.push_back(it_inh->second);
+                        for (auto &it_inh : state_info) {
+                            if (it_inh.second->_host == state->_host) {
+                                state->_services.push_back(it_inh.second);
                             }
-                            ++it_inh;
                         }
                     } else {
                         auto it_inh = state_info.find(state->_host);
@@ -628,11 +617,9 @@ void TableStateHistory::answerQuery(Query *query) {
                 if (entry->_type == ALERT_HOST || entry->_type == STATE_HOST ||
                     entry->_type == DOWNTIME_ALERT_HOST) {
                     if (state_changed != 0) {
-                        auto it_svc = state->_services.begin();
-                        while (it_svc != state->_services.end()) {
-                            updateHostServiceState(query, entry, *it_svc,
+                        for (auto &_service : state->_services) {
+                            updateHostServiceState(query, entry, _service,
                                                    only_update);
-                            ++it_svc;
                         }
                     }
                 }
@@ -657,31 +644,25 @@ void TableStateHistory::answerQuery(Query *query) {
                 }
 
                 _notification_periods[tp_name] = atoi(tp_state);
-                auto it_hst = state_info.begin();
-                while (it_hst != state_info.end()) {
-                    updateHostServiceState(query, entry, it_hst->second,
+                for (auto &it_hst : state_info) {
+                    updateHostServiceState(query, entry, it_hst.second,
                                            only_update);
-                    ++it_hst;
                 }
                 free(buffer);
                 break;
             }
             case LOG_INITIAL_STATES: {
                 // This feature is only available if log_initial_states is set
-                // to 1
-                // If log_initial_states is set, each nagios startup logs the
-                // initial states of all known
-                // hosts and services. Therefore we can detect if a host is no
-                // longer available after
-                // a nagios startup. If it still exists an INITIAL HOST/SERVICE
-                // state entry will follow up shortly.
-                auto it_hst = state_info.begin();
-                while (it_hst != state_info.end()) {
-                    if (!it_hst->second->_has_vanished) {
-                        it_hst->second->_last_known_time = entry->_time;
-                        it_hst->second->_may_no_longer_exist = true;
+                // to 1. If log_initial_states is set, each nagios startup logs
+                // the initial states of all known hosts and services. Therefore
+                // we can detect if a host is no longer available after a nagios
+                // startup. If it still exists an INITIAL HOST/SERVICE state
+                // entry will follow up shortly.
+                for (auto &it_hst : state_info) {
+                    if (!it_hst.second->_has_vanished) {
+                        it_hst.second->_last_known_time = entry->_time;
+                        it_hst.second->_may_no_longer_exist = true;
                     }
-                    ++it_hst;
                 }
                 in_nagios_initial_states = true;
                 break;

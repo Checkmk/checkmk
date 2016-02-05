@@ -110,35 +110,35 @@ void PerfdataAggregator::consumeVariable(const char *varname, double value) {
 }
 
 void PerfdataAggregator::output(Query *q) {
-    char format[64];
     string perf_data;
-    for (_aggr_t::const_iterator it = _aggr.begin(); it != _aggr.end(); ++it) {
+    bool first = true;
+    for (const auto &entry : _aggr) {
         double value;
         switch (_operation) {
             case STATS_OP_SUM:
             case STATS_OP_MIN:
             case STATS_OP_MAX:
             case STATS_OP_SUMINV:
-                value = it->second._aggr;
+                value = entry.second._aggr;
                 break;
 
             case STATS_OP_AVG:
             case STATS_OP_AVGINV:
-                if (it->second._count == 0) {
+                if (entry.second._count == 0) {
                     value = 0.00;
                 } else {
-                    value = it->second._aggr / it->second._count;
+                    value = entry.second._aggr / entry.second._count;
                 }
                 break;
 
             case STATS_OP_STD:
-                if (it->second._count <= 1) {
+                if (entry.second._count <= 1) {
                     value = 0.0;
                 } else {
-                    value = sqrt((it->second._sumq -
-                                  (it->second._aggr * it->second._aggr) /
-                                      it->second._count) /
-                                 (it->second._count - 1));
+                    value = sqrt((entry.second._sumq -
+                                  (entry.second._aggr * entry.second._aggr) /
+                                      entry.second._count) /
+                                 (entry.second._count - 1));
                 }
                 break;
             default:
@@ -146,8 +146,11 @@ void PerfdataAggregator::output(Query *q) {
                 // _operation should beetter be a scoped enumeration.
                 break;
         }
-        snprintf(format, sizeof(format), "%s=%.8f", it->first.c_str(), value);
-        if (it != _aggr.begin()) {
+        char format[64];
+        snprintf(format, sizeof(format), "%s=%.8f", entry.first.c_str(), value);
+        if (first) {
+            first = false;
+        } else {
             perf_data += " ";
         }
         perf_data += format;

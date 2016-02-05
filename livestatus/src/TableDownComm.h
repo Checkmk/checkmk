@@ -51,8 +51,8 @@ public:
     void remove(DowntimeOrComment *data);
     void answerQuery(Query *);
     bool isAuthorized(contact *ctc, void *data);
-    _entries_t::iterator entriesIteratorBegin() { return _entries.begin(); }
-    _entries_t::iterator entriesIteratorEnd() { return _entries.end(); }
+    _entries_t::iterator begin() { return _entries.begin(); }
+    _entries_t::iterator end() { return _entries.end(); }
 };
 
 #endif  // TableDownComm_h

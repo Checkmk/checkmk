@@ -43,11 +43,10 @@ void DownCommColumn::output(void *data, Query *query) {
     if (data != nullptr) {
         bool first = true;
 
-        for (auto it = table->entriesIteratorBegin();
-             it != table->entriesIteratorEnd(); ++it) {
-            unsigned long id = it->first.first;
-            bool is_service = it->first.second;
-            DowntimeOrComment *dt = it->second;
+        for (auto entry : *table) {
+            unsigned long id = entry.first.first;
+            bool is_service = entry.first.second;
+            DowntimeOrComment *dt = entry.second;
 
             bool found_match = false;
 
@@ -115,9 +114,8 @@ bool DownCommColumn::isEmpty(void *data) {
     }
 
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
-    for (auto it = table->entriesIteratorBegin();
-         it != table->entriesIteratorEnd(); ++it) {
-        DowntimeOrComment *dt = it->second;
+    for (auto entry : *table) {
+        DowntimeOrComment *dt = entry.second;
         if (dt->_service == data ||
             (dt->_service == nullptr && dt->_host == data)) {
             return false;

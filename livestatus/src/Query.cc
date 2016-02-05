@@ -838,7 +838,7 @@ void Query::start() {
         outputDatasetBegin();
         bool first = true;
 
-        for (auto column : _columns) {
+        for (const auto &column : _columns) {
             if (first) {
                 first = false;
             } else {
@@ -849,14 +849,14 @@ void Query::start() {
 
         // Output dummy headers for stats columns
         int col = 1;
-        char colheader[32];
-        for (auto it = _stats_columns.begin(); it != _stats_columns.end();
-             ++it) {
+        for (const auto &stats_column : _stats_columns) {
+            (void)stats_column;
             if (first) {
                 first = false;
             } else {
                 outputFieldSeparator();
             }
+            char colheader[32];
             snprintf(colheader, 32, "stats_%d", col);
             outputString(colheader);
             col++;
@@ -931,11 +931,13 @@ bool Query::processDataset(void *data) {
             }
 
             outputDatasetBegin();
-            for (auto it = _columns.begin(); it != _columns.end(); ++it) {
-                if (it != _columns.begin()) {
+            bool first = true;
+            for (auto column : _columns) {
+                if (first) {
+                    first = false;
+                } else {
                     outputFieldSeparator();
                 }
-                Column *column = *it;
                 column->output(data, this);
             }
             outputDatasetEnd();

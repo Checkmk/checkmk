@@ -77,6 +77,7 @@ manpage_catalog_titles = {
             "lancom"      : "LANCOM Systems GmbH",
             "mikrotik"    : "MikroTik",
             "netgear"     : "Netgear",
+            "palo_alto"   : "Palo Alto Networks",
             "qnap"        : "QNAP Systems",
             "riverbed"    : "Riverbed Technology",
             "symantec"    : "Symantec",

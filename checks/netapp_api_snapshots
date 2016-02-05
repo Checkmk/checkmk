@@ -29,35 +29,46 @@
 # volume_snapshot volch150    percent-reserved 22 blocks-reserved 3322    size-total 12122 ...
 # volume_snapshot volch150    percentage-of-total-blocks 0 cumulative-total 122924 ...
 
+factory_settings["netapp_api_snapshots_default_levels"] = {
+    "levels" : (85.0, 90.0)
+}
+
 def inventory_netapp_api_snapshots(parsed):
     for key in parsed.keys():
         yield key, {}
 
-def check_netapp_api_snapshots(item, _no_params, parsed):
+def check_netapp_api_snapshots(item, params, parsed):
     data = parsed.get(item)
 
     if not data:
         return
 
-    snapshot_total   = int(data[-1]["cumulative-total"]) * 1024.0
+    snapshot_total   = int(data[0]["reserve-used-actual"]) * 1024.0
     size_total       = int(data[0]["size-total"])
-    reserved_bytes   = int(data[0]["blocks-reserved"]) * 1024.0
+    reserved_bytes   = int(data[0]["snapshot-blocks-reserved"]) * 1024.0
 
     if not reserved_bytes:
         yield 0, "Used snapshot space: %s" % get_bytes_human_readable(snapshot_total),[("bytes", snapshot_total)]
-        yield 1, "No snapshot reserve configured"
+        yield params.get("state_noreserve", 1), "No snapshot reserve configured"
         return
 
     used_percent     = snapshot_total / reserved_bytes * 100.0
     volume_total     = size_total + reserved_bytes
 
     state = 0
-    if used_percent > 100:
-        state = 2
-    yield state, "Reserve used: %.1f%% (%s)" % (used_percent,
-                                                get_bytes_human_readable(snapshot_total))
 
-    yield 0, "Total Reserve: %s%% (%s) of %s" % (data[0]["percent-reserved"],
+    warn, crit = params.get("levels")
+    if used_percent >= crit:
+        state = 2
+    elif used_percent >= warn:
+        state = 1
+
+    extra_info = state and "(Levels at %d%%/%d%%)" % (warn, crit) or ""
+
+    yield state, "Reserve used: %.1f%% (%s)%s" % (used_percent,
+                                                get_bytes_human_readable(snapshot_total), extra_info)
+
+    yield 0, "Total Reserve: %s%% (%s) of %s" % (data[0]["snapshot-percent-reserved"],
                                                  get_bytes_human_readable(reserved_bytes),
                                                  get_bytes_human_readable(volume_total)),\
                                                  [("bytes", snapshot_total, 0, 0, 0, reserved_bytes)]
@@ -67,7 +78,9 @@ check_info["netapp_api_snapshots"] = {
                                 custom_keys = ["volume_snapshot"], as_dict_list = True),
     'check_function'          : check_netapp_api_snapshots,
     'inventory_function'      : inventory_netapp_api_snapshots,
+    "default_levels_variable" : "netapp_api_snapshots_default_levels",
     'service_description'     : 'Snapshots Volume',
+    'group'                   : "netapp_snapshots",
     'has_perfdata'            : True,
     'includes'                : ["netapp_api.include"]
 }

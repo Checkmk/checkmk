@@ -670,22 +670,11 @@ else:
     # Snapshot info
     print "<<<netapp_api_snapshots:sep(9)>>>"
     for volume in volumes.children_get():
-        name = volume.child_get_string("name")
-
-        volume_snapshots_reserved = server.invoke("snapshot-get-reserve", "volume", name)
-
-        dict_reserved = {}
-        dict_reserved["size-total"]       = volume.child_get_string("size-total")
-        dict_reserved["percent-reserved"] = volume_snapshots_reserved.child_get_string("percent-reserved")
-        dict_reserved["blocks-reserved"]  = volume_snapshots_reserved.child_get_string("blocks-reserved")
-
-        volume_snapshots   = server.invoke("snapshot-list-info", "target-name", name, "target-type", "volume")
-        snapshots_elements = volume_snapshots.child_get("snapshots")
-        if snapshots_elements:
-            print format_dict(dict_reserved, prefix = "volume_snapshot %s" % name, as_line  = True)
-            print format_config(snapshots_elements, "volume_snapshot", name,
-                                config_report = ["volume_snapshot", "percentage-of-total-blocks", "cumulative-total"])
-
+        container = NaElement("container")
+        container.child_add(volume)
+        print format_config(container, "volume_snapshot", "name",
+                    config_report = ["name", "size-total", "snapshot-percent-reserved",
+                                     "snapshot-blocks-reserved", "reserve-used-actual"])
 
     # Protocols
     print "<<<netapp_api_protocol:sep(9)>>>"

@@ -7349,6 +7349,30 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_storage,
+    "netapp_snapshots",
+    _("NetApp Snapshot Reserve"),
+    Dictionary(
+        elements = [
+            ( "levels",
+            Tuple(
+                title = _("Levels for used configured reserve"),
+                elements = [
+                    Percentage(title = _("Warning at or above"),  unit = "%", default_value = 85.0),
+                    Percentage(title = _("Critical at or above"), unit = "%", default_value = 90.0),
+                ]
+            )),
+            ( "state_noreserve",
+               MonitoringState(
+                   title = _("State if no reserve is configured"),
+            )),
+        ],
+    ),
+    TextAscii(title = _("Volume name")),
+    match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_storage,
     "netapp_disks",
     _("Filer Disk Levels (NetApp, IBM SVC)"),
     Transform(

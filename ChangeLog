@@ -16,6 +16,7 @@
     * 2926 FIX: Fix exception in WATO when a check man page has not catalog entry
     * 2944 FIX: Fixed exception during config activation having clusters with unresolvable node IP addresses
     * 3037 FIX: Terminate datasource programs when check timeout occurs...
+    * 2932 FIX: Removal of duplicate services now also works for hosts that are no longer SNMP+TCP
 
     Checks & Agents:
     * 2434 NetApp monitoring: Cluster-Mode is now supported, changes in existing 7Mode checks...

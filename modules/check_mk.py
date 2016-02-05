@@ -1857,7 +1857,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
     if not skip_autochecks and use_cache:
         g_check_table_cache[hostname] = check_table
 
-    if remove_duplicates and is_dual_host(hostname):
+    if remove_duplicates:
         return remove_duplicate_checks(check_table)
     else:
         return check_table

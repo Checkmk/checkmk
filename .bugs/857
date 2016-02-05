@@ -1,0 +1,16 @@
+Title: Clusterservices stay pending until cmk -R
+Component: core
+State: open
+Date: 2016-02-05 08:45:11
+Targetversion: 1.2.7
+Class: bug
+
+Hallo, nur zur INFO
+
+bei Version 2016.02.02 werden Clusterservices mit  „Activate Changes“ oder/und „Restart“ von WATO aus nicht aktiv,
+
+bleiben immer in Pending Status,
+
+ein cmk –R auf der Commandline behebt das Problem allerdings
+
+Gruß H.

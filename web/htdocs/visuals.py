@@ -33,7 +33,7 @@ except ImportError:
 
 from lib import *
 from valuespec import *
-import config, table
+import config, table, userdb
 import pagetypes # That will replace visuals.py one day
 
 #   .--Plugins-------------------------------------------------------------.
@@ -127,6 +127,9 @@ def load(what, builtin_visuals, skip_func = None, lock=False):
     # Now scan users subdirs for files "visuals.mk"
     subdirs = os.listdir(config.config_dir)
     for user in subdirs:
+        if not userdb.user_exists(user):
+            continue
+
         try:
             dirpath = config.config_dir + "/" + user
             if not os.path.isdir(dirpath):

@@ -24,8 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
-import config, table, forms, inspect
+import os, inspect
+import config, table, forms, userdb
 from lib import *
 from valuespec import *
 
@@ -634,6 +634,9 @@ class Overridable:
         # Now scan users subdirs for files "user_$type_name.mk"
         subdirs = os.listdir(config.config_dir)
         for user in subdirs:
+            if not userdb.user_exists(user):
+                continue
+
             try:
                 path = "%s/%s/user_%ss.mk" % (config.config_dir, user, self.type_name())
                 if not os.path.exists(path):

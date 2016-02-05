@@ -1,0 +1,10 @@
+Title: juniper_cpu_util: Better detection, find more devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454658210
+Class: fix
+
+We now look for <tt>Routing Enginge</tt> not only at the beginning, but also
+in the middle of the text.

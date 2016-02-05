@@ -32,8 +32,9 @@ factory_settings['juniper_cpu_util_default_levels'] = {
 
 def inventory_juniper_cpu_util(info):
     for line in info:
-        if line[0].startswith("Routing Engine"):
+        if "Routing Engine" in line[0]:
             yield line[0], {}
+
 
 def check_juniper_cpu_util(item, params, info):
     for name, util in info:

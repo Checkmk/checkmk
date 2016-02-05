@@ -2,7 +2,7 @@ Title: Clusterservices stay pending until cmk -R
 Component: core
 State: open
 Date: 2016-02-05 08:45:11
-Targetversion: 1.2.7
+Targetversion: 1.2.8
 Class: bug
 
 Hallo, nur zur INFO

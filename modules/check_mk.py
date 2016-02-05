@@ -1651,6 +1651,8 @@ def get_single_oid(hostname, ipaddress, oid):
         # we need an exact match
         if len(walk) == 1 and oid == walk[0][0]:
             value = walk[0][1]
+        elif oid.endswith(".*") and len(walk) > 0:
+            value = walk[0][1]
         else:
             value = None
 

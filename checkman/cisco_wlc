@@ -1,4 +1,4 @@
-title: Cisco Wireless Lan Controller (WLC): Connected Wlan accesspoints
+title: Cisco Wireless LAN Controller (WLC): Connected WLAN accesspoints
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check automatically detects all online accesspoints and checks for the current status.
  If an accesspoint is not longer reachable, the checks also triggers a critical state.
- The checks directly connects to a Cisco Wireless Lan Controller. Currently its tested
+ The checks directly connects to a Cisco Wireless LAN Controller. Currently its tested
  with the model 5508.
 
 inventory:

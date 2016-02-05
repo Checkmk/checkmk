@@ -30,8 +30,6 @@
 #include <deque>
 #include <set>
 #include <utility>
-#include <vector>
-#include "AndingFilter.h"
 #include "Column.h"
 #include "Filter.h"
 #include "HostServiceState.h"

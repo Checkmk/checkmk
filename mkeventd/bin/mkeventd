@@ -3276,6 +3276,10 @@ def get_quoted_event(event):
 
     return new_event
 
+def escape_null_bytes(s):
+    return s.replace("\000", "\\000")
+
+
 def do_event_action(action, event, user=""):
     if action["disabled"]:
         log("Skipping disabled action %s." % action["id"])
@@ -3284,13 +3288,13 @@ def do_event_action(action, event, user=""):
     try:
         action_type, settings = action["action"]
         if action_type == 'email':
-            to      = substitute_event_tags(settings["to"], event)
-            subject = substitute_event_tags(settings["subject"], event)
-            body    = substitute_event_tags(settings["body"], event)
+            to      = escape_null_bytes(substitute_event_tags(settings["to"], event))
+            subject = escape_null_bytes(substitute_event_tags(settings["subject"], event))
+            body    = escape_null_bytes(substitute_event_tags(settings["body"], event))
             send_email(to, subject, body)
             log_event_history(event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
-            execute_script(substitute_event_tags(settings["script"], get_quoted_event(event)))
+            execute_script(escape_null_bytes(substitute_event_tags(settings["script"], get_quoted_event(event))))
             log_event_history(event, "SCRIPT", user, action['id'])
         else:
             log("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
@@ -3434,6 +3438,8 @@ def send_email(to, subject, body):
 
 
 def execute_script(body):
+    # Traps can contain 0-Bytes. We need to remove this from the script
+    # body. Otherwise suprocess.Popen will crash.
     p = subprocess.Popen(
         body.encode('utf-8'),
         shell = True,

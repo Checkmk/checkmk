@@ -1214,7 +1214,7 @@ def mode_edit_host(phase, new, is_cluster):
                   folder_preserving_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
                 if is_cluster:
                     html.context_button(_("Clustered Services"),
-                      folder_preserving_link([("mode", "edit_ruleset"), ("host", hostname), ("varname", "clustered_services")]), "rulesets")
+                      folder_preserving_link([("mode", "edit_ruleset"), ("varname", "clustered_services")]), "rulesets")
 
             if config.may("wato.rename_hosts") and not Folder.current().locked_hosts():
                 html.context_button(_("Rename %s") % (is_cluster and _("Cluster") or _("Host")),
@@ -2610,6 +2610,9 @@ def mode_inventory(phase, firsttime):
         if config.may('wato.rulesets'):
             html.context_button(_("Parameters"),
                                 folder_preserving_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
+            if host.is_cluster():
+                html.context_button(_("Clustered Services"),
+                  folder_preserving_link([("mode", "edit_ruleset"), ("varname", "clustered_services")]), "rulesets")
         if not host.is_cluster():
             # only display for non cluster hosts
             html.context_button(_("Diagnostic"),

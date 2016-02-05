@@ -1,0 +1,12 @@
+Title: Treat interface name '1' and '01' as identical when grouping interfaces
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454680372
+Class: fix
+
+Problem was that in the discovery rule for creating interface groups you had
+to specify <tt>01</tt> as item (just it appeared in the service), while the
+actual check compared agains the index (<tt>1</tt>). Both are treated identical
+now and in the rule you may specify either <tt>01</tt> or <tt>1</tt>.

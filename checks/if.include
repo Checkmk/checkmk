@@ -286,7 +286,7 @@ def inventory_if_common(info, has_nodeinfo = False):
         is_only_in_group = False
         for group_name, pattern in group_patterns.items():
             # Interfaces can be grouped by item and iftype
-            match_item = not pattern.get("include_items") or (item in pattern["include_items"])
+            match_item = not pattern.get("include_items") or (tryint(item) in map(tryint, pattern["include_items"]))
             match_type = not pattern.get("iftype")        or (pattern["iftype"] == saveint(ifType))
             if match_item and match_type:
                 have_groups.setdefault(group_name, {"interfaces": [],
@@ -392,7 +392,8 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
 
             if ifGroup and ifGroup == item:
                 matching_interfaces.append((if_member_item, element))
-            elif if_member_item in params.get("include_items", []) or\
+            # tryint -> force "01" and "1" to be identical.
+            elif (params.get("include_items") == None or tryint(if_member_item) in map(tryint, params["include_items"])) or\
                 saveint(element[2 + node_offset]) == params.get("iftype"):
                 matching_interfaces.append((if_member_item, element))
 
@@ -488,7 +489,7 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
         if params.get("iftype"):
             alias_info.append("iftype %s" % params["iftype"])
         if params.get("include_items"):
-            alias_info.append("grouped items")
+            alias_info.append("%d grouped interfaces" % len(matching_interfaces))
 
         if has_nodeinfo:
             group_entry = [None]

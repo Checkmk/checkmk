@@ -1,0 +1,18 @@
+title: USV Eltek Valere: Fans
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the fan speed in percent of a Eltek Valere USV.
+ Default levels are set to 99, 100 percent. Upper and lower levels
+ are configurable.
+
+item:
+ The fan id.
+
+perfdata:
+ No performance data.
+
+inventory:
+ One service per fan is created.

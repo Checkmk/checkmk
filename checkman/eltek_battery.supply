@@ -1,0 +1,18 @@
+title: USV Eltek Valere: Battery Current and Voltage
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the battery voltage and current of a Eltek Valere USV.
+ Default levels are set to 52, 48 V and 50, 75 A. These levels are
+ configurable.
+
+item:
+ Supply.
+
+perfdata:
+ The voltage and current.
+
+inventory:
+ One service is created.

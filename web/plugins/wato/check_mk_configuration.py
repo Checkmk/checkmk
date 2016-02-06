@@ -1120,9 +1120,11 @@ register_configvar(group,
         help = _("If enabled, Check_MK will create one additional service per host "
                  "that does a regular check, if the service discovery would find new services "
                  "currently un-monitored. <b>Note:</b> This option is deprecated and has been "
-                 "replaced by the rule set <i>Periodic Service Discovery</i>, which allows "
-                 "a per-host configuration and additional features such as automatic rediscovery. "
-                 "Rules in that rule set will override the global settings done here.")),
+                 "replaced by the rule set <a href='%s'>Periodic Service Discovery</a>, "
+                 "which allows a per-host configuration and additional features such as "
+                 "automatic rediscovery. Rules in that rule set will override the global "
+                 "settings done here.") % "wato.py?mode=edit_ruleset&varname=periodic_discovery",
+    ),
     need_restart = True)
 
 register_configvar(group,

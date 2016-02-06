@@ -873,7 +873,7 @@ def paint_service_group_memberlist(row):
     return "", ", ".join(links)
 
 multisite_painters["svc_group_memberlist"] = {
-    "title"   : _("Servicegroups the service is member of"),
+    "title"   : _("Service groups the service is member of"),
     "short"   : _("Groups"),
     "columns" : [ "service_groups" ],
     "paint"   : paint_service_group_memberlist,
@@ -1574,7 +1574,7 @@ def paint_host_group_memberlist(row):
     return "", ", ".join(links)
 
 multisite_painters["host_group_memberlist"] = {
-    "title"   : _("Hostgroups the host is member of"),
+    "title"   : _("Host groups the host is member of"),
     "short"   : _("Groups"),
     "columns" : [ "host_groups" ],
     "groupby" : lambda row: tuple(row["host_groups"]),

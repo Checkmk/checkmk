@@ -362,6 +362,7 @@
 
     Reporting & Availability:
     * 2823 FIX: Availability: Fixed division by zero error on rendering the availability table
+    * 3166 FIX: Fixed problem where scheduled report did not honor host or service group filter
 
     Event Console:
     * 2733 Visibility of Event Console events more flexible now...

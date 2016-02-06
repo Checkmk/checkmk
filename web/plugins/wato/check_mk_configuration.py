@@ -1122,7 +1122,7 @@ register_configvar(group,
                  "currently un-monitored. <b>Note:</b> This option is deprecated and has been "
                  "replaced by the rule set <i>Periodic Service Discovery</i>, which allows "
                  "a per-host configuration and additional features such as automatic rediscovery. "
-                 "Rule in that rule set will override the global settings done here.")),
+                 "Rules in that rule set will override the global settings done here.")),
     need_restart = True)
 
 register_configvar(group,

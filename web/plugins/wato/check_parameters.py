@@ -8552,8 +8552,8 @@ register_check_parameters(
          Tuple(
            title = _("Lower levels"),
            elements = [
-             Integer(title = _( "Warning if below"), unit=_("l/s")),
-             Integer(title = _( "Critical if below"), unit=_("l/s"))
+             Float(title = _("Warning if below"), unit=_("l/s"), default_value = 5.0, allow_int=True),
+             Float(title = _("Critical if below"), unit=_("l/s"), default_value = 2.0, allow_int=True)
            ]
          )
        ),
@@ -8561,8 +8561,8 @@ register_check_parameters(
          Tuple(
            title = _("Upper levels"),
            elements = [
-             Integer(title = _( "Warning at"), unit=_("l/s")),
-             Integer(title = _( "Critical at"), unit=_("l/s"))
+             Float(title = _("Warning at"), unit=_("l/s"), default_value = 10.0, allow_int=True),
+             Float(title = _("Critical at"), unit=_("l/s"), default_value = 11.0, allow_int=True)
            ]
          )
        ),

@@ -79,13 +79,27 @@ if ($cache_state != "uptodate")
     }
 }
 
+function replace_cmk_expression($NAME, $MIN, $MAX, $WARN, $CRIT, $text)
+{
+    # Replace expressions in the title. This not a full implementation of
+    # the complete RPN expression syntax of Check_MK - but sufficient for
+    # all used cases.
+    foreach ($NAME as $i => $n) {
+        $text = str_replace("%($n:min@count)", "$MIN[$i]", $text);
+        $text = str_replace("%($n:max@count)", "$MAX[$i]", $text);
+        $text = str_replace("%($n:warn@count)", "$WARN[$i]", $text);
+        $text = str_replace("%($n:crit@count)", "$CRIT[$i]", $text);
+    }
+    return $text;
+}
+
 # Now read template information from cache file, if present
 if (($cache_state == "uptodate" || $cache_state == "stale") && filesize($template_cache_path) > 0) {
     $rrdbase = substr($NAGIOS_XMLFILE, 0, strlen($NAGIOS_XMLFILE) - 4);
     $fd = fopen($template_cache_path, "r");
     while (!feof($fd)) {
         $dsname_line = trim(fgets($fd));
-        $option_line = trim(fgets($fd));
+        $option_line = replace_cmk_expression($NAME, $MIN, $MAX, $WARN, $CRIT, trim(fgets($fd)));
         $graph_line = str_replace('$RRDBASE$', $rrdbase, fgets($fd));
         if ($dsname_line && $option_line && $graph_line) {
             $ds_name[] = $dsname_line;

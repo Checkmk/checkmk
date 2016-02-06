@@ -1021,6 +1021,19 @@ def get_graph_range(graph_template, translated_metrics):
     return min_value, max_value
 
 
+#.
+#   .--PNP Templates-------------------------------------------------------.
+#   |  ____  _   _ ____    _____                    _       _              |
+#   | |  _ \| \ | |  _ \  |_   _|__ _ __ ___  _ __ | | __ _| |_ ___  ___   |
+#   | | |_) |  \| | |_) |   | |/ _ \ '_ ` _ \| '_ \| |/ _` | __/ _ \/ __|  |
+#   | |  __/| |\  |  __/    | |  __/ | | | | | |_) | | (_| | ||  __/\__ \  |
+#   | |_|   |_| \_|_|       |_|\___|_| |_| |_| .__/|_|\__,_|\__\___||___/  |
+#   |                                        |_|                           |
+#   +----------------------------------------------------------------------+
+#   |  Core for creating templates for PNP4Nagios from CMK graph defi-     |
+#   |  nitions.                                                            |
+#   '----------------------------------------------------------------------'
+
 # Called with exactly one variable: the template ID. Example:
 # "check_mk-kernel.util:guest,steal,system,user,wait".
 def page_pnp_template():
@@ -1230,6 +1243,7 @@ def render_graph_pnp(graph_template, translated_metrics):
         rrdgraph_arguments += " -l 0"
 
     return graph_title + "\n" + rrdgraph_arguments + "\n" + rrdgraph_commands + "\n"
+
 
 
 #.

@@ -1,9 +1,9 @@
 Title: cmk --inventory-as-check does not take into account disabled services
 Component: core
-State: open
+Class: bug
+State: works4me
 Date: 2015-07-15 16:09:54
 Targetversion: 1.2.8
-Class: bug
 
 If I disable the 'Log .*$' Services with a 'Disable Services' rule,
 cmk --inventory-as-check still reports the unchecked Log services,
@@ -15,3 +15,7 @@ If I only disable the logwatch _check_, but not the _service_,
 cmk --inventory-as-check works as expected, i.e. no unchecked services
 are reported, neither logwatch not DISK IO Summary services.
 
+
+2016-02-06 22:03:36: changed state open -> works4me
+Seems to work now. Probably due to the rewrite of the discovery
+mechanisms

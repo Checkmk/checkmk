@@ -2,6 +2,9 @@ Title: notify.py: subprocess p.communicate() calls may block when plugins output
 Component: notifcation
 State: open
 Date: 2015-11-19 13:38:58
-Targetversion: 1.2.8
+Targetversion: future
 Class: bug
 
+MK: Problem unclear. Is it a problem that a short blocking might occur? Then
+that is not the fault of communicate() but of the fact that the execution
+of the script may take time.

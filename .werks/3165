@@ -1,0 +1,9 @@
+Title: Make columns in view "Services by group" same as in other service views
+Level: 1
+Component: liveproxy
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454752305
+Class: fix
+
+

@@ -379,6 +379,9 @@
     Livestatus:
     * 2743 FIX: Fixed handling of column types in "GET columns"...
 
+    Livestatus-Proxy:
+    * 3165 FIX: Make columns in view "Services by group" same as in other service views
+
     HW/SW-Inventory:
     * 2436 NetApp monitoring: Now able to gather data for inventory...
     * 2440 VMware ESX inventory: Now able to display ESX hostsystems and virtualmachines of clusters

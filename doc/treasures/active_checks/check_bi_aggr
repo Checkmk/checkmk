@@ -178,7 +178,7 @@ except Exception, e:
     sys.exit(3)
 
 if len(obj) == 1:
-    sys.stdout.write('ERROR: Aggregation does not exist or user is not permitted\n')
+    sys.stdout.write('ERROR: Aggregation "%s" does not exist or user is not permitted\n' % aggr_name)
     sys.exit(3)
 
 if type(obj) != list or len(obj) != 2:

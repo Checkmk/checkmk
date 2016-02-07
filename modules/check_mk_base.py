@@ -2030,6 +2030,19 @@ def set_use_cachefile(state=True):
     opt_use_cachefile = state
 
 
+# Creates the directory at path if it does not exist.  If that path does exist
+# it is assumed that it is a directory. the file type is not being checked.
+# This function is atomar so that no exception can arise if two processes
+# at the same time try to create the directory. Only fails if the directory
+# is not present for any reason after this function call.
+def ensure_directory(path):
+    try:
+        os.makedirs(path)
+    except Exception, e:
+        if os.path.exists(path):
+            return
+        raise
+
 #.
 #   .--Check helpers-------------------------------------------------------.
 #   |     ____ _               _      _          _                         |

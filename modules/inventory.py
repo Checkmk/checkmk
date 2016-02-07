@@ -148,11 +148,8 @@ def inv_cleanup_tree(tree):
 
 
 def do_inv(hostnames):
-
-    if not os.path.exists(inventory_output_dir):
-        os.makedirs(inventory_output_dir)
-    if not os.path.exists(inventory_archive_dir):
-        os.makedirs(inventory_archive_dir)
+    ensure_directory(inventory_output_dir)
+    ensure_directory(inventory_archive_dir)
 
     # No hosts specified: do all hosts and force caching
     if hostnames == None:

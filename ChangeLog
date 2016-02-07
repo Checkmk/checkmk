@@ -309,6 +309,7 @@
     * 3041 FIX: Fixed deselecting view checkbox options like "Always show checkboxes" in dashboard embedded views
     * 3046 FIX: Acknowledging all incompatible werks when creating new sites
     * 2931 FIX: Do not load bookmarks, reports, view, etc. of non-existing users anymore
+    * 3171 FIX: Logout in one site will log out of all sites sharing the same auth.secret...
 
     WATO:
     * 2442 WATO remove host: improved cleanup of obsolete host files...

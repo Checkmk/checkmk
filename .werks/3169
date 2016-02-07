@@ -1,0 +1,11 @@
+Title: Permission/Contact group settings for new hosts did show folder options
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454877739
+Class: fix
+
+When creating a new host in WATO the section <i>Permissions</i> would show
+settings that are meant for folders. This has been fixed (when editing an
+existing host the correct options were displayed).

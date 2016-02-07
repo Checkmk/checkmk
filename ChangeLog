@@ -17,6 +17,7 @@
     * 2944 FIX: Fixed exception during config activation having clusters with unresolvable node IP addresses
     * 3037 FIX: Terminate datasource programs when check timeout occurs...
     * 2932 FIX: Removal of duplicate services now also works for hosts that are no longer SNMP+TCP
+    * 3168 FIX: Fix duplicate loading of check that have a copy in local/share/check_mk/checks.
 
     Checks & Agents:
     * 2434 NetApp monitoring: Cluster-Mode is now supported, changes in existing 7Mode checks...

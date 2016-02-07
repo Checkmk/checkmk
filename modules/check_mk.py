@@ -382,10 +382,11 @@ special_agent_info                 = {}
 # Now read in all checks. Note: this is done *before* reading the
 # configuration, because checks define variables with default
 # values user can override those variables in his configuration.
-# Do not read in the checks if check_mk is called as module
+# If a check or check.include is both found in local/ and in the
+# normal structure, then only the file in local/ must be read!
 def load_checks():
-    filelist = plugin_pathnames_in_directory(checks_dir) \
-             + plugin_pathnames_in_directory(local_checks_dir)
+    filelist = plugin_pathnames_in_directory(local_checks_dir) \
+             + plugin_pathnames_in_directory(checks_dir)
 
     # read include files always first, but still in the sorted
     # order with local ones last (possibly overriding variables)
@@ -398,15 +399,19 @@ def load_checks():
 
     known_vars = set(globals().keys()) # track new configuration variables
 
+    loaded_files = set()
     for f in filelist:
         if not f.endswith("~"): # ignore emacs-like backup files
-            try:
-                execfile(f, globals())
-            except Exception, e:
-                sys.stderr.write("Error in plugin file %s: %s\n" % (f, e))
-                if opt_debug:
-                    raise
-                sys.exit(5)
+            file_name = f.rsplit("/", 1)[-1]
+            if file_name not in loaded_files:
+                try:
+                    loaded_files.add(file_name)
+                    execfile(f, globals())
+                except Exception, e:
+                    sys.stderr.write("Error in plugin file %s: %s\n" % (f, e))
+                    if opt_debug:
+                        raise
+                    sys.exit(5)
 
     for varname, value in globals().iteritems():
         if varname[0] != '_' \

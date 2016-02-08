@@ -777,7 +777,7 @@ then
         then
             run_mrpe $descr "$cmdline"
         else
-            run_cached -m $descr $interval "\'$cmdline\'"
+            run_cached -m $descr $interval "$cmdline"
         fi
     done
 fi

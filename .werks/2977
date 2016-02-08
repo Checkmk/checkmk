@@ -1,0 +1,9 @@
+Title: aruba_wlc_clients: new check which monitors the WLC clients of a Aruba Networks WLAN Controller
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454919076
+Class: feature
+
+

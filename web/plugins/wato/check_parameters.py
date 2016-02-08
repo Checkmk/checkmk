@@ -2766,15 +2766,30 @@ register_check_parameters(
     subgroup_networking,
     "wlc_clients",
     _("WLC WiFi client connections"),
-    Tuple(
-        title = _("Number of connections"),
-        help = _("Number of connections for a WiFi"),
-              elements = [
-              Integer(title = _("Critical if below"), unit=_("connections")),
-              Integer(title = _("Warning if below"),  unit=_("connections")),
-              Integer(title = _("Warning if above"),  unit=_("connections")),
-              Integer(title = _("Critical if above"), unit=_("connections")),
-              ]
+    Transform(
+        Dictionary(
+            title = _("Number of connections"),
+            elements = [
+                ("levels",
+                    Tuple(
+                        title = _("Upper levels"),
+                        elements = [
+                            Integer(title = _("Warning at"),  unit=_("connections")),
+                            Integer(title = _("Critical at"), unit=_("connections")),
+                        ]
+                )),
+                ("levels_lower",
+                    Tuple(
+                        title = _("Lower levels"),
+                        elements= [
+                            Integer(title = _("Critical if below"), unit=_("connections")),
+                            Integer(title = _("Warning if below"),  unit=_("connections")),
+                        ]
+                )),
+            ]
+        ),
+        # old params = (crit_low, warn_low, warn, crit)
+        forth = lambda v: type(v) == tuple and { "levels" : (v[2], v[3]), "levels_lower" : (v[1], v[0]) } or v,
     ),
     TextAscii( title = _("Name of Wifi")),
     "first"

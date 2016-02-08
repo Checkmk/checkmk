@@ -1257,11 +1257,27 @@ def render_graph_pnp(graph_template, translated_metrics):
 #   '----------------------------------------------------------------------'
 
 
-def cmk_graphs_possible():
+def cmk_graphs_possible(site_id = None):
     try:
-        render_graph_html
-        return not config.force_pnp_graphing and browser_supports_canvas() and not html.is_mobile()
+        render_graph_html # Will throw exception if missing
+        return not config.force_pnp_graphing \
+           and browser_supports_canvas() \
+           and site_is_running_cmc(site_id) \
+           and not html.is_mobile()
     except:
+        return False
+
+
+# If site_id is None then we return True if at least
+# one site is running CMC
+def site_is_running_cmc(site_id):
+    if site_id:
+        return site_id in html.site_status \
+           and html.site_status[site_id].get("program_version").startswith("Check_MK")
+    else:
+        for status in html.site_status.values():
+            if status.get("program_version").startswith("Check_MK"):
+                return True
         return False
 
 
@@ -1327,14 +1343,14 @@ def get_graph_template_by_source(graph_templates, source):
 
 # This page is called for the popup of the graph icon of hosts/services.
 def page_host_service_graph_popup():
-    site = html.var('site')
+    site_id = html.var('site')
     host_name = html.var('host_name')
     service_description = html.var('service')
 
-    if cmk_graphs_possible():
-        host_service_graph_popup_cmk(site, host_name, service_description)
+    if cmk_graphs_possible(site_id):
+        host_service_graph_popup_cmk(site_id, host_name, service_description)
     else:
-        host_service_graph_popup_pnp(site, host_name, service_description)
+        host_service_graph_popup_pnp(site_id, host_name, service_description)
 
 
 

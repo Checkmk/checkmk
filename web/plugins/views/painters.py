@@ -917,7 +917,7 @@ multisite_painters["svc_group_memberlist"] = {
 }
 
 def paint_time_graph(row):
-    if metrics.cmk_graphs_possible():
+    if metrics.cmk_graphs_possible(row["site"]):
         return paint_time_graph_cmk(row)
     else:
         return paint_time_graph_pnp(row)

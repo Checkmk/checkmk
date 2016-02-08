@@ -1090,7 +1090,7 @@ class VisualFilterList(ListOfMultiple):
         self._filters = {}
         for info in self._infos:
             for fname, filter in filters_allowed_for_info(info).items():
-                if fname not in fspecs and fname not in ubiquitary_filters:
+                if fname not in fspecs: # and fname not in ubiquitary_filters:
                     fspecs[fname] = VisualFilter(fname,
                         title = filter.title,
                     )

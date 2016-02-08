@@ -62,6 +62,9 @@
 # styles are not modular and all defined in check_mk.css. This will
 # change in future.
 
+import bi # Needed for BI Icon. For arkane reasons (ask htdocs/module.py) this
+          # cannot be imported in views.py directly.
+
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
 #   |                  |  _ \ __ _(_)_ __ | |_ ___ _ __                    |

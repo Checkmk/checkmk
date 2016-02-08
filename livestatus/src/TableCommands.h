@@ -33,8 +33,8 @@ class Query;
 class TableCommands : public Table {
 public:
     TableCommands();
-    const char *name() { return "commands"; }
-    void answerQuery(Query *query);
+    const char *name() override { return "commands"; }
+    void answerQuery(Query *query) override;
     static void addColumns(Table *table, std::string prefix,
                            int indirect_offset);
 };

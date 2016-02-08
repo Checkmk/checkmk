@@ -36,13 +36,13 @@ class TableHosts : public Table {
 
 public:
     explicit TableHosts(bool by_group);
-    const char *name() { return _by_group ? "hostsbygroup" : "hosts"; }
-    const char *prefixname() { return "hosts"; }
-    bool isAuthorized(contact *ctc, void *data);
-    void *findObject(char *objectspec);
+    const char *name() override { return _by_group ? "hostsbygroup" : "hosts"; }
+    const char *prefixname() override { return "hosts"; }
+    bool isAuthorized(contact *ctc, void *data) override;
+    void *findObject(char *objectspec) override;
     static void addColumns(Table *, std::string prefix, int indirect_offset,
                            int extra_offset = -1);
-    void answerQuery(Query *query);
+    void answerQuery(Query *query) override;
 };
 
 #endif  // TableHosts_h

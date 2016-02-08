@@ -37,9 +37,9 @@ class TableColumns : public Table {
 
 public:
     TableColumns();
-    const char *name() { return "columns"; }
+    const char *name() override { return "columns"; }
     void addTable(Table *);
-    void answerQuery(Query *query);
+    void answerQuery(Query *query) override;
     const char *getValue(Column *column, int colcol);
     const char *tableNameOf(Column *column);
 };

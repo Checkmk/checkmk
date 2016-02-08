@@ -61,14 +61,13 @@ protected:
 
 public:
     TableStateHistory();
-    const char *name() { return "statehist"; }
-    const char *prefixname() { return "statehist_"; }
-    bool isAuthorized(contact *ctc, void *data);
+    const char *name() override { return "statehist"; }
+    const char *prefixname() override { return "statehist_"; }
+    bool isAuthorized(contact *ctc, void *data) override;
     void handleNewMessage(Logfile *logfile, time_t since, time_t until,
                           unsigned logclasses);
-    void answerQuery(Query *query);
-    Column *column(
-        const char *colname);  // override in order to handle current_
+    void answerQuery(Query *query) override;
+    Column *column(const char *colname) override;
     int updateHostServiceState(Query *query, const LogEntry *entry,
                                HostServiceState *hs_state,
                                const bool only_update);

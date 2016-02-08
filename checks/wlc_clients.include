@@ -47,7 +47,7 @@ def check_wlc_clients(item, params, parsed):
         num_conns, interface = parsed[item]
         state = 0
         infotext = "%d connections" % num_conns
-        perfdata = [("conns", num_conns)]
+        perfdata = [("connections", num_conns)]
         if interface:
             infotext += " (%s)" % interface
         if params:
@@ -59,7 +59,7 @@ def check_wlc_clients(item, params, parsed):
                 elif num_conns >= warn:
                     state = 1
 
-                perfdata = [("conns", num_conns, warn, crit)]
+                perfdata = [("connections", num_conns, warn, crit)]
 
             elif params.get("levels_lower", None):
                 warn_low, crit_low = params["levels"]

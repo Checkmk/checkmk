@@ -1,0 +1,18 @@
+Title: windows agent: replaced a very costy section regarding installed software
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454934777
+Class: fix
+
+To retrieve the list of installed software the mk_inventory.vbs script uses two different approaches
+that heavily overlap: One retrieves the list of uninstall-entries from the registry, the other
+retrieved the list of installers registered in the windows installer database (via wmi query to
+Win32_Product).
+The latter list is usually a subset of the former and can take excessively long to query as it
+triggers a verification of the database. In the process it also prints a lot of messages to
+the event log (see https://support.microsoft.com/de-de/kb/974524).
+
+Therefore the query to Win32_Product has been replaced with a query via a vbs-interface to the
+installer database. This should produce the same results without the drawbacks mentioned.

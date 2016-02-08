@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # =================================================================== #
+
 #        _    ____ ___      ____                                      #
 #       / \  |  _ \_ _|    |  _ \  ___   ___ _   _                    #
 #      / _ \ | |_) | |_____| | | |/ _ \ / __| | | |                   #
@@ -60,19 +61,25 @@
 # That class is optional and set to "" in most cases. Currently CSS
 # styles are not modular and all defined in check_mk.css. This will
 # change in future.
-# =================================================================== #
 
-#     ____       _       _                          _   _
-#    |  _ \ __ _(_)_ __ | |_ ___ _ __    ___  _ __ | |_(_) ___  _ __  ___
-#    | |_) / _` | | '_ \| __/ _ \ '__|  / _ \| '_ \| __| |/ _ \| '_ \/ __|
-#    |  __/ (_| | | | | | ||  __/ |    | (_) | |_) | |_| | (_) | | | \__ \
-#    |_|   \__,_|_|_| |_|\__\___|_|     \___/| .__/ \__|_|\___/|_| |_|___/
-#                                            |_|
-#
-# Painter options influence how painters render their data. Painter options
-# are stored together with "refresh" and "columns" as "View options".
-
-import bi # needed for aggregation icon
+#   .--Painter Options-----------------------------------------------------.
+#   |                   ____       _       _                               |
+#   |                  |  _ \ __ _(_)_ __ | |_ ___ _ __                    |
+#   |                  | |_) / _` | | '_ \| __/ _ \ '__|                   |
+#   |                  |  __/ (_| | | | | | ||  __/ |                      |
+#   |                  |_|   \__,_|_|_| |_|\__\___|_|                      |
+#   |                                                                      |
+#   |                   ___        _   _                                   |
+#   |                  / _ \ _ __ | |_(_) ___  _ __  ___                   |
+#   |                 | | | | '_ \| __| |/ _ \| '_ \/ __|                  |
+#   |                 | |_| | |_) | |_| | (_) | | | \__ \                  |
+#   |                  \___/| .__/ \__|_|\___/|_| |_|___/                  |
+#   |                       |_|                                            |
+#   +----------------------------------------------------------------------+
+#   | Painter options influence how painters render their data. Painter    |
+#   | options are stored together with "refresh" and "columns" as "View    |
+#   | options".                                                            |
+#   '----------------------------------------------------------------------'
 
 multisite_painter_options["pnp_timerange"] = {
     'valuespec' : Timerange(
@@ -110,6 +117,17 @@ multisite_painter_options["matrix_omit_uniform"] = {
     )
 }
 
+#.
+#   .--Helpers-------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   '----------------------------------------------------------------------'
+
+
 # This helper function returns the value of the given custom var
 def paint_custom_var(what, key, row):
     if what:
@@ -121,15 +139,90 @@ def paint_custom_var(what, key, row):
         return key, custom_vars[key]
     return key,  ""
 
-#    ___
-#   |_ _|___ ___  _ __  ___
-#    | |/ __/ _ \| '_ \/ __|
-#    | | (_| (_) | | | \__ \
-#   |___\___\___/|_| |_|___/
-#
+
+def paint_nagios_link(row):
+    # We need to use the Nagios-URL as configured
+    # in sites.
+    baseurl = config.site(row["site"])["url_prefix"] + "nagios/cgi-bin"
+    url = baseurl + "/extinfo.cgi?host=" + html.urlencode(row["host_name"])
+    svc = row.get("service_description")
+    if svc:
+        url += "&type=2&service=" + html.urlencode(svc)
+        what = "service"
+    else:
+        url += "&type=1"
+        what = "host"
+    return "singleicon", "<a href=\"%s\">%s</a>" % \
+        (url, html.render_icon('nagios', _('Show this %s in Nagios') % what))
+
+
+def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what='past'):
+    if not has_been_checked:
+        return "age", "-"
+
+    if mode == None:
+        mode = get_painter_option("ts_format")
+
+    if mode == "epoch":
+        return "", str(int(timestamp))
+
+    if mode == "both":
+        css, h1 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "abs", what=what)
+        css, h2 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "rel", what=what)
+        return css, "%s - %s" % (h1, h2)
+
+    dateformat = get_painter_option("ts_date")
+    age = time.time() - timestamp
+    if mode == "abs" or \
+        (mode == "mixed" and age >= 48 * 3600 or age < -48 * 3600):
+        return "age", time.strftime(dateformat + " %H:%M:%S", time.localtime(timestamp))
+
+    warn_txt = ''
+    output_format = "%s"
+    if what == 'future' and age > 0:
+        warn_txt = ' <b>%s</b>' % _('in the past!')
+    elif what == 'past' and age < 0:
+        warn_txt = ' <b>%s</b>' % _('in the future!')
+    elif what == 'both' and age > 0:
+        output_format = "%%s %s" % _("ago")
+
+
+    # Time delta less than two days => make relative time
+    if age < 0:
+        age = -age
+        prefix = "in "
+    else:
+        prefix = ""
+    if age < bold_if_younger_than:
+        age_class = "age recent"
+    else:
+        age_class = "age"
+
+    return age_class, prefix + (output_format % html.age_text(age)) + warn_txt
+
+
+def paint_future_time(timestamp):
+    if timestamp <= 0:
+        return "", "-"
+    else:
+        return paint_age(timestamp, True, 0, what='future')
+
+def paint_day(timestamp):
+    return "", time.strftime("%A, %Y-%m-%d", time.localtime(timestamp))
+
+#.
+#   .--Icons---------------------------------------------------------------.
+#   |                       ___                                            |
+#   |                      |_ _|___ ___  _ __  ___                         |
+#   |                       | |/ __/ _ \| '_ \/ __|                        |
+#   |                       | | (_| (_) | | | \__ \                        |
+#   |                      |___\___\___/|_| |_|___/                        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 # Deprecated in 1.2.7i1
 multisite_icons = []
+
 # Use this structure for new icons
 multisite_icons_and_actions = {}
 
@@ -354,82 +447,32 @@ multisite_painters["host_icons"] = {
     "paint"     : lambda row: paint_icons("host", row)
 }
 
-# -----------------------------------------------------------------------
 
-def paint_nagios_link(row):
-    # We need to use the Nagios-URL as configured
-    # in sites.
-    baseurl = config.site(row["site"])["url_prefix"] + "nagios/cgi-bin"
-    url = baseurl + "/extinfo.cgi?host=" + html.urlencode(row["host_name"])
-    svc = row.get("service_description")
-    if svc:
-        url += "&type=2&service=" + html.urlencode(svc)
-        what = "service"
-    else:
-        url += "&type=1"
-        what = "host"
-    return "singleicon", "<a href=\"%s\">%s</a>" % \
-        (url, html.render_icon('nagios', _('Show this %s in Nagios') % what))
-
-def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what='past'):
-    if not has_been_checked:
-        return "age", "-"
-
-    if mode == None:
-        mode = get_painter_option("ts_format")
-
-    if mode == "epoch":
-        return "", str(int(timestamp))
-
-    if mode == "both":
-        css, h1 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "abs", what=what)
-        css, h2 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "rel", what=what)
-        return css, "%s - %s" % (h1, h2)
-
-    dateformat = get_painter_option("ts_date")
-    age = time.time() - timestamp
-    if mode == "abs" or \
-        (mode == "mixed" and age >= 48 * 3600 or age < -48 * 3600):
-        return "age", time.strftime(dateformat + " %H:%M:%S", time.localtime(timestamp))
-
-    warn_txt = ''
-    output_format = "%s"
-    if what == 'future' and age > 0:
-        warn_txt = ' <b>%s</b>' % _('in the past!')
-    elif what == 'past' and age < 0:
-        warn_txt = ' <b>%s</b>' % _('in the future!')
-    elif what == 'both' and age > 0:
-        output_format = "%%s %s" % _("ago")
-
-
-    # Time delta less than two days => make relative time
-    if age < 0:
-        age = -age
-        prefix = "in "
-    else:
-        prefix = ""
-    if age < bold_if_younger_than:
-        age_class = "age recent"
-    else:
-        age_class = "age"
-
-    return age_class, prefix + (output_format % html.age_text(age)) + warn_txt
-
-
-def paint_future_time(timestamp):
-    if timestamp <= 0:
-        return "", "-"
-    else:
-        return paint_age(timestamp, True, 0, what='future')
-
-def paint_day(timestamp):
-    return "", time.strftime("%A, %Y-%m-%d", time.localtime(timestamp))
+#.
+#   .--Site----------------------------------------------------------------.
+#   |                           ____  _ _                                  |
+#   |                          / ___|(_) |_ ___                            |
+#   |                          \___ \| | __/ _ \                           |
+#   |                           ___) | | ||  __/                           |
+#   |                          |____/|_|\__\___|                           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Column painters showing information about a site.                   |
+#   '----------------------------------------------------------------------'
 
 def paint_site_icon(row):
     if row["site"] and config.use_siteicons:
         return None, "<img class=siteicon src=\"icons/site-%s-24.png\">" % row["site"]
     else:
         return None, ""
+
+multisite_painters["site_icon"] = {
+    "title"   : _("Icon showing the site"),
+    "short"   : "",
+    "columns" : ["site"],
+    "paint"   : paint_site_icon,
+    "sorter"  : 'site',
+}
 
 multisite_painters["sitename_plain"] = {
     "title"   : _("Site ID"),
@@ -444,6 +487,8 @@ multisite_painters["sitealias"] = {
     "columns" : ["site"],
     "paint"   : lambda row: (None, config.site(row["site"])["alias"]),
 }
+
+
 
 #.
 #   .--Services------------------------------------------------------------.
@@ -497,14 +542,6 @@ multisite_painters["service_state"] = {
     "sorter"  : 'svcstate',
 }
 
-
-multisite_painters["site_icon"] = {
-    "title"   : _("Icon showing the site"),
-    "short"   : "",
-    "columns" : ["site"],
-    "paint"   : paint_site_icon,
-    "sorter"  : 'site',
-}
 
 multisite_painters["svc_plugin_output"] = {
     "title"   : _("Output of check plugin"),

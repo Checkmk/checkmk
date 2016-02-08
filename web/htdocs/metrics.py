@@ -1460,7 +1460,6 @@ def render_metrics_table(translated_metrics, host_name, service_description):
                     ("host", host_name),
                     ("service", service_description),
                     ("metric", metric_name),
-                    ("back_url", "HIRN MIST TODO"),
                 ]
             )
             output += "</td>"

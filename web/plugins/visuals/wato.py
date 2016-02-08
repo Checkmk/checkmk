@@ -28,7 +28,7 @@ import wato
 
 class FilterWatoFile(Filter):
     def __init__(self):
-        Filter.__init__(self, "wato_folder", _("WATO Folder"), "host", ["filename"], [])
+        Filter.__init__(self, "wato_folder", _("WATO Folder"), "host", ["wato_folder"], [])
         self.last_wato_data_update = None
 
 

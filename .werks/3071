@@ -1,0 +1,10 @@
+Title: cisco_mem, cisco_sys_mem, cisco_mem_asa: fixed incorrect unit being displayed
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454938819
+Class: fix
+
+Previously the memory used on this devices was displayed as n Bytes although n is memory usage in
+percent

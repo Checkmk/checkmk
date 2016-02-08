@@ -3602,6 +3602,18 @@ check_metrics["check_mk-mssql_counters.sqlstats"] = {
     "sql_re-compilations/sec"   : { "name" : "requests_per_second" },
 }
 
+check_metrics["check_mk-cisco_mem"] = {
+    "mem_used" : { "name" : "mem_used_percent" }
+}
+
+check_metrics["check_mk-cisco_sys_mem"] = {
+    "mem_used" : { "name" : "mem_used_percent" }
+}
+
+check_metrics["check_mk-cisco_mem_asa"] = {
+    "mem_used" : { "name" : "mem_used_percent" }
+}
+
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.

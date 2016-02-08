@@ -60,4 +60,5 @@ check_info["aruba_wlc_clients"] = {
                                     "2",    # wlanESSIDNumStations
                               ]),
     "includes"              : [ "wlc_clients.include" ],
-}
+
+

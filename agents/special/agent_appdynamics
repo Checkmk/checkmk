@@ -193,3 +193,4 @@ for node, applications in grouped_data.iteritems():
                             else:
                                 output_items.append('%s:%s' % (name, value))
                         sys.stdout.write('|'.join(output_items) + '\n')
+sys.stdout.write('<<<<>>>>\n')

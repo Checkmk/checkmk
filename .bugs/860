@@ -1,0 +1,8 @@
+Title: Bug in Daily 08.02.16: Ackn doesn't work any more
+Component: multisite
+State: open
+Date: 2016-02-09 15:29:25
+Targetversion: 1.2.7
+Class: bug
+
+It is not possible to acknowldge services anymore. Downtime works. The list of services was mit OK and CRIT services.

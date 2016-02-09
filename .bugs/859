@@ -1,0 +1,8 @@
+Title: Changing the output_format doesen't change the response header
+Component: multisite
+State: open
+Date: 2016-02-09 15:28:09
+Targetversion: 1.2.7
+Class: bug
+
+If you change the output_format for example to json, the response header is still html

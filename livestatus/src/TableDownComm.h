@@ -42,17 +42,17 @@ class TableDownComm : public Table {
 
 public:
     explicit TableDownComm(bool is_downtime);
-    const char *name() { return _name; }
+    const char *name() override { return _name; }
     ~TableDownComm();
     DowntimeOrComment *findEntry(unsigned long id, bool is_service);
     void addDowntime(nebstruct_downtime_data *);
     void addComment(nebstruct_comment_data *);
     void add(DowntimeOrComment *data);
     void remove(DowntimeOrComment *data);
-    void answerQuery(Query *);
-    bool isAuthorized(contact *ctc, void *data);
-    _entries_t::iterator entriesIteratorBegin() { return _entries.begin(); }
-    _entries_t::iterator entriesIteratorEnd() { return _entries.end(); }
+    void answerQuery(Query *) override;
+    bool isAuthorized(contact *ctc, void *data) override;
+    _entries_t::iterator begin() { return _entries.begin(); }
+    _entries_t::iterator end() { return _entries.end(); }
 };
 
 #endif  // TableDownComm_h

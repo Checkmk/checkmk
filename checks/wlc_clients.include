@@ -1,0 +1,75 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# parsed = {
+#     "Summary" : (13, ""),
+#     "NAME 1"  : (5, INTERFACE),
+#     "NAME 2"  : (8, INTERFACE),
+# }
+
+
+def inventory_wlc_clients(parsed):
+    return [ (name, {}) for name in parsed ]
+
+
+def check_wlc_clients(item, params, parsed):
+    if type(params) == tuple:
+        params = {
+            "levels_lower" : (params[1], params[0]),
+            "levels"       : (params[2], params[3]),
+        }
+
+    if item in parsed:
+        num_conns, interface = parsed[item]
+        state = 0
+        infotext = "%d connections" % num_conns
+        perfdata = [("connections", num_conns)]
+        if interface:
+            infotext += " (%s)" % interface
+        if params:
+            if params.get("levels", None):
+                warn, crit = params["levels"]
+                levelstext = "at %d/%d" % (warn, crit)
+                if num_conns >= crit:
+                    state = 2
+                elif num_conns >= warn:
+                    state = 1
+
+                perfdata = [("connections", num_conns, warn, crit)]
+
+            elif params.get("levels_lower", None):
+                warn_low, crit_low = params["levels"]
+                levelstext = "below %d/%d" % (warn_low, crit_low)
+                if num_conns < crit_low:
+                    state = 2
+                elif num_conns < warn_low:
+                    state = 1
+
+            if state > 0:
+                infotext += " (warn/crit %s)" % levelstext
+
+        return state, infotext, perfdata

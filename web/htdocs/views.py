@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -954,10 +954,10 @@ def show_view(view, show_heading = False, show_buttons = True,
     # FIXME TODO HACK to make grouping single contextes possible on host/service infos
     # Is hopefully cleaned up soon.
     if view['datasource'] in ['hosts', 'services']:
-        if 'hostgroup' in view['single_infos']:
-            html.set_var('opthost_group', html.var('hostgroup'))
-        if 'servicegroup' in view['single_infos']:
-            html.set_var('optservice_group', html.var('servicegroup'))
+        if html.has_var('hostgroup') and not html.has_var("opthost_group"):
+            html.set_var("opthost_group", html.var("hostgroup"))
+        if html.has_var('servicegroup') and not html.has_var("optservice_group"):
+            html.set_var("optservice_group", html.var("servicegroup"))
 
     # Now populate the HTML vars with context vars from the view definition. Hard
     # coded default values are treated differently:

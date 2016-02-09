@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -2029,6 +2029,19 @@ def set_use_cachefile(state=True):
     orig_opt_use_cachefile = opt_use_cachefile
     opt_use_cachefile = state
 
+
+# Creates the directory at path if it does not exist.  If that path does exist
+# it is assumed that it is a directory. the file type is not being checked.
+# This function is atomar so that no exception can arise if two processes
+# at the same time try to create the directory. Only fails if the directory
+# is not present for any reason after this function call.
+def ensure_directory(path):
+    try:
+        os.makedirs(path)
+    except Exception, e:
+        if os.path.exists(path):
+            return
+        raise
 
 #.
 #   .--Check helpers-------------------------------------------------------.

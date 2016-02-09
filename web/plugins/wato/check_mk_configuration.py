@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -1120,9 +1120,11 @@ register_configvar(group,
         help = _("If enabled, Check_MK will create one additional service per host "
                  "that does a regular check, if the service discovery would find new services "
                  "currently un-monitored. <b>Note:</b> This option is deprecated and has been "
-                 "replaced by the rule set <i>Periodic Service Discovery</i>, which allows "
-                 "a per-host configuration and additional features such as automatic rediscovery. "
-                 "Rule in that rule set will override the global settings done here.")),
+                 "replaced by the rule set <a href='%s'>Periodic Service Discovery</a>, "
+                 "which allows a per-host configuration and additional features such as "
+                 "automatic rediscovery. Rules in that rule set will override the global "
+                 "settings done here.") % "wato.py?mode=edit_ruleset&varname=periodic_discovery",
+    ),
     need_restart = True)
 
 register_configvar(group,

@@ -186,9 +186,8 @@ void TableDownComm::remove(DowntimeOrComment *data) {
 }
 
 void TableDownComm::answerQuery(Query *query) {
-    for (_entries_t::const_iterator it = _entries.begin(); it != _entries.end();
-         ++it) {
-        if (!query->processDataset(it->second)) {
+    for (const auto &entry : _entries) {
+        if (!query->processDataset(entry.second)) {
             break;
         }
     }

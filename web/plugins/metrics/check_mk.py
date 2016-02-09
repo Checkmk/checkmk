@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -3600,6 +3600,18 @@ check_metrics["check_mk-mssql_counters.sqlstats"] = {
     "batch_requests/sec"        : { "name" : "requests_per_second" },
     "sql_compilations/sec"      : { "name" : "requests_per_second" },
     "sql_re-compilations/sec"   : { "name" : "requests_per_second" },
+}
+
+check_metrics["check_mk-cisco_mem"] = {
+    "mem_used" : { "name" : "mem_used_percent" }
+}
+
+check_metrics["check_mk-cisco_sys_mem"] = {
+    "mem_used" : { "name" : "mem_used_percent" }
+}
+
+check_metrics["check_mk-cisco_mem_asa"] = {
+    "mem_used" : { "name" : "mem_used_percent" }
 }
 
 

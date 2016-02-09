@@ -33,8 +33,8 @@ class Query;
 class TableTimeperiods : public Table {
 public:
     TableTimeperiods();
-    const char *name() { return "timeperiods"; }
-    void answerQuery(Query *query);
+    const char *name() override { return "timeperiods"; }
+    void answerQuery(Query *query) override;
     static void addColumns(Table *table, std::string prefix,
                            int indirect_offset);
 };

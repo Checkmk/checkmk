@@ -43,9 +43,21 @@ If (fso.FileExists(timestamp)) Then
     End If
 End If
 
+
+' handle error message ourselves so this script can also be run directly, for testing
+On Error Resume Next
+
 ' create new timestamp file
 ' only allowed when script runs as administrator user
 Set stampo = fso.CreateTextFile(timestamp)
+
+If Err.Number <> 0 Then
+    outPut "Failed to create time stamp: " & Err.Description & " (" & Err.Number & ")"
+    Err.Clear
+End If
+
+On Error Goto 0
+
 
 ' determine the timezone offset w/t GMT
 Set systemParams = objClass.ExecQuery("Select * from Win32_ComputerSystem")
@@ -117,6 +129,22 @@ Sub RecurseForExecs(strFolderPath)
     Next
 End Sub
 
+Sub SoftwareFromInstaller(fields)
+    Dim installer
+    Set installer = CreateObject("WindowsInstaller.Installer")
+    Dim productCode, productName
+    For Each productCode In installer.Products
+        values = fields  ' copy
+        idx = 0
+
+        For Each field In fields
+            values(idx) = installer.ProductInfo(productCode, field)
+            idx = idx + 1
+        Next
+        outPut(Join(values, "|"))
+    Next
+End Sub
+
 ' Processor
 Call startSection("win_cpuinfo",58,timeUntil)
 cpuVars = Array( "Name","Manufacturer","Caption","DeviceID","MaxClockSpeed","AddressWidth","L2CacheSize","L3CacheSize","Architecture","NumberOfCores","NumberOfLogicalProcessors","CurrentVoltage","Status" )
@@ -152,8 +180,8 @@ Call getWMIObject("Win32_VideoController",adapterVars)
 
 ' Installed Software
 Call startSection("win_wmi_software",124,timeUntil)
-swVars = Array( "Name", "Vendor", "Version", "InstallDate", "Language")
-Call getWMIObject2("Win32_Product",swVars)
+swVars = Array( "ProductName", "Publisher", "VersionString", "InstallDate", "Language")
+Call SoftwareFromInstaller(swVars)
 
 ' Search Registry
 Call startSection("win_reg_uninstall",124,timeUntil)

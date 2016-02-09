@@ -37,15 +37,15 @@ class TableServices : public Table {
 
 public:
     TableServices(bool by_group, bool by_hostgroup);
-    const char *name() {
+    const char *name() override {
         return _by_group ? "servicesbygroup"
                          : (_by_hostgroup ? "servicesbyhostgroup" : "services");
     }
-    const char *prefixname() { return "services"; }
-    bool isAuthorized(contact *, void *);
-    void *findObject(char *objectspec);
+    const char *prefixname() override { return "services"; }
+    bool isAuthorized(contact *, void *) override;
+    void *findObject(char *objectspec) override;
     void add(service *svc);
-    void answerQuery(Query *);
+    void answerQuery(Query *) override;
     static void addColumns(Table *, std::string prefix, int indirect_offset,
                            bool add_hosts);
 };

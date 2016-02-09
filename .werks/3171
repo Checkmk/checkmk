@@ -1,0 +1,13 @@
+Title: Logout in one site will log out of all sites sharing the same auth.secret
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454880775
+Class: fix
+
+Site that share the file <tt>etc/auth.secret</tt> also share the same login.
+A user logging in in one of these sites is automatically logged in in all
+others. But logging out did only work when the logout was done on the same
+site as the login. Now you can log in at one site and log out at the other.
+Note: Also <tt>omd cp</tt> creates sites with the same secret.

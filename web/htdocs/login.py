@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -81,10 +81,17 @@ def generate_hash(username, now, serial):
     secret = load_secret()
     return md5(username.encode("utf-8") + now + str(serial) + secret).hexdigest()
 
+
 def del_auth_cookie():
-    name = site_cookie_name()
-    if html.has_cookie(name):
-        html.del_cookie(name)
+    # Note: in distributed setups a cookie issued by one site is accepted by
+    # others with the same auth.secret and user serial numbers. When a users
+    # logs out then we need to delete all cookies that are accepted by us -
+    # not just the one that we have issued.
+    for cookie_name in html.get_cookie_names():
+        if cookie_name.startswith("auth_"):
+            if auth_cookie_is_valid(cookie_name):
+                html.del_cookie(cookie_name)
+
 
 def auth_cookie_value(username, serial):
     now = str(time.time())
@@ -101,23 +108,10 @@ def renew_cookie(cookie_name, username, serial):
        and cookie_name == site_cookie_name():
         set_auth_cookie(username, serial)
 
+
 def check_auth_cookie(cookie_name):
-    username, issue_time, cookie_hash = html.cookie(cookie_name, '::').split(':', 2)
-    username = username.decode("utf-8")
-
-    # FIXME: Ablauf-Zeit des Cookies testen
-    #max_cookie_age = 10
-    #if float(issue_time) < time.time() - max_cookie_age:
-    #    del_auth_cookie()
-    #    return ''
-
-    if not userdb.user_exists(username):
-        raise MKAuthException(_('Username is unknown'))
-
-    # Validate the hash
-    serial = load_serial(username)
-    if cookie_hash != generate_hash(username, issue_time, serial):
-        raise MKAuthException(_('Invalid credentials'))
+    username, issue_time, cookie_hash = parse_auth_cookie(cookie_name)
+    serial = check_parsed_auth_cookie(username, issue_time, cookie_hash)
 
     # Once reached this the cookie is a good one. Renew it!
     renew_cookie(cookie_name, username, serial)
@@ -129,6 +123,32 @@ def check_auth_cookie(cookie_name):
 
     # Return the authenticated username
     return username
+
+
+def parse_auth_cookie(cookie_name):
+    username, issue_time, cookie_hash = html.cookie(cookie_name, '::').split(':', 2)
+    username = username.decode("utf-8")
+    return username, issue_time, cookie_hash
+
+
+def check_parsed_auth_cookie(username, issue_time, cookie_hash):
+    if not userdb.user_exists(username):
+        raise MKAuthException(_('Username is unknown'))
+
+    serial = load_serial(username)
+    if cookie_hash != generate_hash(username, issue_time, serial):
+        raise MKAuthException(_('Invalid credentials'))
+
+    return serial
+
+
+def auth_cookie_is_valid(cookie_name):
+    try:
+        check_parsed_auth_cookie(*parse_auth_cookie(cookie_name))
+        return True
+    except MKAuthException:
+        return False
+
 
 def check_auth_automation():
     secret = html.var("_secret").strip()

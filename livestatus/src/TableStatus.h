@@ -32,8 +32,8 @@ class Query;
 class TableStatus : public Table {
 public:
     TableStatus();
-    const char *name() { return "status"; }
-    void answerQuery(Query *query);
+    const char *name() override { return "status"; }
+    void answerQuery(Query *query) override;
 };
 
 #endif  // TableStatus_h

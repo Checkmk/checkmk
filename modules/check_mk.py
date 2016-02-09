@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -382,10 +382,11 @@ special_agent_info                 = {}
 # Now read in all checks. Note: this is done *before* reading the
 # configuration, because checks define variables with default
 # values user can override those variables in his configuration.
-# Do not read in the checks if check_mk is called as module
+# If a check or check.include is both found in local/ and in the
+# normal structure, then only the file in local/ must be read!
 def load_checks():
-    filelist = plugin_pathnames_in_directory(checks_dir) \
-             + plugin_pathnames_in_directory(local_checks_dir)
+    filelist = plugin_pathnames_in_directory(local_checks_dir) \
+             + plugin_pathnames_in_directory(checks_dir)
 
     # read include files always first, but still in the sorted
     # order with local ones last (possibly overriding variables)
@@ -398,15 +399,19 @@ def load_checks():
 
     known_vars = set(globals().keys()) # track new configuration variables
 
+    loaded_files = set()
     for f in filelist:
         if not f.endswith("~"): # ignore emacs-like backup files
-            try:
-                execfile(f, globals())
-            except Exception, e:
-                sys.stderr.write("Error in plugin file %s: %s\n" % (f, e))
-                if opt_debug:
-                    raise
-                sys.exit(5)
+            file_name = f.rsplit("/", 1)[-1]
+            if file_name not in loaded_files:
+                try:
+                    loaded_files.add(file_name)
+                    execfile(f, globals())
+                except Exception, e:
+                    sys.stderr.write("Error in plugin file %s: %s\n" % (f, e))
+                    if opt_debug:
+                        raise
+                    sys.exit(5)
 
     for varname, value in globals().iteritems():
         if varname[0] != '_' \
@@ -1651,6 +1656,8 @@ def get_single_oid(hostname, ipaddress, oid):
         # we need an exact match
         if len(walk) == 1 and oid == walk[0][0]:
             value = walk[0][1]
+        elif oid.endswith(".*") and len(walk) > 0:
+            value = walk[0][1]
         else:
             value = None
 
@@ -1857,7 +1864,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
     if not skip_autochecks and use_cache:
         g_check_table_cache[hostname] = check_table
 
-    if remove_duplicates and is_dual_host(hostname):
+    if remove_duplicates:
         return remove_duplicate_checks(check_table)
     else:
         return check_table

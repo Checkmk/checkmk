@@ -1,4 +1,4 @@
-title: Cisco Wireless Lan Controller (WLC): Numer of Wifi connections
+title: Cisco Wireless LAN Controller (WLC): Number of Wifi connections
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This checks display the amount of connected clients in an wireless network.
  Per default the check only displays the information for each network, and also one
- summary. Levels can be set for each network via Wato.
+ summary. Levels can be set for each network via WATO.
 
 item:
  Name of the wifi, configured in Cisco's WLC Software or "Summary" for the overall number

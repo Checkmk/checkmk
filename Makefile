@@ -17,7 +17,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -70,10 +70,10 @@ FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix livestatus/src/mk,*.cc *.c *.h)) \
                       $(wildcard $(addprefix mkeventd/src/,*.cc *.c *.h))
 
-.PHONY: all check-binaries check check-permissions check-spaces check-version \
-        clang-analyzer clang-tidy clean cppcheck dist documentation format \
-        headers healspaces help iwyu minify-js mk-eventd mk-livestatus \
-        mrproper optimize-images packages setup setversion version
+.PHONY: all analyze check check-binaries check-permissions check-spaces \
+        check-version clean cppcheck dist documentation format headers \
+        healspaces help iwyu minify-js mk-eventd mk-livestatus mrproper \
+        optimize-images packages setup setversion tidy version
 
 all: dist packages
 
@@ -263,7 +263,7 @@ compile_commands.json: $(FILES_TO_FORMAT)
 	$(MAKE) -C livestatus clean
 	$(BEAR) $(MAKE) -C livestatus -j8
 
-clang-tidy: compile_commands.json
+tidy: compile_commands.json
 	./compiled_sources | xargs $(CLANG_TIDY)
 
 # Not really perfect rules, but better than nothing
@@ -272,7 +272,7 @@ iwyu:
 	$(MAKE) -C livestatus CC=$(IWYU) CXX=$(IWYU) -k
 
 # Not really perfect rules, but better than nothing
-clang-analyzer:
+analyze:
 	$(MAKE) -C livestatus clean
 	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE)
 

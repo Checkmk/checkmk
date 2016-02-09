@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -1203,6 +1203,13 @@ class html(GUITester):
 
     def all_vars(self):
         return self.vars
+
+
+    def all_varnames_with_prefix(self, prefix):
+        for varname, value in self.vars.items():
+            if varname.startswith(prefix):
+                yield varname
+
 
     # Return all values of a variable that possible occurs more
     # than once in the URL. note: self.listvars does contain those

@@ -33,9 +33,9 @@ class Query;
 class TableContactgroups : public Table {
 public:
     TableContactgroups();
-    const char *name() { return "contactgroups"; }
-    void *findObject(char *objectspec);
-    void answerQuery(Query *query);
+    const char *name() override { return "contactgroups"; }
+    void *findObject(char *objectspec) override;
+    void answerQuery(Query *query) override;
     static void addColumns(Table *table, std::string prefix,
                            int indirect_offset);
 };

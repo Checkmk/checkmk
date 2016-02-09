@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -27,7 +27,6 @@
 import urllib2, sys, os, socket, pprint, base64
 
 opt_debug = '--debug' in sys.argv
-
 
 class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
     """
@@ -48,8 +47,8 @@ class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
     https_request = http_request
 
 
-def fetch_var(server, port, path, suburi, itemspec):
-    url = "http://%s:%d/%s/%s" % (server, port, suburi, path)
+def fetch_var(protocol, server, port, path, suburi, itemspec):
+    url = "%s://%s:%d/%s/%s" % (protocol, server, port, suburi, path)
     if opt_debug:
         sys.stderr.write("DEBUG: Fetching: %s\n" % url)
     try:
@@ -139,20 +138,22 @@ def extract_item(key, itemspec):
 def query_instance(inst):
     # Prepare user/password authentication via HTTP Auth
     if inst.get("password"):
-        passwdmngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        passwdmngr.add_password(None, "http://%s:%d/" %
-                (inst["server"], inst["port"]), inst["user"], inst["password"])
+        password_mngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        password_mngr.add_password(None, "%s://%s:%d/" %
+                (inst["protocol"], inst["server"], inst["port"]), inst["user"], inst["password"])
+
         if inst["mode"] == 'digest':
-            authhandler = urllib2.HTTPDigestAuthHandler(passwdmngr)
+            authhandler = urllib2.HTTPDigestAuthHandler(password_mngr)
         elif inst["mode"] == "basic_preemptive":
-            authhandler = PreemptiveBasicAuthHandler(passwdmngr)
-        else:
-            authhandler = urllib2.HTTPBasicAuthHandler(passwdmngr)
+            authhandler = PreemptiveBasicAuthHandler(password_mngr)
+        elif inst["mode"] == "basic" and inst["protocol"] != "https":
+            authhandler = urllib2.HTTPBasicAuthHandler(password_mngr)
+
         opener = urllib2.build_opener(authhandler)
         urllib2.install_opener(opener)
 
     # Determine type of server
-    server_info = fetch_var(inst["server"], inst["port"], "", inst["suburi"], "")
+    server_info = fetch_var(inst["protocol"], inst["server"], inst["port"], "", inst["suburi"], "")
 
     sys.stdout.write('<<<jolokia_info>>>\n')
     if server_info:
@@ -173,7 +174,7 @@ def query_instance(inst):
     # Fetch the general information first
     for path, title, itemspec in global_vars + specific_vars.get(product, []):
         try:
-            values = fetch_var(inst["server"], inst["port"], "read/" + path, inst["suburi"], itemspec)
+            values = fetch_var(inst["protocol"], inst["server"], inst["port"], "read/" + path, inst["suburi"], itemspec)
 
         # In case of network errors skip this server
         except IOError:
@@ -210,6 +211,7 @@ def query_instance(inst):
 
 
 # Default configuration for all instances
+protocol = "http"
 server   = "localhost"
 port     = 8080
 user     = "monitoring"
@@ -219,47 +221,46 @@ suburi   = "jolokia"
 instance = None
 
 global_vars = [
-  ( "java.lang:type=Memory/NonHeapMemoryUsage/used",                "NonHeapMemoryUsage",       [] ),
-  ( "java.lang:type=Memory/NonHeapMemoryUsage/max",                 "NonHeapMemoryMax",         [] ),
-  ( "java.lang:type=Memory/HeapMemoryUsage/used",                   "HeapMemoryUsage",          [] ),
-  ( "java.lang:type=Memory/HeapMemoryUsage/max",                    "HeapMemoryMax",            [] ),
-  ( "java.lang:type=Threading/ThreadCount",                         "ThreadCount",              [] ),
-  ( "java.lang:type=Threading/DaemonThreadCount",                   "DeamonThreadCount",        [] ),
-  ( "java.lang:type=Threading/PeakThreadCount",                     "PeakThreadCount",          [] ),
-  ( "java.lang:type=Threading/TotalStartedThreadCount",             "TotalStartedThreadCount",  [] ),
-  ( "java.lang:type=Runtime/Uptime",                                "Uptime",                   [] ),
-  ( "java.lang:type=GarbageCollector,name=*/CollectionCount",       "",                         [] ),
-  ( "java.lang:type=GarbageCollector,name=*/CollectionTime",        "",                         [] ),
-  ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/used",   "PermGenUsage",             [] ),
-  ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/max",    "PermGenMax",               [] ),
+  ( "java.lang:type=Memory/NonHeapMemoryUsage/used",              "NonHeapMemoryUsage",      [] ),
+  ( "java.lang:type=Memory/NonHeapMemoryUsage/max",               "NonHeapMemoryMax",        [] ),
+  ( "java.lang:type=Memory/HeapMemoryUsage/used",                 "HeapMemoryUsage",         [] ),
+  ( "java.lang:type=Memory/HeapMemoryUsage/max",                  "HeapMemoryMax",           [] ),
+  ( "java.lang:type=Threading/ThreadCount",                       "ThreadCount",             [] ),
+  ( "java.lang:type=Threading/DaemonThreadCount",                 "DeamonThreadCount",       [] ),
+  ( "java.lang:type=Threading/PeakThreadCount",                   "PeakThreadCount",         [] ),
+  ( "java.lang:type=Threading/TotalStartedThreadCount",           "TotalStartedThreadCount", [] ),
+  ( "java.lang:type=Runtime/Uptime",                              "Uptime",                  [] ),
+  ( "java.lang:type=GarbageCollector,name=*/CollectionCount",     "",                        [] ),
+  ( "java.lang:type=GarbageCollector,name=*/CollectionTime",      "",                        [] ),
+  ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/used", "PermGenUsage",            [] ),
+  ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/max",  "PermGenMax",              [] ),
 ]
 
 
 specific_vars = {
   "weblogic" : [
-      ( "*:*/CompletedRequestCount",                          None,                      [ "ServerRuntime" ] ),
-      ( "*:*/QueueLength",                                    None,                      [ "ServerRuntime" ] ),
-      ( "*:*/StandbyThreadCount",                             None,                      [ "ServerRuntime" ] ),
-      ( "*:*/PendingUserRequestCount",                        None,                      [ "ServerRuntime" ] ),
-      ( "*:Name=ThreadPoolRuntime,*/ExecuteThreadTotalCount", None,                      [ "ServerRuntime" ] ),
-      ( "*:*/ExecuteThreadIdleCount",                         None,                      [ "ServerRuntime" ] ),
-      ( "*:*/HoggingThreadCount",                             None,                      [ "ServerRuntime" ] ),
-      ( "*:Type=WebAppComponentRuntime,*/OpenSessionsCurrentCount", None,                [ "ServerRuntime", "ApplicationRuntime" ] ),
+      ( "*:*/CompletedRequestCount",                                None, [ "ServerRuntime" ] ),
+      ( "*:*/QueueLength",                                          None, [ "ServerRuntime" ] ),
+      ( "*:*/StandbyThreadCount",                                   None, [ "ServerRuntime" ] ),
+      ( "*:*/PendingUserRequestCount",                              None, [ "ServerRuntime" ] ),
+      ( "*:Name=ThreadPoolRuntime,*/ExecuteThreadTotalCount",       None, [ "ServerRuntime" ] ),
+      ( "*:*/ExecuteThreadIdleCount",                               None, [ "ServerRuntime" ] ),
+      ( "*:*/HoggingThreadCount",                                   None, [ "ServerRuntime" ] ),
+      ( "*:Type=WebAppComponentRuntime,*/OpenSessionsCurrentCount", None, [ "ServerRuntime", "ApplicationRuntime" ] ),
   ],
   "tomcat" : [
-      ( "*:type=Manager,*/activeSessions,maxActiveSessions",  None,                      [ "path", "context" ] ),
-      ( "*:j2eeType=Servlet,name=default,*/stateName", None, [ "WebModule" ] ),
+      ( "*:type=Manager,*/activeSessions,maxActiveSessions",        None, [ "path", "context" ] ),
+      ( "*:j2eeType=Servlet,name=default,*/stateName",              None, [ "WebModule" ] ),
       # Check not yet working
-      ( "*:j2eeType=Servlet,name=default,*/requestCount", None, [ "WebModule" ]),
-      ( "*:name=*,type=ThreadPool/maxThreads", None, []),
-      ( "*:name=*,type=ThreadPool/currentThreadCount", None, []),
-      ( "*:name=*,type=ThreadPool/currentThreadsBusy", None, []),
+      ( "*:j2eeType=Servlet,name=default,*/requestCount",           None, [ "WebModule" ]),
+      ( "*:name=*,type=ThreadPool/maxThreads",                      None, []),
+      ( "*:name=*,type=ThreadPool/currentThreadCount",              None, []),
+      ( "*:name=*,type=ThreadPool/currentThreadsBusy",              None, []),
      # too wide location for addressing the right info
      # ( "*:j2eeType=Servlet,*/requestCount", None, [ "WebModule" ] ),
-
   ],
   "jboss" : [
-      ( "*:type=Manager,*/activeSessions,maxActiveSessions",  None,                      [ "path", "context" ] ),
+      ( "*:type=Manager,*/activeSessions,maxActiveSessions",        None, [ "path", "context" ] ),
   ],
 }
 
@@ -293,6 +294,7 @@ socket.setdefaulttimeout(1.0)
 # of dicts).
 for inst in instances:
     for varname, value in [
+        ( "protocol", protocol ),
         ( "server",   server ),
         ( "port",     port ),
         ( "user",     user ),

@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -344,7 +344,7 @@ def pnp_graph_icon_link(row, what):
     if 'X' not in html.display_options:
         return ""
 
-    if not metrics.cmk_graphs_possible():
+    if not metrics.cmk_graphs_possible(row["site"]):
         return pnp_url(row, what)
     else:
         return new_graphing_url(row, what)
@@ -353,7 +353,7 @@ def pnp_graph_icon_link(row, what):
 def pnp_icon(row, what):
     url = pnp_graph_icon_link(row, what)
 
-    if not metrics.cmk_graphs_possible():
+    if not metrics.cmk_graphs_possible(row["site"]):
         # Directly ask PNP for all data, don't try to use the new graph fetching mechanism
         # to keep the number of single requests low
         hover_content_func = 'fetch_pnp_hover_contents(\'%s\')' % pnp_popup_url(row, what)

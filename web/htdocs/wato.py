@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -1212,6 +1212,10 @@ def mode_edit_host(phase, new, is_cluster):
             if config.may('wato.rulesets'):
                 html.context_button(_("Parameters"),
                   folder_preserving_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
+                if is_cluster:
+                    html.context_button(_("Clustered Services"),
+                      folder_preserving_link([("mode", "edit_ruleset"), ("varname", "clustered_services")]), "rulesets")
+
             if config.may("wato.rename_hosts") and not Folder.current().locked_hosts():
                 html.context_button(_("Rename %s") % (is_cluster and _("Cluster") or _("Host")),
                   folder_preserving_link([("mode", "rename_host"), ("host", hostname)]), "rename_host")
@@ -2606,6 +2610,9 @@ def mode_inventory(phase, firsttime):
         if config.may('wato.rulesets'):
             html.context_button(_("Parameters"),
                                 folder_preserving_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
+            if host.is_cluster():
+                html.context_button(_("Clustered Services"),
+                  folder_preserving_link([("mode", "edit_ruleset"), ("varname", "clustered_services")]), "rulesets")
         if not host.is_cluster():
             # only display for non cluster hosts
             html.context_button(_("Diagnostic"),

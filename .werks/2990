@@ -1,0 +1,9 @@
+Title: netapp_api_vs_traffic: fixed incorrect CIFS latency
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454942332
+Class: fix
+
+The CIFS latency was off by a factor of 1000.

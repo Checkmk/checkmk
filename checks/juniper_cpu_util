@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -32,8 +32,9 @@ factory_settings['juniper_cpu_util_default_levels'] = {
 
 def inventory_juniper_cpu_util(info):
     for line in info:
-        if line[0].startswith("Routing Engine"):
+        if "Routing Engine" in line[0]:
             yield line[0], {}
+
 
 def check_juniper_cpu_util(item, params, info):
     for name, util in info:
@@ -51,6 +52,6 @@ check_info['juniper_cpu_util'] = {
                                                              5, #jnxOperatingDescr
                                                              8, #jnxOperatingCPU
                                                              ]),
-    'includes'                : "cpu_util.include",
+    'includes'                : ["cpu_util.include"],
     'default_levels_variable' : "juniper_cpu_util_default_levels"
 }

@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -33,7 +33,7 @@ except ImportError:
 
 from lib import *
 from valuespec import *
-import config, table
+import config, table, userdb
 import pagetypes # That will replace visuals.py one day
 
 #   .--Plugins-------------------------------------------------------------.
@@ -127,6 +127,9 @@ def load(what, builtin_visuals, skip_func = None, lock=False):
     # Now scan users subdirs for files "visuals.mk"
     subdirs = os.listdir(config.config_dir)
     for user in subdirs:
+        if not userdb.user_exists(user):
+            continue
+
         try:
             dirpath = config.config_dir + "/" + user
             if not os.path.isdir(dirpath):
@@ -1087,7 +1090,7 @@ class VisualFilterList(ListOfMultiple):
         self._filters = {}
         for info in self._infos:
             for fname, filter in filters_allowed_for_info(info).items():
-                if fname not in fspecs and fname not in ubiquitary_filters:
+                if fname not in fspecs: # and fname not in ubiquitary_filters:
                     fspecs[fname] = VisualFilter(fname,
                         title = filter.title,
                     )

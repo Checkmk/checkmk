@@ -768,3 +768,12 @@ td.nowiki table td, td.nowiki table th {
     border: 1px solid #888;
 }
 
+/* Command for modifying existing downtimes */
+table.modifydowntimes > tbody > tr > td:nth-child(1) {
+    vertical-align: middle;
+    padding-top: 10px;
+}
+table.modifydowntimes > tbody > tr:nth-child(1) > td:nth-child(1)  {
+    padding-top: 0px;
+}
+

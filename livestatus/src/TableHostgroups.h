@@ -34,11 +34,11 @@ class Query;
 class TableHostgroups : public Table {
 public:
     TableHostgroups();
-    const char *name() { return "hostgroups"; }
-    void *findObject(char *objectspec);
-    bool isAuthorized(contact *, void *);
+    const char *name() override { return "hostgroups"; }
+    void *findObject(char *objectspec) override;
+    bool isAuthorized(contact *, void *) override;
     static void addColumns(Table *, std::string prefix, int indirect_offset);
-    void answerQuery(Query *query);
+    void answerQuery(Query *query) override;
 };
 
 #endif  // TableHostgroups_h

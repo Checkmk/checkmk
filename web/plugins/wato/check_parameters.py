@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails. You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -2766,15 +2766,30 @@ register_check_parameters(
     subgroup_networking,
     "wlc_clients",
     _("WLC WiFi client connections"),
-    Tuple(
-        title = _("Number of connections"),
-        help = _("Number of connections for a WiFi"),
-              elements = [
-              Integer(title = _("Critical if below"), unit=_("connections")),
-              Integer(title = _("Warning if below"),  unit=_("connections")),
-              Integer(title = _("Warning if above"),  unit=_("connections")),
-              Integer(title = _("Critical if above"), unit=_("connections")),
-              ]
+    Transform(
+        Dictionary(
+            title = _("Number of connections"),
+            elements = [
+                ("levels",
+                    Tuple(
+                        title = _("Upper levels"),
+                        elements = [
+                            Integer(title = _("Warning at"),  unit=_("connections")),
+                            Integer(title = _("Critical at"), unit=_("connections")),
+                        ]
+                )),
+                ("levels_lower",
+                    Tuple(
+                        title = _("Lower levels"),
+                        elements= [
+                            Integer(title = _("Critical if below"), unit=_("connections")),
+                            Integer(title = _("Warning if below"),  unit=_("connections")),
+                        ]
+                )),
+            ]
+        ),
+        # old params = (crit_low, warn_low, warn, crit)
+        forth = lambda v: type(v) == tuple and { "levels" : (v[2], v[3]), "levels_lower" : (v[1], v[0]) } or v,
     ),
     TextAscii( title = _("Name of Wifi")),
     "first"
@@ -7349,6 +7364,30 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_storage,
+    "netapp_snapshots",
+    _("NetApp Snapshot Reserve"),
+    Dictionary(
+        elements = [
+            ( "levels",
+            Tuple(
+                title = _("Levels for used configured reserve"),
+                elements = [
+                    Percentage(title = _("Warning at or above"),  unit = "%", default_value = 85.0),
+                    Percentage(title = _("Critical at or above"), unit = "%", default_value = 90.0),
+                ]
+            )),
+            ( "state_noreserve",
+               MonitoringState(
+                   title = _("State if no reserve is configured"),
+            )),
+        ],
+    ),
+    TextAscii(title = _("Volume name")),
+    match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_storage,
     "netapp_disks",
     _("Filer Disk Levels (NetApp, IBM SVC)"),
     Transform(
@@ -8528,8 +8567,8 @@ register_check_parameters(
          Tuple(
            title = _("Lower levels"),
            elements = [
-             Integer(title = _( "Warning if below"), unit=_("l/s")),
-             Integer(title = _( "Critical if below"), unit=_("l/s"))
+             Float(title = _("Warning if below"), unit=_("l/s"), default_value = 5.0, allow_int=True),
+             Float(title = _("Critical if below"), unit=_("l/s"), default_value = 2.0, allow_int=True)
            ]
          )
        ),
@@ -8537,8 +8576,8 @@ register_check_parameters(
          Tuple(
            title = _("Upper levels"),
            elements = [
-             Integer(title = _( "Warning at"), unit=_("l/s")),
-             Integer(title = _( "Critical at"), unit=_("l/s"))
+             Float(title = _("Warning at"), unit=_("l/s"), default_value = 10.0, allow_int=True),
+             Float(title = _("Critical at"), unit=_("l/s"), default_value = 11.0, allow_int=True)
            ]
          )
        ),

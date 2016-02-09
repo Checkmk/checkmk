@@ -38,16 +38,15 @@ class TableLog : public Table {
 public:
     TableLog();
     ~TableLog();
-    const char *name() { return "log"; }
-    const char *prefixname() { return "logs"; }
-    bool isAuthorized(contact *ctc, void *data);
+    const char *name() override { return "log"; }
+    const char *prefixname() override { return "logs"; }
+    bool isAuthorized(contact *ctc, void *data) override;
     void handleNewMessage(Logfile *logfile, time_t since, time_t until,
                           unsigned logclasses);
     static void addColumns(Table *, std::string prefix, int indirect_offset,
                            bool add_host = true, bool add_services = true);
-    void answerQuery(Query *query);
-    Column *column(
-        const char *colname);  // override in order to handle current_
+    void answerQuery(Query *query) override;
+    Column *column(const char *colname) override;
 
 private:
     bool answerQuery(Query *, Logfile *, time_t, time_t);

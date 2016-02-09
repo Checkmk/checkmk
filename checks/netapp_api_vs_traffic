@@ -54,8 +54,8 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
                ("write_data",         "fcp_write_data",       "write data",         1,        get_bytes_human_readable)]),
 
         "cifs:vserver": ("CIFS",
-            [  ("cifs_read_latency",  "cifs_read_latency",    "read latency",       0.000001, lambda x: "%.2f ms" % x),
-               ("cifs_write_latency", "cifs_write_latency",   "write latency",      0.000001, lambda x: "%.2f ms" % x),
+            [  ("cifs_read_latency",  "cifs_read_latency",    "read latency",       0.000000001, lambda x: "%.2f ms" % (x * 1000)),
+               ("cifs_write_latency", "cifs_write_latency",   "write latency",      0.000000001, lambda x: "%.2f ms" % (x * 1000)),
                ("cifs_read_ops",      "cifs_read_ios",        "read OPs",           1,        int),
                ("cifs_write_ops",     "cifs_write_ios",       "write OPs",          1,        int)]),
 

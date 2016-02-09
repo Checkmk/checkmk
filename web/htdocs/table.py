@@ -221,10 +221,18 @@ def end():
                         rows.remove(row)
                         fixed_rows.append((index, row))
 
-                # Then use natural sorting to sort the list
-                rows.sort(cmp=lambda a, b: cmp(num_split(a[0][sort_col][0]),
-                                               num_split(b[0][sort_col][0])),
-                          reverse=sort_reverse==1)
+                # Then use natural sorting to sort the list. Note: due to a
+                # change in the number of columns of a table in different software
+                # versions the cmp-function might fail. This is because the sorting
+                # column is persisted in a user file. So we ignore exceptions during
+                # sorting. This gives the user the chance to change the sorting and
+                # see the table in the first place.
+                try:
+                    rows.sort(cmp=lambda a, b: cmp(num_split(a[0][sort_col][0]),
+                                                   num_split(b[0][sort_col][0])),
+                              reverse=sort_reverse==1)
+                except IndexError:
+                    pass
 
                 # Now re-add the removed "fixed" rows to the list again
                 if fixed_rows:

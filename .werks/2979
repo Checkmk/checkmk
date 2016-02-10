@@ -1,0 +1,9 @@
+Title: aruba_wlc_aps: new inventory plugin for Aruba Networks WLAN Controller which displays name, group name, model, serial number and system location of all access points of this WLC
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455118995
+Class: feature
+
+

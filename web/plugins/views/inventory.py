@@ -663,6 +663,15 @@ inventory_displayhints.update({
     ".networking.interfaces:*.speed"                   : { "title" : _("Speed"), "paint" : "nic_speed", },
     ".networking.interfaces:*.port_type"               : { "title" : _("Type"), "paint" : "if_port_type", "filter" : visuals.FilterInvtableInterfaceType },
     ".networking.interfaces:*.last_change"             : { "title" : _("Last Change"), "paint" : "timestamp_as_age_days", "filter" : visuals.FilterInvtableTimestampAsAge },
+
+    ".networking.wlan"                                 : { "title" : _("WLAN") },
+    ".networking.wlan.controller"                      : { "title" : _("Controller") },
+    ".networking.wlan.controller.accesspoints:"        : { "title" : _("Access Points"), "keyorder" : ["name", "group", "model", "serial_nr", "sys_location"], "render" : render_inv_dicttable },
+    ".networking.wlan.controller.accesspoints:*.name"         : { "title" : _("Name") },
+    ".networking.wlan.controller.accesspoints:*.group"        : { "title" : _("Group") },
+    ".networking.wlan.controller.accesspoints:*.model"        : { "title" : _("Model") },
+    ".networking.wlan.controller.accesspoints:*.serial"       : { "title" : _("Serial Number") },
+    ".networking.wlan.controller.accesspoints:*.sys_location" : { "title" : _("System Location") },
 })
 
 # create painters for node with a display hint

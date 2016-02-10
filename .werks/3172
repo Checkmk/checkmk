@@ -1,0 +1,10 @@
+Title: fjdarye100_rluns  fjdarye101_rluns  fjdarye60_rluns: Correctly detect RAID 0 state
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.6p17
+Date: 1455092205
+
+Thanks to Alexander Greiner Baer.

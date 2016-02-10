@@ -135,6 +135,8 @@ def check_fjdarye_rluns(item, _no_params, info):
                 return (1, "RLUN copyback in progress")
             elif rawdata[2] == '\x41':
                 return (1, "RLUN spare is in use")
+            elif rawdata[2] == 'B':
+                return (0, "RLUN is in RAID0 state" ) # assumption state 42
             elif rawdata[2] == '\x00':
                 return (0, "RLUN is in normal state") # assumption
             else:

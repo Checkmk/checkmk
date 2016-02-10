@@ -1,6 +1,7 @@
 1.2.6p17:
     Checks & Agents:
     * 3069 FIX: unitrend_backup: fixed broken plugin output
+    * 3172 FIX: fjdarye100_rluns  fjdarye101_rluns  fjdarye60_rluns: Correctly detect RAID 0 state...
 
     Event Console:
     * 2986 FIX: Event Console: Text elements of events are now correctly quoted in shell scripts...

@@ -283,8 +283,10 @@ def show_crash_report(info):
     html.write("</table>")
 
 
+# Local vars are a base64 encoded repr of the python dict containing the local vars of
+# the exception context. Decode it!
 def format_local_vars(local_vars):
-    return pprint.pformat(local_vars)
+    return base64.b64decode(local_vars)
 
 
 def show_crashed_check_details(info):
@@ -389,7 +391,10 @@ def get_local_vars_of_last_exception():
     local_vars = {}
     for key, val in inspect.trace()[-1][0].f_locals.items():
         local_vars[key] = format_var_for_export(val)
-    return local_vars
+
+    # This needs to be encoded as the local vars might contain binary data which can not be
+    # transported using JSON.
+    return base64.b64encode(pprint.pformat(local_vars))
 
 
 def format_var_for_export(val):

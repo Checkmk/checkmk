@@ -1543,10 +1543,13 @@ def format_var_for_export(val):
 
 def get_local_vars_of_last_exception():
     local_vars = {}
-    import inspect
+    import inspect, base64, pprint
     for key, val in inspect.trace()[-1][0].f_locals.items():
         local_vars[key] = format_var_for_export(val)
-    return local_vars
+
+    # This needs to be encoded as the local vars might contain binary data which can not be
+    # transported using JSON.
+    return base64.b64encode(pprint.pformat(local_vars))
 
 
 def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text):

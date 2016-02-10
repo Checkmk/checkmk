@@ -167,9 +167,9 @@ except ValueError:
 
 if (user == None or user == '') and (password == None or password == ''):
     # try using security files
-    basecmd="naviseccli -h %s " % host_address
+    basecmd = "naviseccli -h %s " % host_address
 else:
-    basecmd="naviseccli -h %s -User %s -Password '%s' -Scope 0 " % (host_address, user, password)
+    basecmd = "naviseccli -h %s -User %s -Password '%s' -Scope 0 " % (host_address, user, password)
 
 #
 # check_mk section of agent output
@@ -179,16 +179,22 @@ cmd = basecmd + "getall -sp"
 if opt_debug:
     sys.stderr.write("executing external command: %s\n" % cmd)
 
-cmdout = []
-try:
-    p = subprocess.Popen(cmd)
-except OSError:
-    sys.stderr.write("Failed to execute \"%s\". Maybe \"naviseccli\" is missing.\n" % cmd)
-    sys.exit(1)
+# Now read the whole output of the command
+cmdout = [ l.strip() for l in os.popen(cmd + " 2>&1").readlines() ]
 
-for line in p.stdout.readlines():
-    line = line.strip()
-    cmdout.append(line)
+if cmdout:
+    if "naviseccli: not found" in cmdout[0]:
+        sys.stderr.write("The command \"naviseccli\" could not be found. Terminating.\n")
+        sys.exit(1)
+
+    elif cmdout[0].startswith("Security file not found"):
+        sys.stderr.write("Could not find security file. Please provide valid user "
+                         "credentials if you don't have a security file.\n")
+        sys.exit(1)
+
+# Try to gather the version of the agent
+emcvnx_version = None
+for line in cmdout:
     tokens = re.split("\s+", line)
     if tokens[0] == "Agent" and tokens[1] == "Rev:":
         emcvnx_version = "_".join(tokens[2:])

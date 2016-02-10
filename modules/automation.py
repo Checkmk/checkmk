@@ -436,7 +436,7 @@ def automation_delete_host(args):
         shutil.rmtree("%s/%s" % (logwatch_dir, hostname))
 
 
-def automation_restart(job = "restart", use_rushd = True):
+def automation_restart(job = "restart"):
     if check_plugins_have_changed():
         forced = True
         job = "restart"
@@ -486,7 +486,7 @@ def automation_restart(job = "restart", use_rushd = True):
             backup_path = None
 
         try:
-            configuration_warnings = create_core_config(use_rushd=use_rushd)
+            configuration_warnings = create_core_config()
 
             if "do_bake_agents" in globals() and bake_agents_on_restart:
                 do_bake_agents()
@@ -800,7 +800,7 @@ def automation_rename_hosts():
     if core_was_running:
         global ignore_ip_lookup_failures
         ignore_ip_lookup_failures = True # force config generation to succeed. The core *must* start.
-        automation_restart("start", use_rushd = False)
+        automation_restart("start")
         if monitoring_core == "cmc":
             try:
                 os.remove(var_dir + "/core/config.rush")

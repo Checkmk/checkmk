@@ -4249,6 +4249,11 @@ def shell_quote(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
+def prepare_git_commit():
+    global g_git_messages
+    g_git_messages = []
+
+
 def do_git_commit():
     author = shell_quote("%s <%s>" % (config.user_id, config.user_email))
     git_dir = defaults.default_config_dir + "/.git"

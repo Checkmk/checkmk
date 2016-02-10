@@ -1,0 +1,9 @@
+Title: datapower_cpu datapower_fan datapower_fs datapower_ldrive datapower_mem datapower_pdrive datapower_raid_bat datapower_tcp datapower_temp: Detect XI52 Model
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455096912
+Class: feature
+
+

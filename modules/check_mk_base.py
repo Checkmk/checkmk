@@ -1283,6 +1283,8 @@ def is_expected_agent_version(agent_version, expected_version):
 
         return True
     except Exception, e:
+        if opt_debug:
+            raise
         raise MKGeneralException("Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
                 (agent_version, expected_version, e))
 
@@ -1306,7 +1308,11 @@ def parse_check_mk_version(v):
                 return number and int(number) or 0, s
         return number and int(number) or 0, ''
 
-    major, minor, rest = v.split('.')
+    parts = v.split('.')
+    while len(parts) < 3:
+        parts.append("0")
+
+    major, minor, rest = parts
     sub, rest = extract_number(rest)
 
     if not rest:

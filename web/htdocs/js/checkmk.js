@@ -552,7 +552,6 @@ function executeJSbyObject(obj)
         }
         else {
             try {
-                // TODO: Das hier geht nicht :-(
                 g_current_script = aScripts[i];
                 eval(aScripts[i].text);
                 g_current_script = null;

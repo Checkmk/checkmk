@@ -1,0 +1,9 @@
+Title: ups_modulys_battery: Fixed wrong remaining minutes in some cases
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455205667
+Class: fix
+
+

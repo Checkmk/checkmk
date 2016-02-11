@@ -6,4 +6,5 @@ Version: 1.2.7i4
 Date: 1455205795
 Class: feature
 
+This new special agent can be configured, just like the other special agents, via the Datasource Programs in WATO.
 Please make sure, that if you have installed freeipmi that IPMI is really support by your hardware.

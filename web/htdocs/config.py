@@ -285,7 +285,7 @@ def login_super_user():
     user_id = None
 
     global user_role_ids
-    user_role_ids = []
+    user_role_ids = [ "admin" ]
 
     global user_baserole_ids
     user_baserole_ids = [ "admin" ]
@@ -321,12 +321,6 @@ def hide_language(lang):
     return lang in hide_languages
 
 def roles_of_user(user):
-    # Make sure, builtin roles are present, even if not modified
-    # and saved with WATO.
-    for br in builtin_role_ids:
-        if br not in roles:
-            roles[br] = {}
-
     if user in multisite_users:
         return existing_role_ids(multisite_users[user]["roles"])
     elif user in admin_users:
@@ -421,12 +415,6 @@ def get_role_permissions():
     # Loop all permissions
     # and for each permission loop all roles
     # and check wether it has the permission or not
-
-    # Make sure, builtin roles are present, even if not modified
-    # and saved with WATO.
-    for br in builtin_role_ids:
-        if br not in roles:
-            roles[br] = {}
 
     roleids = roles.keys()
     for perm in permissions_by_order:
@@ -606,5 +594,10 @@ def save_site_config():
 
 def load_plugins(force):
     load_web_plugins("config", globals())
+
+    # Make sure, builtin roles are present, even if not modified and saved with WATO.
+    for br in builtin_role_ids:
+        roles.setdefault(br, {})
+
 
 load_plugins(True)

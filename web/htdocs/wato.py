@@ -9491,6 +9491,12 @@ def page_automation():
     if secret != get_login_secret():
         raise MKAuthException(_("Invalid automation secret."))
 
+    # The automation page is accessed unauthenticated. After leaving the index.py area
+    # into the page handler we always want to have a user context initialized to keep
+    # the code free from special cases (if no user logged in, then...). So fake the
+    # logged in user here.
+    config.login_super_user()
+
     # To prevent mixups in written files we use the same lock here as for
     # the normal WATO page processing. This might not be needed for some
     # special automation requests, like inventory e.g., but to keep it simple,

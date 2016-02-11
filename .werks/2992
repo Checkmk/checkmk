@@ -16,4 +16,4 @@ usually <i>searchhost</i>, and replace the <i>Hostname</i> filter with the
 <i>Hostname or Alias</i> filter. If both filters are active, you will only
 get the hostnames on the quicksearch.<br>
 
-Reason: <i>Hostname</i> AND <i>Hostname and Alias</i>: Just the hostname...
+Reason: <i>Hostname</i> AND <i>Hostname or Alias</i> results in <i>Just the hostname...</i>

@@ -279,19 +279,6 @@ def inventory_jolokia_metrics_tp(info, what):
             inv.append(("%s ThreadPool %s" % (inst ,tp) , levels))
     return inv
 
-def inventory_jolokia_metrics_tp(info, what):
-    inv = []
-    parsed = jolokia_metrics_parse(info)
-    levels = 'jolokia_metrics_tp_default_levels'
-    if what == 'tp':
-        needed_key = ["currentThreadsBusy", "currentThreadCount", "maxThreads"]
-    for inst, vals in parsed.iteritems():
-        if vals == None:
-            continue # no data from agent
-        for tp, val in vals.get('tp', {}).iteritems():
-            inv.append(("%s ThreadPool %s" % (inst ,tp) , levels))
-    return inv
-
 def check_jolokia_metrics_mem(item, params, info):
     parsed = jolokia_metrics_parse(info)
 

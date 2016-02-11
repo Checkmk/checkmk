@@ -67,8 +67,8 @@ def hpux_convert_to_if64(info):
             nics.append(nic)
             nic[2] = '6' # fake port type Ethernet
         elif '=' in line:
-            x = " ".join(line)
-            left, right = x.split("=")
+            line_txt = " ".join(line)
+            left, right = line_txt.split("=")
             left = left.strip()
             right = right.strip()
             if left == "PPA Number":

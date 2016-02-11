@@ -68,8 +68,7 @@ factory_settings["ucs_bladecenter_psu_default_levels"] = {
 }
 
 def inventory_ucs_bladecenter_psu(parsed):
-    items = set([])
-    for key, values in parsed.items():
+    for key in parsed.keys():
         if key.startswith("Chassis"):
             yield key, {}
 
@@ -79,8 +78,6 @@ def check_ucs_bladecenter_psu(item, params, parsed):
         yield 3, "Chassis voltage info not available"
         return
 
-    info_texts = []
-    state = 0
     for param_key, perfname, key, text in [ ("levels_3v_", "3_3v", "Output3v3Avg", "Output 3.3V-Average"),
                                             ("levels_12v_", "12v", "Output12vAvg", "Output 12V-Average") ]:
         voltage = float(psu[key])
@@ -121,7 +118,6 @@ check_info["ucs_bladecenter_psu"] = {
 #   '----------------------------------------------------------------------'
 
 def inventory_ucs_bladecenter_psu_switch_power(parsed):
-    items = set([])
     for key, values in parsed.items():
         if key.startswith("Switch"):
             yield key, {}

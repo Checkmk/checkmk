@@ -40,9 +40,9 @@ def inventory_lsi(check_type, info):
             disks.append((id, state))
 
     if check_type == 'lsi.array':
-        return [(id, "None") for (id, state) in arrays]
+        return [(item, "None") for (item, state) in arrays]
     else:
-        return [(id, '"%s"' % state) for (id, state) in disks]
+        return [(item, '"%s"' % state) for (item, state) in disks]
 
 
 def check_lsi_array(item, _no_params, info):

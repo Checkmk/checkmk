@@ -183,8 +183,12 @@ class html_mod_python(htmllib.html):
 
 
     def set_cookie(self, varname, value, expires = None):
-        # httponly tells the browser not to make this cookie available to Javascript
-        c = Cookie.Cookie(varname, make_utf8(value), path='/', httponly=True)
+        # httponly tells the browser not to make this cookie available to Javascript.
+        # But it is only available from Python 2.6+. Be compatible.
+        try:
+            c = Cookie.Cookie(varname, make_utf8(value), path='/', httponly=True)
+        except AttributeError:
+            c = Cookie.Cookie(varname, make_utf8(value), path='/')
 
         if self.is_ssl_request():
             c.secure = True

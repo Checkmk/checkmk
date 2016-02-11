@@ -63,7 +63,6 @@ def render_mkeventd_performance():
            data["status_average_rule_trie_rate"] * 100))
     except: # division by zero
         write_line(_("Rule hit ratio"), _("-.-- %"))
-        pass
 
     # Time columns
     time_columns = [

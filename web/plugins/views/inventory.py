@@ -381,7 +381,7 @@ def inv_paint_hz(hz):
     if hz < 10:
         return "number", "%.2f" % hz
     elif hz < 100:
-        return "number", "%.11" % hz
+        return "number", "%.1f" % hz
     elif hz < 1500:
         return "number", "%.0f" % hz
     elif hz < 1000000:

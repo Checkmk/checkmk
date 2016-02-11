@@ -711,7 +711,6 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
                     warning("   Exception in SNMP scan function of %s" % check_type)
                 elif on_error == "raise":
                     raise
-                pass
         else:
             found.append(check_type)
             default_found.append(check_type)

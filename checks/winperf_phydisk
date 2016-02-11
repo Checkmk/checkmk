@@ -98,11 +98,6 @@ def winperf_phydisk_convert(info):
 
     current_node = ""
     try:
-        # averages are calculated on two values so we always need to store one
-        # until the second is available
-        average_counters_write = [[], []]
-        average_counters_read = [[], []]
-
         while True:
             line = lines.next()
             if line[2] == "instances:":

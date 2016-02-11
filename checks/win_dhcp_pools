@@ -116,7 +116,6 @@ def inventory_win_dhcp_pools(info):
 def check_win_dhcp_pools(item, params, info):
     in_block = False
     pool_stats = []
-    status = 0
     for line in parse_win_dhcp_pools(info):
         if win_dhcp_pools_stats_translate.get(line[0], line[0]) == 'Subnet' and line[1] == item:
             in_block = True

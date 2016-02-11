@@ -53,7 +53,6 @@ def check_win_cpuusage(item, params, info):
             # I've forgotton what's it for (idle?)
             num_cpus = len(line) - 4
             overall_perc = 0
-            counter_wrapped = False
             for cpu in range(0, num_cpus):
                 ticks = int(line[2 + cpu])
                 ticks_per_sec = get_rate("cpuusage.%d" % cpu, this_time, ticks)

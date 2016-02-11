@@ -77,9 +77,7 @@ def inventory_wut_webio_io_inputs(info):
 def check_wut_webio_io_inputs(item, params, info):
     wut_info = parse_webio_io_inputs(info)
     for index in wut_info.keys():
-        descr = wut_info[index][0]
         if wut_info[index][0] == item:
-            oldstate = params
             state    = wut_info[index][1]
 
             # Compare to the state of the IO port at inventory.

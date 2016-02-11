@@ -711,7 +711,7 @@ register_check_parameters(
         ]
     ),
     None, "dict"
-),
+)
 
 register_check_parameters(
     subgroup_applications,

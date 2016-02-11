@@ -359,11 +359,12 @@ class ModeBI(WatoMode):
     # | Valuespecs                                                         |
     # '--------------------------------------------------------------------'
 
+    # FIXME TODO self._vs_call_rule etc. refactor to properties
     def _create_valuespecs(self):
-        self._vs_call_rule = self._vs_call_rule()
-        self._vs_host_re = self._vs_host_re()
-        self._vs_node = self._vs_node()
-        self._vs_aggregation = self._vs_aggregation()
+        self._vs_call_rule = self._get_vs_call_rule()
+        self._vs_host_re = self._get_vs_host_re()
+        self._vs_node = self._get_vs_node()
+        self._vs_aggregation = self._get_vs_aggregation()
 
 
     def _allowed_rule_choices(self):
@@ -408,7 +409,7 @@ class ModeBI(WatoMode):
                                     (len(rule_params), ', '.join(rule_params), len(arguments)))
 
 
-    def _vs_call_rule(self):
+    def _get_vs_call_rule(self):
         return Tuple(
             elements = [
                 DropdownChoice(
@@ -426,7 +427,7 @@ class ModeBI(WatoMode):
         )
 
 
-    def _vs_host_re(self):
+    def _get_vs_host_re(self):
         host_re_help = _("Either an exact host name or a regular expression exactly matching the host "
                          "name. Example: <tt>srv.*p</tt> will match <tt>srv4711p</tt> but not <tt>xsrv4711p2</tt>. ")
         return TextUnicode(
@@ -541,7 +542,7 @@ class ModeBI(WatoMode):
         ]
 
 
-    def _vs_node(self):
+    def _get_vs_node(self):
         # Configuration of leaf nodes
         vs_node_simplechoices = [
             ( "host", _("State of a host"),
@@ -592,7 +593,7 @@ class ModeBI(WatoMode):
         return choices
 
 
-    def _vs_aggregation(self):
+    def _get_vs_aggregation(self):
         return Dictionary(
             title = _("Aggregation Properties"),
             optional_keys = False,

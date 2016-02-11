@@ -259,7 +259,7 @@ def login(u):
     else:
         user = { "roles" : user_role_ids }
         user_alias = user_id
-        user_email = user_email
+        user_email = user_id
 
     # Prepare cache of already computed permissions
     global user_permissions

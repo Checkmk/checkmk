@@ -1,0 +1,19 @@
+Title: New visual filter: "Hostname or Alias"
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455208441
+Class: feature
+
+Previously you could either search for the hostname or the hostalias
+with distinct filters. This new filter returns both matches, e.g
+any hosts starting with 'server7' and any hostaliases with 'server7'.
+
+The <i>Quicksearch</i> sidebar snapin also supports this new filter.
+If you want to use it you need to edit the target view of the quicksearch,
+usually <i>searchhost</i>, and replace the <i>Hostname</i> filter with the
+<i>Hostname or Alias</i> filter. If both filters are active, you will only
+get the hostnames on the quicksearch.<br>
+
+Reason: <i>Hostname</i> AND <i>Hostname and Alias</i>: Just the hostname...

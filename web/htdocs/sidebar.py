@@ -691,7 +691,14 @@ def plugin_matches_filters(plugin, used_filters):
                 return False
     return True
 
-def search_url_tmpl(used_filters, row, exact = True):
+def search_url_tmpl(used_filters, matched_instances):
+    exact = True
+    if matched_instances and len(matched_instances) == 1:
+        row = matched_instances[0]
+    else:
+        row = matched_instances and matched_instances[0] or None
+        exact = False
+
     if not row:
         def find_plugin(filters):
             for entry in search_plugins:
@@ -762,6 +769,15 @@ def search_url_tmpl(used_filters, row, exact = True):
             'search' : html.urlencode(name),
             'site'   : site,
         }
+
+    # This little 'adjustment' adds an extra url parameter for an optional hostnameoralias filter in the target view.
+    # If this filter is not activated it won't have any impact. The search_url_templ function is currently not designed
+    # to handle matches of multiple filter types and probably requires a complete revision to support this.
+    if not exact and matched_instances:
+        found_plugins = set(map(lambda instances: instances[0]["id"], matched_instances))
+        # Only add this extra parameter if there are solely hosts and host_alias matches
+        if "hosts" in found_plugins or "host_alias" in found_plugins:
+            url_tmpl += "&hostnameoralias=%s" % used_filters[0][1]
 
     return url_tmpl
 
@@ -909,7 +925,7 @@ def render_search_results(used_filters, objects, format_func = format_result):
         # Find missing urls
         name = get_row_name(row)
         if "url" not in row_options:
-            row_options["url"] = search_url_tmpl(used_filters, row)
+            row_options["url"] = search_url_tmpl(used_filters, [row])
 
         obj_id = (row_options["url"], name)
         if obj_id not in unique:
@@ -952,14 +968,11 @@ def search_open():
     if not q:
         return
 
-    data, used_filters = process_search(q)
+    matched_instances, used_filters = process_search(q)
     if not used_filters:
         return
 
-    if data and len(data) == 1:
-        url = search_url_tmpl(used_filters, data[0])
-    else:
-        url = search_url_tmpl(used_filters, data and data[0] or None, exact = False)
+    url = search_url_tmpl(used_filters, matched_instances)
 
     html.set_http_header('Location', url)
     from mod_python import apache

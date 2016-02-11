@@ -32,7 +32,8 @@ class FilterText(Filter):
         htmlvars = [htmlvar]
         if negateable:
             htmlvars.append("neg_" + htmlvar)
-        Filter.__init__(self, name, title, info, htmlvars, [column])
+        link_columns = type(column) == list and column or [column]
+        Filter.__init__(self, name, title, info, htmlvars, link_columns)
         self.op = op
         self.column = column
         self.negateable = negateable
@@ -79,6 +80,25 @@ class FilterUnicode(FilterText):
         htmlvar = self.htmlvars[0]
         return html.get_unicode_input(htmlvar, "")
 
+class FilterHostnameOrAlias(FilterUnicode):
+    def __init__(self, *args):
+        FilterUnicode.__init__(self, *args)
+
+    def filter(self, infoname):
+        current_value = self._current_value()
+
+        if self.negateable and html.get_checkbox(self.htmlvars[1]):
+            negate = "!"
+        else:
+            negate = ""
+
+        if current_value:
+            if type(current_value) == unicode:
+                current_value = current_value.encode("utf-8")
+            return "Filter: host_name %s%s %s\nFilter: alias %s%s %s\nOr: 2\n" % ((negate, self.op, lqencode(current_value)) * 2)
+        else:
+            return ""
+
 #                               filter          title              info       column           htmlvar
 declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host_regex",    "~~" , True),
                           _("Search field allowing regular expressions and partial matches"))
@@ -99,6 +119,10 @@ declare_filter(202, FilterUnicode("service_display_name", _("Service alternative
                           _("Alternative display name of the service, regex match"))
 
 declare_filter(202, FilterUnicode("output",  _("Status detail"), "service", "service_plugin_output", "service_output", "~~"))
+
+declare_filter(102, FilterHostnameOrAlias("hostnameoralias",   _("Hostname or Alias"), "host", ["host_alias", "host_name"],  "hostnameoralias", "~~", False),
+                          _("Search field allowing regular expressions and partial matches"))
+
 
 class FilterIPAddress(Filter):
     def __init__(self, what):

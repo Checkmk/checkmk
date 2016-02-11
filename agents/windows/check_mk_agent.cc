@@ -322,15 +322,25 @@ void section_systemtime(OutputProxy &out) {
 
 void section_uptime(OutputProxy &out) {
     crash_log("<<<uptime>>>");
-    static LARGE_INTEGER Frequency, Ticks;
-    QueryPerformanceFrequency(&Frequency);
-    QueryPerformanceCounter(&Ticks);
-    Ticks.QuadPart = Ticks.QuadPart - Frequency.QuadPart;
-    unsigned int uptime = (double)Ticks.QuadPart / Frequency.QuadPart;
+
+    std::string uptime = "0";
+
+    typedef ULONGLONG WINAPI (*GetTickCount64_type)(void);
+    DYNAMIC_FUNC(GetTickCount64, L"kernel32.dll");
+    if (GetTickCount64_dyn != nullptr) {
+        // GetTickCount64 is only available on Vista/2008 and newer
+        uptime = std::to_string(GetTickCount64_dyn() / 1000);
+    } else {
+        // fallback if GetTickCount64 is not available
+        wmi::Result res = WMILookup::get().query(
+            L"SELECT SystemUpTime FROM Win32_PerfFormattedData_PerfOS_System");
+        uptime = res.get<std::string>(L"SystemUpTime");
+    }
+
     out.output(
         "<<<uptime>>>\n"
-        "%u\n",
-        uptime);
+        "%s\n",
+        uptime.c_str());
 }
 
 //  .----------------------------------------------------------------------.

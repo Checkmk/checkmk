@@ -2181,43 +2181,69 @@ multisite_painters["log_command"] = {
     "columns" : ["log_command_name"],
     "paint"   : lambda row: ("nowrap", row["log_command_name"]),
 }
+
+
 def paint_log_icon(row):
     img = None
     log_type = row["log_type"]
     if log_type == "SERVICE ALERT":
         img = { 0: "ok", 1: "warn", 2:"crit", 3:"unknown" }.get(row["log_state"])
+        title = _("Service Alert")
+
     elif log_type == "HOST ALERT":
         img = { 0: "up", 1: "down", 2:"unreach" }.get(row["log_state"])
+        title = _("Host Alert")
+
     elif "DOWNTIME" in log_type:
         if row["log_state_type"] in [ "END", "STOPPED" ]:
             img = "downtimestop"
+            title = _("Downtime stopped")
         else:
             img = "downtime"
+            title = _("Downtime")
+
     elif log_type.endswith("NOTIFICATION"):
         if row["log_command_name"] == "check-mk-notify":
             img = "cmk_notify"
+            title = _("Core produced a notification")
         else:
             img = "notify"
+            title = _("User notification")
+
     elif log_type == "EXTERNAL COMMAND":
         img = "command"
+        title = _("External command")
+
     elif "restarting..." in log_type:
         img = "restart"
+        title = _("Core restarted")
+
     elif "Reloading configuration" in log_type:
         img = "reload"
+        title = _("Core configuration reloaded")
+
     elif "starting..." in log_type:
         img = "start"
+        title = _("Core started")
+
     elif "shutdown..." in log_type or "shutting down" in log_type:
         img = "stop"
+        title = _("Core stopped")
+
     elif " FLAPPING " in log_type:
         img = "flapping"
+        title = _("Flapping")
+
     elif "ACKNOWLEDGE ALERT" in log_type:
         if row["log_state_type"] == "STARTED":
             img = "ack"
+            title = _("Acknowledged")
         else:
             img = "ackstop"
+            title = _("Stopped acknowledgement")
 
     if img:
-        return "icon", '<img class=icon src="images/alert_%s.png">' % img
+        return "icon", '<img class=icon src="images/alert_%s.png" title="%s">' % (img, title)
     else:
         return "icon", ""
 

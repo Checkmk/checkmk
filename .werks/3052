@@ -1,0 +1,9 @@
+Title: domino_mailqueues: Fixed exception when receiving empty data from SNMP
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455188210
+Class: fix
+
+

@@ -45,6 +45,9 @@ def inventory_domino_mailqueues(info):
 
 def check_domino_mailqueues(item, params, info):
     for line in info:
+        if not line:
+            continue
+
         val = int(line[0][0].split(".")[12])
         if item == domino_mailqueues[val][0]:
             reading = int(line[0][1])
@@ -69,6 +72,6 @@ check_info["domino_mailqueues"] = {
     "default_levels_variable" : "domino_mailqueues_defaults",
     "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2",
     "snmp_info"               : map(lambda x: (".1.3.6.1.4.1.334.72.1.1.4", [OID_STRING, x]),
-                                                     domino_mailqueues.keys()),
+                                                     sorted(domino_mailqueues.keys())),
     "group"		      : "domino_mailqueues"
 }

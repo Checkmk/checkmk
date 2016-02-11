@@ -856,7 +856,6 @@ void output_eventlog(OutputProxy &out, const char *logname,
         EVENTLOGRECORD *record = log.read();
         while (record != nullptr) {
             std::pair<char, int> state = determine_event_state(record, level);
-            crash_log("peek %d", (int)record->RecordNumber);
             worst_state = std::max(worst_state, state.second);
 
             // store highest record number we found. This is just in case

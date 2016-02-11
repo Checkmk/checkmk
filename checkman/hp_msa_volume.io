@@ -5,6 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the IO summary of all volume of a HP MSA 2040 storage system.
+ To make it work you have to configure the hp_msa datasource program via WATO.
  With the WATO rule "Discovery mode for Disk IO check" the check
  monitors each volume IO.
 

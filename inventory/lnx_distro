@@ -42,13 +42,16 @@ def inv_lnx_distro(info):
     node = inv_tree("software.os.")
     for line in info:
         if line[0] == '/etc/lsb-release':
-             inv_lnx_parse_lsb_release(node, line[1:])
+            inv_lnx_parse_lsb_release(node, line[1:])
         elif line[0] == '/etc/debian_version':
             inv_lnx_parse_debian(node, line[1])
         elif line[0] == '/etc/redhat-release':
             inv_lnx_parse_redhat_release(node, line[1])
         elif line[0] == '/etc/SuSE-release':
             inv_lnx_parse_suse_release(node, line[1:])
+        elif line[0] == '/usr/share/cma/version':
+            inv_lnx_parse_cma(node, line[1])
+
 
 def inv_lnx_parse_suse_release(node, line):
     node["type"] = "linux"
@@ -72,6 +75,7 @@ def inv_lnx_parse_suse_release(node, line):
         node["code_name"] = "Darthmouth"
     elif version == "13.1":
         node["code_name"] = "Bottle"
+
 
 def inv_lnx_parse_redhat_release(node, line):
     node["type"] = "linux"
@@ -98,6 +102,7 @@ def inv_lnx_parse_lsb_release(node, lines):
             node["code_name"] = value.title()
         elif varname == "DISTRIB_DESCRIPTION":
             node["name"] = value
+
 
 def inv_lnx_parse_debian(node, line):
     node["type"] = "linux"
@@ -126,6 +131,14 @@ def inv_lnx_parse_debian(node, line):
         elif line.startswith("8."):
             node["code_name"] = "Jessie"
 
+
+def inv_lnx_parse_cma(node, line):
+    node["type"] = "linux"
+    node["name"] = "Check_MK Appliance " + line
+    node["vendor"] = "Mathias Kettner GmbH"
+    node["version"] = line
+    if "code_name" in node:
+        del node["code_name"]
 
 
 inv_info['lnx_distro'] = {

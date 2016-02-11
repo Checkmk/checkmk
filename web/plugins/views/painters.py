@@ -516,8 +516,8 @@ def paint_service_state_short(row):
         state = str(state) + " stale"
     return "state svcstate state%s" % state, name
 
-def paint_host_state_short(row):
-# return None, str(row)
+
+def paint_host_state_short(row, short=False):
     if row["host_has_been_checked"] == 1:
         state = row["host_state"]
         # A state of 3 is sent by livestatus in cases where no normal state
@@ -526,9 +526,15 @@ def paint_host_state_short(row):
     else:
         state = "p"
         name = _("PEND")
+
     if is_stale(row):
         state = str(state) + " stale"
+
+    if short:
+        name = name[0]
+
     return "state hstate hstate%s" % state, name
+
 
 multisite_painters["service_nagios_link"] = {
     "title"   : _("Icon with link to service in Nagios GUI"),

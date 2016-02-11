@@ -1,0 +1,9 @@
+Title: Fixed broken "Host state (first character)" painter
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455180428
+Class: fix
+
+

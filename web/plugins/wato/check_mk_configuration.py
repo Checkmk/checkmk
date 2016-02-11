@@ -1994,11 +1994,12 @@ register_rule(group,
                  " always assumes UTF-8 encoding. You can declare other "
                  " other encodings here"),
         choices = [
-           ("utf-8", _("UTF-8") ),
-           ("latin1" ,_("latin1")),
-           ("cp437" ,_("cp437")),
-           ]
-        )),
+           ("utf-8",  _("UTF-8") ),
+           ("latin1", _("latin1")),
+           ("cp437",  _("cp437")),
+        ]
+    )
+)
 
 register_rule(group,
     "bulkwalk_hosts",

@@ -3152,7 +3152,7 @@ def configuration_warning(text):
     sys.stdout.write("\n%sWARNING:%s %s\n" % (tty_bold + tty_yellow, tty_normal, text))
 
 
-def create_core_config(use_rushd):
+def create_core_config():
     global g_configuration_warnings
     g_configuration_warnings = []
 
@@ -3160,7 +3160,7 @@ def create_core_config(use_rushd):
     verify_non_deprecated_checkgroups()
 
     if monitoring_core == "cmc":
-        warnings = do_create_cmc_config(opt_cmc_relfilename, use_rushd=use_rushd)
+        warnings = do_create_cmc_config(opt_cmc_relfilename)
     else:
         load_module("nagios")
         out = file(nagios_objects_file, "w")
@@ -3991,7 +3991,7 @@ NOTES:
 def do_create_config(with_agents=True):
     sys.stdout.write("Generating configuration for core (type %s)..." % monitoring_core)
     sys.stdout.flush()
-    create_core_config(use_rushd=False)
+    create_core_config()
     sys.stdout.write(tty_ok + "\n")
 
     if bake_agents_on_restart and with_agents and 'do_bake_agents' in globals():

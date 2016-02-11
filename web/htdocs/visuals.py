@@ -1090,7 +1090,7 @@ class VisualFilterList(ListOfMultiple):
         self._filters = {}
         for info in self._infos:
             for fname, filter in filters_allowed_for_info(info).items():
-                if fname not in fspecs: # and fname not in ubiquitary_filters:
+                if fname not in fspecs:
                     fspecs[fname] = VisualFilter(fname,
                         title = filter.title,
                     )
@@ -1109,6 +1109,7 @@ class VisualFilterList(ListOfMultiple):
 
     def filter_names(self):
         return self._filters.keys()
+
 
 # Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get
 # the filled in values and provide the filled in information for persistance.

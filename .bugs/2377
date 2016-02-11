@@ -1,9 +1,9 @@
 Title: Deleting a context filter should, but does not put it back into the dropdown
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2015-09-16 11:58:25
 Targetversion: 1.2.8
-Class: bug
 
 When you edit the Context/Search Filters section of a report, dashboard or
 view then for each context type (e.g. services) there is a dropdown where you
@@ -14,3 +14,5 @@ not contained in the dropdown - not even grayed out. When you now delete
 such a filter you cannot re-add it without saving and coming back.
 
 Fix: Add the already present filters greyed out to the initial drop down.
+
+2016-02-11 08:42:14: changed state open -> done

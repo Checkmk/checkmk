@@ -1081,7 +1081,7 @@ class ListOfMultiple(ValueSpec):
         html.write("</table>")
         html.write("<br>")
 
-        choosable = [('', '')] + [ (ident, vs.title()) for ident, vs in self._choices if ident not in value ]
+        choosable = [('', '')] + [ (ident, vs.title()) for ident, vs in self._choices ]
         attrs = {}
         if self._size != None:
             attrs["style"] = "width: %dex" % self._size

@@ -2069,11 +2069,27 @@ function vs_listofmultiple_toggle_fields(root, varprefix, enable) {
 function vs_listofmultiple_init(varprefix) {
     document.getElementById(varprefix + '_choice').value = '';
 
-    // Mark fields of unused elements as disabled
+    vs_listofmultiple_disable_selected_options(varprefix);
+
+    // Mark input fields of unused elements as disabled
     var container = document.getElementById(varprefix + '_table');
     var unused = document.getElementsByClassName('unused', container);
     for (var i in unused) {
         vs_listofmultiple_toggle_fields(unused[i], varprefix, false);
+    }
+}
+
+// The <option> elements in the <select> field of the currently choosen
+// elements need to be disabled.
+function vs_listofmultiple_disable_selected_options(varprefix)
+{
+    var active_choices = document.getElementById(varprefix + '_active').value.split(";");
+
+    var choice_field = document.getElementById(varprefix + '_choice');
+    for (var i = 0; i < choice_field.childNodes.length; i++) {
+        if (active_choices.indexOf(choice_field.childNodes[i].value) !== -1) {
+            choice_field.childNodes[i].disabled = true;
+        }
     }
 }
 

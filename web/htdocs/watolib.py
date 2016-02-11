@@ -212,8 +212,6 @@ def log_pending(status, linkinfo, what, message, user_id = None):
     if not is_distributed() and not is_wato_slave_site():
         if status != SYNC:
             log_entry(linkinfo, what, message, "pending.log", user_id)
-        cmc_rush_ahead()
-
 
     # Currently we add the pending to each site, regardless if
     # the site is really affected. This needs to be optimized
@@ -273,20 +271,6 @@ def parse_audit_log(what):
         entries.reverse()
         return entries
     return []
-
-
-def cmc_rush_ahead():
-    if defaults.omd_root:
-        socket_path = defaults.omd_root + "/tmp/run/cmcrush"
-        if os.path.exists(socket_path):
-            try:
-                changeid = str(random.randint(1, 100000000000000000))
-                file(log_dir + "changeid", "w").write(changeid + "\n")
-                socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) \
-                          .sendto(changeid, socket_path)
-            except:
-                if config.debug:
-                    raise
 
 
 def log_commit_pending():
@@ -3467,10 +3451,6 @@ def synchronize_profile(site, user_id):
     update_replication_status(site["id"], {}, {"profile-sync": duration})
     return result
 
-
-# Try to do a rush-ahead-activation
-def cmc_rush_ahead_activation():
-    return
 
 def cmc_reload():
     log_audit(None, "activate-config", "Reloading Check_MK Micro Core on the fly")

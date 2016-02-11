@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, livestatus, time, os, re, pprint, time
+import config, defaults, livestatus, time, os, re, pprint
 import weblib, traceback, forms, valuespec, inventory, visuals, metrics
 from lib import *
 
@@ -399,10 +399,6 @@ def view_editor_options():
         ('force_checkboxes', _('Always show the checkboxes')),
         ('user_sortable',    _('Make view sortable by user')),
         ('play_sounds',      _('Play alarm sounds')),
-    # FIXME
-    #html.help(_("If enabled and the view shows at least one host or service problem "
-    #            "the a sound will be played by the browser. Please consult the %s for details.")
-    #            % docu_link("multisite_sounds", _("documentation")))
     ]
 
 def view_editor_specs(ds_name, general_properties=True):
@@ -693,7 +689,6 @@ def transform_valuespec_value_to_view(view):
 def create_view_from_valuespec(old_view, view):
     ds_name = old_view.get('datasource', html.var('datasource'))
     view['datasource'] = ds_name
-    datasource = multisite_datasources[ds_name]
     vs_value = {}
     for ident, vs in view_editor_specs(ds_name):
         attrs = vs.from_html_vars(ident)
@@ -736,7 +731,6 @@ def show_filter_form(is_open, filters):
     # sort filters according to title
     s = [(f.sort_index, f.title, f) for f in filters if f.available()]
     s.sort()
-    col = 0
 
     # First show filters with double height (due to better floating
     # layout)
@@ -1890,11 +1884,9 @@ def core_command(what, row, row_nr, total_rows):
     if what == "host":
         spec = host
         cmdtag = "HOST"
-        prefix = "host_"
     elif what == "service":
         spec = "%s;%s" % (host, descr)
         cmdtag = "SVC"
-        prefix = "service_"
     else:
         spec = row.get(what + "_id")
         if descr:
@@ -2268,7 +2260,6 @@ def sort_url(view, painter, join_index):
     2. user defined sorters (url sorter)
     3. configured view sorters
     """
-    sort = html.var('sort', None)
     sorter = []
 
     group_sort, user_sort, view_sort = get_separated_sorters(view)

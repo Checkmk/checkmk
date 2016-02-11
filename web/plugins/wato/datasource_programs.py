@@ -214,6 +214,37 @@ register_rule(group,
     match = 'first')
 
 register_rule(group,
+    "special_agents:ipmi_sensors",
+    Dictionary(
+        elements = [
+            ( "username",
+              TextAscii(
+                  title = _("Username"),
+                  allow_empty = False,
+              )
+            ),
+            ( "password",
+              Password(
+                  title = _("Password"),
+                  allow_empty = False,
+              )
+            ),
+            ( "privilege_lvl",
+              TextAscii(
+                  title = _("Privilege Level"),
+                  help = _("Possible are 'user', 'operator', 'admin'"),
+                  allow_empty = False,
+              )
+            )
+        ],
+        optional_keys = False
+    ),
+    title = _("Check IPMI Sensors via Freeipmi"),
+    help = _("This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
+             "which collects the data through the Freeipmi command"),
+    match = 'first')
+
+register_rule(group,
     "special_agents:netapp",
     Transform(
         Dictionary(

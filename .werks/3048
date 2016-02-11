@@ -1,0 +1,12 @@
+Title: It is now possible to add a context filter right after removing it from a view again
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455176396
+Class: fix
+
+The view editor had a bug which made it impossible to add a context filter again after
+removing it from the view when it was already in the view during loading of the view
+editor. It could be worked around by saving the view and opening up the editor again
+to add the filter again.

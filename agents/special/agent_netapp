@@ -72,6 +72,45 @@ OPTIONS:
                                 subquery.
   --nocounters volumes          (clustermode only), skip counters for the given element
                                 right now only "volumes" is supported
+
+Required user permissions
+#########################
+
+General:
+ cf-status
+ diagnosis-status-get
+ perf-object-get-instances
+ perf-object-instance-list-info-iter
+ storage-shelf-environment-list-info
+ system-get-info
+ system-get-version
+
+7-Mode specific:
+ aggr-list-info
+ disk-list-info
+ license-v2-list-info
+ net-ifconfig-get
+ snapvault-secondary-relationship-status-list-iter-end
+ snapvault-secondary-relationship-status-list-iter-next
+ snapvault-secondary-relationship-status-list-iter-start
+ vfiler-list-info
+ volume-list-info
+
+Cluster-Mode specific:
+ aggr-get-iter
+ fcp-adapter-get-iter
+ fcp-interface-get-iter
+ net-interface-get-iter
+ net-port-get-iter
+ snapmirror-get-iter
+ storage-disk-get-iter
+ storage-shelf-environment-list-info
+ system-get-node-info-iter
+ system-get-node-info-iter
+ system-get-node-info-iter
+ system-node-get-iter
+ volume-get-iter
+ vserver-get-iter
 """)
 
 

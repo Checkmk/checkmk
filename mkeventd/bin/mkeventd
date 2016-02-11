@@ -2265,17 +2265,13 @@ class EventServer:
                 event["facility"] = 1 # user
                 event["priority"] = 5 # notice
 
-            # Variant 7
+            # Variant 7 and 7a
             if line[0] == '@' and line[11] in [ ' ', ';' ]:
-                if line[11] == ' ':
-                    # Variant 7
-                    timestamp, event['host'], line = line.split(' ', 2)
-                else:
-                    # Variant 7a
-                    details, event['host'], line = line.split(' ', 2)
-                    timestamp, sl = details.split(';', 1)
-                    event["sl"] = int(sl)
-
+                details, event['host'], line = line.split(' ', 2)
+                detail_tokens = details.split(';')
+                timestamp = detail_tokens[0]
+                if len(detail_tokens) > 1:
+                    event["sl"] = int(detail_tokens[1])
                 event['time'] = float(timestamp[1:])
                 event.update(self.parse_syslog_info(line))
 

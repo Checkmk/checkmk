@@ -248,13 +248,12 @@ register_rule(group,
     ),
     title = _("Check NetApp via WebAPI"),
     help  = _("This rule set selects the NetApp special agent instead of the normal Check_MK Agent "
-              "and allows monitoring via the NetApp API. Right now only <i>7-Mode</i> is supported, "
-              "<i>Cluster Mode</i> will follow soon. Important: To make this special agent NetApp work "
-              "you will have to provide two additional python files (<tt>NaServer.py</tt>, <tt>NaElement.py</tt>) "
-              "from the NetApp Manageability SDK. They need to be put into the site directory "
-              "into <tt>~/local/lib/python</tt>. The user requires a number of permissions for specific API classes. "
-              "They are displayed if you call the agent with <tt>agent_netapp --help</tt>. The agent itself "
-              "is located in the site directory under <tt>~/share/check_mk/agents/special</tt>."),
+              "and allows monitoring via the NetApp Web API. Important: To get this agent running, you need to "
+              "install two additional python files (<tt>NaServer.py</tt>, <tt>NaElement.py</tt>) from the "
+              "NetApp Manageabiltiy SDK into the <tt>~/local/lib/python</tt> directory. To access the data the "
+              "user requires permissions to several API classes. They are shown when you call the agent with "
+              "<tt>agent_netapp --help</tt>. The agent itself is located in the site directory under "
+              "<tt>~/share/check_mk/agents/special</tt>."),
     match = 'first')
 
 register_rule(group,

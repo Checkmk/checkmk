@@ -76,6 +76,7 @@
 #include "stringutil.h"
 #include "types.h"
 #include "wmiHelper.h"
+#include "EventLog.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
@@ -183,11 +184,6 @@ HANDLE g_crashlogMutex = CreateMutex(NULL, FALSE, NULL);
 // Variables for section <<<logwatch>>>
 bool logwatch_suppress_info = true;
 
-// dynamic buffer for event log entries. Grows with the
-// time as needed. Never shrinked.
-char *eventlog_buffer = 0;
-int eventlog_buffer_size = 0;
-
 Configuration *g_config;
 
 char g_crash_log[256];
@@ -242,16 +238,6 @@ private:
 //  | Global helper functions                                              |
 //  '----------------------------------------------------------------------'
 
-// determine system root by reading the environment variable
-// %SystemRoot%. This variable is used in the registry entries
-// that describe eventlog messages.
-const char *system_root() {
-    static char root[128];
-    if (0 < GetWindowsDirectory(root, sizeof(root)))
-        return root;
-    else
-        return "C:\\WINDOWS";
-}
 
 double current_time() {
     SYSTEMTIME systime;
@@ -632,45 +618,64 @@ void dump_performance_counters(OutputProxy &out, unsigned counter_base_number,
 //  |                      |___/                                           |
 //  '----------------------------------------------------------------------'
 
-void grow_eventlog_buffer(int newsize) {
-    delete[] eventlog_buffer;
-    eventlog_buffer = new char[newsize];
-    eventlog_buffer_size = newsize;
+
+// loads a dll while ignoring blacklisted dlls and with support for
+// environment variables in the path
+HMODULE load_library_ext(const char *dllpath) {
+    HMODULE dll = nullptr;
+
+    // this should be sufficient most of the time
+    static const size_t INIT_BUFFER_SIZE = 128;
+
+    std::string dllpath_expanded;
+    dllpath_expanded.resize(INIT_BUFFER_SIZE, '\0');
+    DWORD required = ExpandEnvironmentStrings(dllpath, &dllpath_expanded[0],
+                                              dllpath_expanded.size());
+    if (required > dllpath_expanded.size()) {
+        dllpath_expanded.resize(required + 1);
+        required = ExpandEnvironmentStrings(dllpath, &dllpath_expanded[0],
+                                            dllpath_expanded.size());
+    } else if (required == 0) {
+        dllpath_expanded = dllpath;
+    }
+    if (required != 0) {
+        // required includes the zero terminator
+        dllpath_expanded.resize(required - 1);
+    }
+
+    // load the library as a datafile without loading refernced dlls. This is
+    // quicker but most of all it prevents problems if dependent dlls can't be
+    // loaded.
+    dll =
+        LoadLibraryExA(dllpath_expanded.c_str(), nullptr,
+                       DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
+    return dll;
 }
 
-bool output_eventlog_entry(OutputProxy &out, char *dllpath,
+bool output_eventlog_entry(OutputProxy &out, const char *dllpath,
                            EVENTLOGRECORD *event, char type_char,
                            const char *logname, const char *source_name,
-                           WCHAR **strings) {
+                           const WCHAR **strings,
+                           std::map<std::string, HMODULE> &handle_cache) {
     char msgbuffer[8192];
-    char dll_realpath[128];
-    HINSTANCE dll;
 
-    // if no dllpath is NULL, we output the message without text conversion and
+    HMODULE dll = nullptr;
+
+    // if dllpath is NULL, we output the message without text conversion and
     // always succeed. If a dll pathpath is given, we only succeed if the
     // conversion
     // is successfull.
 
     if (dllpath) {
-        // to make it even more difficult, dllpath may contain %SystemRoot%,
-        // which
-        // must be replaced with the environment variable %SystemRoot% (most
-        // probably -
-        // but not entirely for sure - C:\WINDOWS
-        if (strncasecmp(dllpath, "%SystemRoot%", 12) == 0)
-            snprintf(dll_realpath, sizeof(dll_realpath), "%s%s", system_root(),
-                     dllpath + 12);
-        else if (strncasecmp(dllpath, "%windir%", 8) == 0)
-            snprintf(dll_realpath, sizeof(dll_realpath), "%s%s", system_root(),
-                     dllpath + 8);
-        else
-            snprintf(dll_realpath, sizeof(dll_realpath), "%s", dllpath);
-
-        // I found this path in the official API documentation. I hope
-        // it's correct for all windows versions
-        dll = LoadLibrary(dll_realpath);
+        auto iter = handle_cache.find(dllpath);
+        if (iter == handle_cache.end()) {
+            dll = load_library_ext(dllpath);
+            iter = handle_cache.insert(std::make_pair(std::string(dllpath), dll)).first;
+        } else {
+            dll = iter->second;
+        }
         if (!dll) {
-            crash_log("     --> failed to load %s", dll_realpath);
+            crash_log("     --> failed to load %s", dllpath);
             return false;
         }
     } else
@@ -690,8 +695,6 @@ bool output_eventlog_entry(OutputProxy &out, char *dllpath,
                                // msgbuffer,
                                8192, (char **)strings);
     crash_log("Formatting Message - DONE");
-
-    if (dll) FreeLibrary(dll);
 
     if (len) {
         // convert message to UTF-8
@@ -718,7 +721,7 @@ bool output_eventlog_entry(OutputProxy &out, char *dllpath,
         int n = 0;
         while (strings[n])  // string array is zero terminated
         {
-            WCHAR *s = strings[n];
+            const WCHAR *s = strings[n];
             DWORD len =
                 WideCharToMultiByte(CP_UTF8, 0, s, -1, w, sizeleft, NULL, NULL);
             if (!len) break;
@@ -750,243 +753,147 @@ bool output_eventlog_entry(OutputProxy &out, char *dllpath,
     return true;
 }
 
-void process_eventlog_entries(OutputProxy &out, const char *logname,
-                              char *buffer, DWORD bytesread,
-                              DWORD *record_number, bool do_not_output,
-                              int *worst_state, int level, int hide_context) {
-    WCHAR *strings[64];
-    char regpath[128];
-    BYTE dllpath[128];
-    char source_name[128];
-
-    EVENTLOGRECORD *event = (EVENTLOGRECORD *)buffer;
-    while (bytesread > 0) {
-        crash_log(
-            "     - record %lu: process_eventlog_entries bytesread %lu, "
-            "event->Length %lu",
-            *record_number, bytesread, event->Length);
-        *record_number = event->RecordNumber;
-
-        char type_char;
-        int this_state;
-        switch (event->EventType) {
-            case EVENTLOG_ERROR_TYPE:
-                type_char = 'C';
-                this_state = 2;
-                break;
-            case EVENTLOG_WARNING_TYPE:
-                type_char = 'W';
-                this_state = 1;
-                break;
-            case EVENTLOG_INFORMATION_TYPE:
-            case EVENTLOG_AUDIT_SUCCESS:
-            case EVENTLOG_SUCCESS:
-                type_char = level == 0 ? 'O' : '.';
-                this_state = 0;
-                break;
-            case EVENTLOG_AUDIT_FAILURE:
-                type_char = 'C';
-                this_state = 2;
-                break;
-            default:
-                type_char = 'u';
-                this_state = 1;
-                break;
-        }
-        if (*worst_state < this_state) *worst_state = this_state;
-
-        // If we are not just scanning for the current end and the worst state,
-
-        // we output the event message
-        if (!do_not_output && (!hide_context || type_char != '.')) {
-            // The source name is the name of the application that produced the
-            // event
-            // It is UTF-16 encoded
-            WCHAR *lpSourceName =
-                (WCHAR *)((LPBYTE)event + sizeof(EVENTLOGRECORD));
-            WideCharToMultiByte(CP_UTF8, 0, lpSourceName, -1, source_name,
-                                sizeof(source_name), NULL, NULL);
-
-            char *w = source_name;
-            while (*w) {
-                if (*w == ' ') *w = '_';
-                w++;
-            }
-
-            // prepare array of zero terminated strings to be inserted
-            // into message template.
-            DWORD num_strings = event->NumStrings;
-            WCHAR *s = (WCHAR *)(((char *)event) + event->StringOffset);
-            unsigned ns;
-            for (ns = 0; ns < 63; ns++) {
-                if (ns < num_strings) {
-                    strings[ns] = s;
-                    s += wcslen(s) + 1;
-                } else
-                    // Sometimes the eventlog record does not provide
-                    // enough strings for the message template. Causes crash...
-                    // -> Fill the rest with empty strings
-                    strings[ns] = (WCHAR *)"";
-            }
-            strings[63] = 0;  // end marker in array
-
-            // Windows eventlog entries refer to texts stored in a DLL >:-P
-            // We need to load this DLL. First we need to look up which
-            // DLL to load in the registry. Hard to image how one could
-            // have contrieved this more complicated...
-            snprintf(regpath, sizeof(regpath),
-                     "SYSTEM\\CurrentControlSet\\Services\\Eventlog\\%s\\%S",
-                     logname, lpSourceName);
-
-            HKEY key;
-            DWORD ret =
-                RegOpenKeyEx(HKEY_LOCAL_MACHINE, regpath, 0, KEY_READ, &key);
-
-            bool success = false;
-            if (ret == ERROR_SUCCESS)  // could open registry key
-            {
-                DWORD size =
-                    sizeof(dllpath) - 1;  // leave space for 0 termination
-                memset(dllpath, 0, sizeof(dllpath));
-                if (ERROR_SUCCESS == RegQueryValueEx(key, "EventMessageFile",
-                                                     NULL, NULL, dllpath,
-                                                     &size)) {
-                    crash_log("     - record %lu: DLLs to load: %s",
-                              *record_number, dllpath);
-                    // Answer may contain more than one DLL. They are separated
-                    // by semicola. Not knowing which one is the correct one, I
-                    // have to try
-                    // all...
-                    char *token = strtok((char *)dllpath, ";");
-                    while (token) {
-                        if (output_eventlog_entry(out, token, event, type_char,
-                                                  logname, source_name,
-                                                  strings)) {
-                            success = true;
-                            break;
-                        }
-                        token = strtok(NULL, ";");
-                    }
-                }
-                RegCloseKey(key);
-            } else {
-                crash_log("     - record %lu: no DLLs listed in registry",
-                          *record_number);
-            }
-
-            // No text conversion succeeded. Output without text anyway
-            if (!success) {
-                crash_log("     - record %lu: translation failed",
-                          *record_number);
-                output_eventlog_entry(out, NULL, event, type_char, logname,
-                                      source_name, strings);
-            }
-
-        }  // type_char != '.'
-
-        bytesread -= event->Length;
-        crash_log(
-            "     - record %lu: event_processed, bytesread %lu, event->Length "
-            "%lu",
-            *record_number, bytesread, event->Length);
-        event = (EVENTLOGRECORD *)((LPBYTE)event + event->Length);
+std::pair<char, int> determine_event_state(EVENTLOGRECORD *event, int level) {
+    switch (event->EventType) {
+        case EVENTLOG_ERROR_TYPE:
+            return {'C', 2};
+        case EVENTLOG_WARNING_TYPE:
+            return {'W', 1};
+        case EVENTLOG_INFORMATION_TYPE:
+        case EVENTLOG_AUDIT_SUCCESS:
+        case EVENTLOG_SUCCESS:
+            if (level == 0)
+                return {'O', 0};
+            else
+                return {'.', 0};
+        case EVENTLOG_AUDIT_FAILURE:
+            return {'C', 2};
+        default:
+            return {'u', 1};
     }
+}
+
+void process_eventlog_entry(OutputProxy &out, EventLog &event_log,
+                            EVENTLOGRECORD *event, int level, int hide_context,
+                            std::map<std::string, HMODULE> &handle_cache) {
+    char type_char;
+    int this_state;
+    std::tie(type_char, this_state) = determine_event_state(event, level);
+
+    if (hide_context && (type_char == '.')) {
+        return;
+    }
+
+    // source is the application that produced the event
+    std::string source_name = to_utf8((WCHAR *)(event + 1));
+    std::replace(source_name.begin(), source_name.end(), ' ', '_');
+
+    // prepare array of zero terminated strings to be inserted
+    // into message template.
+    std::vector<const WCHAR*> strings;
+    const WCHAR *string = (WCHAR *)(((char *)event) + event->StringOffset);
+    for (int i = 0; i < event->NumStrings; ++i) {
+        strings.push_back(string);
+    }
+
+    // Sometimes the eventlog record does not provide
+    // enough strings for the message template. Causes crash...
+    // -> Fill the rest with empty strings
+    strings.resize(63, L"");
+    // end marker in array
+    strings.push_back(nullptr);
+
+    // To save space and to make log messages localizable, each
+    // eventlog entry only contains an id and the variable parameters of
+    // a message.
+    // The actual error string has to be retrieved from a dll, usually
+    // the one that caused the error.
+    std::vector<std::string> message_files =
+        event_log.getMessageFiles(source_name.c_str());
+
+    bool success = false;
+    for (const std::string &message_file : message_files) {
+        if (output_eventlog_entry(out, message_file.c_str(), event, type_char,
+                                  event_log.getName().c_str(),
+                                  source_name.c_str(), &strings[0],
+                                  handle_cache)) {
+            success = true;
+        }
+    }
+
+    if (!success) {
+        if (message_files.size() == 0) {
+            crash_log("     - record %lu: no DLLs listed in registry",
+                      event->RecordNumber);
+        } else {
+            crash_log("     - record %lu: translation failed",
+                      event->RecordNumber);
+        }
+        output_eventlog_entry(out, NULL, event, type_char,
+                              event_log.getName().c_str(), source_name.c_str(),
+                              &strings[0], handle_cache);
+    }
+    crash_log("     - record %lu: event_processed, "
+            "event->Length %lu", event->RecordNumber, event->Length);
 }
 
 void output_eventlog(OutputProxy &out, const char *logname,
                      DWORD *record_number, int level, int hide_context) {
     crash_log(" - event log \"%s\":", logname);
 
-    if (eventlog_buffer_size == 0) {
-        const int initial_size = 65536;
-        eventlog_buffer = new char[initial_size];
-        eventlog_buffer_size = initial_size;
-    }
-
-    HANDLE hEventlog = OpenEventLog(NULL, logname);
-    DWORD bytesread = 0;
-    DWORD bytesneeded = 0;
-    if (hEventlog) {
+    try {
+        EventLog log(logname);
         crash_log("   . successfully opened event log");
 
         out.output("[[[%s]]]\n", logname);
         int worst_state = 0;
-        DWORD old_record_number = *record_number;
 
-        // we scan all new entries twice. At the first run we check if
-        // at least one warning/error message is present. Only if this
-        // is the case we make a second run where we output *all* messages,
-        // even the informational ones.
-        for (int cycle = 0; cycle < 2; cycle++) {
-            *record_number = old_record_number;
-            verbose("Starting from entry number %lu", old_record_number);
-            while (true) {
-                DWORD flags;
-                if (*record_number == 0) {
-                    if (cycle == 1) {
-                        verbose(
-                            "Need to reopen Logfile in order to find start "
-                            "again.");
-                        CloseEventLog(hEventlog);
-                        hEventlog = OpenEventLog(NULL, logname);
-                        if (!hEventlog) {
-                            verbose("Failed to reopen event log. Bailing out.");
-                            return;
-                        }
-                        crash_log("   . reopened log");
-                    }
-                    flags = EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ;
-                } else {
-                    verbose("Previous record number was %lu. Doing seek read.",
-                            *record_number);
-                    flags = EVENTLOG_SEEK_READ | EVENTLOG_FORWARDS_READ;
-                }
+        DWORD newest_record = *record_number;
 
-                if (ReadEventLogW(hEventlog, flags, *record_number + 1,
-                                  eventlog_buffer, eventlog_buffer_size,
-                                  &bytesread, &bytesneeded)) {
-                    crash_log("   . got entries starting at %lu (%lu bytes)",
-                              *record_number + 1, bytesread);
+        log.seek(*record_number);
 
-                    process_eventlog_entries(
-                        out, logname, eventlog_buffer, bytesread, record_number,
-                        cycle == 0, &worst_state, level, hide_context);
-                } else {
-                    DWORD error = GetLastError();
-                    if (error == ERROR_INSUFFICIENT_BUFFER) {
-                        grow_eventlog_buffer(bytesneeded);
-                        crash_log("   . needed to grow buffer to %lu bytes",
-                                  bytesneeded);
-                    }
-                    // found current end of log
-                    else if (error == ERROR_HANDLE_EOF) {
-                        verbose(
-                            "End of logfile reached at entry %lu. Worst state "
-                            "is %d",
-                            *record_number, worst_state);
-                        break;
-                    }
-                    // invalid parameter can also mean end of log
-                    else if (error == ERROR_INVALID_PARAMETER) {
-                        verbose(
-                            "Invalid parameter at entry %lu (could mean end of "
-                            "logfile). Worst state is %d",
-                            *record_number, worst_state);
-                        break;
-                    } else {
-                        out.output(
-                            "ERROR: Cannot read eventlog '%s': error %lu\n",
-                            logname, error);
-                        break;
-                    }
-                }
-            }
-            if (worst_state < level && logwatch_suppress_info) {
-                break;  // nothing important found. Skip second run
+        // first pass - determine if there are records above level
+        EVENTLOGRECORD *record = log.read();
+        while (record != nullptr) {
+            std::pair<char, int> state = determine_event_state(record, level);
+            worst_state = std::max(worst_state, state.second);
+
+            // store highest record number we found. This is just in case
+            // the second pass doesn't heppen
+            newest_record = record->RecordNumber;
+            record = log.read();
+        }
+
+        crash_log("    . worst state: %d", worst_state);
+
+        // loading and releasing the message dlls for each message was by far
+        // the biggest performance cost (~90%) of resolving eventlog messages.
+        // -> keep the handles open until all messages are logged so we only
+        //    load each dll once
+        std::map<std::string, HMODULE> handle_cache;
+
+        // second pass - if there were, print everything
+        if ((worst_state >= level) || !logwatch_suppress_info) {
+            log.reset();
+            log.seek(*record_number);
+
+            EVENTLOGRECORD *record = log.read();
+            while (record != nullptr) {
+                crash_log("record %d", (int)record->RecordNumber);
+                process_eventlog_entry(out, log, record, level, hide_context,
+                                       handle_cache);
+
+                // store highest record number we found
+                newest_record = record->RecordNumber;
+                record = log.read();
             }
         }
-        CloseEventLog(hEventlog);
-    } else {
+        for (auto kv : handle_cache) {
+            ::FreeLibrary(kv.second);
+        }
+        *record_number = newest_record;
+    } catch (const std::exception &e) {
+        crash_log("failed to read event log: %s\n", e.what());
         out.output("[[[%s:missing]]]\n", logname);
     }
 }
@@ -3594,8 +3501,6 @@ void output_data(OutputProxy &out, const Environment &env,
 
 void cleanup() {
     WMILookup::clear();
-
-    if (eventlog_buffer_size > 0) delete[] eventlog_buffer;
 
     unregister_all_eventlogs();  // frees a few bytes
 

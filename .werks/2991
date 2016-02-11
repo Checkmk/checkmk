@@ -1,0 +1,12 @@
+Title: Snapshot restore: Improved robustness and logging
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455198375
+Class: feature
+
+The restore operation tries to complete the snapshot extraction with the rest of
+the data when it encounters critical errors in the crucial extract phase.
+Error information is logged in the file <tt>~/var/log/web.log</tt>.
+This should never happen anyway - there are several mechanisms to prevent this.

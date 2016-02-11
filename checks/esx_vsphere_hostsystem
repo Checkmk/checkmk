@@ -122,9 +122,13 @@ def check_esx_vsphere_hostsystem_mem_cluster(item, params, info):
     level = total_memory_usage / total_memory_size * 100
     label = ""
     state = 0
+    warn_perf, crit_perf = None, None
     for count, levels in sorted_params:
         if nodes_count >= count:
             warn, crit = levels
+            warn_perf = warn * total_memory_size / 100
+            crit_perf = cirt * total_memory_size / 100
+
             if level > crit:
                 state = 2
                 label = " (Levels at %d%%/%d%%)" % (warn, crit)
@@ -133,11 +137,10 @@ def check_esx_vsphere_hostsystem_mem_cluster(item, params, info):
                 label = " (Levels at %d%%/%d%%)" % (warn, crit)
             break
 
-
-    perf = [("usage", total_memory_usage, warn * total_memory_size / 100,
-                      crit * total_memory_size / 100, 0, total_memory_size)]
+    perf = [("usage", total_memory_usage, warn_perf, crit_perf, 0, total_memory_size)]
     yield state, "%d%%%s used - %s/%s" % \
-    (level, label, get_bytes_human_readable(total_memory_usage), get_bytes_human_readable(total_memory_size)), perf
+            (level, label, get_bytes_human_readable(total_memory_usage),
+             get_bytes_human_readable(total_memory_size)), perf
 
 
 check_info['esx_vsphere_hostsystem.mem_usage_cluster'] = {

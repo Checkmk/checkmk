@@ -191,7 +191,7 @@ def acknowledge_werks(werks):
     ack_ids = load_acknowledgements()
     for werk in werks:
         ack_ids.append(werk["id"])
-    werk["compatible"] = "incomp_ack"
+        werk["compatible"] = "incomp_ack"
     save_acknowledgements(ack_ids)
 
 

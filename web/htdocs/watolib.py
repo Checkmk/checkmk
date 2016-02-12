@@ -4247,10 +4247,18 @@ def do_git_commit():
         git_command(["config", "user.name", "check_mk"])
 
         # Make sure that .gitignore-files are present and uptodate
-        file(defaults.default_config_dir + "/.gitignore", "w").write("*\n!*.d\n!.gitignore\n*swp\n*.mk.new\n")
+        file(defaults.default_config_dir + "/.gitignore", "w").write(
+            "*\n"
+            "!*.d\n"
+            "!.gitignore\n"
+            "*swp\n"
+            "*.mk.new\n")
         for subdir in os.listdir(defaults.default_config_dir):
             if subdir.endswith(".d"):
-                file(defaults.default_config_dir + "/" + subdir + "/.gitignore", "w").write("*\n!wato\n!wato/*\n")
+                file(defaults.default_config_dir + "/" + subdir + "/.gitignore", "w").write(
+                    "*\n"
+                    "!wato\n"
+                    "!wato/*\n")
 
         git_command(["add", ".gitignore", "*.d/wato"])
         git_command(["commit", "--untracked-files=no", "--author", author, "-m", shell_quote(_("Initialized GIT for Check_MK"))])

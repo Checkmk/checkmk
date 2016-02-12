@@ -91,7 +91,7 @@ directories:
 # number. Instead a placeholder is being used as version.a
 # -----------------------------------------------------------------------------
 
-SRCS = check_mk_agent.cc SettingsCollector.cc Configuration.cc Environment.cc stringutil.cc wmiHelper.cc ListenSocket.cc PerfCounter.cc Thread.cc OutputProxy.cc logging.cc Crypto.cc OHMMonitor.cc EventLog.cc
+SRCS = check_mk_agent.cc SettingsCollector.cc Configuration.cc Environment.cc stringutil.cc wmiHelper.cc ListenSocket.cc PerfCounter.cc Thread.cc OutputProxy.cc logging.cc Crypto.cc OHMMonitor.cc EventLog.cc ExternalCmd.cc
 OBJS = $(addprefix obj/,$(SRCS:.cc=.o))
 OBJS64 = $(addprefix obj64/,$(SRCS:.cc=.o))
 
@@ -113,12 +113,12 @@ obj64/%.o: %.cc
 check_mk_agent.unversioned.exe: $(OBJS)
 	$(MAKE) inc_build_version
 	$(MAKE) check_mk_agent.res
-	$(CXX) $(COPTIONS) -o $@ $^ check_mk_agent.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi
+	$(CXX) $(COPTIONS) -o $@ $^ check_mk_agent.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi
 
 check_mk_agent-64.unversioned.exe: $(OBJS64)
 	$(MAKE) inc_build_version
 	$(MAKE) check_mk_agent-64.res
-	$(CXX_64) $(COPTIONS) -o $@ $^ check_mk_agent-64.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi
+	$(CXX_64) $(COPTIONS) -o $@ $^ check_mk_agent-64.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi
 
 
 # -----------------------------------------------------------------------------
@@ -176,4 +176,4 @@ mrproper: clean
 	rm -f *.exe
 
 setup:
-	sudo apt-get install nsis lcab binutils-mingw-w64-i686 binutils-mingw-w64-x86-64
+	sudo apt-get install nsis lcab binutils-mingw-w64-i686 binutils-mingw-w64-x86-64 g++-mingw-w64-i686 g++-mingw-w64-x86-64

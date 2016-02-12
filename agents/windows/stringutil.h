@@ -38,7 +38,7 @@
 #endif
 
 char *lstrip(char *s);
-void rstrip(char *s);
+char *rstrip(char *s);
 char *strip(char *s);
 
 std::vector<const char *> split_line(char *pos, int (*split_pred)(int));

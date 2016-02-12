@@ -1,4 +1,7 @@
 1.2.9i1:
+    Checks & Agents:
+    * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
+
     Event Console:
     * 3058 FIX: Event Console is now allowing non loadable MIB modules on startup...
 

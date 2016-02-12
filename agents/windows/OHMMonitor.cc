@@ -86,7 +86,7 @@ bool OHMMonitor::checkAvailabe() {
         si.dwFlags |= STARTF_USESTDHANDLES;
         si.hStdOutput = si.hStdError = dev_null();
 
-        OnScopeExit([&si]() { CloseHandle(si.hStdOutput); });
+        OnScopeExit close_stdout([&si]() { CloseHandle(si.hStdOutput); });
 
         PROCESS_INFORMATION pi = {};
 

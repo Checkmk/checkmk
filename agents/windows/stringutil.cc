@@ -16,12 +16,13 @@ char *lstrip(char *s) {
     return s;
 }
 
-void rstrip(char *s) {
+char *rstrip(char *s) {
     char *end = s + strlen(s);  // point one beyond last character
     while (end > s && isspace(*(end - 1))) {
         end--;
     }
     *end = 0;
+    return end;
 }
 
 char *strip(char *s) {

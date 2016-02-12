@@ -26,6 +26,7 @@
 
 from lib import *
 import time
+import sites
 import config
 
 def ajax_action():
@@ -70,8 +71,8 @@ def action_reschedule():
 
     try:
         now = int(time.time())
-        html.live.command("[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, lqencode(spec), now), site)
-        html.live.set_only_sites([site])
+        sites.live().command("[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, lqencode(spec), now), site)
+        sites.live().set_only_sites([site])
         query = u"GET %ss\n" \
                 "WaitObject: %s\n" \
                 "WaitCondition: last_check >= %d\n" \
@@ -80,8 +81,8 @@ def action_reschedule():
                 "Columns: last_check state plugin_output\n" \
                 "Filter: host_name = %s\n%s" \
                 % (what, lqencode(wait_spec), now, config.reschedule_timeout * 1000, lqencode(host), add_filter)
-        row = html.live.query_row(query)
-        html.live.set_only_sites()
+        row = sites.live().query_row(query)
+        sites.live().set_only_sites()
         last_check = row[0]
         if last_check < now:
             html.write("['TIMEOUT', 'Check not executed within %d seconds']\n" % (config.reschedule_timeout))
@@ -95,5 +96,5 @@ def action_reschedule():
             html.write("['OK', %d, %d, %r]\n" % (row[0], row[1], row[2].encode("utf-8")))
 
     except Exception, e:
-        html.live.set_only_sites()
+        sites.live().set_only_sites()
         raise MKGeneralException(_("Cannot reschedule check: %s") % e)

@@ -3526,7 +3526,8 @@ def mode_bulk_discovery(phase):
 
 
 def find_hosts_with_failed_inventory_check():
-    return html.live.query_column(
+    import sites
+    return sites.live().query_column(
         "GET services\n"
         "Filter: description = Check_MK inventory\n" # FIXME: Remove this one day
         "Filter: description = Check_MK Discovery\n"
@@ -3535,7 +3536,8 @@ def find_hosts_with_failed_inventory_check():
         "Columns: host_name")
 
 def find_hosts_with_failed_agent():
-    return html.live.query_column(
+    import sites
+    return sites.live().query_column(
         "GET services\n"
         "Filter: description = Check_MK\n"
         "Filter: state >= 2\n"
@@ -4315,13 +4317,13 @@ def mode_changelog(phase):
             # Distributed WATO: Show replication state of each site
 
             repstatus = load_replication_status()
-            sites = [(name, config.site(name)) for name in config.sitenames() ]
-            sort_sites(sites)
+            configured_sites = [(name, config.site(name)) for name in config.sitenames() ]
+            sort_sites(configured_sites)
 
             table.begin("site-status", searchable=False)
 
             num_replsites = 0 # for detecting end of bulk replication
-            for site_id, site in sites:
+            for site_id, site in configured_sites:
                 is_local = config.site_is_local(site_id)
 
                 if not is_local and not site.get("replication"):
@@ -4333,7 +4335,7 @@ def mode_changelog(phase):
                     ss = {}
                     status = "disabled"
                 else:
-                    ss = html.site_status.get(site_id, {})
+                    ss = sites.state(site_id, {})
                     status = ss.get("state", "unknown")
 
                 srs = repstatus.get(site_id, {})
@@ -6305,8 +6307,8 @@ def render_global_configuration_variables(default_values, current_settings, show
 def mode_edit_configvar(phase, what = 'globalvars'):
     siteid = html.var("site")
     if siteid:
-        sites = load_sites()
-        site = sites[siteid]
+        configured_sites = load_sites()
+        site = configured_sites[siteid]
 
     if phase == "title":
         if what == 'mkeventd':
@@ -6355,7 +6357,7 @@ def mode_edit_configvar(phase, what = 'globalvars'):
                   % (varname, valuespec.value_to_text(new_value))
 
         if siteid:
-            save_sites(sites, activate=False)
+            save_sites(configured_sites, activate=False)
             changes = { "need_sync" : True }
             if need_restart:
                 changes["need_restart"] = True
@@ -8759,11 +8761,11 @@ def find_usages_of_timeperiod(tpname):
 #   '----------------------------------------------------------------------'
 
 # Sort given sites argument by local, followed by slaves
-def sort_sites(sites):
+def sort_sites(sitelist):
     def custom_sort(a,b):
         return cmp(a[1].get("replication"), b[1].get("replication")) or \
                cmp(a[1].get("alias"), b[1].get("alias"))
-    sites.sort(cmp = custom_sort)
+    sitelist.sort(cmp = custom_sort)
 
 
 def mode_sites(phase):
@@ -8775,7 +8777,7 @@ def mode_sites(phase):
         html.context_button(_("New connection"), folder_preserving_link([("mode", "edit_site")]), "new")
         return
 
-    sites = load_sites()
+    configured_sites = load_sites()
 
     if phase == "action":
         delid = html.var("_delete")
@@ -8783,7 +8785,7 @@ def mode_sites(phase):
             # The last connection can always be deleted. In that case we
             # fallb back to non-distributed-WATO and the site attribute
             # will be removed.
-            test_sites = dict(sites.items())
+            test_sites = dict(configured_sites.items())
             del test_sites[delid]
             if is_distributed(test_sites):
                 # Make sure that site is not being used by hosts and folders
@@ -8804,8 +8806,8 @@ def mode_sites(phase):
             c = wato_confirm(_("Confirm deletion of site %s" % delid),
                              _("Do you really want to delete the connection to the site %s?" % delid))
             if c:
-                del sites[delid]
-                save_sites(sites)
+                del configured_sites[delid]
+                save_sites(configured_sites)
                 update_replication_status(delid, None)
 
                 # Due to the deletion the replication state can get clean.
@@ -8821,13 +8823,13 @@ def mode_sites(phase):
 
         logout_id = html.var("_logout")
         if logout_id:
-            site = sites[logout_id]
+            site = configured_sites[logout_id]
             c = wato_confirm(_("Confirm logout"),
                        _("Do you really want to log out of '%s'?") % site["alias"])
             if c:
                 if "secret" in site:
                     del site["secret"]
-                save_sites(sites)
+                save_sites(configured_sites)
                 log_audit(None, "edit-site", _("Logged out of remote site '%s'") % site["alias"])
                 return None, _("Logged out.")
             elif c == False:
@@ -8841,7 +8843,7 @@ def mode_sites(phase):
                 return "sites"
             if not html.check_transaction():
                 return
-            site = sites[login_id]
+            site = configured_sites[login_id]
             error = None
             # Fetch name/password of admin account
             if html.has_var("_name"):
@@ -8850,7 +8852,7 @@ def mode_sites(phase):
                 try:
                     secret = do_site_login(login_id, name, passwd)
                     site["secret"] = secret
-                    save_sites(sites)
+                    save_sites(configured_sites)
                     log_audit(None, "edit-site", _("Successfully logged into remote site '%s'") % site["alias"])
                     return None, _("Successfully logged into remote site '%s'!" % site["alias"])
                 except MKAutomationException, e:
@@ -8898,7 +8900,7 @@ def mode_sites(phase):
                                "sites, please do not forget to add your local monitoring site also, if "
                                "you want to display its data."))
 
-    entries = sites.items()
+    entries = configured_sites.items()
     sort_sites(entries)
     for id, site in entries:
         table.row()
@@ -8979,9 +8981,9 @@ def mode_sites(phase):
     table.end()
 
 def mode_edit_site_globals(phase):
-    sites = load_sites()
+    configured_sites = load_sites()
     siteid = html.var("site")
-    site = sites[siteid]
+    site = configured_sites[siteid]
 
     if phase == "title":
         return _("Edit site-specific global settings of %s" % siteid)
@@ -9024,7 +9026,7 @@ def mode_edit_site_globals(phase):
                 msg = _("Changed site-specific configuration variable %s to %s." % (varname,
                     current_settings[varname] and "on" or "off"))
                 site.setdefault("globals", {})[varname] = current_settings[varname]
-                save_sites(sites, activate=False)
+                save_sites(configured_sites, activate=False)
 
                 changes = { "need_sync" : True }
                 if need_restart:
@@ -9054,19 +9056,19 @@ def mode_edit_site_globals(phase):
     render_global_configuration_variables(default_values, current_settings, show_all=True)
 
 def mode_edit_site(phase):
-    sites = load_sites()
+    configured_sites = load_sites()
     siteid = html.var("edit") # missing -> new site
     cloneid = html.var("clone")
     new = siteid == None
     if cloneid:
-        site = sites[cloneid]
+        site = configured_sites[cloneid]
     elif new:
         if defaults.omd_root:
             site = { "replicate_mkps" : True }
         else:
             site = { }
     else:
-        site = sites.get(siteid, {})
+        site = configured_sites.get(siteid, {})
 
     if phase == "title":
         if new:
@@ -9170,17 +9172,17 @@ def mode_edit_site(phase):
         else:
             id = siteid
 
-        if new and id in sites:
+        if new and id in configured_sites:
             raise MKUserError("id", _("This id is already being used by another connection."))
         if not re.match("^[-a-z0-9A-Z_]+$", id):
             raise MKUserError("id", _("The site id must consist only of letters, digit and the underscore."))
 
         # Save copy of old site for later
         if not new:
-            old_site = sites[siteid]
+            old_site = configured_sites[siteid]
 
         new_site = {}
-        sites[id] = new_site
+        configured_sites[id] = new_site
         alias = html.get_unicode_input("alias", "").strip()
         if not alias:
             raise MKUserError("alias", _("Please enter an alias name or description of this site."))
@@ -9223,7 +9225,7 @@ def mode_edit_site(phase):
         # Status host
         sh_site = html.var("sh_site")
         if sh_site:
-            if sh_site not in sites:
+            if sh_site not in configured_sites:
                 raise MKUserError("sh_site", _("The site of the status host does not exist."))
             if sh_site in [ siteid, id ]:
                 raise MKUserError("sh_site", _("You cannot use the site itself as site of the status host."))
@@ -9287,7 +9289,7 @@ def mode_edit_site(phase):
                 if key not in new_site:
                     new_site[key] = old_site[key]
 
-        save_sites(sites)
+        save_sites(configured_sites)
 
         # Own site needs RESTART in any case
         update_replication_status(our_site_id(), { "need_restart" : True })
@@ -9385,8 +9387,11 @@ def mode_edit_site(phase):
     html.write(_("host: "))
     html.text_input("sh_host", sh_host, size=10)
     html.write(_(" on monitoring site: "))
+
     html.sorted_select("sh_site",
-       [ ("", _("(no status host)")) ] + [ (sk, si.get("alias", sk)) for (sk, si) in sites.items() ], sh_site)
+       [ ("", _("(no status host)")) ] + [
+         (sk, si.get("alias", sk)) for (sk, si) in configured_sites.items() ], sh_site)
+
     html.help( _("By specifying a status host for each non-local connection "
                  "you prevent Multisite from running into timeouts when remote sites do not respond. "
                  "You need to add the remote monitoring servers as hosts into your local monitoring "
@@ -13584,8 +13589,8 @@ def user_profile_async_replication_page():
 
 
 def user_profile_async_replication_dialog():
-    sites = wato_slave_sites()
-    sort_sites(sites)
+    slave_sites = wato_slave_sites()
+    sort_sites(slave_sites)
     repstatus = load_replication_status()
 
     html.message(_('In order to activate your changes available on all remote sites, your user profile needs '
@@ -13596,18 +13601,11 @@ def user_profile_async_replication_dialog():
     html.write('<h3>%s</h3>' % _('Replication States'))
     html.write('<div id="profile_repl">')
     num_replsites = 0
-    for site_id, site in sites:
+    for site_id, site in slave_sites:
         is_local = config.site_is_local(site_id)
 
         if is_local or (not is_local and not site.get("replication")):
             continue # Skip non replication slaves
-
-        if site.get("disabled"):
-            ss = {}
-            status = "disabled"
-        else:
-            ss = html.site_status.get(site_id, {})
-            status = ss.get("state", "unknown")
 
         srs = repstatus.get(site_id, {})
 

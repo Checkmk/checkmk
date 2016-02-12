@@ -55,9 +55,3 @@ def page_index():
 </frameset>
 </html>
 """ % (html.attrencode(heading), html.attrencode(start_url)))
-
-# This function does almost nothing. It just makes sure that
-# a livestatus-connection is built up, since connect_to_livestatus()
-# handles the _site_switch variable.
-def ajax_switch_site():
-    html.live

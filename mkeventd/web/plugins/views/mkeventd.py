@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import sites
 import mkeventd
 from valuespec import *
 
@@ -117,11 +118,11 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
     if not config.may("mkeventd.seeall"):
         hosts_contact_groups = {}
         query = "GET hosts\nColumns: name address contact_groups\n" + host_filters
-        html.live.set_only_sites(only_sites)
-        html.live.set_auth_domain('mkeventd')
-        data = html.live.query(query)
-        html.live.set_auth_domain('read')
-        html.live.set_only_sites(None)
+        sites.live().set_only_sites(only_sites)
+        sites.live().set_auth_domain('mkeventd')
+        data = sites.live().query(query)
+        sites.live().set_auth_domain('read')
+        sites.live().set_only_sites(None)
         for host, address, groups in data:
             hosts_contact_groups[host.lower()] = groups
             hosts_contact_groups[address] = groups
@@ -232,20 +233,20 @@ def event_hostrows(columns, only_sites, filters, host_filters):
 
 def get_user_contact_groups():
     query = "GET contactgroups\nFilter: members >= %s\nColumns: name\nCache: reload" % (config.user_id)
-    contacts = html.live.query_column(query)
+    contacts = sites.live().query_column(query)
     return set(contacts)
 
 def get_host_table(filter_header, only_sites, add_columns):
     columns = [ "host_name" ] + add_columns
 
-    html.live.set_only_sites(only_sites)
-    html.live.set_prepend_site(True)
-    data = html.live.query(
+    sites.live().set_only_sites(only_sites)
+    sites.live().set_prepend_site(True)
+    data = sites.live().query(
             "GET hosts\n" +
             "Columns: " + (" ".join(columns)) + "\n" +
             filter_header)
-    html.live.set_prepend_site(False)
-    html.live.set_only_sites(None)
+    sites.live().set_prepend_site(False)
+    sites.live().set_only_sites(None)
 
     headers = [ "site" ] + columns
     rows = [ dict(zip(headers, row)) for row in data ]

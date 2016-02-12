@@ -112,12 +112,12 @@ sidebar_snapins["admin_mini"] = {
 #   '----------------------------------------------------------------------'
 
 def compute_foldertree():
-    html.live.set_prepend_site(True)
+    sites.live().set_prepend_site(True)
     query = "GET hosts\n" \
             "Stats: state >= 0\n" \
             "Columns: filename"
-    hosts = html.live.query(query)
-    html.live.set_prepend_site(False)
+    hosts = sites.live().query(query)
+    sites.live().set_prepend_site(False)
     hosts.sort()
 
     def get_folder(path, num = 0):

@@ -961,7 +961,8 @@ def paint_time_graph_pnp(row):
     service = row.get("service_description", "_HOST_")
 
     container_id = "%s_%s_%s_graph" % (sitename, host, service)
-    pnp_url = html.site_status[sitename]["site"]["url_prefix"] + "pnp4nagios/"
+    url_prefix = config.site(sitename)["url_prefix"]
+    pnp_url = url_prefix + "pnp4nagios/"
     if 'X' in html.display_options:
         with_link = 'true'
     else:
@@ -1082,9 +1083,9 @@ def paint_custom_notes(what, row):
     contents = []
     def replace_tags(text):
         sitename = row["site"]
-        site = html.site_status[sitename]["site"]
+        url_prefix = config.site(sitename)["url_prefix"]
         return text\
-            .replace('$URL_PREFIX$',     site["url_prefix"])\
+            .replace('$URL_PREFIX$',     url_prefix)\
             .replace('$SITE$',           sitename)\
             .replace('$HOSTNAME$',       host)\
 	    .replace('$HOSTNAME_LOWER$', host.lower())\

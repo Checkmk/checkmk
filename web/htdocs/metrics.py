@@ -36,9 +36,9 @@
 
 import math, time, colorsys, shlex, operator, random
 import config, defaults, pagetypes, table
+import sites
 from lib import *
 from valuespec import *
-import livestatus
 
 
 #   .--Plugins-------------------------------------------------------------.
@@ -1272,10 +1272,9 @@ def cmk_graphs_possible(site_id = None):
 # one site is running CMC
 def site_is_running_cmc(site_id):
     if site_id:
-        return site_id in html.site_status \
-           and html.site_status[site_id].get("program_version").startswith("Check_MK")
+        return sites.state(site_id, {}).get("program_version", "").startswith("Check_MK")
     else:
-        for status in html.site_status.values():
+        for status in sites.states().values():
             if status.get("program_version").startswith("Check_MK"):
                 return True
         return False
@@ -1305,13 +1304,13 @@ def get_graph_data_from_livestatus(site, host_name, service):
                 "Columns: perf_data metrics check_command\n" % (host_name, service)
 
     if site:
-        html.live.set_only_sites([site])
-    html.live.set_prepend_site(True)
-    data = html.live.query_row(query)
-    html.live.set_prepend_site(False)
+        sites.live().set_only_sites([site])
+    sites.live().set_prepend_site(True)
+    data = sites.live().query_row(query)
+    sites.live().set_prepend_site(False)
 
     if site:
-        html.live.set_only_sites(None)
+        sites.live().set_only_sites(None)
 
     if service == "_HOST_":
         return {
@@ -1357,7 +1356,7 @@ def page_host_service_graph_popup():
 def host_service_graph_popup_pnp(site, host_name, service_description):
     pnp_host   = pnp_cleanup(host_name)
     pnp_svc    = pnp_cleanup(service_description)
-    url_prefix = html.site_status[site]["site"]["url_prefix"]
+    url_prefix = config.site(site)["url_prefix"]
 
     if html.mobile:
         url = url_prefix + ("pnp4nagios/index.php?kohana_uri=/mobile/popup/%s/%s" % \
@@ -1425,7 +1424,7 @@ def host_service_graph_dashlet_pnp(graph_specification):
 
     pnp_host   = pnp_cleanup(graph_specification[1]["host_name"])
     pnp_svc    = pnp_cleanup(graph_specification[1]["service_description"])
-    url_prefix = html.site_status[site]["site"]["url_prefix"]
+    url_prefix = config.site(site)["url_prefix"]
 
     html.write(url_prefix + "pnp4nagios/index.php/image?host=%s&srv=%s&source=%d&view=%s&theme=multisite" % \
         (html.urlencode(pnp_host), html.urlencode(pnp_svc), source, html.var("timerange")))

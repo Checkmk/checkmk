@@ -610,7 +610,7 @@ register_configvar(group,
 # Helper that retrieves the list of hostgroups via Livestatus
 # use alias by default but fallback to name if no alias defined
 def list_hostgroups():
-    groups = dict(html.live.query("GET hostgroups\nCache: reload\nColumns: name alias\n"))
+    groups = dict(sites.live().query("GET hostgroups\nCache: reload\nColumns: name alias\n"))
     return [ (name, groups[name] or name) for name in groups.keys() ]
 
 register_configvar(group,

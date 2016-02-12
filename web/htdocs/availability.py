@@ -32,6 +32,7 @@
 #### Reporting abbilden.
 
 import bi, views, visuals
+import sites
 # TODO: Get rid of import of views
 # from lib import *
 from valuespec import *
@@ -565,11 +566,11 @@ def get_availability_rawdata(what, filterheaders, only_sites, av_object, include
     query += "Columns: %s\n" % " ".join(columns)
     query += filterheaders
 
-    html.live.set_prepend_site(True)
-    html.live.set_only_sites(only_sites)
-    data = html.live.query(query)
-    html.live.set_only_sites(None)
-    html.live.set_prepend_site(False)
+    sites.live().set_prepend_site(True)
+    sites.live().set_only_sites(only_sites)
+    data = sites.live().query(query)
+    sites.live().set_only_sites(None)
+    sites.live().set_prepend_site(False)
     columns = ["site"] + columns
     spans = [ dict(zip(columns, span)) for span in data ]
     return spans_by_object(spans)
@@ -1290,9 +1291,9 @@ def get_bi_spans(tree, aggr_group, avoptions, timewarp):
         hosts.append(host)
 
     columns = [ "host_name", "service_description", "from", "log_output", "state", "in_downtime", "in_service_period" ]
-    html.live.set_only_sites(list(only_sites))
-    html.live.set_prepend_site(True)
-    html.live.set_limit() # removes limit
+    sites.live().set_only_sites(list(only_sites))
+    sites.live().set_prepend_site(True)
+    sites.live().set_limit() # removes limit
     query = "GET statehist\n" + \
             "Columns: " + " ".join(columns) + "\n" +\
             "Filter: time >= %d\nFilter: time < %d\n" % time_range
@@ -1313,13 +1314,13 @@ def get_bi_spans(tree, aggr_group, avoptions, timewarp):
     if len(hosts) != 1:
         query += "Or: %d\n" % len(hosts)
 
-    data = html.live.query(query)
+    data = sites.live().query(query)
     if not data:
         return [], None
         # raise MKGeneralException(_("No historical data available for this aggregation. Query was: <pre>%s</pre>") % query)
 
-    html.live.set_prepend_site(False)
-    html.live.set_only_sites(None)
+    sites.live().set_prepend_site(False)
+    sites.live().set_only_sites(None)
     columns = ["site"] + columns
     rows = [ dict(zip(columns, row)) for row in data ]
 

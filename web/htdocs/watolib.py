@@ -44,6 +44,7 @@
 
 import os, shutil, subprocess, base64
 import defaults, config, hooks, userdb, multitar
+import sites
 from lib import *
 from valuespec import *
 
@@ -3454,13 +3455,13 @@ def synchronize_profile(site, user_id):
 
 def cmc_reload():
     log_audit(None, "activate-config", "Reloading Check_MK Micro Core on the fly")
-    html.live.command("[%d] RELOAD_CONFIG" % time.time())
+    sites.live().command("[%d] RELOAD_CONFIG" % time.time())
 
 # AJAX handler for asynchronous replication of user profiles (changed passwords)
 def ajax_profile_repl():
     site_id = html.var("site")
 
-    status = html.site_status.get(site_id, {}).get("state", "unknown")
+    status = sites.state(site_id, {}).get("state", "unknown")
     if status == "dead":
         result = _('The site is marked as dead. Not trying to replicate.')
 

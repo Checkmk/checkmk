@@ -29,6 +29,7 @@ import time
 
 import config
 import defaults
+import sites
 from lib import *
 
 
@@ -317,16 +318,16 @@ def guitest_drop_dynamic_ids_in_text(text):
 
 
 def pending_hosts():
-    html.live.set_prepend_site(True)
-    hosts = html.live.query("GET hosts\nFilter: has_been_checked = 0\nColumns: name")
-    html.live.set_prepend_site(False)
+    sites.live().set_prepend_site(True)
+    hosts = sites.live().query("GET hosts\nFilter: has_been_checked = 0\nColumns: name")
+    sites.live().set_prepend_site(False)
     return hosts
 
 
 def pending_active_services():
-    html.live.set_prepend_site(True)
-    services = html.live.query("GET services\nFilter: has_been_checked = 0\nFilter: check_type = 0\nColumns: host_name description")
-    html.live.set_prepend_site(False)
+    sites.live().set_prepend_site(True)
+    services = sites.live().query("GET services\nFilter: has_been_checked = 0\nFilter: check_type = 0\nColumns: host_name description")
+    sites.live().set_prepend_site(False)
     entries = [ (site, "%s;%s" % (host_name, service_description))
                 for (site, host_name, service_description) in services ]
     return entries
@@ -346,7 +347,7 @@ def wait_for_pending(what, generator_function, tries):
     entries = generator_function()
     for try_number in range(tries):
         for site, entry in entries:
-            html.live.command("[1231231233] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (what.upper(), entry, time.time()), sitename = site)
+            sites.live().command("[1231231233] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (what.upper(), entry, time.time()), sitename = site)
         time.sleep(0.3)
         entries = generator_function()
         if not entries:

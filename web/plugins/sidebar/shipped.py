@@ -26,6 +26,7 @@
 
 import views, time, defaults, dashboard
 import pagetypes, table
+import sites
 from valuespec import *
 from lib import *
 
@@ -200,7 +201,7 @@ sidebar_snapins["dashboards"] = {
 #   '----------------------------------------------------------------------'
 
 def render_groups(what):
-    data = html.live.query("GET %sgroups\nColumns: name alias\n" % what)
+    data = sites.live().query("GET %sgroups\nColumns: name alias\n" % what)
     name_to_alias = dict(data)
     groups = [(name_to_alias[name].lower(), name_to_alias[name], name) for name in name_to_alias.keys()]
     groups.sort() # sort by Alias in lowercase
@@ -236,7 +237,7 @@ sidebar_snapins["servicegroups"] = {
 #   '----------------------------------------------------------------------'
 
 def render_hosts(mode):
-    html.live.set_prepend_site(True)
+    sites.live().set_prepend_site(True)
     query = "GET hosts\nColumns: name state worst_service_state\nLimit: 100\n"
     view = "host"
 
@@ -251,15 +252,15 @@ def render_hosts(mode):
         svc_query = "GET services\nColumns: host_name\n"\
                     "Filter: state > 0\nFilter: scheduled_downtime_depth = 0\n"\
                     "Filter: host_scheduled_downtime_depth = 0\nAnd: 3"
-        problem_hosts = set(map(lambda x: x[1], html.live.query(svc_query)))
+        problem_hosts = set(map(lambda x: x[1], sites.live().query(svc_query)))
 
         query += "Filter: state > 0\nFilter: scheduled_downtime_depth = 0\nAnd: 2\n"
         for host in problem_hosts:
             query += "Filter: name = %s\n" % host
         query += "Or: %d\n" % (len(problem_hosts) + 1)
 
-    hosts = html.live.query(query)
-    html.live.set_prepend_site(False)
+    hosts = sites.live().query(query)
+    sites.live().set_prepend_site(False)
     hosts.sort()
 
     longestname = 0
@@ -346,13 +347,13 @@ sidebar_snapins["problem_hosts"] = {
 #   '----------------------------------------------------------------------'
 
 def render_hostmatrix():
-    html.live.set_prepend_site(True)
+    sites.live().set_prepend_site(True)
     query = "GET hosts\n" \
             "Columns: name state has_been_checked worst_service_state scheduled_downtime_depth\n" \
             "Filter: custom_variable_names < _REALNAME\n" \
             "Limit: 901\n"
-    hosts = html.live.query(query)
-    html.live.set_prepend_site(False)
+    hosts = sites.live().query(query)
+    sites.live().set_prepend_site(False)
     hosts.sort()
     if len(hosts) > 900:
         html.write(_("Sorry, I will not display more than 900 hosts."))
@@ -443,13 +444,14 @@ def render_sitestatus():
 
         for sitename, sitealias in config.sorted_sites():
             site = config.site(sitename)
-            if sitename not in html.site_status or "state" not in html.site_status[sitename]:
+            state = sites.state(sitename, {})
+            if state.get("state") == None:
                 state = "missing"
                 text = _("Missing site")
                 title = _("Site %s does not exist") % sitename
+
             else:
-                state = html.site_status[sitename]["state"]
-                if state == "disabled":
+                if state["state"] == "disabled":
                     switch = "on"
                     text = site["alias"]
                     title = _("Site %s is switched off") % site["alias"]
@@ -460,8 +462,8 @@ def render_sitestatus():
                     except:
                         linkview = "sitehosts"
                     text = link(site["alias"], "view.py?view_name=%s&site=%s" % (linkview, sitename))
-                    ex = html.site_status[sitename].get("exception")
-                    shs = html.site_status[sitename].get("status_host_state")
+                    ex = state.get("exception")
+                    shs = state.get("status_host_state")
 
                     if ex:
                         title = ex
@@ -471,8 +473,8 @@ def render_sitestatus():
             html.write("<tr><td class=left>%s</td>" % text)
             onclick = "switch_site('_site_switch=%s:%s')" % (sitename, switch)
             html.write("<td class=state>")
-            html.icon_button("#", _("%s this site") % (state == "disabled" and "enable" or "disable"),
-                             "sitestatus_%s" % state, onclick=onclick)
+            html.icon_button("#", _("%s this site") % (state["state"] == "disabled" and "enable" or "disable"),
+                             "sitestatus_%s" % state["state"], onclick=onclick)
             html.write("</tr>\n")
         html.write("</table>\n")
 
@@ -558,8 +560,8 @@ def render_tactical_overview():
     # ACHTUNG: Stats-Filter so anpassen, dass jeder Host gezaehlt wird.
 
     try:
-        hstdata = html.live.query_summed_stats(host_query)
-        svcdata = html.live.query_summed_stats(service_query)
+        hstdata = sites.live().query_summed_stats(host_query)
+        svcdata = sites.live().query_summed_stats(service_query)
     except livestatus.MKLivestatusNotFoundError:
         html.write("<center>No data from any site</center>")
         return
@@ -643,7 +645,7 @@ def render_performance():
 
     html.write("<table class=\"content_center performance\">\n")
 
-    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate "
+    data = sites.live().query("GET status\nColumns: service_checks_rate host_checks_rate "
                            "external_commands_rate connections_rate forks_rate "
                            "log_messages_rate cached_log_messages\n")
     for what, col, format in \
@@ -657,7 +659,7 @@ def render_performance():
         write_line(what + ":", format % sum([row[col] for row in data]))
 
     if len(config.allsites()) == 1:
-        data = html.live.query("GET status\nColumns: external_command_buffer_slots "
+        data = sites.live().query("GET status\nColumns: external_command_buffer_slots "
                                "external_command_buffer_max\n")
         size = sum([row[0] for row in data])
         maxx = sum([row[1] for row in data])
@@ -959,16 +961,16 @@ def render_master_control():
         ( "enable_event_handlers",    _("Alert handlers" )),
         ]
 
-    html.live.set_prepend_site(True)
-    data = html.live.query("GET status\nColumns: %s" % " ".join([ i[0] for i in items ]))
-    html.live.set_prepend_site(False)
+    sites.live().set_prepend_site(True)
+    data = sites.live().query("GET status\nColumns: %s" % " ".join([ i[0] for i in items ]))
+    sites.live().set_prepend_site(False)
 
     for siteline in data:
         siteid = siteline[0]
         if not config.is_single_local_site():
-            sitealias = html.site_status[siteid]["site"]["alias"]
+            sitealias = config.site(siteid)["alias"]
             html.begin_foldable_container("master_control", siteid, True, sitealias)
-        is_cmc = html.site_status[siteid]["program_version"].startswith("Check_MK ")
+        is_cmc = sites.state(siteid)["program_version"].startswith("Check_MK ")
         html.write("<table class=master_control>\n")
         for i, (colname, title) in enumerate(items):
             # Do not show event handlers on Check_MK Micro Core
@@ -1544,11 +1546,11 @@ if defaults.omd_root:
 #   '----------------------------------------------------------------------'
 
 def compute_tag_tree(taglist):
-    html.live.set_prepend_site(True)
+    sites.live().set_prepend_site(True)
     query = "GET hosts\n" \
             "Columns: host_name filename state num_services_ok num_services_warn num_services_crit num_services_unknown custom_variables"
-    hosts = html.live.query(query)
-    html.live.set_prepend_site(False)
+    hosts = sites.live().query(query)
+    sites.live().set_prepend_site(False)
     hosts.sort()
 
     def get_tag_group_value(groupentries, tags):

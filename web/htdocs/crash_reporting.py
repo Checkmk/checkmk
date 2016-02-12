@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import subprocess, base64, time, pprint, traceback, tarfile, cStringIO, sys
+import sites
 import inspect
 from lib import *
 from valuespec import *
@@ -125,9 +126,9 @@ def get_crash_report_archive_as_string(site, host, service):
             "Columns: long_plugin_output\n" % (
             lqencode(host), lqencode(service))
 
-    html.live.set_only_sites([site])
-    data = html.live.query_value(query)
-    html.live.set_only_sites()
+    sites.live().set_only_sites([site])
+    data = sites.live().query_value(query)
+    sites.live().set_only_sites()
 
     if not data.startswith("Crash dump:\\n"):
         raise MKGeneralException("No crash dump is available for this service.")

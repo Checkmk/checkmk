@@ -641,13 +641,13 @@ def command_downtime(cmdtag, spec, row):
 
 def get_child_hosts(site, hosts, recurse):
     hosts = set(hosts)
-    html.live.set_only_sites([site])
+    sites.live().set_only_sites([site])
     query = "GET hosts\nColumns: name\n"
     for h in hosts:
         query += "Filter: parents >= %s\n" % h
     query += "Or: %d\n" % len(hosts)
-    childs = html.live.query_column(query)
-    html.live.set_only_sites(None)
+    childs = sites.live().query_column(query)
+    sites.live().set_only_sites(None)
     # Recursion, but try to avoid duplicate work
     childs = set(childs)
     new_childs = childs.difference(hosts)

@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import wato
+import sites
 
 class FilterWatoFile(Filter):
     def __init__(self):
@@ -57,7 +58,7 @@ class FilterWatoFile(Filter):
         # Note: WATO Folders that the user has not permissions to must not be visible.
         # Permissions in this case means, that the user has view permissions for at
         # least one host in that folder.
-        result = html.live.query("GET hosts\nCache: reload\nColumns: filename\nStats: state >= 0\n")
+        result = sites.live().query("GET hosts\nCache: reload\nColumns: filename\nStats: state >= 0\n")
         allowed_folders = set([""])
         for path, host_count in result:
             # convert '/wato/server/hosts.mk' to 'server'

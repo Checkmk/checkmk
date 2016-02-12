@@ -29,10 +29,10 @@ backup_perfdata_enabled = True
 def performancedata_restore(pre_restore = True):
     global backup_perfdata_enabled
     site = config.default_site()
-    html.live.set_only_sites([site])
+    sites.live().set_only_sites([site])
 
     if pre_restore:
-        data = html.live.query("GET status\nColumns: process_performance_data")
+        data = sites.live().query("GET status\nColumns: process_performance_data")
         if data:
             backup_perfdata_enabled = data[0][0] == 1
         else:
@@ -43,8 +43,8 @@ def performancedata_restore(pre_restore = True):
         return []
 
     command = pre_restore and "DISABLE_PERFORMANCE_DATA" or "ENABLE_PERFORMANCE_DATA"
-    html.live.command("[%d] %s" % (int(time.time()), command), site)
-    html.live.set_only_sites()
+    sites.live().command("[%d] %s" % (int(time.time()), command), site)
+    sites.live().set_only_sites()
     return []
 
 if not defaults.omd_root:

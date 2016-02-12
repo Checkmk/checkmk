@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import livestatus, time, re, os, datetime, config, defaults
+import time, re, os, datetime, config, defaults
 from lib import *
 import views
 
@@ -67,7 +67,7 @@ def page_show():
     # b) all logs on one host
     # c) one log on one host
     if html.has_var('_ack') and not html.var("_do_actions") == _("No"):
-        html.live.set_auth_domain('action')
+        sites.live().set_auth_domain('action')
         do_log_ack(host, filename)
         return
 
@@ -453,9 +453,9 @@ def may_see(host):
 
     # FIXME: Or maybe make completely transparent and add pseudo local_connection() to Single livestatus clas?
     if config.is_multisite():
-        conn = html.live.local_connection()
+        conn = sites.live().local_connection()
     else:
-        conn = html.live
+        conn = sites.live()
 
     # livestatus connection is setup with AuthUser
     return conn.query_value("GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host)) > 0

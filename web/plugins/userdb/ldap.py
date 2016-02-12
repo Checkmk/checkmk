@@ -1753,6 +1753,7 @@ ldap_attribute_plugins['groups_to_roles'] = {
 # time. In this case the implementation does not scale well. We would need to
 # change this to some kind of profile bulk sync per site.
 def synchronize_profile_to_sites(connection, user_id, profile):
+    import sites
     import wato # FIXME: Cleanup!
     sites = [(site_id, config.site(site_id))
               for site_id in config.sitenames()
@@ -1772,7 +1773,7 @@ def synchronize_profile_to_sites(connection, user_id, profile):
             num_disabled += 1
             continue
 
-        status = html.site_status.get(site_id, {}).get("state", "unknown")
+        status = sites.state(site_id, {}).get("state", "unknown")
         if status == "dead":
             result = "Site is dead"
         else:

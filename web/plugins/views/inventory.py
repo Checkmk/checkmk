@@ -719,8 +719,8 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
             filter_code += header
     host_columns = list(set([ "host_name" ] + filter(lambda c: c.startswith("host_"), columns)))
 
-    html.live.set_only_sites(only_sites)
-    html.live.set_prepend_site(True)
+    sites.live().set_only_sites(only_sites)
+    sites.live().set_prepend_site(True)
 
     query = "GET hosts\n"
     query += "Columns: " + (" ".join(host_columns)) + "\n"
@@ -731,11 +731,11 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
         html.write('<div class="livestatus message" onmouseover="this.style.display=\'none\';">'
                            '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
 
-    html.live.set_only_sites(only_sites)
-    html.live.set_prepend_site(True)
-    data = html.live.query(query)
-    html.live.set_prepend_site(False)
-    html.live.set_only_sites(None)
+    sites.live().set_only_sites(only_sites)
+    sites.live().set_prepend_site(True)
+    data = sites.live().query(query)
+    sites.live().set_prepend_site(False)
+    sites.live().set_only_sites(None)
 
     headers = [ "site" ] + host_columns
 

@@ -307,17 +307,17 @@ def pnp_url(row, what, how = 'graph'):
         svc = "_HOST_"
     else:
         svc = pnp_cleanup(row["service_description"])
-    site = html.site_status[sitename]["site"]
+    url_prefix = config.site(sitename)["url_prefix"]
     if html.mobile:
-        url = site["url_prefix"] + ("pnp4nagios/index.php?kohana_uri=/mobile/%s/%s/%s" % \
+        url = url_prefix + ("pnp4nagios/index.php?kohana_uri=/mobile/%s/%s/%s" % \
             (how, html.urlencode(host), html.urlencode(svc)))
     else:
-        url = site["url_prefix"] + ("pnp4nagios/index.php/%s?host=%s&srv=%s" % \
+        url = url_prefix + ("pnp4nagios/index.php/%s?host=%s&srv=%s" % \
             (how, html.urlencode(host), html.urlencode(svc)))
 
     if how == 'graph':
         url += "&theme=multisite&baseurl=%scheck_mk/" % \
-                        html.urlencode(site["url_prefix"])
+                        html.urlencode(url_prefix)
     return url
 
 
@@ -398,8 +398,8 @@ def paint_prediction_icon(what, row, tags, host_custom_vars):
                 varname, value = p.split("=")
                 dsname = varname[8:]
                 sitename = row["site"]
-                site = html.site_status[sitename]["site"]
-                url = site["url_prefix"] + "check_mk/prediction_graph.py?" + html.urlencode_vars([
+                url_prefix = config.site(sitename)["url_prefix"]
+                url = url_prefix + "check_mk/prediction_graph.py?" + html.urlencode_vars([
                     ( "host", row["host_name"] ),
                     ( "service", row["service_description"] ),
                     ( "dsname", dsname ) ])
@@ -451,12 +451,12 @@ multisite_icons_and_actions['custom_action'] = {
 
 def logwatch_url(sitename, hostname, item):
     host_item_url = "check_mk/logwatch.py?host=%s&file=%s" % (html.urlencode(hostname), html.urlencode(item))
-    site = html.site_status[sitename]["site"]
+    url_prefix = config.site(sitename)["url_prefix"]
     master_url = ''
     if config.is_multisite():
         master_url = '&master_url=' + defaults.url_prefix + 'check_mk/'
 
-    return site["url_prefix"] + host_item_url + master_url
+    return url_prefix + host_item_url + master_url
 
 def paint_logwatch(what, row, tags, host_custom_vars):
     if what != "service":

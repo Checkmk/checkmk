@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import sites
 
 
 # Filters for substring search, displaying a text input field
@@ -253,7 +254,7 @@ declare_filter(103, FilterAddressFamilies())
 # Helper that retrieves the list of host/service/contactgroups via Livestatus
 # use alias by default but fallback to name if no alias defined
 def all_groups(what):
-    groups = dict(html.live.query("GET %sgroups\nCache: reload\nColumns: name alias\n" % what))
+    groups = dict(sites.live().query("GET %sgroups\nCache: reload\nColumns: name alias\n" % what))
     return [ (name, groups[name] or name) for name in groups.keys() ]
 
 class FilterMultigroup(Filter):
@@ -338,7 +339,7 @@ class FilterGroupCombo(Filter):
                 return ""
             # Take first group with the name we search
             table = self.what.replace("host_contact", "contact").replace("service_contact", "contact")
-            current_value = html.live.query_value("GET %sgroups\nCache: reload\nColumns: name\nLimit: 1\n" % table, None)
+            current_value = sites.live().query_value("GET %sgroups\nCache: reload\nColumns: name\nLimit: 1\n" % table, None)
 
         if current_value == None:
             return "" # no {what}group exists!
@@ -367,7 +368,7 @@ class FilterGroupCombo(Filter):
         current_value = self.current_value()
         if current_value:
             table = self.what.replace("host_contact", "contact").replace("service_contact", "contact")
-            alias = html.live.query_value("GET %sgroups\nCache: reload\nColumns: alias\nFilter: name = %s\n" %
+            alias = sites.live().query_value("GET %sgroups\nCache: reload\nColumns: alias\nFilter: name = %s\n" %
                 (table, lqencode(current_value)), current_value)
             return alias
 
@@ -444,7 +445,7 @@ class FilterQueryDropdown(Filter):
         self.filterline = filterline
 
     def display(self):
-        selection = html.live.query_column_unique(self.query)
+        selection = sites.live().query_column_unique(self.query)
         html.sorted_select(self.name, [("", "")] + [(x,x) for x in selection])
 
     def filter(self, infoname):
@@ -641,7 +642,7 @@ class FilterSite(Filter):
                 choices = []
             else:
                 choices = [("","")]
-            for sitename, state in html.site_status.items():
+            for sitename, state in sites.states().items():
                 if state["state"] == "online":
                     choices.append((sitename, config.site(sitename)["alias"]))
         html.sorted_select("site", choices)

@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, re, pprint, time, views
+import sites
 from lib import *
 
 # Datastructures and functions needed before plugins can be loaded
@@ -135,13 +136,13 @@ def load_services(cache, only_hosts):
         filter_txt = ''.join(host_filter)
         filter_txt += "Or: %d\n" % len(host_filter)
 
-    html.live.set_prepend_site(True)
-    html.live.set_auth_domain('bi')
-    data = html.live.query("GET hosts\n"
+    sites.live().set_prepend_site(True)
+    sites.live().set_auth_domain('bi')
+    data = sites.live().query("GET hosts\n"
                            +filter_txt+
                            "Columns: name custom_variable_names custom_variable_values services childs parents\n")
-    html.live.set_prepend_site(False)
-    html.live.set_auth_domain('read')
+    sites.live().set_prepend_site(False)
+    sites.live().set_auth_domain('read')
 
     for site, host, varnames, values, svcs, childs, parents in data:
         vars = dict(zip(varnames, values))
@@ -155,7 +156,7 @@ def load_services(cache, only_hosts):
 # with 0.
 def cache_needs_update():
     new_config_information = [tuple(config.modification_timestamps)]
-    for site in html.site_status.values():
+    for site in sites.states().values():
         new_config_information.append(site.get("program_start", 0))
 
     if new_config_information != g_config_information:
@@ -1200,12 +1201,12 @@ def get_status_info(required_hosts):
             filter += "Filter: name = %s\n" % host
         if len(hosts) > 1:
             filter += "Or: %d\n" % len(hosts)
-        html.live.set_auth_domain('bi')
-        data = html.live.query(
+        sites.live().set_auth_domain('bi')
+        data = sites.live().query(
                 "GET hosts\n"
                 "Columns: name state hard_state plugin_output scheduled_downtime_depth acknowledged in_service_period services_with_fullstate\n"
                 + filter)
-        html.live.set_auth_domain('read')
+        sites.live().set_auth_domain('read')
         tuples += [((site, e[0]), e[1:]) for e in data]
 
     return dict(tuples)
@@ -1217,8 +1218,8 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
     columns = [ "name", "host_name", "state", "hard_state", "plugin_output", "scheduled_downtime_depth",
                 "host_in_service_period", "acknowledged", "services_with_fullstate", "parents" ] + add_columns
 
-    html.live.set_only_sites(only_sites)
-    html.live.set_prepend_site(True)
+    sites.live().set_only_sites(only_sites)
+    sites.live().set_prepend_site(True)
 
     query = "GET hosts%s\n" % (bygroup and "bygroup" or "")
     query += "Columns: " + (" ".join(columns)) + "\n"
@@ -1229,15 +1230,15 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
         html.write('<div class="livestatus message" onmouseover="this.style.display=\'none\';">'
                            '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
 
-    html.live.set_only_sites(only_sites)
-    html.live.set_prepend_site(True)
+    sites.live().set_only_sites(only_sites)
+    sites.live().set_prepend_site(True)
 
-    html.live.set_auth_domain('bi')
-    data = html.live.query(query)
+    sites.live().set_auth_domain('bi')
+    data = sites.live().query(query)
 
-    html.live.set_prepend_site(False)
-    html.live.set_only_sites(None)
-    html.live.set_auth_domain('read')
+    sites.live().set_prepend_site(False)
+    sites.live().set_only_sites(None)
+    sites.live().set_auth_domain('read')
 
     headers = [ "site" ] + columns
     hostnames = [ row[1] for row in data ]

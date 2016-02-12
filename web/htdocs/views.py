@@ -24,8 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, livestatus, time, os, re, pprint
+import config, defaults, time, os, re, pprint
 import weblib, traceback, forms, valuespec, inventory, visuals, metrics
+import sites
 from lib import *
 
 # Datastructures and functions needed before plugins can be loaded
@@ -1284,7 +1285,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     if config.show_livestatus_errors \
        and 'W' in display_options \
        and (html.output_format == "html" or not config.is_multisite()):
-        for sitename, info in html.live.deadsites.items():
+        for sitename, info in sites.live().deadsites.items():
             html.show_error("<b>%s - %s</b><br>%s" % (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
     # FIXME: Sauberer wäre noch die Status Icons hier mit aufzunehmen
@@ -1293,7 +1294,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 
     if show_footer:
         pid = os.getpid()
-        if html.live.successfully_persisted():
+        if sites.live().successfully_persisted():
             html.add_status_icon("persist", _("Reused persistent livestatus connection from earlier request (PID %d)") % pid)
         if bi.reused_compilation():
             html.add_status_icon("aggrcomp", _("Reused cached compiled BI aggregations (PID %d)") % pid)
@@ -1643,20 +1644,20 @@ def do_query_data(query, columns, add_columns, merge_column,
                   add_headers, only_sites, limit):
     query += "Columns: %s\n" % " ".join(columns)
     query += add_headers
-    html.live.set_prepend_site(True)
+    sites.live().set_prepend_site(True)
     if limit != None:
-        html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
+        sites.live().set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
     if config.debug_livestatus_queries \
             and html.output_format == "html" and 'W' in html.display_options:
         html.write('<div class="livestatus message">'
                    '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
 
     if only_sites:
-        html.live.set_only_sites(only_sites)
-    data = html.live.query(query)
-    html.live.set_only_sites(None)
-    html.live.set_prepend_site(False)
-    html.live.set_limit() # removes limit
+        sites.live().set_only_sites(only_sites)
+    data = sites.live().query(query)
+    sites.live().set_only_sites(None)
+    sites.live().set_prepend_site(False)
+    sites.live().set_limit() # removes limit
 
     if merge_column:
         data = merge_data(data, columns)
@@ -1930,7 +1931,7 @@ def core_command(what, row, row_nr, total_rows):
 
 
 def command_executor_livestatus(command, site):
-    html.live.command("[%d] %s" % (int(time.time()), command), site)
+    sites.live().command("[%d] %s" % (int(time.time()), command), site)
 
 # make gettext localize some magic texts
 _("services")
@@ -2542,18 +2543,18 @@ def query_action_data(what, host, site, svcdesc):
         pass
 
     if site:
-        html.live.set_only_sites([site])
-    html.live.set_prepend_site(True)
+        sites.live().set_only_sites([site])
+    sites.live().set_prepend_site(True)
     query = 'GET %ss\n' \
             'Columns: %s\n' \
             'Filter: host_name = %s\n' \
            % (what, ' '.join(columns), host)
     if what == 'service':
         query += 'Filter: service_description = %s\n' % svcdesc
-    row = html.live.query_row(query)
+    row = sites.live().query_row(query)
 
-    html.live.set_prepend_site(False)
-    html.live.set_only_sites(None)
+    sites.live().set_prepend_site(False)
+    sites.live().set_only_sites(None)
 
     return dict(zip(['site'] + columns, row))
 

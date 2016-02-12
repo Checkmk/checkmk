@@ -24,8 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, livestatus, views, pprint, os, copy, userdb, pagetypes
+import config, defaults, views, pprint, os, copy, userdb, pagetypes
 import notify, werks, urlparse
+import sites
 from lib import *
 
 # Constants to be used in snapins
@@ -417,7 +418,7 @@ def ajax_snapin():
             if not snapin.get('refresh') and snapin.get('restart'):
                 since = float(html.var('since', 0))
                 newest = since
-                for site in html.site_status.values():
+                for site in sites.states().values():
                     prog_start = site.get("program_start", 0)
                     if prog_start > newest:
                         newest = prog_start
@@ -528,7 +529,7 @@ def ajax_speedometer():
 
         # Get the current rates and the program start time. If there
         # are more than one site, we simply add the start times.
-        data = html.live.query_summed_stats("GET status\n"
+        data = sites.live().query_summed_stats("GET status\n"
                "Columns: service_checks_rate program_start")
         current_rate = data[0]
         program_start = data[1]
@@ -545,7 +546,7 @@ def ajax_speedometer():
             #
             # Manually added services without check_interval could be a problem, but
             # we have no control there.
-            scheduled_rate = html.live.query_summed_stats(
+            scheduled_rate = sites.live().query_summed_stats(
                         "GET services\n"
                         "Stats: suminv check_interval\n")[0] / 60.0
 
@@ -585,11 +586,11 @@ def ajax_switch_masterstate():
 
     command = commands.get((column, state))
     if command:
-        html.live.command("[%d] %s" % (int(time.time()), command), site)
-        html.live.set_only_sites([site])
-        html.live.query("GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n" % \
+        sites.live().command("[%d] %s" % (int(time.time()), command), site)
+        sites.live().set_only_sites([site])
+        sites.live().query("GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n" % \
                (column, state, column))
-        html.live.set_only_sites()
+        sites.live().set_only_sites()
         render_master_control()
     else:
         html.write(_("Command %s/%d not found") % (html.attrencode(column), state))
@@ -607,6 +608,24 @@ def ajax_tag_tree_enter():
     tree_conf = config.load_user_file("virtual_host_tree", {"tree": 0, "cwd": {}})
     tree_conf["cwd"][tree_conf["tree"]] = path
     config.save_user_file("virtual_host_tree", tree_conf)
+
+
+def ajax_switch_site():
+    # _site_switch=sitename1:on,sitename2:off,...
+    if not config.may("sidesnap.sitestatus"):
+        return
+
+    switch_var = html.var("_site_switch")
+    if switch_var:
+        for info in switch_var.split(","):
+            sitename, onoff = info.split(":")
+            if sitename not in config.sitenames():
+                continue
+
+            d = config.user_siteconf.get(sitename, {})
+            d["disabled"] = onoff != "on"
+            config.user_siteconf[sitename] = d
+        config.save_site_config()
 
 
 #.
@@ -793,7 +812,7 @@ def search_livestatus(used_filters):
     # for the case, that a host can be found via alias or name.
     data = []
 
-    html.live.set_prepend_site(True)
+    sites.live().set_prepend_site(True)
     for plugin in search_plugins:
         if 'filter_func' not in plugin:
             continue
@@ -810,7 +829,7 @@ def search_livestatus(used_filters):
             #html.debug("<br>%s" % lq.replace("\n", "<br>"))
 
             lq_columns = [ "site" ] + lq_columns
-            for row in html.live.query(lq):
+            for row in sites.live().query(lq):
                 # Put result columns into a dict
                 row_dict = {}
                 for idx, col in enumerate(row):
@@ -832,7 +851,7 @@ def search_livestatus(used_filters):
                 row_options, row_data = row
                 data.append((plugin, row_options, row_data))
 
-    html.live.set_prepend_site(False)
+    sites.live().set_prepend_site(False)
 
     # Apply the limit once again (search_funcs of plugins could have added some results)
     data = data[:limit]

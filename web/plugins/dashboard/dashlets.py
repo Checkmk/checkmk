@@ -29,6 +29,8 @@ try:
 except ImportError:
     import json
 
+import sites
+
 #   .--Overview------------------------------------------------------------.
 #   |              ___                       _                             |
 #   |             / _ \__   _____ _ ____   _(_) _____      __              |
@@ -225,11 +227,11 @@ def render_statistics(pie_id, what, table, filter, dashlet):
 
     site = dashlet['context'].get('siteopt', {}).get('site')
     if site:
-        html.live.set_only_sites([site])
-        result = html.live.query_row(query)
-        html.live.set_only_sites()
+        sites.live().set_only_sites([site])
+        result = sites.live().query_row(query)
+        sites.live().set_only_sites()
     else:
-        result = html.live.query_summed_stats(query)
+        result = sites.live().query_summed_stats(query)
 
     pies = zip(table, result)
     total = sum([x[1] for x in pies])
@@ -354,13 +356,13 @@ def dashlet_graph_reload_js(nr, dashlet):
     if html.has_var('site'):
         site = html.var('site')
     else:
-        html.live.set_prepend_site(True)
+        sites.live().set_prepend_site(True)
         query = "GET hosts\nFilter: name = %s\nColumns: name" % lqencode(host)
         try:
-            site = html.live.query_column(query)[0]
+            site = sites.live().query_column(query)[0]
         except IndexError:
             raise MKUserError("host", _("The host could not be found on any active site."))
-        html.live.set_prepend_site(False)
+        sites.live().set_prepend_site(False)
 
     # New graphs which have been added via "add to visual" option don't have a timerange
     # configured. So we assume the default timerange here by default.

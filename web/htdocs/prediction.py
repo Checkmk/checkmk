@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import defaults
+import sites
 import os
 import time
 
@@ -208,7 +209,7 @@ def compute_vertical_scala(low, high):
     return vert_scala
 
 def get_current_perfdata(host, service, dsname):
-    perf_data = html.live.query_value("GET services\nFilter: host_name = %s\nFilter: description = %s\nColumns: perf_data" % (
+    perf_data = sites.live().query_value("GET services\nFilter: host_name = %s\nFilter: description = %s\nColumns: perf_data" % (
             lqencode(host), lqencode(service)))
     for part in perf_data.split():
         name, rest = part.split("=")

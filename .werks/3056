@@ -1,0 +1,9 @@
+Title: vms_cpu: Fixed exception when having thresholds configured
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455266828
+Class: fix
+
+

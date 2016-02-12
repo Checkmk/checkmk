@@ -47,11 +47,11 @@ def check_vms_cpu(item, params, info):
           ( "system", system ),
           ( "wait",   wait, 0, 0 ) ]
     if params:
+        warn, crit = params
         perfdata = [
               ( "user",   user ),
               ( "system", system ),
               ( "wait",   wait, warn, crit ) ]
-        warn, crit = params
         if wait >= crit:
             state = 2
             infotext += '(!!)'

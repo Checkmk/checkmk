@@ -270,7 +270,8 @@
     * 3049 FIX: esx_vsphere_hostsystem.mem_usage_cluster: Fixed exception when no thresholds configured
     * 3052 FIX: domino_mailqueues: Fixed exception when receiving empty data from SNMP
     * 3054 FIX: ups_modulys_battery: Fixed wrong remaining minutes in some cases
-    * 3055 FIX: ibm_svc_mdiskgrp...
+    * 3055 FIX: ibm_svc_mdiskgrp: Fixed exception in case of configured thresholds...
+    * 3056 FIX: vms_cpu: Fixed exception when having thresholds configured
 
     Multisite:
     * 2684 Added icons for downloading agent data / walks of hosts...

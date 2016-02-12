@@ -1,4 +1,4 @@
-Title: ibm_svc_mdiskgrp
+Title: ibm_svc_mdiskgrp: Fixed exception in case of configured thresholds
 Level: 1
 Component: checks
 Compatible: compat

@@ -1,0 +1,9 @@
+Title: arc_raid_status: Fixed exception when number of disks changed
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455269277
+Class: fix
+
+

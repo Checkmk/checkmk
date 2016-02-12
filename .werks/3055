@@ -1,0 +1,9 @@
+Title: ibm_svc_mdiskgrp
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455265758
+Class: fix
+
+Fixed exception in case of configured thresholds.

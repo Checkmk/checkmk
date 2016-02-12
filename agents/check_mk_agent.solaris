@@ -327,6 +327,15 @@ then
     fmadm faulty
 fi
 
+# Getting Information About Services Running on Solaris
+# We can get a list of all service instances, including disabled
+# or incomplete ones by 'svcs -a'
+if type svcs > /dev/null 2>&1
+then
+    echo '<<<solaris_services>>>'
+    svcs -a
+fi
+
 # MK's Remote Plugin Executor
 if test -f "$MK_CONFDIR/mrpe.cfg"
 then

@@ -1,0 +1,9 @@
+Title: solaris_services.summary: new check which gives a summary of services provided by SMF on Solaris
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455269547
+Class: feature
+
+

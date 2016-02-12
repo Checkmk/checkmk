@@ -1,0 +1,83 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# <<<solaris_services>>>
+# STATE          STIME    FMRI
+# legacy_run     Jun_14   lrc:/etc/rcS_d/S99openconnect-clean
+# legacy_run     Jun_14   lrc:/etc/rc2_d/S47pppd
+# legacy_run     Jun_14   lrc:/etc/rc2_d/S81dodatadm_udaplt
+# legacy_run     Jun_14   lrc:/etc/rc2_d/S89PRESERVE
+# disabled       Jun_14   svc:/system/device/mpxio-upgrade:default
+# disabled       Jun_14   svc:/network/install:default
+# disabled       Jun_14   svc:/network/ipfilter:default
+# disabled       Jun_14   svc:/network/ipsec/ike:default
+# disabled       Jun_14   svc:/network/ipsec/manual-key:default
+# disabled       Jun_14   svc:/system/name-service-cache:default
+# disabled       Jun_14   svc:/network/ldap/client:default
+# disabled       Jun_14   svc:/network/nis/client:default
+# disabled       Jun_14   svc:/network/ibd-post-upgrade:default
+# disabled       Jun_14   svc:/network/inetd-upgrade:default
+# disabled       Jun_14   svc:/network/nfs/status:default
+# disabled       Jun_14   svc:/network/nfs/nlockmgr:default
+# online         Jun_14   svc:/system/zones:default
+# online         Jun_14   svc:/system/power:default
+# online         Jun_14   svc:/system/hal:default
+# online         Jun_14   svc:/application/texinfo-update:default
+# online         Jun_14   svc:/application/pkg/update:default
+# maintenance    Jul_09   svc:/network/smtp:sendmail
+
+
+def inventory_solaris_services_summary(info):
+    return [ (None, {}) ]
+
+
+def check_solaris_services_summary(_no_item, params, info):
+    collected_services = {}
+    if len(info) >= 1:
+        for line in info[1:]:
+            collected_services.setdefault(line[0], [])
+            collected_services[line[0]].append(line[2])
+
+        yield 0, "%d services" % (len(info) - 1)
+
+        for srv_type, srv_names in collected_services.items():
+            state = 0
+            extra_info = ""
+            if srv_type == "maintenance":
+                if params.get("maintenance_state", 0):
+                    extra_info += " (%s)" % ", ".join(srv_names)
+                    state = params["maintenance_state"]
+
+            yield state, "%d %s%s" % (len(srv_names), srv_type.replace("_", " "), extra_info)
+
+
+check_info['solaris_services.summary'] = {
+    'inventory_function'  : inventory_solaris_services_summary,
+    'check_function'      : check_solaris_services_summary,
+    'service_description' : 'SMF Services Summary', # Service Management Facility
+    'group'               : 'solaris_services_summary',
+}

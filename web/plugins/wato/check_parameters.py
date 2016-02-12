@@ -4692,6 +4692,24 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "solaris_services_summary",
+    _("Solaris Services Summary"),
+    Dictionary(
+        title = _('SMF Services'),
+        elements = [
+            ('maintenance_state',
+                MonitoringState(
+                    title = _("State if 'maintenance' services are found"),
+                    default_value = 0,
+            )),
+        ],
+    ),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
     "esx_vsphere_objects",
     _("State of ESX hosts and virtual machines"),
     Dictionary(

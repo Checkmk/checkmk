@@ -50,6 +50,10 @@
 #include "Host.h"
 #include "Service.h"
 #include "Timeperiod.h"
+#define STATE_OK 0
+#define STATE_WARNING 1
+#define STATE_CRITICAL 2
+#define STATE_UNKNOWN 3
 #else
 #include "auth.h"
 #endif

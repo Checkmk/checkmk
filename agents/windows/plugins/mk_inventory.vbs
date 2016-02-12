@@ -10,7 +10,8 @@ exePaths = Array("")
 regPaths = Array("Software\Microsoft\Windows\CurrentVersion\Uninstall","Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall")
 
 Set fso = CreateObject("Scripting.FileSystemObject")
-Set objStdout = WScript.Stdout
+' request unicode stdout
+Set objStdout = fso.GetStandardStream(1, True) 
 Set objClass = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
 Set wshShell = WScript.CreateObject( "WScript.Shell" )
 remote_host = wshShell.ExpandEnvironmentStrings( "%REMOTE_HOST%" )
@@ -47,12 +48,15 @@ End If
 ' handle error message ourselves so this script can also be run directly, for testing
 On Error Resume Next
 
+'need a bom so the agent knows we send utf-16
+outPut(chrW(&HFEFF))
+
 ' create new timestamp file
 ' only allowed when script runs as administrator user
 Set stampo = fso.CreateTextFile(timestamp)
 
 If Err.Number <> 0 Then
-    outPut "Failed to create time stamp: " & Err.Description & " (" & Err.Number & ")"
+    outPut "Failed to create time stamp: " & Err.Description & " (" & Err.Number & ")" 
     Err.Clear
 End If
 

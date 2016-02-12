@@ -2047,17 +2047,16 @@ char *add_interpreter(char *path, char *newpath) {
         //       -> Get-ExecutionPolicy / Set-ExecutionPolicy
         //
         // actually, microsoft always installs the powershell interpreter to the
-        // same
-        // directory (independent of the version) so even if it's not in the
-        // path,
-        // we have a good chance with this fallback.
+        // same directory (independent of the version) so even if it's not in
+        // the path, we have a good chance with this fallback.
+        const char *fallback =
+            "C:\\Windows\\System32\\WindowsPowershell\\v1.0\\powershell.exe";
+
         char dummy;
         ::SearchPathA(NULL, "powershell.exe", NULL, 1, &dummy, NULL);
         const char *interpreter = ::GetLastError() != ERROR_FILE_NOT_FOUND
                                       ? "powershell.exe"
-                                      : "C:"
-                                        "\\Windows\\System32\\WindowsPowershell"
-                                        "\\v1.0\\powershell.exe";
+                                      : fallback;
         snprintf(newpath, 256,
                  "%s -NoLogo -ExecutionPolicy RemoteSigned \"& \'%s\'\"",
                  interpreter, path);
@@ -2230,6 +2229,18 @@ int launch_program(script_container *cont) {
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
 
+    // if the output has a utf-16 bom, we need to convert it now, as the remaining
+    // code doesn't handle wide characters
+    unsigned char *buf_u = reinterpret_cast<unsigned char *>(cont->buffer_work);
+    if ((buf_u[0] == 0xFF) && (buf_u[1] == 0xFE)) {
+        wchar_t *buffer_u16 = reinterpret_cast<wchar_t *>(cont->buffer_work);
+        std::string buffer_u8 = to_utf8(buffer_u16);
+        HeapFree(GetProcessHeap(), 0, buffer_u16);
+        cont->buffer_work =
+            (char *)HeapAlloc(GetProcessHeap(), 0, buffer_u8.size() + 1);
+        memcpy(cont->buffer_work, buffer_u8.c_str(), buffer_u8.size() + 1);
+    }
+
     return exit_code;
 }
 
@@ -2341,16 +2352,13 @@ void output_external_programs(OutputProxy &out, script_type type) {
                     cont->buffer = NULL;
                 }
 
-                // Replace BOM for UTF-16 LE and UTF-8 with newlines
-                if ((strlen(cont->buffer_work)) >= 2 &&
-                    ((unsigned char)cont->buffer_work[0] == 0xFF &&
-                     (unsigned char)cont->buffer_work[1] == 0xFE)) {
-                    cont->buffer_work[0] = '\n';
-                    cont->buffer_work[1] = '\n';
-                } else if (strlen(cont->buffer_work) >= 3 &&
-                           (unsigned char)cont->buffer_work[0] == 0xEF &&
-                           (unsigned char)cont->buffer_work[1] == 0xBB &&
-                           (unsigned char)cont->buffer_work[2] == 0xBF) {
+                // Replace BOM with newlines.
+                // At this point the buffer must not contain a wide character
+                // encoding as the code can't handle it!
+                if (strlen(cont->buffer_work) >= 3 &&
+                    (unsigned char)cont->buffer_work[0] == 0xEF &&
+                    (unsigned char)cont->buffer_work[1] == 0xBB &&
+                    (unsigned char)cont->buffer_work[2] == 0xBF) {
                     cont->buffer_work[0] = '\n';
                     cont->buffer_work[1] = '\n';
                     cont->buffer_work[2] = '\n';

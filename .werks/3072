@@ -1,0 +1,15 @@
+Title: windows agent: agent can now handle utf-16 encoded output from plugins
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455267933
+Class: fix
+
+utf-16 is the default unicode encoding used on windows and appears to be the only one supported as
+an output encoding for vbs scripts.
+Previously the agent would print an empty string instead of the utf-16 encoded output.
+For this to work the plugin/local check has to use a unicode-enabled stdout and print a utf-16 BOM,
+i.e.:
+Set objStdout = fso.GetStandardStream(1, True)
+objStdout.Write(chrW(&HFEFF))

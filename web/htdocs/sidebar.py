@@ -992,7 +992,4 @@ def search_open():
         return
 
     url = search_url_tmpl(used_filters, matched_instances)
-
-    html.set_http_header('Location', url)
-    from mod_python import apache
-    raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
+    html.http_redirect(url)

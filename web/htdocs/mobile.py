@@ -176,7 +176,6 @@ def page_login():
     html.write('</div>')
     jqm_page_footer()
     mobile_html_foot()
-    return 0 # apache.OK
 
 
 def page_index():

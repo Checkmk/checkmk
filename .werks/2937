@@ -2,7 +2,7 @@ Title: mrpe: check now supports service descriptions using percent-encoded chara
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453724472
 Class: feature
 

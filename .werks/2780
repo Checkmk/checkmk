@@ -2,7 +2,7 @@ Title: cisco_vss: detect this check on newer (15.1) devices
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1449046212
 Class: feature
 

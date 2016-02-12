@@ -2,7 +2,7 @@ Title: LDAP: User created during login does not trigger full user synchronisatio
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453473922
 Class: fix
 

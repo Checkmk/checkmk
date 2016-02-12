@@ -2,7 +2,7 @@ Title: Snapshot restore: Improved robustness and logging
 Level: 1
 Component: wato
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1455198375
 Class: feature
 

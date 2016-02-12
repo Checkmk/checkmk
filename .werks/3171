@@ -2,7 +2,7 @@ Title: Logout in one site will log out of all sites sharing the same auth.secret
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454880775
 Class: fix
 

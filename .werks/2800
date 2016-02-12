@@ -2,7 +2,7 @@ Title: mk_mysql: fixed some issues with incorrect assembled command line
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1448362357
 Class: fix
 

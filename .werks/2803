@@ -2,7 +2,7 @@ Title: netapp_api_volumes: clustered volumes now longer show the current node na
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1448549213
 Class: feature
 

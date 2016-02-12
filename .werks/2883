@@ -2,7 +2,7 @@ Title: default.php template: fixed id_string while creating default template, e.
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1449070264
 Class: fix
 

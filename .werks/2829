@@ -2,7 +2,7 @@ Title: filesystem checks: introduced default levels for inodes used (10%/5% free
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453293061
 Class: feature
 

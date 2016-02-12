@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1446800972
 
 In the check output and the WATO texts for its configuration the words <i>provisioning</i>

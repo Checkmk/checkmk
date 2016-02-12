@@ -2,7 +2,7 @@ Title: lnx_distro: Correctly detecting Check_MK Appliance Operating System now
 Level: 1
 Component: inv
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1455186399
 Class: fix
 

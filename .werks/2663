@@ -2,7 +2,7 @@ Title: knuerr_rms_temp: switch to new generic temperature logic, allow e.g. lowe
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1444989479
 Class: feature
 

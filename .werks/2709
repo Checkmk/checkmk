@@ -2,7 +2,7 @@ Title: fixed exception when opening the action menu
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1446823507
 Class: fix
 

@@ -2,7 +2,7 @@ Title: fortigate_ipsecvpn, fortigate_sslvpn: Added monitoring for vpn tunnels in
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1448445873
 Class: feature
 

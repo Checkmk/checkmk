@@ -2,7 +2,7 @@ Title: Hosts can now be added by regular network scans of configured IP ranges
 Level: 2
 Component: wato
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453126961
 Class: feature
 

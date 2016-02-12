@@ -2,7 +2,7 @@ Title: Event Console: Text elements of events are now correctly quoted in shell 
 Level: 1
 Component: ec
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454069066
 Class: fix
 

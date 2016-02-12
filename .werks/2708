@@ -2,7 +2,7 @@ Title: sap, sap_state: new sap_state service reports connection problems to sap 
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1446559117
 Class: feature
 

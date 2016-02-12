@@ -2,7 +2,7 @@ Title: agent_ipmi_sensors: new special agent to monitor IPMI data via ipmi-senso
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1455205795
 Class: feature
 

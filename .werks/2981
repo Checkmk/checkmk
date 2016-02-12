@@ -2,7 +2,7 @@ Title: isc_dhcpd: added leases path /var/lib/dhcpd/dhcpd.leases for CentOS
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1455262300
 Class: feature
 

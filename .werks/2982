@@ -2,7 +2,7 @@ Title: solaris_services.summary: new check which gives a summary of services pro
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1455269547
 Class: feature
 

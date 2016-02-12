@@ -2,7 +2,7 @@ Title: netscaler_health: no longer discovers non-running fans (i.e. in virtual a
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454402678
 Class: fix
 

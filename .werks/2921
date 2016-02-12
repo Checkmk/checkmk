@@ -2,7 +2,7 @@ Title: printer_supply_ricoh: check now tries to handle negative readings properl
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453105397
 Class: feature
 

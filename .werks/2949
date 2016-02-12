@@ -2,7 +2,7 @@ Title: oracle_logswitches oracle_sessions oracle_version: Improved handling of l
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453724413
 Class: fix
 

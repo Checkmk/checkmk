@@ -2,7 +2,7 @@ Title: The encoding parameter set in the agent sections was not working
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1447764921
 Class: fix
 

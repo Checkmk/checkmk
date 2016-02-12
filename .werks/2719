@@ -4,7 +4,7 @@ Component: ec
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1446450077
 
 When using a regular expression to find Event Console events for an "Events" service, the

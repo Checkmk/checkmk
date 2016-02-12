@@ -2,7 +2,7 @@ Title: agent_jolokia: jolokia can now be monitored using a special agent
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1452769128
 Class: feature
 

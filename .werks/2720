@@ -2,7 +2,7 @@ Title: nullmailer_mailq: New check for monitoring the outgoing mail queue of Nul
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1446458345
 Class: feature
 

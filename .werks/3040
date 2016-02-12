@@ -2,7 +2,7 @@ Title: Removed all summary_hosts related filters from shipped views
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454406525
 Class: fix
 

@@ -2,7 +2,7 @@ Title: mssql_counters.sqlstats: New check to monitor several rates from the SQL 
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453998241
 Class: feature
 

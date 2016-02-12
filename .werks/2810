@@ -2,7 +2,7 @@ Title: esx_vsphere_counters, winperf_phydisk: fixed exception on pnpgraph overvi
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1449742812
 Class: fix
 

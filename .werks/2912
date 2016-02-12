@@ -2,7 +2,7 @@ Title: mk_oracle mk_oracle.aix: Fixed handling of DBs which names end with "_[NU
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453369163
 Class: fix
 

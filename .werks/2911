@@ -2,7 +2,7 @@ Title: mysql.innodb_io: Fixed crash in case averaging is set to 0 minutes
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453305291
 Class: fix
 

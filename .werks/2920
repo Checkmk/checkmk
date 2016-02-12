@@ -2,7 +2,7 @@ Title: hr_cpu: this check can now also supports per-core features
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1452853469
 Class: feature
 

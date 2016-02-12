@@ -2,7 +2,7 @@ Title: Fixed possible exception in icon column when showing some actions in the 
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1447924751
 Class: fix
 

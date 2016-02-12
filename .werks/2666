@@ -2,7 +2,7 @@ Title: Fix search for global configuration variables: ignore case now
 Level: 1
 Component: wato
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1445508288
 Class: fix
 

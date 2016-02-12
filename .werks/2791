@@ -4,7 +4,7 @@ Component: wato
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1447684168
 
 The parameter overview did display incorrect links for the <i>"Command Line"</i> information,

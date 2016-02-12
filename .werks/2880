@@ -2,7 +2,7 @@ Title: Automatically detect changes in local web/plugins, no Apache restart need
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1450433521
 Class: feature
 

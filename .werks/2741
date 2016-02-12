@@ -2,7 +2,7 @@ Title: isc_dhcpd: Fix problem where outdated leases where counted as active
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1446816658
 Class: fix
 

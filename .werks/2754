@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1446824182
 
 The ipmitool command can take a long time to return on some systems.

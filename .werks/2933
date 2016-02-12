@@ -2,7 +2,7 @@ Title: openhardwaremonitor, check_mk_agent.windows: added agent support and chec
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453211015
 Class: feature
 

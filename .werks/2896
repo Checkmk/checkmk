@@ -2,7 +2,7 @@ Title: Improved handling of wrong encoded input strings
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1450428996
 Class: fix
 

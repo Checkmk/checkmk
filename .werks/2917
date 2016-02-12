@@ -2,7 +2,7 @@ Title: cisco_asa_failover: Will no longer discover on devices where failover is 
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1452591537
 Class: fix
 

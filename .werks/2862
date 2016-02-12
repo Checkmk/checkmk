@@ -2,7 +2,7 @@ Title: Fixed handling of umlauts in mails send by the EC
 Level: 1
 Component: ec
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1449484145
 Class: fix
 

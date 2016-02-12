@@ -2,7 +2,7 @@ Title: tsm_stagingpools: Fixed exception in case of garbled agent output
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453814049
 Class: fix
 

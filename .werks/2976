@@ -2,7 +2,7 @@ Title: eltek_battery, eltek_battery.temp, eltek_battery.supply, eltek_fans, elte
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454665671
 Class: feature
 

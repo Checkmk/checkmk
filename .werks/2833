@@ -2,7 +2,7 @@ Title: isc_dhcpd, win_dhcp_pools: lower levels for used dhcp leases are now conf
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1447328506
 Class: feature
 

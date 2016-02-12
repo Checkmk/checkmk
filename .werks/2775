@@ -2,7 +2,7 @@ Title: omd_status: handle case where status information is incomplete due to mis
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1447319883
 Class: fix
 

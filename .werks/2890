@@ -2,7 +2,7 @@ Title: cisco_nexus_cpu, cisco_oldcpu: new checks for Cisco devices which do not 
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1452761536
 Class: feature
 

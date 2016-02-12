@@ -2,7 +2,7 @@ Title: fjdarye100_rluns  fjdarye101_rluns  fjdarye60_rluns: Correctly detect RAI
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1455092205
 Class: fix
 

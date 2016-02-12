@@ -2,7 +2,7 @@ Title: oracle_locks: Fixed handling of ORA- errors as sent from e.g. older AIX a
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453301932
 Class: fix
 

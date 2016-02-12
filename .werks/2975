@@ -2,7 +2,7 @@ Title: mk_jolokia: now supports HTTPS
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454659643
 Class: feature
 

@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1446816126
 
 The grouping of interfaces which are checked with the if64 check

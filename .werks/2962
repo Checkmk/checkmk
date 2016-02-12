@@ -2,7 +2,7 @@ Title: esx_vsphere_vm.guest_tools: Fixed exception in case no version info is av
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453814285
 Class: fix
 

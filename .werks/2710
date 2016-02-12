@@ -2,7 +2,7 @@ Title: arbor_peakflow_sp, arbor_peakflow_sp.cpu_load, arbor_peakflow_sp.disk_usa
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1447667450
 Class: feature
 

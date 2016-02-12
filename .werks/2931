@@ -2,7 +2,7 @@ Title: Do not load bookmarks, reports, view, etc. of non-existing users anymore
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454674544
 Class: fix
 

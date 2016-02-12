@@ -2,7 +2,7 @@ Title: all temperature checks rewritten to use the shared temperature api
 Level: 3
 Component: checks
 Compatible: incomp
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453300152
 Class: feature
 

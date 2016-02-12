@@ -2,7 +2,7 @@ Title: barracuda_mail_latency, barracuda_mailqueues, barracuda_system_cpu_util: 
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1448459696
 Class: feature
 

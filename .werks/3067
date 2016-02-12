@@ -2,7 +2,7 @@ Title: openhardwaremonitor.smart: initial support for S.M.A.R.T. harddisk health
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454574976
 Class: feature
 

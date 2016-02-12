@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1449837223
 
 Before that fix the feature to use the current date as match criteria for fileinfo groups only worked

@@ -2,7 +2,7 @@ Title: SNMP: Generalized error handling of emtpy info for SNMP checks
 Level: 2
 Component: core
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1446828681
 Class: fix
 

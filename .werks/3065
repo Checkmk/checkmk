@@ -2,7 +2,7 @@ Title: mem.win: renamed "Pagefile" to "Commit Charge" to clarify what the number
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454422778
 Class: fix
 

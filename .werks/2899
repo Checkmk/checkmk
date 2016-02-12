@@ -2,7 +2,7 @@ Title: ps: Finally improved performance impact of perfdata when having a lot of 
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1452500538
 Class: fix
 

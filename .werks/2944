@@ -2,7 +2,7 @@ Title: Fixed exception during config activation having clusters with unresolvabl
 Level: 1
 Component: core
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453383432
 Class: fix
 

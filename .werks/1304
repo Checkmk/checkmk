@@ -2,7 +2,7 @@ Title: mk_mysql: Agent plugin can now detect multiple instances running unter th
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1447949700
 Class: feature
 

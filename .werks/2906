@@ -2,7 +2,7 @@ Title: Fixed crash in views containing special chars in HW/SW-Inventory based co
 Level: 1
 Component: inv
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453299789
 Class: fix
 

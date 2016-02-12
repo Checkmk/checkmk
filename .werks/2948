@@ -2,7 +2,7 @@ Title: oracle_tablespaces: Fixed exception when section contained empty line
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453718509
 Class: fix
 

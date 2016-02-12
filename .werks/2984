@@ -2,7 +2,7 @@ Title: mk_inventory.solaris: improved detection of serial number for solaris_prt
 Level: 1
 Component: inv
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453986550
 Class: feature
 

@@ -2,7 +2,7 @@ Title: Treat interface name '1' and '01' as identical when grouping interfaces
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454680372
 Class: fix
 

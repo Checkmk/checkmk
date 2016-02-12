@@ -2,7 +2,7 @@ Title: Removal of duplicate services now also works for hosts that are no longer
 Level: 1
 Component: core
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454678767
 Class: fix
 

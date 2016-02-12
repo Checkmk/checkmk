@@ -2,7 +2,7 @@ Title: Fixed broken login with Python 2.4 (e.g. on CentOS 5.x systems)
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1455203973
 Class: fix
 

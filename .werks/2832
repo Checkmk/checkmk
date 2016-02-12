@@ -2,7 +2,7 @@ Title: netscaler_vserver: improved check output for unknown protocols
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453803324
 Class: feature
 

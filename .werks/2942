@@ -2,7 +2,7 @@ Title: juniper_cpu_util: new check replaces juniper_cpu which was reporting inco
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454322353
 Class: fix
 

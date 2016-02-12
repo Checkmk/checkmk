@@ -2,7 +2,7 @@ Title: check_mail_loop: now only deletes expected mails and not all mails matchi
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1450346972
 Class: fix
 

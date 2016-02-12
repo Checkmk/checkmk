@@ -2,7 +2,7 @@ Title: Avaya Series 88xx / 45xx: New temperature, fan and CPU utilization checks
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1450097264
 Class: feature
 

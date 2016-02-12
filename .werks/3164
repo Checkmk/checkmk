@@ -2,7 +2,7 @@ Title: No longer crash on action or email if trap contains a null byte
 Level: 1
 Component: ec
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454683140
 Class: fix
 

@@ -2,7 +2,7 @@ Title: Rework of host search in WATO - allow all bulk operations on search resul
 Level: 2
 Component: wato
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1450086757
 Class: feature
 

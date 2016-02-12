@@ -4,7 +4,7 @@ Component: ec
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1447054989
 
 The "Check event state in event console" check (check_mkevents) was finding too many events in case

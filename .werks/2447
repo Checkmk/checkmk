@@ -4,7 +4,7 @@ Component: multisite
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1447065454
 
 The sorting of performancedata values like <i>rta=0.087ms;200.000;500.000;0;</i> was broken.

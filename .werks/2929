@@ -2,7 +2,7 @@ Title: Show all metrics of a service in a nicely formatted table in the service 
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454275199
 Class: feature
 

@@ -2,7 +2,7 @@ Title: Do not reopen search form when doing actions via Host/Service search
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1449566877
 Class: fix
 

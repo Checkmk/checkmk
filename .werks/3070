@@ -2,7 +2,7 @@ Title: windows agent: replaced a very costy section regarding installed software
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454934777
 Class: fix
 

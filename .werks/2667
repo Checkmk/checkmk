@@ -2,7 +2,7 @@ Title: solaris_mem: fix exception in inventory plugin
 Level: 1
 Component: inv
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1445693228
 Class: fix
 

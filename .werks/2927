@@ -2,7 +2,7 @@ Title: Fix links to logwatch logfiles in case of several special characters in t
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1453213894
 Class: fix
 

@@ -2,7 +2,7 @@ Title: check_mk_agent.linux: The ps section of the agent now supports long usern
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1449579105
 Class: feature
 

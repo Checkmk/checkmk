@@ -2,7 +2,7 @@ Title: Fix duplicate loading of check that have a copy in local/share/check_mk/c
 Level: 1
 Component: core
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454876897
 Class: fix
 

@@ -2,7 +2,7 @@ Title: WATO rule based notifications: Validate regular expression for service co
 Level: 1
 Component: notifications
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1450446173
 Class: fix
 

@@ -2,7 +2,7 @@ Title: hp_msa_controller.io, hp_msa_disk.io, hp_msa_volume.io: fixed broken I/O 
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1445415738
 Class: fix
 

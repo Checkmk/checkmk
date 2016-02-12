@@ -2,7 +2,7 @@ Title: netapp_api_cpu: fixed incorrect scaling of CPU data in NetApp Clustermode
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1448273327
 Class: fix
 

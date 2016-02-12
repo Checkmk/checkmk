@@ -2,7 +2,7 @@ Title: check_mk_agent.linux: Diskstat Sektion now supports s390 DASDs (zLinux on
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1450353376
 Class: feature
 

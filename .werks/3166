@@ -2,7 +2,7 @@ Title: Fixed problem where scheduled report did not honor host or service group 
 Level: 1
 Component: reporting
 Compatible: compat
-Version: 1.2.7i4
+Version: 1.2.8b1
 Date: 1454790655
 Class: fix
 

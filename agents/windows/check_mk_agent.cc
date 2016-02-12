@@ -77,6 +77,7 @@
 #include "types.h"
 #include "wmiHelper.h"
 #include "EventLog.h"
+#include "ExternalCmd.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
@@ -2097,151 +2098,108 @@ bool banned_exec_name(char *name) {
     }
 }
 
+
 int launch_program(script_container *cont) {
-    int exit_code = 0;
-    int out_offset = 0;
+    enum {
+        SUCCESS = 0,
+        CANCELED,
+        BUFFER_FULL,
+        WORKING
+    } result = WORKING;
+    try {
+        ExternalCmd command(cont->path);
 
-    STARTUPINFO si;
-    SECURITY_ATTRIBUTES sa;
-    SECURITY_DESCRIPTOR sd;  // security information for pipes
+        static const size_t BUFFER_SIZE = 16635;
+        char buf[BUFFER_SIZE];  // i/o buffer
+        memset(buf, 0, BUFFER_SIZE);
+        time_t process_start = time(0);
 
-    PROCESS_INFORMATION pi;
-    WinHandle script_stdout, read_stdout;  // pipe handles
-    WinHandle script_stderr, read_stderr;
+        cont->buffer_work = (char *)HeapAlloc(
+            GetProcessHeap(), HEAP_ZERO_MEMORY, HEAP_BUFFER_DEFAULT);
+        unsigned long current_heap_size =
+            HeapSize(GetProcessHeap(), 0, cont->buffer_work);
 
-    // initialize security descriptor (Windows NT)
-    if (Environment::isWinNt()) {
-        InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION);
-        SetSecurityDescriptorDacl(&sd, true, NULL, false);
-        sa.lpSecurityDescriptor = &sd;
-    } else
-        sa.lpSecurityDescriptor = NULL;
-
-    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-    sa.bInheritHandle = true;  // allow inheritable handles
-
-    if (!CreatePipe(read_stdout.ptr(), script_stdout.ptr(), &sa,
-                    0))  // create stdout pipe
-        return 1;
-
-    if (!CreatePipe(read_stderr.ptr(), script_stderr.ptr(), &sa,
-                    0))  // create stderr pipe
-        return 1;
-
-    // set startupinfo for the spawned process
-    GetStartupInfo(&si);
-    si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-    si.wShowWindow = SW_HIDE;
-    si.hStdOutput = script_stdout;
-
-    if (with_stderr)
-        si.hStdError = script_stdout;
-    else
-        si.hStdError = script_stderr;
-
-    // spawn the child process
-    if (!CreateProcess(NULL, cont->path, NULL, NULL, TRUE, CREATE_NEW_CONSOLE,
-                       NULL, NULL, &si, &pi)) {
-        crash_log("failed to spawn process %s: %s", cont->path,
-                  get_win_error_as_string().c_str());
-        return 1;
-    }
-
-    // Create a job object for this process
-    // Whenever the process ends all of its childs will terminate, too
-    cont->job_object = CreateJobObject(NULL, NULL);
-    AssignProcessToJobObject(cont->job_object, pi.hProcess);
-    AssignProcessToJobObject(g_workers_job_object, pi.hProcess);
-
-    unsigned long bread;  // bytes read
-    unsigned long avail;  // bytes available
-
-    static const size_t BUFFER_SIZE = 16635;
-    char buf[BUFFER_SIZE];  // i/o buffer
-    memset(buf, 0, BUFFER_SIZE);
-    time_t process_start = time(0);
-    bool buffer_full = false;
-
-    cont->buffer_work = (char *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                                          HEAP_BUFFER_DEFAULT);
-    unsigned long current_heap_size =
-        HeapSize(GetProcessHeap(), 0, cont->buffer_work);
-
-    for (;;) {
-        if (cont->should_terminate || time(0) - process_start > cont->timeout) {
-            exit_code = 2;
-            break;
-        }
-
-        GetExitCodeProcess(pi.hProcess,
-                           &cont->exit_code);  // while the process is running
-        while (!buffer_full) {
-            if (!with_stderr) {
-                PeekNamedPipe(read_stderr, buf, BUFFER_SIZE, &bread, &avail,
-                              NULL);
-                if (avail > 0)
-                    // Just read from the pipe, we do not use this data
-                    ReadFile(read_stderr, buf, BUFFER_SIZE - 1, &bread, NULL);
+        int out_offset = 0;
+        // outer loop -> wait until the process is finished, reading its output
+        while (result == WORKING) {
+            if (cont->should_terminate ||
+                time(0) - process_start > cont->timeout) {
+                result = CANCELED;
+                continue;
             }
 
-            PeekNamedPipe(read_stdout, buf, BUFFER_SIZE, &bread, &avail, NULL);
+            cont->exit_code = command.exitCode();
 
-            if (avail == 0) break;
+            // inner loop without delay -> read all data available in
+            // the pipe
+            while (result == WORKING) {
+                // drop stderr
+                command.readStderr(buf, BUFFER_SIZE, false);
 
-            while (out_offset + bread > current_heap_size) {
-                // Increase heap buffer
-                if (current_heap_size * 2 <= HEAP_BUFFER_MAX) {
-                    cont->buffer_work = (char *)HeapReAlloc(
-                        GetProcessHeap(), HEAP_ZERO_MEMORY, cont->buffer_work,
-                        current_heap_size * 2);
-                    current_heap_size =
-                        HeapSize(GetProcessHeap(), 0, cont->buffer_work);
-                } else {
-                    buffer_full = true;
+                DWORD available = command.stdoutAvailable();
+                if (available == 0) {
                     break;
                 }
-            }
-            if (buffer_full) break;
 
-            if (bread > 0) {
-                ReadFile(read_stdout, cont->buffer_work + out_offset,
-                         std::min<size_t>(BUFFER_SIZE - 1,
-                                          current_heap_size - out_offset),
-                         &bread, NULL);
-                out_offset += bread;
+                while (out_offset + available > current_heap_size) {
+                    // Increase heap buffer
+                    if (current_heap_size * 2 <= HEAP_BUFFER_MAX) {
+                        cont->buffer_work = (char *)HeapReAlloc(
+                            GetProcessHeap(), HEAP_ZERO_MEMORY,
+                            cont->buffer_work, current_heap_size * 2);
+                        current_heap_size =
+                            HeapSize(GetProcessHeap(), 0, cont->buffer_work);
+                    } else {
+                        result = BUFFER_FULL;
+                    }
+                }
+                if (result != BUFFER_FULL) {
+                    size_t max_read = std::min<size_t>(
+                        BUFFER_SIZE - 1, current_heap_size - out_offset);
+
+                    DWORD bread = command.readStdout(cont->buffer_work + out_offset,
+                                                     max_read, true);
+                    if (bread == 0) {
+                        result = BUFFER_FULL;
+                    }
+                    out_offset += bread;
+                }
+            }
+
+            if (result == BUFFER_FULL) {
+                crash_log("plugin produced more than 2MB output -> dropped");
+            }
+
+            cont->exit_code = command.exitCode();
+
+            if (cont->exit_code != STILL_ACTIVE) {
+                result = SUCCESS;
+            }
+
+            if (result == WORKING) {
+                Sleep(10); // 10 milliseconds
             }
         }
-        if (buffer_full) {
-            crash_log("plugin produced more than 2MB output -> dropped");
-            // Buffer full -> delete incomplete data
-            exit_code = 1;
-            break;
+
+        // if the output has a utf-16 bom, we need to convert it now, as the
+        // remaining code doesn't handle wide characters
+        unsigned char *buf_u =
+            reinterpret_cast<unsigned char *>(cont->buffer_work);
+        if ((buf_u[0] == 0xFF) && (buf_u[1] == 0xFE)) {
+            wchar_t *buffer_u16 =
+                reinterpret_cast<wchar_t *>(cont->buffer_work);
+            std::string buffer_u8 = to_utf8(buffer_u16);
+            HeapFree(GetProcessHeap(), 0, buffer_u16);
+            cont->buffer_work =
+                (char *)HeapAlloc(GetProcessHeap(), 0, buffer_u8.size() + 1);
+            memcpy(cont->buffer_work, buffer_u8.c_str(), buffer_u8.size() + 1);
         }
 
-        if (cont->exit_code != STILL_ACTIVE) break;
-
-        Sleep(10);
+    } catch (const std::exception &e) {
+        crash_log("%s", e.what());
+        result = CANCELED;
     }
-    TerminateJobObject(cont->job_object, exit_code);
-
-    // cleanup the mess
-    CloseHandle(cont->job_object);
-    CloseHandle(pi.hThread);
-    CloseHandle(pi.hProcess);
-
-    // if the output has a utf-16 bom, we need to convert it now, as the remaining
-    // code doesn't handle wide characters
-    unsigned char *buf_u = reinterpret_cast<unsigned char *>(cont->buffer_work);
-    if ((buf_u[0] == 0xFF) && (buf_u[1] == 0xFE)) {
-        wchar_t *buffer_u16 = reinterpret_cast<wchar_t *>(cont->buffer_work);
-        std::string buffer_u8 = to_utf8(buffer_u16);
-        HeapFree(GetProcessHeap(), 0, buffer_u16);
-        cont->buffer_work =
-            (char *)HeapAlloc(GetProcessHeap(), 0, buffer_u8.size() + 1);
-        memcpy(cont->buffer_work, buffer_u8.c_str(), buffer_u8.size() + 1);
-    }
-
-    return exit_code;
+    return result;
 }
 
 DWORD WINAPI ScriptWorkerThread(LPVOID lpParam) {
@@ -2560,31 +2518,38 @@ void section_mrpe(OutputProxy &out) {
                      entry->run_as_user);
         snprintf(command, sizeof(command), "%s%s", run_as_prefix,
                  entry->command_line);
-        FILE *f = _popen(entry->command_line, "r");
-        if (!f) {
+
+        try {
+            ExternalCmd command(entry->command_line);
+            crash_log("Script started -> collecting data");
+            std::string buffer;
+            buffer.resize(8192);
+            char *buf_start = &buffer[0];
+            char *pos = &buffer[0];
+            while (command.exitCode() == STILL_ACTIVE) {
+                DWORD read = command.readStdout(
+                    pos, buffer.size() - (pos - buf_start), true);
+                pos += read;
+                Sleep(10);
+            }
+            command.readStdout(pos, buffer.size() - (pos - buf_start), true);
+
+            char *output_end = rstrip(&buffer[0]);
+            char *plugin_output = lstrip(&buffer[0]);
+            // replace newlines
+            std::transform (plugin_output, output_end, plugin_output, [] (char ch) {
+                    if (ch == '\n') return '\1';
+                    if (ch == '\r') return ' ';
+                    else return ch;
+                    });
+            int nagios_code = command.exitCode();
+            out.output("%d %s\n", nagios_code, plugin_output);
+            crash_log("Script finished");
+        } catch (const std::exception &e) {
+            crash_log("mrpe failed: %s", e.what());
             out.output("3 Unable to execute - plugin may be missing.\n");
             continue;
         }
-
-        crash_log("Script started -> collecting data");
-        if (f) {
-            char buffer[8192];
-            int bytes = fread(buffer, 1, sizeof(buffer) - 1, f);
-            buffer[bytes] = 0;
-            rstrip(buffer);
-            char *plugin_output = lstrip(buffer);
-            // Replace \n with Ascii 1 and \r with spaces
-            for (char *x = plugin_output; *x; x++) {
-                if (*x == '\n')
-                    *x = (char)1;
-                else if (*x == '\r')
-                    *x = ' ';
-            }
-            int status = _pclose(f);
-            int nagios_code = status;
-            out.output("%d %s\n", nagios_code, plugin_output);
-        }
-        crash_log("Script finished");
     }
 }
 

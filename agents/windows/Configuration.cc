@@ -26,6 +26,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
+#include <shlwapi.h>
 #include "PerfCounter.h"
 #include "logging.h"
 #include "stringutil.h"
@@ -750,8 +751,15 @@ bool Configuration::handleMrpeConfigVariable(char *var, char *value) {
         mrpe_entry *tmp_entry = new mrpe_entry();
         memset(tmp_entry, 0, sizeof(mrpe_entry));
 
-        strncpy(tmp_entry->command_line, command_line,
-                sizeof(tmp_entry->command_line));
+        if (PathIsRelative(command_line)) {
+            snprintf(tmp_entry->command_line, sizeof(tmp_entry->command_line),
+                     "%s\\%s", _environment.agentDirectory().c_str(),
+                     command_line);
+        } else {
+            strncpy(tmp_entry->command_line, command_line,
+                    sizeof(tmp_entry->command_line));
+        }
+
         strncpy(tmp_entry->service_description, service_description,
                 sizeof(tmp_entry->service_description));
 

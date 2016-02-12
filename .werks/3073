@@ -1,0 +1,15 @@
+Title: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455289718
+Class: fix
+
+contrary to how it was documented, mrpe scripts with relative paths were expected in the directory
+relative to the current working directory, which would usually be c:\windows\system32
+
+In addition, it was not possible to include spaces in the script path which made it very difficult
+to reference mrpe scripts in c:\program files...
+
+This has now been fixed and mrpe configuration should now work as documented.

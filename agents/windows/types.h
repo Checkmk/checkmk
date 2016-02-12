@@ -312,11 +312,15 @@ class WinHandle {
 public:
     WinHandle(HANDLE hdl = INVALID_HANDLE_VALUE) : _handle(hdl) {}
 
+    WinHandle(const WinHandle &reference) = delete;
+
     ~WinHandle() {
         if (_handle != INVALID_HANDLE_VALUE) {
             ::CloseHandle(_handle);
         }
     }
+
+    WinHandle &operator=(const WinHandle &reference) = delete;
 
     WinHandle &operator=(HANDLE hdl) {
         if (_handle != INVALID_HANDLE_VALUE) {

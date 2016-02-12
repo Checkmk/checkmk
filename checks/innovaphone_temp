@@ -31,7 +31,7 @@ factory_settings["innovaphone_temp_default_levels"] = {
 def inventory_innovaphone_temp(info):
     yield "Ambient", {}
 
-def check_innovaphone_temp(_no_item, params, info):
+def check_innovaphone_temp(item, params, info):
     return check_temperature(int(info[0][1]), params, "innovaphone_temp_%s" % item)
 
 check_info["innovaphone_temp"] = {

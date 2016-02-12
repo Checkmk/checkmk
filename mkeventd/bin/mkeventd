@@ -1151,24 +1151,30 @@ class EventServer:
         return os.open(g_pipe_path, os.O_RDWR | os.O_NONBLOCK)
 
     def load_mibs(self):
-        builder = MibBuilder() # manages python MIB modules
+        try:
+            builder = MibBuilder() # manages python MIB modules
 
-        # load MIBs from our compiled MIB and default MIB paths
-        builder.setMibSources(*[DirMibSource(g_compiled_mibs_dir)]
-                               + list(builder.getMibSources()))
+            # load MIBs from our compiled MIB and default MIB paths
+            builder.setMibSources(*[DirMibSource(g_compiled_mibs_dir)]
+                                   + list(builder.getMibSources()))
 
-        # Indicate we wish to load DESCRIPTION and other texts from MIBs
-        builder.loadTexts = True
+            # Indicate we wish to load DESCRIPTION and other texts from MIBs
+            builder.loadTexts = True
 
-        # This loads all or specified pysnmp MIBs into memory
-        builder.loadModules()
+            # This loads all or specified pysnmp MIBs into memory
+            builder.loadModules()
 
-        loaded_mib_module_names = builder.mibSymbols.keys()
-        log('Loaded %d SNMP MIB modules' % len(loaded_mib_module_names))
-        verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
+            loaded_mib_module_names = builder.mibSymbols.keys()
+            log('Loaded %d SNMP MIB modules' % len(loaded_mib_module_names))
+            verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
 
-        # This object maintains various indices built from MIBs data
-        self._mib_resolver = MibViewController(builder)
+            # This object maintains various indices built from MIBs data
+            self._mib_resolver = MibViewController(builder)
+        except SmiError, e:
+            if opt_debug:
+                raise
+            log("Exception while loading MIB modules. Proceeding without modules!")
+            log("Exception: %s" % e)
 
     # Format time difference seconds into approximated
     # human readable value

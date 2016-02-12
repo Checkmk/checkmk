@@ -3251,7 +3251,7 @@ class ModeBulkImport(WatoMode):
 
         # Add tag groups
         for entry in configured_host_tags():
-            attributes.append((entry[0], _("Tag: %s") % entry[1]))
+            attributes.append(("tag_"+entry[0], _("Tag: %s") % entry[1]))
 
         return attributes
 

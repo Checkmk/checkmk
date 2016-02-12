@@ -27,6 +27,7 @@
 from mod_python import apache
 import sys, os, pprint, __builtin__
 import i18n
+import sites
 import livestatus
 import modules
 import defaults, config, login
@@ -167,6 +168,7 @@ def handler(req, fields = None, is_profiling = False):
             (apache.SERVER_RETURN, apache.HTTP_UNAUTHORIZED),
             (apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY)):
         release_all_locks()
+        sites.disconnect()
         html.finalize(is_error=True)
         raise
 
@@ -184,6 +186,7 @@ def handler(req, fields = None, is_profiling = False):
         response_code = apache.OK
 
     release_all_locks()
+    sites.disconnect()
     html.finalize()
     return response_code
 

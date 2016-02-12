@@ -169,6 +169,12 @@ def set_livestatus_auth():
     _live.set_auth_domain('read')
 
 
+def disconnect():
+    global _live, _site_status
+    _live = None
+    _site_status = None
+
+
 def status_host_state_name(shs):
     if shs == None:
         return "dead"

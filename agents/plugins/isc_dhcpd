@@ -9,7 +9,11 @@ for path in [ '/etc/dhcpd.conf', '/etc/dhcp/dhcpd.conf' ]:
         break
 
 leases_file = None
-for path in [ '/var/lib/dhcp/db/dhcpd.leases', '/var/lib/dhcp/dhcpd.leases' ]:
+for path in [
+        '/var/lib/dhcp/db/dhcpd.leases',
+        '/var/lib/dhcp/dhcpd.leases',
+        '/var/lib/dhcpd/dhcpd.leases', # CentOS
+    ]:
     if os.path.exists(path):
         leases_file = path
         break

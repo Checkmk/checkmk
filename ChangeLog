@@ -1,5 +1,6 @@
 1.2.9i1:
 
+
 1.2.8b1:
     Core & Setup:
     * 2771 Errors in Check_MK configuration do not prevent the core from being restarted anymore...

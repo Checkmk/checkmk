@@ -32,7 +32,7 @@ import livestatus
 import modules
 import defaults, config, login
 from lib import *
-from html_mod_python import *
+from html_mod_python import html_mod_python, FinalizeRequest
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
 def handler(req, fields = None, is_profiling = False):

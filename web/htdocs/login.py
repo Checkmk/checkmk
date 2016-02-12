@@ -26,7 +26,7 @@
 
 import defaults, config, userdb
 from lib import *
-from mod_python import apache
+from html_mod_python import FinalizeRequest
 import os, time
 
 try:
@@ -289,8 +289,7 @@ def normal_login_page(called_directly = True):
 
     # When someone calls the login page directly and is already authed redirect to main page
     if html.myfile == 'login' and check_auth():
-        html.immediate_browser_redirect(0.5, origtarget and origtarget or 'index.py')
-        return apache.OK
+        html.http_redirect(origtarget and origtarget or 'index.py')
 
     html.write('<div id="login">\n')
     html.write('<img id="login_window" src="images/login_window.png" />\n')
@@ -325,7 +324,6 @@ def normal_login_page(called_directly = True):
     html.write("</div>\n")
 
     html.footer()
-    return apache.OK
 
 def page_logout():
     # Remove eventual existing cookie
@@ -338,7 +336,7 @@ def page_logout():
         if not html.has_cookie('logout'):
             html.set_http_header('WWW-Authenticate', 'Basic realm="%s"' % defaults.nagios_auth_name)
             html.set_cookie('logout', '1')
-            raise apache.SERVER_RETURN, apache.HTTP_UNAUTHORIZED
+            raise FinalizeRequest(401)
         else:
             html.del_cookie('logout')
             html.http_redirect(defaults.url_prefix + 'check_mk/')

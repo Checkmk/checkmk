@@ -1,0 +1,11 @@
+Title: Event Console is now allowing non loadable MIB modules on startup
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1455284199
+
+This case of a MIB module processing error it is now logging the issue and
+proceeding without any loaded MIB module.

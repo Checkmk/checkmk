@@ -1,4 +1,6 @@
 1.2.9i1:
+    Event Console:
+    * 3058 FIX: Event Console is now allowing non loadable MIB modules on startup...
 
 
 1.2.8b1:

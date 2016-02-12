@@ -291,7 +291,7 @@ def check_temperature(reading, params, unique_name, dev_unit = "c",
 
     warn, crit, warn_lower, crit_lower =\
         check_temperature_determine_levels(dlh, usr_warn, usr_crit,
-                                           usr_warn_lower, usr_warn_lower,
+                                           usr_warn_lower, usr_crit_lower,
                                            dev_warn, dev_crit,
                                            dev_warn_lower, dev_crit_lower, dev_unit)
 
@@ -456,8 +456,17 @@ def check_temperature_list(sensorlist, params, unique_name):
 
     if "trend_compute" in params and\
             "period" in params["trend_compute"]:
+        usr_warn, usr_crit             = params.get("levels") or (None, None)
+        usr_warn_lower, usr_crit_lower = params.get("levels_lower") or (None, None)
+
+        # no support for dev_unit or dev_levels in check_temperature_list so
+        # this ignores the device level handling set in params
         warn, crit, warn_lower, crit_lower =\
-            check_temperature_determine_levels(params, None, None, dev_unit)
+            check_temperature_determine_levels("usr", usr_warn, usr_crit,
+                                               usr_warn_lower, usr_crit_lower,
+                                               None, None,
+                                               None, None, "c")
+
 
         trend_status, trend_infotext =\
             check_temperature_trend(tempavg, params["trend_compute"], output_unit,

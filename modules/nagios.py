@@ -217,7 +217,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
         outfile.write("  host_name\t\t\t%s\n" % summary_hostname(hostname))
         outfile.write("  use\t\t\t\t%s-summary\n" % (is_clust and cluster_template or host_template))
         outfile.write("  alias\t\t\t\tSummary of %s\n" % alias)
-        outfile.write("  address\t\t\t%s\n" % (ip and ip or fallback_ip(hostname)))
+        outfile.write("  address\t\t\t%s\n" % (ip and ip or fallback_ip_for(hostname)))
         outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
         outfile.write("  __REALNAME\t\t\t%s\n" % hostname)
         outfile.write("  parents\t\t\t%s\n" % hostname)
@@ -244,7 +244,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
             outfile.write("  contact_groups\t\t+%s\n" % make_utf8(",".join(cgrs)))
 
         if is_clust:
-            outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(node_ips))
+            outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(attrs.get("_NODEIPS")))
         outfile.write(extra_summary_host_conf_of(hostname))
         outfile.write("}\n")
     outfile.write("\n")

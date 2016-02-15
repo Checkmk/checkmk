@@ -2888,7 +2888,7 @@ def show_check_manual(checkname):
         output.flush()
         output.close()
     except Exception, e:
-        print "Invalid check manpage %s: missing %s" % (filename, e)
+        sys.stdout.write("Invalid check manpage %s: %s\n" % (checkname, e))
 
 
 #.

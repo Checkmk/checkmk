@@ -7,6 +7,7 @@
 
     Multisite:
     * 3059 FIX: Fixed highlighting of availability timeline time slices
+    * 3175 FIX: Fix timeranges of graphs that are embedded in a dashboard...
 
     WATO:
     * 3060 FIX: Folder properties: Fixed exception when a user has no alias set...

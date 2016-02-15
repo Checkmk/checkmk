@@ -388,6 +388,7 @@ dashlet_types["pnpgraph"] = {
     "infos"        : ["service", "host"],
     "single_infos" : ["service", "host"],
     "parameters"   : [
+        # Cleanup: switch to generic Timerange() valuespec!
         ("timerange", DropdownChoice(
             title = _('Timerange'),
             default_value = '1',
@@ -405,7 +406,7 @@ dashlet_types["pnpgraph"] = {
     ],
     "styles": """
 .dashlet.pnpgraph .dashlet_inner {
-    background-color: #fff;
+    background-color: #f8f4f0;
     color: #000;
     text-align: center;
 }

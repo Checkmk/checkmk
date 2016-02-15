@@ -1,0 +1,10 @@
+Title: Fix timeranges of graphs that are embedded in a dashboard
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455536077
+Class: fix
+
+That was hard coded to 8 hours and ignored the settings in the dashlet.
+This has been fixed.

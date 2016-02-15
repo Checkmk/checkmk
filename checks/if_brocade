@@ -24,11 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def fix_if_64_highspeed(info):
-    for line in info:
-        if type(line[3]) in [ str, unicode ]: # not yet converted
-            line[3] = saveint(line[3]) * 1000000
-
 def if_brocade_convert(info):
     iftab, ssidtab = info
     ssid_dict = dict(ssidtab)

@@ -59,6 +59,13 @@ if_disable_if64_hosts = [] # Binary host list for disabling if64 on some broken 
 def if64_disabled(hostname):
     return in_binary_hostlist(hostname, if_disable_if64_hosts)
 
+
+def fix_if_64_highspeed(info):
+    for line in info:
+        if type(line[3]) in [ str, unicode ]: # not yet converted
+            line[3] = saveint(line[3]) * 1000000
+
+
 # Remove 0 bytes from strings. They lead to problems e.g. here:
 # On windows hosts the labels of network interfaces in oid
 # iso.3.6.1.2.1.2.2.1.2.1 are given as hex strings with tailing

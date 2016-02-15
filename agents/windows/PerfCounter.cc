@@ -117,7 +117,7 @@ ULONGLONG PerfCounter::extractValue(PERF_COUNTER_BLOCK *block) const {
 
     switch (_counter->CounterType & PERF_SIZE_MASK) {
         case PERF_SIZE_DWORD:
-            return static_cast<ULONGLONG>(*(DWORD *)block);
+            return static_cast<ULONGLONG>(*(DWORD *)pData);
         case PERF_SIZE_LARGE:
             return *(UNALIGNED ULONGLONG *)pData;
         case PERF_SIZE_ZERO:

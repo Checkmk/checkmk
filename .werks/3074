@@ -1,0 +1,9 @@
+Title: windows agent: fixed incorrect values for 32-bit performance counters
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455543009
+Class: fix
+
+

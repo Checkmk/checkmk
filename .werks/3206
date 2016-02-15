@@ -1,0 +1,9 @@
+Title: esx_vsphere_hostsystem.mem_usage_cluster: Fixed broken check
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455551517
+Class: fix
+
+

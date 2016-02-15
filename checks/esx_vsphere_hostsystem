@@ -127,7 +127,7 @@ def check_esx_vsphere_hostsystem_mem_cluster(item, params, info):
         if nodes_count >= count:
             warn, crit = levels
             warn_perf = warn * total_memory_size / 100
-            crit_perf = cirt * total_memory_size / 100
+            crit_perf = crit * total_memory_size / 100
 
             if level > crit:
                 state = 2

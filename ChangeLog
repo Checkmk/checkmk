@@ -73,6 +73,7 @@
     * 3075 FIX: windows agent: fixed data encryption of realtime updates were incompatible...
     * 3205 FIX: raritan_pdu_inlet: Fixed exception in case phases report a non OK state
     * 3206 FIX: esx_vsphere_hostsystem.mem_usage_cluster: Fixed broken check
+    * 3207 FIX: msexch_dag.copyqueue: Fixed broken check in case of non OK state
     * 3209 FIX: esx_vsphere_datastores: Added missing uncommitted and overprovisioned graphs
     * 3210 FIX: oracle_asm_diskgroup: Fixed exception when using required mirror free space parameter
     * 3211 FIX: logwatch: Fixed broken error messages in case of failed filesystem operations

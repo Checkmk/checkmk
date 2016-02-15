@@ -2,6 +2,9 @@
     Checks & Agents:
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
 
+    Multisite:
+    * 3059 FIX: Fixed highlighting of availability timeline time slices
+
     Event Console:
     * 3058 FIX: Event Console is now allowing non loadable MIB modules on startup...
 

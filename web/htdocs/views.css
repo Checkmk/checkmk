@@ -636,7 +636,7 @@ div.timelinerange div.timelinechoord {
 table.timelineevents {
     width: 800px;
 }
-table.timelineevents tr.hilite {
+table.data.oddeven.timelineevents > tbody > tr.hilite {
     background-color: #6ab;
     color: white;
 }

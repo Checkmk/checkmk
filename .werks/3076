@@ -1,0 +1,8 @@
+Title: fixed broken views in check_mk raw edition
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.9i1
+Date: 1455547912
+Class: fix
+

@@ -1407,9 +1407,19 @@ def host_service_graph_dashlet_cmk(graph_specification):
         "resizable"     : False,
     }
 
-    # FIXME: html.var("timerange") ???
+
+    # The timerange is specified in PNP like manner.
+    range_secs = {
+        "0" : 4 * 3600,
+        "1" : 25 * 3600,
+        "2" : 7 * 86400,
+        "3" : 31 * 86400,
+        "4" : 366 * 86400,
+    }
+
+    secs = range_secs.get(html.var("timerange"), 4 * 3600)
     end_time = time.time()
-    start_time = end_time - 8 * 3600
+    start_time = end_time - secs
     graph_data_range = {
         "time_range" : (start_time, end_time),
     }

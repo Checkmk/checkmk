@@ -14,7 +14,7 @@ private:
     // algorithm can't currently be changed
     static const ALG_ID DEFAULT_ALGORITHM = CALG_AES_256;
 
-    static const ALG_ID HASH_ALGORITHM = CALG_SHA1;
+    static const ALG_ID HASH_ALGORITHM = CALG_MD5;
 
     enum KeyLength {
         KEY_LEN_DEFAULT = 0,

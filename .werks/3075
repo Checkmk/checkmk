@@ -1,0 +1,10 @@
+Title: windows agent: fixed data encryption of realtime updates were incompatible
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455546420
+Class: fix
+
+The windows agent used sha-1 hashes to derive the key/iv-pair from the pass phrase while check_mk
+and the linux agent use md5

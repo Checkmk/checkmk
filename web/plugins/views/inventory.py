@@ -666,9 +666,10 @@ inventory_displayhints.update({
 
     ".networking.wlan"                                 : { "title" : _("WLAN") },
     ".networking.wlan.controller"                      : { "title" : _("Controller") },
-    ".networking.wlan.controller.accesspoints:"        : { "title" : _("Access Points"), "keyorder" : ["name", "group", "model", "serial", "sys_location"], "render" : render_inv_dicttable },
+    ".networking.wlan.controller.accesspoints:"        : { "title" : _("Access Points"), "keyorder" : ["name", "group", "ip_addr", "model", "serial", "sys_location"], "render" : render_inv_dicttable },
     ".networking.wlan.controller.accesspoints:*.name"         : { "title" : _("Name") },
     ".networking.wlan.controller.accesspoints:*.group"        : { "title" : _("Group") },
+    ".networking.wlan.controller.accesspoints:*.ip_addr"      : { "title" : _("IP Address") },
     ".networking.wlan.controller.accesspoints:*.model"        : { "title" : _("Model") },
     ".networking.wlan.controller.accesspoints:*.serial"       : { "title" : _("Serial Number") },
     ".networking.wlan.controller.accesspoints:*.sys_location" : { "title" : _("System Location") },

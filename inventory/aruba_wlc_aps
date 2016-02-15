@@ -25,13 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-# .1.3.6.1.4.1.14823.2.2.1.5.2.1.4.1.3.0.36.108.192.2.186 ALA-AP 2.1.1 --> WLSX-WLAN-MIB::wlanAPName.'.$l...'
-# .1.3.6.1.4.1.14823.2.2.1.5.2.1.4.1.4.0.36.108.192.2.186 ALA-Office --> WLSX-WLAN-MIB::wlanAPGroupName.'.$l...'
-# .1.3.6.1.4.1.14823.2.2.1.5.2.1.4.1.5.0.36.108.192.2.186 .1.3.6.1.4.1.14823.1.2.34 --> WLSX-WLAN-MIB::wlanAPModel.'.$l...'
-# .1.3.6.1.4.1.14823.2.2.1.5.2.1.4.1.6.0.36.108.192.2.186 AL0000642 --> WLSX-WLAN-MIB::wlanAPSerialNumber.'.$l...'
-# .1.3.6.1.4.1.14823.2.2.1.5.2.1.4.1.32.0.36.108.192.2.186 --> WLSX-WLAN-MIB::wlanAPSysLocation.'.$l...'
-
-
 def inv_aruba_wlc_aps(info):
     map_ap_products = {
         "1"  : "a50", "2"  : "a52", "3"  : "a60", "4"  : "a61", "5"  : "a70",
@@ -52,21 +45,28 @@ def inv_aruba_wlc_aps(info):
         "76" : "ap205H", "9999" : "undefined",
     }
     node = inv_tree("networking.wlan.controller.accesspoints:")
-    for ap_name, ap_gr_name, ap_model, ap_serial_nr, ap_sys_loc in info:
+    for ap_name, ap_status, ap_unprovisioned, ap_ip, ap_group, \
+        ap_model, ap_serial, ap_sysloc in info:
         node.append({
+            "ip_addr"      : ap_ip,
             "name"         : ap_name,
-            "group"        : ap_gr_name,
+            "group"        : ap_group,
             "model"        : map_ap_products.get(ap_model.split(".")[-1], "unknown"),
-            "serial"       : ap_serial_nr,
-            "sys_location" : ap_sys_loc,
+            "serial"       : ap_serial,
+            "sys_location" : ap_sysloc,
         })
     return node
 
 
 inv_info['aruba_wlc_aps'] = {
     'inv_function'        : inv_aruba_wlc_aps,
-    "snmp_info"           : ( ".1.3.6.1.4.1.14823.2.2.1.5.2.1.4.1",[
+    # If you make changes here in snmp_info, don't forget to make
+    # these changes in the related check plugin, too.
+    "snmp_info"           : ( ".1.3.6.1.4.1.14823.2.2.1.5.2.1.4.1", [
                                   "3",    # wlanAPName
+                                  "19",   # wlanAPStatus
+                                  "22",   # wlanAPUnprovisioned
+                                  "2",    # wlanAPIpAddress
                                   "4",    # wlanAPGroupName
                                   "5",    # wlanAPModel
                                   "6",    # wlanAPSerialNumber

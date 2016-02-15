@@ -1,0 +1,9 @@
+Title: aruba_wlc_aps: new check which monitors the provisioned accesspoints of an Aruba Network WLAN Controller
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1455522993
+Class: feature
+
+

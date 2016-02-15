@@ -1,0 +1,15 @@
+Title: Fixed fake check results for hosts
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455531955
+Class: fix
+
+Fake check results were handled in a slightly inconsistent way, now their
+behavior exactly mirrors the processing of "real" check results, making the
+resulting up/down host states less surprising.
+
+Note that submitting a "down" result does not necessarily imply a "down"
+host state: Depending on the state of its parents, the host in question
+could go to the "unreachable" state, too.

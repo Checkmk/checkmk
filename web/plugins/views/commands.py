@@ -274,12 +274,11 @@ def render_fake_form(what):
     html.write("</td><td>")
     html.text_input("_fake_perfdata", "", size=50)
     html.write("</td></tr><tr><td>")
-    html.write(_("Set to:"))
+    html.write(_("Result:"))
     html.write("</td><td>")
     if what == "host":
         html.button("_fake_0", _("Up"))
-        html.button("_fake_1", _("Down"))
-        html.button("_fake_2", _("Unreachable"))
+        html.button("_fake_2", _("Down"))
     else:
         html.button("_fake_0", _("OK"))
         html.button("_fake_1", _("Warning"))

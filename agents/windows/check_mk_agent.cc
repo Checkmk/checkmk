@@ -67,6 +67,8 @@
 #include <vector>
 #include "Configuration.h"
 #include "Environment.h"
+#include "EventLog.h"
+#include "ExternalCmd.h"
 #include "ListenSocket.h"
 #include "OHMMonitor.h"
 #include "OutputProxy.h"
@@ -76,8 +78,6 @@
 #include "stringutil.h"
 #include "types.h"
 #include "wmiHelper.h"
-#include "EventLog.h"
-#include "ExternalCmd.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
@@ -238,7 +238,6 @@ private:
 //  +----------------------------------------------------------------------+
 //  | Global helper functions                                              |
 //  '----------------------------------------------------------------------'
-
 
 double current_time() {
     SYSTEMTIME systime;
@@ -629,7 +628,6 @@ void dump_performance_counters(OutputProxy &out, unsigned counter_base_number,
 //  |                      |___/                                           |
 //  '----------------------------------------------------------------------'
 
-
 // loads a dll while ignoring blacklisted dlls and with support for
 // environment variables in the path
 HMODULE load_library_ext(const char *dllpath) {
@@ -681,7 +679,9 @@ bool output_eventlog_entry(OutputProxy &out, const char *dllpath,
         auto iter = handle_cache.find(dllpath);
         if (iter == handle_cache.end()) {
             dll = load_library_ext(dllpath);
-            iter = handle_cache.insert(std::make_pair(std::string(dllpath), dll)).first;
+            iter =
+                handle_cache.insert(std::make_pair(std::string(dllpath), dll))
+                    .first;
         } else {
             dll = iter->second;
         }
@@ -801,7 +801,7 @@ void process_eventlog_entry(OutputProxy &out, EventLog &event_log,
 
     // prepare array of zero terminated strings to be inserted
     // into message template.
-    std::vector<const WCHAR*> strings;
+    std::vector<const WCHAR *> strings;
     const WCHAR *string = (WCHAR *)(((char *)event) + event->StringOffset);
     for (int i = 0; i < event->NumStrings; ++i) {
         strings.push_back(string);
@@ -844,8 +844,10 @@ void process_eventlog_entry(OutputProxy &out, EventLog &event_log,
                               event_log.getName().c_str(), source_name.c_str(),
                               &strings[0], handle_cache);
     }
-    crash_log("     - record %lu: event_processed, "
-            "event->Length %lu", event->RecordNumber, event->Length);
+    crash_log(
+        "     - record %lu: event_processed, "
+        "event->Length %lu",
+        event->RecordNumber, event->Length);
 }
 
 void output_eventlog(OutputProxy &out, const char *logname,
@@ -2098,14 +2100,8 @@ bool banned_exec_name(char *name) {
     }
 }
 
-
 int launch_program(script_container *cont) {
-    enum {
-        SUCCESS = 0,
-        CANCELED,
-        BUFFER_FULL,
-        WORKING
-    } result = WORKING;
+    enum { SUCCESS = 0, CANCELED, BUFFER_FULL, WORKING } result = WORKING;
     try {
         ExternalCmd command(cont->path);
 
@@ -2157,8 +2153,8 @@ int launch_program(script_container *cont) {
                     size_t max_read = std::min<size_t>(
                         BUFFER_SIZE - 1, current_heap_size - out_offset);
 
-                    DWORD bread = command.readStdout(cont->buffer_work + out_offset,
-                                                     max_read, true);
+                    DWORD bread = command.readStdout(
+                        cont->buffer_work + out_offset, max_read, true);
                     if (bread == 0) {
                         result = BUFFER_FULL;
                     }
@@ -2177,7 +2173,7 @@ int launch_program(script_container *cont) {
             }
 
             if (result == WORKING) {
-                Sleep(10); // 10 milliseconds
+                Sleep(10);  // 10 milliseconds
             }
         }
 
@@ -2537,11 +2533,14 @@ void section_mrpe(OutputProxy &out) {
             char *output_end = rstrip(&buffer[0]);
             char *plugin_output = lstrip(&buffer[0]);
             // replace newlines
-            std::transform (plugin_output, output_end, plugin_output, [] (char ch) {
-                    if (ch == '\n') return '\1';
-                    if (ch == '\r') return ' ';
-                    else return ch;
-                    });
+            std::transform(plugin_output, output_end, plugin_output,
+                           [](char ch) {
+                               if (ch == '\n') return '\1';
+                               if (ch == '\r')
+                                   return ' ';
+                               else
+                                   return ch;
+                           });
             int nagios_code = command.exitCode();
             out.output("%d %s\n", nagios_code, plugin_output);
             crash_log("Script finished");

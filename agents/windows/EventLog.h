@@ -22,15 +22,13 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #ifndef EventLog_h
 #define EventLog_h
 
-
 #include <windows.h>
-#include "types.h"
-#include "stringutil.h"
 #include "logging.h"
+#include "stringutil.h"
+#include "types.h"
 
 class EventLog {
 public:
@@ -91,5 +89,4 @@ private:
     DWORD _buffer_used{0};
 };
 
-#endif // EventLog_h
-
+#endif  // EventLog_h

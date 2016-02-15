@@ -22,16 +22,12 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #ifndef ExternalCmd_h
 #define ExternalCmd_h
 
-
 #include <windows.h>
 
-
 class ExternalCmd {
-
 public:
     ExternalCmd(const char *cmdline);
 
@@ -59,4 +55,4 @@ private:
     HANDLE _stderr{INVALID_HANDLE_VALUE};
 };
 
-#endif // ExternalCmd_h
+#endif  // ExternalCmd_h

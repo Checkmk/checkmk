@@ -22,9 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #include "EventLog.h"
-
 
 EventLog::EventLog(LPCSTR name) : _name(name) {
     open();
@@ -50,7 +48,7 @@ void EventLog::seek(DWORD record_number) {
         // not actually seeking but storing for the next actual read
         _record_offset = record_number;
     }
-    _buffer_offset = _buffer_used; // enforce that a new chunk is fetched
+    _buffer_offset = _buffer_used;  // enforce that a new chunk is fetched
 }
 
 EVENTLOGRECORD *EventLog::read() {
@@ -130,7 +128,7 @@ void EventLog::open() {
         throw win_exception(std::string("failed to open eventlog: ") + _name);
     }
 
-    _buffer_offset = _buffer_used; // enforce that a new chunk is fetched
+    _buffer_offset = _buffer_used;  // enforce that a new chunk is fetched
 }
 
 void EventLog::close() { CloseEventLog(_log); }
@@ -175,4 +173,3 @@ bool EventLog::fillBuffer() {
         throw win_exception(std::string("Can't read eventlog ") + _name, error);
     }
 }
-

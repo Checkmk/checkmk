@@ -23,10 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Configuration.h"
+#include <shlwapi.h>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
-#include <shlwapi.h>
 #include "PerfCounter.h"
 #include "logging.h"
 #include "stringutil.h"

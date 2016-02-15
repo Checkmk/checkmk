@@ -22,24 +22,22 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #include "ExternalCmd.h"
-#include "Environment.h"
-#include "types.h"
-#include "logging.h"
 #include <memory>
-
+#include "Environment.h"
+#include "logging.h"
+#include "types.h"
 
 extern bool with_stderr;
 extern HANDLE g_workers_job_object;
-
 
 ExternalCmd::ExternalCmd(const char *cmdline) {
     SECURITY_DESCRIPTOR security_descriptor;
     SECURITY_ATTRIBUTES security_attributes;
     // initialize security descriptor (Windows NT)
     if (Environment::isWinNt()) {
-        InitializeSecurityDescriptor(&security_descriptor, SECURITY_DESCRIPTOR_REVISION);
+        InitializeSecurityDescriptor(&security_descriptor,
+                                     SECURITY_DESCRIPTOR_REVISION);
         SetSecurityDescriptorDacl(&security_descriptor, true, nullptr, false);
         security_attributes.lpSecurityDescriptor = &security_descriptor;
     } else {
@@ -126,13 +124,11 @@ DWORD ExternalCmd::stderrAvailable() {
     return available;
 }
 
-DWORD ExternalCmd::readStdout(char *buffer, size_t buffer_size,
-                              bool block) {
+DWORD ExternalCmd::readStdout(char *buffer, size_t buffer_size, bool block) {
     return readPipe(_stdout, buffer, buffer_size, block);
 }
 
-DWORD ExternalCmd::readStderr(char *buffer, size_t buffer_size,
-                              bool block) {
+DWORD ExternalCmd::readStderr(char *buffer, size_t buffer_size, bool block) {
     if (!with_stderr) {
         return readPipe(_stderr, buffer, buffer_size, block);
     } else {
@@ -155,4 +151,3 @@ DWORD ExternalCmd::readPipe(HANDLE pipe, char *buffer, size_t buffer_size,
     }
     return bytes_read;
 }
-

@@ -4246,30 +4246,40 @@ def do_git_commit():
         git_command(["config", "user.email", "check_mk"])
         git_command(["config", "user.name", "check_mk"])
 
-        # Make sure that .gitignore-files are present and uptodate
-        file(defaults.default_config_dir + "/.gitignore", "w").write(
-            "*\n"
-            "!*.d\n"
-            "!.gitignore\n"
-            "*swp\n"
-            "*.mk.new\n")
-        for subdir in os.listdir(defaults.default_config_dir):
-            if subdir.endswith(".d"):
-                file(defaults.default_config_dir + "/" + subdir + "/.gitignore", "w").write(
-                    "*\n"
-                    "!wato\n"
-                    "!wato/*\n")
+        write_gitignore_files()
 
         git_command(["add", ".gitignore", "*.d/wato"])
         git_command(["commit", "--untracked-files=no", "--author", author, "-m", shell_quote(_("Initialized GIT for Check_MK"))])
 
     # Only commit, if something is changed
-    if os.popen("cd '%s' && git status --untracked-files=no --porcelain" % defaults.default_config_dir).read().strip():
+    if os.popen("cd '%s' && git status --porcelain" % defaults.default_config_dir).read().strip():
         git_command(["add", "*.d/wato"])
         message = ", ".join(g_git_messages)
         if not message:
             message = _("Unknown configuration change")
         git_command(["commit", "--author", author, "-m", shell_quote(message)])
+
+
+# Make sure that .gitignore-files are present and uptodate. Only files below the "wato" directories
+# should be under git control. The files in etc/check_mk/*.mk should not be put under control.
+#
+# FIXME TODO: Should also be written on regular commits to make it possible to update the files
+def write_gitignore_files():
+    file(defaults.default_config_dir + "/.gitignore", "w").write(
+        "*\n"
+        "!*.d\n"
+        "!.gitignore\n"
+        "*swp\n"
+        "*.mk.new\n")
+
+    for subdir in os.listdir(defaults.default_config_dir):
+        if subdir.endswith(".d"):
+            file(defaults.default_config_dir + "/" + subdir + "/.gitignore", "w").write(
+                "*\n"
+                "!wato\n")
+
+            if os.path.exists(defaults.default_config_dir + "/" + subdir + "/wato"):
+                file(defaults.default_config_dir + "/" + subdir + "/wato/.gitignore", "w").write("!*\n")
 
 
 # Make sure that the user is in all of cgs contact groups.

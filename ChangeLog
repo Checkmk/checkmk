@@ -12,6 +12,7 @@
 
     WATO:
     * 3060 FIX: Folder properties: Fixed exception when a user has no alias set...
+    * 3062 FIX: Git integration: Fixed not adding files in WATO folders to git control
 
     Event Console:
     * 3058 FIX: Event Console is now allowing non loadable MIB modules on startup...

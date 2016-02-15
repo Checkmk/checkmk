@@ -1,4 +1,7 @@
 1.2.9i1:
+    Core & Setup:
+    * 3193 FIX: Fixed fake check results for hosts...
+
     Checks & Agents:
     * 3183 aruba_wlc_aps: new check which monitors the provisioned accesspoints of an Aruba Network WLAN Controller
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...

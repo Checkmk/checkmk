@@ -2,6 +2,9 @@
     Checks & Agents:
     * 2996 websphere_mq_queues: now able to configure levels for used percentage of total queues
 
+    Multisite:
+    * 3076 FIX: fixed broken views in check_mk raw edition
+
 
 1.2.8b2:
     Core & Setup:

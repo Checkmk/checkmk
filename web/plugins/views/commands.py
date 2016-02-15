@@ -717,6 +717,8 @@ def has_recurring_downtimes():
     try:
         wato.recurring_downtimes_types # Check if this exists
         return True
+    except AttributeError:
+        return False
     except NameError:
         return False
 

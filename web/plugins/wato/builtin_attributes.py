@@ -141,7 +141,7 @@ register_hook('validate-host', validate_host_parents)
 class NetworkScanAttribute(ValueSpecAttribute):
     def __init__(self):
         def get_all_user_ids():
-            return [ (user_id, "%s (%s)" % (user_id, user["alias"]))
+            return [ (user_id, "%s (%s)" % (user_id, user.get("alias", user_id)))
                      for user_id, user in userdb.load_users(lock = False).items() ]
 
         ValueSpecAttribute.__init__(self, "network_scan",

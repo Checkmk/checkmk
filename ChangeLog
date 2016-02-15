@@ -6,6 +6,9 @@
     Multisite:
     * 3059 FIX: Fixed highlighting of availability timeline time slices
 
+    WATO:
+    * 3060 FIX: Folder properties: Fixed exception when a user has no alias set...
+
     Event Console:
     * 3058 FIX: Event Console is now allowing non loadable MIB modules on startup...
 

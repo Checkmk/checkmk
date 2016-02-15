@@ -1,0 +1,11 @@
+Title: Folder properties: Fixed exception when a user has no alias set
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1455532388
+
+The "Network Scan" property caused the page to break when at least one
+user had no alias set.

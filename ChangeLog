@@ -8,6 +8,7 @@
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters
     * 3075 FIX: windows agent: fixed data encryption of realtime updates were incompatible...
+    * 3205 FIX: raritan_pdu_inlet: Fixed exception in case phases report a non OK state
 
     Multisite:
     * 3059 FIX: Fixed highlighting of availability timeline time slices

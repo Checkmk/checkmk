@@ -1,0 +1,10 @@
+Title: raritan_pdu_inlet: Fixed exception in case phases report a non OK state
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1455551228
+
+

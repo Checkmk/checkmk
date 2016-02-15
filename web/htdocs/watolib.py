@@ -3069,7 +3069,7 @@ def check_mk_remote_automation(siteid, command, args, indata, stdin_data=None, t
             ("arguments",  mk_repr(args)),       # The arguments for the command
             ("indata",     mk_repr(indata)),     # The input data
             ("stdin_data", mk_repr(stdin_data)), # The input data for stdin
-            ("timeout",    mk_repr(indata)),     # The timeout
+            ("timeout",    mk_repr(timeout)),     # The timeout
         ])
     return response
 

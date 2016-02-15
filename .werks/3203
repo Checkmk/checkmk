@@ -1,0 +1,34 @@
+Title: Distributed WATO: Fixed exception in remote host service discovery
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455540745
+Class: fix
+
+Fixed an exception which could occur during automation calls between distributed
+sites:
+
+2016-02-15 13:49:14 [3] [13761] /heute/check_mk/wato.py Internal error: Traceback (most recent call last):
+  File "/omd/sites/heute/share/check_mk/web/htdocs/index.py", line 131, in handler
+    handler()
+  File "/omd/sites/heute/share/check_mk/web/htdocs/wato.py", line 188, in page_handler
+    result = modefunc("action")
+  File "/omd/sites/heute/share/check_mk/web/htdocs/wato.py", line 15850, in <lambda>
+    "inventory"          : (["hosts"], lambda phase: mode_inventory(phase, False)),
+  File "/omd/sites/heute/share/check_mk/web/htdocs/wato.py", line 2669, in mode_inventory
+    check_mk_automation(host.site_id(), "set-autochecks", [hostname], active_checks)
+  File "/omd/sites/heute/share/check_mk/web/htdocs/watolib.py", line 3878, in check_mk_automation
+    return check_mk_remote_automation(siteid, command, args, indata, stdin_data, timeout)
+  File "/omd/sites/heute/share/check_mk/web/htdocs/watolib.py", line 3072, in check_mk_remote_automation
+    ("timeout",    mk_repr(indata)),     # The timeout
+  File "/omd/sites/heute/share/check_mk/web/htdocs/watolib.py", line 3099, in do_remote_automation
+    raise MKAutomationException("<pre>%s</pre>" % response)
+MKAutomationException: <pre>%d format: a number is required, not dictTraceback (most recent call last):
+  File &quot;/omd/sites/slave/share/check_mk/web/htdocs/index.py&quot;, line 63, in handler
+    handler()
+  File &quot;/omd/sites/slave/share/check_mk/web/htdocs/wato.py&quot;, line 9515, in page_automation
+    result = check_mk_local_automation(cmk_command, args, indata, stdin_data, timeout)
+  File &quot;/omd/sites/slave/share/check_mk/web/htdocs/watolib.py&quot;, line 3883, in check_mk_local_automation
+    args = [ &quot;--timeout&quot;, &quot;%d&quot; % timeout ] + args
+TypeError: %d format: a number is required, not dic

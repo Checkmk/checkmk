@@ -864,7 +864,7 @@ def get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan, on_er
     # Handle discovered services -> "new"
     new_items = discover_services(hostname, None, use_caches, do_snmp_scan, on_error, ipaddress)
     for check_type, item, paramstring in new_items:
-       services[(check_type, item)] = ("new", paramstring)
+        services[(check_type, item)] = ("new", paramstring)
 
     # Match with existing items -> "old" and "vanished"
     old_items = parse_autochecks_file(hostname)

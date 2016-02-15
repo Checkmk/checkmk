@@ -109,7 +109,8 @@ def check_cmctc_lcp(item, params, info, sensortype):
                     extra_state = 2
                 elif value >= warn:
                     extra_state = 1
-                if states[-1]:
+
+                if extra_state:
                     extra_info += " (warn/crit at %d/%d%s)" % (warn, crit, unit)
             else:
                 perfdata = [(sensortype, value)]

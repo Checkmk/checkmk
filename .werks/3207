@@ -1,0 +1,9 @@
+Title: msexch_dag.copyqueue: Fixed broken check in case of non OK state
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455551666
+Class: fix
+
+

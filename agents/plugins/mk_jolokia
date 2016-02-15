@@ -26,7 +26,8 @@
 
 import urllib2, sys, os, socket, pprint, base64
 
-opt_debug = '--debug' in sys.argv
+opt_verbose = '--verbose' in sys.argv
+opt_debug   = '--debug' in sys.argv
 
 class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
     """
@@ -49,13 +50,15 @@ class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
 
 def fetch_var(protocol, server, port, path, suburi, itemspec):
     url = "%s://%s:%d/%s/%s" % (protocol, server, port, suburi, path)
-    if opt_debug:
+    if opt_verbose:
         sys.stderr.write("DEBUG: Fetching: %s\n" % url)
     try:
         json = urllib2.urlopen(url).read()
-        if opt_debug:
+        if opt_verbose:
             sys.stderr.write("DEBUG: Result: %s\n\n" % json)
     except Exception, e:
+        if opt_debug:
+            raise
         sys.stderr.write("ERROR: %s\n" % e)
         return []
 
@@ -79,7 +82,7 @@ def fetch_var(protocol, server, port, path, suburi, itemspec):
     # take the first items first value.
     # {'Catalina:host=localhost,path=\\/test,type=Manager': {'activeSessions': 0}}
     if 'value' not in obj:
-        if opt_debug:
+        if opt_verbose:
             sys.stderr.write("ERROR: not found: %s\n" % path)
         return []
     val = obj.get('value', None)

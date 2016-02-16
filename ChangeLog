@@ -12,6 +12,7 @@
     * 3206 FIX: esx_vsphere_hostsystem.mem_usage_cluster: Fixed broken check
     * 3207 FIX: msexch_dag.copyqueue: Fixed broken check in case of non OK state
     * 3208 FIX: cmctc_lcp: Fixed broken check in case of non OK state
+    * 3209 FIX: esx_vsphere_datastores: Added missing uncommitted and overprovisioned graphs
 
     Multisite:
     * 3059 FIX: Fixed highlighting of availability timeline time slices

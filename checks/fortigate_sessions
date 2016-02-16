@@ -31,7 +31,11 @@ def inventory_fortigate_sessions(info):
 
 def check_fortigate_sessions(item, params, info):
     warn, crit = params
-    current = saveint(info[0][0])
+
+    if not info[0]:
+        return
+    current = int(info[0][0])
+
     state = 0
     icon = ''
     if current >= warn:

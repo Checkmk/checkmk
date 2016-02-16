@@ -21,6 +21,7 @@
             NOTE: Please refer to the migration notes!
     * 3176 FIX: Fix invalid scaling of some obscure metrics by factor 100...
     * 3177 FIX: mem.linux: added all missing metric definitions
+    * 3217 FIX: fortigate_sessions: Fixed exception in case of empty data provided by the device
 
     Multisite:
     * 3059 FIX: Fixed highlighting of availability timeline time slices

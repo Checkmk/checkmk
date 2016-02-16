@@ -19,6 +19,7 @@
     * 3212 FIX: cmciii.phase: Fixed totally broken check
     * 3213 FIX: ibm_svc_disks netapp_api_disk: Fixed exception when disks are failed
     * 3176 FIX: Fix invalid scaling of some obscure metrics by factor 100...
+    * 3177 FIX: mem.linux: added all missing metric definitions
 
     Multisite:
     * 3059 FIX: Fixed highlighting of availability timeline time slices

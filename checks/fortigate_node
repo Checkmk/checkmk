@@ -24,9 +24,31 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 #
 # monitoring of cluster members (nodes) in fortigate high availability tree
 #
+
+# cluster info
+# .1.3.6.1.4.1.12356.101.13.1.1.0 3
+# .1.3.6.1.4.1.12356.101.13.1.7.0 DEPTHA-HA
+
+# node info
+# .1.3.6.1.4.1.12356.101.13.2.1.1.11.1 NODE-01
+# .1.3.6.1.4.1.12356.101.13.2.1.1.11.2 NODE-02
+# .1.3.6.1.4.1.12356.101.13.2.1.1.3.1 13
+# .1.3.6.1.4.1.12356.101.13.2.1.1.3.2 1
+# .1.3.6.1.4.1.12356.101.13.2.1.1.4.1 52
+# .1.3.6.1.4.1.12356.101.13.2.1.1.4.2 21
+# .1.3.6.1.4.1.12356.101.13.2.1.1.6.1 1884
+# .1.3.6.1.4.1.12356.101.13.2.1.1.6.2 742
+
+# only one node given => standalone cluster
+# .1.3.6.1.4.1.12356.101.13.2.1.1.11.1  ""
+# .1.3.6.1.4.1.12356.101.13.2.1.1.3.1  0
+# .1.3.6.1.4.1.12356.101.13.2.1.1.4.1  19
+# .1.3.6.1.4.1.12356.101.13.2.1.1.6.1  443
+
 
 #   .--Info----------------------------------------------------------------.
 #   |                         ___        __                                |
@@ -36,20 +58,51 @@
 #   |                        |___|_| |_|_|  \___/                          |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-def inventory_fortigate_cluster(info):
-    return [(None, None)]
 
 
-def check_fortigate_cluster(_no_item, _no_params, info):
-    mode_name = {
+def parse_fortigate_node(info):
+    parsed = {}
+    if info[0]:
+        parsed["cluster_info"] = info[0][0]
+
+    for hostname, cpu_str, memory_str, sessions_str, oid_end in info[1]:
+        # This means we have a standalone cluster
+        if len(info[1]) == 1:
+            item_name = "Cluster"
+        elif hostname:
+            item_name = hostname
+        else:
+            item_name = "Node %s" % oid_end
+
+        parsed.setdefault("nodes", {})
+        parsed["nodes"].setdefault(item_name, {
+            "cpu"      : float(cpu_str),
+            "memory"   : int(memory_str),
+            "sessions" : int(sessions_str),
+        })
+
+    return parsed
+
+
+def inventory_fortigate_cluster(parsed):
+    if "cluster_info" in parsed:
+        return [(None, None)]
+
+
+def check_fortigate_cluster(_no_item, _no_params, parsed):
+    map_mode = {
         "1": "Standalone",
         "2": "Active/Active",
         "3": "Active/Passive"
     }
-    return 0, "%s, mode %s" % (info[0][0][1], mode_name[info[0][0][0]])
+
+    if "cluster_info" in parsed:
+        system_mode, group_name = parsed["cluster_info"]
+        return 0, "System mode: %s, Group: %s" % (map_mode[system_mode], group_name)
 
 
 check_info["fortigate_node"] = {
+    "parse_function"      : parse_fortigate_node,
     "inventory_function"  : inventory_fortigate_cluster,
     "check_function"      : check_fortigate_cluster,
     "service_description" : "Cluster Info",
@@ -58,11 +111,11 @@ check_info["fortigate_node"] = {
         (".1.3.6.1.4.1.12356.101.13.1", [1,  # fgHaSystemMode
                                          7,  # fgHaGroupName
                                          ]),
-        (".1.3.6.1.4.1.12356.101.13.2.1.1", [11, # fgHaStatsSerial
+        (".1.3.6.1.4.1.12356.101.13.2.1.1", [11, # fgHaStatsHostname
                                              3,  # fgHaStatsCpuUsage
                                              4,  # fgHaStatsMemUsage
-                                             5,  # fgHaStatsNetUsage
                                              6,  # fgHaStatsSesCount
+                                             OID_END
                                              ])
     ],
 }
@@ -77,18 +130,19 @@ check_info["fortigate_node"] = {
 #   |                          \____|_|    \___/                           |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
 fortigate_node_cpu_default_levels = (80.0, 90.0)
 
 
-def inventory_fortigate_node_cpu(info):
-    for serial, cpu, mem, net, ses in info[1]:
-        yield serial, "fortigate_node_cpu_default_levels"
+def inventory_fortigate_node_cpu(parsed):
+    for hostname in parsed["nodes"]:
+        yield hostname, "fortigate_node_cpu_default_levels"
 
 
-def check_fortigate_node_cpu(item, params, info):
-    for serial, cpu, mem, net, ses in info[1]:
-        if serial == item:
-            return check_cpu_util(float(cpu), params).next()
+def check_fortigate_node_cpu(item, params, parsed):
+    if item in parsed["nodes"]:
+        return check_cpu_util(parsed["nodes"][item]["cpu"], params)
 
 
 check_info["fortigate_node.cpu"] = {
@@ -109,39 +163,41 @@ check_info["fortigate_node.cpu"] = {
 #   |              |_|  |_|\___|_| |_| |_|\___/|_|   \__, |                |
 #   |                                                |___/                 |
 #   '----------------------------------------------------------------------'
+
+
 fortigate_node_memory_default_levels = (70, 80)
 
-def inventory_fortigate_node_mem(info):
-    for serial, cpu, mem, net, ses in info[1]:
-        yield serial, "fortigate_node_memory_default_levels"
+
+def inventory_fortigate_node_mem(parsed):
+    for hostname in parsed["nodes"]:
+        yield hostname, "fortigate_node_memory_default_levels"
 
 
-def check_fortigate_node_mem(item, params, info):
-    for serial, cpu, mem, net, ses in info[1]:
-        if serial == item:
-            if type(params) == dict:
-                params = params["levels"]
+def check_fortigate_node_mem(item, params, parsed):
+    if item in parsed["nodes"]:
+        if type(params) == dict:
+            params = params["levels"]
 
-            # This check is only able to check the used space
-            # The checkgroup "memory" might set negative values which act as levels for free space
-            # These levels are converted to used space, too..
-            warn, crit = map(abs, params)
+        # This check is only able to check the used space
+        # The checkgroup "memory" might set negative values which act as levels for free space
+        # These levels are converted to used space, too..
+        warn, crit = map(abs, params)
 
-            current = int(mem)
+        current = parsed["nodes"][item]["memory"]
 
-            status = 0
-            if current >= crit:
-                status = 2
-            elif current >= warn:
-                status = 1
+        status = 0
+        if current >= crit:
+            status = 2
+        elif current >= warn:
+            status = 1
 
-            if status > 0:
-                wcsuffix = ", (warn/crit at %d/%d)" % (warn, crit)
-            else:
-                wcsuffix = ""
+        if status > 0:
+            wcsuffix = ", (warn/crit at %d/%d)" % (warn, crit)
+        else:
+            wcsuffix = ""
 
-            return status, "%s%% used%s" % (mem, wcsuffix),\
-                [("mem_usage", current, warn, crit)]
+        return status, "%s%% used%s" % (current, wcsuffix),\
+            [("mem_usage", current, warn, crit)]
 
 
 check_info["fortigate_node.memory"] = {
@@ -164,34 +220,33 @@ check_info["fortigate_node.memory"] = {
 
 fortigate_node_sessions_default_levels = (100000, 150000)
 
-def inventory_fortigate_node_ses(info):
-    for serial, cpu, mem, net, ses in info[1]:
-        yield serial, "fortigate_node_sessions_default_levels"
+def inventory_fortigate_node_ses(parsed):
+    for hostname in parsed["nodes"]:
+        yield hostname, "fortigate_node_sessions_default_levels"
 
 
-def check_fortigate_node_ses(item, params, info):
-    for serial, cpu, mem, net, ses in info[1]:
-        if serial == item:
-            if type(params) == dict:
-                params = params["levels"]
+def check_fortigate_node_ses(item, params, parsed):
+    if item in parsed["nodes"]:
+        if type(params) == dict:
+            params = params["levels"]
 
-            warn, crit = map(int, params)
+        warn, crit = map(int, params)
 
-            current = int(ses)
+        current = parsed["nodes"][item]["sessions"]
 
-            status = 0
-            if current >= crit:
-                status = 2
-            elif current >= warn:
-                status = 1
+        status = 0
+        if current >= crit:
+            status = 2
+        elif current >= warn:
+            status = 1
 
-            if status > 0:
-                wcsuffix = ", (warn/crit at %d/%d)" % (warn, crit)
-            else:
-                wcsuffix = ""
+        if status > 0:
+            wcsuffix = ", (warn/crit at %d/%d)" % (warn, crit)
+        else:
+            wcsuffix = ""
 
-            return status, "%s Sessions%s" % (ses, wcsuffix),\
-                [("session", current, warn, crit)]
+        return status, "%s Sessions%s" % (current, wcsuffix),\
+            [("session", current, warn, crit)]
 
 
 check_info["fortigate_node.sessions"] = {
@@ -200,5 +255,3 @@ check_info["fortigate_node.sessions"] = {
     "service_description" : "Sessions %s",
     "has_perfdata"        : True,
 }
-
-#.

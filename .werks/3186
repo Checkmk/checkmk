@@ -1,0 +1,9 @@
+Title: fortigate_node: fixed empty item
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+State: unknown
+Version: 1.2.9i1
+Date: 1455636238
+

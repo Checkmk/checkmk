@@ -1,0 +1,9 @@
+Title: lnx_distro: Now detecting Oracle VM Server correctly
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455629695
+Class: fix
+
+

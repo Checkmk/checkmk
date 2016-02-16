@@ -38,6 +38,9 @@
     Event Console:
     * 3058 FIX: Event Console is now allowing non loadable MIB modules on startup...
 
+    HW/SW-Inventory:
+    * 3219 FIX: lnx_distro: Now detecting Oracle VM Server correctly
+
 
 1.2.8b1:
     Core & Setup:

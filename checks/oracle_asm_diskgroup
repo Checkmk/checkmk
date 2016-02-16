@@ -61,6 +61,7 @@ def check_oracle_asm_diskgroup(item, params, info):
         dg_name = name.rstrip('/')
 
         if dg_name == item:
+            add_text = ""
             if typ in ('NORMAL', 'HIGH'):
                 if typ == 'NORMAL':
                     if voting_files == 'Y':
@@ -89,7 +90,7 @@ def check_oracle_asm_diskgroup(item, params, info):
 
                     free_space_mb = int(req_mir_free_mb)
 
-                    infotext += ', required mirror free space used'
+                    add_text = ', required mirror free space used'
 
             else:
                 # EXTERNAL Redundancy
@@ -99,6 +100,7 @@ def check_oracle_asm_diskgroup(item, params, info):
                    free_space_mb, 0, params)
 
             infotext += ', %s redundancy' % typ.lower()
+            infotext += add_text
 
             offline_disks = int(offline_disks)
             if offline_disks > 0:

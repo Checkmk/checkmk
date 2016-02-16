@@ -1,0 +1,9 @@
+Title: ucd_cpu_load: this service will be discovered although we prefer HOST-RESOURCES MIB
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.9i1
+Date: 1455615905
+Class: fix
+
+

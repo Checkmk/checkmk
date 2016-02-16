@@ -24,10 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+# .1.3.6.1.2.1.25.3.3.1.2.768 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.768
+# .1.3.6.1.2.1.25.3.3.1.2.769 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.769
+
+
 hr_cpu_default_levels = (80.0, 90.0)
+
+
 def inventory_hr_cpu(info):
     if len(info) >= 1:
         return [(None, "hr_cpu_default_levels")]
+
 
 def check_hr_cpu(_no_item, params, info):
     num_cpus = 0

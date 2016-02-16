@@ -10,6 +10,7 @@
     * 3075 FIX: windows agent: fixed data encryption of realtime updates were incompatible...
     * 3205 FIX: raritan_pdu_inlet: Fixed exception in case phases report a non OK state
     * 3206 FIX: esx_vsphere_hostsystem.mem_usage_cluster: Fixed broken check
+    * 3209 FIX: esx_vsphere_datastores: Added missing uncommitted and overprovisioned graphs
 
     Multisite:
     * 3059 FIX: Fixed highlighting of availability timeline time slices

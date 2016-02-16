@@ -13,6 +13,7 @@
     * 3207 FIX: msexch_dag.copyqueue: Fixed broken check in case of non OK state
     * 3208 FIX: cmctc_lcp: Fixed broken check in case of non OK state
     * 3209 FIX: esx_vsphere_datastores: Added missing uncommitted and overprovisioned graphs
+    * 3210 FIX: oracle_asm_diskgroup: Fixed exception when using required mirror free space parameter
 
     Multisite:
     * 3059 FIX: Fixed highlighting of availability timeline time slices

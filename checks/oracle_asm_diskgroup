@@ -89,7 +89,7 @@ def check_oracle_asm_diskgroup(item, params, info):
 
                     free_space_mb = int(req_mir_free_mb)
 
-                    infotext += ', required mirror free space used' % lower()
+                    infotext += ', required mirror free space used'
 
             else:
                 # EXTERNAL Redundancy

@@ -57,6 +57,8 @@ def state(site_id, deflt=None):
 
 # Returns dictionary of all known site states
 def states():
+    if _live == None:
+        connect()
     return _site_status
 
 

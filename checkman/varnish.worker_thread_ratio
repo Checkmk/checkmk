@@ -1,5 +1,6 @@
 title: HTTP Accelerator Statistics via Varnishstat on Linux: Worker Thread Ratio
 agents: linux
+catalog: os/networking
 license: GPL
 distribution: check_mk
 description:

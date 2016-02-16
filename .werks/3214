@@ -1,0 +1,16 @@
+Title: Removing SNMP checks for non SNMP hosts and agent based checks for non agent hosts
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455620283
+Class: fix
+
+When changing the agent type of a host, for example from Agent to SNMP, vice versa or
+from Agent+SNMP to only SNMP it could happen that former discovered services of now
+disabled protocols were left assigned to a host leading to still contacting the host
+with the disabled protocol. This could only be solved by rediscovering the services
+of this host.
+
+This has now been changed to disable the services right after next restart/reload of
+the core after changing the agent type.

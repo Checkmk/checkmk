@@ -506,6 +506,16 @@ def output_check_info():
 def active_check_service_description(act_info, params):
     return sanitize_service_description(act_info["service_description"](params).replace('$HOSTNAME$', g_hostname))
 
+
+def is_snmp_check(check_name):
+    return check_name in snmp_info
+
+
+def is_tcp_check(check_name):
+    return check_name in check_info \
+       and check_name not in snmp_info
+
+
 #.
 #   .--Hosts---------------------------------------------------------------.
 #   |                       _   _           _                              |
@@ -1813,6 +1823,13 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
             pass # regular case: list of hostnames
         elif hostlist != []:
             raise MKGeneralException("Invalid entry '%r' in check table. Must be single hostname or list of hostnames" % hostlist)
+
+        # Skip SNMP checks for non SNMP hosts (might have been discovered before with other
+        # agent setting. Remove them without rediscovery). Same for agent based checks.
+        if not is_snmp_host(hostname) and is_snmp_check(checkname):
+            return
+        if not is_tcp_host(hostname) and is_tcp_check(checkname):
+            return
 
         if hosttags_match_taglist(hosttags, tags) and \
                in_extraconf_hostlist(hostlist, hostname):

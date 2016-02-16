@@ -851,18 +851,27 @@ def reparse_cmciii_phase(parsed):
     output = {}
     for name, value in inputs.items():
         if name[1].find("Phase") != -1:
-            device, phase, value_name  = name[1].split('.')
-            unit_id = int( name[0])
-            unit = units[unit_id-1][1]
-            phase = phase[-1]
+            parts = name[1].split('.')
+            if len(parts) == 3:
+                device, phase, value_name = parts
+            else:
+                device, phase, value_name, value_name_add = parts
+                value_name = (value_name, value_name_add)
+
+            unit_id = int(name[0])
+            unit    = units[unit_id-1][1]
+            phase   = phase[-1]
+
             output.setdefault((unit, device, phase), {})
             output[(unit, device, phase)][value_name] = value
     return output
 
+
 def inventory_cmciii_phase(parsed):
     parsed = reparse_cmciii_phase(parsed)
-    for (device, unit, phase), values in parsed.items():
+    for device, unit, phase in parsed.keys():
         yield "%s %s Phase %s" % (device, unit, phase), {}
+
 
 def check_cmciii_phase(item, params, parsed):
     device, unit, word, phase = item.split()
@@ -872,11 +881,10 @@ def check_cmciii_phase(item, params, parsed):
     parsed[item] = {}
     parsed[item]["voltage"] = float(data['Voltage']['Value'].split()[0]), None
     parsed[item]["current"] = float(data['Current']['Value'].split()[0]), None
-    parsed[item]["power"]   = float(data['Power']['Value'].split()[0]), None
-    #parsed[item]["appower"] = float(data['Current']['Value'].split()[0]), None
-    parsed[item]["energy"]  = float(data['Energy']['Value'].split()[0]), None
+    parsed[item]["power"]   = float(data[('Power', 'Active')]['Value'].split()[0]), None
+    parsed[item]["energy"]  = float(data[('Energy', 'Active')]['Value'].split()[0]), None
 
-    return check_elphase(item, params, unit_items)
+    return check_elphase(item, params, parsed)
 
 check_info['cmciii.phase'] = {
     "check_function"      : check_cmciii_phase,

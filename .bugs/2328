@@ -1,9 +1,9 @@
 Title: Disable SNMP checks for SNMP disabled hosts
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2016-02-11 09:07:20
 Targetversion: 1.2.8
-Class: bug
 
 aktuell ist es so, dass - wenn SNMP checks mal da sind (autochecks, explizit),
 der Host auch SNMP machen wird, selbst wenn das per Tag ausgeschaltet ist.
@@ -14,3 +14,5 @@ Beispiel:
 
 Man könnte das in get_check_table() geradeziehen. Dann werden auch die
 "no agent" hosts so behandelt, dass dann alle Check_MK-Checks wegfallen.
+
+2016-02-16 12:01:06: changed state open -> done

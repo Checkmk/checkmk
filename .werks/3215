@@ -1,0 +1,9 @@
+Title: WATO git ignore files are now updated on each commit
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.9i1
+Date: 1455625320
+Class: fix
+
+

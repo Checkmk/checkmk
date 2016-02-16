@@ -104,6 +104,9 @@ wato_styles = [ "pages", "wato", "status" ]
 
 
 def init_wato_datastructures():
+    if config.wato_use_git:
+        prepare_git_commit()
+
     create_sample_config()        # if called for the very first time!
     declare_host_tag_attributes() # create attributes out of tag definitions
     declare_site_attribute()      # create attribute for distributed WATO
@@ -147,9 +150,6 @@ def page_handler():
     # WATO.
     if html.is_transaction():
         lock_exclusive()
-
-    if config.wato_use_git:
-        prepare_git_commit()
 
     try:
         init_wato_datastructures()

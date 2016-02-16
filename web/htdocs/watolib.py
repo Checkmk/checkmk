@@ -4254,6 +4254,7 @@ def do_git_commit():
 
     # Only commit, if something is changed
     if os.popen("cd '%s' && git status --porcelain" % defaults.default_config_dir).read().strip():
+        write_gitignore_files()
         git_command(["add", "*.d/wato"])
         message = ", ".join(g_git_messages)
         if not message:

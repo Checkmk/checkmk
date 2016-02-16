@@ -354,7 +354,7 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
                 # the cache files of the nodes.
                 ipaddress = lookup_ip_address(node)
                 new_info = get_realhost_info(node, ipaddress, checkname,
-                               max_cachefile_age == None and cluster_max_cachefile_age or max_cache_age,
+                               max_cachefile_age == None and cluster_max_cachefile_age or max_cachefile_age,
                                ignore_check_interval=True)
                 if new_info != None:
                     if add_nodeinfo:

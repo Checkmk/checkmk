@@ -20,6 +20,7 @@
     * 3185 FIX: ucd_cpu_load: this service will be discovered although we prefer HOST-RESOURCES MIB
             NOTE: Please refer to the migration notes!
     * 3176 FIX: Fix invalid scaling of some obscure metrics by factor 100...
+    * 3177 FIX: mem.linux: added all missing metric definitions
 
     Multisite:
     * 3059 FIX: Fixed highlighting of availability timeline time slices

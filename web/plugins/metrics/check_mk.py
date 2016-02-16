@@ -521,6 +521,12 @@ metric_info["mem_pages_rate"] = {
     "color": "34/a",
 }
 
+metric_info["mem_lnx_total_used"] = {
+    "title" : _("Total used memory"),
+    "color": "#70f038",
+    "unit" : "bytes",
+}
+
 metric_info["mem_lnx_cached"] = {
     "title" : _("File contents"),
     "color": "#91cceb",
@@ -539,6 +545,43 @@ metric_info["mem_lnx_slab"] = {
     "unit" : "bytes",
 }
 
+metric_info["mem_lnx_sreclaimable"] = {
+    "title" : _("Reclaimable memory"),
+    "color": "23/a",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_sunreclaim"] = {
+    "title" : _("Unreclaimable memory"),
+    "color": "24/a",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_pending"] = {
+    "title" : _("Pending memory"),
+    "color": "25/a",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_unevictable"] = {
+    "title" : _("Unevictable memory"),
+    "color": "26/a",
+    "unit" : "bytes",
+}
+
+
+metric_info["mem_lnx_active"] = {
+    "title" : _("Active"),
+    "color": "#dd2020",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_anon_pages"] = {
+    "title" : _("Anonymous pages"),
+    "color": "#cc4040",
+    "unit" : "bytes",
+}
+
 metric_info["mem_lnx_active_anon"] = {
     "title" : _("Active (anonymous)"),
     "color": "#ff4040",
@@ -548,6 +591,12 @@ metric_info["mem_lnx_active_anon"] = {
 metric_info["mem_lnx_active_file"] = {
     "title" : _("Active (files)"),
     "color": "#ff8080",
+    "unit" : "bytes",
+}
+
+metric_info["mem_lnx_inactive"] = {
+    "title" : _("Inactive"),
+    "color": "#275c6b",
     "unit" : "bytes",
 }
 
@@ -653,26 +702,32 @@ metric_info["mem_lnx_mapped"] = {
     "unit" : "bytes",
 }
 
+metric_info["mem_lnx_anon_huge_pages"] = {
+    "title" : _("Anonymous huge pages"),
+    "color": "#f0f0f0",
+    "unit" : "bytes",
+}
+
 metric_info["mem_lnx_huge_pages_total"] = {
-    "title" : _("Total"),
+    "title" : _("Huge pages total"),
     "color": "#f0f0f0",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_huge_pages_free"] = {
-    "title" : _("Free"),
+    "title" : _("Huge pages free"),
     "color": "#f0a0f0",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_huge_pages_rsvd"] = {
-    "title" : _("Reserved part of Free"),
+    "title" : _("Huge pages reserved part of free"),
     "color": "#40f0f0",
     "unit" : "bytes",
 }
 
 metric_info["mem_lnx_huge_pages_surp"] = {
-    "title" : _("Surplus"),
+    "title" : _("Huge pages surplus"),
     "color": "#90f0b0",
     "unit" : "bytes",
 }
@@ -3126,20 +3181,22 @@ check_metrics["check_mk-mem.linux"] = {
     "hardware_corrupted" : { "name" : "mem_lnx_hardware_corrupted", },
 
     # Several computed values should not be graphed because they
-    # are already contained in the other graphs.
-    "sreclaimable"     : { "auto_graph" : False },
-    "pending"          : { "auto_graph" : False },
-    "sunreclaim"       : { "auto_graph" : False },
-    "anon_huge_pages"  : { "auto_graph" : False },
-    "anon_pages"       : { "auto_graph" : False },
-    "caches"           : { "auto_graph" : False },
-    "mapped"           : { "auto_graph" : False },
-    "active"           : { "auto_graph" : False },
-    "inactive"         : { "auto_graph" : False },
-    "swap_free"        : { "auto_graph" : False },
-    "total_used"       : { "auto_graph" : False },
-    "unevictable"      : { "auto_graph" : False },
-    "mem_free"         : { "auto_graph" : False },
+    # are already contained in the other graphs. Or because they
+    # are bizarre
+    "caches"           : { "name" : "caches",          "auto_graph" : False },
+    "swap_free"        : { "name" : "swap_free",       "auto_graph" : False },
+    "mem_free"         : { "name" : "mem_free",        "auto_graph" : False },
+
+    "sreclaimable"     : { "name" : "mem_lnx_sreclaimable",    "auto_graph" : False },
+    "pending"          : { "name" : "mem_lnx_pending",         "auto_graph" : False },
+    "sunreclaim"       : { "name" : "mem_lnx_sunreclaim",      "auto_graph" : False },
+    "anon_huge_pages"  : { "name" : "mem_lnx_anon_huge_pages", "auto_graph" : False },
+    "anon_pages"       : { "name" : "mem_lnx_anon_pages",      "auto_graph" : False },
+    "mapped"           : { "name" : "mem_lnx_mapped",          "auto_graph" : False },
+    "active"           : { "name" : "mem_lnx_active",          "auto_graph" : False },
+    "inactive"         : { "name" : "mem_lnx_inactive",        "auto_graph" : False },
+    "total_used"       : { "name" : "mem_lnx_total_used",      "auto_graph" : False },
+    "unevictable"      : { "name" : "mem_lnx_unevictable",     "auto_graph" : False },
 }
 
 check_metrics["check_mk-mem.vmalloc"] = {

@@ -37,7 +37,8 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 def inventory_fortigate_cluster(info):
-    return [(None, None)]
+    if info[0]:
+        return [(None, None)]
 
 
 def check_fortigate_cluster(_no_item, _no_params, info):
@@ -46,7 +47,9 @@ def check_fortigate_cluster(_no_item, _no_params, info):
         "2": "Active/Active",
         "3": "Active/Passive"
     }
-    return 0, "%s, mode %s" % (info[0][0][1], mode_name[info[0][0][0]])
+
+    if info[0]:
+        return 0, "%s, mode %s" % (info[0][0][1], mode_name[info[0][0][0]])
 
 
 check_info["fortigate_node"] = {

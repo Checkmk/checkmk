@@ -1,0 +1,9 @@
+Title: fortigate_node: Fixed wrong discovered services on non cluster devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455628735
+Class: fix
+
+

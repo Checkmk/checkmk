@@ -140,7 +140,7 @@ bool BufferedSocketProxy::flushInt() {
 EncryptingBufferedSocketProxy::EncryptingBufferedSocketProxy(
     SOCKET socket, const std::string &passphrase, size_t buffer_size)
     : BufferedSocketProxy(socket, buffer_size), _crypto(passphrase) {
-    _blockSize = _crypto.blockSize();
+    _blockSize = _crypto.blockSize() / 8;
 
     _plain.resize(_blockSize * 8);
 }
@@ -181,9 +181,10 @@ void EncryptingBufferedSocketProxy::output(const char *format, ...) {
 
 void EncryptingBufferedSocketProxy::flush() {
     // this assumes the plain buffer is large enouph for one measly block
-    DWORD required_size = _crypto.encrypt(
-        reinterpret_cast<BYTE *>(&(_plain)[0]), _written, _plain.size(), true);
-    writeBinary(&_plain[0], required_size);
+    char *buffer = &_plain[0];
+    DWORD required_size = _crypto.encrypt(reinterpret_cast<BYTE *>(buffer),
+                                          _written, _plain.size(), true);
+    writeBinary(buffer, required_size);
 
     _written = 0;
 

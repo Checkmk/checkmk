@@ -75,7 +75,7 @@ def check_filer_disks(disks, params):
         if len(total_disks) > 0:
             info_text = "%s disks" % len(total_disks)
             if len(prefailed_disks) > 0:
-                info_text += " (%d prefailed)" % (prefailed)
+                info_text += " (%d prefailed)" % (prefailed_disks)
             yield 0, info_text
             info_texts = []
             for disk in prefailed_disks:

@@ -1,0 +1,9 @@
+Title: ibm_svc_disks netapp_api_disk: Fixed exception when disks are failed
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455614967
+Class: fix
+
+

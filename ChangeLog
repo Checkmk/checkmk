@@ -2,6 +2,7 @@
     Core & Setup:
     * 3193 FIX: Fixed fake check results for hosts...
     * 3214 FIX: Removing SNMP checks for non SNMP hosts and agent based checks for non agent hosts...
+    * 3220 FIX: Check_MK HW/SW Inventory is now always disabled for "No Agent" hosts
 
     Checks & Agents:
     * 3183 aruba_wlc_aps: new check which monitors the provisioned accesspoints of an Aruba Network WLAN Controller

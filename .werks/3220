@@ -1,0 +1,10 @@
+Title: Check_MK HW/SW Inventory is now always disabled for "No Agent" hosts
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1455631116
+
+

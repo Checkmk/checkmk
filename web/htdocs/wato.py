@@ -8036,6 +8036,9 @@ def mode_notification_rule(phase, profilemode):
 
     if userid:
         users = userdb.load_users(lock = phase == 'action')
+        if userid not in users:
+            raise MKUserError(None, _("The user you are trying to edit "
+                                      "notification rules for does not exist."))
         user = users[userid]
         rules = user.setdefault("notification_rules", [])
     else:
@@ -10096,6 +10099,8 @@ def mode_edit_user(phase):
             users[id] = new_user
         else:
             id = html.get_unicode_input("edit").strip()
+            if id not in users:
+                raise MKUserError(None, _("The user you are trying to edit does not exist."))
             new_user = users[id]
 
         # Full name

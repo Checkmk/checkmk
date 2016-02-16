@@ -990,7 +990,7 @@ multisite_painters["svc_pnpgraph" ] = {
     "columns" : [ "host_name", "service_description", "service_perf_data", "service_metrics", "service_check_command" ],
     "options" : [ 'pnp_timerange' ],
     "paint"   : paint_time_graph,
-    "printable" : False,
+    "printable" : "time_graph",
 }
 
 
@@ -1345,7 +1345,7 @@ multisite_painters["host_pnpgraph" ] = {
     "columns" : [ "host_name", "host_perf_data", "host_metrics", "host_check_command" ],
     "options" : [ 'pnp_timerange' ],
     "paint"   : paint_time_graph,
-    "printable" : False,
+    "printable" : "time_graph",
 }
 
 def paint_host_black(row):

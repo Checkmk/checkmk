@@ -1,0 +1,10 @@
+Title: Fixed broken nagios config because of missing contact group check-mk-notify with rule based notifications enabled
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1455633251
+
+Fixes the error "Could not find any contactgroup matching 'check-mk-notify'" when starting the nagios core.

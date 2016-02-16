@@ -734,9 +734,9 @@ define servicegroup {
 """ % (make_utf8(sg), make_utf8(alias)))
 
 def create_nagios_config_contactgroups(outfile):
-    if define_contactgroups:
-        cgs = list(contactgroups_to_define)
-        cgs.sort()
+    cgs = list(contactgroups_to_define)
+    cgs.sort()
+    if cgs:
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Contact groups (controlled by define_contactgroups)\n")
         outfile.write("# ------------------------------------------------------------\n\n")
@@ -870,6 +870,7 @@ def create_nagios_config_contacts(outfile, hostnames):
             outfile.write("}\n\n")
 
     if enable_rulebased_notifications and hostnames:
+        contactgroups_to_define.add("check-mk-notify")
         outfile.write(
             "# Needed for rule based notifications\n"
             "define contact {\n"

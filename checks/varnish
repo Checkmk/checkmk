@@ -623,22 +623,22 @@ factory_settings["varnish_worker_thread_ratio_default_levels"] = {
 def check_varnish_worker_thread_ratio(_no_item, params, parsed):
     if "n" in parsed:
         state = 0
-        rate = 0.0
+        ratio = 0.0
 
         if parsed["n"]["wrk_create"][0] > 0:
-            rate = parsed["n"]["wrk"][0] / parsed["n"]["wrk_create"][0] * 100
+            ratio = parsed["n"]["wrk"][0] / parsed["n"]["wrk_create"][0] * 100
 
-        infotext = "%.1f%%" % rate
+        infotext = "%.1f%%" % ratio
         warn, crit = params["levels_lower"]
 
-        if rate < crit:
+        if ratio < crit:
             state = 2
-        elif rate < warn:
+        elif ratio < warn:
             state = 1
         if state > 0:
             infotext += " (warn/crit below %.1f%%/%.1f%%)" % (warn, crit)
 
-        return state, infotext, [("varnish_worker_thread_ratio", rate, warn, crit)]
+        return state, infotext, [("varnish_worker_thread_ratio", ratio, warn, crit)]
 
 
 check_info["varnish.worker_thread_ratio"] = {

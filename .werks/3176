@@ -1,0 +1,11 @@
+Title: Fix invalid scaling of some obscure metrics by factor 100
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455617759
+Class: fix
+
+This has been done by dropping the <tt>render_scale</tt> argument of
+metric units. The affected checks have been declared to scale by 100
+explicitely now.

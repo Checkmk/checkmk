@@ -24,6 +24,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+# .1.3.6.1.2.1.25.2.3.1.2.1 .1.3.6.1.2.1.25.2.1.2 --> HOST-RESOURCES-MIB::hrStorageType.1
+# .1.3.6.1.2.1.25.2.3.1.2.3 .1.3.6.1.2.1.25.2.1.3 --> HOST-RESOURCES-MIB::hrStorageType.3
+# .1.3.6.1.2.1.25.2.3.1.3.1 Physical memory --> HOST-RESOURCES-MIB::hrStorageDescr.1
+# .1.3.6.1.2.1.25.2.3.1.3.3 Virtual memory --> HOST-RESOURCES-MIB::hrStorageDescr.3
+# .1.3.6.1.2.1.25.2.3.1.4.1 1024 --> HOST-RESOURCES-MIB::hrStorageAllocationUnits.1
+# .1.3.6.1.2.1.25.2.3.1.4.3 1024 --> HOST-RESOURCES-MIB::hrStorageAllocationUnits.3
+# .1.3.6.1.2.1.25.2.3.1.5.1 8122520 --> HOST-RESOURCES-MIB::hrStorageSize.1
+# .1.3.6.1.2.1.25.2.3.1.5.3 21230740 --> HOST-RESOURCES-MIB::hrStorageSize.3
+# .1.3.6.1.2.1.25.2.3.1.6.1 7749124 --> HOST-RESOURCES-MIB::hrStorageUsed.1
+# .1.3.6.1.2.1.25.2.3.1.6.3 7749124 --> HOST-RESOURCES-MIB::hrStorageUsed.3
+
+
 # Juniper devices put information about the device into the
 # field where we expect the mount point. Ugly. Remove that crap.
 def fix_hr_fs_mountpoint(mp):

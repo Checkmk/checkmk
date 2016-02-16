@@ -20,6 +20,8 @@
     * 3211 FIX: logwatch: Fixed broken error messages in case of failed filesystem operations
     * 3212 FIX: cmciii.phase: Fixed totally broken check
     * 3213 FIX: ibm_svc_disks netapp_api_disk: Fixed exception when disks are failed
+    * 3185 FIX: ucd_cpu_load: this service will be discovered although we prefer HOST-RESOURCES MIB
+            NOTE: Please refer to the migration notes!
     * 3176 FIX: Fix invalid scaling of some obscure metrics by factor 100...
     * 3177 FIX: mem.linux: added all missing metric definitions
     * 3217 FIX: fortigate_sessions: Fixed exception in case of empty data provided by the device

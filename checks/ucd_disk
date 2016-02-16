@@ -51,7 +51,7 @@ check_info['ucd_disk'] = {
                                         "6",    # dskTotal -> in kBytes
                                         "7",    # dskAvail -> in kBytes
                                   ]),
-    'snmp_scan_function'        : ucd_scan_function,
+    'snmp_scan_function'        : prefer_hr_scan_function,
     "group"                     : "filesystem",
     'default_levels_variable'   : "filesystem_default_levels",
     'includes'                  : [ "ucd.include", "df.include" ],

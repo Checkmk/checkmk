@@ -583,6 +583,7 @@ multisite_painters["svc_metrics"] = {
     "short" : _("Metrics"),
     "columns" : [ "service_check_command", "service_perf_data"],
     "paint" : paint_service_metrics,
+    "printable" : False,
 }
 
 def get_perfdata_nth_value(row, n, remove_unit = False):

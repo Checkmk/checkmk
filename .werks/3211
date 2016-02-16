@@ -1,0 +1,9 @@
+Title: logwatch: Fixed broken error messages in case of failed filesystem operations
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455609175
+Class: fix
+
+

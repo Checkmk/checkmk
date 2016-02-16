@@ -2778,6 +2778,124 @@ metric_info["sslproxy_active_sessions"] = {
     "color" : "#11FF11",
 }
 
+for what, descr, color in [
+        ("busy",      "too many",      "11/a"),
+        ("unhealthy", "not attempted", "13/a"),
+        ("req",       "requests",      "15/a"),
+        ("recycle",   "recycles",      "21/a"),
+        ("retry",     "retry",         "23/a"),
+        ("fail",      "failures",      "25/a"),
+        ("toolate",   "was closed",    "31/a"),
+        ("conn",      "success",       "33/a"),
+        ("reuse",     "reuses",        "35/a")
+    ]:
+    metric_info_key = "varnish_backend_%s_rate" % what
+    metric_info[metric_info_key] = {
+        "title" : _("Backend Conn. %s" % descr),
+        "unit"  : "1/s",
+        "color" : color,
+    }
+
+for what, descr, color in [
+        ("hit",     "hits",          "11/a"),
+        ("miss",    "misses",        "13/a"),
+        ("hitpass", "hits for pass", "21/a")
+    ]:
+    metric_info_key = "varnish_cache_%s_rate" % what
+    metric_info[metric_info_key] = {
+        "title" : _("Cache %s" % descr),
+        "unit"  : "1/s",
+        "color" : color,
+    }
+
+for what, descr, color in [
+        ("drop",      "Connections dropped",         "12/a"),
+        ("req",       "Client requests received",    "22/a"),
+        ("conn",      "Client connections accepted", "32/a"),
+        ("drop_late", "Connection dropped late",     "42/a"),
+    ]:
+    metric_info_key = "varnish_client_%s_rate" % what
+    metric_info[metric_info_key] = {
+        "title" : _(descr),
+        "unit"  : "1/s",
+        "color" : color,
+    }
+
+for what, descr, color in [
+        ("oldhttp", "pre HTTP/1.1 closed", "11/a"),
+        ("head",    "head",                "13/a"),
+        ("eof",     "EOF",                 "15/a"),
+        ("zero",    "zero length",         "21/a"),
+        ("304",     "no body (304)",       "23/a"),
+        ("1xx",     "no body (1xx)",       "25/a"),
+        ("204",     "no body (204)",       "31/a"),
+        ("length",  "with length",         "33/a"),
+        ("failed",  "failed",              "35/a"),
+        ("bad",     "had bad headers",     "41/a"),
+        ("close",   "wanted close",        "43/a"),
+        ("chunked", "chunked",             "45/a"),
+    ]:
+    metric_info_key = "varnish_fetch_%s_rate" % what
+    metric_info[metric_info_key] = {
+        "title" : _("Fetch %s" % descr),
+        "unit"  : "1/s",
+        "color" : color,
+    }
+
+for what, descr, color in [
+        ("expired",   "Expired objects",   "21/a"),
+        ("lru_nuked", "LRU nuked objects", "31/a"),
+        ("lru_moved", "LRU moved objects", "41/a"),
+    ]:
+    metric_info_key = "varnish_objects_%s_rate" % what
+    metric_info[metric_info_key] = {
+        "title" : _(descr),
+        "unit"  : "1/s",
+        "color" : color,
+    }
+
+for what, descr, color in [
+        ("",        "Worker threads",             "11/a"),
+        ("_lqueue", "Work request queue length",  "13/a"),
+        ("_create", "Worker threads created",     "15/a"),
+        ("_drop",   "Dropped work requests",      "21/a"),
+        ("_failed", "Worker threads not created", "23/a"),
+        ("_queued", "Queued work requests",       "25/a"),
+        ("_max",    "Worker threads limited",     "31/a"),
+    ]:
+    metric_info_key = "varnish_worker%s_rate" % what
+    metric_info[metric_info_key] = {
+        "title" : _(descr),
+        "unit"  : "1/s",
+        "color" : color,
+    }
+
+# ESI = Edge Side Includes
+metric_info["varnish_esi_errors_rate"] = {
+    "title" : _("ESI Errors"),
+    "unit"  : "1/s",
+    "color" : "13/a",
+}
+
+metric_info["varnish_esi_warnings_rate"] = {
+    "title" : _("ESI Warnings"),
+    "unit"  : "1/s",
+    "color" : "21/a",
+}
+
+metric_info["varnish_backend_success_ratio"] = {
+    "title" : _("Varnish Backend success ratio"),
+    "unit"  : "%",
+    "color" : "#60c0c0",
+}
+
+metric_info["varnish_worker_thread_ratio"] = {
+    "title" : _("Varnish Worker thread ratio"),
+    "unit"  : "%",
+    "color" : "#60c0c0",
+}
+
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -4257,6 +4375,18 @@ perfometer_info.append(("stacked", [
 perfometer_info.append({
     "type"      : "linear",
     "segments"  : [ "cache_hit_ratio" ],
+    "total"     : 100,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "varnish_worker_thread_ratio" ],
+    "total"     : 100,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "varnish_backend_success_ratio" ],
     "total"     : 100,
 })
 
@@ -5836,4 +5966,86 @@ graph_info.append({
                     ("icmp_active_sessions", "stack"),
                     ("sslproxy_active_sessions", "stack"),
                 ],
+})
+
+graph_info.append({
+    "title"     : _("Varnish Backend Connections"),
+    "metrics"   : [
+        ( "varnish_backend_busy_rate",      "line" ),
+        ( "varnish_backend_unhealthy_rate", "line" ),
+        ( "varnish_backend_req_rate",       "line" ),
+        ( "varnish_backend_recycle_rate",   "line" ),
+        ( "varnish_backend_retry_rate",     "line" ),
+        ( "varnish_backend_fail_rate",      "line" ),
+        ( "varnish_backend_toolate_rate",   "line" ),
+        ( "varnish_backend_conn_rate",      "line" ),
+        ( "varnish_backend_reuse_rate",     "line" ),
+    ],
+})
+
+graph_info.append({
+    "title"     : _("Varnish Cache"),
+    "metrics"   : [
+        ( "varnish_cache_miss_rate",    "line" ),
+        ( "varnish_cache_hit_rate",     "line" ),
+        ( "varnish_cache_hitpass_rate", "line" ),
+    ],
+})
+
+graph_info.append({
+    "title"     : _("Varnish Clients"),
+    "metrics"   : [
+        ( "varnish_client_req_rate",       "line" ),
+        ( "varnish_client_conn_rate",      "line" ),
+        ( "varnish_client_drop_rate",      "line" ),
+        ( "varnish_client_drop_late_rate", "line" ),
+    ],
+})
+
+graph_info.append({
+    "title"     : _("Varnish ESI Errors and Warnings"),
+    "metrics"   : [
+        ( "varnish_esi_errors_rate",   "line" ),
+        ( "varnish_esi_warnings_rate", "line" ),
+    ],
+})
+
+graph_info.append({
+    "title"     : _("Varnish Fetch"),
+    "metrics"   : [
+        ( "varnish_fetch_oldhttp_rate", "line" ),
+        ( "varnish_fetch_head_rate",    "line" ),
+        ( "varnish_fetch_eof_rate",     "line" ),
+        ( "varnish_fetch_zero_rate",    "line" ),
+        ( "varnish_fetch_304_rate",     "line" ),
+        ( "varnish_fetch_length_rate",  "line" ),
+        ( "varnish_fetch_failed_rate",  "line" ),
+        ( "varnish_fetch_bad_rate",     "line" ),
+        ( "varnish_fetch_close_rate",   "line" ),
+        ( "varnish_fetch_1xx_rate",     "line" ),
+        ( "varnish_fetch_chunked_rate", "line" ),
+        ( "varnish_fetch_204_rate",     "line" ),
+    ],
+})
+
+graph_info.append({
+    "title"     : _("Varnish Objects"),
+    "metrics"   : [
+        ( "varnish_objects_expired_rate",   "line"),
+        ( "varnish_objects_lru_nuked_rate", "line"),
+        ( "varnish_objects_lru_moved_rate", "line"),
+    ],
+})
+
+graph_info.append({
+    "title"     : _("Varnish Worker"),
+    "metrics"   : [
+        ( "varnish_worker_lqueue_rate", "line" ),
+        ( "varnish_worker_create_rate", "line" ),
+        ( "varnish_worker_drop_rate",   "line" ),
+        ( "varnish_worker_rate",        "line" ),
+        ( "varnish_worker_failed_rate", "line" ),
+        ( "varnish_worker_queued_rate", "line" ),
+        ( "varnish_worker_max_rate",    "line" ),
+    ],
 })

@@ -732,6 +732,12 @@ if type trd >/dev/null; then
    trd -s
 fi
 
+# HTTP Accelerator Statistics
+if type varnishstat >/dev/null; then
+   echo "<<<varnish>>>"
+   varnishstat -1
+fi
+
 # Start new liveupdate process in background on each agent execution. Starting
 # a new live update process will terminate the old one automatically after
 # max. 1 sec.

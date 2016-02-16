@@ -1,0 +1,9 @@
+Title: varnish, varnish.backend, varnish.backend_success_ratio, varnish.cache, varnish.cache_hit_ratio, varnish.client, varnish.esi, varnish.fetch, varnish.objects, varnish.worker, varnish.worker_thread_ratio: new checks which monitor HTTP Accelerator Statistics via varnishstat on Linux
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1455612229
+Class: feature
+
+

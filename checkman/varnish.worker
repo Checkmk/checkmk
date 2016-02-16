@@ -1,0 +1,13 @@
+title: HTTP Accelerator Statistics via Varnishstat on Linux: Worker
+agents: linux
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the worker of Varnish Server provided by 'varnishstat -1'.
+ The Linux Agent needs to be installed.
+
+ There are no default levels. Upper levels can be set for
+ "dropped work requests", "worker threads not created" and "queued work requests".
+
+inventory:
+ One service is created.

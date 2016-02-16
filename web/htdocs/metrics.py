@@ -1080,11 +1080,10 @@ def render_graph_pnp(graph_template, translated_metrics):
         rrd = "$RRDBASE$_" + metrics["orig_name"] + ".rrd"
         scale = metrics["scale"]
         unit = metrics["unit"]
-        render_scale = unit.get("render_scale", 1)
 
-        if scale != 1.0 or render_scale != 1.0:
+        if scale != 1.0:
             rrdgraph_commands += "DEF:%s_UNSCALED=%s:1:MAX " % (var_name, rrd)
-            rrdgraph_commands += "CDEF:%s=%s_UNSCALED,%f,* " % (var_name, var_name, scale * render_scale)
+            rrdgraph_commands += "CDEF:%s=%s_UNSCALED,%f,* " % (var_name, var_name, scale)
 
         else:
             rrdgraph_commands += "DEF:%s=%s:1:MAX " % (var_name, rrd)

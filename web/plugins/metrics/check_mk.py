@@ -27,7 +27,7 @@
 # TODO Graphingsystem:
 # - Default-Template: Wenn im Graph kein "range" angegeben ist, aber
 # in der Unit eine "range"-Angabe ist, dann soll diese genommen werden.
-# "%" und "ratio". Und dann sämtliche Schablonen, die nur wegen Range
+# Und dann sämtliche Schablonen, die nur wegen Range
 # 0..100 da sind, wieder durch generic ersetzen.
 
 # Metric definitions for Check_MK's checks
@@ -67,14 +67,6 @@ unit_info["%"] = {
     "render" : lambda v: percent_human_redable(v, 3),
 }
 
-# Similar as %, but value ranges from 0.0 ... 1.0
-unit_info["ratio"] = {
-    "title"  : _("%"),
-    "description" : _("Percentage given in range (0...1)"),
-    "symbol" : _("%"),
-    "render_scale" : 100.0, # Scale by this before rendering if "render" not being used
-    "render" : lambda v: percent_human_redable(v, 3),
-}
 
 unit_info["s"] = {
     "title"    : _("sec"),
@@ -1418,7 +1410,7 @@ metric_info["disk_queue_length"] = {
 
 metric_info["disk_utilization"] = {
     "title" : _("Disk utilization"),
-    "unit"  : "ratio",
+    "unit"  : "%",
     "color" : "#a05830",
 }
 
@@ -3210,6 +3202,19 @@ check_metrics["check_mk-emc_isilon_quota"]                      = df_translation
 check_metrics["check_mk-emc_isilon_ifs"]                        = df_translation
 check_metrics["check_mk-mongodb_collections"]                   = df_translation
 
+disk_utilization_translation = { "disk_utilization" : { "scale" : 100.0 } }
+
+check_metrics["check_mk-diskstat"]                      = disk_utilization_translation
+check_metrics["check_mk-emc_vplex_director_stats"]      = disk_utilization_translation
+check_metrics["check_mk-emc_vplex_volumes"]             = disk_utilization_translation
+check_metrics["check_mk-esx_vsphere_counters.diskio"]   = disk_utilization_translation
+check_metrics["check_mk-hp_msa_controller.io"]          = disk_utilization_translation
+check_metrics["check_mk-hp_msa_disk.io"]                = disk_utilization_translation
+check_metrics["check_mk-hp_msa_volume.io"]              = disk_utilization_translation
+check_metrics["check_mk-winperf_phydisk"]               = disk_utilization_translation
+check_metrics["check_mk-arbor_peakflow_sp.disk_usage"]  = disk_utilization_translation
+check_metrics["check_mk-arbor_peakflow_tms.disk_usage"] = disk_utilization_translation
+check_metrics["check_mk-arbor_pravail.disk_usage"]      = disk_utilization_translation
 
 # in=0;;;0; inucast=0;;;; innucast=0;;;; indisc=0;;;; inerr=0;0.01;0.1;; out=0;;;0; outucast=0;;;; outnucast=0;;;; outdisc=0;;;; outerr=0;0.01;0.1;; outqlen=0;;;0;
 if_translation = {
@@ -3293,10 +3298,11 @@ check_metrics["check_mk-mysql.innodb_io"] = {
 }
 
 check_metrics["check_mk-esx_vsphere_counters.diskio"] = {
-    "read"      : { "name" : "disk_read_throughput" },
-    "write"     : { "name" : "disk_write_throughput" },
-    "ios"       : { "name" : "disk_ios" },
-    "latency"   : { "name" : "disk_latency" },
+    "read"             : { "name" : "disk_read_throughput" },
+    "write"            : { "name" : "disk_write_throughput" },
+    "ios"              : { "name" : "disk_ios" },
+    "latency"          : { "name" : "disk_latency" },
+    "disk_utilization" : { "scale" : 100.0 },
 }
 
 check_metrics["check_mk-emcvnx_disks"] = {
@@ -3306,7 +3312,8 @@ check_metrics["check_mk-emcvnx_disks"] = {
 
 check_metrics["check_mk-diskstat"] = {
     "read" : { "name" : "disk_read_throughput" },
-    "write": { "name" : "disk_write_throughput" }
+    "write": { "name" : "disk_write_throughput" },
+    "disk_utilization" : { "scale" : 100.0 },
 }
 
 check_metrics["check_mk-ibm_svc_systemstats.iops"] = {
@@ -3524,11 +3531,13 @@ check_metrics["check_mk-raritan_pdu_outletcount"] = {
 }
 
 check_metrics["check_mk-docsis_channels_upstream"] = {
-    "total"      : { "name" : "total_modems" },
-    "active"     : { "name" : "active_modems" },
-    "registered" : { "name" : "registered_modems" },
-    "util"       : { "name" : "channel_utilization" },
-    "frequency"  : { "scale" : 1000000.0 },
+    "total"                   : { "name" : "total_modems" },
+    "active"                  : { "name" : "active_modems" },
+    "registered"              : { "name" : "registered_modems" },
+    "util"                    : { "name" : "channel_utilization" },
+    "frequency"               : { "scale" : 1000000.0 },
+    "codewords_corrected"     : { "scale" : 100.0 },
+    "codewords_uncorrectable" : { "scale" : 100.0 },
 }
 
 check_metrics["check_mk-docsis_channels_downstream"] = {
@@ -4131,7 +4140,7 @@ perfometer_info.append({
 })
 
 # TODO total = None?
-perfometer_info.append(("linear", ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None, ("mem_total,mem_used,+,swap_used,/", "ratio"))))
+perfometer_info.append(("linear", ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None, ("mem_total,mem_used,+,swap_used,/,100,*", "%"))))
 
 perfometer_info.append({
     "type"      : "linear",

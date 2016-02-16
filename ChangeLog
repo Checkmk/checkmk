@@ -18,6 +18,7 @@
     * 3213 FIX: ibm_svc_disks netapp_api_disk: Fixed exception when disks are failed
     * 3185 FIX: ucd_cpu_load: this service will be discovered although we prefer HOST-RESOURCES MIB
             NOTE: Please refer to the migration notes!
+    * 3176 FIX: Fix invalid scaling of some obscure metrics by factor 100...
 
     Multisite:
     * 3059 FIX: Fixed highlighting of availability timeline time slices

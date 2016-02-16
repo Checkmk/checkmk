@@ -468,6 +468,11 @@ define service {
     for acttype, rules in active_checks.items():
         entries = host_extra_conf(hostname, rules)
         if entries:
+            # Skip Check_MK HW/SW Inventory for all ping hosts, even when the user has enabled
+            # the inventory for ping only hosts
+            if acttype == "cmk_inv" and is_ping_host(hostname):
+                continue
+
             active_checks_to_define.add(acttype)
             act_info = active_check_info[acttype]
             for params in entries:

@@ -1,0 +1,9 @@
+Title: fortigate_sessions: Fixed exception in case of empty data provided by the device
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455628575
+Class: fix
+
+

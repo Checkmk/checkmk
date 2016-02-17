@@ -10056,7 +10056,6 @@ def mode_edit_user(phase):
 
     if new:
         vs_user_id = UserID(
-            validate_value = validate_user_id,
             allow_empty = False
         )
     else:
@@ -10100,6 +10099,9 @@ def mode_edit_user(phase):
         if new:
             id = vs_user_id.from_html_vars("user_id")
             vs_user_id.validate_value(id, "user_id")
+
+            if id in users:
+                raise MKUserError("user_id", _("This username is already being used by another user."))
 
             new_user = {}
             users[id] = new_user
@@ -10487,12 +10489,6 @@ def filter_hidden_users(users):
         return dict([ (id, user) for id, user in users.items() if id not in config.wato_hidden_users ])
     else:
         return users
-
-
-def validate_user_id(value, varprefix):
-    users = userdb.load_users(lock = phase == 'action')
-    if new and id in users:
-        raise MKUserError(varprefix, _("This username is already being used by another user."))
 
 
 def generate_wato_users_elements_function(none_value, only_contacts = False):

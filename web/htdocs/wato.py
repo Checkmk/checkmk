@@ -2130,7 +2130,7 @@ def mode_object_parameters(phase):
                 checkgroup = serviceinfo["checkgroup"]
                 checktype = serviceinfo["checktype"]
                 if not group:
-                    htmlwrite(_("This check is not configurable via WATO"))
+                    html.write(_("This check is not configurable via WATO"))
                 else:
                     rulespec = g_rulespecs["static_checks:" + checkgroup]
                     itemspec = rulespec["itemspec"]

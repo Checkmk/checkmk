@@ -646,7 +646,7 @@ class HTTPUrl(TextAscii):
         return value
 
     def value_to_text(self, url):
-        if not url.startswith("http://") and not value.startswith("https://"):
+        if not url.startswith("http://") and not url.startswith("https://"):
             url = "http://" + url
         try:
             parts = urlparse.urlparse(url)

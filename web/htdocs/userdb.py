@@ -791,21 +791,24 @@ def declare_custom_user_attrs():
 #   '----------------------------------------------------------------------'
 
 def load_connection_config():
+    user_connections = []
+
     filename = multisite_dir + "user_connections.mk"
     if not os.path.exists(filename):
-        return []
+        return user_connections
+
     try:
-        vars = {
-            "user_connections" : [],
+        context = {
+            "user_connections": user_connections,
         }
-        execfile(filename, vars, vars)
-        return vars["user_connections"]
+        execfile(filename, context, context)
+        return context["user_connections"]
 
     except Exception, e:
         if config.debug:
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
                           (filename, e)))
-        return vars["user_connections"]
+        return user_connections
 
 
 def save_connection_config(connections):

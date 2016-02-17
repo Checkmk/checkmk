@@ -370,7 +370,7 @@ def render_snapin(name, state):
 
 def snapin_exception(e):
     if config.debug:
-        raise
+        raise e
     else:
         html.write("<div class=snapinexception>\n"
                 "<h2>%s</h2>\n"

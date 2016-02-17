@@ -1562,8 +1562,8 @@ class Folder(BaseFolder):
         # Must not fail because of auth problems. Auth is check at the
         # actually renamed host.
         changed = rename_host_in_list(self._attributes["parents"], oldname, newname)
-        self.mark_dirty()
-        self.folder().save_hosts()
+        self.mark_hosts_dirty()
+        self.save_hosts()
         return changed
 
 

@@ -1,0 +1,10 @@
+Title: brocade.temp: increased temperature default levels from 35/40 to 55/60
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.8b2
+Date: 1455717787
+
+

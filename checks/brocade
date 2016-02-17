@@ -106,7 +106,7 @@ check_info["brocade.power"] = {
 }
 
 factory_settings["brocade_temp_default_levels"] = {
-    "levels" : ( 35, 40 )
+    "levels" : ( 55, 60 )
 }
 
 def inventory_brocade_temp(info):

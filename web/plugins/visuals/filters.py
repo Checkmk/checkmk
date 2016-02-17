@@ -875,6 +875,7 @@ declare_filter(204, FilterText("log_state_type",     _("Log: state type"), "log"
 declare_filter(260, FilterText("log_contact_name",   _("Log: contact name (exact match)"),  "log", "log_contact_name",  "log_contact_name",  "="),
                                                                                                   _("Exact match, used for linking"))
 declare_filter(261, FilterText("log_contact_name_regex",   _("Log: contact name"),  "log", "log_contact_name",  "log_contact_name_regex",  "~~", negateable=True))
+declare_filter(262, FilterText("log_command_name_regex",  _("Log: command"),  "log", "log_command_name",  "log_command_name_regex",  "~~", negateable=True))
 
 class FilterLogState(Filter):
     def __init__(self):

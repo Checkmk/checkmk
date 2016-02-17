@@ -3884,30 +3884,21 @@ def check_mk_local_automation(command, args=[], indata="", stdin_data=None, time
 
     # Gather the command to use for executing --automation calls to check_mk
     # - First try to use the check_mk_automation option from the defaults
-    # - When not set try to detect the command for OMD or non OMD installations
-    #   - OMD 'own' apache mode or non OMD: check_mk --automation
-    #   - OMD 'shared' apache mode: Full path to the binary and the defaults
-    sudoline = None
+    # - When not set use "check_mk --automation"
     if defaults.check_mk_automation:
         commandargs = defaults.check_mk_automation.split()
-        cmd = commandargs + [ command, '--' ] + args
     else:
-        omd_mode, omd_site = html.omd_mode()
-        if not omd_mode or omd_mode == 'own':
-            commandargs = [ 'check_mk', '--automation' ]
-            cmd = commandargs  + [ command, '--' ] + args
-        else: # OMD shared mode
-            commandargs = [ 'sudo', '/bin/su', '-', omd_site, '-c', 'check_mk --automation' ]
-            cmd = commandargs[:-1] + [ commandargs[-1] + ' ' + ' '.join([ command, '--' ] + args) ]
-            sudoline = "%s ALL = (root) NOPASSWD: /bin/su - %s -c check_mk\\ --automation\\ *" % (html.apache_user(), omd_site)
+        commandargs = [ 'check_mk', '--automation' ]
 
+    cmd = commandargs  + [ command, '--' ] + args
     sudo_msg = ''
     if commandargs[0] == 'sudo':
-        if not sudoline:
-            if commandargs[1] == '-u': # skip -u USER in /etc/sudoers
-                sudoline = "%s ALL = (%s) NOPASSWD: %s *" % (html.apache_user(), commandargs[2], " ".join(commandargs[3:]))
-            else:
-                sudoline = "%s ALL = (root) NOPASSWD: %s *" % (html.apache_user(), commandargs[0], " ".join(commandargs[1:]))
+        if commandargs[1] == '-u': # skip -u USER in /etc/sudoers
+            sudoline = "%s ALL = (%s) NOPASSWD: %s *" % \
+                        (html.apache_user(), commandargs[2], " ".join(commandargs[3:]))
+        else:
+            sudoline = "%s ALL = (root) NOPASSWD: %s *" % \
+                        (html.apache_user(), " ".join(commandargs[1:]))
 
         sudo_msg = ("<p>The webserver is running as user which has no rights on the "
                     "needed Check_MK/Nagios files.<br>Please ensure you have set-up "

@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import defaults, re, os
+from lib import MKGeneralException
 
 # Load data of a host, cache it in the current HTTP request
 def host(hostname):

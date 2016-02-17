@@ -26,6 +26,7 @@
     * 3217 FIX: fortigate_sessions: Fixed exception in case of empty data provided by the device
     * 3186 FIX: fortigate_node: fixed empty item
             NOTE: Please refer to the migration notes!
+    * 2993 FIX: zfs_arc_cache: fixed crash, no longer reports unknown if not all data is available...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

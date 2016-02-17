@@ -1,0 +1,10 @@
+Title: mem.vmalloc: newer kernel versions (64bit) report wrong data, i.d. both VmallocUsed and Chunk equal zero, thus this check is obsolete
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1455721502
+
+

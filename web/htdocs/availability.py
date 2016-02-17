@@ -1276,7 +1276,7 @@ def find_next_choord(broken, scale):
 #   '----------------------------------------------------------------------'
 
 def get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_output, avoptions):
-    raise XXX
+    raise Exception("Not implemented yet. Sorry.")
 
 def get_bi_spans(tree, aggr_group, avoptions, timewarp):
     time_range, range_title = avoptions["range"]

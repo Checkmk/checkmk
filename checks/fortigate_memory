@@ -55,7 +55,7 @@ def check_fortigate_memory(item, params, info):
 	icon = "(!!)"
 
     perf = [("mem_usage", current, warn, crit)]
-    return(state, "%d%%%s (warn/crit at %d%%/%d%%)" % (current, icon, warn, crit), perf)
+    return (state, "%d%%%s (warn/crit at %d%%/%d%%)" % (current, icon, warn, crit), perf)
 
 check_info["fortigate_memory"] = {
     "check_function"        : check_fortigate_memory,

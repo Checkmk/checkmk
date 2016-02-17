@@ -3573,6 +3573,7 @@ class Color(ValueSpec):
         kwargs["regex_error"] = _("The color needs to be given in hex format.")
         ValueSpec.__init__(self, **kwargs)
         self._on_change = kwargs.get("on_change")
+        self._allow_empty = kwargs.get("allow_empty", True)
 
 
     def render_input(self, varprefix, value):

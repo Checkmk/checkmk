@@ -340,7 +340,7 @@ def ps_has_extended_perfdata(process_info):
 
 def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes", total_ram = None):
     now = time.time()
-    parms = ps_cleanup_params(params)
+    params = ps_cleanup_params(params)
 
     count = 0
     virtual_size   = 0

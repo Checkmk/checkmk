@@ -39,9 +39,11 @@ def inv_win_wmi_software(info):
     for line in info:
         pacname, vendor, version = line[0:3]
         dat = line[3]
-        install_date = ""
+
+        install_date = None
         if len(dat) == 8 and re.match("^20", dat):
             install_date = int(time.mktime(time.strptime(dat, "%Y%m%d")))
+
 	# contains language as well
 	if len(line) == 5:
 	    language = line[4]

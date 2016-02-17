@@ -45,7 +45,7 @@ void *create_inputbuffer(int fd, const int *termination_flag);
 void delete_inputbuffer(void *);
 void queue_add_connection(int cc);
 int queue_pop_connection();
-void queue_wakeup_all();
+void queue_terminate();
 void update_timeperiods_cache(time_t);
 void log_timeperiods_cache();
 

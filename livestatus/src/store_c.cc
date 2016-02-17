@@ -58,7 +58,7 @@ void queue_add_connection(int cc) { g_client_queue->addConnection(cc); }
 
 int queue_pop_connection() { return g_client_queue->popConnection(); }
 
-void queue_wakeup_all() { return g_client_queue->wakeupAll(); }
+void queue_terminate() { return g_client_queue->terminate(); }
 
 void store_register_comment(nebstruct_comment_data *d) {
     g_store->registerComment(d);

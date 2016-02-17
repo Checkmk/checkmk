@@ -281,7 +281,7 @@ void terminate_threads() {
         logger(LG_INFO, "Waiting for main to terminate...");
         pthread_join(g_mainthread_id, NULL);
         logger(LG_INFO, "Waiting for client threads to terminate...");
-        queue_wakeup_all();
+        queue_terminate();
         int t;
         for (t = 0; t < g_num_clientthreads; t++) {
             if (0 != pthread_join(g_clientthread_id[t], NULL)) {

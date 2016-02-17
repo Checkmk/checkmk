@@ -315,6 +315,10 @@ class WithPermissions(object):
         return self.reason_why_user_may_not(config.user_id, how)
 
 
+    def user_needs_permission(self, user_id, how):
+        raise NotImplementedError("Subclasses has to implement this!")
+
+
     def need_permission(self, how):
         self.user_needs_permission(config.user_id, how)
 
@@ -341,6 +345,7 @@ class WithPermissions(object):
 class WithPermissionsAndAttributes(WithPermissions):
     def __init__(self):
         WithPermissions.__init__(self)
+        self._attributes = {}
 
     # .--------------------------------------------------------------------.
     # | ATTRIBUTES                                                         |
@@ -360,6 +365,10 @@ class WithPermissionsAndAttributes(WithPermissions):
 
     def has_explicit_attribute(self, attrname):
         return attrname in self.attributes()
+
+
+    def effective_attributes(self):
+        raise NotImplementedError("Subclasses has to implement this!")
 
 
     def effective_attribute(self, attrname, default_value=None):
@@ -386,6 +395,10 @@ class BaseFolder(WithPermissionsAndAttributes):
         WithPermissions.__init__(self)
 
 
+    def hosts(self):
+        raise NotImplementedError("Subclasses has to implement this!")
+
+
     def host_names(self):
         return self.hosts().keys()
 
@@ -400,13 +413,6 @@ class BaseFolder(WithPermissionsAndAttributes):
 
     def has_hosts(self):
         return len(self.hosts()) != 0
-
-
-    def num_hosts_recursively(self):
-        num = self.num_hosts()
-        for subfolder in self.subfolders().values():
-            num += subfolder.num_hosts_recursively()
-        return num
 
 
     def host_validation_errors(self):
@@ -1056,6 +1062,13 @@ class Folder(BaseFolder):
     def num_hosts(self):
         # Do *not* load hosts here! This method must kept cheap
         return self._num_hosts
+
+
+    def num_hosts_recursively(self):
+        num = self.num_hosts()
+        for subfolder in self.subfolders().values():
+            num += subfolder.num_hosts_recursively()
+        return num
 
 
     def all_hosts_recursively(self):

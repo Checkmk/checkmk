@@ -65,7 +65,7 @@ register_configvar(group,
         help = _("If this option is set to a non-zero number, then Check_MK "
                  "keeps the last <i>X</i> notifications for later reference. "
                  "You can replay these notifications and analyse your set of "
-                 "notifications rules. This only works with rulebased notiications. Note: "
+                 "notifications rules. This only works with rulebased notifications. Note: "
                  "only notifications sent out by the local notification system can be "
                  "tracked. If you have a distributed environment you need to do the analysis "
                  "directly on the remote sites - unless you use a central spooling."),

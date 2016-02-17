@@ -1744,7 +1744,7 @@ def rename_host_as_parent(oldname, newname, in_folder=None):
 
     if in_folder.has_explicit_attribute("parents"):
         if in_folder.rename_parent(oldname, newname):
-            parents.append(somehost.name())
+            parents.append(in_folder.name())
 
     if parents:
         parents = [ "parents" ] * len(parents)

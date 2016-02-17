@@ -35,7 +35,7 @@ def ajax_tree_openclose():
     name = html.get_unicode_input("name")
 
     if not tree or not name:
-        raise lib.MKUserError(_('tree or name parameter missing'))
+        raise lib.MKUserError(None, _('tree or name parameter missing'))
 
     html.set_tree_state(tree, name, html.var("state"))
     html.save_tree_states()
@@ -120,7 +120,7 @@ def ajax_set_rowselection():
 
     action = html.var('action', 'set')
     if action not in [ 'add', 'del', 'set', 'unset' ]:
-        raise lib.MKUserError(_('Invalid action'))
+        raise lib.MKUserError(None, _('Invalid action'))
 
     rows  = html.var('rows', '').split(',')
 

@@ -43,7 +43,7 @@
 #   '----------------------------------------------------------------------'
 
 import os, shutil, subprocess, base64
-import defaults, config, hooks, userdb, multitar
+import defaults, config, hooks, userdb, multitar, pickle
 from lib import *
 from valuespec import *
 

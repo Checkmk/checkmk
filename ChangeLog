@@ -43,6 +43,7 @@
     * 3216 FIX: Fixed exception when trying to edit an already deleted user
     * 3222 FIX: Fixed broken duplicate user id validation when creating new users
     * 3223 FIX: Fixed exception in network scan when hosts can not be resolved
+    * 3224 FIX: Fixed broken "WATO legacy eval"
 
     Event Console:
     * 3058 FIX: Event Console is now allowing non loadable MIB modules on startup...

@@ -86,7 +86,7 @@
 #   `----------------------------------------------------------------------'
 
 import sys, pprint, socket, re, time, datetime,  \
-       shutil, tarfile, cStringIO, math, fcntl, pickle, random, glob, \
+       shutil, tarfile, cStringIO, math, fcntl, random, glob, \
        base64, csv
 import i18n
 import config, table, multitar, userdb, weblib, login

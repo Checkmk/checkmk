@@ -46,8 +46,13 @@ isc_dhcpd_default_levels = (15.0, 5.0)
 # 10.0.1.57
 
 def parse_isc_dhcpd(info):
-    parsed = {}
+    parsed = {
+        "pids"   : [],
+        "pools"  : [],
+        "leases" : [],
+    }
 
+    mode = None
     for line in info:
         if line[0] == '[general]':
             mode = "general"
@@ -59,10 +64,12 @@ def parse_isc_dhcpd(info):
         elif mode == "general":
             if line[0] == "PID:":
                 parsed["pids"] = map(int, line[1:])
+
         elif mode == "pools":
-            parsed.setdefault("pools", []).append((line[0], line[1]))
+            parsed["pools"].append((line[0], line[1]))
+
         elif mode == "leases":
-            parsed.setdefault("leases", []).append(line[0])
+            parsed["leases"].append(line[0])
 
     return parsed
 

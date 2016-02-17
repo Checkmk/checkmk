@@ -2975,9 +2975,9 @@ class Dictionary(ValueSpec):
             if key == None:
                 elements[0][1].set_focus(varprefix + "_p_" + elements[0][0])
             else:
-                for element in elements:
-                    if element[0] == key:
-                        element[1].set_focus(varprefix + "_p_" + name)
+                for element_key, element_vs in elements:
+                    if element_key == key:
+                        element_vs.set_focus(varprefix + "_p_" + key)
 
     def canonical_value(self):
         return dict([

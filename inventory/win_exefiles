@@ -51,7 +51,7 @@ def inv_win_exefiles(info):
             # This is the 1.2.6p1 new default date
             install_date = int(time.mktime(time.strptime(write_time, "%m/%d/%Y %H:%M:%S")))
         else:
-            install_date = None # need to return 0 to not break the painter which assumes an int
+            install_date = None
 
         entry = {
             "name"            : parts[-1],

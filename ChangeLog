@@ -32,6 +32,7 @@
     * 2993 FIX: zfs_arc_cache: fixed crash, no longer reports unknown if not all data is available...
     * 3188 FIX: ps.include: fixed typo
     * 3226 FIX: isc_dhcpd: Fixed exception during discovery when pools can not be gathered by agent
+    * 3189 FIX: mem.vmalloc: newer kernel versions (64bit) report wrong data, i.d. both VmallocUsed and Chunk equal zero, thus this check is obsolete
 
     Multisite:
     * 3059 FIX: Fixed highlighting of availability timeline time slices

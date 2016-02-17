@@ -326,11 +326,14 @@ def check_mem_linux(_no_item, params, info):
         if r[0]:
             yield r # only display if non-OK
 
-    # VMalloc
-    r = check_mem_levels("Largest Free VMalloc Chunk", meminfo["VmallocTotal"] - meminfo["VmallocChunk"],
-            meminfo["VmallocTotal"], params.get("levels_vmalloc"), of_what = "VMalloc Area", show_free=True)
-    if r[0]:
-        yield r # only display if non-OK
+    # VMalloc,
+    # newer kernel version report wrong data,
+    # i.d. both VmallocUsed and Chunk equal zero
+    if not (meminfo["VmallocUsed"] == 0 and meminfo["VmallocChunk"] == 0):
+        r = check_mem_levels("Largest Free VMalloc Chunk", meminfo["VmallocTotal"] - meminfo["VmallocChunk"],
+                meminfo["VmallocTotal"], params.get("levels_vmalloc"), of_what = "VMalloc Area", show_free=True)
+        if r[0]:
+            yield r # only display if non-OK
 
     # HardwareCorrupted
     hwc = meminfo.get("HardwareCorrupted")
@@ -543,7 +546,10 @@ def inventory_mem_vmalloc(info):
     if is_linux_meminfo(meminfo):
         return # handled by new Linux memory check
 
-    if "VmallocTotal" in meminfo:
+    # newer kernel version report wrong data,
+    # i.d. both VmallocUsed and Chunk equal zero
+    if "VmallocTotal" in meminfo and \
+        not (meminfo["VmallocUsed"] == 0 and meminfo["VmallocChunk"] == 0):
         # Do not checks this on 64 Bit systems. They have almost
         # infinitive vmalloc
         vmalloc = meminfo["VmallocTotal"] / 1024.4

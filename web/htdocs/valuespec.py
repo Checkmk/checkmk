@@ -1487,7 +1487,7 @@ class CascadingDropdown(ValueSpec):
                         raise MKUserError(varprefix + "_sel", _("Value must a tuple with two elements."))
                     vs.validate_datatype(value[1], varprefix + "_%d" % nr)
                 return
-        raise MKUserError(_("Value %r is not allowed here.") % value)
+        raise MKUserError(varprefix, _("Value %r is not allowed here.") % value)
 
     def validate_value(self, value, varprefix):
         choices = self.choices()

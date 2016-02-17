@@ -29,6 +29,7 @@
             NOTE: Please refer to the migration notes!
     * 2993 FIX: zfs_arc_cache: fixed crash, no longer reports unknown if not all data is available...
     * 3188 FIX: ps.include: fixed typo
+    * 3226 FIX: isc_dhcpd: Fixed exception during discovery when pools can not be gathered by agent
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

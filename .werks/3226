@@ -1,0 +1,10 @@
+Title: isc_dhcpd: Fixed exception during discovery when pools can not be gathered by agent
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1455717894
+
+

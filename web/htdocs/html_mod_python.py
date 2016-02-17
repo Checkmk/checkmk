@@ -227,20 +227,6 @@ class html_mod_python(htmllib.html):
         self.javascript('update_header_timer()')
         self.top_heading_right()
 
-    def omd_mode(self):
-        # Load mod_python env into regular environment
-        for k, v in self.req.subprocess_env.items():
-            os.environ[k] = v
-
-        omd_mode = None
-        omd_site = None
-        if 'OMD_SITE' in os.environ:
-            omd_site = os.environ['OMD_SITE']
-            omd_mode = 'shared'
-            if omd_site == self.apache_user():
-                omd_mode = 'own'
-        return (omd_mode, omd_site)
-
     def log(self, *args):
         from lib import logger, LOG_NOTICE
         for arg in args:

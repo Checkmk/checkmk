@@ -1,0 +1,9 @@
+Title: Views in dashlets do use display options
+Component: multisite
+State: open
+Date: 2016-02-17 14:33:10
+Targetversion: future
+Class: nastiness
+
+Example: change time format in "normal" view to absolute.
+Embedded "normal" view in dashlet still uses old (defautl) format.

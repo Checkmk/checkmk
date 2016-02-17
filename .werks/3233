@@ -1,0 +1,12 @@
+Title: Fixed shutdown of Nagios core with Livestatus module
+Level: 1
+Component: livestatus
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455714163
+Class: fix
+
+The Nagios core no longer hangs now during shutdown when the Livestatus
+module is used. This resulted in a long delay before the core was finally
+killed forcefully.
+

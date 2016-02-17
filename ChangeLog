@@ -26,6 +26,7 @@
     * 3218 FIX: fortigate_node: Fixed wrong discovered services on non cluster devices
     * 3186 FIX: fortigate_node: fixed empty item
             NOTE: Please refer to the migration notes!
+    * 2993 FIX: zfs_arc_cache: fixed crash, no longer reports unknown if not all data is available...
 
     Multisite:
     * 3059 FIX: Fixed highlighting of availability timeline time slices

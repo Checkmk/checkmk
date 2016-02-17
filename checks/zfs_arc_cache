@@ -116,60 +116,30 @@ def inventory_zfs_arc_cache(parsed):
         return []
 
 def check_zfs_arc_cache(_no_item, _no_params, parsed):
-    status = 0
-    perfdata = []
-    message = "ZFS arc cache:"
-
-    # hit ratio
-    if "hits" in parsed.keys() and "misses" in parsed.keys():
-        hit_ratio = float(parsed["hits"]) / (parsed["hits"] + parsed["misses"]) * 100
-        message += " hit ratio: %0.2f %%" % hit_ratio
-        perfdata.append(("hit_ratio", "%0.2f" % hit_ratio, '', '', 0, 100))
-    else:
-        message += " no info about hit ratio available"
-        perfdata.append(("hit_ratio", 0, '', '', 0, 100))
-        status = 3
-
-    # prefetch data hit ratio
-    if "prefetch_data_hits" in parsed.keys() and "prefetch_data_misses" in parsed.keys():
-        prefetch_data_hit_ratio = float(parsed["prefetch_data_hits"]) / (parsed["prefetch_data_hits"] + parsed["prefetch_data_misses"]) * 100
-        message += ", prefetch data hit ratio: %0.2f %%" % prefetch_data_hit_ratio
-        perfdata.append(("prefetch_data_hit_ratio", "%0.2f" % prefetch_data_hit_ratio, '', '', 0, 100))
-    else:
-        message += ", no info about prefetch data hit ratio available"
-        perfdata.append(("prefetch_data_hit_ratio", 0, '', '', 0, 100))
-        status = 3
-
-    # prefetch metadata hit ratio
-    if "prefetch_metadata_hits" in parsed.keys() and "prefetch_metadata_misses" in parsed.keys():
-        prefetch_metadata_hit_ratio = float(parsed["prefetch_metadata_hits"]) / (parsed["prefetch_metadata_hits"] + parsed["prefetch_metadata_misses"]) * 100
-        message += ", prefetch metadata hit ratio: %0.2f %%" % prefetch_metadata_hit_ratio
-        perfdata.append(("prefetch_metadata_hit_ratio", "%0.2f" % prefetch_metadata_hit_ratio, '', '', 0, 100))
-    else:
-        message += ", no info about prefetch metadata hit ratio available"
-        perfdata.append(("prefetch_metadata_hit_ratio", 0, '', '', 0, 100))
-        status = 3
+    for key in [ "", "prefetch_data_", "prefetch_metadata_" ]:
+        human_key = key.replace("_", " ")
+        total_hits_misses = parsed["%shits" % key] + parsed["%smisses" % key]
+        if not total_hits_misses:
+            yield 0, " No %sHits or Misses" % human_key, [("%shit_ratio" % key, 0, '', '', 0, 100)]
+        else:
+            hit_ratio = float(parsed["%shits" % key]) / total_hits_misses * 100
+            yield 0, " %sHit Ratio: %0.2f %%" % (human_key.title(), hit_ratio), [("%shit_ratio" % key, "%0.2f" % hit_ratio, '', '', 0, 100)]
 
     # size
     if "size" in parsed.keys():
-        message += ", cache size: %d MB" % parsed["size"]
-        perfdata.append(("size", parsed["size"] * 1024 * 1024, '', '', 0))
-    else:
-        message += ", no info about cache size available"
-        perfdata.append(("size", 0, '', '', 0))
-        status = 3
+        yield 0, "Cache size: %d MB" % parsed["size"], [("size", parsed["size"] * 1024 * 1024, '', '', 0)]
 
     # arc_meta
     # these values may be missing, this is ok too
     # in this case just do not report these values
     if "arc_meta_used" in parsed.keys() and "arc_meta_limit" in parsed.keys() and "arc_meta_max" in parsed.keys():
-        message += ", arc meta %d MB used, limit %d MB, max %d MB" \
-                   % (parsed["arc_meta_used"], parsed["arc_meta_limit"], parsed["arc_meta_max"])
-        perfdata.append(("arc_meta_used", parsed["arc_meta_used"] * 1024 * 1024, '', '', 0))
-        perfdata.append(("arc_meta_limit", parsed["arc_meta_limit"] * 1024 * 1024, '', '', 0))
-        perfdata.append(("arc_meta_max", parsed["arc_meta_max"] * 1024 * 1024, '', '', 0))
+        yield 0, "Arc Meta %d MB used, Limit %d MB, Max %d MB" \
+                   % (parsed["arc_meta_used"], parsed["arc_meta_limit"], parsed["arc_meta_max"]),[
+        ("arc_meta_used", parsed["arc_meta_used"] * 1024 * 1024, '', '', 0),
+        ("arc_meta_limit", parsed["arc_meta_limit"] * 1024 * 1024, '', '', 0),
+        ("arc_meta_max", parsed["arc_meta_max"] * 1024 * 1024, '', '', 0)
+        ]
 
-    return status, message, perfdata
 
 check_info["zfs_arc_cache"] = {
     "parse_function"        : parse_zfs_arc_cache,

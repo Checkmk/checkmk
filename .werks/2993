@@ -1,0 +1,12 @@
+Title: zfs_arc_cache: fixed crash, no longer reports unknown if not all data is available
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b2
+Date: 1455709812
+
+Fixed division by zero exception. Some zfs systems do not report all data, the check
+is now able to tolerate this.
+

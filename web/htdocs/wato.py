@@ -6929,6 +6929,7 @@ def load_notification_rules():
     filename = wato_root_dir + "notifications.mk"
     if not os.path.exists(filename):
         return []
+
     try:
         vars = { "notification_rules" : [] }
         execfile(filename, vars, vars)
@@ -6941,7 +6942,7 @@ def load_notification_rules():
                 del rule["notify_method"]
                 rule["notify_plugin"] = ( plugin, method )
         return notification_rules
-    except:
+    except Exception, e:
         if config.debug:
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
                           (filename, e)))

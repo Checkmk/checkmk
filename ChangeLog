@@ -40,6 +40,7 @@
     * 3215 FIX: WATO git ignore files are now updated on each commit
     * 3216 FIX: Fixed exception when trying to edit an already deleted user
     * 3222 FIX: Fixed broken duplicate user id validation when creating new users
+    * 3223 FIX: Fixed exception in network scan when hosts can not be resolved
 
     Event Console:
     * 3058 FIX: Event Console is now allowing non loadable MIB modules on startup...

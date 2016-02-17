@@ -15250,7 +15250,7 @@ def ping_worker(addresses, hosts):
             try:
                 host_name = socket.gethostbyaddr(ipaddress)[0]
             except socket.error:
-                host_name = address
+                host_name = ipaddress
 
             hosts.append((host_name, ipaddress))
 

@@ -94,9 +94,12 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                     edited_value = entries.from_html_vars(keyname)
                     entries.validate_value(edited_value, keyname)
                     new_value[keyname].update(edited_value)
-                except Exception, e:
+                except MKUserError, e:
                     messages.append("%s: %s" % (entries.title() or _("Properties"), e))
                     html.add_user_error(e.varname, e)
+                except Exception, e:
+                    messages.append("%s: %s" % (entries.title() or _("Properties"), e))
+                    html.add_user_error(None, e)
 
             if validate and not html.has_user_errors():
                 try:

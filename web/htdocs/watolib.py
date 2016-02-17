@@ -1740,7 +1740,7 @@ class SearchFolder(BaseFolder):
 
     def path(self):
         if self._name:
-            return self._base_folder.path() + "//search:" + self_name
+            return self._base_folder.path() + "//search:" + self._name
         else:
             return self._base_folder.path() + "//search"
 

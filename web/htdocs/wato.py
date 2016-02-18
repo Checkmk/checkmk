@@ -7329,7 +7329,7 @@ def event_rule_match_conditions(flavour):
         add_choices = [
             ( 'f', _("Start or end of flapping state")),
             ( 's', _("Start or end of a scheduled downtime")),
-            ( 'x', _("Acknowledgement of host problem")),
+            ( 'x', _("Acknowledgement of problem")),
         ]
         add_default = [ 'f', 's', 'x' ]
     else:

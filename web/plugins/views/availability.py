@@ -216,7 +216,7 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
         if config.reporting_available():
             html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
-        if av_mode == "availability":
+        if av_mode == "table":
             html.context_button(_("Export as CSV"), html.makeuri([("output_format", "csv_export")]), "download_csv")
 
         if av_mode == "timeline" or av_object:
@@ -802,17 +802,27 @@ def handle_edit_annotations():
 #   '----------------------------------------------------------------------'
 
 def output_availability_csv(what, av_data, avoptions):
+    def cells_from_row(object_titles, cell_titles, row_object, row_cells):
+        for title, (name, url) in zip(object_titles, row_object):
+            table.cell(title, name)
+        for (title, help), (text, css) in zip(cell_titles, row_cells):
+            table.cell(title, text)
+
     av_output_csv_mimetype(_("Check_MK-Availability"))
     availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
     table.begin("av_items", output_format = "csv")
     for group_title, availability_table in availability_tables:
         av_table = availability.layout_availability_table(what, group_title, availability_table, avoptions)
+        pad = 0
         for row in av_table["rows"]:
             table.row()
-            for title, (name, url) in zip(av_table["object_titles"], row["object"]):
-                table.cell(title, name)
-            for (title, help), (text, css) in zip(av_table["cell_titles"], row["cells"]):
-                table.cell(title, text)
+            cells_from_row(av_table["object_titles"], av_table["cell_titles"],
+                           row["object"], row["cells"])
+            # presumably all rows have the same width
+            pad = len(row["object"]) - 1
+        table.row()
+        cells_from_row(av_table["object_titles"], av_table["cell_titles"],
+                       [(_("Summary"), "")] + [("", "")] * pad, av_table["summary"])
     table.end()
 
 def av_output_csv_mimetype(title):

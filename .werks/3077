@@ -1,0 +1,10 @@
+Title: CSV export is now available for host/service availability and now includes summary line
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1455782640
+
+

@@ -1,0 +1,9 @@
+Title: mssql_transactionlogs: new check to monitor the size of mssql transaction logs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1455800413
+Class: feature
+
+

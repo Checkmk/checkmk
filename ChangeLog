@@ -9,6 +9,7 @@
     * 3183 aruba_wlc_aps: new check which monitors the provisioned accesspoints of an Aruba Network WLAN Controller
     * 3184 varnish, varnish.backend, varnish.backend_success_ratio, varnish.cache, varnish.cache_hit_ratio, varnish.client, varnish.esi, varnish.fetch, varnish.objects, varnish.worker, varnish.worker_thread_ratio: new checks which monitor HTTP Accelerator Statistics via varnishstat on Linux
     * 2994 brocade.temp: increased temperature default levels from 35/40 to 55/60
+    * 3078 mssql_transactionlogs: new check to monitor the size of mssql transaction logs
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

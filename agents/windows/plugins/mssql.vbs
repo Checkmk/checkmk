@@ -314,6 +314,41 @@ For Each instId In instIds.Keys
         RS.Close
     Next
 
+    'Loop all databases to get the size of the transaction log
+    addOutput( "<<<mssql_transactionlogs>>>" )
+
+    RS.Open "SELECT name" & _
+            " FROM sys.databases" &_
+            " WHERE recovery_model_desc <> 'SIMPLE'" &_
+            " AND name <> 'MODEL'", CONN
+
+    Dim tablesWithLog
+    Set tablesWithLog = CreateObject("Scripting.Dictionary")
+    Do While NOT RS.Eof
+        dbName = RS("name")
+        If Not tablesWithLog.exists(dbName) Then
+            tablesWithLog.add dbName, ""
+        End If
+        RS.MoveNext
+    Loop
+    RS.Close
+
+    For Each dbName in tablesWithLog.Keys
+        RS.Open "USE [" & dbName & "]", CONN
+        RS.Open "SELECT name, physical_name," &_
+                "  cast(max_size/128 as bigint) as MaxSize," &_
+                "  cast(size/128 as bigint) as AllocatedSize," &_
+                "  cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize" &_
+                " FROM sys.database_files WHERE type_desc = 'LOG'", CONN
+        Do While Not RS.Eof
+            addOutput(Replace(dbName, " ", "_") & " " & Replace(RS("name"), " ", "_") & _
+                      " " & Replace(RS("physical_name"), " ", "_") & " " & _
+                      RS("MaxSize") & " " & RS("AllocatedSize") & " " & RS("UsedSize"))
+            RS.MoveNext
+        Loop
+        RS.Close
+    Next
+
     CONN.Close
 Next
 

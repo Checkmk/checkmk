@@ -6053,6 +6053,76 @@ register_check_parameters(
     match_type = "dict",
 )
 
+
+def levels_absolute_or_dynamic(name, value):
+    return Alternative(
+        title = _("Levels of %s %s") % (name, value),
+        default_value = (80.0, 90.0),
+        elements = [
+            Tuple(
+                title = _("Percentage %s space") % value,
+                elements = [
+                    Percentage(title = _("Warning at"), unit = _("% used")),
+                    Percentage(title = _("Critical at"), unit = _("% used")),
+                ]
+            ),
+            Tuple(
+                title = _("Absolute %s space") % value,
+                elements = [
+                    Integer(title = _("Warning at"), unit = _("MB"), default_value = 500),
+                    Integer(title = _("Critical at"), unit = _("MB"), default_value = 1000),
+                ]
+            ),
+            ListOf(
+                Tuple(
+                    orientation = "horizontal",
+                    elements = [
+                        Filesize(title = _(" larger than")),
+                        Alternative(
+                            title = _("Levels for the %s %s size") % (name, value),
+                            elements = [
+                                Tuple(
+                                    title = _("Percentage %s space") % value,
+                                    elements = [
+                                        Percentage(title = _("Warning at"), unit = _("% used")),
+                                        Percentage(title = _("Critical at"), unit = _("% used")),
+                                    ]
+                                ),
+                                Tuple(
+                                    title = _("Absolute free space"),
+                                    elements = [
+                                        Integer(title = _("Warning at"), unit = _("MB")),
+                                        Integer(title = _("Critical at"), unit = _("MB")),
+                                    ]
+                                ),
+                            ]
+                        ),
+                    ],
+                ),
+                title = _('Dynamic levels'),
+            ),
+        ]
+    )
+
+
+register_check_parameters(
+    subgroup_applications,
+    "mssql_transactionlogs",
+    _("MSSQL Transactionlog Sizes"),
+    Dictionary(
+        title = _("File Size Levels"),
+        elements = [
+            ("used_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("used"))),
+            ("allocated_used_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("used of allocation"))),
+            ("allocated_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("allocated"))),
+        ]
+    ),
+    TextAscii(
+        title = _("Service descriptions"),
+        allow_empty = False),
+    "dict"
+)
+
 register_check_parameters(
     subgroup_applications,
     "vm_snapshots",

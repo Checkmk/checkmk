@@ -71,7 +71,6 @@ def check_mssql_transactionlogs(item, params, info):
                     warn, crit = None, None
                     for level_set in levels:
                         if max_size > level_set[0]:
-                            print(level_set)
                             warn, crit = calculate_levels(level_set[1], reference_value)
                             break
                 else:

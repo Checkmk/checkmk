@@ -1,0 +1,11 @@
+Title: esx_vsphere_licenses: now compatible with esx 6.0
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.8b2
+Date: 1455807287
+
+Furthermore, this check now reports the number of keys for each license.
+

@@ -8,6 +8,7 @@
 
     Checks & Agents:
     * 2994 brocade.temp: increased temperature default levels from 35/40 to 55/60
+    * 2995 esx_vsphere_licenses: now compatible with esx 6.0...
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

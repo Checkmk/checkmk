@@ -112,6 +112,6 @@ check_info["win_printers"] = {
     "inventory_function"     : inventory_win_printers,
     "service_description"    : "Printer %s",
     "has_perfdata"           : False,
-    "default_level_variable" : "win_printer_default_levels",
+    "default_levels_variable" : "win_printer_default_levels",
 }
 

@@ -1,0 +1,9 @@
+Title: win_printers: fixed typo that kept default parameters from being used
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b2
+Date: 1455809865
+Class: fix
+
+This bug was only recently introduced and 1.2.8b1 should be the only release that included it

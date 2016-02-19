@@ -1,4 +1,7 @@
 1.2.8b3:
+    Checks & Agents:
+    * 2996 websphere_mq_queues: now able to configure levels for used percentage of total queues
+
 
 1.2.8b2:
     Core & Setup:

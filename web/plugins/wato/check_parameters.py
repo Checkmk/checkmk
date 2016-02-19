@@ -328,6 +328,15 @@ register_check_parameters(
                          Integer(title = _("Critical at"), default_value = 1200 ),
                      ]
                  )),
+                ("message_count_perc",
+                 Tuple(
+                     title = _('Percentage of Queue Length'),
+                     help  = _('This setting only applies if the WebSphere MQ reports the queue length'),
+                     elements = [
+                         Percentage(title = _("Warning at"), default_value = 80.0 ),
+                         Percentage(title = _("Critical at"), default_value = 90.0 ),
+                     ]
+                 )),
                 ("status",
                  Dictionary(
                      title = _('Override check state based on channel state (only for channels)'),

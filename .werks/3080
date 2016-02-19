@@ -1,0 +1,10 @@
+Title: windows_updates: non-ascii characters are now handled correctly
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1455893821
+
+

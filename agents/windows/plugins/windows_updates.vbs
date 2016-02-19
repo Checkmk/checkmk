@@ -22,6 +22,13 @@
 
 Option Explicit
 
+Dim fso
+Dim objStdout
+Set fso = CreateObject("Scripting.FileSystemObject")
+' request unicode stdout and add a bom so the agent knows we send utf-16
+Set objStdout = fso.GetStandardStream(1, True)
+objStdout.Write(chrW(&HFEFF))
+
 function readFromRegistry (strRegistryKey, strDefault )
     Dim WSHShell, value
 
@@ -48,8 +55,9 @@ Set WSHShell = CreateObject("WScript.Shell")
 Dim RebootTime
 Dim RegPath
 
+
 If CreateObject("Microsoft.Update.AutoUpdate").DetectNow <> 0 Then
-    WScript.Echo "<<<windows_updates>>>"
+    objStdout.WriteLine "<<<windows_updates>>>"
     WScript.Quit()
 End If
 
@@ -71,9 +79,9 @@ On Error Resume Next
 Set result = updtSearcher.Search("IsInstalled = 0 and IsHidden = 0")
 
 If Err.Number <> 0 then
-        WScript.Echo "<<<windows_updates>>>"
-        Wscript.Echo "x x x"
-        Wscript.Echo "There was an error getting update information. Maybe Windows update is not activated. Error Number: " & Err.Number
+        objStdout.WriteLine "<<<windows_updates>>>"
+        objStdout.WriteLine "x x x"
+        objStdout.WriteLine "There was an error getting update information. Maybe Windows update is not activated. Error Number: " & Err.Number
         WScript.Quit()
 End If
 
@@ -99,9 +107,9 @@ For Each objEntry in colDownloads
 
 Next
 
-WScript.Echo "<<<windows_updates>>>"
-WScript.Echo reboot & " " & numImp & " " & numOpt
-WScript.Echo important
-WScript.Echo opti
-WScript.Echo RebootTime
+objStdout.WriteLine "<<<windows_updates>>>"
+objStdout.WriteLine reboot & " " & numImp & " " & numOpt
+objStdout.WriteLine important
+objStdout.WriteLine opti
+objStdout.WriteLine RebootTime
 WScript.Quit()

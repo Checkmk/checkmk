@@ -37,6 +37,7 @@
     * 3226 FIX: isc_dhcpd: Fixed exception during discovery when pools can not be gathered by agent
     * 3189 FIX: mem.vmalloc: newer kernel versions (64bit) report wrong data, i.d. both VmallocUsed and Chunk equal zero, thus this check is obsolete
     * 3079 FIX: win_printers: fixed typo that kept default parameters from being used...
+    * 3080 FIX: windows_updates: non-ascii characters are now handled correctly
 
     Multisite:
     * 3059 FIX: Fixed highlighting of availability timeline time slices

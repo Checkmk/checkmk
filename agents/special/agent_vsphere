@@ -1118,14 +1118,15 @@ def connect_to_server():
         error = "Cannot connect to vSphere Server. Please check the IP and SSL certificate (if applicable) "\
                 "\and try again. This error is not related to the login credentials. Error message: %r" % e
 
-def retrieve_basic_info():
+def retrieve_systeminfo():
     global systeminfo
     # Retrieve basic data, which requires no login
     payload = telegram_list["systeminfo"]
     reply_code, reply_msg, reply_headers, reply_data = query_server(payload)
     for entry, function in systemfields:
          element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % { "entry": entry }, reply_data)
-         systeminfo[entry] = function and function(element[0]) or element[0]
+         if element:
+             systeminfo[entry] = function and function(element[0]) or element[0]
 
 def login():
     global server_cookie
@@ -1159,7 +1160,11 @@ def login():
 #   +----------------------------------------------------------------------+
 
 connect_to_server()
-retrieve_basic_info()
+retrieve_systeminfo()
+
+if not systeminfo:
+    sys.stderr.write("Unable to get data from Web API"+ "\n")
+    sys.exit(1)
 
 # The cookie access time is required to determine the agents check interval
 # This is required later on by the performancecounters. Depending on the

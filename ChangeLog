@@ -1,6 +1,7 @@
 1.2.8b3:
     Checks & Agents:
     * 2996 websphere_mq_queues: now able to configure levels for used percentage of total queues
+    * 3227 FIX: Automatic service adding: Fixed exception when using time range to skip automatic configuration...
 
     Multisite:
     * 3076 FIX: fixed broken views in check_mk raw edition

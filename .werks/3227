@@ -1,0 +1,19 @@
+Title: Automatic service adding: Fixed exception when using time range to skip automatic configuration
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b3
+Date: 1456129237
+Class: fix
+
+This fixes the exception:
+
+Traceback (most recent call last):
+  File "/omd/sites/stable/share/check_mk/modules/check_mk.py", line 5065, in <module>
+    discover_marked_hosts()
+  File "/omd/sites/stable/share/check_mk/modules/discovery.py", line 441, in discover_marked_hosts
+    why_not = may_rediscover(params)
+  File "/omd/sites/stable/share/check_mk/modules/discovery.py", line 389, in may_rediscover
+    now = datetime.datetime.utcfromtimestamp(now_ts)
+NameError: global name 'datetime' is not defined
+

@@ -3142,7 +3142,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
 
             MutexLock guard(data->mutex);
             // adhere to the configured timeout
-            if (time(NULL) < data->push_until) {
+            if ((time(NULL) < data->push_until) && !data->terminate) {
                 // if a new request was made, reestablish the connection
                 if (data->new_request) {
                     data->new_request = false;
@@ -3326,12 +3326,15 @@ void do_adhoc(const Environment &env) {
 
     if (realtime_checker.wasStarted()) {
         thread_data.terminate = true;
+    }
 
+    stop_threads();
+
+    if (realtime_checker.wasStarted()) {
         int res = realtime_checker.join();
         crash_log("realtime check thread ended with errror code %d.", res);
     }
 
-    stop_threads();
     WSACleanup();
     close_crash_log();
 }

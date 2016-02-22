@@ -1317,13 +1317,13 @@ metric_info["noise_floor"] = {
 
 metric_info["codewords_corrected"] = {
     "title" : _("Corrected codewords"),
-    "unit"  : "ratio",
+    "unit"  : "%",
     "color" : "#ff8040",
 }
 
 metric_info["codewords_uncorrectable"] = {
     "title" : _("Uncorrectable codewords"),
-    "unit"  : "ratio",
+    "unit"  : "%",
     "color" : "#ff4020",
 }
 

@@ -2596,7 +2596,7 @@ metric_info["apache_state_keep_alive"] = {
 }
 
 metric_info["http_bandwidth"] = {
-    "title" : _("Http bandwidth"),
+    "title" : _("HTTP bandwidth"),
     "unit"  : "bytes/s",
     "color" : "53/b",
 }

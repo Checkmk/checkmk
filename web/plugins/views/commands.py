@@ -688,7 +688,7 @@ def paint_downtime_buttons(what):
     html.write("&nbsp; "+_('to')+" &nbsp;")
     html.datetime_input("_down_to", time.time() + 7200, submit="_down_custom")
     html.write("<hr>")
-    html.checkbox("_down_flexible", False, label=_('flexible with max. duration')+" ")
+    html.checkbox("_down_flexible", False, label=_('flexible with duration')+" ")
     html.time_input("_down_duration", 2, 0)
     html.write(" "+_('(HH:MM)'))
     if what == "host":

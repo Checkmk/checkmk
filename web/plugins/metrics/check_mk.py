@@ -4862,6 +4862,7 @@ graph_info.append({
         ( "children_system_time", "stack" ),
         ( "user_time,children_user_time,system_time,children_system_time,+,+,+#888888", "line", _("Total") ),
     ],
+    "omit_zero_metrics" : True,
 })
 
 graph_info.append({

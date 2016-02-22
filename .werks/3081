@@ -1,0 +1,19 @@
+Title: mk_jolokia: plugin now supports setting custom CAs for verifying server certificate as well as sending a client certificate
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1456137267
+Class: feature
+
+The CA can be set through the new configuration parameter "cert_path". This can also be set to None,
+in which case the server certificate is not verified.
+If cert_path is not set, the behaviour is identical to the old behaviour which is dependent on the
+python version. Old python versions (not sure exactly, probably up to at least 2.5) ignored server
+certificates, later versions checked against system-wide trusted CAs.
+
+To send a client certificate, set "client_cert" and "client_key". The key can't be password
+protected.
+
+"mode" also supports a new option called "https". If this is set, the client certificate parameters
+need to be set and no further authentication should be expected by the server.

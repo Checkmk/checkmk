@@ -866,6 +866,15 @@ mk_jolokia_elements = [
                   "will be used as an instance name.")
      ),
    ),
+   ( "protocol",
+     DropdownChoice(
+         title = _("Protocol"),
+         choices = [
+             ( "http",  "HTTP" ),
+             ( "https", "HTTPS" ),
+         ]
+     ),
+   ),
 ]
 
 group = 'datasource_programs'

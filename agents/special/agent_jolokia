@@ -24,10 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import urllib2, sys, os, socket, getopt
+import urllib2, sys, os, socket, pprint, base64, ssl
+import getopt
+from httplib import HTTPConnection, HTTPSConnection
 
+try:
+    from simplejson import json
+except ImportError:
+    try:
+        import json
+    except ImportError:
+        json = None
 
-opt_debug = False  # assigned in parse_arguments
+# assigned in parse_arguments
+opt_verbose = False
+opt_debug = False
 
 class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
     """
@@ -93,41 +104,79 @@ specific_vars = {
     ],
 }
 
+class HTTPSValidatingConnection(HTTPSConnection):
+    def __init__(self, host, ca_file, key_file, cert_file):
+        HTTPSConnection.__init__(self, host, key_file=key_file, cert_file=cert_file)
+        self.__ca_file = ca_file
+        self.__key_file = key_file
+        self.__cert_file = cert_file
+
+    def connect(self):
+        HTTPConnection.connect(self)
+        if self.__ca_file:
+            self.sock = ssl.wrap_socket(self.sock, keyfile=self.key_file, certfile=self.cert_file,
+                                        ca_certs=self.__ca_file, cert_reqs=ssl.CERT_REQUIRED)
+        else:
+            self.sock = ssl.wrap_socket(self.sock, keyfile=self.key_file, certfile=self.cert_file,
+                                        ca_certs=self.__ca_file, cert_reqs=ssl.CERT_NONE)
 
 
-def fetch_var(server, port, path, suburi, itemspec):
-    url = "http://%s:%d/%s/%s" % (server, port, suburi, path)
-    if opt_debug:
+class HTTPSAuthHandler(urllib2.HTTPSHandler):
+    def __init__(self, ca_file, key, cert):
+        urllib2.HTTPSHandler.__init__(self)
+        self.__ca_file = ca_file
+        self.__key = key
+        self.__cert = cert
+
+    def https_open(self, req):
+        # do_open expects a class as the first parameter but getConnection will act
+        # as a facotry function
+        return self.do_open(self.getConnection, req)
+
+    def getConnection(self, host, timeout):
+        return HTTPSValidatingConnection(host, ca_file=self.__ca_file,
+                                         key_file=self.__key, cert_file=self.__cert)
+
+
+def fetch_var(protocol, server, port, path, suburi, cert_path, itemspec):
+    url = "%s://%s:%d/%s/%s" % (protocol, server, port, suburi, path)
+    if opt_verbose:
         sys.stderr.write("DEBUG: Fetching: %s\n" % url)
     try:
-        json = urllib2.urlopen(url).read()
-        if opt_debug:
-            sys.stderr.write("DEBUG: Result: %s\n\n" % json)
+        conn = urllib2.urlopen(url)
+        data = conn.read()
+
+        if opt_verbose:
+            sys.stderr.write("DEBUG: Result: %s\n\n" % data)
     except Exception, e:
+        if opt_debug:
+            raise
         sys.stderr.write("ERROR: %s\n" % e)
         return []
-
 
     try:
         true = True
         false = False
         null = None
-        obj = eval(json)
+        if json:
+            obj = json.loads(data)
+        else:
+            obj = eval(data)
     except Exception, e:
         sys.stderr.write('ERROR: Invalid json code (%s)\n' % e)
-        sys.stderr.write('       Response %s\n' % json)
+        sys.stderr.write('       Response %s\n' % data)
         return []
 
     if obj.get('status', 200) != 200:
         sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % url)
-        sys.stderr.write('       Response: %s\n' % json)
+        sys.stderr.write('       Response: %s\n' % data)
         return []
 
     # Only take the value of the object. If the value is an object
     # take the first items first value.
     # {'Catalina:host=localhost,path=\\/test,type=Manager': {'activeSessions': 0}}
     if 'value' not in obj:
-        if opt_debug:
+        if opt_verbose:
             sys.stderr.write("ERROR: not found: %s\n" % path)
         return []
     val = obj.get('value', None)
@@ -185,22 +234,35 @@ def extract_item(key, itemspec):
 
 def query_instance(inst):
     # Prepare user/password authentication via HTTP Auth
+    password_mngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
     if inst.get("password"):
-        passwdmngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        passwdmngr.add_password(None, "http://%s:%d/" %
-                (inst["server"], inst["port"]), inst["user"], inst["password"])
-        if inst["mode"] == 'digest':
-            authhandler = urllib2.HTTPDigestAuthHandler(passwdmngr)
-        elif inst["mode"] == "basic_preemptive":
-            authhandler = PreemptiveBasicAuthHandler(passwdmngr)
-        else:
-            authhandler = urllib2.HTTPBasicAuthHandler(passwdmngr)
-        opener = urllib2.build_opener(authhandler)
+        password_mngr.add_password(None, "%s://%s:%d/" %
+                (inst["protocol"], inst["server"], inst["port"]), inst["user"], inst["password"])
+
+    handlers = []
+    if inst["protocol"] == "https":
+        if inst["mode"] == 'https' and (inst["client_key"] is None or
+                                        inst["client_cert"] is None):
+            sys.stdout.write('<<<jolokia_info>>>\n')
+            sys.stderr.write("ERROR: https set up as authentication method but certificate "
+                                "wasn't provided\n")
+            return
+        handlers.append(HTTPSAuthHandler(inst["cert_path"],
+                                         inst["client_key"], inst["client_cert"]))
+    if inst["mode"] == 'digest':
+        handlers.append(urllib2.HTTPDigestAuthHandler(password_mngr))
+    elif inst["mode"] == "basic_preemptive":
+        handlers.append(PreemptiveBasicAuthHandler(password_mngr))
+    elif inst["mode"] == "basic" and inst["protocol"] != "https":
+        handlers.append(urllib2.HTTPBasicAuthHandler(password_mngr))
+
+    if handlers:
+        opener = urllib2.build_opener(*handlers)
         urllib2.install_opener(opener)
 
     # Determine type of server
-    server_info = fetch_var(inst["server"], inst["port"], "", inst["suburi"], "")
-
+    server_info = fetch_var(inst["protocol"], inst["server"], inst["port"], "", inst["suburi"],
+                            inst["cert_path"], "")
     sys.stdout.write('<<<jolokia_info>>>\n')
     if server_info:
         d = dict(server_info)
@@ -220,7 +282,8 @@ def query_instance(inst):
     # Fetch the general information first
     for path, title, itemspec in global_vars + specific_vars.get(product, []):
         try:
-            values = fetch_var(inst["server"], inst["port"], "read/" + path, inst["suburi"], itemspec)
+            values = fetch_var(inst["protocol"], inst["server"], inst["port"], "read/" + path,
+                               inst["suburi"], inst["cert_path"], itemspec)
 
         # In case of network errors skip this server
         except IOError:
@@ -277,7 +340,7 @@ OPTIONS:
 
 
 """
-    for param in ['server', 'port', 'suburi', 'instance']:
+    for param in ['server', 'port', 'suburi', 'instance', 'protocol', 'cert_path', 'client_cert', 'client_key']:
         if param in params:
             arglist.append('--%s %s' % (param, params[param]))
 
@@ -290,7 +353,8 @@ OPTIONS:
 def parse_arguments():
     short_options = ''
     long_options  = [
-        'help', 'server=', 'port=', 'user=', 'password=', 'mode=', 'suburi=', 'instance='
+        'help', 'server=', 'port=', 'user=', 'password=', 'mode=', 'suburi=', 'instance=',
+        'protocol=', 'cert_path=', 'client_cert=', 'client_key='
     ]
 
     try:
@@ -307,13 +371,17 @@ def parse_arguments():
     global opt_debug
     opt_debug = 'debug' in opts
 
-    for optional, default in [('server',   "localhost"),
-                              ('user',     "monitoring"),
-                              ('password', None),
-                              ('mode',     "digest"),
-                              ('suburi',   "jolokia"),
-                              ('port',     8080),
-                              ('instance', lambda: str(opts['port']))]:
+    for optional, default in [('server',      "localhost"),
+                              ('user',        "monitoring"),
+                              ('password',    None),
+                              ('mode',        "digest"),
+                              ('suburi',      "jolokia"),
+                              ('port',        8080),
+                              ('instance',    lambda: str(opts['port'])),
+                              ('protocol',    "http"),
+                              ('cert_path',   None),
+                              ('client_cert', None),
+                              ('client_key',  None)]:
         if optional not in opts:
             if callable(default):
                 opts[optional] = default()
@@ -344,13 +412,17 @@ def main():
 # instances in his configuration, we will use this (a list
 # of dicts).
     for inst in instances:
-        for varname, value in [("server",   opts['server']),
-                               ("port",     int(opts['port'])),
-                               ("user",     opts['user']),
-                               ("password", opts['password']),
-                               ("mode",     opts['mode']),
-                               ("suburi",   opts['suburi']),
-                               ("instance", opts['instance'])]:
+        for varname, value in [("server",      opts['server']),
+                               ("port",        int(opts['port'])),
+                               ("user",        opts['user']),
+                               ("password",    opts['password']),
+                               ("mode",        opts['mode']),
+                               ("suburi",      opts['suburi']),
+                               ("instance",    opts['instance']),
+                               ("protocol",    opts['protocol']),
+                               ("cert_path",   opts['cert_path']),
+                               ("client_cert", opts['client_cert']),
+                               ("client_key",  opts['client_key'])]:
             if varname not in inst:
                 inst[varname] = value
         if not inst["instance"]:

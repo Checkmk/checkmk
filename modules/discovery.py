@@ -386,10 +386,16 @@ def discover_marked_hosts():
         if "inventory_rediscovery" not in params:
             return "automatic discovery disabled for this host"
 
-        now = datetime.datetime.utcfromtimestamp(now_ts)
+        now = time.gmtime(now_ts)
         for start_hours_mins, end_hours_mins in params["inventory_rediscovery"]["excluded_time"]:
-            start_time = datetime.datetime(now.year, now.month, now.day, start_hours_mins[0], start_hours_mins[1])
-            end_time = datetime.datetime(now.year, now.month, now.day, end_hours_mins[0], end_hours_mins[1])
+            start_time = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday,
+                start_hours_mins[0], start_hours_mins[1], 0,
+                now.tm_wday, now.tm_yday, now.tm_isdst))
+
+            end_time = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday,
+                end_hours_mins[0], end_hours_mins[1], 0,
+                now.tm_wday, now.tm_yday, now.tm_isdst))
+
             if start_time <= now <= end_time:
                 return "we are currently in a disallowed time of day"
 

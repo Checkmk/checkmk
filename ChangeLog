@@ -35,6 +35,7 @@
     * 3226 FIX: isc_dhcpd: Fixed exception during discovery when pools can not be gathered by agent
     * 3189 FIX: mem.vmalloc: newer kernel versions (64bit) report wrong data, i.d. both VmallocUsed and Chunk equal zero, thus this check is obsolete
     * 3079 FIX: win_printers: fixed typo that kept default parameters from being used...
+    * 3227 FIX: Automatic service adding: Fixed exception when using time range to skip automatic configuration...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

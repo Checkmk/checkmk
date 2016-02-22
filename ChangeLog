@@ -12,6 +12,7 @@
     * 3078 mssql_transactionlogs: new check to monitor the size of mssql transaction logs
     * 2995 esx_vsphere_licenses: now compatible with esx 6.0...
     * 2996 websphere_mq_queues: now able to configure levels for used percentage of total queues
+    * 3190 entity_sensors, entity_sensors.fan: new checks monitoring temperature and fan sensors of devices such as Palo Alto Networks which support the ENTITY-SENSORS-MIB
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

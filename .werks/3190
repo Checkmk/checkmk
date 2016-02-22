@@ -1,0 +1,9 @@
+Title: entity_sensors, entity_sensors.fan: new checks monitoring temperature and fan sensors of devices such as Palo Alto Networks which support the ENTITY-SENSORS-MIB
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1456131741
+Class: feature
+
+

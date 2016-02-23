@@ -27,6 +27,7 @@
 import views, time, defaults, dashboard
 import pagetypes, table
 import sites
+import livestatus
 from valuespec import *
 from lib import *
 

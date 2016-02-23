@@ -1,0 +1,9 @@
+Title: Omit icon for downloading agent output on shadow hosts (cmcdump)
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b3
+Date: 1456232935
+Class: fix
+
+Hosts that are synced via <tt>cmcdump</tt> do not have any agent output.

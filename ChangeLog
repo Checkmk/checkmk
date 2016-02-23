@@ -10,6 +10,7 @@
 
     Multisite:
     * 3076 FIX: fixed broken views in check_mk raw edition
+    * 3181 FIX: Omit icon for downloading agent output on shadow hosts (cmcdump)...
 
     WATO:
     * 3179 FIX: Fix labelling of heartbeat interval for liveproxyd settings...

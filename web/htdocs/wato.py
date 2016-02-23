@@ -60,8 +60,6 @@
 # [2] Global variables
 # At the beginning of each page some global variables are set:
 #
-# g_configvars -> dictionary of variables in main.mk that can be configured
-#           via WATO.
 #
 # g_html_head_open -> True, if the HTML head has already been rendered.
 
@@ -6177,7 +6175,7 @@ def mode_globalvars(phase):
 
     # Get default settings of all configuration variables of interest in the domain
     # "check_mk". (this also reflects the settings done in main.mk)
-    check_mk_vars = [ varname for (varname, var) in g_configvars.items() if var[0] == "check_mk" ]
+    check_mk_vars = [ varname for (varname, var) in configvars().items() if var[0] == "check_mk" ]
     default_values = check_mk_local_automation("get-configuration", [], check_mk_vars)
     current_settings = load_configuration_settings()
 
@@ -6185,7 +6183,7 @@ def mode_globalvars(phase):
         varname = html.var("_varname")
         action = html.var("_action")
         if varname:
-            domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars[varname]
+            domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
             def_value = default_values.get(varname, valuespec.default_value())
 
             if action == "reset" and not is_a_checkbox(valuespec):
@@ -6207,7 +6205,7 @@ def mode_globalvars(phase):
                 msg = _("Changed Configuration variable %s to %s." % (varname,
                     current_settings[varname] and "on" or "off"))
                 save_configuration_settings(current_settings)
-                pending_func  = g_configvar_domains[domain].get("pending")
+                pending_func  = configvar_domains()[domain].get("pending")
                 if pending_func:
                     pending_func(msg)
                 else:
@@ -6226,8 +6224,8 @@ def mode_globalvars(phase):
     render_global_configuration_variables(default_values, current_settings, search=search)
 
 def render_global_configuration_variables(default_values, current_settings, show_all=False, search=None):
-    groupnames = g_configvar_groups.keys()
-    groupnames.sort(cmp=lambda a,b: cmp(g_configvar_order.get(a, 999), g_configvar_order.get(b, 999)))
+    groupnames = configvar_groups().keys()
+    groupnames.sort(cmp=lambda a,b: cmp(configvar_order().get(a, 999), configvar_order().get(b, 999)))
 
     search_form(_("Search for settings:"))
 
@@ -6236,9 +6234,9 @@ def render_global_configuration_variables(default_values, current_settings, show
     for groupname in groupnames:
         header_is_painted = False # needed for omitting empty groups
 
-        for domain, varname, valuespec in g_configvar_groups[groupname]:
-            if not show_all and (not g_configvars[varname][4]
-                                 or not g_configvar_domains[domain].get('in_global_settings', True)):
+        for domain, varname, valuespec in configvar_groups()[groupname]:
+            if not show_all and (not configvars()[varname][4]
+                                 or not configvar_domains()[domain].get('in_global_settings', True)):
                 continue # do not edit via global settings
             if domain == "check_mk" and varname not in default_values:
                 if config.debug:
@@ -6328,7 +6326,7 @@ def mode_edit_configvar(phase, what = 'globalvars'):
         return
 
     varname = html.var("varname")
-    domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars[varname]
+    domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
     if siteid:
         current_settings = site.setdefault("globals", {})
     else:
@@ -6371,7 +6369,7 @@ def mode_edit_configvar(phase, what = 'globalvars'):
             else:
                 status = SYNC
 
-            pending_func  = g_configvar_domains[domain].get("pending")
+            pending_func  = configvar_domains()[domain].get("pending")
             if pending_func:
                 pending_func(msg)
             else:
@@ -6427,103 +6425,6 @@ def mode_edit_configvar(phase, what = 'globalvars'):
     html.hidden_fields()
     html.end_form()
 
-# domain is one of "check_mk", "multisite" or "nagios"
-def register_configvar(group, varname, valuespec, domain="check_mk",
-                       need_restart=False, allow_reset=True, in_global_settings=True):
-    g_configvar_groups.setdefault(group, []).append((domain, varname, valuespec))
-    g_configvars[varname] = domain, valuespec, need_restart, allow_reset, in_global_settings
-
-g_configvar_domains = {
-    "check_mk" : {
-        "configdir" : wato_root_dir,
-    },
-    "multisite" : {
-        "configdir" : multisite_dir,
-    },
-}
-
-# The following keys are available:
-# configdir: Directory to store the global.mk in (applies to check_mk, multisite, mkeventd)
-# pending:   Handler function to create the pending log entry
-# load:      Optional handler to load/parse the file
-# save:      Optional handler to save the filea
-# in_global_settings: Set to False to hide whole section from global settings dialog
-def register_configvar_domain(domain, configdir = None, pending = None, save = None, load = None, in_global_settings = True):
-    g_configvar_domains[domain] = {
-        'in_global_settings': in_global_settings,
-    }
-    for k in [ 'configdir', 'pending', 'save', 'load' ]:
-        if locals()[k] is not None:
-            g_configvar_domains[domain][k] = locals()[k]
-
-# Persistenz: Speicherung der Werte
-# - WATO speichert seine Variablen für main.mk in conf.d/wato/global.mk
-# - Daten, die der User in main.mk einträgt, müssen WATO auch bekannt sein.
-#   Sie werden als Defaultwerte verwendet.
-# - Daten, die der User in final.mk oder local.mk einträgt, werden von WATO
-#   völlig ignoriert. Der Admin kann hier Werte überschreiben, die man mit
-#   WATO dann nicht ändern kann. Und man sieht auch nicht, dass der Wert
-#   nicht änderbar ist.
-# - WATO muss irgendwie von Check_MK herausbekommen, welche Defaultwerte
-#   Variablen haben bzw. welche Einstellungen diese Variablen nach main.mk
-#   haben.
-# - WATO kann main.mk nicht selbst einlesen, weil dann der Kontext fehlt
-#   (Default-Werte der Variablen aus Check_MK und aus den Checks)
-# - --> Wir machen eine automation, die alle Konfigurationsvariablen
-#   ausgibt.
-
-def load_configuration_settings():
-    settings = {}
-    for domain, domain_info in g_configvar_domains.items():
-        if 'load' in domain_info:
-            domain_info['load'](settings)
-        else:
-            load_configuration_vars(domain_info["configdir"] + "global.mk", settings)
-    return settings
-
-
-def load_configuration_vars(filename, settings):
-    if not os.path.exists(filename):
-        return {}
-    try:
-        execfile(filename, settings, settings)
-        for varname in settings.keys():
-            if varname not in g_configvars:
-                del settings[varname]
-        return settings
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
-        return {}
-
-
-def save_configuration_settings(vars):
-    per_domain = {}
-    for varname, (domain, valuespec, need_restart, allow_reset, in_global_settings) in g_configvars.items():
-        if varname not in vars:
-            continue
-        per_domain.setdefault(domain, {})[varname] = vars[varname]
-
-    # The global setting wato_enabled is not registered in the configuration domains
-    # since the user must not change it directly. It is set by D-WATO on slave sites.
-    if "wato_enabled" in vars:
-        per_domain.setdefault("multisite", {})["wato_enabled"] = vars["wato_enabled"]
-
-    for domain, domain_info in g_configvar_domains.items():
-        if 'save' in domain_info:
-            domain_info['save'](per_domain.get(domain, {}))
-        else:
-            dir = domain_info["configdir"]
-            make_nagios_directory(dir)
-            save_configuration_vars(per_domain.get(domain, {}), dir + "global.mk")
-
-def save_configuration_vars(vars, filename):
-    out = create_user_file(filename, 'w')
-    out.write(wato_fileheader())
-    for varname, value in vars.items():
-        out.write("%s = %s\n" % (varname, pprint.pformat(value)))
-
 #.
 #   .--Groups--------------------------------------------------------------.
 #   |                    ____                                              |
@@ -6571,7 +6472,7 @@ def find_usages_of_contact_group(name):
     global_config = load_configuration_settings()
 
     # Used in default_user_profile?
-    domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars['default_user_profile']
+    domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()['default_user_profile']
     configured = global_config.get('default_user_profile', {})
     default_value = valuespec.default_value()
     if (configured and name in configured['contactgroups']) \
@@ -6580,8 +6481,8 @@ def find_usages_of_contact_group(name):
             folder_preserving_link([('mode', 'edit_configvar'), ('varname', 'default_user_profile')])))
 
     # Is the contactgroup used in mkeventd notify (if available)?
-    if 'mkeventd_notify_contactgroup' in g_configvars:
-        domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars['mkeventd_notify_contactgroup']
+    if 'mkeventd_notify_contactgroup' in configvars():
+        domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()['mkeventd_notify_contactgroup']
         configured = global_config.get('mkeventd_notify_contactgroup')
         default_value = valuespec.default_value()
         if (configured and name == configured) \
@@ -8998,7 +8899,7 @@ def mode_edit_site_globals(phase):
         return
 
     # The site's default values are the current global settings
-    check_mk_vars = [ varname for (varname, var) in g_configvars.items() if var[0] == "check_mk" ]
+    check_mk_vars = [ varname for (varname, var) in configvars().items() if var[0] == "check_mk" ]
     default_values = check_mk_local_automation("get-configuration", [], check_mk_vars)
     default_values.update(load_configuration_settings())
     current_settings = site.get("globals", {})
@@ -9007,7 +8908,7 @@ def mode_edit_site_globals(phase):
         varname = html.var("_varname")
         action = html.var("_action")
         if varname:
-            domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars[varname]
+            domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
             def_value = default_values.get(varname, valuespec.default_value())
 
             if action == "reset" and not is_a_checkbox(valuespec):
@@ -15916,13 +15817,8 @@ def load_plugins(force):
     modules = []
 
     undeclare_all_host_attributes()
-
     load_notification_table()
-
-    global g_configvars, g_configvar_groups, g_configvar_order
-    g_configvars = {}
-    g_configvar_groups = {}
-    g_configvar_order = {}
+    initialize_global_configvars()
 
     global g_rulegroups, g_rulespecs, g_rulespec_group, g_rulespec_groups
     g_rulegroups = {}

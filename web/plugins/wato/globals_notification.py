@@ -30,7 +30,7 @@
 # remove from WATO.
 
 group = _("Notifications")
-g_configvar_order[group] = 15
+configvar_order()[group] = 15
 
 register_configvar(group,
     "enable_rulebased_notifications",

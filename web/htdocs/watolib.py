@@ -2775,6 +2775,145 @@ def collect_attributes(for_what, do_validate = True, varprefix=""):
     return host
 
 #.
+#   .--Global configuration------------------------------------------------.
+#   |       ____ _       _           _                    __ _             |
+#   |      / ___| | ___ | |__   __ _| |   ___ ___  _ __  / _(_) __ _       |
+#   |     | |  _| |/ _ \| '_ \ / _` | |  / __/ _ \| '_ \| |_| |/ _` |      |
+#   |     | |_| | | (_) | |_) | (_| | | | (_| (_) | | | |  _| | (_| |      |
+#   |      \____|_|\___/|_.__/ \__,_|_|  \___\___/|_| |_|_| |_|\__, |      |
+#   |                                                          |___/       |
+#   +----------------------------------------------------------------------+
+#   |  Code for loading and saving global configuration variables. This is |
+#   |  not only needed by the WATO for mode for editing these, but e.g.    |
+#   |  also in the code for distributed WATO (handling of site specific    |
+#   |  globals).
+#   '----------------------------------------------------------------------'
+
+def initialize_global_configvars():
+    global g_configvars, g_configvar_groups, g_configvar_order
+    g_configvars = {}
+    g_configvar_groups = {}
+    g_configvar_order = {}
+
+
+g_configvar_domains = {
+    "check_mk" : {
+        "configdir" : wato_root_dir,
+    },
+    "multisite" : {
+        "configdir" : multisite_dir,
+    },
+}
+
+
+def configvars():
+    return g_configvars
+
+
+def configvar_groups():
+    return g_configvar_groups
+
+
+def configvar_order():
+    return g_configvar_order
+
+def configvar_domains():
+    return g_configvar_domains
+
+
+
+# domain is one of "check_mk", "multisite" or "nagios"
+def register_configvar(group, varname, valuespec, domain="check_mk",
+                       need_restart=False, allow_reset=True, in_global_settings=True):
+    g_configvar_groups.setdefault(group, []).append((domain, varname, valuespec))
+    g_configvars[varname] = domain, valuespec, need_restart, allow_reset, in_global_settings
+
+
+
+# The following keys are available:
+# configdir: Directory to store the global.mk in (applies to check_mk, multisite, mkeventd)
+# pending:   Handler function to create the pending log entry
+# load:      Optional handler to load/parse the file
+# save:      Optional handler to save the filea
+# in_global_settings: Set to False to hide whole section from global settings dialog
+def register_configvar_domain(domain, configdir = None, pending = None, save = None, load = None, in_global_settings = True):
+    g_configvar_domains[domain] = {
+        'in_global_settings': in_global_settings,
+    }
+    for k in [ 'configdir', 'pending', 'save', 'load' ]:
+        if locals()[k] is not None:
+            g_configvar_domains[domain][k] = locals()[k]
+
+# Persistenz: Speicherung der Werte
+# - WATO speichert seine Variablen für main.mk in conf.d/wato/global.mk
+# - Daten, die der User in main.mk einträgt, müssen WATO auch bekannt sein.
+#   Sie werden als Defaultwerte verwendet.
+# - Daten, die der User in final.mk oder local.mk einträgt, werden von WATO
+#   völlig ignoriert. Der Admin kann hier Werte überschreiben, die man mit
+#   WATO dann nicht ändern kann. Und man sieht auch nicht, dass der Wert
+#   nicht änderbar ist.
+# - WATO muss irgendwie von Check_MK herausbekommen, welche Defaultwerte
+#   Variablen haben bzw. welche Einstellungen diese Variablen nach main.mk
+#   haben.
+# - WATO kann main.mk nicht selbst einlesen, weil dann der Kontext fehlt
+#   (Default-Werte der Variablen aus Check_MK und aus den Checks)
+# - --> Wir machen eine automation, die alle Konfigurationsvariablen
+#   ausgibt.
+
+def load_configuration_settings():
+    settings = {}
+    for domain, domain_info in g_configvar_domains.items():
+        if 'load' in domain_info:
+            domain_info['load'](settings)
+        else:
+            load_configuration_vars(domain_info["configdir"] + "global.mk", settings)
+    return settings
+
+
+def load_configuration_vars(filename, settings):
+    if not os.path.exists(filename):
+        return {}
+    try:
+        execfile(filename, settings, settings)
+        for varname in settings.keys():
+            if varname not in g_configvars:
+                del settings[varname]
+        return settings
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                          (filename, e)))
+        return {}
+
+
+def save_configuration_settings(vars):
+    per_domain = {}
+    for varname, (domain, valuespec, need_restart, allow_reset, in_global_settings) in g_configvars.items():
+        if varname not in vars:
+            continue
+        per_domain.setdefault(domain, {})[varname] = vars[varname]
+
+    # The global setting wato_enabled is not registered in the configuration domains
+    # since the user must not change it directly. It is set by D-WATO on slave sites.
+    if "wato_enabled" in vars:
+        per_domain.setdefault("multisite", {})["wato_enabled"] = vars["wato_enabled"]
+
+    for domain, domain_info in g_configvar_domains.items():
+        if 'save' in domain_info:
+            domain_info['save'](per_domain.get(domain, {}))
+        else:
+            dir = domain_info["configdir"]
+            make_nagios_directory(dir)
+            save_configuration_vars(per_domain.get(domain, {}), dir + "global.mk")
+
+def save_configuration_vars(vars, filename):
+    out = create_user_file(filename, 'w')
+    out.write(wato_fileheader())
+    for varname, value in vars.items():
+        out.write("%s = %s\n" % (varname, pprint.pformat(value)))
+
+
+#.
 #   .--Distributed WATO----------------------------------------------------.
 #   |                 ____     __        ___  _____ ___                    |
 #   |                |  _ \    \ \      / / \|_   _/ _ \                   |

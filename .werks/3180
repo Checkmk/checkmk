@@ -1,0 +1,9 @@
+Title: Fix broken site specific globals and disabling of WATO in slave sites
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.8b3
+Date: 1456232582
+Class: fix
+
+

@@ -1725,16 +1725,16 @@ def mode_mkeventd_config(phase):
         html.context_button(_("Server Status"), html.makeuri_contextless([("mode", "mkeventd_status")]), "status")
         return
 
-    vs = [ (v[1], v[2]) for v in g_configvar_groups[_("Event Console")] ]
+    vs = [ (v[1], v[2]) for v in configvar_groups()[_("Event Console")] ]
     current_settings = load_configuration_settings()
-    pending_func = g_configvar_domains['mkeventd']['pending']
+    pending_func = configvar_domains()['mkeventd']['pending']
 
     if phase == "action":
         varname = html.var("_varname")
         action = html.var("_action")
         if not varname:
             return
-        domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars[varname]
+        domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
         def_value = valuespec.default_value()
 
         if action == "reset" and not isinstance(valuespec, Checkbox):
@@ -2136,7 +2136,7 @@ if mkeventd_enabled:
     register_configvar_domain("mkeventd", mkeventd_config_dir,
             pending = lambda msg: log_mkeventd('config-change', msg), in_global_settings = False)
     group = _("Event Console")
-    g_configvar_order[group] = 18
+    configvar_order()[group] = 18
 
     register_configvar(group,
         "remote_status",

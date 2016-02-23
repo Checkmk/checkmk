@@ -37,7 +37,7 @@
 #   '----------------------------------------------------------------------'
 
 group = _("User Interface")
-g_configvar_order[group] = 20
+configvar_order()[group] = 20
 
 register_configvar(group,
     "debug",
@@ -643,7 +643,7 @@ register_configvar(group,
 #   '----------------------------------------------------------------------'
 
 group = _("Administration Tool (WATO)")
-g_configvar_order[group] = 25
+configvar_order()[group] = 25
 
 register_configvar(group,
     "wato_max_snapshots",
@@ -757,7 +757,7 @@ register_configvar(group,
 #   '----------------------------------------------------------------------'
 
 group = _("User Management")
-g_configvar_order[group] = 40
+configvar_order()[group] = 40
 
 register_configvar(group,
     "userdb_automatic_sync",
@@ -910,7 +910,7 @@ register_configvar(group,
 #   '----------------------------------------------------------------------'
 
 group = _("Execution of checks")
-g_configvar_order[group] = 10
+configvar_order()[group] = 10
 
 
 register_configvar(group,
@@ -1107,7 +1107,7 @@ register_configvar(group,
 )
 
 group = _("Service discovery")
-g_configvar_order[group] = 4
+configvar_order()[group] = 4
 
 register_configvar(group,
     "inventory_check_interval",

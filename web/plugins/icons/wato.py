@@ -82,7 +82,8 @@ multisite_icons_and_actions['wato'] = {
 
 def paint_download_agent_output(what, row, tags, host_custom_vars, ty):
     if (what == "host" or (what == "service" and row["service_description"] == "Check_MK")) \
-       and config.may("wato.download_agent_output"):
+       and config.may("wato.download_agent_output") \
+       and not row["host_check_type"] == 2: # Not for shadow hosts
 
         # Not 100% acurate to use the tags here, but this is the best we can do
         # with the available information.
@@ -107,7 +108,7 @@ def paint_download_agent_output(what, row, tags, host_custom_vars, ty):
 
 
 multisite_icons_and_actions['download_agent_output'] = {
-    'host_columns'    : [ "filename" ],
+    'host_columns'    : [ "filename", "check_type" ],
     'paint'           : lambda *args: paint_download_agent_output(*args, ty="agent"),
     'toplevel'        : False,
     'sort_index'      : 50,

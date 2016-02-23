@@ -30,7 +30,7 @@
 
 
 factory_settings['mssql_transactionlogs_default_levels'] = {
-    'used_levels'           : (80, 90),
+    'used_levels'           : (80.0, 90.0),
 }
 
 

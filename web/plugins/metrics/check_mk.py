@@ -413,6 +413,12 @@ metric_info["unused_size"] = {
     "color" : "46/a",
 }
 
+metric_info["allocated_size"] = {
+    "title" : _("Allocated space"),
+    "unit"  : "bytes",
+    "color" : "42/a"
+}
+
 metric_info["tablespace_size"] = {
     "title" : _("Tablespace size"),
     "unit"  : "bytes",

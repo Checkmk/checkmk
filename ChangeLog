@@ -59,6 +59,7 @@
     * 3222 FIX: Fixed broken duplicate user id validation when creating new users
     * 3223 FIX: Fixed exception in network scan when hosts can not be resolved
     * 3225 FIX: Fixed exception when renaming a host which is configured as parent on a folder
+    * 3179 FIX: Fix labelling of heartbeat interval for liveproxyd settings...
 
     Event Console:
     * 3058 FIX: Event Console is now allowing non loadable MIB modules on startup...

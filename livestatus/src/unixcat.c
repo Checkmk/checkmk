@@ -160,10 +160,20 @@ int main(int argc, char **argv) {
     struct thread_info toleft_info = {sock, 1, 0, 1};
     struct thread_info toright_info = {0, sock, 1, 0};
     pthread_t toright_thread, toleft_thread;
-    pthread_create(&toright_thread, 0, copy_thread, (void *)&toright_info);
-    pthread_create(&toleft_thread, 0, copy_thread, (void *)&toleft_info);
-    pthread_join(toleft_thread, NULL);
-    pthread_join(toright_thread, NULL);
+    if (pthread_create(&toright_thread, 0, copy_thread,
+                       (void *)&toright_info) != 0 ||
+        pthread_create(&toleft_thread, 0, copy_thread, (void *)&toleft_info) !=
+            0) {
+        fprintf(stderr, "Couldn't create threads: %s.\n", strerror(errno));
+        close(sock);
+        exit(5);
+    }
+    if (pthread_join(toleft_thread, NULL) != 0 ||
+        pthread_join(toright_thread, NULL) != 0) {
+        fprintf(stderr, "Couldn't join threads: %s.\n", strerror(errno));
+        close(sock);
+        exit(6);
+    }
 
     close(sock);
     return 0;

@@ -1,0 +1,12 @@
+Title: Make unixcat more robust
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.8b3
+Date: 1456222762
+Class: fix
+
+Previously it could happen that unixcat crashed when system resources and/or
+limits were low, especially the nproc limit.  Now we emit sensible error
+messages and exit with new return codes (5 and 6).
+

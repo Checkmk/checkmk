@@ -1,4 +1,7 @@
 1.2.8b3:
+    Core & Setup:
+    * 3234 FIX: Make unixcat more robust...
+
     Checks & Agents:
     * 2996 websphere_mq_queues: now able to configure levels for used percentage of total queues
     * 3227 FIX: Automatic service adding: Fixed exception when using time range to skip automatic configuration...

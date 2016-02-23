@@ -218,6 +218,7 @@ function merge_args()
     return defaults;
 }
 
+// Tells the caller whether or not there are graphs on the current page
 function has_graphing()
 {
     return typeof g_graphs !== 'undefined';

@@ -11,6 +11,9 @@
     Multisite:
     * 3076 FIX: fixed broken views in check_mk raw edition
 
+    WATO:
+    * 3179 FIX: Fix labelling of heartbeat interval for liveproxyd settings...
+
 
 1.2.8b2:
     Core & Setup:

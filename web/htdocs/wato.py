@@ -9118,8 +9118,8 @@ def mode_edit_site(phase):
                         title = _("Regular heartbeat"),
                         orientation = "float",
                         elements = [
-                            Integer(label = _("Rate:"), unit=_("/sec"), minvalue=1, default_value = 5),
-                            Float(label = _("Timeout:"), unit=_("sec"), minvalue=0.1, default_value = 2.0),
+                            Integer(label = _("One heartbeat every"), unit=_("sec"), minvalue=1, default_value = 5),
+                            Float(label = _("with a timeout of"), unit=_("sec"), minvalue=0.1, default_value = 2.0, display_format="%.1f"),
                    ])),
                    ( "channel_timeout",
                      Float(

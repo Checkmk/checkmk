@@ -1,0 +1,9 @@
+Title: Fix labelling of heartbeat interval for liveproxyd settings
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b3
+Date: 1456230677
+Class: fix
+
+Instead of "5/sec" we now correctly write "one heartbeat every 5 sec".

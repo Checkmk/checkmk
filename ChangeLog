@@ -43,6 +43,7 @@
     * 3227 FIX: Automatic service adding: Fixed exception when using time range to skip automatic configuration...
     * 3178 FIX: docsis_channels_upstream: Fixed crash in graphs
     * 3082 FIX: windows agent: with realtime updates active, shutting down the agent could take very long
+    * 2997 FIX: Fixed broken SNMP subchecks...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

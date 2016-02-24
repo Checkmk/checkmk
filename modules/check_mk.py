@@ -513,7 +513,7 @@ def is_snmp_check(check_name):
 
 def is_tcp_check(check_name):
     return check_name in check_info \
-       and check_name not in snmp_info
+       and check_name.split(".")[0] not in snmp_info # snmp check basename
 
 
 #.

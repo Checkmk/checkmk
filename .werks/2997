@@ -1,0 +1,9 @@
+Title: Fixed broken SNMP subchecks
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1456315853
+Class: fix
+
+Fixed recently introduced bug (#3214) which removed all SNMP subchecks from monitoring.

@@ -2,8 +2,10 @@ Title: Discovery check lifes in history
 Component: checks
 State: open
 Date: 2016-02-09 15:25:38
-Targetversion: 1.2.7
+Targetversion: 1.2.8
 Class: bug
 
-After Changing a rule like Diskstat Diskcovery mode and a re discovery every seams fine. But some times later the Check_MK Discovery Check
-reports unchecked services. But if you then reschedule the Discovery Service by hand, everything is fine again
+After changing a rule like diskstat Discovery mode and doing a rediscovery
+every seems fine. But some times later the Check_MK Discovery Check reports
+unchecked services. But if you then reschedule the Discovery Service manually,
+everything is fine again

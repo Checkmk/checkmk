@@ -1,0 +1,10 @@
+Title: Discovery failed: No such file or directory: '/omd/sites/heute/var/check_mk/persisted/heute'
+Component: core
+State: open
+Date: 2016-02-24 15:51:18
+Targetversion: 1.2.8
+Class: bug
+
+Discovery failed: Exception in check plugin '3ware_disks': [Errno 2] No such file or directory: '/omd/sites/heute/var/check_mk/persisted/heute'
+Reason unknown. The site was freshly started after a reboot of the system.
+Maybe this was a race condition due to an empty tmpfs.

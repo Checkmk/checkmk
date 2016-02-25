@@ -1,0 +1,12 @@
+Title: Fix bulk operations based on search result folder
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1456402291
+
+If you searched for a host tag and then did a bulk operation like discovery
+on the search result - the tag criteria was ignored and too many hosts
+selected. This has been fixed.

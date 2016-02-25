@@ -15564,7 +15564,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             # has not set that attribute. In case of bulk edit we never lock: During bulk edit no
             # attribute ca be removed anyway.
 
-            checkbox_name = "_change_%s" % attrname
+            checkbox_name = for_what + "_change_%s" % attrname
             cb = html.get_checkbox(checkbox_name)
             force_entry = False
             disabled = False

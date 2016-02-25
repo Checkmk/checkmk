@@ -91,9 +91,9 @@ def render_views():
     views.load_views()
     dashboard.load_dashboards()
 
-    def render_topic(topic, s):
+    def render_topic(topic, entries):
         first = True
-        for t, title, name, is_view in s:
+        for t, title, name, is_view in entries:
             if is_view and config.visible_views and name not in config.visible_views:
                 continue
             if is_view and config.hidden_views and name in config.hidden_views:
@@ -104,21 +104,42 @@ def render_views():
                     first = False
                 if is_view:
                     bulletlink(title, "view.py?view_name=%s" % name, onclick = "return wato_views_clicked(this)")
+                elif "?name=" in name:
+                    bulletlink(title, name)
                 else:
                     bulletlink(title, 'dashboard.py?name=%s' % name, onclick = "return wato_views_clicked(this)")
 
         # TODO: One day pagestypes should handle the complete snapin.
-        for page_type in pagetypes.all_page_types().values():
-            if issubclass(page_type, pagetypes.PageRenderer):
-                for t, title, url in page_type.sidebar_links():
-                    if t == topic:
-                        bulletlink(title, url)
+        # for page_type in pagetypes.all_page_types().values():
+        #     if issubclass(page_type, pagetypes.PageRenderer):
+        #         for t, title, url in page_type.sidebar_links():
+        #             if t == topic:
+        #                 bulletlink(title, url)
 
         if not first: # at least one item rendered
             html.end_foldable_container()
 
-    for topic, s in visuals_by_topic(views.permitted_views().items() + dashboard.permitted_dashboards().items()):
-        render_topic(topic, s)
+    # TODO: One bright day drop this whole visuals stuff and only use page_types
+    page_type_topics = {}
+    for page_type in pagetypes.all_page_types().values():
+        if issubclass(page_type, pagetypes.PageRenderer):
+            for t, title, url in page_type.sidebar_links():
+                page_type_topics.setdefault(t, []).append((t, title, url, False))
+
+    visuals_topics_with_entries = visuals_by_topic(views.permitted_views().items() + dashboard.permitted_dashboards().items())
+    all_topics_with_entries = []
+    for topic, entries in visuals_topics_with_entries:
+        if topic in page_type_topics:
+            entries = entries + page_type_topics[topic]
+            del page_type_topics[topic]
+        all_topics_with_entries.append((topic, entries))
+
+    all_topics_with_entries += page_type_topics.items()
+    all_topics_with_entries.sort()
+
+    for topic, entries in all_topics_with_entries:
+        render_topic(topic, entries)
+
 
     links = []
     if config.may("general.edit_views"):

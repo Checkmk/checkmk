@@ -16,6 +16,7 @@
     WATO:
     * 3179 FIX: Fix labelling of heartbeat interval for liveproxyd settings...
     * 3180 FIX: Fix broken site specific globals and disabling of WATO in slave sites
+    * 3182 FIX: Fix bulk operations based on search result folder...
 
 
 1.2.8b2:

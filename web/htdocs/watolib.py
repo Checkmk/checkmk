@@ -2765,7 +2765,7 @@ def collect_attributes(for_what, do_validate = True, varprefix=""):
     host = {}
     for attr, topic in all_host_attributes():
         attrname = attr.name()
-        if not html.var("_change_%s" % attrname, False):
+        if not html.var(for_what + "_change_%s" % attrname, False):
             continue
 
         if do_validate and attr.needs_validation():

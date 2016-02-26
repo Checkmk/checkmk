@@ -9,6 +9,7 @@
     * 3082 FIX: windows agent: with realtime updates active, shutting down the agent could take very long
     * 2997 FIX: Fixed broken SNMP subchecks...
     * 3243 FIX: Fix missing custom graphs in sidebar snapin Views if explicit topic is set
+    * 3245 FIX: Fix interpretation of check levels 0.0 as "no levels"...
 
     Multisite:
     * 3076 FIX: fixed broken views in check_mk raw edition

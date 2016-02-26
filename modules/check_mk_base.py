@@ -2082,7 +2082,11 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
     perfdata = []
     infotexts = []
 
-    scale_value = lambda v: v != None and v * factor * scale or None
+    def scale_value(v):
+        if v == None:
+            return None
+        else:
+            return v * factor * scale
 
     # None or (None, None) -> do not check any levels
     if params == None or params == (None, None):

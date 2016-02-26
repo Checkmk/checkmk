@@ -1,0 +1,10 @@
+Title: Fix interpretation of check levels 0.0 as "no levels"
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b3
+Date: 1456481952
+Class: fix
+
+E.g. if you have set 0/0 as warn/crit levels for CPU load then the service
+would always be OK. This has now been fixed.

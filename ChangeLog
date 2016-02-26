@@ -14,6 +14,7 @@
     Multisite:
     * 3076 FIX: fixed broken views in check_mk raw edition
     * 3181 FIX: Omit icon for downloading agent output on shadow hosts (cmcdump)...
+    * 3248 FIX: Avoid broken list of context filters and case of a BI error
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

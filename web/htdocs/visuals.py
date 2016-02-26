@@ -821,7 +821,14 @@ def show_filter(f):
     html.write('<div class="floatfilter %s">' % (f.double_height() and "double" or "single"))
     html.write('<div class=legend>%s</div>' % html.attrencode(f.title))
     html.write('<div class=content>')
-    f.display()
+    try:
+        f.display()
+    except Exception, e:
+        if config.debug:
+            raise
+        html.icon(_("This filter cannot be displayed"), "alert")
+        html.write("%s" % e)
+
     html.write("</div>")
     html.write("</div>")
 

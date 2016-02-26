@@ -421,6 +421,8 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     # Remember successful compile in cache
     g_cache[user] = cache
 
+    check_title_uniqueness(cache["forest"])
+
     if compile_logging():
         num_total_aggr = 0
         for grp, aggrs in cache['forest'].iteritems():
@@ -462,6 +464,21 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                len(config.aggregations),
                len(config.host_aggregations),
             ))
+
+
+def check_title_uniqueness(forest):
+    known_titles = set()
+    for group, aggrs in forest.iteritems():
+        for aggr in aggrs:
+            title = aggr["title"]
+            if title in known_titles:
+                raise MKConfigError(_("Duplicate BI aggregation with the title \"<b>%s</b>\". "
+                         "Please check your BI configuration and make sure that within each group no aggregation has "
+                         "the same title as any other. Note: you can use arguments in the top level "
+                         "aggregation rule, like <tt>Host $HOST$</tt>.") % (
+                    html.attrencode(title)))
+            else:
+                known_titles.add(title)
 
 def compile_logging():
     return config.bi_compile_log is not None

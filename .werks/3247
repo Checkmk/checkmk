@@ -1,0 +1,11 @@
+Title: Do not allow multiple BI aggregates with the same title
+Level: 2
+Component: bi
+Compatible: compat
+Version: 1.2.8b3
+Date: 1456485207
+Class: fix
+
+Doing that leads into several anomalies and strange behaviour. The BI
+titles must be unique. This is now enforced and an error printed in
+cased.

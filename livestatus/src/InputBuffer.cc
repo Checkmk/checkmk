@@ -32,8 +32,6 @@
 #include "logger.h"
 
 using std::list;
-using std::make_pair;
-using std::pair;
 using std::string;
 
 extern int g_query_timeout_msec;
@@ -57,10 +55,6 @@ bool timeout_reached(const struct timeval *start, int timeout_ms) {
     elapsed += now.tv_usec - start->tv_usec;
     return elapsed / 1000 >= timeout_ms;
 }
-
-pair<list<string>, InputBuffer::Result> failure(InputBuffer::Result r) {
-    return make_pair(list<string>(), r);
-}
 }  // namespace
 
 InputBuffer::InputBuffer(int fd, const int *termination_flag)
@@ -72,8 +66,7 @@ InputBuffer::InputBuffer(int fd, const int *termination_flag)
 }
 
 // read in data enough for one complete request (and maybe more).
-pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
-    std::list<std::string> request_lines;
+InputBuffer::Result InputBuffer::readRequest() {
     // Remember when we started waiting for a request. This
     // is needed for the idle_timeout. A connection may
     // not be idle longer than that value.
@@ -113,7 +106,7 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
                         logger(LG_INFO,
                                "Timeout of %d ms exceeded while reading query",
                                g_query_timeout_msec);
-                        return failure(Result::timeout);
+                        return Result::timeout;
                     }
                     // Check if we exceeded the maximum time between two queries
                     if (timeout_reached(&start_of_idle, g_idle_timeout_msec)) {
@@ -121,7 +114,7 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
                                "Idle timeout of %d ms exceeded. Going to close "
                                "connection.",
                                g_idle_timeout_msec);
-                        return failure(Result::timeout);
+                        return Result::timeout;
                     }
                 }
 
@@ -132,12 +125,11 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
                 else if (
                     rd == Result::eof &&
                     r == _read_index /* currently at beginning of a line */) {
-                    if (request_lines.empty()) {
-                        return failure(
-                            Result::eof);  // empty request -> no request
+                    if (_request_lines.empty()) {
+                        return Result::eof;  // empty request -> no request
                     }
                     // socket has been closed but request is complete
-                    return make_pair(request_lines, Result::request_read);
+                    return Result::request_read;
                     // the current state is now:
                     // _read_index == r == _write_index => buffer is empty
                     // that way, if the main program tries to read the
@@ -147,11 +139,11 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
                 // if we are *not* at an end of line while reading
                 // a request, we got an invalid request.
                 else if (rd == Result::eof) {
-                    return failure(Result::unexpected_eof);
+                    return Result::unexpected_eof;
 
                     // Other status codes
                 } else if (rd == Result::should_terminate) {
-                    return failure(rd);
+                    return rd;
                 }
             }
             // OK. So no space is left in the buffer. But maybe at the
@@ -178,7 +170,7 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
                 if (new_capacity > maximum_buffer_size) {
                     logger(LG_INFO,
                            "Error: maximum length of request line exceeded");
-                    return failure(Result::line_too_long);
+                    return Result::line_too_long;
                 }
                 _readahead_buffer.resize(new_capacity);
             }
@@ -187,10 +179,10 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
             if (_read_index == r) {  // empty line found => end of request
                 _read_index = r + 1;
                 // Was ist, wenn noch keine korrekte Zeile gelesen wurde?
-                if (request_lines.empty()) {
-                    return failure(Result::empty_request);
+                if (_request_lines.empty()) {
+                    return Result::empty_request;
                 }
-                return make_pair(request_lines, Result::request_read);
+                return Result::request_read;
 
             }  // non-empty line: belongs to current request
             int length = r - _read_index;
@@ -199,7 +191,7 @@ pair<list<string>, InputBuffer::Result> InputBuffer::readRequest() {
                 length--;
             }
             if (length > 0) {
-                request_lines.push_back(
+                _request_lines.push_back(
                     string(&_readahead_buffer[_read_index], length));
             } else {
                 logger(LG_INFO,
@@ -246,4 +238,12 @@ InputBuffer::Result InputBuffer::readData() {
         }
     }
     return Result::should_terminate;
+}
+
+bool InputBuffer::empty() const { return _request_lines.empty(); }
+
+string InputBuffer::nextLine() {
+    string s = _request_lines.front();
+    _request_lines.pop_front();
+    return s;
 }

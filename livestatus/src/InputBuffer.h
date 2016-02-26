@@ -29,7 +29,6 @@
 #include <stddef.h>
 #include <list>
 #include <string>
-#include <utility>
 #include <vector>
 
 class InputBuffer {
@@ -46,7 +45,9 @@ public:
     };
 
     InputBuffer(int fd, const int *termination_flag);
-    std::pair<std::list<std::string>, Result> readRequest();
+    Result readRequest();
+    bool empty() const;
+    std::string nextLine();
 
 private:
     int _fd;
@@ -54,6 +55,7 @@ private:
     std::vector<char> _readahead_buffer;
     size_t _read_index;
     size_t _write_index;
+    std::list<std::string> _request_lines;
 
     Result readData();
 };

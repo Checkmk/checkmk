@@ -121,28 +121,41 @@ void Store::registerDowntime(nebstruct_downtime_data *d) {
     _table_downtimes.addDowntime(d);
 }
 
+namespace {
+list<string> getLines(InputBuffer *input) {
+    list<string> lines;
+    while (!input->empty()) {
+        lines.push_back(input->nextLine());
+        if (lines.back().empty()) {
+            break;
+        }
+    }
+    return lines;
+}
+}  // namespace
+
 bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
     output->reset();
-    pair<list<string>, InputBuffer::Result> r = input->readRequest();
-    if (r.second != InputBuffer::Result::request_read) {
-        if (r.second != InputBuffer::Result::eof) {
+    InputBuffer::Result res = input->readRequest();
+    if (res != InputBuffer::Result::request_read) {
+        if (res != InputBuffer::Result::eof) {
             output->setError(
                 RESPONSE_CODE_INCOMPLETE_REQUEST,
                 "Client connection terminated while request still incomplete");
         }
         return false;
     }
-    list<string> &lines = r.first;
-    string l = lines.front();
-    lines.pop_front();
+    string l = input->nextLine();
     const char *line = l.c_str();
     if (g_debug_level > 0) {
         logger(LG_INFO, "Query: %s", line);
     }
     if (strncmp(line, "GET ", 4) == 0) {
-        answerGetRequest(lines, output, lstrip(const_cast<char *>(line) + 4));
+        answerGetRequest(getLines(input), output,
+                         lstrip(const_cast<char *>(line) + 4));
     } else if (strcmp(line, "GET") == 0) {
-        answerGetRequest(lines, output, "");  // only to get error message
+        // only to get error message
+        answerGetRequest(getLines(input), output, "");
     } else if (strncmp(line, "COMMAND ", 8) == 0) {
         answerCommandRequest(lstrip(const_cast<char *>(line) + 8));
         output->setDoKeepalive(true);
@@ -172,7 +185,7 @@ void Store::answerCommandRequest(const char *command) {
 #endif
 }
 
-void Store::answerGetRequest(list<string> &lines, OutputBuffer *output,
+void Store::answerGetRequest(const list<string> &lines, OutputBuffer *output,
                              const char *tablename) {
     output->reset();
     if (tablename[0] == 0) {

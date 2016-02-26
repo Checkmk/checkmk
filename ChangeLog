@@ -22,6 +22,9 @@
     * 3182 FIX: Fix bulk operations based on search result folder...
     * 2998 FIX: Fixed broken WATO rules where content is dynamically loaded...
 
+    Livestatus:
+    * 3235 FIX: Unbreak COMMAND handling...
+
 
 1.2.8b2:
     Core & Setup:

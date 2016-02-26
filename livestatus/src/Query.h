@@ -91,7 +91,7 @@ class Query {
     _stats_groups_t _stats_groups;
 
 public:
-    Query(std::list<std::string> &lines, OutputBuffer *output, Table *);
+    Query(const std::list<std::string> &lines, OutputBuffer *output, Table *);
     ~Query();
     bool processDataset(void *);
     bool timelimitReached();

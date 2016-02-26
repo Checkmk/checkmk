@@ -85,7 +85,7 @@ public:
 
 private:
     Table *findTable(std::string name);
-    void answerGetRequest(std::list<std::string> &lines, OutputBuffer *,
+    void answerGetRequest(const std::list<std::string> &lines, OutputBuffer *,
                           const char *);
     void answerCommandRequest(const char *);
 };

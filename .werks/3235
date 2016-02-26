@@ -1,0 +1,12 @@
+Title: Unbreak COMMAND handling
+Level: 1
+Component: livestatus
+Compatible: compat
+Version: 1.2.8b3
+Date: 1456481971
+Class: fix
+
+Due to a recent bug, only the first of several COMMANDs piped into
+livestatus was executed. This made e.g. replaying the output of cmcdump
+impossible. This has been fixed now.
+

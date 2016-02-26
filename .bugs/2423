@@ -1,0 +1,10 @@
+Title: NagVis does not work anymore because of gadget_type=img
+Component: multisite
+State: open
+Date: 2016-02-26 09:12:18
+Targetversion: 1.2.8
+Class: bug
+
+Nagvis geht nach dem Update nicht mehr da Links zu maps bis dahin das Attribut
+gadget_type=img hatten, was nun nicht mehr erlaubt ist und zu einer Meldung
+führt was die GUI blockiert. Entfernen der Werte löst das Problem.

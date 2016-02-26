@@ -1,0 +1,10 @@
+Title: cisco_mem: remove bogus memory check for "Driver text"
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b4
+Date: 1456501845
+Class: fix
+
+Some C3XXX devices send this information which 40 Bytes used memory of 1 MB,
+which seems to be totally useless. We no longer discover these items now.

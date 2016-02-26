@@ -1575,8 +1575,11 @@ class ListChoice(ValueSpec):
                 self._elements = self._choices
             else:
                 self._elements = self._choices()
-        else:
-            self._elements = []
+            return
+
+        if self._loaded_at != id(html):
+            self._elements = self.get_elements()
+            self._loaded_at = id(html) # unique for each query!
 
     def canonical_value(self):
         return []

@@ -1,0 +1,11 @@
+Title: Fixed broken WATO rules where content is dynamically loaded
+Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1456477952
+
+Rules like <i>Disabled checks</i> and <i>Deploy custom files with agent (Windows)</i>
+were no longer displaying any content. This has been fixed.

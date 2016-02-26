@@ -268,7 +268,11 @@ fi
 
 if type prtdiag >/dev/null 2>&1
 then
-    run_cached -s solaris_prtdiag_status 300 '/usr/sbin/prtdiag 1>/dev/null 2>&1; echo $?'
+    # prtdiag does not work in local zones
+    if [ "$zonename" == "global" ]
+    then
+        run_cached -s solaris_prtdiag_status 300 '/usr/sbin/prtdiag 1>/dev/null 2>&1; echo $?'
+    fi
 fi
 
 # TCP Connection stats

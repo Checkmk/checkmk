@@ -1,0 +1,10 @@
+Title: Avoid broken list of context filters and case of a BI error
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1456486084
+
+

@@ -27,7 +27,10 @@
 cisco_mem_default_levels = (80.0, 90.0)
 
 def inventory_cisco_mem(info):
-    return [ (line[0], "cisco_mem_default_levels") for line in info ]
+    return [
+       (line[0], "cisco_mem_default_levels")
+        for line in info
+        if line[0] != "Driver text" ]
 
 def check_cisco_mem(item, params, info):
     for line in info:

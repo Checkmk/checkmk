@@ -1,0 +1,10 @@
+Title: WATO BI Module: swap order of aggregation function and child node selection
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b3
+Date: 1456480905
+Class: feature
+
+This is more intuitive. First I decide, which nodes I want to have, then how they
+should be aggregated. And in most cases <i>worst</i> will be used anyway.

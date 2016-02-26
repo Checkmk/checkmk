@@ -1429,8 +1429,8 @@ class ModeBIEditRule(ModeBI):
             elements = elements,
             headers = [
                 ( _("General Properties"),     [ "id", "title", "comment", "params" ]),
-                ( _("Aggregation Function"),   [ "aggregation" ], ),
                 ( _("Child Node Generation"),  [ "nodes" ] ),
+                ( _("Aggregation Function"),   [ "aggregation" ], ),
             ]
         )
 

@@ -276,7 +276,12 @@ def process_multisite_icons(what, row, tags, custom_vars, toplevel):
                 # b) single string - the icon name (without .png)
                 # c) tuple         - icon, title
                 # d) triple        - icon, title, url
-                result = icon['paint'](what, row, tags, custom_vars)
+                try:
+                    result = icon['paint'](what, row, tags, custom_vars)
+                except Exception, e:
+                    if config.debug:
+                        raise
+                    result = ("alert", "%s" % e)
 
                 if result == None:
                     continue

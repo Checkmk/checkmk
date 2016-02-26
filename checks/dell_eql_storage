@@ -32,7 +32,8 @@ def check_dell_eql_storage(item, _no_params, info):
     for name, desc, health_state, raid_state, total_storage, \
             repl_storage, snap_storage, used_storage in info:
         if name == item:
-            yield 0, desc
+            if desc:
+                yield 0, desc
 
             # Health Status:
             health_states = {

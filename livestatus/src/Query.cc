@@ -56,7 +56,7 @@ using std::list;
 using std::string;
 using std::vector;
 
-Query::Query(list<string> &lines, OutputBuffer *output, Table *table)
+Query::Query(const list<string> &lines, OutputBuffer *output, Table *table)
     : _output(output)
     , _table(table)
     , _auth_user(nullptr)

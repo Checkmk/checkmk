@@ -75,6 +75,7 @@
 
     Livestatus:
     * 3233 FIX: Fixed shutdown of Nagios core with Livestatus module...
+    * 3235 FIX: Unbreak COMMAND handling...
 
     HW/SW-Inventory:
     * 3219 FIX: lnx_distro: Now detecting Oracle VM Server correctly

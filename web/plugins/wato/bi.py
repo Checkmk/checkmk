@@ -1454,9 +1454,10 @@ bi_aggregation_functions["worst"] = {
             Integer(
                 help = _("Normally this value is <tt>1</tt>, which means that the worst state "
                          "of all child nodes is being used as the total state. If you set it for example "
-                         "to <tt>2</tt>, then the node with the worst state is not being regarded. "
-                         "If the states of the child nodes would be CRIT, WARN and OK, then to total "
-                         "state would be WARN."),
+                         "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
+                         "Example: In the case of five nodes with the states CRIT CRIT WARN OK OK then "
+                         "resulting state would be WARN. Or you could say that the worst to nodes are "
+                         "first dropped and then the worst of the remaining nodes defines the state. "),
                 title = _("Take n'th worst state for n = "),
                 default_value = 1,
                 min_value = 1),

@@ -1,0 +1,10 @@
+Title: Fix missing filter for non-OK services when report is called via context button
+Level: 2
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1456499195
+
+

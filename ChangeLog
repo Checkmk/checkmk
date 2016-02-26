@@ -75,6 +75,9 @@
     BI:
     * 3247 FIX: Do not allow multiple BI aggregates with the same title...
 
+    Reporting & Availability:
+    * 3249 FIX: Fix missing filter for non-OK services when report is called via context button
+
     Event Console:
     * 3058 FIX: Event Console is now allowing non loadable MIB modules on startup...
 

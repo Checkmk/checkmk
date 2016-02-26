@@ -1,0 +1,10 @@
+Title: Fix link for editing a BI aggregation after coming back from the details of another aggregation
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b3
+Date: 1456485140
+Class: fix
+
+The problem occurred if you tried to edit first one aggregation, then
+directly after that another one.

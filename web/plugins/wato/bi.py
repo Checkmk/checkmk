@@ -996,7 +996,7 @@ class ModeBIAggregations(ModeBI):
         for nr, aggregation in enumerate(self._pack["aggregations"]):
             table.row()
             table.cell(_("Actions"), css="buttons")
-            edit_url = html.makeuri([("mode", "bi_edit_aggregation"), ("id", nr)])
+            edit_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"), ("id", nr), ("pack", self._pack_id)])
             html.icon_button(edit_url, _("Edit this aggregation"), "edit")
             if self.is_contact_for_pack():
                 delete_url = html.makeactionuri([("_del_aggr", nr)])

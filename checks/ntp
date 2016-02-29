@@ -26,6 +26,11 @@
 
 ntp_default_levels = (10, 200.0, 500.0) # stratum, ms offset
 
+factory_settings["ntp_time_default_levels"] = {
+    "ntp_levels" : ntp_default_levels,
+    "alert_delay" : (300, 3600),
+}
+
 # Example output from agent:
 # <<<ntp>>>
 # - 42.202.61.100   .INIT.          16 u    - 1024    0    0.000    0.000   0.000
@@ -123,6 +128,7 @@ def check_ntp_server_state(line, params):
     else:
         return (0, infotext, offset, jitter)
 
+
 def check_ntp(item, params, info):
     for line in info:
         if line[1] == item:
@@ -139,18 +145,53 @@ def check_ntp(item, params, info):
 
     return (3, "peer not found")
 
-def check_ntp_summary(item, params, info):
+
+def check_ntp_summary(_no_item, params, info):
+    if type(params) == tuple:
+        params = {
+            "ntp_levels" : params,
+            "alert_delay" : (300, 3600),
+        }
     # No information at all? NTP daemon not running or timeout in ntpq -p
     if len(info) == 0:
-        return (3, "no information from NTP: timeout in ntpq -p or NTP daemon not running")
+        yield 3, "no information from NTP: timeout in ntpq -p or NTP daemon not running"
+        return
 
     # We only are interested in our system peer or pulse per second source (pps)
     for line in info:
         if line[0] in [ "*", "o" ]:
-            state, text, perfdata = check_ntp(line[1], params, [line])
+            state, text, perfdata = check_ntp(line[1], params["ntp_levels"], [line])
             text += " (synchronized on %s)" % line[1]
-            return (state, text, perfdata)
-    return (2, "found %d peers, but none is suitable" % len(info))
+            set_item_state(None, ("sync", time.time(), state, "last successful sync")) # remember last successfull sync
+            yield state, text, perfdata
+            return
+
+    infotext = "found %d peers, but none is suitable" % len(info)
+    yield 0, infotext
+
+    # Currently no peer is suitable. But we want to tolerate that for a while.
+    entry = get_item_state(None)
+    if entry == None:
+        set_item_state(None, ("init", time.time(), 0, infotext))
+        yield 0, "just started monitoring"
+        return
+
+    how, last_successful_sync, last_state, last_infotext = entry
+    time_since_sync = time.time() - last_successful_sync
+    infotext = "this is %s since " % get_age_human_readable(time_since_sync)
+    infotext += last_infotext
+    yield last_state, infotext
+
+    warn_time, crit_time = params["alert_delay"]
+    if time_since_sync >= crit_time:
+        status = 2
+    elif time_since_sync >= warn_time:
+        status = 1
+    else:
+        status = 0
+
+    if status:
+        yield status, "(levels at %s/%s)" % (get_age_human_readable(warn_time), get_age_human_readable(crit_time))
 
 
 
@@ -168,4 +209,5 @@ check_info["ntp.time"] = {
     'service_description':     'NTP Time',
     'has_perfdata':            True,
     'group':                   'ntp_time',
+    'default_levels_variable': "ntp_time_default_levels",
 }

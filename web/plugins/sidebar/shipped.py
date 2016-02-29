@@ -134,8 +134,7 @@ def render_views():
             del page_type_topics[topic]
         all_topics_with_entries.append((topic, entries))
 
-    all_topics_with_entries += page_type_topics.items()
-    all_topics_with_entries.sort()
+    all_topics_with_entries += sorted(page_type_topics.items())
 
     for topic, entries in all_topics_with_entries:
         render_topic(topic, entries)

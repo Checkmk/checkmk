@@ -2,6 +2,9 @@
     Checks & Agents:
     * 3250 FIX: cisco_mem: remove bogus memory check for "Driver text"...
 
+    Multisite:
+    * 3251 FIX: Fix sorting of entries in Views sidebar element
+
     Notifications:
     * 3253 FIX: sms: notification script sms now handles single quotes in the message in the right way
 

@@ -1,0 +1,9 @@
+Title: snmp_extended_info: now inventorizes all physical components of devices which support the ENTITY-MIB
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.9i1
+Date: 1456736344
+Class: feature
+
+

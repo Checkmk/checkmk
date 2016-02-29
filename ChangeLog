@@ -87,6 +87,7 @@
     * 3235 FIX: Unbreak COMMAND handling...
 
     HW/SW-Inventory:
+    * 3192 snmp_extended_info: now inventorizes all physical components of devices which support the ENTITY-MIB
     * 3219 FIX: lnx_distro: Now detecting Oracle VM Server correctly
 
 

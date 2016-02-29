@@ -569,10 +569,63 @@ inventory_displayhints.update({
     ".hardware.memory.arrays:*.devices:*."             : { "title" : lambda v: v["locator"], },
     ".hardware.memory.arrays:*.devices:*.size"         : { "title" : _("Size"),                   "paint" : "bytes", },
     ".hardware.memory.arrays:*.devices:*.speed"        : { "title" : _("Speed"),                  "paint" : "hz", },
+
     ".hardware.system."                                : { "title" : _("System") },
     ".hardware.system.product"                         : { "title" : _("Product") },
-    ".hardware.system.serial_number"                   : { "title" : _("Serial Number") },
-    ".hardware.system.model_name"                      : { "title" : _("Model Name") },
+    ".hardware.system.serial"                          : { "title" : _("Serial Number") },
+    ".hardware.system.model"                           : { "title" : _("Model Name") },
+
+    ".hardware.components."                            : { "title" : _("Physical Components") },
+    ".hardware.components.backplanes:"                 : { "title" : _("Backplanes"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
+                                                           "view" : "invbackplane_of_host" },
+    ".hardware.components.backplanes:*.index"          : { "title" : _("Index") },
+    ".hardware.components.backplanes:*.name"           : { "title" : _("Name") },
+    ".hardware.components.backplanes:*.description"    : { "title" : _("Description") },
+    ".hardware.components.backplanes:*.serial"         : { "title" : _("Serial Number") },
+    ".hardware.components.backplanes:*.model"          : { "title" : _("Model Name") },
+    ".hardware.components.backplanes:*.location"       : { "title" : _("Location") },
+
+    ".hardware.components.fans:"                       : { "title" : _("Fans"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
+                                                           "view" : "invfan_of_host" },
+    ".hardware.components.fans:*.index"                : { "title" : _("Index") },
+    ".hardware.components.fans:*.name"                 : { "title" : _("Name") },
+    ".hardware.components.fans:*.description"          : { "title" : _("Description") },
+    ".hardware.components.fans:*.serial"               : { "title" : _("Serial Number") },
+    ".hardware.components.fans:*.model"                : { "title" : _("Model Name") },
+    ".hardware.components.fans:*.location"             : { "title" : _("Location") },
+
+    ".hardware.components.psus:"                       : { "title" : _("Power Supplies"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
+                                                           "view" : "invpsu_of_host" },
+    ".hardware.components.psus:*.index"                : { "title" : _("Index") },
+    ".hardware.components.psus:*.name"                 : { "title" : _("Name") },
+    ".hardware.components.psus:*.description"          : { "title" : _("Description") },
+    ".hardware.components.psus:*.serial"               : { "title" : _("Serial Number") },
+    ".hardware.components.psus:*.model"                : { "title" : _("Model Name") },
+    ".hardware.components.psus:*.location"             : { "title" : _("Location") },
+
+    ".hardware.components.sensors:"                    : { "title" : _("Sensors"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
+                                                           "view" : "invsensor_of_host" },
+    ".hardware.components.sensors:*.index"             : { "title" : _("Index") },
+    ".hardware.components.sensors:*.name"              : { "title" : _("Name") },
+    ".hardware.components.sensors:*.description"       : { "title" : _("Description") },
+    ".hardware.components.sensors:*.serial"            : { "title" : _("Serial Number") },
+    ".hardware.components.sensors:*.model"             : { "title" : _("Model Name") },
+    ".hardware.components.sensors:*.location"          : { "title" : _("Location") },
+
+    ".hardware.components.modules:"                    : { "title" : _("Modules"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
+                                                           "view" : "invmodule_of_host" },
+    ".hardware.components.modules:*.index"             : { "title" : _("Index") },
+    ".hardware.components.modules:*.name"              : { "title" : _("Name") },
+    ".hardware.components.modules:*.description"       : { "title" : _("Description") },
+    ".hardware.components.modules:*.serial"            : { "title" : _("Serial Number") },
+    ".hardware.components.modules:*.model"             : { "title" : _("Model Name") },
+    ".hardware.components.modules:*.location"          : { "title" : _("Location") },
+
     ".hardware.storage."                               : { "title" : _("Storage") },
     ".hardware.storage.disks:"                         : { "title" : _("Block Devices") },
     ".hardware.storage.disks:*."                       : { "title" : _("Block Device %d") },
@@ -625,13 +678,13 @@ inventory_displayhints.update({
 
     "software.applications."                           : { "title" : _("Applications"), },
 
-    ".software.applications.citrix."                                 : { "title" : _("Citrix") },
-    ".software.applications.citrix.controller."                      : { "title" : _("Controller") },
-    ".software.applications.citrix.controller.controller_version"   : { "title" : _("Controller Version"), },
-    ".software.applications.citrix.vm."                              : { "title" : _("Virtual Machine") },
-    ".software.applications.citrix.vm.desktop_group_name"           : { "title" : _("Desktop Group Name"), },
-    ".software.applications.citrix.vm.catalog"                      : { "title" : _("Catalog"), },
-    ".software.applications.citrix.vm.agent_version"                : { "title" : _("Agent Version"), },
+    ".software.applications.citrix."                              : { "title" : _("Citrix") },
+    ".software.applications.citrix.controller."                   : { "title" : _("Controller") },
+    ".software.applications.citrix.controller.controller_version" : { "title" : _("Controller Version"), },
+    ".software.applications.citrix.vm."                           : { "title" : _("Virtual Machine") },
+    ".software.applications.citrix.vm.desktop_group_name"         : { "title" : _("Desktop Group Name"), },
+    ".software.applications.citrix.vm.catalog"                    : { "title" : _("Catalog"), },
+    ".software.applications.citrix.vm.agent_version"              : { "title" : _("Agent Version"), },
 
     ".software.applications.vmwareesx:*."               : { "title" : _("Datacenter %d") },
     ".software.applications.vmwareesx:*.clusters:*."    : { "title" : _("Cluster %d") },
@@ -652,7 +705,8 @@ inventory_displayhints.update({
     ".networking.routes:*.type"                        : { "title" : _("Type of route"), "paint" : "route_type" },
     ".networking.routes:*.gateway"                     : { "title" : _("Gateway") },
     ".networking.interfaces:"                          : { "title" : _("Interfaces"), "render" : render_inv_dicttable,
-                                                           "keyorder" : [ "index", "description", "alias", "oper_status", "admin_status", "available", "speed" ], "view" : "invinterface_of_host", },
+                                                           "keyorder" : [ "index", "description", "alias", "oper_status", "admin_status", "available", "speed" ],
+                                                           "view" : "invinterface_of_host", },
     ".networking.interfaces:*.index"                   : { "title" : _("Index"), "paint" : "number", "filter" : visuals.FilterInvtableIDRange },
     ".networking.interfaces:*.description"             : { "title" : _("Description") },
     ".networking.interfaces:*.alias"                   : { "title" : _("Alias") },
@@ -924,8 +978,13 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
     multisite_builtin_views[infoname + "_of_host"].update(view_options)
 
 # Now declare Multisite views for a couple of embedded tables
-declare_invtable_view("invswpac",       ".software.packages:",       _("Software Package"),   _("Software Packages"))
-declare_invtable_view("invinterface",   ".networking.interfaces:",   _("Network Interface"),  _("Network Interfaces"))
+declare_invtable_view("invswpac",      ".software.packages:",       _("Software Package"),   _("Software Packages"))
+declare_invtable_view("invinterface",  ".networking.interfaces:",   _("Network Interface"),  _("Network Interfaces"))
+declare_invtable_view("invbackplane",  ".hardware.components.backplanes:", _("Backplane"),  _("Backplanes"))
+declare_invtable_view("invfan",        ".hardware.components.fans:",       _("Fan"),        _("Fans"))
+declare_invtable_view("invpsu",        ".hardware.components.psus:",       _("Power Supply"), _("Power Supplies"))
+declare_invtable_view("invsensor",     ".hardware.components.sensors:",    _("Sensor"),     _("Sensors"))
+declare_invtable_view("invmodule",     ".hardware.components.modules:",    _("Module"),     _("Modules"))
 
 # This would also be possible. But we muss a couple of display and filter hints.
 # declare_invtable_view("invdisks",       ".hardware.storage.disks:",  _("Hard Disk"),          _("Hard Disks"))

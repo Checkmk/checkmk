@@ -1,0 +1,10 @@
+Title: haproxy: fixed wrong type handling
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1456765794
+
+

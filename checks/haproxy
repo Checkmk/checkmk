@@ -25,22 +25,31 @@
 # Boston, MA 02110-1301 USA.
 
 
-# Example output from agent:
 # <<<haproxy:sep(44)>>>
 # # pxname,svname,qcur,qmax,scur,smax,slim,stot,bin,bout,dreq,dresp,ereq,econ,eresp,wretr,wredis,status,weight,act,bck,chkfail,chkdown,lastchg,downtime,qlimit,pid,iid,sid,throttle,lbtot,tracked,type,rate,rate_lim,rate_max,check_status,check_code,check_duration,hrsp_1xx,hrsp_2xx,hrsp_3xx,hrsp_4xx,hrsp_5xx,hrsp_other,hanafail,req_rate,req_rate_max,req_tot,cli_abrt,srv_abrt,comp_in,comp_out,comp_byp,comp_rsp,lastsess,last_chk,last_agt,qtime,ctime,rtime,ttime,
 # https_t3test.tgic.de,FRONTEND,,,0,0,2000,0,0,0,0,0,0,,,,,OPEN,,,,,,,,,1,2,0,,,,0,0,0,0,,,,0,0,0,0,0,0,,0,0,0,,,0,0,0,0,,,,,,,,
 # https_t3test.tgic.de,BACKEND,0,0,0,0,200,0,0,0,0,0,,0,0,0,0,UP,0,0,0,,0,363417,0,,1,2,0,,0,,1,0,,0,,,,0,0,0,0,0,0,,,,,0,0,0,0,0,0,-1,,,0,0,0,0,
 # t3test,t3test,0,0,0,0,,0,0,0,,0,,0,0,0,0,UP,1,1,0,0,0,363417,0,,1,3,1,,0,,2,0,,0,L4OK,,0,0,0,0,0,0,0,0,,,,0,0,,,,,-1,,,0,0,0,0,
 
+# <<<haproxy:sep(44)>>>
+# BLABLABFO,ELEADC05,0,0,0,5,,841,483793,1386127,,0,,0,751,0,0,UP,1,1,0,0,0,38624,0,,1,5,2,,841,,2,0,,4,L4OK,,0,,,,,,,0,,,,90,751,,,,,169,,,0,0,0,3073,
+# BLABLABLABLA,FRONTEND,,,0,0,2000,0,0,0,0,0,0,,,,,OPEN,,,,,,,,,1,2,0,,,,0,0,0,0,,,,0,0,0,0,0,0,,0,0,0,,,0,0,0,0,,,,,,,,
+# LDAP,IP.IP.IP.IP,,,0,32,250,5892,3365040,9470591,0,0,0,,,,,OPEN,,,,,,,,,1,3,1,,,,3,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+
+# from http://www.haproxy.org/download/1.7/doc/management.txt
+# 0=frontend, 1=backend, 2=server, 3=socket/listener
+
 
 def inventory_haproxy_frontend(info):
     for line in info:
-	if line[1] == "FRONTEND":
-	    yield line[0], None
+        if line[32] == "0":
+            yield line[0], None
+
 
 def check_haproxy_frontend(item, _no_params, info):
     for line in info:
-	if line[1] == "FRONTEND" and line[0] == item:
+        if line[0] == item:
             now = time.time()
             status = line[17]
             stot = int(line[7])
@@ -50,9 +59,9 @@ def check_haproxy_frontend(item, _no_params, info):
             perfdata = [ ("session_rate", session_rate) ]
 
             if status == "OPEN":
-                    state = 0
+                state = 0
             else:
-                    state = 2
+                state = 2
 
             return state, infotext, perfdata
 
@@ -67,34 +76,33 @@ check_info["haproxy.frontend"] = {
 
 def inventory_haproxy_server(info):
     for line in info:
-	if line[1] != "BACKEND" and line[1] != "FRONTEND" and not line[0].startswith("#"):
-		item = "%s/%s" % (line[0], line[1])
-		yield item, None
+        if line[32] == "2":
+            yield "%s/%s" % (line[0], line[1]), None
+
 
 def check_haproxy_server(item, _no_params, info):
-	backend, server = item.split("/")
-	for line in info:
-            if line[0] == backend and line[1] == server:
-		status = line[17]
-		uptime = get_age_human_readable(int(line[23]))
-		layer_check = line[36]
-		active = int(line[19])
-		backup = int(line[20])
+    for line in info:
+        if "%s/%s" % (line[0], line[1]) == item:
+            status = line[17]
+            uptime = get_age_human_readable(int(line[23]))
+            layer_check = line[36]
+            active = int(line[19])
+            backup = int(line[20])
 
-		if status == "UP" and (active or backup):
-			state = 0
-		else:
-			state = 2
+            if status == "UP" and (active or backup):
+                state = 0
+            else:
+                state = 2
 
-		infotext = "%s since %s, Layer Check: %s" % \
-				(status, uptime, layer_check)
-		if active:
-			infotext += ", active"
-		elif backup:
-			infotext += ", backup"
-		else:
-			infotext += ", neither active nor backup (!!)"
-		return state, infotext
+            infotext = "%s since %s, Layer Check: %s" % \
+                        (status, uptime, layer_check)
+            if active:
+                infotext += ", active"
+            elif backup:
+                infotext += ", backup"
+            else:
+                infotext += ", neither active nor backup (!!)"
+            return state, infotext
 
 
 check_info["haproxy.server"] = {

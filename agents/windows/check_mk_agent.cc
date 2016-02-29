@@ -586,36 +586,40 @@ void dump_performance_counters(OutputProxy &out, unsigned counter_base_number,
                                const char *countername) {
     crash_log("<<<winperf_%s>>>", countername);
 
-    PerfCounterObject counterObject(counter_base_number);
+    try {
+        PerfCounterObject counterObject(counter_base_number);
 
-    if (!counterObject.isEmpty()) {
-        LARGE_INTEGER Frequency;
-        QueryPerformanceFrequency(&Frequency);
-        out.output("<<<winperf_%s>>>\n", countername);
-        out.output("%.2f %u %" PRId64 "\n", current_time(), counter_base_number,
-                   Frequency.QuadPart);
+        if (!counterObject.isEmpty()) {
+            LARGE_INTEGER Frequency;
+            QueryPerformanceFrequency(&Frequency);
+            out.output("<<<winperf_%s>>>\n", countername);
+            out.output("%.2f %u %" PRId64 "\n", current_time(), counter_base_number,
+                       Frequency.QuadPart);
 
-        std::vector<PERF_INSTANCE_DEFINITION *> instances =
-            counterObject.instances();
-        // output instances - if any
-        if (instances.size() > 0) {
-            out.output("%d instances:", static_cast<int>(instances.size()));
-            for (std::wstring name : counterObject.instanceNames()) {
-                std::replace(name.begin(), name.end(), L' ', L'_');
-                out.output(" %s", to_utf8(name.c_str()).c_str());
+            std::vector<PERF_INSTANCE_DEFINITION *> instances =
+                counterObject.instances();
+            // output instances - if any
+            if (instances.size() > 0) {
+                out.output("%d instances:", static_cast<int>(instances.size()));
+                for (std::wstring name : counterObject.instanceNames()) {
+                    std::replace(name.begin(), name.end(), L' ', L'_');
+                    out.output(" %s", to_utf8(name.c_str()).c_str());
+                }
+                out.output("\n");
             }
-            out.output("\n");
-        }
 
-        // output counters
-        for (const PerfCounter &counter : counterObject.counters()) {
-            out.output("%d", static_cast<int>(counter.titleIndex()) -
-                                 static_cast<int>(counter_base_number));
-            for (ULONGLONG value : counter.values(instances)) {
-                out.output(" %" PRIu64, value);
+            // output counters
+            for (const PerfCounter &counter : counterObject.counters()) {
+                out.output("%d", static_cast<int>(counter.titleIndex()) -
+                                     static_cast<int>(counter_base_number));
+                for (ULONGLONG value : counter.values(instances)) {
+                    out.output(" %" PRIu64, value);
+                }
+                out.output(" %s\n", counter.typeName().c_str());
             }
-            out.output(" %s\n", counter.typeName().c_str());
         }
+    } catch (const std::exception &e) {
+        crash_log("Exception: %s", e.what());
     }
 }
 

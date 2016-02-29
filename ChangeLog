@@ -48,6 +48,7 @@
     * 3243 FIX: Fix missing custom graphs in sidebar snapin Views if explicit topic is set
     * 3245 FIX: Fix interpretation of check levels 0.0 as "no levels"...
     * 3250 FIX: cisco_mem: remove bogus memory check for "Driver text"...
+    * 3084 FIX: windows agent: fixed crash when specifying an invalid performance counter
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

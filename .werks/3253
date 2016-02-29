@@ -1,0 +1,10 @@
+Title: sms: notification script sms now handles single quotes in the message in the right way
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1456740033
+
+

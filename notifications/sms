@@ -87,16 +87,17 @@ elif notification_type == "CUSTOM":
     message += " " + os.environ['NOTIFY_NOTIFICATIONCOMMENT']
 
 recipient = os.environ['NOTIFY_CONTACTPAGER'].replace(" ", "")
+quoted_message = "'" + message.replace("'", "'\"'\"'") + "'"
 
 if send_path:
-    if os.system("%s %s '%s'" % (send_path, recipient, message[:160])) >> 8 != 0:
+    if os.system("%s %s %s" % (send_path, recipient, quoted_message[:160])) >> 8 != 0:
         sys.exit(1)
 elif spool_dir:
     # On some distros, like debian, smstools does not ship with the sendsms/smssend helper
     # script. On this distro, simply drop the SMS in the outgoing spool directory.
     import tempfile, shutil
     fd, path = tempfile.mkstemp(prefix = 'cmk_sms_')
-    os.write(fd, 'To: %s\n\n%s' % (recipient, message))
+    os.write(fd, 'To: %s\n\n%s' % (recipient, quoted_message))
     os.close(fd)
     os.chmod(path, 0660)
     filename = path.split('/')[-1]

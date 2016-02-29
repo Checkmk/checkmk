@@ -8373,6 +8373,7 @@ register_check_parameters(
 )
 ntp_params = \
     Tuple(
+        title = _("Thresholds for quality of time"),
         elements = [
             Integer(
                 title = _("Critical at stratum"),
@@ -8398,7 +8399,23 @@ register_check_parameters(
    subgroup_os,
     "ntp_time",
     _("State of NTP time synchronisation"),
-    ntp_params,
+    Transform(
+        Dictionary(
+            elements = [
+                ( "ntp_levels",
+                  ntp_params, ),
+                ( "alert_delay",
+                  Tuple(
+                     title = _("Phases without synchronization"),
+                     elements = [
+                         Age(title=_("Warning at"), display=["hours", "minutes"], default_value = 300, ),
+                         Age(title=_("Critical at"), display=["hours", "minutes"], default_value = 3600,),
+                     ]
+               )),
+            ]
+       ),
+       forth = lambda params: type(params) == tuple and { "ntp_levels" : params } or params
+    ),
     None,
     "first"
 )

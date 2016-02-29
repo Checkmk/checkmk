@@ -1,0 +1,14 @@
+Title: ntp.time: better handling of temporary synchronization loss
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b4
+Date: 1456760686
+
+After a reboot of the target machine or of the NTP server the check always
+go CRIT for a couple of minutes - since NTP disregarded the peers as suitable.
+Now this is being tolerated for a configurable amount of time. Per default
+after 5 minutes of being without a valid time source the check goes WARN
+and after 60 minute CRIT - but only if before this there was a valid time.

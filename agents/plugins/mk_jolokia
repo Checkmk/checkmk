@@ -56,7 +56,6 @@ class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
 
     https_request = http_request
 
-
 class HTTPSValidatingConnection(HTTPSConnection):
     def __init__(self, host, ca_file, key_file, cert_file):
         HTTPSConnection.__init__(self, host, key_file=key_file, cert_file=cert_file)
@@ -90,39 +89,80 @@ class HTTPSAuthHandler(urllib2.HTTPSHandler):
         return HTTPSValidatingConnection(host, ca_file=self.__ca_file,
                                          key_file=self.__key, cert_file=self.__cert)
 
+def fetch_url_get(base_url, path):
+    if path:
+        url = "%s/read/%s" % (base_url, path)
+    else:
+        url = base_url
 
-def fetch_var(protocol, server, port, path, suburi, cert_path, itemspec):
-    url = "%s://%s:%d/%s/%s" % (protocol, server, port, suburi, path)
     if opt_verbose:
         sys.stderr.write("DEBUG: Fetching: %s\n" % url)
     try:
-        conn = urllib2.urlopen(url)
-        data = conn.read()
-
+        json_data = urllib2.urlopen(url).read()
         if opt_verbose:
-            sys.stderr.write("DEBUG: Result: %s\n\n" % data)
+            sys.stderr.write("DEBUG: Result: %s\n\n" % json_data)
     except Exception, e:
         if opt_debug:
             raise
         sys.stderr.write("ERROR: %s\n" % e)
         return []
+    return json_data
+
+
+def fetch_url_post(base_url, path, service_url, service_user, service_password):
+    segments = path.split("/")
+
+    data = {
+        "type":      "READ",
+        "mbean":     segments[0],
+        "attribute": segments[1],
+        "target":    {
+            "url": service_url,
+        },
+    }
+    if len(segments) > 2:
+        data["path"] = segments[2]
+
+    if service_user:
+        data["target"]["username"] = service_user
+        data["target"]["password"] = service_password
+
+    if opt_verbose:
+        sys.stderr.write("DEBUG: Fetching: %s\n" % base_url)
+    try:
+        json_data = urllib2.urlopen(base_url, data=json.dumps(data)).read()
+        if opt_verbose:
+            sys.stderr.write("DEBUG: Result: %s\n\n" % json_data)
+    except Exception, e:
+        if opt_debug:
+            raise
+        sys.stderr.write("ERROR: %s\n" % e)
+        return []
+    return json_data
+
+def fetch_var(protocol, server, port, path, suburi, itemspec, service_url, service_user, service_password):
+    base_url = "%s://%s:%d/%s" % (protocol, server, port, suburi)
+    if service_url is not None:
+        json_data = fetch_url_post(base_url, path, service_url, service_user, service_password)
+    else:
+        json_data = fetch_url_get(base_url, path)
 
     try:
         true = True
         false = False
         null = None
         if json:
-            obj = json.loads(data)
+            obj = json.loads(json_data)
         else:
-            obj = eval(data)
+            obj = eval(json_data)
     except Exception, e:
         sys.stderr.write('ERROR: Invalid json code (%s)\n' % e)
-        sys.stderr.write('       Response %s\n' % data)
+        sys.stderr.write('       Response %s\n' % json_data)
         return []
 
     if obj.get('status', 200) != 200:
-        sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % url)
-        sys.stderr.write('       Response: %s\n' % data)
+        sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % base_url)
+        sys.stderr.write('       Response: %s\n' % json_data)
         return []
 
     # Only take the value of the object. If the value is an object
@@ -215,7 +255,8 @@ def query_instance(inst):
 
     # Determine type of server
     server_info = fetch_var(inst["protocol"], inst["server"], inst["port"], "", inst["suburi"],
-                            inst["cert_path"], "")
+                            "", None, None, None)
+
     sys.stdout.write('<<<jolokia_info>>>\n')
     if server_info:
         d = dict(server_info)
@@ -235,8 +276,9 @@ def query_instance(inst):
     # Fetch the general information first
     for path, title, itemspec in global_vars + specific_vars.get(product, []):
         try:
-            values = fetch_var(inst["protocol"], inst["server"], inst["port"], "read/" + path,
-                               inst["suburi"], inst["cert_path"], itemspec)
+            values = fetch_var(inst["protocol"], inst["server"], inst["port"], path,
+                               inst["suburi"], itemspec,
+                               inst["service_url"], inst["service_user"], inst["service_password"])
 
         # In case of network errors skip this server
         except IOError:
@@ -273,17 +315,20 @@ def query_instance(inst):
 
 
 # Default configuration for all instances
-protocol    = "http"
-server      = "localhost"
-port        = 8080
-user        = "monitoring"
-password    = None
-mode        = "digest"
-suburi      = "jolokia"
-instance    = None
-cert_path   = "_default"
-client_cert = None
-client_key  = None
+protocol         = "http"
+server           = "localhost"
+port             = 8080
+user             = "monitoring"
+password         = None
+mode             = "digest"
+suburi           = "jolokia"
+instance         = None
+cert_path        = "_default"
+client_cert      = None
+client_key       = None
+service_url      = None
+service_user     = None
+service_password = None
 
 global_vars = [
   ( "java.lang:type=Memory/NonHeapMemoryUsage/used",              "NonHeapMemoryUsage",      [] ),
@@ -358,18 +403,21 @@ socket.setdefaulttimeout(1.0)
 # instances in his configuration, we will use this (a list
 # of dicts).
 for inst in instances:
-    for varname, value in [
-        ( "protocol", protocol ),
-        ( "server",   server ),
-        ( "port",     port ),
-        ( "user",     user ),
-        ( "password", password ),
-        ( "mode",     mode ),
-        ( "suburi",   suburi ),
-        ( "instance", instance ),
-        ( "cert_path", cert_path ),
-        ( "client_cert", client_cert ),
-        ( "client_key", client_key ),
+    for varname,              value in [
+        ("protocol",         protocol),
+        ("server",           server),
+        ("port",             port),
+        ("user",             user),
+        ("password",         password),
+        ("mode",             mode),
+        ("suburi",           suburi),
+        ("instance",         instance),
+        ("cert_path",        cert_path),
+        ("client_cert",      client_cert),
+        ("client_key",       client_key),
+        ("service_url",      service_url),
+        ("service_user",     service_user),
+        ("service_password", service_password)
     ]:
         if varname not in inst:
             inst[varname] = value

@@ -1,0 +1,9 @@
+Title: mk_jolokia: The plugin can now be configured with a service url to treat the jolokia server as a jmx proxy
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1456736890
+Class: feature
+
+

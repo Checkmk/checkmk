@@ -1,6 +1,7 @@
 1.2.8b4:
     Checks & Agents:
     * 3250 FIX: cisco_mem: remove bogus memory check for "Driver text"...
+    * 3084 FIX: windows agent: fixed crash when specifying an invalid performance counter
 
     Multisite:
     * 3251 FIX: Fix sorting of entries in Views sidebar element

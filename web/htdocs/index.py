@@ -36,6 +36,25 @@ from html_mod_python import html_mod_python, FinalizeRequest
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
 def handler(req, fields = None, is_profiling = False):
+    if not is_profiling and os.path.exists(defaults.var_dir + "/profiling"):
+        import cProfile
+        # the profiler loses the memory about all modules. We need to hand over
+        # the request object in the apache module.
+        # Ubuntu: install python-profiler when using this feature
+        profile_file = defaults.var_dir + "/profiling/multisite.profile"
+        retcode = cProfile.runctx(
+            "import index; "
+            "index.handler(profile_req, profile_fields, is_profiling=True)",
+            {'profile_req': req, 'profile_fields': fields}, {}, profile_file)
+        file(profile_file + ".py", "w").write(
+            "#!/usr/bin/python\n"
+            "import pstats\n"
+            "stats = pstats.Stats(%r)\n"
+            "stats.sort_stats('time').print_stats()\n" % profile_file)
+        os.chmod(profile_file + ".py", 0755)
+        return apache.OK
+
+
     # Create an object that contains all data about the request and
     # helper functions for creating valid HTML. Parse URI and
     # store results in the request object for later usage.
@@ -45,7 +64,6 @@ def handler(req, fields = None, is_profiling = False):
     try:
         config.load_config() # load multisite.mk etc.
         html.init_modes()
-        init_profiling(is_profiling)
 
         # Make sure all plugins are avaiable as early as possible. At least
         # we need the plugins (i.e. the permissions declared in these) at the
@@ -189,27 +207,6 @@ def handler(req, fields = None, is_profiling = False):
     sites.disconnect()
     html.finalize()
     return response_code
-
-
-# Profiling of the Check_MK GUI can be enabled via global settings
-def init_profiling(is_profiling):
-    if not is_profiling and config.profile:
-        import cProfile
-        # the profiler loses the memory about all modules. We need to hand over
-        # the request object in the apache module.
-        # Ubuntu: install python-profiler when using this feature
-        profile_file = defaults.var_dir + "/web/multisite.profile"
-        retcode = cProfile.runctx(
-            "import index; "
-            "index.handler(profile_req, profile_fields, is_profiling=True)",
-            {'profile_req': html.req, 'profile_fields': html.fields}, {}, profile_file)
-        file(profile_file + ".py", "w").write(
-            "#!/usr/bin/python\n"
-            "import pstats\n"
-            "stats = pstats.Stats(%r)\n"
-            "stats.sort_stats('time').print_stats()\n" % profile_file)
-        os.chmod(profile_file + ".py", 0755)
-        raise FinalizeRequest(apache.OK)
 
 
 # Ajax-Functions want no HTML output in case of an error but

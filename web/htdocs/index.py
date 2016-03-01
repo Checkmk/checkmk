@@ -42,8 +42,8 @@ def handler(req, fields = None, is_profiling = False):
 
     response_code = apache.OK
     try:
-        init_profiling(req, fields, is_profiling)
         config.load_config() # load multisite.mk etc.
+        init_profiling(is_profiling)
         html.init_modes()
 
         # Make sure all plugins are avaiable as early as possible. At least
@@ -218,23 +218,24 @@ def init_sys_path():
             sys.path[0:0] = [ local_module_path, defaults.web_dir + "/htdocs" ]
 
 
-def init_profiling(req, fields, is_profiling):
-    if not is_profiling and os.path.exists(defaults.var_dir + "/profiling"):
+def init_profiling(is_profiling):
+    if not is_profiling and config.profile:
         import cProfile
-        # the profiler loses the memory about all modules. We need to hand over
-        # the request object in the apache module.
+
         # Ubuntu: install python-profiler when using this feature
         profile_file = defaults.var_dir + "/profiling/multisite.profile"
-        retcode = cProfile.runctx(
-            "import index; "
-            "index.handler(profile_req, profile_fields, is_profiling=True)",
-            {'profile_req': req, 'profile_fields': fields}, {}, profile_file)
+
+        p = cProfile.Profile()
+        p.runcall(handler, html.req, html.fields, True)
+        p.dump_stats(profile_file)
+
         file(profile_file + ".py", "w").write(
             "#!/usr/bin/python\n"
             "import pstats\n"
             "stats = pstats.Stats(%r)\n"
             "stats.sort_stats('time').print_stats()\n" % profile_file)
         os.chmod(profile_file + ".py", 0755)
+
         raise FinalizeRequest()
 
 

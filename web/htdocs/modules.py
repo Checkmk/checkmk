@@ -63,7 +63,7 @@ def init_modules():
 
     module_names_prev = set(imports())
 
-    # The config module is handled separate from the other modulesa
+    # The config module is handled separate from the other modules
     module_names_prev.add("config")
 
     # Load the list of internal hard coded modules

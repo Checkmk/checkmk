@@ -1,0 +1,9 @@
+Title: The BI Treestate painter now exports the aggregation tree as real json structure
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.8b4
+Date: 1456842643
+

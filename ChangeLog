@@ -8,6 +8,7 @@
     * 3256 FIX: blade_bx_powerfan: fixed wrong levels handling and minor cleanup
 
     Multisite:
+    * 3228 The BI Treestate painter now exports the aggregation tree as real json structure
     * 3251 FIX: Fix sorting of entries in Views sidebar element
     * 3230 FIX: Slightly improved popup menu positioning when hitting right+left or bottom+top border of screen/dashlet
 

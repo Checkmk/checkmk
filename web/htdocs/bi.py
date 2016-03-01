@@ -1501,6 +1501,69 @@ def ajax_render_tree():
     raise MKGeneralException(_("Unknown BI Aggregation %s") % aggr_title)
 
 
+def render_tree_json(row):
+    expansion_level = int(html.var("expansion_level", 999))
+
+    saved_expansion_level = load_ex_level()
+    treestate = html.get_tree_states('bi')
+    if expansion_level != saved_expansion_level:
+        treestate = {}
+        html.set_tree_states('bi', treestate)
+        html.save_tree_states()
+
+
+    def render_node_json(tree, show_host):
+        is_leaf = len(tree) == 3
+        if is_leaf:
+            service = tree[2].get("service")
+            if not service:
+                title = _("Host status")
+            else:
+                title = service
+        else:
+            title = tree[2]["title"]
+
+        json_node = {
+            "title"             : title,
+            # 2 -> This element is currently in a scheduled downtime
+            # 1 -> One of the subelements is in a scheduled downtime
+            "in_downtime"       : tree[0]["in_downtime"],
+            "acknowledged"      : tree[0]["acknowledged"],
+            "in_service_period" : tree[0]["in_service_period"],
+        }
+
+        # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
+        if tree[1] and tree[0] != tree[1]:
+            json_node["assumed"] = True
+            effective_state = tree[1]
+        else:
+            json_node["assumed"] = False
+            effective_state = tree[0]
+
+        json_node["state"] = effective_state["state"]
+        json_node["output"] = effective_state["output"]
+
+        return json_node
+
+
+    def render_subtree_json(node, path, show_host):
+        json_node = render_node_json(node, show_host)
+
+        is_leaf = len(node) == 3
+        if not is_leaf:
+            json_node["nodes"] = []
+            for child_node in node[3]:
+                if not child_node[2].get("hidden"):
+                    new_path = path + [child_node[2]["title"]]
+                    json_node["nodes"].append(render_subtree_json(child_node, new_path, show_host))
+
+        return json_node
+
+    root_node = row["aggr_treestate"]
+    affected_hosts = row["aggr_hosts"]
+
+    return "", render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
+
 
 def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, lazy):
     saved_expansion_level = load_ex_level()
@@ -1584,8 +1647,6 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
                 h += '<ul id="%d:%s" %sclass="subtree">' % (expansion_level or 0, path_id, style)
                 if not omit_content:
                     for node in tree[3]:
-                        estate = node[1] != None and node[1] or node[0]
-
                         if not node[2].get("hidden"):
                             new_path = path + [node[2]["title"]]
                             h += '<li>' + render_subtree(node, new_path, show_host) + '</li>\n'

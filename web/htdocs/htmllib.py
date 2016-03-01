@@ -135,6 +135,9 @@ class html(GUITester):
     def is_mobile(self):
         return self.mobile
 
+    def is_api_call(self):
+        return self.output_format != "html"
+
     def get_user_agent(self):
         raise MKGeneralException("get_user_agent not implemented")
 

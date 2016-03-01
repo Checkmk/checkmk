@@ -226,7 +226,7 @@ def init_profiling(is_profiling):
         import cProfile
 
         # Ubuntu: install python-profiler when using this feature
-        profile_file = defaults.var_dir + "/profiling/multisite.profile"
+        profile_file = defaults.var_dir + "/multisite.profile"
 
         p = cProfile.Profile()
         p.runcall(handler, html.req, html.fields, True)

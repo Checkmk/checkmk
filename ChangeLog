@@ -4,6 +4,7 @@
     * 3084 FIX: windows agent: fixed crash when specifying an invalid performance counter
     * 3252 FIX: ntp.time: better handling of temporary synchronization loss...
     * 3254 FIX: haproxy: fixed wrong type handling
+    * 3255 FIX: apc_inrow_temp: fixed wrong discovery handling of available sensors
 
     Multisite:
     * 3251 FIX: Fix sorting of entries in Views sidebar element

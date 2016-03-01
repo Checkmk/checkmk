@@ -1,0 +1,9 @@
+Title: apc_inrow_temp: fixed wrong discovery handling of available sensors
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b4
+Date: 1456842114
+Class: fix
+
+

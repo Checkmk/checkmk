@@ -299,10 +299,15 @@ def paint_aggr_tree_ltr(row, mirror):
     h += '</table>'
     return "aggrtree", h
 
+
 def paint_aggregated_tree_state(row):
-    treetype = get_painter_option("aggr_treetype")
+    if html.is_api_call():
+        return bi.render_tree_json(row)
+
+    treetype        = get_painter_option("aggr_treetype")
     expansion_level = int(get_painter_option("aggr_expand"))
-    only_problems = get_painter_option("aggr_onlyproblems") == "1"
+    only_problems   = get_painter_option("aggr_onlyproblems") == "1"
+
     if treetype == "foldable":
         return bi.render_tree_foldable(row,  False,  False, expansion_level, only_problems, lazy=True)
     elif treetype == "boxes":
@@ -313,6 +318,7 @@ def paint_aggregated_tree_state(row):
         return paint_aggr_tree_ltr(row, False)
     elif treetype == "top-down":
         return paint_aggr_tree_ltr(row, True)
+
 
 multisite_painters["aggr_treestate"] = {
     "title"   : _("Aggregation: complete tree"),

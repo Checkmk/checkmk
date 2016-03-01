@@ -36,25 +36,6 @@ from html_mod_python import html_mod_python, FinalizeRequest
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
 def handler(req, fields = None, is_profiling = False):
-    if not is_profiling and os.path.exists(defaults.var_dir + "/profiling"):
-        import cProfile
-        # the profiler loses the memory about all modules. We need to hand over
-        # the request object in the apache module.
-        # Ubuntu: install python-profiler when using this feature
-        profile_file = defaults.var_dir + "/profiling/multisite.profile"
-        retcode = cProfile.runctx(
-            "import index; "
-            "index.handler(profile_req, profile_fields, is_profiling=True)",
-            {'profile_req': req, 'profile_fields': fields}, {}, profile_file)
-        file(profile_file + ".py", "w").write(
-            "#!/usr/bin/python\n"
-            "import pstats\n"
-            "stats = pstats.Stats(%r)\n"
-            "stats.sort_stats('time').print_stats()\n" % profile_file)
-        os.chmod(profile_file + ".py", 0755)
-        return apache.OK
-
-
     # Create an object that contains all data about the request and
     # helper functions for creating valid HTML. Parse URI and
     # store results in the request object for later usage.
@@ -62,6 +43,7 @@ def handler(req, fields = None, is_profiling = False):
 
     response_code = apache.OK
     try:
+        init_profiling(req, fields, is_profiling)
         config.load_config() # load multisite.mk etc.
         html.init_modes()
 
@@ -237,6 +219,26 @@ def init_sys_path():
         local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
         if local_module_path not in sys.path:
             sys.path[0:0] = [ local_module_path, defaults.web_dir + "/htdocs" ]
+
+
+def init_profiling(req, fields, is_profiling):
+    if not is_profiling and os.path.exists(defaults.var_dir + "/profiling"):
+        import cProfile
+        # the profiler loses the memory about all modules. We need to hand over
+        # the request object in the apache module.
+        # Ubuntu: install python-profiler when using this feature
+        profile_file = defaults.var_dir + "/profiling/multisite.profile"
+        retcode = cProfile.runctx(
+            "import index; "
+            "index.handler(profile_req, profile_fields, is_profiling=True)",
+            {'profile_req': req, 'profile_fields': fields}, {}, profile_file)
+        file(profile_file + ".py", "w").write(
+            "#!/usr/bin/python\n"
+            "import pstats\n"
+            "stats = pstats.Stats(%r)\n"
+            "stats.sort_stats('time').print_stats()\n" % profile_file)
+        os.chmod(profile_file + ".py", 0755)
+        raise FinalizeRequest()
 
 
 # Early initialization upon first start of the application by the server

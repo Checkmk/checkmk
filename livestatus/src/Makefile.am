@@ -51,7 +51,7 @@ livestatus_so_SOURCES = \
 	ContactgroupsColumn.cc CustomTimeperiodColumn.cc HostServiceState.cc opids.cc auth.cc
 
 livestatus_so_CXXFLAGS = -std=c++11 -fPIC
-livestatus_so_CFLAGS   = -fPIC
+livestatus_so_CFLAGS   = -std=c99 -fPIC
 
 livestatus.o: $(livestatus_so_OBJECTS) $(livestatus_so_DEPENDENCIES)
 	-rm -f plugin.so

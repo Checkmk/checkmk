@@ -22,6 +22,9 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// Needed for strdup and S_ISSOCK
+#define _XOPEN_SOURCE 500
+
 // IWYU pragma: no_include <bits/socket_type.h>
 #include "config.h"
 #include <errno.h>

@@ -24,6 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 def render_python_raw(data, view, group_painters, painters, num_columns, show_checkboxes):
     html.write(repr(data))
 
@@ -55,16 +60,7 @@ multisite_layouts["python"] = {
     "hide"   : True,
 }
 
-
-json_escape = re.compile(r'[\\"\r\n\t\b\f\x00-\x1f]')
-json_encoding_table = dict([(chr(i), '\\u%04x' % i) for i in range(32)])
-json_encoding_table.update({'\b': '\\b', '\f': '\\f', '\n': '\\n', '\r': '\\r', '\t': '\\t', '\\': '\\\\', '"': '\\"' })
-
-def encode_string_json(s):
-    return '"' + json_escape.sub(lambda m: json_encoding_table[m.group(0)], s) + '"'
-
-
-def render_json(rows, view, group_painters, painters, num_columns, show_checkboxes, export = False):
+def render_json(rows, view, group_painters, painters, num_columns, show_checkboxes, export=False):
     if export:
         html.req.content_type = "appliation/json; charset=UTF-8"
         filename = '%s-%s.json' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
@@ -72,41 +68,35 @@ def render_json(rows, view, group_painters, painters, num_columns, show_checkbox
             filename = filename.encode("utf-8")
         html.req.headers_out['Content-Disposition'] = 'Attachment; filename=%s' % filename
 
-    html.write("[\n")
+    painted_rows = []
 
-    first = True
-    html.write("[")
+    header_row = []
     for p in painters:
-        if first:
-            first = False
-        else:
-            html.write(",")
-        content = p[0]["name"]
-        stripped = html.strip_tags(content)
-        utf8 = stripped.encode("utf-8")
-        html.write(encode_string_json(utf8))
-    html.write("]")
+        header_row.append(html.strip_tags(p[0]["name"]))
+    painted_rows.append(header_row)
 
     for row in rows:
-        html.write(",\n[")
-        first = True
+        painted_row = []
         for p in painters:
-            if first:
-                first = False
-            else:
-                html.write(",")
             joined_row = join_row(row, p)
-            tdclass, content = paint_painter(p[0], joined_row)
-            if type(content) == unicode:
-                content = content.encode("utf-8")
-            else:
-                content = str(content)
-            content = content.replace("<br>","\n")
-            stripped = html.strip_tags(content)
-            html.write(encode_string_json(stripped))
-        html.write("]")
+            content = paint_painter(p[0], joined_row)[1]
+            if type(content) in [ list, dict ]:
+                # Allow painters to return lists and dicts, then json encode them
+                # as such data structures without wrapping them into strings
+                pass
 
-    html.write("\n]\n")
+            else:
+                if type(content) == unicode:
+                    content = content.encode("utf-8")
+                else:
+                    content = str(content)
+                content = html.strip_tags(content.replace("<br>","\n"))
+
+            painted_row.append(content)
+
+        painted_rows.append(painted_row)
+
+    html.write(json.dumps(painted_rows, indent=True))
 
 
 multisite_layouts["json_export"] = {

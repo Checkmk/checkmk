@@ -1551,7 +1551,9 @@ def render_tree_json(row):
         json_node = render_node_json(node, show_host)
 
         is_leaf = len(node) == 3
-        if not is_leaf:
+        is_next_level_open = len(path) <= expansion_level
+
+        if not is_leaf and is_next_level_open:
             json_node["nodes"] = []
             for child_node in node[3]:
                 if not child_node[2].get("hidden"):

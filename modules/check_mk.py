@@ -1107,6 +1107,19 @@ def extra_conf_of(confdict, hostname, service):
             result += format % (key, values[0])
     return result
 
+def autodetect_plugin(command_line):
+    plugin_name = command_line.split()[0]
+    if command_line[0] not in [ '$', '/' ]:
+        try:
+            for dir in [ "/local", "" ]:
+                path = omd_root + dir + "/lib/nagios/plugins/"
+                if os.path.exists(path + plugin_name):
+                    command_line = path + command_line
+                    break
+        except:
+            pass
+    return command_line
+
 def host_check_command(hostname, ip, is_clust):
     # Check dedicated host check command
     values = host_extra_conf(hostname, host_check_commands)

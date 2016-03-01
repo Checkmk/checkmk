@@ -9,6 +9,9 @@
     Multisite:
     * 3251 FIX: Fix sorting of entries in Views sidebar element
 
+    WATO:
+    * 3000 FIX: Host check command: "Use a custom check plugin" was not working with CMC...
+
     Notifications:
     * 3253 FIX: sms: notification script sms now handles single quotes in the message in the right way
 

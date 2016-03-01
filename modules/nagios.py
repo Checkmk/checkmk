@@ -664,19 +664,6 @@ define service {
 """ % (pingonly_template, descr, ping_command, arguments, extra_service_conf_of(hostname, descr), hostname))
 
 
-def autodetect_plugin(command_line):
-    plugin_name = command_line.split()[0]
-    if command_line[0] not in [ '$', '/' ]:
-        try:
-            for dir in [ "/local", "" ]:
-                path = omd_root + dir + "/lib/nagios/plugins/"
-                if os.path.exists(path + plugin_name):
-                    command_line = path + command_line
-                    break
-        except:
-            pass
-    return command_line
-
 def simulate_command(command):
     if simulation_mode:
         custom_commands_to_define.add("check-mk-simulation")

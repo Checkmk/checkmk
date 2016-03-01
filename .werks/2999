@@ -1,0 +1,10 @@
+Title: The contact name is now included in Event Console notifications
+Level: 1
+Component: ec
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.8b4
+Date: 1456829159
+
+The contact name is available in the environment variable NOTIFY_EC_CONTACT.

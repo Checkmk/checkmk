@@ -11,6 +11,9 @@
     Notifications:
     * 3253 FIX: sms: notification script sms now handles single quotes in the message in the right way
 
+    Event Console:
+    * 2999 The contact name is now included in Event Console notifications...
+
 
 1.2.8b3:
     Core & Setup:

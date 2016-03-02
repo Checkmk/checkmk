@@ -194,6 +194,51 @@ div#foot_refresh, div#foot_refresh_time {
     display: inline-block;
 }
 
+#reload_pause {
+    display: block;
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    width: 90px;
+    height: 90px;
+    background-color: #111;
+    opacity: 0.8;
+    filter: alpha(opacity=80); /* For IE8 and earlier */
+    border-radius: 5px;
+    padding: 10px;
+    text-decoration: none;
+}
+
+.pause_bar {
+    display: inline-block;
+    width: 20px;
+    height: 60px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    background-color: #fff;
+    opacity: 0.9;
+    filter: alpha(opacity=90); /* For IE8 and earlier */
+    border-radius: 5px;
+}
+
+.pause_bar.p1 {
+    margin-left: 20px;
+    margin-right: 5px;
+}
+
+.pause_bar.p2 {
+    margin-left: 5px;
+    margin-right: 10px;
+}
+
+#reload_pause_counter {
+    font-weight: bold;
+    color: #fff;
+    width: 100%;
+    text-align: center;
+    font-size: 120%;
+}
+
 
 /*-------------------------------------------------------------------------.
 |         ____            _            _   _ _       _                     |
@@ -506,7 +551,7 @@ tr.groupheader a:hover {
 /* state in group header must have fixed width */
 .groupheader td.state {
     border: 1px solid #000000;
-    border-radius: 5px 5px 5px 5px;
+    border-radius: 5px;
     box-shadow: 1px 1px 2px #444444;
     padding: 2px 5px;
     width: 50px;
@@ -974,7 +1019,7 @@ a#helpbutton.passive {
 div.help {
     background-image: url("images/helpbackground.jpg");
     background-color: #FFFFCC;
-    border-radius: 5px 5px 5px 5px;
+    border-radius: 5px;
     box-shadow: 0 0 10px #fff;
     margin: 6px 3px 10px 3px;
     padding: 5px;

@@ -343,7 +343,9 @@ function dashboard_scheduler(initial) {
     if (timestamp % 60 == 0)
         update_header_timer();
 
-    setTimeout(function() { dashboard_scheduler(0); }, 1000);
+    g_reload_timer = setTimeout(function() {
+        dashboard_scheduler(0);
+    }, 1000);
 }
 
 function dashboard_update_contents(id, response_text) {

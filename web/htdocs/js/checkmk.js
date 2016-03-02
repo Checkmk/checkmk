@@ -1048,24 +1048,6 @@ function handle_content_reload_error(_unused, status_code, error_msg)
     schedule_reload();
 }
 
-function get_content_reload_data()
-{
-    var data = {};
-
-    if (has_graphing())
-        data = merge_args(data, get_modified_graph_contextes());
-
-    // now urlencode the data
-    var params = [];
-    for (var name in data)
-        params.push(name + '=' + encodeURIComponent(data[name]));
-
-    if (params)
-        return params.join('&');
-    else
-        return null;
-}
-
 function do_reload(url)
 {
     // Nicht mehr die ganze Seite neu laden, wenn es ein DIV "data_container" gibt.
@@ -1116,8 +1098,7 @@ function do_reload(url)
         call_ajax(makeuri(params), {
             response_handler : handle_content_reload,
             error_handler    : handle_content_reload_error,
-            method           : 'POST',
-            post_data        : get_content_reload_data()
+            method           : 'POST'
         });
     }
 }

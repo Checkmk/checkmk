@@ -94,6 +94,30 @@ register_check_parameters(
     "dict"
 )
 
+register_check_parameters(
+    subgroup_networking,
+    "fortinet_signatures",
+    "Fortigate Signatures",
+    Dictionary(
+        elements = [
+            ('av_age',
+             Tuple(title = "Age of Anti-Virus signature",
+                   elements = [
+                       Age(title=_("Warning at"), default_value = 86400),
+                       Age(title=_("Critical at"), default_value = 2*86400),
+                   ])),
+            ('ips_age',
+             Tuple(title = "Age of Intrusion Prevention signature",
+                   elements = [
+                       Age(title=_("Warning at"), default_value = 86400),
+                       Age(title=_("Critical at"), default_value = 2*86400),
+                   ])),
+        ]
+    ),
+    None,
+    "dict"
+)
+
 #.
 #   .--Inventory-----------------------------------------------------------.
 #   |            ___                      _                                |

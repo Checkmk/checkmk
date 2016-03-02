@@ -1,0 +1,10 @@
+Title: fortigate_signatures: new check to monitor av and ips signatures on fortigate firewalls
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1456914423
+Class: feature
+
+This new check monitors the age and version of Signatures of the Anti-Virus and Intrusion
+Prevention System.

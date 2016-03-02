@@ -1,0 +1,16 @@
+title: FortiGate firewalls: Age and version of AV and IPS signatures
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the version of Antivirus and Intrusion Protection Signature
+ checks.
+ If the last signature update is too long ago, it will go into {WARN} or {CRIT} state.
+
+ Please note: There is no documentation on which timezone the signature date is stored in
+ and whether it reports the date the signature file was published or when it was installed.
+ If you know these details, please let us know.
+
+inventory:
+ One service is discovered on supported devices.

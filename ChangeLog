@@ -5,6 +5,7 @@
     * 3252 FIX: ntp.time: better handling of temporary synchronization loss...
     * 3254 FIX: haproxy: fixed wrong type handling
     * 3255 FIX: apc_inrow_temp: fixed wrong discovery handling of available sensors
+    * 3256 FIX: blade_bx_powerfan: fixed wrong levels handling and minor cleanup
 
     Multisite:
     * 3251 FIX: Fix sorting of entries in Views sidebar element

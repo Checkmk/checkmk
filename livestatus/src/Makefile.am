@@ -50,7 +50,7 @@ livestatus_so_SOURCES = \
 	global_counters.c  module.c  logger.c waittriggers.cc TimeperiodsCache.cc pnp4nagios.cc mk_inventory.cc \
 	ContactgroupsColumn.cc CustomTimeperiodColumn.cc HostServiceState.cc opids.cc auth.cc
 
-livestatus_so_CXXFLAGS = -std=c++11 -fPIC
+livestatus_so_CXXFLAGS = -std=c++14 -fPIC
 livestatus_so_CFLAGS   = -std=c99 -fPIC
 
 livestatus.o: $(livestatus_so_OBJECTS) $(livestatus_so_DEPENDENCIES)

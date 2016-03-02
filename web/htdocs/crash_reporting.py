@@ -398,19 +398,22 @@ def get_local_vars_of_last_exception():
     return base64.b64encode(pprint.pformat(local_vars))
 
 
-def format_var_for_export(val):
+def format_var_for_export(val, maxdepth=4):
+    if maxdepth == 0:
+        return "Max recursion depth reached"
+
     if isinstance(val, dict):
         for item_key, item_val in val.items():
-            val[item_key] = format_var_for_export(item_val)
+            val[item_key] = format_var_for_export(item_val, maxdepth-1)
 
     elif isinstance(val, list):
         for index, item in enumerate(val):
-            val[index] = format_var_for_export(item)
+            val[index] = format_var_for_export(item, maxdepth-1)
 
     elif isinstance(val, tuple):
         new_val = ()
         for item in val:
-            new_val += (format_var_for_export(item),)
+            new_val += (format_var_for_export(item, maxdepth-1),)
         val = new_val
 
     # Check and limit size

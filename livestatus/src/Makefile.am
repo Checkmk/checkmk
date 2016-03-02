@@ -23,7 +23,9 @@
 # Boston, MA 02110-1301 USA.
 
 bin_PROGRAMS = unixcat
+
 unixcat_SOURCES = unixcat.c
+unixcat_CFLAGS = -std=c99
 unixcat_LDADD = -lpthread
 
 pkglib_LIBRARIES = livestatus.so

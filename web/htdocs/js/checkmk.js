@@ -936,8 +936,11 @@ function performAction(oLink, action, site, host, service, wait_svc) {
 //#   |                                                                    |
 //#   '--------------------------------------------------------------------'
 
-// Stores the reload timer object
+// Stores the reload timer object (of views and also dashboards)
 var g_reload_timer = null;
+// Stores the reload pause timer object once the regular reload has
+// been paused e.g. by modifying a graphs timerange or vertical axis.
+var g_reload_pause_timer = null;
 // This stores the refresh time of the page (But never 0)
 var g_reload_interval = 0; // seconds
 // This flag tells the handle_content_reload_error() function to add an
@@ -994,8 +997,7 @@ function update_header_timer()
 // When called with two parmeters the 2nd one is used as new url.
 function set_reload(secs, url)
 {
-    if (g_reload_timer)
-        clearTimeout(g_reload_timer);
+    stop_reload_timer();
 
     update_foot_refresh(secs);
 
@@ -1004,6 +1006,7 @@ function set_reload(secs, url)
         schedule_reload(url);
     }
 }
+
 
 // Issues the timer for the next page reload. If some timer is already
 // running, this timer is terminated and replaced by the new one.
@@ -1015,13 +1018,13 @@ function schedule_reload(url, milisecs)
     if (typeof milisecs === 'undefined')
         milisecs = parseFloat(g_reload_interval) * 1000; // use default reload interval
 
-    if (g_reload_timer)
-        clearTimeout(g_reload_timer);
+    stop_reload_timer();
 
     g_reload_timer = setTimeout(function() {
         do_reload(url);
     }, milisecs);
 }
+
 
 function handle_content_reload(_unused, code) {
     g_reload_error = false;
@@ -1035,6 +1038,7 @@ function handle_content_reload(_unused, code) {
     schedule_reload();
 }
 
+
 function handle_content_reload_error(_unused, status_code, error_msg)
 {
     if(!g_reload_error) {
@@ -1047,6 +1051,16 @@ function handle_content_reload_error(_unused, status_code, error_msg)
     // Continue update after the error
     schedule_reload();
 }
+
+
+function stop_reload_timer()
+{
+    if (g_reload_timer) {
+        clearTimeout(g_reload_timer);
+        g_reload_timer = null;
+    }
+}
+
 
 function do_reload(url)
 {
@@ -1098,9 +1112,84 @@ function do_reload(url)
         call_ajax(makeuri(params), {
             response_handler : handle_content_reload,
             error_handler    : handle_content_reload_error,
-            method           : 'POST'
+            method           : 'GET'
         });
     }
+}
+
+
+// Sets the reload timer in pause mode for X seconds. This is shown to
+// the user with a pause overlay icon. The icon also shows the time when
+// the pause ends. Once the user clicks on the pause icon or the time
+// is reached, the whole page is reloaded.
+function pause_reload(seconds)
+{
+    stop_reload_timer();
+    draw_reload_pause_overlay(seconds);
+    set_reload_pause_timer(seconds);
+}
+
+
+function set_reload_pause_timer(seconds)
+{
+    if (g_reload_pause_timer)
+        clearTimeout(g_reload_pause_timer);
+
+    g_reload_pause_timer = setTimeout(function () {
+        update_reload_pause_timer(seconds);
+    }, 1000);
+}
+
+
+function update_reload_pause_timer(seconds_left)
+{
+    seconds_left -= 1;
+
+    if (seconds_left <= 0) {
+        window.location.reload(false);
+    }
+    else {
+        // update the pause counter        
+        var counter = document.getElementById("reload_pause_counter");
+        if (counter) {
+            counter.innerHTML = seconds_left;
+        }
+
+        g_reload_pause_timer = setTimeout(function() {
+            update_reload_pause_timer(seconds_left);
+        }, 1000);
+    }
+}
+
+function draw_reload_pause_overlay(seconds)
+{
+    var container = document.getElementById("reload_pause");
+    if (container) {
+        // only render once. Just update the counter.
+        var counter = document.getElementById("reload_pause_counter");
+        counter.innerHTML = seconds;
+        return;
+    }
+
+    var container = document.createElement("a");
+    container.setAttribute("id", "reload_pause");
+    container.href = "javascript:window.location.reload(false)";
+    // FIXME: Localize
+    container.title = "Page update paused. Click for reload.";
+
+    var p1 = document.createElement("div");
+    p1.className = "pause_bar p1";
+    container.appendChild(p1);
+
+    var p2 = document.createElement("div");
+    p2.className = "pause_bar p2";
+    container.appendChild(p2);
+
+    var counter = document.createElement("div");
+    counter.setAttribute("id", "reload_pause_counter");
+    container.appendChild(counter);
+
+    document.body.appendChild(container);
 }
 
 //#.

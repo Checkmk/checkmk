@@ -207,6 +207,7 @@ div#foot_refresh, div#foot_refresh_time {
     border-radius: 5px;
     padding: 10px;
     text-decoration: none;
+    z-index: 40;
 }
 
 .pause_bar {

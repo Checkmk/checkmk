@@ -62,24 +62,30 @@ def inv_lnx_distro(info):
 def inv_lnx_parse_suse_release(node, line):
     node["type"] = "linux"
     node["vendor"] = "SuSE"
+
+    version = line[1].split()[-1]
+
     if len(line) == 3:
-        version = "%s.%s" % (line[1].split()[-1], line[2].split()[-1])
+        patchlevel = line[2].split()[-1]
     else:
-        version = "%s.0" % line[1].split()[-1]
-    node["version"] = version
-    if version == "11.2":
+        patchlevel = "0"
+
+    node["version"] = "%s.%s" % (version, patchlevel)
+    node["name"] = "%s.%s" % (line[0].split('(')[0].strip(), patchlevel)
+
+    if node["version"] == "11.2":
         node["code_name"] = "Emerald"
-    elif version == "11.3":
+    elif node["version"] == "11.3":
         node["code_name"] = "Teal"
-    elif version == "11.4":
+    elif node["version"] == "11.4":
         node["code_name"] = "Celadon"
-    elif version == "12.1":
+    elif node["version"] == "12.1":
         node["code_name"] = "Asparagus"
-    elif version == "12.2":
+    elif node["version"] == "12.2":
         node["code_name"] = "Mantis"
-    elif version == "12.3":
+    elif node["version"] == "12.3":
         node["code_name"] = "Darthmouth"
-    elif version == "13.1":
+    elif node["version"] == "13.1":
         node["code_name"] = "Bottle"
 
 

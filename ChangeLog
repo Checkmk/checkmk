@@ -19,6 +19,9 @@
     Event Console:
     * 2999 The contact name is now included in Event Console notifications...
 
+    HW/SW-Inventory:
+    * 3229 FIX: lnx_distro: SLES based systems have now an OS name inventorized\
+
 
 1.2.8b3:
     Core & Setup:

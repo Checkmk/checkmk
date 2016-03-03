@@ -1,0 +1,12 @@
+Title: fixed incorrect host list when one wato folder was a substring of another
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b4
+Date: 1457013618
+Class: fix
+
+When a view is filtered by a wato folder, that search was a pure prefix match, so if a view was
+opened for the folder "abc" it would also contain all hosts from the folder "abcde".
+This affected (probably among other things) the "Virtual Host Tree" and the "Tree of Folders"
+snapins.

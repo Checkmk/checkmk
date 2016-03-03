@@ -121,11 +121,6 @@ def load_services(cache, only_hosts):
     g_services = {}
     g_services_by_hostname = {}
 
-    # TODO: At the moment the data is always refetched. This could really
-    # be optimized. Maybe create a cache which fetches data for the given
-    # list of hosts, puts it to a cache and then only fetch the additionally
-    # needed information which are not cached yet in future requests
-
     # Create optional host filter
     filter_txt = 'Filter: custom_variable_names < _REALNAME\n' # drop summary hosts
     if only_hosts:
@@ -138,9 +133,12 @@ def load_services(cache, only_hosts):
 
     sites.live().set_prepend_site(True)
     sites.live().set_auth_domain('bi')
-    data = sites.live().query("GET hosts\n"
-                           +filter_txt+
-                           "Columns: name custom_variable_names custom_variable_values services childs parents\n")
+    data = sites.live().query(
+        "GET hosts\n"
+        +filter_txt+
+        "Columns: name custom_variable_names custom_variable_values services childs parents\n"
+        "Cache: reload\n"
+    )
     sites.live().set_prepend_site(False)
     sites.live().set_auth_domain('read')
 

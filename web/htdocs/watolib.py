@@ -2217,6 +2217,11 @@ class Attribute:
     def show_in_folder(self):
         return self._show_in_folder
 
+    # Wether or not to make this attribute configurable in
+    # the host search form
+    def show_in_host_search(self):
+        return self._show_in_host_search
+
     # Wether or not this attribute can be edited after creation
     # of the object
     def editable(self):
@@ -2667,19 +2672,20 @@ g_host_attributes = []
 g_host_attribute = {}
 
 # Declare attributes with this method
-def declare_host_attribute(a, show_in_table = True, show_in_folder = True,
+def declare_host_attribute(a, show_in_table = True, show_in_folder = True, show_in_host_search = True,
        topic = None, show_in_form = True, depends_on_tags = [], depends_on_roles = [], editable = True,
        show_inherited_value = True, may_edit = None):
 
     g_host_attributes.append((a, topic))
     g_host_attribute[a.name()] = a
-    a._show_in_table        = show_in_table
-    a._show_in_folder       = show_in_folder
-    a._show_in_form         = show_in_form
-    a._show_inherited_value = show_inherited_value
-    a._depends_on_tags      = depends_on_tags
-    a._depends_on_roles     = depends_on_roles
-    a._editable             = editable
+    a._show_in_table         = show_in_table
+    a._show_in_folder        = show_in_folder
+    a._show_in_host_search   = show_in_host_search
+    a._show_in_form          = show_in_form
+    a._show_inherited_value  = show_inherited_value
+    a._depends_on_tags       = depends_on_tags
+    a._depends_on_roles      = depends_on_roles
+    a._editable              = editable
 
     if may_edit:
         a.may_edit = may_edit

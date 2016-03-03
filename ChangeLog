@@ -14,6 +14,7 @@
 
     WATO:
     * 3000 FIX: Host check command: "Use a custom check plugin" was not working with CMC...
+    * 3231 FIX: Not showing network scan properties in host search form anymore
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

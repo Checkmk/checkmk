@@ -14871,12 +14871,23 @@ def mode_download_agents(phase):
         '/windows/msibuild/patches',
     ]
 
+    banned_paths_recursive = [
+        '/windows/openhardwaremonitor',
+    ]
+
     file_titles = {}
     other_sections = []
     for root, dirs, files in os.walk(defaults.agents_dir):
         file_paths = []
         relpath = root.split('agents')[1]
-        if relpath not in banned_paths:
+        is_banned = relpath in banned_paths
+        if not is_banned:
+            for banned in banned_paths_recursive:
+                if relpath.startswith(banned):
+                    is_banned = True
+                    break
+
+        if not is_banned:
             title = titles.get(relpath, relpath)
             for filename in files:
                 if filename == "CONTENTS":

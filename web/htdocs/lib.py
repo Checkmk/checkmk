@@ -642,31 +642,31 @@ def age_human_readable(secs, min_only=False):
         return physical_precision(secs, 3, _("s"))
     elif min_only:
         mins = secs / 60.0
-        return "%.1f %s" % (mins, _("min"))
+        return "%.1f %s" % (mins, _("m"))
     elif secs < 10:
-        return "%.2f %s" % (secs, _("sec"))
+        return "%.2f %s" % (secs, _("s"))
     elif secs < 60:
-        return "%.1f %s" % (secs, _("sec"))
+        return "%.1f %s" % (secs, _("s"))
     elif secs < 240:
-        return "%d %s" % (secs, _("sec"))
+        return "%d %s" % (secs, _("s"))
     mins = secs / 60
     if mins < 360:
-        return "%d %s" % (mins, _("min"))
+        return "%d %s" % (mins, _("m"))
     hours = mins / 60
     if hours < 48:
-        return "%d %s" % (hours, _("hours"))
+        return "%d %s" % (hours, _("h"))
     days = hours / 24.0
     if days < 6:
         d = ("%.1f" % days).rstrip("0").rstrip(".")
-        return "%s %s" % (d, _("days"))
+        return "%s %s" % (d, _("d"))
     elif days < 999:
-        return "%.0f %s" % (days, _("days"))
+        return "%.0f %s" % (days, _("d"))
     else:
         years = days / 365
         if years < 10:
-            return "%.1f %s" % (years, _("years"))
+            return "%.1f %s" % (years, _("y"))
         else:
-            return "%.0f %s" % (years, _("years"))
+            return "%.0f %s" % (years, _("y"))
 
 
 def date_human_readable(timestamp):

@@ -20,6 +20,9 @@
     * 3263 Notifications: allow users to restrict by their contact groups...
     * 3253 FIX: sms: notification script sms now handles single quotes in the message in the right way
 
+    BI:
+    * 3232 FIX: BI: Only querying site of host for specific host status info...
+
     Event Console:
     * 2999 The contact name is now included in Event Console notifications...
 

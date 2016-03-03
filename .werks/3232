@@ -1,0 +1,18 @@
+Title: BI: Only querying site of host for specific host status info
+Level: 2
+Component: bi
+Compatible: compat
+Version: 1.2.8b4
+Date: 1457010960
+Class: fix
+
+BI communicates via livestatus with the sites to first gather a list of
+all hosts in all sites. Once this has been done BI knows which host
+status can be found on which site.
+
+But this info was not used when fetching the states of the hosts. The
+host state queries were always sent to all sites causing a lot of needless
+livestatus queries.
+
+This should improve the performance of the BI views when having a higher
+number of sites or some sites which have a bad connection.

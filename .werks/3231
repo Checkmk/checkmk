@@ -1,0 +1,10 @@
+Title: Not showing network scan properties in host search form anymore
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1457001592
+
+

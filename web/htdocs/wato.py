@@ -15457,6 +15457,8 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             return True
         elif for_what == "folder" and not attr.show_in_folder():
             return True
+        elif for_what == "host_search" and not attr.show_in_host_search():
+            return True
         return False
 
     # The remaining topics are shown in the order of the

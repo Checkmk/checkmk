@@ -9,3 +9,5 @@ If you setup Interfacemmonitoring (SNMP) in a way that an UP port
 will be warned then sometimes the check will not detect this and
 stay OK - even in the port UP. Might or might not be due to 
 counter wraps.
+
+If you restart the OMD site then the problem is gone.

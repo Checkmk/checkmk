@@ -27,6 +27,7 @@
 import config, defaults, time, os, re, pprint
 import weblib, traceback, forms, valuespec, inventory, visuals, metrics
 import sites
+import bi
 from lib import *
 
 # Datastructures and functions needed before plugins can be loaded

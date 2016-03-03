@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
 from types import ModuleType
 from lib import load_web_plugins, local_web_plugins_have_changed
 from mod_python.apache import import_module
@@ -44,13 +45,26 @@ pagehandlers = {}
 # initialize them.
 modules = []
 
+
 # Returns a list of names of all currently imported python modules
 def imports():
     for name, val in globals().items():
         if isinstance(val, ModuleType):
-            # val.__name__ would be better, but this is not available in mod_python
-            name = val.__file__.split("/")[-1][:-3]
-            yield name
+            yield get_module_name(val)
+
+
+def cleanup_already_imported_modules():
+    g = globals()
+    for module in modules:
+        try:
+            del g[get_module_name(module)]
+        except KeyError:
+            pass # not loaded, it's ok
+
+
+# module name can not be get from __name__ in mod_python. use the file path to detect it.
+def get_module_name(module):
+    return os.path.splitext(os.path.basename(module.__file__))[0]
 
 
 # Loads all modules needed into memory and performs global initializations for
@@ -58,8 +72,12 @@ def imports():
 # If you need more time cosuming initializations, they should be done in
 # the late_init_modules() function.
 def init_modules():
-    global modules      ; modules = []
-    global pagehandlers ; pagehandlers = {}
+    global modules, pagehandlers
+
+    cleanup_already_imported_modules()
+
+    modules      = []
+    pagehandlers = {}
 
     module_names_prev = set(imports())
 

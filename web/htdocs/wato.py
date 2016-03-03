@@ -6907,7 +6907,8 @@ def vs_notification_rule(userid = None):
     else:
         contact_headers = [
             ( _("Contact Selection"), [ "contact_all", "contact_all_with_email", "contact_object",
-                                        "contact_users", "contact_groups", "contact_emails", "contact_match_macros" ] ),
+                                        "contact_users", "contact_groups", "contact_emails", "contact_match_macros",
+                                        "contact_match_groups", ] ),
         ]
         section_contacts = [
             # Contact selection
@@ -6977,6 +6978,18 @@ def vs_notification_rule(userid = None):
                            "<i>all</i> macros must match. The matches are regular expressions "
                            "that must fully match the value of the macro."),
                   add_label = _("Add condition"),
+              )
+            ),
+            ( "contact_match_groups",
+              ListOf(
+                  GroupSelection("contact"),
+                  title = _("Restrict by contact groups"),
+                  help = _("Here you can <i>restrict</i> the list of contacts that has been "
+                           "built up by the previous options to those that are members of "
+                           "selected contact groups. If you select more than one contact group here then "
+                           "the user must be member of <i>all</i> these groups."),
+                  add_label = _("Add Group"),
+                  movable = False,
               )
             ),
         ]
@@ -7082,7 +7095,8 @@ def vs_notification_rule(userid = None):
                           "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_escalation_throttle",
                           "match_sl", "match_host_event", "match_service_event", "match_ec", "match_notification_comment",
-                          "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails", "contact_match_macros" ],
+                          "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails",
+                          "contact_match_macros", "contact_match_groups" ],
         headers = [
             ( _("General Properties"), [ "description", "comment", "disabled", "docu_url", "allow_disable" ] ),
             ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]

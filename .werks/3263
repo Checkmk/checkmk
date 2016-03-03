@@ -1,0 +1,13 @@
+Title: Notifications: allow users to restrict by their contact groups
+Level: 1
+Component: notifications
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1456998194
+
+In notification rules in the {{Contact Selection}} you can now restrict
+users by their membership in contact groups. Note: this is not the same
+as the <b>Selection</b> by contact groups - which already existed. This
+feature is used to later reduce that selected contacts.

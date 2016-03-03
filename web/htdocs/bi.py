@@ -1219,11 +1219,14 @@ def get_status_info(required_hosts):
         if len(hosts) > 1:
             filter += "Or: %d\n" % len(hosts)
         sites.live().set_auth_domain('bi')
+        sites.live().set_only_sites([site])
         data = sites.live().query(
                 "GET hosts\n"
-                "Columns: name state hard_state plugin_output scheduled_downtime_depth acknowledged in_service_period services_with_fullstate\n"
+                "Columns: name state hard_state plugin_output scheduled_downtime_depth "
+                "acknowledged in_service_period services_with_fullstate\n"
                 + filter)
         sites.live().set_auth_domain('read')
+        sites.live().set_only_sites(None)
         tuples += [((site, e[0]), e[1:]) for e in data]
 
     return dict(tuples)

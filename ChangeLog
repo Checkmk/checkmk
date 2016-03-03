@@ -91,6 +91,7 @@
 
     BI:
     * 3247 FIX: Do not allow multiple BI aggregates with the same title...
+    * 3232 FIX: BI: Only querying site of host for specific host status info...
 
     Reporting & Availability:
     * 3249 FIX: Fix missing filter for non-OK services when report is called via context button

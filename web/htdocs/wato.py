@@ -5333,9 +5333,13 @@ def mode_snapshot(phase):
                 continue
             status = get_snapshot_status(name)
             table.row()
-            # Snapshot name
-            table.cell(_("From"), '<a href="%s">%s</a>' %
-                       (folder_preserving_link([("mode","snapshot_detail"),("_snapshot_name", name)]), status["name"]))
+            snapshot_url = html.makeuri_contextless([("mode","snapshot_detail"),("_snapshot_name", name)])
+
+            table.cell("", css="buttons")
+            html.icon_button(snapshot_url, _("Details and actions of this snapshot"), "edit")
+
+            # Date
+            table.cell(_("From"), status["name"])
 
             # Comment
             table.cell(_("Comment"), status.get("comment",""))

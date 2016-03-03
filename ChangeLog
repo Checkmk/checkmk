@@ -16,6 +16,7 @@
     * 3000 FIX: Host check command: "Use a custom check plugin" was not working with CMC...
 
     Notifications:
+    * 3263 Notifications: allow users to restrict by their contact groups...
     * 3253 FIX: sms: notification script sms now handles single quotes in the message in the right way
 
     Event Console:

@@ -683,22 +683,47 @@ def rbn_rule_contacts(rule, context):
                 notify_log("   - skipping contact %s: he/she has disabled notifications" % contactname)
                 continue
 
-            if "contact_match_macros" in rule:
-                match = True
-                for macro_name, regexp in rule["contact_match_macros"]:
-                    value = contact.get("_" + macro_name, "")
-                    if not regexp.endswith("$"):
-                        regexp = regexp + "$"
-                    if not regex(regexp).match(value):
-                        notify_log("   - skipping contact %s: value '%s' for macro '%s' does not match '%s'" % (
-                                contactname, value, macro_name, regexp))
-                        match = False
-                        break
-                if not match:
-                    continue
+            reason = rbn_match_contact_macros(rule, contactname, contact) or \
+                     rbn_match_contact_groups(rule, contactname, contact)
+
+            if reason:
+                notify_log("   - skipping contact %s: %s" % (contactname, reason))
+                continue
+
+        else:
+            notify_log("Warning: cannot get information about contact %s: ignoring restrictions" % contactname)
+
         all_enabled.append(contactname)
 
     return all_enabled
+
+
+def rbn_match_contact_macros(rule, contactname, contact):
+    if "contact_match_macros" in rule:
+        for macro_name, regexp in rule["contact_match_macros"]:
+            value = contact.get("_" + macro_name, "")
+            if not regexp.endswith("$"):
+                regexp = regexp + "$"
+            if not regex(regexp).match(value):
+                macro_overview = ", ".join([
+                    "%s=%s" % (varname[1:], val)
+                    for (varname, val)
+                    in contact.items()
+                    if varname.startswith("_")])
+                return "value '%s' for macro '%s' does not match '%s'. His macros are: %s" % (
+                       value, macro_name, regexp, macro_overview)
+
+
+def rbn_match_contact_groups(rule, contactname, contact):
+    if "contact_match_groups" in rule:
+        if "contactgroups" not in contact:
+            notify_log("Warning: cannot determine contact groups of %s: skipping restrictions" % contactname)
+            return
+        for required_group in rule["contact_match_groups"]:
+            if required_group not in contact["contactgroups"]:
+                return "he/she is not member of the contact group %s (his groups are %s)" % (
+                   required_group, ", ".join(contact["contactgroups"] or ["<None>"]))
+
 
 def rbn_match_notification_comment(rule, context):
     if "match_notification_comment" in rule:

@@ -2623,17 +2623,32 @@ function fix_popup_menu_position(event, menu) {
     // Check whether or not the menu is out of the bottom border
     // -> if so, move the menu up
     if (rect.bottom > (window.innerHeight || document.documentElement.clientHeight)) {
-        menu.style.top    = 'auto';
-        menu.style.bottom = '15px';
+        var height = rect.bottom - rect.top;
+        if (rect.top - height < 0) {
+            // would hit the top border too, then put the menu to the top border
+            // and hope that it fits within the screen
+            menu.style.top    = '-' + (rect.top - 15) + 'px';
+            menu.style.bottom = 'auto';
+        } else {
+            menu.style.top    = 'auto';
+            menu.style.bottom = '15px';
+        }
     }
 
     // Check whether or not the menu is out of right border and
     // a move to the left would fix the issue
     // -> if so, move the menu to the left
-    if (rect.right > (window.innerWidth || document.documentElement.clientWidth)
-        && rect.left - (rect.right - rect.left) >= 0) {
-        menu.style.left  = 'auto';
-        menu.style.right = '15px';
+    if (rect.right > (window.innerWidth || document.documentElement.clientWidth)) {
+        var width = rect.right - rect.left;
+        if (rect.left - width < 0) {
+            // would hit the left border too, then put the menu to the left border
+            // and hope that it fits within the screen
+            menu.style.left  = '-' + (rect.left - 15) + 'px';
+            menu.style.right = 'auto';
+        } else {
+            menu.style.left  = 'auto';
+            menu.style.right = '15px';
+        }
     }
 }
 

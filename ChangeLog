@@ -65,6 +65,7 @@
     * 3181 FIX: Omit icon for downloading agent output on shadow hosts (cmcdump)...
     * 3248 FIX: Avoid broken list of context filters and case of a BI error
     * 3251 FIX: Fix sorting of entries in Views sidebar element
+    * 3230 FIX: Slightly improved popup menu positioning when hitting right+left or bottom+top border of screen/dashlet
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

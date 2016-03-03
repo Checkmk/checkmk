@@ -81,6 +81,8 @@ class FilterWatoFile(Filter):
             path_regex = "^/wato/%s" % current.replace("\n", "") # prevent insertions attack
             if current.endswith("/"): # Hosts directly in this folder
                 path_regex += "hosts.mk"
+            else:
+                path_regex += "/"
             if "*" in current: # used by virtual host tree snapin
                 path_regex = path_regex.replace(".", "\\.").replace("*", ".*")
                 op = "~~"

@@ -9,6 +9,7 @@
 
     Multisite:
     * 3251 FIX: Fix sorting of entries in Views sidebar element
+    * 3230 FIX: Slightly improved popup menu positioning when hitting right+left or bottom+top border of screen/dashlet
 
     WATO:
     * 3000 FIX: Host check command: "Use a custom check plugin" was not working with CMC...

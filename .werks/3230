@@ -1,0 +1,9 @@
+Title: Slightly improved popup menu positioning when hitting right+left or bottom+top border of screen/dashlet
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b4
+Date: 1456991805
+Class: fix
+
+

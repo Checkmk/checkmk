@@ -131,6 +131,10 @@ def include(filename):
 
 # Load multisite.mk and all files in multisite.d/. This will happen
 # for *each* HTTP request.
+# FIXME: Optimize this to cache the config etc. until either the config files or plugins
+# have changed. We could make this being cached for multiple requests just like the
+# plugins of other modules. This may save significant time in case of small requests like
+# the graph ajax page or similar.
 def load_config():
     global modification_timestamps, sites
     modification_timestamps = []
@@ -598,6 +602,3 @@ def load_plugins(force):
     # Make sure, builtin roles are present, even if not modified and saved with WATO.
     for br in builtin_role_ids:
         roles.setdefault(br, {})
-
-
-load_plugins(True)

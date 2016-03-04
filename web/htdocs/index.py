@@ -108,8 +108,11 @@ def handler(req, fields = None, is_profiling = False):
         # has been initialized
         i18n.localize(html.var("lang", config.get_language()))
 
-        # All plugins might have to be reloaded due to a language change
-        modules.load_all_plugins()
+        # All plugins might have to be reloaded due to a language change. Only trigger
+        # a second plugin loading when the user is really using a custom localized GUI.
+        # Otherwise the load_all_plugins() at the beginning of the request is sufficient.
+        if current_language != None:
+            modules.load_all_plugins()
 
         # User allowed to login at all?
         if not config.may("general.use"):

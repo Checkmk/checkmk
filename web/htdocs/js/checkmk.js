@@ -1149,7 +1149,7 @@ function update_reload_pause_timer(seconds_left)
         window.location.reload(false);
     }
     else {
-        // update the pause counter        
+        // update the pause counter
         var counter = document.getElementById("reload_pause_counter");
         if (counter) {
             counter.innerHTML = seconds_left;

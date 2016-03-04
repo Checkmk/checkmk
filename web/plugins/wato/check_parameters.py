@@ -2079,6 +2079,12 @@ register_check_parameters(
                     help = _("Outside these ranges the check will always be OK"),
                     count = 3,
             )),
+            ("state_missing",
+                MonitoringState(
+                    default_value = 3,
+                    title = _("State when file is missing")
+                )
+            ),
         ]
     ),
     TextAscii(

@@ -1,0 +1,10 @@
+Title: fileinfo: now able to configure the checks status if the file is missing
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.8b5
+Date: 1457104202
+
+

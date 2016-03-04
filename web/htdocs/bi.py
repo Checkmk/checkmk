@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, re, pprint, time, views
+import config, re, pprint, time
 import sites
 from lib import *
 
@@ -1912,9 +1912,6 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
     host_columns = filter(lambda c: c.startswith("host_"), columns)
     hostrows = get_status_info_filtered(filter_code, only_sites, limit, host_columns, config.bi_precompile_on_demand, bygroup)
     log("* Got %d host rows" % len(hostrows))
-
-    # if limit:
-    #     views.check_limit(hostrows, limit)
 
     # Apply aggregation group filter. This is important for performance. We
     # must not compute any aggregations from other aggregation groups and filter

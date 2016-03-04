@@ -596,7 +596,7 @@ def calculate_physical_precision(v, precision):
         places_before_comma = exponent + 1
         places_after_comma = precision - places_before_comma
 
-    return scale_symbols[scale], places_after_comma, 1000**abs(scale)
+    return scale_symbols[scale], places_after_comma, 1000 ** scale
 
 
 def nic_speed_human_readable(bits_per_second):

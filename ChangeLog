@@ -2,6 +2,9 @@
     Checks & Agents:
     * 3001 fileinfo: now able to configure the checks status if the file is missing
 
+    Multisite:
+    * 3264 FIX: Fix display of values in graphs that are < 1.0
+
 
 1.2.8b4:
     Checks & Agents:

@@ -40,6 +40,9 @@ class FinalizeRequest(Exception):
 
 class html_mod_python(htmllib.html):
 
+    # The constructor must not rely on "config.", because the configuration
+    # is not loaded yet. Earliest place is self.init_modes() where config
+    # is loaded.
     def __init__(self, req, fields):
         req.content_type = "text/html; charset=UTF-8"
         req.header_sent = False

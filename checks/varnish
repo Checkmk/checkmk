@@ -274,10 +274,10 @@ def parse_varnish(info):
 
 def inventory_varnish_uptime(parsed):
     if "uptime" in parsed:
-        return [(None, {})]
+        return [(None, None)]
 
 
-def check_varnish_uptime(_no_item, params, parsed):
+def check_varnish_uptime(_no_item, _no_params, parsed):
     if "uptime" in parsed:
         return check_uptime_seconds(params, parsed["uptime"][0])
 
@@ -289,7 +289,6 @@ check_info["varnish"] = {
     "service_description"   : "Varnish Uptime",
     "has_perfdata"          : True,
     "includes"              : [ "uptime.include" ],
-    "group"                 : "uptime",
 }
 
 

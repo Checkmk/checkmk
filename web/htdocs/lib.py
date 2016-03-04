@@ -529,10 +529,35 @@ def frexp10(x):
 # Note if the type of v is integer, then the precision cut
 # down to the precision of the actual number
 def physical_precision(v, precision, unit_symbol):
-    if v == 0:
-        return "%%.%df %%s" % (precision - 1) % (v, unit_symbol)
-    elif v < 0:
+    if v < 0:
         return "-" + physical_precision(-v, precision, unit_symbol)
+
+    scale_symbol, places_after_comma, scale_factor = calculate_physical_precision(v, precision)
+
+    scaled_value = float(v) / scale_factor
+    return (u"%%.%df %%s%%s" % places_after_comma) % (scaled_value, scale_symbol, unit_symbol)
+
+
+def physical_precision_list(values, precision, unit_symbol):
+    if not values:
+        reference = 0
+    else:
+        reference = min([ abs(v) for v in values ])
+
+    scale_symbol, places_after_comma, scale_factor = calculate_physical_precision(reference, precision)
+
+    units = []
+    scaled_values = []
+    for value in values:
+        scaled_value = float(value) / scale_factor
+        scaled_values.append(("%%.%df" % places_after_comma) % scaled_value)
+
+    return "%s%s" % (scale_symbol, unit_symbol), scaled_values
+
+
+def calculate_physical_precision(v, precision):
+    if v == 0:
+        return "", precision - 1, 1
 
     # Splitup in mantissa (digits) an exponent to the power of 10
     # -> a: (2.23399998, -2)  b: (4.5, 6)    c: (1.3756, 2)
@@ -540,10 +565,6 @@ def physical_precision(v, precision, unit_symbol):
 
     if type(v) == int:
         precision = min(precision, exponent + 1)
-
-    # Round the mantissa to the required number of digits
-    # -> a: 2.23              b: 4.5         c: 1.38
-    mant_rounded = round(mantissa, precision-1) * 10**exponent
 
     # Choose a power where no artifical zero (due to rounding) needs to be
     # placed left of the decimal point.
@@ -575,9 +596,8 @@ def physical_precision(v, precision, unit_symbol):
         places_before_comma = exponent + 1
         places_after_comma = precision - places_before_comma
 
-    value = mantissa * 10**exponent
+    return scale_symbols[scale], places_after_comma, 1000**abs(scale)
 
-    return u"%%.%df %%s%%s" % places_after_comma % (value, scale_symbols[scale], unit_symbol)
 
 def nic_speed_human_readable(bits_per_second):
     if bits_per_second == 10000000:

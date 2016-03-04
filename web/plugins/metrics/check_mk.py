@@ -42,6 +42,22 @@
 #   +----------------------------------------------------------------------+
 #   |  Definition of units of measurement.                                 |
 #   '----------------------------------------------------------------------'
+# Optional attributes of units:
+#
+#   stepping: FIXME: Describe this
+#
+#   graph_unit: Compute a common unit for the whole graph. This is an optional
+#               feature to solve the problem that some unit names are too long
+#               to be shown on the left of the screen together with the values.
+#               For fixing this the "graph unit" is available which is displayed
+#               on the top left of the graph and is used for the whole graph. So
+#               once a "graph unit" is computed, it does not need to be shown
+#               beside each label.
+#               This has to be set to a function which recevies a list of values,
+#               then computes the optimal unit for the given values and then
+#               returns a two element tuple. The first element is the "graph unit"
+#               and the second is a list containing all of the values rendered with
+#               the graph unit.
 
 # TODO: Move fundamental units like "" to main file.
 
@@ -66,7 +82,6 @@ unit_info["%"] = {
     "symbol" : _("%"),
     "render" : lambda v: percent_human_redable(v, 3),
 }
-
 
 unit_info["s"] = {
     "title"    : _("sec"),
@@ -106,9 +121,10 @@ unit_info["bytes/s"] = {
 }
 
 unit_info["bits/s"] = {
-    "title"    : _("Bits per second"),
-    "symbol"   : _("bits/s"),
-    "render"   : lambda v: physical_precision(v, 3, _("bit/s")),
+    "title"      : _("Bits per second"),
+    "symbol"     : _("bits/s"),
+    "render"     : lambda v: physical_precision(v, 3, _("bit/s")),
+    "graph_unit" : lambda v: physical_precision_list(v, 3, _("bit/s")),
 }
 
 # Output in bytes/days, value is in bytes/s

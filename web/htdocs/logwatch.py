@@ -26,7 +26,7 @@
 
 import time, re, os, datetime, config, defaults
 from lib import *
-import views
+import views, sites
 
 stylesheets = [ 'pages', 'status', 'logwatch' ]
 

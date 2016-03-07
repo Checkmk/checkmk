@@ -25,44 +25,53 @@
 #ifndef mk_SharedMutex_h
 #define mk_SharedMutex_h
 
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 #include <pthread.h>
-#include "Mutex.h"
+#include <string.h>
+#include <mutex>
+#include <system_error>
 
 // A more or less drop-in replacement for C++14's <shared_mutex> (partial)
 
 namespace mk {
 
-// Note: This is not in the standard, but close enough to shared_mutex for our purposes.
+inline void throw_system_error(int err) {
+    throw std::system_error(std::error_code(err, std::generic_category()));
+}
+
+inline void check_status(int status) {
+    if (status != 0) throw_system_error(status);
+}
+
+// Note: This is not in the standard, but close enough to shared_mutex for our
+// purposes.
 class rw_mutex {
 public:
     typedef pthread_rwlock_t *native_handle_type;
     rw_mutex() { check_status(pthread_rwlock_init(&_mutex, 0)); }
     ~rw_mutex() { check_status(pthread_rwlock_destroy(&_mutex)); }
     void lock() { check_status(pthread_rwlock_wrlock(&_mutex)); }
-    bool try_lock()
-    {
+    bool try_lock() {
         int status = pthread_rwlock_trywrlock(&_mutex);
         if (status != EBUSY) check_status(status);
         return status == 0;
     }
     void unlock() { check_status(pthread_rwlock_unlock(&_mutex)); }
     void lock_shared() { check_status(pthread_rwlock_rdlock(&_mutex)); }
-    bool try_lock_shared()
-    {
+    bool try_lock_shared() {
         int status = pthread_rwlock_tryrdlock(&_mutex);
         if (status != EBUSY) check_status(status);
         return status == 0;
     }
     void unlock_shared() { check_status(pthread_rwlock_unlock(&_mutex)); }
     native_handle_type native_handle() { return &_mutex; }
+
 private:
-    rw_mutex(const rw_mutex &);            // = delete
-    rw_mutex &operator=(const rw_mutex &); // = delete
+    rw_mutex(const rw_mutex &);             // = delete
+    rw_mutex &operator=(const rw_mutex &);  // = delete
 
     pthread_rwlock_t _mutex;
 };
-
 
 template <typename Mutex>
 class shared_lock {
@@ -71,26 +80,19 @@ public:
 
     shared_lock() : _mutex(0), _owns_lock(false) {}
     explicit shared_lock(mutex_type &m)
-        : _mutex(addressOf(m)), _owns_lock(false)
-    {
+        : _mutex(addressOf(m)), _owns_lock(false) {
         lock();
         _owns_lock = true;
     }
 
-    shared_lock(mutex_type &m, defer_lock_t)
-        : _mutex(addressOf(m)), _owns_lock(false)
-    {
-    }
+    shared_lock(mutex_type &m, std::defer_lock_t)
+        : _mutex(addressOf(m)), _owns_lock(false) {}
 
-    shared_lock(mutex_type &m, try_to_lock_t)
-        : _mutex(addressOf(m)), _owns_lock(_mutex->try_lock_shared())
-    {
-    }
+    shared_lock(mutex_type &m, std::try_to_lock_t)
+        : _mutex(addressOf(m)), _owns_lock(_mutex->try_lock_shared()) {}
 
-    shared_lock(mutex_type &m, adopt_lock_t)
-        : _mutex(addressOf(m)), _owns_lock(true)
-    {
-    }
+    shared_lock(mutex_type &m, std::adopt_lock_t)
+        : _mutex(addressOf(m)), _owns_lock(true) {}
 
     // template<typename Clock, typename Duration>
     // shared_lock(mutex_type& m,
@@ -100,24 +102,21 @@ public:
     // shared_lock(mutex_type& m,
     //             const chrono::duration<Rep, Period>& rtime);
 
-    ~shared_lock()
-    {
+    ~shared_lock() {
         if (_owns_lock) unlock();
     }
 
     // shared_lock(shared_lock&& other)
     // shared_lock& operator=(shared_lock&& other)
 
-    void lock()
-    {
+    void lock() {
         if (!_mutex) throw_system_error(EPERM);
         if (_owns_lock) throw_system_error(EDEADLK);
         _mutex->lock_shared();
         _owns_lock = true;
     }
 
-    bool try_lock()
-    {
+    bool try_lock() {
         if (!_mutex) throw_system_error(EPERM);
         if (_owns_lock) throw_system_error(EDEADLK);
         _owns_lock = _mutex->try_lock_shared();
@@ -130,8 +129,7 @@ public:
     // template<typename Rep, typename Period>
     // bool try_lock_for(const chrono::duration<Rep, Period>& rtime)
 
-    void unlock()
-    {
+    void unlock() {
         if (!_owns_lock) throw_system_error(EPERM);
         if (_mutex) {
             _mutex->unlock_shared();
@@ -139,14 +137,12 @@ public:
         }
     }
 
-    void swap(shared_lock &other)
-    {
+    void swap(shared_lock &other) {
         std::swap(_mutex, other._mutex);
         std::swap(_owns_lock, other._owns_lock);
     }
 
-    mutex_type *release()
-    {
+    mutex_type *release() {
         mutex_type *ret = _mutex;
         _mutex = 0;
         _owns_lock = false;
@@ -154,31 +150,29 @@ public:
     }
 
     bool owns_lock() const { return _owns_lock; }
-    operator bool() const { return owns_lock(); } // explicit
+    operator bool() const { return owns_lock(); }  // explicit
     mutex_type *mutex() const { return _mutex; }
+
 private:
-    shared_lock(const shared_lock &);            // = delete;
-    shared_lock &operator=(const shared_lock &); // = delete;
+    shared_lock(const shared_lock &);             // = delete;
+    shared_lock &operator=(const shared_lock &);  // = delete;
 
     mutex_type *_mutex;
     bool _owns_lock;
 
     // basically std::addressof from C++11's <memory>
     template <typename T>
-    inline T *addressOf(T &x)
-    {
+    inline T *addressOf(T &x) {
         return reinterpret_cast<T *>(
             &const_cast<char &>(reinterpret_cast<const volatile char &>(x)));
     }
 };
 
-
 template <typename Mutex>
-void swap(shared_lock<Mutex> &x, shared_lock<Mutex> &y)
-{
+void swap(shared_lock<Mutex> &x, shared_lock<Mutex> &y) {
     x.swap(y);
 }
 
-} // namespace mk
+}  // namespace mk
 
-#endif // mk_SharedMutex_h
+#endif  // mk_SharedMutex_h

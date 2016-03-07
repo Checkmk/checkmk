@@ -1,0 +1,10 @@
+Title: check_smtp: when set to IPv6 it used the IPv4 address nevertheless
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1457358264
+
+

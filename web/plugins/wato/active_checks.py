@@ -1186,19 +1186,11 @@ register_rule(group,
                       )
                    ),
                    ( "ip_version",
-                     Alternative(
+                     DropdownChoice(
                          title = _("IP-Version"),
-                         elements = [
-                            FixedValue(
-                                "ipv4",
-                                totext = "",
-                                title = _("IPv4")
-                            ),
-                            FixedValue(
-                                "ipv6",
-                                totext = "",
-                                title = _("IPv6")
-                            ),
+                         choices = [
+                           ( "ipv4", _("IPv4") ),
+                           ( "ipv6", _("IPv6") ),
                          ],
                      ),
                    ),

@@ -154,25 +154,18 @@ def write_settings_file(path, content):
         data = repr(content)
     create_user_file(path, "w").write(data + "\n")
 
+
 def remove_user_file(path):
     path = path.encode("utf-8")
     if os.path.exists(path):
         os.remove(path)
+
 
 def savefloat(f):
     try:
         return float(f)
     except:
         return 0.0
-
-# sorted() is not available in all Python versions
-try:
-    sorted
-except:
-    def sorted(l):
-        a = l[:]
-        a.sort()
-        return a
 
 
 def make_utf8(x):

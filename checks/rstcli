@@ -1,0 +1,177 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# --VOLUME INFORMATION--
+#
+# Name:              Vol1
+# Raid Level:        1
+# Size:              932 GB
+# StripeSize:        64 KB
+# Num Disks:         2
+# State:             Normal
+# System:            True
+# Initialized:       True
+# Cache Policy:      Off
+#
+#
+# --DISKS IN VOLUME: Vol1 --
+#
+# ID:                0-0-0-0
+# Type:              Disk
+# Disk Type:         SATA Disk
+# State:             Normal
+# Size:              932 GB
+# Free Size:         0 GB
+# System Disk:       False
+# Usage:             Array member
+# Serial Number:     AB-CDEF123456
+# Model:             AB CD EF
+#
+# ID:                0-1-0-0
+# Type:              Disk
+# Disk Type:         SATA Disk
+# State:             Normal
+# Size:              932 GB
+# Free Size:         0 GB
+# System Disk:       False
+# Usage:             Array member
+# Serial Number:     AB-CDEF123457
+# Model:             AB CD EF
+
+
+# split output into the --xxx-- sections
+def parse_rstcli_sections(info):
+    current_section = None
+    for line in info:
+        if line[0].startswith("--"):
+            if current_section is not None:
+                yield current_section
+            current_section = (":".join(line).strip("-").strip(), [])
+        else:
+            if current_section is None:
+                raise MKGeneralException("error: %s" % " ".join(line))
+            current_section[1].append(line)
+
+    yield current_section
+
+
+# interpret the volumes section
+def parse_rstcli_volumes(rows):
+    volumes = {}
+    current_volume = None
+
+    for row in rows:
+        if row[0] == "Name":
+            volumes[row[1].strip()] = current_volume = {}
+        else:
+            current_volume[row[0]] = row[1].strip()
+
+    return volumes
+
+
+# interpret the disks section
+def parse_rstcli_disks(rows):
+    disks = []
+    current_disk = None
+
+    for row in rows:
+        if row[0] == "ID":
+            current_disk = {}
+            disks.append(current_disk)
+
+        current_disk[row[0]] = row[1].strip()
+
+    return disks
+
+def parse_rstcli(info):
+    volumes = {}
+
+    for section in parse_rstcli_sections(info):
+        if section[0] == "VOLUME INFORMATION":
+            volumes = parse_rstcli_volumes(section[1])
+        elif section[0].startswith("DISKS IN VOLUME"):
+            volume = section[0].split(":")[1].strip()
+            volumes[volume]['Disks'] = parse_rstcli_disks(section[1])
+        else:
+            raise MKGeneralException("invalid section in rstcli output: %s" % section[0])
+
+    return volumes
+
+
+def inventory_rstcli(parsed):
+    return [(name, None) for name in parsed.keys()]
+
+
+# Help! There is no documentation, what are the possible values?
+rstcli_states = {
+    'Normal': 0,
+}
+
+
+def check_rstcli(item, params, parsed):
+    if item in parsed:
+        volume = parsed[item]
+        return rstcli_states.get(volume['State']), "RAID %s, %d disks (%s), state %s" % \
+            (volume['Raid Level'], int(volume['Num Disks']),
+             volume['Size'], volume['State'])
+
+
+check_info["rstcli"] = {
+    'check_function':      check_rstcli,
+    'inventory_function':  inventory_rstcli,
+    'parse_function':      parse_rstcli,
+    'service_description': 'RAID Volume %s',
+}
+
+
+def inventory_rstcli_pdisks(parsed):
+    for key, volume in parsed.iteritems():
+        for disk in volume['Disks']:
+            yield "%s/%s" % (key, disk['ID']), None
+
+
+def check_rstcli_pdisks(item, params, parsed):
+    reg = regex("(.*)/([0-9\-]*)")
+    match = reg.match(item)
+    if match:
+        return 3, "unsupported item name"
+
+    volume, disk_id = match.group(1), match.group(2)
+
+    disks = parsed.get(volume, {}).get('Disks', [])
+    for disk in disks:
+        if disk['ID'] == disk_id:
+            return rstcli_states.get(disk['State'], 2), \
+                "[%s] state %s" % (disk['Serial Number'], disk['State'])
+
+
+check_info["rstcli.pdisks"] = {
+    'check_function':      check_rstcli_pdisks,
+    'inventory_function':  inventory_rstcli_pdisks,
+    'service_description': 'RAID Disk %s',
+}
+

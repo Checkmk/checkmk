@@ -1407,7 +1407,7 @@ register_check_parameters(
 
 
 register_check_parameters(
-    subgroup_applications,
+    subgroup_storage,
     "mongodb_locks",
     _("MongoDB Locks"),
     Dictionary(

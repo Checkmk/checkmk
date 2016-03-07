@@ -35,11 +35,14 @@ def check_smtp_arguments(params):
         port = int(settings["port"]) # ValueSpec was broken, convert to int
         args += ' -p %d' % port
 
+    host_address = '$HOSTADDRESS$'
     if "ip_version" in settings:
         if settings['ip_version'] == 'ipv4':
             args += ' -4'
+            host_address = '$HOST_ADDRESS_4$'
         else:
             args += ' -6'
+            host_address = '$HOST_ADDRESS_6$'
 
     for s in settings.get("commands", []):
         args += ' -C %s' % quote_shell_string(s)
@@ -74,7 +77,7 @@ def check_smtp_arguments(params):
     if 'hostname' in settings:
         args += ' -H %s' % settings['hostname']
     else:
-        args += ' -H $HOSTADDRESS$'
+        args += ' -H ' + host_address
     return args
 
 def check_smtp_desc(params):

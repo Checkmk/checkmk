@@ -1383,18 +1383,22 @@ def page_graph_dashlet():
     spec = html.var("spec")
     if not spec:
         raise MKUserError("spec", _("Missing spec parameter"))
-
     graph_specification = json.loads(html.var("spec"))
 
+    render = html.var("render")
+    if not render:
+        raise MKUserError("render", _("Missing render parameter"))
+    custom_graph_render_options = json.loads(html.var("render"))
+
     if cmk_graphs_possible():
-        host_service_graph_dashlet_cmk(graph_specification)
+        host_service_graph_dashlet_cmk(graph_specification, custom_graph_render_options)
     elif graph_specification[0] == "template":
         host_service_graph_dashlet_pnp(graph_specification)
     else:
         html.write(_("This graph can not be rendered."))
 
 
-def host_service_graph_dashlet_cmk(graph_specification):
+def host_service_graph_dashlet_cmk(graph_specification, custom_graph_render_options):
     size = (int(((float(html.var("width")) - 49 - 5)/html_size_per_ex)),
             int((float(html.var("height")) - 23)/html_size_per_ex))
 
@@ -1405,7 +1409,7 @@ def host_service_graph_dashlet_cmk(graph_specification):
         "show_controls" : False,
         "resizable"     : False,
     }
-
+    graph_render_options.update(custom_graph_render_options)
 
     # The timerange is specified in PNP like manner.
     range_secs = {
@@ -1423,7 +1427,27 @@ def host_service_graph_dashlet_cmk(graph_specification):
         "time_range" : (start_time, end_time),
     }
 
-    html_code = render_graphs_from_specification_html(graph_specification, graph_data_range, graph_render_options)
+    graph_data_range["step"] = estimate_graph_step_for_html(graph_data_range["time_range"],
+                                                            graph_render_options)
+
+    try:
+        graph_definitions = create_graph_definitions_from_specification(graph_specification)
+        if graph_definitions:
+            graph_definition = graph_definitions[0]
+        else:
+            raise MKGeneralException(_("Failed to calculate a graph definition."))
+    except livestatus.MKLivestatusNotFoundError:
+        html.write("<div class=error>%s</div>" % html.attrencode(_("Cannot reander graphs: cannot fetch data via Livestatus")))
+        return
+
+    # When the legend is enabled, we need to reduce the height by the height of the legend to
+    # make the graph fit into the dashlet area.
+    if graph_render_options["show_legend"]:
+        # TODO FIXME: This abstract graph is calulated twice. Once here and once in render_graphs_from_specification_html()
+        abstract_graph = compute_abstract_graph(graph_definition, graph_data_range, graph_render_options)
+        graph_render_options["size"] = (size[0], size[1] - graph_legend_height_ex(graph_render_options, abstract_graph))
+
+    html_code = render_graphs_from_definitions([graph_definition], graph_data_range, graph_render_options)
     html.write(html_code)
 
 

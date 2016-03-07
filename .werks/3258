@@ -1,0 +1,9 @@
+Title: dell_idrac_disks: fixed disk and component status handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457345843
+Class: fix
+
+

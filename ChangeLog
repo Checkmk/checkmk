@@ -56,6 +56,7 @@
     * 3254 FIX: haproxy: fixed wrong type handling
     * 3255 FIX: apc_inrow_temp: fixed wrong discovery handling of available sensors
     * 3256 FIX: blade_bx_powerfan: fixed wrong levels handling and minor cleanup
+    * 3258 FIX: dell_idrac_disks: fixed disk and component status handling
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

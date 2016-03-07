@@ -1,0 +1,10 @@
+Title: fixed very rare crash in active checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b4
+Date: 1457357683
+Class: fix
+
+The error caused active check to go into warning state with output "expected a character buffer
+object"

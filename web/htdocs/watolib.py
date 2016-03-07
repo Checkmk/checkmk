@@ -206,6 +206,7 @@ def log_pending(status, linkinfo, what, message, user_id = None):
 
     # On each change to the Check_MK configuration mark the agents to be rebuild
     if 'need_to_bake_agents' in globals():
+        # pylint: disable=undefined-variable
         need_to_bake_agents()
 
     # The latter one condition applies to slave sites
@@ -317,7 +318,7 @@ class WithPermissions(object):
 
 
     def user_needs_permission(self, user_id, how):
-        raise NotImplementedError("Subclasses has to implement this!")
+        raise NotImplementedError()
 
 
     def need_permission(self, how):
@@ -369,7 +370,7 @@ class WithPermissionsAndAttributes(WithPermissions):
 
 
     def effective_attributes(self):
-        raise NotImplementedError("Subclasses has to implement this!")
+        raise NotImplementedError()
 
 
     def effective_attribute(self, attrname, default_value=None):
@@ -397,7 +398,7 @@ class BaseFolder(WithPermissionsAndAttributes):
 
 
     def hosts(self):
-        raise NotImplementedError("Subclasses has to implement this!")
+        raise NotImplementedError()
 
 
     def host_names(self):
@@ -432,8 +433,16 @@ class BaseFolder(WithPermissionsAndAttributes):
         return self.parent() != None
 
 
+    def parent(self):
+        raise NotImplementedError()
+
+
     def is_same_as(self, folder):
         return self == folder or self.path() == folder.path()
+
+
+    def path(self):
+        raise NotImplementedError()
 
 
     def is_current_folder(self):
@@ -472,7 +481,8 @@ class BaseFolder(WithPermissionsAndAttributes):
             keepvars.append(("mode", "folder"))
 
         def render_component(folder):
-            return '<a href="%s">%s</a>' % (html.makeuri_contextless([("folder", folder.path())] + keepvars), folder.title())
+            return '<a href="%s">%s</a>' % (html.makeuri_contextless([ ("folder", folder.path())]
+                                                                     + keepvars), folder.title())
 
         def breadcrump_element_start(end = '', z_index = 0):
             html.write('<li style="z-index:%d;"><div class="left %s"></div>' % (z_index, end))
@@ -522,6 +532,18 @@ class BaseFolder(WithPermissionsAndAttributes):
             breadcrump_element_end('end')
 
         html.write("</ul></div>\n")
+
+
+    def title(self):
+        raise NotImplementedError()
+
+
+    def has_subfolders(self):
+        raise NotImplementedError()
+
+
+    def subfolder_choices(self):
+        raise NotImplementedError()
 
 
 #.
@@ -1744,6 +1766,10 @@ class SearchFolder(BaseFolder):
         pass
 
 
+    def has_subfolder(self, name):
+        return False
+
+
     def has_subfolders(self):
         return False
 
@@ -2164,13 +2190,22 @@ class Host(WithPermissionsAndAttributes):
 
 class Attribute:
     # The constructor stores name and title. If those are
-    # dynamic than leave them out and override name() and
+    # dynamic then leave them out and override name() and
     # title()
     def __init__(self, name=None, title=None, help=None, default_value=None):
         self._name = name
         self._title = title
         self._help = help
         self._default_value = default_value
+
+        self._show_in_table        = True
+        self._show_in_folder       = True
+        self._show_in_host_search  = False
+        self._show_in_form         = True
+        self._show_inherited_value = True
+        self._depends_on_tags      = []
+        self._depends_on_roles     = []
+        self._editable             = True
 
     # Return the name (= identifier) of the attribute
     def name(self):
@@ -2223,10 +2258,12 @@ class Attribute:
     def show_in_host_search(self):
         return self._show_in_host_search
 
+
     # Wether or not this attribute can be edited after creation
     # of the object
     def editable(self):
         return self._editable
+
 
     # Wether it is allowed that a host has no explicit
     # value here (inherited or direct value). An mandatory
@@ -2234,34 +2271,28 @@ class Attribute:
     def is_mandatory(self):
         return False
 
+
     # Return information about the user roles we depend on.
     # The method is usually not overridden, but the variable
     # _depends_on_roles is set by declare_host_attribute().
     def depends_on_roles(self):
-        try:
-            return self._depends_on_roles
-        except:
-            return []
+        return self._depends_on_roles
+
 
     # Return information about whether or not either the
     # inherited value or the default value should be shown
     # for an attribute.
     # _depends_on_roles is set by declare_host_attribute().
     def show_inherited_value(self):
-        try:
-            return self._show_inherited_value
-        except:
-            return True
+        return self._show_inherited_value
 
 
     # Return information about the host tags we depend on.
     # The method is usually not overridden, but the variable
     # _depends_on_tags is set by declare_host_attribute().
     def depends_on_tags(self):
-        try:
-            return self._depends_on_tags
-        except:
-            return []
+        return self._depends_on_tags
+
 
     # Render HTML input fields displaying the value and
     # make it editable. If filter == True, then the field
@@ -2269,6 +2300,7 @@ class Attribute:
     # search filter)
     def render_input(self, varprefix, value):
         pass
+
 
     # Create value from HTML variables.
     def from_html_vars(self, varprefix):

@@ -372,9 +372,12 @@ def dashlet_graph_reload_js(nr, dashlet):
         "service_description" : service,
         "graph_index"         : dashlet["source"] -1,
     })
+    graph_render_options = {
+        "show_legend": dashlet.get("show_legend", False),
+    }
 
-    return "dashboard_render_graph(%d, %s, '%s')" % \
-            (nr, json.dumps(graph_specification), timerange)
+    return "dashboard_render_graph(%d, %s, %s, '%s')" % \
+            (nr, json.dumps(graph_specification), json.dumps(graph_render_options), timerange)
 
 
 dashlet_types["pnpgraph"] = {
@@ -403,6 +406,14 @@ dashlet_types["pnpgraph"] = {
             default_value = 0,
             minvalue = 1,
         )),
+        ("show_legend", Checkbox(
+            title = _("Show Legend"),
+            label = _("Show the legend area of the graph"),
+            help = _("This option controls whether or not the legend below the graph "
+                     "area should be shown. This option is only used by the new Check_MK "
+                     "graphs which are only available in the Check_MK Enterprise Edition."),
+            default_value = False,
+        )),
     ],
     "styles": """
 .dashlet.pnpgraph .dashlet_inner {
@@ -423,7 +434,7 @@ dashlet_types["pnpgraph"] = {
     "on_refresh"   : dashlet_graph_reload_js,
     "script": """
 var dashlet_offsets = {};
-function dashboard_render_graph(nr, graph_specification, timerange)
+function dashboard_render_graph(nr, graph_specification, graph_render_options, timerange)
 {
     // Get the target size for the graph from the inner dashlet container
     var inner = document.getElementById('dashlet_inner_' + nr);
@@ -431,6 +442,7 @@ function dashboard_render_graph(nr, graph_specification, timerange)
     var c_h = inner.clientHeight;
 
     var post_data = "spec=" + encodeURIComponent(JSON.stringify(graph_specification))
+                  + "&render=" + encodeURIComponent(JSON.stringify(graph_render_options))
                   + "&timerange=" + encodeURIComponent(timerange)
                   + "&width=" + c_w
                   + "&height=" + c_h

@@ -626,7 +626,7 @@ function makeuri(addvars, url) {
 
     // Add new params
     for (var key in addvars) {
-        params.push(key + '=' + addvars[key]);
+        params.push(encodeURIComponent(key) + '=' + encodeURIComponent(addvars[key]));
     }
 
     return base + '?' + params.join('&')

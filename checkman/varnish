@@ -7,8 +7,5 @@ description:
  This check monitors the uptime of Varnish Server provided by 'varnishstat -1'.
  The Linux Agent needs to be installed.
 
- This check can go WARN or CRIT when the uptime is below or above certain
- configured levels.
-
 inventory:
  One service is created.

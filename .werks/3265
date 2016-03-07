@@ -1,0 +1,10 @@
+Title: mk_inventory.solaris: fix problem on Solaris 10, do prtdiag and prtpicl only in global zone
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1457350724
+
+

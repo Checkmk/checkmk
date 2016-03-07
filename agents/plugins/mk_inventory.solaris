@@ -28,7 +28,11 @@
 INTERVAL=14400
 
 FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
-NOW=$(truss /usr/bin/date 2>&1 | grep ^time | awk -F"= " '{print $2}')
+if [ `uname -r` = "5.10" ]; then
+    NOW=$(truss /usr/bin/date 2>&1 | grep ^time | awk -F"= " '{print $2}')
+else
+    NOW=`date +%s`
+fi
 UNTIL=$((NOW + INTERVAL + 600))
 
 #check if flagfile exits
@@ -46,27 +50,29 @@ then
     echo "<<<solaris_uname:sep(61):persist($UNTIL)>>>"
     uname -X
 
-    if type prtdiag > /dev/null; then
-        echo "<<<solaris_prtdiag:sep(10):persist($UNTIL)>>>"
-        if type sneep >/dev/null 2>&1; then
-            SN=$(sneep -t serial)
-        else
-            SN=$(smbios -t SMB_TYPE_SYSTEM | grep 'Serial Number:' | awk '{print substr($0, index($0,$3))}')
+    if zoneadm list | grep -q global
+    then
+        if type prtdiag > /dev/null; then
+            echo "<<<solaris_prtdiag:sep(10):persist($UNTIL)>>>"
+            if type sneep >/dev/null 2>&1; then
+                SN=$(sneep -t serial)
+            else
+                SN=$(smbios -t SMB_TYPE_SYSTEM | grep 'Serial Number:' | awk '{print substr($0, index($0,$3))}')
+            fi
+            echo "SerialNumber: $SN"
+            prtdiag -v
         fi
-        echo "SerialNumber: $SN"
-        prtdiag -v
+
+        if type prtpicl > /dev/null; then
+            echo "<<<solaris_prtpicl:persist($UNTIL)>>>"
+            prtpicl -v
+        fi
     fi
 
     if type psrinfo > /dev/null; then
         echo "<<<solaris_psrinfo:persist($UNTIL)>>>"
         psrinfo -p -v
     fi
-
-    if type prtpicl > /dev/null; then
-        echo "<<<solaris_prtpicl:persist($UNTIL)>>>"
-        prtpicl -v
-    fi
-
 
     if type pkginfo >/dev/null ; then
         echo "<<<solaris_pkginfo:sep(58):persist($UNTIL)>>>"

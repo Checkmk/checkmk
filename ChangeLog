@@ -6,6 +6,9 @@
     Multisite:
     * 3264 FIX: Fix display of values in graphs that are < 1.0
 
+    HW/SW-Inventory:
+    * 3265 FIX: mk_inventory.solaris: fix problem on Solaris 10, do prtdiag and prtpicl only in global zone
+
 
 1.2.8b4:
     Checks & Agents:

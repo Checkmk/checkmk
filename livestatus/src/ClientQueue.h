@@ -26,10 +26,10 @@
 #define ClientQueue_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <condition_variable>
 #include <deque>
 #include <memory>
-#include "mk/ConditionVariable.h"
-#include "mk/Mutex.h"
+#include <mutex>
 
 class ClientQueue {
 public:
@@ -42,8 +42,8 @@ public:
 private:
     typedef std::deque<int> _queue_t;
     _queue_t _queue;
-    mk::mutex _mutex;
-    mk::condition_variable _cond;
+    std::mutex _mutex;
+    std::condition_variable _cond;
     bool _should_terminate;
 };
 

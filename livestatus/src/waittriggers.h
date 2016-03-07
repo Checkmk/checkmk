@@ -53,7 +53,7 @@ const char *trigger_all_names();
 void trigger_notify_all(struct trigger *which);
 
 void trigger_wait(struct trigger *which);
-int trigger_wait_until(struct trigger *which, const struct timespec *abstime);
+int trigger_wait_for(struct trigger *which, unsigned ms);
 
 #ifdef __cplusplus
 }

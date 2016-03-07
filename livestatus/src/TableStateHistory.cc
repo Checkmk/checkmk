@@ -28,6 +28,7 @@
 #include <syslog.h>
 #include <time.h>
 #include <deque>
+#include <mutex>
 #include <set>
 #include <utility>
 #include "Column.h"
@@ -44,7 +45,6 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "logger.h"
-#include "mk/Mutex.h"
 
 #ifdef CMC
 #include "Host.h"
@@ -58,11 +58,11 @@
 #include "auth.h"
 #endif
 
-using mk::lock_guard;
-using mk::mutex;
 using std::deque;
+using std::lock_guard;
 using std::make_pair;
 using std::map;
+using std::mutex;
 using std::set;
 using std::string;
 

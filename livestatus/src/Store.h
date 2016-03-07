@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <list>
 #include <map>
+#include <mutex>
 #include <string>
 #include "LogCache.h"
 #include "TableColumns.h"
@@ -43,7 +44,6 @@
 #include "TableStateHistory.h"
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
-#include "mk/Mutex.h"
 #include "nagios.h"
 class InputBuffer;
 class OutputBuffer;
@@ -72,7 +72,7 @@ class Store {
     typedef std::map<std::string, Table *> _tables_t;
     _tables_t _tables;
 
-    mk::mutex _command_mutex;
+    std::mutex _command_mutex;
 
 public:
     Store();

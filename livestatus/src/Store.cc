@@ -43,10 +43,10 @@
 #include "tables.h"  // IWYU pragma: keep
 #undef EXTERN
 
-using mk::lock_guard;
-using mk::mutex;
 using std::list;
+using std::lock_guard;
 using std::make_pair;
+using std::mutex;
 using std::pair;
 using std::string;
 

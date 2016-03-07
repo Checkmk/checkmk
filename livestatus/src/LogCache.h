@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <time.h>
 #include <map>
-#include "mk/Mutex.h"
+#include <mutex>
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
 class Logfile;
@@ -41,7 +41,7 @@ class LogCache {
     _logfiles_t _logfiles;
 
 public:
-    mk::mutex _lock;
+    std::mutex _lock;
 
     explicit LogCache(unsigned long max_cached_messages);
     ~LogCache();

@@ -28,14 +28,14 @@
 #include "config.h"  // IWYU pragma: keep
 #include <time.h>
 #include <map>
-#include "mk/Mutex.h"
+#include <mutex>
 #include "nagios.h"
 
 class TimeperiodsCache {
     time_t _cache_time;
     typedef std::map<timeperiod *, bool> _cache_t;
     _cache_t _cache;
-    mk::mutex _cache_lock;
+    std::mutex _cache_lock;
 
 public:
     TimeperiodsCache();

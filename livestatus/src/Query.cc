@@ -28,7 +28,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
 #include <syslog.h>
 #include <utility>
 #include <vector>
@@ -1331,16 +1330,6 @@ void Query::doWait() {
         _wait_trigger = trigger_all();
     }
 
-    struct timeval now;
-    gettimeofday(&now, nullptr);
-    struct timespec timeout;
-    timeout.tv_sec = now.tv_sec + (_wait_timeout / 1000);
-    timeout.tv_nsec = now.tv_usec * 1000 + 1000 * 1000 * (_wait_timeout % 1000);
-    if (timeout.tv_nsec > 1000000000) {
-        timeout.tv_sec++;
-        timeout.tv_nsec -= 1000000000;
-    }
-
     do {
         if (_wait_timeout == 0) {
             if (g_debug_level >= 2) {
@@ -1353,7 +1342,7 @@ void Query::doWait() {
                 logger(LG_INFO, "Waiting %d ms or until condition becomes true",
                        _wait_timeout);
             }
-            if (trigger_wait_until(_wait_trigger, &timeout) == 0) {
+            if (trigger_wait_for(_wait_trigger, _wait_timeout) == 0) {
                 if (g_debug_level >= 2) {
                     logger(LG_INFO, "WaitTimeout after %d ms", _wait_timeout);
                 }

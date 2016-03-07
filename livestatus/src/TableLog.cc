@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <map>
+#include <mutex>
 #include <utility>
 #include "LogCache.h"
 #include "LogEntry.h"
@@ -39,14 +40,13 @@
 #include "TableContacts.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "mk/Mutex.h"
 
 #ifndef CMC
 #include "auth.h"
 #endif
 
-using mk::lock_guard;
-using mk::mutex;
+using std::lock_guard;
+using std::mutex;
 using std::string;
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */

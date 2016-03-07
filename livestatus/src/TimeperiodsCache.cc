@@ -30,9 +30,9 @@
 #include <utility>
 #include "logger.h"
 
+using std::lock_guard;
 using std::make_pair;
-using mk::lock_guard;
-using mk::mutex;
+using std::mutex;
 
 extern timeperiod *timeperiod_list;
 

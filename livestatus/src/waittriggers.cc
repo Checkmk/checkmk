@@ -24,12 +24,14 @@
 
 #include "waittriggers.h"
 #include <string.h>
-#include "mk/ConditionVariable.h"
-#include "mk/Mutex.h"
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+#include <ratio>
 
-using mk::condition_variable;
-using mk::mutex;
-using mk::unique_lock;
+using std::condition_variable;
+using std::mutex;
+using std::unique_lock;
 
 namespace {
 
@@ -127,8 +129,9 @@ void trigger_wait(struct trigger *which) {
     from_trigger(which)->wait(ul);
 }
 
-int trigger_wait_until(struct trigger *which, const struct timespec *abstime) {
+int trigger_wait_for(struct trigger *which, unsigned ms) {
     unique_lock<mutex> ul(g_wait_mutex);
-    return static_cast<int>(from_trigger(which)->wait_until(ul, abstime) ==
-                            mk::no_timeout);
+    return static_cast<int>(
+        from_trigger(which)->wait_for(ul, std::chrono::milliseconds(ms)) ==
+        std::cv_status::no_timeout);
 }

@@ -26,10 +26,10 @@
 #include <unistd.h>
 #include <algorithm>
 
-using mk::lock_guard;
-using mk::mutex;
-using mk::unique_lock;
 using std::for_each;
+using std::lock_guard;
+using std::mutex;
+using std::unique_lock;
 
 ClientQueue::ClientQueue() : _should_terminate(false) {}
 

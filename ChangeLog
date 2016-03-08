@@ -112,6 +112,7 @@
     * 3232 FIX: BI: Only querying site of host for specific host status info...
 
     Reporting & Availability:
+    * 3267 New availability option for reclassifying host state "unreachable"...
     * 3249 FIX: Fix missing filter for non-OK services when report is called via context button
 
     Event Console:

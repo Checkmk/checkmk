@@ -430,6 +430,7 @@ def format_var_for_export(val, maxdepth=4):
 # reporting it is totally ok to have some string representations of the objects.
 class RobustJSONEncoder(json.JSONEncoder):
     # Are there cases where no __str__ is available? if so, we should do something like %r
+    # pylint: disable=method-hidden
     def default(self, o):
         return "%s" % o
 

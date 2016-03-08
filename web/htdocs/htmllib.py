@@ -81,6 +81,7 @@ __builtin__.HTML = HTML
 class html(GUITester):
     def __init__(self):
         GUITester.__init__(self)
+        self.cookies = {}
         self.user = None
         self.user_errors = {}
         self.focus_object = None
@@ -189,6 +190,7 @@ class html(GUITester):
 	        text = text.encode("utf-8")
 
             self.lowlevel_write(text)
+
 
     def plug(self):
         self.plugged = True
@@ -1705,3 +1707,34 @@ class html(GUITester):
         self.times[name] += elapsed
         self.last_measurement = now
 
+
+    #
+    # To be overridden by subclasses
+    #
+
+    def lowlevel_write(self, text):
+        raise NotImplementedError()
+
+
+    def get_button_counts(self):
+        raise NotImplementedError()
+
+
+    def add_custom_style_sheet(self):
+        raise NotImplementedError()
+
+
+    def top_heading(self, title):
+        raise NotImplementedError()
+
+
+    def load_transids(self, lock=False):
+        raise NotImplementedError()
+
+
+    def save_transids(self, used_ids, unlock=False):
+        raise NotImplementedError()
+
+
+    def load_tree_states(self):
+        raise NotImplementedError()

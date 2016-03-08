@@ -78,6 +78,7 @@
     * 3230 FIX: Slightly improved popup menu positioning...
     * 3264 FIX: Fix display of values in graphs that are < 1.0
     * 3273 FIX: Dashboard: The dashboard is now preserving edit/view state during page reloads
+    * 3090 FIX: fixed perf-o-meter link leading to old graph page even when new graphs are being used
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

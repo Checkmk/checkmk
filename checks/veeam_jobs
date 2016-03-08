@@ -51,7 +51,7 @@ def check_veeam_jobs(item, _no_params, info):
             elif backup_current == 'Idle' and backup_type == "BackupSync":
                 # A sync job is always idle
                 state = 0
-            elif backup_current == "Working":
+            elif backup_current in [ "Working", "Postprocessing" ]:
                 state = 0
                 line = line[:6]
             elif backup_status == "Failed":

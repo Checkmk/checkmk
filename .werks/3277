@@ -1,0 +1,10 @@
+Title: veeam_jobs: Handling missing state "Postprocessing" now
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1457429930
+
+

@@ -1,0 +1,11 @@
+Title: Availability options were invalid after resetting them
+Level: 2
+Component: reporting
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457439239
+Class: fix
+
+In certain work flows the availability options would not be correctly reset
+on {{Reset to defaults}} but all checkboxes would be unchecked. That e.g.
+lead to the column {{N/A}} missing. This has been fixed.

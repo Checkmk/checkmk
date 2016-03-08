@@ -1486,7 +1486,6 @@ def compute_tree_state(tree, status):
 # to CRIT because of state grouping, then the WARN column should not be
 # displayed.
 def cell_active(sid, avoptions):
-    #html.debug((sid, "aktiv?"))
     # Some columns might be unneeded due to state treatment options
     sg = avoptions["state_grouping"]
     hsg = avoptions["host_state_grouping"]

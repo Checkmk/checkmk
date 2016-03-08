@@ -23,6 +23,7 @@
 
     Reporting & Availability:
     * 3267 New availability option for reclassifying host state "unreachable"...
+    * 3268 FIX: Availability options were invalid after resetting them...
 
     HW/SW-Inventory:
     * 3265 FIX: mk_inventory.solaris: fix problem on Solaris 10, do prtdiag and prtpicl only in global zone

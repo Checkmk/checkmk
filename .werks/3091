@@ -1,0 +1,11 @@
+Title: fixed failure to rename hosts in raw edition
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1457431906
+
+renaming of hosts would cancel with the error "No such file or directory:
+'/omd/sites/sitename/var/check_mk/agents/'"

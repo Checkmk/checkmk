@@ -873,9 +873,10 @@ def rename_host_files(oldname, newname):
     # Baked agents
     agents_dir = var_dir + "/agents/"
     have_renamed_agent = False
-    for opsys in os.listdir(agents_dir):
-        if rename_host_file(agents_dir + opsys, oldname, newname):
-            have_renamed_agent = True
+    if os.path.exists(agents_dir):
+        for opsys in os.listdir(agents_dir):
+            if rename_host_file(agents_dir + opsys, oldname, newname):
+                have_renamed_agent = True
     if have_renamed_agent:
         actions.append("agent")
 

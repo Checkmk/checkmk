@@ -38,9 +38,11 @@ ad_replication_default_params = (15,20)
 
 def parse_ad_replication_dates(s):
     if s == '0' or s == '(never)':
-        return None
+        return None, "unknown"
     else:
-        return time.mktime(time.strptime(s, '%Y-%m-%d %H:%M:%S'))
+        s_val = time.mktime(time.strptime(s, '%Y-%m-%d %H:%M:%S'))
+        s_txt = get_relative_date_human_readable(s_val)
+        return s_val, s_txt
 
 def parse_ad_replication_info(info):
     lines = []
@@ -87,8 +89,8 @@ def check_ad_replication(item, params, info):
 
         if lineType == 'showrepl_INFO' and source_site+'/'+source_dc == item:
             foundLine = True
-            time_last_failure = parse_ad_replication_dates(time_last_failure)
-            time_last_success = parse_ad_replication_dates(time_last_success)
+            time_last_failure, time_last_failure_txt = parse_ad_replication_dates(time_last_failure)
+            time_last_success, time_last_success_txt = parse_ad_replication_dates(time_last_success)
 
             max_failures_warn = params[0]
             max_failures_crit = params[1]
@@ -96,30 +98,27 @@ def check_ad_replication(item, params, info):
             if int(num_failures) > max_failures_warn:
                 status = 1
                 output += '(!) %s/%s replication of context %s reached ' \
-                          ' the threshold of maximum failures (%s) (last success: %s, ' \
-                          'last failure: %s, num failures: %s Status: %s), ' % \
+                          ' the threshold of maximum failures (%s) (Last success: %s, ' \
+                          'Last failure: %s, Num failures: %s, Status: %s), ' % \
                          (source_site, source_dc, naming_context, max_failures_warn,
-                          get_relative_date_human_readable(time_last_success),
-                          get_relative_date_human_readable(time_last_failure), num_failures, statusLastFailure)
+                          time_last_success_txt, time_last_failure_txt, num_failures, statusLastFailure)
 
             if int(num_failures) > max_failures_crit:
                 status = 2
                 output += '(!!) %s/%s replication of context %s reached ' \
-                          ' the threshold of maximum failures (%s) (last success: %s, ' \
-                          'last failure: %s, num failures: %s, status: %s), ' % \
+                          ' the threshold of maximum failures (%s) (Last success: %s, ' \
+                          'Last failure: %s, Num failures: %s, Status: %s), ' % \
                          (source_site, source_dc, naming_context, max_failures_crit,
-                          get_relative_date_human_readable(time_last_success),
-                          get_relative_date_human_readable(time_last_failure), num_failures, statusLastFailure)
+                          time_last_success_txt, time_last_failure_txt, num_failures, statusLastFailure)
 
             if time_last_failure != None and time_last_success != None \
                and time_last_failure > time_last_success:
                 status = 2
                 output += '(!!) %s/%s replication of context %s failed ' \
-                         '(last success: %s, last failure: %s num_failures: %s, status: %s), ' % \
+                         '(Last success: %s, Last failure: %s, Num failures: %s, Status: %s), ' % \
                          (source_site, source_dc, naming_context,
-                          get_relative_date_human_readable(time_last_success),
-                          get_relative_date_human_readable(time_last_failure),
-                          num_failures, statusLastFailure)
+                          time_last_success_txt, time_last_failure_txt, num_failures, statusLastFailure)
+
     if not foundLine:
         return (3, 'Replication information for %s not found' % item)
 

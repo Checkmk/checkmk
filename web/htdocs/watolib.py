@@ -42,7 +42,7 @@
 #   |  Doing this that must be done when the module WATO is loaded.        |
 #   '----------------------------------------------------------------------'
 
-import os, shutil, subprocess, base64
+import os, shutil, subprocess, base64, pickle
 import defaults, config, hooks, userdb, multitar
 import sites
 from lib import *

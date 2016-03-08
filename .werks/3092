@@ -1,0 +1,9 @@
+Title: isc_dhcpd: fixed incorrect handling of timezones
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457434558
+Class: fix
+
+

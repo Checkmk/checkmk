@@ -1,4 +1,7 @@
 1.2.8b5:
+    Core & Setup:
+    * 3275 FIX: Piggyback based services were skipped on "No agent hosts"...
+
     Checks & Agents:
     * 3001 fileinfo: now able to configure the checks status if the file is missing
     * 3258 FIX: dell_idrac_disks: fixed disk and component status handling

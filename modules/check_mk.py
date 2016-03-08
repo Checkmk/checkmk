@@ -1835,13 +1835,15 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
         elif type(hostlist[0]) == str:
             pass # regular case: list of hostnames
         elif hostlist != []:
-            raise MKGeneralException("Invalid entry '%r' in check table. Must be single hostname or list of hostnames" % hostlist)
+            raise MKGeneralException("Invalid entry '%r' in check table. Must be single hostname "
+                                     "or list of hostnames" % hostlist)
 
         # Skip SNMP checks for non SNMP hosts (might have been discovered before with other
         # agent setting. Remove them without rediscovery). Same for agent based checks.
         if not is_snmp_host(hostname) and is_snmp_check(checkname):
             return
-        if not is_tcp_host(hostname) and is_tcp_check(checkname):
+        if not is_tcp_host(hostname) and not has_piggyback_info(hostname) \
+           and is_tcp_check(checkname):
             return
 
         if hosttags_match_taglist(hosttags, tags) and \

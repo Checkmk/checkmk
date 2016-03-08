@@ -1,0 +1,11 @@
+Title: cisco_temperature: fixed duplicated sensors on some devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457443808
+Class: fix
+
+On some cisco devices, temperature sensors were discovered twice under different names.
+This has now been fixed and best effort has been made to properly merge available information of the
+two.

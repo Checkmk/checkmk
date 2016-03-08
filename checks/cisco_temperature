@@ -58,6 +58,17 @@ cisco_entity_exponents = {
 
 
 def parse_cisco_temperature(info):
+    def merge_dict(dest, src):
+        # recursively merge two dicts and don't overwrite
+        # if the source-field contains None
+        for k, v in src.iteritems():
+            if k not in dest:
+                dest[k] = v
+            elif isinstance(dest[k], dict) and isinstance(v, dict):
+                merge_dict(dest[k], v)
+            elif v is not None:
+                dest[k] = v
+
     description_info, state_info, levels_info, perfstuff = info
 
     # Parse OIDs described by CISCO-ENTITY-SENSOR-MIB
@@ -117,8 +128,19 @@ def parse_cisco_temperature(info):
     }
 
     parsed = {}
-    for statustext, temp, max_temp, state, oid_end in perfstuff:
-        item = cisco_sensor_item(statustext, oid_end)
+
+    for statustext, temp, max_temp, state, sensor_id in perfstuff:
+        if sensor_id in descriptions and descriptions[sensor_id] in entity_parsed:
+            # if this sensor is already in the dictionary, ensure we use the same name
+            item = descriptions[sensor_id]
+            prev_description = cisco_sensor_item(statustext, sensor_id)
+            # also register the name we would have used up to 1.2.8b4, so we can give
+            # the user a proper info message.
+            # It's the little things that show you care
+            parsed[prev_description] = {"obsolete": True}
+        else:
+            item = cisco_sensor_item(statustext, sensor_id)
+
         if state in ['5', '6']:
             parsed[item] = (3, "Sensor %s" % envmon_states[state])
         elif int(temp) == 0:
@@ -129,33 +151,39 @@ def parse_cisco_temperature(info):
         else:
             parsed[item] = {}
             parsed[item]['temp'] = int(temp)
-            if max_temp and int(max_temp):
+
+            if state == '1':
+                parsed[item]['dev_status'] = 0
+            elif state == '2':
+                parsed[item]['dev_status'] = 1
+            elif state in ['3', '4']:
+                parsed[item]['dev_status'] = 2
+            else:
                 parsed[item]['dev_status'] = None
+
+            # TODO using max_temp as a crit level is not really practical as, according
+            # to the mib, the device will be shut down at this temperature!
+            if max_temp and int(max_temp):
                 parsed[item]['dev_levels'] = (int(max_temp), int(max_temp))
             else:
                 parsed[item]['dev_levels'] = None
-                if state == '1':
-                    parsed[item]['dev_status'] = 0
-                elif state == '2':
-                    parsed[item]['dev_status'] = 1
-                elif state in '34':
-                    parsed[item]['dev_status'] = 2
-                else:
-                    parsed[item] = (3, "Sensor reports unknown status code")
 
     # Merge the two dicts, preferring keys generated from ENTITY data
-    parsed.update(entity_parsed)
+    merge_dict(parsed, entity_parsed)
 
     return parsed
 
 
 def inventory_cisco_temperature(parsed):
-    for item in parsed.keys():
-        yield item, {}
+    for item, value in parsed.iteritems():
+        if not value.get("obsolete", False):
+            yield item, {}
 
 
 def check_cisco_temperature(item, params, parsed):
     if item in parsed:
+        if parsed[item].get("obsolete", False):
+            return 3, "This sensor is obsolete, please rediscover"
         if type(parsed[item]) == tuple:
             return parsed[item]
         else:

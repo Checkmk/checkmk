@@ -611,7 +611,7 @@ class Hostname(TextAscii):
         TextAscii.__init__(self, **kwargs)
         self._regex = re.compile('^[-0-9a-zA-Z_.]+$')
         self._regex_error = _("Please enter a valid hostname or IPv4 address. "
-                              "Only only letters, digits, dash, underscore and dot are allowed.")
+                              "Only letters, digits, dash, underscore and dot are allowed.")
         if "allow_empty" not in kwargs:
             self._allow_empty = False
 

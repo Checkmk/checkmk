@@ -54,6 +54,11 @@ table.data td.perfometer.stale div.title {
     text-shadow: 0.8px 0.8px 0.8px #fff;
 }
 
+table.data tr.data td.stale.state2,
+table.data tr.data td.stale.hstate1 {
+    color: #a00;
+    text-shadow: 0.8px 0.8px 0.8px #f88;
+}
 
 
 /* OK/UP */
@@ -67,6 +72,7 @@ table.data td.perfometer.stale div.title {
 .even0 .state0, .even0 .hstate0, .even0 .state0 a, .even0 .hstate0 a {
     background-color: #0b3;
 }
+
 
 
 .hstate {

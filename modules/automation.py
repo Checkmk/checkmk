@@ -475,7 +475,7 @@ def automation_restart(job = "restart"):
 
     try:
         backup_path = None
-        if not lock_objects_file():
+        if another_activation_is_in_progress():
             raise MKAutomationError("Cannot activate changes. "
                   "Another activation process is currently in progresss")
 

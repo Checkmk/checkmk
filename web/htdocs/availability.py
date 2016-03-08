@@ -125,6 +125,9 @@ def get_avoption_entries(what):
           ( "service_groups", _("By Service group") ),
         ]
 
+    def aligned_label(text):
+        return "<div style=\"width: 196px; display: inline-block;\">%s:</div>" % text
+
     return [
   # Time range selection
   ( "rangespec",
@@ -207,17 +210,16 @@ def get_avoption_entries(what):
     ),
   ),
 
-  # Optionally group some states together
   ( "state_grouping",
     "double",
     True,
     Dictionary(
-       title = _("Status Grouping"),
+       title = _("Service Status Grouping"),
        columns = 2,
        elements = [
            ( "warn",
               DropdownChoice(
-                  label = _("Treat Warning as: "),
+                  label = aligned_label(_("Treat Warning as")),
                   choices = [
                     ( "ok",      _("OK") ),
                     ( "warn",    _("WARN") ),
@@ -229,7 +231,7 @@ def get_avoption_entries(what):
            ),
            ( "unknown",
               DropdownChoice(
-                  label = _("Treat Unknown as: "),
+                  label = aligned_label(_("Treat Unknown/Unreachable as")),
                   choices = [
                     ( "ok",      _("OK") ),
                     ( "warn",    _("WARN") ),
@@ -241,7 +243,7 @@ def get_avoption_entries(what):
            ),
            ( "host_down",
               DropdownChoice(
-                  label = _("Treat Host Down as: "),
+                  label = aligned_label(_("Treat Host Down as")),
                   choices = [
                     ( "ok",        _("OK") ),
                     ( "warn",      _("WARN") ),
@@ -323,6 +325,31 @@ def get_avoption_entries(what):
         ]
     )
   ),
+
+  # Optionally group some states together
+  ( "host_state_grouping",
+    "single",
+    True,
+    Dictionary(
+       title = _("Host Status Grouping"),
+       columns = 2,
+       elements = [
+           ( "unreach",
+              DropdownChoice(
+                  label = aligned_label(_("Treat Unreachable as")),
+                  choices = [
+                    ( "up",        _("UP") ),
+                    ( "down",      _("DOWN") ),
+                    ( "unreach",   _("UNREACH") ),
+                  ],
+                  default_value = "unreach",
+                ),
+           ),
+       ],
+       optional_keys = False,
+    ),
+  ),
+
 
   # Omit all non-OK columns
   ( "av_mode",
@@ -498,6 +525,10 @@ def get_default_avoptions():
             "unmonitored" : True,
         },
 
+        "host_state_grouping" : {
+            "unreach"     : "unreach",
+        },
+
         "state_grouping" : {
             "warn"        : "warn",
             "unknown"     : "unknown",
@@ -669,12 +700,13 @@ def compute_availability(what, av_rawdata, avoptions):
                         s = { 0: "ok", 1:"warn", 2:"crit", 3:"unknown" }.get(state, "unmonitored")
                     else:
                         s = { 0: "up", 1:"down", 2:"unreach" }.get(state, "unmonitored")
-                    if s == "warn":
-                        s = avoptions["state_grouping"]["warn"]
-                    elif s == "unknown":
-                        s = avoptions["state_grouping"]["unknown"]
-                    elif s == "host_down":
-                        s = avoptions["state_grouping"]["host_down"]
+
+                    # Reclassification due to state grouping
+                    if s in avoptions["state_grouping"]:
+                        s = avoptions["state_grouping"][s]
+
+                    elif s in avoptions["host_state_grouping"]:
+                        s = avoptions["host_state_grouping"][s]
 
                 total_duration += span["duration"]
                 if consider:
@@ -1454,9 +1486,10 @@ def compute_tree_state(tree, status):
 # to CRIT because of state grouping, then the WARN column should not be
 # displayed.
 def cell_active(sid, avoptions):
+    #html.debug((sid, "aktiv?"))
     # Some columns might be unneeded due to state treatment options
     sg = avoptions["state_grouping"]
-    state_groups = [ sg["warn"], sg["unknown"], sg["host_down"] ]
+    hsg = avoptions["host_state_grouping"]
 
     if sid not in [ "up", "ok" ] and avoptions["av_mode"]:
         return False
@@ -1472,7 +1505,9 @@ def cell_active(sid, avoptions):
         return False
     elif sid == "host_down" and not avoptions["consider"]["host_down"]:
         return False
-    elif sid in [ "warn", "unknown", "host_down" ] and sid not in state_groups:
+    elif sid in sg and sid not in sg.values():
+        return False
+    elif sid in hsg and sid not in hsg.values():
         return False
     else:
         return True

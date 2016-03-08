@@ -1,0 +1,9 @@
+Title: New availability option for reclassifying host state "unreachable"
+Level: 1
+Component: reporting
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457435081
+Class: feature
+
+The host state UNREACH can now be reclassified as UP or DOWN.

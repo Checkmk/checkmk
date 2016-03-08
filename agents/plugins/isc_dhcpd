@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os, sys, time, calendar
+import os, sys, time, re, calendar
 
 conf_file = None
 for path in [ '/etc/dhcpd.conf', '/etc/dhcp/dhcpd.conf', '/usr/local/etc/dhcpd.conf' ]:
@@ -27,10 +27,18 @@ pidof_dhcpd = os.popen("pidof dhcpd").read().strip()
 sys.stdout.write('<<<isc_dhcpd>>>\n[general]\nPID: %s\n' % pidof_dhcpd)
 
 sys.stdout.write('[pools]\n')
-for line in file(conf_file):
-    line = line.strip().rstrip(";").rstrip()
-    if line.startswith("range"):
-        sys.stdout.write(line[5:].strip() + "\n")
+
+
+def parse_config(filename):
+    for line in file(filename):
+        if line.startswith("include"):
+            included_file = re.search('include\s+"(.*)"', line).group(1)
+            parse_config(included_file)
+        elif line.startswith("range"):
+            sys.stdout.write(line[5:].strip() + "\n")
+
+parse_config(conf_file)
+
 
 # lease 10.1.1.81 {
 #   starts 3 2015/09/09 11:42:20;

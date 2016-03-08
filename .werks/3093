@@ -1,0 +1,10 @@
+Title: isc_dhcpd: now interprets include statements when parsing the configuration file
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1457439448
+
+

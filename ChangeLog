@@ -22,6 +22,7 @@
     * 3257 dell_idrac_virtdisks: new check which monitors the virtual disks of a Dell IDrac Device
     * 3001 fileinfo: now able to configure the checks status if the file is missing
     * 3088 rstcli, rstcli.pdisks: new checks to monitor Intel RST raids
+    * 3093 isc_dhcpd: now interprets include statements when parsing the configuration file
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

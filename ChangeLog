@@ -61,6 +61,7 @@
     * 3087 FIX: fixed very rare crash in active checks...
     * 3266 FIX: check_smtp: when set to IPv6 it used the IPv4 address nevertheless
     * 3274 FIX: ibm_svc_disks: Fixed wrong listing of man page
+    * 3089 FIX: cmciii.temp: added handling for more device states
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

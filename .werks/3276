@@ -1,0 +1,9 @@
+Title: esx_vsphere_vm.snapshot: Graphs now scale the age of the scnapshots correctly
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457429460
+Class: fix
+
+

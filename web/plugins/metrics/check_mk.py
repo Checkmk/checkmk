@@ -328,6 +328,12 @@ metric_info["uptime"] = {
     "color" : "#80f000",
 }
 
+metric_info["age"] = {
+    "title" : _("Age"),
+    "unit"  : "s",
+    "color" : "#80f000",
+}
+
 metric_info["runtime"] = {
     "title" : _("Process Runtime"),
     "unit"  : "s",
@@ -3304,7 +3310,7 @@ check_metrics["check_mk-apc_symmetra"] = {
     "runtime"    : { "name" : "lifetime_remaining", "scale" : 60 },
 }
 
-check_metrics["check_mk-kernel.util"]                           = {
+check_metrics["check_mk-kernel.util"] = {
     "wait" : { "name" : "io_wait" },
     "guest" : { "name" : "cpu_util_guest" },
     "steal" : { "name" : "cpu_util_steal" },
@@ -3748,6 +3754,13 @@ perfometer_info.append({
 perfometer_info.append({
     "type"       : "logarithmic",
     "metric"     : "uptime",
+    "half_value" : 2592000.0,
+    "exponent"   : 2,
+})
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "age",
     "half_value" : 2592000.0,
     "exponent"   : 2,
 })

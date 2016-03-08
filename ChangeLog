@@ -10,6 +10,7 @@
     * 3089 FIX: cmciii.temp: added handling for more device states
     * 3276 FIX: esx_vsphere_vm.snapshot: Graphs now scale the age of the scnapshots correctly
     * 3277 FIX: veeam_jobs: Handling missing state "Postprocessing" now
+    * 3278 FIX: fritz_wan_if: Fixed incorrect unit Bit used in check
 
     Multisite:
     * 3264 FIX: Fix display of values in graphs that are < 1.0

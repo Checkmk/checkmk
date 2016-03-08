@@ -1,0 +1,9 @@
+Title: fritz_wan_if: Fixed incorrect unit Bit used in check
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457431633
+Class: fix
+
+

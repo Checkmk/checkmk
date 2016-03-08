@@ -4127,7 +4127,7 @@ def do_restart(only_reload = False):
     try:
         backup_path = None
 
-        if not lock_objects_file():
+        if another_activation_is_in_progress():
             sys.stderr.write("Other restart currently in progress. Aborting.\n")
             sys.exit(1)
 
@@ -4178,7 +4178,7 @@ def do_restart(only_reload = False):
         sys.exit(1)
 
 restart_lock_fd = None
-def lock_objects_file():
+def another_activation_is_in_progress():
     global restart_lock_fd
     # In some bizarr cases (as cmk -RR) we need to avoid duplicate locking!
     if restart_locking and restart_lock_fd == None:
@@ -4194,8 +4194,8 @@ def lock_objects_file():
             fcntl.flock(restart_lock_fd, fcntl.LOCK_EX |
                 ( restart_locking == "abort" and fcntl.LOCK_NB or 0))
         except:
-            return False
-    return True
+            return True
+    return False
 
 
 def do_donation():

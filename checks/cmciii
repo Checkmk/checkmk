@@ -533,6 +533,10 @@ def translate_cmciii_temp_status(status_name):
     return {
         "ok"       : 0,
         "warning"  : 1,
+        "low warn" : 1,
+        "high warn": 1,
+        "too low"  : 2,
+        "too high" : 2,
     }[status_name.lower()]
 
 

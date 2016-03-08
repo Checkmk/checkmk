@@ -29,7 +29,9 @@
 #include <mutex>
 #include <ratio>
 
+using std::chrono::milliseconds;
 using std::condition_variable;
+using std::cv_status;
 using std::mutex;
 using std::unique_lock;
 
@@ -131,7 +133,6 @@ void trigger_wait(struct trigger *which) {
 
 int trigger_wait_for(struct trigger *which, unsigned ms) {
     unique_lock<mutex> ul(g_wait_mutex);
-    return static_cast<int>(
-        from_trigger(which)->wait_for(ul, std::chrono::milliseconds(ms)) ==
-        std::cv_status::no_timeout);
+    return static_cast<int>(from_trigger(which)->wait_for(
+                                ul, milliseconds(ms)) == cv_status::no_timeout);
 }

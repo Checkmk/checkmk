@@ -122,6 +122,16 @@ register_rule(group,
                        default = None,
                    )
                  ),
+                 ( "vm_piggyname",
+                   DropdownChoice(
+                       title = _("Piggyback name of virtual machines"),
+                       choices = [
+                           ( "alias",    _("Use the name specified in the ESX system") ),
+                           ( "hostname", _("Use the VMs hostname if set, otherwise fall back to ESX name") ),
+                       ],
+                       default = "alias",
+                   )
+                 ),
                  ( "vm_pwr_display",
                    DropdownChoice(
                        title = _("Display VM power state on"),
@@ -178,7 +188,7 @@ register_rule(group,
                   )
                 ),
             ],
-            optional_keys = [ "tcp_port", "timeout", "vm_pwr_display", "host_pwr_display" ],
+            optional_keys = [ "tcp_port", "timeout", "vm_pwr_display", "host_pwr_display", "vm_piggyname" ],
         ),
         title = _("Check state of VMWare ESX via vSphere"),
         help = _("This rule selects the vSphere agent instead of the normal Check_MK Agent "

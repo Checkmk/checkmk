@@ -1,0 +1,13 @@
+Title: agent_vsphere: now able to configure used piggyback name for virtualmachines
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1457452277
+Class: feature
+
+In the ESX datasource program you can now set if used piggyback name is
+taken from the ESX management view (most of the time an alias) or if the
+actual hostname of the system should be used (if available).
+
+The alias option is set as default.

@@ -62,6 +62,9 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
     if params.get("vm_pwr_display"):
         args += ' --vm_pwr_display %s' % params.get("vm_pwr_display")
 
+    if params.get("vm_piggyname"):
+        args += ' --vm_piggyname %s' % params.get("vm_piggyname")
+
     if params.get("host_pwr_display"):
         args += ' --host_pwr_display %s' % params.get("host_pwr_display")
 

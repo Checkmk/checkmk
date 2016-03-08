@@ -268,6 +268,7 @@ telegram_list = {
            '<ns1:pathSet>guest.toolsVersion</ns1:pathSet>'\
            '<ns1:pathSet>guestHeartbeatStatus</ns1:pathSet>'\
            '<ns1:pathSet>name</ns1:pathSet>'\
+           '<ns1:pathSet>summary.guest.hostName</ns1:pathSet>'\
            '<ns1:pathSet>summary.quickStats.compressedMemory</ns1:pathSet>'\
            '<ns1:pathSet>summary.quickStats.swappedMemory</ns1:pathSet>'\
            '<ns1:pathSet>summary.quickStats.guestMemoryUsage</ns1:pathSet>'\
@@ -817,6 +818,9 @@ OPTIONS:
                                 after the first space, "underscore": replace with
                                 underscores. Default is "underscore".
 
+  --vm_piggyname hostname|alias Here you can specify whether the virtual machines HOSTNAME or the ESX
+                                system ALIAS name for this machine should be used on creating piggyback data
+
   --vm_pwr_display WHERE        Specifies where the virtual machines power state should be shown
                                 Default (no option) is on the queried vCenter or ESX-Host
                                 Possible WHERE options: * esxhost : show on ESX host
@@ -828,10 +832,11 @@ OPTIONS:
 
 """)
 
-short_options = 'hi:u:s:Dat:H:Pp:S:'
+short_options = "hi:u:s:Dat:H:Pp:S:"
 long_options  = [
-    'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'no-cert-check',
-    'hostname=', 'tracefile=', "pysphere", "port=", "spaces=", "host_pwr_display=", "vm_pwr_display="
+    "help", "user=", "secret=", "direct", "agent", "debug", "modules=", "timeout=", "no-cert-check",
+    "hostname=", "tracefile=", "pysphere", "port=", "spaces=", "host_pwr_display=", "vm_pwr_display=",
+    "vm_piggyname="
 ]
 
 opt_debug               = False
@@ -845,6 +850,7 @@ opt_pysphere            = False
 opt_tracefile           = None
 opt_host_pwr_display    = None
 opt_vm_pwr_display      = None
+opt_vm_piggyname        = "alias"
 opt_spaces              = "underscore"
 opt_no_cert             = False
 
@@ -890,6 +896,8 @@ for o,a in opts:
         opt_timeout = int(a)
     elif o in [ '-H', '--hostname' ]:
         opt_hostname = a
+    elif o in [ '--vm_piggyname' ]:
+        opt_vm_piggyname = a
     elif o in [ '--vm_pwr_display' ]:
         opt_vm_pwr_display = a
     elif o in [ '--host_pwr_display' ]:
@@ -1550,13 +1558,16 @@ if not error:
                         if key in vm_data:
                             vm_data[key] = transform(vm_data[key])
 
-                    vms[vm_data.get("name")] = vm_data
+                    if opt_vm_piggyname == "hostname" and vm_data.get("summary.guest.hostName"):
+                        vms[vm_data.get("summary.guest.hostName")] = vm_data
+                    else:
+                        vms[vm_data.get("name")] = vm_data
 
 
                 for key in sorted(vms.keys()):
                     data = vms[key]
                     if data.get("name"):
-                        output("<<<<%s>>>>" % convert_hostname(data.get("name")))
+                        output("<<<<%s>>>>" % convert_hostname(key))
                         output("<<<esx_vsphere_vm>>>")
                         entries = list(data.items())
                         entries.sort()

@@ -9,6 +9,7 @@
     * 3274 FIX: ibm_svc_disks: Fixed wrong listing of man page
     * 3089 FIX: cmciii.temp: added handling for more device states
     * 3276 FIX: esx_vsphere_vm.snapshot: Graphs now scale the age of the scnapshots correctly
+    * 3277 FIX: veeam_jobs: Handling missing state "Postprocessing" now
 
     Multisite:
     * 3264 FIX: Fix display of values in graphs that are < 1.0

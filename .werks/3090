@@ -1,0 +1,9 @@
+Title: fixed perf-o-meter link leading to old graph page even when new graphs are being used
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457429645
+Class: fix
+
+

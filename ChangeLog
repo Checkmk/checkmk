@@ -9,6 +9,7 @@
     Multisite:
     * 3264 FIX: Fix display of values in graphs that are < 1.0
     * 3273 FIX: Dashboard: The dashboard is now preserving edit/view state during page reloads
+    * 3090 FIX: fixed perf-o-meter link leading to old graph page even when new graphs are being used
 
     HW/SW-Inventory:
     * 3265 FIX: mk_inventory.solaris: fix problem on Solaris 10, do prtdiag and prtpicl only in global zone

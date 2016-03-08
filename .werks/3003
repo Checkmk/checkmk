@@ -1,0 +1,14 @@
+Title: New treasure script: migrate_oldcmk2wato.py
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.9i1
+Date: 1457445919
+Class: feature
+
+This script parses old configuration files (pre-WATO) and converts them
+into a WATO environment by creating hosts.mk and rules.mk files.
+
+Note: This script is still experimental is not able to do a complete migration
+      of all configuration settings.
+

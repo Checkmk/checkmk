@@ -1,0 +1,9 @@
+Title: ad_replication: fixed wrong timestamp handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457442486
+Class: fix
+
+

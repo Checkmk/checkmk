@@ -157,7 +157,7 @@ def check_fritz_wan_if(item, params, info):
     if 'assumed_speed_out' not in params:
         params['assumed_speed_out'] = int(data['NewLayer1UpstreamMaxBitRate'])
     if 'unit' not in params:
-        params['unit'] = 'Bit'
+        params['unit'] = 'bit'
     return check_if_common(item, params, fritz_wan_if_to_if64(data))
 
 check_info["fritz.wan_if"] = {

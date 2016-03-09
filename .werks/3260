@@ -1,4 +1,4 @@
-Title: Availability: ignores complete unmonitored objects in summary calculation
+Title: Availability: ignores completely unmonitored objects in summary calculation
 Level: 1
 Component: multisite
 Class: fix

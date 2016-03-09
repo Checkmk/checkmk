@@ -751,7 +751,6 @@ def compute_availability(what, av_rawdata, avoptions):
                 "timeline"            : timeline_rows,
             }
 
-
             availability_table.append(availability_entry)
 
     availability_table.sort(cmp = cmp_av_entry)
@@ -910,6 +909,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
 
     summary = {}
     summary_counts = {}
+    unmonitored_objects = 0
 
     av_table = {
         "title" : group_title,
@@ -1035,9 +1035,14 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
                     else:
                         row["cells"].append(("", ""))
 
+        # If timeline == [] and states == {} then this objects has complete unmonitored state
+        if entry["timeline"] == [] and entry["states"] == {}:
+            unmonitored_objects += 1
 
     # Summary line. It has the same format as each entry in cells
-    if show_summary and len(availability_table) > 0:
+    # We ignore unmonitored objects
+    len_availability_table = len(availability_table) - unmonitored_objects
+    if show_summary and len_availability_table > 0:
         summary_cells = []
 
         for sid, css, sname, help in availability_columns[what]:
@@ -1045,7 +1050,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
                 continue
             number = summary.get(sid, 0)
             if show_summary == "average" or avoptions["timeformat"].startswith("percentage"):
-                number /= len(availability_table)
+                number /= len_availability_table
                 if avoptions["timeformat"].startswith("percentage"):
                     number *= entry["considered_duration"]
             if not number:
@@ -1061,7 +1066,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
                     if aggr == "cnt":
                         count = summary_counts.get(sid, 0)
                         if show_summary == "average":
-                            count = float(count) / len(availability_table)
+                            count = float(count) / len_availability_table
                             text = "%.2f" % count
                         else:
                             text = str(count)

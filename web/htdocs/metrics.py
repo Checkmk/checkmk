@@ -40,6 +40,10 @@ import sites
 from lib import *
 from valuespec import *
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |

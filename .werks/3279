@@ -1,0 +1,14 @@
+Title: LDAP: Fixed default values of attribute selections
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457526988
+Class: fix
+
+For several LDAP sync plugins it is possible to configure the LDAP attribute
+for syncing. For example for the mail sync plugin you can configure which LDAP
+attribute to use as source for the mail address.
+
+The default values of these attributes depend on the selected LDAP type. This
+special case was not working in 1.2.8x and has beend fixed now.

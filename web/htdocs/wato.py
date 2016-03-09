@@ -5610,7 +5610,7 @@ def validate_ldap_connection_id(value, varprefix):
         raise MKUserError(varprefix, _("This ID is already user by another connection. Please choose another one."))
 
 
-def vs_ldap_connection(new):
+def vs_ldap_connection(new, connection_id):
     if new:
         general_elements = [
             ("id", TextAscii(
@@ -5878,7 +5878,7 @@ def vs_ldap_connection(new):
                       'or disabled. When enabling a plugin, it is used upon the next synchonisation of '
                       'user accounts for gathering their attributes. The user options which get imported '
                       'into Check_MK from LDAP will be locked in WATO.'),
-            elements = userdb.ldap_attribute_plugins_elements,
+            elements = lambda: userdb.ldap_attribute_plugins_elements(connection_id),
             default_keys = ['email', 'alias', 'auth_expire' ],
         )),
         ("cache_livetime", Age(
@@ -5954,7 +5954,7 @@ def mode_edit_ldap_connection(phase):
         html.context_button(_("Back"), folder_preserving_link([("mode", "ldap_config")]), "back")
         return
 
-    vs = vs_ldap_connection(new)
+    vs = vs_ldap_connection(new, connection_id)
 
     if phase == 'action':
         if not html.check_transaction():

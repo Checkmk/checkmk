@@ -1,0 +1,17 @@
+title: Nutanix Prism: Alerts
+agents: special
+catalog: os/storage
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the alerts reported by a nutanix cluster.
+ It will change status to {warn} and {crit} depending on the severity of
+ the alert reported (this is controlled by the device itself).
+ In addition, the latest message among those with the highest occuring severity
+ will be displayed.
+ Reported alerts can be acknowledged inside the Prism user interface.
+
+ This check requires the special agent configurable through "Nutanix Prism".
+
+inventory:
+ Exactly one item will be discovered.

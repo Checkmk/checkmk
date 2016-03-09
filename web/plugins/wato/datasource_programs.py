@@ -929,3 +929,29 @@ register_rule(group,
     title = _("Tinkerforge"),
     match = 'first')
 
+
+register_rule(group,
+    'special_agents:prism',
+    Dictionary(
+        elements = [
+            ("port",
+            Integer(
+                title = _("TCP port for connection"),
+                default_value = 9440,
+                minvalue = 1,
+                maxvalue = 65535
+
+            )),
+            ("username",
+            TextAscii(
+                title = _("User ID for web login"),
+            )),
+            ("password",
+            Password(
+                title = _("Password for this user")
+            )),
+        ],
+        optional_keys = ["port"]
+    ),
+    title = _("Nutanix Prism"),
+    match = 'first')

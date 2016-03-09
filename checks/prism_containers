@@ -1,0 +1,80 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# <<<prism_containers:sep(9)>>>
+# name    usage   capacity
+# DS01_NFS_Nutanix_B2B_Intern_SAS_Contrainer      2518694292480   38575532134515
+
+
+factory_settings['prism_container_default_levels'] = {
+    'levels': (80.0, 90.0), # in percent, defaults based on df checks
+}
+
+
+def inventory_prism_container(parsed):
+    for row in parsed:
+        yield row['name'], {}
+
+
+def check_prism_container(item, params, parsed):
+    for row in parsed:
+        if row['name'] == item:
+            usage, capacity = map(int, (row['usage'], row['capacity']))
+
+            warn, crit = params['levels']
+            if isinstance(warn, float):
+                warn, crit = map(lambda x: x * capacity, (warn, crit))
+
+            if usage >= crit:
+                status = 2
+            elif usage >= warn:
+                status = 1
+            else:
+                status = 0
+
+            if status != 0:
+                warntxt = " (warn/crit at %s/%s)" %\
+                    (get_bytes_human_readable(warn), get_bytes_human_readable(crit))
+            else:
+                warntxt = ""
+
+            return status, "%s of %s used%s" %\
+                (get_bytes_human_readable(usage),
+                 get_bytes_human_readable(capacity),
+                 warntxt), [('fs_used', usage, warn, crit, 0, capacity)]
+
+
+check_info['prism_containers'] = {
+    'check_function':          check_prism_container,
+    'inventory_function':      inventory_prism_container,
+    'parse_function':          parse_prism,
+    'group':                   "prism_container",
+    'has_perfdata':            True,
+    'service_description':     "Container %s",
+    'includes':                ["prism.include"],
+    'default_levels_variable': 'prism_container_default_levels'
+}

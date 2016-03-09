@@ -1,0 +1,16 @@
+title: Nutanix Prism: Containers
+agents: special
+catalog: os/storage
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the remaining space on containers in a nutanix cluster.
+ Limits can be configured through wato.
+
+ This check requires the special agent configurable through "Nutanix Prism".
+
+item:
+ The name of the container.
+
+inventory:
+ One item per storage container will be discovered.

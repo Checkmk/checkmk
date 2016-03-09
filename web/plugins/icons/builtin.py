@@ -853,3 +853,30 @@ multisite_icons_and_actions['crashed_check'] = {
     'paint'           : paint_icon_crashed_check,
     'toplevel'        : True,
 }
+
+#.
+#   .--Check Period--------------------------------------------------------.
+#   |       ____ _               _      ____           _           _       |
+#   |      / ___| |__   ___  ___| | __ |  _ \ ___ _ __(_) ___   __| |      |
+#   |     | |   | '_ \ / _ \/ __| |/ / | |_) / _ \ '__| |/ _ \ / _` |      |
+#   |     | |___| | | |  __/ (__|   <  |  __/  __/ |  | | (_) | (_| |      |
+#   |      \____|_| |_|\___|\___|_|\_\ |_|   \___|_|  |_|\___/ \__,_|      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Icon shown if the check is outside its check period                  |
+#   '----------------------------------------------------------------------'
+
+#
+#def paint_icon_check_period(what, row, tags, host_custom_vars):
+#    if row['%s_in_check_period' % what] == 0:
+#        return 'starred', _("This %s is currently not being cheked") % _(what)
+#
+#
+#multisite_icons_and_actions['check_period'] = {
+#    'columns'  : ['in_check_period'],
+#    'paint'    : paint_icon_check_period,
+#    'toplevel' : True,
+#}
+
+
+#.

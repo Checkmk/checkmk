@@ -124,7 +124,7 @@ def fetch_url_post(base_url, path, service_url, service_user, service_password):
         data["path"] = segments[2]
 
     if service_user:
-        data["target"]["username"] = service_user
+        data["target"]["user"] = service_user
         data["target"]["password"] = service_password
 
     if opt_verbose:

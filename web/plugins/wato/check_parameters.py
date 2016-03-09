@@ -1425,6 +1425,43 @@ register_check_parameters(
 )
 
 
+register_check_parameters(
+    subgroup_storage,
+    "prism_container",
+    _("Nutanix Prism"),
+    Dictionary(
+        elements = [
+            ("levels",
+             Alternative(
+                 title = _("Usage levels"),
+                 default_value = (80.0, 90.0),
+                 elements = [
+                     Tuple(
+                         title = _("Specify levels in percentage of total space"),
+                         elements = [
+                             Percentage(title = _("Warning at"), unit = _("%")),
+                             Percentage(title = _("Critical at"), unit = _("%"))
+                         ]
+                     ),
+                     Tuple(
+                         title = _("Specify levels in absolute usage"),
+                         elements = [
+                             Filesize(title = _("Warning at"), default_value = 1000 * 1024 * 1024),
+                             Filesize(title = _("Critical at"), default_value = 5000 * 1024 * 1024)
+                         ]
+                     ),
+                 ]
+             ))
+        ],
+        optional_keys = []
+    ),
+    TextAscii(
+        title = _("Container Name"),
+        help = _("Name of the container"),
+    ),
+    match_type = "dict"
+)
+
 
 #.
 #   .--Unsorted--(Don't create new stuff here!)----------------------------.

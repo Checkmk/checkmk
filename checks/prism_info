@@ -1,0 +1,54 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# <<<prism_containers:sep(9)>>>
+# name    usage   capacity
+# DS01_NFS_Nutanix_B2B_Intern_SAS_Contrainer      2518694292480   38575532134515
+# <<<prism_alerts:sep(9)>>>
+# timestamp       message severity
+# 1456749413164951        DIMM fault detected on host 172.25.209.110. The node is running with 384 GB whereas 512 GB was installed.       kCritical
+# 1456748512334905        DIMM fault detected on host 172.25.209.110. The node is running with 384 GB whereas 512 GB was installed.       kCritical
+# <<<prism_cluster:sep(9)>>>
+# name    version
+# CHZRHPCLNB2BINT001      4.5.1.2
+
+
+def inventory_prism_cluster(parsed):
+    yield None, None
+
+
+def check_prism_cluster(_no_item, _no_params, parsed):
+    return 0, "%s, version %s" % (parsed[0]['name'], parsed[0]['version'])
+
+
+check_info['prism_info'] = {
+    'check_function':      check_prism_cluster,
+    'inventory_function':  inventory_prism_cluster,
+    'parse_function':      parse_prism,
+    'service_description': "Prism Cluster",
+    'includes':            ["prism.include"]
+}

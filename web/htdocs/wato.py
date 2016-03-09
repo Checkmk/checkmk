@@ -15055,8 +15055,16 @@ def add_scanned_hosts_to_folder(folder, found):
 
 
 def save_network_scan_result(folder, result):
-    folder.set_attribute("network_scan_result", result)
-    folder.save()
+    # Reload the folder, lock WATO before to protect against concurrency problems.
+    lock_exclusive()
+
+    # A user might have changed the folder somehow since starting the scan. Load the
+    # folder again to get the current state.
+    write_folder = Folder.folder(folder.path())
+    write_folder.set_attribute("network_scan_result", result)
+    write_folder.save()
+
+    unlock_exclusive()
 
 
 # This is executed in the site the host is assigned to.

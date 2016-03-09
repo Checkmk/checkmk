@@ -2949,7 +2949,7 @@ class ModeBulkImport(WatoMode):
     def __init__(self):
         super(ModeBulkImport, self).__init__()
         self._csv_reader = None
-        self._params = {}
+        self._params = None
 
 
     def title(self):
@@ -3009,6 +3009,13 @@ class ModeBulkImport(WatoMode):
                 os.unlink(path)
 
 
+    def _get_custom_csv_dialect(self, delim):
+        class CustomCSVDialect(csv.excel):
+            delimiter = delim
+
+        return CustomCSVDialect()
+
+
     def _read_csv_file(self):
         try:
             csv_file = file(self._file_path())
@@ -3017,22 +3024,23 @@ class ModeBulkImport(WatoMode):
 
         params = self._vs_parse_params().from_html_vars("_preview")
         self._vs_parse_params().validate_value(params, "_preview")
-        self._params = params or self._vs_parse_params().default_value()
+        self._params = params
 
         # try to detect the CSV format to be parsed
         if "field_delimiter" in params:
-            class CustomCSVDialect(csv.excel):
-                delimiter = params["field_delimiter"]
-
-            csv_dialect = CustomCSVDialect()
+            csv_dialect = self._get_custom_csv_dialect(params["field_delimiter"])
         else:
             try:
                 csv_dialect = csv.Sniffer().sniff(csv_file.read(2048), delimiters=",;\t:")
                 csv_file.seek(0)
             except csv.Error, e:
                 if "Could not determine delimiter" in str(e):
-                    raise MKUserError(None, _("Failed to detect the CSV files field delimiter character. Please "
-                                              "specify it manually."))
+                    # Failed to detect the CSV files field delimiter character. Using ";" now. If
+                    # you need another one, please specify it manually.
+                    csv_dialect = self._get_custom_csv_dialect(";")
+                    csv_file.seek(0)
+                else:
+                    raise
 
 
         # Save for preview in self.page()
@@ -3041,7 +3049,10 @@ class ModeBulkImport(WatoMode):
 
     def _import(self):
         if self._params.get("has_title_line"):
-            self._csv_reader.next() # skip header
+            try:
+                self._csv_reader.next() # skip header
+            except StopIteration:
+                pass
 
         num_succeeded, num_failed = 0, 0
         fail_messages = []
@@ -3181,7 +3192,10 @@ class ModeBulkImport(WatoMode):
         # Die problematischen Zeilen sollen angezeigt werden, so dass man diese als Block in ein neues CSV-File eintragen kann und dann diese Datei
         # erneut importieren kann.
         if self._params.get("has_title_line"):
-            headers = list(self._csv_reader.next())
+            try:
+                headers = list(self._csv_reader.next())
+            except StopIteration:
+                headers = [] # nope, there is no header
         else:
             headers = []
 
@@ -3211,7 +3225,11 @@ class ModeBulkImport(WatoMode):
 
 
     def _preview_form(self):
-        self._vs_parse_params().render_input("_preview", self._params or self._vs_parse_params().default_value())
+        if self._params != None:
+            params = self._params
+        else:
+            params = self._vs_parse_params().default_value()
+        self._vs_parse_params().render_input("_preview", params)
         html.hidden_fields()
         html.button("_do_preview", _("Update preview"))
         html.button("_do_import", _("Import"))

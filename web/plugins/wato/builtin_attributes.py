@@ -161,7 +161,7 @@ class NetworkScanAttribute(ValueSpecAttribute):
                         title = _("Scan interval"),
                         display = [ "days", "hours" ],
                         default_value = 60*60*24,
-                        min_value = 3600, # 1 hour
+                        minvalue = 3600, # 1 hour
                     )),
                     ("max_parallel_pings", Integer(
                         title = _("Parallel pings to send"),

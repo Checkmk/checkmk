@@ -666,7 +666,7 @@ def check_logwatch_ec(item, params, info):
     infotexts = []
     if params.get('monitor_logfilelist'):
         if 'expected_logfiles' not in params:
-            infotexts.append("You enabled monitoring the list of forwarded logfiles. You need to re-inventorize the check once.")
+            infotexts.append("You enabled monitoring the list of forwarded logfiles. You need to redo service discovery.")
             status = 1
         else:
             expected = params['expected_logfiles']

@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO FIXME: Change attribute sync plugins to classes. The current dict
+# based approach is not very readable. Classes/objects make it a lot
+# easier to understand the mechanics.
+
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
 #   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
@@ -46,9 +50,11 @@ try:
 
     # be compatible to both python-ldap below 2.4 and above
     try:
+        # pylint: disable=no-member
         LDAP_CONTROL_PAGED_RESULTS = ldap.LDAP_CONTROL_PAGE_OID
         ldap_compat = False
     except:
+        # pylint: disable=no-member
         LDAP_CONTROL_PAGED_RESULTS = ldap.CONTROL_PAGEDRESULTS
         ldap_compat = True
 except:
@@ -1134,7 +1140,10 @@ def ldap_list_attribute_plugins():
     return plugins
 
 # Returns a list of pairs (key, parameters) of all available attribute plugins
-def ldap_attribute_plugins_elements():
+def ldap_attribute_plugins_elements(connection_id):
+    global g_editing_connection_id
+    g_editing_connection_id = connection_id
+
     register_user_attribute_sync_plugins()
 
     elements = []
@@ -1185,10 +1194,24 @@ def register_user_attribute_sync_plugins():
                 ('attr', TextAscii(
                     title = _("LDAP attribute to sync"),
                     help  = _("The LDAP attribute whose contents shall be synced into this custom attribute."),
-                    default_value = lambda: ldap_attr(attr),
+                    default_value = lambda: ldap_attr_of_connection(g_editing_connection_id, attr),
                 )),
             ],
         }
+
+# This hack is needed to make the connection_id of the connection currently
+# being edited (or None if being created) available in the "default_value"
+# handler functions of the valuespec. There is no other standard way to
+# transport this info to these functions.
+g_editing_connection_id = None
+
+# Helper function for gathering the default LDAP attribute names of a connection.
+def ldap_attr_of_connection(connection_id, attr):
+    connection = get_connection(connection_id)
+    if not connection:
+        return None
+
+    return connection.ldap_attr(attr)
 
 
 def ldap_sync_simple(user_id, ldap_user, user, user_attr, attr):
@@ -1304,7 +1327,7 @@ ldap_attribute_plugins['email'] = {
         ("attr", TextAscii(
             title = _("LDAP attribute to sync"),
             help  = _("The LDAP attribute containing the mail address of the user."),
-            default_value = lambda: ldap_attr('mail'),
+            default_value = lambda: ldap_attr_of_connection(g_editing_connection_id, 'mail'),
         )),
     ],
 }
@@ -1340,7 +1363,7 @@ ldap_attribute_plugins['alias'] = {
         ("attr", TextAscii(
             title = _("LDAP attribute to sync"),
             help  = _("The LDAP attribute containing the alias of the user."),
-            default_value = lambda: ldap_attr('cn'),
+            default_value = lambda: ldap_attr_of_connection(g_editing_connection_id, 'cn'),
         )),
     ],
 }
@@ -1421,7 +1444,7 @@ ldap_attribute_plugins['auth_expire'] = {
                       "current authenticated sessions of the user are invalidated and the "
                       "user must login again. By default this field uses the fields which "
                       "hold the time of the last password change of the user."),
-            default_value = lambda: ldap_attr('pw_changed'),
+            default_value = lambda: ldap_attr_of_connection(g_editing_connection_id, 'pw_changed'),
         )),
     ],
 }
@@ -1457,7 +1480,7 @@ ldap_attribute_plugins['pager'] = {
         ('attr', TextAscii(
             title = _("LDAP attribute to sync"),
             help  = _("The LDAP attribute containing the pager number of the user."),
-            default_value = lambda: ldap_attr('mobile'),
+            default_value = lambda: ldap_attr_of_connection(g_editing_connection_id, 'mobile'),
         )),
     ],
 }

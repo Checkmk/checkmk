@@ -40,6 +40,10 @@ from lib import *
 from valuespec import *
 import livestatus
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |

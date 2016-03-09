@@ -1147,15 +1147,16 @@ def login():
         reply_code, repy_msg, reply_headers, reply_data = \
                     query_server(payload, payload_params = {"username": encode_url(user),
                                                             "password": encode_url(secret)})
-        server_cookie = reply_headers.get("Set-Cookie")
-        if host_cookie_path:
-            cookie_file = file(host_cookie_path, "w")
-            os.chmod(host_cookie_path, 0600)
-            cookie_file.write(server_cookie)
-
         if "InvalidLogin" in reply_data:
             global error
             error = "Cannot login to vSphere Server. Login response is not 'OK'. Please check the credentials"
+        else:
+            server_cookie = reply_headers.get("Set-Cookie")
+            if host_cookie_path and server_cookie:
+                cookie_file = file(host_cookie_path, "w")
+                os.chmod(host_cookie_path, 0600)
+                cookie_file.write(server_cookie)
+
 
 
 #   .--Main----------------------------------------------------------------.

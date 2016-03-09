@@ -1,0 +1,15 @@
+.----------------------------------------------------------------------.
+|        __  __                               _              _         |
+|       |  \/  | ___ _ __ ___   ___ __ _  ___| |__   ___  __| |        |
+|       | |\/| |/ _ \ '_ ` _ \ / __/ _` |/ __| '_ \ / _ \/ _` |        |
+|       | |  | |  __/ | | | | | (_| (_| | (__| | | |  __/ (_| |        |
+|       |_|  |_|\___|_| |_| |_|\___\__,_|\___|_| |_|\___|\__,_|        |
+|                                                                      |
+'----------------------------------------------------------------------'
+
+This is a check to monitor the linux memcache daemon, including agent plugin,
+configurable levels and custom metrics.
+All metrics are reported in a single service and several of the monitored
+metrics are raw totals, such was the customers wish.
+Hence, in its current form, this check doesn't fit into the regular check_mk
+distribution.

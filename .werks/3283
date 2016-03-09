@@ -1,0 +1,10 @@
+Title: Bulk import of hosts: It is now possible again to import a simple list of hosts
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457540348
+Class: fix
+
+In previous versions it was possible to just import a simple list of host names. Where
+one host name per line is given. This is now possible again.

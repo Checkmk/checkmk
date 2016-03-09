@@ -2310,10 +2310,23 @@ class Attribute:
     # Check whether this attribute needs to be validated at all
     # Attributes might be permanently hidden (show_in_form = False)
     # or dynamically hidden by the depends_on_tags, editable features
-    def needs_validation(self):
-        if not self._show_in_form:
+    def needs_validation(self, for_what):
+        if not self.is_visible(for_what):
             return False
         return html.var('attr_display_%s' % self._name, "1") == "1"
+
+
+    # Gets the type of current view as argument and returns whether or not
+    # this attribute is shown in this type of view
+    def is_visible(self, for_what):
+        if for_what in [ "host", "bulk" ] and not self.show_in_form():
+            return False
+        elif for_what == "folder" and not self.show_in_folder():
+            return False
+        elif for_what == "host_search" and not self.show_in_host_search():
+            return False
+        return True
+
 
     # Check if the value entered by the user is valid.
     # This method may raise MKUserError in case of invalid user input.
@@ -2807,7 +2820,7 @@ def collect_attributes(for_what, do_validate = True, varprefix=""):
         if not html.var(for_what + "_change_%s" % attrname, False):
             continue
 
-        if do_validate and attr.needs_validation():
+        if do_validate and attr.needs_validation(for_what):
             attr.validate_input(varprefix)
 
         host[attrname] = attr.from_html_vars(varprefix)

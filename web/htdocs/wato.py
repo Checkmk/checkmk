@@ -15466,20 +15466,10 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
     if configured_host_tags():
         topics.append(_("Host tags"))
 
-    # Hide invisible attributes
-    def hide_attribute(for_what, attr):
-        if for_what in [ "host", "bulk" ] and not attr.show_in_form():
-            return True
-        elif for_what == "folder" and not attr.show_in_folder():
-            return True
-        elif for_what == "host_search" and not attr.show_in_host_search():
-            return True
-        return False
-
     # The remaining topics are shown in the order of the
     # appearance of the attribute declarations:
     for attr, topic in all_host_attributes():
-        if topic not in topics and not hide_attribute(for_what, attr):
+        if topic not in topics and attr.is_visible(for_what):
             topics.append(topic)
 
     # Collect dependency mapping for attributes (attributes that are only
@@ -15512,7 +15502,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 continue # e.g. needed to skip ipaddress in CSV-Import
 
             # Determine visibility information if this attribute is not always hidden
-            if not hide_attribute(for_what, attr):
+            if attr.is_visible(for_what):
                 depends_on_tags = attr.depends_on_tags()
                 depends_on_roles = attr.depends_on_roles()
                 # Add host tag dependencies, but only in host mode. In other

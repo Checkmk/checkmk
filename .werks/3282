@@ -1,0 +1,12 @@
+Title: Fixed missing validation of network scan properties
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1457532610
+
+The intended validation of network scan properties was not performed correctly.
+This was some kind general issue which might also have affected other attributes,
+but maybe only the network scan properties were affected.

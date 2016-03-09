@@ -84,8 +84,9 @@ def action_add_host(request):
     if folder_path == None:
         raise MKUserError(None, _("Foldername is missing"))
     folders = folder_path.split("/")
-    for foldername in folders:
-        check_wato_foldername(None, foldername, just_name = True)
+    if folders != [ "" ]:
+        for foldername in folders:
+            check_wato_foldername(None, foldername, just_name = True)
 
     # Validate and cleanup given attributes
     # CLEANUP: modify WebAPI .nodes argument

@@ -137,6 +137,7 @@ dist: mk-livestatus mk-eventd
 		--exclude "*~" \
 		--exclude "Makefile" \
 		--exclude "crash.exe" \
+		--exclude "openhardwaremonitor" \
 		--exclude .f12 $$(cd agents ; ls)
 	cd $(DISTNAME) ; ../make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)

@@ -1,0 +1,9 @@
+Title: Availability: ignores complete unmonitored objects in summary calculation
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457511172
+Class: fix
+
+

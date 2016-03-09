@@ -1,0 +1,11 @@
+Title: Fixed too often executed network scans
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1457530987
+
+The network scan interval was not handled correctly and network scan of a folder
+could be executed multiple time in parallel if running more than 1 minute.

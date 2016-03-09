@@ -261,6 +261,9 @@ class NetworkScanResultAttribute(ValueSpecAttribute):
                             FixedValue(None,
                                 totext = _("No scan has finished yet."),
                             ),
+                            FixedValue(True,
+                                totext = "", # currently running
+                            ),
                             AbsoluteDate(
                                 include_time = True,
                                 default_value = 0,

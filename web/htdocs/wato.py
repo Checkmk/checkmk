@@ -14987,10 +14987,15 @@ def execute_network_scan_job():
 
     result = {
         "start"  : time.time(),
-        "end"    : None,
+        "end"    : True, # means currently running
         "state"  : None,
-        "output" : "",
+        "output" : "The scan is currently running.",
     }
+
+    # Mark the scan in progress: Is important in case the request takes longer than
+    # the interval of the cron job (1 minute). Otherwise the scan might be started
+    # a second time before the first one finished.
+    save_network_scan_result(folder, result)
 
     try:
         if config.site_is_local(folder.site_id()):
@@ -15030,7 +15035,7 @@ def find_folder_to_scan():
     folder_to_scan = None
     for folder_path, folder in Folder.all_folders().items():
         scheduled_time = folder.next_network_scan_at()
-        if scheduled_time != None:
+        if scheduled_time != None and scheduled_time < time.time():
             if folder_to_scan == None:
                 folder_to_scan = folder
             elif folder_to_scan.next_network_scan_at() > folder.next_network_scan_at():
@@ -15176,7 +15181,7 @@ def ping_worker(addresses, hosts):
     while True:
         try:
             ipaddress = addresses.pop()
-        except IndexError:
+        except KeyError:
             break
 
         if ping(ipaddress):
@@ -15207,11 +15212,8 @@ def scan_ip_addresses(folder, ip_addresses):
         t.start()
 
     # Now wait for all workers to finish
-    while threads:
-        for t in threads:
-            if not t.isAlive():
-                threads.remove(t)
-        time.sleep(1)
+    for t in threads:
+        t.join()
 
     return found_hosts
 

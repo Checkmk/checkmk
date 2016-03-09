@@ -1,0 +1,10 @@
+Title: agent_vsphere: fixed exception when providing the wrong login credentials
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b5
+Date: 1457540970
+
+

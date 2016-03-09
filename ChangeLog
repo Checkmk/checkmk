@@ -15,6 +15,7 @@
     * 3092 FIX: isc_dhcpd: fixed incorrect handling of timezones
     * 3259 FIX: ad_replication: fixed wrong timestamp handling
     * 3094 FIX: cisco_temperature: fixed duplicated sensors on some devices...
+    * 3006 FIX: agent_vsphere: fixed exception when providing the wrong login credentials
 
     Multisite:
     * 3264 FIX: Fix display of values in graphs that are < 1.0

@@ -1,4 +1,5 @@
 #!/usr/bin/ksh
+# Monitor DB/2 databases on AIX
 # $HOME/sqllib/db2profile
 
 # This script can be called in two ways

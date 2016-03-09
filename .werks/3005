@@ -1,0 +1,10 @@
+Title: webapi: now able to add new hosts to main folder (bug was introduced recently)
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b5
+Date: 1457535465
+
+

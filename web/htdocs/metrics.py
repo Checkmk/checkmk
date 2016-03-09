@@ -39,6 +39,7 @@ import config, defaults, pagetypes, table
 import sites
 from lib import *
 from valuespec import *
+from livestatus import MKLivestatusNotFoundError
 
 try:
     import simplejson as json
@@ -1440,7 +1441,7 @@ def host_service_graph_dashlet_cmk(graph_specification, custom_graph_render_opti
             graph_definition = graph_definitions[0]
         else:
             raise MKGeneralException(_("Failed to calculate a graph definition."))
-    except livestatus.MKLivestatusNotFoundError:
+    except MKLivestatusNotFoundError:
         html.write("<div class=error>%s</div>" % html.attrencode(_("Cannot reander graphs: cannot fetch data via Livestatus")))
         return
 

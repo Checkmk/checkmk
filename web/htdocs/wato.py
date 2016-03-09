@@ -14862,6 +14862,7 @@ def mode_download_agents(phase):
         '/windows/plugins'         : _('Windows Agent - Plugins'),
         '/windows/mrpe'            : _('Windows Agent - MRPE Scripts'),
         '/windows/cfg_examples'    : _('Windows Agent - Example Configurations'),
+        '/windows/ohm'             : _('Windows Agent - OpenHardwareMonitor (headless)'),
         '/z_os'                    : _('z/OS'),
         '/sap'                     : _('SAP R/3'),
     }

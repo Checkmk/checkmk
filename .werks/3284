@@ -1,0 +1,10 @@
+Title: Bulk import of hosts: Fixed disabling of reading first line as header
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457540419
+Class: fix
+
+When no delimiter is specified, it is now possible to disable treating the
+first line as header line.

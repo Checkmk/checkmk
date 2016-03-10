@@ -1,0 +1,10 @@
+Title: Fix rendering of floating point values < 1 in graphs (e.g. CPU load)
+Level: 2
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1457608199
+
+

@@ -176,16 +176,16 @@ def parse_cisco_temperature(info):
 
 def inventory_cisco_temperature(parsed):
     for item, value in parsed.iteritems():
-        if not value.get("obsolete", False):
+        if type(parsed[item]) == tuple or not value.get("obsolete", False):
             yield item, {}
 
 
 def check_cisco_temperature(item, params, parsed):
     if item in parsed:
-        if parsed[item].get("obsolete", False):
-            return 3, "This sensor is obsolete, please rediscover"
         if type(parsed[item]) == tuple:
             return parsed[item]
+        elif parsed[item].get("obsolete", False):
+            return 3, "This sensor is obsolete, please rediscover"
         else:
             return check_temperature(parsed[item]['temp'], params, "cisco_temperature_%s" % item,
                         dev_levels = parsed[item]['dev_levels'],

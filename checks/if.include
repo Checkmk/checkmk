@@ -293,12 +293,14 @@ def inventory_if_common(info, has_nodeinfo = False):
         is_only_in_group = False
         for group_name, pattern in group_patterns.items():
             # Interfaces can be grouped by item and iftype
-            match_item = not pattern.get("include_items") or (tryint(item) in map(tryint, pattern["include_items"]))
-            match_type = not pattern.get("iftype")        or (pattern["iftype"] == saveint(ifType))
+            match_item = "include_items" not in pattern or (tryint(item) in map(tryint, pattern["include_items"]))
+            match_type = "iftype" not in pattern        or (pattern["iftype"] == saveint(ifType))
             if match_item and match_type:
-                have_groups.setdefault(group_name, {"interfaces": [],
-                                                    "iftype": pattern.get("iftype"),
-                                                    "include_items": pattern.get("include_items")})
+                have_groups.setdefault(group_name, {"interfaces": []})
+                for what in [ "iftype", "include_items" ]:
+                    if pattern.get(what):
+                        have_groups[group_name][what] = pattern.get(what)
+
                 have_groups[group_name]["interfaces"].append((saveint(ifSpeed), ifOperStatus, ifType))
                 if pattern.get("single"):
                     is_only_in_group = True
@@ -337,9 +339,10 @@ def inventory_if_common(info, has_nodeinfo = False):
         group_operStatus = one_up and "1" or "2"
 
         if group_operStatus in portstates:
-            params = {  "iftype"       : values["iftype"],
-                        "include_items": values["include_items"],
-                        "aggregate"    : True }
+            params = { "aggregate": True }
+            for what in [ "iftype", "include_items" ]:
+                if what in values:
+                    params[what] = values[what]
 
             if uses_description:
                 params["aggr_member_item"] = "description"
@@ -399,10 +402,17 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
 
             if ifGroup and ifGroup == item:
                 matching_interfaces.append((if_member_item, element))
-            # tryint -> force "01" and "1" to be identical.
-            elif (params.get("include_items") == None or tryint(if_member_item) in map(tryint, params["include_items"])) or\
-                saveint(element[2 + node_offset]) == params.get("iftype"):
-                matching_interfaces.append((if_member_item, element))
+            else:
+                # The iftype and include_items parameters are further restrictions
+                # If none of them are set, the interface is added to the group
+                add_interface = True # This approach is easier to comprehend..
+                # tryint -> force "01" and "1" to be identical.
+                if params.get("include_items") != None and tryint(if_member_item) not in map(tryint, params["include_items"]):
+                    add_interface = False
+                elif params.get("iftype") != None and saveint(element[2 + node_offset]) != params["iftype"]:
+                    add_interface = False
+                if add_interface:
+                    matching_interfaces.append((if_member_item, element))
 
         # Accumulate info over matching_interfaces
         wrapped = False
@@ -477,6 +487,8 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
             group_info["ifOutErrors"]   += saveint(ifOutErrors)
             group_info["ifOutQLen"]     += saveint(ifOutQLen)
 
+            group_info["ifType"] = ifType # This is the fallback ifType if none is set in the parameters
+
 
 
         # Append an additional entry to the info table containing the calculated group_info
@@ -503,10 +515,13 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
         else:
             group_entry = []
 
+        if params.get("ifType"):
+            group_info["ifType"] = params["ifType"]
+
         group_entry += [
                     "ifgroup%s" % item,         # ifIndex
                     item,                       # ifDescr
-                    params["iftype"],           # ifType
+                    group_info["ifType"],       # ifType
                     group_info["ifSpeed"],      # ifSpeed
                     group_operStatus,           # ifOperStatus
                     group_info["ifInOctets"],   # ifInOctets

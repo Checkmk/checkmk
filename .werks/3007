@@ -1,0 +1,12 @@
+Title: Interface groups: fixed exception when port type or interface items were not set in the WATO rule
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b5
+Date: 1457605216
+
+You should do a new service discovery for hosts with grouped interfaces.
+This is not mandatory, however it will clean up some invalid values stored values
+in the autochecks directory.

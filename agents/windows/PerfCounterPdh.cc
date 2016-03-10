@@ -278,7 +278,6 @@ void PerfCounterQuery::execute() {
 
     if (((DWORD)status != ERROR_SUCCESS) &&
         ((DWORD)status != PDH_NO_MORE_DATA)) {
-        printf("query status: %x\n", (DWORD)status);
         throw std::runtime_error(get_win_error_as_string(status));
     }
 }

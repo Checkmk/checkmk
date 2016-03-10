@@ -593,8 +593,8 @@ void dump_performance_counters(OutputProxy &out, unsigned counter_base_number,
             LARGE_INTEGER Frequency;
             QueryPerformanceFrequency(&Frequency);
             out.output("<<<winperf_%s>>>\n", countername);
-            out.output("%.2f %u %" PRId64 "\n", current_time(), counter_base_number,
-                       Frequency.QuadPart);
+            out.output("%.2f %u %" PRId64 "\n", current_time(),
+                       counter_base_number, Frequency.QuadPart);
 
             std::vector<PERF_INSTANCE_DEFINITION *> instances =
                 counterObject.instances();

@@ -61,6 +61,7 @@ bool ci_equal(const std::string &lhs, const std::string &rhs);
 // Do a simple pattern matching with the jokers * and ?.
 // This is case insensitive (windows-like).
 bool globmatch(const char *pattern, const char *astring);
+bool globmatch(const wchar_t *pattern, const wchar_t *astring);
 
 template <typename T>
 std::basic_string<T> join(const std::vector<std::basic_string<T>> &input,

@@ -203,6 +203,50 @@ bool globmatch(const char *pattern, const char *astring) {
     return *p == 0;
 }
 
+bool globmatch(const wchar_t *pattern, const wchar_t *astring) {
+    const wchar_t *p = pattern;
+    const wchar_t *s = astring;
+    while (*s) {
+        if (!*p) return false;  // pattern too short
+
+        // normal character-wise match
+        if (towlower(*p) == towlower(*s) || *p == L'?') {
+            p++;
+            s++;
+        }
+
+        // non-matching charactetr
+        else if (*p != L'*')
+            return false;
+
+        else {  // check *
+            // If there is more than one asterisk in the pattern,
+            // we need to try out several variants. We do this
+            // by backtracking (smart, eh?)
+            int maxlength = wcslen(s);
+            // replace * by a sequence of ?, at most the rest length of s
+            wchar_t *subpattern = (wchar_t *)malloc(
+                (wcslen(p) + maxlength + 1) * sizeof(wchar_t));
+            bool match = false;
+            for (int i = 0; i <= maxlength; i++) {
+                for (int x = 0; x < i; x++) subpattern[x] = L'?';
+                wcscpy(subpattern + i, p + 1);  // omit leading '*'
+                if (globmatch(subpattern, s)) {
+                    match = true;
+                    break;
+                }
+            }
+            free(subpattern);
+            return match;
+        }
+    }
+
+    // string has ended, pattern not. Pattern must only
+    // contain * now if it wants to match
+    while (*p == L'*') p++;
+    return *p == 0;
+}
+
 #ifdef _WIN32
 std::string get_win_error_as_string(DWORD error_id) {
     // Get the error message, if any.

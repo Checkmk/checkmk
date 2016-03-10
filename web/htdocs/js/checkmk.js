@@ -1161,6 +1161,21 @@ function update_reload_pause_timer(seconds_left)
     }
 }
 
+
+function stop_reload_pause_timer()
+{
+    if (!g_reload_pause_timer)
+        return;
+
+    clearTimeout(g_reload_pause_timer);
+    g_reload_pause_timer = null;
+
+    var counter = document.getElementById("reload_pause_counter");
+    if (counter)
+        counter.style.display = "none";
+}
+
+
 function draw_reload_pause_overlay(seconds)
 {
     var container = document.getElementById("reload_pause");
@@ -1185,8 +1200,11 @@ function draw_reload_pause_overlay(seconds)
     p2.className = "pause_bar p2";
     container.appendChild(p2);
 
-    var counter = document.createElement("div");
+    var counter = document.createElement("a");
     counter.setAttribute("id", "reload_pause_counter");
+    // FIXME: Localize
+    counter.title = "Click to stop the countdown."
+    counter.href = "javascript:stop_reload_pause_timer()";
     container.appendChild(counter);
 
     document.body.appendChild(container);

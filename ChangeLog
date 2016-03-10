@@ -74,6 +74,7 @@
     * 3094 FIX: cisco_temperature: fixed duplicated sensors on some devices...
     * 3006 FIX: agent_vsphere: fixed exception when providing the wrong login credentials
     * 3261 FIX: cisco_temperature: fixed wrong datatype handling
+    * 3007 FIX: Interface groups: fixed exception when port type or interface items were not set in the WATO rule...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

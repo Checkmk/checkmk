@@ -70,106 +70,111 @@ check_icmp_params = [
        )),
 ]
 
+imap_parameters = Dictionary(
+    title = "IMAP",
+    optional_keys = [],
+    elements = [
+        ('server', TextAscii(
+            title = _('IMAP Server'),
+            allow_empty = False,
+            help = _('You can specify a hostname or IP address different from the IP address '
+                     'of the host this check will be assigned to.')
+        )),
+        ('ssl', CascadingDropdown(
+            title = _('SSL Encryption'),
+            default_value = (False, 143),
+            choices = [
+                (False, _('Use no encryption'),
+                 Optional(Integer(
+                     allow_empty = False,
+                     default_value = 143,
+                 ),
+                     title = _('TCP Port'),
+                     help = _('By default the standard IMAP Port 143 is used.'),
+                 )),
+                (True, _('Encrypt IMAP communication using SSL'),
+                 Optional(Integer(
+                     allow_empty = False,
+                     default_value = 993,
+                 ),
+                     title = _('TCP Port'),
+                     help = _('By default the standard IMAP/SSL Port 993 is used.'),
+                 )),
+            ],
+        )),
+        ('auth', Tuple(
+            title = _('Authentication'),
+            elements = [
+                TextAscii(
+                    title = _('Username'),
+                    allow_empty = False,
+                    size = 24
+                ),
+                Password(
+                    title = _('Password'),
+                    allow_empty = False,
+                    size = 12
+                ),
+            ],
+        )),
+    ],
+)
+
+pop3_parameters = Dictionary(
+    optional_keys = ['server'],
+    elements = [
+        ('server', TextAscii(
+            title = _('POP3 Server'),
+            allow_empty = False,
+            help = _('You can specify a hostname or IP address different from the IP address '
+                     'of the host this check will be assigned to.')
+        )),
+        ('ssl', CascadingDropdown(
+            title = _('SSL Encryption'),
+            default_value = (False, 110),
+            choices = [
+                (False, _('Use no encryption'),
+                 Optional(Integer(
+                     allow_empty = False,
+                     default_value = 110,
+                 ),
+                     title = _('TCP Port'),
+                     help = _('By default the standard POP3 Port 110 is used.'),
+                 )),
+                (True, _('Encrypt POP3 communication using SSL'),
+                 Optional(Integer(
+                     allow_empty = False,
+                     default_value = 995,
+                 ),
+                     title = _('TCP Port'),
+                     help = _('By default the standard POP3/SSL Port 995 is used.'),
+                 )),
+            ],
+        )),
+        ('auth', Tuple(
+            title = _('Authentication'),
+            elements = [
+                TextAscii(
+                    title = _('Username'),
+                    allow_empty = False,
+                    size = 24
+                ),
+                Password(
+                    title = _('Password'),
+                    allow_empty = False,
+                    size = 12
+                ),
+            ],
+        )),
+    ],
+)
+
 mail_receiving_params = [
     ('fetch', CascadingDropdown(
         title = _('Mail Receiving'),
         choices = [
-            ('IMAP', _('IMAP'), Dictionary(
-                optional_keys = ['server'],
-                elements = [
-                    ('server', TextAscii(
-                        title = _('IMAP Server'),
-                        allow_empty = False,
-                        help = _('You can specify a hostname or IP address different from the IP address '
-                                 'of the host this check will be assigned to.')
-                    )),
-                    ('ssl', CascadingDropdown(
-                        title = _('SSL Encryption'),
-                        default_value = (False, 143),
-                        choices = [
-                            (False, _('Use no encryption'),
-                                Optional(Integer(
-                                    allow_empty = False,
-                                    default_value = 143,
-                                ),
-                                title = _('TCP Port'),
-                                help = _('By default the standard IMAP Port 143 is used.'),
-                            )),
-                            (True, _('Encrypt IMAP communication using SSL'),
-                                Optional(Integer(
-                                    allow_empty = False,
-                                    default_value = 993,
-                                ),
-                                title = _('TCP Port'),
-                                help = _('By default the standard IMAP/SSL Port 993 is used.'),
-                            )),
-                        ],
-                    )),
-                    ('auth', Tuple(
-                        title = _('Authentication'),
-                        elements = [
-                            TextAscii(
-                                title = _('Username'),
-                                allow_empty = False,
-                                size = 24
-                            ),
-                            Password(
-                                title = _('Password'),
-                                allow_empty = False,
-                                size = 12
-                            ),
-                        ],
-                    )),
-                ],
-            )),
-            ('POP3', _('POP3'), Dictionary(
-                optional_keys = ['server'],
-                elements = [
-                    ('server', TextAscii(
-                        title = _('POP3 Server'),
-                        allow_empty = False,
-                        help = _('You can specify a hostname or IP address different from the IP address '
-                                 'of the host this check will be assigned to.')
-                    )),
-                    ('ssl', CascadingDropdown(
-                        title = _('SSL Encryption'),
-                        default_value = (False, 110),
-                        choices = [
-                            (False, _('Use no encryption'),
-                                Optional(Integer(
-                                    allow_empty = False,
-                                    default_value = 110,
-                                ),
-                                title = _('TCP Port'),
-                                help = _('By default the standard POP3 Port 110 is used.'),
-                            )),
-                            (True, _('Encrypt POP3 communication using SSL'),
-                                Optional(Integer(
-                                    allow_empty = False,
-                                    default_value = 995,
-                                ),
-                                title = _('TCP Port'),
-                                help = _('By default the standard POP3/SSL Port 995 is used.'),
-                            )),
-                        ],
-                    )),
-                    ('auth', Tuple(
-                        title = _('Authentication'),
-                        elements = [
-                            TextAscii(
-                                title = _('Username'),
-                                allow_empty = False,
-                                size = 24
-                            ),
-                            Password(
-                                title = _('Password'),
-                                allow_empty = False,
-                                size = 12
-                            ),
-                        ],
-                    )),
-                ],
-            )),
+            ('IMAP', _('IMAP'), imap_parameters),
+            ('POP3', _('POP3'), pop3_parameters),
         ]
     ))
 ]
@@ -1961,6 +1966,50 @@ register_rule(group,
                 ]
             )),
         ]
+    ),
+    match = 'all'
+)
+
+register_rule(group,
+    'active_checks:mailboxes',
+    Dictionary(
+        title = _('Check IMAP Mailboxes'),
+        help = _('This check monitors count and age of mails in mailboxes.'),
+        elements = [
+            ('service_description',
+              TextUnicode(
+                  title = _('Service description'),
+                  help = _('Please make sure that this is unique per host '
+                           'and does not collide with other services.'),
+                  allow_empty = False,
+                  default_value = "Mailboxes")
+            ),
+            ('imap_parameters', imap_parameters),
+            ('connect_timeout', Integer(
+                title = _('Connect Timeout'),
+                minvalue = 1,
+                default_value = 10,
+                unit = _('sec'),
+            )),
+            ('age', Tuple(
+                title = _("Message Age"),
+                elements = [
+                    Age(title = _("Warning at")),
+                    Age(title = _("Critical at"))
+                ])),
+            ('count', Tuple(
+                title = _("Message Count"),
+                elements = [
+                    Integer(title = _("Warning at")),
+                    Integer(title = _("Critical at"))
+                ])),
+            ('mailboxes', ListOfStrings(
+                        title = _('Check only the listed mailboxes'),
+                        help = _('By default, all mailboxes are checked with these parameters. '
+                                 'If you specify mailboxes here, only those are monitored.')
+                    ))
+        ],
+        required_keys = [ 'service_description', 'imap_parameters' ]
     ),
     match = 'all'
 )

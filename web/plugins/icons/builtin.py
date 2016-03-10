@@ -542,7 +542,7 @@ multisite_icons_and_actions['status_downtimes'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def paint_comments(what, row, tags, host_custom_vars):
+def paint_comment_icon(what, row, tags, host_custom_vars):
     comments = row[what + "_comments_with_extra_info"]
     if len(comments) > 0:
         text = ""
@@ -554,7 +554,7 @@ def paint_comments(what, row, tags, host_custom_vars):
 
 multisite_icons_and_actions['status_comments'] = {
     'columns':         [ 'comments_with_extra_info' ],
-    'paint':           paint_comments,
+    'paint':           paint_comment_icon,
     'toplevel':        True,
 }
 
@@ -621,7 +621,7 @@ multisite_icons_and_actions['status_flapping'] = {
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def paint_is_stale(what, row, tags, host_custom_vars):
+def paint_is_stale_icon(what, row, tags, host_custom_vars):
     if is_stale(row):
         if what == "host":
             title = _("This host is stale")
@@ -632,7 +632,7 @@ def paint_is_stale(what, row, tags, host_custom_vars):
 
 multisite_icons_and_actions['status_stale'] = {
     'columns':         [ 'staleness' ],
-    'paint':           paint_is_stale,
+    'paint':           paint_is_stale_icon,
     'toplevel':        True,
 }
 

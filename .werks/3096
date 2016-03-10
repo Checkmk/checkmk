@@ -1,0 +1,10 @@
+Title: check_mailboxes: new active check to monitor age and count of mails in imap mailboxes
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1457616826
+
+

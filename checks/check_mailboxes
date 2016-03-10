@@ -1,0 +1,78 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def check_mailboxes_arguments(params):
+    args = []
+
+    fetch_params = params['imap_parameters']
+
+    if 'server' in fetch_params:
+        args.append('--server=%s' % quote_shell_string(fetch_params['server']))
+    else:
+        args.append('--server=$HOSTADDRESS$')
+
+    fetch_use_ssl, fetch_port = fetch_params['ssl']
+    if fetch_use_ssl:
+        args.append('--ssl')
+
+    if fetch_port is not None:
+        args.append('--port=%d' % fetch_port)
+
+    args.append('--username=%s' % quote_shell_string(fetch_params['auth'][0]))
+    args.append('--password=%s' % quote_shell_string(fetch_params['auth'][1]))
+
+    if 'connect_timeout' in params:
+        args.append('--connect-timeout=%d' % params['connect_timeout'])
+
+    if 'retrieve_max' in params:
+        args.append('--retrieve-max=%d' % params['retrieve_max'])
+
+    if 'age' in params:
+        args.append('--warn-age=%d' % params['age'][0])
+        args.append('--crit-age=%d' % params['age'][1])
+
+    if 'new' in params:
+        args.append('--warn-new=%d' % params['new'][0])
+        args.append('--crit-new=%d' % params['new'][1])
+
+    if 'count' in params:
+        args.append('--warn-count=%d' % params['count'][0])
+        args.append('--crit-count=%d' % params['count'][1])
+
+    if 'mailboxes' in params:
+        for mb in params['mailboxes']:
+            args.append('--mailbox=%s' % mb)
+
+    return " ".join(args)
+
+
+active_check_info['mailboxes'] = {
+    "command_line"        : '$USER1$/check_mailboxes $ARG1$',
+    "argument_function"   : check_mailboxes_arguments,
+    "service_description" : lambda params: params['service_description'],
+    "has_perfdata"        : True,
+}
+

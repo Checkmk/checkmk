@@ -1,0 +1,15 @@
+title: IMAP mailboxes
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ This active check logs into an imap account and can monitor the age of the oldest or
+ newest mail as well as the total count of mails in one or multiple mailboxes.
+
+ There is a caveat though: Many mailservers don't support retrieving mails sorted by
+ age and it would be very costy (in terms of traffic and check time) to retrive all
+ mails. To work around this, the check retrieves a configurable number of the least
+ recently and most recently modified mails from the server and checks the age of those.
+ Unless mails get moved between mailboxes, the least recenly modified mail should also
+ be the oldest one and the most recently modified mail should be the newest.

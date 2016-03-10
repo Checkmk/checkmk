@@ -25,6 +25,7 @@
     * 3093 isc_dhcpd: now interprets include statements when parsing the configuration file
     * 3004 agent_vsphere: now able to configure used piggyback name for virtualmachines...
     * 3095 prism_info, prism_containers, prism_alerts: added checks to monitor a Nutanix Prism cluster
+    * 3096 check_mailboxes: new active check to monitor age and count of mails in imap mailboxes
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

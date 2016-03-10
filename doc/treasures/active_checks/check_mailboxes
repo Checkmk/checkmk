@@ -1,0 +1,295 @@
+#!/usr/bin/python
+# encoding: utf-8
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+import sys
+import getopt
+import os
+import time
+import imaplib
+import email
+import email.utils
+import re
+import socket
+from optparse import OptionParser
+
+
+class Mail(object):
+
+    def __init__(self, conn, mail_id):
+        self.__mail = None
+        self.__timestamp = None
+        self.__conn = conn
+        self.__mail_id = mail_id
+
+    def __resolve_mail(self):
+        if self.__mail is None:
+            msg = self.__conn.fetch(self.__mail_id, "(RFC822)")
+            self.__mail = email.message_from_string(msg[1][0][1])
+            self.__timestamp = email.utils.mktime_tz(email.utils.parsedate_tz(self.__mail["DATE"]))
+
+    def timestamp(self):
+        if self.__timestamp is None:
+            # only resolve the internal date as this is quicker if we need nothing
+            # else from the mail
+            msg = self.__conn.fetch(self.__mail_id, "INTERNALDATE")
+            self.__timestamp = time.mktime(imaplib.Internaldate2tuple(msg[1][0]))
+        return self.__timestamp
+
+
+class MailList(object):
+    def __init__(self, conn, id_list):
+        super(MailList, self).__init__()
+        self.__conn = conn
+        self.__id_list = id_list
+
+    def __getitem__(self, idx):
+        if isinstance(idx, slice):
+            return MailList(self.__conn, self.__id_list[idx])
+        else:
+            return self.__get_by_index(self.__id_list[idx])
+
+    def __get_by_index(self, idx):
+        return Mail(self.__conn, idx)
+
+    def __len__(self):
+        return len(self.__id_list)
+
+    def empty(self):
+        return not self.__id_list
+
+
+class LoginError(Exception):
+    def __init__(self, *args, **kwargs):
+        super(LoginError, self).__init__(*args, **kwargs)
+
+
+class ImapWrapper(object):
+    def __init__(self, host, user, password, use_ssl):
+        super(ImapWrapper, self).__init__()
+        if use_ssl:
+            self.__conn = imaplib.IMAP4_SSL(host)
+        else:
+            self.__conn = imaplib.IMAP4(host)
+        res = self.__conn.login(user, password)
+        if res[0].lower() != 'ok':
+            raise LoginError("Login as user \"%s\" failed" % user)
+
+    def mailboxes(self):
+        res, mb_list = self.__conn.list()
+        pattern = re.compile(r'\((.*?)\) "(.*)" (.*)')
+        return [pattern.search(mb).group(3).strip("\"") for mb in mb_list]
+
+    def __format_date(self, timestamp):
+        return time.strftime("%d-%b-%Y", time.gmtime(timestamp))
+        #return time.strftime("%Y-%m-%d", time.gmtime(timestamp))
+        #return email.utils.formatdate(timestamp)
+
+    def mails(self, mailbox, before=None, after=None):
+        """
+        retrieve mails from a mailbox
+        before: if set, mails before that timestamp (rounded down to days)
+                are returned
+        """
+        self.__conn.select(mailbox)
+
+        if before is not None:
+            ids = self.__conn.search(None, "SENTBEFORE",
+                                     email.utils.encode_rfc2231(self.__format_date(before)))
+        elif after is not None:
+            ids = self.__conn.search(None, "SENTSINCE",
+                                     email.utils.encode_rfc2231(self.__format_date(after)))
+        else:
+            ids = self.__conn.search(None, "ALL")
+
+        return MailList(self.__conn, ids[1][0].split())
+
+
+class Age(object):
+    def __init__(self, secs):
+        super(Age, self).__init__()
+        self.__secs = secs
+
+    def __str__(self):
+        if self.__secs < 240:
+            return "%d sec" % self.__secs
+        mins = self.__secs / 60
+        if mins < 120:
+            return "%d min" % mins
+        hours, mins = divmod(mins, 60)
+        if hours < 12 and mins > 0:
+            return "%d hours %d min" % (hours, mins)
+        elif hours < 48:
+            return "%d hours" % hours
+        days, hours = divmod(hours, 24)
+        if days < 7 and hours > 0:
+            return "%d days %d hours" % (days, hours)
+        return "%d days" % days
+
+    def __float__(self):
+        return float(self.__secs)
+
+
+def output(message):
+    sys.stdout.write(message)
+
+
+def main():
+    parser = OptionParser()
+    parser.add_option("-d", "--debug", action="store_true", default=False,
+                      help="print debugging information")
+    parser.add_option("--server", help="the imap server to connect to (hostname or ip)")
+    parser.add_option("--port", type="int",
+                      help="tcp port of the imap server (default is 143 for unencrypted and 993 for SSL)")
+    parser.add_option("--ssl", action="store_true", default=False,
+                      help="enables ssl encrypted communication with the server")
+    parser.add_option("--username", help="Username to use for IMAP")
+    parser.add_option("--password", help="Password to use for IMAP")
+    parser.add_option("--timeout", type="int", default=10,
+                      help="Timeout in seconds for network connects")
+
+    parser.add_option("--warn-age", type="int",
+                      help="age (in seconds) of mails above which the check will warn")
+    parser.add_option("--crit-age", type="int",
+                      help="age (in seconds) of mails above which the check will become critical")
+
+    parser.add_option("--warn-new", type="int",
+                      help="warn if the newest message is older than this value (in seconds)")
+    parser.add_option("--crit-new", type="int",
+                      help="crit if the newest message is older than this value (in seconds)")
+
+    parser.add_option("--warn-count", type="int",
+                      help="number of mails above which the check will warn")
+    parser.add_option("--crit-count", type="int",
+                      help="number of mails above which the check will become critical")
+
+    parser.add_option("--mailbox", dest="mailboxes", action="append",
+                      help="mailbox to check. Can appear repeatedly to monitor multiple mailboxes")
+
+    parser.add_option("--retrieve-max", type="int", default=5,
+                      help="limit the number of mails retrieved per mailbox. Only relevant when checking age")
+
+    options, args = parser.parse_args()
+
+    for mandatory in ["server", "username"]:
+        if getattr(options, mandatory) is None:
+            parser.error("--%s not set" % mandatory)
+            return 1
+
+    if options.password is None:
+        from getpass import getpass
+        options.password = getpass()
+
+    socket.setdefaulttimeout(options.timeout)
+
+    try:
+        imap = ImapWrapper(options.server, options.username, options.password, True)
+    except LoginError, e:
+        output("login failed")
+        sys.exit(2)
+
+    messages = []
+    now = time.time()
+
+    for mb in imap.mailboxes():
+        if options.mailboxes and mb not in options.mailboxes:
+            continue
+
+        if options.crit_count and options.warn_count:
+            count = len(imap.mails(mb))
+            if count >= options.crit_count:
+                messages.append((2, "%s has %d messages (warn/crit at %d/%d)" % \
+                                (mb, count, options.warn_count, options.crit_count)))
+            elif count >= options.warn_count:
+                messages.append((1, "%s has %d messages (warn/crit at %d/%d)" % \
+                                (mb, count, options.warn_count, options.crit_count)))
+
+        if options.crit_age and options.warn_age:
+            # we want to filter mails by their age in at least minute precision,
+            # but imap search doesn't allow more than day-precision, so we have to
+            # retrieve all mails from the day before the relevant age and
+            # filter the result
+            old_mails = imap.mails(mb,  before=(now - options.warn_age) + 86400)
+            if old_mails:
+                old_mails = old_mails[:options.retrieve_max]
+                report_age = None
+                status = 0
+                status_icon = ""
+                for mail in old_mails:
+                    age = Age(now - mail.timestamp())
+                    if float(age) >= options.crit_age:
+                        report_age = age
+                        status = 2
+                        status_icon = "(!!) "
+                        break
+                    elif float(age) >= options.warn_age and float(age) > float(report_age):
+                        report_age = age
+                        status = 1
+                        status_icon = "(!) "
+
+                if status > 0:
+                    messages.append(
+                            (status,
+                             "oldest mail in %s is at least %s old %s(warn/crit at %s/%s)" %\
+                             (mb, report_age, status_icon,
+                             Age(options.warn_age), Age(options.crit_age))))
+
+        if options.crit_new and options.warn_new:
+            new_mails = imap.mails(mb, after=(now - options.crit_new))
+            status = 2
+            report_age = Age(options.crit_new)
+            if new_mails:
+                new_mails = new_mails[options.retrieve_max * -1:]
+                for mail in reversed(new_mails):
+                    age = Age(now - mail.timestamp())
+                    if float(age) < options.warn_new:
+                        status = 0
+                        break
+                    elif float(age) < options.crit_new and float(age) < float(report_age):
+                        report_age = age
+                        status = 1
+            if status == 2:
+                status_icon = "(!!) "
+            elif status == 1:
+                status_icon = "(!) "
+
+            if status > 0:
+                messages.append(
+                    (status, "newest mail in %s is at least %s old %s(warn/crit at %s/%s)" %\
+                     (mb, report_age, status_icon, Age(options.warn_new), Age(options.crit_new))))
+
+    if messages:
+        status = max([m[0] for m in messages])
+        output(", ".join([m[1] for m in messages]))
+        sys.exit(status)
+    else:
+        output("all mailboxes fine")
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
+

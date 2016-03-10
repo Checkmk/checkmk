@@ -95,7 +95,11 @@ int main(int argc, char **argv) {
 
     try {
         if (strcmp(argv[1], "tree") == 0) {
-            print_namespace(L"Root");
+            if (argc < 3) {
+                print_namespace(L"Root");
+            } else {
+                print_namespace(to_utf16(argv[2]).c_str());
+            }
         }
 
         if (strcmp(argv[1], "csv") == 0) {

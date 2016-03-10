@@ -25,6 +25,7 @@
     * 3090 FIX: fixed perf-o-meter link leading to old graph page even when new graphs are being used
     * 3260 FIX: Availability: ignores completely unmonitored objects in summary calculation
     * 3279 FIX: LDAP: Fixed default values of attribute selections...
+    * 3285 FIX: Fixed exception when editing large bookmark lists
 
     WATO:
     * 3091 FIX: fixed failure to rename hosts in raw edition...

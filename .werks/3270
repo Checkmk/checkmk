@@ -1,0 +1,9 @@
+Title: Fix button [Deprecated Rulesets] within deprecated manual checks rulesets
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457612462
+Class: fix
+
+

@@ -11885,8 +11885,12 @@ def mode_rulesets(phase, group=None):
             if group != "static":
                 html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
             else:
-                html.context_button(_("Deprecated Rulesets"),
-                    folder_preserving_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "1")]), "rulesets_deprecated")
+                if show_deprecated:
+                    html.context_button(_("Normal Rulesets"),
+                        folder_preserving_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "0")]), "rulesets")
+                else:
+                    html.context_button(_("Deprecated Rulesets"),
+                        folder_preserving_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "1")]), "rulesets_deprecated")
             if config.may("wato.hosts") or config.may("wato.seeall"):
                 html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "folder")
             if group == "agents":

@@ -14261,7 +14261,7 @@ def mode_edit_custom_attr(phase, what):
     if not new:
         attr = [ a for a in attrs if a['name'] == name ]
         if not attr:
-            raise MKUserError(_('The attribute does not exist.'))
+            raise MKUserError(None, _('The attribute does not exist.'))
         else:
             attr = attr[0]
     else:

@@ -907,7 +907,7 @@ class Overridable:
             if page:
                 raise MKUserError("_p_name", _("You already have an element with the ID <b>%s</b>") % page_dict["name"])
 
-        new_page_dict = forms.edit_valuespec(vs, page_dict, validate=validate, focus="_p_title")
+        new_page_dict = forms.edit_valuespec(vs, page_dict, validate=validate, focus="_p_title", method="POST")
         if new_page_dict != None:
             # Take over keys from previous value that are specific to the page type
             # and not edited here.

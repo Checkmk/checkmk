@@ -208,6 +208,7 @@ div#foot_refresh, div#foot_refresh_time {
     padding: 10px;
     text-decoration: none;
     z-index: 40;
+    text-align: center;
 }
 
 .pause_bar {
@@ -223,21 +224,25 @@ div#foot_refresh, div#foot_refresh_time {
 }
 
 .pause_bar.p1 {
-    margin-left: 20px;
+    margin-left: 15px;
     margin-right: 5px;
 }
 
 .pause_bar.p2 {
     margin-left: 5px;
-    margin-right: 10px;
+    margin-right: 15px;
 }
 
 #reload_pause_counter {
     font-weight: bold;
     color: #fff;
-    width: 100%;
     text-align: center;
     font-size: 120%;
+    text-decoration: none;
+}
+
+#reload_pause_counter:hover {
+    text-decoration: underline;
 }
 
 

@@ -772,7 +772,7 @@ def get_agent_info_program(commandline):
 
     vverbose("Calling external program %s\n" % commandline)
     try:
-        p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull, 'w'),
+        p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull),
                              stdout=subprocess.PIPE, stderr = subprocess.PIPE,
                              preexec_fn=os.setsid, close_fds=True)
         stdout, stderr = p.communicate()

@@ -5801,7 +5801,7 @@ def vs_ldap_connection(new, connection_id):
                      "Members of a group:<br> "
                      "<tt>(&(objectclass=user)(objectcategory=person)(memberof=CN=cmk-users,OU=groups,DC=example,DC=com))</tt><br>"),
             size = 80,
-            default_value = lambda: userdb.ldap_filter('users', False),
+            default_value = lambda: userdb.ldap_filter_of_connection(connection_id, 'users', False),
             attrencode = True,
         )),
         ("user_filter_group", LDAPDistinguishedName(
@@ -5825,7 +5825,7 @@ def vs_ldap_connection(new, connection_id):
             help  = _("The attribute used to identify the individual users. It must have "
                       "unique values to make an user identifyable by the value of this "
                       "attribute."),
-            default_value = lambda: userdb.ldap_attr('user_id'),
+            default_value = lambda: userdb.ldap_attr_of_connection(connection_id, 'user_id'),
             attrencode = True,
         )),
         ("lower_user_ids", FixedValue(
@@ -5879,13 +5879,13 @@ def vs_ldap_connection(new, connection_id):
                      "subset of the groups below the given base DN.<br><br>"
                      "e.g. <tt>(objectclass=group)</tt>"),
             size = 80,
-            default_value = lambda: userdb.ldap_filter('groups', False),
+            default_value = lambda: userdb.ldap_filter_of_connection(connection_id, 'groups', False),
             attrencode = True,
         )),
         ("group_member", TextAscii(
             title = _("Member Attribute"),
             help  = _("The attribute used to identify users group memberships."),
-            default_value = lambda: userdb.ldap_attr('member'),
+            default_value = lambda: userdb.ldap_attr_of_connection(connection_id, 'member'),
             attrencode = True,
         )),
     ]

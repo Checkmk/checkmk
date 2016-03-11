@@ -772,8 +772,9 @@ def get_agent_info_program(commandline):
 
     vverbose("Calling external program %s\n" % commandline)
     try:
-        p = subprocess.Popen(commandline, shell = True, stdout = subprocess.PIPE,
-                             stderr = subprocess.PIPE, preexec_fn=os.setsid)
+        p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull, 'w'),
+                             stdout=subprocess.PIPE, stderr = subprocess.PIPE,
+                             preexec_fn=os.setsid, close_fds=True)
         stdout, stderr = p.communicate()
         exitstatus = p.returncode
     except MKTimeout:

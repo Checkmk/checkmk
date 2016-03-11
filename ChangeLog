@@ -1,6 +1,7 @@
 1.2.8b5:
     Core & Setup:
     * 3275 FIX: Piggyback based services were skipped on "No agent hosts"...
+    * 3286 FIX: Fixing possible logging issues when using datasource programs for monitoring...
 
     Checks & Agents:
     * 3001 fileinfo: now able to configure the checks status if the file is missing

@@ -1,0 +1,15 @@
+Title: Fixing possible logging issues when using datasource programs for monitoring
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.8b5
+Date: 1457703007
+Class: fix
+
+When calling datasource programs for monitoring they are executed as subprocesses
+of Check_MK. Check_MK as passing all filedescriptors except stdout and stderr to
+the subprocess. So if a subprocess was doing something strange with them it could
+happen that this influenced the handling within Check_MK.
+
+This could, for example, confuse the communication between the CMC and the Check_MK
+keepalive helper processes.

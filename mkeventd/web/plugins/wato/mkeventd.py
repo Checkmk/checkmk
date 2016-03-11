@@ -1820,20 +1820,7 @@ def mode_mkeventd_mibs(phase):
                 c = wato_confirm(_("Confirm MIB deletion"),
                                  _("Do you really want to delete the MIB file <b>%s</b>?" % filename))
                 if c:
-                    log_mkeventd("delete-mib", _("Deleted MIB %s") % filename)
-
-                    # Delete the uploaded mib file
-                    os.remove(mkeventd.mib_upload_dir + "/" + filename)
-
-                    # Also delete the compiled files
-                    mib_name = mibs[filename]["name"]
-                    for f in [ mkeventd.compiled_mibs_dir + "/" + mib_name + ".py",
-                               mkeventd.compiled_mibs_dir + "/" + mib_name + ".pyc",
-                               mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".py",
-                               mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".pyc"
-                            ]:
-                        if os.path.exists(f):
-                            os.remove(f)
+                    delete_mib(filename, mibs[filename]["name"])
                 elif c == False:
                     return ""
                 else:
@@ -1850,6 +1837,9 @@ def mode_mkeventd_mibs(phase):
                         raise
                     else:
                         raise MKUserError("_upload_mib", str(e))
+
+        elif html.var("_bulk_delete_custom_mibs"):
+            return bulk_delete_custom_mibs_after_confirm()
 
         return
 
@@ -1875,20 +1865,80 @@ def mode_mkeventd_mibs(phase):
         os.makedirs(mkeventd.mib_upload_dir) # Let exception happen if this fails. Never happens on OMD
 
     for path, title in mkeventd.mib_dirs:
-        table.begin("mibs_"+path, title)
-        for filename, mib in sorted(load_snmp_mibs(path).items()):
-            table.row()
+        show_mib_table(path, title)
 
-            table.cell(_("Actions"), css="buttons")
-            if path == mkeventd.mib_upload_dir:
-                delete_url = make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)])
-                html.icon_button(delete_url, _("Delete this MIB"), "delete")
 
-            table.cell(_("Filename"), filename)
-            table.cell(_("MIB"), mib.get("name", ""))
-            table.cell(_("Organization"), mib.get("organization", ""))
-            table.cell(_("Size"), bytes_human_readable(mib.get("size", 0)), css="number")
-        table.end()
+def show_mib_table(path, title):
+    is_custom_dir = path == mkeventd.mib_upload_dir
+
+    if is_custom_dir:
+        html.begin_form("bulk_delete_form", method = "POST")
+
+    table.begin("mibs_"+path, title, searchable=False)
+    for filename, mib in sorted(load_snmp_mibs(path).items()):
+        table.row()
+
+        if is_custom_dir:
+            table.cell("<input type=button class=checkgroup name=_toggle_group"
+                       " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'),
+                       sortable=False, css="buttons")
+            html.checkbox("_c_mib_%s" % filename)
+
+        table.cell(_("Actions"), css="buttons")
+        if is_custom_dir:
+            delete_url = make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)])
+            html.icon_button(delete_url, _("Delete this MIB"), "delete")
+
+        table.cell(_("Filename"), filename)
+        table.cell(_("MIB"), mib.get("name", ""))
+        table.cell(_("Organization"), mib.get("organization", ""))
+        table.cell(_("Size"), bytes_human_readable(mib.get("size", 0)), css="number")
+
+    table.end()
+
+    if is_custom_dir:
+        html.button("_bulk_delete_custom_mibs", _("Bulk Delete"), "submit", style="margin-top:10px")
+        html.hidden_fields()
+        html.end_form()
+
+
+def bulk_delete_custom_mibs_after_confirm():
+    custom_mibs = load_snmp_mibs(mkeventd.mib_upload_dir)
+    selected_custom_mibs = []
+    for varname in html.all_varnames_with_prefix("_c_mib_"):
+        if html.get_checkbox(varname):
+            filename = varname.split("_c_mib_")[-1]
+            if filename in custom_mibs:
+                selected_custom_mibs.append(filename)
+
+    if selected_custom_mibs:
+        c = wato_confirm(_("Confirm deletion of selected MIBs"),
+                         _("Do you really want to delete the selected %d MIBs?") % \
+                           len(selected_custom_mibs))
+        if c:
+            for filename in selected_custom_mibs:
+                delete_mib(filename, custom_mibs[filename]["name"])
+            return
+        elif c == False:
+            return "" # not yet confirmed
+        else:
+            return    # browser reload
+
+
+def delete_mib(filename, mib_name):
+    log_mkeventd("delete-mib", _("Deleted MIB %s") % filename)
+
+    # Delete the uploaded mib file
+    os.remove(mkeventd.mib_upload_dir + "/" + filename)
+
+    # Also delete the compiled files
+    for f in [ mkeventd.compiled_mibs_dir + "/" + mib_name + ".py",
+               mkeventd.compiled_mibs_dir + "/" + mib_name + ".pyc",
+               mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".py",
+               mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".pyc"
+            ]:
+        if os.path.exists(f):
+            os.remove(f)
 
 
 def load_snmp_mibs(path):

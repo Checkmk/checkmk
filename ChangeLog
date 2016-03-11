@@ -141,6 +141,7 @@
 
     Event Console:
     * 2999 The contact name is now included in Event Console notifications...
+    * 3262 Event Console: bulk delete button for custom MIBs now available
     * 3058 FIX: Event Console is now allowing non loadable MIB modules on startup...
 
     Livestatus:

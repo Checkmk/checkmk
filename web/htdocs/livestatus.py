@@ -87,6 +87,9 @@ class MKLivestatusNotFoundError(MKLivestatusException):
 # We need some unique value here
 NO_DEFAULT = lambda: None
 class Helpers:
+    def query(self, query, add_headers = ""):
+        raise NotImplementedError()
+
     def query_value(self, query, deflt = NO_DEFAULT):
         """Issues a query that returns exactly one line and one columns and returns
            the response as a single value"""
@@ -163,6 +166,7 @@ class BaseConnection:
     def __init__(self, socketurl, persist = False, allow_cache = False):
         """Create a new connection to a MK Livestatus socket"""
         self.add_headers = ""
+        self.auth_header = ""
         self.persist = persist
         self.allow_cache = allow_cache
         self.socketurl = socketurl
@@ -358,7 +362,6 @@ class SingleSiteConnection(BaseConnection, Helpers):
         self.prepend_site = False
         self.auth_users = {}
         self.deadsites = {} # never filled, just for compatibility
-        self.auth_header = ""
         self.limit = None
 
     def set_prepend_site(self, p):
@@ -404,7 +407,10 @@ class SingleSiteConnection(BaseConnection, Helpers):
 # timeout:  timeout for tcp/unix in seconds
 
 class MultiSiteConnection(Helpers):
-    def __init__(self, sites, disabled_sites = []):
+    def __init__(self, sites, disabled_sites = None):
+        if disabled_sites is None:
+            disabled_sites = {}
+
         self.sites = sites
         self.connections = []
         self.deadsites = {}
@@ -556,7 +562,7 @@ class MultiSiteConnection(Helpers):
         return self.deadsites
 
     def alive_sites(self):
-        return self.connections.keys()
+        return [ s[0] for s in self.connections ]
 
     def successfully_persisted(self):
         for sitename, site, connection in self.connections:

@@ -1214,6 +1214,15 @@ def ldap_attr_of_connection(connection_id, attr):
     return connection.ldap_attr(attr)
 
 
+# Helper function for gathering the default LDAP filters of a connection.
+def ldap_filter_of_connection(connection_id, *args, **kwargs):
+    connection = get_connection(connection_id)
+    if not connection:
+        return None
+
+    return connection.ldap_filter(*args, **kwargs)
+
+
 def ldap_sync_simple(user_id, ldap_user, user, user_attr, attr):
     if attr in ldap_user:
         return {user_attr: ldap_user[attr][0]}

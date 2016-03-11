@@ -328,7 +328,7 @@ class WatoMode(object):
         global_buttons()
 
 
-    def actions(self):
+    def action(self):
         pass
 
 

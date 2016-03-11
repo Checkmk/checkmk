@@ -625,25 +625,22 @@ class Folder(BaseFolder):
     # latter case we need to load all hosts in all folders and actively search the host.
     @staticmethod
     def current():
-        if not html.is_cached("wato_current_folder"):
-            if html.has_var("host_search"):
-                base_folder = Folder.folder(html.var("folder", ""))
-                search_criteria = SearchFolder.criteria_from_html_vars()
-                folder = SearchFolder(base_folder, search_criteria)
-            elif html.has_var("folder"):
-                folder = Folder.folder(html.var("folder"))
-            else:
-                host_name = html.var("host")
-                if host_name: # find host with full scan. Expensive operation
-                    host = Host.host(host_name)
-                    if host:
-                        folder = host.folder()
-                else:
-                    folder = Folder.root_folder()
-            html.set_cache("wato_current_folder", folder)
-            return folder
-        else:
+        if html.is_cached("wato_current_folder"):
             return html.get_cached("wato_current_folder")
+
+        if html.has_var("folder"):
+            folder = Folder.folder(html.var("folder"))
+        else:
+            host_name = html.var("host")
+            if host_name: # find host with full scan. Expensive operation
+                host = Host.host(host_name)
+                if host:
+                    folder = host.folder()
+            else:
+                folder = Folder.root_folder()
+
+        Folder.set_current(folder)
+        return folder
 
 
     @staticmethod
@@ -1707,6 +1704,22 @@ class SearchFolder(BaseFolder):
         crit = { ".name" : html.var("host_search_host") }
         crit.update(collect_attributes("host_search", do_validate = False, varprefix="host_search_"))
         return crit
+
+
+    @staticmethod
+    def current():
+        if html.is_cached("wato_current_folder"):
+            return html.get_cached("wato_current_folder")
+
+        if html.has_var("host_search"):
+            base_folder = Folder.folder(html.var("folder", ""))
+            search_criteria = SearchFolder.criteria_from_html_vars()
+            folder = SearchFolder(base_folder, search_criteria)
+            Folder.set_current(folder)
+            return
+        else:
+            # FIXME: Is this needed for SearchFolder()?
+            return Folder.current()
 
 
     # .--------------------------------------------------------------------.

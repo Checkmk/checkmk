@@ -1,3 +1,5 @@
+1.2.8b6:
+
 1.2.8b5:
     Core & Setup:
     * 3275 FIX: Piggyback based services were skipped on "No agent hosts"...

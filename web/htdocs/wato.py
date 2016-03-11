@@ -949,7 +949,7 @@ def ajax_popup_move_to_folder():
         return
 
     if not back_url or not back_url.startswith("wato.py"):
-        raise MKUserError(_("Invalid back URL provided."))
+        raise MKUserError("back_url", _("Invalid back URL provided."))
 
     html.write('<span>%s</span>' % _('Move this %s to:') % what_title)
 

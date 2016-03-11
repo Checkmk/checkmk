@@ -36,7 +36,9 @@
 #include "logger.h"
 
 #ifdef CMC
+#include <chrono>
 #include "Core.h"
+using std::chrono::system_clock;
 extern Core *g_core;
 #else
 extern time_t last_log_rotation;
@@ -97,7 +99,8 @@ bool LogCache::logCachePreChecks() {
 // our file index. And delete all memorized
 // log messages.
 #ifdef CMC
-    if (g_core->_last_logfile_rotation > _last_index_update) {
+    if (g_core->_last_logfile_rotation >
+        system_clock::from_time_t(_last_index_update)) {
 #else
     if (last_log_rotation > _last_index_update) {
 #endif

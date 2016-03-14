@@ -1,0 +1,22 @@
+Title: Implemented grouping of services in table views
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.9i1
+Date: 1457961576
+Class: feature
+
+You can now configure the service table views to group the service row together
+to expandable groups. This can be configured using the global setting
+"Grouping of services in table views".
+
+For example if you have a host with several network interfaces
+which are all named like "Interface 1", "Interface 2" and so on, you can create
+a single group out of them. You can name the group "Interfaces" and configure
+a pattern like "Interface .*" for matching all your interface services. Once saved
+you can open up the service list page of the host and see all interface services
+hidden and grouped together.
+
+Please note that only services in OK (and not stale) state are grouped together. If
+one of the interfaces is in a problematic state, it will not be hidden by the grouping
+mechanism.

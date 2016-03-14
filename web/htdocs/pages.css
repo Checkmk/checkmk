@@ -554,6 +554,14 @@ tr.groupheader a:hover {
     text-decoration: underline;
 }
 
+tr.data.grouped_row_header td {
+    cursor: pointer;
+}
+
+tr.data.grouped_row_header img.treeangle {
+    margin-left: 0;
+}
+
 /* state in group header must have fixed width */
 .groupheader td.state {
     border: 1px solid #000000;

@@ -393,6 +393,18 @@ if (navigator.appVersion.indexOf("MSIE 7.") != -1)
     };
 }
 
+// Not available in IE <9
+if (!("nextElementSibling" in document.documentElement)) {
+    Object.defineProperty(Element.prototype, "nextElementSibling", {
+        get: function(){
+            var e = this.nextSibling;
+            while(e && 1 !== e.nodeType)
+                e = e.nextSibling;
+            return e;
+        }
+    });
+}
+
 //#.
 //#   .-AJAX---------------------------------------------------------------.
 //#   |                         _       _   _    __  __                    |
@@ -1282,11 +1294,16 @@ function toggle_tree_state(tree, name, oContainer, fetch_url) {
                 change_class(oContainer, 'open', 'closed');
         }
     }
-    get_url('tree_openclose.py?tree=' + encodeURIComponent(tree)
-            + '&name=' + encodeURIComponent(name) + '&state=' + state);
+
+    persist_tree_state(tree, name, state);
     oContainer = null;
 }
 
+function persist_tree_state(tree, name, state)
+{
+    get_url('tree_openclose.py?tree=' + encodeURIComponent(tree)
+            + '&name=' + encodeURIComponent(name) + '&state=' + state);
+}
 
 // fetch_url: dynamically load content of opened element.
 function toggle_foldable_container(treename, id, fetch_url) {
@@ -1305,6 +1322,34 @@ function toggle_foldable_container(treename, id, fetch_url) {
         toggle_folding(oImg, !has_class(oBox, "closed"));
         oImg = null;
         oBox = null;
+    }
+}
+
+
+function toggle_grouped_rows(tree, id, cell, num_rows)
+{
+    var group_title_row = cell.parentNode;
+
+    if (has_class(group_title_row, "closed")) {
+        remove_class(group_title_row, "closed");
+        var display = "";
+        var toggle_img_open = 1;
+        var state = "on";
+    }
+    else {
+        add_class(group_title_row, "closed");
+        var display = "none";
+        var toggle_img_open = 0;
+        var state = "off";
+    }
+
+    toggle_folding(cell.getElementsByTagName("IMG")[0], toggle_img_open);
+    persist_tree_state(tree, id, state);
+
+    var row = group_title_row;
+    for (var i = 0; i < num_rows; i++) {
+        var row = row.nextElementSibling;
+        row.style.display = display;
     }
 }
 

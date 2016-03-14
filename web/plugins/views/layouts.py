@@ -174,13 +174,13 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
 
 
     # render one group
-    def render_group(header, rows):
+    def render_group(header, rows_with_ids):
         html.write("<table class=groupheader cellspacing=0 cellpadding=0 border=0><tr class=groupheader>")
         painted = False
         for p in group_painters:
             if painted:
                 html.write("<td>,</td>")
-            painted = paint(p, rows[0][1])
+            painted = paint(p, rows_with_ids[0][1])
         html.write("</tr></table>\n")
 
         html.write("<table class=data>")
@@ -199,31 +199,51 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
         if column_headers != "off":
             show_header_line()
 
+        groups = calculate_grouping_of_services(rows_with_ids)
+
         visible_row_number = 0
-        for index, row in rows:
+        hide_grouped_rows = 0
+        for index, row in rows_with_ids:
             if view.get("column_headers") == "repeat":
                 if visible_row_number > 0 and visible_row_number % repeat_heading_every == 0:
                     show_header_line()
             visible_row_number += 1
 
             register_events(row) # needed for playing sounds
-            if trclass == "odd":
-                trclass = "even"
-            else:
-                trclass = "odd"
+
+            trclass = trclass == "odd" and "even" or "odd"
+
             # state = row.get("service_state", row.get("aggr_state"))
             state = saveint(row.get("service_state"))
             if state == None:
                 state = saveint(row.get("host_state", 0))
-                if state > 0: state +=1 # 1 is critical for hosts
+                if state > 0:
+                    state +=1 # 1 is critical for hosts
+
             stale = ''
             if is_stale(row):
                 stale = ' stale'
-            html.write('<tr class="data %s%d%s">' % (trclass, state, stale))
+
+            num_painters = len(painters)
+
+            if index in groups:
+                group_spec, num_rows = groups[index]
+                hide_grouped_rows = grouped_row_title(index, group_spec, num_rows, trclass, num_painters)
+                trclass = trclass == "odd" and "even" or "odd"
+
+            hide = ""
+            if hide_grouped_rows:
+                hide = " style=\"display:none\""
+                hide_grouped_rows -= 1
+
+            html.write('<tr class="data %s%d%s"%s>' % (trclass, state, stale, hide))
+
             if show_checkboxes:
-                render_checkbox_td(view, row, len(painters))
+                render_checkbox_td(view, row, num_painters)
+
             for p in painters:
                 paint(p, row)
+
             html.write("</tr>\n")
 
         html.write("</table>\n")
@@ -233,10 +253,77 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
     html.write("<table class=\"boxlayout%s\"><tr>" % (css_class and " "+css_class or ""))
     for column in columns:
         html.write("<td class=boxcolumn>")
-        for header, rows in column:
-            render_group(header, rows)
+        for header, rows_with_ids in column:
+            render_group(header, rows_with_ids)
         html.write("</td>")
     html.write("</tr></table>\n")
+
+
+def grouped_row_title(index, group_spec, num_rows, trclass, num_painters):
+    is_open = html.foldable_container_is_open("grouped_rows", index, False)
+    closed_class = not is_open and " closed" or ""
+
+    html.write("<tr class=\"data grouped_row_header%s %s0\">" %
+                                            (closed_class, trclass))
+    html.write("<td colspan=\"%d\" onclick=\"toggle_grouped_rows("
+               "'grouped_rows', '%s', this, %d)\">" %
+                (num_painters, index, num_rows))
+    html.write('<img align=absbottom class="treeangle nform" src="images/%s_%s.png">' %
+                                    ("tree_black", is_open and "90" or "00"))
+    html.write("%s (%d)</td>" % (html.attrencode(group_spec["title"]), num_rows))
+    html.write("</tr>")
+
+    if not is_open:
+        hide_grouped_rows = num_rows
+    else:
+        hide_grouped_rows = 0
+
+    return hide_grouped_rows
+
+
+# Produces a dictionary where the row index of the first row is used as key
+# and a tuple of the group_spec and the number of rows in this group is the value
+def calculate_grouping_of_services(rows):
+    if not config.service_view_grouping:
+        return {}
+
+    # First create dictionaries for each found group containing the
+    # group spec and the row indizes of the grouped rows
+    groups = {}
+    current_group = None
+    group_id = None
+    for index, row in rows:
+        group_spec = try_to_match_group(row)
+        if group_spec:
+            if current_group == None:
+                group_id = index
+            elif current_group != group_spec:
+                group_id = index
+
+            current_group = group_spec
+            groups.setdefault(group_id, (group_spec, []))
+            groups[group_id][1].append(index)
+        else:
+            current_group = None
+
+    # Now create the final structure as described above
+    groupings = {}
+    for group_id, (group_spec, row_indizes) in groups.items():
+        if len(row_indizes) >= group_spec.get("min_items", 2):
+            groupings[row_indizes[0]] = group_spec, len(row_indizes)
+
+    return groupings
+
+
+def try_to_match_group(row):
+    for group_spec in config.service_view_grouping:
+        if row.get('service_description', '') != '' \
+           and row.get("service_state", -1) == 0 and not is_stale(row) \
+           and re.match(group_spec["pattern"], row["service_description"]):
+            return group_spec
+
+    return None
+
 
 multisite_layouts["boxed"] = {
     "title"  : _("Balanced boxes"),
@@ -423,9 +510,12 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
                 break
         return members
 
+    rows_with_ids = [ (row_id(view, row), row) for row in rows ]
+    groups = calculate_grouping_of_services(rows_with_ids)
 
     visible_row_number = 0
-    for row in rows:
+    hide_grouped_rows = 0
+    for index, row in rows_with_ids:
         register_events(row) # needed for playing sounds
         # Show group header, if a new group begins. But only if grouping
         # is activated
@@ -492,8 +582,19 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
             else:
                 state = 0
 
+            if index in groups:
+                group_spec, num_rows = groups[index]
+                hide_grouped_rows = grouped_row_title(index, group_spec, num_rows, odd, num_painters)
+                odd = odd == "odd" and "even" or "odd"
+
+            hide = ""
+            if hide_grouped_rows:
+                hide = " style=\"display:none\""
+                hide_grouped_rows -= 1
+
             odd = odd == "odd" and "even" or "odd"
-            html.write('<tr class="data %s %s%d">' % (num_columns > 1 and "multicolumn" or "", odd, state))
+            html.write('<tr class="data %s %s%d"%s>' %
+                (num_columns > 1 and "multicolumn" or "", odd, state, hide))
 
         # Not first columns: Create one empty column as separator
         else:

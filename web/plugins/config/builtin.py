@@ -146,6 +146,9 @@ visible_views = None
 # Set this list in order to actively hide certain views
 hidden_views = None
 
+# Patterns to group services in table views together
+service_view_grouping = []
+
 # Custom user stylesheet to load (resides in htdocs/)
 custom_style_sheet = None
 

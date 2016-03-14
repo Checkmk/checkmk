@@ -607,6 +607,39 @@ register_configvar(group,
     domain = "multisite",
 )
 
+
+register_configvar(group,
+    "service_view_grouping",
+    ListOf(
+        Dictionary(
+            elements = [
+                ('title', TextUnicode(
+                    title = _('Title to show for the group'),
+                )),
+                ('pattern', RegExpUnicode(
+                    title = _('Grouping expression'),
+                    help = _('This regular expression is used to match the services to be put '
+                             'into this group. This is a prefix match regular expression.'),
+                )),
+                ('min_items', Integer(
+                    title = _('Minimum number of items to create a group'),
+                    help = _('When less than these items are found for a group, the services '
+                             'are not shown grouped together.'),
+                    min_value = 2,
+                    default_value = 2,
+                )),
+            ],
+            optional_keys = ["min_items"],
+        ),
+        title = _("Grouping of services in table views"),
+        help = _("You can use this option to make the service table views fold services matching "
+                 "the given patterns into groups. Only services in state <i>OK</i> will be folded "
+                 "together. Groups of only one service will not be rendered. If multiple patterns "
+                 "match a service, the service will be added to the first matching group."),
+    ),
+    domain = "multisite",
+)
+
 # Helper that retrieves the list of hostgroups via Livestatus
 # use alias by default but fallback to name if no alias defined
 def list_hostgroups():

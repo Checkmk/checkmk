@@ -555,6 +555,9 @@ class FilterTristate(Filter):
         else:
             return self.filter_code(infoname, False)
 
+    def filter_code(self, infoname, positive):
+        raise NotImplementedError()
+
 
 class FilterStateType(FilterTristate):
     def __init__(self, info, column, title, deflt = -1):
@@ -574,6 +577,7 @@ class FilterStateType(FilterTristate):
 declare_filter(116, FilterStateType("host", "host_state_type",       _("Host state type")))
 declare_filter(217, FilterStateType("service", "service_state_type", _("Service state type")))
 
+
 class FilterNagiosFlag(FilterTristate):
     def __init__(self, info, column, title, deflt = -1):
         FilterTristate.__init__(self, column, title, info, column, deflt)
@@ -584,6 +588,7 @@ class FilterNagiosFlag(FilterTristate):
         else:
             return "Filter: %s = 0\n" % self.column
 
+
 class FilterNagiosExpression(FilterTristate):
     def __init__(self, info, name, title, pos, neg, deflt = -1):
         FilterTristate.__init__(self, name, title, info, None, deflt)
@@ -592,6 +597,7 @@ class FilterNagiosExpression(FilterTristate):
 
     def filter_code(self, infoname, positive):
         return positive and self.pos or self.neg
+
 
 declare_filter(120, FilterNagiosExpression("host", "summary_host", _("Is summary host"),
             "Filter: host_custom_variable_names >= _REALNAME\n",
@@ -970,6 +976,10 @@ class BIServiceIsUsedFilter(FilterTristate):
 	        new_rows.append(row)
 	return new_rows
 
+    def filter_code(self, infoname, positive):
+        pass
+
+
 declare_filter(300, BIServiceIsUsedFilter())
 
 declare_filter(301, FilterText("downtime_id", _("Downtime ID"), "downtime", "downtime_id", "downtime_id", "="))
@@ -1128,6 +1138,10 @@ class FilterStarred(FilterTristate):
 
         filters += "%s: %d\n" % (oor, count)
         return filters
+
+    def filter_code(self, infoname, positive):
+        pass
+
 
 declare_filter(501, FilterStarred("host"))
 declare_filter(501, FilterStarred("service"))

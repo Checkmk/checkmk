@@ -1,0 +1,10 @@
+Title: Fixed exception in logwatch config generation when using Nagios
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b7
+Date: 1457959319
+
+The config generation failed when the logwatch item had special characters.

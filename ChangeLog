@@ -1,4 +1,7 @@
 1.2.8b7:
+    Core & Setup:
+    * 3008 FIX: Fixed exception in logwatch config generation when using Nagios...
+
 
 1.2.8b6:
     Multisite:

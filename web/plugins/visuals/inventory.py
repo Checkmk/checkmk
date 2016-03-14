@@ -36,6 +36,7 @@ def try_int(x):
     except:
         return x
 
+
 class FilterInvtableText(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
@@ -60,6 +61,8 @@ class FilterInvtableText(Filter):
                 newrows.append(row)
         return newrows
 
+
+
 # Filter for choosing a range in which an age lies
 class FilterInvtableAge(Filter):
     def __init__(self, infoname, name, title, only_days=False):
@@ -81,7 +84,7 @@ class FilterInvtableAge(Filter):
         return True
 
     def filter_table(self, rows):
-        return filter_table_with_conversion(self, rows, lambda age: age)
+        return self.filter_table_with_conversion(self, rows, lambda age: age)
 
     def filter_table_with_conversion(self, rows, conv):
         from_value = Age().from_html_vars(self.name + "_from")
@@ -104,6 +107,7 @@ class FilterInvtableAge(Filter):
         return newrows
 
 
+
 class FilterInvtableTimestampAsAge(FilterInvtableAge):
     def __init__(self, infoname, name, title, only_days=True):
         FilterInvtableAge.__init__(self, infoname, name, title, only_days)
@@ -112,7 +116,6 @@ class FilterInvtableTimestampAsAge(FilterInvtableAge):
     def filter_table(self, rows):
         now = time.time()
         return self.filter_table_with_conversion(rows, lambda timestamp: now - timestamp)
-
 
 
 

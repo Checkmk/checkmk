@@ -1,0 +1,14 @@
+Title: Fixed missing filters in HW-/SW-Inventory views after editing the view
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1457964984
+
+When editing HW-/SW-Inventory based views like the software package search,
+all software related filters were gone after saving the view. Only removing
+the customized view helped to bring the old view back.
+
+Loosing the filters has now been fixed. You can now edit such views as expected.

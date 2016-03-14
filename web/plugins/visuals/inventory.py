@@ -39,7 +39,7 @@ def try_int(x):
 class FilterInvtableText(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
-        Filter.__init__(self, varname, title, infoname + "s", [varname], [])
+        Filter.__init__(self, varname, title, infoname, [varname], [])
 
     def display(self):
         htmlvar = self.htmlvars[0]
@@ -64,7 +64,7 @@ class FilterInvtableText(Filter):
 class FilterInvtableAge(Filter):
     def __init__(self, infoname, name, title, only_days=False):
         name = infoname + "_" + name
-        Filter.__init__(self, name, title, infoname + "s", [name + "_from", name + "_to"], [])
+        Filter.__init__(self, name, title, infoname, [name + "_from", name + "_to"], [])
 
     def display(self):
         html.write("<table><tr><td style='vertical-align: middle;'>")
@@ -120,7 +120,7 @@ class FilterInvtableTimestampAsAge(FilterInvtableAge):
 class FilterInvtableIDRange(Filter):
     def __init__(self, infoname, name, title):
         name = infoname + "_" + name
-        Filter.__init__(self, name, title, infoname + "s", [name + "_from", name + "_to"], [])
+        Filter.__init__(self, name, title, infoname, [name + "_from", name + "_to"], [])
 
     def display(self):
         html.write(_("from:") + " ")
@@ -152,7 +152,7 @@ class FilterInvtableOperStatus(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
         varnames = [ varname + "_" + str(x) for x in interface_oper_states ]
-        Filter.__init__(self, varname, title, infoname + "s", varnames, [])
+        Filter.__init__(self, varname, title, infoname, varnames, [])
 
     def display(self):
         html.begin_checkbox_group()
@@ -189,7 +189,7 @@ class FilterInvtableOperStatus(Filter):
 class FilterInvtableAdminStatus(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
-        Filter.__init__(self, varname, title, infoname + "s", [ varname ], [])
+        Filter.__init__(self, varname, title, infoname, [ varname ], [])
 
     def display(self):
         html.begin_radio_group(horizontal = True)
@@ -212,7 +212,7 @@ class FilterInvtableAdminStatus(Filter):
 class FilterInvtableAvailable(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
-        Filter.__init__(self, varname, title, infoname + "s", [ varname ], [])
+        Filter.__init__(self, varname, title, infoname, [ varname ], [])
 
     def display(self):
         html.begin_radio_group(horizontal = True)
@@ -238,7 +238,7 @@ class FilterInvtableAvailable(Filter):
 class FilterInvtableInterfaceType(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
-        Filter.__init__(self, varname, title, infoname + "s", [ varname ], [])
+        Filter.__init__(self, varname, title, infoname, [ varname ], [])
 
     def double_height(self):
         return True
@@ -276,7 +276,7 @@ class FilterInvtableInterfaceType(Filter):
 class FilterInvtableVersion(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
-        Filter.__init__(self, varname, title, infoname + "s", [varname + "_from", varname + "_to"], [])
+        Filter.__init__(self, varname, title, infoname, [varname + "_from", varname + "_to"], [])
 
     def display(self):
         htmlvar = self.htmlvars[0]

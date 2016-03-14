@@ -7,6 +7,9 @@
     Multisite:
     * 3287 FIX: Fixed broken crash reporting (Submission of crashes did not work)
 
+    HW/SW-Inventory:
+    * 3289 FIX: Fixed missing filters in HW-/SW-Inventory views after editing the view...
+
 
 1.2.8b5:
     Core & Setup:

@@ -1217,6 +1217,10 @@ class EventServer:
     # Convert pysnmp datatypes to simply handable ones
     def snmptrap_translate_varbinds(self, var_bind_list):
         var_binds = []
+        if self._mib_resolver is None:
+            log('Failed to translate OIDs, no modules loaded (see above)')
+            return [(str(oid), str(value)) for oid, value in var_bind_list]
+
         for oid, value in var_bind_list:
             try:
                 mib_var = ObjectType(ObjectIdentity(oid), value).resolveWithMib(self._mib_resolver)

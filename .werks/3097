@@ -1,0 +1,9 @@
+Title: mkeventd: fixed crash with non-descriptive error message if mibs couldn't be loaded
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.8b7
+Date: 1457970667
+Class: fix
+
+

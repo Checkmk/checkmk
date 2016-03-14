@@ -1,0 +1,10 @@
+Title: Fixed broken crash reporting (Submission of crashes did not work)
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1457942405
+
+

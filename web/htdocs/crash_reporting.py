@@ -255,7 +255,7 @@ def show_report_form(details):
     vs.render_input("_report", details)
     vs.set_focus("report")
     forms.end()
-    html.button("report", _("Submit Report"))
+    html.button("_report", _("Submit Report"))
     html.hidden_fields()
     html.end_form()
 

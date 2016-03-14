@@ -1,0 +1,9 @@
+Title: Fixed broken crash reporting (Submission of crashes did not work)
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b6
+Date: 1457942405
+Class: fix
+
+

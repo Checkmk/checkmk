@@ -4517,7 +4517,7 @@ def must_be_in_contactgroups(cgspec):
 
 
 def check_wato_foldername(htmlvarname, name, just_name = False):
-    if not just_name and name in Folder.current().has_subfolder(name):
+    if not just_name and Folder.current().has_subfolder(name):
         raise MKUserError(htmlvarname, _("A folder with that name already exists."))
 
     if not name:

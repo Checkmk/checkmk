@@ -1217,9 +1217,13 @@ def mode_edit_host(phase, new, is_cluster):
                     html.context_button(_("Clustered Services"),
                       folder_preserving_link([("mode", "edit_ruleset"), ("varname", "clustered_services")]), "rulesets")
 
-            if config.may("wato.rename_hosts") and not Folder.current().locked_hosts():
-                html.context_button(_("Rename %s") % (is_cluster and _("Cluster") or _("Host")),
-                  folder_preserving_link([("mode", "rename_host"), ("host", hostname)]), "rename_host")
+            if not Folder.current().locked_hosts():
+                if config.may("wato.rename_hosts"):
+                    html.context_button(is_cluster and _("Rename Cluster") or _("Rename Host"),
+                      folder_preserving_link([("mode", "rename_host"), ("host", hostname)]), "rename_host")
+                html.context_button(is_cluster and _("Delete Cluster") or _("Delete Host"),
+                      html.makeactionuri([("delete", "1")]), "delete")
+
             if not is_cluster:
                 html.context_button(_("Diagnostic"),
                       folder_preserving_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
@@ -1308,8 +1312,6 @@ def mode_edit_host(phase, new, is_cluster):
         html.image_button("save", _("Save &amp; Finish"), "submit")
         if not is_cluster:
             html.image_button("diag_host", _("Save &amp; Test"), "submit")
-        if not new:
-            html.image_button("delete", _("Delete host!"), "submit")
     html.hidden_fields()
     html.end_form()
 

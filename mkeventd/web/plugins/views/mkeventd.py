@@ -509,9 +509,32 @@ if mkeventd_enabled:
 
     def render_delete_event_icons(row):
         if config.may("mkeventd.delete"):
+            urlvars = []
+
             # Found no cleaner way to get the view. Sorry.
-            view = get_view_by_name(html.var("view_name"))
-            urlvars = [
+            # TODO: This needs to be cleaned up with the new view implementation.
+            if html.has_var("name") and html.has_var("id"):
+                ident = int(html.var("id"))
+
+                import dashboard
+                dashboard.load_dashboards()
+                view = dashboard.get_dashlet(html.var("name"), ident)
+
+                # These actions are not performed within the dashlet. Assume the title url still
+                # links to the source view where the action can be performed.
+                title_url = view.get("title_url")
+                if title_url:
+                    from urlparse import urlparse, parse_qsl
+                    url = urlparse(title_url)
+                    filename = url.path
+                    urlvars += parse_qsl(url.query)
+            else:
+                # Regular view
+                view = get_view_by_name(html.var("view_name"))
+                target = None
+                filename = None
+
+            urlvars += [
                 ("filled_in", "actions"),
                 ("actions", "yes"),
                 ("_do_actions", "yes"),
@@ -519,7 +542,7 @@ if mkeventd_enabled:
                 ("_delete_event", _("Archive Event")),
                 ("_show_result", "0"),
             ]
-            url = html.makeactionuri(urlvars)
+            url = html.makeactionuri(urlvars, filename=filename)
             return html.render_icon_button(url, _("Archive this event"), "delete")
         else:
             return ''

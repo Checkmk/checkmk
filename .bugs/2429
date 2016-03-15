@@ -1,0 +1,10 @@
+Title: OMD site with AUTOSTART off is partially started after server boot
+Component: core
+State: open
+Date: 2016-03-15 17:04:31
+Targetversion: 1.2.8
+Class: bug
+
+If you boot your server then a site with AUTOSTART off
+is partially started due to the crontab entry being started.
+This prevents e.g. omd config.

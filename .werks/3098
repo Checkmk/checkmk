@@ -1,0 +1,9 @@
+Title: isc_dhcpd: fixed handling of leases that never expire
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b7
+Date: 1458034851
+Class: fix
+
+

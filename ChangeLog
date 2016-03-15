@@ -2,6 +2,9 @@
     Core & Setup:
     * 3008 FIX: Fixed exception in logwatch config generation when using Nagios...
 
+    Checks & Agents:
+    * 3098 FIX: isc_dhcpd: fixed handling of leases that never expire
+
     Event Console:
     * 3097 FIX: mkeventd: fixed crash with non-descriptive error message if mibs couldn't be loaded
 

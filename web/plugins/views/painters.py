@@ -1356,9 +1356,9 @@ multisite_painters["host_pnpgraph" ] = {
 def paint_host_black(row):
     state = row["host_state"]
     if state != 0:
-        return None, "<div class=hostdown>%s</div>" % row["host_name"]
+        return "nobr", "<div class=hostdown>%s</div>" % row["host_name"]
     else:
-        return None, row["host_name"]
+        return "nobr", row["host_name"]
 
 multisite_painters["host_black"] = {
     "title"   : _("Hostname, red background if down or unreachable"),
@@ -1403,7 +1403,7 @@ def paint_host_with_state(row):
     if state != 0:
         return "state hstate hstate%s" % state, row["host_name"]
     else:
-        return "", row["host_name"]
+        return "nobr", row["host_name"]
 
 multisite_painters["host_with_state"] = {
     "title"   : _("Hostname, marked red if down"),
@@ -1417,7 +1417,7 @@ multisite_painters["host"] = {
     "title"   : _("Hostname"),
     "short"   : _("Host"),
     "columns" : ["host_name"],
-    "paint"   : lambda row: ("", row["host_name"]),
+    "paint"   : lambda row: ("nobr", row["host_name"]),
     "sorter"  : 'site_host',
 }
 

@@ -66,10 +66,11 @@ for line in file(leases_file):
     if parts[0] == "lease":
         ip_address = parts[1]
     elif parts[0] == "ends":
-        ends_date_string = parts[2] + " " + parts[3]
-        ends_date = calendar.timegm(time.strptime(ends_date_string, "%Y/%m/%d %H:%M:%S"))
-        if ends_date < now:
-            ip_address = None # skip this address, this lease is outdated
+        if parts[1] != "never":
+            ends_date_string = parts[2] + " " + parts[3]
+            ends_date = calendar.timegm(time.strptime(ends_date_string, "%Y/%m/%d %H:%M:%S"))
+            if ends_date < now:
+                ip_address = None # skip this address, this lease is outdated
 
     elif parts[0] == "binding" and parts[1] == "state":
         binding_state = parts[2]

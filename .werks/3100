@@ -1,0 +1,8 @@
+Title: fixed exception when trying to create a wato folder when that folder already exists
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b7
+Date: 1458044804
+Class: fix
+

@@ -9,6 +9,9 @@
     Multisite:
     * 3290 FIX: Fixed broken event quick delete icon when used in dashlets
 
+    WATO:
+    * 3100 FIX: fixed exception when trying to create a wato folder when that folder already exists
+
     BI:
     * 3291 FIX: Improved error handling when searching for BI aggregations with invalid regex
 

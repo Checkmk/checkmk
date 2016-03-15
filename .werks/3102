@@ -1,0 +1,11 @@
+Title: added option to availability to include host alias in reports
+Level: 1
+Component: reporting
+Compatible: compat
+Version: 1.2.9i1
+Date: 1458056479
+Class: feature
+
+In addition to the new option to display the host alias, the option "do not display the host name"
+now works in host availability views as well, but only if the alias is selected to be displayed. You still
+can't have a table with only the availability column.

@@ -149,6 +149,7 @@ def get_avoption_entries(what):
         choices = [
             ( "omit_headers",            _("Do not display column headers")),
             ( "omit_host",               _("Do not display the host name")),
+            ( "show_alias",              _("Display the host alias")),
             ( "use_display_name",        _("Use alternative display name for services")),
             ( "omit_buttons",            _("Do not display icons for history and timeline")),
             ( "display_timeline_legend", _("Display legend for timeline")),
@@ -589,6 +590,8 @@ def get_availability_rawdata(what, filterheaders, only_sites, av_object, include
         columns.append("log_output")
     if "use_display_name" in avoptions["labelling"]:
         columns.append("service_display_name")
+    if "show_alias" in avoptions["labelling"]:
+        columns.append("host_alias")
 
     # If we group by host/service group then make sure that that information is available
     if avoptions["grouping"] not in [ None, "host" ]:
@@ -665,6 +668,7 @@ def compute_availability(what, av_rawdata, avoptions):
 
                 display_name = span.get("service_display_name", service)
                 state = span["state"]
+                host_alias = span.get("host_alias", site_host[1])
                 consider = True
 
                 if state == -1:
@@ -741,6 +745,7 @@ def compute_availability(what, av_rawdata, avoptions):
             availability_entry = {
                 "site"                : site_host[0],
                 "host"                : site_host[1],
+                "alias"               : host_alias,
                 "service"             : service,
                 "display_name"        : display_name,
                 "states"              : states,
@@ -917,15 +922,24 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
     }
 
     # Titles for the columns that specify the object
+    titles = []
     if what == "bi":
-        av_table["object_titles"] = [ _("Aggregate") ]
-    elif what == "host":
-        av_table["object_titles"] = [ _("Host") ]
-    else: # service
-        if "omit_host" in labelling:
-            av_table["object_titles"] = [ _("Service") ]
-        else:
-            av_table["object_titles"] = [ _("Host"), _("Service") ]
+        titles.append(_("Aggregate"))
+    else:
+        # in service availability we can only omit the host. In the
+        # host availability this is only possible if the alias is
+        # being displayed, Otherwise the table wouldn't make sense
+        # and the pdf renderer would crash
+        if "omit_host" not in labelling or\
+                (what == "host" and "show_alias" not in labelling):
+            titles.append(_("Host"))
+        if "show_alias" in labelling:
+            titles.append(_("Alias"))
+
+        if what != "host":
+            titles.append(_("Service"))
+
+    av_table["object_titles"] = titles
 
     # Headers for availability cells
     av_table["cell_titles"] = []
@@ -947,6 +961,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
     for entry in availability_table:
         site = entry["site"]
         host = entry["host"]
+        alias = entry["alias"]
         service = entry["service"]
 
         row = {}
@@ -975,8 +990,11 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
             objectcells.append((service, bi_url))
         else:
             host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"), ("site", site), ("host", host)])
-            if not "omit_host" in labelling or what == "host":
+            if "omit_host" not in labelling or\
+                    (what == "host" and "show_alias" not in labelling):
                 objectcells.append((host, host_url))
+            if "show_alias" in labelling:
+                objectcells.append((alias, host_url))
             if what == "service":
                 if "use_display_name" in labelling:
                     service_name = entry["display_name"]

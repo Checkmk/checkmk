@@ -75,7 +75,7 @@ body.main {
    on the URL */
 body.main.screenshotmode {
     background-image: url("");
-    background-color: white;
+    background-color: white; /* #5893af; */
 }
 
 body.main div.main {

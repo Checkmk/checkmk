@@ -68,6 +68,10 @@ div.floatfilter {
     color: black;
 }
 
+body.main.screenshotmode div.floatfilter {
+    background-color: #5893af;
+}
+
 div.floatfilter input[type=text].neg {
     width: 229px;
 }

@@ -66,7 +66,11 @@ then
   mysql_sockets="--"$(fgrep socket $MK_CONFDIR/mysql.cfg)
   if [ $mysql_sockets = "--" ] ; then
     mysql_sockets=$(ps -ef | grep mysqld | grep "[s]ocket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
-    for socket in $mysql_sockets ; do do_query "--socket="$socket ; done
+    if [ -z $mysql_sockets ] ; then
+        do_query ""
+    else
+        for socket in $mysql_sockets ; do do_query "--socket="$socket ; done
+    fi
   else
     do_query ""
   fi

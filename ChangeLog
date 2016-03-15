@@ -79,6 +79,7 @@
     * 3261 FIX: cisco_temperature: fixed wrong datatype handling
     * 3007 FIX: Interface groups: fixed exception when port type or interface items were not set in the WATO rule...
     * 3098 FIX: isc_dhcpd: fixed handling of leases that never expire
+    * 3099 FIX: mk_mysql: worked around problems where running instances can't be discovered
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

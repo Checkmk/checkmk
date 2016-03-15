@@ -9,6 +9,9 @@
     Multisite:
     * 3290 FIX: Fixed broken event quick delete icon when used in dashlets
 
+    BI:
+    * 3291 FIX: Improved error handling when searching for BI aggregations with invalid regex
+
     Event Console:
     * 3097 FIX: mkeventd: fixed crash with non-descriptive error message if mibs couldn't be loaded
 

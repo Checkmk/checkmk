@@ -82,7 +82,12 @@ class BITextFilter(Filter):
         if not val:
             return rows
         if self.how == "regex":
-            reg = re.compile(val.lower())
+            try:
+                reg = re.compile(val.lower())
+            except re.error, e:
+                html.add_user_error(None, "Invalid regular expression: %s" % e)
+                return rows
+
             return [ row for row in rows if reg.search(row[self.column].lower()) ]
         else:
             return [ row for row in rows if row[self.column] == val ]

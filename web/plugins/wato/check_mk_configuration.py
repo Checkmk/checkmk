@@ -629,13 +629,14 @@ register_configvar(group,
                     default_value = 2,
                 )),
             ],
-            optional_keys = ["min_items"],
+            optional_keys = [],
         ),
         title = _("Grouping of services in table views"),
         help = _("You can use this option to make the service table views fold services matching "
                  "the given patterns into groups. Only services in state <i>OK</i> will be folded "
                  "together. Groups of only one service will not be rendered. If multiple patterns "
                  "match a service, the service will be added to the first matching group."),
+        add_label = _("Add new grouping definition"),
     ),
     domain = "multisite",
 )

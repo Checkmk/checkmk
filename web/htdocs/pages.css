@@ -562,6 +562,10 @@ tr.data.grouped_row_header img.treeangle {
     margin-left: 0;
 }
 
+tr.data.group_end {
+    border-bottom: 2px solid #ccc;
+}
+
 /* state in group header must have fixed width */
 .groupheader td.state {
     border: 1px solid #000000;

@@ -1,0 +1,11 @@
+Title: zpool: new check to monitor usage of zfs pools
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1458048130
+Class: feature
+
+There is already a check (zfsget) to monitor usage of zfs mountpoints, but in complex setups where
+the pools don't map 1:1 to mountpoints, the existing check doesn't give a correct picture of the
+underlying pools.

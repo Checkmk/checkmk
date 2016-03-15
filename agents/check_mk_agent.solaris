@@ -239,6 +239,9 @@ echo $load 1/$ps $$ $procs
 # zpool status
 if [ -x /sbin/zpool ]; then
     run_cached -s zpool_status 120 "/sbin/zpool status -x"
+
+    echo '<<<zpool>>>'
+    zpool list
 fi
 
 

@@ -1198,7 +1198,15 @@ def check_ajax_update():
     ident = int(html.var('id'))
 
     load_dashboards(lock=True)
-    dashlet = get_dashlet(board, ident)
+
+    if board not in available_dashboards:
+        raise MKGeneralException(_('The requested dashboard does not exist.'))
+    dashboard = available_dashboards[board]
+
+    try:
+        dashlet = dashboard['dashlets'][ident]
+    except IndexError:
+        raise MKGeneralException(_('The dashlet does not exist.'))
 
     return dashlet, dashboard
 

@@ -610,6 +610,17 @@ def get_dashlet_type(dashlet):
     return dashlet_types[dashlet["type"]]
 
 
+def get_dashlet(board, ident):
+    if board not in available_dashboards:
+        raise MKGeneralException(_('The requested dashboard does not exist.'))
+    dashboard = available_dashboards[board]
+
+    try:
+        return dashboard['dashlets'][ident]
+    except IndexError:
+        raise MKGeneralException(_('The dashlet does not exist.'))
+
+
 # Use the URL returned by urlfunc as dashlet URL
 #
 # We need to support function pointers to be compatible to old dashboard plugin
@@ -1187,15 +1198,7 @@ def check_ajax_update():
     ident = int(html.var('id'))
 
     load_dashboards(lock=True)
-
-    if board not in available_dashboards:
-        raise MKGeneralException(_('The requested dashboard does not exist.'))
-    dashboard = available_dashboards[board]
-
-    try:
-        dashlet = dashboard['dashlets'][ident]
-    except IndexError:
-        raise MKGeneralException(_('The dashlet does not exist.'))
+    dashlet = get_dashlet(board, ident)
 
     return dashlet, dashboard
 

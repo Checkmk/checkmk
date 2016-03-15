@@ -1238,6 +1238,12 @@ def render_view(view, rows, datasource, group_painters, painters,
     # web service e.g. for NagStaMon)
     elif row_count > 0 and config.may("general.act") \
          and html.do_actions() and html.transaction_valid():
+
+        # There are one shot actions which only want to affect one row, filter the rows
+        # by this id during actions
+        if html.has_var("_row_id") and html.do_actions():
+            rows = filter_by_row_id(view, rows)
+
         try:
             do_actions(view, datasource["infos"][0], rows, '')
         except:

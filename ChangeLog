@@ -99,6 +99,7 @@
     * 3279 FIX: LDAP: Fixed default values of attribute selections...
     * 3285 FIX: Fixed exception when editing large bookmark lists
     * 3287 FIX: Fixed broken crash reporting (Submission of crashes did not work)
+    * 3290 FIX: Fixed broken event quick delete icon when used in dashlets
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

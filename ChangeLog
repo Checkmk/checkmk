@@ -4,6 +4,7 @@
 
     Checks & Agents:
     * 3098 FIX: isc_dhcpd: fixed handling of leases that never expire
+    * 3099 FIX: mk_mysql: worked around problems where running instances can't be discovered
 
     Multisite:
     * 3290 FIX: Fixed broken event quick delete icon when used in dashlets

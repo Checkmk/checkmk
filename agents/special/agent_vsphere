@@ -1664,7 +1664,14 @@ if not error:
                 raise
             error = "Error while processing received data"
 
-print "\n".join(vsphere_output)
+
+def make_utf8(line):
+    if type(line) == unicode:
+        return line.encode("utf-8")
+    else:
+        return line
+
+print "\n".join(map(make_utf8, vsphere_output))
 
 if opt_agent:
     sys.stdout.write(get_agent_info_tcp(host_address))

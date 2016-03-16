@@ -1,0 +1,11 @@
+Title: WATO host diagnostic page: prevent incorrectly filled input fields
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b7
+Date: 1458141368
+
+Certain browser automatically fill in username and password formulars.
+The IP address and the SNMP community were on of them... This has been fixed.

@@ -13,6 +13,7 @@
 
     WATO:
     * 3100 FIX: fixed exception when trying to create a wato folder when that folder already exists
+    * 3011 FIX: WATO host diagnostic page: prevent incorrectly filled input fields...
 
     BI:
     * 3291 FIX: Improved error handling when searching for BI aggregations with invalid regex

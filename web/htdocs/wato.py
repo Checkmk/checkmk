@@ -2482,6 +2482,7 @@ def mode_diag_host(phase):
     forms.header(_('Host Properties'))
 
     forms.section(legend = False)
+    html.prevent_password_auto_completion()
     vs_host.render_input("vs_host", host.attributes())
     html.help(vs_host.help())
 

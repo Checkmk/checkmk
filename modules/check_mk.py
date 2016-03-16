@@ -508,7 +508,7 @@ def active_check_service_description(act_info, params):
 
 
 def is_snmp_check(check_name):
-    return check_name in snmp_info
+    return check_name.split(".")[0] in snmp_info
 
 
 def is_tcp_check(check_name):

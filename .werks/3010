@@ -1,0 +1,9 @@
+Title: Fixed vanished snmp subchecks for snmp hosts
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.8b7
+Date: 1458135856
+Class: fix
+
+SNMP subchecks for snmp hosts did not work when the host did not have the host tag 'snmp'.

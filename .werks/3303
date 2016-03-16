@@ -1,0 +1,9 @@
+Title: cisco_fru_module_status: new check which monitors the operational status of FRU modules of Cisco devices which support the CISCO-ENTITY-FRU-CONTROL-MIB
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1458122275
+Class: feature
+
+

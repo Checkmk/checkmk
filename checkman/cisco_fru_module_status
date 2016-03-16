@@ -1,0 +1,18 @@
+title: Cisco devices: Status of FRU Modules
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the operational status of field
+ replaceable unit (FRU) modules of Cisco devices which
+ support the CISCO-ENTITY-FRU-CONTROL-MIB.
+ The device sends its status itself.
+ The check is OK if the operational status is OK, otherwise
+ it is WARN or CRIT.
+
+item:
+ The index of the FRU module.
+
+inventory:
+ One check is created for each FRU module.

@@ -97,8 +97,11 @@ def parse_brocade_optical(info):
         if value_string == 'N/A' or value_string.lower() == "not supported":
             return None, None
 
-        val, unit, status = value_string.split()
-        return float(val), status
+        try:
+            val, unit, status = value_string.split()
+            return float(val), status
+        except ValueError:
+            return None, None
 
     result = {}
 

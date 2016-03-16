@@ -396,12 +396,15 @@ def check_jolokia_metrics_threads(item, params, info):
             continue # The keys might be optional (saw jboss only sending ThreadCount)
 
         val = int(d[key])
+        status_info = ""
         if key == 'ThreadCount':
             # Thread count might lead to a warn/crit state
             if val >= crit:
                 status = 2
+                status_info = "(!!) (Levels at %d/%d)" % (warn, crit)
             elif val >= warn:
                 status = 1
+                status_info = "(!) (Levels at %d/%d)" % (warn, crit)
 
             # Calculate the thread increase rate
             try:
@@ -412,7 +415,7 @@ def check_jolokia_metrics_threads(item, params, info):
                 wrapped = True
 
         perfdata.append((key, val))
-        output.append('%s: %d' % (key, val))
+        output.append('%s: %d%s' % (key, val, status_info))
     # Only process the perfdata when no wrap occured
     if wrapped:
         return (status, ', '.join(output))

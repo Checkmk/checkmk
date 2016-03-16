@@ -31,6 +31,7 @@
     * 3101 zpool: new check to monitor usage of zfs pools...
     * 3103 brocade_optical: new check to monitor signal strength of optical network ports on Brocade switches
     * 3303 cisco_fru_module_status: new check which monitors the operational status of FRU modules of Cisco devices which support the CISCO-ENTITY-FRU-CONTROL-MIB
+    * 3012 jolokia_metrics.threads: Improved check output, now showing the actual problem and levels
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

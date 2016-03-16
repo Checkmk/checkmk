@@ -65,7 +65,7 @@ check_info['zpool'] = {
     "check_function"      : check_zpool,
     "inventory_function"  : inventory_zpool,
     "parse_function"      : parse_zpool,
-    "service_description" : "Pool %s",
+    "service_description" : "Storage Pool %s",
     "has_perfdata"        : True,
     "group"               : "filesystem",
 }

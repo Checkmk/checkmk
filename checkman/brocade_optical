@@ -1,0 +1,16 @@
+title: Brocade Switches: Optical Signal Quality
+catalog: hw/storagehw/brocade
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors the signal quality of optical ports on Brocade switches.
+ It takes into account RX and TX power levels as well as the temperature at the port
+ and, optionally, the same readings for all individual lanes.
+ Currently the {OK}, {WARN}, {CRIT} levels are not configurable in check_mk, instead
+ the status as reported by the device itself is reported.
+
+inventory:
+ The inventory creates one service for each port that fulfills the conditions configured
+ for network and switch port discovery and reports optical signal quality readings.
+

@@ -118,6 +118,35 @@ register_check_parameters(
     "dict"
 )
 
+register_check_parameters(
+    subgroup_networking,
+    "brocade_optical",
+    "Brocade Optical Signal",
+    Dictionary(
+        elements = [
+            ('temp',     Checkbox(title = _("Temperature Alert"),
+                                  default_value = True)
+             ),
+            ('tx_light', Checkbox(title = _("TX Light alert"),
+                                  label = _("TX Light alert"),
+                                  default_value = False)),
+            ('rx_light', Checkbox(title = _("RX Light alert"),
+                                  label = _("TX Light alert"),
+                                  default_value = False)),
+            ('lanes',    Checkbox(
+                            title = _("Lanes"),
+                            label = _("Monitor & Graph Lanes"),
+                            help  = _("Monitor and graph the lanes, if the port has multiple"))),
+        ],
+        optional_keys=[]
+    ),
+    TextAscii(
+        title = _("Interface id"),
+    ),
+    match_type = "dict"
+)
+
+
 #.
 #   .--Inventory-----------------------------------------------------------.
 #   |            ___                      _                                |

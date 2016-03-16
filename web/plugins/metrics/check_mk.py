@@ -2970,6 +2970,35 @@ metric_info["varnish_worker_thread_ratio"] = {
     "color" : "#60c0c0",
 }
 
+metric_info["rx_light"] = {
+    "title" : _("RX Signal Power"),
+    "unit"  : "dbm",
+    "color" : "35/a"
+}
+
+metric_info["tx_light"] = {
+    "title" : _("TX Signal Power"),
+    "unit"  : "dbm",
+    "color" : "15/a"
+}
+
+for i in range(10):
+    metric_info["rx_light_%d" % i] = {
+        "title" : _("RX Signal Power Lane %d") % (i + 1),
+        "unit"  : "dbm",
+        "color" : "35/b",
+    }
+    metric_info["tx_light_%d" % i] = {
+        "title" : _("TX Signal Power Lane %d") % (i + 1),
+        "unit"  : "dbm",
+        "color" : "15/b",
+    }
+    metric_info["port_temp_%d" % i] = {
+        "title" : _("Temperature Lane %d") % (i + 1),
+        "unit"  : "dbm",
+        "color" : indexed_color(i * 3 + 2, 30),
+    }
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -6151,3 +6180,21 @@ graph_info.append({
         ( "varnish_worker_max_rate",    "line" ),
     ],
 })
+
+graph_info.append({
+    "title" : _("Optical Signal Power"),
+    "metrics" : [
+        ( "rx_light", "line" ),
+        ( "tx_light", "line" )
+    ]
+})
+
+for i in range(10):
+    graph_info.append({
+        "title" : _("Optical Signal Power Lane %d") % i,
+        "metrics" : [
+            ( "rx_light_%d" % i, "line" ),
+            ( "tx_light_%d" % i, "line" )
+        ]
+    })
+

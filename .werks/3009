@@ -1,0 +1,10 @@
+Title: ESX agent: fixed exception with utf-8 encoded strings
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1458132586
+Class: fix
+
+The agent tried to encode and already utf-8 encoded string.
+

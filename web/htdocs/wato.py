@@ -2339,7 +2339,7 @@ def analyse_ruleset(rulespec, ruleset, hostname, service):
             effectiverules.append((folder, nr))
 
         elif rulespec["match"] == "dict":
-            new_result = value.copy()
+            new_result = value.copy() # pylint: disable=no-member
             new_result.update(resultdict)
             resultdict = new_result
             effectiverules.append((folder, nr))
@@ -9278,7 +9278,7 @@ def mode_edit_site(phase):
     if type(method) == str and method.startswith("unix:"):
         method = ('unix', method[5:])
     elif type(method) == str and method.startswith("tcp:"):
-        parts = method.split(":")[1:]
+        parts = method.split(":")[1:] # pylint: disable=no-member
         method = ('tcp', (parts[0], int(parts[1])))
     vs_conn_method.render_input("method", method)
 
@@ -12276,7 +12276,7 @@ def mode_edit_ruleset(phase):
                         title = _("This rule matches, but does not define any parameters.")
                         img = 'imatch'
                     else:
-                        new_keys = set(value.keys())
+                        new_keys = set(value.keys()) # pylint: disable=no-member
                         if set_is_disjoint(match_keys, new_keys):
                             title = _("This rule matches and defines new parameters.")
                             img = 'match'

@@ -1,0 +1,10 @@
+Title: jolokia_metrics.threads: Improved check output, now showing the actual problem and levels
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.8b7
+Date: 1458142474
+
+

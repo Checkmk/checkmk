@@ -316,6 +316,12 @@ def compile_forest(user, only_hosts = None, only_groups = None):
             if entry[0] == config.DISABLED:
                 continue
 
+            if entry[0] == config.DT_AGGR_WARN:
+                downtime_aggr_warn = True
+                entry = entry[1:]
+            else:
+                downtime_aggr_warn = False
+
             if entry[0] == config.HARD_STATES:
                 use_hard_states = True
                 entry = entry[1:]
@@ -345,6 +351,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
             for this_entry in new_entries:
                 remove_empty_nodes(this_entry)
                 this_entry["use_hard_states"] = use_hard_states
+                this_entry["downtime_aggr_warn"] = downtime_aggr_warn
 
             new_entries = [ e for e in new_entries if len(e["nodes"]) > 0 ]
 
@@ -1018,20 +1025,25 @@ service_nomatch_cache = set([])
 # Execution of the trees. Returns a tree object reflecting
 # the states of all nodes
 def execute_tree(tree, status_info = None):
-    use_hard_states = tree["use_hard_states"]
+    aggregation_options = {
+        "use_hard_states"    : tree["use_hard_states"],
+        "downtime_aggr_warn" : tree["downtime_aggr_warn"],
+    }
+
     if status_info == None:
         required_hosts = tree["reqhosts"]
         status_info = get_status_info(required_hosts)
-    return execute_node(tree, status_info, use_hard_states)
+    return execute_node(tree, status_info, aggregation_options)
 
-def execute_node(node, status_info, use_hard_states):
+
+def execute_node(node, status_info, aggregation_options):
     if node["type"] == NT_LEAF:
-        return execute_leaf_node(node, status_info, use_hard_states)
+        return execute_leaf_node(node, status_info, aggregation_options)
     else:
-        return execute_rule_node(node, status_info, use_hard_states)
+        return execute_rule_node(node, status_info, aggregation_options)
 
 
-def execute_leaf_node(node, status_info, use_hard_states):
+def execute_leaf_node(node, status_info, aggregation_options):
 
     site, host = node["host"]
     service = node.get("service")
@@ -1065,7 +1077,7 @@ def execute_leaf_node(node, status_info, use_hard_states):
                 if has_been_checked == 0:
                     output = _("This service has not been checked yet")
                     state = PENDING
-                if use_hard_states:
+                if aggregation_options["use_hard_states"]:
                     st = hard_state
                 else:
                     st = state
@@ -1098,7 +1110,7 @@ def execute_leaf_node(node, status_info, use_hard_states):
             }, None, node)
 
     else:
-        if use_hard_states:
+        if aggregation_options["use_hard_states"]:
             st = host_hard_state
         else:
             st = host_state
@@ -1123,7 +1135,7 @@ def execute_leaf_node(node, status_info, use_hard_states):
         return (state, assumed_state, node)
 
 
-def execute_rule_node(node, status_info, use_hard_states):
+def execute_rule_node(node, status_info, aggregation_options):
     # get aggregation function
     funcspec = node["func"]
     parts = funcspec.split('!')
@@ -1144,7 +1156,7 @@ def execute_rule_node(node, status_info, use_hard_states):
     ack_states = [] # Needed for computing the acknowledgement of non-OK nodes
     one_assumption = False
     for n in node["nodes"]:
-        result = execute_node(n, status_info, use_hard_states) # state, assumed_state, node [, subtrees]
+        result = execute_node(n, status_info, aggregation_options) # state, assumed_state, node [, subtrees]
         subtrees.append(result)
 
         # Assume items in downtime as CRIT when computing downtime state
@@ -1174,7 +1186,10 @@ def execute_rule_node(node, status_info, use_hard_states):
     downtime_state = func(*([downtime_states] + funcargs))
     host_downtime_state = func(*([host_downtime_states] + funcargs))
 
-    state["in_downtime"] = downtime_state["state"] >= 2
+    if aggregation_options["downtime_aggr_warn"]:
+        state["in_downtime"] = downtime_state["state"] >= 1
+    else:
+        state["in_downtime"] = downtime_state["state"] >= 2
 
     # Compute acknowledgedment state
     if state["state"] > 0: # Non-OK-State -> compute acknowledgedment

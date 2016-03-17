@@ -1,0 +1,17 @@
+Title: New option in aggregation for tuning aggregation of downtimes
+Level: 1
+Component: bi
+Compatible: compat
+Version: 1.2.9i1
+Date: 1458212879
+Class: feature
+
+When computing the state 'in scheduled downtime' for an aggregate
+first all leaf nodes that are within downtime are assumed CRIT and all others
+OK. Then each aggregated node is assumed to be in downtime if the state
+is CRIT under this assumption. You can change this to WARN now by checking
+the new option {{Escalate downtimes based on aggregated WARN state}} in
+the properties of an aggregation now. The influence of
+this setting is especially relevant if you use aggregation functions of type <i>count</i>
+and want the downtime information also escalated in case such a node would go into
+WARN state.

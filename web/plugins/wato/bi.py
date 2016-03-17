@@ -58,6 +58,7 @@ class ModeBI(WatoMode):
             'REMAINING'          : 'REMAINING-f41e728b-0bce-40dc-82ea-51091d034fc3',
             'DISABLED'           : 'DISABLED-f41e728b-0bce-40dc-82ea-51091d034fc3',
             'HARD_STATES'        : 'HARD_STATES-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            'DT_AGGR_WARN'       : 'DT_AGGR_WARN-f41e728b-0bce-40dc-82ea-51091d034fc3',
         }
         self._load_config()
 
@@ -206,6 +207,8 @@ class ModeBI(WatoMode):
         convaggr = conv + node
         if aggr["hard_states"]:
             convaggr = (self._bi_constants["HARD_STATES"],) + convaggr
+        if aggr["downtime_aggr_warn"]:
+            convaggr = (self._bi_constants["DT_AGGR_WARN"],) + convaggr
         if aggr["disabled"]:
             convaggr = (self._bi_constants["DISABLED"],) + convaggr
         return convaggr
@@ -255,6 +258,12 @@ class ModeBI(WatoMode):
         else:
             disabled = False
 
+        if aggr[0] == self._bi_constants["DT_AGGR_WARN"]:
+            downtime_aggr_warn = True
+            aggr = aggr[1:]
+        else:
+            downtime_aggr_warn = False
+
         if aggr[0] == self._bi_constants["HARD_STATES"]:
             hard_states = True
             aggr = aggr[1:]
@@ -267,11 +276,12 @@ class ModeBI(WatoMode):
             groups = aggr[0]
         node = self._convert_node_from_bi(aggr[1:])
         return {
-            "disabled"    : disabled,
-            "hard_states" : hard_states,
-            "groups"      : groups,
-            "node"        : node,
-            "single_host" : single_host,
+            "disabled"           : disabled,
+            "hard_states"        : hard_states,
+            "downtime_aggr_warn" : downtime_aggr_warn,
+            "groups"             : groups,
+            "node"               : node,
+            "single_host"        : single_host,
         }
 
     # Make some conversions so that the format of the
@@ -630,6 +640,18 @@ class ModeBI(WatoMode):
                            "just since one check then it's soft state is CRIT, but its hard state is still OK."),
               )
             ),
+            ( "downtime_aggr_warn",
+              Checkbox(
+                  title = _("Aggregation of Downtimes"),
+                  label = _("Escalate downtimes based on aggregated WARN state"),
+                  help = _("When computing the state 'in scheduled downtime' for an aggregate "
+                           "first all leaf nodes that are within downtime are assumed CRIT and all others "
+                           "OK. Then each aggregated node is assumed to be in downtime if the state "
+                           "is CRIT under this assumption. You can change this to WARN. The influence of "
+                           "this setting is especially relevant if you use aggregation functions of type <i>count</i> "
+                           "and want the downtime information also escalated in case such a node would go into "
+                           "WARN state."),
+            )),
             ( "single_host",
               Checkbox(
                   title = _("Optimization"),

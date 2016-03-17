@@ -329,13 +329,17 @@ def new_graphing_url(row, what):
     site_id = row["site"]
 
     urivars = [
-        ("view_name", "service_graphs"),
         ("siteopt",   site_id),
         ("host",      row["host_name"]),
     ]
 
     if what == "service":
-        urivars.append(("service", row["service_description"]))
+        urivars += [
+            ("service", row["service_description"]),
+            ("view_name", "service_graphs"),
+        ]
+    else:
+        urivars.append(("view_name", "host_graphs"))
 
     return html.makeuri_contextless(urivars, filename="view.py")
 

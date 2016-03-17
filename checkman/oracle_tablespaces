@@ -9,17 +9,13 @@ description:
  and the autoextension and optionally the setting of
  the increment size.
 
- {Autoextension}: During inventory the autoextension
- setting is determined and frozen into the check parameter.
- That means that if the auto extension setting changes
- later, the check will get critical. A table space may
- consist of several data files with different settings.
- If at least one data file has auto extension turned on,
- the table space is considered to have auto extension
- turned on. You can turn off auto extension checking
- by setting the first check parameter to {None} rather
- then to {True} or {False}. Inventory will do this for
- you if you set {oracle_tablespaces_check_autoext} to {False}.
+ {Autoextension}: During inventory the autoextension setting is determined
+ and remembered for later.  That means that if the auto extension setting
+ changes later, the check will get critical. A table space may consist of
+ several data files with different settings.  If at least one data file
+ has auto extension turned on, the table space is considered to have auto
+ extension turned on. The behaviour of autoextension setting can be configured
+ with a check parameter.
 
  {Increment size}: If the configuration parameter
  {oracle_tablespaces_check_default_increment} is set to
@@ -50,16 +46,6 @@ item:
  A string composited of the SID and the tablespace name,
  separated by a dot, for example {"pengt.TEMP"}.
 
-examples:
- # Set levels for free space to 20% (WARN) and 10% (CRIT)
- # of maximum tablespace size and deactivate check of autoextend
-
-
- oracle_tablespaces_defaults = {
-        "levels" : (20.0, 10.0),
-        "autoextend" : None
- }
-
 perfdata:
  Three values in bytes: the current size, the used size of the tablespace
  and the maximum size of the table space.
@@ -68,47 +54,3 @@ inventory:
  One separate check will be created for each tablespace
  which is {ONLINE}.
 
-[parameters]
-parameters (dict):
-
- {"autoextend"}: Either {True} or {False} - depending on whether auto extension is
- expected to be on or off
-
- {"levels"}: By default a tuple containing the warn and crit levels for free space.
- Supported types (int / float). If this is a float, it is considered as
- percentage of the maximum size of the tablespace. If it is an integer,
- it is considered to be MB of free space. If the space drops to this level or below,
- the check will get into warning state. Default is {(10.0, 5.0)}.
- This check also supports some kind of dynamic level definition. Using this you can
- apply thresholds to tablespace checks depending on their size, just like using the
- magic factor, but more simple do configure. To configure thi, you have to set this
- variable to a list of tuples, where the first element is an integer representing
- the minimum tablespace size in bytes to apply these thresholds to and a tuple
- containing the thresholds as described above.
-
- {"magic"}: The magic number, which scales the levels according to the tablespace size.
- Default is a factor of 1.0, which does no adaptation. A factor less than 1.0 lowers the
- percentual levels for the free space in large tablespaces and raises them for small ones.
-
- {"magic_normsize"}: Norm size of a tablespace for the magic computation
- The default for this is {1000}. It is measured in {MB}.
-
- {"magic_maxlevels"}: Maximum levels if using magic factor. The warn / crit levels will go beyond
- these numbers. The preset is set to (60.0, 50.0)
-
-[configuration]
-oracle_tablespaces_check_autoext(bool): This boolean setting determines, whether
- inventory should activate monitoring of the auto extension setting. Per default
- this is set to {True}, so the current state of the auto extension will be
- put into the check parameters as either {True} or {False}. If you set the
- configuration variable to {False}, then inventory will enter {None} as
- check parameter und thus disable the checking of the auto extensible flag
- for newly inventorized table spaces.
-
-oracle_tablespaces_check_default_increment(bool): This setting does not
- control inventory but is used live during the checking und thus affects
- all checks, not only newly inventorized ones. Per default it is set to
- {True}. That way the check will warn if the table space has its increment
- size set to {1} (the ORACLE default value).
-
-oracle_tablespaces_defaults(dict): A dictionary with the optional keys mentioned in parameters

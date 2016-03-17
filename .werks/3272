@@ -1,0 +1,19 @@
+Title: oracle_tablespaces: severity of check for autoextension is now configurable
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1458228140
+Class: feature
+
+There is now a new check parameter that defines the check state in case that
+the current autoextension setting does not match the expected setting. The
+expected setting is either determined during discovery (default) or by an
+explicit value in the rule.
+
+By setting the state in such a case to OK the checking for autoextension
+is effectlivey turned off.
+
+Since the expected autoextension setting and the severity are two different
+parameters you can easily create independent rules for the expected setting
+and the severity of a mismatch.

@@ -5694,10 +5694,18 @@ register_check_parameters(
                  "This rule allows you to define checks on the size of tablespaces."),
         elements = db_levels_common + [
             ( "autoextend",
-                Checkbox(
-                  title = _("Autoextend"),
-                  label = _("Autoextension is expected"),
-                  help = "")),
+                DropdownChoice(
+                  title = _("Expected autoextend setting"),
+                  choices = [
+                     ( True, _("Autoextend is expected to be ON")),
+                     ( False, _("Autoextend is expected to be OFF")),
+                  ]
+            )),
+            ( "autoextend_severity",
+              MonitoringState(
+                  title = _("Severity of invalid autoextend setting"),
+                  default_value = 2,
+            )),
             ( "defaultincrement",
                 Checkbox(
                   title = _("Default Increment"),

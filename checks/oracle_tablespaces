@@ -45,7 +45,9 @@ factory_settings["oracle_tablespaces_defaults"] = {
     "defaultincrement": True,
 }
 
-# Whether to check auto extend settings
+# Whether to check auto extend settings. Note: this setting is not ment to
+# be changed anymore. It cannot be edited via WATO either. There now exists
+# a check parameter, where the behaviour can be configured on a per-service-base.
 oracle_tablespaces_check_autoext = True
 
 # this parameter is deprecated and needed for old configurations with
@@ -267,11 +269,21 @@ def check_oracle_tablespaces(item, params, parsed):
     # Check autoextend status if parameter not set to None
     if autoext != None:
         if autoext and num_extensible == 0:
-            infotext += ", NO AUTOEXTEND(!!)"
-            status = 2
+            autoext_info = "NO AUTOEXTEND"
         elif not autoext and num_extensible > 0:
-            infotext += ", AUTOTEXTEND(!!)"
-            status = 2
+            autoext_info = "AUTOTEXTEND"
+        else:
+            autoext_info = None
+
+        if autoext_info:
+            autoextend_severity = params.get("autoextend_severity", 2)
+            if autoextend_severity == 2 or status == 2:
+                status = 2
+            else:
+                status = max(autoextend_severity, status)
+            infotext += ", " + autoext_info + state_markers[autoextend_severity]
+
+
     elif num_extensible > 0:
         infotext += ", autoextend"
     else:

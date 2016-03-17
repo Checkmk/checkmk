@@ -87,6 +87,7 @@
     * 3009 FIX: ESX agent: fixed exception with utf-8 encoded strings...
     * 3010 FIX: Fixed vanished snmp subchecks for snmp hosts...
     * 3237 FIX: brocade_vdx_status: Fixed broken discovery
+    * 3238 FIX: if.include: Fixed handling of old-skool traffic limits
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

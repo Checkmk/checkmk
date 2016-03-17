@@ -107,6 +107,7 @@
     * 3285 FIX: Fixed exception when editing large bookmark lists
     * 3287 FIX: Fixed broken crash reporting (Submission of crashes did not work)
     * 3290 FIX: Fixed broken event quick delete icon when used in dashlets
+    * 3236 FIX: Fixed host page of pnp4nagios...
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

@@ -1,0 +1,12 @@
+Title: Fixed host page of pnp4nagios
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b7
+Date: 1458203813
+Class: fix
+
+Fixed PHP error when opening host page of pnp4nagios, the error was:
+
+   "cannot redeclare replace_cmk_expression()..."
+

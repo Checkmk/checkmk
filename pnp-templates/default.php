@@ -79,18 +79,20 @@ if ($cache_state != "uptodate")
     }
 }
 
-function replace_cmk_expression($NAME, $MIN, $MAX, $WARN, $CRIT, $text)
-{
-    # Replace expressions in the title. This not a full implementation of
-    # the complete RPN expression syntax of Check_MK - but sufficient for
-    # all used cases.
-    foreach ($NAME as $i => $n) {
-        $text = str_replace("%($n:min@count)", "$MIN[$i]", $text);
-        $text = str_replace("%($n:max@count)", "$MAX[$i]", $text);
-        $text = str_replace("%($n:warn@count)", "$WARN[$i]", $text);
-        $text = str_replace("%($n:crit@count)", "$CRIT[$i]", $text);
+if (!function_exists("replace_cmk_expression")) {
+    function replace_cmk_expression($NAME, $MIN, $MAX, $WARN, $CRIT, $text)
+    {
+        # Replace expressions in the title. This not a full implementation of
+        # the complete RPN expression syntax of Check_MK - but sufficient for
+        # all used cases.
+        foreach ($NAME as $i => $n) {
+            $text = str_replace("%($n:min@count)", "$MIN[$i]", $text);
+            $text = str_replace("%($n:max@count)", "$MAX[$i]", $text);
+            $text = str_replace("%($n:warn@count)", "$WARN[$i]", $text);
+            $text = str_replace("%($n:crit@count)", "$CRIT[$i]", $text);
+        }
+        return $text;
     }
-    return $text;
 }
 
 # Now read template information from cache file, if present

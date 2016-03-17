@@ -136,7 +136,9 @@ def if_get_traffic_levels(params):
     new_traffic = []
     if 'traffic' in params and type(params['traffic']) != list:
         warn, crit = params['traffic']
-        if type(warn) == int:
+        if warn == None:
+            new_traffic.append(('both', ('upper', (None, (None, None)))))
+        elif type(warn) == int:
             new_traffic.append(('both', ('upper', ('abs', (warn, crit)))))
         elif type(warn) == float:
             new_traffic.append(('both', ('upper', ('perc', (warn, crit)))))

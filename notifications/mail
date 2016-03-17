@@ -36,6 +36,8 @@
 
 
 import os, re, sys, subprocess
+import urllib2
+import base64
 
 try:
     from email.mime.multipart import MIMEMultipart
@@ -50,6 +52,11 @@ except ImportError:
     from email.MIMEBase import MIMEBase
     from email import Encoders
     MIMEApplication = None
+
+try:
+    from simplejson import json
+except ImportError:
+    import json
 
 tmpl_head_html = '''
 <html>
@@ -464,6 +471,103 @@ def extract_graph_error(output):
     return output
 
 
+# Fetch graphs for this object. It first tries to detect how many sources
+# are available for this object. Then it loops through all sources and
+# fetches retrieves the images. If a problem occurs, it is printed to
+# stderr (-> notify.log) and the graph is not added to the mail.
+def render_pnp_graphs(context):
+    try:
+        num_sources = fetch_num_sources(context)
+    except GraphException, e:
+        graph_error = extract_graph_error(str(e))
+        if '.xml" not found.' not in graph_error:
+            sys.stderr.write('Unable to fetch number of graphs: %s\n' % graph_error)
+        num_sources = 0
+
+    graph_list = []
+    for source in range(0, num_sources):
+        try:
+            content = fetch_graph(context, source)
+        except GraphException, e:
+            sys.stderr.write('Unable to fetch graph: %s\n' % e)
+            continue
+
+        graph_list.append(content)
+
+    return graph_list
+
+
+def render_cmk_graphs(context):
+    if context["WHAT"] == "HOST":
+        svc_desc = "_HOST_"
+    else:
+        svc_desc = context["SERVICEDESC"]
+
+    url = "http://localhost:%d/%s/check_mk/ajax_graph_images.py?host=%s&service=%s" % \
+                    (get_apache_port(), os.environ["OMD_SITE"], context["HOSTNAME"], svc_desc)
+
+    try:
+        json_data = urllib2.urlopen(url).read()
+    except Exception, e:
+        if opt_debug:
+            raise
+        sys.stderr.write("ERROR: %s\n" % e)
+        return []
+
+    return map(base64.b64decode, json.loads(json_data))
+
+
+def get_omd_config(key):
+    for l in file(os.environ["OMD_ROOT"] + "/etc/omd/site.conf"):
+        if l.startswith(key + "="):
+            return l.split("=")[-1].strip("'\n")
+    return None
+
+
+def get_apache_port():
+    port = get_omd_config("CONFIG_APACHE_TCP_PORT")
+    if port == None:
+        return 80
+    else:
+        return int(port)
+
+
+def use_cmk_graphs():
+    return get_omd_config("CONFIG_CORE") == "cmc"
+
+
+def render_performance_graphs(context):
+    if use_cmk_graphs():
+        graphs = render_cmk_graphs(context)
+    else:
+        graphs = render_pnp_graphs(context)
+
+    attachments, graph_code = [], ''
+    for source, graph_png in enumerate(graphs):
+        if context['WHAT'] == 'HOST':
+            svc_desc = '_HOST_'
+        else:
+            svc_desc = context['SERVICEDESC'].replace(' ', '_')
+            # replace forbidden windows characters < > ? " : | \ / *
+            for token in ["<", ">", "?", "\"", ":", "|", "\\", "/", "*"] :
+                svc_desc = svc_desc.replace(token, "x%s" % ord(token))
+
+        filename = '%s-%s-%d.png' % (context['HOSTNAME'], svc_desc, source)
+
+        attachments.append(('img', filename, graph_png, 'inline'))
+
+        cls = ''
+        if context.get('PARAMETER_NO_FLOATING_GRAPHS'):
+            cls = ' class="nofloat"'
+        graph_code += '<img src="cid:%s"%s />' % (filename, cls)
+
+    if graph_code:
+        graph_code = '<tr><th colspan=2>Graphs</th></tr>' \
+                     '<tr class="even0"><td colspan=2 class=graphs>%s</td></tr>' % graph_code
+
+    return attachments, graph_code
+
+
 def construct_content(context):
     # A list of optional information is configurable via the parameter "elements"
     # (new configuration style)
@@ -575,48 +679,13 @@ def construct_content(context):
     # Prepare the mail contents
     content_txt, content_html = render_elements(context, elements)
 
-    # Add PNP Graph
     if "graph" in elements:
-        # Fetch graphs for this object. It first tries to detect how many sources
-        # are available for this object. Then it loops through all sources and
-        # fetches retrieves the images. If a problem occurs, it is printed to
-        # stderr (-> notify.log) and the graph is not added to the mail.
+        # Add PNP or Check_MK graph
         try:
-            num_sources = fetch_num_sources(context)
-        except GraphException, e:
-            graph_error = extract_graph_error(str(e))
-            if '.xml" not found.' not in graph_error:
-                sys.stderr.write('Unable to fetch number of graphs: %s\n' % graph_error)
-            num_sources = 0
-
-        graph_code = ''
-        for source in range(0, num_sources):
-            try:
-                content = fetch_graph(context, source)
-            except GraphException, e:
-                sys.stderr.write('Unable to fetch graph: %s\n' % e)
-                continue
-
-            if context['WHAT'] == 'HOST':
-                svc_desc = '_HOST_'
-            else:
-                svc_desc = context['SERVICEDESC'].replace(' ', '_')
-                # replace forbidden windows characters < > ? " : | \ / *
-                for token in ["<", ">", "?", "\"", ":", "|", "\\", "/", "*"] :
-                    svc_desc = svc_desc.replace(token, "x%s" % ord(token))
-            name = '%s-%s-%d.png' % (context['HOSTNAME'], svc_desc, source)
-
-            attachments.append(('img', name, content, 'inline'))
-            cls = ''
-            if context.get('PARAMETER_NO_FLOATING_GRAPHS'):
-                cls = ' class="nofloat"'
-            graph_code += '<img src="cid:%s"%s />' % (name, cls)
-
-        if graph_code:
-            content_html += (
-                '<tr><th colspan=2>Graphs</th></tr>'
-                '<tr class="even0"><td colspan=2 class=graphs>%s</td></tr>' % graph_code
-            )
+            attachments, graph_code = render_performance_graphs(context)
+            content_html += graph_code
+        except Exception, e:
+            sys.stderr.write("Failed to add graphs to mail. Continue without them. (%s)\n" % e)
 
     content_html = substitute_context(tmpl_head_html, context) + \
                    content_html + \

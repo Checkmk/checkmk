@@ -77,6 +77,10 @@ class html_mod_python(htmllib.html):
         return self.req.method
 
 
+    def remote_ip(self):
+        return self.req.connection.remote_ip
+
+
     def is_ssl_request(self):
         return self.get_request_header('X-Forwarded-Proto') == 'https'
 

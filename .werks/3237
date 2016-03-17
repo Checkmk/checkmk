@@ -1,0 +1,9 @@
+Title: brocade_vdx_status: Fixed broken discovery
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b7
+Date: 1458208148
+Class: fix
+
+

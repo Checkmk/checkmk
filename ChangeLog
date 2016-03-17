@@ -8,6 +8,7 @@
     * 3099 FIX: mk_mysql: worked around problems where running instances can't be discovered
     * 3009 FIX: ESX agent: fixed exception with utf-8 encoded strings...
     * 3010 FIX: Fixed vanished snmp subchecks for snmp hosts...
+    * 3237 FIX: brocade_vdx_status: Fixed broken discovery
 
     Multisite:
     * 3290 FIX: Fixed broken event quick delete icon when used in dashlets

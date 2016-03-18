@@ -948,6 +948,16 @@ def paint_time_graph_cmk(row, show_timeranges=False):
     graph_data_range = { "time_range" : get_graph_timerange_from_painter_options() }
     graph_render_options = {}
 
+    if "host_metrics" in row:
+        metrics = row["host_metrics"]
+        perf_data = row["host_perf_data"]
+    else:
+        metrics = row["service_metrics"]
+        perf_data = row["service_perf_data"]
+
+    if not metrics and perf_data:
+        return "", _("No historic metrics recorded.")
+
     return "", metrics.render_graphs_from_specification_html(
             graph_specification,
             graph_data_range,

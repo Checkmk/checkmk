@@ -245,6 +245,14 @@ function getTarget(event) {
     return event.target ? event.target : event.srcElement;
 }
 
+function get_event_offset_x(event) {
+    return event.offsetX == undefined ? event.layerX : event.offsetX;
+}
+
+function get_event_offset_y(event) {
+    return event.offsetY == undefined ? event.layerY : event.offsetY;
+}
+
 function getButton(event) {
     if (event.which == null)
         /* IE case */

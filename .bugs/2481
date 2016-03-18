@@ -1,0 +1,9 @@
+Title: WATO CSV-Import: no error handling in case of empty/missing file
+Component: wato
+State: open
+Date: 2016-03-18 11:32:29
+Targetversion: 1.2.8
+Class: bug
+
+it is possible to not select any file. Nevertheless you come to the next screen
+which is obviously useless.

@@ -2080,6 +2080,42 @@ metric_info["livestatus_request_rate"] = {
     "color" : "#bbccdd",
 }
 
+metric_info["helper_usage_cmk"] = {
+    "title" : _("Check_MK helper usage"),
+    "unit"  : "%",
+    "color" : "15/a",
+}
+
+metric_info["helper_usage_generic"] = {
+    "title" : _("Generic helper usage"),
+    "unit"  : "%",
+    "color" : "41/a",
+}
+
+metric_info["average_latency_cmk"] = {
+    "title" : _("Check_MK check latency"),
+    "unit"  : "s",
+    "color" : "15/a",
+}
+
+metric_info["average_latency_generic"] = {
+    "title" : _("Check latency"),
+    "unit"  : "s",
+    "color" : "41/a",
+}
+
+metric_info["livestatus_usage"] = {
+    "title" : _("Livestatus usage"),
+    "unit"  : "%",
+    "color" : "12/a",
+}
+
+metric_info["livestatus_overflows_rate"] = {
+    "title" : _("Livestatus overflows"),
+    "unit"  : "1/s",
+    "color" : "16/a",
+}
+
 metric_info["log_message_rate"] = {
     "title" : _("Log messages"),
     "unit"  : "1/s",
@@ -5656,6 +5692,22 @@ graph_info.append({
     "metrics" : [
         ( "livestatus_request_rate,livestatus_connect_rate,/#88aa33", "area",
           _("Average requests per connection")),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Check helper usage"),
+    "metrics" : [
+        ( "helper_usage_cmk",     "area" ),
+        ( "helper_usage_generic", "area" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Average check latency"),
+    "metrics" : [
+        ( "average_latency_cmk",     "area" ),
+        ( "average_latency_generic", "area" ),
     ],
 })
 

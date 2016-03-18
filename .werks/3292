@@ -1,0 +1,11 @@
+Title: livestatus_status: Added Microcore relevant metrics like helper usage and latency
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b7
+Date: 1458287805
+Class: feature
+
+The livestatus_status check was missing some performance indicators like the helper usage
+and check latency which are only available in the Microcore. These metrics have now been
+added to this check.

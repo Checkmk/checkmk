@@ -112,6 +112,7 @@
     * 3287 FIX: Fixed broken crash reporting (Submission of crashes did not work)
     * 3290 FIX: Fixed broken event quick delete icon when used in dashlets
     * 3236 FIX: Fixed host page of pnp4nagios...
+    * 3293 FIX: Fixed graphs in IE with enabled compatibility mode (for IE < 8)
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

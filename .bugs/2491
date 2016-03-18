@@ -1,0 +1,8 @@
+Title: Rules of Monitoring Agents are applied to GENERIC host
+Component: wato
+State: open
+Date: 2016-03-18 13:15:47
+Targetversion: 1.2.8
+Class: bug
+
+All rules of the Agent Bakery are applied to the default host GENERIC. Although there are conditions like hostname or tags.

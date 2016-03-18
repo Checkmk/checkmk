@@ -1,0 +1,12 @@
+Title: Fixed mixed languages when some users have localized GUI and some not
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1458314348
+
+When some of the GUI users are using a localized GUI and some are at the default
+setting (have no explicit language configured), it could happen that the later
+users sometimes see the GUI in the language another user has configured.

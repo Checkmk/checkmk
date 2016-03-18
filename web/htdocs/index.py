@@ -42,6 +42,7 @@ def handler(req, fields = None, is_profiling = False):
 
     response_code = apache.OK
     try:
+        i18n.initialize()
         config.load_config() # load multisite.mk etc.
         init_profiling(is_profiling)
         html.init_modes()

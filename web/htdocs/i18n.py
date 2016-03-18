@@ -128,6 +128,10 @@ def localize(lang, **kwargs):
         unlocalize()
 
 
+def initialize():
+    __builtin__._u = _u
+    unlocalize()
+
 #.
 #   .--User i18n-----------------------------------------------------------.
 #   |                _   _                 _ _  ___                        |
@@ -151,5 +155,4 @@ def _u(text):
         return text
 
 
-__builtin__._u = _u
-unlocalize()
+initialize()

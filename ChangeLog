@@ -19,6 +19,7 @@
     * 3290 FIX: Fixed broken event quick delete icon when used in dashlets
     * 3236 FIX: Fixed host page of pnp4nagios...
     * 3293 FIX: Fixed graphs in IE with enabled compatibility mode (for IE < 8)
+    * 3294 FIX: Fixed mixed languages when some users have localized GUI and some not...
 
     WATO:
     * 3100 FIX: fixed exception when trying to create a wato folder when that folder already exists

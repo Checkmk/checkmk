@@ -180,6 +180,7 @@
     * 3229 FIX: lnx_distro: SLES based systems have now an OS name inventorized\
     * 3265 FIX: mk_inventory.solaris: fix problem on Solaris 10, do prtdiag and prtpicl only in global zone
     * 3289 FIX: Fixed missing filters in HW-/SW-Inventory views after editing the view...
+    * 3013 FIX: Inventory: snmp inventory plugins never use cached data...
 
 
 1.2.8b1:

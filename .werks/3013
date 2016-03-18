@@ -1,0 +1,11 @@
+Title: Inventory: snmp inventory plugins never use cached data
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1458305923
+
+This fixes a bug where inventory data from snmp devices
+got cached indefinitely and was never updated.

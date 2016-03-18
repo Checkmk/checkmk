@@ -84,17 +84,35 @@ def check_livestatus_status(item, params, parsed):
     # Check Performance counters
     this_time = time.time()
     status_counters = [
-        ( "host_checks",    "Host Checks",         ),
-        ( "service_checks", "Service Checks",      ),
-        ( "forks",          "Process Creations",   ),
-        ( "connections",    "Livestatus Connects", ),
-        ( "requests",       "Livestatus Requests", ),
-        ( "log_messages",   "Log Messages",        ),
+        # conv_func, factor, calc_rate, column, format, title
+        (int, 1, True, "%.1f/s", "host_checks",    "Host Checks",         ),
+        (int, 1, True, "%.1f/s", "service_checks", "Service Checks",      ),
+        (int, 1, True, "%.1f/s", "forks",          "Process Creations",   ),
+        (int, 1, True, "%.1f/s", "connections",    "Livestatus Connects", ),
+        (int, 1, True, "%.1f/s", "requests",       "Livestatus Requests", ),
+        (int, 1, True, "%.1f/s", "log_messages",   "Log Messages",        ),
     ]
 
-    for counter, title in status_counters:
-        rate = get_rate("livestatus_status.%s.%s" % (item, counter), this_time, int(status[counter]))
-        yield 0, ("%.1f %s/s" % (rate, title)), [(counter, rate)]
+    if status["program_version"].startswith("Check_MK"):
+        # We have a CMC here.
+
+        status_counters += [
+            # conv_func, factor, calc_rate, format, column, title
+            (float, 1,   False, "%.3fs",  "average_latency_generic",   "Average check latency"),
+            (float, 1,   False, "%.3fs",  "average_latency_cmk",       "Average Check_MK latency"),
+            (float, 100, False, "%.1f%%", "helper_usage_generic",      "Check helper usage"),
+            (float, 100, False, "%.1f%%", "helper_usage_cmk",          "Check_MK helper usage"),
+            (float, 100, False, "%.1f%%", "livestatus_usage",          "Livestatus usage"),
+            (float, 1,   False, "%.1f/s", "livestatus_overflows_rate", "Livestatus overflow rate"),
+        ]
+
+    for conv_func, factor, calc_rate, fmt, counter, title in status_counters:
+        value = factor * conv_func(status[counter])
+
+        if calc_rate:
+            value = get_rate("livestatus_status.%s.%s" % (item, counter), this_time, value)
+
+        yield 0, ("%s: %s" % (title, fmt % value)), [(counter, value)]
 
     yield 0, "%d Hosts" % int(status["num_hosts"]), [("monitored_hosts", int(status["num_hosts"]))]
     yield 0, "%d Services" % int(status["num_services"]), [("monitored_services", int(status["num_services"]))]

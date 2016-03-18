@@ -1,0 +1,9 @@
+Title: ipmi: fixed crash when using summarized output with nagios backend
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b7
+Date: 1458295273
+Class: fix
+
+

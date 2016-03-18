@@ -241,11 +241,14 @@ def do_inv_for(hostname):
 
     for info_type, plugin in inv_info.items():
         # Skip SNMP sections that are not supported by this device
-        if check_uses_snmp(info_type) and info_type not in snmp_check_types:
-            continue
+        use_caches = True
+        if check_uses_snmp(info_type):
+            use_caches = False
+            if info_type not in snmp_check_types:
+                continue
 
         try:
-            info = get_info_for_discovery(hostname, ipaddress, info_type, use_caches=True)
+            info = get_info_for_discovery(hostname, ipaddress, info_type, use_caches=use_caches)
         except Exception, e:
             if str(e):
                 raise # Otherwise simply ignore missing agent section

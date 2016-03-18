@@ -28,6 +28,9 @@
     Event Console:
     * 3097 FIX: mkeventd: fixed crash with non-descriptive error message if mibs couldn't be loaded
 
+    HW/SW-Inventory:
+    * 3013 FIX: Inventory: snmp inventory plugins never use cached data...
+
 
 1.2.8b6:
     Multisite:

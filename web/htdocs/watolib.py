@@ -623,10 +623,17 @@ class Folder(BaseFolder):
     # Find folder that is specified by the current URL. This is either by a folder
     # path in the variable "folder" or by a host name in the variable "host". In the
     # latter case we need to load all hosts in all folders and actively search the host.
+    # Another case is the host search which has the "host_search" variable set. To handle
+    # the later case we call .current() of SearchFolder() to let it decide whether or not
+    # this is a host search. This method has to return a folder in all cases.
     @staticmethod
     def current():
         if html.is_cached("wato_current_folder"):
             return html.get_cached("wato_current_folder")
+
+        folder = SearchFolder.current_search_folder()
+        if folder:
+            return folder
 
         if html.has_var("folder"):
             folder = Folder.folder(html.var("folder"))
@@ -1706,20 +1713,15 @@ class SearchFolder(BaseFolder):
         return crit
 
 
+    # This method is allowed to return None when no search is currently performed.
     @staticmethod
-    def current():
-        if html.is_cached("wato_current_folder"):
-            return html.get_cached("wato_current_folder")
-
+    def current_search_folder():
         if html.has_var("host_search"):
             base_folder = Folder.folder(html.var("folder", ""))
             search_criteria = SearchFolder.criteria_from_html_vars()
             folder = SearchFolder(base_folder, search_criteria)
             Folder.set_current(folder)
-            return
-        else:
-            # FIXME: Is this needed for SearchFolder()?
-            return Folder.current()
+            return folder
 
 
     # .--------------------------------------------------------------------.

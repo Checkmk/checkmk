@@ -9811,11 +9811,11 @@ def mode_users(phase):
             c = wato_confirm(_("Confirm deletion of user %s" % delid),
                              _("Do you really want to delete the user %s?" % delid))
             if c:
-                del users[delid]
+                delete_user(delid, users)
                 userdb.save_users(users)
-                log_pending(SYNCRESTART, None, "edit-users", _("Deleted user %s" % (delid)))
             elif c == False:
                 return ""
+
         elif html.var('_sync'):
             try:
                 if userdb.hook_sync(add_to_changelog = True, raise_exc = True):
@@ -9826,6 +9826,9 @@ def mode_users(phase):
                     raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
                 else:
                     raise MKUserError(None, str(e))
+
+        elif html.var("_bulk_delete_users"):
+            return bulk_delete_users_after_confirm(users)
 
         return None
 
@@ -9839,10 +9842,20 @@ def mode_users(phase):
     entries = users.items()
     entries.sort(cmp = lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
 
+    html.begin_form("bulk_delete_form", method = "POST")
+
     table.begin("users", None, empty_text = _("No users are defined yet."))
     online_threshold = time.time() - config.user_online_maxage
     for id, user in entries:
         table.row()
+
+        # Checkboxes
+        table.cell("<input type=button class=checkgroup name=_toggle_group"
+                   " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'),
+                   sortable=False, css="buttons")
+
+        if id != config.user_id:
+            html.checkbox("_c_user_%s" % id)
 
         user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
         connection = userdb.get_connection(user_connection_id)
@@ -9954,6 +9967,10 @@ def mode_users(phase):
 
     table.end()
 
+    html.button("_bulk_delete_users", _("Bulk Delete"), "submit", style="margin-top:10px")
+    html.hidden_fields()
+    html.end_form()
+
     if not userdb.load_group_information().get("contact", {}):
         url = "wato.py?mode=contact_groups"
         html.write("<div class=info>" +
@@ -9962,6 +9979,31 @@ def mode_users(phase):
               "make them monitoring contacts. Only monitoring contacts can receive "
               "notifications.") % url + "</div>")
 
+
+def bulk_delete_users_after_confirm(users):
+    selected_users = []
+    for varname in html.all_varnames_with_prefix("_c_user_"):
+        if html.get_checkbox(varname):
+            user = varname.split("_c_user_")[-1]
+            if user in users:
+                selected_users.append(user)
+
+    if selected_users:
+        c = wato_confirm(_("Confirm deletion of %d users" % len(selected_users)),
+                         _("Do you really want to delete %d users?" % len(selected_users)))
+        if c:
+            for user in selected_users:
+                delete_user(user, users)
+        elif c == False:
+            return ""
+
+    userdb.save_users(users)
+    return
+
+
+def delete_user(delid, users):
+    del users[delid]
+    log_pending(SYNCRESTART, None, "edit-users", _("Deleted user %s" % (delid)))
 
 
 def mode_edit_user(phase):

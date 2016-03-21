@@ -1180,7 +1180,10 @@ def mode_edit_host(phase, new, is_cluster):
         is_cluster = host.is_cluster()
 
     # edit
-    elif not new and Folder.current().has_host(hostname):
+    elif not new:
+        if not Folder.current().has_host(clonename):
+            raise MKGeneralException(_("You called this page with an invalid host name."))
+
         mode = "edit"
         title = _("Properties of host") + " " + hostname
         host = Folder.current().host(hostname)

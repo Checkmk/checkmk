@@ -22,6 +22,7 @@
     * 3314 FIX: Correctly add custom user attribute values after change in attribute declaration...
     * 3316 FIX: Fix validation of empty or missing file uploads (such as in Bulk host import)
     * 3302 FIX: Improved error handling when trying to edit a not existing rule
+    * 3338 FIX: Improved error handling when host to be edited does not exist
 
     Event Console:
     * 3335 FIX: Improved error handling when requested rule pack does not exist

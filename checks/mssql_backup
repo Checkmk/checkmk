@@ -38,6 +38,9 @@ def inventory_mssql_backup(info):
 
 def check_mssql_backup(item, params, info):
     for line in info:
+        if len(line) not in [3, 4]:
+            continue
+
         last_backup_date = False
         try:
             inst, tablespace, last_backup_date, last_backup_time = line

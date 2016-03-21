@@ -96,11 +96,26 @@ def init_modules():
     modules += [ globals()[m] for m in set(imports()).difference(module_names_prev) ]
 
 
+g_all_modules_loaded = False
+
 # Call the load_plugins() function in all modules
 def load_all_plugins():
+    global g_all_modules_loaded
+
+    # CLEANUP: Move this to the pagehandlers if this concept works out.
+    if html.myfile == "ajax_graph" and g_all_modules_loaded:
+        only_modules = ["metrics"]
+    else:
+        only_modules = None
+
+    g_all_modules_loaded = True
+
+
     need_plugins_reload = local_web_plugins_have_changed()
 
     for module in modules:
+        if only_modules != None and get_module_name(module) not in only_modules:
+            continue
         try:
             module.load_plugins # just check if this function exists
         except AttributeError:

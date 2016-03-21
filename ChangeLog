@@ -91,6 +91,7 @@
     * 3237 FIX: brocade_vdx_status: Fixed broken discovery
     * 3238 FIX: if.include: Fixed handling of old-skool traffic limits
     * 3104 FIX: ipmi: fixed crash when using summarized output with nagios backend
+    * 3298 FIX: winperf_processor.util: Fixed exception when CPU counters were not matched
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

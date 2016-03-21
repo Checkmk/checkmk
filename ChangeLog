@@ -94,6 +94,7 @@
     * 3298 FIX: winperf_processor.util: Fixed exception when CPU counters were not matched
     * 3299 FIX: mssql_backup: Fixed exception in case of invalid agent output
     * 3300 FIX: zfsget: Fixed excluding snapshots from zfsget section
+    * 3301 FIX: mrpe: Fixed exception "urllib not defined" when using Nagios as core
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

@@ -1,0 +1,9 @@
+Title: mssql_backup: Fixed exception in case of invalid agent output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b8
+Date: 1458556468
+Class: fix
+
+

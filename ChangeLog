@@ -1,6 +1,7 @@
 1.2.8b8:
     Checks & Agents:
     * 3298 FIX: winperf_processor.util: Fixed exception when CPU counters were not matched
+    * 3299 FIX: mssql_backup: Fixed exception in case of invalid agent output
 
     Multisite:
     * 3297 SEC: Fixes possible XSS in views sidebar snapin...

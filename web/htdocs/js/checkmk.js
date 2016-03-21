@@ -1208,6 +1208,8 @@ function draw_reload_pause_overlay(seconds)
     p2.className = "pause_bar p2";
     container.appendChild(p2);
 
+    container.appendChild(document.createElement("br"));
+
     var counter = document.createElement("a");
     counter.setAttribute("id", "reload_pause_counter");
     // FIXME: Localize

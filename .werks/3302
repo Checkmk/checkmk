@@ -1,0 +1,9 @@
+Title: Improved error handling when trying to edit a not existing rule
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b8
+Date: 1458564780
+Class: fix
+
+

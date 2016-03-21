@@ -15,6 +15,7 @@
     * 3296 FIX: Hiding pending changes related buttons after discarding changes
     * 3314 FIX: Correctly add custom user attribute values after change in attribute declaration...
     * 3316 FIX: Fix validation of empty or missing file uploads (such as in Bulk host import)
+    * 3302 FIX: Improved error handling when trying to edit a not existing rule
 
 
 1.2.8b7:

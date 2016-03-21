@@ -62,7 +62,6 @@ multisite_layouts["python"] = {
 
 def render_json(rows, view, group_painters, painters, num_columns, show_checkboxes, export=False):
     if export:
-        html.req.content_type = "appliation/json; charset=UTF-8"
         filename = '%s-%s.json' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
         if type(filename) == unicode:
             filename = filename.encode("utf-8")

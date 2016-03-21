@@ -4736,7 +4736,7 @@ def render_audit_log(log, what, with_filename = False, hilite_others=False):
         html.write(htmlcode)
 
 def export_audit_log():
-    html.req.content_type = "text/csv; charset=UTF-8"
+    html.set_output_format("csv")
     filename = 'wato-auditlog-%s_%s.csv' % (fmt_date(time.time()), fmt_time(time.time()))
     html.req.headers_out['Content-Disposition'] = 'attachment; filename=%s' % filename
     titles = (
@@ -13869,7 +13869,7 @@ def page_download_agent_output():
                                                       [host_name, ty])
 
     if success:
-        html.set_content_type("text/plain; charset=UTF-8")
+        html.set_output_format("text")
         html.set_http_header("Content-Disposition", "Attachment; filename=" + host_name)
         html.write(agent_data)
     else:

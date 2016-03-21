@@ -170,8 +170,34 @@ class html(GUITester):
         self.auto_id += 1
         return "id_%d" % self.auto_id
 
+
     def set_output_format(self, f):
         self.output_format = f
+        if f == "json":
+            content_type = "application/json; charset=UTF-8"
+
+        elif f == "jsonp":
+            content_type = "application/javascript; charset=UTF-8"
+
+        elif f in ("csv", "csv_export"): # Cleanup: drop one of these
+            content_type = "text/csv; charset=UTF-8"
+
+        elif f == "python":
+            content_type = "application/python; charset=UTF-8"
+
+        elif f == "text":
+            content_type = "text/plain; charset=UTF-8"
+
+        elif f == "html":
+            content_type = "text/html; charset=UTF-8"
+
+        elif f == "pdf":
+            content_type = "application/pdf"
+
+        else:
+            raise MKGeneralException(_("Unsupported context type '%s'") % f)
+        self.set_content_type(content_type)
+
 
     def set_link_target(self, framename):
         self.link_target = framename

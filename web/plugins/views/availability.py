@@ -808,7 +808,7 @@ def output_availability_csv(what, av_data, avoptions):
         for (title, help), (text, css) in zip(cell_titles, row_cells):
             table.cell(title, text)
 
-    av_output_csv_mimetype(_("Check_MK-Availability"))
+    av_output_set_content_disposition(_("Check_MK-Availability"))
     availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
     table.begin("av_items", output_format = "csv")
     for group_title, availability_table in availability_tables:
@@ -825,8 +825,7 @@ def output_availability_csv(what, av_data, avoptions):
                        [(_("Summary"), "")] + [("", "")] * pad, av_table["summary"])
     table.end()
 
-def av_output_csv_mimetype(title):
-    html.req.content_type = "text/csv; charset=UTF-8"
+def av_output_set_content_disposition(title):
     filename = '%s-%s.csv' % (title, time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
     if type(filename) == unicode:
         filename = filename.encode("utf-8")

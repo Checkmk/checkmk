@@ -230,9 +230,11 @@ def load_werk(path):
 
 def load_acknowledgements():
     if os.path.exists(acknowledgement_path):
-        return literal_eval(file(acknowledgement_path).read())
-    else:
-        return []
+        content = file(acknowledgement_path).read().strip()
+        if content:
+            return literal_eval(file(acknowledgement_path).read())
+
+    return []
 
 
 def unacknowledged_incompatible_werks():

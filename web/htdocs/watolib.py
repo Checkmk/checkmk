@@ -4457,26 +4457,40 @@ def do_git_commit():
         git_command(["config", "user.name", "check_mk"])
 
         write_gitignore_files()
+        git_add_files()
+        git_command(["commit", "--untracked-files=no", "--author", author, "-m",
+                                    shell_quote(_("Initialized GIT for Check_MK"))])
 
-        git_command(["add", ".gitignore", "*.d/wato"])
-        git_command(["commit", "--untracked-files=no", "--author", author, "-m", shell_quote(_("Initialized GIT for Check_MK"))])
-
-    # Only commit, if something is changed
-    if os.popen("cd '%s' && git status --porcelain" % defaults.default_config_dir).read().strip():
+    if git_has_pending_changes():
         write_gitignore_files()
-        git_command(["add", "*.d/wato"])
+
+    # Writing the gitignore files might have reverted the change. So better re-check.
+    if git_has_pending_changes():
+        git_add_files()
+
         message = ", ".join(g_git_messages)
         if not message:
             message = _("Unknown configuration change")
+
         git_command(["commit", "--author", author, "-m", shell_quote(message)])
+
+
+def git_add_files():
+    git_command(["add", ".gitignore", "*.d/wato"])
+
+
+def git_has_pending_changes():
+    return os.popen("cd '%s' && git status --porcelain" %
+                        defaults.default_config_dir).read().strip()
 
 
 # Make sure that .gitignore-files are present and uptodate. Only files below the "wato" directories
 # should be under git control. The files in etc/check_mk/*.mk should not be put under control.
-#
-# FIXME TODO: Should also be written on regular commits to make it possible to update the files
 def write_gitignore_files():
     file(defaults.default_config_dir + "/.gitignore", "w").write(
+        "# This file is under control of Check_MK. Please don't modify it.\n"
+        "# Your changes will be overwritten.\n"
+        "\n"
         "*\n"
         "!*.d\n"
         "!.gitignore\n"

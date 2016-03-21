@@ -148,6 +148,7 @@
     * 3100 FIX: fixed exception when trying to create a wato folder when that folder already exists
     * 3011 FIX: WATO host diagnostic page: prevent incorrectly filled input fields...
     * 3295 FIX: Fixed exception in WATO git integration when modifying .gitingore file
+    * 3296 FIX: Hiding pending changes related buttons after discarding changes
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

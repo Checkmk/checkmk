@@ -96,10 +96,10 @@ def page_api():
             raise
         response = { "result_code": 1, "result": str(e) }
 
-    output_format = html.var("output_format", "json")
-    if output_format == "json":
+    if html.output_format == "json":
         html.write(json.dumps(response))
     else:
+        html.set_output_format("python")
         html.write(repr(response))
 
 

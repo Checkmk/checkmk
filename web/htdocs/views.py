@@ -2502,7 +2502,6 @@ def ajax_inv_render_tree():
         render_inv_subtree_container(hostname, tree_id, invpath, node)
 
 def output_csv_headers(view):
-    html.req.content_type = "text/csv; charset=UTF-8"
     filename = '%s-%s.csv' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
     if type(filename) == unicode:
         filename = filename.encode("utf-8")

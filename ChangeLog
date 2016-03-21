@@ -1,4 +1,7 @@
 1.2.8b8:
+    Multisite:
+    * 3313 FIX: Set correct mime type when exporting CSV and other non-HTML formats
+
     WATO:
     * 3295 FIX: Fixed exception in WATO git integration when modifying .gitingore file
     * 3296 FIX: Hiding pending changes related buttons after discarding changes

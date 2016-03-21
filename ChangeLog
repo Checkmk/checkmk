@@ -1,4 +1,7 @@
 1.2.8b8:
+    Checks & Agents:
+    * 3298 FIX: winperf_processor.util: Fixed exception when CPU counters were not matched
+
     Multisite:
     * 3297 SEC: Fixes possible XSS in views sidebar snapin...
     * 3313 FIX: Set correct mime type when exporting CSV and other non-HTML formats

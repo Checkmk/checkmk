@@ -1,0 +1,9 @@
+Title: winperf_processor.util: Fixed exception when CPU counters were not matched
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b8
+Date: 1458553473
+Class: fix
+
+

@@ -4273,7 +4273,8 @@ def mode_changelog(phase):
             extract_snapshot(file_to_restore)
             activate_changes()
             log_commit_pending()
-            return None, _("Successfully discarded all pending changes.")
+            return None, HTML(_("Successfully discarded all pending changes.") \
+                            + html.render_javascript("hide_changes_buttons();"))
 
         # Give hooks chance to do some pre-activation things (and maybe stop
         # the activation)

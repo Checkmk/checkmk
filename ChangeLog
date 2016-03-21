@@ -1,6 +1,7 @@
 1.2.8b8:
     WATO:
     * 3295 FIX: Fixed exception in WATO git integration when modifying .gitingore file
+    * 3296 FIX: Hiding pending changes related buttons after discarding changes
 
 
 1.2.8b7:

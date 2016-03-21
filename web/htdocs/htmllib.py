@@ -1257,8 +1257,11 @@ class html(GUITester):
     def unstash_vars(self):
         self.vars = self.var_stash.pop()
 
+    def render_javascript(self, code):
+        return "<script language=\"javascript\">\n%s\n</script>\n" % code
+
     def javascript(self, code):
-        self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)
+        self.write(self.render_javascript(code))
 
     def final_javascript(self, code):
         self.final_javascript_code += code + "\n"

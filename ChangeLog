@@ -14,6 +14,7 @@
     * 3313 FIX: Set correct mime type when exporting CSV and other non-HTML formats
     * 3315 FIX: Builtin icon visibility now can be correctly reset...
     * 3336 FIX: Fixed possible crash on werk list page...
+    * 3337 FIX: Improved error handling of invalid perfdata in the GUI
 
     WATO:
     * 3295 FIX: Fixed exception in WATO git integration when modifying .gitingore file

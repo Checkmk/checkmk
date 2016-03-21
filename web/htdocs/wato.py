@@ -2958,7 +2958,7 @@ class ModeBulkImport(WatoMode):
 
 
     def buttons(self):
-        html.context_button(_("Back"), folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(_("Abort"), folder_preserving_link([("mode", "folder")]), "abort")
 
 
     def action(self):

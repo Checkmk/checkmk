@@ -4138,7 +4138,7 @@ register_check_parameters(
                     ListChoice(
                         title = _("Allowed states:"),
                         choices = dict_choices(interface_oper_states)),
-                    title = _("Operational State"),
+                    title = _("Operational state"),
                     help = _("If you activate the monitoring of the operational state (<tt>ifOperStatus</tt>) "
                              "the check will get warning or critical if the current state "
                              "of the interface does not match one of the expected states. Note: the status 9 (<i>admin down</i>) "

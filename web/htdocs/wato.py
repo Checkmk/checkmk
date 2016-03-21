@@ -2956,7 +2956,7 @@ class ModeBulkImport(WatoMode):
 
 
     def title(self):
-        return _("Bulk Host Import")
+        return _("Bulk host import")
 
 
     def buttons(self):

@@ -1141,6 +1141,7 @@ def rule_pack_with_id(rule_packs, rule_pack_id):
     for nr, entry in enumerate(rule_packs):
         if entry["id"] == rule_pack_id:
             return nr, entry
+    raise MKUserError(None, _("The requested rule pack does not exist."))
 
 
 def mode_mkeventd_rules(phase):

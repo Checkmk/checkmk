@@ -9,6 +9,7 @@
     WATO:
     * 3295 FIX: Fixed exception in WATO git integration when modifying .gitingore file
     * 3296 FIX: Hiding pending changes related buttons after discarding changes
+    * 3314 FIX: Correctly add custom user attribute values after change in attribute declaration...
 
 
 1.2.8b7:

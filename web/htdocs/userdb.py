@@ -609,6 +609,10 @@ def save_users(profiles):
     hooks.call("users-saved", profiles)
 
 
+def rewrite_users():
+    users = load_users(lock = True)
+    save_users(users)
+
 def contactgroups_of_user(user_id):
     users = load_users()
     if user_id not in users:

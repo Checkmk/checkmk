@@ -1,0 +1,10 @@
+Title: Correctly add custom user attribute values after change in attribute declaration
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b8
+Date: 1458555064
+Class: fix
+
+If you redeclared this attributes as "make available for notifications" it would
+be added only after once modifying any actual user. This has been fixed.

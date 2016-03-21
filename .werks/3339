@@ -1,0 +1,9 @@
+Title: Fixed exception on "Aggregations Affected by Service" page when no host/service given
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b8
+Date: 1458575328
+Class: fix
+
+

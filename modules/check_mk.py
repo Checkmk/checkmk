@@ -3800,9 +3800,9 @@ def dump_host(hostname):
 
     print_table(headers, colors, [ [
         checktype,
-        item,
+        make_utf8(item),
         params,
-        description,
+        make_utf8(description),
         make_utf8(",".join(service_extra_conf(hostname, description, service_groups))),
         if_aggr(aggregated_service_name(hostname, description)),
         if_aggr(",".join(service_extra_conf(hostname, aggregated_service_name(hostname, description), summary_service_groups))),

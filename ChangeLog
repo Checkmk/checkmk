@@ -1,4 +1,7 @@
 1.2.8b8:
+    Core & Setup:
+    * 3105 FIX: fixed crash in cmk --dump for services containing non-ascii characters
+
     Checks & Agents:
     * 3298 FIX: winperf_processor.util: Fixed exception when CPU counters were not matched
     * 3299 FIX: mssql_backup: Fixed exception in case of invalid agent output

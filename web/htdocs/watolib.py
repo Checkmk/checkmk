@@ -471,7 +471,8 @@ class BaseFolder(WithPermissionsAndAttributes):
             keepvars.append(("mode", "folder"))
 
         def render_component(folder):
-            return '<a href="%s">%s</a>' % (html.makeuri_contextless([("folder", folder.path())] + keepvars), folder.title())
+            return '<a href="%s">%s</a>' % (html.makeuri_contextless([("folder", folder.path())] + keepvars),
+                                            html.attrencode(folder.title()))
 
         def breadcrump_element_start(end = '', z_index = 0):
             html.write('<li style="z-index:%d;"><div class="left %s"></div>' % (z_index, end))
@@ -488,7 +489,7 @@ class BaseFolder(WithPermissionsAndAttributes):
         if link_to_folder:
             parts.append(render_component(self))
         else:
-            parts.append(self.title())
+            parts.append(html.attrencode(self.title()))
 
 
         # Render the folder path
@@ -4244,7 +4245,7 @@ def render_condition_editor(tag_specs, varprefix=""):
     make_foldable = len(all_topics) > 1
     for topic in all_topics:
         if make_foldable:
-            html.begin_foldable_container("topic", topic, True, "<b>%s</b>" % (_u(topic)))
+            html.begin_foldable_container("topic", topic, True, HTML("<b>%s</b>" % (_u(topic))))
         html.write("<table class=\"hosttags\">")
 
         # Show main tags

@@ -1,5 +1,6 @@
 1.2.8b8:
     Multisite:
+    * 3297 SEC: Fixes possible XSS in views sidebar snapin...
     * 3313 FIX: Set correct mime type when exporting CSV and other non-HTML formats
 
     WATO:

@@ -1606,28 +1606,28 @@ class html(GUITester):
         if indent == "nform":
             self.write('<tr class=heading><td id="nform.%s.%s" %s colspan=2>' % (treename, id, onclick))
             if icon:
-                self.write('<img class="treeangle title" src="images/icon_%s.png">' % icon)
+                self.write('<img class="treeangle title" src="images/icon_%s.png">' % self.attrencode(icon))
             else:
                 self.write('<img align=absbottom class="treeangle nform" src="images/%s_%s.png">' %
                                                 (tree_img, isopen and "90" or "00"))
-            self.write('%s</td></tr>' % title)
+            self.write('%s</td></tr>' % self.attrencode(title))
         else:
             if not icon:
                 self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
                            'src="images/%s_%s.png" %s>' %
                         (treename, id, tree_img, img_num, onclick))
-            if title.startswith('<'): # custom HTML code
-                self.write(title)
+            if isinstance(title, HTML): # custom HTML code
+                self.write(self.attrencode(title))
                 if indent != "form":
                     self.write("<br>")
             else:
                 self.write('<b class="treeangle title" class=treeangle %s>' % (not title_url and onclick or ""))
                 if icon:
-                    self.write('<img class="treeangle title" src="images/icon_%s.png">' % icon)
+                    self.write('<img class="treeangle title" src="images/icon_%s.png">' % self.attrencode(icon))
                 if title_url:
-                    self.write('<a href="%s">%s</a>' % (title_url, title))
+                    self.write('<a href="%s">%s</a>' % (self.attrencode(title_url), self.attrencode(title)))
                 else:
-                    self.write(title)
+                    self.write(self.attrencode(title))
                 self.write('</b><br>')
 
             indent_style = "padding-left: %dpx; " % (indent == True and 15 or 0)

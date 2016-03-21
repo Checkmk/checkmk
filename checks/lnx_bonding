@@ -56,7 +56,12 @@
 # Permanent HW addr: 00:26:b9:7d:89:2e
 
 def parse_lnx_bonding(info):
-    lines = iter(info)
+    def strip_popd_garbage(info):
+        for line in info:
+            if len(line) != 1 or not line[0].startswith("/"):
+                yield line
+
+    lines = strip_popd_garbage(info)
     bonds = {}
 
     # Skip header with bonding version

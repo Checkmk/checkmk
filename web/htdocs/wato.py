@@ -12780,10 +12780,18 @@ def mode_edit_rule(phase, new = False):
             if phase != "action":
                 html.message(_("Cannot create rule: %s") % e)
             return
-        rulenr   = len(rules)
+        rulenr = len(rules)
     else:
-        rulenr   = int(html.var("rulenr"))
-        rule     = rules[rulenr]
+        rulenr = int(html.var("rulenr"))
+        try:
+            rule = rules[rulenr]
+        except IndexError:
+            if phase == "action":
+                raise MKUserError("rulenr", _("You are trying to edit a rule which does not exist "
+                                              "anymore."))
+            else:
+                html.show_error(_("You are trying to edit a rule which does not exist anymore."))
+                return
 
     valuespec = rulespec.get("valuespec")
     value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)

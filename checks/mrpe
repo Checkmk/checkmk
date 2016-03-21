@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_mrpe(info):
+    import urllib
     items = []
     for line in info:
         # New Linux agent sends (check_name) in first column. Stay
@@ -45,6 +46,7 @@ def mrpe_parse_perfdata(perfinfo):
 
 
 def check_mrpe(item, params, info):
+    import urllib
     # This check is cluster-aware. An item might be found
     # more than once. In that case we use the best of the
     # multiple statuses.

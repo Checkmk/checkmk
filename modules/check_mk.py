@@ -709,19 +709,9 @@ def convert_host_ruleset(ruleset):
         sys.stderr.write('WARNING: deprecated entry [ "" ] in host configuration list\n')
 
     for rule in ruleset:
-        rule, rule_options = get_rule_options(rule)
+        item, tags, hostlist, rule_options = parse_host_rule(rule)
         if rule_options.get("disabled"):
             continue
-
-        num_elements = len(rule)
-        if num_elements == 2:
-            item, hostlist = rule
-            tags = []
-        elif num_elements == 3:
-            item, tags, hostlist = rule
-        else:
-            raise MKGeneralException("Invalid entry '%r' in host configuration list: must "
-                                     "have 2 or 3 entries" % (rule,))
 
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
@@ -739,11 +729,42 @@ def host_extra_conf(hostname, ruleset):
 
     entries = []
     for item, hostname_list in ruleset:
-        # Hack for the agent bakery: The hostname may be "True" which is used
-        # for the generic agent. When the hostname is True it should match
-        # without conditions.
-        if hostname == True or hostname in hostname_list:
+        if hostname in hostname_list:
             entries.append(item)
+    return entries
+
+
+def parse_host_rule(rule):
+    rule, rule_options = get_rule_options(rule)
+
+    num_elements = len(rule)
+    if num_elements == 2:
+        item, hostlist = rule
+        tags = []
+    elif num_elements == 3:
+        item, tags, hostlist = rule
+    else:
+        raise MKGeneralException("Invalid entry '%r' in host configuration list: must "
+                                 "have 2 or 3 entries" % (rule,))
+
+    return item, tags, hostlist, rule_options
+
+
+# Needed for agent bakery: Compute ruleset for "generic" host. This
+# fictious host has no name and no tags. It matches all rules that
+# do not require specific hosts or tags. But it matches rules that
+# e.g. except specific hosts or tags (is not, has not set)
+def generic_host_extra_conf(ruleset):
+    entries = []
+
+    for rule in ruleset:
+        item, tags, hostlist, rule_options = parse_host_rule(rule)
+        if tags and not hosttags_match_taglist([], tags):
+            continue
+        if not in_extraconf_hostlist(hostlist, ""):
+            continue
+
+        entries.append(item)
     return entries
 
 

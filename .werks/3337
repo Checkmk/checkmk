@@ -1,0 +1,10 @@
+Title: Improved error handling of invalid perfdata in the GUI
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1458573804
+
+

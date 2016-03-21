@@ -586,8 +586,14 @@ multisite_painters["svc_perf_data"] = {
 }
 
 def paint_service_metrics(row):
-    translated_metrics = metrics.translate_metrics(*metrics.parse_perf_data(row["service_perf_data"], row["service_check_command"]))
-    return "", metrics.render_metrics_table(translated_metrics, row["host_name"], row["service_description"])
+    translated_metrics = metrics.translate_perf_data(row["service_perf_data"],
+                                                     row["service_check_command"])
+
+    if row["service_perf_data"] and not translated_metrics:
+        return "", _("Failed to parse performance data string: %s") % row["service_perf_data"]
+
+    return "", metrics.render_metrics_table(translated_metrics, row["host_name"],
+                                            row["service_description"])
 
 multisite_painters["svc_metrics"] = {
     "title" : _("Service Metrics"),

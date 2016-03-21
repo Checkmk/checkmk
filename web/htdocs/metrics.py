@@ -309,6 +309,9 @@ def split_perf_data(perf_data_string):
 
 
 # Convert perf_data_string into perf_data, extract check_command
+# This methods must not return None or anything else. It mustr strictly
+# return a tuple of perf_data list and the check_command. In case of
+# errors during parsing it returns an empty list for the perf_data.
 def parse_perf_data(perf_data_string, check_command=None):
     # Strip away arguments like in "check_http!-H mathias-kettner.de"
     # FIXME: check_command=None? Fails here!
@@ -322,7 +325,7 @@ def parse_perf_data(perf_data_string, check_command=None):
         parts = split_perf_data(perf_data_string)
     except ValueError, e:
         html.log("Failed to parse perfdata string: %s" % perf_data_string)
-        return None, check_command
+        return [], check_command
 
     # Try if check command is appended to performance data
     # in a PNP like style
@@ -351,16 +354,18 @@ def parse_perf_data(perf_data_string, check_command=None):
 
             # separate value from unit
             i = 0
-            while i < len(value_text) and (isdigit(value_text[i]) or value_text[i] in ['.', ',', '-']):
+            while i < len(value_text) and (isdigit(value_text[i])
+                                           or value_text[i] in ['.', ',', '-']):
                 i += 1
+
             unit_name = value_text[i:]
-            value = value_text[:i]
+            value = float_or_int(value_text[:i])
 
             perf_data.append((varname, value, unit_name, warn, crit, min, max))
         except:
+            html.log("Failed to parse perfdata: %s" % perf_data_string)
             if config.debug:
                 raise
-            perf_data = None
 
     return perf_data, check_command
 
@@ -388,6 +393,10 @@ def perfvar_translation(perfvar_nr, perfvar_name, check_command):
     }
 
 
+def translate_perf_data(perf_data_string, check_command=None):
+    perf_data, check_command = parse_perf_data(perf_data_string, check_command)
+    return translate_metrics(perf_data, check_command)
+
 
 # Convert Ascii-based performance data as output from a check plugin
 # into floating point numbers, do scaling if neccessary.
@@ -399,7 +408,7 @@ def translate_metrics(perf_data, check_command):
     color_index = 0
     for nr, entry in enumerate(perf_data):
         varname = entry[0]
-        value_text = entry[1]
+        value = entry[1]
 
         translation_entry = perfvar_translation(nr, varname, check_command)
         metric_name = translation_entry["name"]
@@ -420,7 +429,7 @@ def translate_metrics(perf_data, check_command):
             mi["color"] = parse_color_into_hexrgb(mi["color"])
 
         new_entry = {
-            "value"      : float_or_int(value_text) * translation_entry["scale"],
+            "value"      : value * translation_entry["scale"],
             "orig_name"  : varname,
             "scale"      : translation_entry["scale"], # needed for graph definitions
             "scalar"     : {},

@@ -1,4 +1,7 @@
 1.2.8b8:
+    WATO:
+    * 3295 FIX: Fixed exception in WATO git integration when modifying .gitingore file
+
 
 1.2.8b7:
     Core & Setup:

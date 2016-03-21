@@ -3313,7 +3313,7 @@ class FileUpload(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._allow_empty = kwargs.get('allow_empty', True)
         self._allowed_extensions = kwargs.get('allowed_extensions')
-        self._allow_empty_content= kwargs.get('allow_empty_content', True)
+        self._allow_empty_content = kwargs.get('allow_empty_content', True)
 
 
     def canonical_value(self):
@@ -3326,7 +3326,7 @@ class FileUpload(ValueSpec):
     def validate_value(self, value, varprefix):
         file_name, mime_type, content = value
 
-        if not self._allow_empty and (value == None or file_name == ''):
+        if not self._allow_empty and (content == '' or file_name == ''):
             raise MKUserError(varprefix, _('Please select a file.'))
 
         if not self._allow_empty_content and len(content) == 0:
@@ -3358,12 +3358,16 @@ class FileUpload(ValueSpec):
 class UploadOrPasteTextFile(Alternative):
     def __init__(self, **kwargs):
         file_title = kwargs.get("file_title", _("File"))
+        allow_empty = kwargs.get("allow_empty", True)
         kwargs["elements"] = [
-            FileUpload(title = _("Upload %s") % file_title),
+            FileUpload(
+                title = _("Upload %s") % file_title,
+                allow_empty = allow_empty),
             TextAreaUnicode(
                 title = _("Content of %s") % file_title,
-                cols=80,
-                rows="auto"),
+                allow_empty = allow_empty,
+                cols = 80,
+                rows = "auto"),
         ]
 
         if kwargs.get("default_mode", "text") == "upload":

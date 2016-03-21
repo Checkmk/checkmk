@@ -1,0 +1,9 @@
+Title: Fix validation of empty or missing file uploads (such as in Bulk host import)
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b8
+Date: 1458559742
+Class: fix
+
+

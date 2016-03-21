@@ -1,0 +1,10 @@
+Title: Improved error handling when host to be edited does not exist
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1458574630
+
+

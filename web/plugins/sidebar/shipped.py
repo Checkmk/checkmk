@@ -1789,7 +1789,8 @@ def render_tag_tree_level(taggroups, path, cwd, title, tree):
                                         "svc_problems")
 
         if path:
-            html.begin_foldable_container("tag-tree", ".".join(map(str, path)), False, bullet + title)
+            html.begin_foldable_container("tag-tree", ".".join(map(str, path)),
+                                          False, HTML(bullet + title))
 
     items = tree.items()
     items.sort()

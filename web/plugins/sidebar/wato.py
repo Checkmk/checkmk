@@ -197,10 +197,10 @@ def render_tree_folder(f, js_func):
         html.write("<ul style='padding-left: 0px;'>")
 
     title = '<a class="link" href="#" onclick="%s(this, \'%s\');">%s (%d)</a>' % (
-            js_func, f[".path"], f["title"], f[".num_hosts"])
+            js_func, f[".path"], html.attrencode(f["title"]), f[".num_hosts"])
 
     if not is_leaf:
-        html.begin_foldable_container('wato-hosts', "/" + f[".path"], False, title)
+        html.begin_foldable_container('wato-hosts', "/" + f[".path"], False, HTML(title))
         for subfolder in subfolders:
             render_tree_folder(subfolder, js_func)
         html.end_foldable_container()

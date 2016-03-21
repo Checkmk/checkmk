@@ -556,13 +556,13 @@ def show_subfolder_title(subfolder):
     if not config.wato_hide_filenames:
         title += ' (%s)' % subfolder.name()
 
-    html.write('<div class=title title="%s">' % title)
+    html.write('<div class=title title="%s">' % html.attrencode(title))
     if subfolder.may("read"):
         html.write('<a href="%s">' % subfolder.url())
-        html.write(subfolder.title())
+        html.write(html.attrencode(subfolder.title()))
         html.write("</a>")
     else:
-        html.write(subfolder.title())
+        html.write(html.attrencode(subfolder.title()))
     html.write('</div>')
 
 
@@ -4597,7 +4597,7 @@ def render_logfile_linkinfo(linkinfo):
     else:
         return ""
 
-    return '<a href="%s">%s</a>' % (url, title)
+    return '<a href="%s">%s</a>' % (url, html.attrencode(title))
 
 
 def get_timerange(t):
@@ -4726,7 +4726,7 @@ def render_audit_log(log, what, with_filename = False, hilite_others=False):
                      % _("This change has been made by another user")
         htmlcode += user + '</td>'
 
-        htmlcode += '</td><td width="100%%">%s</td></tr>\n' % text
+        htmlcode += '</td><td width="100%%">%s</td></tr>\n' % html.attrencode(text)
     htmlcode += "</table>"
 
     if what == 'audit':
@@ -14186,7 +14186,8 @@ def mode_pattern_editor(phase):
             match_img   = 'nmatch'
             match_title = reason
 
-        html.begin_foldable_container("rule", str(rulenr), True, "<b>Rule #%d</b>" % (rulenr + 1), indent = False)
+        html.begin_foldable_container("rule", str(rulenr), True,
+                    HTML("<b>Rule #%d</b>" % (rulenr + 1)), indent = False)
         html.write('<table style="width:100%" class="data logwatch"><tr>')
         html.write('<th style="width:30px;">' + _('Match') + '</th>')
         html.write('<th style="width:50px;">' + _('State') + '</th>')

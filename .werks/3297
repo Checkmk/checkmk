@@ -1,0 +1,15 @@
+Title: Fixes possible XSS in views sidebar snapin
+Level: 1
+Component: multisite
+Class: security
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1458552307
+
+Authenticated and permitted users could create views using
+a topic which might contains HTML code, for example script tags,
+that where executed when having the view listed in the views snapin.
+
+Making the JS code be executed by other users is only possible with
+view publish permissions which normally only admin users have.

@@ -85,7 +85,7 @@ def declare_inv_column(invpath, datatype, title, short = None):
             "cmp"      : lambda a, b: cmp_inventory_node(a, b, invpath),
         }
 
-        # Declare filter.
+        # Declare filter. Sync this with declare_invtable_columns()
         if datatype == "str":
             visuals.declare_filter(800, visuals.FilterInvText(name, invpath, title))
         else:
@@ -840,15 +840,23 @@ def declare_invtable_columns(infoname, invpath, topic):
             render_function_name = "inv_paint_" + paint_name
             render_function = globals()[render_function_name]
         else:
-            paint_name = "text"
+            paint_name = "str"
             render_function = None
 
+        # Sync this with declare_inv_column()
         filter_class = hint.get("filter")
+        if not filter_class:
+            if paint_name == "str":
+                filter_class = visuals.FilterInvtableText
+            else:
+                filter_class = visuals.FilterInvtableIDRange
+
         declare_invtable_column(infoname, name, topic, hint["title"],
                            hint.get("short", hint["title"]), sortfunc, render_function, filter_class)
 
 
-def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc, render_func, filter_class):
+def declare_invtable_column(infoname, name, topic, title, short_title,
+                            sortfunc, render_func, filter_class):
     column = infoname + "_" + name
     if render_func == None:
         paint = lambda row: ("", "%s" % row.get(column))
@@ -872,8 +880,6 @@ def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc,
         "cmp"      : lambda a, b: sortfunc(a.get(column), b.get(column))
     }
 
-    if filter_class == None:
-        filter_class = visuals.FilterInvtableText
     visuals.declare_filter(800, filter_class(infoname, name, topic + ": " + title))
 
 

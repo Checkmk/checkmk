@@ -140,7 +140,8 @@ class BIServiceFilter(Filter):
         html.text_input(self.htmlvars[2])
 
     def heading_info(self):
-        return html.get_unicode_input(self.htmlvars[1]) + " / " + html.get_unicode_input(self.htmlvars[2])
+        return html.get_unicode_input(self.htmlvars[1], "") \
+               + " / " + html.get_unicode_input(self.htmlvars[2], "")
 
     def service_spec(self):
         if html.has_var(self.htmlvars[2]):

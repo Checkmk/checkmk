@@ -949,14 +949,15 @@ def paint_time_graph_cmk(row, show_timeranges=False):
     graph_render_options = {}
 
     if "host_metrics" in row:
-        metrics = row["host_metrics"]
+        available_metrics = row["host_metrics"]
         perf_data = row["host_perf_data"]
     else:
-        metrics = row["service_metrics"]
+        available_metrics = row["service_metrics"]
         perf_data = row["service_perf_data"]
 
-    if not metrics and perf_data:
-        return "", _("No historic metrics recorded.")
+    if not available_metrics and perf_data:
+        return "", _("No historic metrics recorded but performance data is available. "
+                     "Maybe performance data processing is disabled.")
 
     return "", metrics.render_graphs_from_specification_html(
             graph_specification,

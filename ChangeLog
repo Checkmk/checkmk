@@ -29,6 +29,9 @@
     Event Console:
     * 3335 FIX: Improved error handling when requested rule pack does not exist
 
+    HW/SW-Inventory:
+    * 3340 FIX: Fixed exception when searching for software package sizes
+
 
 1.2.8b7:
     Core & Setup:

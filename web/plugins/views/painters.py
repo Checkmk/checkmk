@@ -234,17 +234,23 @@ load_web_plugins('icons', globals())
 def get_multisite_icons():
     icons = {}
 
-    for icon_id, icon in multisite_icons_and_actions.items():
-        icon.setdefault('toplevel', False)
-        icon.setdefault('sort_index', 30)
+    for icon_id, icon_config in multisite_icons_and_actions.items():
+        icon = {
+            "toplevel" : False,
+            "sort_index" : 30,
+        }
+        icon.update(icon_config)
         icons[icon_id] = icon
 
     # multisite_icons has been deprecated, but to be compatible to old icon
     # plugins transform them to the new structure. We use part of the paint
     # function name as icon id.
-    for icon in multisite_icons:
-        icon.setdefault('toplevel', False)
-        icon.setdefault('sort_index', 30)
+    for icon_config in multisite_icons:
+        icon = {
+            "toplevel" : False,
+            "sort_index" : 30,
+        }
+        icon.update(icon_config)
         icon_id = icon['paint'].__name__.replace('paint_', '')
         icons[icon_id] = icon
 

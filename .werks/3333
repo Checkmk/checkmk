@@ -1,0 +1,10 @@
+Title: Predictive levels: Improved error handling in case no RRDs have been created yet
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1458567828
+
+

@@ -96,6 +96,7 @@
     * 3299 FIX: mssql_backup: Fixed exception in case of invalid agent output
     * 3300 FIX: zfsget: Fixed excluding snapshots from zfsget section
     * 3301 FIX: mrpe: Fixed exception "urllib not defined" when using Nagios as core
+    * 3333 FIX: Predictive levels: Improved error handling in case no RRDs have been created yet
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

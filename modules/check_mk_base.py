@@ -2113,6 +2113,12 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
                 infotexts.append("predicted reference: %.2f%s" % (ref_value / scale, unit))
             else:
                 infotexts.append("no reference for prediction yet")
+
+        except MKGeneralException, e:
+            ref_value = None
+            warn_upper, crit_upper, warn_lower, crit_lower = None, None, None, None
+            infotexts.append("no reference for prediction (%s)" % e)
+
         except Exception, e:
             if opt_debug:
                 raise

@@ -48,6 +48,9 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
             raise
         raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)
 
+    if not response:
+        raise MKGeneralException("Got no historic metrics")
+
     real_fromtime, real_untiltime, step = response[:3]
     values = response[3:]
     return step, values

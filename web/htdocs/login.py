@@ -177,7 +177,7 @@ def check_auth_http_header():
 
 def check_auth():
     user_id = None
-    if html.var("_secret"):
+    if html.has_var("_username") and html.has_var("_secret"):
         user_id = check_auth_automation()
 
     elif config.auth_by_http_header:

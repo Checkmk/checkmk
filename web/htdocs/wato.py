@@ -14350,7 +14350,7 @@ def mode_edit_custom_attr(phase, what):
 
                 log_pending(SYNCRESTART, None, "edit-%sattr" % what, _("Create new %s attribute %s") % (what, name))
             else:
-                log_pending(SYNCRESTART, None, "edit-%sattr" % what, _("Changed title of %s attribute %s") % (what, name))
+                log_pending(SYNCRESTART, None, "edit-%sattr" % what, _("Modified %s attribute %s") % (what, name))
             attr.update({
                 'title'            : title,
                 'topic'            : topic,
@@ -14361,6 +14361,10 @@ def mode_edit_custom_attr(phase, what):
             })
 
             save_custom_attrs(all_attrs)
+            if what == "user":
+                userdb.declare_custom_user_attrs()
+                userdb.rewrite_users()
+
 
         return what + "_attrs"
 

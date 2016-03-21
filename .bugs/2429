@@ -1,10 +1,9 @@
-Title: OMD site with AUTOSTART off is partially started after server boot
+Title: Service crontab survives hard crash of server
 Component: core
 State: open
 Date: 2016-03-15 17:04:31
 Targetversion: 1.2.8
-Class: bug
+Class: nastiness
 
-If you boot your server then a site with AUTOSTART off
-is partially started due to the crontab entry being started.
-This prevents e.g. omd config.
+We should run an own cron daemon in each site. This
+needs patches to cron.

@@ -2,7 +2,7 @@ Title: Make a clean install of the agents/ directory
 Component: core
 State: open
 Date: 2016-03-09 10:58:31
-Targetversion: 1.2.8
+Targetversion: 1.2.9
 Class: bug
 
 The contents of the source code direcgory agents/ in the GIT cannot shipped 1:1

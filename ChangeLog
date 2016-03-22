@@ -10,6 +10,7 @@
     * 3333 FIX: Predictive levels: Improved error handling in case no RRDs have been created yet
     * 3317 FIX: lnx_bonding: handle bogus output of 1.2.6 agents where >/dev/null is missing after popd
     * 3305 FIX: cmciii.phase: fixed wrong datatype handling
+    * 3107 FIX: heartbeat_crm: fixed incorrect timezone handling...
 
     Multisite:
     * 3297 SEC: Fixes possible XSS in views sidebar snapin...

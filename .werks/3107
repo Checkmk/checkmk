@@ -1,0 +1,11 @@
+Title: heartbeat_crm: fixed incorrect timezone handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b8
+Date: 1458655464
+Class: fix
+
+The service "Heartbeat CRM General" calculated the status output age incorrectly, using comparing a
+time in UTC to one in the local timezone of the server.
+The fix required the addition of a conversion function to the check api.

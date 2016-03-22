@@ -22,79 +22,58 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef EventLog_h
-#define EventLog_h
+// implements reading the eventlog with a newer api introduced in vista.
+// This is required to read the "channels" introduce with vista
+
+#ifndef EventLogVista_h
+#define EventLogVista_h
 
 #include <windows.h>
+#include <exception>
+#include <string>
+#include <vector>
 #include "IEventLog.h"
-#include "logging.h"
-#include "stringutil.h"
-#include "types.h"
 
 // forward declaration
-class MessageResolver;
+struct EvtFunctionMap;
 
-class EventLog : public IEventLog {
+class UnsupportedException : public std::exception {};
+
+class EventLogVista : public IEventLog {
 public:
-    /**
-     * Construct a reader for the named eventlog
-     */
-    EventLog(LPCWSTR name);
+    // constructor
+    // This throws an UnsupportedException if the vista-api is not supported.
+    EventLogVista(LPCWSTR path);
 
-    virtual ~EventLog();
+    EventLogVista(const EventLogVista &reference) = delete;
 
-    /**
-     * return to reading from the beginning of the log
-     */
-    virtual void reset() override;
+    virtual ~EventLogVista() noexcept;
 
     virtual std::wstring getName() const override;
 
-    /**
-     * seek to the specified record on the next read or, if the record_number is
-     * older than the oldest existing record, seek to the beginning.
-     * Note: there is a bug in the MS eventlog code that prevents seeking on
-     * large eventlogs.
-     * In this case this function will still work as expected but the next read
-     * will be slow.
-     */
+    virtual void reset() override;
+
     virtual uint64_t seek(uint64_t record_id) override;
 
-    /**
-     * read the next eventlog record
-     * Note: records are retrieved from the api in chunks, so this read will be
-     * quick most of the time but occasionally cause a fetch via api that takes
-     * longer
-     */
     virtual std::shared_ptr<IEventLogRecord> read() override;
 
-    /**
-     * get a list of dlls that contain eventid->message mappings for this
-     * eventlog and the specified source
-     */
-    std::vector<std::string> getMessageFiles(const char *source) const;
-
 private:
-    void open();
+    static const int EVENT_BLOCK_SIZE = 16;
 
-    void close();
-
+    EvtFunctionMap &evt() const;
     bool fillBuffer();
 
+    std::wstring renderBookmark(HANDLE bookmark) const;
+
 private:
-    static const size_t INIT_BUFFER_SIZE = 64 * 1024;
-
-    std::wstring _name;
-    HANDLE _log;
-    DWORD _record_offset{0};
-    bool _seek_possible{true};
-    std::vector<BYTE> _buffer;
-    DWORD _buffer_offset{0};
-    DWORD _buffer_used{0};
-
-    DWORD _last_record_read{0};
-
-    std::shared_ptr<MessageResolver> _resolver;
+    std::wstring _path;
+    HANDLE _handle;
+    HANDLE _signal;
+    // HANDLE _bookmark;
+    HANDLE _render_context;
+    EvtFunctionMap *_evt;
+    std::vector<HANDLE> _events;
+    size_t _next_event{0};
 };
 
-#endif  // EventLog_h
+#endif  // EventLogVista_h

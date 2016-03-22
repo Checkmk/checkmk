@@ -100,12 +100,17 @@ struct winperf_counter {
 
 // Configuration entries from [logwatch] for individual logfiles
 struct eventlog_config_entry {
-    eventlog_config_entry(int level, int hide_context, const char *name)
-        : name(name), level(level), hide_context(hide_context) {}
+    eventlog_config_entry(int level, int hide_context, const char *name,
+                          bool vista_api)
+        : name(name)
+        , level(level)
+        , hide_context(hide_context)
+        , vista_api(vista_api) {}
 
     std::string name;
     int level;
     int hide_context;
+    bool vista_api;
 };
 
 // How single scripts are executed
@@ -219,16 +224,16 @@ struct mrpe_entry {
 // which record entry we have seen its messages so
 // far.
 struct eventlog_file_state {
-    eventlog_file_state(char *name)
-        : name(name), num_known_records(0), newly_discovered(true) {}
+    eventlog_file_state(const char *name)
+        : name(name), newly_discovered(true) {}
     std::string name;
-    DWORD num_known_records;
+    uint64_t record_no;
     bool newly_discovered;
 };
 
 struct eventlog_hint_t {
     char *name;
-    DWORD record_no;
+    uint64_t record_no;
 };
 
 struct timeout_config {

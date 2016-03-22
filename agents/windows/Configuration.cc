@@ -692,7 +692,9 @@ void Configuration::parseExecute(char *value) {
 }
 
 bool Configuration::handleLogwatchConfigVariable(char *var, char *value) {
-    if (!strncmp(var, "logfile ", 8)) {
+    bool is_logfile = strncmp(var, "logfile ", 8) == 0;
+    bool is_newlog = strncmp(var, "logname ", 8) == 0;
+    if (is_logfile || is_newlog) {
         int level;
         char *logfilename = lstrip(var + 8);
         lowercase(logfilename);
@@ -723,13 +725,18 @@ bool Configuration::handleLogwatchConfigVariable(char *var, char *value) {
         }
 
         _eventlog_config.add(
-            eventlog_config_entry(level, hide_context, logfilename));
+            eventlog_config_entry(level, hide_context, logfilename, is_newlog));
 
         return true;
     } else if (!strcmp(var, "sendall")) {
         int s = parse_boolean(value);
         if (s == -1) return false;
         _logwatch_send_initial_entries = s;
+        return true;
+    } else if (!strcmp(var, "vista_api")) {
+        int s = parse_boolean(value);
+        if (s == -1) return false;
+        _eventlog_vista_api = s;
         return true;
     }
     return false;

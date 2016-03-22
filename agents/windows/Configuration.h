@@ -91,6 +91,8 @@ public:
     bool psUseWMI() const { return _ps_use_wmi; }
     bool psFullCommandLine() const { return _ps_full_path; }
 
+    bool useVistaEventLog() const { return _eventlog_vista_api; }
+
     script_execution_mode defaultScriptExecutionMode() const {
         return _default_script_execution_mode;
     }
@@ -203,6 +205,8 @@ private:
 
     bool _ps_use_wmi;
     bool _ps_full_path;
+
+    bool _eventlog_vista_api;
 
     // fileinfo
     ListCollector<fileinfo_paths_t, BlockMode::Nop<fileinfo_paths_t>,

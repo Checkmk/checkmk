@@ -1,0 +1,19 @@
+Title: windows agent: added support for new eventlog types introduced with windows vista / server 2008
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1458652411
+Class: feature
+
+The new eventlogs introduced in windows vista / windows server 2008 can only be accessed through a
+new api introduced in that same version.
+To allow this agent to work with older windows versions, the api used can be toggled through the
+configuration file and, for compatibilty, defaults to the old style.
+To enable the new api, set "vista_api = yes" in the logwatch section.
+This only changes the api, it doesn't automatically enable additional logs (there could be
+hundreds).
+Instead you can manually activate the new-style logs with a line like this (again in the logwatch
+section):
+"logname Microsoft-Windows-GroupPolicy/Operational = warn"
+The correct name to use for the logs can be found in windows through the Properties-Window of a log.

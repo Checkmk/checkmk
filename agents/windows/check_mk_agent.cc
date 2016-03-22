@@ -632,165 +632,30 @@ void dump_performance_counters(OutputProxy &out, unsigned counter_base_number,
 //  |                      |___/                                           |
 //  '----------------------------------------------------------------------'
 
-// loads a dll while ignoring blacklisted dlls and with support for
-// environment variables in the path
-HMODULE load_library_ext(const char *dllpath) {
-    HMODULE dll = nullptr;
-
-    // this should be sufficient most of the time
-    static const size_t INIT_BUFFER_SIZE = 128;
-
-    std::string dllpath_expanded;
-    dllpath_expanded.resize(INIT_BUFFER_SIZE, '\0');
-    DWORD required = ExpandEnvironmentStrings(dllpath, &dllpath_expanded[0],
-                                              dllpath_expanded.size());
-    if (required > dllpath_expanded.size()) {
-        dllpath_expanded.resize(required + 1);
-        required = ExpandEnvironmentStrings(dllpath, &dllpath_expanded[0],
-                                            dllpath_expanded.size());
-    } else if (required == 0) {
-        dllpath_expanded = dllpath;
-    }
-    if (required != 0) {
-        // required includes the zero terminator
-        dllpath_expanded.resize(required - 1);
-    }
-
-    // load the library as a datafile without loading refernced dlls. This is
-    // quicker but most of all it prevents problems if dependent dlls can't be
-    // loaded.
-    dll =
-        LoadLibraryExA(dllpath_expanded.c_str(), nullptr,
-                       DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
-    return dll;
-}
-
-bool output_eventlog_entry(OutputProxy &out, const char *dllpath,
-                           EVENTLOGRECORD *event, char type_char,
-                           const char *logname, const char *source_name,
-                           const WCHAR **strings,
-                           std::map<std::string, HMODULE> &handle_cache) {
-    char msgbuffer[8192];
-
-    HMODULE dll = nullptr;
-
-    // if dllpath is NULL, we output the message without text conversion and
-    // always succeed. If a dll pathpath is given, we only succeed if the
-    // conversion
-    // is successfull.
-
-    if (dllpath) {
-        auto iter = handle_cache.find(dllpath);
-        if (iter == handle_cache.end()) {
-            dll = load_library_ext(dllpath);
-            iter =
-                handle_cache.insert(std::make_pair(std::string(dllpath), dll))
-                    .first;
-        } else {
-            dll = iter->second;
-        }
-        if (!dll) {
-            crash_log("     --> failed to load %s", dllpath);
-            return false;
-        }
-    } else
-        dll = NULL;
-
-    WCHAR wmsgbuffer[8192];
-    DWORD dwFlags = FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_SYSTEM;
-    if (dll) dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
-
-    crash_log("Event ID: %lu.%lu",
-              event->EventID / 65536,   // "Qualifiers": no idea what *that* is
-              event->EventID % 65536);  // the actual event id
-    crash_log("Formatting Message");
-    DWORD len = FormatMessageW(dwFlags, dll, event->EventID,
-                               0,  // accept any language
-                               wmsgbuffer,
-                               // msgbuffer,
-                               8192, (char **)strings);
-    crash_log("Formatting Message - DONE");
-
-    if (len) {
-        // convert message to UTF-8
-        len = WideCharToMultiByte(CP_UTF8, 0, wmsgbuffer, -1, msgbuffer,
-                                  sizeof(msgbuffer), NULL, NULL);
-    }
-
-    if (len == 0)  // message could not be converted
-    {
-        // if conversion was not successfull while trying to load a DLL, we
-        // return a
-        // failure. Our parent function will then retry later without a DLL
-        // path.
-        if (dllpath) return false;
-
-        // if message cannot be converted, then at least output the text
-        // strings.
-        // We render all messages one after the other into msgbuffer, separated
-        // by spaces.
-        memset(msgbuffer, 0,
-               sizeof(msgbuffer));  // avoids problems with 0-termination
-        char *w = msgbuffer;
-        int sizeleft = sizeof(msgbuffer) - 1;  // leave one byte for termination
-        int n = 0;
-        while (strings[n])  // string array is zero terminated
-        {
-            const WCHAR *s = strings[n];
-            DWORD len =
-                WideCharToMultiByte(CP_UTF8, 0, s, -1, w, sizeleft, NULL, NULL);
-            if (!len) break;
-            sizeleft -= len;
-            w += len;
-            if (sizeleft <= 0) break;
-            n++;
-            if (strings[n]) *w++ = ' ';
-        }
-    }
-
-    // replace newlines with spaces. check_mk expects one message each line.
-    char *w = msgbuffer;
-    while (*w) {
-        if (*w == '\n' || *w == '\r') *w = ' ';
-        w++;
-    }
-
-    // convert UNIX timestamp to local time
-    time_t time_generated = (time_t)event->TimeGenerated;
-    struct tm *t = localtime(&time_generated);
-    char timestamp[64];
-    strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
-
-    out.output("%c %s %lu.%lu %s %s\n", type_char, timestamp,
-               event->EventID / 65536,  // "Qualifiers": no idea what *that* is
-               event->EventID % 65536,  // the actual event id
-               source_name, msgbuffer);
-    return true;
-}
-
-std::pair<char, int> determine_event_state(EVENTLOGRECORD *event, int level) {
-    switch (event->EventType) {
-        case EVENTLOG_ERROR_TYPE:
+std::pair<char, int> determine_event_state(const IEventLogRecord &event,
+                                           int level) {
+    switch (event.level()) {
+        case IEventLogRecord::Level::Error:
             return {'C', 2};
-        case EVENTLOG_WARNING_TYPE:
+        case IEventLogRecord::Level::Warning:
             return {'W', 1};
-        case EVENTLOG_INFORMATION_TYPE:
-        case EVENTLOG_AUDIT_SUCCESS:
-        case EVENTLOG_SUCCESS:
+        case IEventLogRecord::Level::Information:
+        case IEventLogRecord::Level::AuditSuccess:
+        case IEventLogRecord::Level::Success:
             if (level == 0)
                 return {'O', 0};
             else
                 return {'.', 0};
-        case EVENTLOG_AUDIT_FAILURE:
+        case IEventLogRecord::Level::AuditFailure:
             return {'C', 2};
         default:
             return {'u', 1};
     }
 }
 
-void process_eventlog_entry(OutputProxy &out, EventLog &event_log,
-                            EVENTLOGRECORD *event, int level, int hide_context,
-                            std::map<std::string, HMODULE> &handle_cache) {
+void process_eventlog_entry(OutputProxy &out, const IEventLog &event_log,
+                            const IEventLogRecord &event, int level,
+                            int hide_context) {
     char type_char;
     int this_state;
     std::tie(type_char, this_state) = determine_event_state(event, level);
@@ -799,125 +664,76 @@ void process_eventlog_entry(OutputProxy &out, EventLog &event_log,
         return;
     }
 
+    // convert UNIX timestamp to local time
+    time_t time_generated = (time_t)event.timeGenerated();
+    struct tm *t = localtime(&time_generated);
+    char timestamp[64];
+    strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
+
     // source is the application that produced the event
-    std::string source_name = to_utf8((WCHAR *)(event + 1));
+    std::string source_name = to_utf8(event.source().c_str());
     std::replace(source_name.begin(), source_name.end(), ' ', '_');
 
-    // prepare array of zero terminated strings to be inserted
-    // into message template.
-    std::vector<const WCHAR *> strings;
-    const WCHAR *string = (WCHAR *)(((char *)event) + event->StringOffset);
-    for (int i = 0; i < event->NumStrings; ++i) {
-        strings.push_back(string);
-    }
-
-    // Sometimes the eventlog record does not provide
-    // enough strings for the message template. Causes crash...
-    // -> Fill the rest with empty strings
-    strings.resize(63, L"");
-    // end marker in array
-    strings.push_back(nullptr);
-
-    // To save space and to make log messages localizable, each
-    // eventlog entry only contains an id and the variable parameters of
-    // a message.
-    // The actual error string has to be retrieved from a dll, usually
-    // the one that caused the error.
-    std::vector<std::string> message_files =
-        event_log.getMessageFiles(source_name.c_str());
-
-    bool success = false;
-    for (const std::string &message_file : message_files) {
-        if (output_eventlog_entry(out, message_file.c_str(), event, type_char,
-                                  event_log.getName().c_str(),
-                                  source_name.c_str(), &strings[0],
-                                  handle_cache)) {
-            success = true;
-        }
-    }
-
-    if (!success) {
-        if (message_files.size() == 0) {
-            crash_log("     - record %lu: no DLLs listed in registry",
-                      event->RecordNumber);
-        } else {
-            crash_log("     - record %lu: translation failed",
-                      event->RecordNumber);
-        }
-        output_eventlog_entry(out, NULL, event, type_char,
-                              event_log.getName().c_str(), source_name.c_str(),
-                              &strings[0], handle_cache);
-    }
-    crash_log(
-        "     - record %lu: event_processed, "
-        "event->Length %lu",
-        event->RecordNumber, event->Length);
+    out.output("%c %s %lu.%lu %s %s\n", type_char, timestamp,
+               event.eventQualifiers(), event.eventId(), source_name.c_str(),
+               to_utf8(event.message().c_str()).c_str());
 }
 
-void output_eventlog(OutputProxy &out, const char *logname,
-                     DWORD *record_number, int level, int hide_context) {
-    crash_log(" - event log \"%s\":", logname);
+void output_eventlog(OutputProxy &out, LPCWSTR logname, uint64_t &first_record,
+                     int level, int hide_context) {
+    crash_log(" - event log \"%ls\":", logname);
 
     try {
-        EventLog log(logname);
-        crash_log("   . successfully opened event log");
+        std::unique_ptr<IEventLog> log(
+            open_eventlog(logname, g_config->useVistaEventLog()));
+        {
+            crash_log("   . successfully opened event log");
 
-        out.output("[[[%s]]]\n", logname);
-        int worst_state = 0;
+            out.output("[[[%ls]]]\n", logname);
+            int worst_state = 0;
+            first_record = log->seek(first_record);
 
-        DWORD newest_record = *record_number;
+            uint64_t last_record = first_record;
 
-        log.seek(*record_number);
+            // first pass - determine if there are records above level
+            std::shared_ptr<IEventLogRecord> record = log->read();
+            while (record.get() != nullptr) {
+                std::pair<char, int> state =
+                    determine_event_state(*record, level);
+                worst_state = std::max(worst_state, state.second);
 
-        // first pass - determine if there are records above level
-        EVENTLOGRECORD *record = log.read();
-        while (record != nullptr) {
-            std::pair<char, int> state = determine_event_state(record, level);
-            worst_state = std::max(worst_state, state.second);
-
-            // store highest record number we found. This is just in case
-            // the second pass doesn't heppen
-            newest_record = record->RecordNumber;
-            record = log.read();
-        }
-
-        crash_log("    . worst state: %d", worst_state);
-
-        // loading and releasing the message dlls for each message was by far
-        // the biggest performance cost (~90%) of resolving eventlog messages.
-        // -> keep the handles open until all messages are logged so we only
-        //    load each dll once
-        std::map<std::string, HMODULE> handle_cache;
-
-        // second pass - if there were, print everything
-        if ((worst_state >= level) || !logwatch_suppress_info) {
-            log.reset();
-            log.seek(*record_number);
-
-            EVENTLOGRECORD *record = log.read();
-            while (record != nullptr) {
-                crash_log("record %d", (int)record->RecordNumber);
-                process_eventlog_entry(out, log, record, level, hide_context,
-                                       handle_cache);
-
-                // store highest record number we found
-                newest_record = record->RecordNumber;
-                record = log.read();
+                last_record = record->recordId();
+                record = log->read();
             }
+
+            crash_log("    . worst state: %d", worst_state);
+
+            // second pass - if there were, print everything
+            if ((worst_state >= level) || !logwatch_suppress_info) {
+                log->reset();
+                log->seek(first_record);
+
+                std::shared_ptr<IEventLogRecord> record = log->read();
+                while (record.get() != nullptr) {
+                    process_eventlog_entry(out, *log, *record, level,
+                                           hide_context);
+
+                    // store highest record number we found
+                    last_record = record->recordId();
+                    record = log->read();
+                }
+            }
+            first_record = last_record;
         }
-        for (auto kv : handle_cache) {
-            ::FreeLibrary(kv.second);
-        }
-        *record_number = newest_record;
     } catch (const std::exception &e) {
         crash_log("failed to read event log: %s\n", e.what());
-        out.output("[[[%s:missing]]]\n", logname);
+        out.output("[[[%ls:missing]]]\n", logname);
     }
 }
 
 // Keeps memory of an event log we have found. It
 // might already be known and will not be stored twice.
-void register_eventlog(char *logname) {
+void register_eventlog(const char *logname) {
     // check if we already know this one...
     for (eventlog_state_t::iterator iter = g_eventlog_state.begin();
          iter != g_eventlog_state.end(); ++iter) {
@@ -979,6 +795,16 @@ bool find_eventlogs(OutputProxy &out) {
             "%lu\n",
             regpath, GetLastError());
     }
+
+    // enable the vista-style logs if that api is enabled
+    if (g_config->useVistaEventLog()) {
+        for (const auto &eventlog : g_config->eventlogConfig()) {
+            if (eventlog.vista_api) {
+                register_eventlog(eventlog.name.c_str());
+            }
+        }
+    }
+
     return success;
 }
 
@@ -1267,11 +1093,10 @@ void parse_eventlog_state_line(char *line) {
     char *token = strtok(p, "|");
 
     if (!token) return;
-    unsigned long long record_no = string_to_llu(token);
 
     eventlog_hint_t *elh = new eventlog_hint_t();
     elh->name = strdup(path);
-    elh->record_no = record_no;
+    elh->record_no = std::stoull(token);
     g_eventlog_hints.push_back(elh);
 }
 
@@ -1315,6 +1140,11 @@ void save_logwatch_offsets(const std::string &logwatch_statefile) {
 
 void save_eventlog_offsets(const std::string &eventlog_statefile) {
     FILE *file = fopen(eventlog_statefile.c_str(), "w");
+    if (file == nullptr) {
+        fprintf(stderr, "failed to open %s for writing\n",
+                eventlog_statefile.c_str());
+        return;
+    }
     for (eventlog_state_t::iterator state_iter = g_eventlog_state.begin();
          state_iter != g_eventlog_state.end(); ++state_iter) {
         int level = 1;
@@ -1328,8 +1158,8 @@ void save_eventlog_offsets(const std::string &eventlog_statefile) {
             }
         }
         if (level != -1)
-            fprintf(file, "%s|%lu\n", state_iter->name.c_str(),
-                    state_iter->num_known_records);
+            fprintf(file, "%s|%" PRIu64 "\n", state_iter->name.c_str(),
+                    state_iter->record_no);
     }
     fclose(file);
 }
@@ -1821,7 +1651,6 @@ void section_eventlog(OutputProxy &out, const Environment &env) {
         // Special handling on startup (first_run)
         // The last processed record number of each eventlog is stored in the
         // file eventstate.txt
-        // If there is no entry for the given eventlog we start at the end
         if (first_run && !g_config->logwatchSendInitialEntries()) {
             for (eventlog_state_t::iterator it_st = g_eventlog_state.begin();
                  it_st != g_eventlog_state.end(); ++it_st) {
@@ -1831,22 +1660,15 @@ void section_eventlog(OutputProxy &out, const Environment &env) {
                      it_el != g_eventlog_hints.end(); it_el++) {
                     eventlog_hint_t *hint = *it_el;
                     if (it_st->name.compare(hint->name) == 0) {
-                        it_st->num_known_records = hint->record_no;
+                        it_st->record_no = hint->record_no;
                         found_hint = true;
                         break;
                     }
                 }
+                // If there is no entry for the given eventlog we start at the
+                // end
                 if (!found_hint) {
-                    HANDLE hEventlog = OpenEventLog(NULL, it_st->name.c_str());
-                    if (hEventlog) {
-                        DWORD no_records;
-                        DWORD oldest_record;
-                        GetNumberOfEventLogRecords(hEventlog, &no_records);
-                        GetOldestEventLogRecord(hEventlog, &oldest_record);
-                        if (no_records > 0)
-                            it_st->num_known_records =
-                                oldest_record + no_records - 1;
-                    }
+                    it_st->record_no = std::numeric_limits<uint64_t>::max();
                 }
             }
         }
@@ -1872,9 +1694,8 @@ void section_eventlog(OutputProxy &out, const Environment &env) {
                     }
                 }
                 if (level != -1) {
-                    output_eventlog(out, it_st->name.c_str(),
-                                    &it_st->num_known_records, level,
-                                    hide_context);
+                    output_eventlog(out, to_utf16(it_st->name.c_str()).c_str(),
+                                    it_st->record_no, level, hide_context);
                 }
             }
         }

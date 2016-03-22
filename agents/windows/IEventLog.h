@@ -22,43 +22,58 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef EventLog_h
-#define EventLog_h
+#ifndef IEventLog_h
+#define IEventLog_h
 
-#include <windows.h>
-#include "IEventLog.h"
-#include "logging.h"
-#include "stringutil.h"
-#include "types.h"
+#include <memory>
+#include <string>
 
-// forward declaration
-class MessageResolver;
-
-class EventLog : public IEventLog {
+class IEventLogRecord {
 public:
-    /**
-     * Construct a reader for the named eventlog
-     */
-    EventLog(LPCWSTR name);
+    enum class Level {
+        Error,
+        Warning,
+        Information,
+        AuditFailure,
+        AuditSuccess,
+        Success
+    };
 
-    virtual ~EventLog();
+public:
+    virtual uint64_t recordId() const = 0;
+    virtual uint16_t eventId() const = 0;
+    virtual uint16_t eventQualifiers() const = 0;
+    virtual time_t timeGenerated() const = 0;
+    virtual std::wstring source() const = 0;
+    virtual Level level() const = 0;
+    virtual std::wstring message() const = 0;
+};
+
+class IEventLog {
+public:
+    virtual ~IEventLog() {}
 
     /**
      * return to reading from the beginning of the log
      */
-    virtual void reset() override;
+    virtual void reset() = 0;
 
-    virtual std::wstring getName() const override;
+    /**
+     * return the name/path of the eventlog monitored
+     **/
+    virtual std::wstring getName() const = 0;
 
     /**
      * seek to the specified record on the next read or, if the record_number is
-     * older than the oldest existing record, seek to the beginning.
-     * Note: there is a bug in the MS eventlog code that prevents seeking on
-     * large eventlogs.
-     * In this case this function will still work as expected but the next read
-     * will be slow.
+     * older than the oldest existing record, seek to the beginning. If the
+     * record_number is the highest representable uint32_t, seek to the end of
+     * the log such that only future events are retrieveda
+     *
+     * returns the actual record_id we seeked to, which may differ from the
+     * input
+     * if it was outside the available range
      */
-    virtual uint64_t seek(uint64_t record_id) override;
+    virtual uint64_t seek(uint64_t record_id) = 0;
 
     /**
      * read the next eventlog record
@@ -66,35 +81,17 @@ public:
      * quick most of the time but occasionally cause a fetch via api that takes
      * longer
      */
-    virtual std::shared_ptr<IEventLogRecord> read() override;
+    virtual std::shared_ptr<IEventLogRecord> read() = 0;
 
     /**
      * get a list of dlls that contain eventid->message mappings for this
      * eventlog and the specified source
      */
-    std::vector<std::string> getMessageFiles(const char *source) const;
-
-private:
-    void open();
-
-    void close();
-
-    bool fillBuffer();
-
-private:
-    static const size_t INIT_BUFFER_SIZE = 64 * 1024;
-
-    std::wstring _name;
-    HANDLE _log;
-    DWORD _record_offset{0};
-    bool _seek_possible{true};
-    std::vector<BYTE> _buffer;
-    DWORD _buffer_offset{0};
-    DWORD _buffer_used{0};
-
-    DWORD _last_record_read{0};
-
-    std::shared_ptr<MessageResolver> _resolver;
+    //    virtual std::vector<std::string> getMessageFiles(
+    //        const char *source) const = 0;
 };
+
+std::unique_ptr<IEventLog> open_eventlog(const wchar_t *name_or_path,
+                                         bool try_vista_api);
 
 #endif  // EventLog_h

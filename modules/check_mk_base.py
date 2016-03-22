@@ -2053,6 +2053,11 @@ def ensure_directory(path):
             return
         raise
 
+# like time.mktime but assumes the time_struct to be in utc, not in local time.
+def utc_mktime(time_struct):
+    import calendar
+    return calendar.timegm(time_struct)
+
 #.
 #   .--Check helpers-------------------------------------------------------.
 #   |     ____ _               _      _          _                         |

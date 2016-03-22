@@ -152,7 +152,7 @@ def check_heartbeat_crm(item, params, info):
 
         # Check the freshness of the crm_mon output and terminate with CRITICAL
         # when too old information are found
-        dt = time.mktime(time.strptime(last_updated, '%a %b %d %H:%M:%S %Y'))
+        dt = utc_mktime(time.strptime(last_updated, '%a %b %d %H:%M:%S %Y'))
         now = time.time()
         delta = now - dt
         if delta > params['max_age']:

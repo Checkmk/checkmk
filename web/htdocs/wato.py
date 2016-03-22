@@ -1181,7 +1181,7 @@ def mode_edit_host(phase, new, is_cluster):
 
     # edit
     elif not new:
-        if not Folder.current().has_host(clonename):
+        if not Folder.current().has_host(hostname):
             raise MKGeneralException(_("You called this page with an invalid host name."))
 
         mode = "edit"
@@ -2597,7 +2597,7 @@ def mode_inventory(phase, firsttime):
     hostname = html.var("host")
     host = Folder.current().host(hostname)
     if not host:
-        raise MKGeneralException(_("You called this page for a non-existing host."))
+        raise MKGeneralException(_("You called this page with an invalid host name."))
 
     host.need_permission("read")
 

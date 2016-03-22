@@ -1,0 +1,11 @@
+Title: CSV bulk import of hosts: fix handling of CSV column headers
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1458656003
+
+Reenable the feature of automatic detection of the correct column. Remove
+bogus {{None}} headers if headers are disabled.

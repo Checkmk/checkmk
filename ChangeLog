@@ -171,6 +171,7 @@
     * 3316 FIX: Fix validation of empty or missing file uploads (such as in Bulk host import)
     * 3302 FIX: Improved error handling when trying to edit a not existing rule
     * 3338 FIX: Improved error handling when host to be edited does not exist
+    * 3318 FIX: CSV bulk import of hosts: fix handling of CSV column headers...
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

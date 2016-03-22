@@ -2964,6 +2964,8 @@ class ModeBulkImport(WatoMode):
 
     def buttons(self):
         html.context_button(_("Abort"), folder_preserving_link([("mode", "folder")]), "abort")
+        if html.has_var("file_id"):
+            html.context_button(_("Back"), folder_preserving_link([("mode", "bulk_import")]), "back")
 
 
     def action(self):
@@ -3112,7 +3114,7 @@ class ModeBulkImport(WatoMode):
                     raise MKUserError(None, _("Invalid host name: %r. Only the characters a-z, A-Z, "
                                               "0-9, _, . and - are allowed.") % value)
                 host_name = value
-            elif attribute:
+            elif attribute and attribute != "-":
                 if attribute in attributes:
                     raise MKUserError(None, _("The attribute \"%s\" is assigned to multiple columns. "
                                               "You can not populate one attribute from multiple columns. "
@@ -3147,7 +3149,6 @@ class ModeBulkImport(WatoMode):
         html.hidden_fields()
         html.button("_do_upload", _("Upload"))
         html.end_form()
-
 
 
     def _vs_upload(self):
@@ -3210,15 +3211,21 @@ class ModeBulkImport(WatoMode):
         # Determine how many columns should be rendered by using the longest column
         num_columns = max([ len(r) for r in [headers] + rows ])
 
-        table.begin(sortable=False, searchable=False)
+        table.begin(sortable=False, searchable=False, omit_headers = not self._params.get("has_title_line"))
 
         # Render attribute selection fields
         table.row()
         for col_num in range(num_columns):
             header = len(headers) > col_num and headers[col_num] or None
             table.cell(html.attrencode(header))
-            html.select("attribute_%d" % col_num, attributes, self._try_detect_default_attribute(attributes, header),
-                        attrs={"autocomplete": "off"})
+            attribute_varname = "attribute_%d" % col_num
+            if html.var(attribute_varname):
+                attribute_method = html.var("attribute_varname")
+            else:
+                attribute_method = self._try_detect_default_attribute(attributes, header)
+                html.del_var(attribute_varname)
+
+            html.select("attribute_%d" % col_num, attributes, attribute_method, attrs={"autocomplete": "off"})
 
         # Render sample rows
         for row in rows:
@@ -3263,7 +3270,8 @@ class ModeBulkImport(WatoMode):
 
     def _attribute_choices(self):
         attributes = [
-            (None,              _("Don't import")),
+            (None,              _("(please select)")),
+            ("-",               _("Don't import")),
             ("host_name",       _("Hostname")),
             ("alias",           _("Alias")),
             ("ipaddress",       _("IPv4 Address")),
@@ -3273,7 +3281,7 @@ class ModeBulkImport(WatoMode):
 
         # Add tag groups
         for entry in configured_host_tags():
-            attributes.append(("tag_"+entry[0], _("Tag: %s") % entry[1]))
+            attributes.append(("tag_" + entry[0], _("Tag: %s") % entry[1]))
 
         return attributes
 

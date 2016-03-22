@@ -1,0 +1,9 @@
+Title: cmciii.phase: fixed wrong datatype handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b8
+Date: 1458653268
+Class: fix
+
+

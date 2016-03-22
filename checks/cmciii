@@ -868,6 +868,9 @@ def reparse_cmciii_phase(parsed):
 
             output.setdefault((unit, device, phase), {})
             output[(unit, device, phase)][value_name] = value
+
+
+
     return output
 
 
@@ -883,12 +886,16 @@ def check_cmciii_phase(item, params, parsed):
 
     parsed = {}
     parsed[item] = {}
-    parsed[item]["voltage"] = float(data['Voltage']['Value'].split()[0]), None
-    parsed[item]["current"] = float(data['Current']['Value'].split()[0]), None
-    parsed[item]["power"]   = float(data[('Power', 'Active')]['Value'].split()[0]), None
-    parsed[item]["energy"]  = float(data[('Energy', 'Active')]['Value'].split()[0]), None
+    for key, values in data.items():
+        if values.get("Value"):
+            if type(key) == tuple:
+                phase_key = key[0].lower()
+            else:
+                phase_key = key.lower()
+            parsed[item][phase_key] = float(data[key]['Value'].split()[0]), None
 
     return check_elphase(item, params, parsed)
+
 
 check_info['cmciii.phase'] = {
     "check_function"      : check_cmciii_phase,

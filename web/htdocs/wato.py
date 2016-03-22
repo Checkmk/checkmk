@@ -367,12 +367,12 @@ def mode_folder(phase):
             if not folder.locked_hosts() and config.may("wato.manage_hosts") and folder.may("write"):
                 html.context_button(_("New host"),    folder.url([("mode", "newhost")]), "new")
                 html.context_button(_("New cluster"), folder.url([("mode", "newcluster")]), "new_cluster")
-                html.context_button(_("Bulk Import"), folder.url([("mode", "bulk_import")]), "bulk_import")
+                html.context_button(_("Bulk import"), folder.url([("mode", "bulk_import")]), "bulk_import")
             if config.may("wato.services"):
-                html.context_button(_("Bulk Discovery"), folder.url([("mode", "bulkinventory"), ("all", "1")]),
+                html.context_button(_("Bulk discovery"), folder.url([("mode", "bulkinventory"), ("all", "1")]),
                             "inventory")
             if config.may("wato.rename_hosts"):
-                html.context_button(_("Bulk Renaming"), folder.url([("mode", "bulk_rename_host")]), "rename_host")
+                html.context_button(_("Bulk renaming"), folder.url([("mode", "bulk_rename_host")]), "rename_host")
             if not folder.locked_hosts() and config.may("wato.parentscan") and folder.may("write"):
                 html.context_button(_("Parent scan"), folder.url([("mode", "parentscan"), ("all", "1")]),
                             "parentscan")
@@ -1222,9 +1222,9 @@ def mode_edit_host(phase, new, is_cluster):
 
             if not Folder.current().locked_hosts():
                 if config.may("wato.rename_hosts"):
-                    html.context_button(is_cluster and _("Rename Cluster") or _("Rename Host"),
+                    html.context_button(is_cluster and _("Rename cluster") or _("Rename host"),
                       folder_preserving_link([("mode", "rename_host"), ("host", hostname)]), "rename_host")
-                html.context_button(is_cluster and _("Delete Cluster") or _("Delete Host"),
+                html.context_button(is_cluster and _("Delete cluster") or _("Delete host"),
                       html.makeactionuri([("delete", "1")]), "delete")
 
             if not is_cluster:
@@ -1584,7 +1584,7 @@ def HostnameRenamingConfig():
               ListOf(
                   HostnameRenaming(),
                   title = _("Renaming Operations"),
-                  add_label = _("Add Renaming"),
+                  add_label = _("Add renaming"),
                   allow_empty = False,
             )),
         ],
@@ -1996,8 +1996,7 @@ def render_renaming_actions(action_counts):
         if what.startswith("dnsfail-"):
             text = _("<b>WARNING: </b> the IP address lookup of <b>%s</b> has failed. The core has been "
                                  "started by using the address <tt>0.0.0.0</tt> for the while. "
-                                 "You will not be able to activate any changes until you have either updated your "
-                                 "DNS or configure an explicit address for.") % what.split("-", 1)[1]
+                                 "Please update your DNS or configure an IP address for the affected host.") % what.split("-", 1)[1]
         else:
             text = action_titles.get(what, what)
         if count > 1:

@@ -1,0 +1,12 @@
+Title: MKP: Verifying minimal version of packages during installation
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.8b8
+Date: 1458746476
+Class: fix
+
+The minimal required version of MKPs was only an informational field before
+this change. Now the version is checked during installation of the MKPs. When
+the package requires a newer version than you are currently using it refuses
+the installation.

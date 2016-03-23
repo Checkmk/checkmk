@@ -2,6 +2,7 @@
     Core & Setup:
     * 3342 MKP: local/lib and local/bin of sites can now be packed...
     * 3105 FIX: fixed crash in cmk --dump for services containing non-ascii characters
+    * 3343 FIX: MKP: Verifying minimal version of packages during installation...
 
     Checks & Agents:
     * 3298 FIX: winperf_processor.util: Fixed exception when CPU counters were not matched

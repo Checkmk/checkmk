@@ -74,6 +74,7 @@
 #include "OutputProxy.h"
 #include "PerfCounter.h"
 #include "Thread.h"
+#include "dynamic_func.h"
 #include "logging.h"
 #include "stringutil.h"
 #include "types.h"
@@ -276,24 +277,6 @@ void debug_script_container(script_container *container) {
     crash_log("buffer_work: \n<<<<\n%s\n>>>>", container->buffer_work);
 }
 
-template <typename FuncT>
-FuncT dynamic_func(LPCWSTR dllName, LPCSTR funcName) {
-    HMODULE mod = LoadLibraryW(dllName);
-    if (mod != NULL) {
-        FARPROC proc = GetProcAddress(mod, funcName);
-        if (proc != NULL) {
-            return (FuncT)proc;
-        }
-    }
-    return NULL;
-}
-
-#define DYNAMIC_FUNC(func, dllName) \
-    func##_type func##_dyn = dynamic_func<func##_type>(dllName, #func)
-// GetProcessHandleCount_type GetProcessHandleCount_dyn =
-// dynamic_func<GetProcessHandleCount_type>(L"kernel32.dll",
-// "GetProcessHandleCount");
-
 //  .----------------------------------------------------------------------.
 //  |  ______              _                 _   _               ______    |
 //  | / / / /___ _   _ ___| |_ ___ _ __ ___ | |_(_)_ __ ___   ___\ \ \ \   |
@@ -326,7 +309,8 @@ void section_uptime(OutputProxy &out) {
     std::string uptime = "0";
 
     typedef ULONGLONG WINAPI (*GetTickCount64_type)(void);
-    DYNAMIC_FUNC(GetTickCount64, L"kernel32.dll");
+    GetTickCount64_type GetTickCount64_dyn =
+        DYNAMIC_FUNC(GetTickCount64, L"kernel32.dll");
     if (GetTickCount64_dyn != nullptr) {
         // GetTickCount64 is only available on Vista/2008 and newer
         uptime = std::to_string(GetTickCount64_dyn() / 1000);
@@ -1027,7 +1011,8 @@ void section_ps(OutputProxy &out) {
                 // GetProcessHandleCount is only available winxp upwards
                 typedef BOOL WINAPI (*GetProcessHandleCount_type)(HANDLE,
                                                                   PDWORD);
-                DYNAMIC_FUNC(GetProcessHandleCount, L"kernel32.dll");
+                GetProcessHandleCount_type GetProcessHandleCount_dyn =
+                    DYNAMIC_FUNC(GetProcessHandleCount, L"kernel32.dll");
                 if (GetProcessHandleCount_dyn != NULL) {
                     GetProcessHandleCount_dyn(hProcess, &processHandleCount);
                 }
@@ -1542,12 +1527,60 @@ bool output_wmi_table(OutputProxy &out, const wchar_t *table_name,
     return true;
 }
 
+bool output_perfcounter_table(OutputProxy &out, const wchar_t *table_name,
+                              const char *section_name,
+                              bool as_subtable = false) {
+    try {
+        int counter_id = PerfCounterObject::resolve_counter_name(table_name);
+        if (counter_id < 0) {
+            return false;
+        }
+        PerfCounterObject counter_object(counter_id);
+        std::vector<std::wstring> instance_names =
+            counter_object.instanceNames();
+        std::vector<PERF_INSTANCE_DEFINITION *> instances =
+            counter_object.instances();
+
+        // we have to transpose the data coming from the perfcounter
+        std::map<int, std::vector<std::wstring>> value_map;
+
+        for (size_t i = 0; i < instances.size(); ++i) {
+            value_map[i] = std::vector<std::wstring>();
+        }
+
+        for (const PerfCounter &counter : counter_object.counters()) {
+            int idx = 0;
+            for (ULONGLONG value : counter.values(instances)) {
+                value_map[idx++].push_back(std::to_wstring(value));
+            }
+        }
+
+        // output
+        if (as_subtable) {
+            out.output("[%s]\n", section_name);
+        } else {
+            out.output("<<<%s:sep(44)>>>\n", section_name);
+        }
+        out.output("instance,%ls\n",
+                   join(counter_object.counterNames(), L",").c_str());
+        for (const auto &instance_values : value_map) {
+            out.output("%ls,%ls\n",
+                       instance_names[instance_values.first].c_str(),
+                       join(instance_values.second, L",").c_str());
+        }
+    } catch (const std::exception &e) {
+        crash_log("Exception: %s", e.what());
+        return false;
+    }
+    return true;
+}
+
 void section_dotnet(OutputProxy &out) {
     crash_log("<<<dotnet_clrmemory>>>");
-
     if (!output_wmi_table(out, L"Win32_PerfRawData_NETFramework_NETCLRMemory",
                           "dotnet_clrmemory")) {
-        crash_log("dotnet wmi table(s) missing or empty -> section disabled");
+        crash_log(
+            "dotnet perfcounter table(s) missing or empty -> section disabled");
         g_config->disableSection(SECTION_DOTNET);
     }
 }

@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <stdexcept>
 #include <vector>
+#include "PerfCounterCommon.h"
 #include "logging.h"
 #include "stringutil.h"
 
@@ -177,10 +178,9 @@ PerfCounterObject::PerfCounterObject(unsigned int counter_base_number)
            ERROR_SUCCESS) {
         if (ret == ERROR_MORE_DATA) {
             // the size of performance counter blocks is varible and may change
-            // concurrently,
-            // so there is no way to ensure the buffer is large enough before
-            // the call, we
-            // can only increase the buffer size until the call succeeds
+            // concurrently, so there is no way to ensure the buffer is large
+            // enough before the call, we can only increase the buffer size
+            // until the call succeeds
             buffer_size = _buffer.size() * 2;
             _buffer.resize(buffer_size);
         } else {
@@ -189,10 +189,8 @@ PerfCounterObject::PerfCounterObject(unsigned int counter_base_number)
     }
 
     // apparently this handle is opened on demand by RegQueryValueEx but needs
-    // to be
-    // closed manually, otherwise we may be blocking installation of apps that
-    // create new
-    // performance counters.
+    // to be closed manually, otherwise we may be blocking installation of apps
+    // that create new performance counters.
     // say WHAT???
     RegCloseKey(HKEY_PERFORMANCE_DATA);
 
@@ -220,8 +218,7 @@ PERF_OBJECT_TYPE *PerfCounterObject::findObject(DWORD counter_index) {
 
     for (DWORD i = 0; i < data_block->NumObjectTypes; ++i) {
         // iterate to the object we requested since apparently there can be more
-        // than
-        // that in the buffer returned
+        // than that in the buffer returned
         if (iter->ObjectNameTitleIndex == counter_index) {
             return iter;
         } else {
@@ -268,19 +265,21 @@ std::vector<PerfCounter> PerfCounterObject::counters() const {
     return result;
 }
 
-// retrieve the next line from a multi-sz registry key
-const TCHAR *get_next_multi_sz(const std::vector<TCHAR> &data, size_t &offset) {
-    const TCHAR *next = &data[offset];
-    size_t len = strlen(next);
-    if ((len == 0) || (offset + len > data.size())) {
-        // the second condition would only happen with an invalid registry value
-        // but that's not
-        // unheard of
-        return NULL;
-    } else {
-        offset += len + 1;
-        return next;
+std::vector<std::wstring> PerfCounterObject::counterNames() const {
+    std::map<DWORD, std::wstring> name_map = perf_id_map(false);
+
+    std::vector<std::wstring> result;
+    PERF_COUNTER_DEFINITION *counter = FirstCounter(_object);
+    for (DWORD i = 0UL; i < _object->NumCounters; ++i) {
+        auto iter = name_map.find(counter->CounterNameTitleIndex);
+        if (iter != name_map.end()) {
+            result.push_back(iter->second);
+        } else {
+            result.push_back(std::to_wstring(counter->CounterNameTitleIndex));
+        }
+        counter = NextCounter(counter);
     }
+    return result;
 }
 
 PerfCounterObject::CounterList PerfCounterObject::counter_list(
@@ -322,6 +321,56 @@ PerfCounterObject::CounterList PerfCounterObject::counter_list(
     }
 
     return output;
+}
+
+int PerfCounterObject::resolve_counter_name(const wchar_t *counter_name,
+                                            const wchar_t *language) {
+    if (language == NULL) {
+        // "autodetect", which means we try local language and english
+        int result = resolve_counter_name(counter_name, L"CurrentLanguage");
+        if (result == -1) {
+            result = resolve_counter_name(counter_name, L"009");
+        }
+        return result;
+    } else {
+        HKEY hKey;
+        LONG result =
+            RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          (std::wstring(L"SOFTWARE\\Microsoft\\Windows "
+                                        L"NT\\CurrentVersion\\Perflib\\") +
+                           language)
+                              .c_str(),
+                          REG_MULTI_SZ, KEY_READ, &hKey);
+
+        // preflight
+        std::vector<wchar_t> szValueName;
+        DWORD dwcbData = 0;
+        RegQueryValueExW(hKey, L"Counter", NULL, NULL, (LPBYTE)&szValueName[0],
+                         &dwcbData);
+        szValueName.resize(dwcbData);
+        // actual read op
+        RegQueryValueExW(hKey, L"Counter", NULL, NULL, (LPBYTE)&szValueName[0],
+                         &dwcbData);
+        RegCloseKey(hKey);
+
+        if (result != ERROR_SUCCESS) {
+            return -1;
+        }
+
+        size_t offset = 0;
+        for (;;) {
+            const wchar_t *id = get_next_multi_sz(szValueName, offset);
+            const wchar_t *name = get_next_multi_sz(szValueName, offset);
+            if ((id == NULL) || (name == NULL)) {
+                break;
+            }
+            if (wcscmp(name, counter_name) == 0) {
+                return wcstol(id, NULL, 10);
+            }
+        }
+
+        return -1;
+    }
 }
 
 int PerfCounterObject::resolve_counter_name(const char *counter_name,

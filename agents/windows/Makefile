@@ -91,7 +91,7 @@ directories:
 # number. Instead a placeholder is being used as version.a
 # -----------------------------------------------------------------------------
 
-SRCS = check_mk_agent.cc SettingsCollector.cc Configuration.cc Environment.cc stringutil.cc wmiHelper.cc ListenSocket.cc PerfCounter.cc Thread.cc OutputProxy.cc logging.cc Crypto.cc OHMMonitor.cc EventLog.cc ExternalCmd.cc EventLogVista.cc IEventLog.cc
+SRCS = check_mk_agent.cc SettingsCollector.cc Configuration.cc Environment.cc stringutil.cc wmiHelper.cc ListenSocket.cc PerfCounter.cc PerfCounterCommon.cc Thread.cc OutputProxy.cc logging.cc Crypto.cc OHMMonitor.cc EventLog.cc ExternalCmd.cc EventLogVista.cc IEventLog.cc
 OBJS = $(addprefix obj/,$(SRCS:.cc=.o))
 OBJS64 = $(addprefix obj64/,$(SRCS:.cc=.o))
 

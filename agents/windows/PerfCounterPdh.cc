@@ -26,91 +26,21 @@
 #include <pdhmsg.h>
 #include <stdio.h>
 #include <windows.h>
-#include <sstream>
-#include "stringutil.h"
-
 #include <ctime>
-
-// retrieve the next line from a multi-sz registry key
-LPCWSTR get_next_multi_sz(const std::vector<wchar_t> &data, size_t &offset) {
-    LPCWSTR next = &data[offset];
-    size_t len = wcslen(next);
-    if ((len == 0) || (offset + len > data.size())) {
-        // the second condition would only happen with an invalid registry value
-        // but that's not
-        // unheard of
-        return NULL;
-    } else {
-        offset += len + 1;
-        return next;
-    }
-}
-
-std::vector<wchar_t> retrieve_perf_data(LPCWSTR name, bool local) {
-    std::vector<wchar_t> result;
-    DWORD counters_size = 0;
-
-    HKEY key = local ? HKEY_PERFORMANCE_NLSTEXT : HKEY_PERFORMANCE_TEXT;
-
-    // preflight
-    ::RegQueryValueExW(key, name, NULL, NULL, (LPBYTE)&result[0],
-                       &counters_size);
-
-    result.resize(counters_size);
-    // actual read op
-    ::RegQueryValueExW(key, name, NULL, NULL, (LPBYTE)&result[0],
-                       &counters_size);
-
-    return result;
-}
-
-std::map<int, std::wstring> perf_id_map(bool local) {
-    std::vector<wchar_t> names = retrieve_perf_data(L"Counter", local);
-
-    std::map<int, std::wstring> result;
-
-    size_t offset = 0;
-    for (;;) {
-        LPCWSTR id = get_next_multi_sz(names, offset);
-        LPCWSTR name = get_next_multi_sz(names, offset);
-        if ((id == NULL) || (name == NULL)) {
-            break;
-        }
-
-        result[wcstol(id, NULL, 10)] = name;
-    }
-
-    return result;
-}
-
-std::map<std::wstring, int> perf_name_map(bool local) {
-    std::vector<wchar_t> names = retrieve_perf_data(L"Counter", local);
-
-    std::map<std::wstring, int> result;
-
-    size_t offset = 0;
-    for (;;) {
-        LPCWSTR id = get_next_multi_sz(names, offset);
-        LPCWSTR name = get_next_multi_sz(names, offset);
-        if ((id == NULL) || (name == NULL)) {
-            break;
-        }
-
-        result[name] = wcstol(id, NULL, 10);
-    }
-
-    return result;
-}
+#include <sstream>
+#include "PerfCounterCommon.h"
+#include "stringutil.h"
 
 std::wstring resolve_perf_id(int id) {
     std::wstring result;
     DWORD buffer_size = 0;
 
     PDH_STATUS status =
-        PdhLookupPerfNameByIndexW(NULL, id, &result[0], &buffer_size);
+        PdhLookupPerfNameByIndexW(nullptr, id, &result[0], &buffer_size);
     if ((DWORD)status == PDH_MORE_DATA) {
         result.resize(buffer_size);
-        status = PdhLookupPerfNameByIndexW(NULL, id, &result[0], &buffer_size);
+        status =
+            PdhLookupPerfNameByIndexW(nullptr, id, &result[0], &buffer_size);
     }
 
     if ((DWORD)status != ERROR_SUCCESS) {
@@ -175,7 +105,7 @@ std::pair<StringList, StringList> PerfCounterQuery::enumerateObject(
     std::wstring object_name(object_name_in);
 
     PDH_STATUS status = PdhEnumObjectItemsW(
-        NULL, NULL, object_name.c_str(), &counterlist_buffer[0],
+        nullptr, nullptr, object_name.c_str(), &counterlist_buffer[0],
         &counterlist_size, &instancelist_buffer[0], &instancelist_size,
         PERF_DETAIL_WIZARD, 0);
 
@@ -187,7 +117,7 @@ std::pair<StringList, StringList> PerfCounterQuery::enumerateObject(
             // and continue with that
             object_name = resolve_perf_id(iter->second);
             status = PdhEnumObjectItemsW(
-                NULL, NULL, object_name.c_str(), &counterlist_buffer[0],
+                nullptr, nullptr, object_name.c_str(), &counterlist_buffer[0],
                 &counterlist_size, &instancelist_buffer[0], &instancelist_size,
                 PERF_DETAIL_WIZARD, 0);
         }
@@ -205,7 +135,7 @@ std::pair<StringList, StringList> PerfCounterQuery::enumerateObject(
     counterlist_buffer.resize(counterlist_size);
     instancelist_buffer.resize(instancelist_size);
 
-    status = PdhEnumObjectItemsW(NULL, NULL, object_name.c_str(),
+    status = PdhEnumObjectItemsW(nullptr, nullptr, object_name.c_str(),
                                  &counterlist_buffer[0], &counterlist_size,
                                  &instancelist_buffer[0], &instancelist_size,
                                  PERF_DETAIL_WIZARD, 0);
@@ -244,14 +174,14 @@ StringList PerfCounterQuery::enumerateObjects() const {
 
     // this call can take several seconds, as it refreshes the whole list of
     // performance counters
-    PDH_STATUS status = PdhEnumObjectsW(NULL, NULL, &buffer[0], &buffer_size,
-                                        PERF_DETAIL_WIZARD, TRUE);
+    PDH_STATUS status = PdhEnumObjectsW(nullptr, nullptr, &buffer[0],
+                                        &buffer_size, PERF_DETAIL_WIZARD, TRUE);
 
     if ((DWORD)status == PDH_MORE_DATA) {
         // documentation says to add 1 to the buffer size on winxp.
         ++buffer_size;
         buffer.resize(buffer_size);
-        status = PdhEnumObjectsW(NULL, NULL, &buffer[0], &buffer_size,
+        status = PdhEnumObjectsW(nullptr, nullptr, &buffer[0], &buffer_size,
                                  PERF_DETAIL_WIZARD, FALSE);
     }
 

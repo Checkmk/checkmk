@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -22,55 +22,39 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef PerfCounterPdh_h
-#define PerfCounterPdh_h
-
-/**
- *
- * Cleaner implementation of Performance counter querying using pdh.dll
- * Not currently used
- *
- */
-
-#define WIN32_LEAN_AND_MEAN
-#include <pdh.h>
 #include <windows.h>
 #include <map>
-#include <string>
-#include <utility>
 #include <vector>
 
-typedef std::vector<std::wstring> StringList;
+template <typename CharT>
+size_t string_length(const CharT *s);
 
-class PerfCounterQuery {
-    HQUERY _query;
-    std::map<std::wstring, HCOUNTER> _counter;
-    std::map<std::wstring, int> _perf_name_index;
-    std::map<std::wstring, std::wstring> _translation_map;
+template <>
+size_t string_length<char>(const char *s);
 
-public:
-    PerfCounterQuery();
+template <>
+size_t string_length<wchar_t>(const wchar_t *s);
 
-    ~PerfCounterQuery();
+// retrieve the next line from a multi-sz registry key
+template <typename CharT>
+const CharT *get_next_multi_sz(const std::vector<CharT> &data, size_t &offset) {
+    const CharT *next = &data[offset];
+    size_t len = string_length(next);
+    if ((len == 0) || (offset + (len * sizeof(CharT)) > data.size())) {
+        // the second condition would only happen with an invalid registry value
+        // but that's not unheard of
+        return nullptr;
+    } else {
+        offset += len + 1;
+        return next;
+    }
+}
 
-    HCOUNTER addCounter(const std::wstring &path);
+// returns a map of performance counter indices to the corresponding names.
+// This can be used to resolve fields like CounterNameTitleIndex
+// if local is set, localized names are used, otherwise the names are english
+std::map<DWORD, std::wstring> perf_id_map(bool local);
 
-    static std::wstring makePath(const std::wstring &object,
-                                 const std::wstring instance,
-                                 const std::wstring &counter);
-
-    // enumerates all counters and instances for the specified object
-    std::pair<StringList, StringList> enumerateObject(
-        LPCWSTR object_name) const;
-
-    StringList enumerateObjects() const;
-
-    void execute();
-
-    std::wstring counterValue(LPCWSTR name) const;
-    std::wstring counterValue(HCOUNTER counter) const;
-
-    std::wstring trans(const std::wstring &local_name) const;
-};
-
-#endif  // PerfCounterPdh_h
+// returns the map inverse to perf_id_map. This is necessary
+// when one wants to translate between localized and english counter names
+std::map<std::wstring, DWORD> perf_name_map(bool local);

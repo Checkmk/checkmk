@@ -72,8 +72,13 @@ public:
     std::vector<PERF_INSTANCE_DEFINITION *> instances() const;
     std::vector<std::wstring> instanceNames() const;
     std::vector<PerfCounter> counters() const;
+    std::vector<std::wstring> counterNames() const;
 
     static CounterList counter_list(const char *language);
+
+    static int resolve_counter_name(const wchar_t *name,
+                                    const wchar_t *language = NULL);
+
     static int resolve_counter_name(const char *name,
                                     const char *language = NULL);
 

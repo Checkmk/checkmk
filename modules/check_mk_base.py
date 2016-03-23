@@ -1264,12 +1264,12 @@ def is_expected_agent_version(agent_version, expected_version):
             return False
 
         elif type(expected_version) == tuple and expected_version[0] == 'at_least':
-            is_daily_build = len(agent_version) == 10 or '-' in agent_version
-
             spec = expected_version[1]
-            if is_daily_build and 'daily_build' in spec:
+            if is_daily_build_version(agent_version) and 'daily_build' in spec:
                 expected = int(spec['daily_build'].replace('.', ''))
-                if len(agent_version) == 10: # master build
+
+                branch = branch_of_daily_build(agent_version)
+                if branch == "master":
                     agent = int(agent_version.replace('.', ''))
 
                 else: # branch build (e.g. 1.2.4-2014.06.01)
@@ -1288,6 +1288,17 @@ def is_expected_agent_version(agent_version, expected_version):
             raise
         raise MKGeneralException("Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
                 (agent_version, expected_version, e))
+
+
+def is_daily_build_version(v):
+    return len(v) == 10 or '-' in v
+
+
+def branch_of_daily_build(v):
+    if len(v) == 10:
+        return "master"
+    else:
+        return v.split('-')[0]
 
 
 # Parses versions of Check_MK and converts them into comparable integers.

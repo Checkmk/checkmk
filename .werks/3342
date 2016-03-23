@@ -1,0 +1,14 @@
+Title: MKP: local/lib and local/bin of sites can now be packed
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.8b8
+Date: 1458746298
+Class: feature
+
+The MKP packages can now pack files located below local/lib and local/bin
+of Check_MK sites.
+
+When you are using a manual installation of Check_MK (setup.sh), the lib and
+bin files shipped with MKP packages are not installed. You can also not pack
+such files into MKPs.

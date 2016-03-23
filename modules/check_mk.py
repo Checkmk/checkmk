@@ -102,6 +102,8 @@ if omd_root:
     local_pnp_templates_dir  = local_share + "/pnp-templates"
     local_doc_dir            = omd_root + "/local/share/doc/check_mk"
     local_locale_dir         = local_share + "/locale"
+    local_bin_dir            = omd_root + "/local/bin"
+    local_lib_dir            = omd_root + "/local/lib"
 else:
     local_checks_dir         = None
     local_notifications_dir  = None
@@ -114,6 +116,8 @@ else:
     local_pnp_templates_dir  = None
     local_doc_dir            = None
     local_locale_dir         = None
+    local_bin_dir            = None
+    local_lib_dir            = None
 
 # Pathnames, directories   and  other  settings.  All  these  settings
 # should be  overriden by  /usr/share/check_mk/modules/defaults, which

@@ -160,7 +160,7 @@ fi
 echo '<<<df>>>'
 for fs in ufs vxfs samfs lofs
 do
-    df -l -k -F $fs 2>/dev/null | sed 1d | \
+    df -l -k -F $fs 2>/dev/null | sed 1d | grep -v "^[^ ]*/lib/[^ ]*\.so\.1 " | \
     while read Filesystem kbytes used avail capacity Mountedon
     do
         kbytes=$(($used + $avail))

@@ -1,4 +1,7 @@
 1.2.8b9:
+    Checks & Agents:
+    * 3307 FIX: dell_poweredge_netdev: does not discover disconnected network devices any more
+
     Multisite:
     * 2237 Unique name for columns of Host Groups and Service Groups...
 

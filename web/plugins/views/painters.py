@@ -1753,77 +1753,77 @@ def paint_hg_host_list(row):
     return "", h
 
 multisite_painters["hostgroup_hosts"] = {
-    "title"   : _("Hosts colored according to state"),
+    "title"   : _("Hosts colored according to state (Host Group)"),
     "short"   : _("Hosts"),
     "columns" : [ "hostgroup_members_with_state" ],
     "paint"   : paint_hg_host_list,
 }
 
 multisite_painters["hg_num_services"] = {
-    "title"   : _("Number of services"),
+    "title"   : _("Number of services (Host Group)"),
     "short"   : "",
     "columns" : [ "hostgroup_num_services" ],
     "paint"   : lambda row: (None, str(row["hostgroup_num_services"])),
 }
 
 multisite_painters["hg_num_services_ok"] = {
-    "title"   : _("Number of services in state OK"),
+    "title"   : _("Number of services in state OK (Host Group)"),
     "short"   : _("O"),
     "columns" : [ "hostgroup_num_services_ok" ],
     "paint"   : lambda row: paint_svc_count(0, row["hostgroup_num_services_ok"]),
 }
 
 multisite_painters["hg_num_services_warn"] = {
-    "title"   : _("Number of services in state WARN"),
+    "title"   : _("Number of services in state WARN (Host Group)"),
     "short"   : _("W"),
     "columns" : [ "hostgroup_num_services_warn" ],
     "paint"   : lambda row: paint_svc_count(1, row["hostgroup_num_services_warn"]),
 }
 
 multisite_painters["hg_num_services_crit"] = {
-    "title"   : _("Number of services in state CRIT"),
+    "title"   : _("Number of services in state CRIT (Host Group)"),
     "short"   : _("C"),
     "columns" : [ "hostgroup_num_services_crit" ],
     "paint"   : lambda row: paint_svc_count(2, row["hostgroup_num_services_crit"]),
 }
 
 multisite_painters["hg_num_services_unknown"] = {
-    "title"   : _("Number of services in state UNKNOWN"),
+    "title"   : _("Number of services in state UNKNOWN (Host Group)"),
     "short"   : _("U"),
     "columns" : [ "hostgroup_num_services_unknown" ],
     "paint"   : lambda row: paint_svc_count(3, row["hostgroup_num_services_unknown"]),
 }
 
 multisite_painters["hg_num_services_pending"] = {
-    "title"   : _("Number of services in state PENDING"),
+    "title"   : _("Number of services in state PENDING (Host Group)"),
     "short"   : _("P"),
     "columns" : [ "hostgroup_num_services_pending" ],
     "paint"   : lambda row: paint_svc_count("p", row["hostgroup_num_services_pending"]),
 }
 
 multisite_painters["hg_num_hosts_up"] = {
-    "title"   : _("Number of hosts in state UP"),
+    "title"   : _("Number of hosts in state UP (Host Group)"),
     "short"   : _("Up"),
     "columns" : [ "hostgroup_num_hosts_up" ],
     "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_up"]),
 }
 
 multisite_painters["hg_num_hosts_down"] = {
-    "title"   : _("Number of hosts in state DOWN"),
+    "title"   : _("Number of hosts in state DOWN (Host Group)"),
     "short"   : _("Dw"),
     "columns" : [ "hostgroup_num_hosts_down" ],
     "paint"   : lambda row: paint_host_count(1, row["hostgroup_num_hosts_down"]),
 }
 
 multisite_painters["hg_num_hosts_unreach"] = {
-    "title"   : _("Number of hosts in state UNREACH"),
+    "title"   : _("Number of hosts in state UNREACH (Host Group)"),
     "short"   : _("Un"),
     "columns" : [ "hostgroup_num_hosts_unreach" ],
     "paint"   : lambda row: paint_host_count(2, row["hostgroup_num_hosts_unreach"]),
 }
 
 multisite_painters["hg_num_hosts_pending"] = {
-    "title"   : _("Number of hosts in state PENDING"),
+    "title"   : _("Number of hosts in state PENDING (Host Group)"),
     "short"   : _("Pd"),
     "columns" : [ "hostgroup_num_hosts_pending" ],
     "paint"   : lambda row: paint_host_count(None, row["hostgroup_num_hosts_pending"]),
@@ -1851,49 +1851,49 @@ multisite_painters["hg_alias"] = {
 #                                     |___/                |_|
 
 multisite_painters["sg_services"] = {
-    "title"   : _("Services colored according to state"),
+    "title"   : _("Services colored according to state (Service Group)"),
     "short"   : _("Services"),
     "columns" : [ "servicegroup_members_with_state" ],
     "paint"   : lambda row: paint_service_list(row, "servicegroup_members_with_state"),
 }
 
 multisite_painters["sg_num_services"] = {
-    "title"   : _("Number of services"),
+    "title"   : _("Number of services (Service Group)"),
     "short"   : "",
     "columns" : [ "servicegroup_num_services" ],
     "paint"   : lambda row: (None, str(row["servicegroup_num_services"])),
 }
 
 multisite_painters["sg_num_services_ok"] = {
-    "title"   : _("Number of services in state OK"),
+    "title"   : _("Number of services in state OK (Service Group)"),
     "short"   : _("O"),
     "columns" : [ "servicegroup_num_services_ok" ],
     "paint"   : lambda row: paint_svc_count(0, row["servicegroup_num_services_ok"])
 }
 
 multisite_painters["sg_num_services_warn"] = {
-    "title"   : _("Number of services in state WARN"),
+    "title"   : _("Number of services in state WARN (Service Group)"),
     "short"   : _("W"),
     "columns" : [ "servicegroup_num_services_warn" ],
     "paint"   : lambda row: paint_svc_count(1, row["servicegroup_num_services_warn"])
 }
 
 multisite_painters["sg_num_services_crit"] = {
-    "title"   : _("Number of services in state CRIT"),
+    "title"   : _("Number of services in state CRIT (Service Group)"),
     "short"   : _("C"),
     "columns" : [ "servicegroup_num_services_crit" ],
     "paint"   : lambda row: paint_svc_count(2, row["servicegroup_num_services_crit"])
 }
 
 multisite_painters["sg_num_services_unknown"] = {
-    "title"   : _("Number of services in state UNKNOWN"),
+    "title"   : _("Number of services in state UNKNOWN (Service Group)"),
     "short"   : _("U"),
     "columns" : [ "servicegroup_num_services_unknown" ],
     "paint"   : lambda row: paint_svc_count(3, row["servicegroup_num_services_unknown"])
 }
 
 multisite_painters["sg_num_services_pending"] = {
-    "title"   : _("Number of services in state PENDING"),
+    "title"   : _("Number of services in state PENDING (Service Group)"),
     "short"   : _("P"),
     "columns" : [ "servicegroup_num_services_pending" ],
     "paint"   : lambda row: paint_svc_count("p", row["servicegroup_num_services_pending"])

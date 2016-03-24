@@ -27,7 +27,7 @@
 import inventory
 
 def paint_host_inventory(row, invpath):
-    invdata = inventory.get(row["host_inventory"], invpath)
+    invdata = inventory.get(row.get("host_inventory"), invpath)
     if not invdata:
         return "", "" # _("No inventory data available")
 

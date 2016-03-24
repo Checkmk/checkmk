@@ -2379,7 +2379,8 @@ def group_value(row, group_painters):
                 group.append(groupvalfunc(row))
         else:
             for c in get_painter_columns(p[0]):
-                group.append(row[c])
+                if c in row:
+                    group.append(row[c])
     return tuple(group)
 
 def get_painter_option(name):

@@ -1,0 +1,14 @@
+Title: Unique name for columns of Host Groups and Service Groups
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.8b9
+Date: 1458824573
+
+The columns of Host Groups and Service Groups had the same name like the standard columns.
+It was not possible to difference between the columns during the creation or modification
+of a view. Now the columns have unique names.
+
+Thanks to Thorben Soehl

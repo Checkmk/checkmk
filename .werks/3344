@@ -1,0 +1,10 @@
+Title: Removed host inventory painters and sorters from non host based views
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1458814286
+
+

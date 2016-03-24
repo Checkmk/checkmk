@@ -56,8 +56,7 @@ inv_filter_info = {
     "timestamp"     : { "unit" : _("secs") },
 }
 
-
-# Declare all three with one simple call (for simple data types)
+# Declares painters, sorters and filters to be used in views based on all host related datasources.
 def declare_inv_column(invpath, datatype, title, short = None):
     if invpath == ".":
         name = "inv"
@@ -67,7 +66,7 @@ def declare_inv_column(invpath, datatype, title, short = None):
     # Declare column painter
     multisite_painters[name] = {
         "title"    : invpath == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
-        "columns"  : [],
+        "columns"  : ["host_inventory"],
         "load_inv" : True,
         "paint"    : lambda row: paint_host_inventory(row, invpath),
         "sorter"   : name,
@@ -80,7 +79,7 @@ def declare_inv_column(invpath, datatype, title, short = None):
         # Declare sorter. It will detect numbers automatically
         multisite_sorters[name] = {
             "title"    : _("Inventory") + ": " + title,
-            "columns"  : [],
+            "columns"  : ["host_inventory"],
             "load_inv" : True,
             "cmp"      : lambda a, b: cmp_inventory_node(a, b, invpath),
         }
@@ -368,7 +367,7 @@ def inv_titleinfo_long(invpath, node):
 
 multisite_painters["inventory_tree"] = {
     "title"    : _("Hardware & Software Tree"),
-    "columns"  : [],
+    "columns"  : ["host_inventory"],
     "load_inv" : True,
     "paint"    : paint_inv_tree,
 }

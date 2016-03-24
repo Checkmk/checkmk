@@ -1,0 +1,9 @@
+Title: docsis_channels_upstream: fixed missing channel handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b8
+Date: 1458812388
+Class: fix
+
+

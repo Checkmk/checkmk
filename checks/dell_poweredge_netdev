@@ -27,7 +27,7 @@
 def inventory_dell_poweredge_netdev(info):
     inventory = []
     for line in info:
-        if line[4] != "":
+        if line[1] != "2" and line[4] != "":
             inventory.append( ( line[4], None ) )
     return inventory
 

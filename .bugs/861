@@ -1,9 +1,12 @@
 Title: Reshedule Checks only affects some services from the list
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2016-02-09 15:31:09
 Targetversion: 1.2.7
-Class: bug
 
 Reshedule Active checks like HW/SW Inventory doesen't work at all. If you have for example 50 Services, only 12 where done.
 So you have to do it multiple times until all checks are triggered
+
+2016-03-24 10:28:18: changed state open -> done
+fixed for a longer time

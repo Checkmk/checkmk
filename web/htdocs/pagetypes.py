@@ -634,12 +634,12 @@ class Overridable:
         # Now scan users subdirs for files "user_$type_name.mk"
         subdirs = os.listdir(config.config_dir)
         for user in subdirs:
-            if not userdb.user_exists(user):
-                continue
-
             try:
                 path = "%s/%s/user_%ss.mk" % (config.config_dir, user, self.type_name())
                 if not os.path.exists(path):
+                    continue
+
+                if not userdb.user_exists(user):
                     continue
 
                 user_pages = eval(file(path).read())

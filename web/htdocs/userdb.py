@@ -170,11 +170,32 @@ def create_non_existing_user(connection_id, username):
     # Call the sync function for this new user
     hook_sync(connection_id = connection_id, only_username = username)
 
-# FIXME: Can we improve this easily? Would be nice not to have to call "load_users".
-# Maybe a directory listing of profiles or a list of a small file would perform better
-# than having to load the users, contacts etc. during each http request to multisite
+
+# This function is called very often during regular page loads so it has to be efficient
+# even when having a lot of users.
+#
+# When using the multisite authentication with just by WATO created users it would be
+# easy, but we also need to deal with users which are only existant in the htpasswd
+# file and don't have a profile directory yet.
 def user_exists(username):
-    return username in load_users().keys()
+    if _user_exists_according_to_profile(username):
+        return True
+
+    return _user_exists_htpasswd(username)
+
+
+def _user_exists_according_to_profile(username):
+    base_path = config.config_dir + "/" + username + "/"
+    return os.path.exists(base_path + "transids.mk") \
+            or os.path.exists(base_path + "serial.mk")
+
+
+def _user_exists_htpasswd(username):
+    for line in open(defaults.htpasswd_file):
+        if line.startswith("%s:" % username):
+            return True
+    return False
+
 
 def user_locked(username):
     users = load_users()
@@ -469,7 +490,6 @@ def split_dict(d, keylist, positive):
     return dict([(k,v) for (k,v) in d.items() if (k in keylist) == positive])
 
 def save_users(profiles):
-
     # Add custom macros
     core_custom_macros =  [ k for k,o in user_attributes.items() if o.get('add_custom_macro') ]
     for user in profiles.keys():
@@ -578,24 +598,27 @@ def save_users(profiles):
         if 'last_seen' in user:
             save_custom_attr(user_id, 'last_seen', repr(user['last_seen']))
 
-    # Remove settings directories of non-existant users.
-    # Beware: we removed this since it leads to violent destructions
-    # if the user database is out of the scope of Check_MK. This is
-    # e.g. the case, if mod_ldap is used for user authentication.
-    # dir = defaults.var_dir + "/web"
-    # for e in os.listdir(dir):
-    #     if e not in ['.', '..'] and e not in profiles:
-    #         entry = dir + "/" + e
-    #         if os.path.isdir(entry):
-    #             shutil.rmtree(entry)
-    # But for the automation.secret this is ok, since automation users are not
-    # created by other sources in common cases
+    # During deletion of users we don't delete files which might contain user settings
+    # and e.g. customized views which are not easy to reproduce. We want to keep the
+    # files which are the result of a lot of work even when e.g. the LDAP sync deletes
+    # a user by accident. But for some internal files it is ok to delete them.
+    #
+    # Be aware: The user_exists() function relies on these files to be deleted.
+    profile_files_to_delete = [
+        "automation.secret",
+        "transids.mk",
+        "serial.mk",
+    ]
     dir = defaults.var_dir + "/web"
     for user_dir in os.listdir(defaults.var_dir + "/web"):
         if user_dir not in ['.', '..'] and user_dir.decode("utf-8") not in profiles:
             entry = dir + "/" + user_dir
-            if os.path.isdir(entry) and os.path.exists(entry + '/automation.secret'):
-                os.unlink(entry + '/automation.secret')
+            if not os.path.isdir(entry):
+                continue
+
+            for to_delete in profile_files_to_delete:
+                if os.path.exists(entry + '/' + to_delete):
+                    os.unlink(entry + '/' + to_delete)
 
     # Release the lock to make other threads access possible again asap
     # This lock is set by load_users() only in the case something is expected

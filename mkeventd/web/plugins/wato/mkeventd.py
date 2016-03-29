@@ -1369,7 +1369,11 @@ def mode_mkeventd_edit_rule_pack(phase):
         if new:
             return _("Create new rule pack")
         else:
-            return _("Edit rule pack %s" % rule_packs[edit_nr]["id"])
+            try:
+                return _("Edit rule pack %s" % rule_packs[edit_nr]["id"])
+            except IndexError:
+                raise MKUserError("edit", _("The rule pack you are trying to "
+                                            "edit does not exist."))
 
     elif phase == "buttons":
         mkeventd_rules_button()
@@ -1461,7 +1465,10 @@ def mode_mkeventd_edit_rule(phase):
         if new:
             return _("Create new rule")
         else:
-            return _("Edit rule %s" % rules[edit_nr]["id"])
+            try:
+                return _("Edit rule %s" % rules[edit_nr]["id"])
+            except IndexError:
+                raise MKUserError("edit", _("The rule you are trying to edit does not exist."))
 
     elif phase == "buttons":
         home_button()

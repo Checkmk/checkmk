@@ -5,6 +5,9 @@
     Multisite:
     * 2237 Unique name for columns of Host Groups and Service Groups...
 
+    Notifications:
+    * 3346 FIX: Re-added envelope sender to asciimail/mail notification plugins
+
 
 1.2.8b8:
     Core & Setup:

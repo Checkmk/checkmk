@@ -86,7 +86,7 @@ def build_mail(target, subject, from_address, reply_to, content_txt):
 def send_mail(m, target, from_address):
     cmd = ["/usr/sbin/sendmail"]
     if from_address:
-        cmd += ['-F', from_address]
+        cmd += ['-F', from_address, "-f", from_address]
     cmd += [ "-i", target.encode("utf-8")]
     p = subprocess.Popen(cmd, stdin = subprocess.PIPE)
     p.communicate(m.as_string())

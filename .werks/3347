@@ -1,0 +1,10 @@
+Title: Improved performance when having a lot of users
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b9
+Date: 1459249594
+Class: fix
+
+When having a lot of users (>1000) configured via WATO, e.g. created by the LDAP sync,
+the GUI was getting too slow since some versions. This has now been improved.

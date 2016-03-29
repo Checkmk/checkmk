@@ -124,12 +124,9 @@ def load(what, builtin_visuals, skip_func = None, lock=False):
 
         visuals[('', name)] = visual
 
-    # Now scan users subdirs for files "visuals.mk"
+    # Now scan users subdirs for files "user_*.mk"
     subdirs = os.listdir(config.config_dir)
     for user in subdirs:
-        if not userdb.user_exists(user):
-            continue
-
         try:
             dirpath = config.config_dir + "/" + user
             if not os.path.isdir(dirpath):
@@ -143,6 +140,9 @@ def load(what, builtin_visuals, skip_func = None, lock=False):
                 path = "%s/%s.mk" % (dirpath, what)
 
             if not os.path.exists(path):
+                continue
+
+            if not userdb.user_exists(user):
                 continue
 
             if lock:

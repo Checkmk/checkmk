@@ -4,6 +4,7 @@
 
     Multisite:
     * 2237 Unique name for columns of Host Groups and Service Groups...
+    * 3347 FIX: Improved performance when having a lot of users...
 
     Notifications:
     * 3346 FIX: Re-added envelope sender to asciimail/mail notification plugins

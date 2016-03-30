@@ -1,0 +1,11 @@
+Title: zpool_status: fixed wrong error handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b9
+Date: 1459355106
+Class: fix
+
+If 'status' or 'action' is given then there are some errors
+which should be detected.
+

@@ -4,6 +4,7 @@
 
     Checks & Agents:
     * 3307 FIX: dell_poweredge_netdev: does not discover disconnected network devices any more
+    * 3309 FIX: zpool_status: fixed wrong error handling...
 
     Multisite:
     * 2237 Unique name for columns of Host Groups and Service Groups...

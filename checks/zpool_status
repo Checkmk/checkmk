@@ -61,27 +61,31 @@
 # errors: No known data errors
 # ---------------------------------
 
-# inventory function
+
 def inventory_zpool_status(info):
     if not info or " ".join(info[0]) == "no pools available":
         return []
     return [(None, None)]
 
+
 def check_zpool_status(_no_item, _no_params, info):
     if " ".join(info[0]) == "all pools are healthy":
-        return(0, "All pools are healthy")
+        return 0, "All pools are healthy"
 
-    start_pool = False
-    last_pool = None
-    error_pools = {}
+    start_pool    = False
+    multiline     = False
+    last_pool     = None
+    error_pools   = {}
     warning_pools = {}
     pool_messages = {}
-    state = 0
     message = []
+    state   = 0
 
     for line in info:
         if line[0] == "pool:":
             last_pool = line[1]
+            pool_messages.setdefault(last_pool, [])
+            continue
 
         if line[0] == "state:":
             if   line[1] == "ONLINE":
@@ -105,15 +109,26 @@ def check_zpool_status(_no_item, _no_params, info):
                  state = 1
             continue
 
+        if line[0] in ["status:", "action:"]:
+            pool_messages[last_pool].append(" ".join(line[1:]))
+            multiline = True
+            continue
+
+        if line[0] in ["scrub:", "see:", "scan:", "config:"]:
+            multiline = False
+            continue
+
         if line[0] == "NAME":
+            multiline  = False
             start_pool = True
             continue
 
         if line[0] == "errors:":
+            multiline  = False
             start_pool = False
             msg = " ".join(line[1:])
             if msg != 'No known data errors':
-                pool_messages[last_pool] = msg
+                pool_messages[last_pool].append(msg)
             continue
 
         if line[0] in ["spares", "logs", "cache"]:
@@ -127,25 +142,32 @@ def check_zpool_status(_no_item, _no_params, info):
 
             if saveint(line[4]) != 0:
                 warning_pools[line[0]] = tuple(line[1:])
+                continue
 
-    for pool in  pool_messages.keys():
+        if multiline:
+            pool_messages[last_pool].append(" ".join(line))
+            continue
+
+    for pool in pool_messages.keys():
         state = 1
-        message.append("%s: %s" % (pool, pool_messages[pool]))
+        message.append("%s: %s" % (pool, " ".join(pool_messages[pool])))
 
     for pool in warning_pools.keys():
         state = 1
-        message.append("%s CKSUM:%d(!)" % (pool, saveint(warning_pools[pool][3])))
+        message.append("%s CKSUM: %d" % (pool, saveint(warning_pools[pool][3])))
 
     for pool in error_pools.keys():
         state = 2
-        message.append("%s State:%s(!!)" % (pool, error_pools[pool][0]))
+        message.append("%s state: %s" % (pool, error_pools[pool][0]))
 
     if len(message) == 0:
         message = ['No critical errors']
-    return (state, ", ".join(message))
+
+    return state, ", ".join(message)
+
 
 check_info["zpool_status"] = {
-    'check_function':          check_zpool_status,
-    'inventory_function':      inventory_zpool_status,
-    'service_description':     'zpool status',
+    'check_function'      : check_zpool_status,
+    'inventory_function'  : inventory_zpool_status,
+    'service_description' : 'zpool status',
 }

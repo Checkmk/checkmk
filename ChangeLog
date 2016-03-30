@@ -1,4 +1,7 @@
 1.2.8b9:
+    Core & Setup:
+    * 3349 FIX: Added rule to disable Inline-SNMP per host...
+
     Checks & Agents:
     * 3307 FIX: dell_poweredge_netdev: does not discover disconnected network devices any more
 

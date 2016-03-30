@@ -38,8 +38,6 @@
 
 #ifdef CMC
 #include "cmc.h"
-struct Core;
-extern Core *g_core;
 #endif
 
 using std::make_pair;

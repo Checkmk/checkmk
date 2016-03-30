@@ -55,6 +55,9 @@ fallback_agent_output_encoding     = 'latin1'
 # SNMP communities and encoding
 has_inline_snmp                    = False # is set to True by inline_snmp module, when available
 use_inline_snmp                    = True
+non_inline_snmp_hosts              = [] # Ruleset to disable Inline-SNMP per host when
+                                        # use_inline_snmp is enabled.
+
 snmp_limit_oid_range               = [] # Ruleset to recduce fetched OIDs of a check, only inline SNMP
 record_inline_snmp_stats           = False
 snmp_default_community             = 'public'

@@ -1,0 +1,12 @@
+Title: Added rule to disable Inline-SNMP per host
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1459330124
+
+Some SNMP hosts have problems with the Inline-SNMP implemenation. Till this change
+it was only possible to enable/disable Inline-SNMP for all hosts at once which was
+a bit to unflexible when only a single or some devices have trouble with Inline-SNMP.

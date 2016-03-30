@@ -1244,7 +1244,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
     else:
         output += "execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
 
-    if record_inline_snmp_stats and has_inline_snmp and use_inline_snmp:
+    if record_inline_snmp_stats and is_inline_snmp_host(hostname):
         save_snmp_stats()
 
     if opt_keepalive:
@@ -1592,7 +1592,7 @@ def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, d
             "item"          : item,
             "params"        : params,
             "uses_snmp"     : check_uses_snmp(check_type),
-            "inline_snmp"   : has_inline_snmp and use_inline_snmp,
+            "inline_snmp"   : is_inline_snmp_host(hostname),
             "manual_check"  : is_manual_check(hostname, check_type, item),
         },
     }

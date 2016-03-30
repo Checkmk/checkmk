@@ -1055,7 +1055,7 @@ no_discovery_possible = None
     if need_snmp_module:
         output.write(stripped_python_file(modules_dir + "/snmp.py"))
 
-        if has_inline_snmp and use_inline_snmp:
+        if is_inline_snmp_host(hostname):
             output.write(stripped_python_file(modules_dir + "/inline_snmp.py"))
             output.write("\ndef oid_range_limits_of(hostname):\n    return %r\n" % oid_range_limits_of(hostname))
         else:
@@ -1128,7 +1128,7 @@ no_discovery_possible = None
     output.write("def is_tcp_host(hostname):\n   return     % r\n\n" % is_tcp_host(hostname))
     output.write("def is_usewalk_host(hostname):\n   return % r\n\n" % is_usewalk_host(hostname))
     output.write("def snmpv3_contexts_of_host(hostname):\n    return % r\n\n" % snmpv3_contexts_of_host(hostname))
-    if has_inline_snmp and use_inline_snmp:
+    if is_inline_snmp_host(hostname):
         output.write("def is_snmpv2c_host(hostname):\n   return     % r\n\n" % is_snmpv2c_host(hostname))
         output.write("def is_bulkwalk_host(hostname):\n   return    % r\n\n" % is_bulkwalk_host(hostname))
         output.write("def snmp_timing_of(hostname):\n   return      % r\n\n" % snmp_timing_of(hostname))

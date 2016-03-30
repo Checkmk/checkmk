@@ -1538,6 +1538,12 @@ def is_snmpv2c_host(hostname):
 def is_usewalk_host(hostname):
     return in_binary_hostlist(hostname, usewalk_hosts)
 
+
+def is_inline_snmp_host(hostname):
+    return has_inline_snmp and use_inline_snmp \
+           and not in_binary_hostlist(hostname, non_inline_snmp_hosts)
+
+
 def snmp_timing_of(hostname):
     timing = host_extra_conf(hostname, snmp_timing)
     if len(timing) > 0:
@@ -1711,7 +1717,7 @@ def get_single_oid(hostname, ipaddress, oid):
 
     else:
         try:
-            if has_inline_snmp and use_inline_snmp:
+            if is_inline_snmp_host(hostname):
                 value = inline_snmp_get_oid(hostname, oid)
             else:
                 value = snmp_get_oid(hostname, ipaddress, oid)
@@ -3557,7 +3563,7 @@ def do_snmpwalk_on(hostname, filename):
         try:
             verbose("Walk on \"%s\"..." % oid)
 
-            if has_inline_snmp and use_inline_snmp:
+            if is_inline_snmp_host(hostname):
                 rows = inline_snmpwalk_on_suboid(hostname, None, oid)
                 rows = inline_convert_rows_for_stored_walk(rows)
             else:
@@ -3746,7 +3752,7 @@ def dump_host(hostname):
         if is_usewalk_host(hostname):
             agenttypes.append("SNMP (use stored walk)")
         else:
-            if has_inline_snmp and use_inline_snmp:
+            if is_inline_snmp_host(hostname):
                 inline = "yes"
             else:
                 inline = "no"
@@ -4567,7 +4573,7 @@ def cleanup_globals():
     global g_timeout
     g_timeout = None
 
-    if has_inline_snmp and use_inline_snmp:
+    if has_inline_snmp:
         cleanup_inline_snmp_globals()
 
 

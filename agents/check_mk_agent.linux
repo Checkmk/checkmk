@@ -738,6 +738,14 @@ if type varnishstat >/dev/null; then
    varnishstat -1
 fi
 
+# Proxmox Cluster
+if type pvecm > /dev/null 2>&1 ; then
+    echo "<<<pvecm_status:sep(58)>>>"
+    pvecm status
+    echo "<<<pvecm_nodes>>>"
+    pvecm nodes
+fi
+
 # Start new liveupdate process in background on each agent execution. Starting
 # a new live update process will terminate the old one automatically after
 # max. 1 sec.

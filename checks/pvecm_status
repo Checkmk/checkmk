@@ -1,0 +1,105 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# healthy
+# <<<pvecm_status:sep(58)>>>
+# Version: 6.2.0
+# Config Version: 35
+# status Id: 27764
+# status Member: Yes
+# status Generation: 36032
+# Membership state: status-Member
+# Nodes: 7
+# Expected votes: 7
+# Total votes: 7
+# Node votes: 1
+# Quorum: 4
+# Active subsystems: 1
+# Flags:
+# Ports Bound: 0
+# Node name: host-FOO
+# Node ID: 5
+# Multicast addresses: aaa.bbb.ccc.ddd
+# Node addresses: nnn.mmm.ooo.ppp
+
+# with problems:
+# <<<pvecm_status:sep(58)>>>
+# cman_tool: Cannot open connection to cman, is it running?
+
+# <<<pvecm_status:sep(58)>>>
+# Version: 6.2.0
+# Config Version: 2
+# status Id: 4921
+# status Member: Yes
+# status Generation: 280
+# Membership state: status-Member
+# Nodes: 1
+# Expected votes: 2
+# Total votes: 1
+# Node votes: 1
+# Quorum: 2 Activity blocked
+# Active subsystems: 5
+# Flags:
+# Ports Bound: 0
+# Node name: host-FOO
+# Node ID: 1
+# Multicast addresses: aaa.bbb.ccc.ddd
+# Node addresses: nnn.mmm.ooo.ppp
+
+
+def inventory_pvecm_status(info):
+    return [(None, None)]
+
+
+def check_pvecm_status(_no_item, _no_params, info):
+    parsed = {}
+    for what, value in info:
+        parsed[what.lower()] = value.strip().lower()
+
+    if "cman_tool" in parsed and \
+       "cannot open connection to cman" in parsed["cman_tool"]:
+        yield 2, "Cluster management tool: %s" % parsed["cman_tool"]
+
+    else:
+        yield 0, "Name: %s, Nodes: %s" % \
+                 (parsed["cluster name"], parsed["nodes"])
+
+        if "activity blocked" in parsed["quorum"]:
+            yield 2, "Quorum: %s" % parsed["quorum"]
+
+        if int(parsed["expected votes"]) == int(parsed["total votes"]):
+            yield 0, "No faults"
+        else:
+            yield 2, "Expected votes: %s, Total votes: %s" % \
+                     (parsed["expected votes"], parsed["total votes"])
+
+
+check_info['pvecm_status'] = {
+    'inventory_function'        : inventory_pvecm_status,
+    'check_function'            : check_pvecm_status,
+    'service_description'       : 'PVE Cluster State',
+}

@@ -1,0 +1,90 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# healthy if all nodes are reachable (at discovery)
+# <<<pvecm_nodes>>>
+# Node Sts Inc Joined Name
+# 1 M 35960 2016-01-20 13:17:24 BAR-host002
+# 2 M 36020 2016-01-20 13:30:18 FOO-host001
+# 3 M 35960 2016-01-20 13:17:24 FOO-host003
+# 4 M 35964 2016-01-20 13:17:24 FOO-host004
+# 5 M 35764 2016-01-20 12:59:03 FOO-host002
+# 6 M 36032 2016-01-20 13:34:27 BAR-host003
+# 7 M 35960 2016-01-20 13:17:24 BAR-host001
+
+# faulty because some nodes are missing
+# <<<pvecm_nodes>>>
+# Node Sts Inc Joined Name
+# 1 M 35960 2016-01-20 13:17:24 BAR-host002
+# 2 M 36020 2016-01-20 13:30:18 FOO-host001
+# 4 M 35964 2016-01-20 13:17:24 FOO-host004
+# 6 M 36032 2016-01-20 13:34:27 BAR-host003
+# 7 M 35960 2016-01-20 13:17:24 BAR-host001
+
+# faulty communication between nodes
+# <<<pvecm_nodes>>>
+# Node Sts Inc Joined Name
+# 1 M 35960 2016-01-20 13:17:24 BAR-host002
+# 2 M 36020 FOO-host001
+# 3 M 35960 2016-01-20 13:17:24 FOO-host003
+# 4 M 35964 2016-01-20 13:17:24 FOO-host004
+# 5 M 35764 FOO-host002
+# 6 M 36032 BAR-host003
+# 7 M 35960 2016-01-20 13:17:24 BAR-host001
+
+
+def inventory_pvecm_nodes(info):
+    for line in info[1:]:
+        yield (line[-1], None)
+
+
+def check_pvecm_nodes(item, _no_params, info):
+    map_states = {
+        "m" : (0, "member of the cluster"),
+        "x" : (1, "not a member of the cluster"),
+        "d" : (2, "known to the cluster but disallowed access to it"),
+    }
+    for line in info[1:]:
+        if item == line[-1]:
+            state, state_readable = map_states[line[1].lower()]
+            infotext = "Status: %s" % state_readable
+            if len(line) >= 6:
+                infotext += ", Joined: %s (%s)" % (line[4], line[3])
+
+            else:
+                infotext += ", Joined: missing"
+
+            return state, infotext
+
+    return 2, "Node is missing"
+
+
+check_info['pvecm_nodes'] = {
+    'inventory_function'        : inventory_pvecm_nodes,
+    'check_function'            : check_pvecm_nodes,
+    'service_description'       : 'PVE Node %s',
+}

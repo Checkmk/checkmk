@@ -1,0 +1,9 @@
+Title: pvecm_status, pvecm_nodes: new checks which monitor a Proxmox Virtual Environment cluster setup
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1459341332
+Class: feature
+
+

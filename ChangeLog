@@ -109,6 +109,7 @@
     * 3341 FIX: df: Ignoring mounted lib*.so.1 volumes (seen on Solaris 10)
     * 3306 FIX: docsis_channels_upstream: fixed missing channel handling
     * 3307 FIX: dell_poweredge_netdev: does not discover disconnected network devices any more
+    * 3309 FIX: zpool_status: fixed wrong error handling...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

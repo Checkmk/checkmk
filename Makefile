@@ -157,9 +157,13 @@ mk-eventd:
 	    -zf mkeventd-$(VERSION).tar.gz mkeventd
 
 mk-livestatus:
-	if [ ! -e livestatus/configure ] ; then \
-		cd livestatus && autoreconf --install ; \
-	fi
+	cd livestatus ; \
+	for i in aclocal.m4 ar-lib compile config.h.in configure depcomp install-sh Makefile.in missing; do \
+	    if test ! -f $i; then \
+		autoreconf --install ; \
+		break ; \
+	    fi \
+	done
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
 	cd livestatus ; tar cf - $(LIVESTATUS_SOURCES) | tar xf - -C ../mk-livestatus-$(VERSION)

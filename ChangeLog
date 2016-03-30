@@ -209,6 +209,7 @@
     * 3097 FIX: mkeventd: fixed crash with non-descriptive error message if mibs couldn't be loaded
     * 3335 FIX: Improved error handling when requested rule pack does not exist
     * 3348 FIX: Improved error handling when trying to edit not existing rules/rule packs
+    * 3350 FIX: Merged source of Event Console with Check_MK...
 
     Livestatus:
     * 3233 FIX: Fixed shutdown of Nagios core with Livestatus module...

@@ -595,11 +595,11 @@ EOF
 
 compile_mkeventd ()
 {
-   local D=$SRCDIR/mkeventd.src
+   local D=$SRCDIR/bin
    rm -rf $D
    mkdir -p $D
-   tar xvzf $SRCDIR/mkeventd.tar.gz -C $D
-   pushd $D/src &&
+   tar xzf $SRCDIR/bin.tar.gz -C $D
+   pushd $D &&
    make &&
    popd
 }
@@ -1058,13 +1058,9 @@ EOF
 	       compile_mkeventd 2>&1 | propeller > $SRCDIR/mkeventd.log
 	       if [ "${PIPESTATUS[0]}" = 0 ]
 	       then
-                   pushd $SRCDIR/mkeventd.src > /dev/null &&
-                   install -m 755 src/mkevent $DESTDIR$bindir &&
-                   install -m 4754 src/mkeventd_open514 -g $wwwgroup $DESTDIR$bindir &&
-                   install -m 644 checks/* $DESTDIR$checksdir &&
-                   install -m 755 bin/* $DESTDIR$bindir &&
-                   install -m 755 lib/* $DESTDIR${check_icmp_path%/*} &&
-                   cp -r web/* $DESTDIR$web_dir &&
+                   pushd $SRCDIR > /dev/null &&
+                   install -m 755 bin/mkevent bin/mkeventd $DESTDIR$bindir &&
+                   install -m 4754 bin/mkeventd_open514 -g $wwwgroup $DESTDIR$bindir &&
                    mkdir -p $DESTDIR$confdir/mkeventd.d/wato &&
                    chown $wwwuser.$wwwgroup $DESTDIR$confdir/mkeventd.d/wato &&
                    if [ ! -e "$DESTDIR$confdir/multisite.d/mkeventd.mk" ] ; then

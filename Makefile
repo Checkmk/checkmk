@@ -56,8 +56,8 @@ HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* 
                       web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
                       doc/helpers/* scripts/setup.sh scripts/autodetect.py \
                       $$(find pnp-templates -type f -name "*.php") \
-                      mkeventd/bin/mkeventd mkeventd/web/htdocs/*.py mkeventd/web/plugins/*/*.py \
-                      mkeventd/src/*.c mkeventd/checks/* check_mk_templates.cfg \
+                      bin/mkeventd bin/*.c doc/treasures/active_checks/* \
+                      check_mk_templates.cfg \
                       agents/check_mk_*agent* agents/*.c \
                       $$(find agents/cfg_examples -type f) \
                       agents/special/* \
@@ -67,11 +67,11 @@ FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix agents/windows/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.c *.h)) \
-                      $(wildcard $(addprefix mkeventd/src/,*.cc *.c *.h))
+                      $(wildcard $(addprefix bin/,*.cc *.c *.h))
 
 .PHONY: all analyze check check-binaries check-permissions check-spaces \
         check-version clean cppcheck dist documentation format headers \
-        healspaces help iwyu minify-js mk-eventd mk-livestatus mrproper \
+        healspaces help iwyu minify-js mk-livestatus mrproper \
         optimize-images packages setup setversion tidy version
 
 all: dist packages
@@ -96,10 +96,11 @@ check-binaries:
 
 check: check-spaces check-permissions check-binaries check-version
 
-dist: mk-livestatus mk-eventd
+dist: mk-livestatus
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
+	tar czf $(DISTNAME)/bin.tar.gz $(TAROPTS) -C bin $$(cd bin ; ls)
 	tar czf $(DISTNAME)/share.tar.gz $(TAROPTS) check_mk_templates.cfg
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks $$(cd .werks ; ls [0-9]*)
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
@@ -109,7 +110,6 @@ dist: mk-livestatus mk-eventd
 	$(MAKE) minify-js
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs plugins
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
-	tar czf $(DISTNAME)/mkeventd.tar.gz $(TAROPTS) -C mkeventd  $$(cd mkeventd ; echo * )
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
 	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc $$(cd doc ; ls)
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
@@ -150,11 +150,6 @@ dist: mk-livestatus mk-eventd
 
 packages:
 	$(MAKE) -C agents packages
-
-mk-eventd:
-	tar -c $(TAROPTS) --exclude=.f12 \
-	    --transform 's,^mkeventd,mkeventd-$(VERSION),' \
-	    -zf mkeventd-$(VERSION).tar.gz mkeventd
 
 mk-livestatus:
 	cd livestatus ; \
@@ -199,7 +194,7 @@ version:
 setversion:
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
-	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' mkeventd/bin/mkeventd ; \
+	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' bin/mkeventd ; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
@@ -252,7 +247,7 @@ minify-js:
 
 clean:
 	rm -rf api clang-analyzer compile_commands.json dist.tmp rpm.topdir *.rpm *.deb *.exe \
-	       mkeventd-*.tar.gz mk-livestatus-*.tar.gz \
+	       mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js
 	find -name "*~" | xargs rm -f
@@ -261,7 +256,7 @@ mrproper:
 	git clean -xfd -e .bugs 2>/dev/null || git clean -xfd
 
 setup:
-	sudo apt-get install figlet pngcrush slimit bear
+	sudo apt-get install figlet pngcrush slimit bear dietlibc-dev
 
 compile_commands.json: $(FILES_TO_FORMAT)
 	$(MAKE) -C livestatus clean

@@ -1,0 +1,16 @@
+Title: Merged source of Event Console with Check_MK
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.9i1
+Date: 1459347597
+Class: fix
+
+This is more an internal cleanup than a thing you need to care about when you
+are using the Check_MK Raw or Enterprise Edition. This is only interesting
+for you if you are compiling Check_MK from source on your own using the
+source packages.
+
+We have merged the mkeventd-*.tar.gz into the check_mk-*.tar.gz. So if you
+are trying to install Check_MK with the setup.sh you don't need to download
+the Event Console package anymore.

@@ -1,5 +1,14 @@
 #!/bin/bash
 SITE=${SITE:-$(cat ../../../.site 2>/dev/null)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-sudo rsync -va --exclude=.*.swp ./ /omd/sites/$SITE/lib/nagios/plugins
-sudo rsync -va --delete-after ./ /omd/sites/$SITE/share/doc/check_mk/treasures/active_checks
+echo "Installing to /omd/sites/$SITE/lib/nagios/plugins" 
+make
+
+RSYNC_OPTS="-av
+           --chown=root:root
+           --exclude=.*.swp
+           --exclude=Makefile
+           --exclude=*.cc"
+
+sudo rsync $RSYNC_OPTS ./ /omd/sites/$SITE/lib/nagios/plugins
+sudo rsync $RSYNC_OPTS --delete-after ./ /omd/sites/$SITE/share/doc/check_mk/treasures/active_checks

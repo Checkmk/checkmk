@@ -961,7 +961,7 @@ def graph_possible(graph_template, translated_metrics):
     for metric_definition in graph_template["metrics"]:
         try:
             evaluate(metric_definition[0], translated_metrics)
-        except Exception, e:
+        except Exception:
             return False
 
     # Allow graphs to be disabled if certain (better) metrics
@@ -1020,18 +1020,14 @@ def generic_graph_template(metric_name):
 
 
 def get_graph_range(graph_template, translated_metrics):
-    if "range" in graph_template:
-        min_value, max_value = [
-            evaluate(r, translated_metrics)[0]
-            for r in graph_template["range"]
-        ]
+    if "range" not in graph_template:
+        return None, None # Compute range of displayed data points
 
-    else:
-        # Compute range of displayed data points
-        max_value = None
-        min_value = None
-
-    return min_value, max_value
+    try:
+        return evaluate(graph_template["range"][0], translated_metrics)[0], \
+               evaluate(graph_template["range"][1], translated_metrics)[0]
+    except:
+        return None, None
 
 
 #.

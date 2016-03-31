@@ -179,6 +179,9 @@ class NetworkScanAttribute(ValueSpecAttribute):
                         choices = get_all_user_ids,
                         default_value = lambda: config.user_id,
                     )),
+                    ("translate_names", HostnameTranslation(
+                        title = _("Translate Hostnames"),
+                    )),
                 ],
                 title = _("Network Scan"),
                 help = _("For each folder an automatic network scan can be configured. It will "
@@ -186,7 +189,7 @@ class NetworkScanAttribute(ValueSpecAttribute):
                          "to each IP address to check whether or not a host is using this ip "
                          "address. Each new found host will be added to the current folder by "
                          "it's hostname, when resolvable via DNS, or by it's IP address."),
-                optional_keys = ["max_parallel_pings"],
+                optional_keys = ["max_parallel_pings", "translate_names"],
                 default_text = _("Not configured."),
             )
         )

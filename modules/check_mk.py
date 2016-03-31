@@ -2298,7 +2298,7 @@ def service_description(hostname, check_type, item):
     return descr.strip()
 
 
-# Get rules for piggyback translation for that hostname
+# Get a dict that specifies the actions to be done during the hostname translation
 def get_piggyback_translation(hostname):
     rules = host_extra_conf(hostname, piggyback_translation)
     translations = {}

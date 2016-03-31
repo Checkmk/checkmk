@@ -11,6 +11,9 @@
     * 2237 Unique name for columns of Host Groups and Service Groups...
     * 3347 FIX: Improved performance when having a lot of users...
 
+    WATO:
+    * 3351 FIX: Network scan: Fixed number in hosts not being updated during network scan
+
     Notifications:
     * 3346 FIX: Re-added envelope sender to asciimail/mail notification plugins
 

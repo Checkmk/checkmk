@@ -1,0 +1,9 @@
+Title: Network scan: Fixed number in hosts not being updated during network scan
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b9
+Date: 1459432586
+Class: fix
+
+

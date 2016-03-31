@@ -655,24 +655,32 @@ def remove_piggyback_info_from(sourcehost, keep=[]):
                 pass
     return removed
 
+
 def translate_piggyback_host(sourcehost, backedhost):
     translation = get_piggyback_translation(sourcehost)
+    return do_hostname_translation(translation, backedhost)
 
+
+# When changing this keep it in sync with
+# a) check_mk_base.py: do_hostname_translation()
+# b) wato.py:          do_hostname_translation()
+# FIXME TODO: Move the common do_hostname_translation() in a central Check_MK module
+def do_hostname_translation(translation, hostname):
     # 1. Case conversion
     caseconf = translation.get("case")
     if caseconf == "upper":
-        backedhost = backedhost.upper()
+        hostname = hostname.upper()
     elif caseconf == "lower":
-        backedhost = backedhost.lower()
+        hostname = hostname.lower()
 
     # 2. Drop domain part (not applied to IP addresses!)
-    if translation.get("drop_domain") and not backedhost[0].isdigit():
-        backedhost = backedhost.split(".", 1)[0]
+    if translation.get("drop_domain") and not hostname[0].isdigit():
+        hostname = hostname.split(".", 1)[0]
 
-    # To make it possible to match umlauts we need to change the backendhost
+    # To make it possible to match umlauts we need to change the hostname
     # to a unicode string which can then be matched with regexes etc.
     # We assume the incoming name is correctly encoded in UTF-8
-    backedhost = decode_incoming_string(backedhost)
+    hostname = decode_incoming_string(hostname)
 
     # 3. Regular expression conversion
     if "regex" in translation:
@@ -680,19 +688,19 @@ def translate_piggyback_host(sourcehost, backedhost):
         if not expr.endswith('$'):
             expr += '$'
         rcomp = regex(expr)
-        mo = rcomp.match(backedhost)
+        mo = rcomp.match(hostname)
         if mo:
-            backedhost = subst
+            hostname = subst
             for nr, text in enumerate(mo.groups()):
-                backedhost = backedhost.replace("\\%d" % (nr+1), text)
+                hostname = hostname.replace("\\%d" % (nr+1), text)
 
     # 4. Explicity mapping
     for from_host, to_host in translation.get("mapping", []):
-        if from_host == backedhost:
-            backedhost = to_host
+        if from_host == hostname:
+            hostname = to_host
             break
 
-    return backedhost.encode('utf-8') # change back to UTF-8 encoded string
+    return hostname.encode('utf-8') # change back to UTF-8 encoded string
 
 
 def read_cache_file(relpath, max_cache_age):

@@ -44,7 +44,7 @@ BEAR               := bear-fixed
 
 # File to pack into livestatus-$(VERSION).tar.gz
 LIVESTATUS_SOURCES := configure aclocal.m4 config.guess config.h.in config.sub \
-                      configure.ac ltmain.sh Makefile.{in,am} missing ar-lib compile \
+                      configure.ac ltmain.sh Makefile.{in,am} missing ar-lib \
                       nagios/README nagios/*.h nagios4/README nagios4/*.h \
                       src/*.{h,c,cc} src/Makefile.{in,am} \
                       depcomp install-sh api/python/{*.py,README} api/perl/*
@@ -109,7 +109,13 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
 	$(MAKE) minify-js
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs plugins
-	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
+	
+	tar cf $(DISTNAME)/livestatus.tar $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
+	if [ -f livestatus/compile ]; then \
+	    tar rf $(DISTNAME)/livestatus.tar $(TAROPTS) -C livestatus compile ; \
+	fi
+	gzip $(DISTNAME)/livestatus.tar
+	
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
 	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc $$(cd doc ; ls)
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
@@ -162,6 +168,9 @@ mk-livestatus:
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
 	cd livestatus ; tar cf - $(LIVESTATUS_SOURCES) | tar xf - -C ../mk-livestatus-$(VERSION)
+	if [ -f livestatus/compile ]; then \
+	    cp -p livestatus/compile mk-livestatus-$(VERSION)/ ; \
+	fi
 	mkdir -p mk-livestatus-$(VERSION)/nagios
 	cp livestatus/nagios/*.h mk-livestatus-$(VERSION)/nagios/
 	mkdir -p mk-livestatus-$(VERSION)/nagios4

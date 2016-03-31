@@ -1,0 +1,19 @@
+Title: network interface and switch port discovery rules can now be combined to dicover multiple sets of interfaces
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.9i1
+Date: 1459406991
+Class: feature
+
+Previously, multiple rules "network interface and switch port discovery" were merged and thus their
+parameters overwritten or combined.
+I.E. if one rule had "Match interface alias (regex)" and the other "Match interface description
+(regex)" both those conditions had to apply for the interface to be discovered.
+
+This has been changed so that only one of the supplied rules has to match for an interface to be
+discovered and the visual parameters (i.e. "Pad port numbers with zeroes") of only that (first)
+matching rule will apply.
+
+This is an incompatible change in that if you have multiple rules apply for the same host already,
+re-discovery may now produce different items. Without re-discovery, nothing will change.

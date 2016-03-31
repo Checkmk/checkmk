@@ -1653,7 +1653,7 @@ register_rule(group + '/' + subgroup_inventory,
                  'You can configure the port types and port states for inventory'
                  'and the use of alias or description as service name.'),
     ),
-    match = 'dict',
+    match = 'list',
 )
 
 

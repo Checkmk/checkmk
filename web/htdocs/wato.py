@@ -15234,6 +15234,9 @@ def ip_addresses_to_scan(folder):
     # FIXME/TODO: Shouldn't this filtering be done on the central site?
     to_scan.difference_update(known_ip_addresses())
 
+    # And now apply the IP regex patterns to exclude even more addresses
+    to_scan.difference_update(excludes_by_regexes(to_scan, exclude_specs))
+
     return to_scan
 
 
@@ -15261,6 +15264,27 @@ def ip_addresses_of_ranges(ip_ranges):
             addresses.update(spec)
 
     return addresses
+
+
+def excludes_by_regexes(addresses, exclude_specs):
+    patterns = []
+    for ty, spec in exclude_specs:
+        if ty == "ip_regex_list":
+            for p in spec:
+                patterns.append(re.compile(p))
+
+    if not patterns:
+        return addresses
+
+    excludes = []
+    for address in addresses:
+        for p in patterns:
+            if p.match(address):
+                excludes.append(address)
+                break # one match is enough, exclude this.
+
+    return excludes
+
 
 
 FULL_IPV4 = (2 ** 32) - 1

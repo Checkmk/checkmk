@@ -1581,6 +1581,9 @@ class ListChoice(ValueSpec):
             self._elements = self.get_elements()
             self._loaded_at = id(html) # unique for each query!
 
+    def get_elements(self):
+        raise NotImplementedError()
+
     def canonical_value(self):
         return []
 
@@ -3090,7 +3093,7 @@ class ElementSelection(ValueSpec):
             self._loaded_at = id(html) # unique for each query!
 
     def get_elements(self):
-        raise Exception("You need to implement a get_elements() method.")
+        raise NotImplementedError()
 
     def canonical_value(self):
         self.load_elements()

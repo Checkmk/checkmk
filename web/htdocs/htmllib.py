@@ -1741,6 +1741,10 @@ class html(GUITester):
     # To be overridden by subclasses
     #
 
+    def set_content_type(self, ty):
+        raise NotImplementedError()
+
+
     def lowlevel_write(self, text):
         raise NotImplementedError()
 

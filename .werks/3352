@@ -1,0 +1,10 @@
+Title: Network scan: Added hostname translation to translate detected DNS names of scanned hosts
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1459432656
+
+

@@ -1,0 +1,9 @@
+Title: Added missing option to exclude IP addresses by regex
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b9
+Date: 1459437039
+Class: fix
+
+

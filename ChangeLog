@@ -17,6 +17,7 @@
     * 3351 FIX: Network scan: Fixed number in hosts not being updated during network scan
     * 3352 FIX: Network scan: Added hostname translation to translate detected DNS names of scanned hosts
     * 3353 FIX: Displaying disabled/offline host state in WATO host list now
+    * 3354 FIX: Added missing option to exclude IP addresses by regex
 
     Notifications:
     * 3346 FIX: Re-added envelope sender to asciimail/mail notification plugins

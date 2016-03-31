@@ -3823,7 +3823,7 @@ def dump_host(hostname):
 def print_table(headers, colors, rows, indent = ""):
     lengths = [ len(h) for h in headers ]
     for row in rows:
-        lengths = [ max(len(str(c)), l) for c, l in zip(row, lengths) ]
+        lengths = [ max(len(str(make_utf8(c))), l) for c, l in zip(row, lengths) ]
     sumlen = sum(lengths) + len(headers)
     format = indent
     sep = ""

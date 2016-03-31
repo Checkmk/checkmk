@@ -7,6 +7,7 @@
     * 3307 FIX: dell_poweredge_netdev: does not discover disconnected network devices any more
     * 3309 FIX: zpool_status: fixed wrong error handling...
     * 3014 FIX: windows_tasks.ps1: fixed incorrect text encoding for tasks with umlauts
+    * 3015 FIX: Dump host (cmk -D): fixed exception with service descriptions containing umlauts
 
     Multisite:
     * 2237 Unique name for columns of Host Groups and Service Groups...

@@ -160,7 +160,7 @@ mk-eventd:
 mk-livestatus:
 	cd livestatus ; \
 	for i in aclocal.m4 ar-lib compile config.h.in configure depcomp install-sh Makefile.in missing; do \
-	    if test ! -f $i; then \
+	    if test ! -f $$i; then \
 		autoreconf --install ; \
 		break ; \
 	    fi \

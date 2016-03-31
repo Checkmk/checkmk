@@ -13,7 +13,6 @@
     * 3343 FIX: MKP: Verifying minimal version of packages during installation...
     * 3349 FIX: Added rule to disable Inline-SNMP per host...
 
-
     Checks & Agents:
     * 3183 aruba_wlc_aps: new check which monitors the provisioned accesspoints of an Aruba Network WLAN Controller
     * 3184 varnish, varnish.backend, varnish.backend_success_ratio, varnish.cache, varnish.cache_hit_ratio, varnish.client, varnish.esi, varnish.fetch, varnish.objects, varnish.worker, varnish.worker_thread_ratio: new checks which monitor HTTP Accelerator Statistics via varnishstat on Linux
@@ -44,6 +43,7 @@
     * 3308 pvecm_status, pvecm_nodes: new checks which monitor a Proxmox Virtual Environment cluster setup
     * 3108 network interface and switch port discovery rules can now be combined to dicover multiple sets of interfaces...
             NOTE: Please refer to the migration notes!
+    * 3109 dotnet_clrmemory: levels are now configurable
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

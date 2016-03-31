@@ -1,0 +1,10 @@
+Title: dotnet_clrmemory: levels are now configurable
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1459423404
+
+

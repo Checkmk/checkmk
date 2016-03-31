@@ -1,0 +1,10 @@
+Title: windows_tasks.ps1: fixed incorrect text encoding for tasks with umlauts
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b9
+Date: 1459435089
+
+

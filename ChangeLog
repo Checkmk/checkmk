@@ -6,6 +6,7 @@
     * 3109 dotnet_clrmemory: levels are now configurable
     * 3307 FIX: dell_poweredge_netdev: does not discover disconnected network devices any more
     * 3309 FIX: zpool_status: fixed wrong error handling...
+    * 3014 FIX: windows_tasks.ps1: fixed incorrect text encoding for tasks with umlauts
 
     Multisite:
     * 2237 Unique name for columns of Host Groups and Service Groups...

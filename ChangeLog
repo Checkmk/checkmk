@@ -3,6 +3,7 @@
     * 3349 FIX: Added rule to disable Inline-SNMP per host...
 
     Checks & Agents:
+    * 3109 dotnet_clrmemory: levels are now configurable
     * 3307 FIX: dell_poweredge_netdev: does not discover disconnected network devices any more
     * 3309 FIX: zpool_status: fixed wrong error handling...
 
@@ -15,6 +16,7 @@
 
     Event Console:
     * 3348 FIX: Improved error handling when trying to edit not existing rules/rule packs
+
 
 1.2.8b8:
     Core & Setup:

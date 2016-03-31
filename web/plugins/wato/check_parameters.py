@@ -768,6 +768,32 @@ register_check_parameters(
     "dict",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "clr_memory",
+    _(".Net runtime memory levels"),
+    Dictionary(
+        help = _("This rule allows to set the warn and crit levels of the memory "
+                 "metrics of the .Net Runtime"),
+        elements = [
+            ( "upper",
+             Tuple(
+                 title = _("Percent time spent in garbage collection"),
+                 elements = [
+                     Percentage(title = _("Warning at"), label = _("% time"), default_value = 10.0),
+                     Percentage(title = _("Critical at"), label = _("% time"), default_value = 15.0),
+                 ]
+             )),
+        ],
+    ),
+    TextAscii(
+        title = _("Name of the Application"),
+        help = _("The name of the .net application or _Global_"),
+        allow_empty = False,
+    ),
+    "dict"
+)
+
 #.
 #   .--Environment---------------------------------------------------------.
 #   |     _____            _                                      _        |

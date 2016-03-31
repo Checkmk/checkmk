@@ -113,6 +113,7 @@
     * 3306 FIX: docsis_channels_upstream: fixed missing channel handling
     * 3307 FIX: dell_poweredge_netdev: does not discover disconnected network devices any more
     * 3309 FIX: zpool_status: fixed wrong error handling...
+    * 3014 FIX: windows_tasks.ps1: fixed incorrect text encoding for tasks with umlauts
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

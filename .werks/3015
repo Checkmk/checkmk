@@ -1,0 +1,9 @@
+Title: Dump host (cmk -D): fixed exception with service descriptions containing umlauts
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1459435354
+Class: fix
+
+

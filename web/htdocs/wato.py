@@ -757,11 +757,15 @@ def show_hosts(folder):
             html.icon(msg, "validation_error")
             html.write("&nbsp;")
 
-        html.write('<a href="%s">%s</a>\n' % (host.edit_url(), hostname))
+        if host.is_offline():
+            html.icon(_("This host is disabled"), "disabled")
+            html.write("&nbsp;")
 
         if host.is_cluster():
-            html.write("&nbsp;")
             html.icon(_("This host is a cluster of %s") % ", ".join(host.cluster_nodes()), "cluster")
+            html.write("&nbsp;")
+
+        html.write('<a href="%s">%s</a>\n' % (host.edit_url(), hostname))
 
         # Show attributes
         for attr, topic in all_host_attributes():

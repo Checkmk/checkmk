@@ -189,6 +189,7 @@
     * 3318 FIX: CSV bulk import of hosts: fix handling of CSV column headers...
     * 3351 FIX: Network scan: Fixed number in hosts not being updated during network scan
     * 3352 FIX: Network scan: Added hostname translation to translate detected DNS names of scanned hosts
+    * 3353 FIX: Displaying disabled/offline host state in WATO host list now
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

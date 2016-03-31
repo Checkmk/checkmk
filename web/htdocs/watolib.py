@@ -1970,9 +1970,12 @@ class Host(WithPermissionsAndAttributes):
     def is_cluster(self):
         return self._cluster_nodes != None
 
-
     def cluster_nodes(self):
         return self._cluster_nodes
+
+
+    def is_offline(self):
+        return self.tag("criticality") == "offline"
 
 
     def site_id(self):

@@ -26,6 +26,9 @@
     Notifications:
     * 3346 FIX: Re-added envelope sender to asciimail/mail notification plugins
 
+    BI:
+    * 3358 FIX: Fixed BI Boxes views when "Enable BI compilation diagnostics" enabled
+
     Event Console:
     * 3348 FIX: Improved error handling when trying to edit not existing rules/rule packs
 

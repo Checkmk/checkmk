@@ -1235,9 +1235,6 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
     columns = [ "name", "host_name", "state", "hard_state", "plugin_output", "scheduled_downtime_depth",
                 "host_in_service_period", "acknowledged", "services_with_fullstate", "parents" ] + add_columns
 
-    html.live.set_only_sites(only_sites)
-    html.live.set_prepend_site(True)
-
     query = "GET hosts%s\n" % (bygroup and "bygroup" or "")
     query += "Columns: " + (" ".join(columns)) + "\n"
     query += filter_header
@@ -1249,8 +1246,8 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
 
     html.live.set_only_sites(only_sites)
     html.live.set_prepend_site(True)
-
     html.live.set_auth_domain('bi')
+
     data = html.live.query(query)
 
     html.live.set_prepend_site(False)
@@ -1266,10 +1263,11 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
     # host_aggregation construct.
     if fetch_parents:
         parent_filter = []
-        for row in data:
-            parent_filter += [ 'Filter: name = %s\n' % p for p in row[8] ]
+        for row in rows:
+            parent_filter += [ 'Filter: name = %s\n' % p for p in row["services_with_fullstate"] ]
         parent_filter_txt = ''.join(parent_filter)
         parent_filter_txt += 'Or: %d\n' % len(parent_filter)
+
         for row in  get_status_info_filtered(filter_header, only_sites, limit, add_columns, False, bygroup):
             if row['name'] not in hostnames:
                 rows.append(row)

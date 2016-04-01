@@ -117,6 +117,7 @@
     * 3015 FIX: Dump host (cmk -D): fixed exception with service descriptions containing umlauts
     * 3110 FIX: ewon: Various improvements to snmp proxy functionality...
             NOTE: Please refer to the migration notes!
+    * 3016 FIX: mk-job: scheduled jobs are now always executed despite of any status file permission problems...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

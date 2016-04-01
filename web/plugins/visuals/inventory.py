@@ -80,11 +80,14 @@ class FilterInvtableAge(Filter):
         Age(display=["days"]).render_input(self.name + "_to", 0)
         html.write("</tr></table>")
 
+
     def double_height(self):
         return True
 
+
     def filter_table(self, rows):
-        return self.filter_table_with_conversion(self, rows, lambda age: age)
+        return self.filter_table_with_conversion(rows, lambda age: age)
+
 
     def filter_table_with_conversion(self, rows, conv):
         from_value = Age().from_html_vars(self.name + "_from")

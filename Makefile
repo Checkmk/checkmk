@@ -110,13 +110,13 @@ dist: mk-livestatus mk-eventd
 	$(MAKE) minify-js
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs plugins
 	tar czf $(DISTNAME)/mkeventd.tar.gz $(TAROPTS) -C mkeventd  $$(cd mkeventd ; echo * )
-	
+
 	tar cf $(DISTNAME)/livestatus.tar $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
 	if [ -f livestatus/compile ]; then \
 	    tar rf $(DISTNAME)/livestatus.tar $(TAROPTS) -C livestatus compile ; \
 	fi
 	gzip $(DISTNAME)/livestatus.tar
-	
+
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
 	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc $$(cd doc ; ls)
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog

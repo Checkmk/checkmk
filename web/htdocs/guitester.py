@@ -41,6 +41,10 @@ class MKGuitestFailed(MKException):
 
 class GUITester:
     def __init__(self):
+        # Are overridden later by html()
+        self.user = None
+        self.start_time = None
+
         self.guitest = None
         self.replayed_guitest_step = None
         self.guitest_repair_step = None
@@ -102,6 +106,11 @@ class GUITester:
             return eval(file(path).read())
         except IOError, e:
             raise MKGeneralException(_("Cannot load GUI test file %s: %s") % (self.attrencode(path), e))
+
+
+    def guitest_fake_login(self, user_id):
+        config.login(user_id)
+        self.user = user_id
 
 
     def replay_guitest(self):
@@ -186,16 +195,48 @@ class GUITester:
             return guitest_check_element_list
 
 
+    #
+    # Abstract methods, are in html() object
+    #
+
+    def add_status_icon(self, img, tooltip, url = None):
+        raise NotImplementedError()
+
+
+    def attrencode(self, value):
+        raise NotImplementedError()
+
+
+    def var(self, varname, deflt = None):
+        raise NotImplementedError()
+
+
+    def get_transid(self):
+        raise NotImplementedError()
+
+
+    def store_new_transids(self):
+        raise NotImplementedError()
+
+
+    def write(self, text):
+        raise NotImplementedError()
+
+
+
 def guitest_check_single_value(reference, reality):
+    errors = []
+
     if len(reference) > 1:
         errors.append("More than one reference value: %s" % ", ".join(reference))
     if len(reality) > 1:
         errors.append("More than one value: %s" % ", ".join(reality))
+
     diff_text = guitest_check_text(reference[0], reality[0])
     if diff_text:
-        return [ diff_text ]
-    else:
-        return []
+        errors.append(diff_text)
+
+    return errors
 
 
 def guitest_check_element_list_with_exceeding(reference, reality):

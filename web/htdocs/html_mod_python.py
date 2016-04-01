@@ -93,11 +93,6 @@ class html_mod_python(htmllib.html):
         return self.req.headers_in.get('Referer', '')
 
 
-    def guitest_fake_login(self, user_id):
-        config.login(user_id)
-        self.user = user_id
-
-
     def verify_not_using_threaded_mpm(self):
         if apache.mpm_query(apache.AP_MPMQ_IS_THREADED) != 0:
             raise MKGeneralException(

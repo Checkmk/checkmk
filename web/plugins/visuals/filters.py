@@ -716,6 +716,7 @@ class FilterTime(Filter):
 
         Filter.__init__(self, name, title, info, varnames, [column])
 
+
     def double_height(self):
         return True
 
@@ -750,47 +751,36 @@ class FilterTime(Filter):
 
     # Extract timerange user has selected from HTML variables
     def get_time_range(self):
-        range = []
-        for what in [ "from", "until" ]:
-            varprefix = self.name + "_" + what
-            count = html.var(varprefix)
-            if count == "":
-                range.append(None)
-            else:
-                rangename = html.var(varprefix + "_range")
-                if rangename == "abs":
-                    try:
-                        range.append(time.mktime(time.strptime(count, "%Y-%m-%d")))
-                    except:
-                        html.add_user_error(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
-                        range.append(None)
-                elif rangename == "unix":
-                    range.append(int(count))
-                else:
-                    try:
-                        count = int(count)
-                        secs = count * int(rangename)
-                        range.append(int(time.time()) - secs)
-                    except:
-                        range.append(None)
-                        html.set_var(varprefix, "")
+        return self._get_time_range_of("from"), \
+               self._get_time_range_of("until")
 
-        return range
 
-    # I'm not sure if this function is useful or ever been called.
-    # Problem is, that it is not clear wether to use "since" or "before"
-    # here.
-    # def variable_settings(self, row):
-    #     vars = []
-    #     secs = int(time.time()) - row[self.column]
-    #     for s, n in self.ranges[::-1]:
-    #         v = secs / s
-    #         secs -= v * s
-    #         vars.append((self.name + "_" + n, secs))
-    #     return vars
+    def _get_time_range_of(self, what):
+        varprefix = self.name + "_" + what
+        count = html.var(varprefix)
+        if count == "":
+            return None
 
-    # def heading_info(self):
-    #     return _("since the last couple of seconds")
+        rangename = html.var(varprefix + "_range")
+        if rangename == "abs":
+            try:
+                return time.mktime(time.strptime(count, "%Y-%m-%d"))
+            except:
+                html.add_user_error(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
+                return None
+
+        elif rangename == "unix":
+            return int(count)
+
+        try:
+            count = int(count)
+            secs = count * int(rangename)
+            return int(time.time()) - secs
+        except:
+            html.set_var(varprefix, "")
+            return None
+
+
 
 declare_filter(250, FilterTime("service", "svc_last_state_change", _("Last service state change"), "service_last_state_change"))
 declare_filter(251, FilterTime("service", "svc_last_check", _("Last service check"), "service_last_check"))

@@ -191,7 +191,7 @@ register_rule(group + '/' + subgroup_inventory,
 
 register_rule(group + '/' + subgroup_inventory,
     varname = "ewon_discovery_rules",
-    title = _("EWON Discovery"),
+    title = _("eWON Discovery"),
     help = _("The ewon vpn routers can rely data from a secondary device via snmp. "
             "It doesn't however allow discovery of the device type relayed this way. "
             "To allow interpretation of the data you need to pick the device manually."),
@@ -204,6 +204,7 @@ register_rule(group + '/' + subgroup_inventory,
         ],
         default_value = None,
     ),
+    match = 'first'
 )
 
 
@@ -1316,6 +1317,42 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor name"),
         help = _("The identifier of the sensor."),
+    ),
+    match_type = "dict"
+)
+
+
+register_check_parameters(
+    subgroup_environment,
+    'ewon',
+    _("eWON SNMP Proxy"),
+    Dictionary(
+        title = _("Device Type"),
+        help = _("The eWON router can act as a proxy to metrics from a secondary non-snmp device."
+                 "Here you can make settings to the monitoring of the proxied device."),
+        elements = [
+            ("oxyreduct", Dictionary(
+                title = _("Wagner OxyReduct"),
+                elements = [
+                    ("o2_levels", Tuple(
+                        title = _("O2 levels"),
+                        elements = [
+                            Percentage(title = _("Warning at"), default_value = 16.0),
+                            Percentage(title = _("Critical at"), default_value = 17.0),
+                            Percentage(title = _("Warning below"), default_value = 14.0),
+                            Percentage(title = _("Critical below"), default_value = 13.0),
+                        ]
+                    )
+                    )
+                ]
+            )
+            )
+        ]
+    ),
+    TextAscii(
+        title = _("Item name"),
+        help = _("The item name. The meaning of this depends on the proxied device: "
+                 "- Wagner OxyReduct: Name of the room/protection zone")
     ),
     match_type = "dict"
 )

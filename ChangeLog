@@ -115,6 +115,8 @@
     * 3309 FIX: zpool_status: fixed wrong error handling...
     * 3014 FIX: windows_tasks.ps1: fixed incorrect text encoding for tasks with umlauts
     * 3015 FIX: Dump host (cmk -D): fixed exception with service descriptions containing umlauts
+    * 3110 FIX: ewon: Various improvements to snmp proxy functionality...
+            NOTE: Please refer to the migration notes!
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

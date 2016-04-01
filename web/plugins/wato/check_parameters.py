@@ -6923,14 +6923,12 @@ register_check_parameters(
                   default_value = 300,
             )),
         ]),
-    OptionalDropdownChoice(
-        choices = [ ( "SUMMARY",  _("Summary of all disks") ), ],
-        otherlabel = _("On explicit devices ->"),
-        explicit = TextAscii(allow_empty = False),
+    TextAscii(
         title = _("Device"),
         help = _("For a summarized throughput of all disks, specify <tt>SUMMARY</tt>,  "
                  "a per-disk IO is specified by the drive letter, a colon and a slash on Windows "
-                 "(e.g. <tt>C:/</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")),
+                 "(e.g. <tt>C:/</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")
+    ),
     "dict",
 )
 
@@ -7001,13 +6999,7 @@ register_check_parameters(
                            "if you are running PNP4Nagios in SINGLE mode.")),
             ),
         ]),
-    OptionalDropdownChoice(
-        choices = [ ( "SUMMARY",  _("Summary of all disks") ),
-                    ( "read",     _("Summary of disk input (read)") ),
-                    ( "write",    _("Summary of disk output (write)") ),
-                  ],
-        otherlabel = _("On explicit devices ->"),
-        explicit = TextAscii(allow_empty = False),
+    TextAscii(
         title = _("Device"),
         help = _("For a summarized throughput of all disks, specify <tt>SUMMARY</tt>, for a "
                  "sum of read or write throughput write <tt>read</tt> or <tt>write</tt> resp. "

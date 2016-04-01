@@ -1,0 +1,12 @@
+Title: mk-job: scheduled jobs are now always executed despite of any status file permission problems
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b9
+Date: 1459511566
+
+The mk-job call could fail if the status file for this command could not get created
+due to permission problems. With this fix insufficient permissions now only prevent the creation of the status file.
+The command itself is executed nevertheless.

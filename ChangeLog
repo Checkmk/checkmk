@@ -149,6 +149,7 @@
     * 3344 FIX: Removed host inventory painters and sorters from non host based views
     * 3345 FIX: Fixed exception when inventory painter was used as group painter
     * 3347 FIX: Improved performance when having a lot of users...
+    * 3355 FIX: Fixed possible borken HW-/SW-Inventory history view
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

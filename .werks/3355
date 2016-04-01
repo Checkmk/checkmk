@@ -1,0 +1,9 @@
+Title: Fixed possible borken HW-/SW-Inventory history view
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b9
+Date: 1459491473
+Class: fix
+
+

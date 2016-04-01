@@ -1124,7 +1124,7 @@ multisite_datasources["invhist"] = {
     "table"        : inv_history_table,
     "infos"        : [ "host", "invhist" ],
     "keys"         : [],
-    "idkeys"       : [ "host_name", "invhist_date" ],
+    "idkeys"       : [ "host_name", "invhist_time" ],
 }
 
 multisite_painters["invhist_time"] = {

@@ -12,6 +12,7 @@
     Multisite:
     * 2237 Unique name for columns of Host Groups and Service Groups...
     * 3347 FIX: Improved performance when having a lot of users...
+    * 3355 FIX: Fixed possible borken HW-/SW-Inventory history view
 
     WATO:
     * 3351 FIX: Network scan: Fixed number in hosts not being updated during network scan

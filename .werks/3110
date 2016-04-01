@@ -1,0 +1,12 @@
+Title: ewon: Various improvements to snmp proxy functionality
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.8b9
+Date: 1459499897
+Class: fix
+
+Added configurable O2 levels and disabled the crit status when the N2 outlet is open.
+Also fixed incompatibility with nagios core.
+
+Unfortunately these changes make a re-discovery of the device necessary.

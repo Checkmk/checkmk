@@ -661,8 +661,8 @@ multisite_layouts["table"] = {
 
 def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_show_checkboxes):
 
-    header_majorities = matrix_find_majorities(rows, group_painters, True)
-    value_counts, row_majorities = matrix_find_majorities(rows, painters, False)
+    header_majorities = matrix_find_majorities_for_header(rows, group_painters)
+    value_counts, row_majorities = matrix_find_majorities(rows, painters)
 
     for groups, unique_row_ids, matrix_cells in \
              create_matrices(rows, group_painters, painters, num_columns):
@@ -732,7 +732,7 @@ def csv_export_matrix(rows, view, group_painters, painters):
     output_csv_headers(view)
 
     groups, unique_row_ids, matrix_cells = list(create_matrices(rows, group_painters, painters, num_columns=None))[0]
-    value_counts, row_majorities = matrix_find_majorities(rows, painters, False)
+    value_counts, row_majorities = matrix_find_majorities(rows, painters)
 
     table.begin(output_format="csv")
     for painter_nr, painter in enumerate(group_painters):
@@ -770,7 +770,12 @@ def csv_export_matrix(rows, view, group_painters, painters):
     table.end()
 
 
-def matrix_find_majorities(rows, painters, for_header):
+def matrix_find_majorities_for_header(rows, painters):
+    counts, majorities = matrix_find_majorities(rows, painters, for_header=True)
+    return majorities.get(None, {})
+
+
+def matrix_find_majorities(rows, painters, for_header=False):
     counts = {} # dict row_id -> painter_nr -> value -> count
 
     for row in rows:
@@ -778,6 +783,7 @@ def matrix_find_majorities(rows, painters, for_header):
             row_id = None
         else:
             row_id = tuple(group_value(row, [ painters[0] ]))
+
         for painter_nr, painter in enumerate(painters[1:]):
             value = group_value(row, [painter])
             row_entry = counts.setdefault(row_id, {})
@@ -805,10 +811,8 @@ def matrix_find_majorities(rows, painters, for_header):
             maj_entry[painter_nr] = maj_value
 
 
-    if for_header:
-        return majorities.get(None, {})
-    else:
-        return counts, majorities
+    return counts, majorities
+
 
 # Create list of matrices to render
 def create_matrices(rows, group_painters, painters, num_columns):

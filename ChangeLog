@@ -196,6 +196,7 @@
     * 3352 FIX: Network scan: Added hostname translation to translate detected DNS names of scanned hosts
     * 3353 FIX: Displaying disabled/offline host state in WATO host list now
     * 3354 FIX: Added missing option to exclude IP addresses by regex
+    * 3357 FIX: Fixed service conditions of Disk IO related rulesets
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

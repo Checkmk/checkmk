@@ -1,0 +1,9 @@
+Title: netapp_api_disks: ignore disks with raid-state remote (metrocluster setups)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1459760250
+Class: fix
+
+Disks with raid-state remote are monitored on the partner system.

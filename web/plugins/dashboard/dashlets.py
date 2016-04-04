@@ -374,6 +374,7 @@ def dashlet_graph_reload_js(nr, dashlet):
     })
     graph_render_options = {
         "show_legend": dashlet.get("show_legend", False),
+        "show_service" : dashlet.get("show_service", True),
     }
 
     return "dashboard_render_graph(%d, %s, %s, '%s')" % \
@@ -414,6 +415,11 @@ dashlet_types["pnpgraph"] = {
                      "graphs which are only available in the Check_MK Enterprise Edition."),
             default_value = False,
         )),
+        ("show_service", Checkbox(
+            title = _("Show host/service name in title"),
+            label = _("Add the host/service to the graph title"),
+            default_value = True,
+        )),
     ],
     "styles": """
 .dashlet.pnpgraph .dashlet_inner {
@@ -427,6 +433,9 @@ dashlet_types["pnpgraph"] = {
 }
 .dashlet.pnpgraph .container {
     background-color: #f8f4f0;
+}
+.dashlet.pnpgraph div.title a {
+    color: #000;
 }
 """,
     "on_resize"    : dashlet_graph_reload_js,

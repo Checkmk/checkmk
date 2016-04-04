@@ -1,0 +1,14 @@
+Title: HW/SW-Inventory service can now be OK in case of unreachable host
+Level: 2
+Component: inv
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.8b10
+Date: 1459776126
+
+The active check for performing the HW/SW-inventory used to always take the
+WARN state if the inventory cannot be done (mostly because the target host
+was down).  This can now be set other states as well. Set this to OK if you
+inventorized workstations that are allowed to be switched off. This setting
+is in the rule set {{Do hardware/software Inventory}}.

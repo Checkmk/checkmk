@@ -3933,6 +3933,7 @@ OPTIONS:
                  You can specify this option multiple times.
   --hw-changes=S --inventory-as-check: Use monitoring state S for HW changes
   --sw-changes=S --inventory-as-check: Use monitoring state S for SW changes
+  --inv-fail-status=S Use monitoring state S in case if error during inventory
 
 NOTES:
   -I can be restricted to certain check types. Write '--checks df -I' if you
@@ -4915,7 +4916,7 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                  "man", "nowiki", "config-check", "backup=", "restore=",
                  "check-inventory=", "check-discovery=", "discover-marked-hosts", "paths",
-                 "checks=", "inventory", "inventory-as-check=", "hw-changes=", "sw-changes=",
+                 "checks=", "inventory", "inventory-as-check=", "hw-changes=", "sw-changes=", "inv-fail-status=",
                  "cmc-file=", "browse-man", "list-man", "update-dns-cache", "cap", "real-time-checks" ]
 
 non_config_options = ['-L', '--list-checks', '-P', '--package', '-M',
@@ -4942,6 +4943,7 @@ exit_status = 0
 opt_verbose = 0 # start again from 0, was already faked at the beginning
 opt_inv_hw_changes = 0
 opt_inv_sw_changes = 0
+opt_inv_fail_status = 1 # State in case of an error (default: WARN)
 
 # Scan modifying options first (makes use independent of option order)
 for o,a in opts:
@@ -4998,6 +5000,8 @@ for o,a in opts:
         opt_inv_hw_changes = int(a)
     elif o == "--sw-changes":
         opt_inv_sw_changes = int(a)
+    elif o == "--inv-fail-status":
+        opt_inv_fail_status = int(a)
 
 # Perform actions (major modes)
 try:

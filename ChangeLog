@@ -16,6 +16,9 @@
     * 3239 The delay and the period of notifications can be fractions of a minute now.
     * 3359 FIX: Fixed exception when trying to edit non existant host...
 
+    HW/SW-Inventory:
+    * 3319 HW/SW-Inventory service can now be OK in case of unreachable host...
+
 
 1.2.8b9:
     Core & Setup:

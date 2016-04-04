@@ -28,7 +28,10 @@ def check_cmk_inv(params):
     if params == None:
         params = {} # convert from legacy rule syntax
 
-    return "--hw-changes=%d --sw-changes=%d" % (params.get("hw_changes", 0), params.get("sw_changes", 0))
+    return "--inv-fail-status=%d --hw-changes=%d --sw-changes=%d" % (
+        params.get("fail_status", 1),
+        params.get("hw_changes", 0),
+        params.get("sw_changes", 0))
 
 active_check_info['cmk_inv'] = {
     "command_line"        : 'cmk $ARG1$ --cache --inventory-as-check $HOSTNAME$',

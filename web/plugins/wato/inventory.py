@@ -44,6 +44,15 @@ register_rule(group,
                       title = _("State when hardware changes are detected"),
                       default_value = 0,
                 )),
+                ( "fail_status",
+                  MonitoringState(
+                      title = _("State when inventory fails"),
+                      help = _("The check takes this state in case the inventory cannot be "
+                               "updated because of any possible reason. A common use is "
+                               "setting this to OK for workstations that can be switched "
+                               "off - so you will get no notifications in that case."),
+                      default_value = 1,
+                )),
             ]
         ),
         title = _("Do hardware/software Inventory"),

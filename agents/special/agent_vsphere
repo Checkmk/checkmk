@@ -1583,21 +1583,22 @@ if not error:
 
             if not opt_direct:
                 reply_code, reply_msg, reply_headers, response = query_server(telegram_list["datacenters"])
-                datacenter = get_pattern('<objects><obj type="Datacenter">(.*?)</obj>.*', response)[0]
-                reply_code, reply_msg, reply_headers, response = query_server(telegram_list["clustersofdatacenter"],
-                                                                              payload_params = {"datacenter": datacenter} )
-                clusters = get_pattern('<objects><obj type="ClusterComputeResource">(.*?)</obj>.*?string">(.*?)</val></propSet></objects>', response)
+                datacenters = get_pattern('<objects><obj type="Datacenter">(.*?)</obj>', response)
+                for datacenter in datacenters:
+                    reply_code, reply_msg, reply_headers, response = query_server(telegram_list["clustersofdatacenter"],
+                                                                                  payload_params = {"datacenter": datacenter} )
+                    clusters = get_pattern('<objects><obj type="ClusterComputeResource">(.*?)</obj>.*?string">(.*?)</val></propSet></objects>', response)
 
-                output("<<<esx_vsphere_clusters:sep(9)>>>")
-                for cluster in clusters:
-                    reply_code, reply_msg, reply_headers, response = query_server(telegram_list["esxhostsofcluster"],
-                                                                                  payload_params = {"clustername": cluster[0]} )
-                    cluster_vms = []
-                    hosts = get_pattern('<objects><obj type="HostSystem">.*?string">(.*?)</val></propSet></objects>', response)
-                    for host in hosts:
-                        cluster_vms.extend(vm_esx_host.get(host, []))
-                    output("%s\thostsystems\t%s\t%s" % (datacenter, cluster[1], "\t".join(hosts)))
-                    output("%s\tvms\t%s\t%s" % (datacenter, cluster[1], "\t".join(map(convert_hostname, cluster_vms))))
+                    output("<<<esx_vsphere_clusters:sep(9)>>>")
+                    for cluster in clusters:
+                        reply_code, reply_msg, reply_headers, response = query_server(telegram_list["esxhostsofcluster"],
+                                                                                      payload_params = {"clustername": cluster[0]} )
+                        cluster_vms = []
+                        hosts = get_pattern('<objects><obj type="HostSystem">.*?string">(.*?)</val></propSet></objects>', response)
+                        for host in hosts:
+                            cluster_vms.extend(vm_esx_host.get(host, []))
+                        output("%s\thostsystems\t%s\t%s" % (datacenter, cluster[1], "\t".join(hosts)))
+                        output("%s\tvms\t%s\t%s" % (datacenter, cluster[1], "\t".join(map(convert_hostname, cluster_vms))))
 
             output("<<<esx_vsphere_objects:sep(9)>>>")
 

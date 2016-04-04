@@ -1,0 +1,9 @@
+Title: Fixed missing host/vms inventory information when having multiple datacenters
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1459754630
+Class: fix
+
+The inventory data was incomplete when more than one datacenter was available.

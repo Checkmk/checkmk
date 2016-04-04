@@ -1,0 +1,10 @@
+Title: The delay and the period of notifications can be fractions of a minute now.
+Level: 1
+Component: wato
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1459751927
+
+

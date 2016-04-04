@@ -4896,6 +4896,7 @@ def output_profile():
 #   | Main entry point and option parsing. Here is where all begins.       |
 #   '----------------------------------------------------------------------'
 
+register_sigint_handler()
 load_checks()
 
 opt_nowiki     = False
@@ -5217,6 +5218,10 @@ try:
 
     output_profile()
     sys.exit(exit_status)
+
+except MKTerminate, e:
+    # At top level this exception means the process has been terminated without issues.
+    sys.exit(0)
 
 except (MKGeneralException, MKBailOut), e:
     sys.stderr.write("%s\n" % e)

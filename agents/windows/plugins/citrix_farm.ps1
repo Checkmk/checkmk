@@ -95,6 +95,9 @@ foreach ($Controller in $Controllers) {
 
 		# Column Name of Machine / Gets machines with the specific machine name known to the hypervisor.
 		$HostedMachineName = $XAmachine | %{ $_.HostedMachineName }
+		if([string]::IsNullOrEmpty($HostedMachineName)) {
+			continue;
+		}
 		"<<<<$HostedMachineName>>>>"
 		"<<<citrix_state>>>"
 		# Column CatalogNameName / Gets machines from the catalog with the specific name.

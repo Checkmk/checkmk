@@ -190,7 +190,8 @@ check_info['esx_vsphere_counters'] = {
    'check_function'          : check_esx_vsphere_counters_datastoreio,
    'service_description'     : 'Datastore IO %s',
    'has_perfdata'            : True,
-   'includes'                :  [ 'diskstat.include' ]
+   'includes'                :  [ 'diskstat.include' ],
+   'group'                   : 'diskstat'
 }
 
 

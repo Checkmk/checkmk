@@ -5,6 +5,7 @@
     * 3019 FIX: netapp_api_volumes: fixed incorrect metrics (wrong scaling in graphs)
     * 3111 FIX: citrix_status: fixed incorrect assignment of piggyback data to host running the plugin...
     * 3020 FIX: netapp_api_volumes: ignore volumes of cluster partner...
+    * 3112 FIX: esx_vsphere_counters: made levels configurable
 
     Multisite:
     * 3355 FIX: Fixed possible broken HW-/SW-Inventory history view

@@ -85,6 +85,10 @@ def load_plugins(force):
             'title':  _('Send an E-Mail'),
             'handler': notify_mail,
         },
+        'dashlet': {
+            'title':  _('Send hint to dashlet'),
+            'handler': notify_gui_msg,
+        },
     }
 
     dest_choices = [

@@ -1004,7 +1004,7 @@ function read_message() {
     if (!c)
         return;
 
-    // extract message from teh message container
+    // extract message from the message container
     var hints = get_hint_messages(c);
     var msg = hints[0];
     c.removeChild(msg);

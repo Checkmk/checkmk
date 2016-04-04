@@ -29,7 +29,7 @@ try:
 except ImportError:
     import json
 
-import sites
+import sites, notify, table
 
 #   .--Overview------------------------------------------------------------.
 #   |              ___                       _                             |
@@ -817,4 +817,62 @@ dashlet_types["snapin"] = {
             choices = dashlet_snapin_get_snapins,
         )),
     ],
+}
+
+
+#.
+#   .--Notify users--------------------------------------------------------.
+#   |        _   _       _   _  __                                         |
+#   |       | \ | | ___ | |_(_)/ _|_   _   _   _ ___  ___ _ __ ___         |
+#   |       |  \| |/ _ \| __| | |_| | | | | | | / __|/ _ \ '__/ __|        |
+#   |       | |\  | (_) | |_| |  _| |_| | | |_| \__ \  __/ |  \__ \        |
+#   |       |_| \_|\___/ \__|_|_|  \__, |  \__,_|___/\___|_|  |___/        |
+#   |                              |___/                                   |
+#   +----------------------------------------------------------------------+
+#   | Dashlet for notify user pop up messages                              |
+#   '----------------------------------------------------------------------'
+
+
+def ajax_delete_user_notification():
+    msg_id = html.var("id")
+    notify.delete_gui_message(msg_id)
+
+
+def dashlet_notify_users(nr, dashlet):
+
+    html.write('<div class="notify_users">')
+    table.begin("notify_users", sortable=False, searchable=False, omit_if_empty=True)
+
+
+
+    for entry in sorted(notify.get_gui_messages(), key=lambda e: e["time"], reverse=True):
+        if "dashlet" in entry["methods"]:
+            table.row()
+
+            msg_id   = entry["id"]
+            datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(entry['time']))
+            message  = entry["text"].replace("\n", " ")
+
+            table.cell(_("Actions"), css="buttons", sortable=False)
+            html.icon_button("", _("Delete"), "delete", onclick="delete_user_notification('%s', this);" % msg_id)
+
+            table.cell(_("Message"), html.attrencode(message))
+            table.cell(_("Date"),    datetime)
+
+    table.end()
+    html.javascript('function delete_user_notification(msg_id, btn) {'
+               'post_url("ajax_delete_user_notification.py", "id=" + msg_id);'
+               'var row = btn.parentNode.parentNode;'
+               'row.parentNode.removeChild(row);}')
+
+    html.write("</div>")
+
+
+dashlet_types["notify_users"] = {
+    "title"       : _("User notifications"),
+    "description" : _("Display GUI notifications sent to users."),
+    "render"      : dashlet_notify_users,
+    "sort_index"  : 75,
+    "allowed"     : config.builtin_role_ids,
+    "styles"      : ".notify_users { width: 100%; height: 100%; overflow: auto; }"
 }

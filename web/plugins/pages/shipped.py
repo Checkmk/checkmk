@@ -95,6 +95,7 @@ pagehandlers.update({
    "create_view_dashlet"      : dashboard.page_create_view_dashlet,
    "create_view_dashlet_infos": dashboard.page_create_view_dashlet_infos,
    "ajax_dashlet_pos"         : dashboard.ajax_dashlet_pos,
+   "ajax_delete_user_notification" : lambda: dashboard.ajax_delete_user_notification(),
 
    "ajax_popup_add_visual"    : visuals.ajax_popup_add,
    "ajax_add_visual"          : visuals.ajax_add_visual,

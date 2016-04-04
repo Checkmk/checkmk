@@ -986,6 +986,9 @@ if os.path.islink(%(dst)r):
 
     output.write(stripped_python_file(modules_dir + "/check_mk_base.py"))
 
+    # Register default Check_MK signal handler
+    output.write("register_sigint_handler()\n")
+
     # TODO: can we avoid adding this module if no predictive monitoring
     # is being used?
     output.write(stripped_python_file(modules_dir + "/prediction.py"))

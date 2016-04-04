@@ -262,12 +262,18 @@ class MKSNMPError(Exception):
 class MKSkipCheck(Exception):
     pass
 
-# This signal is raised when a previously configured timeout is reached.
+# This exception is raised when a previously configured timeout is reached.
 # It is used during keepalive mode. It is also used by the automations
 # which have a timeout set.
 class MKTimeout(Exception):
     pass
 
+
+# This exception is raises when the current Check_MK execution should be
+# terminated. Currently it is raised by the SIGINT signal handler to propagate
+# the termination up the callstack.
+class MKTerminate(Exception):
+    pass
 
 
 #.
@@ -2515,8 +2521,11 @@ def submit_check_mk_aggregation(hostname, status, output):
 #   '----------------------------------------------------------------------'
 
 # register SIGINT handler for consistent CTRL+C handling
+# TODO: use MKTermiante() signal instead and handle output and exit code in check_mk.py
 def interrupt_handler(signum, frame):
     sys.stderr.write('<Interrupted>\n')
     sys.exit(1)
 
-signal.signal(signal.SIGINT, interrupt_handler)
+
+def register_sigint_handler():
+    signal.signal(signal.SIGINT, interrupt_handler)

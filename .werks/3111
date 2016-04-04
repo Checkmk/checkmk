@@ -1,0 +1,11 @@
+Title: citrix_status: fixed incorrect assignment of piggyback data to host running the plugin
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b10
+Date: 1459768772
+Class: fix
+
+When a machine is created in citrix without a name, the plugin would previously assign data from
+that machine to the one running the plugin.
+Those machines will now be ignored by the plugin as their data can't be correctly assigned anyway.

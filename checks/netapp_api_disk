@@ -49,7 +49,7 @@ def check_netapp_api_disk_summary(_no_item, params, info):
     # The device can contain disks who belongs to another filer. We only check the ones
     # belonging to this filer.
     # TODO Do we need that?
-    my_disks = dict([disk for disk in disks.items() if not disk[1].get("raid-state") == "partner"])
+    my_disks = dict([disk for disk in disks.items() if not disk[1].get("raid-state") in [ "remote", "partner"] ])
 
     disks_converted = []
     for did, disk in my_disks.items():

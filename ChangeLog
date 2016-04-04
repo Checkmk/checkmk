@@ -1,6 +1,7 @@
 1.2.8b10:
     Checks & Agents:
     * 3017 FIX: Fixed missing host/vms inventory information when having multiple datacenters...
+    * 3018 FIX: netapp_api_disks: ignore disks with raid-state remote (metrocluster setups)...
 
     Multisite:
     * 3355 FIX: Fixed possible broken HW-/SW-Inventory history view

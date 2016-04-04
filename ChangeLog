@@ -1,3 +1,11 @@
+1.2.8b10:
+    Multisite:
+    * 3355 FIX: Fixed possible broken HW-/SW-Inventory history view
+
+    WATO:
+    * 3239 The delay and the period of notifications can be fractions of a minute now.
+
+
 1.2.8b9:
     Core & Setup:
     * 3349 FIX: Added rule to disable Inline-SNMP per host...

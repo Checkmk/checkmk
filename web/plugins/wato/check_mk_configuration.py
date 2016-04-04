@@ -1486,49 +1486,58 @@ register_rule(group,
 
 register_rule(group,
     "extra_host_conf:first_notification_delay",
-    Integer(
-        minvalue = 0,
-        default_value = 60,
-        label = _("Delay:"),
-        unit = _("minutes"),
-        title = _("Delay host notifications"),
-        help = _("This setting delays notifications about host problems by the "
-                 "specified amount of time. If the host is up again within that "
-                 "time, no notification will be sent out."),
+    Transform(
+        Float(
+            minvalue = 0.0,
+            default_value = 60.0,
+            label = _("Delay:"),
+            unit = _("minutes"),
+            title = _("Delay host notifications"),
+            help = _("This setting delays notifications about host problems by the "
+                     "specified amount of time. If the host is up again within that "
+                     "time, no notification will be sent out."),
+        ),
+        forth = lambda x: float(x),
     ),
-    factory_default = 0,
+    factory_default = 0.0,
 )
 
 register_rule(group,
     "extra_service_conf:first_notification_delay",
-    Integer(
-        minvalue = 0,
-        default_value = 60,
-        label = _("Delay:"),
-        unit = _("minutes"),
-        title = _("Delay service notifications"),
-        help = _("This setting delays notifications about service problems by the "
-                 "specified amount of time. If the service is OK again within that "
-                 "time, no notification will be sent out."),
+    Transform(
+        Float(
+            minvalue = 0.0,
+            default_value = 60.0,
+            label = _("Delay:"),
+            unit = _("minutes"),
+            title = _("Delay service notifications"),
+            help = _("This setting delays notifications about service problems by the "
+                     "specified amount of time. If the service is OK again within that "
+                     "time, no notification will be sent out."),
+        ),
+        forth = lambda x: float(x),
     ),
-    factory_default = 0,
+    factory_default = 0.0,
     itemtype = "service")
 
 register_rule(group,
     "extra_host_conf:notification_interval",
     Optional(
-        Integer(
-            minvalue = 1,
-            default_value = 120,
-            label = _("Interval:"),
-            unit = _("minutes")),
+        Transform(
+            Float(
+                minvalue = 0.05,
+                default_value = 120.0,
+                label = _("Interval:"),
+                unit = _("minutes")),
+            forth = lambda x: float(x),
+        ),
         title = _("Periodic notifications during host problems"),
         help = _("If you enable periodic notifications, then during a problem state "
                "of the host notifications will be sent out in regular intervals "
                "until the problem is acknowledged."),
         label = _("Enable periodic notifications"),
         none_label = _("disabled"),
-        none_value = 0,
+        none_value = 0.0,
         )
     )
 
@@ -1537,18 +1546,21 @@ register_rule(group,
 register_rule(group,
     "extra_service_conf:notification_interval",
     Optional(
-        Integer(
-            minvalue = 1,
-            default_value = 120,
-            label = _("Interval:"),
-            unit = _("minutes")),
+        Transform(
+            Float(
+                minvalue = 0.05,
+                default_value = 120.0,
+                label = _("Interval:"),
+                unit = _("minutes")),
+            forth = lambda x: float(x),
+        ),
         title = _("Periodic notifications during service problems"),
         help = _("If you enable periodic notifications, then during a problem state "
                "of the service notifications will be sent out in regular intervals "
                "until the problem is acknowledged."),
         label = _("Enable periodic notifications"),
         none_label = _("disabled"),
-        none_value = 0,
+        none_value = 0.0,
         ),
 
     itemtype = "service")

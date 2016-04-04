@@ -8,6 +8,7 @@
 
     Multisite:
     * 3355 FIX: Fixed possible broken HW-/SW-Inventory history view
+    * 3021 FIX: interface metrics: fixed broken interface metrics when using nagios core...
 
     WATO:
     * 3239 The delay and the period of notifications can be fractions of a minute now.

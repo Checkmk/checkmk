@@ -1176,14 +1176,18 @@ def render_graph_pnp(graph_template, translated_metrics):
             # TODO: beware of division by zero. All metrics are set to 1 here.
             value, unit, color = evaluate(metric_name, translated_metrics)
 
+            expression, explicit_unit_name = metric_name.split("@", 1) # isolate expression
+
             # Choose a unique name for the derived variable and compute it
-            commands += "CDEF:DERIVED%d=%s " % (nr , metric_name)
+            commands += "CDEF:DERIVED%d=%s " % (nr , expression)
             if upside_down:
                 commands += "CDEF:DERIVED%d_NEG=DERIVED%d,-1,* " % (nr, nr)
 
             metric_name = "DERIVED%d" % nr
             # Scaling and upsidedown handling for legend
-            commands += "CDEF:%s_LEGSCALED%s=%s,%f,/ " % (metric_name, upside_down_suffix, metric_name, legend_scale * upside_down_factor)
+            commands += "CDEF:%s_LEGSCALED=%s,%f,/ " % (metric_name, metric_name, legend_scale)
+            if upside_down:
+                commands += "CDEF:%s_LEGSCALED%s=%s,%f,/ " % (metric_name, upside_down_suffix, metric_name, legend_scale * upside_down_factor)
 
         else:
             mi = translated_metrics[metric_name]

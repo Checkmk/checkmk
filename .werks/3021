@@ -1,0 +1,11 @@
+Title: interface metrics: fixed broken interface metrics when using nagios core
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b10
+Date: 1459774881
+
+The automatically generated pnp template for the interface bandwith was
+broken. This problem only rises when the monitoring core is set to nagios.

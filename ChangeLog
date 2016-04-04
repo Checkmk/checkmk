@@ -1,4 +1,7 @@
 1.2.8b10:
+    Checks & Agents:
+    * 3017 FIX: Fixed missing host/vms inventory information when having multiple datacenters...
+
     Multisite:
     * 3355 FIX: Fixed possible broken HW-/SW-Inventory history view
 

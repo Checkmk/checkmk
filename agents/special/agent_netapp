@@ -202,7 +202,7 @@ def create_dict(instances, custom_key = [], is_counter = True):
 def format_config(instances, prefix, config_key, config_report = "all",
                   config_scale = {}, config_rename = {},
                   extra_info = {}, extra_info_report = "all",
-                  delimeter = "\t"):
+                  delimeter = "\t", skip_missing_config_key = False):
 
     result = []
     values = {}
@@ -227,6 +227,11 @@ def format_config(instances, prefix, config_key, config_report = "all",
                instance_key.append(values.get(entry))
             instance_key = ".".join(instance_key)
         else:
+            if skip_missing_config_key and config_key not in values:
+                # The config_key is not available in the xml node
+                # Looks like the information is only available through the other node
+                continue
+
             instance_key = values.get(config_key, config_key)
             if config_key in values:
                 del values[config_key]
@@ -573,7 +578,8 @@ if netapp_mode == "clustermode":
                                                       "volume-inode-attributes.files-used"    : "files-used" },
                                     extra_info = create_dict(volume_counters, custom_key = [ "instance_uuid" ]),
                                     extra_info_report = sum(map(lambda x: ["%s" % x, "nfs_%s" % x, "cifs_%s" % x, "san_%s" % x, "fcp_%s" % x, "iscsi_%s" % x],
-                                                        sum(map(lambda x: ["read_%s" % x, "write_%s" % x], ["data", "latency"]), [])), []) + [ "instance_name" ]
+                                                        sum(map(lambda x: ["read_%s" % x, "write_%s" % x], ["data", "latency"]), [])), []) + [ "instance_name" ],
+                                    skip_missing_config_key = True
         )
 
     # Aggregations

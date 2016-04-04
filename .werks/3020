@@ -1,0 +1,12 @@
+Title: netapp_api_volumes: ignore volumes of cluster partner
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b10
+Date: 1459769140
+
+Volumes from the cluster partner are no longer detected as services.
+These partner-volumes did not provide the entire span of information and
+caused check errors like "Volume is None".

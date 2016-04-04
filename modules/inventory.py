@@ -209,8 +209,8 @@ def do_inv_check(hostname):
     except Exception, e:
         if opt_debug:
             raise
-        sys.stdout.write("WARN - Inventory failed: %s\n" % e)
-        sys.exit(1)
+        sys.stdout.write("Inventory failed: %s\n" % e)
+        sys.exit(opt_inv_fail_status)
 
 
 def count_nodes(tree):

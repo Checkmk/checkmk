@@ -1,0 +1,16 @@
+Title: mk_logwatch (linux): now able to handle queries from multiple servers (no longer loosing data)
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b11
+Date: 1459777575
+
+In earlier versions mk_logwatch only had one statefile for all incoming queries.
+Any newly found loglines were sent to one server - subsequent queries from other servers got nothing.
+With this version each IP address now has its own statefile.
+So you can now monitor the same system from multiple servers without the risk of loosing log
+messages. Important: Multiple OMD sites running under the same server IP address still steal
+log messages from one another.
+

@@ -56,11 +56,22 @@ else:
     mk_confdir = os.getenv("MK_CONFDIR") or "."
     mk_vardir = os.getenv("MK_VARDIR") or "."
 
+remote_hostname = os.getenv("REMOTE", "")
+
 print "<<<logwatch>>>"
 
 config_filename = mk_confdir + "/logwatch.cfg"
 config_dir      = mk_confdir + "/logwatch.d/*.cfg"
-status_filename = mk_vardir + "/logwatch.state"
+
+if remote_hostname != "":
+    status_filename = "%s/mk_logwatch_%s.state" % (mk_vardir, remote_hostname)
+else:
+    status_filename = "%s/mk_logwatch.state" % mk_vardir
+
+# Copy the last known state from the logwatch.state when there is no status_filename yet.
+if not os.path.exists(status_filename) and os.path.exists("%s/logwatch.state" % mk_vardir):
+    import shutil
+    shutil.copy("%s/logwatch.state" % mk_vardir, status_filename)
 
 def is_not_comment(line):
     if line.lstrip().startswith('#') or \

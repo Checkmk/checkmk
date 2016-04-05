@@ -32,6 +32,8 @@
 
 # Fetch RRD historic metrics data of a specific service. returns a tuple
 # of (step, [value1, value2, ...])
+# IMPORTANT: Until we have a central library, keep this function in sync with
+# the function get_rrd_data() from web/prediction.py.
 def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
     step = 1
     rpn = "%s.%s" % (varname, cf.lower()) # "MAX" -> "max"
@@ -54,7 +56,6 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
     real_fromtime, real_untiltime, step = response[:3]
     values = response[3:]
     return step, values
-
 
 
 daynames = [ "monday", "tuesday", "wednesday", "thursday",

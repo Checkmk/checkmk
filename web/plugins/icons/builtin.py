@@ -394,6 +394,9 @@ multisite_icons_and_actions['perfgraph'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+# TODO: At least for interfaces we have 2 predictive values. But this icon
+# only creates a link to the first one. Add multiple icons or add a navigation
+# element to the prediction page.
 def paint_prediction_icon(what, row, tags, host_custom_vars):
     if what == "service":
         parts = row[what + "_perf_data"].split()

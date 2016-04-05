@@ -24,46 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import defaults
-import sites
 import os
 import time
 
+import defaults
+import config
+import sites
 from lib import *
 
 graph_size = 2000, 700
 
-# Import helper functions from check_mk module prediction.py. Maybe we should
-# find some more clean way some day for creating common Python code between
-# Check_MK CCE and Multisite.
-execfile(defaults.modules_dir + "/prediction.py")
-rrd_path = defaults.rrd_path
-rrdcached_socket = None
-omd_root = None
-try:
-    omd_root = default.omd_root
-    if omd_root:
-        rrdcached_socket = omd_root + "/tmp/run/rrdcached.sock"
-    else:
-        try:
-            rrdcached_socket = config.rrdcached_socket
-        except:
-            pass
-except:
-    pass
 
 def page_graph():
-    host = html.var("host")
+    host    = html.var("host")
     service = html.var("service")
-    dsname = html.var("dsname")
+    dsname  = html.var("dsname")
+
     html.header(_("Prediction for %s - %s - %s") %
             (host, service, dsname),
             javascripts=["prediction"],
             stylesheets=["pages", "prediction"])
 
     # Get current value from perf_data via Livestatus
-    current_value = \
-       get_current_perfdata(host, service, dsname)
+    current_value = get_current_perfdata(host, service, dsname)
 
     dir = "%s/prediction/%s/%s/%s" % (
             defaults.var_dir, host, pnp_cleanup(service), pnp_cleanup(dsname))
@@ -208,13 +191,46 @@ def compute_vertical_scala(low, high):
 
     return vert_scala
 
+
 def get_current_perfdata(host, service, dsname):
-    perf_data = sites.live().query_value("GET services\nFilter: host_name = %s\nFilter: description = %s\nColumns: perf_data" % (
-            lqencode(host), lqencode(service)))
+    perf_data = sites.live().query_value(
+                    "GET services\nFilter: host_name = %s\nFilter: description = %s\n"
+                    "Columns: perf_data" % (lqencode(host), lqencode(service)))
+
     for part in perf_data.split():
         name, rest = part.split("=")
         if name == dsname:
             return float(rest.split(";")[0])
+
+
+# Fetch RRD historic metrics data of a specific service. returns a tuple
+# of (step, [value1, value2, ...])
+# IMPORTANT: Until we have a central library, keep this function in sync with
+# the function get_rrd_data() from modules/prediction.py.
+def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
+    step = 1
+    rpn = "%s.%s" % (varname, cf.lower()) # "MAX" -> "max"
+    query = "GET services\n" \
+          "Columns: rrddata:m1:%s:%d:%d:%d\n" \
+          "Filter: host_name = %s\n" \
+          "Filter: description = %s\n" % (
+             rpn, fromtime, untiltime, step,
+             lqencode(hostname), lqencode(service_description))
+
+    try:
+        response = sites.live().query_row(query)[0]
+    except Exception, e:
+        if opt_debug:
+            raise
+        raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)
+
+    if not response:
+        raise MKGeneralException("Got no historic metrics")
+
+    real_fromtime, real_untiltime, step = response[:3]
+    values = response[3:]
+    return step, values
+
 
 # Compute check levels from prediction data and check parameters
 def swap_and_compute_levels(tg_data, tg_info):

@@ -125,6 +125,7 @@
     * 3020 FIX: netapp_api_volumes: ignore volumes of cluster partner...
     * 3022 FIX: mk_logwatch (linux): now able to handle queries from multiple servers (no longer loosing data)...
     * 3112 FIX: esx_vsphere_counters: made levels configurable
+    * 3113 FIX: windows agent: fixed process handle weren't freed when using wmi-based ps check
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

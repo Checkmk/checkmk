@@ -914,8 +914,8 @@ void section_ps_wmi(OutputProxy &out) {
         while (more) {
             int processId = result.get<int>(L"ProcessId");
 
-            HANDLE process = OpenProcess(
-                PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
+            WinHandle process(OpenProcess(
+                PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId));
             string user = "SYSTEM";
             ExtractProcessOwner(process, user);
             std::wstring process_name;

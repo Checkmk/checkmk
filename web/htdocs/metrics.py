@@ -1177,7 +1177,10 @@ def render_graph_pnp(graph_template, translated_metrics):
             # TODO: beware of division by zero. All metrics are set to 1 here.
             value, unit, color = evaluate(metric_name, translated_metrics)
 
-            expression, explicit_unit_name = metric_name.split("@", 1) # isolate expression
+            if "@" in metric_name:
+                expression, explicit_unit_name = metric_name.rsplit("@", 1) # isolate expression
+            else:
+                expression = metric_name
 
             # Choose a unique name for the derived variable and compute it
             commands += "CDEF:DERIVED%d=%s " % (nr , expression)

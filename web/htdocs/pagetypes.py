@@ -712,7 +712,7 @@ class Overridable:
 
         html.header(self.phrase("title_plural"), stylesheets=["pages", "views", "status"])
         html.begin_context_buttons()
-        html.context_button(_('New'), self.create_url(), "new_" + self.type_name())
+        html.context_button(self.phrase("new"), self.create_url(), "new_" + self.type_name())
 
         # TODO: Remove this legacy code as soon as views, dashboards and reports have been
         # moved to pagetypes.py

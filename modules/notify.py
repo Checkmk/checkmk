@@ -340,7 +340,6 @@ def notification_analyse_backlog(nr):
 
 # TODO: Make use of the generic do_keepalive() mechanism?
 def notify_keepalive():
-    load_module("keepalive")
     register_keepalive_sigint_handler()
     event_keepalive(
         event_function  = notify_notify,

@@ -2521,7 +2521,7 @@ def submit_check_mk_aggregation(hostname, status, output):
 #   '----------------------------------------------------------------------'
 
 # register SIGINT handler for consistent CTRL+C handling
-# TODO: use MKTermiante() signal instead and handle output and exit code in check_mk.py
+# TODO: use MKTerminate() signal instead and handle output and exit code in check_mk.py
 def interrupt_handler(signum, frame):
     sys.stderr.write('<Interrupted>\n')
     sys.exit(1)
@@ -2529,3 +2529,13 @@ def interrupt_handler(signum, frame):
 
 def register_sigint_handler():
     signal.signal(signal.SIGINT, interrupt_handler)
+
+
+
+# register SIGINT handler for consistent CTRL+C handling
+def handle_keepalive_interrupt(signum, frame):
+    raise MKTerminate()
+
+
+def register_keepalive_sigint_handler():
+    signal.signal(signal.SIGINT, handle_keepalive_interrupt)

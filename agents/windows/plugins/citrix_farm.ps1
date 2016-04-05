@@ -89,6 +89,7 @@ foreach ($Controller in $Controllers) {
 	if (!$totalinactive_sessions) {$totalinactive_sessions = 0}
 	$totalinactive_sessions = $totalinactive_sessions | Measure-Object -Sum | %{ $_.Sum }
 	"TotalFarmInactiveSessions $totalinactive_sessions"
+	"<<<<>>>>"
 }
 
 	foreach ($XAmachine in $XAmachines) {
@@ -142,8 +143,10 @@ foreach ($Controller in $Controllers) {
 
 		# Column Serverload / Gets machines by their current load index.
 		$Serverload = $XAmachine  | %{ $_.LoadIndex }
-		"<<<citrix_serverload>>>"
-		"$Serverload"
+		if(-NOT ([string]::IsNullOrEmpty($Serverload))) {
+		    "<<<citrix_serverload>>>"
+		    "$Serverload"
+		}
 
 		# Column SessionCount / Count of number of active / inactive sessions on the machine.
 		$Sessions = $XAmachine | %{ $_.SessionCount }
@@ -164,16 +167,18 @@ foreach ($Controller in $Controllers) {
 		"inactive_sessions 0"
 
 		}
+		 "<<<<>>>>"
 		if ($HostingServerName) {
+            $HostingServerName = $HostingServerName.Replace($DNSdomain,$null)
 
-		$HostingServerName = $HostingServerName.Replace($DNSdomain,$null)
-		"<<<<$HostingServerName>>>>"
-                "<<<citrix_hostsystem>>>"
-		"VMName $HostedMachineName"
+		    "<<<<$HostingServerName>>>>"
+            "<<<citrix_hostsystem>>>"
+		    "VMName $HostedMachineName"
 
-		# Column HypervisorConnectionName / Gets machines with a specific Citrix Virtual Delivery Agent version.
-		$HypervisorConnectionName  = $XAmachine | %{ $_.HypervisorConnectionName }
-		"CitrixPoolName $HypervisorConnectionName"
-		}
+		    # Column HypervisorConnectionName / Gets machines with a specific Citrix Virtual Delivery Agent version.
+		    $HypervisorConnectionName  = $XAmachine | %{ $_.HypervisorConnectionName }
+		    "CitrixPoolName $HypervisorConnectionName"
+		    "<<<<>>>>"
+        }
 	}
 "<<<<>>>>"

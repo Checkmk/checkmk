@@ -1102,8 +1102,8 @@ void section_ps_wmi(OutputProxy &out) {
         while (more) {
             int processId = result.get<int>(L"ProcessId");
 
-            HANDLE process = OpenProcess(
-                PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
+            WinHandle process(OpenProcess(
+                PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId));
             string user = "SYSTEM";
             ExtractProcessOwner(process, user);
             std::wstring process_name;
@@ -1836,6 +1836,9 @@ void section_eventlog(OutputProxy &out, const Environment &env) {
                 }
                 if (!found_hint) {
                     HANDLE hEventlog = OpenEventLog(NULL, it_st->name.c_str());
+                    OnScopeExit exitHandler([hEventlog] () {
+                            CloseEventLog(hEventlog);
+                            });
                     if (hEventlog) {
                         DWORD no_records;
                         DWORD oldest_record;

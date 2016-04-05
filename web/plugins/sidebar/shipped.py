@@ -1070,12 +1070,13 @@ class BookmarkList(pagetypes.Overridable, pagetypes.Base):
     @classmethod
     def phrase(self, what):
         return {
-            "title"          : _("Bookmark List"),
-            "title_plural"   : _("Bookmark Lists"),
-            "add_to"         : _("Add to Bookmark List"),
-            "clone"          : _("Clone Bookmark List"),
-            "create"         : _("Create Bookmark List"),
-            "edit"           : _("Edit Bookmark List"),
+            "title"          : _("Bookmark list"),
+            "title_plural"   : _("Bookmark lists"),
+            "add_to"         : _("Add to bookmark list"),
+            "clone"          : _("Clone bookmark list"),
+            "create"         : _("Create bookmark list"),
+            "edit"           : _("Edit bookmark list"),
+            "new"            : _("New list"),
         }.get(what, pagetypes.Base.phrase(what))
 
 

@@ -13,7 +13,6 @@
     * 3343 FIX: MKP: Verifying minimal version of packages during installation...
     * 3349 FIX: Added rule to disable Inline-SNMP per host...
 
-
     Checks & Agents:
     * 3183 aruba_wlc_aps: new check which monitors the provisioned accesspoints of an Aruba Network WLAN Controller
     * 3184 varnish, varnish.backend, varnish.backend_success_ratio, varnish.cache, varnish.cache_hit_ratio, varnish.client, varnish.esi, varnish.fetch, varnish.objects, varnish.worker, varnish.worker_thread_ratio: new checks which monitor HTTP Accelerator Statistics via varnishstat on Linux
@@ -210,6 +209,7 @@
     * 3353 FIX: Displaying disabled/offline host state in WATO host list now
     * 3354 FIX: Added missing option to exclude IP addresses by regex
     * 3357 FIX: Fixed service conditions of Disk IO related rulesets
+    * 3359 FIX: Fixed exception when trying to edit non existant host...
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

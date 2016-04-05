@@ -640,12 +640,11 @@ class Folder(BaseFolder):
             folder = Folder.folder(html.var("folder"))
         else:
             host_name = html.var("host")
+            folder = Folder.root_folder()
             if host_name: # find host with full scan. Expensive operation
                 host = Host.host(host_name)
                 if host:
                     folder = host.folder()
-            else:
-                folder = Folder.root_folder()
 
         Folder.set_current(folder)
         return folder

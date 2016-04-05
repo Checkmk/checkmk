@@ -77,13 +77,13 @@ public:
     }
 
     bool supportIPV6() const { return _support_ipv6; }
+    bool encrypted() const { return _encrypted; }
+    bool encrypted_realtime() const { return _encrypted_rt; }
 
     int realtimeTimeout() const { return _realtime_timeout; }
     std::string passphrase() const { return _passphrase; }
 
-    bool useRealtimeMonitoring() const {
-        return !_passphrase.empty() && (_realtime_sections != 0);
-    }
+    bool useRealtimeMonitoring() const { return _realtime_sections != 0; }
 
     // return true if any section requires wmi functionality
     bool useWMI() const { return _ps_use_wmi; }
@@ -200,6 +200,8 @@ private:
     bool _logwatch_send_initial_entries;
 
     bool _support_ipv6;
+    bool _encrypted;
+    bool _encrypted_rt;
 
     Environment _environment;
 

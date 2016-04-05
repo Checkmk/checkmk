@@ -2153,6 +2153,42 @@ register_rule(group,
 )
 
 register_rule(group,
+    "agent_encryption",
+    Dictionary(
+        elements = [
+            ( "passphrase", PasswordSpec(title = _("Encryption secret"), allow_empty = False, hidden = True) ),
+            ( "use_regular", RadioChoice(title = _("Encryption for Agent"),
+                    help = _("Choose if the agent agents encrypt packages. This controls whether "
+                             "baked agents encrypt their output and whether check_mk expects "
+                             "encrypted output. "
+                             "Please note: If you opt to enforce encryption, "
+                             "agents that don't support encryption will not work any more. "
+                             "Further note: This only affects regular agents, not special agents "
+                             "aka datasource programs."),
+                    default_value = "disable",
+                    choices = [
+                        ( "enforce", _("Enforce (drop unencrypted data)") ),
+                        ( "allow",   _("Enable  (accept encrypted and unencrypted data)") ),
+                        ( "disable", _("Disable (drop encrypted data)") )
+                    ])
+            ),
+            ( "use_realtime", RadioChoice(title = _("Encryption for Realtime Updates"),
+                    help = _("Choose if realtime updates are sent/expected encrypted"),
+                    default_value = "enforce",
+                    choices = [
+                        ( "enforce", _("Enforce (drop unencrypted data)") ),
+                        ( "allow",   _("Enable  (accept encrypted and unencrypted data)") ),
+                        ( "disable", _("Disable (drop encrypted data)") )
+                    ])
+            ),
+        ],
+        optional_keys = []
+    ),
+    title = _("Encryption"),
+    help = _("Control encryption of data sent from agent to host."),
+)
+
+register_rule(group,
     "check_mk_exit_status",
     Dictionary(
         elements = [

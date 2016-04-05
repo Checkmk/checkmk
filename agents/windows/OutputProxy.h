@@ -36,7 +36,7 @@ public:
 
     // write data without any modification to underlying buffer
     virtual void writeBinary(const char *buffer, size_t size) = 0;
-    virtual void flush() = 0;
+    virtual void flush(bool last) = 0;
 };
 
 class FileOutputProxy : public OutputProxy {
@@ -47,7 +47,7 @@ public:
 
     virtual void output(const char *format, ...) override;
     virtual void writeBinary(const char *buffer, size_t size) override;
-    virtual void flush() override;
+    virtual void flush(bool last) override;
 };
 
 class BufferedSocketProxy : public OutputProxy {
@@ -71,7 +71,7 @@ public:
 
     virtual void output(const char *format, ...) override;
     virtual void writeBinary(const char *buffer, size_t size) override;
-    virtual void flush() override;
+    virtual void flush(bool last) override;
 
 protected:
     bool flushInt();
@@ -96,7 +96,7 @@ public:
 
     virtual void output(const char *format, ...) override;
     // writeBinary is NOT overridden so calls to it are not encrypted!
-    virtual void flush() override;
+    virtual void flush(bool last) override;
 };
 
 #endif  // OutputProxy_h

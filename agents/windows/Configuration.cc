@@ -49,6 +49,8 @@ Configuration::Configuration(const Environment &env)
     , _section_flush(true)
     , _logwatch_send_initial_entries(false)
     , _support_ipv6(true)
+    , _encrypted(false)
+    , _encrypted_rt(true)
     , _environment(env)
     , _ps_use_wmi(false)
     , _ps_full_path(false) {
@@ -62,13 +64,6 @@ Configuration::Configuration(const Environment &env)
 
     // ensure only supported sections are enabled for realtime updates
     _realtime_sections &= VALID_REALTIME_SECTIONS;
-
-    if ((_realtime_sections == 0) != (_passphrase.empty())) {
-        fprintf(
-            stderr,
-            "for realtime monitoring, both realtime sections and passphrase "
-            "have to be set and valid.");
-    }
 
     postProcessOnlyFrom();
 }
@@ -109,6 +104,10 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value) {
     } else if (!strcmp(var, "port")) {
         _port = atoi(value);
         return true;
+    } else if (!strcmp(var, "encrypted")) {
+        return parseBoolean(value, _encrypted);
+    } else if (!strcmp(var, "encrypted_rt")) {
+        return parseBoolean(value, _encrypted_rt);
     } else if (!strcmp(var, "realtime_port")) {
         _realtime_port = atoi(value);
         return true;

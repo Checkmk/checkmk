@@ -371,7 +371,7 @@ class TextAscii(ValueSpec):
     def canonical_value(self):
         return ""
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix, value, hidden=False):
         if value == None:
             value = ""
         elif type(value) != unicode:
@@ -383,7 +383,13 @@ class TextAscii(ValueSpec):
 
         if self._prefix_buttons:
             html.write('<div style="white-space: nowrap;">')
-        html.text_input(varprefix, value, size = self._size, read_only = self._read_only, cssclass = self._cssclass)
+
+        if hidden:
+            type_ = "password"
+        else:
+            type_ = "text"
+
+        html.text_input(varprefix, value, size = self._size, read_only = self._read_only, cssclass = self._cssclass, type = type_)
         if self._prefix_buttons:
             self.render_buttons()
             html.write('</div>')
@@ -3303,13 +3309,19 @@ class Password(TextAscii):
 
 class PasswordSpec(TextAscii):
     def __init__(self, **kwargs):
+        self._hidden = kwargs.get('hidden', False)
+        if self._hidden:
+            kwargs["type"] = "password"
         TextAscii.__init__(self, **kwargs)
 
     def render_input(self, varprefix, value):
-        TextAscii.render_input(self, varprefix, value)
+        TextAscii.render_input(self, varprefix, value, hidden=self._hidden)
         if not value:
             html.icon_button("#", _(u"Randomize password"), "random",
                 onclick="vs_passwordspec_randomize(this);")
+        if self._hidden:
+            html.icon_button("#", _(u"Show/Hide password"), "showhide",
+                             onclick="vs_toggle_hidden(this);")
 
 class FileUpload(ValueSpec):
     def __init__(self, **kwargs):

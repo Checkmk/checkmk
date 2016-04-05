@@ -43,7 +43,7 @@ void FileOutputProxy::writeBinary(const char *buffer, size_t size) {
     fwrite(buffer, 1, size, _file);
 }
 
-void FileOutputProxy::flush() {
+void FileOutputProxy::flush(bool) {
     // nop
 }
 
@@ -83,7 +83,7 @@ void BufferedSocketProxy::writeBinary(const char *buffer, size_t size) {
     }
 }
 
-void BufferedSocketProxy::flush() {
+void BufferedSocketProxy::flush(bool) {
     int tries = 10;
     while ((_length > 0) && (tries > 0)) {
         --tries;
@@ -179,14 +179,16 @@ void EncryptingBufferedSocketProxy::output(const char *format, ...) {
     }
 }
 
-void EncryptingBufferedSocketProxy::flush() {
+void EncryptingBufferedSocketProxy::flush(bool last) {
     // this assumes the plain buffer is large enouph for one measly block
-    char *buffer = &_plain[0];
-    DWORD required_size = _crypto.encrypt(reinterpret_cast<BYTE *>(buffer),
-                                          _written, _plain.size(), true);
-    writeBinary(buffer, required_size);
+    if (last) {
+        char *buffer = &_plain[0];
+        DWORD required_size = _crypto.encrypt(reinterpret_cast<BYTE *>(buffer),
+                                              _written, _plain.size(), true);
+        writeBinary(buffer, required_size);
 
-    _written = 0;
+        _written = 0;
+    }
 
-    BufferedSocketProxy::flush();
+    BufferedSocketProxy::flush(last);
 }

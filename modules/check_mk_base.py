@@ -807,6 +807,29 @@ def get_agent_info_program(commandline):
             raise MKAgentError("Agent exited with code %d: %s" % (exitstatus, stderr))
     return stdout
 
+
+def decrypt_package(encrypted_pkg, encryption_key):
+    from Crypto.Cipher import AES
+    from hashlib import md5
+
+    unpad = lambda s : s[0:-ord(s[-1])]
+
+    # Adapt OpenSSL handling of key and iv
+    def derive_key_and_iv(password, key_length, iv_length):
+        d = d_i = ''
+        while len(d) < key_length + iv_length:
+            d_i = md5(d_i + password).digest()
+            d += d_i
+        return d[:key_length], d[key_length:key_length+iv_length]
+
+    key, iv = derive_key_and_iv(encryption_key, 32, AES.block_size)
+    decryption_suite = AES.new(key, AES.MODE_CBC, iv)
+    decrypted_pkg = decryption_suite.decrypt(encrypted_pkg)
+
+    # Strip of fill bytes of openssl
+    return unpad(decrypted_pkg)
+
+
 # Get data in case of TCP
 def get_agent_info_tcp(hostname, ipaddress, port = None):
     if not ipaddress:
@@ -814,6 +837,8 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
 
     if port is None:
         port = agent_port_of(hostname)
+
+    encryption_settings = agent_encryption_settings(hostname)
 
     try:
         s = socket.socket(is_ipv6_primary(hostname) and socket.AF_INET6 or socket.AF_INET,
@@ -848,6 +873,21 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
         s.close()
         if len(output) == 0: # may be caused by xinetd not allowing our address
             raise MKAgentError("Empty output from agent at TCP port %d" % port)
+
+        if encryption_settings["use_regular"] != "disabled":
+            try:
+                protocol_version = int(output[0:2])
+                # currently ignoring version and timestamp
+                output = decrypt_package(output[2:], encryption_settings["passphrase"])
+            except Exception, e:
+                if encryption_settings["use_regular"] == "enforce":
+                    raise MKGeneralException("Failed to decrypt agent output: %s" % e)
+                else:
+                    # of course the package might indeed have been encrypted but
+                    # in an incorrect format, but how would we find that out?
+                    # In this case processing the output will fail
+                    pass
+
         return output
     except MKAgentError, e:
         raise

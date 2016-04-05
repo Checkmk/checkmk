@@ -2019,6 +2019,17 @@ function vs_passwordspec_randomize(img) {
     oInput.value = password;
 }
 
+function vs_toggle_hidden(img) {
+    var oInput = img;
+    while (oInput.tagName != "INPUT")
+        oInput = oInput.previousElementSibling;
+    if (oInput.type == "text") {
+        oInput.type = "password";
+    } else {
+        oInput.type = "text";
+    }
+}
+
 function vs_duallist_enlarge(field_suffix, varprefix) {
     var field = document.getElementById(varprefix + '_' + field_suffix);
     if (field.id != varprefix + '_selected') {

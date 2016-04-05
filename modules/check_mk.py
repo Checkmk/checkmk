@@ -2223,6 +2223,14 @@ def agent_port_of(hostname):
     else:
         return ports[0]
 
+def agent_encryption_settings(hostname):
+    settings = host_extra_conf(hostname, agent_encryption)
+    if settings:
+        return settings[0]
+    else:
+        return {'use_regular': 'disabled',
+                'use_realtime': 'enforce'}
+
 def snmp_port_of(hostname):
     ports = host_extra_conf(hostname, snmp_ports)
     if len(ports) == 0:

@@ -75,6 +75,16 @@ if type timeout >/dev/null 2>&1 ; then
     export -f waitmax
 fi
 
+if [ -f $MK_CONFDIR/encryption.cfg ] ; then
+    source $MK_CONFDIR/encryption.cfg
+fi
+
+if [ "$ENCRYPTED" == "yes" ] ; then
+    echo -n "00" # protocol version
+    exec > >(openssl enc -aes-256-cbc -k $PASSPHRASE -nosalt)
+fi
+
+
 #
 # CHECK SECTIONS
 #
@@ -179,6 +189,11 @@ function run_real_time_checks()
 
     . $MK_CONFDIR/real_time_checks.cfg
 
+    if [ "$PASSPHRASE" != "" ] ; then
+        # new mechanism to set the passphrase has priority
+        RTC_SECRET=$PASSPHRASE
+    fi
+
     while true; do
         # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
         if [ ! -e $PIDFILE ] || [ $(<$PIDFILE) -ne $$ ] || [ $RTC_TIMEOUT -eq 0 ]; then
@@ -186,13 +201,22 @@ function run_real_time_checks()
         fi
 
         for SECTION in $RTC_SECTIONS; do
+            if [ "$ENCRYPTED_RT" != "no" ] ; then
+                PROTOCOL=00
+            else
+                PROTOCOL=99
+            fi
             # Be aware of maximum packet size. Maybe we need to check the size of the section
             # output and do some kind of nicer error handling.
             # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
             # dd is used to concatenate the output of all commands to a single write/block => udp packet
-            { echo -n 00 ;
+            { echo -n $PROTOCOL ;
               date +%s | tr -d '\n' ;
-              export RTC_SECRET=$RTC_SECRET ; section_$SECTION | openssl enc -aes-256-cbc -pass env:RTC_SECRET -nosalt ;
+              if [ "$ENCRYPTED_RT" != "no" ] ; then
+                  export RTC_SECRET=$RTC_SECRET ; section_$SECTION | openssl enc -aes-256-cbc -pass env:RTC_SECRET -nosalt ;
+              else
+                  section_$SECTION ;
+              fi
             } | dd bs=9999 iflag=fullblock 2>/dev/null >/dev/udp/$REMOTE/$RTC_PORT
         done
 

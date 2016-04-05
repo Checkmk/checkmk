@@ -31,6 +31,7 @@
 monitoring_core                    = "nagios" # other option: "cmc"
 agent_port                         = 6556
 agent_ports                        = []
+agent_encryption                   = []
 snmp_ports                         = [] # UDP ports used for SNMP
 tcp_connect_timeout                = 5.0
 use_dns_cache                      = True # prevent DNS by using own cache file

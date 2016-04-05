@@ -249,28 +249,34 @@ def stack(apoints, bpoints, scale):
 # copy&paste. This was neccessary since there is currently no common
 # code between Check_MK CCE and Multisite.
 def compute_levels(params, ref_value, stdev):
-    levels = []
-    for what, sig in [ ( "upper", 1 ), ( "lower", -1 )]:
-        p = "levels_" + what
-        if p in params:
-            how, (warn, crit) = params[p]
-            if how == "absolute":
-                this_levels = (ref_value + (sig * warn), ref_value + (sig * crit))
+    return compute_level(params, ref_value, stdev, "levels_upper", 1), \
+           compute_level(params, ref_value, stdev, "levels_lower", -1)
 
-            elif how == "relative":
-                this_levels = (ref_value + sig * (ref_value * warn / 100),
-                               ref_value + sig * (ref_value * crit / 100))
 
-            else: #  how == "stdev":
-                this_levels = (ref_value + sig * (stdev * warn),
-                              ref_value + sig * (stdev * crit))
-            if what == "upper" and "levels_upper_min" in params:
-                limit_warn, limit_crit = params["levels_upper_min"]
-                this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
-            levels.append(this_levels)
-        else:
-            levels.append((None, None))
+def compute_level(params, ref_value, stdev, param, sig):
+    if param not in params:
+        return None, None
+
+    how, (warn, crit) = params[param]
+    if how == "absolute":
+        levels = (ref_value + (sig * warn),
+                  ref_value + (sig * crit))
+
+    elif how == "relative":
+        levels = (ref_value + sig * (ref_value * warn / 100),
+                  ref_value + sig * (ref_value * crit / 100))
+
+    else: #  how == "stdev":
+        levels = (ref_value + sig * (stdev * warn),
+                  ref_value + sig * (stdev * crit))
+
+    if param == "levels_upper" and "levels_upper_min" in params:
+        limit_warn, limit_crit = params["levels_upper_min"]
+        levels = (max(limit_warn, levels[0]),
+                  max(limit_crit, levels[1]))
+
     return levels
+
 
 def compute_vertical_range(swapped):
     mmin, mmax = 0.0, 0.0

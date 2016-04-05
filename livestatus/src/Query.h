@@ -93,15 +93,12 @@ class Query {
 public:
     Query(const std::list<std::string> &lines, OutputBuffer *output, Table *);
     ~Query();
+    void process();
     bool processDataset(void *);
     bool timelimitReached();
-    void start();
-    void finish();
     void setDefaultColumns(const char *);
     void addColumn(Column *column);
-    void setShowColumnHeaders(bool x) { _show_column_headers = x; }
     void setError(int error_code, const char *msg);
-    bool hasNoColumns();
     contact *authUser() { return _auth_user; }
     void outputDatasetBegin();
     void outputDatasetEnd();
@@ -160,6 +157,8 @@ private:
     void parseWaitTriggerLine(char *line);
     void parseWaitObjectLine(char *line);
     void parseLocaltimeLine(char *line);
+    void start();
+    void finish();
     int lookupOperator(const char *opname);
     Column *createDummyColumn(const char *name);
 };

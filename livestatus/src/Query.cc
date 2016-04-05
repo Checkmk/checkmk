@@ -169,6 +169,13 @@ Query::Query(const list<string> &lines, OutputBuffer *output, Table *table)
             break;
         }
     }
+
+    if (_columns.empty() && !doStats()) {
+        table->addAllColumnsToQuery(this);
+        // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
+        // here, is that really what we want?
+        _show_column_headers = true;
+    }
 }
 
 Query::~Query() {
@@ -198,8 +205,6 @@ void Query::addColumn(Column *column) { _columns.push_back(column); }
 void Query::setError(int error_code, const char *msg) {
     _output->setError(error_code, msg);
 }
-
-bool Query::hasNoColumns() { return _columns.empty() && !doStats(); }
 
 int Query::lookupOperator(const char *opname) {
     int opid;
@@ -382,10 +387,6 @@ void Query::parseStatsNegateLine(char *line) {
 }
 
 void Query::parseStatsLine(char *line) {
-    if (_table == nullptr) {
-        return;
-    }
-
     // first token is either aggregation operator or column name
     char *col_or_op = next_field(&line);
     if (col_or_op == nullptr) {
@@ -472,10 +473,6 @@ void Query::parseStatsLine(char *line) {
 }
 
 void Query::parseFilterLine(char *line, bool is_filter) {
-    if (_table == nullptr) {
-        return;
-    }
-
     char *column_name = next_field(&line);
     if (column_name == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER, "empty filter line");
@@ -523,9 +520,6 @@ void Query::parseFilterLine(char *line, bool is_filter) {
 }
 
 void Query::parseAuthUserHeader(char *line) {
-    if (_table == nullptr) {
-        return;
-    }
     _auth_user = find_contact(line);
     if (_auth_user == nullptr) {
         // Do not handle this as error any more. In a multi site setup
@@ -544,9 +538,6 @@ void Query::parseStatsGroupLine(char *line) {
 }
 
 void Query::parseColumnsLine(char *line) {
-    if (_table == nullptr) {
-        return;
-    }
     char *column_name;
     while (nullptr != (column_name = next_field(&line))) {
         Column *column = _table->column(column_name);
@@ -758,10 +749,6 @@ void Query::parseWaitTriggerLine(char *line) {
 }
 
 void Query::parseWaitObjectLine(char *line) {
-    if (_table == nullptr) {
-        return;
-    }
-
     char *objectspec = lstrip(line);
     _wait_object = _table->findObject(objectspec);
     if (_wait_object == nullptr) {
@@ -810,6 +797,12 @@ void Query::parseLocaltimeLine(char *line) {
 }
 
 bool Query::doStats() { return !_stats_columns.empty(); }
+
+void Query::process() {
+    start();
+    _table->answerQuery(this);
+    finish();
+}
 
 void Query::start() {
     doWait();

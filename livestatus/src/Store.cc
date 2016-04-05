@@ -24,13 +24,12 @@
 
 #include "Store.h"
 #include <string.h>
-#include <sys/time.h>
 #include <time.h>
+#include <chrono>
 #include <utility>
 #include "InputBuffer.h"
 #include "OutputBuffer.h"
 #include "Query.h"
-#include "Table.h"
 #include "global_counters.h"
 #include "logger.h"
 #include "strutil.h"
@@ -43,12 +42,16 @@
 #include "tables.h"  // IWYU pragma: keep
 #undef EXTERN
 
+using std::chrono::duration_cast;
+using std::chrono::microseconds;
+using std::chrono::system_clock;
 using std::list;
 using std::lock_guard;
 using std::make_pair;
 using std::mutex;
 using std::pair;
 using std::string;
+using std::to_string;
 
 extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
@@ -188,34 +191,27 @@ void Store::answerCommandRequest(const char *command) {
 void Store::answerGetRequest(const list<string> &lines, OutputBuffer *output,
                              const char *tablename) {
     output->reset();
+
     if (tablename[0] == 0) {
         output->setError(RESPONSE_CODE_INVALID_REQUEST,
                          "Invalid GET request, missing tablename");
+        return;
     }
+
     Table *table = findTable(tablename);
     if (table == nullptr) {
         output->setError(RESPONSE_CODE_NOT_FOUND,
                          "Invalid GET request, no such table '%s'", tablename);
+        return;
     }
-    Query query(lines, output, table);
 
-    if ((table != nullptr) && !output->hasError()) {
-        if (query.hasNoColumns()) {
-            table->addAllColumnsToQuery(&query);
-            query.setShowColumnHeaders(true);
-        }
-        struct timeval before, after;
-        gettimeofday(&before, nullptr);
-        query.start();
-        table->answerQuery(&query);
-        query.finish();
-        gettimeofday(&after, nullptr);
-        unsigned long ustime = (after.tv_sec - before.tv_sec) * 1000000 +
-                               (after.tv_usec - before.tv_usec);
-        if (g_debug_level > 0) {
-            logger(LG_INFO,
-                   "Time to process request: %lu us. Size of answer: %d bytes",
-                   ustime, output->size());
-        }
+    auto start = system_clock::now();
+    Query(lines, output, table).process();
+    if (g_debug_level > 0) {
+        auto elapsed = duration_cast<microseconds>(system_clock::now() - start);
+        logger(LG_INFO, "%s",
+               ("Time to process request: " + to_string(elapsed.count()) +
+                " us. Size of answer: " + to_string(output->size()) + " bytes")
+                   .c_str());
     }
 }

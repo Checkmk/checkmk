@@ -1,0 +1,9 @@
+Title: Fixed exception when trying to edit non existant host
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b10
+Date: 1459852710
+Class: fix
+
+Fixed the exception "local variable 'folder' referenced before assignment".

@@ -14,6 +14,7 @@
 
     WATO:
     * 3239 The delay and the period of notifications can be fractions of a minute now.
+    * 3359 FIX: Fixed exception when trying to edit non existant host...
 
 
 1.2.8b9:

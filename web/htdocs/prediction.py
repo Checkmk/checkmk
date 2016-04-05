@@ -51,6 +51,10 @@ def page_graph():
     dir = "%s/prediction/%s/%s/%s" % (
             defaults.var_dir, host, pnp_cleanup(service), pnp_cleanup(dsname))
 
+    if not os.path.exists(dir):
+        raise MKGeneralException(_("There is currently no predition information "
+                                   "available for this for this service."))
+
     # Load all prediction information, sort by time of generation
     tg_name = html.var("timegroup")
     timegroup = None
@@ -72,8 +76,11 @@ def page_graph():
                 for tg_info in timegroups ]
 
     if not timegroup:
-        timegroup  = timegroups[0]
-        tg_name = choices[0][0]
+        if timegroups:
+            timegroup  = timegroups[0]
+            tg_name = choices[0][0]
+        else:
+            raise MKGeneralException(_("Missing prediction information."))
 
     html.begin_form("prediction")
     html.write(_("Show prediction for "))
@@ -82,7 +89,12 @@ def page_graph():
     html.end_form()
 
     # Get prediction data
-    tg_data = eval(file(dir + "/" + timegroup["name"]).read())
+    try:
+        path = dir + "/" + timegroup["name"]
+        tg_data = eval(file(path).read())
+    except IOError:
+        raise MKGeneralException(_("Failed to read the prediction data from <tt>%s</tt>.") % path)
+
     swapped = swap_and_compute_levels(tg_data, timegroup)
     vertical_range = compute_vertical_range(swapped)
     legend = [

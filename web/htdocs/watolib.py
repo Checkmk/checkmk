@@ -754,10 +754,14 @@ class Folder(BaseFolder):
         if host_name in variables["host_attributes"]:
             attributes = variables["host_attributes"][host_name]
 
-        # Otherwise it is in import from some manual old version of from some
-        # CMDB and we reconstruct the attributes. That way the folder inheritance
-        # information is not available and all tags are set explicitely
+            # Old WATO was saving "site" attribute with value of None. Skip this key.
+            if "site" in attributes and attributes["site"] == None:
+                del attributes["site"]
+
         else:
+            # Otherwise it is an import from some manual old version of from some
+            # CMDB and we reconstruct the attributes. That way the folder inheritance
+            # information is not available and all tags are set explicitely
             attributes = {}
             alias = self._get_alias_from_extra_conf(host_name, variables)
             if alias != None:

@@ -1,0 +1,10 @@
+Title: Fixed exception when handling syntax errors while loading pagetype files
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b10
+Date: 1459957038
+
+

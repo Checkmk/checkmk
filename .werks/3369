@@ -1,0 +1,9 @@
+Title: Printing configuration warning when host references itself as parent
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b10
+Date: 1459948099
+Class: fix
+
+

@@ -124,6 +124,9 @@ declare_host_attribute(ParentsAttribute(),
 
 def validate_host_parents(host):
     for parent_name in host.parents():
+        if parent_name == host.name():
+            raise MKUserError(None, _("You configured the host to be it's own parent, which is not allowed."))
+
         parent = Host.host(parent_name)
         if not parent:
             raise MKUserError(None, _("You defined the non-existing host '%s' as a parent.") % parent_name)

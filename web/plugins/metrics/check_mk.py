@@ -5278,6 +5278,22 @@ graph_info.append({
         ( "user",                           "area"  ),
         ( "system",                         "stack" ),
         ( "io_wait",                        "stack" ),
+        ( "cpu_util_steal",                 "stack" ),
+        ( "user,system,io_wait,cpu_util_steal,+,+,+#004080", "line", _("Total") ),
+    ],
+    "conflicting_metrics" : [
+        "cpu_util_guest",
+    ],
+    "omit_zero_metrics" : True,
+    "range" : (0, 100),
+})
+
+graph_info.append({
+    "title"   : _("CPU utilization"),
+    "metrics" : [
+        ( "user",                           "area"  ),
+        ( "system",                         "stack" ),
+        ( "io_wait",                        "stack" ),
         ( "cpu_util_guest",                 "stack" ),
         ( "cpu_util_steal",                 "stack" ),
         ( "user,system,io_wait,cpu_util_guest,cpu_util_steal,+,+,+,+#004080", "line", _("Total") ),

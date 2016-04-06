@@ -1,0 +1,9 @@
+Title: Disallow scheduling downtimes with an end date that is before the start date
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b10
+Date: 1459949875
+Class: fix
+
+

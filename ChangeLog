@@ -20,6 +20,7 @@
     * 3321 FIX: Globes in dashboards now correctly reflect selected WATO folder...
     * 3364 FIX: Fixed exception when creating a view of a single log entry...
     * 3326 FIX: Fixed white text on white background in mobile GUI
+    * 3327 FIX: Disallow scheduling downtimes with an end date that is before the start date
 
     WATO:
     * 3239 The delay and the period of notifications can be fractions of a minute now.

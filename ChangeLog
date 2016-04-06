@@ -221,6 +221,7 @@
     * 3363 FIX: Exceptions in WATO Web-API are now rendered as plain text messages
     * 3324 FIX: Do not crash whole catalog of check plugins if one man page is broken
     * 3325 FIX: WATO CSV import: fix missing first line in preview after user error
+    * 3365 FIX: Cleaned up wrong counting of parents when renaming a host
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

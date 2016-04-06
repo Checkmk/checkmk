@@ -1,0 +1,10 @@
+Title: Cleaned up wrong counting of parents when renaming a host
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1459936688
+
+

@@ -1,0 +1,12 @@
+Title: Default cloned views to be not public
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.8b10
+Date: 1459950688
+Class: feature
+
+If you create a view as a clone from an existing view than the new view
+defaults <b>not</b> to be public. Previously the public-flag was cloned
+as well. That could lead into trouble by an admin overriding the views of
+others by that way.

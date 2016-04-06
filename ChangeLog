@@ -16,6 +16,7 @@
     * 3370 FIX: check_mail: Fixed mail parsing bug when using POP3
 
     Multisite:
+    * 3328 Default cloned views to be not public...
     * 3355 FIX: Fixed possible broken HW-/SW-Inventory history view
     * 3021 FIX: interface metrics: fixed broken interface metrics when using nagios core...
     * 3360 FIX: Fixed different exceptions in predictive monitoring GUI

@@ -1,0 +1,10 @@
+Title: Exceptions in WATO Web-API are now rendered as plain text messages
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1459933673
+
+

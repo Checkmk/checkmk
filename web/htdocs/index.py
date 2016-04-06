@@ -203,7 +203,7 @@ def fail_silently():
 # Webservice functions may decide to get a normal result code
 # but a text with an error message in case of an error
 def plain_error():
-    return html.has_var("_plain_error")
+    return html.has_var("_plain_error") or html.myfile == "webapi"
 
 
 def page_not_found():

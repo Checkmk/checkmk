@@ -410,8 +410,8 @@ dashlet_types["pnpgraph"] = {
             ],
         )),
         ("source", Integer(
-            title = _('Source (n\'th Graph)'),
-            default_value = 0,
+            title = _('Source (n\'th graph)'),
+            default_value = 1,
             minvalue = 1,
         )),
         ("show_legend", Checkbox(

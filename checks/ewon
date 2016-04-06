@@ -55,11 +55,11 @@ oxyreduct_tag_map = {
             "incident",       "O2 high",    "O2 low",         "alarms",
         ]},
 
-    5: {"flags": "00??????0000?101",
+    5: {"flags": "00??????00**0101",
         "flag_names": [
             "recovery",      "maintenance",       "",                 "",
             "",              "",                  "",                 "",
-            "warnings",      "incidents",         "N2 to safe area",  "N2 from safe area",
+            "warnings",      "incidents",         "N2 to safe area",  "N2 request from safe area",
             "N2 via outlet", "N2 via compressor", "N2-supply locked", "N2-supply open"
         ]},
     6: {"name": "O2 minimum", "levels": (16, 17, 14, 13), "scale": 0.01, "unit": "%",

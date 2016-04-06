@@ -34,8 +34,6 @@ try:
 except ImportError:
     import json
 
-# TODO: Whey not user super() for calling the functions of all classes?
-
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |
 #   |                       | __ )  __ _ ___  ___                          |
@@ -48,8 +46,10 @@ except ImportError:
 #   |  or PageRenderer.                                                    |
 #   '----------------------------------------------------------------------'
 
-class Base:
+class Base(object):
     def __init__(self, d):
+        super(Base, self).__init__()
+
         # The dictionary with the name _ holds all information about
         # the page in question - as a dictionary that can be loaded
         # and saved to files using repr().
@@ -63,6 +63,7 @@ class Base:
 
     def internal_representation(self):
         return self._
+
 
     # You always must override the following method. Not all phrases
     # might be neccessary depending on the type of you page.
@@ -253,6 +254,11 @@ class Base:
                 return instance
 
 
+    @classmethod
+    def type_name(self):
+        raise NotImplementedError()
+
+
 #.
 #   .--PageRenderer--------------------------------------------------------.
 #   |   ____                  ____                _                        |
@@ -267,7 +273,7 @@ class Base:
 #   |  pages.
 #   '----------------------------------------------------------------------'
 
-class PageRenderer:
+class PageRenderer(Base):
     # Stuff to be overridden by the implementation of actual page types
 
     # TODO: Das von graphs.py rauspfluecken. Also alles, was man
@@ -353,7 +359,7 @@ class PageRenderer:
 #   |  Examples: views, dashboards, graphs collections                     |
 #   '----------------------------------------------------------------------'
 
-class Overridable:
+class Overridable(Base):
     @classmethod
     def sanitize(self, d):
         d.setdefault("public", False)
@@ -961,7 +967,7 @@ class Overridable:
 #   |  graphs.                                                             |
 #   '----------------------------------------------------------------------'
 
-class Container:
+class Container(Base):
     @classmethod
     def sanitize(self, d):
         d.setdefault("elements", [])

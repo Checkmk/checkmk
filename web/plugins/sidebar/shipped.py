@@ -1060,11 +1060,7 @@ div.snapin table.master_control td img.iconbutton {
 #   | Shareable lists of bookmarks                                         |
 #   '----------------------------------------------------------------------'
 
-class BookmarkList(pagetypes.Overridable, pagetypes.Base):
-    def __init__(self, d):
-        pagetypes.Base.__init__(self, d)
-
-
+class BookmarkList(pagetypes.Overridable):
     @classmethod
     def type_name(self):
         return "bookmark_list"

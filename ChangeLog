@@ -37,6 +37,7 @@
     * 3365 FIX: Cleaned up wrong counting of parents when renaming a host
     * 3366 FIX: Fixed renaming of hosts not updating parents configured in folders
     * 3369 FIX: Printing configuration warning when host references itself as parent
+    * 3371 FIX: Be compatible to old site=None setting read from hosts.mk...
 
     HW/SW-Inventory:
     * 3319 HW/SW-Inventory service can now be OK in case of unreachable host...

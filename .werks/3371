@@ -1,0 +1,14 @@
+Title: Be compatible to old site=None setting read from hosts.mk
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b10
+Date: 1459951352
+Class: fix
+
+Old WATO versions saved the site attribute with a value of None which
+is not allowed in current WATO versions. Either the key has to be missing
+when no specific site is configured or the key has to be missing. Cleaned
+this up.
+
+Fixed exception: TypeError (cannot concatenate 'str' and 'NoneType' objects)

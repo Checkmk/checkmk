@@ -1265,7 +1265,11 @@ def visual_title(what, visual):
 # the variables "event_id" and "history_line" to be set in order
 # to exactly specify one history entry.
 def info_params(info_key):
-    return dict(infos[info_key]['single_spec']).keys()
+    single_spec = infos[info_key]['single_spec']
+    if single_spec == None:
+        return []
+    else:
+        return dict(single_spec).keys()
 
 def get_single_info_keys(visual):
     keys = []

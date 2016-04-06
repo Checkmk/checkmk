@@ -1,0 +1,14 @@
+Title: Fixed exception when creating a view of a single log entry
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1459935119
+
+When one creates a view of a single log entry, this resulted in an
+exception like "TypeError: 'NoneType' object is not iterable". This
+has been fixed now. However it is currently not possible to create
+such a view since the logfile info (data source) is not supporting
+referencing of single log entries.

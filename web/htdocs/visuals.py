@@ -581,6 +581,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                 n += 1
                 newname = visualname + "_clone%d" % n
             visual["name"] = newname
+            visual["public"] = False
             visualname = newname
             oldname = None # Prevent renaming
             if cloneuser == config.user_id:
@@ -592,6 +593,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                 mode = 'clone'
                 if not visual:
                     raise MKGeneralException(_('The requested %s does not exist.') % visual_types[what]['title'])
+                visual["public"] = False
 
         single_infos = visual['single_infos']
 

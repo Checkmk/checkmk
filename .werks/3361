@@ -1,0 +1,9 @@
+Title: Event Console files not synced to remote site nor backed up with WATO snapshot
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b10
+Date: 1459930482
+Class: fix
+
+

@@ -35,12 +35,6 @@ mkeventd_config_dir  = defaults.default_config_dir + "/mkeventd.d/wato/"
 if defaults.omd_root:
     mkeventd_status_file = defaults.omd_root + "/var/mkeventd/status"
 
-# Include rule configuration into backup/restore/replication. Current
-# status is not backed up.
-if mkeventd_enabled:
-    replication_paths.append(( "dir", "mkeventd", mkeventd_config_dir ))
-    backup_paths.append(( "dir", "mkeventd", mkeventd_config_dir ))
-
 #.
 #   .--ValueSpecs----------------------------------------------------------.
 #   |        __     __    _            ____                                |

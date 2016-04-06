@@ -2474,8 +2474,7 @@ def read_manpage_catalog():
         except Exception, e:
             if opt_debug:
                 raise
-            raise MKGeneralException('ERROR: Skipping invalid manpage: %s: %s\n' % (checkname, e))
-            continue
+            parsed = create_fallback_manpage(checkname, path, e)
 
         if "catalog" in parsed:
             cat = parsed["catalog"]
@@ -2577,6 +2576,19 @@ def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
     for text, value in choices:
         args += [ text, value ]
     return run_dialog(args)
+
+
+def create_fallback_manpage(checkname, path, error_message):
+    return {
+        "name"         : checkname,
+        "path"         : path,
+        "description"  : file(path).read().strip(),
+        "title"        : "%s: Cannot parse man page: %s" % (checkname, error_message),
+        "agents"       : "",
+        "license"      : "unknown",
+        "distribution" : "unknown",
+        "catalog"      : [ "generic" ],
+    }
 
 
 def parse_man_header(checkname, path):

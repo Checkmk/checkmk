@@ -61,7 +61,8 @@ def inv_esx_vsphere_hostsystem(info):
                   "hardware.cpuPkg":     { "index": True},
                   "hardware.cpuInfo":    { "index": False},
                   "hardware.biosInfo":   { "index": False},
-                  "hardware.systemInfo": { "index": False}
+                  "hardware.systemInfo": { "index": False},
+                  "hardware.memorySize": { "index": False}
                 }
 
     data = inv_esx_vsphere_hostsystem_parse(info, inv_items)
@@ -89,7 +90,6 @@ def inv_esx_vsphere_hostsystem(info):
         node = inv_tree("hardware.bios.")
         node["version"] = data["hardware.biosInfo"]["biosVersion"]
 
-    import time
     try:
         node["date"] = float(time.strftime("%s", \
                        time.strptime(data["hardware.biosInfo"]["releaseDate"],"%Y-%m-%dT%H:%M:%SZ")))
@@ -103,6 +103,15 @@ def inv_esx_vsphere_hostsystem(info):
         # We only know for HP that ServiceTag is the serial
         if node["vendor"] == "HP":
             node["serial"]	= data["hardware.systemInfo.otherIdentifyingInfo.ServiceTag"]["0"]
+
+    if "uuid" in data["hardware.systemInfo"]:
+        node["uuid"]  = data["hardware.systemInfo"]["uuid"]
+    if "0" in data["hardware.systemInfo"]:
+        node["serial"]  = data["hardware.systemInfo"]["0"]["ServiceTag"]
+    if "memorySize" in data["hardware"]:
+        node = inv_tree("hardware.memory.")
+        node["total_ram_usable"] = int(data["hardware"]["memorySize"])
+
 
 inv_info['esx_vsphere_hostsystem'] = {
    "inv_function"           : inv_esx_vsphere_hostsystem,

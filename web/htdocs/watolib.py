@@ -1585,6 +1585,7 @@ class Folder(BaseFolder):
         changed = rename_host_in_list(self._attributes["parents"], oldname, newname)
         self.mark_hosts_dirty()
         self.save_hosts()
+        self.save()
         return changed
 
 

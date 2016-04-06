@@ -227,7 +227,8 @@ def check_ewon(item, params, parsed):
         else:
             return 0, "Configured for %s" % params["device"]
     if params["device"]:
-        return globals()["check_%s" % params["device"]](item, params[params["device"]], parsed)
+        return globals()["check_%s" % params["device"]](item, params.get(params["device"], {}),
+                                                        parsed)
 
 
 check_info["ewon"] = {

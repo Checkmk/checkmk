@@ -1,0 +1,9 @@
+Title: check_mailboxes: Improved error handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b10
+Date: 1459952151
+Class: fix
+
+

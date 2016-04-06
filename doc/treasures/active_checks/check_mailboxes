@@ -34,6 +34,7 @@ import email
 import email.utils
 import re
 import socket
+import traceback
 from optparse import OptionParser
 
 
@@ -154,10 +155,9 @@ class Age(object):
 
 
 def output(message):
-    sys.stdout.write(message)
+    sys.stdout.write(message+"\n")
 
-
-def main():
+def parse_args():
     parser = OptionParser()
     parser.add_option("-d", "--debug", action="store_true", default=False,
                       help="print debugging information")
@@ -197,8 +197,12 @@ def main():
     for mandatory in ["server", "username"]:
         if getattr(options, mandatory) is None:
             parser.error("--%s not set" % mandatory)
-            return 1
+            sys.exit(1)
 
+    return options
+
+
+def main(options):
     if options.password is None:
         from getpass import getpass
         options.password = getpass()
@@ -291,5 +295,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-
+    options = parse_args()
+    try:
+        main(options)
+    except Exception, e:
+        output("An exception occured (Run in debug mode for details): %s" % e)
+        if options.debug:
+            output(traceback.format_exc())
+        sys.exit(3)

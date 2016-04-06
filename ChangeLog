@@ -1,4 +1,7 @@
 1.2.8b10:
+    Core & Setup:
+    * 3023 FIX: Fixed possible wrong tag matching caching due to wrong cache id computation
+
     Checks & Agents:
     * 3017 FIX: Fixed missing host/vms inventory information when having multiple datacenters...
     * 3018 FIX: netapp_api_disks: ignore disks with raid-state remote (metrocluster setups)...

@@ -24,6 +24,7 @@
     * 3362 FIX: Fixed reload of Event Console in distributed monitoring slave site
     * 3363 FIX: Exceptions in WATO Web-API are now rendered as plain text messages
     * 3324 FIX: Do not crash whole catalog of check plugins if one man page is broken
+    * 3325 FIX: WATO CSV import: fix missing first line in preview after user error
 
     HW/SW-Inventory:
     * 3319 HW/SW-Inventory service can now be OK in case of unreachable host...

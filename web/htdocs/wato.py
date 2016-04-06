@@ -3177,6 +3177,7 @@ class ModeBulkImport(WatoMode):
 
         attributes = self._attribute_choices()
 
+        self._read_csv_file() # first line could be missing in situation of import error
         if not self._csv_reader:
             return # don't try to show preview when CSV could not be read
 

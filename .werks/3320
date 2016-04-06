@@ -1,0 +1,10 @@
+Title: Fix bogus interfering snapins Tree of folders and Folders
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b10
+Date: 1459928994
+Class: fix
+
+If you have both snapins enabled than folding the tree in one
+would affect the tree of the other. This has been fixed.

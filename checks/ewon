@@ -213,7 +213,7 @@ def inventory_ewon(parsed):
 
     yield "eWON Status", {"device": deviceName}
 
-    if deviceName:
+    if deviceName in set(["oxyreduct"]):
         for res in globals()["inventory_%s" % deviceName](parsed):
             item, params = res
             params["device"] = deviceName
@@ -226,9 +226,11 @@ def check_ewon(item, params, parsed):
             return 1, "This device requires configuration. Plese pick the device type."
         else:
             return 0, "Configured for %s" % params["device"]
-    if params["device"]:
-        return globals()["check_%s" % params["device"]](item, params.get(params["device"], {}),
-                                                        parsed)
+
+    deviceName = params["device"]
+    if deviceName in set(["oxyreduct"]):
+        return globals()["check_%s" % deviceName](item, params.get(deviceName, {}),
+                                                  parsed)
 
 
 check_info["ewon"] = {

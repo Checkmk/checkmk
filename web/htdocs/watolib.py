@@ -3606,12 +3606,28 @@ def automation_push_snapshot():
         else:
             configuration_warnings = []
 
+            # When core restart/reload is done above the EC is reloaded regularly. But
+            # even when the core does not need to be restarted, EC rules might have
+            # changed. So reload the EC in all cases.
+            if hasattr(config, "mkeventd_enabled") and config.mkeventd_enabled:
+                mkeventd_reload()
+
         return configuration_warnings
     except Exception, e:
         if config.debug:
             return _("Internal automation error: %s\n%s") % (str(e), format_exception())
         else:
             return _("Internal automation error: %s") % e
+
+
+def mkeventd_reload():
+    import mkeventd
+    mkeventd.query("COMMAND RELOAD")
+    try:
+        os.remove(log_dir + "mkeventd.log")
+    except OSError:
+        pass # ignore not existing logfile
+    log_audit(None, "mkeventd-activate", _("Activated changes of event console configuration"))
 
 
 # Isolated restart without prior synchronization. Currently this

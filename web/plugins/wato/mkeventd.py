@@ -1556,14 +1556,6 @@ def mode_mkeventd_edit_rule(phase):
     html.end_form()
 
 
-def mkeventd_reload():
-    mkeventd.query("COMMAND RELOAD")
-    try:
-        os.remove(log_dir + "mkeventd.log")
-    except OSError:
-        pass # ignore not existing logfile
-    log_audit(None, "mkeventd-activate", _("Activated changes of event console configuration"))
-
 # This hook is executed when one applies the pending configuration changes
 # related to the mkeventd via WATO on the local system. The hook is called
 # without parameters.

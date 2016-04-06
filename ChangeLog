@@ -215,6 +215,7 @@
     * 3357 FIX: Fixed service conditions of Disk IO related rulesets
     * 3359 FIX: Fixed exception when trying to edit non existant host...
     * 3361 FIX: Event Console files not synced to remote site nor backed up with WATO snapshot
+    * 3362 FIX: Fixed reload of Event Console in distributed monitoring slave site
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

@@ -7,6 +7,7 @@
     * 3020 FIX: netapp_api_volumes: ignore volumes of cluster partner...
     * 3112 FIX: esx_vsphere_counters: made levels configurable
     * 3113 FIX: windows agent: fixed process handle weren't freed when using wmi-based ps check
+    * 3323 FIX: kernel.util: fix graph template in case steal is present but guest not
 
     Multisite:
     * 3355 FIX: Fixed possible broken HW-/SW-Inventory history view

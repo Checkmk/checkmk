@@ -1285,16 +1285,16 @@ class Folder(BaseFolder):
             if c in permitted_groups:
                 return
 
-        reason = _("Sorry, you have no permissions to the folder <b>%s</b>. ") % self.alias_path()
+        reason = _("Sorry, you have no permissions to the folder <b>%s</b>.") % self.alias_path()
         if not permitted_groups:
-            reason += _("The folder is not permitted for any contact group.")
+            reason += " " + _("The folder is not permitted for any contact group.")
         else:
-            reason += _("The folder's permitted contact groups are <b>%s</b>. ") % ", ".join(permitted_groups)
+            reason += " " + _("The folder's permitted contact groups are <b>%s</b>.") % ", ".join(permitted_groups)
             if user_contactgroups:
-                reason += _("Your contact groups are <b>%s</b>.") %  ", ".join(user_contactgroups)
+                reason += " " + _("Your contact groups are <b>%s</b>.") %  ", ".join(user_contactgroups)
             else:
-                reason += _("But you are not a member of any contact group.")
-        reason += _("You may enter the folder as you might have permission on a subfolders, though.")
+                reason += " " + _("But you are not a member of any contact group.")
+        reason += " " + _("You may enter the folder as you might have permission on a subfolders, though.")
         raise MKAuthException(reason)
 
 

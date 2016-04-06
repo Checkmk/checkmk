@@ -229,7 +229,7 @@ api_actions["delete_host"] = {
 ###############
 
 def action_discover_services(request):
-    validate_request_keys(request, ["hostname"])
+    validate_request_keys(request, ["hostname", "mode"])
     config.need_permission("wato.services")
 
     mode = html.var("mode") and html.var("mode") or "new"

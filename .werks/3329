@@ -1,0 +1,12 @@
+Title: Function discover_services now allows the URL parameter mode
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b10
+Date: 1459951658
+Class: fix
+
+The <tt>mode</tt> can e.g. be set to <tt>fixall</tt> in order to remove execeeding
+and add missing services. The implementation was always present, but the validation
+of the request complained that <tt>mode</tt> was not a valid parameter. This has
+been fixed. Thanks to Thomas Huber.

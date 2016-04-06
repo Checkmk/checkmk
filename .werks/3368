@@ -1,0 +1,9 @@
+Title: Fixed regression since 1.2.8b9 which broke all SNMP checks with Nagios core
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b10
+Date: 1459946702
+Class: fix
+
+

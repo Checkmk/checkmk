@@ -1737,6 +1737,11 @@ def rename_host_as_cluster_node(all_hosts, oldname, newname):
         return []
 
 
+def rename_host_in_parents(oldname, newname):
+    parents = rename_host_as_parent(oldname, newname)
+    return [ "parents" ] * len(parents)
+
+
 def rename_host_as_parent(oldname, newname, in_folder=None):
     if in_folder == None:
         in_folder = Folder.root_folder()
@@ -1750,9 +1755,6 @@ def rename_host_as_parent(oldname, newname, in_folder=None):
     if in_folder.has_explicit_attribute("parents"):
         if in_folder.rename_parent(oldname, newname):
             parents.append(in_folder.name())
-
-    if parents:
-        parents = [ "parents" ] * len(parents)
 
     for subfolder in in_folder.subfolders().values():
         parents += rename_host_as_parent(oldname, newname, subfolder)
@@ -1935,7 +1937,7 @@ def rename_hosts(renamings):
             this_host_actions = []
             this_host_actions += rename_host_in_folder(folder, oldname, newname)
             this_host_actions += rename_host_as_cluster_node(all_hosts, oldname, newname)
-            this_host_actions += rename_host_as_parent(oldname, newname)
+            this_host_actions += rename_host_in_parents(oldname, newname)
             this_host_actions += rename_host_in_rulesets(folder, oldname, newname)
             this_host_actions += rename_host_in_bi(oldname, newname)
             actions += this_host_actions
@@ -2001,6 +2003,7 @@ def render_renaming_actions(action_counts):
                                  "Please update your DNS or configure an IP address for the affected host.") % what.split("-", 1)[1]
         else:
             text = action_titles.get(what, what)
+
         if count > 1:
             text += _(" (%d times)" % count)
         texts.append(text)

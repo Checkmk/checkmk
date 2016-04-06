@@ -82,7 +82,9 @@ body.mobile table.dataset {
 }
 
 body.mobile table.dataset tr.header {
+    color: black;
 }
+
 body.mobile table.dataset tr.header th {
 }
 
@@ -222,13 +224,44 @@ img.logomk {
 }
 
 
+td.icons {
+    vertical-align: middle;
+}
+
+div.popup_trigger {
+    display: inline-block;
+}
+
 td.icons img {
     height: 40px;
     width: 40px;
+    margin-left: 5px;
 }
 
 td.icons a {
     padding-left: 8px;
 }
 
+div.popup_trigger > div.popup_menu {
+    display: inline-block;
+}
 
+div.popup_trigger > div.popup_menu a {
+    width: 40px;
+    display: inline-block;
+    overflow: hidden;
+    color: black;
+}
+div.popup_trigger > div.popup_menu a img {
+    margin-left: 0px;
+}
+
+div.popup_trigger > div.popup_menu ul {
+    padding: 0;
+    margin: 0;
+}
+
+div.popup_trigger > div.popup_menu li {
+    display: inline-block;
+    margin: 0px;
+}

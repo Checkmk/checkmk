@@ -1,0 +1,9 @@
+Title: Fixed white text on white background in mobile GUI
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b10
+Date: 1459943006
+Class: fix
+
+

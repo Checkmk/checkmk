@@ -1,0 +1,10 @@
+Title: nginx_status: Fixed local instance detection for IPv6 loopback address
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1459941206
+
+

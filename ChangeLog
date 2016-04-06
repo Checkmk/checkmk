@@ -131,6 +131,7 @@
     * 3323 FIX: kernel.util: fix graph template in case steal is present but guest not
     * 3367 FIX: nginx_status: Fixed local instance detection for IPv6 loopback address
     * 3368 FIX: Fixed regression since 1.2.8b9 which broke all SNMP checks with Nagios core
+    * 3370 FIX: check_mail: Fixed mail parsing bug when using POP3
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

@@ -1,0 +1,10 @@
+Title: check_mail: Fixed mail parsing bug when using POP3
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1459948670
+
+

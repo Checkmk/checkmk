@@ -212,8 +212,13 @@ def render_statistics(pie_id, what, table, filter, dashlet):
     pie_left_aspect  = 0.5
     pie_right_aspect = 0.8
 
-    info = what == 'hosts' and 'host' or 'service'
-    use_filters = visuals.filters_of_visual(dashlet, [info])
+    if what == 'hosts':
+        info = 'host'
+        infos = [ info ]
+    else:
+        info = 'service'
+        infos = [ 'host', 'service' ]
+    use_filters = visuals.filters_of_visual(dashlet, infos)
     for filt in use_filters:
         if filt.available() and not isinstance(filt, visuals.FilterSite):
             filter += filt.filter(info)

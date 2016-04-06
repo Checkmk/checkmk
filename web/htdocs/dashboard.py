@@ -440,13 +440,14 @@ def dashlet_container_end():
     html.write("</div>\n")
 
 
-def draw_dashlet_content(nr, the_dashlet, stash_html_vars=True):
+def draw_dashlet_content(nr, the_dashlet, wato_folder, stash_html_vars=True):
     if stash_html_vars:
         html.stash_vars()
         html.del_all_vars()
 
     try:
         visuals.add_context_to_uri_vars(the_dashlet)
+        html.set_var("wato_folder", wato_folder)
 
         dashlet_type = dashlet_types[the_dashlet['type']]
         if 'iframe_render' in dashlet_type:
@@ -692,7 +693,7 @@ def draw_dashlet(name, board, nr, dashlet, wato_folder):
     # The content is rendered only if it is fixed. In the
     # other cases the initial (re)-size will paint the content.
     if "render" in dashlet_type:
-        draw_dashlet_content(nr, dashlet)
+        draw_dashlet_content(nr, dashlet, wato_folder)
 
     elif "content" in dashlet: # fixed content
         html.write(dashlet["content"])
@@ -762,7 +763,9 @@ def ajax_dashlet():
 
     if the_dashlet['type'] not in dashlet_types:
         raise MKGeneralException(_('The requested dashlet type does not exist.'))
-    draw_dashlet_content(ident, the_dashlet, stash_html_vars=False)
+
+    wato_folder = html.var("wato_folder")
+    draw_dashlet_content(ident, the_dashlet, wato_folder, stash_html_vars=False)
 
 #.
 #   .--Dashboard List------------------------------------------------------.

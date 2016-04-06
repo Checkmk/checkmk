@@ -1,0 +1,10 @@
+Title: Globes in dashboards now correctly reflect selected WATO folder
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.8b10
+Date: 1459929807
+Class: fix
+
+The bug was that they always showed the stats of all hosts, not just
+of the selected folder (if you are using the {{Folders}} snapin).

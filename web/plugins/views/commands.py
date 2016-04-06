@@ -566,6 +566,9 @@ def command_downtime(cmdtag, spec, row):
             raise MKUserError("_down_to", _("You cannot set a downtime that ends in the past. "
                          "This incident will be reported."))
 
+        if down_to < down_from:
+            raise MKUserError("_down_to", _("Your end date is before your start date."))
+
         title = _("<b>schedule a downtime from %s to %s</b> on ") % (
             time.asctime(time.localtime(down_from)),
             time.asctime(time.localtime(down_to)))

@@ -83,7 +83,7 @@ def initialize_before_loading_plugins():
 
     # Include rule configuration into backup/restore/replication. Current
     # status is not backed up.
-    if config.mkeventd_enabled:
+    if hasattr(config, "mkeventd_enabled") and config.mkeventd_enabled:
         mkeventd_config_dir = defaults.default_config_dir + "/mkeventd.d/wato/"
         replication_paths.append(("dir", "mkeventd", mkeventd_config_dir))
         backup_paths.append(("dir", "mkeventd", mkeventd_config_dir))
@@ -3516,7 +3516,8 @@ def automation_push_snapshot():
         if is_distributed():
             pending = parse_audit_log("pending")
             if len(pending) > 0:
-                message = _("There are %d pending changes that would get lost. The most recent are: ") % len(pending)
+                message = _("There are %d pending changes that would get lost. "
+                            "The most recent are: ") % len(pending)
                 message += ", ".join([e[-1] for e in pending[:10]])
                 raise MKGeneralException(message)
 

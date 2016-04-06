@@ -214,6 +214,7 @@
     * 3354 FIX: Added missing option to exclude IP addresses by regex
     * 3357 FIX: Fixed service conditions of Disk IO related rulesets
     * 3359 FIX: Fixed exception when trying to edit non existant host...
+    * 3361 FIX: Event Console files not synced to remote site nor backed up with WATO snapshot
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

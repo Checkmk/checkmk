@@ -82,6 +82,13 @@ def initialize_before_loading_plugins():
         # ( "dir", "autochecks", defaults.autochecksdir ),
     ]
 
+    # Include rule configuration into backup/restore/replication. Current
+    # status is not backed up.
+    if config.mkeventd_enabled:
+        mkeventd_config_dir = defaults.default_config_dir + "/mkeventd.d/wato/"
+        replication_paths.append(("dir", "mkeventd", mkeventd_config_dir))
+        backup_paths.append(("dir", "mkeventd", mkeventd_config_dir))
+
     global backup_domains
     backup_domains = {}
 

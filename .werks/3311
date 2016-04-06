@@ -1,0 +1,9 @@
+Title: apc_netbotz_sensors, apc_netbotz_sensors.dewpoint, apc_netbotz_sensors.humidity: new checks for APC Netbotz devices which support the NETBOTZV2 MIB
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1459937079
+Class: feature
+
+

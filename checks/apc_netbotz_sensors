@@ -1,0 +1,190 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# .1.3.6.1.4.1.5528.100.4.1.1.1.1.636159851 nbAlinkEnc_0_4_TEMP
+# .1.3.6.1.4.1.5528.100.4.1.1.1.1.1619732064 nbAlinkEnc_0_2_TEMP
+# .1.3.6.1.4.1.5528.100.4.1.1.1.1.2628357572 nbAlinkEnc_0_1_TEMP
+# .1.3.6.1.4.1.5528.100.4.1.1.1.1.3031356659 nbAlinkEnc_0_5_TEMP
+# .1.3.6.1.4.1.5528.100.4.1.1.1.1.3056253200 nbAlinkEnc_0_6_TEMP
+# .1.3.6.1.4.1.5528.100.4.1.1.1.1.3406802758 nbAlinkEnc_0_3_TEMP
+# .1.3.6.1.4.1.5528.100.4.1.1.1.2.636159851 238
+# .1.3.6.1.4.1.5528.100.4.1.1.1.2.1619732064 202
+# .1.3.6.1.4.1.5528.100.4.1.1.1.2.2628357572 225
+# .1.3.6.1.4.1.5528.100.4.1.1.1.2.3031356659 204
+# .1.3.6.1.4.1.5528.100.4.1.1.1.2.3056253200 239
+# .1.3.6.1.4.1.5528.100.4.1.1.1.2.3406802758 214
+# .1.3.6.1.4.1.5528.100.4.1.2.1.1.1744856019 nbAlinkEnc_0_4_HUMI
+# .1.3.6.1.4.1.5528.100.4.1.2.1.1.1974269701 nbAlinkEnc_0_2_HUMI
+# .1.3.6.1.4.1.5528.100.4.1.2.1.1.2804425567 nbAlinkEnc_0_1_HUMI
+# .1.3.6.1.4.1.5528.100.4.1.2.1.1.4181308384 nbAlinkEnc_0_5_HUMI
+# .1.3.6.1.4.1.5528.100.4.1.2.1.2.1744856019 200
+# .1.3.6.1.4.1.5528.100.4.1.2.1.2.1974269701 360
+# .1.3.6.1.4.1.5528.100.4.1.2.1.2.2804425567 200
+# .1.3.6.1.4.1.5528.100.4.1.2.1.2.4181308384 370
+# .1.3.6.1.4.1.5528.100.4.1.3.1.1.1000015730 nbAlinkEnc_0_5_DWPT
+# .1.3.6.1.4.1.5528.100.4.1.3.1.1.1807639405 nbAlinkEnc_0_1_DWPT
+# .1.3.6.1.4.1.5528.100.4.1.3.1.1.2231143474 nbAlinkEnc_0_2_DWPT
+# .1.3.6.1.4.1.5528.100.4.1.3.1.1.4125059843 nbAlinkEnc_0_4_DWPT
+# .1.3.6.1.4.1.5528.100.4.1.3.1.2.1000015730 52
+# .1.3.6.1.4.1.5528.100.4.1.3.1.2.1807639405 -15
+# .1.3.6.1.4.1.5528.100.4.1.3.1.2.2231143474 46
+# .1.3.6.1.4.1.5528.100.4.1.3.1.2.4125059843 -5
+
+
+#   .--temperature---------------------------------------------------------.
+#   |      _                                      _                        |
+#   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
+#   |     | __/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
+#   |     | ||  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
+#   |      \__\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
+#   |                       |_|                                            |
+#   +----------------------------------------------------------------------+
+#   |                               main check                             |
+#   '----------------------------------------------------------------------'
+
+
+# Suggested by customer
+factory_settings['apc_netbotz_sensors_temp_default_levels'] = {
+    'levels'       : (30, 35),
+    'levels_lower' : (25, 20),
+}
+
+
+def parse_apc_netbotz_sensors(info):
+    map_sensors = {
+        "1" : "temp",
+        "2" : "humidity",
+        "3" : "dewpoint",
+    }
+    parsed = {}
+    for oid_item, reading_str in info:
+        item_info = oid_item.split(".")
+        item_type = map_sensors[item_info[0]]
+        item_name = " ".join(item_info[2:])
+        parsed.setdefault(item_type, {})
+        parsed[item_type][item_name] = float(reading_str)/10
+
+    return parsed
+
+
+def inventory_apc_netbotz_sensors_temp(parsed, what):
+    return [ (item, {}) for item in parsed.get(what, []) ]
+
+
+def check_apc_netbotz_sensors_temp(item, params, parsed, what):
+    if item in parsed.get(what, []):
+        return check_temperature(parsed[what][item], params, "apc_netbotz_sensors_%s_%s" % (what, item))
+
+
+check_info['apc_netbotz_sensors'] = {
+    'parse_function'            : parse_apc_netbotz_sensors,
+    'inventory_function'        : lambda parsed: \
+        inventory_apc_netbotz_sensors_temp(parsed, "temp"),
+    'check_function'            : lambda item, params, parsed: \
+        check_apc_netbotz_sensors_temp(item, params, parsed, "temp"),
+    'service_description'       : 'Temperature %s',
+    'has_perfdata'              : True,
+    'snmp_info'                 : (".1.3.6.1.4.1.5528.100.4.1", [
+                                        "1.1",  # temp
+                                        "2.1",  # humi
+                                        "3.1",  # dewPoint
+                                        ], [
+                                        "1",    # NETBOTZV2-MIB::*SensorId
+                                        "2",    # NETBOTZV2-MIB::*SensorValue
+                                  ]),
+    'snmp_scan_function'        : lambda oid: \
+        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5528.100.20.10.2014"),
+    'default_levels_variable'   : 'apc_netbotz_sensors_temp_default_levels',
+    'group'                     : "temperature",
+    'includes'                  : [ 'temperature.include' ],
+}
+
+
+#.
+#   .--dewpoint------------------------------------------------------------.
+#   |                 _                           _       _                |
+#   |              __| | _____      ___ __   ___ (_)_ __ | |_              |
+#   |             / _` |/ _ \ \ /\ / / '_ \ / _ \| | '_ \| __|             |
+#   |            | (_| |  __/\ V  V /| |_) | (_) | | | | | |_              |
+#   |             \__,_|\___| \_/\_/ | .__/ \___/|_|_| |_|\__|             |
+#   |                                |_|                                   |
+#   '----------------------------------------------------------------------'
+
+
+# Suggested by customer
+factory_settings['apc_netbotz_sensors_dewpoint_default_levels'] = {
+    'levels'       : (18, 25),
+    'levels_lower' : (-4, -6),
+}
+
+
+check_info['apc_netbotz_sensors.dewpoint'] = {
+    'inventory_function'        : lambda parsed: \
+        inventory_apc_netbotz_sensors_temp(parsed, "dewpoint"),
+    'check_function'            : lambda item, params, info: \
+        check_apc_netbotz_sensors_temp(item, params, info, "dewpoint"),
+    'service_description'       : 'Dew point %s',
+    'has_perfdata'              : True,
+    'default_levels_variable'   : "apc_netbotz_sensors_dewpoint_default_levels",
+    'group'                     : "temperature",
+    'includes'                  : [ 'temperaure.include' ],
+}
+
+
+#.
+#   .--humidity------------------------------------------------------------.
+#   |              _                     _     _ _ _                       |
+#   |             | |__  _   _ _ __ ___ (_) __| (_) |_ _   _               |
+#   |             | '_ \| | | | '_ ` _ \| |/ _` | | __| | | |              |
+#   |             | | | | |_| | | | | | | | (_| | | |_| |_| |              |
+#   |             |_| |_|\__,_|_| |_| |_|_|\__,_|_|\__|\__, |              |
+#   |                                                  |___/               |
+#   '----------------------------------------------------------------------'
+
+
+# Suggested by customer
+apc_netbotz_sensors_humidity_default_levels = (30, 35, 60, 65)
+
+
+def inventory_apc_netbotz_sensors_humidity(parsed):
+    return [ (item, "apc_netbotz_sensors_humidity_default_levels") \
+             for item in parsed.get("humidity", []) ]
+
+
+def check_apc_netbotz_sensors_humidity(item, params, parsed):
+    if item in parsed.get("humidity", []):
+        return check_humidity(parsed["humidity"][item], params)
+
+
+check_info['apc_netbotz_sensors.humidity'] = {
+    'inventory_function'        : inventory_apc_netbotz_sensors_humidity,
+    'check_function'            : check_apc_netbotz_sensors_humidity,
+    'service_description'       : 'Humidity %s',
+    'has_perfdata'              : True,
+    'group'                     : "humidity",
+    'includes'                  : [ 'humidity.include' ],
+}

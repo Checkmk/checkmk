@@ -45,6 +45,7 @@
     * 3108 network interface and switch port discovery rules can now be combined to dicover multiple sets of interfaces...
             NOTE: Please refer to the migration notes!
     * 3109 dotnet_clrmemory: levels are now configurable
+    * 3311 apc_netbotz_sensors, apc_netbotz_sensors.dewpoint, apc_netbotz_sensors.humidity: new checks for APC Netbotz devices which support the NETBOTZV2 MIB
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

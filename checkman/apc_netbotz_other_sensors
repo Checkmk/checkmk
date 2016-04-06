@@ -1,0 +1,23 @@
+title: APC Netbotz Devices: Other numeric sensors summary
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check gives a summary over all other numeric sensors
+ of APC Netbotz devices which support the NETBOTZV2 MIB,
+ e.g. Netbotz 450 series.
+
+ The check is OK if all sensors are OK otherwise CRIT.
+ The sensor reports an individual status description.
+
+ Numeric sensors can be
+ - water level
+ - ethernet link
+ - a-link bus power
+
+item:
+ No item.
+
+inventory:
+ One service is created.

@@ -655,7 +655,8 @@ class Overridable(Base):
                     self.add_instance((user, name), self(page_dict))
 
             except SyntaxError, e:
-                raise MKGeneralException(_("Cannot load %s from %s: %s") % (what, path, e))
+                raise MKGeneralException(_("Cannot load %s from %s: %s") %
+                                                (self.type_name(), path, e))
 
         # FIXME: Better switch to "new style classes" and use super() and then override load()
         # in the subclass. Brings more flexibility.
@@ -663,7 +664,8 @@ class Overridable(Base):
             self._load()
 
         # Declare permissions - one for each of the pages, if it is public
-        config.declare_permission_section(self.type_name(), self.phrase("title_plural"), do_sort = True)
+        config.declare_permission_section(self.type_name(), self.phrase("title_plural"),
+                                          do_sort = True)
 
         for instance in self.instances():
             if instance.is_public():

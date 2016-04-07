@@ -24,6 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+def check_ssh_desc(params):
+    if params.get("description"):
+        return "SSH %s" % params["description"]
+    else:
+        return "SSH"
+
+
 def check_ssh_arguments(params):
     args = []
     if 'timeout' in params:
@@ -39,10 +47,11 @@ def check_ssh_arguments(params):
 
     return " ".join(args)
 
+
 active_check_info['ssh'] = {
     "command_line"        : '$USER1$/check_ssh $ARG1$',
     "argument_function"   : check_ssh_arguments,
-    "service_description" : lambda args: "SSH",
+    "service_description" : check_ssh_desc,
     "has_perfdata"        : True,
 }
 

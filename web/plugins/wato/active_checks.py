@@ -186,6 +186,10 @@ register_rule(group,
         title = _("Check SSH service"),
         help = _("This rulset allow you to configure a SSH check for a host"),
         elements = [
+            ( "description",
+                TextUnicode(
+                    title = _("Service Description"),
+            )),
             ("port",
                Integer(
                     title = _("TCP port number"),

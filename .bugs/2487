@@ -1,0 +1,10 @@
+Title: Availability: Changing time range of an annotation duplicates it
+Component: multisite
+State: open
+Date: 2016-04-07 16:50:29
+Targetversion: 1.2.8
+Class: bug
+
+The start/end is used as a key. If you edit an existing annotation and
+change one of those - Check_MK thinks you are creating a new one and
+creates a duplicate entry.

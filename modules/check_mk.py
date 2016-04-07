@@ -2090,8 +2090,9 @@ def lookup_ipv4_address(hostname):
 def lookup_ipv6_address(hostname):
     return lookup_ip_address(hostname, 6)
 
-# Determine the IP address of a host. It returns either an IP address,
-# or raise an exception when a hostname can not be resolved on the first
+# Determine the IP address of a host. It returns either an IP address or, when
+# a hostname is configured as IP address, the hostname.
+# Or raise an exception when a hostname can not be resolved on the first
 # try to resolve a hostname. On later tries to resolve a hostname  it
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!

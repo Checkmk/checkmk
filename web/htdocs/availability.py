@@ -624,6 +624,7 @@ def spans_by_object(spans):
 
 # Compute an availability table. what is one of "bi", "host", "service".
 def compute_availability(what, av_rawdata, avoptions):
+    reclassified_rawdata = reclassify_by_annotations(av_rawdata)
 
     # Now compute availability table. We have the following possible states:
     # 1. "unmonitored"
@@ -647,7 +648,7 @@ def compute_availability(what, av_rawdata, avoptions):
     considered_duration = 0
 
     # Note: in case of timeline, we have data from exacly one host/service
-    for site_host, site_host_entry in av_rawdata.iteritems():
+    for site_host, site_host_entry in reclassified_rawdata.iteritems():
         for service, service_entry in site_host_entry.iteritems():
 
             if grouping == "host":
@@ -768,6 +769,63 @@ def compute_availability(what, av_rawdata, avoptions):
     return filtered_table
 
 
+# TODO: Wir müssen auch den Fall behandeln, dass ein Host reklassifiert wird.
+# dann müssen die Services das Feld in_host_downtime ebenfalls nachziehen!
+def reclassify_by_annotations(av_rawdata):
+    annotations = load_annotations()
+    if not annotations:
+        return av_rawdata
+
+    reclassified_rawdata = {}
+    for (site, host_name), service_entries in av_rawdata.iteritems():
+        new_entries = {}
+        reclassified_rawdata[(site, host_name)] = new_entries
+        for service_description, service_history in service_entries.iteritems():
+            anno_key = (site, host_name, service_description)
+            if anno_key in annotations:
+                new_entries[service_description] = reclassify_service_by_annotations(service_history, annotations[anno_key])
+            else:
+                new_entries[service_description] = service_history
+
+    return reclassified_rawdata
+
+
+def reclassify_service_by_annotations(service_history, annotation_entries):
+    new_history = service_history
+    for annotation in annotation_entries:
+        downtime = annotation.get("downtime")
+        if downtime == None:
+            continue
+        new_history = reclassify_service_by_annotation(new_history, annotation)
+    return new_history
+
+
+def reclassify_service_by_annotation(service_history, annotation):
+    downtime = annotation["downtime"]
+
+    new_history = []
+    for history_entry in service_history:
+        if annotation["from"] < history_entry["until"] and annotation["until"] > history_entry["from"]:
+            for is_in, p_from, p_until in [
+                  ( False, history_entry["from"],                            max(history_entry["from"], annotation["from"]) ),
+                  ( True, max(history_entry["from"], annotation["from"]),   min(history_entry["until"], annotation["until"]) ),
+                  ( False, min(history_entry["until"], annotation["until"]), history_entry["until"] ),
+                ]:
+                if p_from < p_until:
+                    new_entry = history_entry.copy()
+                    new_entry["from"] = p_from
+                    new_entry["until"] = p_until
+                    new_entry["duration"] = p_until - p_from
+                    if is_in:
+                        new_entry["in_downtime"] = downtime and 1 or 0
+                    new_history.append(new_entry)
+
+        else:
+            new_history.append(history_entry)
+
+    return new_history
+
+
 def pass_availability_filter(row, avoptions):
     if row["considered_duration"] == 0:
         return True
@@ -872,6 +930,92 @@ def melt_short_intervals(entries, duration, dont_merge):
     if need_merge and not dont_merge:
         merge_timeline(entries)
         melt_short_intervals(entries, duration, dont_merge)
+
+
+#.
+#   .--Annotations---------------------------------------------------------.
+#   |         _                      _        _   _                        |
+#   |        / \   _ __  _ __   ___ | |_ __ _| |_(_) ___  _ __  ___        |
+#   |       / _ \ | '_ \| '_ \ / _ \| __/ _` | __| |/ _ \| '_ \/ __|       |
+#   |      / ___ \| | | | | | | (_) | || (_| | |_| | (_) | | | \__ \       |
+#   |     /_/   \_\_| |_|_| |_|\___/ \__\__,_|\__|_|\___/|_| |_|___/       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  This code deals with retrospective annotations and downtimes.       |
+#   '----------------------------------------------------------------------'
+
+# Example for annotations:
+# {
+#   ( "mysite", "foohost", "myservice" ) : # service might be None
+#       [
+#         {
+#            "from"       : 1238288548,
+#            "until"      : 1238292845,
+#            "text"       : u"Das ist ein Text über mehrere Zeilen, oder was weiß ich",
+#            "date"       : 12348854885, # Time of entry
+#            "author"     : "mk",
+#            "downtime"   : True, # Can also be False or None or missing. None is like missing
+#         },
+#         # ... further entries
+#      ]
+# }
+
+
+def save_annotations(annotations):
+    file(defaults.var_dir + "/availability_annotations.mk", "w").write(repr(annotations) + "\n")
+
+
+def load_annotations(lock = False):
+    path = defaults.var_dir + "/availability_annotations.mk"
+    if not os.path.exists(path):
+        # Support legacy old wrong name-clashing path
+        path = defaults.var_dir + "/web/statehist_annotations.mk"
+
+    if os.path.exists(path):
+        if lock:
+            aquire_lock(path)
+        return eval(file(path).read())
+    else:
+        return {}
+
+
+def update_annotations(site_host_svc, annotation):
+    annotations = load_annotations(lock = True)
+    entries = annotations.get(site_host_svc, [])
+    new_entries = []
+    for entry in entries:
+        if  entry["from"] == annotation["from"] \
+            and entry["until"] == annotation["until"]:
+            continue # Skip existing entries with same identity
+        new_entries.append(entry)
+    new_entries.append(annotation)
+    annotations[site_host_svc] = new_entries
+    save_annotations(annotations)
+
+
+def find_annotation(annotations, site_host_svc, fromtime, untiltime):
+    entries = annotations.get(site_host_svc)
+    if not entries:
+        return None
+    for annotation in entries:
+        if annotation["from"] == fromtime \
+            and annotation["until"] == untiltime:
+            return annotation
+    return None
+
+
+def delete_annotation(annotations, site_host_svc, fromtime, untiltime):
+    entries = annotations.get(site_host_svc)
+    if not entries:
+        return
+    found = None
+    for nr, annotation in enumerate(entries):
+        if annotation["from"] == fromtime \
+            and annotation["until"] == untiltime:
+            found = nr
+            break
+    if found != None:
+        del entries[nr]
 
 
 #.

@@ -1,0 +1,9 @@
+Title: Fixed exception when adding a bookmark while having a list not named my_bookmarks
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b10
+Date: 1460042581
+Class: fix
+
+

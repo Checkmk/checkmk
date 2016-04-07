@@ -1164,6 +1164,21 @@ class BookmarkList(pagetypes.Overridable, pagetypes.Base):
 
 
     @classmethod
+    def add_default_bookmark_list(cls):
+        attrs = {
+            "title"         : u"My Bookmarks",
+            "public"        : False,
+            "owner"         : config.user_id,
+            "name"          : "my_bookmarks",
+            "description"   : u"Your personal bookmarks",
+            "default_topic" : u"My Bookmarks",
+            "bookmarks"     : [],
+        }
+
+        cls.add_instance((config.user_id, "my_bookmarks"), cls(attrs))
+
+
+    @classmethod
     def load_legacy_bookmarks(self):
         # Don't load the legacy bookmarks when there is already a my_bookmarks list
         if self.has_instance((config.user_id, "my_bookmarks")):
@@ -1174,20 +1189,12 @@ class BookmarkList(pagetypes.Overridable, pagetypes.Base):
             if user_id == config.user_id:
                 return
 
-        bookmark_list = {
-            "title"         : u"My Bookmarks",
-            "public"        : False,
-            "owner"         : config.user_id,
-            "name"          : "my_bookmarks",
-            "description"   : u"Your personal bookmarks",
-            "default_topic" : u"My Bookmarks",
-            "bookmarks"     : [],
-        }
+        self.add_default_bookmark_list()
+        bookmark_list = self.instance((config.user_id, "my_bookmarks"))
 
         for title, url in load_legacy_bookmarks():
-            bookmark_list["bookmarks"].append(self.new_bookmark(title, url))
+            bookmark_list.add_bookmark(title, url)
 
-        self.add_instance((config.user_id, "my_bookmarks"), self(bookmark_list))
 
     @classmethod
     def new_bookmark(self, title, url):
@@ -1209,6 +1216,7 @@ class BookmarkList(pagetypes.Overridable, pagetypes.Base):
             topic = topics.setdefault(bookmark["topic"], [])
             topic.append(bookmark)
         return sorted(topics.items())
+
 
     def add_bookmark(self, title, url):
         self._["bookmarks"].append(BookmarkList.new_bookmark(title, url))
@@ -1311,6 +1319,10 @@ def try_shorten_url(url):
 
 def add_bookmark(title, url):
     BookmarkList.load()
+
+    if not BookmarkList.has_instance((config.user_id, "my_bookmarks")):
+        BookmarkList.add_default_bookmark_list()
+
     bookmarks = BookmarkList.instance((config.user_id, "my_bookmarks"))
     bookmarks.add_bookmark(title, try_shorten_url(url))
     bookmarks.save_user_instances()

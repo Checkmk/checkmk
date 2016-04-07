@@ -1,0 +1,13 @@
+Title: logwatch: made check cluster-able
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1460028648
+Class: feature
+
+Previously, if one tried to cluster a logwatch-service, only log entries from one node would be
+passed to the cluster.
+Another problem was that when re-scheduling checks on a cluster, the same log messages were re-read
+and transfered the the cluster log again.
+Both these problems are fixed now.

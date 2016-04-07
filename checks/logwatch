@@ -67,7 +67,8 @@ def logwatch_select_forwarded(info):
     forward_settings = host_extra_conf(g_hostname, checkgroup_parameters.get('logwatch_ec', []))
 
     for l in info:
-        line = " ".join(l)
+        # node info ignored (only used in regular logwatch check)
+        line = " ".join(l[1:])
         if len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]" \
            and ':missing' not in line and ':cannotopen' not in line:
             logfile_name = line[3:-3]
@@ -236,31 +237,49 @@ def logwatch_parse_line(line):
 # without precompiled checks, the params must be None an will be
 # ignored.
 def check_logwatch(item, params, info):
+    def cachefile_path(node):
+        return tcp_cache_dir + "/" + node
+
+    now = time.time()
+    last_run = get_item_state("logwatch_last_run_%s" % item, 0)
+    set_item_state("logwatch_last_run_%s" % item, now)
+    cache_new = {}
+
+    def is_cache_new(node):
+        if node not in cache_new:
+            path = cachefile_path(node)
+            if not os.path.exists(path):
+                raise MKGeneralException("cache not found: %s" % path)
+            else:
+                cache_new[node] = os.stat(path).st_mtime > last_run
+        return cache_new[node]
+
     if len(info) == 1:
-        line = " ".join(info[0])
+        line = " ".join(info[0][1:])
         if line.startswith("CANNOT READ CONFIG FILE"):
             return 3, "Error in agent configuration: %s" % " ".join(info[0][4:])
 
     found = False
     loglines = []
     for l in info:
-        line = " ".join(l)
+        node = l[0]
+        line = " ".join(l[1:])
         if line == "[[[%s]]]" % item:
             found = True
         elif len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]":
-            if found:
-                break
             found = False
-        elif found:
+        elif found and is_cache_new(node):
             loglines.append(line)
+
     return check_logwatch_generic(item, params, loglines, found)
 
 
 check_info['logwatch'] = {
-    'check_function':      check_logwatch,
-    'inventory_function':  inventory_logwatch,
-    'service_description': "Log %s",
-    'group':               'logwatch',
+    'check_function'      : check_logwatch,
+    'inventory_function'  : inventory_logwatch,
+    'service_description' : "Log %s",
+    'node_info'           : True,
+    'group'               : 'logwatch',
 }
 
 precompile_params['logwatch'] = logwatch_precompile
@@ -307,7 +326,7 @@ def inventory_logwatch_groups(info):
 
 def check_logwatch_groups(item, params, info):
     if len(info) == 1:
-        line = " ".join(info[0])
+        line = " ".join(info[0][1:])
         if line.startswith("CANNOT READ CONFIG FILE"):
             return 3, "Error in agent configuration: %s" % " ".join(info[0][4:])
 
@@ -315,7 +334,8 @@ def check_logwatch_groups(item, params, info):
     logfile_found = False
     loglines = []
     for l in info:
-        line = " ".join(l)
+        # node info ignored (only used in regular logwatch check)
+        line = " ".join(l[1:])
         if logfile_found == True and not line.startswith('[[['):
             loglines.append(line)
         if line.startswith('[[['):
@@ -330,10 +350,11 @@ def check_logwatch_groups(item, params, info):
 
 
 check_info['logwatch.groups'] = {
-    'check_function':      check_logwatch_groups,
-    'inventory_function':  inventory_logwatch_groups,
-    'service_description': "LOG %s",
-    'group':               'logwatch',
+    'check_function'      : check_logwatch_groups,
+    'inventory_function'  : inventory_logwatch_groups,
+    'service_description' : "LOG %s",
+    'node_info'           : True,
+    'group'               : 'logwatch',
 }
 precompile_params['logwatch.groups'] = logwatch_group_precompile
 #.
@@ -635,7 +656,8 @@ def check_logwatch_ec(item, params, info):
     logs = {}
     logfile = None
     for l in info:
-        line = " ".join(l)
+        # node info ignored (only used in regular logwatch check)
+        line = " ".join(l[1:])
         if len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]":
             # new logfile, extract name
             logfile = line[3:-3]
@@ -856,16 +878,18 @@ precompile_params['logwatch.ec'] = logwatch_ec_precompile
 precompile_params['logwatch.ec_single'] = logwatch_ec_precompile
 
 check_info['logwatch.ec'] = {
-    'check_function':      check_logwatch_ec,
-    'inventory_function':  lambda info: inventory_logwatch_ec(info, False),
-    'service_description': "Log Forwarding",
-    'group':               'logwatch_ec',
-    'has_perfdata':        True,
+    'check_function'      : check_logwatch_ec,
+    'inventory_function'  : lambda info: inventory_logwatch_ec(info, False),
+    'service_description' : "Log Forwarding",
+    'group'               : 'logwatch_ec',
+    'node_info'           : True,
+    'has_perfdata'        : True,
 }
 
 check_info['logwatch.ec_single'] = {
-    'check_function':      check_logwatch_ec,
-    'inventory_function':  lambda info: inventory_logwatch_ec(info, True),
-    'service_description': "Log %s",
-    'has_perfdata':        True,
+    'check_function'      : check_logwatch_ec,
+    'inventory_function'  : lambda info: inventory_logwatch_ec(info, True),
+    'service_description' : "Log %s",
+    'node_info'           : True,
+    'has_perfdata'        : True,
 }

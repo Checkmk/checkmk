@@ -54,13 +54,14 @@ def level_state(level):
 #   '----------------------------------------------------------------------'
 
 def page_show():
-    host = html.var('host')
-    filename = html.var('file')
-    if "/" in host:
-        return
+    host = html.var("host", "")
+    filename = html.var("file", "")
 
     # Fix problem when URL is missing certain illegal characters
-    filename = form_file_to_ext(find_matching_logfile(host, form_file_to_int(filename)))
+    try:
+        filename = form_file_to_ext(find_matching_logfile(host, form_file_to_int(filename)))
+    except OSError:
+        pass # host log dir does not exist
 
     # Acknowledging logs is supported on
     # a) all logs on all hosts
@@ -153,7 +154,9 @@ def list_logs(host, logfiles):
                         (form_datetime(last_log['datetime']), len(logs)))
 
     if rowno == 0:
-        html.write('<tr><td class="data" colspan=4>'+_('No logs found for this host.')+'</td></tr>\n')
+        html.write('<tr><td class="data" colspan=4>')
+        html.message(_('No logs found for this host.'))
+        html.write('</td></tr>\n')
 
 
 def ack_button(host = None, int_filename = None):

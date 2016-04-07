@@ -171,7 +171,7 @@ Query::Query(const list<string> &lines, OutputBuffer *output, Table *table)
     }
 
     if (_columns.empty() && !doStats()) {
-        table->addAllColumnsToQuery(this);
+        table->any_column([this](Column *c) { return addColumn(c), false; });
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
         // here, is that really what we want?
         _show_column_headers = true;

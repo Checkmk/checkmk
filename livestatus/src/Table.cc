@@ -24,10 +24,8 @@
 
 #include "Table.h"
 #include <string.h>
-#include <utility>
 #include "Column.h"
 #include "DynamicColumn.h"
-#include "Query.h"
 
 using std::make_pair;
 using std::string;
@@ -55,12 +53,6 @@ Table::~Table() {
 
     for (auto &dynamic_column : _dynamic_columns) {
         delete dynamic_column.second;
-    }
-}
-
-void Table::addAllColumnsToQuery(Query *q) {
-    for (auto &column : _columns) {
-        q->addColumn(column.second);
     }
 }
 
@@ -115,14 +107,4 @@ Column *Table::dynamicColumn(const char *colname_with_args) {
         return it->second->createColumn(argstring);
     }
     return nullptr;
-}
-
-bool Table::hasColumn(Column *col) {
-    // this is not very efficient but seldomly used
-    for (auto &column : _columns) {
-        if (col == column.second) {
-            return true;
-        }
-    }
-    return false;
 }

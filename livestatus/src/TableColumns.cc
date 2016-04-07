@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableColumns.h"
-#include <utility>
 #include "Column.h"
 #include "ColumnsColumn.h"
 #include "Query.h"
@@ -44,12 +43,7 @@ void TableColumns::addTable(Table *table) { _tables.push_back(table); }
 
 void TableColumns::answerQuery(Query *query) {
     for (auto table : _tables) {
-        Table::_columns_t *columns = table->columns();
-        for (auto &column : *columns) {
-            if (!query->processDataset(column.second)) {
-                break;
-            }
-        }
+        table->any_column([&](Column *c) { return !query->processDataset(c); });
     }
 }
 
@@ -73,7 +67,7 @@ const char *TableColumns::getValue(Column *column, int colcol) {
 
 const char *TableColumns::tableNameOf(Column *column) {
     for (auto table : _tables) {
-        if (table->hasColumn(column)) {
+        if (table->any_column([&](Column *c) { return c == column; })) {
             return table->name();
         }
     }

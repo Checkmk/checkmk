@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <map>
 #include <string>
+#include <utility>
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
 class DynamicColumn;
@@ -35,28 +36,32 @@ class Query;
 
 class Table {
 public:
-    typedef std::map<std::string, Column *> _columns_t;
-    typedef std::map<std::string, DynamicColumn *> _dynamic_columns_t;
-
-private:
-    _columns_t _columns;
-    _dynamic_columns_t _dynamic_columns;
-
-public:
     Table() {}
     virtual ~Table();
     virtual Column *column(const char *colname);
-    Column *dynamicColumn(const char *colname_with_args);
     virtual void answerQuery(Query *) = 0;
     virtual const char *name() = 0;
     virtual const char *prefixname() { return name(); }
     virtual bool isAuthorized(contact *, void *) { return true; }
     virtual void *findObject(char *) { return nullptr; }
     void addColumn(Column *);
-    bool hasColumn(Column *);
     void addDynamicColumn(DynamicColumn *);
-    void addAllColumnsToQuery(Query *);
-    _columns_t *columns() { return &_columns; }
+
+    template <typename Predicate>
+    bool any_column(Predicate pred) {
+        for (auto &c : _columns) {
+            if (pred(c.second)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+private:
+    Column *dynamicColumn(const char *colname_with_args);
+
+    std::map<std::string, Column *> _columns;
+    std::map<std::string, DynamicColumn *> _dynamic_columns;
 };
 
 #endif  // Table_h

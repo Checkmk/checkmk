@@ -181,6 +181,7 @@
     * 3327 FIX: Disallow scheduling downtimes with an end date that is before the start date
     * 3373 FIX: Fixed exception when handling syntax errors while loading pagetype files
     * 3374 FIX: Fixed broken Logwatch page when a host has no log directory (yet)
+    * 3375 FIX: Fixed exception when adding a bookmark while having a list not named my_bookmarks
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

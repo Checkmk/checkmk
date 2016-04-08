@@ -594,7 +594,10 @@ def save_annotations(annotations):
 
 
 def load_annotations(lock = False):
-    path = defaults.var_dir + "/web/statehist_annotations.mk"
+    path = defaults.var_dir + "/availability_annotations.mk"
+    if not os.path.exists(path):
+        # Try old path
+        path = defaults.var_dir + "/web/statehist_annotations.mk"
     if os.path.exists(path):
         if lock:
             aquire_lock(path)

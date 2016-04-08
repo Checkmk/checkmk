@@ -651,6 +651,8 @@ def render_annotations(annotations, by_host, what, avoptions, omit_service):
         return time.strftime(format, time.localtime(ts))
 
     annos_to_render = []
+    annos_rendered = set()
+
     for site_host, avail_entries in by_host.iteritems():
         for service in avail_entries.keys():
             site_host_svc = site_host[0], site_host[1], (service or None)
@@ -660,7 +662,9 @@ def render_annotations(annotations, by_host, what, avoptions, omit_service):
             for annotation in annotations_to_check:
                 if (annotation["from"] >= from_time and annotation["from"] <= until_time) or \
                    (annotation["until"] >= from_time and annotation["until"] <= until_time):
-                   annos_to_render.append((site_host_svc, annotation))
+                   if id(annotation) not in annos_rendered:
+                       annos_to_render.append((site_host_svc, annotation))
+                       annos_rendered.add(id(annotation))
 
     annos_to_render.sort(cmp=lambda a,b: cmp(a[1]["from"], b[1]["from"]) or cmp(a[0], b[0]))
 

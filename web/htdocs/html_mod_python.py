@@ -261,7 +261,7 @@ class html_mod_python(htmllib.html):
             elif self.var("limit") == "hard" and config.may("general.ignore_hard_limit"):
                 text += '<a href="%s">%s</a>' % \
                              (self.makeuri([("limit", "none")]), _('Repeat query without limit.'))
-            text += " " + _("<b>Note:</b> the shown results are incomplete do not reflect the sort order.")
+            text += " " + _("<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")
             self.show_warning(text)
             del rows[limit:]
             return False

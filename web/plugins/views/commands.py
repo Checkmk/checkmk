@@ -499,6 +499,20 @@ config.declare_permission("action.downtimes",
         _("Schedule and remove downtimes on hosts and services"),
         [ "user", "admin" ])
 
+
+def get_duration_human_readable(secs):
+    days, rest  = divmod(secs, 86400)
+    hours, rest = divmod(rest, 3600)
+    mins, secs  = divmod(rest, 60)
+
+    return ", ".join(["%d %s" % (val, label)
+                      for val, label in [(days, "days"),
+                                         (hours, "hours"),
+                                         (mins, "minutes"),
+                                         (secs, "seconds")]
+                      if val > 0])
+
+
 def command_downtime(cmdtag, spec, row):
     down_from = int(time.time())
     down_to = None
@@ -509,39 +523,44 @@ def command_downtime(cmdtag, spec, row):
     else:
         title_start = _("schedule an immediate downtime")
 
-    if html.var("_down_2h"):
-        down_to = down_from + 7200
-        title = _("<b>%s of 2 hours length</b> on") % title_start
+    rangebtns = html.all_varnames_with_prefix("_downrange")
 
-    elif html.var("_down_today"):
-        br = time.localtime(down_from)
-        down_to = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
-        title = _("<b>%s until 24:00:00</b> on") % title_start
-
-    elif html.var("_down_week"):
-        br = time.localtime(down_from)
-        wday = br.tm_wday
-        days_plus = 6 - wday
-        down_to = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
-        down_to += days_plus * 24 * 3600
-        title = _("<b>%s until sunday night</b> on") % title_start
-
-    elif html.var("_down_month"):
-        br = time.localtime(down_from)
-        new_month = br.tm_mon + 1
-        if new_month == 13:
-            new_year = br.tm_year + 1
-            new_month = 1
+    def resolve_end(name):
+        now = time.localtime(down_from)
+        if name == "next_day":
+            return time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1, \
+                _("<b>%s until 24:00:00</b> on") % title_start
+        elif name == "next_week":
+            br = time.localtime(down_from)
+            wday = br.tm_wday
+            days_plus = 6 - wday
+            res = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
+            res += days_plus * 24 * 3600
+            return res, _("<b>%s until sunday night</b> on") % title_start
+        elif name == "next_month":
+            br = time.localtime(down_from)
+            new_month = br.tm_mon + 1
+            if new_month == 13:
+                new_year = br.tm_year + 1
+                new_month = 1
+            else:
+                new_year = br.tm_year
+            return time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, br.tm_isdst)), \
+                _("<b>%s until end of month</b> on") % title_start
+        elif name == "next_year":
+            br = time.localtime(down_from)
+            return time.mktime((br.tm_year, 12, 31, 23, 59, 59, 0, 0, br.tm_isdst)) + 1, \
+                _("<b>%s until end of %d</b> on") % (title_start, br.tm_year)
         else:
-            new_year = br.tm_year
-        down_to = time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, br.tm_isdst))
-        title = _("<b>%s until end of month</b> on") % title_start
+            duration = int(name)
+            return down_from + duration, \
+                _("<b>%s of %s length</b> on") %\
+                (title_start, get_duration_human_readable(duration))
 
-    elif html.var("_down_year"):
-        br = time.localtime(down_from)
-        down_to = time.mktime((br.tm_year, 12, 31, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
-        title = _("<b>%s until end of %d</b> on") % (title_start, br.tm_year)
-
+    if rangebtns:
+        rangebtn = rangebtns.next()
+        btnname, end = rangebtn.split("__", 1)
+        down_to, title = resolve_end(end)
     elif html.var("_down_from_now"):
         try:
             minutes = int(html.var("_down_minutes"))
@@ -668,11 +687,8 @@ def paint_downtime_buttons(what):
     html.number_input("_down_minutes", 60, size=4, submit="_down_from_now")
     html.write("&nbsp; " + _("minutes"))
     html.write("<hr>")
-    html.button("_down_2h", _("2 hours"))
-    html.button("_down_today", _("Today"))
-    html.button("_down_week", _("This week"))
-    html.button("_down_month", _("This month"))
-    html.button("_down_year", _("This year"))
+    for time_range in config.user_downtime_timeranges:
+        html.button("_downrange__%s" % time_range['end'], time_range['title'])
     if what != "aggr":
         html.write(" &nbsp; - &nbsp;")
         html.button("_down_remove", _("Remove all"))

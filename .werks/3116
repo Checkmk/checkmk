@@ -1,0 +1,12 @@
+Title: Timerange buttons for downtimes can now be configured
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.9i1
+Date: 1460101816
+Class: feature
+
+The dialog to set a downtime currently offers 5 buttons to quickly set a downtime: 2 hours, today,
+this week, this month and this year.
+Now one can add additional ranges or replace the current ones. The configuration can be found under
+Globals Settings->Custom Downtime Timeranges

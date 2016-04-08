@@ -554,6 +554,51 @@ register_configvar(group,
     domain = "multisite",
 )
 
+register_configvar(group,
+    "user_downtime_timeranges",
+    ListOf(
+        Dictionary(
+            elements = [
+                ('title', TextUnicode(title = _('Title'))),
+                ('end', Alternative(
+                    title = _("To"),
+                    elements = [
+                        Age(
+                            title = _("Duration"),
+                            display = [ "minutes", "hours", "days" ]
+                        ),
+                        DropdownChoice(
+                            title = _("Until"),
+                            choices = [
+                                ('next_day', _("Start of next day")),
+                                ('next_week', _("Start of next week")),
+                                ('next_month', _("Start of next month")),
+                                ('next_year', _("Start of next year")),
+                            ],
+                            default_value = "next_day"
+                        )
+                    ],
+                    style = "dropdown",
+                    default_value = 24 *60 * 60,
+                ))
+            ],
+            optional_keys = [],
+        ),
+        title = _("Custom Downtime Timeranges"),
+        movable = True,
+        totext = _("%d timeranges"),
+        default_value = [
+            {'title': _("2 hours"),    'end': 2 * 60 * 60},
+            {'title': _("Today"),      'end': 'next_day'},
+            {'title': _("This week"),  'end': 'next_week'},
+            {'title': _("This month"), 'end': 'next_month'},
+            {'title': _("This year"),  'end': 'next_year'},
+        ]
+    ),
+    domain = "multisite",
+)
+
+
 def get_builtin_icons():
     import views
     return [ (id, id) for id in views.get_multisite_icons().keys() ]

@@ -263,6 +263,14 @@ user_localizations = {
 # Contains user specified icons and actions for hosts and services
 user_icons_and_actions = {}
 
+user_downtime_timeranges = [
+            {'title': _("2 hours"),    'end': 2 * 60 * 60},
+            {'title': _("Today"),      'end': 'next_day'},
+            {'title': _("This week"),  'end': 'next_week'},
+            {'title': _("This month"), 'end': 'next_month'},
+            {'title': _("This year"),  'end': 'next_year'},
+        ]
+
 # Override toplevel and sort_index settings of builtin icons
 builtin_icon_visibility = {}
 

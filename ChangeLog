@@ -8,6 +8,7 @@
     * 3400 FIX: local: do not crash in P mode if performance data contains a unit of measurement
 
     Multisite:
+    * 3118 FIX: Availability view now takes daylight saving time into account
     * 3401 FIX: Fix sorting and grouping hosts by their IPv4 address
     * 3402 FIX: Using information from inventory in column tooltips now longer crashes
     * 3413 FIX: Correctly display non-Ascii-characters in host tag values in host tag filter

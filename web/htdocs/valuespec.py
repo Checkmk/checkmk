@@ -2229,6 +2229,58 @@ month_names = [
   _("September"), _("October"),  _("November"), _("December")
 ]
 
+
+class TimeHelper:
+    @staticmethod
+    def round(timestamp, unit):
+        time_s = list(time.localtime(timestamp))
+        time_s[3] = time_s[4] = time_s[5] = 0
+        time_s[8] = -1
+        if unit == 'd':
+            return time.mktime(time_s)
+        elif unit == 'w':
+            days = time_s[6]       # 0 based
+        elif unit == 'm':
+            days = time_s[2] - 1   # 1 based
+        elif unit == 'y':
+            days = time_s[7] - 1   # 1 based
+        else:
+            raise MKGeneralException("invalid time unit %s" % unit)
+
+        return TimeHelper.round(time.mktime(time_s) - days * 86400 + 3600, 'd')
+
+    @staticmethod
+    def add(timestamp, count, unit):
+        if unit == 'h':
+            return timestamp + 3600 * count
+        elif unit == 'd':
+            return timestamp + 86400 * count
+        elif unit == 'w':
+            return timestamp + (7 * 86400) * count
+        elif unit == 'm':
+            time_s = list(time.localtime(timestamp))
+            years, months = divmod(abs(count), 12)
+
+            if count < 0:
+                years *= -1
+                months *= -1
+
+            time_s[0] += years
+            time_s[1] += months
+            if time_s[1] <= 0:
+                time_s[0] -= 1
+                time_s[1] = 12 - time_s[1]
+            time_s[8] = -1
+            return time.mktime(time_s)
+        elif unit == 'y':
+            time_s = list(time.localtime(timestamp))
+            time_s[0] += count
+            return time.mktime(time_s)
+        else:
+            MKGeneralException("invalid time unit %s" % unit)
+
+
+
 class Timerange(CascadingDropdown):
     def __init__(self, **kwargs):
         self._title = _('Time range')
@@ -2310,6 +2362,7 @@ class Timerange(CascadingDropdown):
             }.get(rangespec[1], "4h")
 
         now = time.time()
+
         if rangespec[0] == 'age':
             from_time = now - rangespec[1]
             until_time = now
@@ -2321,69 +2374,45 @@ class Timerange(CascadingDropdown):
             if from_time > until_time:
                 raise MKUserError("avo_rangespec_9_0_year", _("The end date must be after the start date"))
             if rangespec[0] == 'date':
-                until_time += 86400 # Consider *end* of this day
+                # add 25 hours, then round to 00:00 of that day. This accounts for
+                # daylight-saving time
+                until_time = TimeHelper.round(TimeHelper.add(until_time, 25, 'h'), 'd')
             title = AbsoluteDate().value_to_text(from_time) + " ... " + \
                     AbsoluteDate().value_to_text(until_time)
             return (from_time, until_time), title
 
         else:
-            # year, month, day_of_month, hour, minute, second, day_of_week, day_of_year, is_daylightsavingtime
-            broken = list(time.localtime(now))
-            broken[3:6] = 0, 0, 0 # set time to 00:00:00
-            midnight = time.mktime(broken)
-
             until_time = now
             if rangespec[0].isdigit(): # 4h, 365d
                 count = int(rangespec[:-1])
-                s = rangespec[-1]
-                if s == 'd':
-                    seconds = count * 86400
-                    title = _("Last %d days") % count
-                else:
-                    seconds = count * 3600
-                    title = _("Last %d hours") % count
-                from_time = now - seconds
+                from_time = TimeHelper.add(now, count * -1, rangespec[-1])
+                unit_name = {
+                    'd': "days",
+                    'h': "hours"
+                }[rangespec[-1]]
+                title = _("Last %d %s") % (count, unit_name)
                 return (from_time, now), title
 
-            if rangespec[0] == 'd': # this/last Day
-                from_time = time.mktime(broken)
-                titles = _("Today"), _("Yesterday")
-
-            elif rangespec[0] == 'w': # week
-                from_time = midnight - (broken[6]) * 86400
-                titles = _("This week"), _("Last week")
-
-            elif rangespec[0] == 'm': # month
-                broken[2] = 1
-                from_time = time.mktime(broken)
-                last_year = broken[0] - ((broken[1] == 1) and 1 or 0)
-                titles = month_names[broken[1] - 1] + " " + str(broken[0]), \
-                         month_names[(broken[1] + 10) % 12] + " " + str(last_year)
-
-            elif rangespec[0] == 'y': # year
-                broken[1:3] = [1, 1]
-                from_time = time.mktime(broken)
-                titles = str(broken[0]), str(broken[0]-1)
+            year, month = time.localtime(now)[:2]
+            # base time is current time rounded down to the nearest unit (day, week, ...)
+            from_time = TimeHelper.round(now, rangespec[0])
+            # derive titles from unit ()
+            titles = {
+                'd': (_("Today"),     _("Yesterday")),
+                'w': (_("This week"), _("Last week")),
+                'y': (str(year),      str(year - 1)),
+                'm': ("%s %d" % (month_names[month - 1], year),
+                      "%s %d" % (month_names[(month + 10) % 12], year - int(month == 1))),
+            }[rangespec[0]]
 
             if rangespec[1] == '0':
                 return (from_time, now), titles[0]
-
             else: # last (previous)
-                if rangespec[0] == 'd':
-                    return (from_time - 86400, from_time), titles[1]
-                elif rangespec[0] == 'w':
-                    return (from_time - 7 * 86400, from_time), titles[1]
-
-                until_time = from_time
-                from_broken = list(time.localtime(from_time))
-                if rangespec[0] == 'y':
-                    from_broken[0] -= 1
-                else: # m
-                    from_broken[1] -= 1
-                    if from_broken[1] == 0:
-                        from_broken[1] = 12
-                        from_broken[0] -= 1
-                return (time.mktime(from_broken), until_time), titles[1]
+                prev_time = TimeHelper.add(from_time, -1, rangespec[0])
+                # add one hour to the calculated time so that if dst started in that period,
+                # we don't round down a whole day
+                prev_time = TimeHelper.round(prev_time + 3600, 'd')
+                return (prev_time, from_time), titles[1]
 
 
 # A selection of various date formats

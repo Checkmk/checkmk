@@ -28,9 +28,6 @@
 #
 # - Host-Downtimes müssen auch auf Services wirken
 # - Test mit Hosts und BI-Aggregaten
-# - Wenn man eine Annotation gelöscht hat, braucht man erst einen Reload,
-#   damit die Zeitleiste korrekt dargestellt wird. Anscheinend haben wir
-#   hier ein Reihenfolgenproblem.
 
 
 import availability, table
@@ -193,6 +190,12 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
         av_object = None
         title += view_title(view)
 
+    # Deletion must take place before computation, since it affects the outcome
+    html.plug()
+    handle_delete_annotations()
+    confirmation_html_code = html.drain()
+    html.unplug()
+
     # Now compute all data, we need this also for CSV export
     if not html.has_user_errors():
         av_rawdata = availability.get_availability_rawdata(what, filterheaders, only_sites,
@@ -211,7 +214,8 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
     if 'T' in display_options:
         html.top_heading(title)
 
-    handle_delete_annotations()
+    html.write(confirmation_html_code)
+
 
     # Remove variables for editing annotations, otherwise they will make it into the uris
     html.del_all_vars("editanno_")
@@ -724,7 +728,6 @@ def edit_annotation():
 
 # Called at the beginning of every availability page
 def handle_delete_annotations():
-    html.debug(u"Ich lösche")
     if html.var("_delete_annotation"):
         site_id = html.var("anno_site") or ""
         hostname = html.var("anno_host")

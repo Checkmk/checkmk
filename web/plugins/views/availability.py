@@ -28,8 +28,6 @@
 #
 # - Host-Downtimes müssen auch auf Services wirken
 # - Test mit Hosts und BI-Aggregaten
-# - Wenn man Reload macht nach dem Speichern in einer Annotation, landet man
-#   wieder in der Maske.
 # - Wenn man eine Annotation gelöscht hat, braucht man erst einen Reload,
 #   damit die Zeitleiste korrekt dargestellt wird. Anscheinend haben wir
 #   hier ein Reihenfolgenproblem.
@@ -726,6 +724,7 @@ def edit_annotation():
 
 # Called at the beginning of every availability page
 def handle_delete_annotations():
+    html.debug(u"Ich lösche")
     if html.var("_delete_annotation"):
         site_id = html.var("anno_site") or ""
         hostname = html.var("anno_host")
@@ -744,6 +743,7 @@ def handle_delete_annotations():
 
         availability.delete_annotation(annotations, site_host_svc, fromtime, untiltime)
         availability.save_annotations(annotations)
+
 
 def handle_edit_annotations():
     # Avoid reshowing edit form after edit and reload

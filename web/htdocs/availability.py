@@ -955,7 +955,9 @@ def melt_short_intervals(entries, duration, dont_merge):
 
 
 def save_annotations(annotations):
-    file(defaults.var_dir + "/availability_annotations.mk", "w").write(repr(annotations) + "\n")
+    path = defaults.var_dir + "/availability_annotations.mk"
+    file(path + ".new", "w").write(repr(annotations) + "\n")
+    os.rename(path + ".new", path)
 
 
 def load_annotations(lock = False):

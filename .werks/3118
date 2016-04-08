@@ -1,0 +1,9 @@
+Title: Availability view now takes daylight saving time into account
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.9i1
+Date: 1460130852
+Class: fix
+
+

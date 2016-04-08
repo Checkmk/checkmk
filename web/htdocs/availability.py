@@ -762,8 +762,8 @@ def compute_availability(what, av_rawdata, avoptions):
     return filtered_table
 
 
-# TODO: Wir müssen auch den Fall behandeln, dass ein Host reklassifiert wird.
-# dann müssen die Services das Feld in_host_downtime ebenfalls nachziehen!
+# Note: Reclassifications of host/service periods do currently *not* have
+# any impact on BI aggregations.
 def reclassify_by_annotations(what, av_rawdata):
     annotations = load_annotations()
     if not annotations:

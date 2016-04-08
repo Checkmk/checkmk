@@ -1,0 +1,19 @@
+Title: Availability: Annotations can now be used to reclassify the scheduled downtime status
+Level: 2
+Component: reporting
+Compatible: compat
+Version: 1.2.9i1
+Date: 1460101981
+Class: feature
+
+The availability computation of hosts and services now allows to use the
+existing {{Annotations}} in order to reclassify the annotated periods as
+having been in scheduled downtime or even as not having been in scheduled
+downtime. That way you can fix your figures in case one has forgotten to enter
+a scheduled downtime in the past or in the case that scheduled downtimes
+were just used in order to disable notifications (but the breakdown was in
+fact real and not scheduled).
+
+Availability of BI aggregations currently does not support annotations or any
+reclassifications. Neither does it honor reclassifications in the underlying
+host and service history.

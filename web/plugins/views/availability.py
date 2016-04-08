@@ -24,12 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# ZUTUN / TODO:
-#
-# - Test mit Hosts und BI-Aggregaten
-# - Host-Annotations nicht mehrfach zeigen!
-
-
 import availability, table
 from valuespec import *
 

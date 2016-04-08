@@ -56,6 +56,7 @@ except ImportError:
 from lib import *
 
 # Only parse variable adhering to the following regular expressions
+# TODO: Fix this regex. +-\ selects all from + to \, not +, - and \!
 varname_regex = re.compile('^[\w\d_.%+-\\\*]+$')
 
 # Information about uri

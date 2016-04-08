@@ -654,7 +654,10 @@ def render_annotations(annotations, by_host, what, avoptions, omit_service):
     for site_host, avail_entries in by_host.iteritems():
         for service in avail_entries.keys():
             site_host_svc = site_host[0], site_host[1], (service or None)
-            for annotation in annotations.get(site_host_svc, []):
+            annotations_to_check = annotations.get(site_host_svc, [])
+            if what == "service": # Also show host annotations for services
+                annotations_to_check += annotations.get((site_host[0], site_host[1], None), [])
+            for annotation in annotations_to_check:
                 if (annotation["from"] >= from_time and annotation["from"] <= until_time) or \
                    (annotation["until"] >= from_time and annotation["until"] <= until_time):
                    annos_to_render.append((site_host_svc, annotation))

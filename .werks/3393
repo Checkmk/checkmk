@@ -1,0 +1,9 @@
+Title: Availability annotations: also show annotations for hosts when showing services
+Level: 1
+Component: reporting
+Compatible: compat
+Version: 1.2.8b10
+Date: 1460100559
+Class: fix
+
+

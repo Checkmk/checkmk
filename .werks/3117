@@ -1,0 +1,13 @@
+Title: windows agent: fixed installer may fail to re-start service on update
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b10
+Date: 1460108180
+Class: fix
+
+When updating the agent (i.e. through the auto updater) there was only a fairly short timeout for
+the agent-service to stop.
+If the agent failed to stop in time (i.e. because of a long-running plugin) the agent was still
+installed but the service wasn't started afterwards.
+This has now been fixed by enforcing an unlimited wait when the service is being shut down.

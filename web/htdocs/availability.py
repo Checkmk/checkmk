@@ -24,13 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#### TODO: Jetzt noch die Timeline, die *nicht* inline ist. Dazu der
-#### choords ergänzen. Die render_timeline() Funktion malt aber ja
-#### auch noch die Tabelle mit Hovercode und noch was was ich vergessen
-#### habe. Auch die Tabelle muss formalisiert erzeugt werden. Dann
-#### die Möglichkeit "All Timelines" schaffen und diese dann 1:1 im
-#### Reporting abbilden.
-
 import bi, views, visuals
 import sites
 # TODO: Get rid of import of views

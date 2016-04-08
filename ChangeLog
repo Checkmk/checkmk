@@ -260,6 +260,7 @@
     * 3268 FIX: Availability options were invalid after resetting them...
     * 3269 FIX: Fix rendering of floating point values < 1 in graphs (e.g. CPU load)
     * 3331 FIX: Availability: avoid duplication of annotation when changing time while editing
+    * 3332 FIX: Avoid falling back to annotation edit form when reloading page directly after editing
 
     Event Console:
     * 2999 The contact name is now included in Event Console notifications...

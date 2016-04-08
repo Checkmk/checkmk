@@ -746,6 +746,9 @@ def handle_delete_annotations():
         availability.save_annotations(annotations)
 
 def handle_edit_annotations():
+    # Avoid reshowing edit form after edit and reload
+    if html.is_transaction() and not html.transaction_valid():
+        return False
     if html.var("anno_host") and not html.var("_delete_annotation"):
         finished = edit_annotation()
     else:

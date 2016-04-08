@@ -1,0 +1,10 @@
+Title: Avoid falling back to annotation edit form when reloading page directly after editing
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1460098667
+
+

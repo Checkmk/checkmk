@@ -617,7 +617,7 @@ def spans_by_object(spans):
 
 # Compute an availability table. what is one of "bi", "host", "service".
 def compute_availability(what, av_rawdata, avoptions):
-    reclassified_rawdata = reclassify_by_annotations(av_rawdata)
+    reclassified_rawdata = reclassify_by_annotations(what, av_rawdata)
 
     # Now compute availability table. We have the following possible states:
     # 1. "unmonitored"
@@ -764,7 +764,7 @@ def compute_availability(what, av_rawdata, avoptions):
 
 # TODO: Wir müssen auch den Fall behandeln, dass ein Host reklassifiert wird.
 # dann müssen die Services das Feld in_host_downtime ebenfalls nachziehen!
-def reclassify_by_annotations(av_rawdata):
+def reclassify_by_annotations(what, av_rawdata):
     annotations = load_annotations()
     if not annotations:
         return av_rawdata
@@ -775,25 +775,32 @@ def reclassify_by_annotations(av_rawdata):
         reclassified_rawdata[(site, host_name)] = new_entries
         for service_description, service_history in service_entries.iteritems():
             anno_key = (site, host_name, service_description)
-            if anno_key in annotations:
-                new_entries[service_description] = reclassify_service_by_annotations(service_history, annotations[anno_key])
-            else:
-                new_entries[service_description] = service_history
+            cycles = [ ((site, host_name, service_description), "in_downtime") ]
+            if what == "service":
+                cycles = [ ((site, host_name, None), "in_host_downtime") ] + cycles
+
+            for anno_key, entry_to_change in cycles:
+                if anno_key in annotations:
+                    new_entries[service_description] = \
+                          reclassify_service_by_annotations(service_history, annotations[anno_key], entry_to_change)
+                    service_history = new_entries[service_description]
+                else:
+                    new_entries[service_description] = service_history
 
     return reclassified_rawdata
 
 
-def reclassify_service_by_annotations(service_history, annotation_entries):
+def reclassify_service_by_annotations(service_history, annotation_entries, entry_to_change):
     new_history = service_history
     for annotation in annotation_entries:
         downtime = annotation.get("downtime")
         if downtime == None:
             continue
-        new_history = reclassify_service_by_annotation(new_history, annotation)
+        new_history = reclassify_service_by_annotation(new_history, annotation, entry_to_change)
     return new_history
 
 
-def reclassify_service_by_annotation(service_history, annotation):
+def reclassify_service_by_annotation(service_history, annotation, entry_to_change):
     downtime = annotation["downtime"]
 
     new_history = []
@@ -801,7 +808,7 @@ def reclassify_service_by_annotation(service_history, annotation):
         if annotation["from"] < history_entry["until"] and annotation["until"] > history_entry["from"]:
             for is_in, p_from, p_until in [
                   ( False, history_entry["from"],                            max(history_entry["from"], annotation["from"]) ),
-                  ( True, max(history_entry["from"], annotation["from"]),   min(history_entry["until"], annotation["until"]) ),
+                  ( True, max(history_entry["from"], annotation["from"]),    min(history_entry["until"], annotation["until"]) ),
                   ( False, min(history_entry["until"], annotation["until"]), history_entry["until"] ),
                 ]:
                 if p_from < p_until:
@@ -810,7 +817,7 @@ def reclassify_service_by_annotation(service_history, annotation):
                     new_entry["until"] = p_until
                     new_entry["duration"] = p_until - p_from
                     if is_in:
-                        new_entry["in_downtime"] = downtime and 1 or 0
+                        new_entry[entry_to_change] = downtime and 1 or 0
                     new_history.append(new_entry)
 
         else:

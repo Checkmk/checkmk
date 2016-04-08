@@ -26,8 +26,8 @@
 
 # ZUTUN / TODO:
 #
-# - Host-Downtimes müssen auch auf Services wirken
 # - Test mit Hosts und BI-Aggregaten
+# - Host-Annotations nicht mehrfach zeigen!
 
 
 import availability, table

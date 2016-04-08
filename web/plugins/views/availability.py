@@ -26,7 +26,6 @@
 
 # ZUTUN / TODO:
 #
-# - Duplizieren der Annotations reparieren
 # - Host-Downtimes müssen auch auf Services wirken
 # - Test mit Hosts und BI-Aggregaten
 # - Wenn man Reload macht nach dem Speichern in einer Annotation, landet man

@@ -277,6 +277,13 @@ void debug_script_container(script_container *container) {
     crash_log("buffer_work: \n<<<<\n%s\n>>>>", container->buffer_work);
 }
 
+
+template <typename T>
+bool in_set(const T &val, const std::set<T> &test_set) {
+    return test_set.find(val) != test_set.end();
+}
+
+
 //  .----------------------------------------------------------------------.
 //  |  ______              _                 _   _               ______    |
 //  | / / / /___ _   _ ___| |_ ___ _ __ ___ | |_(_)_ __ ___   ___\ \ \ \   |
@@ -2708,6 +2715,28 @@ void UninstallService() {
         if (service) {
             SERVICE_STATUS serviceStatus;
             if (QueryServiceStatus(service, &serviceStatus)) {
+                while (in_set(serviceStatus.dwCurrentState,
+                              {SERVICE_RUNNING, SERVICE_STOP_PENDING})) {
+                    if (serviceStatus.dwCurrentState == SERVICE_STOP_PENDING) {
+                        printf(SERVICE_NAME " waiting for service to finish\n");
+                        // wait for the wait-hint but no less than 1 second and
+                        // no more than 10
+                        DWORD waitTime = serviceStatus.dwWaitHint / 10;
+                        waitTime =
+                            std::max(1000UL, std::min(waitTime, 10000UL));
+                        Sleep(waitTime);
+                        if (!QueryServiceStatus(service, &serviceStatus)) {
+                            break;
+                        }
+                    } else {
+                        if (ControlService(service, SERVICE_CONTROL_STOP,
+                                           &serviceStatus) == 0) {
+                            break;
+                        }
+                        printf(SERVICE_NAME " stopped\n");
+                    }
+                }
+
                 if (serviceStatus.dwCurrentState == SERVICE_STOPPED) {
                     if (DeleteService(service))
                         printf(SERVICE_NAME " Removed Successfully\n");

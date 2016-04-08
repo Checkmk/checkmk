@@ -972,13 +972,12 @@ def load_annotations(lock = False):
         return {}
 
 
-def update_annotations(site_host_svc, annotation):
+def update_annotations(site_host_svc, annotation, replace_existing):
     annotations = load_annotations(lock = True)
     entries = annotations.get(site_host_svc, [])
     new_entries = []
     for entry in entries:
-        if  entry["from"] == annotation["from"] \
-            and entry["until"] == annotation["until"]:
+        if entry == replace_existing:
             continue # Skip existing entries with same identity
         new_entries.append(entry)
     new_entries.append(annotation)

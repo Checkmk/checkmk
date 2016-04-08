@@ -1,0 +1,10 @@
+Title: Availability: avoid duplication of annotation when changing time while editing
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1460097833
+
+

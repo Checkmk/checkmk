@@ -599,13 +599,12 @@ def load_annotations(lock = False):
     else:
         return {}
 
-def update_annotations(site_host_svc, annotation):
+def update_annotations(site_host_svc, annotation, replace_existing):
     annotations = load_annotations(lock = True)
     entries = annotations.get(site_host_svc, [])
     new_entries = []
     for entry in entries:
-        if  entry["from"] == annotation["from"] \
-            and entry["until"] == annotation["until"]:
+        if entry == replace_existing:
             continue # Skip existing entries with same identity
         new_entries.append(entry)
     new_entries.append(annotation)
@@ -706,14 +705,17 @@ def edit_annotation():
     annotations = load_annotations()
     annotation = find_annotation(annotations, site_host_svc, fromtime, untiltime)
     if not annotation:
-        annotation = {
-        "from"    : fromtime,
-        "until"   : untiltime,
-        "text"    : "",
+        value = {
+            "from"    : fromtime,
+            "until"   : untiltime,
+            "text"    : "",
         }
-    annotation["host"] = hostname
-    annotation["service"] = service
-    annotation["site"] = site_id
+    else:
+        value = annotation.copy()
+
+    value["host"] = hostname
+    value["service"] = service
+    value["site"] = site_id
 
     # FIXME: Why use plugging here? Can we clean this up?
     html.plug()
@@ -735,7 +737,7 @@ def edit_annotation():
         ( "from",    AbsoluteDate(title = _("Start-Time"), include_time = True) ),
         ( "until",   AbsoluteDate(title = _("End-Time"), include_time = True) ),
         ( "text",    TextAreaUnicode(title = _("Annotation"), allow_empty = False) ), ],
-        annotation,
+        value,
         varprefix = "editanno_",
         formname = "editanno",
         focus = "text")
@@ -746,7 +748,7 @@ def edit_annotation():
         del value["host"]
         value["date"] = time.time()
         value["author"] = config.user_id
-        update_annotations(site_host_svc, value)
+        update_annotations(site_host_svc, value, replace_existing=annotation)
         html.drain() # omit previous HTML code, not needed
         html.unplug()
         html.del_all_vars(prefix = "editanno_")

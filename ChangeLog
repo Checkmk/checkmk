@@ -45,6 +45,9 @@
     * 3329 FIX: Function discover_services now allows the URL parameter mode...
     * 3330 FIX: WATO Web-API now allows to specify root folder with / instead of empty string again
 
+    Reporting & Availability:
+    * 3331 FIX: Availability: avoid duplication of annotation when changing time while editing
+
     HW/SW-Inventory:
     * 3319 HW/SW-Inventory service can now be OK in case of unreachable host...
 

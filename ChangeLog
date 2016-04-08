@@ -50,6 +50,9 @@
     * 3332 FIX: Avoid falling back to annotation edit form when reloading page directly after editing
     * 3393 FIX: Availability annotations: also show annotations for hosts when showing services
 
+    Event Console:
+    * 3240 FIX: Fixed various quotation issues in GUI parts related to the EC
+
     HW/SW-Inventory:
     * 3319 HW/SW-Inventory service can now be OK in case of unreachable host...
 

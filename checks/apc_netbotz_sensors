@@ -133,7 +133,7 @@ def parse_apc_netbotz_sensors(info):
             item_type = map_sensors[item_info[0]]
             item_name = " ".join(item_info[2:])
             parsed.setdefault(item_type, {})
-            parsed[item_type][item_name] = (float(reading_str)/10 )
+            parsed[item_type][item_name] = float(reading_str)/10
 
     return parsed
 

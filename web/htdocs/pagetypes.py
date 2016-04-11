@@ -166,11 +166,17 @@ class Base(object):
     def name(self):
         return self._["name"]
 
+
     def title(self):
         return self._["title"]
 
+
     def description(self):
         return self._.get("description", "")
+
+
+    def is_hidden(self):
+        return False
 
 
     def render_title(self):

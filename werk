@@ -149,7 +149,8 @@ def rewrite_changelog(*args):
         else:
             chn.write("\n")
         compname = dict(components).get(compid, compid)
-        chn.write("    %s:\n" % compname)
+        chn.write("    %s:\n"
+                  "\n" % compname)
         for werk in werks:
             write_changelog_line(chn, werk)
 

@@ -27,7 +27,6 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <time.h>
-#include <string>
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
@@ -43,8 +42,6 @@ public:
     bool isAuthorized(contact *ctc, void *data) override;
     void handleNewMessage(Logfile *logfile, time_t since, time_t until,
                           unsigned logclasses);
-    static void addColumns(Table *, std::string prefix, int indirect_offset,
-                           bool add_host = true, bool add_services = true);
     void answerQuery(Query *query) override;
     Column *column(const char *colname) override;
 

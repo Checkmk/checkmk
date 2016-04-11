@@ -28,26 +28,19 @@
 #include "Query.h"
 #include "nagios.h"
 
-using std::string;
-
 extern contactgroup *contactgroup_list;
 
-TableContactgroups::TableContactgroups() { addColumns(this, "", -1); }
-
-// static
-void TableContactgroups::addColumns(Table *table, string prefix,
-                                    int indirect_offset) {
+TableContactgroups::TableContactgroups() {
     contactgroup cg;
     char *ref = reinterpret_cast<char *>(&cg);
-    table->addColumn(new OffsetStringColumn(
-        prefix + "name", "The name of the contactgroup",
-        reinterpret_cast<char *>(&cg.group_name) - ref, indirect_offset));
-    table->addColumn(new OffsetStringColumn(
-        prefix + "alias", "The alias of the contactgroup",
-        reinterpret_cast<char *>(&cg.alias) - ref, indirect_offset));
-    table->addColumn(new ContactgroupsMemberColumn(
-        prefix + "members", "A list of all members of this contactgroup",
-        indirect_offset));
+    addColumn(
+        new OffsetStringColumn("name", "The name of the contactgroup",
+                               reinterpret_cast<char *>(&cg.group_name) - ref));
+    addColumn(
+        new OffsetStringColumn("alias", "The alias of the contactgroup",
+                               reinterpret_cast<char *>(&cg.alias) - ref));
+    addColumn(new ContactgroupsMemberColumn(
+        "members", "A list of all members of this contactgroup", -1));
 }
 
 void TableContactgroups::answerQuery(Query *query) {

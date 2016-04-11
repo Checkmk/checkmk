@@ -27,6 +27,7 @@
 #include <time.h>
 #include <map>
 #include <mutex>
+#include <string>
 #include <utility>
 #include "LogCache.h"
 #include "LogEntry.h"
@@ -54,112 +55,89 @@ using std::string;
 // watch nagios' logfile rotation
 extern Store *g_store;
 
-TableLog::TableLog() { addColumns(this, "", -1); }
-
-// static
-void TableLog::addColumns(Table *table, string prefix, int indirect_offset,
-                          bool add_host, bool add_services) {
+TableLog::TableLog() {
     LogEntry *ref = nullptr;
-    table->addColumn(new OffsetTimeColumn(
-        prefix + "time", "Time of the log event (UNIX timestamp)",
-        reinterpret_cast<char *>(&(ref->_time)) - reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetIntColumn(
-        prefix + "lineno", "The number of the line in the log file",
-        reinterpret_cast<char *>(&(ref->_lineno)) -
-            reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetIntColumn(
-        prefix + "class",
+    addColumn(new OffsetTimeColumn("time",
+                                   "Time of the log event (UNIX timestamp)",
+                                   reinterpret_cast<char *>(&(ref->_time)) -
+                                       reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetIntColumn("lineno",
+                                  "The number of the line in the log file",
+                                  reinterpret_cast<char *>(&(ref->_lineno)) -
+                                      reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetIntColumn(
+        "class",
         "The class of the message as integer (0:info, 1:state, 2:program, "
         "3:notification, 4:passive, 5:command)",
         reinterpret_cast<char *>(&(ref->_logclass)) -
-            reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetStringColumn(
-        prefix + "message", "The complete message line including the timestamp",
+            reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetStringColumn(
+        "message", "The complete message line including the timestamp",
         reinterpret_cast<char *>(&(ref->_complete)) -
-            reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetStringColumn(
-        prefix + "type",
+            reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetStringColumn(
+        "type",
         "The type of the message (text before the colon), the message itself "
         "for info messages",
-        reinterpret_cast<char *>(&(ref->_text)) - reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetStringColumn(
-        prefix + "options", "The part of the message after the ':'",
+        reinterpret_cast<char *>(&(ref->_text)) -
+            reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetStringColumn(
+        "options", "The part of the message after the ':'",
         reinterpret_cast<char *>(&(ref->_options)) -
-            reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetStringColumn(
-        prefix + "comment", "A comment field used in various message types",
+            reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetStringColumn(
+        "comment", "A comment field used in various message types",
         reinterpret_cast<char *>(&(ref->_comment)) -
-            reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetStringColumn(
-        prefix + "plugin_output",
+            reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetStringColumn(
+        "plugin_output",
         "The output of the check, if any is associated with the message",
         reinterpret_cast<char *>(&(ref->_check_output)) -
-            reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetIntColumn(
-        prefix + "state", "The state of the host or service in question",
+            reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetIntColumn(
+        "state", "The state of the host or service in question",
         reinterpret_cast<char *>(&(ref->_state)) -
-            reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetStringColumn(
-        prefix + "state_type",
-        "The type of the state (varies on different log classes)",
+            reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetStringColumn(
+        "state_type", "The type of the state (varies on different log classes)",
         reinterpret_cast<char *>(&(ref->_state_type)) -
-            reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetIntColumn(
-        prefix + "attempt", "The number of the check attempt",
-        reinterpret_cast<char *>(&(ref->_attempt)) -
-            reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetStringColumn(
-        prefix + "service_description",
+            reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetIntColumn("attempt", "The number of the check attempt",
+                                  reinterpret_cast<char *>(&(ref->_attempt)) -
+                                      reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetStringColumn(
+        "service_description",
         "The description of the service log entry is about (might be empty)",
         reinterpret_cast<char *>(&(ref->_svc_desc)) -
-            reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetStringColumn(
-        prefix + "host_name",
+            reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetStringColumn(
+        "host_name",
         "The name of the host the log entry is about (might be empty)",
         reinterpret_cast<char *>(&(ref->_host_name)) -
-            reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetStringColumn(
-        prefix + "contact_name",
+            reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetStringColumn(
+        "contact_name",
         "The name of the contact the log entry is about (might be empty)",
         reinterpret_cast<char *>(&(ref->_contact_name)) -
-            reinterpret_cast<char *>(ref),
-        indirect_offset));
-    table->addColumn(new OffsetStringColumn(
-        prefix + "command_name",
+            reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetStringColumn(
+        "command_name",
         "The name of the command of the log entry (e.g. for notifications)",
         reinterpret_cast<char *>(&(ref->_command_name)) -
-            reinterpret_cast<char *>(ref),
-        indirect_offset));
+            reinterpret_cast<char *>(ref)));
 
     // join host and service tables
-    if (add_host) {
-        TableHosts::addColumns(table, "current_host_",
-                               reinterpret_cast<char *>(&(ref->_host)) -
-                                   reinterpret_cast<char *>(ref));
-    }
-    if (add_services) {
-        TableServices::addColumns(table, "current_service_",
-                                  reinterpret_cast<char *>(&(ref->_service)) -
-                                      reinterpret_cast<char *>(ref),
-                                  false /* no hosts table */);
-    }
-    TableContacts::addColumns(table, "current_contact_",
+    TableHosts::addColumns(this, "current_host_",
+                           reinterpret_cast<char *>(&(ref->_host)) -
+                               reinterpret_cast<char *>(ref));
+    TableServices::addColumns(this, "current_service_",
+                              reinterpret_cast<char *>(&(ref->_service)) -
+                                  reinterpret_cast<char *>(ref),
+                              false /* no hosts table */);
+    TableContacts::addColumns(this, "current_contact_",
                               reinterpret_cast<char *>(&(ref->_contact)) -
                                   reinterpret_cast<char *>(ref));
-    TableCommands::addColumns(table, "current_command_",
+    TableCommands::addColumns(this, "current_command_",
                               reinterpret_cast<char *>(&(ref->_command)) -
                                   reinterpret_cast<char *>(ref));
 }

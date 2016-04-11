@@ -26,7 +26,6 @@
 #define TableTimeperiods_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <string>
 #include "Table.h"
 class Query;
 
@@ -35,8 +34,6 @@ public:
     TableTimeperiods();
     const char *name() override { return "timeperiods"; }
     void answerQuery(Query *query) override;
-    static void addColumns(Table *table, std::string prefix,
-                           int indirect_offset);
 };
 
 #endif  // TableTimeperiods_h

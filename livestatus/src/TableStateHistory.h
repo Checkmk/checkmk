@@ -71,7 +71,6 @@ public:
     int updateHostServiceState(Query *query, const LogEntry *entry,
                                HostServiceState *hs_state,
                                const bool only_update);
-    static void addColumns(Table *);
 
 private:
     LogEntry *getPreviousLogentry();

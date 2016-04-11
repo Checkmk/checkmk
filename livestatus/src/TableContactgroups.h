@@ -26,7 +26,6 @@
 #define TableContactgroups_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <string>
 #include "Table.h"
 class Query;
 
@@ -36,8 +35,6 @@ public:
     const char *name() override { return "contactgroups"; }
     void *findObject(char *objectspec) override;
     void answerQuery(Query *query) override;
-    static void addColumns(Table *table, std::string prefix,
-                           int indirect_offset);
 };
 
 #endif  // TableContactgroups_h

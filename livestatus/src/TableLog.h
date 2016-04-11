@@ -36,12 +36,9 @@ class Query;
 class TableLog : public Table {
 public:
     TableLog();
-    ~TableLog();
     const char *name() override { return "log"; }
     const char *prefixname() override { return "logs"; }
     bool isAuthorized(contact *ctc, void *data) override;
-    void handleNewMessage(Logfile *logfile, time_t since, time_t until,
-                          unsigned logclasses);
     void answerQuery(Query *query) override;
     Column *column(const char *colname) override;
 

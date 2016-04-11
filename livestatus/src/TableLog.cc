@@ -142,8 +142,6 @@ TableLog::TableLog() {
                                   reinterpret_cast<char *>(ref));
 }
 
-TableLog::~TableLog() = default;
-
 void TableLog::answerQuery(Query *query) {
     lock_guard<mutex> lg(g_store->logCache()->_lock);
     g_store->logCache()->logCachePreChecks();

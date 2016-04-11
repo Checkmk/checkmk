@@ -26,7 +26,6 @@
 #define TableStateHistory_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <time.h>
 #include <map>
 #include <string>
 #include "LogCache.h"
@@ -54,7 +53,6 @@ class TableStateHistory : public Table {
     _logfiles_t::iterator _it_logs;
     logfile_entries_t *_entries;
     logfile_entries_t::iterator _it_entries;
-    LogEntry *_current_entry;
 
 protected:
     bool _abort_query;
@@ -64,18 +62,16 @@ public:
     const char *name() override { return "statehist"; }
     const char *prefixname() override { return "statehist_"; }
     bool isAuthorized(contact *ctc, void *data) override;
-    void handleNewMessage(Logfile *logfile, time_t since, time_t until,
-                          unsigned logclasses);
     void answerQuery(Query *query) override;
     Column *column(const char *colname) override;
-    int updateHostServiceState(Query *query, const LogEntry *entry,
-                               HostServiceState *hs_state,
-                               const bool only_update);
 
 private:
     LogEntry *getPreviousLogentry();
     LogEntry *getNextLogentry();
     void process(Query *query, HostServiceState *hs_state);
+    int updateHostServiceState(Query *query, const LogEntry *entry,
+                               HostServiceState *hs_state,
+                               const bool only_update);
 };
 
 #endif  // TableStateHistory_h

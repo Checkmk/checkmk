@@ -2718,7 +2718,6 @@ void UninstallService() {
                 while (in_set(serviceStatus.dwCurrentState,
                               {SERVICE_RUNNING, SERVICE_STOP_PENDING})) {
                     if (serviceStatus.dwCurrentState == SERVICE_STOP_PENDING) {
-                        printf(SERVICE_NAME " waiting for service to finish\n");
                         // wait for the wait-hint but no less than 1 second and
                         // no more than 10
                         DWORD waitTime = serviceStatus.dwWaitHint / 10;
@@ -2733,7 +2732,6 @@ void UninstallService() {
                                            &serviceStatus) == 0) {
                             break;
                         }
-                        printf(SERVICE_NAME " stopped\n");
                     }
                 }
 

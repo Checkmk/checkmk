@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO: Cleanup "self" in classmethods to use "cls" which is
+# a) easier to see that this is a classmethod
+# b) more "standard" naming
+
 import os, inspect
 import config, table, forms, userdb
 from lib import *
@@ -168,6 +172,11 @@ class Base(object):
     def description(self):
         return self._.get("description", "")
 
+
+    def render_title(self):
+        return _u(self.title())
+
+
     def is_empty(self):
         return False
 
@@ -259,6 +268,20 @@ class Base(object):
         raise NotImplementedError()
 
 
+    # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
+    # mergt diese mit den übergebenen eingebauten
+    @classmethod
+    def load(self):
+        raise NotImplementedError()
+
+
+    # Custom method to load e.g. old configs after performing the
+    # loading of the regular files.
+    @classmethod
+    def _load(self):
+        pass
+
+
 #.
 #   .--PageRenderer--------------------------------------------------------.
 #   |   ____                  ____                _                        |
@@ -290,15 +313,6 @@ class PageRenderer(Base):
     def ident_attr(self):
         return "name"
 
-    def topic(self):
-        return self._.get("topic", _("Other"))
-
-    # Helper functions for page handlers and render function
-    def page_header(self):
-        return self.phrase("title") + " - " + self.title()
-
-    def page_url(self):
-        return html.makeuri_contextless([(self.ident_attr(), self.name())], filename = "%s.py" % self.type_name())
 
     # Parameters special for page renderers. These can be added to the sidebar,
     # so we need a topic and a checkbox for the visibility
@@ -342,6 +356,28 @@ class PageRenderer(Base):
         for page in self.pages():
             if not page.is_empty() and not page.is_hidden():
                 yield page.topic(), page.title(), page.page_url()
+
+
+    def topic(self):
+        return self._.get("topic", _("Other"))
+
+
+    # Helper functions for page handlers and render function
+    def page_header(self):
+        return self.phrase("title") + " - " + self.title()
+
+
+    def page_url(self):
+        return html.makeuri_contextless([(self.ident_attr(), self.name())],
+                                        filename = "%s.py" % self.type_name())
+
+
+    def render_title(self):
+        if not self.is_hidden():
+            return HTML("<a href=\"%s\">%s</a>" %
+                    (self.page_url(), html.attrencode(self.title())))
+        else:
+            return ""
 
 
 
@@ -462,10 +498,12 @@ class Overridable(Base):
         owner = not self.is_mine() and ("&owner=%s" % self.owner()) or ""
         return "edit_%s.py?load_name=%s%s" % (self.type_name(), self.name(), owner)
 
+
     def clone_url(self):
         backurl = html.urlencode(html.makeuri([]))
         return "edit_%s.py?load_user=%s&load_name=%s&mode=clone&back=%s" \
                     % (self.type_name(), self.owner(), self.name(), backurl)
+
 
     def delete_url(self):
         add_vars = [('_delete', self.name())]
@@ -473,16 +511,20 @@ class Overridable(Base):
             add_vars.append(('_owner', self.owner()))
         return html.makeactionuri(add_vars)
 
+
     @classmethod
     def create_url(self):
         return "edit_%s.py?mode=create" % self.type_name()
+
 
     @classmethod
     def list_url(self):
         return "%ss.py" % self.type_name()
 
+
     def after_create_url(self):
         return None # where redirect after a create should go
+
 
     @classmethod
     def context_button_list(self):
@@ -528,6 +570,7 @@ class Overridable(Base):
     @classmethod
     def has_overriding_permission(self, how):
         return config.may("general.%s_%s" % (how, self.type_name()))
+
 
     @classmethod
     def need_overriding_permission(self, how):
@@ -605,11 +648,13 @@ class Overridable(Base):
         else:
             return None
 
+
     @classmethod
     def find_my_page(self, name):
         for page in self.instances():
             if page.is_mine() and page.name() == name:
                 return page
+
 
     @classmethod
     def find_foreign_page(self, owner, name):
@@ -617,6 +662,7 @@ class Overridable(Base):
             return self.instance((owner, name))
         except KeyError:
             return None
+
 
     @classmethod
     def builtin_pages(self):
@@ -658,10 +704,7 @@ class Overridable(Base):
                 raise MKGeneralException(_("Cannot load %s from %s: %s") %
                                                 (self.type_name(), path, e))
 
-        # FIXME: Better switch to "new style classes" and use super() and then override load()
-        # in the subclass. Brings more flexibility.
-        if hasattr(self, "_load"):
-            self._load()
+        self._load()
 
         # Declare permissions - one for each of the pages, if it is public
         config.declare_permission_section(self.type_name(), self.phrase("title_plural"),
@@ -670,6 +713,7 @@ class Overridable(Base):
         for instance in self.instances():
             if instance.is_public():
                 self.declare_permission(instance)
+
 
     @classmethod
     def save_user_instances(self, owner=None):
@@ -683,9 +727,11 @@ class Overridable(Base):
 
         config.save_user_file('user_%ss' % self.type_name(), save_dict, user=owner)
 
+
     @classmethod
     def add_page(self, new_page):
         self.add_instance((new_page.owner(), new_page.name()), new_page)
+
 
     def clone(self):
         page_dict = {}
@@ -695,6 +741,7 @@ class Overridable(Base):
         self.add_page(new_page)
         return new_page
 
+
     @classmethod
     def declare_permission(self, page):
         permname = "%s.%s" % (self.type_name(), page.name())
@@ -702,9 +749,11 @@ class Overridable(Base):
             config.declare_permission(permname, page.title(),
                              page.description(), ['admin','user','guest'])
 
+
     @classmethod
     def custom_list_buttons(self, instance):
         pass
+
 
     @classmethod
     def page_list(self):
@@ -813,12 +862,7 @@ class Overridable(Base):
 
                 # Title
                 table.cell(_('Title'))
-                title = _u(instance.title())
-                if isinstance(instance, PageRenderer) and not instance.is_hidden():
-                    html.write("<a href=\"%s.py?%s=%s\">%s</a>" %
-                        (self.type_name(), self.ident_attr(), instance.name(), html.attrencode(instance.title())))
-                else:
-                    html.write(html.attrencode(instance.title()))
+                html.write(html.attrencode(instance.render_title()))
                 html.help(html.attrencode(_u(instance.description())))
 
                 # Custom columns specific to that page type
@@ -994,6 +1038,8 @@ class Container(Base):
     def is_empty(self):
         return not self.elements()
 
+
+class OverridableContainer(Overridable, Container):
     # The popup for "Add to ...", e.g. for adding a graph to a report
     # or dashboard. This is needed for page types with the aspect "ElementContainer".
     @classmethod
@@ -1017,7 +1063,8 @@ class Container(Base):
     @classmethod
     def render_addto_popup_entry(self, type_name, name, title):
         html.write('<li><a href="javascript:void(0)" '
-                   'onclick="pagetype_add_to_container(\'%s\', \'%s\'); reload_sidebar();"><img src="images/icon_%s.png"> %s</a></li>' %
+                   'onclick="pagetype_add_to_container(\'%s\', \'%s\'); reload_sidebar();">'
+                   '<img src="images/icon_%s.png"> %s</a></li>' %
                    (type_name, name, type_name, title))
 
 
@@ -1034,7 +1081,8 @@ class Container(Base):
         create_info    = json.loads(html.var("create_info"))
 
         page_type = page_types[page_type_name]
-        target_page, need_sidebar_reload = page_type.add_element_via_popup(page_name, element_type, create_info)
+        target_page, need_sidebar_reload = page_type.add_element_via_popup(page_name,
+                                                            element_type, create_info)
         # Redirect user to tha page this displays the thing we just added to
         if target_page:
             if type(target_page) != str:
@@ -1106,7 +1154,7 @@ def page_handlers():
 
     # Ajax handler for adding elements to a container
     # TODO: Shouldn't we move that declaration into the class?
-    page_handlers["ajax_pagetype_add_element"] = lambda: Container.ajax_add_element()
+    page_handlers["ajax_pagetype_add_element"] = lambda: OverridableContainer.ajax_add_element()
     return page_handlers
 
 

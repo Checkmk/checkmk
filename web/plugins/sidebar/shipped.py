@@ -1155,8 +1155,6 @@ class BookmarkList(pagetypes.Overridable):
         ])]
 
 
-    # FIXME: Better switch to "new style classes" and use super() and then override load()
-    # in the subclass. Brings more flexibility.
     @classmethod
     def _load(self):
         self.load_legacy_bookmarks()

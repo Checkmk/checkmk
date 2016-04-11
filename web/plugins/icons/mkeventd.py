@@ -73,9 +73,9 @@ def paint_mkeventd(what, row, tags, custom_vars):
     # Another possible architecture is to have an event console in each site in
     # a distributed environment. For the later case the base url need to be
     # constructed here
-    site = html.site_status[row['site']]["site"]
     url_prefix = ''
     if getattr(config, 'mkeventd_distributed', False):
+        site = config.site(row["site"])
         url_prefix = site['url_prefix'] + 'check_mk/'
 
     url_vars = [

@@ -528,29 +528,26 @@ def command_downtime(cmdtag, spec, row):
     def resolve_end(name):
         now = time.localtime(down_from)
         if name == "next_day":
-            return time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1, \
+            return time.mktime((now.tm_year, now.tm_mon, now.tm_mday, 23, 59, 59, 0, 0, now.tm_isdst)) + 1, \
                 _("<b>%s until 24:00:00</b> on") % title_start
         elif name == "next_week":
-            br = time.localtime(down_from)
-            wday = br.tm_wday
+            wday = now.tm_wday
             days_plus = 6 - wday
-            res = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
+            res = time.mktime((now.tm_year, now.tm_mon, now.tm_mday, 23, 59, 59, 0, 0, now.tm_isdst)) + 1
             res += days_plus * 24 * 3600
             return res, _("<b>%s until sunday night</b> on") % title_start
         elif name == "next_month":
-            br = time.localtime(down_from)
-            new_month = br.tm_mon + 1
+            new_month = now.tm_mon + 1
             if new_month == 13:
-                new_year = br.tm_year + 1
+                new_year = now.tm_year + 1
                 new_month = 1
             else:
-                new_year = br.tm_year
-            return time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, br.tm_isdst)), \
+                new_year = now.tm_year
+            return time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, now.tm_isdst)), \
                 _("<b>%s until end of month</b> on") % title_start
         elif name == "next_year":
-            br = time.localtime(down_from)
-            return time.mktime((br.tm_year, 12, 31, 23, 59, 59, 0, 0, br.tm_isdst)) + 1, \
-                _("<b>%s until end of %d</b> on") % (title_start, br.tm_year)
+            return time.mktime((now.tm_year, 12, 31, 23, 59, 59, 0, 0, now.tm_isdst)) + 1, \
+                _("<b>%s until end of %d</b> on") % (title_start, now.tm_year)
         else:
             duration = int(name)
             return down_from + duration, \

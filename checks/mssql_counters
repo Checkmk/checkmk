@@ -133,10 +133,28 @@ check_info['mssql_counters.cache_hits'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
+def mssql_time_from_counter(info):
+    for line in info:
+        if line[1] == "utc_time":
+            # mssql returns localized format. great! let's try ...
+            try:
+                # ... iso 8601
+                return utc_mktime(time.strptime(" ".join(line[3:]).split(".")[0],
+                                                "%Y-%m-%d %H:%M:%S"))
+            except ValueError:
+                # ... german
+                return utc_mktime(time.strptime(" ".join(line[3:]),
+                                                "%d.%m.%Y %H:%M:%S"))
+    return None
+
 def check_mssql_counters_transactions(item, params, info):
     output   = []
     perfdata = []
-    now = time.time()
+    now = mssql_time_from_counter(info)
+    if now is None:
+        now = time.time()
+
     for line in info:
         if mssql_counters_item(line, False) != item:
             continue
@@ -170,7 +188,10 @@ def check_mssql_counters_locks(item, params, info):
     state    = 0
     output   = []
     perfdata = []
-    now = time.time()
+    now = mssql_time_from_counter(info)
+    if now is None:
+        now = time.time()
+
     for line in info:
         if mssql_counters_item(line, False) != item:
             continue

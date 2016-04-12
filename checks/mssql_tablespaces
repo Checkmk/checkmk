@@ -50,7 +50,7 @@ def inventory_mssql_tablespaces(info):
     inventory = []
     for line in info:
         if len(line) > 1:
-	    inventory.append((line[0] + ' ' + line[1], 'mssql_tablespace_default_levels'))
+            inventory.append((line[0] + ' ' + line[1], 'mssql_tablespace_default_levels'))
     return inventory
 
 def check_mssql_tablespaces(item, params, info):

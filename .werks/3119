@@ -1,0 +1,11 @@
+Title: mssql: fixed counter calculation when caching plugin output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1460473140
+Class: feature
+
+Previously, the mssql plugin output could not be cached as counter calculations were based on the
+time the output was interpreted and thus would produce incorrect results.
+This has now been fixed by adding a timestamp from the mssql server to the agent output.

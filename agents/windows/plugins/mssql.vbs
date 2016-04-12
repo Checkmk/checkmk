@@ -212,10 +212,15 @@ For Each instId In instIds.Keys
     CONN.Open
 
     ' Get counter data for the whole instance
+    addOutput( "<<<mssql_counters>>>" )
+    RS.Open "SELECT GETUTCDATE() as utc_date", CONN
+    addOutput( "None utc_time None " & RS("utc_date") )
+    RS.Close
+
     RS.Open "SELECT counter_name, object_name, instance_name, cntr_value " & _
             "FROM sys.dm_os_performance_counters " & _
             "WHERE object_name NOT LIKE '%Deprecated%'", CONN
-    addOutput( "<<<mssql_counters>>>" )
+
     Dim objectName, counterName, instanceName, value
     Do While NOT RS.Eof
         objectName   = Replace(Replace(Trim(RS("object_name")), " ", "_"), "$", "_")

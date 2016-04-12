@@ -35,14 +35,21 @@ def check_smtp_arguments(params):
         port = int(settings["port"]) # ValueSpec was broken, convert to int
         args += ' -p %d' % port
 
-    host_address = '$HOSTADDRESS$'
+    # Be compatible to legacy option
     if "ip_version" in settings:
-        if settings['ip_version'] == 'ipv4':
-            args += ' -4'
-            host_address = '$HOST_ADDRESS_4$'
-        else:
-            args += ' -6'
-            host_address = '$HOST_ADDRESS_6$'
+        settings["address_family"] = settings.pop("ip_version")
+
+    # Use the address family of the monitored host by default
+    address_family = settings.get("address_family")
+    if address_family == None:
+        address_family = is_ipv6_primary(g_hostname) and "ipv6" or "ipv4"
+
+    if address_family == "ipv6":
+        args += " -6"
+        address = "$_HOSTADDRESS_6$"
+    else:
+        args += " -4"
+        address = "$_HOSTADDRESS_4$"
 
     for s in settings.get("commands", []):
         args += ' -C %s' % quote_shell_string(s)
@@ -77,7 +84,7 @@ def check_smtp_arguments(params):
     if 'hostname' in settings:
         args += ' -H %s' % settings['hostname']
     else:
-        args += ' -H ' + host_address
+        args += ' -H ' + address
     return args
 
 def check_smtp_desc(params):

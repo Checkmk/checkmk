@@ -27,10 +27,8 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <time.h>
+#include "CommandsHolder.h"
 #include "nagios.h"
-#ifdef CMC
-struct command;
-#endif
 
 #define LOGCLASS_INFO 0          // all messages not in any other class
 #define LOGCLASS_ALERT 1         // alerts: the change service/host state
@@ -88,11 +86,12 @@ struct LogEntry {
     host *_host;
     service *_service;
     contact *_contact;
-    command *_command;
+    CommandsHolder::Command _command;
 
-    LogEntry(unsigned lineno, char *line);
+    LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
+             char *line);
     ~LogEntry();
-    unsigned updateReferences();
+    unsigned updateReferences(const CommandsHolder &commands_holder);
     static int serviceStateToInt(const char *s);
     static int hostStateToInt(const char *s);
 

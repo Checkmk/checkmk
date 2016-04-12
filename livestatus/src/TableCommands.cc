@@ -23,35 +23,34 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableCommands.h"
-#include "OffsetStringColumn.h"
+#include <stddef.h>
+#include "CommandsHolder.h"
+#include "OffsetSStringColumn.h"
 #include "Query.h"
-#include "nagios.h"
 
 using std::string;
 
-extern command *command_list;
-
-TableCommands::TableCommands() { addColumns(this, "", -1); }
-
-// static
-void TableCommands::addColumns(Table *table, string prefix,
-                               int indirect_offset) {
-    command cmd;
-    char *ref = reinterpret_cast<char *>(&cmd);
-    table->addColumn(new OffsetStringColumn(
-        prefix + "name", "The name of the command",
-        reinterpret_cast<char *>(&cmd.name) - ref, indirect_offset));
-    table->addColumn(new OffsetStringColumn(
-        prefix + "line", "The shell command line",
-        reinterpret_cast<char *>(&cmd.command_line) - ref, indirect_offset));
+TableCommands::TableCommands(const CommandsHolder &commands_holder)
+    : _commands_holder(commands_holder) {
+    addColumns(this, "", 0);
 }
 
+// static
+void TableCommands::addColumns(Table *table, string prefix, int offset) {
+    table->addColumn(new OffsetSStringColumn(
+        prefix + "name", "The name of the command",
+        offset + offsetof(CommandsHolder::Command, _name)));
+    table->addColumn(new OffsetSStringColumn(
+        prefix + "line", "The shell command line",
+        offset + offsetof(CommandsHolder::Command, _command_line)));
+}
+
+const char *TableCommands::name() { return "commands"; }
+
 void TableCommands::answerQuery(Query *query) {
-    command *cmd = command_list;
-    while (cmd != nullptr) {
-        if (!query->processDataset(cmd)) {
+    for (auto &cmd : _commands_holder.commands()) {
+        if (!query->processDataset(&cmd)) {
             break;
         }
-        cmd = cmd->next;
     }
 }

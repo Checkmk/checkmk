@@ -22,25 +22,15 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableCommands_h
-#define TableCommands_h
+#include "OffsetSStringColumn.h"
 
-#include "config.h"  // IWYU pragma: keep
-#include <string>
-#include "Table.h"
-class CommandsHolder;
-class Query;
+using std::string;
 
-class TableCommands : public Table {
-public:
-    explicit TableCommands(const CommandsHolder &commands_holder);
-    static void addColumns(Table *table, std::string prefix, int offset);
-
-    const char *name() override;
-    void answerQuery(Query *query) override;
-
-private:
-    const CommandsHolder &_commands_holder;
-};
-
-#endif  // TableCommands_h
+const char *OffsetSStringColumn::getValue(void *data) {
+    char *p = reinterpret_cast<char *>(shiftPointer(data));
+    if (p == nullptr) {
+        return "";
+    }
+    string *s = reinterpret_cast<string *>(p + _offset);
+    return s == nullptr ? "" : s->c_str();
+}

@@ -22,25 +22,23 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableCommands_h
-#define TableCommands_h
+#ifndef CommandsHolder_h
+#define CommandsHolder_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
-#include "Table.h"
-class CommandsHolder;
-class Query;
+#include <vector>
 
-class TableCommands : public Table {
+class CommandsHolder {
 public:
-    explicit TableCommands(const CommandsHolder &commands_holder);
-    static void addColumns(Table *table, std::string prefix, int offset);
+    struct Command {
+        std::string _name;
+        std::string _command_line;
+    };
 
-    const char *name() override;
-    void answerQuery(Query *query) override;
-
-private:
-    const CommandsHolder &_commands_holder;
+    virtual ~CommandsHolder() {}
+    virtual Command find(std::string name) const = 0;
+    virtual std::vector<Command> commands() const = 0;
 };
 
-#endif  // TableCommands_h
+#endif  // CommandsHolder_h

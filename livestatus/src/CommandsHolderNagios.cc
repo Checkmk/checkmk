@@ -22,25 +22,23 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableCommands_h
-#define TableCommands_h
+#include "CommandsHolderNagios.h"
+#include "nagios.h"
 
-#include "config.h"  // IWYU pragma: keep
-#include <string>
-#include "Table.h"
-class CommandsHolder;
-class Query;
+using std::string;
+using std::vector;
 
-class TableCommands : public Table {
-public:
-    explicit TableCommands(const CommandsHolder &commands_holder);
-    static void addColumns(Table *table, std::string prefix, int offset);
+CommandsHolder::Command CommandsHolderNagios::find(string name) const {
+    // Older Nagios headers are not const-correct... :-P
+    command *cmd = find_command(const_cast<char *>(name.c_str()));
+    return {cmd->name, cmd->command_line};
+}
 
-    const char *name() override;
-    void answerQuery(Query *query) override;
-
-private:
-    const CommandsHolder &_commands_holder;
-};
-
-#endif  // TableCommands_h
+vector<CommandsHolder::Command> CommandsHolderNagios::commands() const {
+    extern command *command_list;
+    vector<Command> commands;
+    for (command *cmd = command_list; cmd != nullptr; cmd = cmd->next) {
+        commands.push_back({cmd->name, cmd->command_line});
+    }
+    return commands;
+}

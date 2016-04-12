@@ -30,6 +30,7 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include "CommandsHolderNagios.h"
 #include "LogCache.h"
 #include "TableColumns.h"
 #include "TableCommands.h"
@@ -50,6 +51,7 @@ class OutputBuffer;
 class Table;
 
 class Store {
+    CommandsHolderNagios _commands_holder;
     LogCache _log_cache;
     TableContacts _table_contacts;
     TableCommands _table_commands;

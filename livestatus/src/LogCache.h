@@ -31,11 +31,13 @@
 #include <mutex>
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
+class CommandsHolder;
 class Logfile;
 
 typedef std::map<time_t, Logfile *> _logfiles_t;
 
 class LogCache {
+    const CommandsHolder &_commands_holder;
     unsigned long _max_cached_messages;
     unsigned long _num_at_last_check;
     _logfiles_t _logfiles;
@@ -43,7 +45,8 @@ class LogCache {
 public:
     std::mutex _lock;
 
-    explicit LogCache(unsigned long max_cached_messages);
+    LogCache(const CommandsHolder &commands_holder,
+             unsigned long max_cached_messages);
     ~LogCache();
     void setMaxCachedMessages(unsigned long m);
     time_t _last_index_update;

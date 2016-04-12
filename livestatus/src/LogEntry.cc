@@ -27,8 +27,10 @@
 #include <string.h>
 #include "strutil.h"
 
-LogEntry::LogEntry(unsigned lineno, char *line) {
+LogEntry::LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
+                   char *line) {
     // zero all elements as fast as possible -> default values
+    // TODO(sp) Remove this hack and make commands_holder a member.
     bzero(this, sizeof(LogEntry));
     _lineno = lineno;
 
@@ -69,7 +71,7 @@ LogEntry::LogEntry(unsigned lineno, char *line) {
     // refer to other table, some do not.
     if (handleStatusEntry() || handleNotificationEntry() ||
         handlePassiveCheckEntry() || handleExternalCommandEntry()) {
-        updateReferences();
+        updateReferences(commands_holder);
     } else {
         handleTextEntry() || handleProgrammEntry();  // Performance killer
                                                      // strstr in
@@ -422,7 +424,7 @@ int LogEntry::hostStateToInt(const char *s) {
     }
 }
 
-unsigned LogEntry::updateReferences() {
+unsigned LogEntry::updateReferences(const CommandsHolder &commands_holder) {
     unsigned updated = 0;
     if (_host_name != nullptr) {
         _host = find_host(_host_name);
@@ -437,8 +439,7 @@ unsigned LogEntry::updateReferences() {
         updated++;
     }
     if (_command_name != nullptr) {
-        // Older Nagios headers are not const-correct... :-P
-        _command = find_command(const_cast<char *>(_command_name));
+        _command = commands_holder.find(_command_name);
         updated++;
     }
     return updated;

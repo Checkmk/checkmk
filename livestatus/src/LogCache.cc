@@ -74,8 +74,11 @@ void debug(const char *loginfo, ...) {
     fclose(x);
 }
 
-LogCache::LogCache(unsigned long max_cached_messages)
-    : _max_cached_messages(max_cached_messages), _num_at_last_check(0) {
+LogCache::LogCache(const CommandsHolder &commands_holder,
+                   unsigned long max_cached_messages)
+    : _commands_holder(commands_holder)
+    , _max_cached_messages(max_cached_messages)
+    , _num_at_last_check(0) {
     updateLogfileIndex();
 }
 
@@ -152,7 +155,7 @@ void LogCache::updateLogfileIndex() {
 }
 
 void LogCache::scanLogfile(char *path, bool watch) {
-    auto logfile = new Logfile(path, watch);
+    auto logfile = new Logfile(_commands_holder, path, watch);
     time_t since = logfile->since();
     if (since != 0) {
         // make sure that no entry with that 'since' is existing yet.

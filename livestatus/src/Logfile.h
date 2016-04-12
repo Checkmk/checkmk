@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <map>
+class CommandsHolder;
 class LogCache;
 class Query;
 struct LogEntry;
@@ -45,6 +46,7 @@ typedef std::map<uint64_t, LogEntry *>
 
 class Logfile {
 private:
+    const CommandsHolder &_commands_holder;
     char *_path;
     time_t _since;     // time of first entry
     bool _watch;       // true only for current logfile
@@ -58,7 +60,8 @@ private:
 #endif
 
 public:
-    Logfile(const char *path, bool watch);
+    Logfile(const CommandsHolder &commands_holder, const char *path,
+            bool watch);
     ~Logfile();
 
     char *path() { return _path; }

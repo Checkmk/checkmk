@@ -49,8 +49,10 @@ extern unsigned long g_max_lines_per_logfile;
 // manual fiddling with pointers, offsets, etc. with vector.
 
 // cppcheck-suppress uninitMemberVar
-Logfile::Logfile(const char *path, bool watch)
-    : _path(strdup(path))
+Logfile::Logfile(const CommandsHolder &commands_holder, const char *path,
+                 bool watch)
+    : _commands_holder(commands_holder)
+    , _path(strdup(path))
     , _since(0)
     , _watch(watch)
     , _lineno(0)
@@ -190,7 +192,7 @@ long Logfile::freeMessages(unsigned logclasses) {
 }
 
 bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses) {
-    auto entry = new LogEntry(lineno, _linebuffer);
+    auto entry = new LogEntry(_commands_holder, lineno, _linebuffer);
     // ignored invalid lines
     if (entry->_logclass == LOGCLASS_INVALID) {
         delete entry;
@@ -275,7 +277,7 @@ void Logfile::updateReferences() {
     if (_world != g_live_world) {
         unsigned num = 0;
         for (auto &entry : _entries) {
-            num += entry.second->updateReferences();
+            num += entry.second->updateReferences(_commands_holder);
         }
         logger(LOG_NOTICE,
                "Updated %u log cache references of %s to new world.", num,

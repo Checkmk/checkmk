@@ -57,7 +57,8 @@ extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
 
 Store::Store()
-    : _log_cache(g_max_cached_messages)
+    : _log_cache(_commands_holder, g_max_cached_messages)
+    , _table_commands(_commands_holder)
     , _table_hosts(false)
     , _table_hostsbygroup(true)
     , _table_services(false, false)

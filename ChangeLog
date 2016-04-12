@@ -52,6 +52,7 @@
     * 3312 check_ssh: service description can be set
     * 3119 mssql: fixed counter calculation when caching plugin output...
     * 3120 mssql_datafiles, mssql_transactionlogs: new chech to also monitor the datafiles and added option to summarize datafiles and transactionlogs
+    * 3121 mssql_counters.page_activity, mssql_counters.locks_per_batch: additional checks for mssql performance counters
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

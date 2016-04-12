@@ -274,6 +274,131 @@ check_info["mssql_counters.sqlstats"] = {
 }
 
 
+mssql_pageactivity_counters = [
+    ("page_reads/sec", "Reads"),
+    ("page_writes/sec", "Writes"),
+    ("page_lookups/sec", "Lookups")
+]
+
+
+def check_mssql_counters_pageactivity(item, params, info):
+    now = mssql_time_from_counter(info)
+    if now is None:
+        now = time.time()
+
+    for line in info:
+        if mssql_counters_item(line, False) != item:
+            continue
+
+        for counter, label in mssql_pageactivity_counters:
+            if line[1] == counter:
+                reading = float(line[-1])
+                countername = "mssql_counters_pageactivity.%s.%s" % (item, counter)
+                rate = get_rate(countername, now, reading)
+                state = 0
+                infotext = "%s %.1f/sec" % (label, rate)
+                perfdata = [ (counter, rate) ]
+
+                if params.get(counter):
+                    warn, crit = params[counter]
+                    levelstext = " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
+                    if rate >= crit:
+                        state = 2
+                        infotext += levelstext
+                    elif rate >= warn:
+                        state = 1
+                        infotext += levelstext
+
+                yield state, infotext, perfdata
+
+
+check_info['mssql_counters.pageactivity'] = {
+    'check_function'      : check_mssql_counters_pageactivity,
+    'inventory_function'  : lambda info: inventory_mssql_counters(info,
+        [k for k, n in mssql_pageactivity_counters], False, False, {}),
+    'service_description' : "%s Page Activity",
+    'has_perfdata'        : True,
+    'group'               : "mssql_page_activity",
+}
+
+
+def parse_mssql_counters(info):
+    parsed = {}
+    for line in info:
+        if len(line) != 4:
+            # agent produces broken lines...
+            continue
+        obj, key, instance, value = line
+        if ":" not in obj:
+            continue
+        database, obj = obj.split(":")
+        parsed.\
+            setdefault(database, {}).\
+            setdefault(obj, {}).\
+            setdefault(instance, {})\
+            [key] = value
+    return parsed
+
+
+def mssql_status(value, params):
+    if params is None:
+        return 0, "", None, None
+
+    warn, crit = params
+    warntext = "(warn/crit at %s/%s)" % (warn, crit)
+    if value >= crit:
+        status = 2
+    elif value >= warn:
+        status = 1
+    else:
+        status = 0
+        warntext = ""
+    return status, warntext, warn, crit
+
+
+def inventory_mssql_counters_locks_per_batch(info):
+    parsed = parse_mssql_counters(info)
+    for db_name, db_object in parsed.iteritems():
+        if "lock_requests/sec" in db_object.get("Locks", {}).get("_Total", {}) \
+                and "batch_requests/sec" in db_object.get("SQL_Statistics").get("None", {}):
+            yield db_name, {}
+
+
+def check_mssql_counters_locks_per_batch(item, params, info):
+    parsed = parse_mssql_counters(info)
+
+    now = mssql_time_from_counter(info)
+    if now is None:
+        now = time.time()
+
+    locks = float(parsed[item]["Locks"]["_Total"]["lock_requests/sec"])
+    batches = float(parsed[item]["SQL_Statistics"]["None"]["batch_requests/sec"])
+
+    lock_counter = "mssql_counters_locks_per_batch.%s.locks" % item
+    batch_counter = "mssql_counters_locks_per_batch.%s.batches" % item
+    lock_rate = get_rate(lock_counter, now, locks)
+    batch_rate = get_rate(batch_counter, now, batches)
+
+    if batch_rate == 0:
+        factor = 0
+    else:
+        factor = int(lock_rate / batch_rate)
+
+    status, warn_text, warn, crit = mssql_status(factor, params.get("locks_per_batch"))
+
+    return status, "Locks per batch: %d%s" % (factor, warn_text),\
+        [("locks_per_batch", factor, warn, crit)]
+
+
+check_info["mssql_counters.locks_per_batch"] = {
+    "check_function"      : check_mssql_counters_locks_per_batch,
+    "inventory_function"  : inventory_mssql_counters_locks_per_batch,
+    "service_description" : "%s Locks per Batch",
+    "has_perfdata"        : True,
+    "group"               : "mssql_stats"
+}
+
+
 #.
 #   .--File Sizes----------------------------------------------------------.
 #   |                _____ _ _        ____  _                              |

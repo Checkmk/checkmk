@@ -3035,6 +3035,30 @@ for i in range(10):
         "color" : indexed_color(i * 3 + 2, 30),
     }
 
+metric_info["locks_per_batch"] = {
+    "title" : _("Locks/Batch"),
+    "unit"  : "",
+    "color" : "21/a"
+}
+
+metric_info["page_reads_sec"] = {
+    "title" : _("Page Reads"),
+    "unit"  : "1/s",
+    "color" : "33/b"
+}
+
+metric_info["page_writes_sec"] = {
+    "title" : _("Page Writes"),
+    "unit"  : "1/s",
+    "color" : "14/a"
+}
+
+metric_info["page_lookups_sec"] = {
+    "title" : _("Page Lookups"),
+    "unit"  : "1/s",
+    "color" : "42/a"
+}
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -6265,4 +6289,13 @@ for i in range(10):
             ( "tx_light_%d" % i, "line" )
         ]
     })
+
+graph_info.append({
+    "title" : _("Page Activity"),
+    "metrics" : [
+        ("page_reads_sec",   "area" ),
+        ("page_writes_sec",  "-area"),
+        ("page_lookups_sec", "line" )
+    ]
+})
 

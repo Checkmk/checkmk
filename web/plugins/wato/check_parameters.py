@@ -834,6 +834,9 @@ register_check_parameters(
             ( "sql_re-compilations/sec", Tuple(title = _("SQL Re-Compilations/sec"),
                 elements = [ Float(title = _("warning at"), unit = _("/sec"), default_value = 10000.0),
                              Float(title = _("critical at"), unit = _("/sec"), default_value = 200.0),])),
+            ( "locks_per_batch", Tuple(title = _("Locks/Batch"),
+                elements = [ Float(title = _("warning at"), default_value = 1000.0),
+                             Float(title = _("critical at"), default_value = 3000.0),])),
         ],
     ),
     TextAscii(
@@ -6249,6 +6252,44 @@ register_check_parameters(
     match_type = "dict",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "mssql_page_activity",
+    _("MSSQL Page Activity"),
+    Dictionary(
+        title = _("Page Activity Levels"),
+        elements = [
+            ("page_reads/sec",
+                Tuple(
+                    title = _("Read"),
+                    elements = [
+                      Filesize(title = _("Warning at")),
+                      Filesize(title = _("Critical at")),
+                    ]
+            )),
+            ("page_writes/sec",
+                Tuple(
+                    title = _("Write"),
+                    elements = [
+                      Filesize(title = _("Warning at")),
+                      Filesize(title = _("Critical at")),
+                    ]
+            )),
+            ("page_lookups/sec",
+                Tuple(
+                    title = _("Lookup"),
+                    elements = [
+                      Filesize(title = _("Warning at")),
+                      Filesize(title = _("Critical at")),
+                    ]
+            )),
+        ]
+    ),
+    TextAscii(
+        title = _("Service descriptions"),
+        allow_empty = False),
+    match_type = "dict"
+)
 
 def levels_absolute_or_dynamic(name, value):
     return Alternative(

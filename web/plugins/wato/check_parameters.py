@@ -208,6 +208,26 @@ register_rule(group + '/' + subgroup_inventory,
 )
 
 
+register_rule(
+    group + '/' + subgroup_inventory,
+    varname = "mssql_transactionlogs_discovery",
+    title = _("MSSQL Datafile and Transactionlog Discovery"),
+    valuespec = Dictionary(
+        elements = [
+            ("summarize_datafiles", Checkbox(
+                title = _("Display only a summary of all Datafiles"), label =
+                _("Summarize Datafiles"),
+            )), ("summarize_transactionlogs", Checkbox(
+                title = _("Display only a summary of all Transactionlogs"),
+                label = _("Summarize Transactionlogs"),
+            )),
+        ],
+        optional_keys = []
+    ),
+    match = "first"
+)
+
+
 #.
 #   .--Applications--------------------------------------------------------.
 #   |          _                _ _           _   _                        |
@@ -6280,17 +6300,16 @@ def levels_absolute_or_dynamic(name, value):
         ]
     )
 
-
 register_check_parameters(
     subgroup_applications,
     "mssql_transactionlogs",
-    _("MSSQL Transactionlog Sizes"),
+    _("MSSQL Datafile and Transactionlog Sizes"),
     Dictionary(
         title = _("File Size Levels"),
         elements = [
-            ("used_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("used"))),
-            ("allocated_used_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("used of allocation"))),
-            ("allocated_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("allocated"))),
+            ("used_levels", levels_absolute_or_dynamic(_("Datafile or Transactionlog"), _("used"))),
+            ("allocated_used_levels", levels_absolute_or_dynamic(_("Datafile or Transactionlog"), _("used of allocation"))),
+            ("allocated_levels", levels_absolute_or_dynamic(_("Datafile or Transactionlog"), _("allocated"))),
         ]
     ),
     TextAscii(

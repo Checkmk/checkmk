@@ -1,0 +1,145 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+mssql_transactionlogs_discovery = []
+
+
+def format_item_mssql_datafiles(inst, database, table):
+    if inst is None:
+        return "%s.%s" % (database, table)
+    else:
+        return "%s.%s.%s" % (inst, database, table)
+
+
+def inventory_mssql_datafiles(mode, info):
+    settings = host_extra_conf(g_hostname, mssql_transactionlogs_discovery)
+
+    if settings and settings[0].get("summarize_%s" % mode, False):
+        yield "SUMMARY", {}
+    else:
+        for line in info:
+            if len(line) == 8:
+                inst, database, table = line[0:3]
+            else:
+                inst = None
+                database, table = line[0:2]
+            yield format_item_mssql_datafiles(inst, database, table), {}
+
+
+def mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, unlimited):
+    def calculate_levels(levels, reference_value):
+        if isinstance(levels[0], float):
+            if reference_value == -1:
+                return 0, None
+            else:
+                return map(lambda x: (x * reference_value) / 100, levels)
+        elif levels[0] is not None:
+            return map(lambda x: x * 1024 * 1024, levels)
+        else:
+            return None, None
+
+    if unlimited:
+        max_size = -1
+
+    for param_key,                name,             perf_key,         value,          reference_value in [
+        ('used_levels',           "used",           "data_size",      used_size,      max_size),
+        ('allocated_used_levels', "allocated used", None,             used_size,      allocated_size),
+        ('allocated_levels',      "allocated",      "allocated_size", allocated_size, max_size),
+    ]:
+        status = 0
+
+        levels = params.get(param_key, (None, None))
+        if isinstance(levels, list):
+            warn, crit = None, None
+            for level_set in levels:
+                if max_size > level_set[0]:
+                    warn, crit = calculate_levels(level_set[1], reference_value)
+                    break
+        else:
+            warn, crit = calculate_levels(levels, reference_value)
+
+        if crit is not None and value >= crit:
+            status = 2
+        elif warn is not None and value >= warn:
+            status = 1
+
+        if status > 0:
+            if warn == 0:
+                wc_msg = " (max_size is unlimited, please use absolute levels)"
+            else:
+                wc_msg = " (warn/crit at %s/%s)" % (
+                            get_bytes_human_readable(warn),
+                            get_bytes_human_readable(crit))
+        else:
+            wc_msg = ""
+
+        if perf_key is not None or status != 0:
+            if reference_value == -1:
+                yield status, "%s %s%s" %\
+                    (get_bytes_human_readable(value),
+                        name, wc_msg), \
+                    [(perf_key, value, warn, crit)]
+            else:
+                yield status, "%s of %s %s%s" %\
+                    (get_bytes_human_readable(value),
+                        get_bytes_human_readable(reference_value),
+                        name, wc_msg), \
+                    [(perf_key, value, warn, crit, 0, reference_value)]
+
+
+def check_mssql_datafiles(item, params, info):
+    max_size_sum = allocated_size_sum = used_size_sum = 0
+    unlimited_sum = False
+
+    for row in info:
+        if len(row) == 8:
+            inst, database, table, physical_name, max_size, allocated_size, used_size, unlimited = row
+            unlimited = bool(unlimited)
+        else:
+            database, table, physical_name, max_size, allocated_size, used_size = row
+            inst = None
+            unlimited = False
+
+        if item == "SUMMARY":
+            max_size, allocated_size, used_size = map(lambda x: float(x) * 1024 * 1024,
+                                                      (max_size, allocated_size, used_size))
+            max_size_sum       += max_size
+            allocated_size_sum += allocated_size
+            used_size_sum      += used_size
+            unlimited_sum = unlimited_sum or unlimited
+        elif format_item_mssql_datafiles(inst, database, table) == item:
+            # these values are returned from the db in number of 8KB blocks and divided by
+            # 128 by the plugin to get MB.
+            max_size, allocated_size, used_size = map(lambda x: float(x) * 1024 * 1024,
+                                                      (max_size, allocated_size, used_size))
+            return mssql_datafiles_process_sizes(params, used_size, allocated_size,
+                                                 max_size, unlimited)
+
+    if item == "SUMMARY":
+        return mssql_datafiles_process_sizes(params, used_size_sum, allocated_size_sum,
+                                             max_size_sum, unlimited_sum)
+

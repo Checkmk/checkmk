@@ -25,21 +25,21 @@
 # Boston, MA 02110-1301 USA.
 
 
-# <<<mssql_transactionlogs>>>
+# <<<mssql_datafiles>>>
 # instance database table max_size_in_bytes allocated_size_in_bytes used_size_in_bytes unlimited
 
 
-factory_settings['mssql_transactionlogs_default_levels'] = {
+factory_settings['mssql_datafiles_default_levels'] = {
     'used_levels'           : (80.0, 90.0),
 }
 
 
-check_info['mssql_transactionlogs'] = {
+check_info['mssql_datafiles'] = {
     'check_function'          : check_mssql_datafiles,
-    'inventory_function'      : lambda info: inventory_mssql_datafiles("transactionlogs", info),
-    'service_description'     : 'Transactionlog %s',
+    'inventory_function'      : lambda info: inventory_mssql_datafiles("datafiles", info),
+    'service_description'     : 'Datafile %s',
     'group'                   : "mssql_transactionlogs",
     'has_perfdata'            : True,
-    'default_levels_variable' : 'mssql_transactionlogs_default_levels',
+    'default_levels_variable' : 'mssql_datafiles_default_levels',
     'includes'                : ["mssql.include"]
 }

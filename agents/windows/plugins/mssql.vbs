@@ -33,7 +33,7 @@ Dim WMI, FSO, SHO, items, objItem, prop, instId, instIdx, instVersion
 Dim instIds, instName, output, isClustered, instServers
 Dim WMIservice, colRunningServices, objService, cfg_dir, cfg_file, hostname
 
-WScript.Timeout = 10
+WScript.Timeout = 30
 
 ' Directory of all database instance names
 Set instIds = CreateObject("Scripting.Dictionary")
@@ -322,33 +322,40 @@ For Each instId In instIds.Keys
     'Loop all databases to get the size of the transaction log
     addOutput( "<<<mssql_transactionlogs>>>" )
 
-    RS.Open "SELECT name" & _
-            " FROM sys.databases" &_
-            " WHERE recovery_model_desc <> 'SIMPLE'" &_
-            " AND name <> 'MODEL'", CONN
+    For Each dbName in dbNames.Keys
+       RS.Open "USE [" & dbName & "];", CONN
+       RS.Open "SELECT name, physical_name," &_
+                  "  cast(max_size/128 as bigint) as MaxSize," &_
+                  "  cast(size/128 as bigint) as AllocatedSize," &_
+                  "  cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize," &_
+                  "  case when max_size = '-1' then '1' else '0' end as Unlimited" &_
+                  " FROM sys.database_files WHERE type_desc = 'LOG'", CONN
+        Do While Not RS.Eof
+            addOutput( instId & " " & Replace(dbName, " ", "_") & " " & Replace(RS("name"), " ", "_") & _
+                      " " & Replace(RS("physical_name"), " ", "_") & " " & _
+                      RS("MaxSize") & " " & RS("AllocatedSize") & " " & RS("UsedSize")) & _
+                      " " & RS("Unlimited")
+            RS.MoveNext
+        Loop
+        RS.Close
+    Next
 
-    Dim tablesWithLog
-    Set tablesWithLog = CreateObject("Scripting.Dictionary")
-    Do While NOT RS.Eof
-        dbName = RS("name")
-        If Not tablesWithLog.exists(dbName) Then
-            tablesWithLog.add dbName, ""
-        End If
-        RS.MoveNext
-    Loop
-    RS.Close
+    'Loop all databases to get the size of the transaction log
+    addOutput( "<<<mssql_datafiles>>>" )
 
-    For Each dbName in tablesWithLog.Keys
-        RS.Open "USE [" & dbName & "]", CONN
+    For Each dbName in dbNames.Keys
+        RS.Open "USE [" & dbName & "];", CONN
         RS.Open "SELECT name, physical_name," &_
                 "  cast(max_size/128 as bigint) as MaxSize," &_
                 "  cast(size/128 as bigint) as AllocatedSize," &_
-                "  cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize" &_
-                " FROM sys.database_files WHERE type_desc = 'LOG'", CONN
+                "  cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize," &_
+                "  case when max_size = '-1' then '1' else '0' end as Unlimited" &_
+                " FROM sys.database_files WHERE type_desc = 'ROWS'", CONN
         Do While Not RS.Eof
-            addOutput(Replace(dbName, " ", "_") & " " & Replace(RS("name"), " ", "_") & _
+            addOutput( instId & " " & Replace(dbName, " ", "_") & " " & Replace(RS("name"), " ", "_") & _
                       " " & Replace(RS("physical_name"), " ", "_") & " " & _
-                      RS("MaxSize") & " " & RS("AllocatedSize") & " " & RS("UsedSize"))
+                      RS("MaxSize") & " " & RS("AllocatedSize") & " " & RS("UsedSize")) & _
+                      " " & RS("Unlimited")
             RS.MoveNext
         Loop
         RS.Close

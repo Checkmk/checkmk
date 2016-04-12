@@ -1154,6 +1154,11 @@ register_rule(group,
     match = 'all'
 )
 
+def transform_smtp_address_family(val):
+    if "ip_version" in val:
+        val["address_family"] = val.pop("ip_version")
+    return val
+
 register_rule(group,
     "active_checks:smtp",
     Tuple(
@@ -1167,130 +1172,126 @@ register_rule(group,
                 help = _("The service description will be <b>SMTP</b> plus this name. If the name starts with "
                          "a caret (<tt>^</tt>), the service description will not be prefixed with <tt>SMTP</tt>." ),
                 allow_empty = False),
-            Dictionary(
-               title = _("Optional parameters"),
-               elements = [
-                   ( "hostname",
-                     TextAscii(
-                         title = _("DNS Hostname or IP address"),
-                         allow_empty = False,
-                         help = _("You can specify a hostname or IP address different from the IP address "
-                                  "of the host as configured in your host properties."))),
-                   ( "port",
-                     Transform(
-                         Integer(
-                             title = _("TCP Port to connect to"),
-                             help = _("The TCP Port the SMTP server is listening on. "
-                                      "The default is <tt>25</tt>."),
-                             size = 5,
-                             minvalue = 1,
-                             maxvalue = 65535,
-                             default_value = "25",
-                         ),
-                         forth = int,
-                      )
-                   ),
-                   ( "ip_version",
-                     DropdownChoice(
-                         title = _("IP-Version"),
-                         choices = [
-                           ( "ipv4", _("IPv4") ),
-                           ( "ipv6", _("IPv6") ),
-                         ],
-                     ),
-                   ),
-                   ( "expect",
-                     TextAscii(
-                         title = _("Expected String"),
-                         help = _("String to expect in first line of server response. "
-                                  "The default is <tt>220</tt>."),
-                         size = 8,
-                         allow_empty = False,
-                         default_value = "220",
-                     )
-                   ),
-                   ('commands',
-                     ListOfStrings(
-                         title = _("SMTP Commands"),
-                         help = _("SMTP commands to execute."),
-                     )
-                   ),
-                   ('command_responses',
-                     ListOfStrings(
-                         title = _("SMTP Responses"),
-                         help = _("Expected responses to the given SMTP commands."),
-                     )
-                   ),
-                   ("from",
-                     TextAscii(
-                         title = _("FROM-Address"),
-                         help = _("FROM-address to include in MAIL command, required by Exchange 2000"),
-                         size = 20,
-                         allow_empty = True,
-                         default_value = "",
-                     )
-                   ),
-                   ("fqdn",
-                     TextAscii(
-                         title = _("FQDN"),
-                         help = _("FQDN used for HELO"),
-                         size = 20,
-                         allow_empty = True,
-                         default_value = "",
-                     )
-                   ),
-                   ("cert_days",
-                      Integer(
-                          title = _("Minimum Certificate Age"),
-                          help = _("Minimum number of days a certificate has to be valid."),
-                          unit = _("days"),
-                      )
-                   ),
-                   ("starttls",
-                      FixedValue(
-                          True,
-                          totext = _("STARTTLS enabled."),
-                          title = _("Use STARTTLS for the connection.")
-                      )
-                   ),
-                   ( "auth",
-                     Tuple(
-                         title = _("Enable SMTP AUTH (LOGIN)"),
-                         help = _("SMTP AUTH type to check (default none, only LOGIN supported)"),
-                         elements = [
-                             TextAscii(
-                                 title = _("Username"),
-                                 size = 12,
-                                 allow_empty = False),
-                             Password(
-                                 title = _("Password"),
-                                 size = 12,
-                                 allow_empty = False),
-                         ]
-                     )
-                   ),
-                   ("response_time",
-                     Tuple(
-                         title = _("Expected response time"),
-                         elements = [
+            Transform(
+                Dictionary(
+                   title = _("Optional parameters"),
+                   elements = [
+                       ( "hostname",
+                         TextAscii(
+                             title = _("DNS Hostname or IP address"),
+                             allow_empty = False,
+                             help = _("You can specify a hostname or IP address different from the IP address "
+                                      "of the host as configured in your host properties."))),
+                       ( "port",
+                         Transform(
                              Integer(
-                                 title = _("Warning if above"),
-                                 unit = _("sec")
+                                 title = _("TCP Port to connect to"),
+                                 help = _("The TCP Port the SMTP server is listening on. "
+                                          "The default is <tt>25</tt>."),
+                                 size = 5,
+                                 minvalue = 1,
+                                 maxvalue = 65535,
+                                 default_value = "25",
                              ),
-                             Integer(
-                                 title = _("Critical if above"),
-                                 unit = _("sec")
-                             ),
-                         ])
-                    ),
-                    ( "timeout",
-                      Integer(
-                          title = _("Seconds before connection times out"),
-                          unit = _("sec"),
-                          default_value = 10,
-                      )
-                    ),
-                ])
+                             forth = int,
+                          )
+                       ),
+                       ip_address_family_element,
+                       ( "expect",
+                         TextAscii(
+                             title = _("Expected String"),
+                             help = _("String to expect in first line of server response. "
+                                      "The default is <tt>220</tt>."),
+                             size = 8,
+                             allow_empty = False,
+                             default_value = "220",
+                         )
+                       ),
+                       ('commands',
+                         ListOfStrings(
+                             title = _("SMTP Commands"),
+                             help = _("SMTP commands to execute."),
+                         )
+                       ),
+                       ('command_responses',
+                         ListOfStrings(
+                             title = _("SMTP Responses"),
+                             help = _("Expected responses to the given SMTP commands."),
+                         )
+                       ),
+                       ("from",
+                         TextAscii(
+                             title = _("FROM-Address"),
+                             help = _("FROM-address to include in MAIL command, required by Exchange 2000"),
+                             size = 20,
+                             allow_empty = True,
+                             default_value = "",
+                         )
+                       ),
+                       ("fqdn",
+                         TextAscii(
+                             title = _("FQDN"),
+                             help = _("FQDN used for HELO"),
+                             size = 20,
+                             allow_empty = True,
+                             default_value = "",
+                         )
+                       ),
+                       ("cert_days",
+                          Integer(
+                              title = _("Minimum Certificate Age"),
+                              help = _("Minimum number of days a certificate has to be valid."),
+                              unit = _("days"),
+                          )
+                       ),
+                       ("starttls",
+                          FixedValue(
+                              True,
+                              totext = _("STARTTLS enabled."),
+                              title = _("Use STARTTLS for the connection.")
+                          )
+                       ),
+                       ( "auth",
+                         Tuple(
+                             title = _("Enable SMTP AUTH (LOGIN)"),
+                             help = _("SMTP AUTH type to check (default none, only LOGIN supported)"),
+                             elements = [
+                                 TextAscii(
+                                     title = _("Username"),
+                                     size = 12,
+                                     allow_empty = False),
+                                 Password(
+                                     title = _("Password"),
+                                     size = 12,
+                                     allow_empty = False),
+                             ]
+                         )
+                       ),
+                       ("response_time",
+                         Tuple(
+                             title = _("Expected response time"),
+                             elements = [
+                                 Integer(
+                                     title = _("Warning if above"),
+                                     unit = _("sec")
+                                 ),
+                                 Integer(
+                                     title = _("Critical if above"),
+                                     unit = _("sec")
+                                 ),
+                             ])
+                        ),
+                        ( "timeout",
+                          Integer(
+                              title = _("Seconds before connection times out"),
+                              unit = _("sec"),
+                              default_value = 10,
+                          )
+                        ),
+                    ]
+                ),
+                forth=transform_smtp_address_family,
+            )
         ]
     ),
     match = 'all'

@@ -25,11 +25,33 @@
 # Boston, MA 02110-1301 USA.
 
 
-# number of samples to calculate moving average on
-AVG_SAMPLE_COUNT = 5
+# This set of functions are used for checks that handle "generic" windows
+# performance counters as reported via wmi
+# They should also work with performance counters reported through other means
+# (i.e. pdh) as long as the data transmitted as a csv table.
 
+# Sample data:
+# <<<dotnet_clrmemory:sep(44)>>>
+# AllocatedBytesPersec,Caption,Description,FinalizationSurvivors,Frequency_Object,...
+# 26812621794240,,,32398,0,...
+# 2252985000,,,0,0,...
+
+
+#   .--Parse---------------------------------------------------------------.
+#   |                      ____                                            |
+#   |                     |  _ \ __ _ _ __ ___  ___                        |
+#   |                     | |_) / _` | '__/ __|/ _ \                       |
+#   |                     |  __/ (_| | |  \__ \  __/                       |
+#   |                     |_|   \__,_|_|  |___/\___|                       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 def parse_wmi_table(info, key="Name"):
+    # represents a 2-dimensional table. columns are fixed after
+    # initialization, rows can be appended. fields can be accessed
+    # by x/y index or using names.
+    # the column name is defined by the header parameter in the constructor,
+    # the row name is determined by the key_field
     class Table:
         def __init__(self, headers, key_field):
             self.__headers = {}
@@ -80,22 +102,29 @@ def parse_wmi_table(info, key="Name"):
     try:
         info_iter = iter(info)
         res = None
+        # read input line by line. rows with [] start the table name.
+        # Each table has to start with a header line
         line = info_iter.next()
         while line is not None:
             current = None
             if len(line) == 1 and line[0].startswith("["):
+                # multi-table input
                 if res is None:
                     res = {}
                 tablename = regex("\[(.*)\]").search(line[0]).group(1)
                 line = info_iter.next()
                 if tablename in res:
+                    # known table, append to it
                     current = res[tablename]
                 else:
+                    # table is new, treat as header line
                     current = Table(line, key)
                     res[tablename] = current
             else:
+                # single-table input
                 current = res = Table(line, key)
 
+            # read table content
             line = info_iter.next()
             while line is not None and not line[0].startswith("["):
                 current.add_row(line)
@@ -107,6 +136,30 @@ def parse_wmi_table(info, key="Name"):
 
     return res
 
+
+#.
+#   .--Filters-------------------------------------------------------------.
+#   |                     _____ _ _ _                                      |
+#   |                    |  ___(_) | |_ ___ _ __ ___                       |
+#   |                    | |_  | | | __/ _ \ '__/ __|                      |
+#   |                    |  _| | | | ||  __/ |  \__ \                      |
+#   |                    |_|   |_|_|\__\___|_|  |___/                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def wmi_filter_global_only(table, row):
+    return table.get(row, "Name") == "_Global_"
+
+
+#.
+#   .--Inventory-----------------------------------------------------------.
+#   |            ___                      _                                |
+#   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
+#   |            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |             |
+#   |            | || | | \ V /  __/ | | | || (_) | |  | |_| |             |
+#   |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |             |
+#   |                                                   |___/              |
+#   '----------------------------------------------------------------------'
 
 def inventory_wmi_table(table, **kwargs):
     if isinstance(table, dict):
@@ -124,9 +177,15 @@ def inventory_wmi_table(table, **kwargs):
                 for row in table.row_labels()]
 
 
-def wmi_filter_global_only(table, row):
-    return table.get(row, "Name") == "_Global_"
-
+#.
+#   .--Check---------------------------------------------------------------.
+#   |                      ____ _               _                          |
+#   |                     / ___| |__   ___  ___| | __                      |
+#   |                    | |   | '_ \ / _ \/ __| |/ /                      |
+#   |                    | |___| | | |  __/ (__|   <                       |
+#   |                     \____|_| |_|\___|\___|_|\_\                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 # determine time at which a sample was taken
 def get_wmi_time(table, row):
@@ -246,4 +305,5 @@ def wmi_yield_raw_fraction(table, row, column, label, perfvar, levels=None):
     )
 
 
+#.
 

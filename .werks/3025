@@ -1,0 +1,10 @@
+Title: solaris_pkginfo: the last element of the reported software package list was always missing
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b11
+Date: 1460549851
+
+

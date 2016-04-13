@@ -7,6 +7,10 @@
 
     * 3396 Change default setting of Precompile aggregations on demand to ON now...
 
+    HW/SW-Inventory:
+
+    * 3025 FIX: solaris_pkginfo: the last element of the reported software package list was always missing
+
 
 1.2.8b10:
     Core & Setup:

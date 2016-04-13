@@ -86,6 +86,8 @@ def inv_solaris_pkginfo(info):
             for tkey in translation_dict:
                 if key == tkey:
                     entry.update({ translation_dict[tkey] : value.strip()})
+    if entry:
+        paclist.append(entry)
 
 
 inv_info['solaris_pkginfo'] = {

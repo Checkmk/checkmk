@@ -145,6 +145,7 @@
     * 3370 FIX: check_mail: Fixed mail parsing bug when using POP3
     * 3372 FIX: check_mailboxes: Improved error handling
     * 3117 FIX: windows agent: fixed installer may fail to re-start service on update...
+    * 3406 FIX: hp_proliant_temp: fixed wrong params data type
 
     Multisite:
 

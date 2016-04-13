@@ -150,25 +150,41 @@ def connect_single_site():
 # If Multisite is retricted to data the user is a contact for, we need to set an
 # AuthUser: header for livestatus.
 def set_livestatus_auth():
-    if html.output_format == 'html':
-        perm = "force_authuser"
-    else:
-        perm = "force_authuser_webservice"
-
-    use_livestatus_auth = True
-    if config.may("general.see_all") and not config.user.get(perm):
-        use_livestatus_auth = False
-
-    if use_livestatus_auth == True:
-        _live.set_auth_user('read',   config.user_id)
-        _live.set_auth_user('action', config.user_id)
+    user_id = livestatus_auth_user()
+    if user_id != None:
+        _live.set_auth_user('read',   user_id)
+        _live.set_auth_user('action', user_id)
 
     # May the user see all objects in BI aggregations or only some?
     if not config.may("bi.see_all"):
-        _live.set_auth_user('bi', config.user_id)
+        _live.set_auth_user('bi', user_id)
 
     # Default auth domain is read. Please set to None to switch off authorization
     _live.set_auth_domain('read')
+
+
+# Returns either None when no auth user shal be set or the name of the user
+# to be used as livestatus auth user
+def livestatus_auth_user():
+    if not config.may("general.see_all"):
+        return config.user_id
+
+    force_authuser = html.var("force_authuser")
+    if force_authuser == "1":
+        return config.user_id
+    elif force_authuser == "0":
+        return None
+    elif force_authuser:
+        return force_authuser # set a different user
+
+    # TODO: Remove this with 1.5.0/1.6.0
+    if html.output_format != 'html' and config.user.get("force_authuser_webservice"):
+        return config.user_id
+
+    if config.user.get("force_authuser"):
+        return config.user_id
+
+    return None
 
 
 def disconnect():

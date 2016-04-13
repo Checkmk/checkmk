@@ -37,11 +37,13 @@ declare_user_attribute(
     permission = "general.see_all"
 )
 
+# TODO: Remove this with 1.5.0/1.6.0
 declare_user_attribute(
     "force_authuser_webservice",
     Checkbox(
-        title = _("Visibility of Hosts/Services (Webservice)"),
-        label = _("Export only hosts and services the user is a contact for"),
+        title = _("Hosts/Service visibility (Webservice, Deprecated)"),
+        label = _("Export only hosts and services the user is a contact for. "
+                  "<b>Please don't use this option anymore, it is deprecated.</b>"),
         help = _("When this option is checked, then the Multisite webservice "
                  "will only export hosts and services that the user is a contact for - "
                  "even if he has the permission for seeing all objects."),

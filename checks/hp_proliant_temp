@@ -31,7 +31,7 @@ def format_hp_proliant_name(line):
 
 def inventory_hp_proliant_temp(info):
     for line in info:
-        yield format_hp_proliant_name(line), None
+        yield format_hp_proliant_name(line), {}
 
 def check_hp_proliant_temp(item, params, info):
     for line in info:

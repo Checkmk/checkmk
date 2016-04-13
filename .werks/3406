@@ -1,0 +1,9 @@
+Title: hp_proliant_temp: fixed wrong params data type
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b11
+Date: 1460559805
+Class: fix
+
+

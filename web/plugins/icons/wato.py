@@ -30,7 +30,7 @@ def wato_link(folder, site, hostname, where):
     if not config.wato_enabled:
         return
 
-    if 'X' in html.display_options:
+    if DisplayOptions.enabled(DisplayOptions.X):
         url = "wato.py?folder=%s&host=%s" % \
            (html.urlencode(folder), html.urlencode(hostname))
         if where == "inventory":

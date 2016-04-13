@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -25,35 +25,37 @@
 # Boston, MA 02110-1301 USA.
 
 
-hp_proliant_status_map = {
-        1: 'unknown',
-        2: 'ok',
-        3: 'degraded',
-        4: 'failed',
-        5: 'disabled'
-        }
+def scan_fireeye(oid):
+    return oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.25597.1')
 
-hp_proliant_status2nagios_map = {
-        'unknown': 3,
-        'other': 3,
-        'ok': 0,
-        'degraded': 2,
-        'failed': 2,
-        'disabled': 1
-        }
 
-hp_proliant_locale = {
-        1:   "other",
-        2:   "unknown",
-        3:   "system",
-        4:   "systemBoard",
-        5:   "ioBoard",
-        6:   "cpu",
-        7:   "memory",
-        8:   "storage",
-        9:   "removableMedia",
-        10:  "powerSupply",
-        11:  "ambient",
-        12:  "chassis",
-        13:  "bridgeCard",
+def inventory_fireeye_generic(info, has_item):
+    if info:
+        if has_item:
+            return [ (line[0], None) for line in info ]
+        else:
+            return [ (None, None) ]
+
+
+def check_fireeye_states(states):
+    # Now we only known the OK states and health states
+    # but we can expand if we know more
+    map_states = {
+        "status" : {
+            'good'   : (0, 'good'),
+            'ok'     : (0, 'OK'),
+        },
+        "disk status" : {
+            'online' : (0, 'online'),
+        },
+        "health" : {
+            '1'      : (0, 'healthy'),
+            '2'      : (2, 'unhealthy'),
         }
+    }
+    states_evaluated = {}
+    for what, text in states:
+        states_evaluated.setdefault(text, \
+            map_states[text.lower()].get(what.lower(), (2, "not %s" % what.lower())))
+
+    return states_evaluated

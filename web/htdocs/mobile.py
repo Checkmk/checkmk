@@ -230,7 +230,7 @@ def page_view():
     mobile_html_foot()
 
 def render_view(view, rows, datasource, group_painters, painters,
-                display_options, painter_options, show_heading, show_buttons,
+                painter_options, show_heading, show_buttons,
                 show_checkboxes, layout, num_columns, show_filters, show_footer,
                 browser_reload):
 

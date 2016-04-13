@@ -1,10 +1,10 @@
-title: Citrix ASA SVC Sessions (SSL VPN Client)
+title: Cisco ASA SVC Sessions (SSL VPN Client)
 agents: snmp
 catalog: hw/network/cisco
 distribution: check_mk
 license: GPLv3
 description:
- This check monitors the number of active Sessions VPN Sessions (e.g. Anyconnect) on a citrix server.
+ This check monitors the number of active VPN Sessions (e.g. Anyconnect) on a cisco server.
 
 inventory:
  One service will be created.

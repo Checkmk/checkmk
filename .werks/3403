@@ -1,0 +1,9 @@
+Title: fireeye_content, fireeye_fans, fireeye_powersupplies, fireeye_raid, fireeye_raid.disks, fireeye_sys_image, fireeye_sys_status, fireeye_temp: new checks for Fireeye Appliances which support the FE-FIREEYE-MIB
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1460535522
+Class: feature
+
+

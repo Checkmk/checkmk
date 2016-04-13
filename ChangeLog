@@ -257,6 +257,7 @@
     * 3329 FIX: Function discover_services now allows the URL parameter mode...
     * 3330 FIX: WATO Web-API now allows to specify root folder with / instead of empty string again
     * 3024 FIX: Fixed WATO GIT version control for older (<2.0) GIT versions
+    * 3377 FIX: Network scan: The scan was broken when having no regex exclude patterns since 1.2.8b9
 
     Notifications:
 

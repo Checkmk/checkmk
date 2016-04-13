@@ -1,0 +1,10 @@
+Title: Show IP addresses of a host when hovering over its name
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b11
+Date: 1460552531
+Class: feature
+
+This works in several views, like {{All hosts}}. That way can get to know the
+address of a host without going to its detail page.

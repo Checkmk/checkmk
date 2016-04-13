@@ -43,7 +43,7 @@ host_service_view_painters.insert(1, ('host', 'host'))
 host_view_painters = [
     ('host_state',           None),
 #    ('host_type_icon',       None),
-    ('host',                 'host'),
+    ('host',                 'host', 'host_addresses'),
     ('host_icons',           None),
     ('num_services_ok',      'host_ok'),
     ('num_services_warn',    'host_warn'),

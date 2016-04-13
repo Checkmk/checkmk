@@ -84,10 +84,6 @@ def paint_action_menu(what, row, tags, host_custom_vars):
     if html.has_var('_display_options'):
         url_vars.append(('_display_options', html.var('_display_options')))
 
-    icons = get_icons(what, row, toplevel=False)
-    if not icons:
-        return # Don't paint the menu trigger when the menu would be empty
-
     return html.render_popup_trigger(
         html.render_icon('menu', _('Open the action menu'), cssclass="iconbutton"),
         'action_menu', 'action_menu', url_vars=url_vars)

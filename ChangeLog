@@ -192,6 +192,7 @@
     * 3374 FIX: Fixed broken Logwatch page when a host has no log directory (yet)
     * 3375 FIX: Fixed exception when adding a bookmark while having a list not named my_bookmarks
     * 3118 FIX: Availability view now takes daylight saving time into account
+    * 3395 FIX: Fix performance issue when many BI aggregations are active...
 
     WATO:
 

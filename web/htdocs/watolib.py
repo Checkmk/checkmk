@@ -4507,7 +4507,7 @@ def do_git_commit():
 
 
 def git_add_files():
-    git_command(["add", ".gitignore", "*.d/wato"])
+    git_command(["add", "--all", ".gitignore", "*.d/wato"])
 
 
 def git_has_pending_changes():

@@ -1,0 +1,9 @@
+Title: Fixed too long contact group names overflowing WATO folders
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b11
+Date: 1460560285
+Class: fix
+
+

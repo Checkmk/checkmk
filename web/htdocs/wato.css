@@ -404,8 +404,7 @@ table.validationerror img {
     position: absolute;
     bottom: 23px;
     left: 20px;
-    width: 140px;
-    width: 1140px;
+    right: 20px;
     color: #bde;
     overflow:hidden;
     white-space: nowrap;

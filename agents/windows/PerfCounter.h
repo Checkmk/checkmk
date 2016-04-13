@@ -62,7 +62,7 @@ class PerfCounterObject {
     BYTE *_datablock;
 
 public:
-    typedef std::vector<std::pair<int, std::string>> CounterList;
+    typedef std::vector<std::pair<DWORD, std::wstring>> CounterList;
 
 public:
     PerfCounterObject(unsigned counter_base_number);
@@ -74,7 +74,9 @@ public:
     std::vector<PerfCounter> counters() const;
     std::vector<std::wstring> counterNames() const;
 
-    static CounterList counter_list(const char *language);
+    static std::vector<BYTE> retrieveCounterData(const wchar_t *counterList);
+
+    static CounterList object_list(const char *language);
 
     static int resolve_counter_name(const wchar_t *name,
                                     const wchar_t *language = NULL);

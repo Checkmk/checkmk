@@ -12,11 +12,11 @@ void print_usage(const char *exe_name) {
         exe_name);
 }
 
-void print_perf_counter(int counter_id, const char *counter_name) {
+void print_perf_counter(int counter_id, const wchar_t *counter_name) {
     PerfCounterObject counterObject(counter_id);
 
     if (!counterObject.isEmpty()) {
-        printf("<<<%s:%d>>>\n", counter_name, counter_id);
+        printf("<<<%ls:%d>>>\n", counter_name, counter_id);
         printf("index,type,\"%ls\"\n",
                join(counterObject.instanceNames(), L"\",\"").c_str());
 
@@ -35,24 +35,24 @@ void print_perf_counter(int counter_id, const char *counter_name) {
     }
 }
 
-void print_perf_counter(const char *counter_pattern) {
-    for (auto counter : PerfCounterObject::counter_list("CurrentLanguage")) {
-        if (globmatch(counter_pattern, counter.second.c_str())) {
+void print_perf_counter(const wchar_t *counter_pattern) {
+    for (auto obj : PerfCounterObject::object_list("CurrentLanguage")) {
+        if (globmatch(counter_pattern, obj.second.c_str())) {
             try {
-                print_perf_counter(counter.first, counter.second.c_str());
+                print_perf_counter(obj.first, obj.second.c_str());
             } catch (const std::exception &e) {
-                printf("Failed to read %s:%d: %s\n", counter.second.c_str(),
-                       counter.first, e.what());
+                printf("Failed to read %ls:%lu: %s\n", obj.second.c_str(),
+                       obj.first, e.what());
             }
         }
     }
-    for (auto counter : PerfCounterObject::counter_list("009")) {
-        if (globmatch(counter_pattern, counter.second.c_str())) {
+    for (auto obj : PerfCounterObject::object_list("009")) {
+        if (globmatch(counter_pattern, obj.second.c_str())) {
             try {
-                print_perf_counter(counter.first, counter.second.c_str());
+                print_perf_counter(obj.first, obj.second.c_str());
             } catch (const std::exception &e) {
-                printf("Failed to read %s:%d: %s\n", counter.second.c_str(),
-                       counter.first, e.what());
+                printf("Failed to read %ls:%lu: %s\n", obj.second.c_str(),
+                       obj.first, e.what());
             }
         }
     }
@@ -65,7 +65,17 @@ int main(int argc, char **argv) {
     }
 
     try {
-        print_perf_counter(argv[1]);
+        if (strcmp(argv[1], "--list") == 0) {
+            for (const auto &idx_name : PerfCounterObject::object_list("009")) {
+                printf("%lu = %ls\n", idx_name.first, idx_name.second.c_str());
+                PerfCounterObject obj(idx_name.first);
+                for (const auto &counter : obj.counterNames()) {
+                    printf("  -> %ls\n", counter.c_str());
+                }
+            }
+        } else {
+            print_perf_counter(to_utf16(argv[1]).c_str());
+        }
 
         return 0;
     } catch (const std::exception &e) {

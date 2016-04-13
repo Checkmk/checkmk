@@ -45,7 +45,7 @@ typedef std::vector<std::wstring> StringList;
 class PerfCounterQuery {
     HQUERY _query;
     std::map<std::wstring, HCOUNTER> _counter;
-    std::map<std::wstring, int> _perf_name_index;
+    std::map<std::wstring, DWORD> _perf_name_index;
     std::map<std::wstring, std::wstring> _translation_map;
 
 public:

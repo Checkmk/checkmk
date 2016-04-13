@@ -166,23 +166,25 @@ DWORD PerfCounter::offset() const { return _counter->CounterOffset; }
 
 static const size_t DEFAULT_BUFFER_SIZE = 40960L;
 
-PerfCounterObject::PerfCounterObject(unsigned int counter_base_number)
-    : _buffer(DEFAULT_BUFFER_SIZE), _datablock(NULL) {
-    DWORD buffer_size = _buffer.size();
+std::vector<BYTE> PerfCounterObject::retrieveCounterData(
+    const wchar_t *counterList) {
+    std::vector<BYTE> result;
+    result.resize(DEFAULT_BUFFER_SIZE);
+
+    DWORD buffer_size = result.size();
     DWORD type;
     DWORD ret;
 
-    while ((ret = RegQueryValueEx(HKEY_PERFORMANCE_DATA,
-                                  std::to_string(counter_base_number).c_str(),
-                                  NULL, &type, &_buffer[0], &buffer_size)) !=
+    while ((ret = RegQueryValueExW(HKEY_PERFORMANCE_DATA, counterList, nullptr,
+                                   &type, &result[0], &buffer_size)) !=
            ERROR_SUCCESS) {
         if (ret == ERROR_MORE_DATA) {
             // the size of performance counter blocks is varible and may change
             // concurrently, so there is no way to ensure the buffer is large
             // enough before the call, we can only increase the buffer size
             // until the call succeeds
-            buffer_size = _buffer.size() * 2;
-            _buffer.resize(buffer_size);
+            buffer_size = result.size() * 2;
+            result.resize(buffer_size);
         } else {
             throw std::runtime_error(get_win_error_as_string());
         }
@@ -194,7 +196,13 @@ PerfCounterObject::PerfCounterObject(unsigned int counter_base_number)
     // say WHAT???
     RegCloseKey(HKEY_PERFORMANCE_DATA);
 
-    _buffer.resize(buffer_size);
+    result.resize(buffer_size);
+    return result;
+}
+
+PerfCounterObject::PerfCounterObject(unsigned int counter_base_number)
+    : _datablock(nullptr) {
+    _buffer = retrieveCounterData(std::to_wstring(counter_base_number).c_str());
 
     _object = findObject(counter_base_number);
     if (_object == NULL) {
@@ -282,9 +290,8 @@ std::vector<std::wstring> PerfCounterObject::counterNames() const {
     return result;
 }
 
-PerfCounterObject::CounterList PerfCounterObject::counter_list(
-    const char *language) {
-    CounterList output;
+std::map<DWORD, std::wstring> name_map(const char *language) {
+    std::map<DWORD, std::wstring> output;
 
     HKEY hKey;
     LONG result = RegOpenKeyEx(
@@ -296,31 +303,51 @@ PerfCounterObject::CounterList PerfCounterObject::counter_list(
         REG_MULTI_SZ, KEY_READ, &hKey);
 
     // preflight
-    std::vector<char> szValueName;
+    std::vector<wchar_t> szValueName;
     DWORD dwcbData = 0;
-    RegQueryValueExA(hKey, "Counter", NULL, NULL, (LPBYTE)&szValueName[0],
+    RegQueryValueExW(hKey, L"Counter", nullptr, nullptr, (LPBYTE)&szValueName[0],
                      &dwcbData);
     szValueName.resize(dwcbData);
     // actual read op
-    RegQueryValueExA(hKey, "Counter", NULL, NULL, (LPBYTE)&szValueName[0],
+    RegQueryValueExW(hKey, L"Counter", nullptr, nullptr, (LPBYTE)&szValueName[0],
                      &dwcbData);
     RegCloseKey(hKey);
-
     if (result == ERROR_SUCCESS) {
         size_t offset = 0;
         for (;;) {
-            const char *id = get_next_multi_sz(szValueName, offset);
-            const char *name = get_next_multi_sz(szValueName, offset);
-            if ((id == NULL) || (name == NULL)) {
+            LPCWSTR id = get_next_multi_sz(szValueName, offset);
+            LPCWSTR name = get_next_multi_sz(szValueName, offset);
+            if ((id == nullptr) || (name == nullptr)) {
                 break;
             }
-
-            output.push_back(
-                std::make_pair<int, std::string>(strtol(id, NULL, 10), name));
+            output[wcstol(id, nullptr, 10)] = name;
         }
     }
 
     return output;
+}
+
+PerfCounterObject::CounterList PerfCounterObject::object_list(
+    const char *language) {
+    CounterList result;
+
+    std::map<DWORD, std::wstring> name_lookup = name_map(language);
+
+    std::vector<BYTE> counter_data = retrieveCounterData(L"Global");
+
+    PERF_DATA_BLOCK *data_block = (PERF_DATA_BLOCK *)&counter_data[0];
+    PERF_OBJECT_TYPE *iter = FirstObject(data_block);
+
+    for (DWORD i = 0; i < data_block->NumObjectTypes; ++i) {
+        auto name_iter = name_lookup.find(iter->ObjectNameTitleIndex);
+        if (name_iter != name_lookup.end()) {
+            result.push_back(
+                std::make_pair(iter->ObjectNameTitleIndex, name_iter->second));
+        }
+        iter = NextObject(iter);
+    }
+
+    return result;
 }
 
 int PerfCounterObject::resolve_counter_name(const wchar_t *counter_name,

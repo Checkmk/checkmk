@@ -58,7 +58,7 @@ PerfCounterQuery::PerfCounterQuery() {
     }
 
     _perf_name_index = perf_name_map(false);
-    std::map<int, std::wstring> local_perf_names = perf_id_map(true);
+    std::map<DWORD, std::wstring> local_perf_names = perf_id_map(true);
 
     for (const auto &name_id : _perf_name_index) {
         auto local_iter = local_perf_names.find(name_id.second);

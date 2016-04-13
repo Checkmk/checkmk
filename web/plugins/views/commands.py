@@ -554,8 +554,12 @@ def command_downtime(cmdtag, spec, row):
                 _("<b>%s of %s length</b> on") %\
                 (title_start, get_duration_human_readable(duration))
 
-    if rangebtns:
+    try:
         rangebtn = rangebtns.next()
+    except StopIteration:
+        rangebtn = None
+
+    if rangebtn:
         btnname, end = rangebtn.split("__", 1)
         down_to, title = resolve_end(end)
     elif html.var("_down_from_now"):

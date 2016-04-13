@@ -29,4 +29,4 @@ aggregations            = []
 host_aggregations       = []
 bi_packs                = {}
 bi_compile_log          = None
-bi_precompile_on_demand = False
+bi_precompile_on_demand = True

@@ -182,7 +182,7 @@ class html(GUITester):
             content_type = "text/csv; charset=UTF-8"
 
         elif f == "python":
-            content_type = "application/python; charset=UTF-8"
+            content_type = "text/plain; charset=UTF-8"
 
         elif f == "text":
             content_type = "text/plain; charset=UTF-8"

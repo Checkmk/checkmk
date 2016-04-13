@@ -398,7 +398,7 @@ register_configvar(group,
                 "to change the precompilation to be executed on demand. BI only precompiles the "
                 "aggregations which are really requested by the users."
              ),
-             default_value = False),
+             default_value = True),
     domain = "multisite")
 
 register_configvar(group,

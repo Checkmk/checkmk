@@ -3,6 +3,10 @@
 
     * 3395 FIX: Fix performance issue when many BI aggregations are active...
 
+    BI:
+
+    * 3396 Change default setting of Precompile aggregations on demand to ON now...
+
 
 1.2.8b10:
     Core & Setup:

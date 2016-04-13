@@ -1,0 +1,15 @@
+Title: Change default setting of Precompile aggregations on demand to ON now
+Level: 2
+Component: bi
+Compatible: compat
+Version: 1.2.8b11
+Date: 1460547726
+Class: feature
+
+The global setting {{Precompile aggregations on demand}} improves the
+performance of BI in case where not all aggregations are needed at once. This
+is especially true for the case of single-host aggregations. This setting
+now exists for a long time and we have finally regarded that feature as
+stable enough in order to make it the default.
+
+We might remove the setting from WATO totally in future.

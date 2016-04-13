@@ -343,7 +343,7 @@ def prepare_display_options():
     if html.output_format == "html":
         display_options = html.var("display_options", "")
     else:
-        display_options = DisplayOptions.all_on()
+        display_options = DisplayOptions.all_off()
 
     display_options = DisplayOptions.apply_defaults(display_options)
 

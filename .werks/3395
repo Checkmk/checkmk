@@ -1,0 +1,14 @@
+Title: Fix performance issue when many BI aggregations are active
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.8b11
+Date: 1460542721
+Class: fix
+
+If you have created 1000 or more aggregations and show a view with many
+hosts or services than you could get massive performance and memory problems
+in your Apache process. The reason is the computation of the BI icon in the
+drop down menus of hosts and services. This was only done in order to
+check the visibility of the menu itself. The menu is now always visible
+and thus the computation is not longer neccessary.

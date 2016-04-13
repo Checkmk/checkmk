@@ -311,6 +311,7 @@
     * 3289 FIX: Fixed missing filters in HW-/SW-Inventory views after editing the view...
     * 3013 FIX: Inventory: snmp inventory plugins never use cached data...
     * 3340 FIX: Fixed exception when searching for software package sizes
+    * 3025 FIX: solaris_pkginfo: the last element of the reported software package list was always missing
 
 
 1.2.8b1:

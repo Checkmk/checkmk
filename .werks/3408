@@ -1,0 +1,9 @@
+Title: temperature.include: now does not ignore levels with value 0 any more
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b11
+Date: 1460561025
+Class: fix
+
+

@@ -120,23 +120,23 @@ def check_temperature_determine_levels(dlh, usr_warn, usr_crit, usr_warn_lower, 
 
     # Use user's levels if present, otherwise the device's
     elif dlh == "usrdefault":
-        if usr_warn and usr_crit:
+        if usr_warn is not None and usr_crit is not None:
             warn, crit = usr_warn, usr_crit
         else:
             warn, crit = dev_warn, dev_crit
-        if usr_warn_lower and usr_crit_lower:
+        if usr_warn_lower is not None and usr_crit_lower is not None:
             warn_lower, crit_lower = usr_warn_lower, usr_crit_lower
         else:
             warn_lower, crit_lower = dev_warn_lower, dev_crit_lower
 
     # Use device's levels if present, otherwise yours
     elif dlh == "devdefault":
-        if dev_warn and dev_crit:
+        if dev_warn is not None and dev_crit is None:
             warn, crit = dev_warn, dev_crit
         else:
             warn, crit = usr_warn, usr_crit
 
-        if dev_warn_lower and dev_crit_lower:
+        if dev_warn_lower is not None and dev_crit_lower is not None:
             warn_lower, crit_lower = dev_warn_lower, dev_crit_lower
         else:
             warn_lower, crit_lower = usr_warn_lower, usr_crit_lower
@@ -187,16 +187,16 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
         else:
             warn_lower_trend = crit_lower_trend = None
 
-        if crit_upper_trend and trend > crit_upper_trend:
+        if crit_upper_trend is not None and trend > crit_upper_trend:
             combiner(2, u"rising faster than %s/%g min(!!)" %\
                         (render_temp(crit_upper_trend, output_unit, True), trend_range_min))
-        elif warn_upper_trend and trend > warn_upper_trend:
+        elif warn_upper_trend is not None and trend > warn_upper_trend:
             combiner(1, u"rising faster than %s/%g min(!)" %\
                         (render_temp(warn_upper_trend, output_unit, True), trend_range_min))
-        elif crit_lower_trend and trend < crit_lower_trend:
+        elif crit_lower_trend is not None and trend < crit_lower_trend:
             combiner(2, u"falling faster than %s/%g min(!!)" %\
                         (render_temp(crit_lower_trend, output_unit, True), trend_range_min))
-        elif warn_lower_trend and trend < warn_lower_trend:
+        elif warn_lower_trend is not None and trend < warn_lower_trend:
             combiner(1, u"falling faster than %s/%g min(!)" %\
                         (render_temp(warn_lower_trend, output_unit, True), trend_range_min))
 
@@ -312,7 +312,7 @@ def check_temperature(reading, params, unique_name, dev_unit = "c",
     # Render actual temperature, e.g. "17.8 °F"
     infotext = "%s %s" % (render_temp(temp, output_unit), temp_unitsym[output_unit])
 
-    if dev_status != None and dev_status != 0 and dev_status_name: # omit status in OK case
+    if dev_status is not None and dev_status != 0 and dev_status_name: # omit status in OK case
         infotext += ", %s" % dev_status_name
 
     # In case of a non-OK status output the information about the levels

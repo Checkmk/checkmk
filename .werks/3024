@@ -1,0 +1,10 @@
+Title: Fixed WATO GIT version control for older (<2.0) GIT versions
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b10
+Date: 1460537019
+
+

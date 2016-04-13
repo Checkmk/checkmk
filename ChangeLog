@@ -48,6 +48,7 @@
     * 3371 FIX: Be compatible to old site=None setting read from hosts.mk...
     * 3329 FIX: Function discover_services now allows the URL parameter mode...
     * 3330 FIX: WATO Web-API now allows to specify root folder with / instead of empty string again
+    * 3024 FIX: Fixed WATO GIT version control for older (<2.0) GIT versions
 
     Reporting & Availability:
     * 3331 FIX: Availability: avoid duplication of annotation when changing time while editing

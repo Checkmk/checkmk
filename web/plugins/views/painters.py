@@ -992,7 +992,7 @@ def paint_time_graph_pnp(row):
     container_id = "%s_%s_%s_graph" % (sitename, host, service)
     url_prefix = config.site(sitename)["url_prefix"]
     pnp_url = url_prefix + "pnp4nagios/"
-    if 'X' in html.display_options:
+    if DisplayOptions.enabled(DisplayOptions.X):
         with_link = 'true'
     else:
         with_link = 'false'

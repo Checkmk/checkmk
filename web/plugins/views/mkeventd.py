@@ -268,7 +268,7 @@ def get_all_events(what, filters, limit):
     except:
         debug = False
     if debug \
-            and html.output_format == "html" and 'W' in html.display_options:
+       and html.output_format == "html" and DisplayOptions.enabled(DisplayOptions.W):
         html.write('<div class="livestatus message" onmouseover="this.style.display=\'none\';">'
                    '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
     response = mkeventd.query(query)

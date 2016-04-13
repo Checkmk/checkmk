@@ -257,6 +257,126 @@ def save_views(us):
     visuals.save('views', multisite_views)
 
 #.
+#   .--Display Opts.-------------------------------------------------------.
+#   |       ____  _           _                ___        _                |
+#   |      |  _ \(_)___ _ __ | | __ _ _   _   / _ \ _ __ | |_ ___          |
+#   |      | | | | / __| '_ \| |/ _` | | | | | | | | '_ \| __/ __|         |
+#   |      | |_| | \__ \ |_) | | (_| | |_| | | |_| | |_) | |_\__ \_        |
+#   |      |____/|_|___/ .__/|_|\__,_|\__, |  \___/| .__/ \__|___(_)       |
+#   |                  |_|            |___/        |_|                     |
+#   +----------------------------------------------------------------------+
+#   | Display options are flags that control which elements of a view      |
+#   | should be displayed (buttons, sorting, etc.). They can be  specified |
+#   | via the URL variable display_options.                                |
+#   | An upper-case char means enabled, lower-case means disabled.         |
+#   '----------------------------------------------------------------------'
+
+class DisplayOptions(object):
+    H = "H" # The HTML header and body-tag (containing the tags <HTML> and <BODY>)
+    T = "T" # The title line showing the header and the logged in user
+    B = "B" # The blue context buttons that link to other views
+    F = "F" # The button for using filters
+    C = "C" # The button for using commands and all icons for commands (e.g. the reschedule icon)
+    O = "O" # The view options number of columns and refresh
+    D = "D" # The Display button, which contains column specific formatting settings
+    E = "E" # The button for editing the view
+    Z = "Z" # The footer line, where refresh: 30s is being displayed
+    R = "R" # The auto-refreshing in general (browser reload)
+    S = "S" # The playing of alarm sounds (on critical and warning services)
+    U = "U" # Load persisted user row selections
+    I = "I" # All hyperlinks pointing to other views
+    X = "X" # All other hyperlinks (pointing to external applications like PNP, WATO or others)
+    M = "M" # If this option is not set, then all hyperlinks are targeted to the HTML frame
+            # with the name main. This is useful when using views as elements in the dashboard.
+    L = "L" # The column title links in multisite views
+    W = "W" # The limit and livestatus error message in views
+
+    options       = None
+    title_options = None
+
+    @classmethod
+    def all_on(cls):
+        opts = ""
+        for k in sorted(cls.__dict__.keys()):
+            if len(k) == 1:
+                opts += k
+        return opts
+
+
+    @classmethod
+    def all_off(cls):
+        return cls.all_on().lower()
+
+
+    @classmethod
+    def enabled(cls, opt):
+        return opt in cls.options
+
+
+    @classmethod
+    def disabled(cls, opt):
+        return opt not in cls.options
+
+
+    # If all display_options are upper case assume all not given values default
+    # to lower-case. Vice versa when all display_options are lower case.
+    # When the display_options are mixed case assume all unset options to be enabled
+    @classmethod
+    def apply_defaults(cls, opts):
+        do_defaults = opts.isupper() and cls.all_off() or cls.all_on()
+        for c in do_defaults:
+            if c.lower() not in opts.lower():
+                opts += c
+        return opts
+
+
+
+
+# The function uses the display_option HTML variable, applies defaults and
+# generates different versions of the display options:
+# a) Return value                 -> display options to actually use
+# b) DisplayOptions.options       -> display options to use in for URLs to other views
+# c) DisplayOptions.title_options -> display options for title sorter links
+# d) html.var("display_options")  -> Use this for linking to other views
+def prepare_display_options():
+    # Parse display options and
+    if html.output_format == "html":
+        display_options = html.var("display_options", "")
+    else:
+        display_options = DisplayOptions.all_on()
+
+    display_options = DisplayOptions.apply_defaults(display_options)
+
+    # Add the display_options to the html object for later linking etc.
+    DisplayOptions.options = display_options
+
+    # This is needed for letting only the data table reload. The problem is that
+    # the data table is re-fetched via javascript call using special display_options
+    # but these special display_options must not be used in links etc. So we use
+    # a special var _display_options for defining the display_options for rendering
+    # the data table to be reloaded. The contents of "display_options" are used for
+    # linking to other views.
+    if html.has_var('_display_options'):
+        DisplayOptions.options = DisplayOptions.apply_defaults(html.var("_display_options", ""))
+
+    # But there is one special case: The sorter links! These links need to know
+    # about the provided display_option parameter. The links could use
+    # "DisplayOptions.options" but this contains the implicit options which should
+    # not be added to the URLs. So the real parameters need to be preserved for
+    # this case.
+    if html.var('display_options'):
+        DisplayOptions.title_options = html.var("display_options")
+
+    # If display option 'M' is set, then all links are targetet to the 'main'
+    # frame. Also the display options are removed since the view in the main
+    # frame should be displayed in standard mode.
+    if 'M' not in DisplayOptions.options:
+        html.set_link_target("main")
+        html.del_var("display_options")
+
+
+
+#.
 #   .--Table of views------------------------------------------------------.
 #   |   _____     _     _               __         _                       |
 #   |  |_   _|_ _| |__ | | ___    ___  / _| __   _(_) _____      _____     |
@@ -829,95 +949,13 @@ def get_painter_columns(painter):
         return painter["columns"]
 
 
-# Display options are flags that control which elements of a
-# view should be displayed (buttons, sorting, etc.). They can be
-# specified via the URL variable display_options. The function
-# extracts this variable, applies defaults and generates
-# three versions of the display options:
-# Return value -> display options to actually use
-# html.display_options -> display options to use in for URLs to other views
-# html.title_display_options -> display options for title sorter links
-def prepare_display_options():
-    # Display options (upper-case: show, lower-case: don't show)
-    # H  The HTML header and body-tag (containing the tags <HTML> and <BODY>)
-    # T  The title line showing the header and the logged in user
-    # B  The blue context buttons that link to other views
-    # F  The button for using filters
-    # C  The button for using commands and all icons for commands (e.g. the reschedule icon)
-    # O  The view options number of columns and refresh
-    # D  The Display button, which contains column specific formatting settings
-    # E  The button for editing the view
-    # Z  The footer line, where refresh: 30s is being displayed
-    # R  The auto-refreshing in general (browser reload)
-    # S  The playing of alarm sounds (on critical and warning services)
-    # U  Load persisted user row selections
-    # I  All hyperlinks pointing to other views
-    # X  All other hyperlinks (pointing to external applications like PNP, WATO or others)
-    # M  If this option is not set, then all hyperlinks are targeted to the HTML frame
-    #    with the name main. This is useful when using views as elements in the dashboard.
-    # L  The column title links in multisite views
-    # W  The limit and livestatus error message in views
-    all_display_options = "HTBFCEOZRSUIXDMLW"
-
-    # Parse display options and
-    if html.output_format == "html":
-        display_options = html.var("display_options", "")
-    else:
-        display_options = all_display_options.lower()
-
-    # If all display_options are upper case assume all not given values default
-    # to lower-case. Vice versa when all display_options are lower case.
-    # When the display_options are mixed case assume all unset options to be enabled
-    def apply_display_option_defaults(opts):
-        do_defaults = opts.isupper() and all_display_options.lower() or all_display_options
-        for c in do_defaults:
-            if c.lower() not in opts.lower():
-                opts += c
-        return opts
-
-    display_options = apply_display_option_defaults(display_options)
-    # Add the display_options to the html object for later linking etc.
-    html.display_options = display_options
-
-    # This is needed for letting only the data table reload. The problem is that
-    # the data table is re-fetched via javascript call using special display_options
-    # but these special display_options must not be used in links etc. So we use
-    # a special var _display_options for defining the display_options for rendering
-    # the data table to be reloaded. The contents of "display_options" are used for
-    # linking to other views.
-    if html.has_var('_display_options'):
-        display_options = html.var("_display_options", "")
-        display_options = apply_display_option_defaults(display_options)
-        html.display_options = display_options
-
-    # But there is one special case: The sorter links! These links need to know
-    # about the provided display_option parameter. The links could use
-    # "html.display_options" but this contains the implicit options which should
-    # not be added to the URLs. So the real parameters need to be preserved for
-    # this case. It is stored in the var "html.display_options"
-    if html.var('display_options'):
-        html.title_display_options = html.var("display_options")
-
-    # If display option 'M' is set, then all links are targetet to the 'main'
-    # frame. Also the display options are removed since the view in the main
-    # frame should be displayed in standard mode.
-    if 'M' not in display_options:
-        html.set_link_target("main")
-        html.del_var("display_options")
-
-    # Below we have the following display_options vars:
-    # html.display_options        - Use this when rendering the current view
-    # html.var("display_options") - Use this for linking to other views
-    return display_options
-
-
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True,
               show_footer = True, render_function = None, only_count=False,
               all_filters_active=False, limit=None):
 
-    display_options = prepare_display_options()
+    prepare_display_options()
 
     # User can override the layout settings via HTML variables (buttons)
     # which are safed persistently. This is known as "view options". Note: a few
@@ -1001,7 +1039,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
     if html.var("mode") == "availability" and (
           "aggr" not in datasource["infos"] or html.var("timeline_aggr")):
-        return render_availability_page(view, datasource, filterheaders, display_options, only_sites, limit)
+        return render_availability_page(view, datasource, filterheaders, only_sites, limit)
 
     query = filterheaders + view.get("add_headers", "")
 
@@ -1141,9 +1179,8 @@ def show_view(view, show_heading = False, show_buttons = True,
                 layout = multisite_layouts["json"]
 
     # Set browser reload
-    if browser_reload and 'R' in display_options and not only_count:
+    if browser_reload and DisplayOptions.enabled(DisplayOptions.R) and not only_count:
         html.set_browser_reload(browser_reload)
-
 
     # Until now no single byte of HTML code has been output.
     # Now let's render the view. The render_function will be
@@ -1152,7 +1189,7 @@ def show_view(view, show_heading = False, show_buttons = True,
         render_function = render_view
 
     render_function(view, rows, datasource, group_painters, painters,
-                display_options, painter_options, show_heading, show_buttons,
+                painter_options, show_heading, show_buttons,
                 show_checkboxes, layout, num_columns, show_filters, show_footer,
                 browser_reload)
 
@@ -1160,7 +1197,7 @@ def show_view(view, show_heading = False, show_buttons = True,
 # Output HTML code of a view. If you add or remove paramters here,
 # then please also do this in htdocs/mobile.py!
 def render_view(view, rows, datasource, group_painters, painters,
-                display_options, painter_options, show_heading, show_buttons,
+                painter_options, show_heading, show_buttons,
                 show_checkboxes, layout, num_columns, show_filters, show_footer,
                 browser_reload):
 
@@ -1170,10 +1207,11 @@ def render_view(view, rows, datasource, group_painters, painters,
     # Show heading (change between "preview" mode and full page mode)
     if show_heading:
         # Show/Hide the header with page title, MK logo, etc.
-        if 'H' in display_options:
+        if DisplayOptions.enabled(DisplayOptions.H):
             # FIXME: view/layout/module related stylesheets/javascripts e.g. in case of BI?
             html.body_start(view_title(view), stylesheets=["pages","views","status","bi"])
-        if 'T' in display_options:
+
+        if DisplayOptions.enabled(DisplayOptions.T):
             html.top_heading(view_title(view))
 
     has_done_actions = False
@@ -1182,7 +1220,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     # This is a general flag which makes the command form render when the current
     # view might be able to handle commands. When no commands are possible due missing
     # permissions or datasources without commands, the form is not rendered
-    command_form = should_show_command_form(display_options, datasource)
+    command_form = should_show_command_form(datasource)
 
     if command_form:
         weblib.init_selection()
@@ -1191,8 +1229,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     can_display_checkboxes = layout.get('checkboxes', False)
 
     if show_buttons:
-        show_context_links(view, show_filters, display_options,
-                       painter_options,
+        show_context_links(view, show_filters, painter_options,
                        # Take into account: permissions, display_options
                        row_count > 0 and command_form,
                        # Take into account: layout capabilities
@@ -1205,7 +1242,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 
     # Filter form
     filter_isopen = view.get("mustsearch") and not html.var("filled_in")
-    if 'F' in display_options and len(show_filters) > 0:
+    if DisplayOptions.enabled(DisplayOptions.F) and len(show_filters) > 0:
         show_filter_form(filter_isopen, show_filters)
 
     # Actions
@@ -1228,10 +1265,10 @@ def render_view(view, rows, datasource, group_painters, painters,
             except MKUserError, e:
                 html.show_error(e)
                 html.add_user_error(e.varname, e)
-                if 'C' in display_options:
+                if DisplayOptions.enabled(DisplayOptions.C):
                     show_command_form(True, datasource)
 
-        elif 'C' in display_options: # (*not* display open, if checkboxes are currently shown)
+        elif DisplayOptions.enabled(DisplayOptions.C): # (*not* display open, if checkboxes are currently shown)
             show_command_form(False, datasource)
 
     # Also execute commands in cases without command form (needed for Python-
@@ -1249,16 +1286,16 @@ def render_view(view, rows, datasource, group_painters, painters,
         except:
             pass # currently no feed back on webservice
 
-    if 'O' in display_options and len(painter_options) > 0 and config.may("general.painter_options"):
+    if DisplayOptions.enabled(DisplayOptions.O) and len(painter_options) > 0 and config.may("general.painter_options"):
         show_painter_options(painter_options)
 
     # The refreshing content container
-    if 'R' in display_options:
+    if DisplayOptions.enabled(DisplayOptions.R):
         html.write("<div id=data_container>\n")
 
     if not has_done_actions:
         # Limit exceeded? Show warning
-        if 'W' in display_options:
+        if DisplayOptions.enabled(DisplayOptions.W):
             html.check_limit(rows, get_limit())
         layout["render"](rows, view, group_painters, painters, num_columns,
                          show_checkboxes and not html.do_actions())
@@ -1274,13 +1311,13 @@ def render_view(view, rows, datasource, group_painters, painters,
             if show_buttons:
                 update_context_links(
                     # don't take display_options into account here ('c' is set during reload)
-                    row_count > 0 and should_show_command_form('C', datasource),
+                    row_count > 0 and should_show_command_form(datasource, ignore_display_option=True),
                     # and not html.do_actions(),
                     can_display_checkboxes
                 )
 
         # Play alarm sounds, if critical events have been displayed
-        if 'S' in display_options and view.get("play_sounds"):
+        if DisplayOptions.enabled(DisplayOptions.S) and view.get("play_sounds"):
             play_alarm_sounds()
     else:
         # Always hide action related context links in this situation
@@ -1290,13 +1327,13 @@ def render_view(view, rows, datasource, group_painters, painters,
     # output and raise now exception. We simply print error messages here.
     # In case of the web service we show errors only on single site installations.
     if config.show_livestatus_errors \
-       and 'W' in display_options \
+       and DisplayOptions.enabled(DisplayOptions.W) \
        and (html.output_format == "html" or not config.is_multisite()):
         for sitename, info in sites.live().deadsites.items():
             html.show_error("<b>%s - %s</b><br>%s" % (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
     # FIXME: Sauberer wäre noch die Status Icons hier mit aufzunehmen
-    if 'R' in display_options:
+    if DisplayOptions.enabled(DisplayOptions.R):
         html.write("</div>\n")
 
     if show_footer:
@@ -1314,11 +1351,12 @@ def render_view(view, rows, datasource, group_painters, painters,
                 pass
 
         html.bottom_focuscode()
-        if 'Z' in display_options:
+        if DisplayOptions.enabled(DisplayOptions.Z):
             html.bottom_footer()
 
-        if 'H' in display_options:
+        if DisplayOptions.enabled(DisplayOptions.H):
             html.body_end()
+
 
 # We should rename this into "painter_options". Also the saved file.
 def view_options(viewname):
@@ -1500,16 +1538,16 @@ def togglebutton(id, isopen, icon, help, hidden = False):
                'onclick="view_toggle_form(this, \'%s\');"%s>'
                '<img src="images/icon_%s.png"></div>' % (id, icon, cssclass, help, id, hide, icon))
 
-def show_context_links(thisview, show_filters, display_options,
+def show_context_links(thisview, show_filters,
                        painter_options, enable_commands, enable_checkboxes, show_checkboxes,
                        show_availability):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
-    if 'B' in display_options:
+    if DisplayOptions.enabled(DisplayOptions.B):
         execute_hooks('buttons-begin')
 
     filter_isopen = html.var("filled_in") != "filter" and thisview.get("mustsearch")
-    if 'F' in display_options:
+    if DisplayOptions.enabled(DisplayOptions.F):
         if len(show_filters) > 0:
             if html.var("filled_in") == "filter":
                 icon = "filters_set"
@@ -1521,13 +1559,13 @@ def show_context_links(thisview, show_filters, display_options,
         else:
             togglebutton_off("filters", "filters")
 
-    if 'D' in display_options:
+    if DisplayOptions.enabled(DisplayOptions.D):
         if len(painter_options) > 0 and config.may("general.painter_options"):
             togglebutton("painteroptions", False, "painteroptions", _("Modify display options"))
         else:
             togglebutton_off("painteroptions", "painteroptions")
 
-    if 'C' in display_options:
+    if DisplayOptions.enabled(DisplayOptions.C):
         togglebutton("commands", False, "commands", _("Execute commands on hosts, services and other objects"),
                      hidden = not enable_commands)
         togglebutton_off("commands", "commands", hidden = enable_commands)
@@ -1540,21 +1578,21 @@ def show_context_links(thisview, show_filters, display_options,
         togglebutton_off("checkbox", "checkbox", hidden = not thisview.get("force_checkboxes"))
         html.javascript('g_selection_enabled = %s;' % (selection_enabled and 'true' or 'false'))
 
-    if 'O' in display_options:
+    if DisplayOptions.enabled(DisplayOptions.O):
         if config.may("general.view_option_columns"):
             choices = [ [x, "%s" % x] for x in config.view_option_columns ]
             view_optiondial(thisview, "num_columns", choices, _("Change the number of display columns"))
         else:
             view_optiondial_off("num_columns")
 
-        if 'R' in display_options and config.may("general.view_option_refresh"):
+        if DisplayOptions.enabled(DisplayOptions.R) and config.may("general.view_option_refresh"):
             choices = [ [x, {0:_("off")}.get(x,str(x) + "s") + (x and "" or "")] for x in config.view_option_refreshes ]
             view_optiondial(thisview, "refresh", choices, _("Change the refresh rate"))
         else:
             view_optiondial_off("refresh")
 
 
-    if 'B' in display_options:
+    if DisplayOptions.enabled(DisplayOptions.B):
         # WATO: If we have a host context, then show button to WATO, if permissions allow this
         if html.has_var("host") \
            and config.wato_enabled \
@@ -1578,7 +1616,7 @@ def show_context_links(thisview, show_filters, display_options,
             html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)
 
     # Customize/Edit view button
-    if 'E' in display_options and config.may("general.edit_views"):
+    if DisplayOptions.enabled(DisplayOptions.E) and config.may("general.edit_views"):
         backurl = html.urlencode(html.makeuri([]))
         if thisview["owner"] == config.user_id:
             url = "edit_view.py?load_name=%s&back=%s" % (thisview["name"], backurl)
@@ -1587,13 +1625,14 @@ def show_context_links(thisview, show_filters, display_options,
                   (thisview["owner"], thisview["name"], backurl)
         html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show)
 
-    if 'E' in display_options and show_availability:
+    if DisplayOptions.enabled(DisplayOptions.E) and show_availability:
         html.context_button(_("Availability"), html.makeuri([("mode", "availability")]), "availability")
 
-    if 'B' in display_options:
+    if DisplayOptions.enabled(DisplayOptions.B):
         execute_hooks('buttons-end')
 
     html.end_context_buttons()
+
 
 def update_context_links(enable_command_toggle, enable_checkbox_toggle):
     html.javascript("update_togglebutton('commands', %d);" % (enable_command_toggle and 1 or 0))
@@ -1655,7 +1694,7 @@ def do_query_data(query, columns, add_columns, merge_column,
     if limit != None:
         sites.live().set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
     if config.debug_livestatus_queries \
-            and html.output_format == "html" and 'W' in html.display_options:
+            and html.output_format == "html" and DisplayOptions.enabled(DisplayOptions.W):
         html.write('<div class="livestatus message">'
                    '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
 
@@ -1822,8 +1861,8 @@ def collist_of_collection(collection, join_target = []):
 # Checks wether or not this view handles commands for the current user
 # When it does not handle commands the command tab, command form, row
 # selection and processing commands is disabled.
-def should_show_command_form(display_options, datasource):
-    if not 'C' in display_options:
+def should_show_command_form(datasource, ignore_display_option=False):
+    if not ignore_display_option and DisplayOptions.disabled(DisplayOptions.C):
         return False
     if not config.may("general.act"):
         return False
@@ -2134,7 +2173,7 @@ def prepare_paint(p, row):
     return tdclass, content
 
 def url_to_view(row, view_name):
-    if 'I' not in html.display_options:
+    if DisplayOptions.disabled(DisplayOptions.I):
         return None
 
     view = permitted_views().get(view_name)
@@ -2178,7 +2217,7 @@ def url_to_view(row, view_name):
         return filename + "?" + html.urlencode_vars([("view_name", view_name)] + url_vars)
 
 def link_to_view(content, row, view_name):
-    if 'I' not in html.display_options:
+    if DisplayOptions.disabled(DisplayOptions.I):
         return content
 
     url = url_to_view(row, view_name)
@@ -2336,14 +2375,14 @@ def paint_header(view, p, is_last_column_header=False):
     classes = []
     onclick = ''
     title = ''
-    if 'L' in html.display_options \
+    if DisplayOptions.enabled(DisplayOptions.L) \
        and view.get('user_sortable', False) \
        and get_sorter_name_of_painter(painter) is not None:
         params = [
             ('sort', sort_url(view, painter, join_index)),
         ]
-        if hasattr(html, 'title_display_options'):
-            params.append(('display_options', html.title_display_options))
+        if DisplayOptions.title_options:
+            params.append(('display_options', DisplayOptions.title_options))
 
         classes += [ "sort", get_primary_sorter_order(view, painter) ]
         onclick = ' onclick="location.href=\'%s\'"' % html.makeuri(params, 'sort')

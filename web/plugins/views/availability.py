@@ -140,7 +140,7 @@ def render_availability_options(what):
 # Render the page showing availability table or timelines. It
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
-def render_availability_page(view, datasource, filterheaders, display_options, only_sites, limit):
+def render_availability_page(view, datasource, filterheaders, only_sites, limit):
     if handle_edit_annotations():
         return
 
@@ -203,9 +203,10 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
 
     title += " - " + range_title
 
-    if 'H' in display_options:
+    if DisplayOptions.enabled(DisplayOptions.H):
         html.body_start(title, stylesheets=["pages","views","status"], force=True)
-    if 'T' in display_options:
+
+    if DisplayOptions.enabled(DisplayOptions.T):
         html.top_heading(title)
 
     html.write(confirmation_html_code)
@@ -217,7 +218,7 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
     if html.var("filled_in") == "editanno":
         html.del_var("filled_in")
 
-    if 'B' in display_options:
+    if DisplayOptions.enabled(DisplayOptions.B):
         html.begin_context_buttons()
         togglebutton("avoptions", html.has_user_errors(), "painteroptions", _("Configure details of the report"))
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
@@ -243,9 +244,10 @@ def render_availability_page(view, datasource, filterheaders, display_options, o
     if not html.has_user_errors():
         do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)
 
-    if 'Z' in display_options:
+    if DisplayOptions.enabled(DisplayOptions.Z):
         html.bottom_footer()
-    if 'H' in display_options:
+
+    if DisplayOptions.enabled(DisplayOptions.H):
         html.body_end()
 
 

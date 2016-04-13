@@ -345,7 +345,7 @@ def new_graphing_url(row, what):
 
 
 def pnp_graph_icon_link(row, what):
-    if 'X' not in html.display_options:
+    if DisplayOptions.disabled(DisplayOptions.X):
         return ""
 
     if not metrics.cmk_graphs_possible(row["site"]):
@@ -431,7 +431,7 @@ multisite_icons_and_actions['prediction'] = {
 #   '----------------------------------------------------------------------'
 
 def paint_action(what, row, tags, host_custom_vars):
-    if 'X' in html.display_options:
+    if DisplayOptions.enabled(DisplayOptions.X):
         # action_url (only, if not a PNP-URL and pnp_graph is working!)
         action_url       = row[what + "_action_url_expanded"]
         pnpgraph_present = row[what + "_pnpgraph_present"]
@@ -492,7 +492,7 @@ multisite_icons_and_actions['logwatch'] = {
 # It also adds the master_url which will be used to link back to the source site
 # in multi site environments.
 def paint_notes(what, row, tags, host_custom_vars):
-    if 'X' in html.display_options:
+    if DisplayOptions.enabled(DisplayOptions.X):
         notes_url = row[what + "_notes_url_expanded"]
         check_command = row[what + "_check_command"]
         if check_command == 'check_mk-logwatch' and \

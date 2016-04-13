@@ -1255,11 +1255,6 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
     query += "Columns: " + (" ".join(columns)) + "\n"
     query += filter_header
 
-    if config.debug_livestatus_queries \
-            and html.output_format == "html" and 'W' in html.display_options:
-        html.write('<div class="livestatus message" onmouseover="this.style.display=\'none\';">'
-                           '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
-
     sites.live().set_only_sites(only_sites)
     sites.live().set_prepend_site(True)
     sites.live().set_auth_domain('bi')

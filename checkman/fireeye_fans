@@ -1,0 +1,17 @@
+title: FireEye Appliances: Fan states
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status and health status of fans
+ connected to Fireeye Appliances which support the FE-FIREEYE-MIB.
+
+ The check is OK if the status is OK and health status is
+ healthy. Otherise CRIT.
+
+item:
+ The fan identifier.
+
+inventory:
+ One service per fan is created.

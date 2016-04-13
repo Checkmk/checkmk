@@ -1,0 +1,15 @@
+title: FireEye Appliances: Content version
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the content version, the update passed and
+ the last content update time of Fireeye Appliances which support
+ the FE-FIREEYE-MIB.
+
+ The check goes WARN if the last security content update failed.
+ Otherwise OK.
+
+inventory:
+ One service is created.

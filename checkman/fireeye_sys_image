@@ -1,0 +1,17 @@
+title: FireEye Appliances: System image
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the system image and version
+ of Fireeye Appliances which support the FE-FIREEYE-MIB.
+
+ The check is OK if the system image is the latest,
+ oherwise it goes WARN.
+
+item:
+ No item.
+
+inventory:
+ One service is created.

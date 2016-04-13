@@ -55,6 +55,8 @@
     * 3121 mssql_counters.page_activity, mssql_counters.locks_per_batch: additional checks for mssql performance counters
     * 3403 fireeye_content, fireeye_fans, fireeye_powersupplies, fireeye_raid, fireeye_raid.disks, fireeye_sys_image, fireeye_sys_status, fireeye_temp: new checks for Fireeye Appliances which support the FE-FIREEYE-MIB
     * 3404 fireeye_sys_status: new inventory plugin which gives information about serial number and model of Fireeye Appliances which support the FE-FIREEYE-MIB
+    * 3405 cisco_fantray, cisco_fru_power: now these checks have readable item names
+            NOTE: Please refer to the migration notes!
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

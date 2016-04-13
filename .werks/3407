@@ -1,0 +1,10 @@
+Title: cisco_mem_asa64: new check which monitors the used memory of Cisco Adaptive Security Appliances
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.9i1
+Date: 1460560557
+Class: feature
+
+Cisco Adaptive Security Appliances Version 9 and higher provide wrong data given by 32-bit counter.
+This new check now uses 64-bit counter instead to monitor the used memory.

@@ -57,6 +57,8 @@
     * 3404 fireeye_sys_status: new inventory plugin which gives information about serial number and model of Fireeye Appliances which support the FE-FIREEYE-MIB
     * 3405 cisco_fantray, cisco_fru_power: now these checks have readable item names
             NOTE: Please refer to the migration notes!
+    * 3407 cisco_mem_asa64: new check which monitors the used memory of Cisco Adaptive Security Appliances...
+            NOTE: Please refer to the migration notes!
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

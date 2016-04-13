@@ -994,13 +994,21 @@ void section_ps(OutputProxy &out) {
         pe32.dwSize = sizeof(PROCESSENTRY32);
 
         if (Process32First(hProcessSnap, &pe32)) {
+            // GetProcessHandleCount is only available winxp upwards
+            typedef BOOL WINAPI (*GetProcessHandleCount_type)(HANDLE, PDWORD);
+            GetProcessHandleCount_type GetProcessHandleCount_dyn =
+                DYNAMIC_FUNC(GetProcessHandleCount, L"kernel32.dll");
+
             do {
                 string user = "unknown";
                 DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
                 WinHandle hProcess(
                     OpenProcess(dwAccess, FALSE, pe32.th32ProcessID));
 
-                if (NULL == hProcess) continue;
+                // the following isn't really necessary. We only need the
+                // process handle to determine process owner and handle count,
+                // the process list could still be useful without that.
+                if (nullptr == hProcess) continue;
 
                 // Process times
                 FILETIME createTime, exitTime, kernelTime, userTime;
@@ -1015,12 +1023,7 @@ void section_ps(OutputProxy &out) {
 
                 DWORD processHandleCount = 0;
 
-                // GetProcessHandleCount is only available winxp upwards
-                typedef BOOL WINAPI (*GetProcessHandleCount_type)(HANDLE,
-                                                                  PDWORD);
-                GetProcessHandleCount_type GetProcessHandleCount_dyn =
-                    DYNAMIC_FUNC(GetProcessHandleCount, L"kernel32.dll");
-                if (GetProcessHandleCount_dyn != NULL) {
+                if (GetProcessHandleCount_dyn != nullptr) {
                     GetProcessHandleCount_dyn(hProcess, &processHandleCount);
                 }
 

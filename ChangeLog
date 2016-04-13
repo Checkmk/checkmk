@@ -4,6 +4,10 @@
     * 3397 Show IP addresses of a host when hovering over its name...
     * 3395 FIX: Fix performance issue when many BI aggregations are active...
 
+    WATO:
+
+    * 3377 FIX: Network scan: The scan was broken when having no regex exclude patterns since 1.2.8b9
+
     BI:
 
     * 3396 Change default setting of Precompile aggregations on demand to ON now...

@@ -1,0 +1,8 @@
+Title: Network scan: The scan was broken when having no regex exclude patterns since 1.2.8b9
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b11
+Date: 1460557992
+Class: fix
+

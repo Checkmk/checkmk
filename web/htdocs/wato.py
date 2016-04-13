@@ -15247,7 +15247,7 @@ def excludes_by_regexes(addresses, exclude_specs):
                 patterns.append(re.compile(p))
 
     if not patterns:
-        return addresses
+        return []
 
     excludes = []
     for address in addresses:

@@ -711,9 +711,9 @@ function wato_toggle_folder(event, oDiv, on) {
     }
 
     if(on) {
-        obj.style.backgroundImage = 'url("images/folder_open.png")';
+        add_class(obj, "open");
     } else {
-        obj.style.backgroundImage = 'url("images/folder_closed.png")';
+        remove_class(obj, "open");
 
         // Hide the eventual open move dialog
         var move_dialog = document.getElementById('move_dialog_' + id);

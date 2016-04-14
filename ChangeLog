@@ -1,25 +1,20 @@
 1.2.8b11:
     Checks & Agents:
-
     * 3406 FIX: hp_proliant_temp: fixed wrong params data type
     * 3408 FIX: temperature.include: now does not ignore levels with value 0 any more
 
     Multisite:
-
     * 3397 Show IP addresses of a host when hovering over its name...
     * 3395 FIX: Fix performance issue when many BI aggregations are active...
     * 3398 FIX: Fix exception in Matrix layout if it contains certain complex columns
 
     WATO:
-
     * 3377 FIX: Network scan: The scan was broken when having no regex exclude patterns since 1.2.8b9
 
     BI:
-
     * 3396 Change default setting of Precompile aggregations on demand to ON now...
 
     HW/SW-Inventory:
-
     * 3025 FIX: solaris_pkginfo: the last element of the reported software package list was always missing
 
 

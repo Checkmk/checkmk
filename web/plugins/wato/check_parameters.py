@@ -2765,7 +2765,7 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_storage,
-    "netapp_fcprtio",
+    "netapp_fcportio",
     _("Netapp FC Port throughput"),
     Dictionary(
         elements = [

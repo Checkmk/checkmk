@@ -1,0 +1,10 @@
+Title: netapp_fcpio: the rules for this check are now actually used
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1460626211
+
+A typo prevented this rule from being applied

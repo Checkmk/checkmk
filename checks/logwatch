@@ -260,15 +260,16 @@ def check_logwatch(item, params, info):
             return 3, "Error in agent configuration: %s" % " ".join(info[0][4:])
 
     found = False
+    right_block = False
     loglines = []
     for l in info:
         node = l[0]
         line = " ".join(l[1:])
         if line == "[[[%s]]]" % item:
-            found = True
+            found = right_block = True
         elif len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]":
-            found = False
-        elif found and is_cache_new(node):
+            right_block = False
+        elif right_block and is_cache_new(node):
             loglines.append(line)
 
     return check_logwatch_generic(item, params, loglines, found)

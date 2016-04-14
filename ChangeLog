@@ -1,6 +1,5 @@
 1.2.9i1:
     Core & Setup:
-
     * 3342 MKP: local/lib and local/bin of sites can now be packed...
     * 3114 linux and windows agent can now be configured to directly encrypt their output. For real-time updates encryption is now optional (but active per default)...
     * 3193 FIX: Fixed fake check results for hosts...
@@ -16,7 +15,6 @@
     * 3349 FIX: Added rule to disable Inline-SNMP per host...
 
     Checks & Agents:
-
     * 3183 aruba_wlc_aps: new check which monitors the provisioned accesspoints of an Aruba Network WLAN Controller
     * 3184 varnish, varnish.backend, varnish.backend_success_ratio, varnish.cache, varnish.cache_hit_ratio, varnish.client, varnish.esi, varnish.fetch, varnish.objects, varnish.worker, varnish.worker_thread_ratio: new checks which monitor HTTP Accelerator Statistics via varnishstat on Linux
     * 2994 brocade.temp: increased temperature default levels from 35/40 to 55/60
@@ -151,7 +149,6 @@
     * 3408 FIX: temperature.include: now does not ignore levels with value 0 any more
 
     Multisite:
-
     * 3187 notification view: new filter for log command via regex
     * 3228 The BI Treestate painter now exports the aggregation tree as real json structure
     * 3288 Implemented grouping of services in table views...
@@ -205,7 +202,6 @@
     * 3398 FIX: Fix exception in Matrix layout if it contains certain complex columns
 
     WATO:
-
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...
     * 3002 Treasure script wato_import.py: now able to set wato host tag groups
     * 3003 New treasure script: migrate_oldcmk2wato.py...
@@ -267,13 +263,11 @@
     * 3377 FIX: Network scan: The scan was broken when having no regex exclude patterns since 1.2.8b9
 
     Notifications:
-
     * 3263 Notifications: allow users to restrict by their contact groups...
     * 3253 FIX: sms: notification script sms now handles single quotes in the message in the right way
     * 3346 FIX: Re-added envelope sender to asciimail/mail notification plugins
 
     BI:
-
     * 3271 New option in aggregation for tuning aggregation of downtimes...
     * 3396 Change default setting of Precompile aggregations on demand to ON now...
     * 3247 FIX: Do not allow multiple BI aggregates with the same title...
@@ -282,7 +276,6 @@
     * 3358 FIX: Fixed BI Boxes views when "Enable BI compilation diagnostics" enabled
 
     Reporting & Availability:
-
     * 3267 New availability option for reclassifying host state "unreachable"...
     * 3102 added option to availability to include host alias in reports...
     * 3394 Availability: Annotations can now be used to reclassify the scheduled downtime status...
@@ -294,7 +287,6 @@
     * 3393 FIX: Availability annotations: also show annotations for hosts when showing services
 
     Event Console:
-
     * 2999 The contact name is now included in Event Console notifications...
     * 3262 Event Console: bulk delete button for custom MIBs now available
     * 3058 FIX: Event Console is now allowing non loadable MIB modules on startup...
@@ -305,12 +297,10 @@
     * 3240 FIX: Fixed various quotation issues in GUI parts related to the EC
 
     Livestatus:
-
     * 3233 FIX: Fixed shutdown of Nagios core with Livestatus module...
     * 3235 FIX: Unbreak COMMAND handling...
 
     HW/SW-Inventory:
-
     * 3192 snmp_extended_info: now inventorizes all physical components of devices which support the ENTITY-MIB
     * 3319 HW/SW-Inventory service can now be OK in case of unreachable host...
     * 3322 esx_vsphere_hostsystem: inventory now adds information about memory, uuid and service tag...

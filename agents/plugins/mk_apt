@@ -55,6 +55,6 @@ if type apt-get > /dev/null ; then
     if [ -z $out ]; then
         echo "No updates pending for installation"
     else
-        echo $out
+        echo "$out"
     fi
 fi

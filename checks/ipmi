@@ -85,7 +85,6 @@
 # Virtual_Fan 19.600 unspecified nc na na na na na na
 # Power_Meter 236.000 Watts cr na na na na na na
 
-
 # IPMI has two operation modes:
 # 1. detailed
 # 2. summarized
@@ -94,10 +93,29 @@
 # if the host does not send any IPMI information
 # In Detailed mode for each sensor one item is returned.
 
+# Newer output formats (sensor list and compact/discrete sensors)
+# <<<ipmi:sep(124)>>>
+# BB +5V           | 5.070      | Volts      | ok    | na        | 4.446     | 4.576     | 5.408     | 5.564     | na
+# BB +12V AUX      | 11.904     | Volts      | ok    | na        | 10.416    | 10.726    | 13.144    | 13.578    | na
+# BB +0.9V         | 0.898      | Volts      | ok    | na        | 0.811     | 0.835     | 0.950     | 0.979     | na
+# Serverboard Temp | 39.000     | degrees C  | ok    | na        | 5.000     | 10.000    | 61.000    | 66.000    | na
+# Ctrl Panel Temp  | 31.000     | degrees C  | ok    | na        | 0.000     | 5.000     | 44.000    | 48.000    | na
+# Fan 1            | 7740.000   | RPM        | ok    | na        | 1720.000  | 1978.000  | na        | na        | na
+# Fan 2            | 8557.000   | RPM        | ok    | na        | 1720.000  | 1978.000  | na        | na        | na
+# Fan 3            | 7611.000   | RPM        | ok    | na        | 1720.000  | 1978.000  | na        | na        | na
+# <<<ipmi:sep(124)>>>
+# PS3 Status | C8h | ok | 10.1 | Presence detected
+# PS4 Status | C9h | ok | 10.2 | Presence detected
+# Pwr Unit Stat    | 01h | ok  | 21.1 |
+# Power Redundancy | 02h | ok  | 21.1 | Fully Redundant
+# BMC Watchdog     | 03h | ok  |  7.1 |
+
+
 ipmi_summarize = True
 ipmi_ignore_nr = False # set to True in order to ignore entries with state 'nr'
 ipmi_ignored_sensors = [] # example: [ "Power_Meter", "Virtual_Fan" ]
 inventory_ipmi_rules = []
+
 
 def ipmi_get_ignored_sensors(hostname):
     # merge ignored sensor list specified here and those from wato
@@ -110,18 +128,41 @@ def ipmi_get_ignored_sensors(hostname):
 
 
 def ipmi_ignore_entry(name, state, ignored_sensors):
-    if ipmi_ignore_nr and state == 'nr':
+    if ipmi_ignore_nr and state.startswith('nr'):
         return True
+
     for e in ignored_sensors:
         if name.startswith(e):
             return True
+
     return False
+
+
+def parse_ipmi(info):
+    parsed = []
+    for line in info:
+        # Compatible with older check versions
+        name = line[0].strip().replace(" ", "_")
+        line = [ name ] + map(lambda x: x.strip(), line[1:])
+
+        # Discrete sensors have no values
+        if len(line) <= 5:
+            state = line[2]
+            if line[4]:
+                state += " (%s)" % line[4]
+            line = [line[0], None, None, state, None, None, None, None, None, None]
+
+        parsed.append(line)
+
+    return parsed
+
 
 def inventory_ipmi(info):
     summarize = True
     rules = host_extra_conf(g_hostname, inventory_ipmi_rules)
     if rules:
         summarize = rules[0].get("summarize", True)
+
     # the default for summarize is always true so if either configuration key has been set
     # to false that setting was changed by the user and needs to override the other
     if not ipmi_summarize or not summarize or len(info) == 0:
@@ -132,62 +173,82 @@ def inventory_ipmi(info):
     else:
         yield "Summary", None
 
+
 def check_ipmi(item, params, info):
     if item == "Summary":
         return check_ipmi_summarized(info, params)
     else:
         return check_ipmi_detailed(item, info)
 
-def ipmi_format_message(name, val, unit):
-    text = "%s is %s" % (name, val)
-    if unit != 'unspecified':
-        text += ' %s' % unit
+
+def ipmi_format_message(status, val, unit):
+    infotext = status
+
     # otherwise the unit is unknown or there is none (val could represent yes/no)
-    return text
+    if val is not None:
+        infotext += ", %s" % val
+
+    if unit not in [ 'unspecified', None ]:
+        infotext += " %s" % unit
+
+    return infotext
 
 
 def check_ipmi_detailed(item, info):
     for name, val, unit, status, unrec_low, crit_low, \
         warn_low, warn_high, crit_high, unrec_high in info:
+
         if name == item:
-            perfdata = [ (name, val + unit) ] # TODO: add warn and crit levels
-            if status == 'ok':
-                return (0, ipmi_format_message(name, val, unit), perfdata)
-            elif status == 'nc':
-                return (1, ipmi_format_message(name, val, unit), perfdata)
+            if val is not None:
+                perfdata = [ (name, val + unit, warn_high, crit_high) ]
             else:
-                return (2, ipmi_format_message(name, val, unit), perfdata)
+                perfdata = []
+
+            if status.startswith('ok'):
+                state = 0
+            elif status.startswith('nc'):
+                state = 1
+            else:
+                state = 2
+
+            return state, "Status: %s" % ipmi_format_message(status, val, unit), perfdata
+
 
 def check_ipmi_summarized(info, params):
-    worst_status = 0
-    warn_texts = []
-    crit_texts = []
-    count = 0
+    worst_status  = 0
+    warn_texts    = []
+    crit_texts    = []
+    count         = 0
     ambient_count = 0
-    ambient_sum = 0.0
+    ambient_sum   = 0.0
 
     if 'ignored_sensors' not in params:
         params['ignored_sensors'] = ipmi_get_ignored_sensors(g_hostname)
 
     for name, val, unit, status, unrec_low, crit_low, \
         warn_low, warn_high, crit_high, unrec_high in info:
+
         # Skip datasets which have no valid data (zero value, no unit and state nc)
-        if val == '0.000' and unit == 'unspecified' and status == 'nc':
+        if val == '0.000' and unit == 'unspecified' and status.startswith('nc'):
             continue
 
         if ipmi_ignore_entry(name, status, params['ignored_sensors']):
             continue
 
         count += 1
-        text = ipmi_format_message(name, val, unit)
-        if status == 'nc':
+        infotext = "%s (%s)" % (name, ipmi_format_message(status, val, unit))
+
+        if status.startswith('nc'):
             worst_status = max(worst_status, 1)
-            warn_texts.append(text)
-        elif status == 'nr' and ipmi_ignore_nr:
+            warn_texts.append(infotext)
+
+        elif status.startswith('nr') and ipmi_ignore_nr:
             pass
-        elif status != 'ok':
+
+        elif not status.startswith('ok'):
             worst_status = 2
-            crit_texts.append(text)
+            crit_texts.append(infotext)
+
         if "amb" in name or "Ambient" in name:
             try:
                 ambient_count += 1
@@ -195,21 +256,22 @@ def check_ipmi_summarized(info, params):
             except:
                 pass
 
-
     if ambient_count > 0:
         perfdata = [ ("ambient_temp", ambient_sum / ambient_count) ]
     else:
         perfdata = []
 
     if worst_status == 0:
-        infotext = [ "%d sensors OK" % count ]
+        infotexts = [ "%d sensors OK" % count ]
+
     else:
-        infotext = []
+        infotexts = []
         if len(crit_texts) > 0:
-            infotext.append("CRIT are: %s" % ", ".join(crit_texts))
+            infotexts.append("CRIT are: %s" % ", ".join(crit_texts))
         if len(warn_texts) > 0:
-            infotext.append("WARN are: %s" % ", ".join(warn_texts))
-    return (worst_status, ' - '.join(infotext), perfdata)
+            infotexts.append("WARN are: %s" % ", ".join(warn_texts))
+
+    return worst_status, ' - '.join(infotexts), perfdata
 
 
 def ipmi_precompile(hostname, item, params):
@@ -217,6 +279,7 @@ def ipmi_precompile(hostname, item, params):
         precomped = params.copy()
     else:
         precomped = {}
+
     precomped['ignored_sensors'] = ipmi_get_ignored_sensors(hostname)
     return precomped
 
@@ -226,11 +289,14 @@ def ipmi_precompile(hostname, item, params):
 check_config_variables.append("ipmi_ignore_nr")
 check_config_variables.append("ipmi_ignored_sensors")
 
+
 check_info["ipmi"] = {
-    'check_function':          check_ipmi,
-    'inventory_function':      inventory_ipmi,
-    'service_description':     'IPMI Sensor %s',
-    'has_perfdata':            True,
+    'parse_function'      : parse_ipmi,
+    'inventory_function'  : inventory_ipmi,
+    'check_function'      : check_ipmi,
+    'service_description' : 'IPMI Sensor %s',
+    'has_perfdata'        : True,
 }
+
 
 precompile_params['ipmi'] = ipmi_precompile

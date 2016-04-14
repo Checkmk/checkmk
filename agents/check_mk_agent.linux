@@ -401,7 +401,9 @@ cat /proc/vmstat /proc/stat
 # Hardware sensors via IPMI (need ipmitool)
 if type ipmitool > /dev/null
 then
-    run_cached -s ipmi 300 "waitmax 300 ipmitool sensor list | grep -v 'command failed' | sed -e 's/ *| */|/g' -e 's/ /_/g' -e 's/_*"'$'"//' -e 's/|/ /g' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
+    run_cached -s "ipmi:sep(124)" 300 "waitmax 300 ipmitool sensor list | grep -v 'command failed' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
+    # readable discrete sensor states
+    run_cached -s "ipmi:sep(124)" 300 "waitmax 300 ipmitool sdr elist compact"
 fi
 
 

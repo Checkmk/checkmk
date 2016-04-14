@@ -1,0 +1,9 @@
+Title: ipmi: now monitors compact/discrete sensors
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1460643306
+Class: feature
+
+You also need to install the check_mk_agent.linux

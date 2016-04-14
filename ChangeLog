@@ -296,6 +296,7 @@
     * 3348 FIX: Improved error handling when trying to edit not existing rules/rule packs
     * 3350 FIX: Merged source of Event Console with Check_MK...
     * 3240 FIX: Fixed various quotation issues in GUI parts related to the EC
+    * 3026 FIX: Event console: The "Add comment" option of a rule is now able to add the original text (\0)
 
     Livestatus:
     * 3233 FIX: Fixed shutdown of Nagios core with Livestatus module...

@@ -2116,12 +2116,12 @@ class EventServer:
             event["sl"] = rule["sl"]
         event["first"] = event["time"]
         event["last"] = event["time"]
+        if "set_comment" in rule:
+            event["comment"] = replace_groups(rule["set_comment"], event["text"], groups)
         if "set_text" in rule:
             event["text"] = replace_groups(rule["set_text"], event["text"], groups)
         if "set_host" in rule:
             event["host"] = replace_groups(rule["set_host"], event["host"], groups)
-        if "set_comment" in rule:
-            event["comment"] = replace_groups(rule["set_comment"], event.get("comment", ""), groups)
         if "set_application" in rule:
             event["application"] = replace_groups(rule["set_application"], event["application"], groups)
         if "set_contact" in rule and "contact" not in event:

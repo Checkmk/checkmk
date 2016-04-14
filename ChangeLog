@@ -13,6 +13,7 @@
     * 3105 FIX: fixed crash in cmk --dump for services containing non-ascii characters
     * 3343 FIX: MKP: Verifying minimal version of packages during installation...
     * 3349 FIX: Added rule to disable Inline-SNMP per host...
+    * 3123 FIX: fix for temperature services discovered pre-1.2.8 that caused errors on writing configuration
 
     Checks & Agents:
     * 3183 aruba_wlc_aps: new check which monitors the provisioned accesspoints of an Aruba Network WLAN Controller

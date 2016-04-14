@@ -8,6 +8,7 @@
 
     * 3397 Show IP addresses of a host when hovering over its name...
     * 3395 FIX: Fix performance issue when many BI aggregations are active...
+    * 3398 FIX: Fix exception in Matrix layout if it contains certain complex columns
 
     WATO:
 

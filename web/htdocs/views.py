@@ -2381,7 +2381,15 @@ def group_value(row, group_painters):
             for c in get_painter_columns(p[0]):
                 if c in row:
                     group.append(row[c])
-    return tuple(group)
+    return create_dict_key(group)
+
+def create_dict_key(value):
+    if type(value) in (list, tuple):
+        return tuple(map(create_dict_key, value))
+    elif type(value) == dict:
+        return tuple([ (k, create_dict_key(v)) for (k, v) in sorted(value.items()) ])
+    else:
+        return value
 
 def get_painter_option(name):
     opt = multisite_painter_options[name]

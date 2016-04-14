@@ -6,6 +6,7 @@
     * 3406 FIX: hp_proliant_temp: fixed wrong params data type
     * 3408 FIX: temperature.include: now does not ignore levels with value 0 any more
     * 3122 FIX: netapp_fcpio: the rules for this check are now actually used...
+    * 3409 FIX: apt: fixed 'UNKNOWN - Item not found in agent output' error if there are no pending updates
 
     Multisite:
     * 3397 Show IP addresses of a host when hovering over its name...

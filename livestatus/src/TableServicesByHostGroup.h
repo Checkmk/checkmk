@@ -22,47 +22,22 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef tables_h
-#define tables_h
+#ifndef TableServicesByHostGroup_h
+#define TableServicesByHostGroup_h
 
 #include "config.h"  // IWYU pragma: keep
+#include "Table.h"
+#include "nagios.h"  // IWYU pragma: keep
+class Query;
 
-#ifndef EXTERN
-#define EXTERN extern
-#endif
+class TableServicesByHostGroup : public Table {
+public:
+    TableServicesByHostGroup();
+    const char *name() override { return "servicesbyhostgroup"; }
+    const char *prefixname() override { return "services"; }
+    bool isAuthorized(contact *, void *) override;
+    void *findObject(char *objectspec) override;
+    void answerQuery(Query *) override;
+};
 
-class TableContacts;
-EXTERN TableContacts *g_table_contacts;
-class TableCommands;
-EXTERN TableCommands *g_table_commands;
-class TableHosts;
-EXTERN TableHosts *g_table_hosts;
-class TableHostsByGroup;
-EXTERN TableHostsByGroup *g_table_hostsbygroup;
-class TableServices;
-EXTERN TableServices *g_table_services;
-class TableServicesByGroup;
-EXTERN TableServicesByGroup *g_table_servicesbygroup;
-class TableServicesByHostGroup;
-EXTERN TableServicesByHostGroup *g_table_servicesbyhostgroup;
-class TableHostgroups;
-EXTERN TableHostgroups *g_table_hostgroups;
-class TableServicegroups;
-EXTERN TableServicegroups *g_table_servicegroups;
-class TableDownComm;
-EXTERN TableDownComm *g_table_downtimes;
-EXTERN TableDownComm *g_table_comments;
-class TableTimeperiods;
-EXTERN TableTimeperiods *g_table_timeperiods;
-class TableContactgroups;
-EXTERN TableContactgroups *g_table_contactgroups;
-class TableStatus;
-EXTERN TableStatus *g_table_status;
-class TableLog;
-EXTERN TableLog *g_table_log;
-class TableStateHistory;
-EXTERN TableStateHistory *g_table_statehistory;
-class TableColumns;
-EXTERN TableColumns *g_table_columns;
-
-#endif  // tables_h
+#endif  // TableServicesByHostGroup_h

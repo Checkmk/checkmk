@@ -39,9 +39,12 @@
 #include "TableDownComm.h"
 #include "TableHostgroups.h"
 #include "TableHosts.h"
+#include "TableHostsByGroup.h"
 #include "TableLog.h"
 #include "TableServicegroups.h"
 #include "TableServices.h"
+#include "TableServicesByGroup.h"
+#include "TableServicesByHostGroup.h"
 #include "TableStateHistory.h"
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
@@ -57,11 +60,11 @@ class Store {
     TableCommands _table_commands;
     TableHostgroups _table_hostgroups;
     TableHosts _table_hosts;
-    TableHosts _table_hostsbygroup;
+    TableHostsByGroup _table_hostsbygroup;
     TableServicegroups _table_servicegroups;
     TableServices _table_services;
-    TableServices _table_servicesbygroup;
-    TableServices _table_servicesbyhostgroup;
+    TableServicesByGroup _table_servicesbygroup;
+    TableServicesByHostGroup _table_servicesbyhostgroup;
     TableTimeperiods _table_timeperiods;
     TableContactgroups _table_contactgroups;
     TableDownComm _table_downtimes;

@@ -109,15 +109,19 @@ livestatus_so_SOURCES = \
         TableDownComm.cc \
         TableHostgroups.cc \
         TableHosts.cc \
+        TableHostsByGroup.cc \
         TableLog.cc \
         TableServicegroups.cc \
         TableServices.cc \
+        TableServicesByGroup.cc \
+        TableServicesByHostGroup.cc \
         TableStateHistory.cc \
         TableStatus.cc \
         TableTimeperiods.cc \
         TimeColumnFilter.cc \
         TimePointerColumn.cc \
         TimeperiodsCache.cc \
+        WorldNagios.cc \
         auth.cc \
         global_counters.c \
         logger.c \

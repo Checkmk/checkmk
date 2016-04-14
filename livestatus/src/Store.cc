@@ -42,6 +42,9 @@
 #include "tables.h"  // IWYU pragma: keep
 #undef EXTERN
 
+extern int g_debug_level;
+extern unsigned long g_max_cached_messages;
+
 using std::chrono::duration_cast;
 using std::chrono::microseconds;
 using std::chrono::system_clock;
@@ -53,17 +56,9 @@ using std::pair;
 using std::string;
 using std::to_string;
 
-extern int g_debug_level;
-extern unsigned long g_max_cached_messages;
-
 Store::Store()
     : _log_cache(_commands_holder, g_max_cached_messages)
     , _table_commands(_commands_holder)
-    , _table_hosts(false)
-    , _table_hostsbygroup(true)
-    , _table_services(false, false)
-    , _table_servicesbygroup(true, false)
-    , _table_servicesbyhostgroup(false, true)
     , _table_downtimes(true)
     , _table_comments(false) {
     _tables.insert(make_pair("columns", &_table_columns));

@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableHosts.h"
-#include <string.h>
 #include "AttributelistColumn.h"
 #include "ContactgroupsColumn.h"
 #include "CustomTimeperiodColumn.h"
@@ -46,33 +45,14 @@
 #include "Query.h"
 #include "ServicelistColumn.h"
 #include "ServicelistStateColumn.h"
-#include "TableHostgroups.h"
 #include "auth.h"
+
+extern host *host_list;
+extern char g_mk_inventory_path[];
 
 using std::string;
 
-extern host *host_list;
-extern hostgroup *hostgroup_list;
-extern char g_mk_inventory_path[];
-
-struct hostbygroup {
-    host _host;
-    hostgroup *_hostgroup;
-};
-
-bool TableHosts::isAuthorized(contact *ctc, void *data) {
-    return is_authorized_for(ctc, static_cast<host *>(data), nullptr) != 0;
-}
-
-TableHosts::TableHosts(bool by_group) : _by_group(by_group) {
-    struct hostbygroup ref;
-    addColumns(this, "", -1);
-    if (by_group) {
-        TableHostgroups::addColumns(
-            this, "hostgroup_", reinterpret_cast<char *>(&(ref._hostgroup)) -
-                                    reinterpret_cast<char *>(&ref));
-    }
-}
+TableHosts::TableHosts() { addColumns(this, "", -1); }
 
 // static
 void TableHosts::addColumns(Table *table, string prefix, int indirect_offset,
@@ -688,69 +668,29 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset,
         indirect_offset, extra_offset));
 }
 
-void *TableHosts::findObject(char *objectspec) { return find_host(objectspec); }
-
 void TableHosts::answerQuery(Query *query) {
-    // Table hostsbygroup iterates over host groups
-    if (_by_group) {
-        hostgroup *hgroup = hostgroup_list;
-        hostbygroup hg;
-
-        // When g_group_authorization is set to AUTH_STRICT we need to pre-check
-        // if every host of this group is visible to the _auth_user
-        bool requires_precheck = (query->authUser() != nullptr) &&
-                                 g_group_authorization == AUTH_STRICT;
-
-        while (hgroup != nullptr) {
-            bool show_hgroup = true;
-            hg._hostgroup = hgroup;
-            hostsmember *mem = hgroup->members;
-            if (requires_precheck) {
-                while (mem != nullptr) {
-                    if (is_authorized_for(query->authUser(), mem->host_ptr,
-                                          nullptr) == 0) {
-                        show_hgroup = false;
-                        break;
-                    }
-                    mem = mem->next;
-                }
-            }
-
-            if (show_hgroup) {
-                mem = hgroup->members;
-                while (mem != nullptr) {
-                    memcpy(&hg._host, mem->host_ptr, sizeof(host));
-                    if (!query->processDataset(&hg)) {
-                        break;
-                    }
-                    mem = mem->next;
-                }
-            }
-            hgroup = hgroup->next;
-        }
-        return;
-    }
-
     // do we know the host group?
     hostgroup *hgroup =
         reinterpret_cast<hostgroup *>(query->findIndexFilter("groups"));
     if (hgroup != nullptr) {
-        hostsmember *mem = hgroup->members;
-        while (mem != nullptr) {
+        for (hostsmember *mem = hgroup->members; mem != nullptr;
+             mem = mem->next) {
             if (!query->processDataset(mem->host_ptr)) {
                 break;
             }
-            mem = mem->next;
         }
         return;
     }
 
     // no index -> linear search over all hosts
-    host *hst = host_list;
-    while (hst != nullptr) {
+    for (host *hst = host_list; hst != nullptr; hst = hst->next) {
         if (!query->processDataset(hst)) {
             break;
         }
-        hst = hst->next;
     }
 }
+bool TableHosts::isAuthorized(contact *ctc, void *data) {
+    return is_authorized_for(ctc, static_cast<host *>(data), nullptr) != 0;
+}
+
+void *TableHosts::findObject(char *objectspec) { return find_host(objectspec); }

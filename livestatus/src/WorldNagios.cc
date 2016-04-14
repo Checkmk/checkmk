@@ -22,47 +22,26 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef tables_h
-#define tables_h
+#include "WorldNagios.h"
+#include <string.h>
+#include "strutil.h"
 
-#include "config.h"  // IWYU pragma: keep
+service *getServiceBySpec(char *spec) {
+    char *host_name;
+    char *description;
 
-#ifndef EXTERN
-#define EXTERN extern
-#endif
-
-class TableContacts;
-EXTERN TableContacts *g_table_contacts;
-class TableCommands;
-EXTERN TableCommands *g_table_commands;
-class TableHosts;
-EXTERN TableHosts *g_table_hosts;
-class TableHostsByGroup;
-EXTERN TableHostsByGroup *g_table_hostsbygroup;
-class TableServices;
-EXTERN TableServices *g_table_services;
-class TableServicesByGroup;
-EXTERN TableServicesByGroup *g_table_servicesbygroup;
-class TableServicesByHostGroup;
-EXTERN TableServicesByHostGroup *g_table_servicesbyhostgroup;
-class TableHostgroups;
-EXTERN TableHostgroups *g_table_hostgroups;
-class TableServicegroups;
-EXTERN TableServicegroups *g_table_servicegroups;
-class TableDownComm;
-EXTERN TableDownComm *g_table_downtimes;
-EXTERN TableDownComm *g_table_comments;
-class TableTimeperiods;
-EXTERN TableTimeperiods *g_table_timeperiods;
-class TableContactgroups;
-EXTERN TableContactgroups *g_table_contactgroups;
-class TableStatus;
-EXTERN TableStatus *g_table_status;
-class TableLog;
-EXTERN TableLog *g_table_log;
-class TableStateHistory;
-EXTERN TableStateHistory *g_table_statehistory;
-class TableColumns;
-EXTERN TableColumns *g_table_columns;
-
-#endif  // tables_h
+    // The protocol proposes spaces as a separator between
+    // the host name and the service description. That introduces
+    // the problem that host name containing spaces will not work.
+    // For that reason we alternatively allow a semicolon as a separator.
+    char *semicolon = strchr(spec, ';');
+    if (semicolon != nullptr) {
+        *semicolon = 0;
+        host_name = rstrip(spec);
+        description = rstrip(semicolon + 1);
+    } else {
+        host_name = next_field(&spec);
+        description = spec;
+    }
+    return find_service(host_name, description);
+}

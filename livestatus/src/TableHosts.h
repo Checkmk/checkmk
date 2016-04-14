@@ -32,12 +32,9 @@
 class Query;
 
 class TableHosts : public Table {
-    bool _by_group;
-
 public:
-    explicit TableHosts(bool by_group);
-    const char *name() override { return _by_group ? "hostsbygroup" : "hosts"; }
-    const char *prefixname() override { return "hosts"; }
+    TableHosts();
+    const char *name() override { return "hosts"; }
     bool isAuthorized(contact *ctc, void *data) override;
     void *findObject(char *objectspec) override;
     static void addColumns(Table *, std::string prefix, int indirect_offset,

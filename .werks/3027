@@ -1,0 +1,17 @@
+Title: mtr (Matt's traceroute): New agent plugin
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1460642919
+Class: feature
+
+mtr combines the functionality of the traceroute and ping programs in a single network diagnostic tool.
+For further information have a look at the mtr manpage.
+
+This plugin collects data for every hop to the destination address and creates a plethora
+of performance values for round trip average, package loss and standard deviation.
+
+Keep in mind that services for this new check require quite a large amount of RRD space, due to
+the large number of performance values. Roughly ~23MB for 10 network hops to a target destination.
+

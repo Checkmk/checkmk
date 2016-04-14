@@ -146,6 +146,58 @@ register_check_parameters(
     match_type = "dict"
 )
 
+register_check_parameters(
+	subgroup_applications,
+	"mtr",
+	_("Traceroute with MTR"),
+	Dictionary(
+		help = _("This ruleset can be used to change MTR's (Matt's traceroute) warning and crit levels for packet loss, average "\
+                 "roundtrip and standard deviation."),
+		elements = [
+			("avg",
+				Tuple(
+					title = _("Average roundtrip time in ms"),
+					elements = [
+						Integer(title = _("Warning at"), default_value = 150, unit = _("ms"), min_value = 0 ),
+						Integer(title = _("Critical at"), default_value = 250, unit = _("ms"), min_value = 0 ),
+						],
+					help = _("The maximum average roundtrip time in ms before this service goes into warning/critical. "\
+                             "This alarm only applies to the target host, not the hops in between."),
+					),
+				),
+			("stddev",
+				Tuple(
+					title = _("Standard deviation of roundtrip times in ms"),
+					elements = [
+						Integer(title = _("Warning at"), default_value = 150, unit = _("ms"), min_value = 0 ),
+						Integer(title = _("Critical at"), default_value = 250, unit = _("ms"), min_value = 0 ),
+						],
+					help = _("The maximum standard deviation on the roundtrip time in ms before this service goes into"\
+                             "warning/critical. This alarm only applies to the target host, not the hops in between."),
+					),
+				),
+			("loss",
+				Tuple(
+					title = _("Packet loss in percentage"),
+					elements = [
+						Integer(title = _("Warning at"), default_value = 10, unit = _("%"), min_value = 0 ),
+						Integer(title = _("Critical at"), default_value = 25, unit = _("%"), min_value = 0 ),
+						],
+					help = _("The maximum allowed percentage of packet loss to the destination before this service "\
+                             "goes into warning/critical."),
+					),
+				),
+			],
+		optional_keys = False,
+	),
+	TextAscii(
+		title = _("MTR destination"),
+		help = _("Specify the name of the destination host, i.e. <tt>www.mathias-kettner.com</tt>"),
+		allow_empty = False
+	),
+	'dict'
+)
+
 
 #.
 #   .--Inventory-----------------------------------------------------------.

@@ -292,34 +292,55 @@ def indexed_color(idx, total):
 
 
 
-metric_info["rta"] = {
-    "title" : _("Round trip average"),
-    "unit"  : "s",
-    "color" : "#40a0b0",
-}
+MAX_NUMBER_HOPS = 45 # the amount of hop metrics, graphs and perfometers to create
+for idx in range(1, MAX_NUMBER_HOPS):
+    if idx:
+        prefix_perf = "hop_%d_" % idx
+        prefix_text = "Hop %d " % idx
+    else:
+        prefix_perf = ""
+        prefix_text = ""
 
-metric_info["rtmin"] = {
-    "title" : _("Round trip minimum"),
-    "unit"  : "s",
-    "color" : "42/a",
-}
+    metric_info["%srta" % prefix_perf] = {
+        "title" : _("%sRound trip average") % prefix_text,
+        "unit"  : "s",
+        "color" : "33/a"
+    }
 
-metric_info["rtmax"] = {
-    "title" : _("Round trip maximum"),
-    "unit"  : "s",
-    "color" : "42/b",
-}
+    metric_info["%srtmin" % prefix_perf] = {
+        "title" : _("%sRound trip minimum") % prefix_text,
+        "unit"  : "s",
+        "color" : "42/a",
+    }
 
-metric_info["pl"] = {
-    "title" : _("Packet loss"),
-    "unit"  : "%",
-    "color" : "#ffc030",
-}
+    metric_info["%srtmax" % prefix_perf] = {
+        "title" : _("%sRound trip maximum") % prefix_text,
+        "unit"  : "s",
+        "color" : "42/b",
+    }
 
-metric_info["response_time"] = {
-    "title" : _("Response time"),
-    "unit"  : "s",
-    "color" : "#40a0b0",
+    metric_info["%srtstddev" % prefix_perf] = {
+        "title" : _("%sRound trip standard devation") % prefix_text,
+        "unit"  : "s",
+        "color" : "16/a",
+    }
+
+    metric_info["%spl" % prefix_perf] = {
+        "title" : _("%sPacket loss") % prefix_text,
+        "unit"  : "%",
+        "color" : "#ffc030",
+    }
+
+    metric_info["%sresponse_time" % prefix_perf] = {
+        "title" : _("%sResponse time") % prefix_text,
+        "unit"  : "s",
+        "color" : "23/a"
+    }
+
+metric_info["hops"] = {
+    "title" : _("Number of hops"),
+    "unit"  : "count",
+    "color" : "51/a",
 }
 
 metric_info["uptime"] = {
@@ -4901,6 +4922,21 @@ perfometer_info.append({
 })
 
 
+for x in reversed(range(1, MAX_NUMBER_HOPS)):
+    perfometer_info.append(("dual", [
+        {
+            "type"     : "linear",
+            "segments" : [ "hop_%d_pl" % x ],
+            "total"    : 100.0,
+        },
+        {
+            "type"       : "logarithmic",
+            "metric"        : "hop_%d_rta" % x,
+            "half_value"    : 0.1,
+            "exponent"      : 4
+        }
+    ]))
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -6166,9 +6202,45 @@ graph_info.append({
     "metrics" : [
         ( "rtmax", "area" ),
         ( "rtmin", "area" ),
-        ( "rta", "line" ),
+        ( "rta",   "line" ),
     ],
 })
+
+for idx in range(1, MAX_NUMBER_HOPS):
+    graph_info.append({
+        "title" : _("Hop %d Round trip average") % idx,
+        "metrics" : [
+            ( "hop_%d_rtmax"   % idx, "area" ),
+            ( "hop_%d_rtmin"   % idx, "area" ),
+            ( "hop_%d_rta"     % idx, "line" ),
+            ( "hop_%d_rtstddev" % idx, "line" ),
+            ( "hop_%d_response_time" % idx, "line" ),
+        ],
+    })
+    graph_info.append({
+        "title" : _("Hop %d Packet loss") % idx,
+        "metrics" : [
+            ( "hop_%d_pl"   % idx, "area" ),
+        ],
+    })
+
+
+def create_hop_response_graph():
+    max_hops  = MAX_NUMBER_HOPS
+    new_graph = {
+        "title" : _("Hop response times"),
+        "metrics": [],
+        "optional_metrics": [],
+    }
+    for idx in range(max_hops):
+        color = indexed_color(idx, max_hops)
+        new_graph["metrics"].append( ("hop_%d_response_time%s" % (idx + 1, parse_color_into_hexrgb(color)), "line") )
+        if idx > 0:
+            new_graph["optional_metrics"].append( ("hop_%d_response_time" % (idx + 1)) )
+
+    graph_info.append(new_graph)
+
+create_hop_response_graph()
 
 graph_info.append({
     "metrics" : [

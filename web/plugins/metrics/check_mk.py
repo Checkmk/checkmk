@@ -6232,9 +6232,9 @@ def create_hop_response_graph():
         "metrics": [],
         "optional_metrics": [],
     }
-    for idx in range(max_hops):
+    for idx in range(1, max_hops):
         color = indexed_color(idx, max_hops)
-        new_graph["metrics"].append( ("hop_%d_response_time%s" % (idx + 1, parse_color_into_hexrgb(color)), "line") )
+        new_graph["metrics"].append( ("hop_%d_response_time%s" % (idx, parse_color_into_hexrgb(color)), "line") )
         if idx > 0:
             new_graph["optional_metrics"].append( ("hop_%d_response_time" % (idx + 1)) )
 

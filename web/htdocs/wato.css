@@ -368,6 +368,10 @@ table.validationerror img {
     height: 140px;
 }
 
+.wato div.floatfolder.open {
+    background-image: url('images/folder_open.png');
+}
+
 .wato div.floatfolder .autherr {
     position: absolute;
     top: 28px;
@@ -405,10 +409,25 @@ table.validationerror img {
     bottom: 23px;
     left: 20px;
     right: 20px;
+    overflow: hidden;
+}
+
+.wato div.floatfolder .infos .infos_content {
     color: #bde;
-    overflow:hidden;
+    overflow: hidden;
     white-space: nowrap;
+    left: 0;
+    right: 0;
     text-overflow: ellipsis;
+}
+
+.wato div.floatfolder.open .infos {
+    height: 50px;
+}
+
+.wato div.floatfolder.open .infos .infos_content {
+    position: absolute;
+    bottom: 0;
 }
 
 .wato div.floatfolder .title {

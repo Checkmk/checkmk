@@ -599,6 +599,7 @@ def show_subfolder_delete_button(subfolder):
 
 def show_subfolder_infos(subfolder):
     html.write('<div class=infos>')
+    html.write('<div class=infos_content>')
     groups = userdb.load_group_information().get("contact", {})
     permitted_groups, folder_contact_groups, use_for_services = subfolder.groups()
     for num, pg in enumerate(permitted_groups):
@@ -616,7 +617,8 @@ def show_subfolder_infos(subfolder):
         html.write("%d %s" % (num_hosts, _("Hosts")))
     else:
         html.write("<i>%s</i>" % _("(no hosts)"))
-    html.write('</div>') # class=infos
+    html.write('</div>')
+    html.write('</div>')
 
 
 def show_hosts(folder):

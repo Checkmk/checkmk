@@ -1,0 +1,9 @@
+Title: fix for temperature services discovered pre-1.2.8 that caused errors on writing configuration
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.8b11
+Date: 1460640119
+Class: fix
+
+

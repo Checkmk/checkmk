@@ -299,6 +299,13 @@ old_service_descriptions = {
     "raritan_pdu_inlet"                : "Input Phase %s",
 }
 
+# workaround: set of check-groups that are to be treated as service-checks even if
+#   the item is None
+service_rule_groups = set([
+    "temperature"
+])
+
+
 #.
 #   .--Modules-------------------------------------------------------------.
 #   |                __  __           _       _                            |
@@ -4878,10 +4885,14 @@ def get_checkgroup_parameters(host, checktype, item):
     if rules == None:
         return []
 
-    if item == None: # checks without an item
-        return host_extra_conf(host, rules)
-    else: # checks with an item need service-specific rules
-        return service_extra_conf(host, item, rules)
+    try:
+        # checks without an item
+        if item == None and checkgroup not in service_rule_groups:
+            return host_extra_conf(host, rules)
+        else: # checks with an item need service-specific rules
+            return service_extra_conf(host, item, rules)
+    except MKGeneralException, e:
+        raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
 
 
 def output_profile():

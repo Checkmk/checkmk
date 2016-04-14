@@ -1,4 +1,7 @@
 1.2.8b11:
+    Core & Setup:
+    * 3123 FIX: fix for temperature services discovered pre-1.2.8 that caused errors on writing configuration
+
     Checks & Agents:
     * 3406 FIX: hp_proliant_temp: fixed wrong params data type
     * 3408 FIX: temperature.include: now does not ignore levels with value 0 any more
@@ -17,7 +20,6 @@
     * 3396 Change default setting of Precompile aggregations on demand to ON now...
 
     Event Console:
-
     * 3026 FIX: Event console: The "Add comment" option of a rule is now able to add the original text (\0)
 
     HW/SW-Inventory:

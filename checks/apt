@@ -39,15 +39,18 @@
 # Inst libpolkit-gobject-1-0 [0.105-4ubuntu2] (0.105-4ubuntu2.14.04.1 Ubuntu:14.04/trusty-updates [amd64])
 # Inst libxext-dev [2:1.3.2-1] (2:1.3.2-1ubuntu0.0.14.04.1 Ubuntu:14.04/trusty-security [amd64]) []
 
+
 factory_settings["apt_default_levels"] = {
     "normal"   : 1,
     "security" : 2,
 }
 
+
 # Check that the apt section is in valid format of mk_apt plugin and not
 # from the apt agent plugin which can be found on the Check_MK exchange.
 def apt_valid_info(info):
-    return info and len(info[0]) == 1 and len(info[0][0].split(None, 3)) == 4
+    return info and len(info[0]) == 1 and \
+        (len(info[0][0].split(None, 3)) == 4 or info[0][0] == "No updates pending for installation")
 
 
 def inventory_apt(info):
@@ -57,6 +60,10 @@ def inventory_apt(info):
 
 def check_apt(_no_item, params, info):
     if not apt_valid_info(info):
+        return
+
+    if info[0][0] == "No updates pending for installation":
+        yield 0, "No updates pending for installation"
         return
 
     sec_regex = regex("^[^\\(]*\\(.* (Debian-Security:|Ubuntu:[^/]*/[^-]*-security)")

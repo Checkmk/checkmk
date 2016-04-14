@@ -1,0 +1,10 @@
+Title: apt: fixed 'UNKNOWN - Item not found in agent output' error if there are no pending updates
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1460642074
+
+

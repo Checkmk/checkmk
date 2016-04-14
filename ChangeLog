@@ -202,6 +202,7 @@
     * 3375 FIX: Fixed exception when adding a bookmark while having a list not named my_bookmarks
     * 3118 FIX: Availability view now takes daylight saving time into account
     * 3395 FIX: Fix performance issue when many BI aggregations are active...
+    * 3398 FIX: Fix exception in Matrix layout if it contains certain complex columns
 
     WATO:
 

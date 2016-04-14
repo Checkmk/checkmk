@@ -350,9 +350,13 @@ multisite_layouts["boxed"] = {
 #   '----------------------------------------------------------------------'
 
 
+def render_grouped_boxed_graphs(*args):
+    return render_grouped_boxes(*args, css_class="graph")
+
+
 multisite_layouts["boxed_graph"] = {
     "title"      : _("Balanced graph boxes"),
-    "render"     : lambda *args: render_grouped_boxes(*args + ("graph",)),
+    "render"     : render_grouped_boxed_graphs,
     "group"      : True,
     "checkboxes" : True,
 }

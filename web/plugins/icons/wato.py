@@ -80,7 +80,15 @@ multisite_icons_and_actions['wato'] = {
 #   | Action for downloading the current agent output                      |
 #   '----------------------------------------------------------------------'
 
-def paint_download_agent_output(what, row, tags, host_custom_vars, ty):
+def paint_download_agent_output(*args):
+    return paint_download_host_info(*args, ty="agent")
+
+
+def paint_download_snmp_walk(*args):
+    return paint_download_host_info(*args, ty="walk")
+
+
+def paint_download_host_info(what, row, tags, host_custom_vars, ty):
     if (what == "host" or (what == "service" and row["service_description"] == "Check_MK")) \
        and config.may("wato.download_agent_output") \
        and not row["host_check_type"] == 2: # Not for shadow hosts
@@ -109,14 +117,14 @@ def paint_download_agent_output(what, row, tags, host_custom_vars, ty):
 
 multisite_icons_and_actions['download_agent_output'] = {
     'host_columns'    : [ "filename", "check_type" ],
-    'paint'           : lambda *args: paint_download_agent_output(*args, ty="agent"),
+    'paint'           : paint_download_agent_output,
     'toplevel'        : False,
     'sort_index'      : 50,
 }
 
 multisite_icons_and_actions['download_snmp_walk'] = {
     'host_columns'    : [ "filename" ],
-    'paint'           : lambda *args: paint_download_agent_output(*args, ty="walk"),
+    'paint'           : paint_download_snmp_walk,
     'toplevel'        : False,
     'sort_index'      : 50,
 }

@@ -42,7 +42,15 @@ except:
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def table_events(what, columns, add_headers, only_sites, limit, filters):
+def table_event_history(*args):
+    return table_event_table("history", *args)
+
+
+def table_events(*args):
+    return table_event_table("events", *args)
+
+
+def table_event_table(what, columns, add_headers, only_sites, limit, filters):
     # First we fetch the list of all events from mkeventd - either current
     # or historic ones. We ignore any filters for host_ here. Note:
     # event_host and host_name needn't be compatible. They might differ
@@ -299,7 +307,7 @@ if mkeventd_enabled:
 
     multisite_datasources["mkeventd_events"] = {
         "title"       : _("Event Console: Current Events"),
-        "table"       : lambda *args: table_events('events', *args),
+        "table"       : table_events,
         "infos"       : [ "event", "host" ],
         "keys"        : [],
         "idkeys"      : [ 'site', 'host_name', 'event_id' ],
@@ -308,7 +316,7 @@ if mkeventd_enabled:
 
     multisite_datasources["mkeventd_history"] = {
         "title"       : _("Event Console: Event History"),
-        "table"       : lambda *args: table_events('history', *args),
+        "table"       : table_event_history,
         "infos"       : [ "history", "event", "host" ],
         "keys"        : [],
         "idkeys"      : [ 'site', 'host_name', 'event_id', 'history_line' ],

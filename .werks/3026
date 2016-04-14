@@ -1,0 +1,10 @@
+Title: Event console: The "Add comment" option of a rule is now able to add the original text (\0)
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b11
+Date: 1460628605
+
+

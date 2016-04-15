@@ -25,6 +25,7 @@
 #include "TableDownComm.h"
 #include <utility>
 #include "DowntimeOrComment.h"
+#include "DowntimesOrComments.h"  // IWYU pragma: keep
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
@@ -32,11 +33,11 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "auth.h"
-#include "logger.h"
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
-TableDownComm::TableDownComm(bool is_downtime) : _is_downtime(is_downtime) {
+TableDownComm::TableDownComm(const DowntimesOrComments &holder, bool is_downtime)
+    : _is_downtime(is_downtime), _holder(holder) {
     DowntimeOrComment *ref = nullptr;
     addColumn(new OffsetStringColumn(
         "author", is_downtime ? "The contact that scheduled the downtime"
@@ -128,14 +129,8 @@ TableDownComm::TableDownComm(bool is_downtime) : _is_downtime(is_downtime) {
                               false /* no hosts table */);
 }
 
-TableDownComm::~TableDownComm() {
-    for (auto &entry : _entries) {
-        delete entry.second;
-    }
-}
-
 void TableDownComm::answerQuery(Query *query) {
-    for (const auto &entry : _entries) {
+    for (const auto &entry : _holder) {
         if (!query->processDataset(entry.second)) {
             break;
         }
@@ -145,57 +140,4 @@ void TableDownComm::answerQuery(Query *query) {
 bool TableDownComm::isAuthorized(contact *ctc, void *data) {
     DowntimeOrComment *dtc = static_cast<DowntimeOrComment *>(data);
     return is_authorized_for(ctc, dtc->_host, dtc->_service) != 0;
-}
-
-void TableDownComm::addComment(nebstruct_comment_data *data) {
-    switch (data->type) {
-        case NEBTYPE_COMMENT_ADD:
-        case NEBTYPE_COMMENT_LOAD:
-            add(new Comment(data));
-            break;
-        case NEBTYPE_COMMENT_DELETE:
-            remove(data->comment_id);
-            break;
-        default:
-            break;
-    }
-}
-
-void TableDownComm::addDowntime(nebstruct_downtime_data *data) {
-    switch (data->type) {
-        case NEBTYPE_DOWNTIME_ADD:
-        case NEBTYPE_DOWNTIME_LOAD:
-            add(new Downtime(data));
-            break;
-        case NEBTYPE_DOWNTIME_DELETE:
-            remove(data->downtime_id);
-            break;
-        default:
-            break;
-    }
-}
-
-void TableDownComm::add(DowntimeOrComment *data) {
-    auto it = _entries.find(data->_id);
-    if (it == _entries.end()) {
-        _entries.emplace(data->_id, data);
-    } else {
-        delete it->second;
-        it->second = data;
-    }
-}
-
-void TableDownComm::remove(unsigned long id) {
-    auto it = _entries.find(id);
-    if (it == _entries.end()) {
-        logger(LG_INFO, "Cannot delete non-existing downtime/comment %lu", id);
-    } else {
-        delete it->second;
-        _entries.erase(it);
-    }
-}
-
-DowntimeOrComment *TableDownComm::findEntry(unsigned long id) {
-    auto it = _entries.find(id);
-    return it == _entries.end() ? nullptr : it->second;
 }

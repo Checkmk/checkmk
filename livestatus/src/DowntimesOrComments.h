@@ -22,26 +22,28 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableDownComm_h
-#define TableDownComm_h
+#ifndef DowntimesOrComments_h
+#define DowntimesOrComments_h
 
 #include "config.h"  // IWYU pragma: keep
-#include "Table.h"
+#include <map>
 #include "nagios.h"
-class DowntimesOrComments;
-class Query;
+struct DowntimeOrComment;
 
-class TableDownComm : public Table {
-    bool _is_downtime;
-    const DowntimesOrComments &_holder;
-
+class DowntimesOrComments {
 public:
-    TableDownComm(const DowntimesOrComments &holder, bool is_downtime);
-    const char *name() override {
-        return _is_downtime ? "downtimes" : "comments";
-    }
-    void answerQuery(Query *) override;
-    bool isAuthorized(contact *ctc, void *data) override;
+    ~DowntimesOrComments();
+    void registerDowntime(nebstruct_downtime_data *data);
+    void registerComment(nebstruct_comment_data *data);
+    DowntimeOrComment *findEntry(unsigned long id) const;
+    auto begin() const { return _entries.cbegin(); }
+    auto end() const { return _entries.cend(); }
+
+private:
+    std::map<unsigned long, DowntimeOrComment *> _entries;
+
+    void add(DowntimeOrComment *data);
+    void remove(unsigned long id);
 };
 
-#endif  // TableDownComm_h
+#endif  // DowntimesOrComments_h

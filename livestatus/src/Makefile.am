@@ -52,6 +52,7 @@ livestatus_so_SOURCES = \
         DoubleColumnFilter.cc \
         DownCommColumn.cc \
         DowntimeOrComment.cc \
+        DowntimesOrComments.cc \
         DynamicColumn.cc \
         EmptyColumn.cc \
         Filter.cc \

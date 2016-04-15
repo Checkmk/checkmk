@@ -31,6 +31,7 @@
 #include <mutex>
 #include <string>
 #include "CommandsHolderNagios.h"
+#include "DowntimesOrComments.h"
 #include "LogCache.h"
 #include "TableColumns.h"
 #include "TableCommands.h"
@@ -54,7 +55,20 @@ class OutputBuffer;
 class Table;
 
 class Store {
+public:
+    Store();
+    ~Store();
+    LogCache *logCache() { return &_log_cache; };
+    void registerDowntime(nebstruct_downtime_data *);
+    const DowntimesOrComments &downtimes() const;
+    void registerComment(nebstruct_comment_data *);
+    const DowntimesOrComments &comments() const;
+    bool answerRequest(InputBuffer *, OutputBuffer *);
+
+private:
     CommandsHolderNagios _commands_holder;
+    DowntimesOrComments _downtimes;
+    DowntimesOrComments _comments;
     LogCache _log_cache;
     TableContacts _table_contacts;
     TableCommands _table_commands;
@@ -74,21 +88,10 @@ class Store {
     TableStateHistory _table_statehistory;
     TableColumns _table_columns;
 
-    typedef std::map<std::string, Table *> _tables_t;
-    _tables_t _tables;
+    std::map<std::string, Table *> _tables;
 
     std::mutex _command_mutex;
 
-public:
-    Store();
-    ~Store();
-    LogCache *logCache() { return &_log_cache; };
-    void registerHostgroup(hostgroup *);
-    void registerComment(nebstruct_comment_data *);
-    void registerDowntime(nebstruct_downtime_data *);
-    bool answerRequest(InputBuffer *, OutputBuffer *);
-
-private:
     Table *findTable(std::string name);
     void answerGetRequest(const std::list<std::string> &lines, OutputBuffer *,
                           const char *);

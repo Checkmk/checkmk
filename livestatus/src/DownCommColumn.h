@@ -30,6 +30,7 @@
 #include "Column.h"
 #include "ListColumn.h"
 class DowntimeOrComment;
+class DowntimesOrComments;
 class Query;
 
 class DownCommColumn : public ListColumn {
@@ -38,6 +39,7 @@ class DownCommColumn : public ListColumn {
     bool _is_service;       // and not host
     bool _with_extra_info;  // provides date and type
 
+    const DowntimesOrComments &holder();
     bool match(DowntimeOrComment *dt, void *data);
 
 public:

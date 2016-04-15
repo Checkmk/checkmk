@@ -27,18 +27,23 @@
 #include <stdlib.h>
 #include <utility>
 #include "DowntimeOrComment.h"
+#include "DowntimesOrComments.h"
 #include "Query.h"
-#include "TableDownComm.h"
+#include "Store.h"
 #include "nagios.h"
-#include "tables.h"
+
+extern Store *g_store;
+
+const DowntimesOrComments &DownCommColumn::holder() {
+    return _is_downtime ? g_store->downtimes() : g_store->comments();
+}
 
 void DownCommColumn::output(void *data, Query *query) {
-    TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
     query->outputBeginList();
     data = shiftPointer(data);  // points to host or service
     if (data != nullptr) {
         bool first = true;
-        for (auto entry : *table) {
+        for (auto entry : holder()) {
             unsigned long id = entry.first;
             DowntimeOrComment *dt = entry.second;
             if (match(dt, data)) {
@@ -95,12 +100,11 @@ void *DownCommColumn::getNagiosObject(char *name) {
 }
 
 bool DownCommColumn::isNagiosMember(void *data, void *member) {
-    TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
     // data points to a host or service
     // member is not a pointer, but an unsigned int (hack)
     unsigned long id = static_cast<unsigned long>(
         reinterpret_cast<uintptr_t>(member));  // Hack. Convert it back.
-    DowntimeOrComment *dt = table->findEntry(id);
+    DowntimeOrComment *dt = holder().findEntry(id);
     return dt != nullptr && (dt->_service == static_cast<service *>(data) ||
                              (dt->_service == nullptr &&
                               dt->_host == static_cast<host *>(data)));
@@ -111,8 +115,7 @@ bool DownCommColumn::isEmpty(void *data) {
         return true;
     }
 
-    TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
-    for (auto entry : *table) {
+    for (auto entry : holder()) {
         DowntimeOrComment *dt = entry.second;
         if (dt->_service == data ||
             (dt->_service == nullptr && dt->_host == data)) {

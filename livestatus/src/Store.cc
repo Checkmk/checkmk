@@ -59,8 +59,8 @@ using std::to_string;
 Store::Store()
     : _log_cache(_commands_holder, g_max_cached_messages)
     , _table_commands(_commands_holder)
-    , _table_downtimes(true)
-    , _table_comments(false) {
+    , _table_downtimes(_downtimes, true)
+    , _table_comments(_comments, false) {
     _tables.insert(make_pair("columns", &_table_columns));
     _tables.insert(make_pair("commands", &_table_commands));
     _tables.insert(make_pair("comments", &_table_comments));
@@ -112,13 +112,17 @@ Table *Store::findTable(string name) {
     return it->second;
 }
 
-void Store::registerComment(nebstruct_comment_data *d) {
-    _table_comments.addComment(d);
+void Store::registerDowntime(nebstruct_downtime_data *data) {
+    _downtimes.registerDowntime(data);
 }
 
-void Store::registerDowntime(nebstruct_downtime_data *d) {
-    _table_downtimes.addDowntime(d);
+const DowntimesOrComments &Store::downtimes() const { return _downtimes; }
+
+void Store::registerComment(nebstruct_comment_data *data) {
+    _comments.registerComment(data);
 }
+
+const DowntimesOrComments &Store::comments() const { return _comments; }
 
 namespace {
 list<string> getLines(InputBuffer *input) {

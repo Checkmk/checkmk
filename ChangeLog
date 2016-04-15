@@ -273,6 +273,7 @@
     * 3378 FIX: Fixed too long contact group names overflowing WATO folders
     * 3379 FIX: Fixed error resotring WATO snapshot without Check_MK configuration
     * 3381 FIX: Folder property editing: Redirect back to folder when coming from folder
+    * 3382 FIX: Fixed exception when moving multiple folder levels to another folder
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

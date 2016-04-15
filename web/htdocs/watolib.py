@@ -1330,8 +1330,9 @@ class Folder(BaseFolder):
             self.need_unlocked()
             self.need_unlocked_subfolders()
             self.need_unlocked_hosts()
+
         for subfolder in self.subfolders().values():
-            subfolder.need_recursive_write_permission(how)
+            subfolder.need_recursive_permission(how)
 
 
     def need_unlocked(self):

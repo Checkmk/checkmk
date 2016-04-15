@@ -361,7 +361,7 @@ def mode_folder(phase):
                 html.context_button(_("Rulesets"),        folder_preserving_link([("mode", "ruleeditor")]), "rulesets")
                 html.context_button(_("Manual Checks"),   folder_preserving_link([("mode", "static_checks")]), "static_checks")
             if folder.may("read"):
-                html.context_button(_("Folder Properties"), folder.edit_url(), "edit")
+                html.context_button(_("Folder Properties"), folder.edit_url(backfolder=folder), "edit")
             if not folder.locked_subfolders() and config.may("wato.manage_folders") and folder.may("write"):
                 html.context_button(_("New folder"),        folder.url([("mode", "newfolder")]), "newfolder")
             if not folder.locked_hosts() and config.may("wato.manage_hosts") and folder.may("write"):

@@ -1,0 +1,9 @@
+Title: mysql_slave: now max time and related state can be configured if slave-IO and slave-SQL are not running
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1460713517
+Class: feature
+
+

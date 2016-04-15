@@ -78,40 +78,65 @@ def inventory_mysql_slave(parsed):
 def check_mysql_slave(item, params, parsed):
     if item in parsed:
         data = parsed[item]
-
         state = 0
         perfdata = []
-        output = []
 
-        if data['Slave_IO_Running']:
-            output.append('Slave-IO: running')
-        else:
-            output.append('Slave-IO: not running(!!)')
-            state = 2
-
-        if data['Slave_SQL_Running']:
-            output.append('Slave-SQL: running')
+        if data['Slave_IO_Running'] and data['Slave_SQL_Running']:
+            infotext = 'Slave-IO: running, Slave-SQL: running'
+            seconds_behind_master = data['Seconds_Behind_Master']
+            warn, crit            = params.get('seconds_behind_master', (None, None))
+            set_item_state("slave_running", time.time())
 
             # Makes only sense to monitor the age when the SQL slave is running
-            if data['Seconds_Behind_Master'] == 'NULL':
-                output.append('Time behind master: NULL (Lost connection?)(!!)')
+            if seconds_behind_master == 'NULL':
+                infotext += ', Time behind master: NULL (Lost connection?)(!!)'
                 state = 2
             else:
-                out = 'Time behind Master: %s' % get_age_human_readable(data['Seconds_Behind_Master'])
-                warn, crit = params.get('seconds_behind_master', (None, None))
-                if crit != None and data['Seconds_Behind_Master'] > crit:
+                infotext += ', Time behind Master: %s' % get_age_human_readable(seconds_behind_master)
+                if crit != None and seconds_behind_master > crit:
                     state = 2
-                    out += '(!!)'
-                elif warn != None and data['Seconds_Behind_Master'] > warn:
-                    state = max(state, 1)
-                    out += '(!)'
-                output.append(out)
-                perfdata.append(('sync_latency', data['Seconds_Behind_Master'], warn, crit))
-        else:
-            output.append('Slave-SQL: not running(!!)')
+                elif warn != None and seconds_behind_master > warn:
+                    state = 1
+
+                if state:
+                    infotext += " (warn crit at %s/%s)" % \
+                                (get_age_human_readable(warn),
+                                 get_age_human_readable(crit))
+
+                perfdata.append(('sync_latency', seconds_behind_master, warn, crit))
+
+        elif not data['Slave_IO_Running'] and not data['Slave_SQL_Running']:
+            old_value = get_item_state("slave_running")
+            not_running_state, not_running_max_seconds = \
+                params.get("slave_not_running", (None, None))
+
+            if old_value != None and not_running_state != None and \
+               not_running_max_seconds != None:
+
+                not_running_age = time.time() - old_value
+                infotext = 'Slave-IO: not running, Slave-SQL: not running, Age: %s (crit at %s)' % \
+                            (get_age_human_readable(not_running_age),
+                             get_age_human_readable(not_running_max_seconds))
+
+                if not_running_age < not_running_max_seconds:
+                    state = not_running_state
+                else:
+                    state = 2
+
+            else:
+                infotext = "Slave-IO: not running(!!), Slave-SQL: not running(!!)"
+                state = 2
+
+        elif not data['Slave_IO_Running'] and data['Slave_SQL_Running']:
+            infotext = 'Slave-IO: not running(!!), Slave-SQL: running'
             state = 2
 
-        return state, ', '.join(output), perfdata
+        elif data['Slave_IO_Running'] and not data['Slave_SQL_Running']:
+            infotext = 'Slave-IO: running, Slave-SQL: not running(!!)'
+            state = 2
+
+        return state, infotext, perfdata
+
 
 check_info['mysql_slave'] = {
     "parse_function"          : parse_mysql_slave,

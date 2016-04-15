@@ -6695,6 +6695,19 @@ register_check_parameters(
                     ]
                 )
             ),
+            ( "slave_not_running",
+                Tuple(
+                    title = _("State and max. time if slave is not running"),
+                    help  = _("This rule allows you to configure the state which will be "
+                              "reported until the configured time will be exceeded."),
+                    elements = [
+                        MonitoringState(
+                            default_value = 2,
+                        ),
+                        Age(),
+                    ]
+                ),
+            ),
         ],
         optional_keys = None),
     TextAscii(

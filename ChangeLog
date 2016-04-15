@@ -267,6 +267,7 @@
     * 3024 FIX: Fixed WATO GIT version control for older (<2.0) GIT versions
     * 3377 FIX: Network scan: The scan was broken when having no regex exclude patterns since 1.2.8b9
     * 3378 FIX: Fixed too long contact group names overflowing WATO folders
+    * 3379 FIX: Fixed error resotring WATO snapshot without Check_MK configuration
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

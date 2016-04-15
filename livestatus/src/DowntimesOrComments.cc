@@ -27,20 +27,19 @@
 #include "DowntimeOrComment.h"
 #include "logger.h"
 
-DowntimesOrComments::~DowntimesOrComments() {
-    for (auto &entry : _entries) {
-        delete entry.second;
-    }
-}
+using std::make_unique;
 
 void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
+    unsigned long id = data->downtime_id;
     switch (data->type) {
         case NEBTYPE_DOWNTIME_ADD:
         case NEBTYPE_DOWNTIME_LOAD:
-            add(new Downtime(data));
+            _entries[id] = make_unique<Downtime>(data);
             break;
         case NEBTYPE_DOWNTIME_DELETE:
-            remove(data->downtime_id);
+            if (_entries.erase(id) == 0) {
+                logger(LG_INFO, "Cannot delete non-existing downtime %lu", id);
+            }
             break;
         default:
             break;
@@ -48,40 +47,23 @@ void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
 }
 
 void DowntimesOrComments::registerComment(nebstruct_comment_data *data) {
+    unsigned long id = data->comment_id;
     switch (data->type) {
         case NEBTYPE_COMMENT_ADD:
         case NEBTYPE_COMMENT_LOAD:
-            add(new Comment(data));
+            _entries[id] = make_unique<Comment>(data);
             break;
         case NEBTYPE_COMMENT_DELETE:
-            remove(data->comment_id);
+            if (_entries.erase(id) == 0) {
+                logger(LG_INFO, "Cannot delete non-existing comment %lu", id);
+            }
             break;
         default:
             break;
     }
 }
 
-void DowntimesOrComments::add(DowntimeOrComment *data) {
-    auto it = _entries.find(data->_id);
-    if (it == _entries.end()) {
-        _entries.emplace(data->_id, data);
-    } else {
-        delete it->second;
-        it->second = data;
-    }
-}
-
-void DowntimesOrComments::remove(unsigned long id) {
-    auto it = _entries.find(id);
-    if (it == _entries.end()) {
-        logger(LG_INFO, "Cannot delete non-existing downtime/comment %lu", id);
-    } else {
-        delete it->second;
-        _entries.erase(it);
-    }
-}
-
 DowntimeOrComment *DowntimesOrComments::findEntry(unsigned long id) const {
     auto it = _entries.find(id);
-    return it == _entries.end() ? nullptr : it->second;
+    return it == _entries.end() ? nullptr : it->second.get();
 }

@@ -27,12 +27,12 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <map>
+#include <memory>
+#include "DowntimeOrComment.h"  // IWYU pragma: keep
 #include "nagios.h"
-struct DowntimeOrComment;
 
 class DowntimesOrComments {
 public:
-    ~DowntimesOrComments();
     void registerDowntime(nebstruct_downtime_data *data);
     void registerComment(nebstruct_comment_data *data);
     DowntimeOrComment *findEntry(unsigned long id) const;
@@ -40,10 +40,7 @@ public:
     auto end() const { return _entries.cend(); }
 
 private:
-    std::map<unsigned long, DowntimeOrComment *> _entries;
-
-    void add(DowntimeOrComment *data);
-    void remove(unsigned long id);
+    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> _entries;
 };
 
 #endif  // DowntimesOrComments_h

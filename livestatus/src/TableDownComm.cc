@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableDownComm.h"
+#include <memory>
 #include <utility>
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"  // IWYU pragma: keep
@@ -36,7 +37,8 @@
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
-TableDownComm::TableDownComm(const DowntimesOrComments &holder, bool is_downtime)
+TableDownComm::TableDownComm(const DowntimesOrComments &holder,
+                             bool is_downtime)
     : _is_downtime(is_downtime), _holder(holder) {
     DowntimeOrComment *ref = nullptr;
     addColumn(new OffsetStringColumn(
@@ -131,7 +133,7 @@ TableDownComm::TableDownComm(const DowntimesOrComments &holder, bool is_downtime
 
 void TableDownComm::answerQuery(Query *query) {
     for (const auto &entry : _holder) {
-        if (!query->processDataset(entry.second)) {
+        if (!query->processDataset(entry.second.get())) {
             break;
         }
     }

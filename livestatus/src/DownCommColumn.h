@@ -29,7 +29,7 @@
 #include <string>
 #include "Column.h"
 #include "ListColumn.h"
-class DowntimeOrComment;
+struct DowntimeOrComment;
 class DowntimesOrComments;
 class Query;
 

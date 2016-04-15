@@ -25,6 +25,7 @@
 #include "DownCommColumn.h"
 #include <stdint.h>
 #include <stdlib.h>
+#include <memory>
 #include <utility>
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"
@@ -43,9 +44,9 @@ void DownCommColumn::output(void *data, Query *query) {
     data = shiftPointer(data);  // points to host or service
     if (data != nullptr) {
         bool first = true;
-        for (auto entry : holder()) {
+        for (const auto &entry : holder()) {
             unsigned long id = entry.first;
-            DowntimeOrComment *dt = entry.second;
+            DowntimeOrComment *dt = entry.second.get();
             if (match(dt, data)) {
                 if (first) {
                     first = false;
@@ -115,8 +116,8 @@ bool DownCommColumn::isEmpty(void *data) {
         return true;
     }
 
-    for (auto entry : holder()) {
-        DowntimeOrComment *dt = entry.second;
+    for (const auto &entry : holder()) {
+        DowntimeOrComment *dt = entry.second.get();
         if (dt->_service == data ||
             (dt->_service == nullptr && dt->_host == data)) {
             return false;

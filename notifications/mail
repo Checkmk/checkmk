@@ -511,10 +511,19 @@ def render_cmk_graphs(context):
     except Exception, e:
         if opt_debug:
             raise
-        sys.stderr.write("ERROR: %s\n" % e)
+        sys.stderr.write("ERROR: Failed to fetch graphs: %s\n" % e)
         return []
 
-    return map(base64.b64decode, json.loads(json_data))
+    try:
+        base64_strings = json.loads(json_data)
+    except Exception, e:
+        if opt_debug:
+            raise
+        sys.stderr.write("ERROR: Failed to decode graphs: %s\nData: %s\n" %
+                                                                (e, json_data))
+        return []
+
+    return map(base64.b64decode, base64_strings)
 
 
 def get_omd_config(key):

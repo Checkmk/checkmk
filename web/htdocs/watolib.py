@@ -542,7 +542,15 @@ class BaseFolder(WithPermissionsAndAttributes):
         html.write("</ul></div>\n")
 
 
+    def name(self):
+        raise NotImplementedError()
+
+
     def title(self):
+        raise NotImplementedError()
+
+
+    def subfolder(self, name):
         raise NotImplementedError()
 
 
@@ -551,6 +559,34 @@ class BaseFolder(WithPermissionsAndAttributes):
 
 
     def subfolder_choices(self):
+        raise NotImplementedError()
+
+
+    def move_subfolder_to(self, subfolder, target_folder):
+        raise NotImplementedError()
+
+
+    def create_subfolder(self, name, title, attributes):
+        raise NotImplementedError()
+
+
+    def edit_url(self, backfolder=None):
+        raise NotImplementedError()
+
+
+    def edit(self, new_title, new_attributes):
+        raise NotImplementedError()
+
+
+    def locked(self):
+        raise NotImplementedError()
+
+
+    def create_hosts(self, entries):
+        raise NotImplementedError()
+
+
+    def site_id(self):
         raise NotImplementedError()
 
 

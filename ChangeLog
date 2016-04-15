@@ -274,6 +274,7 @@
     * 3263 Notifications: allow users to restrict by their contact groups...
     * 3253 FIX: sms: notification script sms now handles single quotes in the message in the right way
     * 3346 FIX: Re-added envelope sender to asciimail/mail notification plugins
+    * 3380 FIX: Fixed graphs in service notifications having spaces in service descriptions
 
     BI:
     * 3271 New option in aggregation for tuning aggregation of downtimes...

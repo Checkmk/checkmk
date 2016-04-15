@@ -36,6 +36,7 @@
 
 
 import os, re, sys, subprocess
+import urllib
 import urllib2
 import base64
 
@@ -504,14 +505,15 @@ def render_cmk_graphs(context):
         svc_desc = context["SERVICEDESC"]
 
     url = "http://localhost:%d/%s/check_mk/ajax_graph_images.py?host=%s&service=%s" % \
-                    (get_apache_port(), os.environ["OMD_SITE"], context["HOSTNAME"], svc_desc)
+                    (get_apache_port(), os.environ["OMD_SITE"],
+                     urllib.quote(context["HOSTNAME"]), urllib.quote(svc_desc))
 
     try:
         json_data = urllib2.urlopen(url).read()
     except Exception, e:
         if opt_debug:
             raise
-        sys.stderr.write("ERROR: Failed to fetch graphs: %s\n" % e)
+        sys.stderr.write("ERROR: Failed to fetch graphs: %s\nURL: %s\n" % (e, url))
         return []
 
     try:
@@ -519,8 +521,8 @@ def render_cmk_graphs(context):
     except Exception, e:
         if opt_debug:
             raise
-        sys.stderr.write("ERROR: Failed to decode graphs: %s\nData: %s\n" %
-                                                                (e, json_data))
+        sys.stderr.write("ERROR: Failed to decode graphs: %s\nURL: %s\nData: %r\n" %
+                                                                (e, url, json_data))
         return []
 
     return map(base64.b64decode, base64_strings)

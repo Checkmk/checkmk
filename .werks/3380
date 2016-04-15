@@ -1,0 +1,10 @@
+Title: Fixed graphs in service notifications having spaces in service descriptions
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1460719843
+
+

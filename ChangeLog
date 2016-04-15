@@ -21,6 +21,7 @@
     * 3379 FIX: Fixed error resotring WATO snapshot without Check_MK configuration
     * 3381 FIX: Folder property editing: Redirect back to folder when coming from folder
     * 3382 FIX: Fixed exception when moving multiple folder levels to another folder
+    * 3383 FIX: Host search: Don't preselect any optional field (Searched for empty values)
 
     Notifications:
     * 3380 FIX: Fixed graphs in service notifications having spaces in service descriptions

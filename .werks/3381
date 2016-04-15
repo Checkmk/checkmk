@@ -1,0 +1,10 @@
+Title: Folder property editing: Redirect back to folder when coming from folder
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1460730504
+
+

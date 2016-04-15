@@ -272,6 +272,7 @@
     * 3377 FIX: Network scan: The scan was broken when having no regex exclude patterns since 1.2.8b9
     * 3378 FIX: Fixed too long contact group names overflowing WATO folders
     * 3379 FIX: Fixed error resotring WATO snapshot without Check_MK configuration
+    * 3381 FIX: Folder property editing: Redirect back to folder when coming from folder
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

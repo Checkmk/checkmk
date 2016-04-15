@@ -1420,9 +1420,11 @@ class EventServer:
             # Read events from builtin snmptrap server
             if self._snmptrap != None and self._snmptrap.fileno() in readable:
                 try:
-                    self.process_raw_data(self.process_snmptrap, self._snmptrap.recvfrom(65535))
+                    data = self._snmptrap.recvfrom(65535)
+                    self.process_raw_data(self.process_snmptrap, data)
                 except Exception, e:
-                    log('Exception handling a snmptrap (skipping this one): %s' % format_exception())
+                    log('Exception handling a SNMP trap from "%s". Skipping this one.\n%s' %
+                                                          (data[1][0], format_exception()))
 
             # check wether or not spool files are available
             spool_dir = g_state_dir + "/spool"

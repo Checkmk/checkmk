@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableDownComm.h"
+#include <utility>
 #include "DowntimeOrComment.h"
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
@@ -33,17 +34,9 @@
 #include "auth.h"
 #include "logger.h"
 
-using std::make_pair;
+// TODO(sp): the dynamic data in this table must be locked with a mutex
 
-// Todo: the dynamic data in this table must be
-// locked with a mutex
-
-TableDownComm::TableDownComm(bool is_downtime) {
-    if (is_downtime) {
-        _name = "downtimes";
-    } else {
-        _name = "comments";
-    }
+TableDownComm::TableDownComm(bool is_downtime) : _is_downtime(is_downtime) {
     DowntimeOrComment *ref = nullptr;
     addColumn(new OffsetStringColumn(
         "author", is_downtime ? "The contact that scheduled the downtime"
@@ -141,50 +134,6 @@ TableDownComm::~TableDownComm() {
     }
 }
 
-void TableDownComm::addComment(nebstruct_comment_data *data) {
-    if (data->type == NEBTYPE_COMMENT_ADD ||
-        data->type == NEBTYPE_COMMENT_LOAD) {
-        add(new Comment(data));
-    } else if (data->type == NEBTYPE_COMMENT_DELETE) {
-        Comment comment(data);
-        remove(&comment);
-    }
-}
-
-void TableDownComm::addDowntime(nebstruct_downtime_data *data) {
-    if (data->type == NEBTYPE_DOWNTIME_ADD ||
-        data->type == NEBTYPE_DOWNTIME_LOAD) {
-        add(new Downtime(data));
-    } else if (data->type == NEBTYPE_DOWNTIME_DELETE) {
-        Downtime downtime(data);
-        remove(&downtime);
-    }
-}
-
-void TableDownComm::add(DowntimeOrComment *data) {
-    dc_key tmp_key = make_pair(data->_id, data->_service != nullptr);
-    auto it = _entries.find(tmp_key);
-
-    // might be update -> delete previous data set
-    if (it != _entries.end()) {
-        delete it->second;
-        _entries.erase(it);
-    }
-    _entries.insert(make_pair(tmp_key, data));
-}
-
-void TableDownComm::remove(DowntimeOrComment *data) {
-    dc_key tmp_key = make_pair(data->_id, data->_service != nullptr);
-    auto it = _entries.find(tmp_key);
-    if (it == _entries.end()) {
-        logger(LG_INFO, "Cannot delete non-existing downtime/comment %lu",
-               data->_id);
-    } else {
-        delete it->second;
-        _entries.erase(it);
-    }
-}
-
 void TableDownComm::answerQuery(Query *query) {
     for (const auto &entry : _entries) {
         if (!query->processDataset(entry.second)) {
@@ -198,11 +147,55 @@ bool TableDownComm::isAuthorized(contact *ctc, void *data) {
     return is_authorized_for(ctc, dtc->_host, dtc->_service) != 0;
 }
 
-DowntimeOrComment *TableDownComm::findEntry(unsigned long id, bool is_service) {
-    dc_key tmp_key = make_pair(id, is_service);
-    auto it = _entries.find(tmp_key);
-    if (it != _entries.end()) {
-        return it->second;
+void TableDownComm::addComment(nebstruct_comment_data *data) {
+    switch (data->type) {
+        case NEBTYPE_COMMENT_ADD:
+        case NEBTYPE_COMMENT_LOAD:
+            add(new Comment(data));
+            break;
+        case NEBTYPE_COMMENT_DELETE:
+            remove(data->comment_id);
+            break;
+        default:
+            break;
     }
-    return nullptr;
+}
+
+void TableDownComm::addDowntime(nebstruct_downtime_data *data) {
+    switch (data->type) {
+        case NEBTYPE_DOWNTIME_ADD:
+        case NEBTYPE_DOWNTIME_LOAD:
+            add(new Downtime(data));
+            break;
+        case NEBTYPE_DOWNTIME_DELETE:
+            remove(data->downtime_id);
+            break;
+        default:
+            break;
+    }
+}
+
+void TableDownComm::add(DowntimeOrComment *data) {
+    auto it = _entries.find(data->_id);
+    if (it == _entries.end()) {
+        _entries.emplace(data->_id, data);
+    } else {
+        delete it->second;
+        it->second = data;
+    }
+}
+
+void TableDownComm::remove(unsigned long id) {
+    auto it = _entries.find(id);
+    if (it == _entries.end()) {
+        logger(LG_INFO, "Cannot delete non-existing downtime/comment %lu", id);
+    } else {
+        delete it->second;
+        _entries.erase(it);
+    }
+}
+
+DowntimeOrComment *TableDownComm::findEntry(unsigned long id) {
+    auto it = _entries.find(id);
+    return it == _entries.end() ? nullptr : it->second;
 }

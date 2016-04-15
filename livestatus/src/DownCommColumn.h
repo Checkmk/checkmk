@@ -29,6 +29,7 @@
 #include <string>
 #include "Column.h"
 #include "ListColumn.h"
+class DowntimeOrComment;
 class Query;
 
 class DownCommColumn : public ListColumn {
@@ -36,6 +37,9 @@ class DownCommColumn : public ListColumn {
     bool _with_info;
     bool _is_service;       // and not host
     bool _with_extra_info;  // provides date and type
+
+    bool match(DowntimeOrComment *dt, void *data);
+
 public:
     DownCommColumn(std::string name, std::string description,
                    int indirect_offset, bool is_downtime, bool is_service,

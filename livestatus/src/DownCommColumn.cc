@@ -25,7 +25,6 @@
 #include "DownCommColumn.h"
 #include <stdint.h>
 #include <stdlib.h>
-#include <map>
 #include <utility>
 #include "DowntimeOrComment.h"
 #include "Query.h"
@@ -33,35 +32,16 @@
 #include "nagios.h"
 #include "tables.h"
 
-using std::map;
-using std::pair;
-
 void DownCommColumn::output(void *data, Query *query) {
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
     query->outputBeginList();
     data = shiftPointer(data);  // points to host or service
     if (data != nullptr) {
         bool first = true;
-
         for (auto entry : *table) {
-            unsigned long id = entry.first.first;
-            bool is_service = entry.first.second;
+            unsigned long id = entry.first;
             DowntimeOrComment *dt = entry.second;
-
-            bool found_match = false;
-
-            if (!is_service) {
-                if (dt->_host->name == static_cast<host *>(data)->name) {
-                    found_match = true;
-                }
-            } else if (dt->_service->description ==
-                           static_cast<service *>(data)->description &&
-                       dt->_service->host_name ==
-                           static_cast<service *>(data)->host_name) {
-                found_match = true;
-            }
-
-            if (found_match) {
+            if (match(dt, data)) {
                 if (first) {
                     first = false;
                 } else {
@@ -91,6 +71,24 @@ void DownCommColumn::output(void *data, Query *query) {
     query->outputEndList();
 }
 
+bool DownCommColumn::match(DowntimeOrComment *dt, void *data) {
+    // TableDownComm always enumerates dowtimes/comments for both hosts and
+    // services, regardless of what we are interested in. So we have to skip the
+    // ones which have the wrong kind.
+    if (_is_service != (dt->_is_service != 0)) {
+        return false;
+    }
+
+    if (_is_service) {
+        service *s = static_cast<service *>(data);
+        return dt->_service != nullptr &&  // just to be sure...
+               dt->_service->host_name == s->host_name &&
+               dt->_service->description == s->description;
+    }
+    host *h = static_cast<host *>(data);
+    return dt->_host->name == h->name;
+}
+
 void *DownCommColumn::getNagiosObject(char *name) {
     // Hack. Convert number into pointer.
     return static_cast<char *>(nullptr) + strtoul(name, nullptr, 10);
@@ -102,7 +100,7 @@ bool DownCommColumn::isNagiosMember(void *data, void *member) {
     // member is not a pointer, but an unsigned int (hack)
     unsigned long id = static_cast<unsigned long>(
         reinterpret_cast<uintptr_t>(member));  // Hack. Convert it back.
-    DowntimeOrComment *dt = table->findEntry(id, _is_service);
+    DowntimeOrComment *dt = table->findEntry(id);
     return dt != nullptr && (dt->_service == static_cast<service *>(data) ||
                              (dt->_service == nullptr &&
                               dt->_host == static_cast<host *>(data)));

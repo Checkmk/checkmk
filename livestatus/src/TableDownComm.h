@@ -27,30 +27,31 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <map>
-#include <utility>
 #include "Table.h"
 #include "nagios.h"
 class Query;
 struct DowntimeOrComment;
 
 class TableDownComm : public Table {
-    const char *_name;
+    bool _is_downtime;
 
-    typedef std::pair<unsigned long, bool> dc_key;
-    typedef std::map<dc_key, DowntimeOrComment *> _entries_t;
+    typedef std::map<unsigned long, DowntimeOrComment *> _entries_t;
     _entries_t _entries;
+    void add(DowntimeOrComment *data);
+    void remove(unsigned long id);
 
 public:
     explicit TableDownComm(bool is_downtime);
-    const char *name() override { return _name; }
     ~TableDownComm();
-    DowntimeOrComment *findEntry(unsigned long id, bool is_service);
-    void addDowntime(nebstruct_downtime_data *);
-    void addComment(nebstruct_comment_data *);
-    void add(DowntimeOrComment *data);
-    void remove(DowntimeOrComment *data);
+    const char *name() override {
+        return _is_downtime ? "downtimes" : "comments";
+    }
     void answerQuery(Query *) override;
     bool isAuthorized(contact *ctc, void *data) override;
+
+    DowntimeOrComment *findEntry(unsigned long id);
+    void addDowntime(nebstruct_downtime_data *);
+    void addComment(nebstruct_comment_data *);
     _entries_t::iterator begin() { return _entries.begin(); }
     _entries_t::iterator end() { return _entries.end(); }
 };

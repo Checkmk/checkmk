@@ -15782,8 +15782,6 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 active = True
             elif cb != None:
                 active = cb # get previous state of checkbox
-            elif for_what == "host_search":
-                active = attr.default_value() == "" # show empty text search fields always
             elif for_what == "bulk":
                 active = unique and len(values) > 0
             elif for_what == "folder" and myself:

@@ -18,6 +18,9 @@
     * 3378 FIX: Fixed too long contact group names overflowing WATO folders
     * 3379 FIX: Fixed error resotring WATO snapshot without Check_MK configuration
 
+    Notifications:
+    * 3380 FIX: Fixed graphs in service notifications having spaces in service descriptions
+
     BI:
     * 3396 Change default setting of Precompile aggregations on demand to ON now...
 

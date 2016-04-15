@@ -293,7 +293,7 @@ def indexed_color(idx, total):
 
 
 MAX_NUMBER_HOPS = 45 # the amount of hop metrics, graphs and perfometers to create
-for idx in range(1, MAX_NUMBER_HOPS):
+for idx in range(0, MAX_NUMBER_HOPS):
     if idx:
         prefix_perf = "hop_%d_" % idx
         prefix_text = "Hop %d " % idx

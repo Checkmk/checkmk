@@ -1,0 +1,9 @@
+Title: Fixed error resotring WATO snapshot without Check_MK configuration
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8b11
+Date: 1460702940
+Class: fix
+
+

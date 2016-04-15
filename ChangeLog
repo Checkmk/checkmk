@@ -16,6 +16,7 @@
     WATO:
     * 3377 FIX: Network scan: The scan was broken when having no regex exclude patterns since 1.2.8b9
     * 3378 FIX: Fixed too long contact group names overflowing WATO folders
+    * 3379 FIX: Fixed error resotring WATO snapshot without Check_MK configuration
 
     BI:
     * 3396 Change default setting of Precompile aggregations on demand to ON now...

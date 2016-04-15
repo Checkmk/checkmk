@@ -4916,6 +4916,10 @@ def get_snapshot_status(snapshot, validate_checksums = False):
     def check_core():
         if not defaults.omd_root:
             return # Do not perform this check in non OMD environments
+
+        if "check_mk.tar.gz" not in status["files"]:
+            return
+
         cmk_tar = cStringIO.StringIO(access_snapshot(lambda x: multitar.get_file_content(x, 'check_mk.tar.gz')))
         files = multitar.list_tar_content(cmk_tar)
         using_cmc = os.path.exists(defaults.omd_root + '/etc/check_mk/conf.d/microcore.mk')

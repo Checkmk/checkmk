@@ -663,7 +663,7 @@ vs_mkeventd_rule = Dictionary(
         ( "invert_matching",
           Checkbox(
               title = _("Invert matching"),
-              label = _("Negate match: Execute this rule if the following conditions are <b>not</b> fulfilled."),
+              label = _("Negate match: Execute this rule if the upper conditions are <b>not</b> fulfilled."),
               help = _("By activating this checkbox the complete combined rule conditions will be inverted. That "
                        "means that this rule with be executed, if at least on of the conditions does <b>not</b> match. "
                        "This can e.g. be used for skipping a rule pack if the message text does not contain <tt>ORA-</tt>. "

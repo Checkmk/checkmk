@@ -2515,6 +2515,7 @@ class StatusServer:
                 readable = select.select(listen_list, [], [], 0.2)[0]
                 for s in readable:
                     client_socket, addr_info = s.accept()
+                    client_socket.settimeout(3)
                     before = time.time()
                     g_perfcounters.count("connects")
                     if addr_info:

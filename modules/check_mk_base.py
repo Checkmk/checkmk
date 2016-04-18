@@ -1149,8 +1149,14 @@ def reset_wrapped_counters():
     g_last_counter_wrap = None
 
 
+# TODO: Can we remove this? (check API)
 def last_counter_wrap():
     return g_last_counter_wrap
+
+
+def raise_counter_wrap():
+    if g_last_counter_wrap:
+        raise g_last_counter_wrap # pylint: disable=raising-bad-type
 
 
 # Compute average by gliding exponential algorithm
@@ -1490,8 +1496,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
                     raise Exception(str(info))
 
                 result = sanitize_check_result(check_function(item, params, info), check_uses_snmp(checkname))
-                if last_counter_wrap():
-                    raise last_counter_wrap()
+                raise_counter_wrap()
 
 
             # handle check implementations that do not yet support the
@@ -1661,6 +1666,7 @@ def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, d
     # reporting it is totally ok to have some string representations of the objects.
     class RobustJSONEncoder(json.JSONEncoder):
         # Are there cases where no __str__ is available? if so, we should do something like %r
+        # pylint: disable=method-hidden
         def default(self, o):
             return "%s" % o
 

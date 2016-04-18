@@ -1044,8 +1044,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 try:
                     reset_wrapped_counters()
                     result = sanitize_check_result(check_function(item, params, info), check_uses_snmp(check_type))
-                    if last_counter_wrap():
-                        raise last_counter_wrap()
+                    raise_counter_wrap()
                 except MKCounterWrapped, e:
                     result = (None, "WAITING - Counter based check, cannot be done offline")
                 except Exception, e:

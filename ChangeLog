@@ -1,4 +1,7 @@
 1.2.8b12:
+    Checks & Agents:
+    * 3384 FIX: eltek_battery: Fixed broken check due to wrong spelled include file
+
 
 1.2.8b11:
     Core & Setup:

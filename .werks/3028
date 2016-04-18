@@ -1,0 +1,11 @@
+Title: statgrab_mem, solaris_mem: updated inventory plugins for solaris systems
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.9i1
+Date: 1460977554
+Class: feature
+
+Solaris systems either report statgrab_mem or solaris_mem sections.
+The data from these sections is similar, both inventory plugins determine
+the same inventory data - total ram and total swap.

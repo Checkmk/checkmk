@@ -24,22 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#<<<solaris_mem>>>
-#Memory: 64G phys mem, 28G free mem, 8198M total swap, 8198M free swap
+# <<<statgrab_mem>>>
+# mem.cache 0
+# mem.free 166014599168
+# mem.total 274877906944
+# mem.used 108863307776
+# swap.free 87748075520
+# swap.total 203939356672
+# swap.used 116191281152
 
-# solaris_mem a parse function with the following output:
+# statgrab_mem has a parse function with the following output:
 # {
-#    'MemFree': 2070528,
-#    'MemTotal': 25165824,
-#    'SwapFree': 3802112,
-#    'SwapTotal': 4194304
+#    'SwapTotal' : 0,
+#    'Cached'    : 0,
+#    'MemFree'   : 1582464, # kB
+#    'MemTotal'  : 2017928, # kB
+#    'SwapFree'  : 0,
 # }
-
-def inv_solaris_mem(parsed):
+def inv_statgrab_mem(parsed):
     node = inv_tree("hardware.memory.")
-    node["total_ram_usable"] = parsed["MemFree"]
-    node["total_swap"] = parsed["SwapTotal"]
+    node["total_ram_usable"] = parsed["MemTotal"] * 1024
+    node["total_swap"] = parsed["SwapTotal"] * 1024
 
-inv_info['solaris_mem'] = {
-   "inv_function"           : inv_solaris_mem,
+
+inv_info['statgrab_mem'] = {
+   "inv_function"           : inv_statgrab_mem,
 }

@@ -30,6 +30,7 @@
 #include "InputBuffer.h"
 #include "OutputBuffer.h"
 #include "Query.h"
+#include "Table.h"
 #include "global_counters.h"
 #include "logger.h"
 #include "strutil.h"
@@ -61,24 +62,23 @@ Store::Store()
     , _table_commands(_commands_holder)
     , _table_downtimes(_downtimes, true)
     , _table_comments(_comments, false) {
-    _tables.insert(make_pair("columns", &_table_columns));
-    _tables.insert(make_pair("commands", &_table_commands));
-    _tables.insert(make_pair("comments", &_table_comments));
-    _tables.insert(make_pair("contactgroups", &_table_contactgroups));
-    _tables.insert(make_pair("contacts", &_table_contacts));
-    _tables.insert(make_pair("downtimes", &_table_downtimes));
-    _tables.insert(make_pair("hostgroups", &_table_hostgroups));
-    _tables.insert(make_pair("hostsbygroup", &_table_hostsbygroup));
-    _tables.insert(make_pair("hosts", &_table_hosts));
-    _tables.insert(make_pair("log", &_table_log));
-    _tables.insert(make_pair("servicegroups", &_table_servicegroups));
-    _tables.insert(make_pair("servicesbygroup", &_table_servicesbygroup));
-    _tables.insert(
-        make_pair("servicesbyhostgroup", &_table_servicesbyhostgroup));
-    _tables.insert(make_pair("services", &_table_services));
-    _tables.insert(make_pair("statehist", &_table_statehistory));
-    _tables.insert(make_pair("status", &_table_status));
-    _tables.insert(make_pair("timeperiods", &_table_timeperiods));
+    addTable(&_table_columns);
+    addTable(&_table_commands);
+    addTable(&_table_comments);
+    addTable(&_table_contactgroups);
+    addTable(&_table_contacts);
+    addTable(&_table_downtimes);
+    addTable(&_table_hostgroups);
+    addTable(&_table_hostsbygroup);
+    addTable(&_table_hosts);
+    addTable(&_table_log);
+    addTable(&_table_servicegroups);
+    addTable(&_table_servicesbygroup);
+    addTable(&_table_servicesbyhostgroup);
+    addTable(&_table_services);
+    addTable(&_table_statehistory);
+    addTable(&_table_status);
+    addTable(&_table_timeperiods);
 
     g_table_hosts = &_table_hosts;
     g_table_services = &_table_services;
@@ -96,13 +96,12 @@ Store::Store()
     g_table_log = &_table_log;
     g_table_statehistory = &_table_statehistory;
     g_table_columns = &_table_columns;
-
-    for (auto &table : _tables) {
-        _table_columns.addTable(table.second);
-    }
 }
 
-Store::~Store() = default;
+void Store::addTable(Table *table) {
+    _tables.emplace(table->name(), table);
+    _table_columns.addTable(table);
+}
 
 Table *Store::findTable(string name) {
     auto it = _tables.find(name);

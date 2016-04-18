@@ -57,7 +57,6 @@ class Table;
 class Store {
 public:
     Store();
-    ~Store();
     LogCache *logCache() { return &_log_cache; };
     void registerDowntime(nebstruct_downtime_data *);
     const DowntimesOrComments &downtimes() const;
@@ -92,6 +91,7 @@ private:
 
     std::mutex _command_mutex;
 
+    void addTable(Table *table);
     Table *findTable(std::string name);
     void answerGetRequest(const std::list<std::string> &lines, OutputBuffer *,
                           const char *);

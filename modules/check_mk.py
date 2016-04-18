@@ -90,6 +90,7 @@ if '--profile' in sys.argv[1:]:
 
 # are we running OMD? If yes, honor local/ hierarchy
 omd_root = os.getenv("OMD_ROOT", None)
+omd_site = os.getenv("OMD_SITE", None)
 if omd_root:
     local_share              = omd_root + "/local/share/check_mk"
     local_checks_dir         = local_share + "/checks"

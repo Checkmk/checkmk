@@ -1,0 +1,13 @@
+Title: Bulk edit for hosts seems to contain checkbox state when it should not
+Component: wato
+State: open
+Date: 2016-04-18 14:38:33
+Targetversion: 1.2.8
+Class: bug
+
+Wenn man mehrere Hosts für einen bulk edit markiert hatte und die Änderungen
+mit „Save & Finish“ übernommen hat und dann andere Hosts markiert
+um dann dafür einen bulk edit zu machen werden genau die Änderungen aus
+der vorhergehenden Änderung vorgelegt. Bug oder Feature? Auf jeden Fall
+verwirrend, weil in der Regel die Hosts des zweiten Durchganges andere
+Merkmale bekommen sollen.

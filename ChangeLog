@@ -3,6 +3,9 @@
     * 3384 FIX: eltek_battery: Fixed broken check due to wrong spelled include file
     * 3400 FIX: local: do not crash in P mode if performance data contains a unit of measurement
 
+    Multisite:
+    * 3401 FIX: Fix sorting and grouping hosts by their IPv4 address
+
 
 1.2.8b11:
     Core & Setup:

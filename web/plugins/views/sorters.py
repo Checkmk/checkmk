@@ -224,7 +224,6 @@ multisite_sorters['svc_perf_val10'] = {
 # Host
 declare_1to1_sorter("alias",                  cmp_num_split)
 declare_1to1_sorter("host_address",           cmp_ip_address)
-declare_1to1_sorter("host_ipv4_address",      cmp_ip_address)
 declare_1to1_sorter("host_address_family",    cmp_simple_number)
 declare_1to1_sorter("host_plugin_output",     cmp_simple_string)
 declare_1to1_sorter("host_perf_data",         cmp_simple_string)
@@ -256,6 +255,30 @@ declare_1to1_sorter("host_group_memberlist",  cmp_string_list)
 declare_1to1_sorter("host_contacts",          cmp_string_list)
 declare_1to1_sorter("host_contact_groups",    cmp_string_list)
 declare_1to1_sorter("host_servicelevel",      cmp_simple_number)
+
+
+def cmp_host_ipv4_address(r1, r2):
+    def get_address(row):
+        custom_vars = dict(zip(row["host_custom_variable_names"],
+                               row["host_custom_variable_values"]))
+        return custom_vars.get("ADDRESS_4", "")
+
+    def split_ip(ip):
+        try:
+            return tuple(int(part) for part in ip.split('.'))
+        except:
+            return ip
+
+    v1, v2 = split_ip(get_address(r1)), split_ip(get_address(r2))
+    return cmp(v1, v2)
+
+
+multisite_sorters["host_ipv4_address"] = {
+    "title"   : _("Host IPv4 address"),
+    "cmp"     : cmp_host_ipv4_address,
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values"],
+}
+
 
 def cmp_host_problems(r1, r2):
     return cmp(r1["host_num_services"] - r1["host_num_services_ok"] - r1["host_num_services_pending"],

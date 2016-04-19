@@ -57,7 +57,6 @@ class Table;
 class Store {
 public:
     Store();
-    LogCache *logCache() { return &_log_cache; };
     void registerDowntime(nebstruct_downtime_data *);
     const DowntimesOrComments &downtimes() const;
     void registerComment(nebstruct_comment_data *);

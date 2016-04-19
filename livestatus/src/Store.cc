@@ -61,7 +61,9 @@ Store::Store()
     : _log_cache(_commands_holder, g_max_cached_messages)
     , _table_commands(_commands_holder)
     , _table_downtimes(_downtimes, true)
-    , _table_comments(_comments, false) {
+    , _table_comments(_comments, false)
+    , _table_log(&_log_cache)
+    , _table_statehistory(&_log_cache) {
     addTable(&_table_columns);
     addTable(&_table_commands);
     addTable(&_table_comments);

@@ -36,7 +36,6 @@
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
 #include "Query.h"
-#include "Store.h"
 #include "TableCommands.h"
 #include "TableContacts.h"
 #include "TableHosts.h"
@@ -52,10 +51,7 @@ using std::string;
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
-// watch nagios' logfile rotation
-extern Store *g_store;
-
-TableLog::TableLog() {
+TableLog::TableLog(LogCache *log_cache) : _log_cache(log_cache) {
     LogEntry *ref = nullptr;
     addColumn(new OffsetTimeColumn("time",
                                    "Time of the log event (UNIX timestamp)",
@@ -143,8 +139,8 @@ TableLog::TableLog() {
 }
 
 void TableLog::answerQuery(Query *query) {
-    lock_guard<mutex> lg(g_store->logCache()->_lock);
-    g_store->logCache()->logCachePreChecks();
+    lock_guard<mutex> lg(_log_cache->_lock);
+    _log_cache->logCachePreChecks();
 
     int since = 0;
     int until = time(nullptr) + 1;
@@ -169,15 +165,13 @@ void TableLog::answerQuery(Query *query) {
 
     /* NEW CODE - NEWEST FIRST */
     _logfiles_t::iterator it;
-    it = g_store->logCache()
-             ->logfiles()
-             ->end();  // it now points beyond last log file
-    --it;              // switch to last logfile (we have at least one)
+    it = _log_cache->logfiles()->end();  // it now points beyond last log file
+    --it;  // switch to last logfile (we have at least one)
 
     // Now find newest log where 'until' is contained. The problem
     // here: For each logfile we only know the time of the *first* entry,
     // not that of the last.
-    while (it != g_store->logCache()->logfiles()->begin() &&
+    while (it != _log_cache->logfiles()->begin() &&
            it->first > until) {  // while logfiles are too new...
         --it;                    // go back in history
     }
@@ -187,11 +181,11 @@ void TableLog::answerQuery(Query *query) {
 
     while (true) {
         Logfile *log = it->second;
-        if (!log->answerQueryReverse(query, g_store->logCache(), since, until,
+        if (!log->answerQueryReverse(query, _log_cache, since, until,
                                      classmask)) {
             break;  // end of time range found
         }
-        if (it == g_store->logCache()->logfiles()->begin()) {
+        if (it == _log_cache->logfiles()->begin()) {
             break;  // this was the oldest one
         }
         --it;

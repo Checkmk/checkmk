@@ -41,7 +41,6 @@
 #include "OffsetTimeColumn.h"
 #include "OutputBuffer.h"
 #include "Query.h"
-#include "Store.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "logger.h"
@@ -67,7 +66,6 @@ using std::set;
 using std::string;
 
 int g_disable_statehist_filtering = 0;
-extern Store *g_store;
 
 #ifndef CMC
 const char *getCustomVariable(customvariablesmember *cvm, const char *name) {
@@ -81,7 +79,8 @@ const char *getCustomVariable(customvariablesmember *cvm, const char *name) {
 }
 #endif
 
-TableStateHistory::TableStateHistory() {
+TableStateHistory::TableStateHistory(LogCache *log_cache)
+    : _log_cache(log_cache) {
     HostServiceState *ref = nullptr;
     addColumn(new OffsetTimeColumn(
         "time", "Time of the log event (seconds since 1/1/1970)",
@@ -253,12 +252,12 @@ TableStateHistory::TableStateHistory() {
 LogEntry *TableStateHistory::getPreviousLogentry() {
     while (_it_entries == _entries->begin()) {
         // open previous logfile
-        if (_it_logs == g_store->logCache()->logfiles()->begin()) {
+        if (_it_logs == _log_cache->logfiles()->begin()) {
             return nullptr;
         }
         --_it_logs;
         _entries = _it_logs->second->getEntriesFromQuery(
-            _query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
+            _query, _log_cache, _since, _until, CLASSMASK_STATEHIST);
         _it_entries = _entries->end();
     }
 
@@ -272,12 +271,12 @@ LogEntry *TableStateHistory::getNextLogentry() {
 
     while (_it_entries == _entries->end()) {
         auto it_logs_cpy = _it_logs;
-        if (++it_logs_cpy == g_store->logCache()->logfiles()->end()) {
+        if (++it_logs_cpy == _log_cache->logfiles()->end()) {
             return nullptr;
         }
         ++_it_logs;
         _entries = _it_logs->second->getEntriesFromQuery(
-            _query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
+            _query, _log_cache, _since, _until, CLASSMASK_STATEHIST);
         _it_entries = _entries->begin();
     }
     return _it_entries->second;
@@ -308,8 +307,8 @@ void TableStateHistory::answerQuery(Query *query) {
         }
     }
 
-    lock_guard<mutex> lg(g_store->logCache()->_lock);
-    g_store->logCache()->logCachePreChecks();
+    lock_guard<mutex> lg(_log_cache->_lock);
+    _log_cache->logCachePreChecks();
 
     // This flag might be set to true by the return value of processDataset(...)
     _abort_query = false;
@@ -347,12 +346,12 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     // Switch to last logfile (we have at least one)
-    _it_logs = g_store->logCache()->logfiles()->end();
+    _it_logs = _log_cache->logfiles()->end();
     --_it_logs;
     auto newest_log = _it_logs;
 
     // Now find the log where 'since' starts.
-    while (_it_logs != g_store->logCache()->logfiles()->begin() &&
+    while (_it_logs != _log_cache->logfiles()->begin() &&
            _it_logs->first >= _since) {
         --_it_logs;  // go back in history
     }
@@ -367,7 +366,7 @@ void TableStateHistory::answerQuery(Query *query) {
     // Determine initial logentry
     LogEntry *entry;
     _entries = _it_logs->second->getEntriesFromQuery(
-        query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
+        query, _log_cache, _since, _until, CLASSMASK_STATEHIST);
     if (!_entries->empty() && _it_logs != newest_log) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too

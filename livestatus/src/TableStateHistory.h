@@ -40,6 +40,8 @@ struct LogEntry;
 #define CLASSMASK_STATEHIST 0xC6
 
 class TableStateHistory : public Table {
+    LogCache *_log_cache;
+
     int _query_timeframe;
     Query *_query;
     int _since;
@@ -58,7 +60,7 @@ protected:
     bool _abort_query;
 
 public:
-    TableStateHistory();
+    explicit TableStateHistory(LogCache *log_cache);
     const char *name() override { return "statehist"; }
     const char *prefixname() override { return "statehist_"; }
     bool isAuthorized(contact *ctc, void *data) override;

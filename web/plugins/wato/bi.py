@@ -637,7 +637,9 @@ class ModeBI(WatoMode):
                   help = _("Hard states can only differ from soft states if at least one host or service "
                            "of the BI aggregate has more than 1 maximum check attempt. For example if you "
                            "set the maximum check attempts of a service to 3 and the service is CRIT "
-                           "just since one check then it's soft state is CRIT, but its hard state is still OK."),
+                           "just since one check then it's soft state is CRIT, but its hard state is still OK. "
+                           "<b>Note:</b> When computing the availbility of a BI aggregate this option "
+                           "has no impact. For that purpose always the soft (i.e. real) states will be used."),
               )
             ),
             ( "downtime_aggr_warn",

@@ -1,0 +1,10 @@
+Title: Availability option "Visual levels for the availability" not longer enables itself
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461072458
+
+When you edited an annotation then this option might enable itself. This has been fixed.

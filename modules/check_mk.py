@@ -1505,6 +1505,11 @@ def schedule_inventory_check(hostname):
         else:
             # TODO: Remove this old name handling one day
             command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK inventory;%d" % (hostname, now)
+
+        # Ignore missing check and avoid warning in cmc.log
+        if monitoring_core == "cmc":
+            command += ";TRY"
+
         s.send("COMMAND [%d] %s\n" % (now, command))
     except Exception, e:
         if opt_debug:

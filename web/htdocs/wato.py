@@ -1780,8 +1780,9 @@ def rename_host_in_rulesets(folder, oldname, newname):
                     rules[nr] = newrule
                     changed_rulesets.append(varname)
                     changed = True
+
         if changed:
-            save_rulesets(folder, rulesets)
+            save_changed_ruleset(varname, folder, rulesets)
             folder.mark_hosts_dirty()
 
         for subfolder in folder.subfolders().values():
@@ -11652,6 +11653,9 @@ def change_host_tags_in_rules(folder, operations, mode):
                 ruleset[nr] = construct_rule(rulespec, value, tag_specs, host_list, item_list, rule_options)
                 need_save = True
 
+                if has_agent_bakery() and is_affecting_baked_agents(varname):
+                    need_to_bake_agents()
+
         rules_to_delete = list(rules_to_delete)
         rules_to_delete.sort()
         for nr in rules_to_delete[::-1]:
@@ -12180,7 +12184,7 @@ def mode_edit_ruleset(phase):
                 % (rulenr + 1, rule_folder.alias_path()))
             if c:
                 del rules[rulenr]
-                save_rulesets(rule_folder, rulesets)
+                save_changed_ruleset(varname, rule_folder, rulesets)
                 rule_folder.mark_hosts_dirty()
                 log_pending(AFFECTED, None, "edit-ruleset",
                       _("Deleted rule in ruleset '%s'") % rulespec["title"])
@@ -12194,7 +12198,7 @@ def mode_edit_ruleset(phase):
             if not html.check_transaction():
                 return None # browser reload
             rules[rulenr:rulenr] = [rules[rulenr]]
-            save_rulesets(rule_folder, rulesets)
+            save_changed_ruleset(varname, rule_folder, rulesets)
             rule_folder.mark_hosts_dirty()
 
             log_pending(AFFECTED, None, "edit-ruleset",
@@ -12214,7 +12218,7 @@ def mode_edit_ruleset(phase):
                 rules.insert(0, rule)
             else:
                 rules.append(rule)
-            save_rulesets(rule_folder, rulesets)
+            save_changed_ruleset(varname, rule_folder, rulesets)
             rule_folder.mark_hosts_dirty()
             log_pending(AFFECTED, None, "edit-ruleset",
                      _("Changed order of rules in ruleset %s") % rulespec["title"])
@@ -12404,6 +12408,12 @@ def show_rule_in_table(rulespec, tag_specs, host_list, item_list, varname, value
 
     desc = rule_options.get("description") or rule_options.get("comment", "")
     html.write(html.attrencode(desc))
+
+
+def save_changed_ruleset(varname, rule_folder, rulesets):
+    if has_agent_bakery() and is_affecting_baked_agents(varname):
+        need_to_bake_agents()
+    save_rulesets(rule_folder, rulesets)
 
 
 def create_rule(rulespec, hostname=None, item=NO_ITEM):
@@ -12797,7 +12807,7 @@ def mode_edit_rule(phase, new = False):
                     rules.append(rule)
                 else:
                     rules[rulenr] = rule
-                save_rulesets(folder, rulesets)
+                save_changed_ruleset(varname, folder, rulesets)
                 folder.mark_hosts_dirty()
 
                 if new:
@@ -12809,11 +12819,11 @@ def mode_edit_rule(phase, new = False):
             else: # Move rule to new folder
                 if not new:
                     del rules[rulenr]
-                save_rulesets(folder, rulesets)
+                save_changed_ruleset(varname, folder, rulesets)
                 rulesets = load_rulesets(new_rule_folder)
                 rules = rulesets.setdefault(varname, [])
                 rules.append(rule)
-                save_rulesets(new_rule_folder, rulesets)
+                save_changed_ruleset(varname, new_rule_folder, rulesets)
                 folder.mark_hosts_dirty()
                 new_rule_folder.mark_hosts_dirty()
                 log_pending(AFFECTED, None, "edit-rule", _("Changed properties of rule %s, moved rule from "
@@ -14064,7 +14074,7 @@ def create_sample_config():
     config.wato_aux_tags = wato_aux_tags
 
     # Initial baking of agents (when bakery is available)
-    if 'bake_agents' in globals():
+    if has_agent_bakery():
         try:
             bake_agents()
         except:
@@ -14074,6 +14084,10 @@ def create_sample_config():
     # find to execute it only for new created sites.
     import werks
     werks.acknowledge_all_werks()
+
+
+def has_agent_bakery():
+    return 'bake_agents' in globals()
 
 #.
 #   .--Pattern Editor------------------------------------------------------.

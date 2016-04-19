@@ -77,7 +77,6 @@ class Store {
 public:
     Store();
     ~Store();
-    LogCache *logCache() { return &_log_cache; };
     void registerHostgroup(hostgroup *);
     void registerComment(nebstruct_comment_data *);
     void registerDowntime(nebstruct_downtime_data *);

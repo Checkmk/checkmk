@@ -32,12 +32,12 @@
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
 class Logfile;
+class LogCache;
 class Query;
 
 class TableLog : public Table {
 public:
-    TableLog();
-    ~TableLog();
+    explicit TableLog(LogCache *log_cache);
     const char *name() override { return "log"; }
     const char *prefixname() override { return "logs"; }
     bool isAuthorized(contact *ctc, void *data) override;
@@ -49,6 +49,7 @@ public:
     Column *column(const char *colname) override;
 
 private:
+    LogCache *_log_cache;
     bool answerQuery(Query *, Logfile *, time_t, time_t);
 };
 

@@ -61,7 +61,9 @@ Store::Store()
     , _table_servicesbygroup(true, false)
     , _table_servicesbyhostgroup(false, true)
     , _table_downtimes(true)
-    , _table_comments(false) {
+    , _table_comments(false)
+    , _table_log(&_log_cache)
+    , _table_statehistory(&_log_cache) {
     _tables.insert(make_pair("columns", &_table_columns));
     _tables.insert(make_pair("commands", &_table_commands));
     _tables.insert(make_pair("comments", &_table_comments));

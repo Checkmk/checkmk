@@ -29,47 +29,43 @@
 #include "Store.h"
 #include "TimeperiodsCache.h"
 
-Store *g_store = nullptr;
-ClientQueue *g_client_queue = nullptr;
+static Store *fl_store = nullptr;
+static ClientQueue *fl_client_queue = nullptr;
 TimeperiodsCache *g_timeperiods_cache = nullptr;
 
 void store_init() {
-    g_store = new Store();
-    g_client_queue = new ClientQueue();
+    fl_store = new Store();
+    fl_client_queue = new ClientQueue();
     g_timeperiods_cache = new TimeperiodsCache();
 }
 
 void store_deinit() {
-    if (g_store != nullptr) {
-        delete g_store;
-        g_store = nullptr;
-    }
-    if (g_client_queue != nullptr) {
-        delete g_client_queue;
-        g_client_queue = nullptr;
-    }
-    if (g_timeperiods_cache != nullptr) {
-        delete g_timeperiods_cache;
-        g_timeperiods_cache = nullptr;
-    }
+    delete fl_store;
+    fl_store = nullptr;
+
+    delete fl_client_queue;
+    fl_client_queue = nullptr;
+
+    delete g_timeperiods_cache;
+    g_timeperiods_cache = nullptr;
 }
 
-void queue_add_connection(int cc) { g_client_queue->addConnection(cc); }
+void queue_add_connection(int cc) { fl_client_queue->addConnection(cc); }
 
-int queue_pop_connection() { return g_client_queue->popConnection(); }
+int queue_pop_connection() { return fl_client_queue->popConnection(); }
 
-void queue_terminate() { return g_client_queue->terminate(); }
+void queue_terminate() { return fl_client_queue->terminate(); }
 
 void store_register_comment(nebstruct_comment_data *d) {
-    g_store->registerComment(d);
+    fl_store->registerComment(d);
 }
 
 void store_register_downtime(nebstruct_downtime_data *d) {
-    g_store->registerDowntime(d);
+    fl_store->registerDowntime(d);
 }
 
 int store_answer_request(void *ib, void *ob) {
-    return static_cast<int>(g_store->answerRequest(
+    return static_cast<int>(fl_store->answerRequest(
         static_cast<InputBuffer *>(ib), static_cast<OutputBuffer *>(ob)));
 }
 

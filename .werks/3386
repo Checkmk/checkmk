@@ -1,0 +1,16 @@
+Title: AIX agent: Cached local scripts / plugins need to be configured in seconds
+Level: 2
+Component: checks
+Compatible: incomp
+Version: 1.2.9i1
+Date: 1461057535
+Class: fix
+
+When using cached executin of local scripts or agent plugins (putting scripts
+in subdirectories named like the execution interval) with the AIX agent, the
+directory names were interpreted as minutes which was not consistent with the
+other agents.
+
+This has now been changed to be consistently interpreted as seconds. You will
+have to rename your directories to the current name multiplied with 60 to
+execute the plugins again in the expected interval.

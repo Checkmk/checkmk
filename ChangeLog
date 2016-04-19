@@ -159,6 +159,8 @@
     * 3399 FIX: statgrab_mem, hr_mem: Fix display of total installed memory in graph
     * 3384 FIX: eltek_battery: Fixed broken check due to wrong spelled include file
     * 3400 FIX: local: do not crash in P mode if performance data contains a unit of measurement
+    * 3386 FIX: AIX agent: Cached local scripts / plugins need to be configured in seconds...
+            NOTE: Please refer to the migration notes!
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

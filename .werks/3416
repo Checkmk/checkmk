@@ -1,0 +1,12 @@
+Title: Avoid warning in cmc.log when rescheduling non-existing discovery check
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.8b12
+Date: 1461077110
+Class: fix
+
+This avoids the folloing message:
+F+:var/log/cmc.log
+2016-04-19 13:49:24 [4] Ignoring command SCHEDULE_FORCED_SVC_CHECK;10.1.1.199;Check_MK Discovery;1461066564: invalid parameters
+F-:

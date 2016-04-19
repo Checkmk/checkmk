@@ -162,6 +162,7 @@
     * 3400 FIX: local: do not crash in P mode if performance data contains a unit of measurement
     * 3386 FIX: AIX agent: Cached local scripts / plugins need to be configured in seconds...
             NOTE: Please refer to the migration notes!
+    * 3387 FIX: ps: Fixed crash during service discovery on AIX hosts having defunct processes
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

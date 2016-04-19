@@ -1,0 +1,9 @@
+Title: Correctly display non-Ascii-characters in host tag values in host tag filter
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b12
+Date: 1461060469
+Class: fix
+
+

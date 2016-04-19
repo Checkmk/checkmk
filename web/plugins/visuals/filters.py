@@ -1005,11 +1005,11 @@ class FilterHostTags(Filter):
                 if tag is None:
                     tag = ''
 
-                if type(title) == unicode:
-                    title = title.encode("utf-8")
+                # if type(title) == unicode:
+                #     title = title.encode("utf-8")
                 grouped[entry[0]].append([tag, title])
 
-        html.javascript('g_hosttag_groups = %r;' % grouped)
+        html.javascript('g_hosttag_groups = %s;' % json.dumps(grouped))
         html.write('<table>')
         for num in range(self.count):
             prefix = 'host_tag_%d' % num

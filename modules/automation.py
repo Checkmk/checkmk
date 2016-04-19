@@ -254,24 +254,6 @@ def automation_get_autochecks(args):
     return result
 
 
-def schedule_inventory_check(hostname):
-    try:
-        import socket
-        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(livestatus_unix_socket)
-        now = int(time.time())
-        if 'cmk-inventory' in use_new_descriptions_for:
-            command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK Discovery;%d" % (hostname, now)
-        else:
-            # FIXME: Remove this old name handling one day
-            command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK inventory;%d" % (hostname, now)
-        s.send("COMMAND [%d] %s\n" % (now, command))
-    except Exception, e:
-        if opt_debug:
-            raise
-
-
-
 # Determine the type of the check, and how the parameters are being
 # constructed
 def automation_analyse_service(args):

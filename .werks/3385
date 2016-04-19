@@ -1,0 +1,13 @@
+Title: Fixed not updated discovery service after grouped auto discovery
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461054017
+
+When the automatic service discovery and activation updates the services
+of a host the "Check_MK Discovery" service remained in the state it was
+before the discovery. This has now been fixed by triggering a refresh
+of the discovery services.

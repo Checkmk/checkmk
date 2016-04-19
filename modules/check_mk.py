@@ -1493,6 +1493,24 @@ def restore_original_agent_caching_usage():
         orig_cluster_max_cachefile_age   = None
         orig_inventory_max_cachefile_age = None
 
+
+def schedule_inventory_check(hostname):
+    try:
+        import socket
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(livestatus_unix_socket)
+        now = int(time.time())
+        if 'cmk-inventory' in use_new_descriptions_for:
+            command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK Discovery;%d" % (hostname, now)
+        else:
+            # TODO: Remove this old name handling one day
+            command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK inventory;%d" % (hostname, now)
+        s.send("COMMAND [%d] %s\n" % (now, command))
+    except Exception, e:
+        if opt_debug:
+            raise
+
+
 #.
 #   .--SNMP----------------------------------------------------------------.
 #   |                      ____  _   _ __  __ ____                         |

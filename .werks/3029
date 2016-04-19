@@ -1,0 +1,12 @@
+Title: rule editor icon: fixed query of invalid livestatus column
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b12
+Date: 1461065867
+
+The cmc.log file regularly showed <i>"Replacing non-existing column 'host_host_name' with null column"</i>
+whenever a multisite page with icons was shown. Most of the time it had no effect and did not brake anything,
+because the correct data was already queried through an other function. Nevertheless, this bug has been fixed.

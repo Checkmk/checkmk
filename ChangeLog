@@ -10,6 +10,7 @@
     * 3401 FIX: Fix sorting and grouping hosts by their IPv4 address
     * 3402 FIX: Using information from inventory in column tooltips now longer crashes
     * 3413 FIX: Correctly display non-Ascii-characters in host tag values in host tag filter
+    * 3029 FIX: rule editor icon: fixed query of invalid livestatus column...
 
 
 1.2.8b11:

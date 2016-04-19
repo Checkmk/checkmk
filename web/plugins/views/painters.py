@@ -1634,8 +1634,8 @@ multisite_painters["host_parents"] = {
 }
 
 multisite_painters["host_childs"] = {
-    "title"   : _("Host's childs"),
-    "short"   : _("childs"),
+    "title"   : _("Host's children"),
+    "short"   : _("children"),
     "columns" : [ "host_childs" ],
     "paint"   : lambda row: paint_host_list(row["site"], row["host_childs"]),
 }

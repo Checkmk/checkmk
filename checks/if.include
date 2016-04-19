@@ -689,7 +689,11 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
 
 
 	    if ifPhysAddress:
-                mac = ":".join(["%02s" % hex(ord(m))[2:] for m in ifPhysAddress]).replace(' ', '0')
+                if type(ifPhysAddress) != list:
+                    mac_bytes = map(ord, ifPhysAddress)
+                else:
+                    mac_bytes = ifPhysAddress
+                mac = ":".join(["%02s" % hex(m)[2:] for m in mac_bytes]).replace(' ', '0')
                 infotext += 'MAC: %s, ' % mac
 
             # Check speed settings of interface, but only if speed information

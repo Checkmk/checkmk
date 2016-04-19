@@ -40,6 +40,10 @@ def CACHED_OID(oid):
     return "cached", oid
 
 
+def BINARY(oid):
+    return "binary", oid
+
+
 def strip_snmp_value(value, hex_plain = False):
     v = value.strip()
     if v.startswith('"'):
@@ -137,7 +141,7 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
         max_len_col = -1
 
         for column in targetcolumns:
-            fetchoid = compute_fetch_oid(oid, suboid, column)
+            fetchoid, value_encoding = compute_fetch_oid(oid, suboid, column)
 
             # column may be integer or string like "1.5.4.2.3"
             colno += 1
@@ -152,13 +156,13 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
                     raise MKGeneralException("Invalid SNMP OID specification in implementation of check. "
                         "You can only use one of OID_END, OID_STRING, OID_BIN, OID_END_BIN and OID_END_OCTET_STRING.")
                 index_column = colno
-                columns.append((fetchoid, []))
+                columns.append((fetchoid, [], "string"))
                 index_format = column
                 continue
 
             rowinfo = get_snmpwalk(hostname, ip, check_type, oid, fetchoid, column, use_snmpwalk_cache)
 
-            columns.append((fetchoid, rowinfo))
+            columns.append((fetchoid, rowinfo, value_encoding))
             number_of_rows = len(rowinfo)
             if number_of_rows > max_len:
                 max_len     = number_of_rows
@@ -167,7 +171,7 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
         if index_column != -1:
             index_rows = []
             # Take end-oids of non-index columns as indices
-            fetchoid, max_column  = columns[max_len_col]
+            fetchoid, max_column, value_encoding  = columns[max_len_col]
             for o, value in max_column:
                 if index_format == OID_END:
                     index_rows.append((o, extract_end_oid(fetchoid, o)))
@@ -180,16 +184,16 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
                 else: # OID_END_OCTET_STRING:
                     index_rows.append((o, oid_to_bin(extract_end_oid(fetchoid, o))[1:]))
 
-            columns[index_column] = fetchoid, index_rows
+            columns[index_column] = fetchoid, index_rows, value_encoding
 
 
         # prepend suboid to first column
         if suboid and columns:
-            fetchoid, first_column = columns[0]
+            fetchoid, first_column, value_encoding = columns[0]
             new_first_column = []
             for o, val in first_column:
                 new_first_column.append((o, str(suboid) + "." + str(val)))
-            columns[0] = fetchoid, new_first_column
+            columns[0] = fetchoid, new_first_column, value_encoding
 
         # Here we have to deal with a nasty problem: Some brain-dead devices
         # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
@@ -200,9 +204,9 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
         # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
         # get normal python strings. But for Check_MK we need unicode strings now.
         # Convert them by using the standard Check_MK approach for incoming data
-        new_columns = sanitize_snmp_encoding(new_columns)
+        sanitized_columns = sanitize_snmp_encoding(new_columns)
 
-        info += construct_snmp_table_of_rows(new_columns)
+        info += construct_snmp_table_of_rows(sanitized_columns)
 
     return info
 
@@ -261,6 +265,7 @@ def perform_snmpwalk(hostname, ip, check_type, base_oid, fetchoid):
 
 def compute_fetch_oid(oid, suboid, column):
     fetchoid = oid
+    value_encoding = "string"
 
     if suboid:
         fetchoid += "." + str(suboid)
@@ -268,15 +273,20 @@ def compute_fetch_oid(oid, suboid, column):
     if column != "":
         if type(column) == tuple:
             fetchoid += "." + str(column[1])
+            if column[0] == "binary":
+                value_encoding = "binary"
         else:
             fetchoid += "." + str(column)
 
-    return fetchoid
+    return fetchoid, value_encoding
 
 
 def sanitize_snmp_encoding(columns):
-    for index, column in enumerate(columns):
-        columns[index] = map(snmp_decode_string, column)
+    for index, (column, value_encoding) in enumerate(columns):
+        if value_encoding == "string":
+            columns[index] = map(snmp_decode_string, column)
+        else:
+            columns[index] = map(snmp_decode_binary, column)
     return columns
 
 
@@ -284,7 +294,7 @@ def sanitize_snmp_table_columns(columns):
     # First compute the complete list of end-oids appearing in the output
     # by looping all results and putting the endoids to a flat list
     endoids = []
-    for fetchoid, column in columns:
+    for fetchoid, column, value_encoding in columns:
         for o, value in column:
             endoid = extract_end_oid(fetchoid, o)
             if endoid not in endoids:
@@ -300,7 +310,7 @@ def sanitize_snmp_table_columns(columns):
 
     # Now fill gaps in columns where some endois are missing
     new_columns = []
-    for fetchoid, column in columns:
+    for fetchoid, column, value_encoding in columns:
         # It might happen that end OIDs are not ordered. Fix the OID sorting to make
         # it comparable to the already sorted endoids list. Otherwise we would get
         # some mixups when filling gaps
@@ -325,7 +335,7 @@ def sanitize_snmp_table_columns(columns):
         while i < len(endoids):
             new_column.append("") # (beginoid + '.' +endoids[i], "") )
             i += 1
-        new_columns.append(new_column)
+        new_columns.append((new_column, value_encoding))
 
     return new_columns
 
@@ -539,6 +549,11 @@ def snmp_decode_string(text):
             return text.decode('utf-8')
         except:
             return text.decode('latin1')
+
+
+def snmp_decode_binary(text):
+    return map(ord, text)
+
 
 #   .--Classic SNMP--------------------------------------------------------.
 #   |        ____ _               _        ____  _   _ __  __ ____         |

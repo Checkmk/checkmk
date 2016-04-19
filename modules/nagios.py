@@ -1189,6 +1189,9 @@ no_discovery_possible = None
     # TCP and SNMP port of agent
     output.write("def agent_port_of(hostname):\n    return %d\n\n" % agent_port_of(hostname))
 
+    # agent encryption
+    output.write("def agent_encryption_settings(hostname):\n    return %r\n\n" % agent_encryption_settings(hostname))
+
     # Exit code of Check_MK in case of various errors
     output.write("def exit_code_spec(hostname):\n    return %r\n\n" % exit_code_spec(hostname))
 

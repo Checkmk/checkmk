@@ -1,6 +1,7 @@
 1.2.8b12:
     Checks & Agents:
     * 3384 FIX: eltek_battery: Fixed broken check due to wrong spelled include file
+    * 3400 FIX: local: do not crash in P mode if performance data contains a unit of measurement
 
 
 1.2.8b11:

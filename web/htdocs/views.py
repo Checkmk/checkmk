@@ -1035,10 +1035,10 @@ def show_view(view, show_heading = False, show_buttons = True,
 
     # Inventory data needed in any of the tool tips
     for painter in master_painters:
-        tooltip_painter_name = painter[2]
-        if tooltip_painter_name:
-            if tooltip_painter_name.startswith("inv_"):
-                need_inventory_data = True
+        if len(painter) > 2:
+            tooltip_painter_name = painter[2]
+            if tooltip_painter_name and tooltip_painter_name.startswith("inv_"):
+                    need_inventory_data = True
 
     # Columns needed for sorters
     for s in sorters:

@@ -320,14 +320,20 @@ class PageRenderer:
 
     # Most important: page for showing the page ;-)
     @classmethod
-    def page_show(self):
-        name = html.var(self.ident_attr())
-        self.load()
-        page = self.find_page(name)
+    def page_show(cls):
+        page = cls.requested_page()
+        page.render()
+
+
+    @classmethod
+    def requested_page(cls):
+        name = html.var(cls.ident_attr())
+        cls.load()
+        page = cls.find_page(name)
         if not page:
             raise MKGeneralException(_("Cannot find %s with the name %s") % (
-                        self.phrase("title"), name))
-        page.render()
+                        cls.phrase("title"), name))
+        return page
 
 
     # Links for the sidebar

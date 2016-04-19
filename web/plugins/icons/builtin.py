@@ -198,7 +198,8 @@ def paint_rule_editor(what, row, tags, host_custom_vars):
         return 'rulesets', title, html.makeuri_contextless(urlvars, "wato.py")
 
 multisite_icons_and_actions['rule_editor'] = {
-    'columns':         [ 'check_type', "host_name" ],
+    'columns':         [ 'check_type' ],
+    'host_columns'   : [ 'name' ],
     'service_columns': [ 'description' ],
     'paint':           paint_rule_editor,
 }

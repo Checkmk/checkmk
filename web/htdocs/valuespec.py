@@ -2515,7 +2515,8 @@ class Optional(ValueSpec):
             return self._valuespec.value_to_text(value)
 
     def from_html_vars(self, varprefix):
-        if html.get_checkbox(varprefix + "_use") != self._negate:
+        checkbox_checked = html.get_checkbox(varprefix + "_use") == True # not None or False
+        if checkbox_checked != self._negate:
             return self._valuespec.from_html_vars(varprefix + "_value")
         else:
             return self._none_value

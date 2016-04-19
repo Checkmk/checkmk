@@ -40,6 +40,16 @@
 def local_compute_state(perfdata):
     texts = []
 
+    # 16MB -> 16.0
+    def float_ignore_uom(value):
+        while value:
+            if value[-1] not in "012345678.-":
+                value = value[:-1]
+            else:
+                return float(value)
+        return 0.0
+
+
     def outof_levels(value, levels):
         if levels == None:
             return
@@ -59,7 +69,7 @@ def local_compute_state(perfdata):
         if len(entry) < 3:
             continue # No levels attached
         varname = entry[0]
-        value = float(entry[1])
+        value = float_ignore_uom(entry[1])
         warn = entry[2]
         if len(entry) >= 4:
             crit = entry[3]

@@ -157,6 +157,7 @@
     * 3409 FIX: apt: fixed 'UNKNOWN - Item not found in agent output' error if there are no pending updates
     * 3399 FIX: statgrab_mem, hr_mem: Fix display of total installed memory in graph
     * 3384 FIX: eltek_battery: Fixed broken check due to wrong spelled include file
+    * 3400 FIX: local: do not crash in P mode if performance data contains a unit of measurement
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

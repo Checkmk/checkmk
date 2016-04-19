@@ -1,0 +1,10 @@
+Title: local: do not crash in P mode if performance data contains a unit of measurement
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461048810
+
+

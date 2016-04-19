@@ -1,0 +1,10 @@
+Title: Fix sorting and grouping hosts by their IPv4 address
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461050749
+
+

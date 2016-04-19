@@ -1,0 +1,15 @@
+Title: New declarator BINARY(...) for OIDs - returning a list of byte values
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b12
+Date: 1461066639
+Class: feature
+
+When declaring OIDs in SNMP based checks you can now include the OID
+into <tt>BINARY</tt>.  This will then create a list of bytes instead of a
+string. E.g. <tt>BINARY('5')</tt> will fetch the end OID 5 and convert the
+string values into lists of bytes, into <tt>[0, 33, 85, 10, 7, 186]</tt>
+instead of <tt>'\x00!U\n\x07\xba'</tt>. This allows to tackle a problem with
+the new version 1.2.8 that otherwise automatically interpretes all strings
+as UTF-8.

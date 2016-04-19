@@ -85,5 +85,5 @@ if64_snmp_end_oids = [
     "2.2.1.20",    # ifOutErrors              16
     "2.2.1.21",    # ifOutQLen                17
     "31.1.1.1.18", # ifAlias                  18
-    "2.2.1.6",     # ifPhysAddress            19
+    BINARY("2.2.1.6"),     # ifPhysAddress            19
 ]

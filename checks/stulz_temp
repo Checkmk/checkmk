@@ -77,7 +77,7 @@ def parse_stulz_temp(info):
         oids    = oidend.split(".")
         temp_ty = oids[0]
         index   = oids[2]
-        if temp_ty in map_types:
+        if temp_ty in map_types and reading_str != "999":
             itemname = "%s-%s" % (map_types[temp_ty], index)
             parsed.setdefault(itemname, float(reading_str)/10)
 

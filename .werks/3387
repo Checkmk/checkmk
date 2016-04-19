@@ -1,0 +1,9 @@
+Title: ps: Fixed crash during service discovery on AIX hosts having defunct processes
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b12
+Date: 1461073126
+Class: fix
+
+

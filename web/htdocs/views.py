@@ -1072,6 +1072,13 @@ def show_view(view, show_heading = False, show_buttons = True,
     columns      = get_needed_columns(view, master_painters)
     join_columns = get_needed_columns(view, join_painters)
 
+    # Inventory data needed in any of the tool tips
+    for painter in master_painters:
+        tooltip_painter_name = painter[2]
+        if tooltip_painter_name:
+            if tooltip_painter_name.startswith("inv_"):
+                need_inventory_data = True
+
     # Columns needed for sorters
     for s in sorters:
         if len(s) == 2:

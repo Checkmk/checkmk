@@ -1,4 +1,7 @@
 1.2.8b12:
+    Core & Setup:
+    * 3385 FIX: Fixed not updated discovery service after grouped auto discovery...
+
     Checks & Agents:
     * 3384 FIX: eltek_battery: Fixed broken check due to wrong spelled include file
     * 3400 FIX: local: do not crash in P mode if performance data contains a unit of measurement

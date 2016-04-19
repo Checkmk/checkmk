@@ -466,6 +466,9 @@ def discover_marked_hosts():
                     if redisc_params["activation"]:
                         activation_required = True
 
+                    # Now ensure that the discovery service is updated right after the changes
+                    schedule_inventory_check(hostname)
+
             # delete the file even in error case, otherwise we might be causing the same error
             # every time the cron job runs
             os.remove(host_flag_path)

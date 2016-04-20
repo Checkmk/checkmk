@@ -1,0 +1,19 @@
+Title: Event Console can now process SNMPv3 traps
+Level: 2
+Component: ec
+Compatible: compat
+Version: 1.2.9i1
+Date: 1461146267
+Class: feature
+
+The Event Console can now process SNMPv3 traps send with SNMPv3. To be able to receive
+the traps, you will have to configure the SNMPv3 credentials to be used for decrypting
+the received traps. This can be done in the Event Console configuration using the
+option <i>Credentials for processing SNMPv3 traps</i>.
+
+For each sending server you need to configure the credentials and the systems engine ID
+which is normally generated automatically by the SNMP device. Some devices also support
+setting engine IDs on your own. However, the SNMPv3 specification requires that each
+SNMP device has it's own unique engine ID. To be able to decrypt the traps you need to
+configure this engine ID together with the other SNMPv3 credentials for each trap sending
+device.

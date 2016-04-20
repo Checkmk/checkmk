@@ -2556,6 +2556,45 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
+    register_configvar(group,
+        "snmp_credentials",
+        ListOf(
+            Dictionary(
+                elements = [
+                    ("description", TextUnicode(
+                        title = _("Description"),
+                    )),
+                    ("credentials", SNMPCredentials()),
+                    ("engine_ids", ListOfStrings(
+                        valuespec = TextAscii(
+                            size = 24,
+                            minlen = 2,
+                            allow_empty = False,
+                            regex = "^[A-Fa-f0-9]*$",
+                            regex_error = _("The engine IDs have to be configured as hex strings "
+                                            "like <tt>8000000001020304</tt>."),
+                        ),
+                        title = _("Engine ID"),
+                        help = _("Each SNMPv3 device has it's own engine ID. This is normally "
+                                 "automatically generated, but can also be configured manually "
+                                 "for some devices. As the engine ID is used for the encryption "
+                                 "of SNMPv3 traps sent by the devices, Check_MK needs to know "
+                                 "the engine ID to be able to decrypt the SNMP traps.<br>"
+                                 "The engine IDs have to be configured as hex strings like "
+                                 "<tt>8000000001020304</tt>."),
+                        allow_empty = False,
+                    )),
+                ],
+                optional_keys = [],
+            ),
+            title = _("Credentials for processing SNMPv3 traps"),
+            help = _("When you want to process SNMPv3 traps with the Event Console it is "
+                     "necessary to configure the credentials to decrypt the incoming traps."),
+            text_if_empty = _("SNMPv3 traps not configured"),
+        ),
+        domain = "mkeventd",
+    )
+
     # A few settings for Multisite and WATO
     register_configvar(_("User Interface"),
         "mkeventd_connect_timeout",

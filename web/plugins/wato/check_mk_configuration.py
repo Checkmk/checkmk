@@ -2018,64 +2018,73 @@ _snmpv3_auth_elements = [
     )
 ]
 
+
+class SNMPCredentials(Alternative):
+    def __init__(self, **kwargs):
+        kwargs.update({
+            "elements": [
+                Password(
+                    title = _("SNMP community (SNMP Versions 1 and 2c)"),
+                    allow_empty = False,
+                ),
+                Tuple(
+                    title = _("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
+                    elements = [
+                        FixedValue("noAuthNoPriv",
+                            title = _("Security Level"),
+                            totext = _("No authentication, no privacy"),
+                        ),
+                    ]
+                ),
+                Tuple(
+                    title = _("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
+                    elements = [
+                        FixedValue("authNoPriv",
+                            title = _("Security Level"),
+                            totext = _("authentication but no privacy"),
+                        ),
+                    ] + _snmpv3_auth_elements
+                ),
+                Tuple(
+                    title = _("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
+                    elements = [
+                        FixedValue("authPriv",
+                            title = _("Security Level"),
+                            totext = _("authentication and encryption"),
+                        ),
+                    ] + _snmpv3_auth_elements + [
+                        DropdownChoice(
+                            choices = [
+                                ( "DES", _("DES") ),
+                                ( "AES", _("AES") ),
+                            ],
+                            title = _("Privacy protocol")
+                        ),
+                        Password(
+                            title = _("Privacy pass phrase"),
+                            minlen = 8,
+                        ),
+                    ]
+                ),
+            ],
+            "match": lambda x: type(x) == tuple and ( \
+                              len(x) == 1 and 1 or \
+                              len(x) == 4 and 2 or 3) or 0,
+            "style": "dropdown",
+            "default_value": "public",
+        })
+        kwargs.setdefault("title", _("SNMP credentials"))
+        Alternative.__init__(self, **kwargs)
+
+
 register_rule(group,
     "snmp_communities",
-    Alternative(
-        elements = [
-            Password(
-                title = _("SNMP community (SNMP Versions 1 and 2c)"),
-                allow_empty = False,
-            ),
-            Tuple(
-                title = _("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
-                elements = [
-                    FixedValue("noAuthNoPriv",
-                        title = _("Security Level"),
-                        totext = _("No authentication, no privacy"),
-                    ),
-                ]
-            ),
-            Tuple(
-                title = _("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
-                elements = [
-                    FixedValue("authNoPriv",
-                        title = _("Security Level"),
-                        totext = _("authentication but no privacy"),
-                    ),
-                ] + _snmpv3_auth_elements
-            ),
-            Tuple(
-                title = _("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
-                elements = [
-                    FixedValue("authPriv",
-                        title = _("Security Level"),
-                        totext = _("authentication and encryption"),
-                    ),
-                ] + _snmpv3_auth_elements + [
-                    DropdownChoice(
-                        choices = [
-                            ( "DES", _("DES") ),
-                            ( "AES", _("AES") ),
-                        ],
-                        title = _("Privacy protocol")
-                    ),
-                    Password(
-                        title = _("Privacy pass phrase"),
-                        minlen = 8,
-                    ),
-                ]
-            ),
-        ],
-
-        match = lambda x: type(x) == tuple and ( \
-                          len(x) == 1 and 1 or \
-                          len(x) == 4 and 2 or 3) or 0,
-
-        style = "dropdown",
-        default_value = "public",
+    SNMPCredentials(
         title = _("SNMP credentials of monitored hosts"),
         help = _("By default Check_MK uses the community \"public\" to contact hosts via SNMP v1/v2. This rule "
-                 "can be used to customize the the credentials to be used when contacting hosts via SNMP.")))
+                 "can be used to customize the the credentials to be used when contacting hosts via SNMP."),
+    )
+)
 
 register_rule(group,
     "snmp_character_encodings",

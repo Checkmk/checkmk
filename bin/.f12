@@ -8,3 +8,4 @@ sudo install -m 755 mkeventd mkeventd_open514 mkevent $OMD_ROOT/bin/
 sudo chown root.omd $OMD_ROOT/bin/mkeventd_open514
 sudo chmod 4750 $OMD_ROOT/bin/mkeventd_open514
 echo "Installed to $OMD_ROOT/bin"
+sudo omd restart $SITE mkeventd

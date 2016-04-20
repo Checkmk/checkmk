@@ -200,9 +200,15 @@ def log(text):
     except:
         sys.stderr.write("%s\n" % text)
 
+
+def is_verbose():
+    return opt_verbose or g_config['log_level']
+
+
 def verbose(text):
-    if opt_verbose or g_config['log_level']:
+    if is_verbose:
         log(text)
+
 
 g_regex_cache = {}
 def regex(reg):
@@ -323,6 +329,90 @@ class VerboseLock:
         self._depth -= 1
         if opt_debug:
             log("LOCK %s: %d -> %d" % (self._name, self._depth+1, self._depth))
+
+
+#.
+#   .--SNMP-Traps----------------------------------------------------------.
+#   |        ____  _   _ __  __ ____     _____                             |
+#   |       / ___|| \ | |  \/  |  _ \   |_   _| __ __ _ _ __  ___          |
+#   |       \___ \|  \| | |\/| | |_) |____| || '__/ _` | '_ \/ __|         |
+#   |        ___) | |\  | |  | |  __/_____| || | | (_| | |_) \__ \         |
+#   |       |____/|_| \_|_|  |_|_|        |_||_|  \__,_| .__/|___/         |
+#   |                                                  |_|                 |
+#   +----------------------------------------------------------------------+
+#   | Generic SNMP-Trap processing functions                               |
+#   '----------------------------------------------------------------------'
+
+def initialize_snmptrap_handling():
+    if not opt_snmptrap:
+        return
+
+    initialize_snmptrap_engine()
+
+    if snmptrap_translation_enabled():
+        g_event_server.load_mibs()
+
+
+def initialize_snmptrap_engine():
+    global g_snmp_engine, g_snmp_receiver
+    g_snmp_engine = snmp_engine.SnmpEngine()
+
+    initialize_snmp_credentials()
+    g_snmp_receiver = snmp_ntfrcv.NotificationReceiver(g_snmp_engine,
+                        lambda *args: g_event_server.handle_snmptrap(*args))
+
+
+def initialize_snmp_credentials():
+    # Add default v1/v2 config to make v1/v2 trap porcessing work
+    snmp_config.addV1System(g_snmp_engine, 'my-area', 'public')
+
+    user_num = 0
+    for spec in g_config["snmp_credentials"]:
+        credentials = spec["credentials"]
+        user_num += 1
+
+        # SNMPv1/v2
+        if type(credentials) != tuple:
+            snmp_config.addV1System(g_snmp_engine, 'snmpv2-' % user_num, credentials)
+            continue
+
+        # SNMPv3
+        user_id = "user-%d" % user_num
+        auth_key, priv_key = None, None
+
+        if credentials[0] == "noAuthNoPriv":
+            auth_proto = snmp_config.usmNoAuthProtocol
+
+        elif credentials[0] in [ "authNoPriv", "authPriv" ]:
+            if credentials[1] == "md5":
+                auth_proto = snmp_config.usmHMACMD5AuthProtocol
+            elif credentials[1] == "sha":
+                auth_proto = snmp_config.usmHMACSHAAuthProtocol
+            else:
+                raise Exception("Invalid SNMP auth protocol: %s" % credentials[1])
+
+            user_id  = credentials[2]
+            auth_key = credentials[3]
+
+
+        if credentials[0] == "authPriv":
+            if credentials[4] == "DES":
+                priv_proto = snmp_config.usmDESPrivProtocol
+            elif credentials[4] == "AES":
+                priv_proto = snmp_config.usmAesCfb128Protocol
+            else:
+                raise Exception("Invalid SNMP priv protocol: %s" % credentials[4])
+            priv_key = credentials[5]
+        else:
+            priv_proto = snmp_config.usmNoPrivProtocol
+
+        for engine_id in spec["engine_ids"]:
+            snmp_config.addV3User(
+                g_snmp_engine, user_id,
+                auth_proto, auth_key,
+                priv_proto, priv_key,
+                securityEngineId=snmp_v2c.OctetString(hexValue=engine_id)
+            )
 
 
 #.
@@ -1147,8 +1237,8 @@ class EventServer:
         # select() will trigger even if there is no data. A good article
         # about this is here:
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
-
         return os.open(g_pipe_path, os.O_RDWR | os.O_NONBLOCK)
+
 
     def load_mibs(self):
         try:
@@ -1176,6 +1266,7 @@ class EventServer:
             log("Exception while loading MIB modules. Proceeding without modules!")
             log("Exception: %s" % e)
 
+
     # Format time difference seconds into approximated
     # human readable value
     def fmt_timeticks(self, ticks):
@@ -1193,6 +1284,7 @@ class EventServer:
 
         days, hours = divmod(hours, 24)
         return "%d days, %d hours, %d min" % (days, hours, mins)
+
 
     # Convert pysnmp datatypes to simply handable ones
     def snmptrap_convert_var_binds(self, var_bind_list):
@@ -1213,6 +1305,7 @@ class EventServer:
 
             var_binds.append((key, val))
         return var_binds
+
 
     # Convert pysnmp datatypes to simply handable ones
     def snmptrap_translate_varbinds(self, var_bind_list):
@@ -1245,64 +1338,70 @@ class EventServer:
 
         return var_binds
 
-    def process_snmptrap(self, (whole_msg, (ipaddress, port))):
-        while whole_msg:
-            # Verify the version is supported
-            proto_version = int(pysnmp_api.decodeMessageVersion(whole_msg))
-            if proto_version not in pysnmp_api.protoModules:
-                verbose('Dropped invalid snmptrap (Unsupported SNMP version %s)' % proto_version)
-                return
 
-            proto = pysnmp_api.protoModules[proto_version]
+    # Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
+    # and processing. PySNMP is calling self.handle_snmptrap back.
+    def process_snmptrap(self, (whole_msg, sender_address)):
+        verbose("Trap received from %s:%d. Checking for acceptance now." % sender_address)
+        g_snmp_engine.setUserContext(sender_address=sender_address)
+        g_snmp_engine.msgAndPduDsp.receiveMessage(g_snmp_engine, (), (), whole_msg)
 
-            req_msg, whole_msg = pyasn_decoder.decode(whole_msg, asn1Spec = proto.Message())
-            req_pdu = proto.apiMessage.getPDU(req_msg) # pdu = protocol data unit
-            if not req_pdu.isSameTypeWith(proto.TrapPDU()):
-                return # Skip non trap packagesa (according to header)
 
-            # community: proto.apiMessage.getCommunity(req_msg)
+    def handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
+                              var_binds, cb_ctx):
+        ipaddress, port = snmp_engine.getUserContext("sender_address")
 
-            # Convert SNMPv1 PDU to SNMPv2 for equal handling below this
-            if proto_version == pysnmp_api.protoVersion1:
-                pdu = pysnmp.proto.proxy.rfc2576.v1ToV2(req_pdu)
-            elif proto_version == pysnmp_api.protoVersion2c:
-                pdu = req_pdu
-            else:
-                break # Skip unhandled version
+        self.log_snmptrap_details(context_engine_id, context_name, var_binds, ipaddress)
 
-            if snmptrap_translation_enabled():
-                trap = self.snmptrap_translate_varbinds(proto.apiPDU.getVarBinds(pdu))
-            else:
-                trap = self.snmptrap_convert_var_binds(proto.apiPDU.getVarBinds(pdu))
+        if snmptrap_translation_enabled():
+            trap = self.snmptrap_translate_varbinds(var_binds)
+        else:
+            trap = self.snmptrap_convert_var_binds(var_binds)
 
-            # Use the trap sender IP address as host name
-            host = ipaddress
+        event = self.create_event_from_trap(trap, ipaddress)
 
-            # use the trap-oid as application
-            application = ''
-            for index, (oid, val) in enumerate(trap):
-                if oid in ['1.3.6.1.6.3.1.1.4.1.0', 'SNMPv2-MIB::snmpTrapOID.0']:
-                    application = trap.pop(index)[1]
-                    break
+        self.do_translate_hostname(event)
+        self.process_event(event)
+
+
+    def log_snmptrap_details(self, context_engine_id, context_name, var_binds, ipaddress):
+        if is_verbose():
+            verbose('Trap accepted from %s (ContextEngineId "%s", ContextName "%s")' %
+                 (ipaddress, context_engine_id.prettyPrint(), context_name.prettyPrint()))
+
+            for name, val in var_binds:
+                verbose('%-40s = %s' % (name.prettyPrint(), val.prettyPrint()))
+
+
+    def create_event_from_trap(self, trap, ipaddress):
+        # use the trap-oid as application
+        application = ''
+        for index, (oid, val) in enumerate(trap):
+            if oid in ['1.3.6.1.6.3.1.1.4.1.0', 'SNMPv2-MIB::snmpTrapOID.0']:
+                application = trap.pop(index)[1]
+                break
 
         # once we got here we have a real parsed trap which we convert to an event now
         text = ', '.join([ '%s: %s' % (item[0], str(item[1]).replace('\n', '')) for item in trap ])
+
         # Convert to Unicode, first assume UTF-8, then latin-1
         try:
             text = text.decode("utf-8")
         except:
             text = text.decode("latin-1")
+
         event = {
             'time'        : time.time(),
-            'host'        : host,
+            'host'        : ipaddress,
             'ipaddress'   : ipaddress,
             'priority'    : 5,  # notice
             'facility'    : 31, # not used by syslog -> we use this for all traps
             'application' : application.replace('\n', ''),
             'text'        : text
         }
-        self.do_translate_hostname(event)
-        self.process_event(event)
+
+        return event
+
 
     def serve(self):
         pipe_fragment = ''
@@ -2654,8 +2753,7 @@ class StatusServer:
     def handle_command_reload(self):
         with lock_configuration:
             load_configuration()
-            if opt_snmptrap and snmptrap_translation_enabled():
-                g_event_server.load_mibs()
+            initialize_snmptrap_handling()
             g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
         g_status_server.reload_configuration()
         log("Reloaded configuration.")
@@ -3700,6 +3798,7 @@ def load_configuration():
         "archive_orphans"       : False,
         "archive_mode"          : "file",
         "translate_snmptraps"   : False,
+        "snmp_credentials"      : [],
     }
     main_file = g_config_dir + "/mkeventd.mk"
     if not os.path.exists(main_file):
@@ -3911,12 +4010,17 @@ try:
             sys.stdout.write("mkeventd version %s\n" % VERSION)
             sys.exit(0)
 
-    # Handler specific imports
     if opt_snmptrap:
         # Needed for receiving traps
+        from pysnmp.entity import engine as snmp_engine
+        from pysnmp.entity import config as snmp_config
+        from pysnmp.entity.rfc3413 import ntfrcv as snmp_ntfrcv
+        from pysnmp.proto.api import v2c as snmp_v2c
+
         from pysnmp.proto import api as pysnmp_api
         from pyasn1.codec.ber import decoder as pyasn_decoder
         import pysnmp.proto.proxy.rfc2576
+
         # Needed for trap translation
         from pysnmp.smi.builder import MibBuilder, DirMibSource
         from pysnmp.smi.view import MibViewController
@@ -3969,8 +4073,9 @@ try:
     g_event_status.load_status()
     g_status_server = StatusServer()
     g_event_server  = EventServer()
-    if opt_snmptrap and snmptrap_translation_enabled():
-        g_event_server.load_mibs()
+
+    initialize_snmptrap_handling()
+
     g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
 
     if not opt_foreground:

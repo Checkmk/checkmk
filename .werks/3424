@@ -1,0 +1,16 @@
+Title: ipmi: fixed missing compact/discrete sensor data
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b12
+Date: 1461166556
+Class: fix
+
+To get this check work you have to install the
+check_mk_agent.linux.
+
+The agent now provides an additional section for
+compact/discrete sensors. Older ipmi check versions
+do not handle this new section, but are still compatible.
+To use this feature you have to upgrade the ipmi check
+to the new version.

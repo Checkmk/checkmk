@@ -28,7 +28,10 @@
 #include "config.h"  // IWYU pragma: keep
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
-#ifndef CMC
+#ifdef CMC
+#include <mutex>
+#include "Core.h"
+#else
 class DowntimesOrComments;
 #endif
 class Query;
@@ -36,7 +39,9 @@ class Query;
 class TableHostsByGroup : public Table {
 public:
 #ifdef CMC
-    TableHostsByGroup();
+    TableHostsByGroup(const Core::_notes_t &downtimes_holder,
+                      const Core::_notes_t &comments_holder,
+                      std::recursive_mutex &holder_lock);
 #else
     TableHostsByGroup(const DowntimesOrComments &_downtimes_holder,
                       const DowntimesOrComments &_comments_holder);

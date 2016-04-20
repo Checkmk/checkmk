@@ -30,7 +30,10 @@
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
-#ifndef CMC
+#ifdef CMC
+#include <mutex>
+#include "Core.h"
+#else
 class DowntimesOrComments;
 #endif
 class Logfile;
@@ -40,7 +43,9 @@ class Query;
 class TableLog : public Table {
 public:
 #ifdef CMC
-    explicit TableLog(LogCache *log_cache);
+    TableLog(LogCache *log_cache, const Core::_notes_t &downtimes_holder,
+             const Core::_notes_t &comments_holder,
+             std::recursive_mutex &holder_lock);
 #else
     TableLog(LogCache *log_cache, const DowntimesOrComments &downtimes_holder,
              const DowntimesOrComments &comments_holder);

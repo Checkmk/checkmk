@@ -29,7 +29,10 @@
 #include <string>
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
-#ifndef CMC
+#ifdef CMC
+#include <mutex>
+#include "Core.h"
+#else
 class DowntimesOrComments;
 #endif
 class Query;
@@ -37,9 +40,14 @@ class Query;
 class TableHosts : public Table {
 public:
 #ifdef CMC
-    TableHosts();
+    TableHosts(const Core::_notes_t &downtimes_holder,
+               const Core::_notes_t &comments_holder,
+               std::recursive_mutex &holder_lock);
     static void addColumns(Table *, std::string prefix, int indirect_offset,
-                           int extra_offset);
+                           int extra_offset,
+                           const Core::_notes_t &downtimes_holder,
+                           const Core::_notes_t &comments_holder,
+                           std::recursive_mutex &holder_lock);
 #else
     TableHosts(const DowntimesOrComments &downtimes_holder,
                const DowntimesOrComments &comments_holder);

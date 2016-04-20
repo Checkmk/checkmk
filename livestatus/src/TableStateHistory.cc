@@ -62,6 +62,7 @@ using std::lock_guard;
 using std::make_pair;
 using std::map;
 using std::mutex;
+using std::recursive_mutex;
 using std::set;
 using std::string;
 
@@ -79,14 +80,17 @@ const char *getCustomVariable(customvariablesmember *cvm, const char *name) {
 }
 #endif
 
-TableStateHistory::TableStateHistory(
-    LogCache *log_cache
-#ifndef CMC
-    ,
-    const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder
+TableStateHistory::TableStateHistory(LogCache *log_cache,
+#ifdef CMC
+                                     const Core::_notes_t &downtimes_holder,
+                                     const Core::_notes_t &comments_holder,
+                                     recursive_mutex &holder_lock
+#else
+                                     const DowntimesOrComments
+                                         &downtimes_holder,
+                                     const DowntimesOrComments &comments_holder
 #endif
-    )
+                                     )
     : _log_cache(log_cache) {
     HostServiceState *ref = nullptr;
     addColumn(new OffsetTimeColumn(
@@ -250,21 +254,21 @@ TableStateHistory::TableStateHistory(
     TableHosts::addColumns(
         this, "current_host_",
         reinterpret_cast<char *>(&(ref->_host)) - reinterpret_cast<char *>(ref),
-        -1
-#ifndef CMC
+        -1, downtimes_holder, comments_holder
+#ifdef CMC
         ,
-        downtimes_holder, comments_holder
+        holder_lock
 #endif
         );
-    TableServices::addColumns(this, "current_service_",
-                              reinterpret_cast<char *>(&(ref->_service)) -
-                                  reinterpret_cast<char *>(ref),
-                              false /* no hosts table */
-#ifndef CMC
-                              ,
-                              downtimes_holder, comments_holder
+    TableServices::addColumns(
+        this, "current_service_", reinterpret_cast<char *>(&(ref->_service)) -
+                                      reinterpret_cast<char *>(ref),
+        false /* no hosts table */, downtimes_holder, comments_holder
+#ifdef CMC
+        ,
+        holder_lock
 #endif
-                              );
+        );
 }
 
 LogEntry *TableStateHistory::getPreviousLogentry() {

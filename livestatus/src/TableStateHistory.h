@@ -33,7 +33,10 @@
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
-#ifndef CMC
+#ifdef CMC
+#include <mutex>
+#include "Core.h"
+#else
 class DowntimesOrComments;
 #endif
 class Query;
@@ -64,7 +67,10 @@ protected:
 
 public:
 #ifdef CMC
-    explicit TableStateHistory(LogCache *log_cache);
+    TableStateHistory(LogCache *log_cache,
+                      const Core::_notes_t &downtimes_holder,
+                      const Core::_notes_t &comments_holder,
+                      std::recursive_mutex &holder_lock);
 #else
     TableStateHistory(LogCache *log_cache,
                       const DowntimesOrComments &downtimes_holder,

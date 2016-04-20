@@ -546,7 +546,7 @@ table.sitestate td.state {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def render_tactical_overview():
+def render_tactical_overview(extra_filter_headers="", extra_url_variables=[]):
     host_query = \
         "GET hosts\n" \
         "Stats: state >= 0\n" \
@@ -557,7 +557,8 @@ def render_tactical_overview():
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: acknowledged = 0\n" \
         "StatsAnd: 3\n" \
-        "Filter: custom_variable_names < _REALNAME\n"
+        "Filter: custom_variable_names < _REALNAME\n" + \
+        extra_filter_headers
 
     service_query = \
         "GET services\n" \
@@ -573,9 +574,8 @@ def render_tactical_overview():
         "Stats: acknowledged = 0\n" \
         "Stats: host_state = 0\n" \
         "StatsAnd: 5\n" \
-        "Filter: host_custom_variable_names < _REALNAME\n"
-
-    # ACHTUNG: Stats-Filter so anpassen, dass jeder Host gezaehlt wird.
+        "Filter: host_custom_variable_names < _REALNAME\n" + \
+        extra_filter_headers
 
     try:
         hstdata = html.live.query_summed_stats(host_query)
@@ -591,25 +591,21 @@ def render_tactical_overview():
         html.write("<tr><th>%s</th><th>%s</th><th>%s</th></tr>\n" % (title, _('Problems'), _('Unhandled')))
         html.write("<tr>")
 
-        html.write('<td class=total><a target="main" href="view.py?view_name=all%ss">%d</a></td>' % (what, data[0]))
+        url = html.makeuri_contextless([("view_name", "all" + what + "s")] + extra_url_variables, filename="view.py")
+        html.write('<td class=total><a target="main" href="%s">%d</a></td>' % (url, data[0]))
         unhandled = False
         for value in data[1:]:
-            href = "view.py?view_name=" + view
+            url = html.makeuri_contextless([("view_name", view)] + extra_url_variables, filename="view.py")
             if unhandled:
-                href += "&is_%s_acknowledged=0" % what
-            text = link(str(value), href)
+                url += "&is_%s_acknowledged=0" % what
+            text = link(str(value), url)
             html.write('<td class="%s">%s</td>' % (value == 0 and " " or "states prob", text))
             unhandled = True
         html.write("</tr>\n")
     html.write("</table>\n")
 
-sidebar_snapins["tactical_overview"] = {
-    "title" : _("Tactical Overview"),
-    "description" : _("The total number of hosts and service with and without problems"),
-    "refresh" : True,
-    "render" : render_tactical_overview,
-    "allowed" : [ "user", "admin", "guest" ],
-    "styles" : """
+
+snapin_tactical_overview_styles = """
 table.tacticaloverview {
    border-collapse: separate;
    /**
@@ -644,6 +640,15 @@ table.tacticaloverview td.prob {
 }
 table.tacticaloverview a { display: block; margin-right: 2px; }
 """ % snapin_width
+
+
+sidebar_snapins["tactical_overview"] = {
+    "title" : _("Tactical Overview"),
+    "description" : _("The total number of hosts and service with and without problems"),
+    "refresh" : True,
+    "render" : render_tactical_overview,
+    "allowed" : [ "user", "admin", "guest" ],
+    "styles" : snapin_tactical_overview_styles,
 }
 
 #.

@@ -139,25 +139,29 @@ def ipmi_ignore_entry(name, state, ignored_sensors):
 
 
 def parse_ipmi(info):
+    ipmi_info, ipmi_discrete_info = info
     parsed = []
-    for line in info:
-        # Compatible with older check versions
-        name = line[0].strip().replace(" ", "_")
-        line = [ name ] + map(lambda x: x.strip(), line[1:])
+    for section in [ ipmi_info, ipmi_discrete_info ]:
+        if section:
+            for line in section:
+                # Compatible with older check versions
+                name = line[0].strip().replace(" ", "_")
+                line = [ name ] + map(lambda x: x.strip(), line[1:])
 
-        # Discrete sensors have no values
-        if len(line) <= 5:
-            state = line[2]
-            if line[4]:
-                state += " (%s)" % line[4]
-            line = [line[0], None, None, state, None, None, None, None, None, None]
+                # Discrete sensors have no values
+                if len(line) <= 5:
+                    state = line[2]
+                    if line[4]:
+                        state += " (%s)" % line[4]
+                    line = [line[0], None, None, state, None, None, None, None, None, None]
 
-        parsed.append(line)
+                parsed.append(line)
 
     return parsed
 
 
 def inventory_ipmi(info):
+    parsed = parse_ipmi(info)
     summarize = True
     rules = host_extra_conf(g_hostname, inventory_ipmi_rules)
     if rules:
@@ -165,9 +169,9 @@ def inventory_ipmi(info):
 
     # the default for summarize is always true so if either configuration key has been set
     # to false that setting was changed by the user and needs to override the other
-    if not ipmi_summarize or not summarize or len(info) == 0:
+    if not ipmi_summarize or not summarize or len(parsed) == 0:
         ignored_sensors = ipmi_get_ignored_sensors(g_hostname)
-        for line in info:
+        for line in parsed:
             if not ipmi_ignore_entry(line[0], line[3], ignored_sensors):
                 yield line[0], None
     else:
@@ -175,10 +179,11 @@ def inventory_ipmi(info):
 
 
 def check_ipmi(item, params, info):
+    parsed = parse_ipmi(info)
     if item == "Summary":
-        return check_ipmi_summarized(info, params)
+        return check_ipmi_summarized(parsed, params)
     else:
-        return check_ipmi_detailed(item, info)
+        return check_ipmi_detailed(item, parsed)
 
 
 def ipmi_format_message(status, val, unit):
@@ -194,9 +199,9 @@ def ipmi_format_message(status, val, unit):
     return infotext
 
 
-def check_ipmi_detailed(item, info):
+def check_ipmi_detailed(item, parsed):
     for name, val, unit, status, unrec_low, crit_low, \
-        warn_low, warn_high, crit_high, unrec_high in info:
+        warn_low, warn_high, crit_high, unrec_high in parsed:
 
         if name == item:
             if val is not None:
@@ -214,7 +219,7 @@ def check_ipmi_detailed(item, info):
             return state, "Status: %s" % ipmi_format_message(status, val, unit), perfdata
 
 
-def check_ipmi_summarized(info, params):
+def check_ipmi_summarized(parsed, params):
     worst_status  = 0
     warn_texts    = []
     crit_texts    = []
@@ -226,7 +231,7 @@ def check_ipmi_summarized(info, params):
         params['ignored_sensors'] = ipmi_get_ignored_sensors(g_hostname)
 
     for name, val, unit, status, unrec_low, crit_low, \
-        warn_low, warn_high, crit_high, unrec_high in info:
+        warn_low, warn_high, crit_high, unrec_high in parsed:
 
         # Skip datasets which have no valid data (zero value, no unit and state nc)
         if val == '0.000' and unit == 'unspecified' and status.startswith('nc'):
@@ -291,11 +296,11 @@ check_config_variables.append("ipmi_ignored_sensors")
 
 
 check_info["ipmi"] = {
-    'parse_function'      : parse_ipmi,
     'inventory_function'  : inventory_ipmi,
     'check_function'      : check_ipmi,
     'service_description' : 'IPMI Sensor %s',
     'has_perfdata'        : True,
+    'extra_sections'      : [ "ipmi_discrete" ],
 }
 
 

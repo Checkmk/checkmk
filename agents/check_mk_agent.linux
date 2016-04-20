@@ -403,7 +403,7 @@ if type ipmitool > /dev/null
 then
     run_cached -s "ipmi:sep(124)" 300 "waitmax 300 ipmitool sensor list | grep -v 'command failed' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
     # readable discrete sensor states
-    run_cached -s "ipmi:sep(124)" 300 "waitmax 300 ipmitool sdr elist compact"
+    run_cached -s "ipmi_discrete:sep(124)" 300 "waitmax 300 ipmitool sdr elist compact"
 fi
 
 

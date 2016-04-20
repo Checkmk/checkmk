@@ -28,13 +28,19 @@
 #include "config.h"  // IWYU pragma: keep
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
+#ifndef CMC
 class DowntimesOrComments;
+#endif
 class Query;
 
 class TableHostsByGroup : public Table {
 public:
+#ifdef CMC
+    TableHostsByGroup();
+#else
     TableHostsByGroup(const DowntimesOrComments &_downtimes_holder,
                       const DowntimesOrComments &_comments_holder);
+#endif
     const char *name() override { return "hostsbygroup"; }
     const char *prefixname() override { return "hosts"; }
     bool isAuthorized(contact *ctc, void *data) override;

@@ -30,16 +30,21 @@
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
+#ifndef CMC
 class DowntimesOrComments;
+#endif
 class Logfile;
 class LogCache;
 class Query;
 
 class TableLog : public Table {
 public:
-    explicit TableLog(LogCache *log_cache,
-                      const DowntimesOrComments &downtimes_holder,
-                      const DowntimesOrComments &comments_holder);
+#ifdef CMC
+    explicit TableLog(LogCache *log_cache);
+#else
+    TableLog(LogCache *log_cache, const DowntimesOrComments &downtimes_holder,
+             const DowntimesOrComments &comments_holder);
+#endif
     const char *name() override { return "log"; }
     const char *prefixname() override { return "logs"; }
     bool isAuthorized(contact *ctc, void *data) override;

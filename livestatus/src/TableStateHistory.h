@@ -33,7 +33,9 @@
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
+#ifndef CMC
 class DowntimesOrComments;
+#endif
 class Query;
 struct HostServiceState;
 struct LogEntry;
@@ -61,9 +63,13 @@ protected:
     bool _abort_query;
 
 public:
-    explicit TableStateHistory(LogCache *log_cache,
-                               const DowntimesOrComments &downtimes_holder,
-                               const DowntimesOrComments &comments_holder);
+#ifdef CMC
+    explicit TableStateHistory(LogCache *log_cache);
+#else
+    TableStateHistory(LogCache *log_cache,
+                      const DowntimesOrComments &downtimes_holder,
+                      const DowntimesOrComments &comments_holder);
+#endif
     const char *name() override { return "statehist"; }
     const char *prefixname() override { return "statehist_"; }
     bool isAuthorized(contact *ctc, void *data) override;

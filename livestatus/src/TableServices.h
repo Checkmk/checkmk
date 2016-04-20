@@ -29,21 +29,29 @@
 #include <string>
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
+#ifndef CMC
 class DowntimesOrComments;
+#endif
 class Query;
 
 class TableServices : public Table {
 public:
+#ifdef CMC
+    TableServices();
+    static void addColumns(Table *, std::string prefix, int indirect_offset,
+                           bool add_hosts);
+#else
     TableServices(const DowntimesOrComments &downtimes_holder,
                   const DowntimesOrComments &comments_holder);
-    const char *name() override { return "services"; }
-    bool isAuthorized(contact *, void *) override;
-    void *findObject(char *objectspec) override;
-    void answerQuery(Query *) override;
     static void addColumns(Table *, std::string prefix, int indirect_offset,
                            bool add_hosts,
                            const DowntimesOrComments &downtimes_holder,
                            const DowntimesOrComments &comments_holder);
+#endif
+    const char *name() override { return "services"; }
+    bool isAuthorized(contact *, void *) override;
+    void *findObject(char *objectspec) override;
+    void answerQuery(Query *) override;
 };
 
 #endif  // TableServices_h

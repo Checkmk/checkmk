@@ -103,7 +103,7 @@
 # Fan 1            | 7740.000   | RPM        | ok    | na        | 1720.000  | 1978.000  | na        | na        | na
 # Fan 2            | 8557.000   | RPM        | ok    | na        | 1720.000  | 1978.000  | na        | na        | na
 # Fan 3            | 7611.000   | RPM        | ok    | na        | 1720.000  | 1978.000  | na        | na        | na
-# <<<ipmi:sep(124)>>>
+# <<<ipmi_discrete:sep(124)>>>
 # PS3 Status | C8h | ok | 10.1 | Presence detected
 # PS4 Status | C9h | ok | 10.2 | Presence detected
 # Pwr Unit Stat    | 01h | ok  | 21.1 |

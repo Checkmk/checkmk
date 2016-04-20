@@ -41,7 +41,7 @@ public:
 #ifdef CMC
     TableHostsByGroup(const Core::_notes_t &downtimes_holder,
                       const Core::_notes_t &comments_holder,
-                      std::recursive_mutex &holder_lock);
+                      std::recursive_mutex &holder_lock, Core *core);
 #else
     TableHostsByGroup(const DowntimesOrComments &_downtimes_holder,
                       const DowntimesOrComments &_comments_holder);

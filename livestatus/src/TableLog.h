@@ -45,7 +45,7 @@ public:
 #ifdef CMC
     TableLog(LogCache *log_cache, const Core::_notes_t &downtimes_holder,
              const Core::_notes_t &comments_holder,
-             std::recursive_mutex &holder_lock);
+             std::recursive_mutex &holder_lock, Core *core);
 #else
     TableLog(LogCache *log_cache, const DowntimesOrComments &downtimes_holder,
              const DowntimesOrComments &comments_holder);
@@ -57,6 +57,9 @@ public:
     Column *column(const char *colname) override;
 
 private:
+#ifdef CMC
+    Core *_core;
+#endif
     LogCache *_log_cache;
     bool answerQuery(Query *, Logfile *, time_t, time_t);
 };

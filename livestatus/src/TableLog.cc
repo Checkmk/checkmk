@@ -55,13 +55,18 @@ TableLog::TableLog(LogCache *log_cache,
 #ifdef CMC
                    const Core::_notes_t &downtimes_holder,
                    const Core::_notes_t &comments_holder,
-                   std::recursive_mutex &holder_lock
+                   std::recursive_mutex &holder_lock, Core *core
 #else
                    const DowntimesOrComments &downtimes_holder,
                    const DowntimesOrComments &comments_holder
 #endif
                    )
-    : _log_cache(log_cache) {
+    :
+#ifdef CMC
+    _core(core)
+    ,
+#endif
+    _log_cache(log_cache) {
     LogEntry *ref = nullptr;
     addColumn(new OffsetTimeColumn("time",
                                    "Time of the log event (UNIX timestamp)",
@@ -139,7 +144,7 @@ TableLog::TableLog(LogCache *log_cache,
         -1, downtimes_holder, comments_holder
 #ifdef CMC
         ,
-        holder_lock
+        holder_lock, core
 #endif
         );
     TableServices::addColumns(
@@ -148,7 +153,7 @@ TableLog::TableLog(LogCache *log_cache,
         false /* no hosts table */, downtimes_holder, comments_holder
 #ifdef CMC
         ,
-        holder_lock
+        holder_lock, core
 #endif
         );
     TableContacts::addColumns(this, "current_contact_",
@@ -161,7 +166,11 @@ TableLog::TableLog(LogCache *log_cache,
 
 void TableLog::answerQuery(Query *query) {
     lock_guard<mutex> lg(_log_cache->_lock);
-    _log_cache->logCachePreChecks();
+    _log_cache->logCachePreChecks(
+#ifdef CMC
+        _core
+#endif
+        );
 
     int since = 0;
     int until = time(nullptr) + 1;

@@ -46,6 +46,9 @@ struct LogEntry;
 #define CLASSMASK_STATEHIST 0xC6
 
 class TableStateHistory : public Table {
+#ifdef CMC
+    Core *_core;
+#endif
     LogCache *_log_cache;
 
     int _query_timeframe;
@@ -70,7 +73,7 @@ public:
     TableStateHistory(LogCache *log_cache,
                       const Core::_notes_t &downtimes_holder,
                       const Core::_notes_t &comments_holder,
-                      std::recursive_mutex &holder_lock);
+                      std::recursive_mutex &holder_lock, Core *core);
 #else
     TableStateHistory(LogCache *log_cache,
                       const DowntimesOrComments &downtimes_holder,

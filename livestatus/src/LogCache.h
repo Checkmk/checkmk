@@ -32,6 +32,9 @@
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
 class CommandsHolder;
+#ifdef CMC
+struct Core;
+#endif
 class Logfile;
 
 typedef std::map<time_t, Logfile *> _logfiles_t;
@@ -62,7 +65,11 @@ public:
     void forgetLogfiles();
     void updateLogfileIndex();
 
-    bool logCachePreChecks();
+    bool logCachePreChecks(
+#ifdef CMC
+        Core *core
+#endif
+        );
 
 private:
     void scanLogfile(char *path, bool watch);

@@ -27,11 +27,18 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include "Table.h"
+#ifdef CMC
+struct Core;
+#endif
 class Query;
 
 class TableStatus : public Table {
 public:
+#ifdef CMC
+    explicit TableStatus(Core *core);
+#else
     TableStatus();
+#endif
     const char *name() override { return "status"; }
     void answerQuery(Query *query) override;
 };

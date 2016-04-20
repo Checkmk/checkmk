@@ -42,12 +42,12 @@ public:
 #ifdef CMC
     TableServices(const Core::_notes_t &downtimes_holder,
                   const Core::_notes_t &comments_holder,
-                  std::recursive_mutex &holder_lock);
+                  std::recursive_mutex &holder_lock, Core *core);
     static void addColumns(Table *, std::string prefix, int indirect_offset,
                            bool add_hosts,
                            const Core::_notes_t &downtimes_holder,
                            const Core::_notes_t &comments_holder,
-                           std::recursive_mutex &holder_lock);
+                           std::recursive_mutex &holder_lock, Core *core);
 #else
     TableServices(const DowntimesOrComments &downtimes_holder,
                   const DowntimesOrComments &comments_holder);

@@ -28,13 +28,26 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
+#ifdef CMC
+struct Core;
+#endif
 class Query;
 
 class MetricsColumn : public Column {
+#ifdef CMC
+    Core *_core;
+#endif
 public:
+#ifdef CMC
     MetricsColumn(std::string name, std::string description,
-                  int indirect_offset, int extra_offset = -1)
+                  int indirect_offset, int extra_offset, Core *core)
+        : Column(name, description, indirect_offset, extra_offset)
+        , _core(core) {}
+#else
+    MetricsColumn(std::string name, std::string description,
+                  int indirect_offset, int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
+#endif
     int type() override { return COLTYPE_LIST; }
     void output(void *, Query *) override;
     // Filter *createFilter(int opid, char *value);

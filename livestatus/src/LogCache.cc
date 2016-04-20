@@ -39,7 +39,6 @@
 #include <chrono>
 #include "Core.h"
 using std::chrono::system_clock;
-extern Core *g_core;
 #else
 extern time_t last_log_rotation;
 #endif  // CMC
@@ -91,18 +90,21 @@ void LogCache::setMaxCachedMessages(unsigned long m) {
 
 LogCache::~LogCache() { forgetLogfiles(); }
 
-bool LogCache::logCachePreChecks() {
-    // Do we have any logfiles (should always be the case,
-    // but we don't want to crash...
+bool LogCache::logCachePreChecks(
+#ifdef CMC
+    Core *core
+#endif
+    ) {
+    // Do we have any logfiles (should always be the case, but we don't want to
+    // crash...
     if (_logfiles.empty()) {
         logger(LOG_INFO, "Warning: no logfile found, not even %s", log_file);
         return false;
     }
-// Has Nagios rotated logfiles? => Update
-// our file index. And delete all memorized
-// log messages.
+// Has Nagios rotated logfiles? => Update our file index. And delete all
+// memorized log messages.
 #ifdef CMC
-    if (g_core->_last_logfile_rotation >
+    if (core->_last_logfile_rotation >
         system_clock::from_time_t(_last_index_update)) {
 #else
     if (last_log_rotation > _last_index_update) {

@@ -84,14 +84,19 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
 #ifdef CMC
                                      const Core::_notes_t &downtimes_holder,
                                      const Core::_notes_t &comments_holder,
-                                     recursive_mutex &holder_lock
+                                     recursive_mutex &holder_lock, Core *core
 #else
                                      const DowntimesOrComments
                                          &downtimes_holder,
                                      const DowntimesOrComments &comments_holder
 #endif
                                      )
-    : _log_cache(log_cache) {
+    :
+#ifdef CMC
+    _core(core)
+    ,
+#endif
+    _log_cache(log_cache) {
     HostServiceState *ref = nullptr;
     addColumn(new OffsetTimeColumn(
         "time", "Time of the log event (seconds since 1/1/1970)",
@@ -257,7 +262,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         -1, downtimes_holder, comments_holder
 #ifdef CMC
         ,
-        holder_lock
+        holder_lock, core
 #endif
         );
     TableServices::addColumns(
@@ -266,7 +271,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         false /* no hosts table */, downtimes_holder, comments_holder
 #ifdef CMC
         ,
-        holder_lock
+        holder_lock, core
 #endif
         );
 }
@@ -330,7 +335,11 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     lock_guard<mutex> lg(_log_cache->_lock);
-    _log_cache->logCachePreChecks();
+    _log_cache->logCachePreChecks(
+#ifdef CMC
+        _core
+#endif
+        );
 
     // This flag might be set to true by the return value of processDataset(...)
     _abort_query = false;

@@ -470,7 +470,7 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
     table->addColumn(new MetricsColumn(
         prefix + "metrics",
         "A dummy column in order to be compatible with Check_MK Multisite",
-        indirect_offset));
+        indirect_offset, -1));
     table->addColumn(new FixedIntColumn(
         prefix + "cached_at",
         "A dummy column in order to be compatible with Check_MK Multisite", 0));

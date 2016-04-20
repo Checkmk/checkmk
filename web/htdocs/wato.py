@@ -7212,7 +7212,8 @@ def generic_rule_match_conditions():
         ( "match_servicegroups",
           GroupChoice("service",
               title = _("Match Service Groups"),
-              help = _("The service must be in one of the selected service groups"),
+              help = _("The service must be in one of the selected service groups. For host events this condition "
+                       "never matches as soon as at least one group is selected."),
               allow_empty = False,
           )
         ),

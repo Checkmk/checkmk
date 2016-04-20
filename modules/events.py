@@ -332,9 +332,13 @@ def event_match_hosttags(rule, context):
 
 
 def event_match_servicegroups(rule, context):
-    if context["WHAT"] != "SERVICE":
-        return
     required_groups = rule.get("match_servicegroups")
+    if context["WHAT"] != "SERVICE":
+        if required_groups:
+            return "This rule requires membership in a service group, but this is a host notification"
+        else:
+            return
+
     if required_groups != None:
         sgn = context.get("SERVICEGROUPNAMES")
         if sgn == None:

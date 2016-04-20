@@ -1,0 +1,9 @@
+Title: papouch_th2e_sensors, papouch_th2e_sensors.dewpoint, papouch_th2e_sensors.humidity: new checks which monitor the temperature, dew point and humidity sensors of Papouch TH2E devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1461140342
+Class: feature
+
+

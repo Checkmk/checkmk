@@ -70,11 +70,17 @@ def parse_wmi_table(info, key="Name"):
             self.__row_lookup = {}
             self.__rows = []
 
+
+        def __repr__(self):
+            return repr((self.__headers, self.__rows))
+
+
         def add_row(self, row):
             self.__rows.append(row)
             if self.__key_index is not None:
                 key = row[self.__key_index]
                 self.__row_lookup[key] = len(self.__rows) - 1
+
 
         def get(self, row, column):
             if isinstance(row, int):

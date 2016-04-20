@@ -38,7 +38,7 @@ def check_wmi_cpuload(item, params, parsed):
 
     try:
         cores = int(parsed["computer_system"].get(0, "NumberOfLogicalProcessors"))
-    except ValueError:
+    except (ValueError, KeyError), e:
         # NumberOfLogicalProcessors can be an empty string, not sure why
         cores = int(parsed["computer_system"].get(0, "NumberOfProcessors"))
 

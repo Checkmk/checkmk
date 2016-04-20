@@ -17,6 +17,10 @@
     * 3413 FIX: Correctly display non-Ascii-characters in host tag values in host tag filter
     * 3029 FIX: rule editor icon: fixed query of invalid livestatus column...
 
+    Notifications:
+    * 3418 FIX: Do not send host notifications if a service group is required...
+            NOTE: Please refer to the migration notes!
+
     Reporting & Availability:
     * 3415 FIX: Availability option "Visual levels for the availability" not longer enables itself...
 

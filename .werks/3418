@@ -1,0 +1,12 @@
+Title: Do not send host notifications if a service group is required
+Level: 2
+Component: notifications
+Compatible: incomp
+Version: 1.2.8b12
+Date: 1461143929
+Class: fix
+
+If you set a match condition on the service groups then for host notifications
+this condition was ignored. But a host cannot be in any service group so now
+if you use this condition then the rule will never match for host notifications.
+This should be the way that you expect this.

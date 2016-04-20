@@ -8,6 +8,7 @@
     * 3384 FIX: eltek_battery: Fixed broken check due to wrong spelled include file
     * 3400 FIX: local: do not crash in P mode if performance data contains a unit of measurement
     * 3387 FIX: ps: Fixed crash during service discovery on AIX hosts having defunct processes
+    * 3417 FIX: wmi_cpuload: fix exception in case of missing NumberOfLogicalProcessors on some OS versions
 
     Multisite:
     * 3118 FIX: Availability view now takes daylight saving time into account

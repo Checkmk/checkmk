@@ -34,19 +34,21 @@ class DowntimesOrComments;
 class Query;
 
 class DownCommColumn : public ListColumn {
+    const DowntimesOrComments &_holder;
     bool _is_downtime;
     bool _with_info;
     bool _is_service;       // and not host
     bool _with_extra_info;  // provides date and type
 
-    const DowntimesOrComments &holder();
     bool match(DowntimeOrComment *dt, void *data);
 
 public:
     DownCommColumn(std::string name, std::string description,
-                   int indirect_offset, bool is_downtime, bool is_service,
-                   bool with_info, bool with_extra_info, int extra_offset = -1)
+                   int indirect_offset, const DowntimesOrComments &holder,
+                   bool is_downtime, bool is_service, bool with_info,
+                   bool with_extra_info, int extra_offset = -1)
         : ListColumn(name, description, indirect_offset, extra_offset)
+        , _holder(holder)
         , _is_downtime(is_downtime)
         , _with_info(with_info)
         , _is_service(is_service)

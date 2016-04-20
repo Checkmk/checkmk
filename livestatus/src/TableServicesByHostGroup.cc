@@ -28,6 +28,7 @@
 #include "TableServices.h"
 #include "WorldNagios.h"
 #include "auth.h"
+class DowntimesOrComments;
 
 extern hostgroup *hostgroup_list;
 
@@ -38,9 +39,12 @@ struct servicebyhostgroup {
 };
 }  // namespace
 
-TableServicesByHostGroup::TableServicesByHostGroup() {
+TableServicesByHostGroup::TableServicesByHostGroup(
+    const DowntimesOrComments &downtimes_holder,
+    const DowntimesOrComments &comments_holder) {
     struct servicebyhostgroup hgref;
-    TableServices::addColumns(this, "", -1, true);
+    TableServices::addColumns(this, "", -1, true, downtimes_holder,
+                              comments_holder);
     TableHostgroups::addColumns(this, "hostgroup_",
                                 reinterpret_cast<char *>(&(hgref._hostgroup)) -
                                     reinterpret_cast<char *>(&hgref));

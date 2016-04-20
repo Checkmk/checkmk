@@ -50,14 +50,18 @@ extern service *service_list;
 
 using std::string;
 
-TableServices::TableServices() { addColumns(this, "", -1, true); }
+TableServices::TableServices(const DowntimesOrComments &downtimes_holder,
+                             const DowntimesOrComments &comments_holder) {
+    addColumns(this, "", -1, true, downtimes_holder, comments_holder);
+}
 
 // static
 void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
-                               bool add_hosts) {
-    /* es fehlt noch: double-Spalten, unsigned long spalten, etliche weniger
-       wichtige
-       Spalte. Und: die Servicegruppen */
+                               bool add_hosts,
+                               const DowntimesOrComments &downtimes_holder,
+                               const DowntimesOrComments &comments_holder) {
+    // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
+    // wichtige Spalten und die Servicegruppen.
 
     service svc;
     const char *ref = reinterpret_cast<const char *>(&svc);
@@ -415,27 +419,28 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
                                                indirect_offset));
     table->addColumn(new DownCommColumn(
         prefix + "downtimes", "A list of all downtime ids of the service",
-        indirect_offset, true, true, false, false));
+        indirect_offset, downtimes_holder, true, true, false, false));
     table->addColumn(new DownCommColumn(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        indirect_offset, true, true, true, false));
+        indirect_offset, downtimes_holder, true, true, true, false));
     table->addColumn(new DownCommColumn(
         prefix + "comments", "A list of all comment ids of the service",
-        indirect_offset, false, true, false, false));
+        indirect_offset, comments_holder, false, true, false, false));
     table->addColumn(new DownCommColumn(
         prefix + "comments_with_info",
         "A list of all comments of the service with id, author and comment",
-        indirect_offset, false, true, true, false));
-    table->addColumn(
-        new DownCommColumn(prefix + "comments_with_extra_info",
-                           "A list of all comments of the service with id, "
-                           "author, comment, entry type and entry time",
-                           indirect_offset, false, true, true, true));
+        indirect_offset, comments_holder, false, true, true, false));
+    table->addColumn(new DownCommColumn(
+        prefix + "comments_with_extra_info",
+        "A list of all comments of the service with id, author, comment, entry "
+        "type and entry time",
+        indirect_offset, comments_holder, false, true, true, true));
 
     if (add_hosts) {
         TableHosts::addColumns(table, "host_",
-                               reinterpret_cast<char *>(&svc.host_ptr) - ref);
+                               reinterpret_cast<char *>(&svc.host_ptr) - ref,
+                               -1, downtimes_holder, comments_holder);
     }
 
     table->addColumn(new CustomVarsColumn(

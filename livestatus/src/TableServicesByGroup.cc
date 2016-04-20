@@ -38,9 +38,12 @@ struct servicebygroup {
 };
 }  // namespace
 
-TableServicesByGroup::TableServicesByGroup() {
+TableServicesByGroup::TableServicesByGroup(
+    const DowntimesOrComments &downtimes_holder,
+    const DowntimesOrComments &comments_holder) {
     struct servicebygroup sgref;
-    TableServices::addColumns(this, "", -1, true);
+    TableServices::addColumns(this, "", -1, true, downtimes_holder,
+                              comments_holder);
     TableServicegroups::addColumns(
         this, "servicegroup_",
         reinterpret_cast<char *>(&(sgref._servicegroup)) -

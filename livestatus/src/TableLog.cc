@@ -40,6 +40,7 @@
 #include "TableContacts.h"
 #include "TableHosts.h"
 #include "TableServices.h"
+class DowntimesOrComments;
 
 #ifndef CMC
 #include "auth.h"
@@ -51,7 +52,10 @@ using std::string;
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
-TableLog::TableLog(LogCache *log_cache) : _log_cache(log_cache) {
+TableLog::TableLog(LogCache *log_cache,
+                   const DowntimesOrComments &downtimes_holder,
+                   const DowntimesOrComments &comments_holder)
+    : _log_cache(log_cache) {
     LogEntry *ref = nullptr;
     addColumn(new OffsetTimeColumn("time",
                                    "Time of the log event (UNIX timestamp)",
@@ -123,13 +127,14 @@ TableLog::TableLog(LogCache *log_cache) : _log_cache(log_cache) {
             reinterpret_cast<char *>(ref)));
 
     // join host and service tables
-    TableHosts::addColumns(this, "current_host_",
-                           reinterpret_cast<char *>(&(ref->_host)) -
-                               reinterpret_cast<char *>(ref));
-    TableServices::addColumns(this, "current_service_",
-                              reinterpret_cast<char *>(&(ref->_service)) -
-                                  reinterpret_cast<char *>(ref),
-                              false /* no hosts table */);
+    TableHosts::addColumns(
+        this, "current_host_",
+        reinterpret_cast<char *>(&(ref->_host)) - reinterpret_cast<char *>(ref),
+        -1, downtimes_holder, comments_holder);
+    TableServices::addColumns(
+        this, "current_service_", reinterpret_cast<char *>(&(ref->_service)) -
+                                      reinterpret_cast<char *>(ref),
+        false /* no hosts table */, downtimes_holder, comments_holder);
     TableContacts::addColumns(this, "current_contact_",
                               reinterpret_cast<char *>(&(ref->_contact)) -
                                   reinterpret_cast<char *>(ref));

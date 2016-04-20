@@ -30,21 +30,14 @@
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"
 #include "Query.h"
-#include "Store.h"
 #include "nagios.h"
-
-extern Store *g_store;
-
-const DowntimesOrComments &DownCommColumn::holder() {
-    return _is_downtime ? g_store->downtimes() : g_store->comments();
-}
 
 void DownCommColumn::output(void *data, Query *query) {
     query->outputBeginList();
     data = shiftPointer(data);  // points to host or service
     if (data != nullptr) {
         bool first = true;
-        for (const auto &entry : holder()) {
+        for (const auto &entry : _holder) {
             unsigned long id = entry.first;
             DowntimeOrComment *dt = entry.second.get();
             if (match(dt, data)) {
@@ -105,7 +98,7 @@ bool DownCommColumn::isNagiosMember(void *data, void *member) {
     // member is not a pointer, but an unsigned int (hack)
     unsigned long id = static_cast<unsigned long>(
         reinterpret_cast<uintptr_t>(member));  // Hack. Convert it back.
-    DowntimeOrComment *dt = holder().findEntry(id);
+    DowntimeOrComment *dt = _holder.findEntry(id);
     return dt != nullptr && (dt->_service == static_cast<service *>(data) ||
                              (dt->_service == nullptr &&
                               dt->_host == static_cast<host *>(data)));
@@ -116,7 +109,7 @@ bool DownCommColumn::isEmpty(void *data) {
         return true;
     }
 
-    for (const auto &entry : holder()) {
+    for (const auto &entry : _holder) {
         DowntimeOrComment *dt = entry.second.get();
         if (dt->_service == data ||
             (dt->_service == nullptr && dt->_host == data)) {

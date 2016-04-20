@@ -28,11 +28,13 @@
 #include "config.h"  // IWYU pragma: keep
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
+class DowntimesOrComments;
 class Query;
 
 class TableServicesByGroup : public Table {
 public:
-    TableServicesByGroup();
+    TableServicesByGroup(const DowntimesOrComments &downtimes_holder,
+                         const DowntimesOrComments &comments_holder);
     const char *name() override { return "servicesbygroup"; }
     const char *prefixname() override { return "services"; }
     bool isAuthorized(contact *, void *) override;

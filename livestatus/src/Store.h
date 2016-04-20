@@ -57,11 +57,10 @@ class Table;
 class Store {
 public:
     Store();
-    void registerDowntime(nebstruct_downtime_data *);
-    const DowntimesOrComments &downtimes() const;
-    void registerComment(nebstruct_comment_data *);
-    const DowntimesOrComments &comments() const;
     bool answerRequest(InputBuffer *, OutputBuffer *);
+
+    void registerDowntime(nebstruct_downtime_data *);
+    void registerComment(nebstruct_comment_data *);
 
 private:
     CommandsHolderNagios _commands_holder;

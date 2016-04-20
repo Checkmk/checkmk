@@ -39,9 +39,12 @@ struct hostbygroup {
 };
 }  // namespace
 
-TableHostsByGroup::TableHostsByGroup() {
+TableHostsByGroup::TableHostsByGroup(
+    const DowntimesOrComments &_downtimes_holder,
+    const DowntimesOrComments &_comments_holder) {
     struct hostbygroup ref;
-    TableHosts::addColumns(this, "", -1);
+    TableHosts::addColumns(this, "", -1, -1, _downtimes_holder,
+                           _comments_holder);
     TableHostgroups::addColumns(this, "hostgroup_",
                                 reinterpret_cast<char *>(&(ref._hostgroup)) -
                                     reinterpret_cast<char *>(&ref));

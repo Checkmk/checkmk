@@ -36,7 +36,8 @@ class TableDownComm : public Table {
     const DowntimesOrComments &_holder;
 
 public:
-    TableDownComm(const DowntimesOrComments &holder, bool is_downtime);
+    TableDownComm(bool is_downtime, const DowntimesOrComments &downtimes_holder,
+                  const DowntimesOrComments &comments_holder);
     const char *name() override {
         return _is_downtime ? "downtimes" : "comments";
     }

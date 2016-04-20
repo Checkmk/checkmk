@@ -52,11 +52,16 @@ extern char g_mk_inventory_path[];
 
 using std::string;
 
-TableHosts::TableHosts() { addColumns(this, "", -1); }
+TableHosts::TableHosts(const DowntimesOrComments &downtimes_holder,
+                       const DowntimesOrComments &comments_holder) {
+    addColumns(this, "", -1, -1, downtimes_holder, comments_holder);
+}
 
 // static
 void TableHosts::addColumns(Table *table, string prefix, int indirect_offset,
-                            int extra_offset) {
+                            int extra_offset,
+                            const DowntimesOrComments &downtimes_holder,
+                            const DowntimesOrComments &comments_holder) {
     host hst;
     char *ref = reinterpret_cast<char *>(&hst);
     table->addColumn(new OffsetStringColumn(
@@ -485,24 +490,29 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset,
     table->addColumn(new DownCommColumn(
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this host",
-        indirect_offset, true, false, false, false, extra_offset));
-    table->addColumn(new DownCommColumn(
-        prefix + "downtimes_with_info",
-        "A list of the all scheduled downtimes of the host with id, author and "
-        "comment",
-        indirect_offset, true, false, true, false, extra_offset));
+        indirect_offset, downtimes_holder, true, false, false, false,
+        extra_offset));
+    table->addColumn(
+        new DownCommColumn(prefix + "downtimes_with_info",
+                           "A list of the all scheduled downtimes of the host "
+                           "with id, author and comment",
+                           indirect_offset, downtimes_holder, true, false, true,
+                           false, extra_offset));
     table->addColumn(new DownCommColumn(
         prefix + "comments", "A list of the ids of all comments of this host",
-        indirect_offset, false, false, false, false, extra_offset));
+        indirect_offset, comments_holder, false, false, false, false,
+        extra_offset));
     table->addColumn(new DownCommColumn(
         prefix + "comments_with_info",
         "A list of all comments of the host with id, author and comment",
-        indirect_offset, false, false, true, false, extra_offset));
-    table->addColumn(new DownCommColumn(
-        prefix + "comments_with_extra_info",
-        "A list of all comments of the host with id, author, comment, entry "
-        "type and entry time",
-        indirect_offset, false, false, true, true, extra_offset));
+        indirect_offset, comments_holder, false, false, true, false,
+        extra_offset));
+    table->addColumn(
+        new DownCommColumn(prefix + "comments_with_extra_info",
+                           "A list of all comments of the host with id, "
+                           "author, comment, entry type and entry time",
+                           indirect_offset, comments_holder, false, false, true,
+                           true, extra_offset));
 
     table->addColumn(new CustomVarsColumn(
         prefix + "custom_variable_names",

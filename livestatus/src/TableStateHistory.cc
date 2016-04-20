@@ -79,7 +79,9 @@ const char *getCustomVariable(customvariablesmember *cvm, const char *name) {
 }
 #endif
 
-TableStateHistory::TableStateHistory(LogCache *log_cache)
+TableStateHistory::TableStateHistory(
+    LogCache *log_cache, const DowntimesOrComments &downtimes_holder,
+    const DowntimesOrComments &comments_holder)
     : _log_cache(log_cache) {
     HostServiceState *ref = nullptr;
     addColumn(new OffsetTimeColumn(
@@ -240,13 +242,14 @@ TableStateHistory::TableStateHistory(LogCache *log_cache)
         -1));
 
     // join host and service tables
-    TableHosts::addColumns(this, "current_host_",
-                           reinterpret_cast<char *>(&(ref->_host)) -
-                               reinterpret_cast<char *>(ref));
-    TableServices::addColumns(this, "current_service_",
-                              reinterpret_cast<char *>(&(ref->_service)) -
-                                  reinterpret_cast<char *>(ref),
-                              false /* no hosts table */);
+    TableHosts::addColumns(
+        this, "current_host_",
+        reinterpret_cast<char *>(&(ref->_host)) - reinterpret_cast<char *>(ref),
+        -1, downtimes_holder, comments_holder);
+    TableServices::addColumns(
+        this, "current_service_", reinterpret_cast<char *>(&(ref->_service)) -
+                                      reinterpret_cast<char *>(ref),
+        false /* no hosts table */, downtimes_holder, comments_holder);
 }
 
 LogEntry *TableStateHistory::getPreviousLogentry() {

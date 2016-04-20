@@ -60,10 +60,15 @@ using std::to_string;
 Store::Store()
     : _log_cache(_commands_holder, g_max_cached_messages)
     , _table_commands(_commands_holder)
-    , _table_downtimes(_downtimes, true)
-    , _table_comments(_comments, false)
-    , _table_log(&_log_cache)
-    , _table_statehistory(&_log_cache) {
+    , _table_hosts(_downtimes, _comments)
+    , _table_hostsbygroup(_downtimes, _comments)
+    , _table_services(_downtimes, _comments)
+    , _table_servicesbygroup(_downtimes, _comments)
+    , _table_servicesbyhostgroup(_downtimes, _comments)
+    , _table_downtimes(true, _downtimes, _comments)
+    , _table_comments(false, _downtimes, _comments)
+    , _table_log(&_log_cache, _downtimes, _comments)
+    , _table_statehistory(&_log_cache, _downtimes, _comments) {
     addTable(&_table_columns);
     addTable(&_table_commands);
     addTable(&_table_comments);
@@ -117,13 +122,9 @@ void Store::registerDowntime(nebstruct_downtime_data *data) {
     _downtimes.registerDowntime(data);
 }
 
-const DowntimesOrComments &Store::downtimes() const { return _downtimes; }
-
 void Store::registerComment(nebstruct_comment_data *data) {
     _comments.registerComment(data);
 }
-
-const DowntimesOrComments &Store::comments() const { return _comments; }
 
 namespace {
 list<string> getLines(InputBuffer *input) {

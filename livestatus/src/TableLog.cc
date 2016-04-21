@@ -53,8 +53,7 @@ using std::string;
 
 TableLog::TableLog(LogCache *log_cache,
 #ifdef CMC
-                   const Core::_notes_t &downtimes_holder,
-                   const Core::_notes_t &comments_holder,
+                   const Notes &downtimes_holder, const Notes &comments_holder,
                    std::recursive_mutex &holder_lock, Core *core
 #else
                    const DowntimesOrComments &downtimes_holder,

@@ -30,7 +30,8 @@
 #include "nagios.h"  // IWYU pragma: keep
 #ifdef CMC
 #include <mutex>
-#include "Core.h"
+struct Core;
+class Notes;
 #else
 class DowntimesOrComments;
 #endif
@@ -39,8 +40,8 @@ class Query;
 class TableServicesByGroup : public Table {
 public:
 #ifdef CMC
-    TableServicesByGroup(const Core::_notes_t &downtimes_holder,
-                         const Core::_notes_t &comments_holder,
+    TableServicesByGroup(const Notes &downtimes_holder,
+                         const Notes &comments_holder,
                          std::recursive_mutex &holder_lock, Core *core);
 #else
     TableServicesByGroup(const DowntimesOrComments &downtimes_holder,

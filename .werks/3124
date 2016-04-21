@@ -1,0 +1,10 @@
+Title: workaround for overrunnig counters in a couple of wmi checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b12
+Date: 1461243484
+Class: fix
+
+Please note that this is just a workaround, it will still produce wrong output at some point.
+There doesn't seem to be a correct way to work with a wrap in performance counters.

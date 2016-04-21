@@ -189,8 +189,27 @@ fi
 
 # Processes
 echo '<<<ps>>>'
-ps -o user,vsz,rss,pcpu,args $pszone | \
-sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+# The default solaris ps command strips the command lines of the processes. But for good process
+# matching on the server we really need to whole command line. On linux there are arguments to
+# make ps output the whole command line, but on solaris this seems to be missing. We use the ucb
+# ps command to get the full command line instead. What a hack.
+UCB_PS=$(/usr/ucb/ps -agwwwx)
+PS=$(ps -o user,vsz,rss,pcpu,etime,pid,args $pszone | \
+     sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4,\5,\6) /')
+while read -r LINE; do
+    STATS=${LINE%) *}
+    PID=${STATS##*,}
+
+    CMD=$(echo "$UCB_PS" | grep "\s*$PID " | head -n1 | \
+          awk '{ s = ""; for (i = 5; i <= NF; i++) s = s $i " "; print s }')
+    # Only use the ucb ps line when it's not empty (process might already been gone) and the
+    # ps line is long enough the be potentially stripped.
+    if [ -z "$CMD" ] || [ ${#LINE} -lt 100 ]; then
+        echo "$LINE"
+    else
+        echo "${STATS}) ${CMD}"
+    fi
+done <<< "$PS"
 
 
 # Statgrab

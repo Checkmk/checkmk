@@ -11,6 +11,7 @@
     * 3417 FIX: wmi_cpuload: fix exception in case of missing NumberOfLogicalProcessors on some OS versions
     * 3424 FIX: ipmi: fixed missing compact/discrete sensor data...
     * 3124 FIX: workaround for overrunnig counters in a couple of wmi checks...
+    * 3389 FIX: ps: Fixed stripped command lines for process checking on solaris systems
 
     Multisite:
     * 3118 FIX: Availability view now takes daylight saving time into account

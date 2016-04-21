@@ -1,0 +1,9 @@
+Title: ps: Fixed stripped command lines for process checking on solaris systems
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b12
+Date: 1461250626
+Class: fix
+
+

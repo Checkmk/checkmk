@@ -267,11 +267,11 @@ def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None):
             [wmi_make_perfvar(perfvar, value, levels)])
 
 
-def wmi_calculate_raw_average(table, row, column):
+def wmi_calculate_raw_average(table, row, column, factor):
     if row == "":
         row = 0
 
-    time_spent_total = int(table.get(row, column))
+    measure = int(table.get(row, column)) * factor
     base = int(table.get(row, column + "_Base"))
 
     if base < 0:
@@ -283,13 +283,20 @@ def wmi_calculate_raw_average(table, row, column):
     if base == 0:
         return 0.0
 
-    return float(time_spent_total) / base
+    # This is a total counter which can overflow on long-running systems
+    # (great choice of datatype, microsoft!)
+    # the following forces the counter into a range of 0.0-1.0, but there is no way to know
+    # how often the counter overran, so this bay still be wrong
+    while (base * factor) < measure:
+        base += 1 << 32
+
+    return float(measure) / base
 
 
 def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None):
     levels = wmi_fix_levels(levels)
 
-    average = wmi_calculate_raw_average(table, row, column)
+    average = wmi_calculate_raw_average(table, row, column, 1)
 
     return (
         wmi_determine_status(average, levels),
@@ -301,7 +308,7 @@ def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None):
 def wmi_yield_raw_fraction(table, row, column, label, perfvar, levels=None):
     levels = wmi_fix_levels(levels)
 
-    average = wmi_calculate_raw_average(table, row, column) * 100
+    average = wmi_calculate_raw_average(table, row, column, 100)
     status = wmi_determine_status(average, levels)
 
     return (
@@ -309,7 +316,6 @@ def wmi_yield_raw_fraction(table, row, column, label, perfvar, levels=None):
         "%.2f%s" % (average, label),
         [wmi_make_perfvar(perfvar, average, levels, 0, 100)]
     )
-
 
 #.
 

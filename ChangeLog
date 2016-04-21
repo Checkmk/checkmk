@@ -166,6 +166,7 @@
             NOTE: Please refer to the migration notes!
     * 3387 FIX: ps: Fixed crash during service discovery on AIX hosts having defunct processes
     * 3417 FIX: wmi_cpuload: fix exception in case of missing NumberOfLogicalProcessors on some OS versions
+    * 3124 FIX: workaround for overrunnig counters in a couple of wmi checks...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

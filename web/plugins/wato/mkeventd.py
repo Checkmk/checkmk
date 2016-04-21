@@ -651,13 +651,22 @@ vs_mkeventd_rule = Dictionary(
               title = _("Syslog priority to cancel event"),
               help = _("If the priority of the event lies withing this range and either no text to cancel "
                        "is specified or that text also matched, then events created with this rule will "
-                       "automatically be cancelled (if host, application and match groups match)."),
+                       "automatically be cancelled (if host, application, facility and match groups match)."),
               orientation = "horizontal",
               show_titles = False,
               elements = [
                  DropdownChoice(label = _("from:"), choices = mkeventd.syslog_priorities, default_value = 7),
                  DropdownChoice(label = _(" to:"),   choices = mkeventd.syslog_priorities, default_value = 5),
               ],
+          ),
+        ),
+        ( "cancel_application",
+          RegExpUnicode(
+              title = _("Syslog application to cancel event"),
+              help = _("If the application of the message matches this regular expression "
+                       "(case insensitive) and either no text to cancel is specified or "
+                       "that text also matched, then events created by this rule will "
+                       "automatically be cancelled (if host, facility and match groups match)."),
           ),
         ),
         ( "invert_matching",
@@ -743,11 +752,11 @@ vs_mkeventd_rule = Dictionary(
     optional_keys = [ "delay", "livetime", "count", "expect", "match_priority", "match_priority",
                       "match_facility", "match_sl", "match_host", "match_ipaddress", "match_application", "match_timeperiod",
                       "set_text", "set_host", "set_application", "set_comment",
-                      "set_contact", "cancel_priority", "match_ok", "contact_groups", ],
+                      "set_contact", "cancel_priority", "cancel_application", "match_ok", "contact_groups", ],
     headers = [
         ( _("Rule Properties"), [ "id", "description", "comment", "docu_url", "disabled" ] ),
         ( _("Matching Criteria"), [ "match", "match_host", "match_ipaddress", "match_application", "match_priority", "match_facility",
-                                    "match_sl", "match_ok", "cancel_priority", "match_timeperiod", "invert_matching" ]),
+                                    "match_sl", "match_ok", "cancel_priority", "cancel_application", "match_timeperiod", "invert_matching" ]),
         ( _("Outcome & Action"), [ "state", "sl", "contact_groups", "actions", "cancel_actions", "cancel_action_phases", "drop", "autodelete" ]),
         ( _("Counting & Timing"), [ "count", "expect", "delay", "livetime", ]),
         ( _("Rewriting"), [ "set_text", "set_host", "set_application", "set_comment", "set_contact" ]),

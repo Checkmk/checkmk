@@ -1,0 +1,15 @@
+Title: Events can now be cancelled by the syslog application
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.9i1
+Date: 1461253178
+Class: feature
+
+Event Console rules can now close the events they created by having
+a specific syslog application in messages.
+
+If the application of the message matches this regular expression 
+(case insensitive) and either no text to cancel is specified or 
+that text also matched, then events created by this rule will 
+automatically be cancelled (if host, facility and match groups match).

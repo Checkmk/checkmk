@@ -1892,7 +1892,8 @@ class EventServer:
                         self.hash_rule(rule)
                         if "match_facility" not in rule \
                             and "match_priority" not in rule \
-                            and "cancel_priority" not in rule:
+                            and "cancel_priority" not in rule \
+                            and "cancel_application" not in rule:
                             count_unspecific += 1
 
 
@@ -2138,15 +2139,22 @@ class EventServer:
                 log("  did not match, because timeperiod %s is not active" % rule["match_timeperiod"])
             return False
 
-        if "match_ok" in rule or "cancel_priority" in rule:
+        if "match_ok" in rule or "cancel_priority" in rule or "cancel_application" in rule:
             if "cancel_priority" in rule:
                 up, lo = rule["cancel_priority"]
                 cp = event["priority"] >= lo and event["priority"] <= up
             else:
                 cp = True
 
+            if "cancel_application" in rule:
+                cancel_by_application = match(rule.get("cancel_application"),
+                                                       event["application"],
+                                                       complete=False)
+            else:
+                cancel_by_application = True
+
             match_groups = match(rule.get("match_ok", ""), event["text"], complete = False)
-            if match_groups != False and cp:
+            if match_groups != False and cp and cancel_by_application:
                 if debug:
                     log("  found cancelling event")
                 if match_groups == True:
@@ -3194,15 +3202,17 @@ class EventStatus():
                         (event["id"], event["host"], host))
             return False
 
-        # The same for the application
-        application = new_event["application"]
-        if "set_application" in rule:
-            application = replace_groups(rule["set_application"], application, match_groups)
-        if event["application"] != application:
-            if debug:
-                log("Do not cancel event %d: application is not the same (%s != %s)" %
-                        (event["id"], event["application"], application))
-            return False
+        # The same for the application. But in case there is cancelling based on the application
+        # configured in the rule, then don't check for tidfferent applications.
+        if "cancel_application" not in rule:
+            application = new_event["application"]
+            if "set_application" in rule:
+                application = replace_groups(rule["set_application"], application, match_groups)
+            if event["application"] != application:
+                if debug:
+                    log("Do not cancel event %d: application is not the same (%s != %s)" %
+                            (event["id"], event["application"], application))
+                return False
 
         if event["facility"] != new_event["facility"]:
             if debug:

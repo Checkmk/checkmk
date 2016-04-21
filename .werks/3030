@@ -1,0 +1,15 @@
+Title: brocade_info: fixed problem in snmp scan function during service discovery
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b12
+Date: 1461249883
+
+The snmp implementation on those devices is quite broken.
+Querying an incomplete oid could lead to an unresponsive snmp interface.
+This error automatically resolves after a few seconds.
+However, the service discovery process is not willing to wait -> Service discovery fails.
+
+This werk fixes the queried oid, by specifying its complete path.

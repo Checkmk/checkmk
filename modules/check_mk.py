@@ -1291,7 +1291,7 @@ hosttags = {}
 def collect_hosttags():
     for taggedhost in all_hosts + clusters.keys():
         parts = taggedhost.split("|")
-        hosttags[parts[0]] = parts[1:]
+        hosttags[parts[0]] = sorted(parts[1:])
 
 
 g_hosttag_taglist_cache = {}

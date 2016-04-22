@@ -32,7 +32,6 @@ def inventory_ups_modulys_alarms(info):
 
 
 def check_ups_modulys_alarms(_no_item, _no_params, info):
-
     oiddef = {
         '1'     : (2, 'Disconnect'),
         '2'     : (2, 'Input power failure'),
@@ -67,7 +66,7 @@ def check_ups_modulys_alarms(_no_item, _no_params, info):
 
     for oidend, flag in info:
         result = False
-        if int(flag):
+        if flag and int(flag):
             result = True
             yield oiddef[oidend]
 

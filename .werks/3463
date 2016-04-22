@@ -1,0 +1,10 @@
+Title: ups_modulys_alarms: avoid crash on some SOCOMEC UPS where some alarm OIDs are empty
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461330267
+
+

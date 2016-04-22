@@ -24,8 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent (Linux)
+# Example output from agent (Linux) - note missing LISTENING column for UDP
 # <<netstat>>>
+# tcp        0      0 0.0.0.0:6556            0.0.0.0:*               LISTENING
+# tcp        0      0 127.0.0.1:445           0.0.0.0:*               LISTENING
+# tcp        0      0 10.1.1.50:445           0.0.0.0:*               LISTENING
 # tcp        0      0 127.0.0.1:57573         127.0.0.1:80            ESTABLISHED
 # tcp        0      0 10.1.1.50:38692         178.248.246.154:993     ESTABLISHED
 # tcp        0      0 127.0.0.1:34929         127.0.0.1:5000          TIME_WAIT
@@ -44,6 +47,9 @@
 # tcp        0      0 127.0.0.1:34984         127.0.0.1:5000          TIME_WAIT
 # tcp        0      0 127.0.0.1:80            127.0.0.1:57488         TIME_WAIT
 # tcp        0      0 127.0.0.1:34967         127.0.0.1:5000          TIME_WAIT
+# udp        0      0 10.1.2.255:137          0.0.0.0:*
+# udp        0      0 10.1.2.160:137          0.0.0.0:*
+# udp        0      0 0.0.0.0:137             0.0.0.0:*
 
 def parse_netstat(info):
     connections = []
@@ -55,7 +61,13 @@ def parse_netstat(info):
             elif proto.startswith("udp"):
                 proto = "UDP"
 
-            connections.append( (proto, local.rsplit(":", 1), remote.rsplit(":", 1),
+        if len(line) == 5: # handles UDP listeners
+            proto, recv_q, send_q, local, remote = line
+            if proto.startswith("udp"):
+                proto = "UDP"
+                connstate = "LISTENING"
+
+        connections.append( (proto, local.rsplit(":", 1), remote.rsplit(":", 1),
                                 connstate) )
     return connections
 

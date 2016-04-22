@@ -85,9 +85,12 @@ def run_pylint(cfg_file, base_path):
         pylint_args += " "
     pylint_output = os.environ.get("PYLINT_OUTPUT")
 
-    cmd = "pylint --rcfile=\"%s\" %s%s/*.py" % (cfg_file, pylint_args, base_path)
+    pylint_cfg = os.getcwd() + "/" + cfg_file
+
+    cmd = "pylint --rcfile=\"%s\" %s*.py" % (pylint_cfg, pylint_args)
     print("Running pylint with: %s" % cmd)
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                         shell=True, cwd=base_path)
     stdout = p.communicate()[0]
 
     if stdout.strip():

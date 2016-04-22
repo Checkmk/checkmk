@@ -43,6 +43,10 @@ TableTimeperiods::TableTimeperiods() {
     // TODO(mk): add days and exceptions
 }
 
+const char *TableTimeperiods::name() const { return "timeperiods"; }
+
+const char *TableTimeperiods::namePrefix() const { return "timeperiod_"; }
+
 void TableTimeperiods::answerQuery(Query *query) {
     timeperiod *tp = timeperiod_list;
     while (tp != nullptr) {

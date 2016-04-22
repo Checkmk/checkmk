@@ -134,6 +134,14 @@ TableDownComm::TableDownComm(bool is_downtime,
         false /* no hosts table */, downtimes_holder, comments_holder);
 }
 
+const char *TableDownComm::name() const {
+    return _is_downtime ? "downtimes" : "comments";
+}
+
+const char *TableDownComm::namePrefix() const {
+    return _is_downtime ? "downtime_" : "comment_";
+}
+
 void TableDownComm::answerQuery(Query *query) {
     for (const auto &entry : _holder) {
         if (!query->processDataset(entry.second.get())) {

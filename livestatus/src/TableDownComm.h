@@ -38,9 +38,9 @@ class TableDownComm : public Table {
 public:
     TableDownComm(bool is_downtime, const DowntimesOrComments &downtimes_holder,
                   const DowntimesOrComments &comments_holder);
-    const char *name() override {
-        return _is_downtime ? "downtimes" : "comments";
-    }
+
+    const char *name() const override;
+    const char *namePrefix() const override;
     void answerQuery(Query *) override;
     bool isAuthorized(contact *ctc, void *data) override;
 };

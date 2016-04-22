@@ -36,14 +36,9 @@ class Query;
 
 class Table {
 public:
-    Table() {}
+    Table();
     virtual ~Table();
-    virtual Column *column(const char *colname);
-    virtual void answerQuery(Query *) = 0;
-    virtual const char *name() = 0;
-    virtual const char *prefixname() { return name(); }
-    virtual bool isAuthorized(contact *, void *) { return true; }
-    virtual void *findObject(char *) { return nullptr; }
+
     void addColumn(Column *);
     void addDynamicColumn(DynamicColumn *);
 
@@ -56,6 +51,24 @@ public:
         }
         return false;
     }
+
+    // The name of the table, as used in the GET command. If the name contains a
+    // ':' then we have a dynamic column with column arguments (used to access
+    // RRD metrics data).
+    virtual const char *name() const = 0;
+
+    // TODO(sp) Due to the way multisite works, column names are sometimes
+    // prefixed by a variation of the table name (e.g. "hosts" => "host_"), but
+    // the logic for this really shouldn't live on the cmc side. Furthermore,
+    // multisite sometimes even seems to use a *sequence* of prefixes, which is
+    // yet another a bug. Instead of fixing it there, it is currently papered
+    // over on the cmc side. :-/
+    virtual const char *namePrefix() const = 0;
+
+    virtual void answerQuery(Query *query) = 0;
+    virtual Column *column(const char *colname);
+    virtual bool isAuthorized(contact *ctc, void *data);
+    virtual void *findObject(char *objectspec);
 
 private:
     Column *dynamicColumn(const char *colname_with_args);

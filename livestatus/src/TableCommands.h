@@ -34,10 +34,12 @@ class Query;
 class TableCommands : public Table {
 public:
     explicit TableCommands(const CommandsHolder &commands_holder);
-    static void addColumns(Table *table, std::string prefix, int offset);
 
-    const char *name() override;
+    const char *name() const override;
+    const char *namePrefix() const override;
     void answerQuery(Query *query) override;
+
+    static void addColumns(Table *table, std::string prefix, int offset);
 
 private:
     const CommandsHolder &_commands_holder;

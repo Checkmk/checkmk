@@ -57,6 +57,10 @@ TableHosts::TableHosts(const DowntimesOrComments &downtimes_holder,
     addColumns(this, "", -1, -1, downtimes_holder, comments_holder);
 }
 
+const char *TableHosts::name() const { return "hosts"; }
+
+const char *TableHosts::namePrefix() const { return "host_"; }
+
 // static
 void TableHosts::addColumns(Table *table, string prefix, int indirect_offset,
                             int extra_offset,

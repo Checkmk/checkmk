@@ -38,6 +38,10 @@ extern contact *contact_list;
 
 TableContacts::TableContacts() { addColumns(this, "", -1); }
 
+const char *TableContacts::name() const { return "contacts"; }
+
+const char *TableContacts::namePrefix() const { return "contact_"; }
+
 // static
 void TableContacts::addColumns(Table *table, string prefix,
                                int indirect_offset) {

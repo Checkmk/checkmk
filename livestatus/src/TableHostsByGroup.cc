@@ -50,6 +50,10 @@ TableHostsByGroup::TableHostsByGroup(
                                     reinterpret_cast<char *>(&ref));
 }
 
+const char *TableHostsByGroup::name() const { return "hostsbygroup"; }
+
+const char *TableHostsByGroup::namePrefix() const { return "host_"; }
+
 void TableHostsByGroup::answerQuery(Query *query) {
     // When g_group_authorization is set to AUTH_STRICT we need to pre-check if
     // every host of this group is visible to the _auth_user

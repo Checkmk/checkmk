@@ -163,6 +163,10 @@ TableLog::TableLog(LogCache *log_cache,
                                   reinterpret_cast<char *>(ref));
 }
 
+const char *TableLog::name() const { return "log"; }
+
+const char *TableLog::namePrefix() const { return "log_"; }
+
 void TableLog::answerQuery(Query *query) {
     lock_guard<mutex> lg(_log_cache->_lock);
     _log_cache->logCachePreChecks(

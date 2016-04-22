@@ -32,7 +32,9 @@ class Query;
 class TableTimeperiods : public Table {
 public:
     TableTimeperiods();
-    const char *name() override { return "timeperiods"; }
+
+    const char *name() const override;
+    const char *namePrefix() const override;
     void answerQuery(Query *query) override;
 };
 

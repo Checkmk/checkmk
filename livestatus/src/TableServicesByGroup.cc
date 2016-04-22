@@ -50,6 +50,10 @@ TableServicesByGroup::TableServicesByGroup(
             reinterpret_cast<char *>(&sgref));
 }
 
+const char *TableServicesByGroup::name() const { return "servicesbygroup"; }
+
+const char *TableServicesByGroup::namePrefix() const { return "service_"; }
+
 void TableServicesByGroup::answerQuery(Query *query) {
     // When g_group_authorization is set to AUTH_STRICT we need to pre-check
     // if every service of this group is visible to the _auth_user

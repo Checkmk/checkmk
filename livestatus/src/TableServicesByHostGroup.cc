@@ -49,6 +49,11 @@ TableServicesByHostGroup::TableServicesByHostGroup(
                                 reinterpret_cast<char *>(&(hgref._hostgroup)) -
                                     reinterpret_cast<char *>(&hgref));
 }
+
+const char *TableServicesByHostGroup::name() const { return "servicesbyhostgroup"; }
+
+const char *TableServicesByHostGroup::namePrefix() const { return "service_"; }
+
 void TableServicesByHostGroup::answerQuery(Query *query) {
     for (hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
         for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {

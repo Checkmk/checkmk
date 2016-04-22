@@ -47,11 +47,12 @@ public:
     TableHostsByGroup(const DowntimesOrComments &_downtimes_holder,
                       const DowntimesOrComments &_comments_holder);
 #endif
-    const char *name() override { return "hostsbygroup"; }
-    const char *prefixname() override { return "hosts"; }
+
+    const char *name() const override;
+    const char *namePrefix() const override;
+    void answerQuery(Query *query) override;
     bool isAuthorized(contact *ctc, void *data) override;
     void *findObject(char *objectspec) override;
-    void answerQuery(Query *query) override;
 };
 
 #endif  // TableHostsByGroup_h

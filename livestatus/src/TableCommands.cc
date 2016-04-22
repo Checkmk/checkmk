@@ -35,6 +35,10 @@ TableCommands::TableCommands(const CommandsHolder &commands_holder)
     addColumns(this, "", 0);
 }
 
+const char *TableCommands::name() const { return "commands"; }
+
+const char *TableCommands::namePrefix() const { return "command_"; }
+
 // static
 void TableCommands::addColumns(Table *table, string prefix, int offset) {
     table->addColumn(new OffsetSStringColumn(
@@ -44,8 +48,6 @@ void TableCommands::addColumns(Table *table, string prefix, int offset) {
         prefix + "line", "The shell command line",
         offset + offsetof(CommandsHolder::Command, _command_line)));
 }
-
-const char *TableCommands::name() { return "commands"; }
 
 void TableCommands::answerQuery(Query *query) {
     for (auto &cmd : _commands_holder.commands()) {

@@ -32,14 +32,16 @@ class Column;
 class Query;
 
 class TableColumns : public Table {
-    typedef std::vector<Table *> _tables_t;
-    _tables_t _tables;
+    std::vector<Table *> _tables;
 
 public:
     TableColumns();
-    const char *name() override { return "columns"; }
-    void addTable(Table *);
+
+    const char *name() const override;
+    const char *namePrefix() const override;
     void answerQuery(Query *query) override;
+
+    void addTable(Table *);
     const char *getValue(Column *column, int colcol);
     const char *tableNameOf(Column *column);
 };

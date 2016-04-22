@@ -27,24 +27,9 @@
 #include "Column.h"
 #include "DynamicColumn.h"
 
-using std::make_pair;
 using std::string;
 
-void Table::addColumn(Column *col) {
-    // do not insert column if one with that name
-    // already exists. Delete that column in that
-    // case. (For example needed for TableLog->TableHosts,
-    // which both define host_name.
-    if (column(col->name()) != nullptr) {
-        delete col;
-    } else {
-        _columns.insert(make_pair(col->name(), col));
-    }
-}
-
-void Table::addDynamicColumn(DynamicColumn *dyncol) {
-    _dynamic_columns.insert(make_pair(dyncol->name(), dyncol));
-}
+Table::Table() {}
 
 Table::~Table() {
     for (auto &column : _columns) {
@@ -56,43 +41,45 @@ Table::~Table() {
     }
 }
 
-Column *Table::column(const char *colname) {
-    // We allow the name of the table to be
-    // prefixed to the column name. So if we
-    // detect this prefix, we simply remove it.
-    int prefix_len = strlen(prefixname());  // replace 's' with '_'
+void Table::addColumn(Column *col) {
+    // Do not insert column if one with that name already exists. Delete that
+    // column in that case. (Needed e.g. for TableLog->TableHosts, which both
+    // define host_name.)
+    if (column(col->name()) != nullptr) {
+        delete col;
+    } else {
+        _columns.emplace(col->name(), col);
+    }
+}
 
-    // Multisite seems to query "service_service_description". We can fix this
-    // in newer versions, but need to be compatible. So we need a "while" here,
-    // not just an "if".
-    while ((strncmp(colname, prefixname(), prefix_len - 1) == 0) &&
-           colname[prefix_len - 1] == '_') {
+void Table::addDynamicColumn(DynamicColumn *dyncol) {
+    _dynamic_columns.emplace(dyncol->name(), dyncol);
+}
+
+Column *Table::column(const char *colname) {
+    // Strip away a sequence of prefixes.
+    int prefix_len = strlen(namePrefix());
+    while (strncmp(colname, namePrefix(), prefix_len) == 0) {
         colname += prefix_len;
     }
 
-    // If the colum name contains a ':' then we have a dynamic
-    // column with column arguments
     if (strchr(colname, ':') != nullptr) {
         return dynamicColumn(colname);
     }
 
-    // First try exact match
-    auto it = _columns.find(string(colname));
+    // First try exact match...
+    auto it = _columns.find(colname);
     if (it != _columns.end()) {
         return it->second;
     }
 
-    // Now we try to readd the removed prefix. That way we tackle the
-    // problem with the column "service_period". Here the prefix service_
-    // is part of the actual name of the column!
-    string with_prefix(prefixname(), prefix_len - 1);
-    with_prefix += "_";
-    with_prefix += colname;
-
-    it = _columns.find(with_prefix);
+    // ... then try to match with the prefix.
+    it = _columns.find(string(namePrefix()) + colname);
     if (it != _columns.end()) {
         return it->second;
     }
+
+    // No luck.
     return nullptr;
 }
 
@@ -108,3 +95,7 @@ Column *Table::dynamicColumn(const char *colname_with_args) {
     }
     return nullptr;
 }
+
+bool Table::isAuthorized(contact *, void *) { return true; }
+
+void *Table::findObject(char *) { return nullptr; }

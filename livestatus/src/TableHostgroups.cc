@@ -40,6 +40,10 @@ extern hostgroup *hostgroup_list;
 
 TableHostgroups::TableHostgroups() { addColumns(this, "", -1); }
 
+const char *TableHostgroups::name() const { return "hostgroups"; }
+
+const char *TableHostgroups::namePrefix() const { return "hostgroup_"; }
+
 // static
 void TableHostgroups::addColumns(Table *table, string prefix,
                                  int indirect_offset) {

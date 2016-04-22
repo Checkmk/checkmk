@@ -32,9 +32,11 @@ class Query;
 class TableContactgroups : public Table {
 public:
     TableContactgroups();
-    const char *name() override { return "contactgroups"; }
-    void *findObject(char *objectspec) override;
+
+    const char *name() const override;
+    const char *namePrefix() const override;
     void answerQuery(Query *query) override;
+    void *findObject(char *objectspec) override;
 };
 
 #endif  // TableContactgroups_h

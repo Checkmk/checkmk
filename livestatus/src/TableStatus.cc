@@ -304,4 +304,8 @@ TableStatus::TableStatus() {
                                          SPIC_MK_INVENTORY_LAST));
 }
 
+const char *TableStatus::name() const { return "status"; }
+
+const char *TableStatus::namePrefix() const { return "status_"; }
+
 void TableStatus::answerQuery(Query *query) { query->processDataset(this); }

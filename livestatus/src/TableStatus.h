@@ -39,7 +39,9 @@ public:
 #else
     TableStatus();
 #endif
-    const char *name() override { return "status"; }
+
+    const char *name() const override;
+    const char *namePrefix() const override;
     void answerQuery(Query *query) override;
 };
 

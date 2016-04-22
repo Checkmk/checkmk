@@ -34,11 +34,14 @@ class Query;
 class TableServicegroups : public Table {
 public:
     TableServicegroups();
-    const char *name() override { return "servicegroups"; }
+
+    const char *name() const override;
+    const char *namePrefix() const override;
+    void answerQuery(Query *query) override;
     void *findObject(char *objectspec) override;
     bool isAuthorized(contact *, void *) override;
+
     static void addColumns(Table *, std::string prefix, int indirect_offset);
-    void answerQuery(Query *query) override;
 };
 
 #endif  // TableServicegroups_h

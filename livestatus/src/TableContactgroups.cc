@@ -43,6 +43,10 @@ TableContactgroups::TableContactgroups() {
         "members", "A list of all members of this contactgroup", -1));
 }
 
+const char *TableContactgroups::name() const { return "contactgroups"; }
+
+const char *TableContactgroups::namePrefix() const { return "contactgroup_"; }
+
 void TableContactgroups::answerQuery(Query *query) {
     contactgroup *cg = contactgroup_list;
     while (cg != nullptr) {

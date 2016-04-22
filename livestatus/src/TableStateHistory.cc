@@ -276,6 +276,10 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         );
 }
 
+const char *TableStateHistory::name() const { return "statehist"; }
+
+const char *TableStateHistory::namePrefix() const { return "statehist_"; }
+
 LogEntry *TableStateHistory::getPreviousLogentry() {
     while (_it_entries == _entries->begin()) {
         // open previous logfile

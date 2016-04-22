@@ -55,7 +55,7 @@ public:
     time_t _last_index_update;
 
     const char *name() { return "log"; }
-    const char *prefixname() { return "logs"; }
+    const char *namePrefix() { return "logs"; }
     bool isAuthorized(contact *ctc, void *data);
     void handleNewMessage(Logfile *logfile, time_t since, time_t until,
                           unsigned logclasses);

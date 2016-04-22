@@ -39,6 +39,10 @@ TableColumns::TableColumns() {
         COLCOL_TYPE, this));
 }
 
+const char *TableColumns::name() const { return "columns"; }
+
+const char *TableColumns::namePrefix() const { return "column_"; }
+
 void TableColumns::addTable(Table *table) { _tables.push_back(table); }
 
 void TableColumns::answerQuery(Query *query) {

@@ -51,10 +51,10 @@ public:
     TableLog(LogCache *log_cache, const DowntimesOrComments &downtimes_holder,
              const DowntimesOrComments &comments_holder);
 #endif
-    const char *name() override { return "log"; }
-    const char *prefixname() override { return "logs"; }
-    bool isAuthorized(contact *ctc, void *data) override;
+    const char *name() const override;
+    const char *namePrefix() const override;
     void answerQuery(Query *query) override;
+    bool isAuthorized(contact *ctc, void *data) override;
     Column *column(const char *colname) override;
 
 private:

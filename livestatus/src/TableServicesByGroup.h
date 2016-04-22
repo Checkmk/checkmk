@@ -47,11 +47,12 @@ public:
     TableServicesByGroup(const DowntimesOrComments &downtimes_holder,
                          const DowntimesOrComments &comments_holder);
 #endif
-    const char *name() override { return "servicesbygroup"; }
-    const char *prefixname() override { return "services"; }
+
+    const char *name() const override;
+    const char *namePrefix() const override;
+    void answerQuery(Query *) override;
     bool isAuthorized(contact *, void *) override;
     void *findObject(char *objectspec) override;
-    void answerQuery(Query *) override;
 };
 
 #endif  // TableServicesByGroup_h

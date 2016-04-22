@@ -33,10 +33,13 @@ class Query;
 class TableContacts : public Table {
 public:
     TableContacts();
-    const char *name() override { return "contacts"; }
-    void *findObject(char *objectspec) override;
-    static void addColumns(Table *, std::string prefix, int indirect_offset);
+
+    const char *name() const override;
+    const char *namePrefix() const override;
     void answerQuery(Query *query) override;
+    void *findObject(char *objectspec) override;
+
+    static void addColumns(Table *, std::string prefix, int indirect_offset);
 };
 
 #endif  // TableContacts_h

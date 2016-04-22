@@ -40,6 +40,10 @@ extern servicegroup *servicegroup_list;
 
 TableServicegroups::TableServicegroups() { addColumns(this, "", -1); }
 
+const char *TableServicegroups::name() const { return "servicegroups"; }
+
+const char *TableServicegroups::namePrefix() const { return "servicegroup_"; }
+
 // static
 void TableServicegroups::addColumns(Table *table, string prefix,
                                     int indirect_offset) {

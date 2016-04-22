@@ -250,6 +250,14 @@ register_rule(group,
     match = "all",
 )
 
+# Several active checks just had crit levels as one integer
+def transform_cert_days(cert_days):
+    if type(cert_days) != tuple:
+        return (cert_days, 0)
+    else:
+        return cert_days
+
+
 register_rule(group,
     "active_checks:ftp",
     Transform(
@@ -312,11 +320,17 @@ register_rule(group,
 
                  ),
                  ( "cert_days",
-                   Integer(
-                       title = _("SSL certificate validation"),
-                       help = _("Minimum number of days a certificate has to be valid"),
-                       unit = _("days"),
-                       default_value = 30)
+                   Transform(
+                       Tuple(
+                           title = _("SSL certificate validation"),
+                           help = _("Minimum number of days a certificate has to be valid"),
+                           elements = [
+                               Integer(title = _("Warning at or below"), minvalue = 0, unit = _("days")),
+                               Integer(title = _("Critical at or below"), minvalue = 0, unit = _("days")),
+                           ],
+                       ),
+                       forth = transform_cert_days,
+                   ),
                  ),
             ]),
             forth = lambda x: type(x) == tuple and x[1] or x,
@@ -631,11 +645,17 @@ register_rule(group,
 
                     ),
                     ( "cert_days",
-                      Integer(
-                          title = _("SSL certificate validation"),
-                          help = _("Minimum number of days a certificate has to be valid"),
-                          unit = _("days"),
-                          default_value = 30)
+                      Transform(
+                          Tuple(
+                              title = _("SSL certificate validation"),
+                              help = _("Minimum number of days a certificate has to be valid"),
+                              elements = [
+                                  Integer(title = _("Warning at or below"), minvalue = 0, unit = _("days")),
+                                  Integer(title = _("Critical at or below"), minvalue = 0, unit = _("days")),
+                              ],
+                          ),
+                          forth = transform_cert_days,
+                      ),
                     ),
 
                     ( "quit_string",
@@ -690,12 +710,6 @@ register_rule(group,
                 )),
 
         ]))
-
-# cert_days was only an integer for warning level until version 1.2.7
-def transform_check_http_cert_days(cert_days):
-    if type(cert_days) != tuple:
-        cert_days = (cert_days, 0)
-    return cert_days
 
 ip_address_family_element = ("address_family",
         DropdownChoice(
@@ -1008,7 +1022,7 @@ register_rule(group,
                                             Integer(title = _("Critical at or below"), minvalue = 0, unit = _("days")),
                                         ],
                                     ),
-                                    forth = transform_check_http_cert_days,
+                                    forth = transform_cert_days,
                                 ),
                             ),
                             ( "cert_host",
@@ -1241,13 +1255,18 @@ register_rule(group,
                              default_value = "",
                          )
                        ),
-                       ("cert_days",
-                          Integer(
-                              title = _("Minimum Certificate Age"),
-                              help = _("Minimum number of days a certificate has to be valid."),
-                              unit = _("days"),
-                          )
-                       ),
+                       ( "cert_days",
+                         Transform(
+                             Tuple(
+                                 title = _("Minimum Certificate Age"),
+                                 help = _("Minimum number of days a certificate has to be valid"),
+                                 elements = [
+                                     Integer(title = _("Warning at or below"), minvalue = 0, unit = _("days")),
+                                     Integer(title = _("Critical at or below"), minvalue = 0, unit = _("days")),
+                                 ],
+                             ),
+                             forth = transform_cert_days,
+                       )),
                        ("starttls",
                           FixedValue(
                               True,

@@ -78,8 +78,13 @@ def check_smtp_arguments(params):
     if 'fqdn' in settings:
         args += ' -F %s' % quote_shell_string(settings['fqdn'])
 
-    if 'cert_days' in settings:
-        args += ' -D %d' % settings['cert_days']
+    if "cert_days" in settings:
+        # legacy behavior
+        if type(settings["cert_days"]) == int:
+            args += ' -D %d' % settings["cert_days"]
+        else:
+            warn, crit = settings["cert_days"]
+            args += ' -D %d,%d' % (warn, crit)
 
     if 'hostname' in settings:
         args += ' -H %s' % settings['hostname']

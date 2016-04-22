@@ -176,6 +176,7 @@
     * 3434 FIX: cmctc_lcp: Fixed broken check in case parameter are specified
     * 3435 FIX: check_varnish_uptime: Fixed broken check
     * 3419 FIX: solaris_mem: avoid crash in case of empty agent section, treat section as missing...
+    * 3420 FIX: check_ftp, check_tcp, check_smtp: add missing CRIT levels for certificate live time...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

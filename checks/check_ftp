@@ -61,7 +61,12 @@ def check_ftp_arguments(params):
         args += ' --ssl'
 
     if "cert_days" in settings:
-        args += ' -D %d' % settings["cert_days"]
+        # legacy behavior
+        if type(settings["cert_days"]) == int:
+            args += ' -D %d' % settings["cert_days"]
+        else:
+            warn, crit = settings["cert_days"]
+            args += ' -D %d,%d' % (warn, crit)
 
     return args
 

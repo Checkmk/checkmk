@@ -9,10 +9,15 @@ errors-only=yes
 # C0111 missing module docstring
 # C0326 bad-whitespace
 disable=C0111,C0326
-# Disable this because we often use multiple types for a single variable. Maybe we
-# can change this in future to make such linter checks work, but for the moment these
-# checks are useless with Check_MK.
-disable=unsubscriptable-object,unsupported-membership-test,unpacking-non-sequence
+# unsubscriptable-object
+# unsupported-membership-test
+# unpacking-non-sequence
+#   Disable this because we often use multiple types for a single variable. Maybe we
+#   can change this in future to make such linter checks work, but for the moment these
+#   checks are useless with Check_MK.
+# unpacking-non-sequence
+#   Not a problem for us
+disable=unsubscriptable-object,unsupported-membership-test,unpacking-non-sequence,assignment-from-none
 
 [TYPECHECK]
 # Can not check methods / attributes of the rrdtool C module. Skipping related errors

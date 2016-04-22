@@ -3276,11 +3276,11 @@ def create_core_config():
     verify_non_deprecated_checkgroups()
 
     if monitoring_core == "cmc":
-        warnings = do_create_cmc_config(opt_cmc_relfilename)
+        do_create_cmc_config(opt_cmc_relfilename)
     else:
         load_module("nagios")
         out = file(nagios_objects_file, "w")
-        warnings = create_nagios_config(out)
+        create_nagios_config(out)
 
     num_warnings = len(g_configuration_warnings)
     if num_warnings > 10:

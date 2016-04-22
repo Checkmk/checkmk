@@ -237,6 +237,7 @@ def automation_set_autochecks(args):
     new_items = eval(sys.stdin.read())
     set_autochecks_of(hostname, new_items)
     trigger_discovery_check(hostname)
+    return None
 
 
 # if required, schedule an inventory check
@@ -416,6 +417,8 @@ def automation_delete_host(args):
     if os.path.exists("%s/%s" % (logwatch_dir, hostname)):
         import shutil
         shutil.rmtree("%s/%s" % (logwatch_dir, hostname))
+
+    return None
 
 
 def automation_restart(job = "restart"):
@@ -1381,6 +1384,7 @@ def automation_create_or_edit_package(args, mode):
         create_package(new_package_info)
     else:
         edit_package(package_name, new_package_info)
+    return None
 
 
 def automation_install_package(args):
@@ -1405,6 +1409,7 @@ def automation_remove_or_release_package(args, mode):
         remove_package(package)
     else:
         remove_package_info(package_name)
+    return None
 
 
 def automation_remove_unpackaged_file(args):
@@ -1423,3 +1428,4 @@ def automation_remove_unpackaged_file(args):
             if not os.path.isfile(abspath):
                 raise MKAutomationError("No such file")
             os.remove(abspath)
+    return None

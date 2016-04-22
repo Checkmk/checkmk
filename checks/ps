@@ -217,6 +217,9 @@ def ps_parse_process_entries(parsed):
             # Make number of columns in line consistent for discovery/check
             line.insert(1, (None,))
 
+    # Filter out any lines where no process command line is available, e.g.
+    # [None, u'(<defunct>,,,)']
+    parsed = [ x for x in parsed if len(x) > 2 ]
     return parsed
 
 

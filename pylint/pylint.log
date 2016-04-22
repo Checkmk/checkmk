@@ -1,4 +1,0 @@
-make[1]: Entering directory '/home/lm/git/check_mk/pylint'
-./pylint-modules
-Makefile:12: recipe for target 'modules' failed
-make[1]: Leaving directory '/home/lm/git/check_mk/pylint'

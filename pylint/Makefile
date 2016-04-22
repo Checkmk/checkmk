@@ -9,15 +9,17 @@ help:
 all: modules web checks
 
 modules:
-	./pylint-modules
+	./pylint-modules || true
 
 web:
-	./pylint-web
+	./pylint-web || true
 
 checks:
-	./pylint-checks
-
+	./pylint-checks || true
 
 build:
 	export TERM="linux" ; \
-	$(MAKE) all > pylint.log
+	export PYLINT_ARGS="--output-format=parseable" ; \
+	export PYLINT_OUTPUT="pylint.log" ; \
+	echo -n > pylint.log ; \
+	$(MAKE) all

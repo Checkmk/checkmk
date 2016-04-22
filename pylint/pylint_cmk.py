@@ -2,8 +2,11 @@
 # Library for pylint checks of Check_MK
 
 import os
+import sys
 import shutil
+import subprocess
 import tempfile
+
 
 def ordered_module_files():
     modules = [
@@ -77,9 +80,23 @@ def get_test_dir():
 
 
 def run_pylint(cfg_file, base_path):
-    cmd = "pylint --rcfile=\"%s\" %s/*.py" % (cfg_file, base_path)
-    print("Starting pylint with: %s" % cmd)
-    exit_code = os.system(cmd)
+    pylint_args = os.environ.get("PYLINT_ARGS", "")
+    if pylint_args:
+        pylint_args += " "
+    pylint_output = os.environ.get("PYLINT_OUTPUT")
+
+    cmd = "pylint --rcfile=\"%s\" %s%s/*.py" % (cfg_file, pylint_args, base_path)
+    print("Running pylint with: %s" % cmd)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+    stdout = p.communicate()[0]
+
+    if stdout.strip():
+        if pylint_output:
+            file(pylint_output, "a").write(stdout)
+        else:
+            print(stdout)
+
+    exit_code = p.returncode
     print("Finished with exit code: %d" % exit_code)
 
     if exit_code == 0:

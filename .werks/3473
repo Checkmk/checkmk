@@ -1,0 +1,11 @@
+Title: fileinfo.groups: the include patterns now also support the pattern YESTERDAY, in addition to DATE
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1461330445
+Class: feature
+
+You can now specifiy include patterns with the following syntax<br>
+<i>/var/tmp/backups/$YESTERDAY:%Y%m%d$.txt</i>.<br>This includes files of yesterdays date
+with the given date format spec. The YESTERDAY format should also consider daylight saving time.

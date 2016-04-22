@@ -2654,7 +2654,15 @@ register_rule(group + '/' + subgroup_storage,
                   '<tt>/var/log/apache/*.log</tt>. For files contained in a group '
                   'the inventory will automatically create a group service instead '
                   'of single services for each file. This rule also applies when '
-                  'you use manually configured checks instead of inventorized ones.'),
+                  'you use manually configured checks instead of inventorized ones. '
+                  'Furthermore, the current time/date in a configurable format '
+                  'may be included in the include pattern. The syntax is as follows: '
+                  '$DATE:format-spec$ or $YESTERDAY:format-spec$, where format-spec '
+                  'is a list of time format directives of the unix date command. '
+                  'Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A pattern '
+                  'of /var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files '
+                  'with todays date  as name in the directory /var/tmp/backups. '
+                  'The YESTERDAY syntax simply subtracts one day from the reference time.'),
     valuespec = ListOf(
         Tuple(
             help = _("This defines one file grouping pattern"),

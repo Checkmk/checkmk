@@ -36,7 +36,8 @@ def inventory_avaya_45xx_temp(info):
 def check_avaya_45xx_temp(item, params, info):
     for idx, temp in enumerate(info):
         if str(idx) == item:
-            return check_temperature(int(temp[0]), params, dev_unit = "f")
+            return check_temperature(int(temp[0]), params,
+                                     "avaya_45xx_temp_%s" % item, dev_unit = "f")
 
 check_info["avaya_45xx_temp"] = {
     "check_function":       check_avaya_45xx_temp,

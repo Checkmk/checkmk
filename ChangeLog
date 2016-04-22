@@ -170,6 +170,7 @@
     * 3030 FIX: brocade_info: fixed problem in snmp scan function during service discovery...
     * 3389 FIX: ps: Fixed stripped command lines for process checking on solaris systems
     * 3391 FIX: CPU checks: Fixed graph per core when cores names don't have a tailing number
+    * 3392 FIX: avaya_45xx_temp: Fixed broken check
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

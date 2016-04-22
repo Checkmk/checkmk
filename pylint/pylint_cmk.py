@@ -74,9 +74,13 @@ def add_file(f, path):
 
 
 def get_test_dir():
-    base_path = os.environ.get("JOB_PATH")
-    if not base_path:
+    base_path = os.environ.get("WORKDIR")
+    if base_path:
+        base_path += "/" + os.path.basename(sys.argv[0])
+        os.makedirs(base_path)
+    else:
         base_path = tempfile.mkdtemp(prefix="cmk_pylint")
+
     print("Prepare check in %s..." % base_path)
     return base_path
 
@@ -105,8 +109,8 @@ def run_pylint(cfg_file, base_path):
     print("Finished with exit code: %d" % exit_code)
 
     if exit_code == 0:
-        # Don't remove directory when specified via JOB_PATH env
-        if not os.environ.get("JOB_PATH"):
+        # Don't remove directory when specified via WORKDIR env
+        if not os.environ.get("WORKDIR"):
             print("Removing build path...")
             shutil.rmtree(base_path)
 

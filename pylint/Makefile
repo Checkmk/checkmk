@@ -20,6 +20,6 @@ checks:
 build:
 	export TERM="linux" ; \
 	export PYLINT_ARGS="--output-format=parseable" ; \
-	export PYLINT_OUTPUT="pylint.log" ; \
+	export PYLINT_OUTPUT="$$WORKDIR/pylint.log" ; \
 	echo -n > pylint.log ; \
 	$(MAKE) all

@@ -1,0 +1,9 @@
+Title: cisco_asa_failover: Do not discover interfaces where failover is not enabled
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b12
+Date: 1461327076
+Class: fix
+
+Thanks to Udo Wöhler.

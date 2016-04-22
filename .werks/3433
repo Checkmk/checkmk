@@ -1,0 +1,9 @@
+Title: cmc_temp: Fixed broken check
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b12
+Date: 1461306398
+Class: fix
+
+

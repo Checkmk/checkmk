@@ -34,41 +34,46 @@ def check_db2_mem(item, params, info):
         raise MKCounterWrapped("Login into database failed")
 
     warn, crit = params
-    hit = 0
-    values = []
-    perf = []
-    state = 3
-    message = "Instance not found"
+
+    in_block = False
+    limit, usage = None, None
     for line in info:
-        if hit > 0 and hit <= 2:
-            hit += 1
+        if line[1] == item:
+            in_block = True
+        elif in_block == True:
             if line[-1].lower() == "kb":
                 value = int(line[-2]) * 1024
             elif line[-1].lower() == "mb":
                 value = int(line[-2]) * 1024 * 1024
             else:
                 value = int(line[-2])
-            values.append(value)
-            if len(values) == 2:
-                limit, usage = values
-                left = limit - usage
-                perc_level =  ( 100.0 / limit ) * left
-                label = ", Warn/Crit %d%%/%d%%" % (warn, crit)
-                if perc_level <= crit:
-                    state = 2
-                elif perc_level <= warn:
-                    state = 1
-                else:
-                    label = ""
-                    state = 0
 
-                message = "Max: %s, Used: %s (%.2d%% Free%s) " % \
-                (get_bytes_human_readable(limit), get_bytes_human_readable(usage), perc_level, label)
-                perf = [("mem", usage, 0, 0, 0, limit )]
+            if limit == None:
+                limit = value
+            else:
+                usage = value
+                break
 
-        if line[1] == item:
-            hit = 1
+    if limit == None or usage == None:
+        return
 
+    left = limit - usage
+    perc_level = ( 100.0 / limit ) * left
+    label = " (Warn/Crit %d%%/%d%%)" % (warn, crit)
+
+    if perc_level <= crit:
+        state = 2
+    elif perc_level <= warn:
+        state = 1
+    else:
+        label = ""
+        state = 0
+
+    message = "Max: %s, Used: %s (%.2d%% Free%s) " % \
+                    (get_bytes_human_readable(limit),
+                     get_bytes_human_readable(usage),
+                     perc_level, label)
+    perf = [("mem", usage, 0, 0, 0, limit )]
 
     return state, message, perf
 

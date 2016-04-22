@@ -105,6 +105,7 @@ def inventory_win_dhcp_pools(info):
             continue
         if in_block:
             pool_stats.append(saveint(line[1]))
+
         if len(pool_stats) == 3:
             in_block = False
             used, free, pending = pool_stats
@@ -115,17 +116,19 @@ def inventory_win_dhcp_pools(info):
 
 def check_win_dhcp_pools(item, params, info):
     in_block = False
-    pool_stats = []
+    pool_stats = [None, None, None]
     for line in parse_win_dhcp_pools(info):
         if win_dhcp_pools_stats_translate.get(line[0], line[0]) == 'Subnet' and line[1] == item:
             in_block = True
+            pool_stats = []
             continue
+
         if in_block:
             pool_stats.append(saveint(line[1]))
-        if len(pool_stats) == 3:
-            break
+            if len(pool_stats) == 3:
+                break
 
-    if len(pool_stats) == 3:
+    if all(v is not None for v in pool_stats):
         used, free, pending = pool_stats
         size = used + free + pending
 

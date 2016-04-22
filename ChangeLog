@@ -13,6 +13,7 @@
     * 3124 FIX: workaround for overrunnig counters in a couple of wmi checks...
     * 3030 FIX: brocade_info: fixed problem in snmp scan function during service discovery...
     * 3389 FIX: ps: Fixed stripped command lines for process checking on solaris systems
+    * 3391 FIX: CPU checks: Fixed graph per core when cores names don't have a tailing number
 
     Multisite:
     * 3118 FIX: Availability view now takes daylight saving time into account

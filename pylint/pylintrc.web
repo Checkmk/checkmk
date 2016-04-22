@@ -1,0 +1,40 @@
+[MASTER]
+# Use the OMD default version lib dir to add the mod_python modules
+init-hook='import sys; sys.path = [ "web/htdocs/", "/omd/versions/default/lib/python" ] + sys.path'
+persistent=yes
+
+# We only want to see errors for the moment. Disable this one day. But prepare to cleanup a lot of stuff.
+errors-only=yes
+
+[MESSAGES CONTROL]
+# C0111 missing module docstring
+# C0326 bad-whitespace
+disable=C0111,C0326
+# Disable this because we often use multiple types for a single variable. Maybe we
+# can change this in future to make such linter checks work, but for the moment these
+# checks are useless with Check_MK.
+disable=unsubscriptable-object,unsupported-membership-test,unpacking-non-sequence
+
+[TYPECHECK]
+# The Python ldap module gets a lot of constants from the C API which can not be found by pylint.
+# This results in a lot of these errors: "Module 'ldap' has no 'OPT_REFERRALS' member".
+ignored-modules = ldap
+
+[REPORTS]
+output-format=colorized
+msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
+
+[FORMAT]
+max-line-length=100
+single-line-if-stmt=no
+indent-string='    '
+
+[VARIABLES]
+# Ignore these unused variables (e.g. _no_item,_no_params)
+dummy-variables-rgx=^_.*
+
+additional-builtins=html,_,_u,current_language,HTML
+
+[MISCELLANEOUS]
+# List of note tags to take in consideration, separated by a comma.
+notes=FIXME,TODO

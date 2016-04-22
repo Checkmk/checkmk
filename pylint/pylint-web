@@ -1,0 +1,60 @@
+#!/usr/bin/python
+# encoding: utf-8
+
+import os, sys, shutil, glob
+import pylint_cmk
+import tempfile
+
+def get_web_plugin_dirs():
+    plugin_dirs = sorted(os.listdir("../web/plugins"))
+
+    # icons are included from a plugin of views module. Move to the end to
+    # make them be imported after the views plugins. Same for perfometers.
+    plugin_dirs.remove("icons")
+    plugin_dirs.append("icons")
+    plugin_dirs.remove("perfometer")
+    plugin_dirs.append("perfometer")
+    return plugin_dirs
+
+
+cmk_branch = os.popen("git rev-parse --abbrev-ref HEAD").read().strip()
+cmc_branch = os.popen("cd ../../cmc ; git rev-parse --abbrev-ref HEAD").read().strip()
+if cmk_branch != cmc_branch:
+    sys.stderr.write("ERROR: Branches sind unterschiedlich (%s <> %s)\n" %
+                                                        (cmk_branch, cmc_branch))
+    sys.exit(1)
+
+base_path = pylint_cmk.get_test_dir()
+
+modules = glob.glob("../web/htdocs/*.py") + glob.glob("../../cmc/web/htdocs/*.py")
+
+for module in modules:
+    print("Copy %s to test directory" % module)
+    shutil.copy(module, base_path + "/" + os.path.basename(module))
+
+# Move the whole plugins code to their modules, then
+# run pylint only on the modules
+for plugin_dir in get_web_plugin_dirs():
+    path = "../web/plugins/"+plugin_dir
+    files = [ (f, path) for f in os.listdir(path) ]
+
+    cmc_path = "../../cmc/web/plugins/"+plugin_dir
+    if os.path.exists(cmc_path):
+        files += [ (f, cmc_path) for f in os.listdir(cmc_path) ]
+
+    for plugin_file, plugin_base in sorted(files):
+        plugin_path = plugin_base +"/"+plugin_file
+
+        if plugin_dir in ["icons","perfometer"]:
+            module_name = "views"
+        elif plugin_dir == "pages":
+            module_name = "modules"
+        else:
+            module_name = plugin_dir
+
+        print("[%s] add %s" % (module_name, plugin_path))
+        module = file(base_path + "/" + module_name + ".py", "a")
+        pylint_cmk.add_file(module, plugin_path)
+        module.close()
+
+sys.exit(pylint_cmk.run_pylint("pylintrc.web", base_path))

@@ -40,7 +40,7 @@
 # recognizes it. If the input name doesn't end on a number, this
 # returns consecutive numbers per call so this function has to be
 # called exactly once per core
-def cpu_util_core_name(orig):
+def cpu_util_core_name(orig, core_counter):
     expr = regex("\d+$")
     match = expr.search(orig)
     if match is not None:
@@ -48,11 +48,9 @@ def cpu_util_core_name(orig):
     else:
         # fallback: if the cores have odd names, use
         # consecutive numbers for each call
-        if not hasattr(core_name, "counter"):
-            core_name.counter = 0
-        num = core_name.counter
-        core_name.counter += 1
-    return "cpu_core_util_%s" % num
+        num = core_counter
+        core_counter += 1
+    return "cpu_core_util_%s" % num, core_counter
 
 
 def check_cpu_util(util, params, this_time = None, cores = None):
@@ -98,10 +96,11 @@ def check_cpu_util(util, params, this_time = None, cores = None):
     yield state, infotext, perfdata
 
     if cores and ("core_util_graph" in params or "core_util_time" in params):
-        ctr = 0
+        core_counter = 0
         for core, total_perc in cores:
             if "core_util_graph" in params:
-                yield 0, None, [(cpu_util_core_name(core), total_perc)]
+                core_name, core_counter = cpu_util_core_name(core, core_counter)
+                yield 0, None, [(core_name, total_perc)]
 
             if "core_util_time" in params:
                 threshold, warn_core, crit_core = params["core_util_time"]
@@ -209,7 +208,7 @@ def check_cpu_util_unix(values, params, cores = None):
     if cores and\
             ("core_util_graph" in params or \
              "core_util_time" in params):
-        ctr = 0
+        core_counter = 0
         cores_padded = [line + [0] * (11 - len(line)) for line in cores]
         for core, user, nice, system, idle, iowait,\
             irq, softirq, steal, guest, guest_nice in cores_padded:
@@ -223,7 +222,8 @@ def check_cpu_util_unix(values, params, cores = None):
             total_perc = ((100.0 * total_diff) / sum_jiffies) * len(cores)
 
             if "core_util_graph" in params:
-                yield 0, None, [(cpu_util_core_name(core), total_perc)]
+                core_name, core_counter = cpu_util_core_name(core, core_counter)
+                yield 0, None, [(core_name, total_perc)]
 
             if "core_util_time" in params:
                 threshold, warn_core, crit_core = params["core_util_time"]

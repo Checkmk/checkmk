@@ -1,0 +1,10 @@
+Title: CPU checks: Fixed graph per core when cores names don't have a tailing number
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461305854
+
+

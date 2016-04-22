@@ -1,0 +1,10 @@
+Title: avaya_45xx_temp: Fixed broken check
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b12
+Date: 1461306279
+
+

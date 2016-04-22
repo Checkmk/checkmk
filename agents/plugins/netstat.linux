@@ -28,4 +28,4 @@
 # have an execution time complexity of at least O(n^2) on Linux.
 
 echo '<<<netstat>>>'
-netstat -ntu  |  egrep '^(tcp|udp)'
+netstat -ntua  |  egrep '^(tcp|udp)' | sed -e 's/LISTEN/LISTENING/g'

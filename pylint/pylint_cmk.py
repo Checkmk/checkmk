@@ -79,7 +79,8 @@ def get_test_dir():
 def run_pylint(cfg_file, base_path):
     cmd = "pylint --rcfile=\"%s\" %s/*.py" % (cfg_file, base_path)
     print("Starting pylint with: %s" % cmd)
-    exit_code = os.system(cmd) >> 8
+    exit_code = os.system(cmd)
+    print("Finished with exit code: %d" % exit_code)
 
     if exit_code == 0:
         print("Removing build path...")
@@ -87,3 +88,12 @@ def run_pylint(cfg_file, base_path):
 
     return exit_code
 
+
+def ensure_equal_branches():
+    cmk_branch = os.popen("git rev-parse --abbrev-ref HEAD").read().strip()
+    cmc_branch = os.popen("cd ../../cmc ; "
+                          "git rev-parse --abbrev-ref HEAD").read().strip()
+    if cmk_branch != cmc_branch:
+        sys.stderr.write("ERROR: Different branches (%s != %s)\n" %
+                                              (cmk_branch, cmc_branch))
+        sys.exit(1)

@@ -6,6 +6,7 @@ import sys
 import tempfile
 import pylint_cmk
 
+pylint_cmk.ensure_equal_branches()
 base_path = pylint_cmk.get_test_dir()
 
 f = file(base_path + "/cmk-modules.py", "w")

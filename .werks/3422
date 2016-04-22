@@ -1,0 +1,10 @@
+Title: printer_pages, canon_pages: Detect pages on Canon 8350 with generic check
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b12
+Date: 1461327795
+Class: fix
+
+This printer (and maybe others) do not implement the Canon-specific OIDs so we
+now fall back to the generic MIB.

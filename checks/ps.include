@@ -185,11 +185,7 @@ def process_matches_for_discovery(process_line, process_pattern, userspec):
         if matchobject:
             return [ g and g or "" for g in matchobject.groups() ], grabbed_user
     else:
-        # command_line can be empty. Found in AIX agent output (server-aix-ps-1):
-        # ...
-        # (<defunct>,,,)
-        # ...
-        if command_line and command_line[0] == process_pattern:
+        if command_line[0] == process_pattern:
             return (), grabbed_user
 
     return False, grabbed_user

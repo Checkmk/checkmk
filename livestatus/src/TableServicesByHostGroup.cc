@@ -50,7 +50,9 @@ TableServicesByHostGroup::TableServicesByHostGroup(
                                     reinterpret_cast<char *>(&hgref));
 }
 
-const char *TableServicesByHostGroup::name() const { return "servicesbyhostgroup"; }
+const char *TableServicesByHostGroup::name() const {
+    return "servicesbyhostgroup";
+}
 
 const char *TableServicesByHostGroup::namePrefix() const { return "service_"; }
 

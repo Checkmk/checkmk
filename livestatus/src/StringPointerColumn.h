@@ -37,7 +37,7 @@ public:
                         int extra_offset = -1)
         : StringColumn(name, description, indirect_offset, extra_offset)
         , _string(string) {}
-    const char *getValue(void *) override { return _string; }
+    std::string getValue(void *) const override { return _string; }
 };
 
 #endif  // StringPointerColumn_h

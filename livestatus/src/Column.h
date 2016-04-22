@@ -53,7 +53,7 @@ public:
 
     const char *name() const { return _name.c_str(); }
     const char *description() const { return _description.c_str(); }
-    void *shiftPointer(void *data);
+    void *shiftPointer(void *data) const;
 
     virtual std::string valueAsString(void *, Query *) { return "invalid"; }
     virtual int type() = 0;

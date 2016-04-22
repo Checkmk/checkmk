@@ -46,7 +46,7 @@ public:
         : StringColumn(name, description, indirect_offset, extra_offset)
         , _colcol(colcol)
         , _table_columns(tablecols) {}
-    const char *getValue(void *data) override;
+    std::string getValue(void *data) const override;
 };
 
 #endif  // ColumnsColumn_h

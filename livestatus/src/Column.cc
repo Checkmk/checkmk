@@ -36,7 +36,7 @@ Column::Column(string name, string description, int indirect_offset,
     , _extra_offset(extra_offset)
     , _extra_extra_offset(extra_extra_offset) {}
 
-void *Column::shiftPointer(void *data) {
+void *Column::shiftPointer(void *data) const {
     if (data == nullptr) {
         return nullptr;
     }

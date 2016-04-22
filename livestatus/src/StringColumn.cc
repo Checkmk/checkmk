@@ -28,7 +28,7 @@
 
 void StringColumn::output(void *data, Query *query) {
     if (data != nullptr) {
-        query->outputString(getValue(data));
+        query->outputString(getValue(data).c_str());
     } else {
         query->outputString(nullptr);
     }

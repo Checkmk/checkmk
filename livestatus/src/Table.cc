@@ -96,6 +96,8 @@ Column *Table::dynamicColumn(const char *colname_with_args) {
     return nullptr;
 }
 
-bool Table::isAuthorized(contact *, void *) { return true; }
+bool Table::isAuthorized(contact * /*unused*/, void * /*unused*/) {
+    return true;
+}
 
-void *Table::findObject(char *) { return nullptr; }
+void *Table::findObject(char * /*unused*/) { return nullptr; }

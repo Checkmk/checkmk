@@ -30,6 +30,8 @@
 #include "logger.h"
 #include "opids.h"
 
+using std::string;
+
 StringColumnFilter::StringColumnFilter(StringColumn *column, int opid,
                                        char *value)
     : _column(column)
@@ -67,28 +69,24 @@ StringColumnFilter::~StringColumnFilter() {
 
 bool StringColumnFilter::accepts(void *data) {
     bool pass = true;
-    const char *act_string = _column->getValue(data);
-    if (act_string == nullptr) {
-        act_string =
-            "";  // e.g. current_service_perf_data in host entry in log table
-    }
+    string act_string = _column->getValue(data);
     switch (_opid) {
         case OP_EQUAL:
             pass = _ref_string == act_string;
             break;
         case OP_EQUAL_ICASE:
-            pass = (strcasecmp(_ref_string.c_str(), act_string) == 0);
+            pass = (strcasecmp(_ref_string.c_str(), act_string.c_str()) == 0);
             break;
         case OP_REGEX:
         case OP_REGEX_ICASE:
             pass = _regex != nullptr &&
-                   0 == regexec(_regex, act_string, 0, nullptr, 0);
+                   0 == regexec(_regex, act_string.c_str(), 0, nullptr, 0);
             break;
         case OP_GREATER:
-            pass = 0 > strcmp(_ref_string.c_str(), act_string);
+            pass = 0 > strcmp(_ref_string.c_str(), act_string.c_str());
             break;
         case OP_LESS:
-            pass = 0 < strcmp(_ref_string.c_str(), act_string);
+            pass = 0 < strcmp(_ref_string.c_str(), act_string.c_str());
             break;
         default:
             // this should never be reached, all operators are handled

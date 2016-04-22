@@ -27,18 +27,20 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <utility>
+#include <vector>
 #include "Query.h"
 #include "StatsColumn.h"
 #include "StringColumn.h"
 #include "strutil.h"
 
 using std::string;
+using std::vector;
 
 void PerfdataAggregator::consume(void *data, Query * /*unused*/) {
-    char *perf_data = strdup(_column->getValue(data));
-    char *scan = perf_data;
+    string perf_data = _column->getValue(data);
+    vector<char> perf_data_vec(perf_data.begin(), perf_data.end());
+    char *scan = &perf_data_vec[0];
 
     char *entry;
     while (nullptr != (entry = next_field(&scan))) {
@@ -64,8 +66,6 @@ void PerfdataAggregator::consume(void *data, Query * /*unused*/) {
         double value = strtod(start_of_number, nullptr);
         consumeVariable(start_of_varname, value);
     }
-
-    free(perf_data);
 }
 
 void PerfdataAggregator::consumeVariable(const char *varname, double value) {

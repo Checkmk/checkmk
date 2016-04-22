@@ -24,7 +24,9 @@
 
 #include "CustomVarsExplicitColumn.h"
 
-const char *CustomVarsExplicitColumn::getValue(void *data) {
+using std::string;
+
+string CustomVarsExplicitColumn::getValue(void *data) const {
     customvariablesmember *cvm = getCVM(data);
     while (cvm != nullptr) {
         if (cvm->variable_name == _varname) {
@@ -35,7 +37,7 @@ const char *CustomVarsExplicitColumn::getValue(void *data) {
     return "";
 }
 
-customvariablesmember *CustomVarsExplicitColumn::getCVM(void *data) {
+customvariablesmember *CustomVarsExplicitColumn::getCVM(void *data) const {
     if (data == nullptr) {
         return nullptr;
     }

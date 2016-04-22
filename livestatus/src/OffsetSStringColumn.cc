@@ -26,7 +26,7 @@
 
 using std::string;
 
-const char *OffsetSStringColumn::getValue(void *data) {
+string OffsetSStringColumn::getValue(void *data) const {
     char *p = reinterpret_cast<char *>(shiftPointer(data));
     if (p == nullptr) {
         return "";

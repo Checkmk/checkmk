@@ -24,7 +24,9 @@
 
 #include "OffsetStringColumn.h"
 
-const char *OffsetStringColumn::getValue(void *data) {
+using std::string;
+
+string OffsetStringColumn::getValue(void *data) const {
     char *p = reinterpret_cast<char *>(shiftPointer(data));
     if (p == nullptr) {
         return "";

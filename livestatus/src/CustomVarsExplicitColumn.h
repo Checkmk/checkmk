@@ -41,10 +41,10 @@ public:
         : StringColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset)
         , _varname(varname) {}
-    const char *getValue(void *data) override;
+    std::string getValue(void *data) const override;
 
 private:
-    customvariablesmember *getCVM(void *data);
+    customvariablesmember *getCVM(void *data) const;
 };
 
 #endif  // CustomVarsExplicitColumn_h

@@ -35,13 +35,13 @@ using std::string;
 extern char *macro_user[MAX_USER_MACROS];
 
 string OffsetStringMacroColumn::valueAsString(void *data, Query * /*unused*/) {
-    const char *raw = getValue(data);
+    string raw = getValue(data);
     host *hst = getHost(data);
     service *svc = getService(data);
 
     // search for macro names, beginning with $
     string result = "";
-    const char *scan = raw;
+    const char *scan = raw.c_str();
 
     while (*scan != 0) {
         const char *dollar = strchr(scan, '$');

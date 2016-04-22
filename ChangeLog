@@ -175,6 +175,7 @@
     * 3433 FIX: cmc_temp: Fixed broken check
     * 3434 FIX: cmctc_lcp: Fixed broken check in case parameter are specified
     * 3435 FIX: check_varnish_uptime: Fixed broken check
+    * 3419 FIX: solaris_mem: avoid crash in case of empty agent section, treat section as missing...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

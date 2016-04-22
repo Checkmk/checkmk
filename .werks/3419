@@ -1,0 +1,11 @@
+Title: solaris_mem: avoid crash in case of empty agent section, treat section as missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461322776
+
+Unter some unclear circumstances the neccessary information seems to be missing
+in the agent output.

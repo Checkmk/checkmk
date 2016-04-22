@@ -68,7 +68,12 @@ def check_tcp_arguments(params):
         args += ' --ssl'
 
     if "cert_days" in settings:
-        args += ' -D %d' % settings["cert_days"]
+        # legacy behavior
+        if type(settings["cert_days"]) == int:
+            args += ' -D %d' % settings["cert_days"]
+        else:
+            warn, crit = settings["cert_days"]
+            args += ' -D %d,%d' % (warn, crit)
 
     if "quit_string" in settings:
         args += ' -q %s' % quote_shell_string(settings["quit_string"])

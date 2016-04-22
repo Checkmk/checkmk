@@ -1,0 +1,9 @@
+Title: check_ftp, check_tcp, check_smtp: add missing CRIT levels for certificate live time
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b12
+Date: 1461325421
+Class: fix
+
+Thanks to Gregor Hoffleit.

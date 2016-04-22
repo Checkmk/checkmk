@@ -279,7 +279,7 @@ def inventory_varnish_uptime(parsed):
 
 def check_varnish_uptime(_no_item, _no_params, parsed):
     if "uptime" in parsed:
-        return check_uptime_seconds(params, parsed["uptime"][0])
+        return check_uptime_seconds(_no_params, parsed["uptime"][0])
 
 
 check_info["varnish"] = {

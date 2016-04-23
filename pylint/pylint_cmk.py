@@ -3,9 +3,13 @@
 
 import os
 import sys
+import glob
 import shutil
 import subprocess
 import tempfile
+
+from pylint.reporters.text import ColorizedTextReporter
+from pylint.utils import Message
 
 
 def ordered_module_files():
@@ -65,9 +69,13 @@ def check_files():
 
 
 def add_file(f, path):
+    # Change path to be relative to "workdir" /home/git or the workdir
+    # in the build system.
+    relpath = os.path.relpath(os.path.realpath(path),
+                              os.path.dirname(os.path.dirname(os.getcwd())))
     f.write("\n")
     f.write("#\n")
-    f.write("# " + path + "\n")
+    f.write("# ORIG-FILE: " + relpath + "\n")
     f.write("#\n")
     f.write("\n")
     f.write(file(path).read())
@@ -81,7 +89,7 @@ def get_test_dir():
     else:
         base_path = tempfile.mkdtemp(prefix="cmk_pylint")
 
-    print("Prepare check in %s..." % base_path)
+    print("Prepare check in %s ..." % base_path)
     return base_path
 
 
@@ -93,6 +101,7 @@ def run_pylint(cfg_file, base_path):
 
     pylint_cfg = os.getcwd() + "/" + cfg_file
 
+    os.putenv("PYLINT_PATH", os.getcwd())
     cmd = "pylint --rcfile=\"%s\" %s*.py" % (pylint_cfg, pylint_args)
     print("Running pylint with: %s" % cmd)
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
@@ -125,3 +134,38 @@ def ensure_equal_branches():
         sys.stderr.write("ERROR: Different branches (%s != %s)\n" %
                                               (cmk_branch, cmc_branch))
         sys.exit(1)
+
+
+
+# Check_MK currently uses a packed version of it's files to
+# run the pylint tests because it's not well structured in
+# python modules. This custom reporter rewrites the found
+# messages to tell the users the original location in the
+# python sources
+class CMKColorizedTextReporter(ColorizedTextReporter):
+    def handle_message(self, msg):
+        lines = file(msg.abspath).readlines()
+
+        line_nr = msg.line
+        orig_file, went_back = None, -3
+        while line_nr > 0:
+            line_nr -= 1
+            went_back += 1
+            line = lines[line_nr]
+            if line.startswith("# ORIG-FILE: "):
+                orig_file = line.split(": ", 1)[1].strip()
+                break
+
+        if orig_file != None:
+            msg = msg._replace(line=went_back, path=orig_file)
+
+        ColorizedTextReporter.handle_message(self, msg)
+
+
+# Is called by pylint to load this plugin
+def register(linter):
+    sys.path = glob.glob("/omd/versions/default/lib/python/*.egg") \
+               + [ "/omd/versions/default/lib/python" ] \
+               + sys.path
+
+    linter.register_reporter(CMKColorizedTextReporter)

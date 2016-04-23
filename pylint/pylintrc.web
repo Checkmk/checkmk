@@ -1,8 +1,8 @@
 [MASTER]
 # Use the OMD default version lib dir to add the mod_python modules
-init-hook='import sys; sys.path = [ "web/htdocs/", "/omd/versions/default/lib/python" ] + sys.path'
+init-hook='import sys; sys.path.insert(0, os.environ.get("PYLINT_PATH"))'
+load-plugins=pylint_cmk
 persistent=yes
-
 # We only want to see errors for the moment. Disable this one day. But prepare to cleanup a lot of stuff.
 errors-only=yes
 

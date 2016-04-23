@@ -4,7 +4,6 @@
 import os
 import sys
 import glob
-import shutil
 import tempfile
 import pylint_cmk
 
@@ -43,7 +42,9 @@ modules = glob.glob("../web/htdocs/*.py") \
 
 for module in modules:
     print("Copy %s to test directory" % module)
-    shutil.copy(module, base_path + "/" + os.path.basename(module))
+    f = open(base_path + "/" + os.path.basename(module), "w")
+    pylint_cmk.add_file(f, module)
+    f.close()
 
 # Move the whole plugins code to their modules, then
 # run pylint only on the modules

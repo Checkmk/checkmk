@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import tempfile
 
-from pylint.reporters.text import ColorizedTextReporter
+from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter
 from pylint.utils import Message
 
 
@@ -142,7 +142,7 @@ def ensure_equal_branches():
 # python modules. This custom reporter rewrites the found
 # messages to tell the users the original location in the
 # python sources
-class CMKColorizedTextReporter(ColorizedTextReporter):
+class CMKFixFileMixin(object):
     def handle_message(self, msg):
         lines = file(msg.abspath).readlines()
 
@@ -159,7 +159,18 @@ class CMKColorizedTextReporter(ColorizedTextReporter):
         if orig_file != None:
             msg = msg._replace(line=went_back, path=orig_file)
 
-        ColorizedTextReporter.handle_message(self, msg)
+        super(CMKFixFileMixin, self).handle_message(msg)
+
+
+
+class CMKColorizedTextReporter(CMKFixFileMixin, ColorizedTextReporter):
+    name = "cmk_colorized"
+
+
+
+class CMKParseableTextReporter(CMKFixFileMixin, ParseableTextReporter):
+    name = "cmk_parseable"
+
 
 
 # Is called by pylint to load this plugin
@@ -169,3 +180,4 @@ def register(linter):
                + sys.path
 
     linter.register_reporter(CMKColorizedTextReporter)
+    linter.register_reporter(CMKParseableTextReporter)

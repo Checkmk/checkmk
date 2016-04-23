@@ -27,7 +27,7 @@ disable=unsubscriptable-object,unsupported-membership-test,unpacking-non-sequenc
 ignored-modules = rrdtool
 
 [REPORTS]
-output-format=colorized
+output-format=cmk_colorized
 msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
 
 [FORMAT]

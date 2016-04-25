@@ -797,6 +797,7 @@ try:
     import ast
     literal_eval = ast.literal_eval
 except ImportError:
+    # pylint: disable=no-member
     # Python <2.5 compatibility
     try:
         from compiler import parse

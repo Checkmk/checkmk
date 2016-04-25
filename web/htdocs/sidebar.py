@@ -802,10 +802,7 @@ def search_url_tmpl(used_filters, matched_instances):
 
 
 def search_livestatus(used_filters):
-    try:
-        limit = config.quicksearch_dropdown_limit
-    except:
-        limit = 80
+    limit = config.quicksearch_dropdown_limit
 
     # We need to know which plugin lead to finding a particular host, so it
     # is neccessary to make one query for each plugin - sorry. For example

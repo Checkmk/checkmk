@@ -217,7 +217,7 @@ def available(what, all_visuals):
             return True
 
         if type(visual["public"]) == tuple and visual["public"][0] == "contact_groups":
-            user_groups = set(userdb.groups_of_user(user))
+            user_groups = set(userdb.contactgroups_of_user(user))
             if user_groups.intersection(visual["public"][1]):
                 return True
 

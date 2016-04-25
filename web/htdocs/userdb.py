@@ -598,6 +598,8 @@ def save_users(profiles):
         if 'last_seen' in user:
             save_custom_attr(user_id, 'last_seen', repr(user['last_seen']))
 
+        save_cached_profile(user_id, user, multisite_keys, non_contact_keys)
+
     # During deletion of users we don't delete files which might contain user settings
     # and e.g. customized views which are not easy to reproduce. We want to keep the
     # files which are the result of a lot of work even when e.g. the LDAP sync deletes
@@ -636,12 +638,29 @@ def rewrite_users():
     users = load_users(lock = True)
     save_users(users)
 
+
+def save_cached_profile(user_id, user, multisite_keys, non_contact_keys):
+    # Only save contact AND multisite attributes to the profile. Not the
+    # infos that are stored in the custom attribute files.
+    cache = {}
+    for key in user.keys():
+        if key in multisite_keys or key not in non_contact_keys:
+            cache[key] = user[key]
+
+    config.save_user_file("cached_profile", cache, user=user_id)
+
+
+def load_cached_profile():
+    return config.load_user_file("cached_profile", None)
+
+
 def contactgroups_of_user(user_id):
-    users = load_users()
-    if user_id not in users:
-        return []
-    else:
-        return users[user_id].get("contactgroups", [])
+    user = load_cached_profile()
+    if user == None:
+        # No cached profile present. Load all users to get the users data
+        user = load_users(lock=False)[user_id]
+
+    return user.get("contactgroups", [])
 
 
 #.
@@ -767,12 +786,6 @@ class GroupChoice(DualListChoice):
         this_group = all_groups.get(self.what, {})
         return [ (k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items() ]
 
-
-# TODO: This is not performing good with a large user base. Hope it works for our needs.
-# Maybe we need to change it to livestatus or change our data structures somehow in the future.
-def groups_of_user(user_id):
-    users = load_users(lock=False)
-    return users[user_id]["contactgroups"]
 
 #.
 #   .-Custom-Attrs.--------------------------------------------------------.

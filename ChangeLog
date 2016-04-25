@@ -184,6 +184,7 @@
     * 3464 FIX: netstat.linux: fix monitoring of UDP listeners...
     * 3523 FIX: esx_vsphere_hostsystem: fixed exception when no multipath state info is available
     * 3425 FIX: Fixed extra section handling if no related check plugin exists
+    * 3465 FIX: df: Fix displayed vertical range of graph of all filesystem checks...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

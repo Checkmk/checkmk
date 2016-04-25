@@ -1,0 +1,11 @@
+Title: Views/Dashobards: Can now be published to members of contact groups
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.9i1
+Date: 1461586384
+Class: feature
+
+In previous versions you could publish your views or dashboards to all or no user.
+With this change, you can now create views or dashboards and publish them to a
+the members of specific contact groups only.

@@ -212,6 +212,17 @@ def available(what, all_visuals):
     visuals = {}
     permprefix = what[:-1]
 
+    def published_to_user(visual):
+        if visual["public"] == True:
+            return True
+
+        if type(visual["public"]) == tuple and visual["public"][0] == "contact_groups":
+            user_groups = set(userdb.groups_of_user(user))
+            if user_groups.intersection(visual["public"][1]):
+                return True
+
+        return False
+
     # 1. user's own visuals, if allowed to edit visuals
     if config.may("general.edit_" + what):
         for (u, n), visual in all_visuals.items():
@@ -220,7 +231,7 @@ def available(what, all_visuals):
 
     # 2. visuals of special users allowed to globally override builtin visuals
     for (u, n), visual in all_visuals.items():
-        if n not in visuals and visual["public"] and config.user_may(u, "general.force_" + what):
+        if n not in visuals and published_to_user(visual) and config.user_may(u, "general.force_" + what):
             # Honor original permissions for the current user
             permname = "%s.%s" % (permprefix, n)
             if config.permission_exists(permname) \
@@ -238,7 +249,7 @@ def available(what, all_visuals):
     #    necessary.
     if config.may("general.see_user_" + what):
         for (u, n), visual in all_visuals.items():
-            if n not in visuals and visual["public"] and config.user_may(u, "general.publish_" + what):
+            if n not in visuals and published_to_user(visual) and config.user_may(u, "general.publish_" + what):
                 # Is there a builtin visual with the same name? If yes, honor permissions.
                 permname = "%s.%s" % (permprefix, n)
                 if config.permission_exists(permname) \
@@ -635,13 +646,25 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     # A few checkboxes concerning the visibility of the visual. These will
     # appear as boolean-keys directly in the visual dict, but encapsulated
     # in a list choice in the value spec.
-    visibility_choices = [
-        ('hidden',     _('Hide this %s from the sidebar') % visual_type["title"]),
-        ('hidebutton', _('Do not show a context button to this %s') % visual_type["title"]),
+    visibility_elements = [
+        ('hidden', FixedValue(None,
+            title = _('Hide this %s from the sidebar') % visual_type["title"],
+        )),
+        ('hidebutton', FixedValue(None,
+            title = _('Do not show a context button to this %s') % visual_type["title"],
+        )),
     ]
     if config.may("general.publish_" + what):
-        visibility_choices.append(
-            ('public', _('Make this %s available for all users') % visual_type["title"]))
+        visibility_elements.append(('public', CascadingDropdown(
+            choices = [
+                (True, _("Publish to all users")),
+                ("contact_groups", _("Publish to members of contact groups"), userdb.GroupChoice(
+                    "contact",
+                    title = _("Publish to members of contact groups"),
+                )),
+            ],
+            title = _('Make this %s available for other users') % visual_type["title"]
+        )))
 
     vs_general = Dictionary(
         title = _("General Properties"),
@@ -677,9 +700,9 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
             ('icon', IconSelector(
                 title = _('Button Icon'),
             )),
-            ('visibility', ListChoice(
+            ('visibility', Dictionary(
                 title = _('Visibility'),
-                choices = visibility_choices,
+                elements = visibility_elements,
             )),
         ],
     )
@@ -712,8 +735,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                 visual[key] = general_properties[key]
 
             # ...and import the visibility flags directly into the visual
-            for key, title in visibility_choices:
-                visual[key] = key in general_properties['visibility']
+            for key in dict(visibility_elements).keys():
+                visual[key] = general_properties['visibility'].get(key, False)
 
             if not config.may("general.publish_" + what):
                 visual['public'] = False
@@ -763,8 +786,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
 
     # FIXME: Hier werden die Flags aus visibility nicht korrekt geladen. Wäre es nicht besser,
     # diese in einem Unter-Dict zu lassen, anstatt diese extra umzukopieren?
-    visib = []
-    for key, title in visibility_choices:
+    visib = {}
+    for key, vs in visibility_elements:
         if visual.get(key):
             visib.append(key)
     visual["visibility"] = visib

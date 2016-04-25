@@ -707,6 +707,7 @@ def load_roles():
 #   |                   \____|_|  \___/ \__,_| .__/|___/                   |
 #   |                                        |_|                           |
 #   +----------------------------------------------------------------------+
+# TODO: Contact groups are fine here, but service / host groups?
 
 def load_group_information():
     try:
@@ -753,6 +754,25 @@ def load_group_information():
             logger(LOG_ERR, 'load_group_information: Problem while loading groups (%s - %s). '
                      'Initializing structure...' % (filename, e))
         return {}
+
+
+class GroupChoice(DualListChoice):
+    def __init__(self, what, **kwargs):
+        DualListChoice.__init__(self, **kwargs)
+        self.what = what
+        self._choices = lambda: self.load_groups()
+
+    def load_groups(self):
+        all_groups = load_group_information()
+        this_group = all_groups.get(self.what, {})
+        return [ (k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items() ]
+
+
+# TODO: This is not performing good with a large user base. Hope it works for our needs.
+# Maybe we need to change it to livestatus or change our data structures somehow in the future.
+def groups_of_user(user_id):
+    users = load_users(lock=False)
+    return users[user_id]["contactgroups"]
 
 #.
 #   .-Custom-Attrs.--------------------------------------------------------.

@@ -93,13 +93,13 @@ def get_test_dir():
     return base_path
 
 
-def run_pylint(cfg_file, base_path):
+def run_pylint(base_path):
     pylint_args = os.environ.get("PYLINT_ARGS", "")
     if pylint_args:
         pylint_args += " "
     pylint_output = os.environ.get("PYLINT_OUTPUT")
 
-    pylint_cfg = os.getcwd() + "/" + cfg_file
+    pylint_cfg = os.getcwd() + "/pylintrc"
 
     os.putenv("PYLINT_PATH", os.getcwd())
     cmd = "pylint --rcfile=\"%s\" %s*.py" % (pylint_cfg, pylint_args)

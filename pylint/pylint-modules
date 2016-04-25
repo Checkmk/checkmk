@@ -14,4 +14,4 @@ for path in pylint_cmk.ordered_module_files():
     pylint_cmk.add_file(f, path)
 f.close()
 
-sys.exit(pylint_cmk.run_pylint("pylintrc.modules", base_path))
+sys.exit(pylint_cmk.run_pylint(base_path))

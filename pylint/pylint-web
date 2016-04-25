@@ -66,4 +66,4 @@ for plugin_dir in get_web_plugin_dirs():
         pylint_cmk.add_file(module, plugin_path)
         module.close()
 
-sys.exit(pylint_cmk.run_pylint("pylintrc.web", base_path))
+sys.exit(pylint_cmk.run_pylint(base_path))

@@ -21,10 +21,14 @@ disable=C0111,C0326
 disable=unsubscriptable-object,unsupported-membership-test,unpacking-non-sequence,assignment-from-none
 
 [TYPECHECK]
-# Can not check methods / attributes of the rrdtool C module. Skipping related errors
-# like the following:
-# [E1101(no-member), create_rrd] Module 'rrdtool' has no 'create' member
-ignored-modules = rrdtool
+# rrdtool
+#   Can not check methods / attributes of the rrdtool C module. Skipping related errors
+#   like the following:
+#   [E1101(no-member), create_rrd] Module 'rrdtool' has no 'create' member
+# ldap
+#   The Python ldap module gets a lot of constants from the C API which can not be found by pylint.
+#   This results in a lot of these errors: "Module 'ldap' has no 'OPT_REFERRALS' member".
+ignored-modules = rrdtool,ldap
 
 [REPORTS]
 output-format=cmk_colorized
@@ -38,6 +42,8 @@ indent-string='    '
 [VARIABLES]
 # Ignore these unused variables (e.g. _no_item,_no_params)
 dummy-variables-rgx=^_.*
+# Needed by web code because of super globals. TODO Clean this up some day
+additional-builtins=html,_,_u,current_language,HTML
 
 [MISCELLANEOUS]
 # List of note tags to take in consideration, separated by a comma.

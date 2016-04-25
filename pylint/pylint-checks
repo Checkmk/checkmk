@@ -20,4 +20,4 @@ for path in pylint_cmk.check_files():
 
 f.close()
 
-sys.exit(pylint_cmk.run_pylint("pylintrc.checks", base_path))
+sys.exit(pylint_cmk.run_pylint(base_path))

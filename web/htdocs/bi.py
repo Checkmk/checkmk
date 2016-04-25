@@ -1261,10 +1261,6 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
 
     data = sites.live().query(query)
 
-    html.live.set_only_sites(only_sites)
-    html.live.set_prepend_site(True)
-    html.live.set_auth_domain('bi')
-
     sites.live().set_prepend_site(False)
     sites.live().set_only_sites(None)
     sites.live().set_auth_domain('read')

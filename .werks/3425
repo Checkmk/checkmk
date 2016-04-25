@@ -1,0 +1,9 @@
+Title: Fixed extra section handling if no related check plugin exists
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b13
+Date: 1461587736
+Class: fix
+
+

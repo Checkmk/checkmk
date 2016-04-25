@@ -558,10 +558,8 @@ def default_site():
     for site_name, site in sites.items():
         if site_is_local(site_name):
             return site_name
-    try:
-        return config.sites.keys()[0]
-    except:
-        return None
+    return None
+
 
 def is_multisite():
     # TODO: Remove all calls of this function

@@ -776,11 +776,10 @@ multisite_icons_and_actions['aggregations'] = {
 #   '----------------------------------------------------------------------'
 
 def paint_stars(what, row, tags, host_custom_vars):
-    try:
-        stars = html.stars
-    except:
+    stars = html.get_cached("stars")
+    if stars is None:
         stars = set(config.load_user_file("favorites", []))
-        html.stars = stars
+        html.set_cache("stars", stars)
 
     if what == "host":
         starred = row["host_name"] in stars

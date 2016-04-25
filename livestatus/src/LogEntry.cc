@@ -29,9 +29,23 @@
 
 LogEntry::LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
                    char *line) {
-    // zero all elements as fast as possible -> default values
-    // TODO(sp) Remove this hack and make commands_holder a member.
-    bzero(this, sizeof(LogEntry));
+    // TODO(sp) Fix all handleFooEntry() member functions below to always set
+    // all fields and remove this set-me-to-zero-to-be-sure-block.
+    _logclass = LOGCLASS_INFO;
+    _type = NONE;
+    _host_name = nullptr;
+    _svc_desc = nullptr;
+    _command_name = nullptr;
+    _contact_name = nullptr;
+    _state = 0;
+    _state_type = nullptr;
+    _attempt = 0;
+    _check_output = nullptr;
+    _comment = nullptr;
+    _host = nullptr;
+    _service = nullptr;
+    _contact = nullptr;
+
     _lineno = lineno;
 
     // make a copy of the message and strip trailing newline

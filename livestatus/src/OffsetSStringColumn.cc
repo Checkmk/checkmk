@@ -32,5 +32,5 @@ string OffsetSStringColumn::getValue(void *data) const {
         return "";
     }
     string *s = reinterpret_cast<string *>(p + _offset);
-    return s == nullptr ? "" : s->c_str();
+    return s == nullptr ? "" : *s;
 }

@@ -34,6 +34,7 @@ class Column;
 class DynamicColumn;
 class Query;
 
+/// A table-like view for some underlying data, exposed via LQL.
 class Table {
 public:
     Table();
@@ -52,21 +53,34 @@ public:
         return false;
     }
 
-    // The name of the table, as used in the GET command. If the name contains a
-    // ':' then we have a dynamic column with column arguments (used to access
-    // RRD metrics data).
+    /// The name of the table, as used in the GET command.
     virtual const char *name() const = 0;
 
-    // TODO(sp) Due to the way multisite works, column names are sometimes
-    // prefixed by a variation of the table name (e.g. "hosts" => "host_"), but
-    // the logic for this really shouldn't live on the cmc side. Furthermore,
-    // multisite sometimes even seems to use a *sequence* of prefixes, which is
-    // yet another a bug. Instead of fixing it there, it is currently papered
-    // over on the cmc side. :-/
+    /// \brief An optional prefix for column names.
+    ///
+    /// \todo Due to the way multisite works, column names are sometimes
+    /// prefixed by a variation of the table name (e.g. "hosts" => "host_"), but
+    /// the logic for this really shouldn't live on the cmc side. Furthermore,
+    /// multisite sometimes even seems to use a *sequence* of prefixes, which is
+    /// yet another a bug. Instead of fixing it there, it is currently papered
+    /// over on the cmc side. :-/
     virtual const char *namePrefix() const = 0;
 
-    virtual void answerQuery(Query *query) = 0;
+    /// \brief Retrieve a column with a give name.
+    ///
+    /// If the name contains a ':' then we have a dynamic column with column
+    /// arguments: The part before the colon is the column name and the part
+    /// after it represents the arguments, which are passed to
+    /// DynamicColumn::createColumn. This whole mechanism is used to access RRD
+    /// metrics data.
+    ///
+    /// \todo This member function is virtual just because TableStateHistory and
+    /// TableLog override it for some dubious reason: They first try the normal
+    /// lookup, and if that didn't find a column, the lookup is retried with a
+    /// "current_" prefix. This logic should probably not live in cmc at all.
     virtual Column *column(const char *colname);
+
+    virtual void answerQuery(Query *query) = 0;
     virtual bool isAuthorized(contact *ctc, void *data);
     virtual void *findObject(char *objectspec);
 

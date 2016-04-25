@@ -83,16 +83,16 @@ Query::Query(const list<string> &lines, OutputBuffer *output, Table *table)
             logger(LG_INFO, "Query: %s", buffer);
         }
         if (strncmp(buffer, "Filter:", 7) == 0) {
-            parseFilterLine(lstrip(buffer + 7), true);
+            parseFilterLine(lstrip(buffer + 7), _filter);
 
         } else if (strncmp(buffer, "Or:", 3) == 0) {
-            parseAndOrLine(lstrip(buffer + 3), ANDOR_OR, true);
+            parseAndOrLine(lstrip(buffer + 3), ANDOR_OR, _filter, "Or");
 
         } else if (strncmp(buffer, "And:", 4) == 0) {
-            parseAndOrLine(lstrip(buffer + 4), ANDOR_AND, true);
+            parseAndOrLine(lstrip(buffer + 4), ANDOR_AND, _filter, "And");
 
         } else if (strncmp(buffer, "Negate:", 7) == 0) {
-            parseNegateLine(lstrip(buffer + 7), true);
+            parseNegateLine(lstrip(buffer + 7), _filter, "Negate");
 
         } else if (strncmp(buffer, "StatsOr:", 8) == 0) {
             parseStatsAndOrLine(lstrip(buffer + 8), ANDOR_OR);
@@ -137,16 +137,19 @@ Query::Query(const list<string> &lines, OutputBuffer *output, Table *table)
             parseKeepAliveLine(lstrip(buffer + 10));
 
         } else if (strncmp(buffer, "WaitCondition:", 14) == 0) {
-            parseFilterLine(lstrip(buffer + 14), false);
+            parseFilterLine(lstrip(buffer + 14), _wait_condition);
 
         } else if (strncmp(buffer, "WaitConditionAnd:", 17) == 0) {
-            parseAndOrLine(lstrip(buffer + 17), ANDOR_AND, false);
+            parseAndOrLine(lstrip(buffer + 17), ANDOR_AND, _wait_condition,
+                           "WaitConditionAnd");
 
         } else if (strncmp(buffer, "WaitConditionOr:", 16) == 0) {
-            parseAndOrLine(lstrip(buffer + 16), ANDOR_OR, false);
+            parseAndOrLine(lstrip(buffer + 16), ANDOR_OR, _wait_condition,
+                           "WaitConditionOr");
 
         } else if (strncmp(buffer, "WaitConditionNegate:", 20) == 0) {
-            parseNegateLine(lstrip(buffer + 20), false);
+            parseNegateLine(lstrip(buffer + 20), _wait_condition,
+                            "WaitConditionNegate");
 
         } else if (strncmp(buffer, "WaitTrigger:", 12) == 0) {
             parseWaitTriggerLine(lstrip(buffer + 12));
@@ -255,62 +258,42 @@ Filter *Query::createFilter(Column *column, int operator_id, char *value) {
     return filter;
 }
 
-void Query::parseAndOrLine(char *line, int andor, bool filter) {
+void Query::parseAndOrLine(char *line, int andor, AndingFilter &filter,
+                           string header) {
     char *value = next_field(&line);
     if (value == nullptr) {
-        _output->setError(
-            RESPONSE_CODE_INVALID_HEADER,
-            "Missing value for %s%s: need non-zero integer number",
-            filter ? "" : "WaitCondition", andor == ANDOR_OR ? "Or" : "And");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "Missing value for %s: need positive integer number",
+                          header.c_str());
         return;
     }
 
     int number = atoi(value);
-    if ((isdigit(value[0]) == 0) || number <= 0) {
-        _output->setError(
-            RESPONSE_CODE_INVALID_HEADER,
-            "Invalid value for %s%s: need non-zero integer number",
-            filter ? "" : "WaitCondition", andor == ANDOR_OR ? "Or" : "And");
+    if (isdigit(value[0]) == 0 || number <= 0) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "Invalid value for %s: need positive integer number",
+                          header.c_str());
         return;
     }
-    if (filter) {
-        _filter.combineFilters(number, andor);
-    } else {
-        _wait_condition.combineFilters(number, andor);
-    }
+
+    filter.combineFilters(number, andor);
 }
 
-void Query::parseNegateLine(char *line, bool filter) {
+void Query::parseNegateLine(char *line, AndingFilter &filter, string header) {
     if (next_field(&line) != nullptr) {
-        _output->setError(
-            RESPONSE_CODE_INVALID_HEADER,
-            filter ? "Negate: does not take any arguments"
-                   : "WaitConditionNegate: does not take any arguments");
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                          "%s: does not take any arguments", header.c_str());
         return;
     }
 
-    Filter *to_negate;
-    if (filter) {
-        to_negate = _filter.stealLastSubfiler();
-        if (to_negate == nullptr) {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER,
-                              "Negate: no Filter: header to negate");
-            return;
-        }
-    } else {
-        to_negate = _wait_condition.stealLastSubfiler();
-        if (to_negate == nullptr) {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER,
-                              "Negate: no Wait:-condition negate");
-            return;
-        }
+    Filter *to_negate = filter.stealLastSubfiler();
+    if (to_negate == nullptr) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, "%s: nothing to negate",
+                          header.c_str());
+        return;
     }
-    Filter *negated = new NegatingFilter(to_negate);
-    if (filter) {
-        _filter.addSubfilter(negated);
-    } else {
-        _wait_condition.addSubfilter(negated);
-    }
+
+    filter.addSubfilter(new NegatingFilter(to_negate));
 }
 
 void Query::parseStatsAndOrLine(char *line, int andor) {
@@ -472,7 +455,7 @@ void Query::parseStatsLine(char *line) {
     _show_column_headers = false;
 }
 
-void Query::parseFilterLine(char *line, bool is_filter) {
+void Query::parseFilterLine(char *line, AndingFilter &filter) {
     char *column_name = next_field(&line);
     if (column_name == nullptr) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER, "empty filter line");
@@ -509,13 +492,8 @@ void Query::parseFilterLine(char *line, bool is_filter) {
         return;
     }
 
-    Filter *filter = createFilter(column, operator_id, value);
-    if (filter != nullptr) {
-        if (is_filter) {
-            _filter.addSubfilter(filter);
-        } else {
-            _wait_condition.addSubfilter(filter);
-        }
+    if (Filter *sub_filter = createFilter(column, operator_id, value)) {
+        filter.addSubfilter(sub_filter);
     }
 }
 

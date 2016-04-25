@@ -96,7 +96,6 @@ public:
     void process();
     bool processDataset(void *);
     bool timelimitReached();
-    void setDefaultColumns(const char *);
     void addColumn(Column *column);
     void setError(int error_code, const char *msg);
     contact *authUser() { return _auth_user; }
@@ -137,11 +136,12 @@ private:
     Aggregator **getStatsGroup(_stats_group_spec_t &groupspec);
     void computeStatsGroupSpec(_stats_group_spec_t &groupspec, void *data);
     Filter *createFilter(Column *column, int operator_id, char *value);
-    void parseFilterLine(char *line, bool is_filter /* and not cond */);
+    void parseFilterLine(char *line, AndingFilter &filter);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
-    void parseAndOrLine(char *line, int andor, bool filter /* and not cond */);
-    void parseNegateLine(char *line, bool filter /* and not cond */);
+    void parseAndOrLine(char *line, int andor, AndingFilter &filter,
+                        std::string header);
+    void parseNegateLine(char *line, AndingFilter &filter, std::string header);
     void parseStatsAndOrLine(char *line, int andor);
     void parseStatsNegateLine(char *line);
     void parseColumnsLine(char *line);

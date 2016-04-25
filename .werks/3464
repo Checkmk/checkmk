@@ -1,0 +1,11 @@
+Title: netstat.linux: fix monitoring of UDP listeners
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461330784
+
+Thanks to Davice Delgrande.
+

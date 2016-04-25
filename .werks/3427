@@ -1,0 +1,9 @@
+Title: mssql_counters.sqlstats: fixed rate calculation
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b13
+Date: 1461602704
+Class: fix
+
+

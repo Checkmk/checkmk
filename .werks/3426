@@ -1,0 +1,10 @@
+Title: sms: fixed wrong message handling after message was quoted and therefore too long
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461595506
+
+

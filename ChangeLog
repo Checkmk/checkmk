@@ -316,6 +316,7 @@
     * 3380 FIX: Fixed graphs in service notifications having spaces in service descriptions
     * 3418 FIX: Do not send host notifications if a service group is required...
             NOTE: Please refer to the migration notes!
+    * 3426 FIX: sms: fixed wrong message handling after message was quoted and therefore too long
 
     BI:
     * 3271 New option in aggregation for tuning aggregation of downtimes...

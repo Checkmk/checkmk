@@ -789,7 +789,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     visib = {}
     for key, vs in visibility_elements:
         if visual.get(key):
-            visib.append(key)
+            visib[key] = visual[key]
     visual["visibility"] = visib
 
     vs_general.render_input("general", visual)

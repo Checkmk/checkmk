@@ -1036,7 +1036,8 @@ no_discovery_possible = None
             continue
         if check_info[check_type].get("extra_sections"):
             for section in check_info[check_type]["extra_sections"]:
-                needed_check_types.add(section)
+                if section in check_info:
+                    needed_check_types.add(section)
                 needed_sections.add(section.split(".")[0])
         period = check_period_of(hostname, descr)
         if period:

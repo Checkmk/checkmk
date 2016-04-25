@@ -1,0 +1,10 @@
+Title: esx_vsphere_hostsystem: fixed exception when no multipath state info is available
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b13
+Date: 1461586573
+
+

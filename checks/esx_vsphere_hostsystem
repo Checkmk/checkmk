@@ -373,9 +373,12 @@ check_info['esx_vsphere_hostsystem.maintenance'] = {
 
 def esx_vsphere_multipath_convert(info):
     data = esx_vsphere_hostsystem_convert(info)
-    data = data['config.multipathState.path']
-    data = zip(data[::2], data[1::2])
     paths = {}
+    data = data.get('config.multipathState.path')
+    if not data:
+        return paths
+
+    data = zip(data[::2], data[1::2])
     for path, state in data:
         # ESX 6.0 uses a different format, e.g "vmhba32:C0:T0:L0 active"
         if len(path.split(":")) == 4:

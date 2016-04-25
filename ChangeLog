@@ -1,4 +1,7 @@
 1.2.8b13:
+    Checks & Agents:
+    * 3523 FIX: esx_vsphere_hostsystem: fixed exception when no multipath state info is available
+
 
 1.2.8b12:
     Core & Setup:

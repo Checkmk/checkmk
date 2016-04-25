@@ -5067,7 +5067,6 @@ graph_info.append({
     "metrics" : [
        ( "fs_trend", "line" ),
     ],
-    "range" : (0, 0),
 })
 
 graph_info.append({

@@ -2,6 +2,7 @@
     Checks & Agents:
     * 3523 FIX: esx_vsphere_hostsystem: fixed exception when no multipath state info is available
     * 3425 FIX: Fixed extra section handling if no related check plugin exists
+    * 3465 FIX: df: Fix displayed vertical range of graph of all filesystem checks...
 
     Notifications:
     * 3426 FIX: sms: fixed wrong message handling after message was quoted and therefore too long

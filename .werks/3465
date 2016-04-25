@@ -1,0 +1,11 @@
+Title: df: Fix displayed vertical range of graph of all filesystem checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b13
+Date: 1461597698
+Class: fix
+
+The graph definition had an explicit vertical range of <tt>(0, 0)</tt>. That
+effectively had set the displayed range to 0..1 Bytes/day - which led to an
+always empty or near useless graph. This has been fixed.

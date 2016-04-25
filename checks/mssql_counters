@@ -244,7 +244,8 @@ def check_mssql_counters_sqlstats(item, params, info):
     for line in info:
         if mssql_counters_item(line, True) == item:
             counter_type = item.split()[-1]
-            rate = float(line[-1])
+            rate = get_rate("mssql_counters_sqlstats.%s.%s" % \
+                (counter_type, item), time.time(), float(line[-1]))
             status = 0
             infotext = "%.1f/sec" % rate
 

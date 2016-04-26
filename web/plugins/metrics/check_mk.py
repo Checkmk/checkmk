@@ -377,7 +377,7 @@ metric_info["zfs_metadata_used"] = {
 }
 
 metric_info["zfs_metadata_max"] = {
-    "title" : _("Maxmimum of meta data"),
+    "title" : _("Maximum of meta data"),
     "unit"  : "bytes",
     "color" : "33/a",
 }
@@ -1684,7 +1684,7 @@ metric_info["if_out_unicast"] = {
 }
 
 metric_info["if_out_unicast_octets"] = {
-    "title" : _("Output unicast oackets"),
+    "title" : _("Output unicast octets"),
     "unit"  : "bytes/s",
     "color" : "#00c0ff",
 }

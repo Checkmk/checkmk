@@ -11712,7 +11712,7 @@ def mode_ruleeditor(phase):
     else:
         html.write("<h3>%s: %s</h3>" % (_("Host"), only_host))
 
-    search_form(_("Search for rules sets: "), "rulesets")
+    search_form(_("Search for rule sets: "), "rulesets")
 
     # Group names are separated with "/" into main group and optional subgroup.
     # Do not lose carefully manually crafted order of groups!

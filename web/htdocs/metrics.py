@@ -1467,7 +1467,7 @@ def host_service_graph_dashlet_cmk(graph_specification, custom_graph_render_opti
         else:
             raise MKGeneralException(_("Failed to calculate a graph definition."))
     except livestatus.MKLivestatusNotFoundError:
-        html.write("<div class=error>%s</div>" % html.attrencode(_("Cannot reander graphs: cannot fetch data via Livestatus")))
+        html.write("<div class=error>%s</div>" % html.attrencode(_("Cannot render graphs: cannot fetch data via Livestatus")))
         return
 
     # When the legend is enabled, we need to reduce the height by the height of the legend to

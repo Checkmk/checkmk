@@ -825,7 +825,7 @@ dashlet_types["snapin"] = {
     "parameters"     : [
         ('snapin', DropdownChoice(
             title = _('Snapin'),
-            help = _('Choose the snapin you like to show.'),
+            help = _('Choose the snapin you would like to show.'),
             choices = dashlet_snapin_get_snapins,
         )),
     ],

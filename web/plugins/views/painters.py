@@ -783,7 +783,7 @@ def paint_cache_info(row):
         cache_interval = row["service_cache_interval"]
         cache_age = time.time() - cached_at
         percentage = 100.0 * cache_age / cache_interval
-        return "", _("Cache generated %s ago, cache interval: %s, elapsed cache livetime: %s") % (
+        return "", _("Cache generated %s ago, cache interval: %s, elapsed cache lifespan: %s") % (
                age_human_readable(cache_age), age_human_readable(cache_interval), percent_human_redable(percentage))
 
 multisite_painters["svc_check_cache_info"] = {

@@ -2166,11 +2166,11 @@ register_rule(group,
 register_rule(group,
     "non_inline_snmp_hosts",
     title = _("Hosts not using Inline-SNMP"),
-    help = _("Check_MK has an efficicient SNMP implementation called Inline-SNMP which reduces the "
-             "load produced by SNMP monitoring on the monitoring host significant. This option is "
+    help = _("Check_MK has an efficient SNMP implementation called Inline SNMP which reduces the "
+             "load produced by SNMP monitoring on the monitoring host significantly. This option is "
              "enabled by default for all SNMP hosts and it is a good idea to keep this default "
-             "settings. However, there are SNMP devices which have problems with this SNMP "
-             "implementation. You can use this rule to disable Inline-SNMP for these hosts."))
+             "setting. However, there are SNMP devices which have problems with this SNMP "
+             "implementation. You can use this rule to disable Inline SNMP for these hosts."))
 
 
 register_rule(group,

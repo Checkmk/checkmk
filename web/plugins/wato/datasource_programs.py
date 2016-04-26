@@ -585,7 +585,7 @@ def validate_siemens_plc_values(value, varprefix):
 _siemens_plc_value = [
     Transform(
         CascadingDropdown(
-            title = _("Area"),
+            title = _("The Area"),
             choices = [
                 ("db", _("Datenbaustein"),
                     Integer(
@@ -608,8 +608,8 @@ _siemens_plc_value = [
     Float(
         title = _("Address"),
         display_format = "%.1f",
-        help = _("Addresses are specified as float values, while the numbers "
-                 "the dot specify the byte to fetch and the number after the "
+        help = _("Addresses are specified with a dot notation, where number "
+                 "before the dot specify the byte to fetch and the number after the "
                  "dot specifies the bit to fetch. The number of the bit is always "
                  "between 0 and 7."),
     ),

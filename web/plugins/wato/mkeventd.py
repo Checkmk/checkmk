@@ -2642,7 +2642,7 @@ if mkeventd_enabled:
                 ( "host", _("Host's contact groups have precedence") ),
                 ( "rule", _("Contact groups in rule have precedence") ),
             ],
-            help = _("Here you can specify whether which contact groups shall have "
+            help = _("Here you can specify which contact groups shall have "
                      "precedence when both the host of an event can be found in the "
                      "monitoring and the event rule has defined contact groups for the event."),
         ),

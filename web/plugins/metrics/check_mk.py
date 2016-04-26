@@ -2765,7 +2765,7 @@ metric_info["harddrive_uncorrectable_erros"] = {
 }
 
 metric_info["harddrive_udma_crc_errors"] = {
-    "title" : _("Harddrive udma crc errors"),
+    "title" : _("Harddrive UDMA CRC errors"),
     "unit"  : "count",
     "color" : "46/a",
 }

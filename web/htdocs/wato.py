@@ -1621,7 +1621,7 @@ def HostnameRenaming(**kwargs):
               _("Drop Domain Suffix")
             ),
             ( "reverse_dns",
-              _("Convert IP address hosts into host their DNS name")
+              _("Convert IP addresses of hosts into host their DNS names")
             ),
             ( "regex",
               _("Regular expression substitution"),

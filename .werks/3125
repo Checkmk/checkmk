@@ -1,0 +1,11 @@
+Title: fixed grouping of werk list by version
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461684350
+
+The entries in the werk list when grouping by version were still sorted by date only and thus there
+could be multiple groups for one version, interrupted by an older version.

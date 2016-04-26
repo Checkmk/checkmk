@@ -4383,7 +4383,7 @@ def mode_changelog(phase):
                 html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
                 site_url = site.get("multisiteurl")
                 if site_url:
-                    html.icon_button(site_url, _("Open this site's local web user inteface"), "url", target="_blank")
+                    html.icon_button(site_url, _("Open this site's local web user interface"), "url", target="_blank")
 
                 # ID & Alias
                 table.cell(_("ID"), site_id)

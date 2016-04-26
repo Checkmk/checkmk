@@ -2621,13 +2621,13 @@ metric_info["connector_outlets"] = {
 }
 
 metric_info["qos_dropped_bytes_rate"] = {
-    "title" : _("Qos dropped bytes"),
+    "title" : _("QoS dropped bytes"),
     "unit"  : "bytes/s",
     "color" : "41/a",
 }
 
 metric_info["qos_outbound_bytes_rate"] = {
-    "title" : _("Qos outbound bytes"),
+    "title" : _("QoS outbound bytes"),
     "unit"  : "bytes/s",
     "color" : "26/a",
 }

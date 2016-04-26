@@ -1445,7 +1445,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_storage,
     "blank_tapes",
-    _("Remaining blank tabes in DIVA CSM Devices"),
+    _("Remaining blank tapes in DIVA CSM Devices"),
     Tuple(
         elements = [
             Integer(title = _("Warning below"), default_value = 5),
@@ -4852,7 +4852,7 @@ register_check_parameters(
             ( "levels_swap",        DualMemoryLevels(_("Swap"))),
             ( "levels_virtual",     DualMemoryLevels(_("Total virtual memory"), ( 80.0, 90.0))),
             ( "levels_total",       UpperMemoryLevels(_("Total Data in relation to RAM"), (120.0, 150.0), _("RAM"))),
-            ( "levels_shm",         UpperMemoryLevels(_("Shared Memory"),       ( 20.0,  30.0), _("RAM"))),
+            ( "levels_shm",         UpperMemoryLevels(_("Shared memory"),       ( 20.0,  30.0), _("RAM"))),
             ( "levels_pagetables",  UpperMemoryLevels(_("Page tables"),         (  8.0,  16.0), _("RAM"))),
             ( "levels_writeback",   UpperMemoryLevels(_("Disk Writeback"))),
             ( "levels_committed",   UpperMemoryLevels(_("Committed memory"),    (100.0, 150.0), _("RAM + Swap"))),

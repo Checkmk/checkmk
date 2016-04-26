@@ -1,12 +1,13 @@
 help:
 	@echo "all     - Run ALL checks"
-	@echo "modules - Run Check_MK modules checks"
-	@echo "web     - Run Check_MK web checks"
-	@echo "checks  - Run Check_MK check checks"
+	@echo "modules - Check modules"
+	@echo "web     - Check web"
+	@echo "checks  - Check checks, inventory, bakery plugins"
+	@echo "misc    - Check other files (mkeventd, active checks, agent plugins)"
 	@echo
 	@echo "build   - Run all checks from build system"
 
-all: modules web checks
+all: modules web checks misc
 
 modules:
 	./pylint-modules || true
@@ -16,6 +17,9 @@ web:
 
 checks:
 	./pylint-checks || true
+
+misc:
+	./pylint-misc || true
 
 build:
 	export TERM="linux" ; \

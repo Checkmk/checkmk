@@ -57,8 +57,8 @@ def module_files():
     return modules
 
 
-def check_files():
-    filelist = sorted([ "../checks/" + f for f in os.listdir("../checks")
+def check_files(base_dir="../checks"):
+    filelist = sorted([ base_dir + "/" + f for f in os.listdir(base_dir)
                          if not f.startswith(".") ])
 
     # Sort: first includes, then other
@@ -93,7 +93,7 @@ def get_test_dir():
     return base_path
 
 
-def run_pylint(base_path):
+def run_pylint(base_path, check_files=None, cleanup_test_dir=False):
     pylint_args = os.environ.get("PYLINT_ARGS", "")
     if pylint_args:
         pylint_args += " "
@@ -101,8 +101,13 @@ def run_pylint(base_path):
 
     pylint_cfg = os.getcwd() + "/pylintrc"
 
+    check_files = get_pylint_files(base_path, "*")
+    if not check_files:
+        print "Nothing to do..."
+        return 0 # nothing to do
+
     os.putenv("PYLINT_PATH", os.getcwd())
-    cmd = "pylint --rcfile=\"%s\" %s*.py" % (pylint_cfg, pylint_args)
+    cmd = "pylint --rcfile=\"%s\" %s%s" % (pylint_cfg, pylint_args, " ".join(check_files))
     print("Running pylint with: %s" % cmd)
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                          shell=True, cwd=base_path)
@@ -117,13 +122,39 @@ def run_pylint(base_path):
     exit_code = p.returncode
     print("Finished with exit code: %d" % exit_code)
 
-    if exit_code == 0:
+    if exit_code == 0 and cleanup_test_dir:
         # Don't remove directory when specified via WORKDIR env
         if not os.environ.get("WORKDIR"):
             print("Removing build path...")
             shutil.rmtree(base_path)
 
     return exit_code
+
+
+def get_pylint_files(base_path, file_pattern):
+    files = []
+    for path in glob.glob("%s/%s" % (base_path, file_pattern)):
+        f = path[len(base_path)+1:]
+
+        if is_python_file(path):
+            files.append(f)
+
+    return files
+
+
+def is_python_file(path):
+    if not os.path.isfile(path) or os.path.islink(path):
+        return False
+
+    if path.endswith(".py"):
+        return True
+
+    # Only add python files
+    shebang = file(path, "r").readline()
+    if shebang.startswith("#!") and "python" in shebang:
+        return True
+
+    return False
 
 
 def ensure_equal_branches():

@@ -18,6 +18,14 @@ for path in pylint_cmk.ordered_module_files():
 for path in pylint_cmk.check_files():
     pylint_cmk.add_file(f, path)
 
+# Also add inventory plugins
+for path in pylint_cmk.check_files("../inventory"):
+    pylint_cmk.add_file(f, path)
+
+# Also add bakery plugins
+for path in pylint_cmk.check_files("../../cmc/agents/bakery"):
+    pylint_cmk.add_file(f, path)
+
 f.close()
 
-sys.exit(pylint_cmk.run_pylint(base_path))
+sys.exit(pylint_cmk.run_pylint(base_path, cleanup_test_dir=True))

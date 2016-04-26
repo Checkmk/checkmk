@@ -2594,61 +2594,61 @@ metric_info["qos_outbound_bytes_rate"] = {
 }
 
 metric_info["apache_state_startingup"] = {
-    "title" : _("Apache starting up"),
+    "title" : _("Starting up"),
     "unit"  : "count",
     "color" : "11/a",
 }
 
 metric_info["apache_state_waiting"] = {
-    "title" : _("Apache writing"),
+    "title" : _("Writing"),
     "unit"  : "count",
     "color" : "14/a",
 }
 
 metric_info["apache_state_logging"] = {
-    "title" : _("Apache logging"),
+    "title" : _("Logging"),
     "unit"  : "count",
     "color" : "21/a",
 }
 
 metric_info["apache_state_dns"] = {
-    "title" : _("Apache DNS"),
+    "title" : _("DNS"),
     "unit"  : "count",
     "color" : "24/a",
 }
 
 metric_info["apache_state_sending_reply"] = {
-    "title" : _("Apache sending reply"),
+    "title" : _("Sending reply"),
     "unit"  : "count",
     "color" : "31/a",
 }
 
 metric_info["apache_state_reading_request"] = {
-    "title" : _("Apache reading request"),
+    "title" : _("Reading request"),
     "unit"  : "count",
     "color" : "34/a",
 }
 
 metric_info["apache_state_closing"] = {
-    "title" : _("Apache closing"),
+    "title" : _("Closing"),
     "unit"  : "count",
     "color" : "41/a",
 }
 
 metric_info["apache_state_idle_cleanup"] = {
-    "title" : _("Apache idle clean up"),
+    "title" : _("Idle clean up"),
     "unit"  : "count",
     "color" : "44/a",
 }
 
 metric_info["apache_state_finishing"] = {
-    "title" : _("Apache finishing"),
+    "title" : _("Finishing"),
     "unit"  : "count",
     "color" : "46/b",
 }
 
 metric_info["apache_state_keep_alive"] = {
-    "title" : _("Apache keep alive"),
+    "title" : _("Keep alive"),
     "unit"  : "count",
     "color" : "53/b",
 }
@@ -5790,7 +5790,7 @@ graph_info.append({
 })
 
 graph_info.append({
-    "title" : _("Seconds serving"),
+    "title" : _("Time spent for various page types"),
     "metrics" : [
         ("secs_cmk_views",      "stack"),
         ("secs_cmk_wato",       "stack"),

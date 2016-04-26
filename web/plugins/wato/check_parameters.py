@@ -7305,7 +7305,7 @@ register_check_parameters(
 register_check_parameters(
      subgroup_storage,
     "hpux_multipath",
-    _("HPUX Multipath Count"),
+    _("HP-UX Multipath Count"),
     Tuple(
         title = _("Expected path situation"),
         help = _("This rules sets the expected number of various paths for a multipath LUN "

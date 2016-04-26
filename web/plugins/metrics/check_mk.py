@@ -1274,6 +1274,18 @@ metric_info["current"] = {
     "color" : "#ffb030",
 }
 
+metric_info["differential_current_ac"] = {
+    "title" : _("Differential current AC"),
+    "unit"  : "a",
+    "color" : "#ffb030",
+}
+
+metric_info["differential_current_dc"] = {
+    "title" : _("Differential current DC"),
+    "unit"  : "a",
+    "color" : "#ffb030",
+}
+
 metric_info["voltage"] = {
     "title" : _("Electrical voltage"),
     "unit"  : "v",

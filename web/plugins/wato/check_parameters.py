@@ -8754,7 +8754,23 @@ phase_elements = [
               Integer(title = _("warning if above"), unit = u"Hz", default_value = 55),
               Integer(title = _("critical if above"), unit = u"Hz", default_value = 60),
           ],
-    ))
+    )),
+    ( "differential_current_ac",
+      Tuple(
+          title = _("Differential current AC"),
+          elements = [
+              Float(title = _("warning at"), unit = u"mA", default_value = 3.5),
+              Float(title = _("critical at"), unit = u"mA", default_value = 30),
+          ],
+    )),
+    ( "differential_current_dc",
+      Tuple(
+          title = _("Differential current DC"),
+          elements = [
+              Float(title = _("warning at"), unit = u"mA", default_value = 70),
+              Float(title = _("critical at"), unit = u"mA", default_value = 100),
+          ],
+    )),
 ]
 
 register_check_parameters(

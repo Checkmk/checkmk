@@ -49,15 +49,16 @@ def check_elphase(item, params, parsed):
     class Bounds:
         Lower, Upper, Both = range(3)
 
-    for what, title, unit, bound in [
-        ( "voltage",     "Voltage",        " V",  Bounds.Lower, ),
-        ( "current",     "Current",        " A",  Bounds.Upper, ),
-        ( "output_load", "Load",           "%",   Bounds.Upper, ),
-        ( "power",       "Power",          " W",  Bounds.Upper, ),
-        ( "appower",     "Apparent Power", " VA", Bounds.Upper, ),
-        ( "energy",      "Energy",         " Wh", Bounds.Upper, ),
-        ( "frequency",   "Frequency",      " hz", Bounds.Both,  ),
-    ]:
+    for what, title, unit, bound, factor in [
+        ( "voltage",     "Voltage",        " V",  Bounds.Lower, 1),
+        ( "current",     "Current",        " A",  Bounds.Upper, 1),
+        ( "output_load", "Load",           "%",   Bounds.Upper, 1),
+        ( "power",       "Power",          " W",  Bounds.Upper, 1),
+        ( "appower",     "Apparent Power", " VA", Bounds.Upper, 1),
+        ( "energy",      "Energy",         " Wh", Bounds.Upper, 1),
+        ( "frequency",   "Frequency",      " hz", Bounds.Both,  1),
+        ( "differential_current_ac", "Differential current AC", " mA", Bounds.Upper, 0.001),
+        ( "differential_current_dc", "Differential current DC", " mA", Bounds.Upper, 0.001)]:
 
         if what in parsed[item]:
             entry = parsed[item][what]
@@ -66,9 +67,10 @@ def check_elphase(item, params, parsed):
             else:
                 value = entry             # 12.0
                 state_info = None
-            infotext = "%s: %s%s" % (title, tostring(value), unit)
 
-            status = 0
+            infotext = "%s: %s%s" % (title, tostring(value), unit)
+            status   = 0
+
             if what in params:
                 warn_lower = crit_lower = warn = crit = None
                 if bound == Bounds.Both:
@@ -98,10 +100,12 @@ def check_elphase(item, params, parsed):
                         status = max(status, 1)
                         infotext += levelstext
 
-                perfdata = [ (what, value, warn, crit) ]
+                perfdata = [ (what, value * factor, warn * factor, crit * factor) ]
+
             else:
-                perfdata = [ (what, value) ]
+                perfdata = [ (what, value * factor) ]
 
             yield status, infotext, perfdata
+
             if state_info:
                 yield state_info

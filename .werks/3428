@@ -1,0 +1,9 @@
+Title: bluenet2_powerrail, bluenet2_powerrail.rcm, bluenet2_powerrail.temp, bluenet2_powerrail.humidity: new checks for Bachmann Bluenet2 Powerrails which support the BACHMANN-bluenet2-MIB
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1461653409
+Class: feature
+
+

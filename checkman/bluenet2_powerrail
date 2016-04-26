@@ -1,0 +1,21 @@
+title: Bachmann Bluenet2 Powerrail: Phases
+agents: snmp
+catalog: hw/environment/bachmann
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the voltage, current, active and apparent power
+ and frequency of Bachmann Bluenet2 Powerrail which supports the
+ BACHMANN-BLUENET2-MIB.
+
+ The device sends the state itsself.
+ There are no default levels set.
+
+inventory:
+ One service per phase is created.
+
+item:
+ The phase identifier.
+
+perfdata:
+ Voltage, current, power, apparent power and frequency.

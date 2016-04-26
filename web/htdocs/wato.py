@@ -7006,7 +7006,7 @@ def vs_notification_rule(userid = None):
                           ),
                           RegExp(
                               title = _("Required match (regular expression)"),
-                              help = _("This expression must complete match the value of the variable"),
+                              help = _("This expression must match the value of the variable"),
                               allow_empty = False,
                          ),
                       ]

@@ -2832,7 +2832,7 @@ def show_service_table(host, firsttime):
                             err = e
                         paramtext = _("Invalid check parameter: %s!") % err
                         paramtext += _(" The parameter is: %r") % (params,)
-                        paramtext += _(" The varname is: %s") % varname
+                        paramtext += _(" The variable name is: %s") % varname
 
                     html.write(paramtext)
 
@@ -14990,7 +14990,7 @@ def mode_download_agents(phase):
     elif phase == "buttons":
         global_buttons()
         if 'agents' in modes:
-            html.context_button(_("Baked Agents"), folder_preserving_link([("mode", "agents")]), "download_agents")
+            html.context_button(_("Baked agents"), folder_preserving_link([("mode", "agents")]), "download_agents")
         html.context_button(_("Release Notes"), "version.py", "mk")
         return
 

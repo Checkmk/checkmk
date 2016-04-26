@@ -771,7 +771,7 @@ register_rule(group,
         ],
         optional_keys = False
     ),
-    title = _("Agent Ruckus Spot"),
+    title = _("Agent for Ruckus Spot"),
     help = _("This rule selects the Agent Ruckus Spot agent instead of the normal Check_MK Agent "
              "which collects the data through the Ruckus Spot web interface"),
     match = 'first')

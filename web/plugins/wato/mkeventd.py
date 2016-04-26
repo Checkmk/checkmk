@@ -2742,7 +2742,7 @@ register_rule(
                         title = _("Host specification"),
                         elements = [
                             ListChoice(
-                               title = _("Check with the hosts"),
+                               title = _("Match the hosts with..."),
                                choices = [
                                     ( '$HOSTNAME$',     _("Hostname") ),
                                     ( '$HOSTADDRESS$',  _("IP address" ) ),

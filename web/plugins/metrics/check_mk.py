@@ -2401,7 +2401,6 @@ metric_info["buffered_io"] = {
 
 metric_info["write_cache_usage"] = {
     "title" : _("Write cache usage"),
-    "help"  : _("A write cache is a cache that uses an allocate on write miss, write-back, no allocate on read miss strategy"),
     "unit"  : "%",
     "color" : "#030303",
 }

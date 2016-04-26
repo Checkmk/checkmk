@@ -1766,7 +1766,7 @@ register_rule(group,
                              )),
                              ( "excluded_time",
                                TimeofdayRanges(
-                                   title = _("Never discovery or activate changes in the following time ranges"),
+                                   title = _("Never do discovery or activate changes in the following time ranges"),
                                    help = _("This avoids automatic changes during these times so "
                                             "that the automatic system doesn't interfere with "
                                             "user activity."),

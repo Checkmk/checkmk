@@ -714,7 +714,7 @@ def parents_of(hostname):
 g_converted_host_rulesets_cache = {}
 g_global_caches.append('g_converted_host_rulesets_cache')
 
-def convert_host_ruleset(ruleset):
+def convert_host_ruleset(ruleset, with_foreign_hosts):
     new_rules = []
     if len(ruleset) == 1 and ruleset[0] == "":
         sys.stderr.write('WARNING: deprecated entry [ "" ] in host configuration list\n')
@@ -726,17 +726,21 @@ def convert_host_ruleset(ruleset):
 
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
-        new_rules.append((item, all_matching_hosts(tags, hostlist, with_foreign_hosts=True)))
+        new_rules.append((item, all_matching_hosts(tags, hostlist, with_foreign_hosts)))
 
-    g_converted_host_rulesets_cache[id(ruleset)] = new_rules
     return new_rules
 
 
 def host_extra_conf(hostname, ruleset):
+    # When the requested host is part of the local sites configuration,
+    # then use only the sites hosts for processing the rules
+    with_foreign_hosts = hostname not in all_active_hosts()
+    cache_id = id(ruleset), with_foreign_hosts
     try:
-        ruleset = g_converted_host_rulesets_cache[id(ruleset)]
+        ruleset = g_converted_host_rulesets_cache[cache_id]
     except KeyError:
-        ruleset = convert_host_ruleset(ruleset)
+        ruleset = convert_host_ruleset(ruleset, with_foreign_hosts)
+        g_converted_host_rulesets_cache[cache_id] = ruleset
 
     entries = []
     for item, hostname_list in ruleset:
@@ -896,8 +900,8 @@ def convert_pattern_list(patterns):
 g_hostlist_match_cache = {}
 g_global_caches.append('g_hostlist_match_cache')
 
-def all_matching_hosts(tags, hostlist, with_foreign_hosts=False):
-    cache_id = tuple(tags), tuple(hostlist)
+def all_matching_hosts(tags, hostlist, with_foreign_hosts):
+    cache_id = tuple(tags), tuple(hostlist), with_foreign_hosts
     try:
         return g_hostlist_match_cache[cache_id]
     except KeyError:
@@ -912,8 +916,8 @@ def all_matching_hosts(tags, hostlist, with_foreign_hosts=False):
     for hostname in valid_hosts:
         # When no tag matching is requested, do not filter by tags. Accept all hosts
         # and filter only by hostlist
-        if (not tags or hosttags_match_taglist(tags_of_host(hostname), tags)) and \
-           in_extraconf_hostlist(hostlist, hostname):
+        if in_extraconf_hostlist(hostlist, hostname) and \
+           (not tags or hosttags_match_taglist(tags_of_host(hostname), tags)):
            matching.add(hostname)
 
     g_hostlist_match_cache[cache_id] = matching
@@ -923,7 +927,7 @@ def all_matching_hosts(tags, hostlist, with_foreign_hosts=False):
 g_converted_service_rulesets_cache = {}
 g_global_caches.append('g_converted_service_rulesets_cache')
 
-def convert_service_ruleset(ruleset):
+def convert_service_ruleset(ruleset, with_foreign_hosts):
     new_rules = []
     for rule in ruleset:
         rule, rule_options = get_rule_options(rule)
@@ -942,12 +946,11 @@ def convert_service_ruleset(ruleset):
 
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
-        hosts = all_matching_hosts(tags, hostlist)
+        hosts = all_matching_hosts(tags, hostlist, with_foreign_hosts)
 
         # And now preprocess the configured patterns in the servlist
         new_rules.append((item, hosts, convert_pattern_list(servlist)))
 
-    g_converted_service_rulesets_cache[id(ruleset)] = new_rules
     return new_rules
 
 
@@ -956,10 +959,15 @@ g_global_caches.append('g_extraconf_servicelist_cache')
 
 # Compute outcome of a service rule set that has an item
 def service_extra_conf(hostname, service, ruleset):
+    # When the requested host is part of the local sites configuration,
+    # then use only the sites hosts for processing the rules
+    with_foreign_hosts = hostname not in all_active_hosts()
+    cache_id = id(ruleset), with_foreign_hosts
     try:
-        ruleset = g_converted_service_rulesets_cache[id(ruleset)]
+        ruleset = g_converted_service_rulesets_cache[cache_id]
     except KeyError:
-        ruleset = convert_service_ruleset(ruleset)
+        ruleset = convert_service_ruleset(ruleset, with_foreign_hosts)
+        g_converted_service_rulesets_cache[cache_id] = ruleset
 
     entries = []
     for item, hosts, service_matchers in ruleset:
@@ -976,7 +984,7 @@ def service_extra_conf(hostname, service, ruleset):
     return entries
 
 
-def convert_boolean_service_ruleset(ruleset):
+def convert_boolean_service_ruleset(ruleset, with_foreign_hosts):
     new_rules = []
     for rule in ruleset:
         entry, rule_options = get_rule_options(rule)
@@ -1000,19 +1008,23 @@ def convert_boolean_service_ruleset(ruleset):
 
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
-        hosts = all_matching_hosts(tags, hostlist)
+        hosts = all_matching_hosts(tags, hostlist, with_foreign_hosts)
         new_rules.append((negate, hosts, convert_pattern_list(servlist)))
 
-    g_converted_service_rulesets_cache[id(ruleset)] = new_rules
     return new_rules
 
 
 # Compute outcome of a service rule set that just say yes/no
 def in_boolean_serviceconf_list(hostname, service_description, ruleset):
+    # When the requested host is part of the local sites configuration,
+    # then use only the sites hosts for processing the rules
+    with_foreign_hosts = hostname not in all_active_hosts()
+    cache_id = id(ruleset), with_foreign_hosts
     try:
-        ruleset = g_converted_service_rulesets_cache[id(ruleset)]
+        ruleset = g_converted_service_rulesets_cache[cache_id]
     except KeyError:
-        ruleset = convert_boolean_service_ruleset(ruleset)
+        ruleset = convert_boolean_service_ruleset(ruleset, with_foreign_hosts)
+        g_converted_service_rulesets_cache[cache_id] = ruleset
 
     for negate, hosts, service_matchers in ruleset:
         if hostname in hosts:

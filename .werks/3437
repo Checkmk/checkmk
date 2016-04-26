@@ -1,0 +1,9 @@
+Title: Improved performance of "activate changes", especially in distributed environments
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.8b13
+Date: 1461683485
+Class: fix
+
+

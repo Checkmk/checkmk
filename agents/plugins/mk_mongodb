@@ -20,7 +20,7 @@ import datetime
 try:
     import pymongo
 except ImportError, e:
-    sys.stderr("unable to import pymongo")
+    sys.stderr.write("ERROR: Unable to import pymongo module\n")
     sys.exit(2)
 
 # TODO: might be implemented in the future..

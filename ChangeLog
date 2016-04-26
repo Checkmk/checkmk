@@ -189,6 +189,7 @@
     * 3425 FIX: Fixed extra section handling if no related check plugin exists
     * 3465 FIX: df: Fix displayed vertical range of graph of all filesystem checks...
     * 3427 FIX: mssql_counters.sqlstats: fixed rate calculation
+    * 3438 FIX: mk_mongodb: Fixed agent plugin handling when pymongo can not be imported
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

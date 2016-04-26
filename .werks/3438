@@ -1,0 +1,10 @@
+Title: mk_mongodb: Fixed agent plugin handling when pymongo can not be imported
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461685910
+
+

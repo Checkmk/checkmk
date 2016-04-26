@@ -52,8 +52,8 @@ def page_graph():
             defaults.var_dir, host, pnp_cleanup(service), pnp_cleanup(dsname))
 
     if not os.path.exists(dir):
-        raise MKGeneralException(_("There is currently no predition information "
-                                   "available for this for this service."))
+        raise MKGeneralException(_("There is currently no prediction information "
+                                   "available for this service."))
 
     # Load all prediction information, sort by time of generation
     tg_name = html.var("timegroup")

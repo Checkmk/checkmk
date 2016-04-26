@@ -606,8 +606,8 @@ register_check_parameters(
                     ],
                 ),
                 sameline   = True,
-                label      = _("Levels device not responding"),
-                none_label = _("Not responding levels not set"),
+                label      = _("Levels for <i>device not responding</i>"),
+                none_label = _("No levels set"),
                 none_value = (None, None)
             ),
         ],
@@ -7814,8 +7814,8 @@ register_check_parameters(
         default_value = "on"
     ),
     TextAscii(
-        title = _("Plug Item number or name"),
-        help = _("If you need the number or the name depends on the check. Just take a look to the service description. "),
+        title = _("Plug item number or name"),
+        help = _("Whether you need the number or the name depends on the check. Just take a look to the service description."),
         allow_empty = True),
     match_type = "first",
 )

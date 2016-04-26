@@ -384,7 +384,14 @@ def render_werks_table():
     def begin_group(title):
         table.begin(title=title, limit=None, searchable = False, sortable = False, css="werks")
 
-    for werk in werks_sorted_by_date(g_werks.values()):
+    werklist = []
+
+    if werk_table_options["grouping"] == "version":
+        werklist = werks_sorted_by_version(g_werks.values())
+    else:
+        werklist = werks_sorted_by_date(g_werks.values())
+
+    for werk in werklist:
         if werk_matches_options(werk, werk_table_options):
             group = werk_group_value(werk, werk_table_options["grouping"])
             if group != current_group:
@@ -581,3 +588,14 @@ def insert_manpage_links(text):
 
 def werks_sorted_by_date(werks):
     return sorted(werks, cmp = lambda a, b: -cmp(a["date"], b["date"]))
+
+
+# sort by version and within one version by date
+def werks_sorted_by_version(werks):
+    def by_version(lhs, rhs):
+        if lhs["version"] == rhs["version"]:
+            return cmp(lhs["date"], rhs["date"])
+        else:
+            return cmp(lhs["version"], rhs["version"])
+
+    return sorted(werks, cmp=by_version, reverse=True)

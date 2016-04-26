@@ -8,6 +8,9 @@
     * 3465 FIX: df: Fix displayed vertical range of graph of all filesystem checks...
     * 3427 FIX: mssql_counters.sqlstats: fixed rate calculation
 
+    Multisite:
+    * 3125 FIX: fixed grouping of werk list by version...
+
     Notifications:
     * 3426 FIX: sms: fixed wrong message handling after message was quoted and therefore too long
 

@@ -456,9 +456,9 @@ register_rule(group,
      FixedValue(
         {},
         title = _("Check ACME Session Border Controller"),
-        help = _("This rule activates an expect based agent who connects"
+        help = _("This rule activates an agent who connects"
                  "to an ACME Session Border Controller (SBC). This agent uses SSH, this"
-                 "means that you have to exchange a SSH key to make a password less"
+                 "means that you have to exchange an SSH key to make a passwordless"
                  "connect possible"),
         totext = _("Connect to ACME SBC"),
     ),

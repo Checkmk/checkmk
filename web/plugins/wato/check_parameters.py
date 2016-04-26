@@ -719,8 +719,8 @@ register_check_parameters(
                     ],
                 ),
                 sameline   = True,
-                label      = _("Levels device time drifted"),
-                none_label = _("Time drifted levels not set"),
+                label      = _("Levels for <i>device time drifted</i>"),
+                none_label = _("No levels set"),
                 none_value = (None, None)
             ),
             Optional(

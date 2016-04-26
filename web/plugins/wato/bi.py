@@ -1679,7 +1679,7 @@ host_aggregations += [
 
 config.declare_permission("wato.bi_rules",
     _("Business Intelligence Rules and Aggregations"),
-    _("User the WATO BI module, create, modify and delete BI rules and aggregations in packs that you are a contact of"),
+    _("Use the WATO BI module, create, modify and delete BI rules and aggregations in packs that you are a contact of"),
      [ "admin", "user" ])
 
 config.declare_permission("wato.bi_admin",

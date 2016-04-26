@@ -998,7 +998,7 @@ metric_info["temp"] = {
 }
 
 metric_info["cifs_share_users"] = {
-    "title" : _("Users using a cifs share"),
+    "title" : _("Users using a CIFS share"),
     "unit"  : "count",
     "color" : "#60f020",
 }

@@ -1556,7 +1556,7 @@ register_check_parameters(
             ( "remaining_life",
              Tuple(
                  title = _("Remaining Life"),
-                 help = _("Estimatede remaining health of the disk based on other readings."),
+                 help = _("Estimated remaining health of the disk based on other readings."),
                  elements = [
                      Percentage(title = _("Warning below"),  default_value = 30),
                      Percentage(title = _("Critical below"), default_value = 10),

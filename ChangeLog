@@ -16,6 +16,7 @@
     * 3123 FIX: fix for temperature services discovered pre-1.2.8 that caused errors on writing configuration
     * 3385 FIX: Fixed not updated discovery service after grouped auto discovery...
     * 3416 FIX: Avoid warning in cmc.log when rescheduling non-existing discovery check...
+    * 3437 FIX: Improved performance of "activate changes", especially in distributed environments
 
     Checks & Agents:
     * 3183 aruba_wlc_aps: new check which monitors the provisioned accesspoints of an Aruba Network WLAN Controller

@@ -1982,7 +1982,7 @@ def render_renaming_actions(action_counts):
         "cache"            : _("Cached output of monitoring agent"),
         "counters"         : _("File with performance counter"),
         "agent"            : _("Baked host specific agent"),
-        "agent_deployment" : _("Agent deployment status"),
+        "agent_deployment" : _("Agent update status"),
         "piggyback-load"   : _("Piggyback information from other host"),
         "piggyback-pig"    : _("Piggyback information for other hosts"),
         "autochecks"       : _("Auto-disovered services of the host"),

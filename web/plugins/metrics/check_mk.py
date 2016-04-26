@@ -1792,7 +1792,7 @@ metric_info["fc_notxcredits"] = {
 }
 
 metric_info["fc_c2c3_discards"] = {
-    "title" : _("C2 and c3 discards"),
+    "title" : _("C2 and C3 discards"),
     "unit"  : "1/s",
     "color" : "15/a",
 }

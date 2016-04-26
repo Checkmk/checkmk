@@ -108,15 +108,19 @@ def check_fileinfo(item, params, info):
     if len(info) == 0:
         return (3, "no information sent by agent")
 
-    outof_range_txt = fileinfo_check_timeranges(params)
-    in_timerange = outof_range_txt == None
-    reftime = int(info[0][0])
+    outof_range_txt  = fileinfo_check_timeranges(params)
+    in_timerange     = outof_range_txt == None
+    reftime          = None
     check_definition = False
-    state_missing = params.get("state_missing", 3)
-    for line in info[1:]:
+    state_missing    = params.get("state_missing", 3)
+    for line in info:
+        if len(line) == 1:
+            reftime = int(line[0])
+            continue
+
         if item == line[0]:
             if line[1] == "missing":
-                return in_timerange and state_missing or 0, "File not found" + (outof_range_txt or "")
+                continue
             state = 0
             size = int(line[1])
             age = reftime - int(line[2])
@@ -127,6 +131,7 @@ def check_fileinfo(item, params, info):
 
     if check_definition == False:
         return in_timerange and state_missing or 0, "File not found" + (outof_range_txt or "")
+
     return fileinfo_check_function(check_definition, params, outof_range_txt)
 
 # Extracts patterns that are relevant for the current host and item.
@@ -151,7 +156,7 @@ def check_fileinfo_groups(item, params, info):
 
     outof_range_txt = fileinfo_check_timeranges(params)
 
-    reftime = int(info[0][0])
+    reftime = None
 
     count_all = 0
     age_oldest = None
@@ -161,7 +166,11 @@ def check_fileinfo_groups(item, params, info):
     size_largest  = 0
     date_inclusion = ""
     # Start counting values on all files
-    for line in info[1:]:
+    for line in info:
+        if len(line) == 1:
+            reftime = int(line[0])
+            continue
+
         for pattern in params['precompiled_patterns']:
             inclusion, exclusion = pattern
             inclusion_tmp = fileinfo_process_date(inclusion,reftime)

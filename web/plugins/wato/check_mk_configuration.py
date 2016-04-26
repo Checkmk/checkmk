@@ -406,7 +406,7 @@ register_configvar(group,
     Checkbox(
         title = _("Enable BI compilation diagnostics"),
         label = _("Activate logging of BI compilations"),
-        help = _("If this option is enabled, Check_MK BI will create a log details "
+        help = _("If this option is enabled, Check_MK BI will create a log with details "
                  "about compiling BI aggregations. This includes statistics and "
                  "details for each executed compilation. The logs are written to "
                  "<tt>%s</tt>") % site_neutral_path(defaults.log_dir + "/web.log"),

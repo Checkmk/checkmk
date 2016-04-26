@@ -1977,7 +1977,7 @@ process_level_elements = [
        title = _("Enable per-process details in long-output"),
        label = _("Enable per-process details"),
        help  = _("If active, the long output of this service will contain a list of "
-                   "all the matching processes and their details (i.e. pid, cpu usage, memory usage. "
+                   "all the matching processes and their details (i.e. PID, CPU usage, memory usage). "
                    "Please note that HTML output will only work if \"Escape HTML codes in plugin output\" is "
                    "disabled in global settings. This might expose you to Cross-Site-Scripting (everyone "
                    "with write-access to checks could get scripts executed on the monitoring site in the context "

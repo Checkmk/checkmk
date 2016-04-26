@@ -446,9 +446,9 @@ register_rule(group,
      FixedValue(
         {},
         title = _("Check ACME Session Border Controller"),
-        help = _("This rule activates an agent who connects"
-                 "to an ACME Session Border Controller (SBC). This agent uses SSH, this"
-                 "means that you have to exchange an SSH key to make a passwordless"
+        help = _("This rule activates an agent who connects "
+                 "to an ACME Session Border Controller (SBC). This agent uses SSH, this "
+                 "means that you have to exchange an SSH key to make a passwordless "
                  "connect possible"),
         totext = _("Connect to ACME SBC"),
     ),
@@ -817,7 +817,7 @@ register_rule(group,
         optional_keys = [ 'port', 'timeout' ],
     ),
     title = _('AppDynamics via REST API'),
-    help = _('This rule allows querying an AppDynamics server for information about Java applications'
+    help = _('This rule allows querying an AppDynamics server for information about Java applications '
              'via the AppDynamics REST API. You can configure your connection settings here.'),
     factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')

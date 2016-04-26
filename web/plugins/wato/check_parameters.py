@@ -3957,7 +3957,7 @@ register_check_parameters(
                   title = _("Operating speed"),
                   help = _("If you use this parameter then the check goes warning if the "
                            "interface is not operating at the expected speed (e.g. it "
-                           "is working with 8Gbit/s instead of 16Gbit/s."),
+                           "is working with 8Gbit/s instead of 16Gbit/s)."),
                  choices = [
                     ( None,       _("ignore speed") ),
                     ( 4000000000,   "4 Gbit/s" ),
@@ -7246,7 +7246,7 @@ register_rule(
                          label = _("use alias"),
                          help = _("If a multipath device has an alias then you can use it for specifying "
                                   "the device instead of the UUID. The alias will then be part of the service "
-                                  "description. The UUID will be displayed in the pluging output."))
+                                  "description. The UUID will be displayed in the plugin output."))
             ),
         ],
         help = _("This rule controls whether the UUID or the alias is used in the service description during "
@@ -10706,7 +10706,7 @@ register_check_parameters(
             )),
         ],
         help = _("This rule is used to configure thresholds for duration values read from "
-                 "Siemens PLC  devices."),
+                 "Siemens PLC devices."),
         title = _("Duration levels"),
     ),
     TextAscii(

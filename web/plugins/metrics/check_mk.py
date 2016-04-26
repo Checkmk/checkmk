@@ -209,7 +209,7 @@ unit_info["pa"] = {
 }
 
 unit_info["l/s"] = {
-    "title"     : _("Liter per second"),
+    "title"     : _("Liters per second"),
     "symbol"    : _("l/s"),
     "render"    : lambda v: physical_precision(v, 3, _("l/s")),
 }
@@ -1822,7 +1822,7 @@ metric_info["fc_invalid_tx_words"] = {
 }
 
 metric_info["fc_invalid_crcs"] = {
-    "title" : _("Invalid crcs"),
+    "title" : _("Invalid CRCs"),
     "unit"  : "1/s",
     "color" : "15/a",
 }

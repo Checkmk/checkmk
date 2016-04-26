@@ -14708,8 +14708,8 @@ def get_check_plugin_stats(subnode):
 
     text = ""
     if num_cats > 1:
-        text += _("%d %s<br>") % (num_cats, _("sub categories"))
-    text += _("%d %s") % (num_plugins, _("check plugins"))
+        text += "%d %s<br>" % (num_cats, _("sub categories"))
+    text += "%d %s" % (num_plugins, _("check plugins"))
     return text
 
 

@@ -192,6 +192,7 @@
     * 3438 FIX: mk_mongodb: Fixed agent plugin handling when pymongo can not be imported
     * 3441 FIX: ps: Added missing graph for number of processes
     * 3429 FIX: ps, mem.linux, mem.include: fixed missing parse_proc_meminfo_bytes during precompiling
+    * 3126 FIX: fixed crash in some wmi-based checks when items disappear from the agent output
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

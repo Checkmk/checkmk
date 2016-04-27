@@ -552,7 +552,7 @@ def paint_comment_icon(what, row, tags, host_custom_vars):
         text = ""
         for c in comments:
             id, author, comment, ty, timestamp = c
-            comment = comment.replace("\n", "<br>").replace("'","&#39;")
+            comment = comment.replace("\n", "<br>")
             text += "%s %s: \"%s\" \n" % (paint_age(timestamp, True, 0, 'abs')[1], author, comment)
         return 'comment', text, url_to_view(row, 'comments_of_' + what)
 

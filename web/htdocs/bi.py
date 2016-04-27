@@ -303,12 +303,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
         num_new_host_aggrs  = 0
         num_new_multi_aggrs = 0
 
-    # When only_hosts is given only use the single host aggregations for further processing.
-    # The only_hosts variable is only populated for single host tables.
-    if only_hosts:
-        aggr_list = [(AGGR_HOST, config.host_aggregations)]
-    else:
-        aggr_list = [(AGGR_MULTI, config.aggregations), (AGGR_HOST, config.host_aggregations)]
+    aggr_list = [(AGGR_MULTI, config.aggregations), (AGGR_HOST, config.host_aggregations)]
 
     single_affected_hosts = []
     for aggr_type, aggregations in aggr_list:

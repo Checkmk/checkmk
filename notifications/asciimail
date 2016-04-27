@@ -173,7 +173,12 @@ def read_bulk_contexts():
     # First comes a section with global variables
     for line in sys.stdin:
         line = line.strip()
-        if line:
+
+        if not line:
+            in_params = False
+            context = {}
+            contexts.append(context)
+        else:
             try:
                 key, value = line.split("=", 1)
                 value = value.replace("\1", "\n")
@@ -185,11 +190,6 @@ def read_bulk_contexts():
                 parameters[key] = value
             else:
                 context[key] = value
-
-        else:
-            in_params = False
-            context = {}
-            contexts.append(context)
 
     return parameters, contexts
 

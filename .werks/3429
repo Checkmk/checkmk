@@ -1,4 +1,4 @@
-Title: ps, mem, mem.include: fixed missing parse_proc_meminfo_bytes during precompiling
+Title: ps, mem.linux, mem.include: fixed missing parse_proc_meminfo_bytes during precompiling
 Level: 1
 Component: checks
 Class: fix

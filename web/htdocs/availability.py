@@ -778,10 +778,10 @@ def reclassify_by_annotations(what, av_rawdata):
             if what == "service":
                 cycles = [ ((site, host_name, None), "in_host_downtime") ] + cycles
 
-            for anno_key, entry_to_change in cycles:
+            for anno_key, key_to_change in cycles:
                 if anno_key in annotations:
                     new_entries[service_description] = \
-                          reclassify_service_by_annotations(service_history, annotations[anno_key], entry_to_change)
+                          reclassify_service_history_by_annotations(service_history, annotations[anno_key], key_to_change)
                     service_history = new_entries[service_description]
                 else:
                     new_entries[service_description] = service_history
@@ -789,38 +789,42 @@ def reclassify_by_annotations(what, av_rawdata):
     return reclassified_rawdata
 
 
-def reclassify_service_by_annotations(service_history, annotation_entries, entry_to_change):
+def reclassify_service_history_by_annotations(service_history, annotation_entries, key_to_change):
     new_history = service_history
     for annotation in annotation_entries:
         downtime = annotation.get("downtime")
         if downtime == None:
             continue
-        new_history = reclassify_service_by_annotation(new_history, annotation, entry_to_change)
+        new_history = reclassify_service_history_by_annotation(new_history, annotation, key_to_change)
     return new_history
 
 
-def reclassify_service_by_annotation(service_history, annotation, entry_to_change):
-    downtime = annotation["downtime"]
-
+def reclassify_service_history_by_annotation(service_history, annotation, key_to_change):
     new_history = []
     for history_entry in service_history:
-        if annotation["from"] < history_entry["until"] and annotation["until"] > history_entry["from"]:
-            for is_in, p_from, p_until in [
-                  ( False, history_entry["from"],                            max(history_entry["from"], annotation["from"]) ),
-                  ( True, max(history_entry["from"], annotation["from"]),    min(history_entry["until"], annotation["until"]) ),
-                  ( False, min(history_entry["until"], annotation["until"]), history_entry["until"] ),
-                ]:
-                if p_from < p_until:
-                    new_entry = history_entry.copy()
-                    new_entry["from"] = p_from
-                    new_entry["until"] = p_until
-                    new_entry["duration"] = p_until - p_from
-                    if is_in:
-                        new_entry[entry_to_change] = downtime and 1 or 0
-                    new_history.append(new_entry)
+        new_history += reclassify_service_by_annotation(history_entry, annotation, key_to_change)
 
-        else:
-            new_history.append(history_entry)
+    return new_history
+
+
+def reclassify_service_by_annotation(history_entry, annotation, key_to_change):
+    new_history = []
+    if annotation["from"] < history_entry["until"] and annotation["until"] > history_entry["from"]:
+        for is_in, p_from, p_until in [
+              ( False, history_entry["from"],                            max(history_entry["from"], annotation["from"]) ),
+              ( True, max(history_entry["from"], annotation["from"]),    min(history_entry["until"], annotation["until"]) ),
+              ( False, min(history_entry["until"], annotation["until"]), history_entry["until"] ),
+            ]:
+            if p_from < p_until:
+                new_entry = history_entry.copy()
+                new_entry["from"] = p_from
+                new_entry["until"] = p_until
+                new_entry["duration"] = p_until - p_from
+                if is_in:
+                    new_entry[key_to_change] = annotation["downtime"] and 1 or 0
+                new_history.append(new_entry)
+    else:
+        new_history.append(history_entry)
 
     return new_history
 
@@ -1482,9 +1486,7 @@ def get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_ou
 def get_bi_spans(tree, aggr_group, avoptions, timewarp):
     time_range, range_title = avoptions["range"]
     phases_list = get_bi_leaf_history(tree, aggr_group, time_range)
-    reclassified_phases_list = reclassify_bi_phases(phases_list)
-    return compute_bi_timeline(tree, aggr_group, time_range,
-                               timewarp, reclassified_phases_list)
+    return compute_bi_timeline(tree, aggr_group, time_range, timewarp, phases_list)
 
 
 def get_bi_leaf_history(tree, aggr_group, time_range):
@@ -1497,7 +1499,7 @@ def get_bi_leaf_history(tree, aggr_group, time_range):
         only_sites.add(site)
         hosts.append(host)
 
-    columns = [ "host_name", "service_description", "from", "log_output", "state", "in_downtime", "in_service_period" ]
+    columns = [ "host_name", "service_description", "from", "until", "log_output", "state", "in_downtime", "in_service_period" ]
     sites.live().set_only_sites(list(only_sites))
     sites.live().set_prepend_site(True)
     sites.live().set_limit() # removes limit
@@ -1530,6 +1532,9 @@ def get_bi_leaf_history(tree, aggr_group, time_range):
     sites.live().set_only_sites(None)
     columns = ["site"] + columns
     rows = [ dict(zip(columns, row)) for row in data ]
+
+    # Reclassify base data due to annotations
+    rows = reclassify_bi_rows(rows)
 
     # Now comes the tricky part: recompute the state of the aggregate
     # for each step in the state history and construct a timeline from
@@ -1651,36 +1656,22 @@ def compute_bi_tree_state(tree, status):
     return tree_state
 
 
-def reclassify_bi_phases(phases_list):
+def reclassify_bi_rows(rows):
     annotations = load_annotations()
     if not annotations:
-        return phases_list
+        return rows
 
-    # Each entry in the phases list represents one state snapshot of all leafs
-    # in the BI aggregation. It is itself a pair of (timestamp, node_list).
-    # the node_list is a list of dicts - each of which describes the state
-    # of one host or service. Such a node dict has the same structure as
-    # an entry in av_rawdata:
-    # {
-    #    'from'                : 1461755412,
-    #    'host_name'           : u'heute',
-    #    'in_downtime'         : 0,
-    #    'in_service_period'   : 1,
-    #    'log_output'          : u'OK - sys.peer - stratum 2, offset 26.91 ms, ...',
-    #    'service_description' : u'NTP Time',
-    #    'site'                : 'heute',
-    #    'state'               : 0,
-    # }
-
-    # Now during reclassification we need to split up entries due to annotations
-    # that change the scheduled downtime status
-
-    reclassified_phases = []
-    for phase_begin, node_list in phases_list:
-        reclassified_phases.append((phase_begin, node_list))
-    return reclassified_phases
-
-
+    new_rows = []
+    for row in rows:
+        site = row["site"]
+        host_name = row["host_name"]
+        service_description = row["service_description"]
+        anno_key = (site, host_name, service_description or None)
+        if anno_key in annotations:
+            new_rows += reclassify_service_history_by_annotations([row], annotations[anno_key], "in_downtime")
+        else:
+            new_rows.append(row)
+    return new_rows
 
 
 #.

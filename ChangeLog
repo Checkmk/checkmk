@@ -9,6 +9,7 @@
     * 3427 FIX: mssql_counters.sqlstats: fixed rate calculation
     * 3438 FIX: mk_mongodb: Fixed agent plugin handling when pymongo can not be imported
     * 3441 FIX: ps: Added missing graph for number of processes
+    * 3429 FIX: ps, mem, mem.include: fixed missing parse_proc_meminfo_bytes during precompiling
 
     Multisite:
     * 3125 FIX: fixed grouping of werk list by version...

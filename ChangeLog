@@ -15,6 +15,9 @@
     Notifications:
     * 3426 FIX: sms: fixed wrong message handling after message was quoted and therefore too long
 
+    BI:
+    * 3439 FIX: Fixed processing of BI aggregations containing umlauts
+
 
 1.2.8b12:
     Core & Setup:

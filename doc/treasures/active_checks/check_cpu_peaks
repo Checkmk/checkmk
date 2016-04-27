@@ -107,6 +107,8 @@ try:
     util_total = []
     is_windows = True
     try:
+        # can not check for get_rrd_data because it's hacky included with execfile
+        # pylint: disable=undefined-variable
         data = get_rrd_data(host, "CPU utilization", "util", "MAX", fromtime, untiltime)
         datasets.append(data[1])
         step_secs = data[0]
@@ -118,6 +120,8 @@ try:
         # looks like this is not a windows rrd...
         is_windows = False
         for key in ["system", "user", "wait"]:
+            # can not check for get_rrd_data because it's hacky included with execfile
+            # pylint: disable=undefined-variable
             data = get_rrd_data(host, "CPU utilization", key, "MAX", fromtime, untiltime)
             datasets.append(data[1])
             step_secs = data[0]

@@ -115,7 +115,7 @@ fetch_user       = None
 fetch_pass       = None
 fetch_ssl        = False
 conn_timeout     = 10
-cleanup_messages = False
+cleanup_messages = ""
 forward_ec       = False
 forward_facility = 16 # default to "mail" (2 << 3)
 forward_app      = None
@@ -346,7 +346,7 @@ def forward_to_ec(mails):
                     sock.send(message + "\n")
                 sock.close()
 
-            elif not forward_method.startswith('spool:'):
+            elif not forward_method.startswith('spool:'): # pylint: disable=no-member
                 # write into local event pipe
                 # Important: When the event daemon is stopped, then the pipe
                 # is *not* existing! This prevents us from hanging in such

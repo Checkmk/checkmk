@@ -118,7 +118,7 @@ def check_mssql_datafiles(item, params, info):
     for row in info:
         if len(row) == 8:
             inst, database, table, physical_name, max_size, allocated_size, used_size, unlimited = row
-            unlimited = bool(unlimited)
+            unlimited = unlimited == '1'
         else:
             database, table, physical_name, max_size, allocated_size, used_size = row
             inst = None

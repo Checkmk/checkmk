@@ -1478,8 +1478,16 @@ def find_next_choord(broken, scale):
 def get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_output, avoptions):
     raise Exception("Not implemented yet. Sorry.")
 
+
 def get_bi_spans(tree, aggr_group, avoptions, timewarp):
     time_range, range_title = avoptions["range"]
+    phases_list = get_bi_leaf_history(tree, aggr_group, time_range)
+    reclassified_phases_list = reclassify_bi_phases(phases_list)
+    return compute_bi_timeline(tree, aggr_group, time_range,
+                               timewarp, reclassified_phases_list)
+
+
+def get_bi_leaf_history(tree, aggr_group, time_range):
     # Get state history of all hosts and services contained in the tree.
     # In order to simplify the query, we always fetch the information for
     # all hosts of the aggregates.
@@ -1542,6 +1550,10 @@ def get_bi_spans(tree, aggr_group, avoptions, timewarp):
     for from_time in sorted_times:
         phases_list.append((from_time, phases[from_time]))
 
+    return phases_list
+
+
+def compute_bi_timeline(tree, aggr_group, time_range, timewarp, phases_list):
     states = {}
     def update_states(phase_entries):
         for row in phase_entries:
@@ -1553,7 +1565,7 @@ def get_bi_spans(tree, aggr_group, avoptions, timewarp):
     update_states(phases_list[0][1])
     # states does now reflect the host/services states at the beginning
     # of the query range.
-    tree_state = compute_tree_state(tree, states)
+    tree_state = compute_bi_tree_state(tree, states)
     tree_time = time_range[0]
     if timewarp == int(tree_time):
         timewarp_state = tree_state
@@ -1561,42 +1573,44 @@ def get_bi_spans(tree, aggr_group, avoptions, timewarp):
         timewarp_state = None
 
     timeline = []
-    def append_to_timeline(from_time, until_time, tree_state):
-        timeline.append({
-            "state"                  : tree_state[0]['state'],
-            "log_output"             : tree_state[0]['output'],
-            "from"                   : from_time,
-            "until"                  : until_time,
-            "site"                   : "",
-            "host_name"              : aggr_group,
-            "service_description"    : tree['title'],
-            "in_notification_period" : 1,
-            "in_service_period"      : tree_state[0]['in_service_period'],
-            "in_downtime"            : tree_state[0]['in_downtime'],
-            "in_host_downtime"       : 0,
-            "host_down"              : 0,
-            "is_flapping"            : 0,
-            "duration"               : until_time - from_time,
-        })
-
 
     for from_time, phase in phases_list[1:]:
         update_states(phase)
-        next_tree_state = compute_tree_state(tree, states)
+        next_tree_state = compute_bi_tree_state(tree, states)
         duration = from_time - tree_time
-        append_to_timeline(tree_time, from_time, tree_state)
+        timeline.append(create_bi_timeline_entry(tree, aggr_group, tree_time, from_time, tree_state))
         tree_state = next_tree_state
         tree_time = from_time
         if timewarp == tree_time:
             timewarp_state = tree_state
 
     # Add one last entry - for the state until the end of the interval
-    append_to_timeline(tree_time, time_range[1], tree_state)
+    timeline.append(create_bi_timeline_entry(tree, aggr_group, tree_time, time_range[1], tree_state))
 
     return timeline, timewarp_state
 
 
-def compute_tree_state(tree, status):
+def create_bi_timeline_entry(tree, aggr_group, from_time, until_time, tree_state):
+    return {
+        "state"                  : tree_state[0]['state'],
+        "log_output"             : tree_state[0]['output'],
+        "from"                   : from_time,
+        "until"                  : until_time,
+        "site"                   : "",
+        "host_name"              : aggr_group,
+        "service_description"    : tree['title'],
+        "in_notification_period" : 1,
+        "in_service_period"      : tree_state[0]['in_service_period'],
+        "in_downtime"            : tree_state[0]['in_downtime'],
+        "in_host_downtime"       : 0,
+        "host_down"              : 0,
+        "is_flapping"            : 0,
+        "duration"               : until_time - from_time,
+    }
+
+
+
+def compute_bi_tree_state(tree, status):
     # Convert our status format into that needed by BI
     services_by_host = {}
     hosts = {}
@@ -1631,11 +1645,43 @@ def compute_tree_state(tree, status):
             services_by_host.get(site_host,[])
         ]
 
-
     # Finally we can execute the tree
     bi.load_assumptions()
     tree_state = bi.execute_tree(tree, status_info)
     return tree_state
+
+
+def reclassify_bi_phases(phases_list):
+    annotations = load_annotations()
+    if not annotations:
+        return phases_list
+
+    # Each entry in the phases list represents one state snapshot of all leafs
+    # in the BI aggregation. It is itself a pair of (timestamp, node_list).
+    # the node_list is a list of dicts - each of which describes the state
+    # of one host or service. Such a node dict has the same structure as
+    # an entry in av_rawdata:
+    # {
+    #    'from'                : 1461755412,
+    #    'host_name'           : u'heute',
+    #    'in_downtime'         : 0,
+    #    'in_service_period'   : 1,
+    #    'log_output'          : u'OK - sys.peer - stratum 2, offset 26.91 ms, ...',
+    #    'service_description' : u'NTP Time',
+    #    'site'                : 'heute',
+    #    'state'               : 0,
+    # }
+
+    # Now during reclassification we need to split up entries due to annotations
+    # that change the scheduled downtime status
+
+    reclassified_phases = []
+    for phase_begin, node_list in phases_list:
+        reclassified_phases.append((phase_begin, node_list))
+    return reclassified_phases
+
+
+
 
 #.
 #   .--Various-------------------------------------------------------------.

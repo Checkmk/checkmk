@@ -490,7 +490,7 @@ def compile_rule_node(aggr_type, calllist, lvl):
     if rulename not in config.aggregation_rules:
         raise MKConfigError(_("<h1>Invalid configuration in variable <tt>aggregations</tt></h1>"
                 "There is no rule named <tt>%s</tt>. Available are: <tt>%s</tt>") %
-                (rulename, "</tt>, </tt>".join(config.aggregation_rules.keys())))
+                (rulename, "</tt>, <tt>".join(config.aggregation_rules.keys())))
     rule = config.aggregation_rules[rulename]
 
     # Execute FOREACH: iterate over matching hosts/services.

@@ -29,6 +29,7 @@
 # <<<plesk_domains>>>
 # <domain>
 
+import sys
 import MySQLdb
 
 try:

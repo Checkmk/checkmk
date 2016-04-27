@@ -774,8 +774,7 @@ def reclassify_by_annotations(what, av_rawdata):
         new_entries = {}
         reclassified_rawdata[(site, host_name)] = new_entries
         for service_description, service_history in service_entries.iteritems():
-            anno_key = (site, host_name, service_description)
-            cycles = [ ((site, host_name, service_description), "in_downtime") ]
+            cycles = [ ((site, host_name, service_description or None), "in_downtime") ]
             if what == "service":
                 cycles = [ ((site, host_name, None), "in_host_downtime") ] + cycles
 

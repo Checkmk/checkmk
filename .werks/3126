@@ -1,0 +1,9 @@
+Title: fixed crash in some wmi-based checks when items disappear from the agent output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b13
+Date: 1461763841
+Class: fix
+
+

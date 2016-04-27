@@ -246,6 +246,8 @@ def check_logwatch(item, params, info):
     cache_new = {}
 
     def is_cache_new(node):
+        if node is None:
+            return True
         if node not in cache_new:
             path = cachefile_path(node)
             if not os.path.exists(path):

@@ -856,7 +856,7 @@ def logwatch_ec_precompile(hostname, item, params):
 
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
-        hosts = all_matching_hosts(tags, hostlist)
+        hosts = all_matching_hosts(tags, hostlist, with_foreign_hosts=False)
         ruleset.append((item, hosts, servlist))
 
     # Filter out any logwatch_rules which do apply to to this host

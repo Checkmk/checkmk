@@ -6388,7 +6388,13 @@ graph_info.append({
     "metrics" : [
         ("page_reads_sec",   "area" ),
         ("page_writes_sec",  "-area"),
-        ("page_lookups_sec", "line" )
     ]
 })
 
+graph_info.append({
+    "title" : _("Datafile Sizes"),
+    "metrics" : [
+        ("allocated_size",   "line" ),
+        ("data_size", "area" )
+    ]
+})

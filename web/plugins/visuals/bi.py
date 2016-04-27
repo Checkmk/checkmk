@@ -39,7 +39,7 @@ class BIGroupFilter(Filter):
         html.select(htmlvar, [ ("", "") ] + [(g, g) for g in bi.aggregation_groups()])
 
     def selected_group(self):
-        return html.var(self.htmlvars[0])
+        return html.get_unicode_input(self.htmlvars[0])
 
     def filter_table(self, rows):
         group = self.selected_group()
@@ -49,7 +49,7 @@ class BIGroupFilter(Filter):
             return [ row for row in rows if row[self.column] == group ]
 
     def heading_info(self):
-        return html.var(self.htmlvars[0])
+        return html.get_unicode_input(self.htmlvars[0])
 
 declare_filter( 90,  BIGroupFilter())
 

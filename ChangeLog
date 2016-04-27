@@ -332,6 +332,7 @@
     * 3232 FIX: BI: Only querying site of host for specific host status info...
     * 3291 FIX: Improved error handling when searching for BI aggregations with invalid regex
     * 3358 FIX: Fixed BI Boxes views when "Enable BI compilation diagnostics" enabled
+    * 3439 FIX: Fixed processing of BI aggregations containing umlauts
 
     Reporting & Availability:
     * 3267 New availability option for reclassifying host state "unreachable"...

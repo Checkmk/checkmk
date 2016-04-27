@@ -1,0 +1,12 @@
+Title: Fixed possible BI exception "Unknown BI aggregation group ..."
+Level: 1
+Component: bi
+Compatible: compat
+Version: 1.2.8b13
+Date: 1461748936
+Class: fix
+
+An exception has been fixed which could occur when using "multi host" aggregations
+together with the "precompile on demand" feature. It could happen that a BI ajax
+fold/unfold request was the first BI request in an apache process which had not
+yet initialized the BI cache yet.

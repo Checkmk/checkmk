@@ -17,6 +17,7 @@
 
     BI:
     * 3439 FIX: Fixed processing of BI aggregations containing umlauts
+    * 3440 FIX: Fixed possible BI exception "Unknown BI aggregation group ..."...
 
 
 1.2.8b12:

@@ -1,0 +1,10 @@
+Title: ps, mem, mem.include: fixed missing parse_proc_meminfo_bytes during precompiling
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461759504
+
+

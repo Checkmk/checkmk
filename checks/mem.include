@@ -30,6 +30,16 @@ factory_settings["memory_default_levels"] = {
     "levels" : memused_default_levels,
 }
 
+# Parse /proc/meminfo into the canonical form: into bytes, not kB
+# This function is also used by the ps check
+def parse_proc_meminfo_bytes(info):
+    meminfo = {}
+    for line in info:
+        value = int(line[1])
+        if len(line) > 2 and line[2] == 'kB':
+            value *= 1024
+        meminfo[line[0][:-1]] = value
+    return meminfo
 
 def check_memory(params, meminfo):
     swapused = meminfo['SwapTotal'] - meminfo['SwapFree']

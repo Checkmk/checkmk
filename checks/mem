@@ -157,16 +157,6 @@ factory_settings["mem_linux_default_levels"] = {
     "levels_vmalloc":       ("abs_free",  (50*1024*1024, 30*1024*1024)),
 }
 
-# Parse /proc/meminfo into the canonical form: into bytes, not kB
-def parse_proc_meminfo_bytes(info):
-    meminfo = {}
-    for line in info:
-        value = int(line[1])
-        if len(line) > 2 and line[2] == 'kB':
-            value *= 1024
-        meminfo[line[0][:-1]] = value
-    return meminfo
-
 def is_linux_meminfo(meminfo):
     return "PageTables" in meminfo and "Writeback" in meminfo and "Committed_AS" in meminfo
 
@@ -360,15 +350,15 @@ def check_mem_linux(_no_item, params, info):
     yield 0, "", perfdata
 
 
-
 check_info["mem.linux"] = {
-    'check_function':          check_mem_linux,
-    'inventory_function':      inventory_mem_linux,
-    'service_description':     'Memory',
-    'default_levels_variable': 'mem_linux_default_levels',
-    'has_perfdata':            True,
-    'group':                   'memory_linux',
-    "handle_real_time_checks" : True,
+    'inventory_function'        : inventory_mem_linux,
+    'check_function'            : check_mem_linux,
+    'service_description'       : 'Memory',
+    'default_levels_variable'   : 'mem_linux_default_levels',
+    'has_perfdata'              : True,
+    'group'                     : 'memory_linux',
+    "handle_real_time_checks"   : True,
+    'includes'                  : [ 'mem.include' ],
 }
 
 #.

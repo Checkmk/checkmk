@@ -5862,6 +5862,13 @@ graph_info.append({
 })
 
 graph_info.append({
+    "title" : _("Number of processes"),
+    "metrics" : [
+        ( "processes", "area" ),
+    ]
+})
+
+graph_info.append({
     "title" : _("Size of processes"),
     "metrics" : [
         ( "process_resident_size", "area" ),

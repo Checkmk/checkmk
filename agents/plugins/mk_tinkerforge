@@ -60,6 +60,8 @@
 #  Currently the bricklets included in the Starter Kit: Server Room Monitoring are
 #  implemented
 
+# Don't have tinkerforge module during tests. So disable those checks
+# pylint: disable=import-error
 
 import sys
 import os

@@ -111,20 +111,24 @@ def read_config():
     config = []
 
     for line in config_lines:
-        rewrite = False
         if line[0].isspace(): # pattern line
             if not have_filenames:
                 raise Exception("Missing logfile names")
+
             level, pattern = line.split(None, 1)
+            cont_list = [] # List of continuation patterns
+            rewrite_list = [] # List of rewrite patterns
+
             if level == 'A':
                 cont_list.append(parse_cont_pattern(pattern))
             elif level == 'R':
                 rewrite_list.append(pattern)
             else:
                 level, compiled = parse_pattern(level, pattern, line)
-                cont_list = [] # List of continuation patterns
-                rewrite_list = [] # List of rewrite patterns
+                cont_list = []
+                rewrite_list = []
                 patterns.append((level, compiled, cont_list, rewrite_list))
+
         else: # filename line
             patterns = []
             config.append((parse_filenames(line), patterns))

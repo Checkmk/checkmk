@@ -194,6 +194,7 @@
     * 3429 FIX: ps, mem.linux, mem.include: fixed missing parse_proc_meminfo_bytes during precompiling
     * 3126 FIX: fixed crash in some wmi-based checks when items disappear from the agent output
     * 3443 FIX: mk_logwatch: Fixed exception in agent plugin configuration parsing error handling
+    * 3444 FIX: mssql: Reworked agent plugin to use less WMI calls
 
     Multisite:
     * 3127 new icon on services that are outside their check period

@@ -1,0 +1,9 @@
+Title: mssql: Reworked agent plugin to use less WMI calls
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1461828284
+Class: fix
+
+

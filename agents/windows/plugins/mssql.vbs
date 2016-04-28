@@ -18,7 +18,8 @@
 ' password = secret-pw
 '
 ' The following sources are asked:
-' 1. WMI - to gather a list of local MSSQL-Server instances
+' 1. Registry - To gather a list of local MSSQL-Server instances
+' 2. WMI - To check for the state of the MSSQL service
 ' 2. MSSQL-Servers via ADO/sqloledb connection to gather infos these infos:
 '      a) list and sizes of available databases
 '      b) counters of the database instance
@@ -29,14 +30,20 @@
 
 Option Explicit
 
-Dim WMI, FSO, SHO, items, objItem, prop, instId, instIdx, instVersion
-Dim instIds, instName, output, isClustered, instServers
-Dim WMIservice, colRunningServices, objService, cfg_dir, cfg_file, hostname
+Dim WMI, FSO, SHO, items, objItem, prop, instVersion, registry
+Dim output, sources, instances, instance, instance_id, instance_name
+Dim cfg_dir, cfg_file, hostname
 
+Const HKLM = &H80000002
+
+' Don't make this timeout too low. We saw the "sp_spaceused" stored procedure
+' to sometimes come back instantly but sometimes it takes several seconds to
+' come back. If this is needed to be changed, please make it configurable using
+' the plugins mssql*.ini config files.
 WScript.Timeout = 30
 
 ' Directory of all database instance names
-Set instIds = CreateObject("Scripting.Dictionary")
+Set instances = CreateObject("Scripting.Dictionary")
 Set FSO = CreateObject("Scripting.FileSystemObject")
 Set SHO = CreateObject("WScript.Shell")
 
@@ -45,7 +52,8 @@ cfg_dir = SHO.ExpandEnvironmentStrings("%MK_CONFDIR%")
 
 output = ""
 Sub addOutput(text)
-    output = output & text & vbLf
+    wscript.echo text
+    'output = output & text & vbLf
 End Sub
 
 Function readIniFile(path)
@@ -67,103 +75,98 @@ Function readIniFile(path)
                     End If
                 End If
             End If
+            Set FH = Nothing
         Loop
         FH.Close
     End If
     Set readIniFile = parsed
+    Set parsed = Nothing
 End Function
 
-' Detect whether or not the script is called in a clustered environment.
-' Saves the virtual server names of the DB instances
-Set instServers = CreateObject("Scripting.Dictionary")
-On Error Resume Next
-Set WMI = GetObject("WINMGMTS:\\.\root\mscluster")
-Set items = WMI.execQuery("SELECT Name, Status, State, Type, PrivateProperties " & _
-                          "FROM MsCluster_Resource WHERE Type = 'SQL Server'")
-For Each objItem in items
-    instName = objItem.PrivateProperties.InstanceName
-    instServers(instName) = objItem.PrivateProperties.VirtualServerName
-Next
+Set registry = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\default:StdRegProv")
+Set sources = CreateObject("Scripting.Dictionary")
 
-If Err.Number <> 0 Then
-    Err.Clear()
-    isClustered = FALSE
-Else
-    isClustered = TRUE
+Dim service, i, version, edition, value_types, value_names, value_raw, cluster_name
+Set WMI = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
+
+'
+' Gather instances on this host, store instance in instances and output version section for it
+'
+registry.EnumValues HKLM, "SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL", _
+                          value_names, value_types
+
+If Not IsArray(value_names) Then
+    addOutput("ERROR: Failed to gather SQL server instances")
+    wscript.quit(1)
 End If
-On Error Goto 0
 
-' Dummy empty output.
-' Contains timeout error if this scripts runtime exceeds the timeout
-WScript.echo "<<<mssql_versions>>>"
+For i = LBound(value_names) To UBound(value_names)
+    instance_id = value_names(i)
 
-' Loop all found local MSSQL server instances
-' Try different trees to handle different versions of MSSQL
-On Error Resume Next
-' try SQL Server 2014:
-Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement12")
-If Err.Number <> 0 Then
-    Err.Clear()
-    ' try SQL Server 2012:
-    Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement11")
-    If Err.Number <> 0 Then
-        Err.Clear()
+    registry.GetStringValue HKLM, "SOFTWARE\Microsoft\Microsoft SQL Server\" & _
+                                  "Instance Names\SQL", _
+                                  instance_id, instance_name
 
-        ' try SQL Server 2008
-        Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement10")
-        If Err.Number <> 0 Then
-            Err.Clear()
+    ' HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQLServer\CurrentVersion
+    registry.GetStringValue HKLM, "SOFTWARE\Microsoft\Microsoft SQL Server\" & _
+                                  instance_name & "\MSSQLServer\CurrentVersion", _
+                                  "CurrentVersion", version
 
-            ' try MSSQL < 10
-            Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement")
-            If Err.Number <> 0 Then
-                WScript.echo "Error: " & Err.Number & " " & Err.Description
-                Err.Clear()
-                wscript.quit()
-            End If
+    ' HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\Setup
+    registry.GetStringValue HKLM, "SOFTWARE\Microsoft\Microsoft SQL Server\" & _
+                                  instance_name & "\Setup", _
+                                  "Edition", edition
+
+    addOutput("<<<mssql_versions:sep(124)>>>")
+    addOutput("MSSQL_" & instance_id & "|" & version & "|" & edition)
+
+    ' Check whether or not this instance is clustered
+    registry.GetStringValue HKLM, "SOFTWARE\Microsoft\Microsoft SQL Server\" & _
+                                  instance_name & "\Cluster", "ClusterName", cluster_name
+
+    If IsNull(cluster_name) Then
+        ' In case of instance name "MSSQLSERVER" always use (local) as connect string
+        If instance_id = "MSSQLSERVER" Then
+            sources.add instance_id, "(local)"
+        Else
+            sources.add instance_id, hostname & "\" & instance_id
+        End If
+    Else
+        ' In case the instance name is "MSSQLSERVER" always use the virtual server name
+        If instance_id = "MSSQLSERVER" Then
+            sources.add instance_id, cluster_name
+        Else
+            sources.add instance_id, cluster_name & "\" & instance_id
         End If
     End If
-End If
-On Error Goto 0
 
-Set WMIservice = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
-
-For Each prop In WMI.ExecQuery("SELECT * FROM SqlServiceAdvancedProperty WHERE " & _
-                               "SQLServiceType = 1 AND PropertyName = 'VERSION'")
-
-
-    Set colRunningServices = WMIservice.ExecQuery("SELECT State FROM Win32_Service " & _
-                                                  "WHERE Name = '" & prop.ServiceName & "'")
-    instId      = Replace(prop.ServiceName, "$", "__")
-    instVersion = prop.PropertyStrValue
-    instIdx = Replace(instId, "__", "_")
-    addOutput( "<<<mssql_versions>>>" )
-    addOutput( instIdx & "  " & instVersion )
-
-    ' Now query the server instance for the databases
-    ' Use name as key and always empty value for the moment
-    For Each objService In colRunningServices
-        If objService.State = "Running" Then
-            instIds.add instId, ""
-        End If
-    Next
+    ' Only collect results for currently running instances
+    Set service = WMI.ExecQuery("SELECT State FROM Win32_Service " & _
+                          "WHERE Name = 'MSSQL$" & instance_id & "' AND State = 'Running'")
+    If Not IsNull(service) Then
+        instances.add instance_id, ""
+    End If
 Next
 
-Set WMI = nothing
+Set service  = Nothing
+Set WMI      = Nothing
+Set registry = Nothing
+
+wscript.quit(1)
 
 Dim CONN, RS, CFG, AUTH
 
-' Initialize connection objects
-Set CONN = CreateObject("ADODB.Connection")
-Set RS = CreateObject("ADODB.Recordset")
+' Initialize database connection objects
+Set CONN      = CreateObject("ADODB.Connection")
+Set RS        = CreateObject("ADODB.Recordset")
 CONN.Provider = "sqloledb"
 
 ' Loop all found server instances and connect to them
 ' In my tests only the connect using the "named instance" string worked
-For Each instId In instIds.Keys
+For Each instance_id In instances.Keys
     ' Use either an instance specific config file named mssql_<instance-id>.ini
     ' or the default mysql.ini file.
-    cfg_file = cfg_dir & "\mssql_" & instId & ".ini"
+    cfg_file = cfg_dir & "\mssql_" & instance & ".ini"
     If Not FSO.FileExists(cfg_file) Then
         cfg_file = cfg_dir & "\mssql.ini"
         If Not FSO.FileExists(cfg_file) Then
@@ -186,29 +189,7 @@ For Each instId In instIds.Keys
         CONN.Properties("Password").Value = AUTH("password")
     End If
 
-    If InStr(instId, "__") <> 0 Then
-        instName = Split(instId, "__")(1)
-    instId = Replace(instId, "__", "_")
-    Else
-        instName = instId
-    End If
-
-    ' In case of instance name "MSSQLSERVER" always use (local) as connect string
-    If Not isClustered Then
-        If instName = "MSSQLSERVER" Then
-            CONN.Properties("Data Source").Value = "(local)"
-        Else
-            CONN.Properties("Data Source").Value = hostname & "\" & instName
-        End If
-    Else
-        ' In case the instance name is "MSSQLSERVER" always use the virtual server name
-        If instName = "MSSQLSERVER" Then
-            CONN.Properties("Data Source").Value = instServers(instName)
-        Else
-            CONN.Properties("Data Source").Value = instServers(instName) & "\" & instName
-        End If
-    End If
-
+    CONN.Properties("Data Source").Value = sources(instance_id)
     CONN.Open
 
     ' Get counter data for the whole instance
@@ -245,7 +226,7 @@ For Each instId In instIds.Keys
         wait_duration_ms = Trim(RS("wait_duration_ms"))
         wait_type = Trim(RS("wait_type"))
         blocking_session_id = Trim(RS("blocking_session_id"))
-        addOutput( session_id & " " & wait_duration_ms & " " & wait_type & " " & blocking_session_id  )
+        addOutput(session_id & " " & wait_duration_ms & " " & wait_type & " " & blocking_session_id)
         RS.MoveNext
     Loop
     RS.Close
@@ -263,7 +244,7 @@ For Each instId In instIds.Keys
 
     ' Now gather the db size and unallocated space
     addOutput( "<<<mssql_tablespaces>>>" )
-    Dim i, dbSize, unallocated, reserved, data, indexSize, unused
+    Dim dbSize, unallocated, reserved, data, indexSize, unused
     For Each dbName in dbNames.Keys
         ' Switch to other database and then ask for stats
         RS.Open "USE [" & dbName & "]", CONN
@@ -296,8 +277,8 @@ For Each instId In instIds.Keys
             Set RS = RS.NextRecordset
             i = i + 1
         Loop
-        addOutput( instId & " " & Replace(dbName, " ", "_") & " " & dbSize & " " & unallocated & " " & reserved & " " & _
-                     data & " " & indexSize & " " & unused )
+        addOutput("MSSQL_" & instance & " " & Replace(dbName, " ", "_") & " " & dbSize & " " & _
+                  unallocated & " " & reserved & " " & data & " " & indexSize & " " & unused)
         Set RS = CreateObject("ADODB.Recordset")
     Next
 
@@ -312,7 +293,8 @@ For Each instId In instIds.Keys
         Do While Not RS.Eof
             lastBackupDate = Trim(RS("last_backup_date"))
             If lastBackupDate <> "" Then
-                addOutput( instId & " " & Replace(dbName, " ", "_") & " " & lastBackupDate )
+                addOutput("MSSQL_" & instance & " " & Replace(dbName, " ", "_") & _
+                          " " & lastBackupDate)
             End If
             RS.MoveNext
         Loop
@@ -364,10 +346,12 @@ For Each instId In instIds.Keys
     CONN.Close
 Next
 
+Set sources = nothing
+Set instances = nothing
 Set RS = nothing
 Set CONN = nothing
 Set FSO = nothing
 Set SHO = nothing
 
 ' finally output collected data
-WScript.echo output
+'WScript.echo output

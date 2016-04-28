@@ -1,0 +1,11 @@
+Title: Nagios Core: fixed bug, incomplete cleanup of process tree on service check timeout
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8b13
+Date: 1461838635
+
+Datasource programs like the special agents for ESX and NetApp did not get killed correctly,
+when the service timeout was reached. This bug only applies to the Nagios Core.

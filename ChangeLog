@@ -12,6 +12,7 @@
     * 3429 FIX: ps, mem.linux, mem.include: fixed missing parse_proc_meminfo_bytes during precompiling
     * 3126 FIX: fixed crash in some wmi-based checks when items disappear from the agent output
     * 3443 FIX: mk_logwatch: Fixed exception in agent plugin configuration parsing error handling
+    * 3525 FIX: Nagios Core: fixed bug, incomplete cleanup of process tree on service check timeout...
 
     Multisite:
     * 3125 FIX: fixed grouping of werk list by version...

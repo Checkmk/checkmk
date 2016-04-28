@@ -474,6 +474,10 @@ def inv_paint_if_available(available):
         return "if_state " + (available and "if_available" or "if_not_available"), \
            (available and _("free") or _("used"))
 
+def inv_paint_mssql_is_clustered(clustered):
+    return "mssql_" + (clustered and "is_clustered" or "is_not_clustered"), \
+       (clustered and _("is clustered") or _("is not clustered"))
+
 def inv_paint_ipv4_network(nw):
     if nw == "0.0.0.0/0":
         return "", _("Default")
@@ -685,8 +689,14 @@ inventory_displayhints.update({
     ".software.applications.citrix.vm.catalog"                    : { "title" : _("Catalog"), },
     ".software.applications.citrix.vm.agent_version"              : { "title" : _("Agent Version"), },
 
-    ".software.applications.vmwareesx:*."               : { "title" : _("Datacenter %d") },
-    ".software.applications.vmwareesx:*.clusters:*."    : { "title" : _("Cluster %d") },
+    ".software.applications.vmwareesx:*."              : { "title" : _("Datacenter %d") },
+    ".software.applications.vmwareesx:*.clusters:*."   : { "title" : _("Cluster %d") },
+
+    ".software.applications.mssql."                    : { "title" : _("MSSQL") },
+    ".software.applications.mssql.instances:"          : { "title" : _("Instances"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "name", "edition", "version", "clustered", "cluster_name" ],
+                                                         },
+    ".software.applications.mssql.instances:*.clustered" : { "title" : _("Clustered"), "paint" : "mssql_is_clustered"},
 
     ".networking."                                     : { "title" : _("Networking"), "icon" : "networking" },
     ".networking.total_interfaces"                     : { "title" : _("Interfaces"), "paint" : "count", },

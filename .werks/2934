@@ -1,5 +1,5 @@
-Title: all temperature checks rewritten to use the shared temperature api
-Level: 3
+Title: All temperature checks now use common code and have the same features
+Level: 2
 Component: checks
 Compatible: incomp
 Version: 1.2.7i4

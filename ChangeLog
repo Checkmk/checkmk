@@ -196,6 +196,7 @@
     * 3443 FIX: mk_logwatch: Fixed exception in agent plugin configuration parsing error handling
 
     Multisite:
+    * 3127 new icon on services that are outside their check period
     * 3187 notification view: new filter for log command via regex
     * 3228 The BI Treestate painter now exports the aggregation tree as real json structure
     * 3288 Implemented grouping of services in table views...

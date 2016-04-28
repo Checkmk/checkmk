@@ -388,6 +388,7 @@
     * 3013 FIX: Inventory: snmp inventory plugins never use cached data...
     * 3340 FIX: Fixed exception when searching for software package sizes
     * 3025 FIX: solaris_pkginfo: the last element of the reported software package list was always missing
+    * 3526 FIX: Inventory scripts are no longer called when no data is available for their section...
 
 
 1.2.8b1:

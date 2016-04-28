@@ -254,7 +254,7 @@ def do_inv_for(hostname):
                 raise # Otherwise simply ignore missing agent section
             continue
 
-        if info == None: # section not present (None or [])
+        if not info: # section not present (None or [])
             # Note: this also excludes existing sections without info..
             continue
 

@@ -1,0 +1,10 @@
+Title: mk_logwatch: Fixed exception in agent plugin configuration parsing error handling
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461826579
+
+

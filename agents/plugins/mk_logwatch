@@ -90,13 +90,15 @@ def is_not_comment(line):
 def parse_filenames(line):
     return line.split()
 
-def parse_pattern(level, pattern):
+def parse_pattern(level, pattern, line):
     if level not in [ 'C', 'W', 'I', 'O' ]:
-        raise(Exception("Invalid pattern line '%s'" % line))
+        raise Exception("Invalid pattern line '%s'" % line)
+
     try:
         compiled = re.compile(pattern)
     except:
-        raise(Exception("Invalid regular expression in line '%s'" % line))
+        raise Exception("Invalid regular expression in line '%s'" % line)
+
     return (level, compiled)
 
 def read_config():
@@ -119,7 +121,7 @@ def read_config():
             elif level == 'R':
                 rewrite_list.append(pattern)
             else:
-                level, compiled = parse_pattern(level, pattern)
+                level, compiled = parse_pattern(level, pattern, line)
                 cont_list = [] # List of continuation patterns
                 rewrite_list = [] # List of rewrite patterns
                 patterns.append((level, compiled, cont_list, rewrite_list))

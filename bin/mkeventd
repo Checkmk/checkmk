@@ -359,7 +359,7 @@ def initialize_snmptrap_engine():
 
     initialize_snmp_credentials()
     g_snmp_receiver = snmp_ntfrcv.NotificationReceiver(g_snmp_engine,
-                        lambda *args: g_event_server.handle_snmptrap(*args))
+                                                       g_event_server.handle_snmptrap)
 
 
 def initialize_snmp_credentials():
@@ -1314,12 +1314,19 @@ class EventServer:
             log('Failed to translate OIDs, no modules loaded (see above)')
             return [(str(oid), str(value)) for oid, value in var_bind_list]
 
+        def translate(oid, value):
+            # Disable mib_var[0] type detection
+            # pylint: disable=no-member
+            mib_var = ObjectType(ObjectIdentity(oid), value).resolveWithMib(self._mib_resolver)
+            node             = mib_var[0].getMibNode()
+            translated_oid   = mib_var[0].prettyPrint().replace("\"", "")
+            translated_value = mib_var[1].prettyPrint()
+
+            return node, translated_oid, translated_value
+
         for oid, value in var_bind_list:
             try:
-                mib_var = ObjectType(ObjectIdentity(oid), value).resolveWithMib(self._mib_resolver)
-                node             = mib_var[0].getMibNode()
-                translated_oid   = mib_var[0].prettyPrint().replace("\"", "")
-                translated_value = mib_var[1].prettyPrint()
+                node, translated_oid, translated_value = translate(oid, value)
 
                 if hasattr(node, "getUnits"):
                     translated_value += ' ' + node.getUnits()

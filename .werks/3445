@@ -1,0 +1,9 @@
+Title: mssql_versions: With up-to-date agent plugin it is now writing out the used edition
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1461828353
+Class: feature
+
+

@@ -43,7 +43,12 @@ DO_UPDATE=yes
 
 function check_apt_update {
     if [ "$DO_UPDATE" = yes ] ; then
-        apt-get update -qq
+        # NOTE: Even with -qq, apt-get update can output several lines to
+        # stderr, e.g.:
+        #
+        # W: There is no public key available for the following key IDs:
+        # 1397BC53640DB551
+        apt-get update -qq 2> /dev/null
     fi
     apt-get -o 'Debug::NoLocking=true' -s -qq "$UPGRADE" | grep -v '^Conf'
 }
@@ -52,7 +57,7 @@ function check_apt_update {
 if type apt-get > /dev/null ; then
     echo '<<<apt:sep(0)>>>'
     out=$(check_apt_update)
-    if [ -z $out ]; then
+    if [ -z "$out" ]; then
         echo "No updates pending for installation"
     else
         echo "$out"

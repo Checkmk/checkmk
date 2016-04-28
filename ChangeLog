@@ -198,6 +198,7 @@
     * 3443 FIX: mk_logwatch: Fixed exception in agent plugin configuration parsing error handling
     * 3444 FIX: mssql: Reworked agent plugin to use less WMI calls
     * 3525 FIX: Nagios Core: fixed bug, incomplete cleanup of process tree on service check timeout...
+    * 3241 FIX: Fixed broken apt plugin
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

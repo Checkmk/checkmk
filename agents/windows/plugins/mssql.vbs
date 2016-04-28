@@ -117,14 +117,13 @@ For i = LBound(value_names) To UBound(value_names)
                                   instance_name & "\Setup", _
                                   "Edition", edition
 
-    addOutput("<<<mssql_versions:sep(124)>>>")
-    addOutput("MSSQL_" & instance_id & "|" & version & "|" & edition)
-
     ' Check whether or not this instance is clustered
     registry.GetStringValue HKLM, "SOFTWARE\Microsoft\Microsoft SQL Server\" & _
                                   instance_name & "\Cluster", "ClusterName", cluster_name
 
     If IsNull(cluster_name) Then
+        cluster_name = ""
+
         ' In case of instance name "MSSQLSERVER" always use (local) as connect string
         If instance_id = "MSSQLSERVER" Then
             sources.add instance_id, "(local)"
@@ -139,6 +138,9 @@ For i = LBound(value_names) To UBound(value_names)
             sources.add instance_id, cluster_name & "\" & instance_id
         End If
     End If
+
+    addOutput("<<<mssql_versions:sep(124)>>>")
+    addOutput("MSSQL_" & instance_id & "|" & version & "|" & edition & "|" & cluster_name)
 
     ' Only collect results for currently running instances
     Set service = WMI.ExecQuery("SELECT State FROM Win32_Service " & _

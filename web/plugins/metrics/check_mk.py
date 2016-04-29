@@ -5781,6 +5781,32 @@ graph_info.append({
 })
 
 graph_info.append({
+    "title" : _("RAM used"),
+    "metrics" : [
+        ("mem_used", "area"),
+    ],
+    "scalars" : [
+        ("mem_used:max#000000", "Maximum"),
+        ("mem_used:warn", "Warning"),
+        ("mem_used:crit", "Critical"),
+    ],
+    "range" : (0, "mem_used:max"),
+})
+
+graph_info.append({
+    "title" : _("Commit Charge"),
+    "metrics" : [
+        ("pagefile_used", "area"),
+    ],
+    "scalars" : [
+        ("pagefile_used:max#000000", "Maximum"),
+        ("pagefile_used:warn", "Warning"),
+        ("pagefile_used:crit", "Critical"),
+    ],
+    "range" : (0, "pagefile_used:max"),
+})
+
+graph_info.append({
     "title" : _("Filesystem Writeback"),
     "metrics" : [
         ("mem_lnx_dirty", "area"),

@@ -1,0 +1,10 @@
+Title: mem.win: graphs now display the available memory
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1461937818
+
+

@@ -8,19 +8,25 @@ help:
 	@echo "build   - Run all checks from build system"
 	@echo "setup   - Install required tools"
 
-all: modules web checks misc
+all:
+	EXIT_CODE=0 ; \
+	$(MAKE) modules ; EXIT_CODE=$$(($$EXIT_CODE | $$?)) ; \
+	$(MAKE) web ; EXIT_CODE=$$(($$EXIT_CODE | $$?)) ; \
+	$(MAKE) checks ; EXIT_CODE=$$(($$EXIT_CODE | $$?)) ; \
+	$(MAKE) misc ; EXIT_CODE=$$(($$EXIT_CODE | $$?)) ; \
+	exit $$EXIT_CODE
 
 modules:
-	./pylint-modules || true
+	./pylint-modules
 
 web:
-	./pylint-web || true
+	./pylint-web
 
 checks:
-	./pylint-checks || true
+	./pylint-checks
 
 misc:
-	./pylint-misc || true
+	./pylint-misc
 
 build:
 	export TERM="linux" ; \

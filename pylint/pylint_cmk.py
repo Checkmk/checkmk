@@ -226,9 +226,17 @@ class CMKParseableTextReporter(CMKFixFileMixin, ParseableTextReporter):
     name = "cmk_parseable"
 
 
+def verify_pylint_version():
+    import pylint
+    if tuple(map(int, pylint.__version__.split("."))) < (1, 5, 5):
+        raise Exception("You need to use at least pylint 1.5.5. Run \"make setup\" in "
+                        "pylint directory to get the current version.")
+
 
 # Is called by pylint to load this plugin
 def register(linter):
+    verify_pylint_version()
+
     sys.path = glob.glob("/omd/versions/default/lib/python/*.egg") \
                + [ "/omd/versions/default/lib/python" ] \
                + sys.path

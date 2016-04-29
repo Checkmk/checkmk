@@ -14,6 +14,7 @@
     * 3443 FIX: mk_logwatch: Fixed exception in agent plugin configuration parsing error handling
     * 3525 FIX: Nagios Core: fixed bug, incomplete cleanup of process tree on service check timeout...
     * 3241 FIX: Fixed broken apt plugin
+    * 3430 FIX: apc_inrow_temp: fixed wrong data handling if data is not available or incomplete
 
     Multisite:
     * 3125 FIX: fixed grouping of werk list by version...

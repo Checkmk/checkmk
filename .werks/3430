@@ -1,0 +1,9 @@
+Title: apc_inrow_temp: fixed wrong data handling if data is not available or incomplete
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8b13
+Date: 1461923920
+Class: fix
+
+

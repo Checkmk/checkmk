@@ -39,12 +39,13 @@ factory_settings["apc_inrow_temp_default_levels"] = {
 
 def parse_apc_inrow_temp(info):
     parsed = {}
-    for what, what_item in zip(info[0],
-        ["Rack Inlet", "Supply Air", "Return Air",
-         "Entering Fluid", "Leaving Fluid"
-        ]):
-        if what != "" or what != "-1":
-            parsed[what_item] = float(what) / 10
+    if info:
+        for what, what_item in zip(info[0],
+            ["Rack Inlet", "Supply Air", "Return Air",
+             "Entering Fluid", "Leaving Fluid"
+            ]):
+            if what not in [ "", "-1" ]:
+                parsed.setdefault(what_item, float(what) / 10)
 
     return parsed
 

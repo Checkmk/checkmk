@@ -175,8 +175,31 @@ def ensure_equal_branches():
 # python sources
 class CMKFixFileMixin(object):
     def handle_message(self, msg):
-        lines = file(msg.abspath).readlines()
+        new_path, new_line = self._orig_location_from_compiled_file(msg)
 
+        if new_path == None:
+            new_path = self._change_path_to_repo_path(msg)
+
+        if new_path != None:
+            msg = msg._replace(path=new_path)
+        if new_line != None:
+            msg = msg._replace(line=new_line)
+
+        super(CMKFixFileMixin, self).handle_message(msg)
+
+
+    def _change_path_to_repo_path(self, msg):
+        abspath = os.path.join(os.getcwd(), msg.abspath)
+        parts = abspath.split("/")
+        while parts and parts[0] not in ["check_mk", "cmc"]:
+            parts.pop(0)
+
+        if parts:
+            return "/".join(parts)
+
+
+    def _orig_location_from_compiled_file(self, msg):
+        lines = file(msg.abspath).readlines()
         line_nr = msg.line
         orig_file, went_back = None, -3
         while line_nr > 0:
@@ -187,10 +210,10 @@ class CMKFixFileMixin(object):
                 orig_file = line.split(": ", 1)[1].strip()
                 break
 
-        if orig_file != None:
-            msg = msg._replace(line=went_back, path=orig_file)
+        if orig_file == None:
+            went_back = None
 
-        super(CMKFixFileMixin, self).handle_message(msg)
+        return orig_file, went_back
 
 
 

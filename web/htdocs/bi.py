@@ -136,16 +136,17 @@ def load_services(cache, only_hosts):
     data = sites.live().query(
         "GET hosts\n"
         +filter_txt+
-        "Columns: name custom_variable_names custom_variable_values services childs parents\n"
+        "Columns: name custom_variable_names custom_variable_values "
+        "services childs parents alias\n"
         "Cache: reload\n"
     )
     sites.live().set_prepend_site(False)
     sites.live().set_auth_domain('read')
 
-    for site, host, varnames, values, svcs, childs, parents in data:
+    for site, host, varnames, values, svcs, childs, parents, alias in data:
         vars = dict(zip(varnames, values))
         tags = vars.get("TAGS", "").split(" ")
-        entry = (tags, svcs, childs, parents)
+        entry = (tags, svcs, childs, parents, alias)
         g_services[(site, host)] = entry
         g_services_by_hostname.setdefault(host, []).append((site, entry))
 
@@ -508,11 +509,12 @@ def compile_rule_node(aggr_type, calllist, lvl):
         matches = find_matching_services(aggr_type, what, calllist[1:])
         new_elements = []
         handled_args = set() # avoid duplicate rule incarnations
-        for match in matches:
-            args = [ substitute_matches(a, match) for a in arglist ]
+        for (hostname, hostalias), matchgroups in matches:
+            args = substitute_matches(arglist, hostname, hostalias, matchgroups)
             if tuple(args) not in handled_args:
                 new_elements += compile_aggregation_rule(aggr_type, rule, args, lvl)
                 handled_args.add(tuple(args))
+
         return new_elements
 
     else:
@@ -522,8 +524,8 @@ def compile_rule_node(aggr_type, calllist, lvl):
 def find_matching_services(aggr_type, what, calllist):
     if what == config.FOREACH_CHILD_WITH: # extract foreach child specific parameters
         required_child_tags = calllist[0]
-        child_re = calllist[1]
-        calllist = calllist[2:]
+        child_spec = calllist[1]
+        calllist   = calllist[2:]
 
     # honor list of host tags preceding the host_re
     if type(calllist[0]) == list:
@@ -535,13 +537,73 @@ def find_matching_services(aggr_type, what, calllist):
     if len(calllist) == 0:
         raise MKConfigError(_("Invalid syntax in FOREACH_..."))
 
-    host_re = calllist[0]
+    host_spec = calllist[0]
     if what in [ config.FOREACH_HOST, config.FOREACH_CHILD, config.FOREACH_CHILD_WITH, config.FOREACH_PARENT ]:
         service_re = config.HOST_STATE
     else:
         service_re = calllist[1]
 
     matches = set([])
+
+    if type(host_spec) == tuple:
+        host_spec, honor_site, entries = get_services_filtered_by_host_alias(host_spec)
+    else:
+        host_spec, honor_site, entries = get_services_filtered_by_host_name(host_spec)
+
+    # TODO: Hier könnte man - wenn der Host bekannt ist, effektiver arbeiten, als
+    # komplett alles durchzugehen.
+    for (site, hostname), (tags, services, childs, parents, alias) in entries:
+        # Skip already compiled hosts
+        if aggr_type == AGGR_HOST and (site, hostname) in g_user_cache['compiled_hosts']:
+            continue
+
+        host_matches = match_host(hostname, alias, host_spec,
+                                  tags, required_tags, site, honor_site)
+        list_of_matches = []
+        if host_matches != None:
+            if what == config.FOREACH_CHILD:
+                list_of_matches = [ host_matches + (child_name,) for child_name in childs ]
+
+            elif what == config.FOREACH_CHILD_WITH:
+                for child_name in childs:
+                    child_tags = g_services_by_hostname[child_name][0][1][0]
+                    child_alias = g_services_by_hostname[child_name][0][1][4]
+                    child_matches = match_host(child_name, child_alias, child_spec, child_tags,
+                                               required_child_tags, site, honor_site)
+                    if child_matches != None:
+                        list_of_matches.append(host_matches + child_matches)
+
+            elif what == config.FOREACH_PARENT:
+                list_of_matches  = [ host_matches + (parent,) for parent in parents ]
+
+            else:
+                list_of_matches = [ host_matches ]
+
+        for host_matches in list_of_matches:
+            if service_re == config.HOST_STATE:
+                matches.add(((hostname, alias), host_matches))
+                continue
+
+            for service in services:
+                mo = (service_re, service)
+                if mo in service_nomatch_cache:
+                    continue
+                m = regex(service_re).match(service)
+                if m:
+                    svc_matches = tuple(m.groups())
+                    matches.add(((hostname, alias), host_matches + svc_matches))
+                else:
+                    service_nomatch_cache.add(mo)
+
+    return sorted(list(matches))
+
+
+def get_services_filtered_by_host_alias(host_spec):
+    honor_site = SITE_SEP in host_spec[1]
+    return host_spec, honor_site, g_services.items()
+
+
+def get_services_filtered_by_host_name(host_re):
     honor_site = SITE_SEP in host_re
 
     if host_re.startswith("^(") and host_re.endswith(")$"):
@@ -550,6 +612,7 @@ def find_matching_services(aggr_type, what, calllist):
         if middle in g_services_by_hostname:
             entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname[middle] ]
             host_re = "(.*)"
+
     elif not honor_site and not '*' in host_re and not '$' in host_re \
          and not '|' in host_re and not '[' in host_re:
         # Exact host match
@@ -559,47 +622,8 @@ def find_matching_services(aggr_type, what, calllist):
         # All services
         entries = g_services.items()
 
-    # TODO: Hier könnte man - wenn der Host bekannt ist, effektiver arbeiten, als
-    # komplett alles durchzugehen.
-    for (site, hostname), (tags, services, childs, parents) in entries:
-        # Skip already compiled hosts
-        if aggr_type == AGGR_HOST and (site, hostname) in g_user_cache['compiled_hosts']:
-            continue
+    return host_re, honor_site, entries
 
-        host_matches = match_host(hostname, host_re, tags, required_tags, site, honor_site)
-        if host_matches != None:
-            if what == config.FOREACH_CHILD:
-                list_of_matches  = [ host_matches + (child,) for child in childs ]
-            elif what == config.FOREACH_CHILD_WITH:
-                list_of_matches = []
-                for child_name in childs:
-                    child_tags = g_services_by_hostname[child_name][0][1][0]
-                    child_matches = match_host(child_name, child_re, child_tags, required_child_tags, site, honor_site)
-                    if child_matches != None:
-                        list_of_matches.append(host_matches + child_matches)
-            elif what == config.FOREACH_PARENT:
-                list_of_matches  = [ host_matches + (parent,) for parent in parents ]
-            else:
-                list_of_matches = [ host_matches ]
-
-            for matched_host in list_of_matches:
-                if service_re == config.HOST_STATE:
-                    matches.add(matched_host)
-                else:
-                    for service in services:
-                        mo = (service_re, service)
-                        if mo in service_nomatch_cache:
-                            continue
-                        m = regex(service_re).match(service)
-                        if m:
-                            svc_matches = tuple(m.groups())
-                            matches.add(matched_host + svc_matches)
-                        else:
-                            service_nomatch_cache.add(mo)
-
-    matches = list(matches)
-    matches.sort()
-    return matches
 
 def do_match(reg, text):
     mo = regex(reg).match(text)
@@ -608,11 +632,6 @@ def do_match(reg, text):
     else:
         return tuple(mo.groups())
 
-
-def substitute_matches(arg, match):
-    for n, m in enumerate(match):
-        arg = arg.replace("$%d$" % (n+1), m)
-    return arg
 
 
 # Debugging function
@@ -785,17 +804,18 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
                 # 2: (['waage'], '(.*)')
                 calllist = []
                 for n in node[1:-2]:
-                    if type(n) in [ str, unicode, list ]:
+                    if type(n) in [ str, unicode, list, tuple ]:
                         n = subst_vars(n, arginfo)
                     calllist.append(n)
+
                 matches = find_matching_services(aggr_type, node[0], calllist)
                 new_elements = []
                 handled_args = set() # avoid duplicate rule incarnations
-                for match in matches:
-                    sub_arginfo = dict([(str(n+1), x) for (n,x) in enumerate(match)])
-                    if tuple(args) + match not in handled_args:
-                        new_elements += compile_leaf_node(subst_vars(node[-2], sub_arginfo), subst_vars(node[-1], sub_arginfo))
-                        handled_args.add(tuple(args) + match)
+                for (hostname, hostalias), matchgroups in matches:
+                    if tuple(args) + matchgroups not in handled_args:
+                        new_elements += compile_leaf_node(substitute_matches(node[-2], hostname, hostalias, matchgroups),
+                                                          substitute_matches(node[-1], hostname, hostalias, matchgroups))
+                        handled_args.add(tuple(args) + matchgroups)
 
                 host_name, service_description = node[-2:]
             else:
@@ -843,7 +863,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
 
 
 def find_remaining_services(hostspec, aggregation):
-    tags, all_services, childs, parents = g_services[hostspec]
+    tags, all_services, childs, parents, alias = g_services[hostspec]
     all_services = set(all_services)
     for site, host, service in find_all_leaves(aggregation):
         if (site, host) == hostspec:
@@ -872,15 +892,26 @@ def find_variables(pattern, varname):
         else:
             return found
 
-# replace variables in a string
+
 def subst_vars(pattern, arginfo):
     if type(pattern) == list:
         return [subst_vars(x, arginfo) for x in pattern ]
+    elif type(pattern) == tuple:
+        return tuple([subst_vars(x, arginfo) for x in pattern ])
 
     for name, value in arginfo.items():
         if type(pattern) in [ str, unicode ]:
             pattern = pattern.replace('$'+name+'$', value)
     return pattern
+
+
+def substitute_matches(arg, hostname, hostalias, matchgroups):
+    arginfo = dict([(str(n+1), x) for (n,x) in enumerate(matchgroups)])
+    arginfo["HOSTNAME"]  = hostname
+    arginfo["HOSTALIAS"] = hostalias
+
+    return subst_vars(arg, arginfo)
+
 
 def match_host_tags(have_tags, required_tags):
     for tag in required_tags:
@@ -894,13 +925,52 @@ def match_host_tags(have_tags, required_tags):
             return False
     return True
 
-def match_host(hostname, host_re, tags, required_tags, site, honor_site):
+
+def match_host(hostname, hostalias, host_spec, tags, required_tags, site, honor_site):
     if not match_host_tags(tags, required_tags):
         return None
 
-    if host_re == '(.*)':
-        return (hostname, )
+    if type(host_spec) != tuple: # matching by host name
+        pattern  = host_spec
+        to_match = hostname
     else:
+        pattern = host_spec[1]
+        to_match = hostalias
+
+    if pattern == '(.*)':
+        return (to_match, )
+    else:
+        # For regex to have '$' anchor for end. Users might be surprised
+        # to get a prefix match on host names. This is almost never what
+        # they want. For services this is useful, however.
+        if pattern.endswith("$"):
+            anchored = pattern
+        else:
+            anchored = pattern + "$"
+
+        # In order to distinguish hosts with the same name on different
+        # sites we prepend the site to the host name. If the host specification
+        # does not contain the site separator - though - we ignore the site
+        # an match the rule for all sites.
+        if honor_site:
+            return do_match(anchored, "%s%s%s" % (site, SITE_SEP, to_match))
+        else:
+            return do_match(anchored, to_match)
+
+
+def compile_leaf_node(host_re, service_re = config.HOST_STATE):
+    found = []
+    honor_site = SITE_SEP in host_re
+    if not honor_site and not '*' in host_re and not '$' in host_re \
+        and not '|' in host_re and '[' not in host_re:
+        # Exact host match
+        entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, []) ]
+
+    else:
+        entries = g_services.items()
+
+    # TODO: If we already know the host we deal with, we could avoid this loop
+    for (site, hostname), (tags, services, childs, parents, alias) in entries:
         # For regex to have '$' anchor for end. Users might be surprised
         # to get a prefix match on host names. This is almost never what
         # they want. For services this is useful, however.
@@ -914,81 +984,37 @@ def match_host(hostname, host_re, tags, required_tags, site, honor_site):
         # does not contain the site separator - though - we ignore the site
         # an match the rule for all sites.
         if honor_site:
-            return do_match(anchored, "%s%s%s" % (site, SITE_SEP, hostname))
-        else:
-            return do_match(anchored, hostname)
-
-def compile_leaf_node(host_re, service_re = config.HOST_STATE):
-    found = []
-    honor_site = SITE_SEP in host_re
-    if not honor_site and not '*' in host_re and not '$' in host_re \
-        and not '|' in host_re and '[' not in host_re:
-        entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, []) ]
-
-    else:
-        entries = g_services.items()
-
-    # TODO: If we already know the host we deal with, we could avoid this loop
-    for (site, hostname), (tags, services, childs, parents) in entries:
-        # If host ends with '|@all', we need to check host tags instead
-        # of regexes.
-        if host_re.endswith('|@all'):
-            if not match_host_tags(host_re[:-5], tags):
+            if not regex(anchored).match("%s%s%s" % (site, SITE_SEP, hostname)):
                 continue
-        elif host_re != '@all':
-            # For regex to have '$' anchor for end. Users might be surprised
-            # to get a prefix match on host names. This is almost never what
-            # they want. For services this is useful, however.
-            if host_re.endswith("$"):
-                anchored = host_re
-            else:
-                anchored = host_re + "$"
+        else:
+            if not regex(anchored).match(hostname):
+                continue
 
-            # In order to distinguish hosts with the same name on different
-            # sites we prepend the site to the host name. If the host specification
-            # does not contain the site separator - though - we ignore the site
-            # an match the rule for all sites.
-            if honor_site:
-                if not regex(anchored).match("%s%s%s" % (site, SITE_SEP, hostname)):
+        if service_re == config.HOST_STATE:
+            found.append({"type"     : NT_LEAF,
+                          "reqhosts" : [(site, hostname)],
+                          "host"     : (site, hostname),
+                          "title"    : hostname})
+
+        elif service_re == config.REMAINING:
+            found.append({"type"     : NT_REMAINING,
+                          "reqhosts" : [(site, hostname)],
+                          "host"     : (site, hostname)})
+
+        else:
+            for service in services:
+                mo = (service_re, service)
+                if mo in service_nomatch_cache:
                     continue
-            else:
-                if not regex(anchored).match(hostname):
-                    continue
-
-            if service_re == config.HOST_STATE:
-                found.append({"type"     : NT_LEAF,
-                              "reqhosts" : [(site, hostname)],
-                              "host"     : (site, hostname),
-                              "title"    : hostname})
-
-            elif service_re == config.REMAINING:
-                found.append({"type"     : NT_REMAINING,
-                              "reqhosts" : [(site, hostname)],
-                              "host"     : (site, hostname)})
-
-            else:
-                # found.append({"type" : NT_LEAF,
-                #               "reqhosts" : [(site, hostname)],
-                #               "host" : (site, hostname),
-                #               "service" : "FOO",
-                #               "title" : "Foo bar",
-                #               })
-                # continue
-
-
-                for service in services:
-                    mo = (service_re, service)
-                    if mo in service_nomatch_cache:
-                        continue
-                    m = regex(service_re).match(service)
-                    if m:
-                        found.append({"type"     : NT_LEAF,
-                                      "reqhosts" : [(site, hostname)],
-                                      "host"     : (site, hostname),
-                                      "service"  : service,
-                                      "title"    : "%s - %s" % (hostname, service)} )
-                    else:
-                        service_nomatch_cache.add(mo)
+                m = regex(service_re).match(service)
+                if m:
+                    found.append({"type"     : NT_LEAF,
+                                  "reqhosts" : [(site, hostname)],
+                                  "host"     : (site, hostname),
+                                  "service"  : service,
+                                  "title"    : "%s - %s" % (hostname, service)} )
+                else:
+                    service_nomatch_cache.add(mo)
 
     found.sort()
     return found

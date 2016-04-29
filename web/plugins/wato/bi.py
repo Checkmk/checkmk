@@ -452,6 +452,37 @@ class ModeBI(WatoMode):
         return [ ( "call", _("Call a Rule"), self._vs_call_rule ), ]
 
 
+    def _host_valuespec(self, title):
+        return Alternative(
+            title = title,
+            style = "dropdown",
+            elements = [
+                FixedValue(None,
+                    title = _("All Hosts"),
+                    totext = "",
+                ),
+                TextAscii(
+                    title = _("Regex for host name"),
+                    size = 60
+                ),
+                Tuple(
+                    title = _("Regex for host alias"),
+                    elements = [
+                        FixedValue("alias",
+                            totext = "",
+                        ),
+                        TextAscii(
+                            size = 60,
+                        ),
+                    ],
+                ),
+            ],
+            help = _("If you choose \"Regex for host name\" or \"Regex for host alias\", "
+                     "you need to provide a regex which results in exactly one match group."),
+            default_value = None,
+        )
+
+
     # Configuration of FOREACH_...-type nodes
     def _foreach_choices(self, subnode_choices):
         return [
@@ -468,15 +499,7 @@ class ModeBI(WatoMode):
                                     HostTagCondition(
                                         title = _("Child Host Tags:")
                                     ),
-                                    OptionalDropdownChoice(
-                                        title = _("Child Host Name:"),
-                                        choices = [
-                                            ( None, _("All Hosts")),
-                                        ],
-                                        explicit = TextAscii(size = 60),
-                                        otherlabel = _("Regex for host name"),
-                                        default_value = None,
-                                    ),
+                                    self._host_valuespec(_("Child host name:")),
                                 ]),
                             ),
                             ( 'parent',     _("The found hosts' parents") ),
@@ -484,32 +507,25 @@ class ModeBI(WatoMode):
                         help = _('When selecting <i>The found hosts\' childs</i>, the conditions '
                           '(tags and host name) are used to match a host, but you will get one '
                           'node created for each child of the matched host. The '
-                          'place holder <tt>$1$</tt> contains the name of the found child.<br><br>'
+                          'place holder <tt>$HOSTNAME$</tt> contains the name of the found child '
+                          'and the place holder <tt>$HOSTALIAS$</tt> contains it\'s alias.<br><br>'
                           'When selecting <i>The found hosts\' parents</i>, the conditions '
                           '(tags and host name) are used to match a host, but you will get one '
                           'node created for each of the parent hosts of the matched host. '
-                          'The place holder <tt>$1$</tt> contains the name of the child host '
-                          'and <tt>$2$</tt> the name of the parent host.'),
+                          'The place holder <tt>$HOSTNAME$</tt> contains the name of the child '
+                          'host and <tt>$2$</tt> the name of the parent host.'),
                     ),
                     HostTagCondition(
                         title = _("Host Tags:")
                     ),
-                    OptionalDropdownChoice(
-                        title = _("Host Name:"),
-                        choices = [
-                            ( None, _("All Hosts")),
-                        ],
-                        explicit = TextAscii(size = 60),
-                        otherlabel = _("Regex for host name"),
-                        default_value = None,
-                        help = _("If you choose \"Regex for host name\", you need to provide a regex "
-                                 "which results in exactly one match group."),
-                    ),
+                    self._host_valuespec(_("Host name:")),
                     CascadingDropdown(
                         title = _("Nodes to create:"),
-                        help = _("When calling a rule you can use the place holder <tt>$1$</tt> "
-                                 "in the rule arguments. It will be replaced by the actual host "
-                                 "names found by the search - one host name for each rule call."),
+                        help = _("When calling a rule you can use the place holder "
+                                 "<tt>$HOSTNAME$</tt> in the rule arguments. It will be replaced "
+                                 "by the actual host names found by the search - one host name "
+                                 "for each rule call. Use <tt>$HOSTALIAS$</tt> to get the alias of"
+                                 " the matched host."),
                         choices = subnode_choices,
                     ),
                  ]
@@ -521,15 +537,7 @@ class ModeBI(WatoMode):
                     HostTagCondition(
                         title = _("Host Tags:")
                     ),
-                    OptionalDropdownChoice(
-                        title = _("Host Name:"),
-                        choices = [
-                            ( None, _("All Hosts")),
-                        ],
-                        explicit = TextAscii(size = 60),
-                        otherlabel = _("Regex for host name"),
-                        default_value = None,
-                    ),
+                    self._host_valuespec(_("Host name:")),
                     TextAscii(
                         title = _("Service Regex:"),
                         help = _("Subexpressions enclosed in <tt>(</tt> and <tt>)</tt> will be available "
@@ -538,10 +546,11 @@ class ModeBI(WatoMode):
                     ),
                     CascadingDropdown(
                         title = _("Nodes to create:"),
-                        help = _("When calling a rule you can use the place holder <tt>$1$</tt> "
+                        help = _("When calling a rule you can use the place holder <tt>$HOSTNAME$</tt> "
                                  "in the rule arguments. It will be replaced by the actual host "
-                                 "names found by the search - one host name for each rule call. If you "
-                                 "have regular expression subgroups in the service pattern, then "
+                                 "names found by the search - one host name for each rule call. "
+                                 "Use <tt>$HOSTALIAS$</tt> to get the alias of the matched host. "
+                                 "If you have regular expression subgroups in the service pattern, then "
                                  "the place holders <tt>$2$</tt> will represent the first group match, "
                                  "<tt>$3</tt> the second, and so on..."),
                         choices = subnode_choices,
@@ -704,7 +713,7 @@ class ModeBI(WatoMode):
             subnode = node[1][-1]
             if subnode[0] == 'call':
                 if node[1][0] == 'host':
-                    info = _("Called for all hosts...")
+                    info = _("Called for each host...")
                 elif node[1][0] == 'child':
                     info = _("Called for each child of...")
                 else:
@@ -1562,94 +1571,94 @@ bi_aggregation_functions["count_ok"] = {
 
 bi_example = '''
 aggregation_rules["host"] = (
-  "Host $HOST$",
-  [ "HOST" ],
+  "Host $HOSTNAME$",
+  [ "HOSTNAME" ],
   "worst",
   [
-      ( "general",      [ "$HOST$" ] ),
-      ( "performance",    [ "$HOST$" ] ),
-      ( "filesystems",  [ "$HOST$" ] ),
-      ( "networking",   [ "$HOST$" ] ),
-      ( "applications", [ "$HOST$" ] ),
-      ( "logfiles",     [ "$HOST$" ] ),
-      ( "hardware",     [ "$HOST$" ] ),
-      ( "other",        [ "$HOST$" ] ),
+      ( "general",      [ "$HOSTNAME$" ] ),
+      ( "performance",  [ "$HOSTNAME$" ] ),
+      ( "filesystems",  [ "$HOSTNAME$" ] ),
+      ( "networking",   [ "$HOSTNAME$" ] ),
+      ( "applications", [ "$HOSTNAME$" ] ),
+      ( "logfiles",     [ "$HOSTNAME$" ] ),
+      ( "hardware",     [ "$HOSTNAME$" ] ),
+      ( "other",        [ "$HOSTNAME$" ] ),
   ]
 )
 
 aggregation_rules["general"] = (
   "General State",
-  [ "HOST" ],
+  [ "HOSTNAME" ],
   "worst",
   [
-      ( "$HOST$", HOST_STATE ),
-      ( "$HOST$", "Uptime" ),
-      ( "checkmk",  [ "$HOST$" ] ),
+      ( "$HOSTNAME$", HOST_STATE ),
+      ( "$HOSTNAME$", "Uptime" ),
+      ( "checkmk",    [ "$HOSTNAME$" ] ),
   ]
 )
 
 aggregation_rules["filesystems"] = (
   "Disk & Filesystems",
-  [ "HOST" ],
+  [ "HOSTNAME" ],
   "worst",
   [
-      ( "$HOST$", "Disk|MD" ),
-      ( "multipathing", [ "$HOST$" ]),
-      ( FOREACH_SERVICE, "$HOST$", "fs_(.*)", "filesystem", [ "$HOST$", "$1$" ] ),
-      ( FOREACH_SERVICE, "$HOST$", "Filesystem(.*)", "filesystem", [ "$HOST$", "$1$" ] ),
+      ( "$HOSTNAME$", "Disk|MD" ),
+      ( "multipathing", [ "$HOSTNAME$" ]),
+      ( FOREACH_SERVICE, "$HOSTNAME$", "fs_(.*)", "filesystem", [ "$HOSTNAME$", "$1$" ] ),
+      ( FOREACH_SERVICE, "$HOSTNAME$", "Filesystem(.*)", "filesystem", [ "$HOSTNAME$", "$1$" ] ),
   ]
 )
 
 aggregation_rules["filesystem"] = (
   "$FS$",
-  [ "HOST", "FS" ],
+  [ "HOSTNAME", "FS" ],
   "worst",
   [
-      ( "$HOST$", "fs_$FS$$" ),
-      ( "$HOST$", "Filesystem$FS$$" ),
-      ( "$HOST$", "Mount options of $FS$$" ),
+      ( "$HOSTNAME$", "fs_$FS$$" ),
+      ( "$HOSTNAME$", "Filesystem$FS$$" ),
+      ( "$HOSTNAME$", "Mount options of $FS$$" ),
   ]
 )
 
 aggregation_rules["multipathing"] = (
   "Multipathing",
-  [ "HOST" ],
+  [ "HOSTNAME" ],
   "worst",
   [
-      ( "$HOST$", "Multipath" ),
+      ( "$HOSTNAME$", "Multipath" ),
   ]
 )
 
 aggregation_rules["performance"] = (
   "Performance",
-  [ "HOST" ],
+  [ "HOSTNAME" ],
   "worst",
   [
-      ( "$HOST$", "CPU|Memory|Vmalloc|Kernel|Number of threads" ),
+      ( "$HOSTNAME$", "CPU|Memory|Vmalloc|Kernel|Number of threads" ),
   ]
 )
 
 aggregation_rules["hardware"] = (
   "Hardware",
-  [ "HOST" ],
+  [ "HOSTNAME" ],
   "worst",
   [
-      ( "$HOST$", "IPMI|RAID" ),
+      ( "$HOSTNAME$", "IPMI|RAID" ),
   ]
 )
 
 aggregation_rules["networking"] = (
   "Networking",
-  [ "HOST" ],
+  [ "HOSTNAME" ],
   "worst",
   [
-      ( "$HOST$", "NFS|Interface|TCP" ),
+      ( "$HOSTNAME$", "NFS|Interface|TCP" ),
   ]
 )
 
 aggregation_rules["checkmk"] = (
   "Check_MK",
-  [ "HOST" ],
+  [ "HOSTNAME" ],
   "worst",
   [
        ( "$HOST$", "Check_MK|Uptime" ),
@@ -1658,32 +1667,32 @@ aggregation_rules["checkmk"] = (
 
 aggregation_rules["logfiles"] = (
   "Logfiles",
-  [ "HOST" ],
+  [ "HOSTNAME" ],
   "worst",
   [
-      ( "$HOST$", "LOG" ),
+      ( "$HOSTNAME$", "LOG" ),
   ]
 )
 aggregation_rules["applications"] = (
   "Applications",
-  [ "HOST" ],
+  [ "HOSTNAME" ],
   "worst",
   [
-      ( "$HOST$", "ASM|ORACLE|proc" ),
+      ( "$HOSTNAME$", "ASM|ORACLE|proc" ),
   ]
 )
 
 aggregation_rules["other"] = (
   "Other",
-  [ "HOST" ],
+  [ "HOSTNAME" ],
   "worst",
   [
-      ( "$HOST$", REMAINING ),
+      ( "$HOSTNAME$", REMAINING ),
   ]
 )
 
 host_aggregations += [
-  ( DISABLED, "Hosts", FOREACH_HOST, [ "tcp" ], ALL_HOSTS, "host", ["$1$"] ),
+  ( DISABLED, "Hosts", FOREACH_HOST, [ "tcp" ], ALL_HOSTS, "host", ["$HOSTNAME$"] ),
 ]
 '''
 

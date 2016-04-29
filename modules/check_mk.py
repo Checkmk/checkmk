@@ -48,8 +48,6 @@ import inspect
 # These variable will be substituted at 'make dist' time
 check_mk_version  = '(inofficial)'
 
-IFAWHLOO%H*@R%@IQPRQ@
-
 #   .--Prelude-------------------------------------------------------------.
 #   |                  ____           _           _                        |
 #   |                 |  _ \ _ __ ___| |_   _  __| | ___                   |

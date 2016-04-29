@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inv_aix_service_packs(info):
-    node = inv_tree("software.os.service_packs:")
+    node = inv_tree_list("software.os.service_packs:")
     for line in info:
         node.append({ "name" : line[0]})
 

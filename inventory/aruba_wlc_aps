@@ -44,7 +44,7 @@ def inv_aruba_wlc_aps(info):
         "72" : "ap227",  "73" : "ap214", "74" : "ap215", "75" : "ap228",
         "76" : "ap205H", "9999" : "undefined",
     }
-    node = inv_tree("networking.wlan.controller.accesspoints:")
+    node = inv_tree_list("networking.wlan.controller.accesspoints:")
     for ap_name, ap_status, ap_unprovisioned, ap_ip, ap_group, \
         ap_model, ap_serial, ap_sysloc in info:
         node.append({

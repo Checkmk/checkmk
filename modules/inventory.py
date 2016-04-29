@@ -67,6 +67,14 @@ for f in filelist:
             sys.exit(5)
 
 
+# This is just a small wrapper for the inv_tree() function which makes
+# it clear that the requested tree node is treated as a list.
+def inv_tree_list(path):
+    l = []
+    l += inv_tree(path)
+    return l
+
+
 # Function for accessing the inventory tree of the current host
 # Example: path = "software.packages:17."
 # The path must end with : or .

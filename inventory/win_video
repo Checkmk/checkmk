@@ -37,7 +37,7 @@
 
 
 def inv_win_video(info):
-    node = inv_tree("hardware.video:")
+    node = inv_tree_list("hardware.video:")
     array = {}
     first_varname = None
     for line in info:

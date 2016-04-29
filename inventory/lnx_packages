@@ -43,7 +43,7 @@
 
 
 def inv_lnx_packages(info):
-    paclist = inv_tree("software.packages:")
+    paclist = inv_tree_list("software.packages:")
     for pacname, version, arch, pactype, summary, inststate in info:
         if pactype == "deb":
             if "installed" not in inststate:

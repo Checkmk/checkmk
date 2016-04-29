@@ -50,7 +50,7 @@ def inv_lnx_ip_a(info):
             "type" : '.' in address and "ipv4" or "ipv6",
         }
 
-    addresses = inv_tree("networking.addresses:")
+    addresses = inv_tree_list("networking.addresses:")
     for line in info:
         if line[0][-1] == ':':
             device = line[1].rstrip(':')

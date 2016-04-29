@@ -58,7 +58,7 @@ def parse_lnx_ip_route(line):
 
 
 def inv_lnx_ip_r(info):
-    routes = inv_tree("networking.routes:")
+    routes = inv_tree_list("networking.routes:")
     for line in info:
         routes.append(parse_lnx_ip_route(line))
 

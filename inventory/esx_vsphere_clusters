@@ -31,7 +31,7 @@
 
 
 def inv_esx_vsphere_clusters(info):
-    node = inv_tree("software.applications.vmwareesx:")
+    node = inv_tree_list("software.applications.vmwareesx:")
 
     datacenters = {}
     for line in info:

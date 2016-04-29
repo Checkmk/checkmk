@@ -44,7 +44,7 @@ def inv_if(info, params):
     total_ethernet_ports = 0
     available_ethernet_ports = 0
 
-    node = inv_tree("networking.interfaces:")
+    node = inv_tree_list("networking.interfaces:")
     for if_index, if_descr, if_alias, if_type, if_speed, if_high_speed, \
         if_oper_status, if_admin_status, if_phys_address, if_last_change in port_info:
 

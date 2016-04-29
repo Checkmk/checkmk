@@ -58,7 +58,7 @@
 # SCSITargetId                : 0
 
 def inv_win_disks(info):
-    node = inv_tree("hardware.storage.disks:")
+    node = inv_tree_list("hardware.storage.disks:")
     array = {}
     first_varname = None
 

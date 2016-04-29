@@ -172,7 +172,7 @@ def inv_dmidecode_parse_processor(lines):
 #             node["module_voltage"] = dmidecode_parse_voltage(line[1])
 #
 # def inv_dmidecode_parse_mem_module(lines):
-#     node = inv_tree("hardware.memory.modules:")
+#     node = inv_tree_list("hardware.memory.modules:")
 #     module = {}
 #     node.append(module)
 #     for line in lines:
@@ -191,7 +191,7 @@ def inv_dmidecode_parse_processor(lines):
 
 def inv_dmidecode_parse_physical_mem_array(lines):
     # We expect several possible arrays
-    node = inv_tree("hardware.memory.arrays:")
+    node = inv_tree_list("hardware.memory.arrays:")
 
     # If we have a dummy entry from previous Memory Devices (see below)
     # then we fill that entry rather than creating a new one
@@ -217,7 +217,7 @@ def inv_dmidecode_parse_mem_device(lines):
     # we assume that this device belongs to the most recently
     # read array. Otherwise we create a dummy entry and replace
     # that later with actual information
-    node = inv_tree("hardware.memory.arrays:")
+    node = inv_tree_list("hardware.memory.arrays:")
     if node:
         array = node[-1]
     else:

@@ -35,7 +35,7 @@
 
 
 def inv_win_wmi_software(info):
-    paclist = inv_tree("software.packages:")
+    paclist = inv_tree_list("software.packages:")
     for line in info:
         pacname, vendor, version = line[0:3]
         dat = line[3]

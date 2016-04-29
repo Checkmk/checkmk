@@ -47,7 +47,7 @@
 
 
 def inv_solaris_pkginfo(info):
-    paclist = inv_tree("software.packages:")
+    paclist = inv_tree_list("software.packages:")
     entry = {}
     translation_dict = {
             "ARCH"      : "arch",

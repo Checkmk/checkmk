@@ -66,7 +66,7 @@ def inv_snmp_extended_info(info):
                 location_info = (map_type[parsed[parent][2]], parent)
             else:
                 location_info = ("Missing in ENTITY table", parent)
-            node = inv_tree("hardware.components.%ss:" % (map_type[entity_type]).lower())
+            node = inv_tree_list("hardware.components.%ss:" % (map_type[entity_type]).lower())
             node.append({
                 "index"       : index,
                 "name"        : name,

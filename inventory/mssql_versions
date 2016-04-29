@@ -33,7 +33,7 @@
 # MSSQL_MSSQLSERVER|10.50.1600.1|Enterprise Edition
 
 def inv_mssql_versions(info):
-    node = inv_tree("software.applications.mssql.instances")
+    node = inv_tree_list("software.applications.mssql.instances:")
 
     for line in info:
         if len(line) not in [2, 4]:

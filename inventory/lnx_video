@@ -44,7 +44,7 @@
 
 
 def inv_lnx_video(info):
-    node = inv_tree("hardware.video:")
+    node = inv_tree_list("hardware.video:")
     array = {}
     for line in info:
         if len(line) > 1:

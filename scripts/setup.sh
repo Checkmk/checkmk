@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.2.8b13
+VERSION=1.2.8b14
 NAME=check_mk
 LANG=
 LC_ALL=

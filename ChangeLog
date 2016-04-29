@@ -19,6 +19,9 @@
     * 3125 FIX: fixed grouping of werk list by version...
     * 3442 FIX: Fixed double escaping of single quotes in comment texts
 
+    WATO:
+    * 3448 FIX: Fixed styling of duallist choice fields (e.g. used in notifcation contact list)
+
     Notifications:
     * 3426 FIX: sms: fixed wrong message handling after message was quoted and therefore too long
 

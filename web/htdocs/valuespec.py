@@ -1680,7 +1680,7 @@ class MultiSelect(ListChoice):
 class DualListChoice(ListChoice):
     def __init__(self, **kwargs):
         ListChoice.__init__(self, **kwargs)
-        self._autoheight = kwargs.get("autoheight", True)
+        self._autoheight = kwargs.get("autoheight", False)
         self._custom_order = kwargs.get("custom_order", False)
         self._instant_add = kwargs.get("instant_add", False)
         self._enlarge_active = kwargs.get("enlarge_active", False)

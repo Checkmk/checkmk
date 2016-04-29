@@ -3,6 +3,7 @@
     * 3437 FIX: Improved performance of "activate changes", especially in distributed environments
 
     Checks & Agents:
+    * 3128 mem.win: graphs now display the available memory
     * 3523 FIX: esx_vsphere_hostsystem: fixed exception when no multipath state info is available
     * 3425 FIX: Fixed extra section handling if no related check plugin exists
     * 3465 FIX: df: Fix displayed vertical range of graph of all filesystem checks...

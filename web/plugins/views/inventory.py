@@ -781,10 +781,8 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
         header = filt.filter(infoname)
         if not header.startswith("Sites:"):
             filter_code += header
-    host_columns = list(set([ "host_name" ] + filter(lambda c: c.startswith("host_"), columns)))
-
-    sites.live().set_only_sites(only_sites)
-    sites.live().set_prepend_site(True)
+    host_columns = [ "host_name" ] + list(set(filter(lambda c: c.startswith("host_")
+                                                               and c != "host_name", columns)))
 
     query = "GET hosts\n"
     query += "Columns: " + (" ".join(host_columns)) + "\n"

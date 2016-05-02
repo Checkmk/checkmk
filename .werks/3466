@@ -1,0 +1,21 @@
+Title: Logwatch pages now work in distributed environment without HTTH reverse proxy
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.9i1
+Date: 1462200919
+Class: feature
+
+The web pages for viewing and acknowledging files from logwatch checks now no longer
+need a HTTP reverse proxy setup but simply work. The use Livestatus - just like the
+other status data. This means that in the Enterprise Edition you can now drop the
+reverse proxying totally. In the Raw Edition you still need it for the performance
+graphs from PNP4Nagios.
+
+In a manual setup you need to tell the Livestatus Nagios-Module where it finds
+the logwatch files with the option <tt>mk_logwatch_path=.....</tt>. Specify the
+absolute path to the base directory where Check_MK stores the logwatch files.
+This path always ends with <tt>/logwatch</tt>.
+
+Note: You need to update Livestatus / Check_MK on all remote sites. If you just
+update the central site then the logwatch GUI will stop working.

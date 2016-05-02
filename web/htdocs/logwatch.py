@@ -24,66 +24,51 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import time, re, os, datetime, config, defaults
+import time, re, datetime, config, defaults, table, livestatus
 from lib import *
 import views, sites
 
-stylesheets = [ 'pages', 'status', 'logwatch' ]
 
-nagios_illegal_chars  = '`;~!$%^&*|\'"<>?,()='
-
-def level_name(level):
-    if   level == 'W': return 'WARN'
-    elif level == 'C': return 'CRIT'
-    elif level == 'O': return 'OK'
-    else: return 'OK'
-
-def level_state(level):
-    if   level == 'W': return 1
-    elif level == 'C': return 2
-    elif level == 'O': return 0
-    else: return 0
-
-#   .----------------------------------------------------------------------.
-#   |          ____  _                     _                               |
-#   |         / ___|| |__   _____      __ | |    ___   __ _ ___            |
-#   |         \___ \| '_ \ / _ \ \ /\ / / | |   / _ \ / _` / __|           |
-#   |          ___) | | | | (_) \ V  V /  | |__| (_) | (_| \__ \           |
-#   |         |____/|_| |_|\___/ \_/\_/   |_____\___/ \__, |___/           |
-#   |                                                 |___/                |
+#   .--HTML Output---------------------------------------------------------.
+#   |     _   _ _____ __  __ _        ___        _               _         |
+#   |    | | | |_   _|  \/  | |      / _ \ _   _| |_ _ __  _   _| |_       |
+#   |    | |_| | | | | |\/| | |     | | | | | | | __| '_ \| | | | __|      |
+#   |    |  _  | | | | |  | | |___  | |_| | |_| | |_| |_) | |_| | |_       |
+#   |    |_| |_| |_| |_|  |_|_____|  \___/ \__,_|\__| .__/ \__,_|\__|      |
+#   |                                               |_|                    |
+#   +----------------------------------------------------------------------+
+#   |  Toplevel code for show the actual HTML page                         |
 #   '----------------------------------------------------------------------'
 
 def page_show():
-    host = html.var("host", "")
-    filename = html.var("file", "")
+    site = html.var("site") # optional site hint
+    host_name = html.var("host", "")
+    file_name = html.var("file", "")
 
     # Fix problem when URL is missing certain illegal characters
     try:
-        filename = form_file_to_ext(find_matching_logfile(host, form_file_to_int(filename)))
-    except OSError:
-        pass # host log dir does not exist
+        file_name = form_file_to_ext(find_matching_logfile(site, host_name, form_file_to_int(file_name)))
+    except livestatus.MKLivestatusNotFoundError:
+        pass # host_name log dir does not exist
 
     # Acknowledging logs is supported on
     # a) all logs on all hosts
-    # b) all logs on one host
-    # c) one log on one host
+    # b) all logs on one host_name
+    # c) one log on one host_name
     if html.has_var('_ack') and not html.var("_do_actions") == _("No"):
         sites.live().set_auth_domain('action')
-        do_log_ack(host, filename)
+        do_log_ack(site, host_name, file_name)
         return
 
-    if not host:
+    if not host_name:
         show_log_list()
         return
 
-    # Check user permissions on the host
-    if not may_see(host):
-        raise MKAuthException(_("You are not allowed to access the logs of the host %s") % html.attrencode(host))
-
-    if filename:
-        show_file(host, filename)
+    if file_name:
+        show_file(site, host_name, file_name)
     else:
-        show_host_log_list(host)
+        show_host_log_list(site, host_name)
+
 
 # Shows a list of all problematic logfiles grouped by host
 def show_log_list():
@@ -94,73 +79,163 @@ def show_log_list():
     ack_button()
     html.end_context_buttons()
 
-    html.write("<table class=data>\n")
-    for host, logs in all_logs():
-        html.write('<tr><td colspan=2><h2><a href="%s">%s</a></h2></td></tr>' % \
-                                              (html.makeuri([('host', host)]), host))
-        list_logs(host, logs)
-    html.write("</table>\n")
-
+    for site, host_name, logs in all_logs():
+        html.write('<h2><a href="%s">%s</a></h2>' % \
+                  (html.makeuri([('site', site), ('host', host_name)]), host_name))
+        list_logs(site, host_name, logs)
     html.footer()
 
+
+def services_url(site, host_name):
+    return html.makeuri_contextless([("view_name", "host"), ("site", site), ("host", host_name)], filename="view.py")
+
+
+def analyse_url(site, host_name, file_name='', match=''):
+    return html.makeuri_contextless([
+        ("mode", "pattern_editor"),
+        ("site", site),
+        ("host", host_name),
+        ("file", file_name),
+        ("match", match)], filename="wato.py")
+
+
 # Shows all problematic logfiles of a host
-def show_host_log_list(host):
-    master_url = html.var('master_url', '')
-    html.header(_("Logfiles of Host %s") % host, stylesheets = stylesheets)
+def show_host_log_list(site, host_name):
+    html.header(_("Logfiles of host %s") % host_name, stylesheets = stylesheets)
+
     html.begin_context_buttons()
-    html.context_button(_("Services"), "%sview.py?view_name=host&site=&host=%s" %
-                                (master_url, html.urlencode(host)), 'services')
-    html.context_button(_("All Logfiles"), html.makeuri([('host', ''), ('file', '')]))
-    html.context_button(_("Analyze Host Patterns"), "%swato.py?mode=pattern_editor&host=%s" %
-                                (master_url, html.urlencode(host)), 'analyze')
-    ack_button(host)
+    html.context_button(_("Services"), services_url(site, host_name), 'services')
+    html.context_button(_("All Logfiles"), html.makeuri([('site', ''), ('host', ''), ('file', '')]))
+    html.context_button(_("Analyze host patterns"), analyse_url(site, host_name), 'analyze')
+    ack_button(site, host_name)
     html.end_context_buttons()
 
     html.write("<table class=data>\n")
-    list_logs(host, host_logs(host))
+    list_logs(site, host_name, logfiles_of_host(site, host_name))
     html.write("</table>\n")
 
     html.footer()
 
+
 # Displays a table of logfiles
-def list_logs(host, logfiles):
-    rowno = 0
-    for log_file in logfiles:
-        rowno += 1
-        if rowno == 1:
-            html.write("<tr class=groupheader>\n")
-            html.write("<th>"+_('Level')+"</th><th>"+_('Logfile')+"</th>")
-            html.write("<th>"+_('Last Entry')+"</th><th>"+_('Entries')+"</th></tr>\n")
+def list_logs(site, host_name, logfile_names):
+    table.begin(empty_text = _("No logs found for this host."))
 
-        file_display = form_file_to_ext(log_file)
+    for file_name in logfile_names:
+        table.row()
+        file_display = form_file_to_ext(file_name)
+        logfile_link = "<a href=\"%s\">%s</a></td>\n" % \
+                    (html.makeuri([('site', site), ('host', host_name), ('file', file_display)]),
+                    html.attrencode(file_display))
 
-        logs = parse_file(host, log_file)
-        if logs == [] or type(logs) != list: # corrupted logfile
-            if logs == []: logs = "empty"
-            html.write("<tr class=\"data %s0\">\n" % (rowno % 2 == 0 and "odd" or "even"))
-            html.write("<td>-</td><td>%s</td><td>%s</td><td>0</td></tr>\n" %
-                             (html.attrencode(logs), html.attrencode(file_display)))
-        else:
-            worst_log = get_worst_log(logs)
-            last_log = get_last_log(logs)
-            state = worst_log['level']
+        try:
+            log_chunks = parse_file(site, host_name, file_name)
+            if log_chunks == None:
+                continue # Logfile vanished
+
+            worst_log  = get_worst_chunk(log_chunks)
+            last_log   = get_last_chunk(log_chunks)
+            state      = worst_log['level']
             state_name = form_level(state)
-            html.write("<tr class=\"data %s%d\">\n" % (rowno % 2 == 0 and "odd" or "even", state))
 
-            html.write("<td class=\"state%d\">%s</td>\n" % (state, state_name))
-            html.write("<td><a href=\"%s\">%s</a></td>\n" %
-                        (html.makeuri([('host', host), ('file', file_display)]), html.attrencode(file_display)))
-            html.write("<td>%s</td><td>%s</td></tr>\n" % \
-                        (form_datetime(last_log['datetime']), len(logs)))
+            table.cell(_("Level"), state_name, css="state%d" % state)
+            table.cell(_("Logfile"), logfile_link)
+            table.cell(_("Last Entry"), form_datetime(last_log['datetime']))
+            table.cell(_("Entries"), len(log_chunks), css="number")
 
-    if rowno == 0:
-        html.write('<tr><td class="data" colspan=4>')
-        html.message(_('No logs found for this host.'))
-        html.write('</td></tr>\n')
+        except Exception, e:
+            if config.debug:
+                raise
+            table.cell(_("Level"), "")
+            table.cell(_("Logfile"), logfile_link)
+            table.cell(_("Last Entry"), "")
+            table.cell(_("Entries"), _("Corrupted"))
+
+    table.end()
 
 
-def ack_button(host = None, int_filename = None):
-    if not config.may("general.act") or (host and not may_see(host)):
+def show_file(site, host_name, file_name):
+    master_url = html.var('master_url', '')
+
+    int_filename = form_file_to_int(file_name)
+
+    html.header(_("Logfiles of Host %s: %s") % (host_name, file_name), stylesheets = stylesheets)
+    html.begin_context_buttons()
+    html.context_button(_("Services"), services_url(site, host_name), 'services')
+    html.context_button(_("All Logfiles of Host"), html.makeuri([('file', '')]))
+    html.context_button(_("All Logfiles"), html.makeuri([('host', ''), ('file', '')]))
+    html.context_button(_("Analyze patterns"), analyse_url(site, host_name, file_name), 'analyze')
+
+    if html.var('_hidecontext', 'no') == 'yes':
+        hide_context_label = _('Show Context')
+        hide_context_param = 'no'
+        hide = True
+    else:
+        hide_context_label = _('Hide Context')
+        hide_context_param = 'yes'
+        hide = False
+
+    try:
+        log_chunks = parse_file(site, host_name, int_filename, hide)
+    except Exception, e:
+        if config.debug:
+            raise
+        html.end_context_buttons()
+        html.show_error(_("Unable to show logfile: <b>%s</b>") % e)
+        html.footer()
+        return
+
+    if log_chunks == None:
+        html.end_context_buttons()
+        html.show_error(_("The logfile does not exist."))
+        html.footer()
+        return
+
+    elif log_chunks == []:
+        html.end_context_buttons()
+        html.message(_("This logfile contains no unacknowledged messages."))
+        html.footer()
+        return
+
+    ack_button(site, host_name, int_filename)
+    html.context_button(hide_context_label, html.makeuri([('_hidecontext', hide_context_param)]))
+
+    html.end_context_buttons()
+
+    html.write("<div id=logwatch>\n")
+    for log in log_chunks:
+        html.write('<div class="chunk">\n');
+        html.write('<table class="section">\n<tr>\n');
+        html.write('<td class="%s">%s</td>\n' % (form_level(log['level']), form_level(log['level'])));
+        html.write('<td class="date">%s</td>\n' % (form_datetime(log['datetime'])));
+        html.write('</tr>\n</table>\n');
+
+        for line in log['lines']:
+            html.write('<p class="%s">' % line['class'])
+            html.icon_button(analyse_url(site, host_name, file_name, line['line']), _("Analyze this line"), "analyze")
+            html.write('%s</p>\n' % (html.attrencode(line['line']).replace(" ", "&nbsp;").replace("\1", "<br>") ))
+
+        html.write('</div>\n')
+
+    html.write("</div>\n")
+    html.footer()
+
+
+#.
+#   .--Acknowledge---------------------------------------------------------.
+#   |       _        _                        _          _                 |
+#   |      / \   ___| | ___ __   _____      _| | ___  __| | __ _  ___      |
+#   |     / _ \ / __| |/ / '_ \ / _ \ \ /\ / / |/ _ \/ _` |/ _` |/ _ \     |
+#   |    / ___ \ (__|   <| | | | (_) \ V  V /| |  __/ (_| | (_| |  __/     |
+#   |   /_/   \_\___|_|\_\_| |_|\___/ \_/\_/ |_|\___|\__,_|\__, |\___|     |
+#   |                                                      |___/           |
+#   +----------------------------------------------------------------------+
+#   |  Code for acknowleding (i.e. deleting) log files                     |
+#   '----------------------------------------------------------------------'
+
+
+def ack_button(site=None, host_name=None, int_filename=None):
+    if not config.may("general.act") or (host_name and not may_see(site, host_name)):
         return
 
     if int_filename:
@@ -174,127 +249,43 @@ def ack_button(host = None, int_filename = None):
     html.context_button(label, html.makeactionuri(urivars), 'delete')
 
 
-# Tackle problem, where some characters are missing in the service
-# description
-def find_matching_logfile(host, filename):
-    dir_path = defaults.logwatch_dir + '/' + host + '/'
-    if os.path.exists(dir_path + filename):
-        return filename # Most common case
 
-    for logfile_name in os.listdir(dir_path):
-        if remove_illegal_service_characters(logfile_name) == filename:
-            return logfile_name
-
-    # Not found? Fall back to original name. Logfile might be cleared.
-    return filename
-
-
-def remove_illegal_service_characters(filename):
-    return "".join([ c for c in filename if c not in nagios_illegal_chars ])
-
-
-
-def show_file(host, filename):
-    master_url = html.var('master_url', '')
-
-    int_filename = form_file_to_int(filename)
-    html.header(_("Logfiles of Host %s: %s") % (host, filename), stylesheets = stylesheets)
-    html.begin_context_buttons()
-    html.context_button(_("Services"), "%sview.py?view_name=host&site=&host=%s" % (master_url, html.urlencode(host)), 'services')
-    html.context_button(_("All Logfiles of Host"), html.makeuri([('file', '')]))
-    html.context_button(_("All Logfiles"), html.makeuri([('host', ''), ('file', '')]))
-
-    html.context_button(_("Analyze Patterns"), "%swato.py?mode=pattern_editor&host=%s&file=%s" %
-                                (master_url, html.urlencode(host), html.urlencode(filename)), 'analyze')
-
-    if html.var('_hidecontext', 'no') == 'yes':
-        hide_context_label = _('Show Context')
-        hide_context_param = 'no'
-        hide = True
-    else:
-        hide_context_label = _('Hide Context')
-        hide_context_param = 'yes'
-        hide = False
-
-    logs = parse_file(host, int_filename, hide)
-    if type(logs) != list:
-        html.end_context_buttons()
-        html.show_error(_("Unable to show logfile: <b>%s</b>") % logs)
-        html.footer()
-        return
-    elif logs == []:
-        html.end_context_buttons()
-        html.message(_("This logfile contains no unacknowledged messages."))
-        html.footer()
-        return
-
-    ack_button(host, int_filename)
-    html.context_button(hide_context_label, html.makeuri([('_hidecontext', hide_context_param)]))
-
-    html.end_context_buttons()
-
-    html.write("<div id=logwatch>\n")
-    for log in logs:
-        html.write('<div class="chunk">\n');
-        html.write('<table class="section">\n<tr>\n');
-        html.write('<td class="%s">%s</td>\n' % (form_level(log['level']), form_level(log['level'])));
-        html.write('<td class="date">%s</td>\n' % (form_datetime(log['datetime'])));
-        html.write('</tr>\n</table>\n');
-
-        for line in log['lines']:
-            html.write('<p class="%s">' % line['class'])
-
-            edit_url = master_url + "wato.py?" + html.urlencode_vars([
-                ('mode',  'pattern_editor'),
-                ('host',  host),
-                ('file',  filename),
-                ('match', line['line']),
-            ])
-            html.icon_button(edit_url, _("Analyze this line"), "analyze")
-            html.write('%s</p>\n' % (html.attrencode(line['line']).replace(" ", "&nbsp;").replace("\1", "<br>") ))
-
-        html.write('</div>\n')
-
-    html.write("</div>\n")
-    html.footer()
-
-
-def do_log_ack(host, filename):
+def do_log_ack(site, host_name, file_name):
     todo = []
-    if not host and not filename: # all logs on all hosts
-        for this_host, logs in all_logs():
+    if not host_name and not file_name: # all logs on all hosts
+        for site, this_host, logs in all_logs():
             for int_filename in logs:
                 file_display = form_file_to_ext(int_filename)
                 todo.append((this_host, int_filename, file_display))
         ack_msg = _('all logfiles on all hosts')
 
-    elif host and not filename: # all logs on one host
-        for int_filename in host_logs(host):
+    elif host_name and not file_name: # all logs on one host
+        for int_filename in logfiles_of_host(site, host_name):
             file_display = form_file_to_ext(int_filename)
-            todo.append((host, int_filename, file_display))
-        ack_msg = _('all logfiles of host %s') % html.attrencode(host)
+            todo.append((host_name, int_filename, file_display))
+        ack_msg = _('all logfiles of host %s') % html.attrencode(host_name)
 
-    elif host and filename: # one log on one host
-        int_filename = form_file_to_int(filename)
-        todo = [ (host, int_filename, form_file_to_ext(int_filename)) ]
+    elif host_name and file_name: # one log on one host
+        int_filename = form_file_to_int(file_name)
+        todo = [ (host_name, int_filename, form_file_to_ext(int_filename)) ]
         ack_msg = _('the log file %s on host %s') % \
-                       (html.attrencode(filename), html.attrencode(host))
+                       (html.attrencode(file_name), html.attrencode(host_name))
 
     else:
-        for this_host, logs in all_logs():
-            file_display = form_file_to_ext(filename)
-            if filename in logs:
-                todo.append((this_host, filename, file_display))
-        ack_msg = _('log file %s on all hosts') % (html.attrencode(filename))
+        for site, this_host, logs in all_logs():
+            file_display = form_file_to_ext(file_name)
+            if file_name in logs:
+                todo.append((this_host, file_name, file_display))
+        ack_msg = _('log file %s on all hosts') % (html.attrencode(file_name))
 
 
     html.header(_("Acknowledge %s") % ack_msg, stylesheets = stylesheets)
 
     html.begin_context_buttons()
     html.context_button(_("All Logfiles"), html.makeuri([('host', ''), ('file', '')]))
-    if host:
+    if host_name:
         html.context_button(_("All Logfiles of Host"), html.makeuri([('file', '')]))
-    if host and filename:
+    if host_name and file_name:
         html.context_button(_("Back to Logfile"), html.makeuri([]))
     html.end_context_buttons()
 
@@ -315,7 +306,7 @@ def do_log_ack(host, filename):
 
     for this_host, int_filename, display_name in todo:
         try:
-            if not may_see(this_host):
+            if not may_see(site, this_host):
                 raise MKAuthException(_('Permission denied.'))
             os.remove(defaults.logwatch_dir + '/' + this_host + '/' + int_filename)
         except Exception, e:
@@ -329,74 +320,59 @@ def do_log_ack(host, filename):
     html.footer()
 
 
-def get_worst_log(logs):
-    worst_level = 0
-    worst_log = logs[0]
+#.
+#   .--Parsing-------------------------------------------------------------.
+#   |                  ____                _                               |
+#   |                 |  _ \ __ _ _ __ ___(_)_ __   __ _                   |
+#   |                 | |_) / _` | '__/ __| | '_ \ / _` |                  |
+#   |                 |  __/ (_| | |  \__ \ | | | | (_| |                  |
+#   |                 |_|   \__,_|_|  |___/_|_| |_|\__, |                  |
+#   |                                              |___/                   |
+#   +----------------------------------------------------------------------+
+#   |  Parsing the contents of a logfile                                   |
+#   '----------------------------------------------------------------------'
 
-    for log in logs:
-        for line in log['lines']:
-            if line['level'] >= worst_level:
-                worst_level = line['level']
-                worst_log = log
-
-    return worst_log
-
-def get_last_log(logs):
-    last_log = None
-    last_datetime = None
-
-    for log in logs:
-        if not last_datetime or log['datetime'] > last_datetime:
-            last_datetime = log['datetime']
-            last_log = log
-
-    return last_log
-
-
-def parse_file(host, file, hidecontext = False):
-    logs = []
+def parse_file(site, host_name, file_name, hidecontext = False):
+    log_chunks = []
     try:
-        file_path = defaults.logwatch_dir + '/' + host + '/' + file
-        if not os.path.exists(file_path):
-            return []
-        f = open(file_path, 'r')
-        chunk_open = False
-        log = None
+        chunk = None
+        lines = get_logfile_lines(site, host_name, file_name)
+        if lines == None:
+            return None
 
-        # skip hash line. this doesn't exist in older files
-        hash_line = f.readline().rstrip('\n')
-        if not hash_line.startswith('[[[') or not hash_line.endswith(']]]'):
-            f.seek(0)
+        while lines and lines[0].startswith('#'): # skip hash line. this doesn't exist in older files
+            lines = lines[1:]
 
-        for line in f.readlines():
+        for line in lines:
             line = line.strip()
             if line == '':
                 continue
 
             if line[:3] == '<<<': # new chunk begins
                 log_lines = []
-                log = {'lines': log_lines}
-                logs.append(log)
+                chunk = {'lines': log_lines}
+                log_chunks.append(chunk)
 
                 # New header line
                 date, logtime, level = line[3:-3].split(' ')
 
                 # Save level as integer to make it better comparable
                 if level == 'CRIT':
-                    log['level'] = 2
+                    chunk['level'] = 2
                 elif level == 'WARN':
-                    log['level'] = 1
+                    chunk['level'] = 1
                 elif level == 'OK':
-                    log['level'] = 0
+                    chunk['level'] = 0
                 else:
-                    log['level'] = 0
+                    chunk['level'] = 0
 
                 # Gather datetime object
                 # Python versions below 2.5 don't provide datetime.datetime.strptime.
                 # Use the following instead:
-                #log['datetime'] = datetime.datetime.strptime(date + ' ' + logtime, "%Y-%m-%d %H:%M:%S")
-                log['datetime'] = datetime.datetime(*time.strptime(date + ' ' + logtime, "%Y-%m-%d %H:%M:%S")[0:5])
-            elif log: # else: not in a chunk?!
+                #chunk['datetime'] = datetime.datetime.strptime(date + ' ' + logtime, "%Y-%m-%d %H:%M:%S")
+                chunk['datetime'] = datetime.datetime(*time.strptime(date + ' ' + logtime, "%Y-%m-%d %H:%M:%S")[0:5])
+
+            elif chunk: # else: not in a chunk?!
                 # Data line
                 line_display = line[2:]
 
@@ -426,53 +402,169 @@ def parse_file(host, file, hidecontext = False):
 
                 log_lines.append({ 'level': line_level, 'class': line_class, 'line': line_display })
     except Exception, e:
-        # cannot parse logfile: corrupted
-        return str(e)
+        if config.debug:
+            raise
+        raise MKGeneralException(_("Cannot parse log file %s: %s") % (html.attrencode(file_name), e))
 
-    return logs
+    return log_chunks
 
-def host_logs(host):
-    try:
-        return filter(lambda x: x != '..' and x != '.', os.listdir(defaults.logwatch_dir + '/' + host))
-    except:
-        return []
 
-# Returns a list of tuples where the first element is the hostname
-# and the second element is a list of logs of this host
-def all_logs():
-    logs = []
-    try:
-        for host in filter(lambda x: x != '..' and x != '.', os.listdir(defaults.logwatch_dir)):
-            logs_of_host = host_logs(host)
-            if may_see(host) and logs_of_host:
-                logs.append((host, logs_of_host))
-    except:
-        pass
-    return logs
+def get_worst_chunk(log_chunks):
+    worst_level = 0
+    worst_log = log_chunks[0]
 
-def may_see(host):
-    if config.may("general.see_all"):
-        return True
+    for chunk in log_chunks:
+        for line in chunk['lines']:
+            if line['level'] >= worst_level:
+                worst_level = line['level']
+                worst_log = chunk
 
-    # FIXME: Or maybe make completely transparent and add pseudo local_connection() to Single livestatus clas?
-    if config.is_multisite():
-        conn = sites.live().local_connection()
-    else:
-        conn = sites.live()
+    return worst_log
 
-    # livestatus connection is setup with AuthUser
-    return conn.query_value("GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host)) > 0
+
+def get_last_chunk(log_chunks):
+    last_log = None
+    last_datetime = None
+
+    for chunk in log_chunks:
+        if not last_datetime or chunk['datetime'] > last_datetime:
+            last_datetime = chunk['datetime']
+            last_log = chunk
+
+    return last_log
+
+
+#.
+#   .--Constants-----------------------------------------------------------.
+#   |              ____                _              _                    |
+#   |             / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___              |
+#   |            | |   / _ \| '_ \/ __| __/ _` | '_ \| __/ __|             |
+#   |            | |__| (_) | | | \__ \ || (_| | | | | |_\__ \             |
+#   |             \____\___/|_| |_|___/\__\__,_|_| |_|\__|___/             |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Definition of various constants - also used by WATO                  |
+#   '----------------------------------------------------------------------'
+
+stylesheets = [ 'pages', 'status', 'logwatch' ]
+
+nagios_illegal_chars  = '`;~!$%^&*|\'"<>?,()='
+
+def level_name(level):
+    if   level == 'W': return 'WARN'
+    elif level == 'C': return 'CRIT'
+    elif level == 'O': return 'OK'
+    else: return 'OK'
+
+def level_state(level):
+    if   level == 'W': return 1
+    elif level == 'C': return 2
+    elif level == 'O': return 0
+    else: return 0
+
+
+#.
+#   .--Helpers-------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   |  Various helper functions                                            |
+#   '----------------------------------------------------------------------'
 
 def form_level(level):
     levels = [ 'OK', 'WARN', 'CRIT', 'UNKNOWN' ]
     return levels[level]
 
+
 def form_file_to_int(f):
     return f.replace('/', '\\')
+
 
 def form_file_to_ext(f):
     return f.replace('\\', '/')
 
+
 def form_datetime(dt, fmt = '%Y-%m-%d %H:%M:%S'):
-    # FIXME: Dateformat could be configurable
     return dt.strftime(fmt)
+
+
+#.
+#   .--Access--------------------------------------------------------------.
+#   |                       _                                              |
+#   |                      / \   ___ ___ ___  ___ ___                      |
+#   |                     / _ \ / __/ __/ _ \/ __/ __|                     |
+#   |                    / ___ \ (_| (_|  __/\__ \__ \                     |
+#   |                   /_/   \_\___\___\___||___/___/                     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Code for fetching data and for acknowledging. Now all via Live-     |
+#   |  status.                                                             |
+#   '----------------------------------------------------------------------'
+
+def logfiles_of_host(site, host_name):
+    if site: # Honor site hint if available
+        sites.live().set_only_sites([site])
+    file_names = sites.live().query_value(
+        "GET hosts\n"
+        "Columns: mk_logwatch_files\n"
+        "Filter: name = %s\n" % lqencode(host_name))
+    if site: # Honor site hint if available
+        sites.live().set_only_sites(None)
+    return file_names
+
+
+def get_logfile_lines(site, host_name, file_name):
+    if site: # Honor site hint if available
+        sites.live().set_only_sites([site])
+    query = \
+        "GET hosts\n" \
+        "Columns: mk_logwatch_file:file:%s\n" \
+        "Filter: name = %s\n" % (lqencode(file_name.replace('\\', '\\\\').replace(' ', '\\s')), lqencode(host_name))
+    file_content = sites.live().query_value(query)
+    if site: # Honor site hint if available
+        sites.live().set_only_sites(None)
+    if file_content == None:
+        return None
+    else:
+        return file_content.splitlines()
+
+
+def all_logs():
+    sites.live().set_prepend_site(True)
+    rows = sites.live().query(
+        "GET hosts\n"
+        "Columns: name mk_logwatch_files\n"
+    )
+    sites.live().set_prepend_site(False)
+    return rows
+
+
+def may_see(site, host_name):
+    if config.may("general.see_all"):
+        return True
+
+    # livestatus connection is setup with AuthUser
+    return sites.live().query_value("GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host_name)) > 0
+
+
+# Tackle problem, where some characters are missing in the service
+# description
+def find_matching_logfile(site, host_name, file_name):
+    existing_files = logfiles_of_host(site, host_name)
+    if file_name in existing_files:
+        return file_name # Most common case
+
+    for logfile_name in existing_files:
+        if remove_illegal_service_characters(logfile_name) == file_name:
+            return logfile_name
+
+    # Not found? Fall back to original name. Logfile might be cleared.
+    return file_name
+
+
+def remove_illegal_service_characters(file_name):
+    return "".join([ c for c in file_name if c not in nagios_illegal_chars ])

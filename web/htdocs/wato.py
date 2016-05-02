@@ -14164,9 +14164,7 @@ def mode_pattern_editor(phase):
             else:
                 title = _("Host Logfiles")
 
-            master_url = '&master_url=' + defaults.url_prefix + 'check_mk/'
-            html.context_button(title, "logwatch.py?host=%s&amp;file=%s%s" %
-                (html.urlencode(hostname), html.urlencode(item), master_url), 'logwatch')
+            html.context_button(title, html.makeuri_contextless([("host", hostname), ("file", item)], filename="logwatch.py"), 'logwatch')
 
         html.context_button(_('Edit Logfile Rules'), folder_preserving_link([
                 ('mode', 'edit_ruleset'),

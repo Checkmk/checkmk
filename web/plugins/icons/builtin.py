@@ -454,13 +454,7 @@ multisite_icons_and_actions['custom_action'] = {
 #   '----------------------------------------------------------------------'
 
 def logwatch_url(sitename, hostname, item):
-    host_item_url = "check_mk/logwatch.py?host=%s&file=%s" % (html.urlencode(hostname), html.urlencode(item))
-    url_prefix = config.site(sitename)["url_prefix"]
-    master_url = ''
-    if config.is_multisite():
-        master_url = '&master_url=' + defaults.url_prefix + 'check_mk/'
-
-    return url_prefix + host_item_url + master_url
+    return html.makeuri_contextless([("site", sitename), ("host", hostname), ("file", item)], filename="logwatch.py")
 
 def paint_logwatch(what, row, tags, host_custom_vars):
     if what != "service":
@@ -494,7 +488,7 @@ def paint_notes(what, row, tags, host_custom_vars):
         check_command = row[what + "_check_command"]
         if check_command == 'check_mk-logwatch' and \
             "check_mk/logwatch.py?host" in notes_url:
-            return
+            return # Ancient logwatch URL via notes_url. Ignore in order to avoid duplicate icon
         if notes_url:
             return 'notes', _('Custom Notes'), notes_url
 

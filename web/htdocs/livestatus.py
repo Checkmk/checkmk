@@ -680,4 +680,4 @@ class MultiSiteConnection(Helpers):
         raise MKLivestatusConfigError("No livestatus connection to local host")
 
 # Examle for forcing local connection:
-# live.local_connection().query_single_value(...)
+# live.local_connection().query_value(...)

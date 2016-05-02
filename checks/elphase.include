@@ -70,6 +70,7 @@ def check_elphase(item, params, parsed):
 
             infotext = "%s: %s%s" % (title, tostring(value), unit)
             status   = 0
+            perfdata = [ (what, value * factor) ]
 
             if what in params:
                 warn_lower = crit_lower = warn = crit = None
@@ -100,10 +101,7 @@ def check_elphase(item, params, parsed):
                         status = max(status, 1)
                         infotext += levelstext
 
-                perfdata = [ (what, value * factor, warn * factor, crit * factor) ]
-
-            else:
-                perfdata = [ (what, value * factor) ]
+                    perfdata = [ (what, value * factor, warn * factor, crit * factor) ]
 
             yield status, infotext, perfdata
 

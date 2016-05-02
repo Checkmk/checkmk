@@ -1,4 +1,7 @@
 1.2.8b14:
+    WATO:
+    * 3450 FIX: Site properties: It was not possible to switch a site back to "local site" connection
+
 
 1.2.8b13:
     Core & Setup:

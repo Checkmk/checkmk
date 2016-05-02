@@ -9253,7 +9253,7 @@ def mode_edit_site(phase):
         # are not edited with this dialog
         if not new:
             for key in old_site.keys():
-                if key not in new_site:
+                if key not in new_site and key != "socket":
                     new_site[key] = old_site[key]
 
         save_sites(sites)

@@ -129,10 +129,12 @@ unit_info["bits/s"] = {
 
 # Output in bytes/days, value is in bytes/s
 unit_info["bytes/d"] = {
-    "title"    : _("Bytes per day"),
-    "symbol"   : _("B/d"),
-    "render"   : lambda v: bytes_human_readable(v * 86400.0) + _("/d"),
-    "stepping" : "binary", # for vertical graph labels
+    "title"      : _("Bytes per day"),
+    "symbol"     : _("B/d"),
+    "render"     : lambda v: bytes_human_readable(v * 86400.0, unit="B/d"),
+    "graph_unit" : lambda values: bytes_human_readable_list(
+                            [ v * 86400.0 for v in values ], unit=_("B/d")),
+    "stepping"   : "binary", # for vertical graph labels
 }
 
 unit_info["c"] = {

@@ -1,0 +1,9 @@
+Title: apache_status: Fixed wrong graph labels and improved wordings
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8b14
+Date: 1462182308
+Class: fix
+
+

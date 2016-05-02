@@ -23,7 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 
-
+#include <stdio.h>
+#include <string.h>
+#include "logger.h"
 #include "mk_logwatch.h"
 #include "pnp4nagios.h"
 
@@ -35,4 +37,23 @@ std::string mk_logwatch_path_of_host(const char *host_name)
 
     path += pnp_cleanup(host_name);
     return path;
+}
+
+void mk_logwatch_acknowledge(const std::string &host_name, const std::string &file_name)
+{
+    if (file_name.find('/') != std::string::npos) {
+        logger(LOG_WARNING, "Invalid character / in mk_logfile filename '%s' of host '%s'", file_name.c_str(), host_name.c_str());
+        return;
+    }
+
+    std::string path(MK_LOGWATCH_PATH);
+    if (path == "")
+        return;
+    path += pnp_cleanup(host_name);
+    path += "/";
+    path += file_name;
+
+    int r = remove(path.c_str());
+    if (r != 0)
+        logger(LOG_WARNING, "Cannot acknowledge mk_logfile file '%s' of host '%s': %s", file_name.c_str(), host_name.c_str(), strerror(errno));
 }

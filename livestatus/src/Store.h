@@ -94,6 +94,7 @@ private:
     void answerGetRequest(const std::list<std::string> &lines, OutputBuffer *,
                           const char *);
     void answerCommandRequest(const char *);
+    bool answerLogwatchCommandRequest(const char *);
 };
 
 #endif  // Store_h

@@ -10,6 +10,7 @@
     WATO:
     * 3450 FIX: Site properties: It was not possible to switch a site back to "local site" connection
     * 3451 FIX: Fixed exception in host list when no local site configured
+    * 3457 FIX: Bulk edit: Prevent browser auto completion of stored credentials
 
     HW/SW-Inventory:
     * 3455 FIX: Fixed broken switch port filtering/sorting view

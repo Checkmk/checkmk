@@ -3629,6 +3629,7 @@ def mode_bulk_edit(phase):
     "will keep their individual settings.") + "</p>")
 
     html.begin_form("edit_host", method = "POST")
+    html.prevent_password_auto_completion()
     configure_attributes(False, hosts, "bulk", parent = Folder.current())
     forms.end()
     html.button("_save", _("Save &amp; Finish"))

@@ -97,6 +97,7 @@ def connect_multiple_sites():
             "program_start"      : ps,
             "num_hosts"          : num_hosts,
             "num_services"       : num_services,
+            "core"               : v2.startswith("Check_MK") and "cmc" or "nagios",
         })
     _live.set_prepend_site(False)
 

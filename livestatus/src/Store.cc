@@ -180,6 +180,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
 }
 
 void Store::answerCommandRequest(const char *command) {
+    logger(LOG_WARNING, "Das Kommando ist [%s]", command);
     lock_guard<mutex> lg(_command_mutex);
 #ifdef NAGIOS4
     process_external_command1((char *)command);

@@ -1,0 +1,10 @@
+Title: Fixed exception in host list when no local site configured
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1462172016
+
+

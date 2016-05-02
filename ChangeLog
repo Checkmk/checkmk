@@ -328,6 +328,7 @@
     * 3381 FIX: Folder property editing: Redirect back to folder when coming from folder
     * 3382 FIX: Fixed exception when moving multiple folder levels to another folder
     * 3383 FIX: Host search: Don't preselect any optional field (Searched for empty values)
+    * 3450 FIX: Site properties: It was not possible to switch a site back to "local site" connection
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

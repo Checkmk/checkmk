@@ -25,6 +25,7 @@
 #include <string>
 #include <sys/types.h>
 #include <dirent.h>
+#include <string.h>
 #include "LogwatchListColumn.h"
 #include "Query.h"
 #include "mk_logwatch.h"

@@ -263,6 +263,7 @@
     * 3125 FIX: fixed grouping of werk list by version...
     * 3442 FIX: Fixed double escaping of single quotes in comment texts
     * 3452 FIX: Fixed vertical label of Bytes/day graphs (like filesystem growth)
+    * 3453 FIX: apache_status: Fixed wrong graph labels and improved wordings
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

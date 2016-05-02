@@ -2640,7 +2640,7 @@ metric_info["apache_state_startingup"] = {
 }
 
 metric_info["apache_state_waiting"] = {
-    "title" : _("Writing"),
+    "title" : _("Waiting"),
     "unit"  : "count",
     "color" : "14/a",
 }
@@ -2652,7 +2652,7 @@ metric_info["apache_state_logging"] = {
 }
 
 metric_info["apache_state_dns"] = {
-    "title" : _("DNS"),
+    "title" : _("DNS lookup"),
     "unit"  : "count",
     "color" : "24/a",
 }
@@ -2670,25 +2670,25 @@ metric_info["apache_state_reading_request"] = {
 }
 
 metric_info["apache_state_closing"] = {
-    "title" : _("Closing"),
+    "title" : _("Closing connection"),
     "unit"  : "count",
     "color" : "41/a",
 }
 
 metric_info["apache_state_idle_cleanup"] = {
-    "title" : _("Idle clean up"),
+    "title" : _("Idle clean up of worker"),
     "unit"  : "count",
     "color" : "44/a",
 }
 
 metric_info["apache_state_finishing"] = {
-    "title" : _("Finishing"),
+    "title" : _("Gracefully finishing"),
     "unit"  : "count",
     "color" : "46/b",
 }
 
 metric_info["apache_state_keep_alive"] = {
-    "title" : _("Keep alive"),
+    "title" : _("Keepalive"),
     "unit"  : "count",
     "color" : "53/b",
 }

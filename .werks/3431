@@ -1,0 +1,9 @@
+Title: netextreme_cpu_util: new check which monitors the CPU utilization of a Extreme Networks Switch which supports the EXTREME-MIB
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1462207393
+Class: feature
+
+

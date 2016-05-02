@@ -1,4 +1,7 @@
 1.2.8b14:
+    Checks & Agents:
+    * 3456 FIX: bluecoat_diskcpu: Fixed visualization of graph
+
     Multisite:
     * 3452 FIX: Fixed vertical label of Bytes/day graphs (like filesystem growth)
     * 3453 FIX: apache_status: Fixed wrong graph labels and improved wordings

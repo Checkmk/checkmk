@@ -714,6 +714,7 @@ def date_human_readable(timestamp):
     # This can be localized:
     return time.strftime(_("%m/%d/%Y"), time.localtime(timestamp))
 
+
 def date_range_human_readable(start_time, end_time):
     start_time_local = time.localtime(start_time)
     end_time_local = time.localtime(end_time)
@@ -743,23 +744,23 @@ def date_month_human_readable(timestamp):
     return time.strftime(_("%B %Y"), time.localtime(timestamp))
 
 
-def calculate_bytes_human_readable(b, base=1024.0, bytefrac=True):
+def calculate_scaled_number(v, base=1024.0, precision=1):
     base = float(base)
 
     digits = 1
-    if b >= base ** 4:
+    if v >= base ** 4:
         symbol = "T"
         scale = base ** 4
 
-    elif b >= base ** 3:
+    elif v >= base ** 3:
         symbol = "G"
         scale = base ** 3
 
-    elif b >= base ** 2:
+    elif v >= base ** 2:
         symbol = "M"
         scale = base ** 2
 
-    elif b >= base:
+    elif v >= base:
         symbol = "k"
         scale = base
 
@@ -767,16 +768,20 @@ def calculate_bytes_human_readable(b, base=1024.0, bytefrac=True):
         symbol = ""
         scale = 1
 
+    return symbol, precision, scale
+
+
+def calculate_scaled_bytes(v, base=1024.0, bytefrac=True):
     if not bytefrac:
         digits = 0
-    elif b >= 100:
+    elif v >= 100:
         digits = 0
-    elif b >= 10:
+    elif v >= 10:
         digits = 1
     else:
         digits = 2
 
-    return symbol, digits, scale
+    return calculate_scaled_number(v, base, precision=digits)
 
 
 def bytes_human_readable(b, *args, **kwargs):
@@ -788,7 +793,7 @@ def bytes_human_readable(b, *args, **kwargs):
     else:
         unit = "B"
 
-    scale_symbol, places_after_comma, scale_factor = calculate_bytes_human_readable(b, *args, **kwargs)
+    scale_symbol, places_after_comma, scale_factor = calculate_scaled_bytes(b, *args, **kwargs)
 
     scaled_value = float(b) / scale_factor
     return (u"%%.%df %%s%%s" % places_after_comma) % (scaled_value, scale_symbol, unit)
@@ -805,7 +810,7 @@ def bytes_human_readable_list(values, *args, **kwargs):
     else:
         unit = "B"
 
-    scale_symbol, places_after_comma, scale_factor = calculate_bytes_human_readable(reference, *args, **kwargs)
+    scale_symbol, places_after_comma, scale_factor = calculate_scaled_bytes(reference, *args, **kwargs)
 
     units = []
     scaled_values = []
@@ -814,6 +819,34 @@ def bytes_human_readable_list(values, *args, **kwargs):
         scaled_values.append(("%%.%df" % places_after_comma) % scaled_value)
 
     return "%s%s" % (scale_symbol, unit), scaled_values
+
+
+def metric_number_with_precision(v, *args, **kwargs):
+    if v < 0:
+        return "-" + metric_number_with_precision(-v, *args, **kwargs)
+
+    kwargs["base"] = 1000.0
+    scale_symbol, places_after_comma, scale_factor = calculate_scaled_number(v, *args, **kwargs)
+    scaled_value = float(v) / scale_factor
+    return (u"%%.%df %%s" % places_after_comma) % (scaled_value, scale_symbol)
+
+
+def metric_number_with_precision_list(values, *args, **kwargs):
+    if not values:
+        reference = 0
+    else:
+        reference = min([ abs(v) for v in values ])
+
+    kwargs["base"] = 1000.0
+    scale_symbol, places_after_comma, scale_factor = calculate_scaled_number(reference, *args, **kwargs)
+
+    units = []
+    scaled_values = []
+    for value in values:
+        scaled_value = float(value) / scale_factor
+        scaled_values.append(("%%.%df" % places_after_comma) % scaled_value)
+
+    return "%s" % scale_symbol, scaled_values
 
 
 def file_size_human_readable(file_size):

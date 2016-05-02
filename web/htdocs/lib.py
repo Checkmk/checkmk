@@ -743,33 +743,29 @@ def date_month_human_readable(timestamp):
     return time.strftime(_("%B %Y"), time.localtime(timestamp))
 
 
-def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
+def calculate_bytes_human_readable(b, base=1024.0, bytefrac=True):
     base = float(base)
-    # Handle negative bytes correctly
-    prefix = ''
-    if b < 0:
-        prefix = '-'
-        b *= -1
 
     digits = 1
     if b >= base ** 4:
         symbol = "T"
-        b /= base ** 4
+        scale = base ** 4
 
     elif b >= base ** 3:
         symbol = "G"
-        b /= base ** 3
+        scale = base ** 3
 
     elif b >= base ** 2:
         symbol = "M"
-        b /= base ** 2
+        scale = base ** 2
 
     elif b >= base:
         symbol = "k"
-        b /= base
+        scale = base
 
     else:
         symbol = ""
+        scale = 1
 
     if not bytefrac:
         digits = 0
@@ -780,7 +776,45 @@ def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
     else:
         digits = 2
 
-    return "%%s%%.%df %%s%%s" % digits % (prefix, b, symbol, unit)
+    return symbol, digits, scale
+
+
+def bytes_human_readable(b, *args, **kwargs):
+    if b < 0:
+        return "-" + bytes_human_readable(-b, *args, **kwargs)
+
+    if "unit" in kwargs:
+        unit = kwargs.pop("unit")
+    else:
+        unit = "B"
+
+    scale_symbol, places_after_comma, scale_factor = calculate_bytes_human_readable(b, *args, **kwargs)
+
+    scaled_value = float(b) / scale_factor
+    return (u"%%.%df %%s%%s" % places_after_comma) % (scaled_value, scale_symbol, unit)
+
+
+def bytes_human_readable_list(values, *args, **kwargs):
+    if not values:
+        reference = 0
+    else:
+        reference = min([ abs(v) for v in values ])
+
+    if "unit" in kwargs:
+        unit = kwargs.pop("unit")
+    else:
+        unit = "B"
+
+    scale_symbol, places_after_comma, scale_factor = calculate_bytes_human_readable(reference, *args, **kwargs)
+
+    units = []
+    scaled_values = []
+    for value in values:
+        scaled_value = float(value) / scale_factor
+        scaled_values.append(("%%.%df" % places_after_comma) % scaled_value)
+
+    return "%s%s" % (scale_symbol, unit), scaled_values
+
 
 def file_size_human_readable(file_size):
     if file_size < 10000:
@@ -792,6 +826,7 @@ def file_size_human_readable(file_size):
         as_string = as_string[:-3]
     result = as_string + result
     return result
+
 
 try:
     import ast

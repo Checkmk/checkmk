@@ -2033,6 +2033,8 @@ def render_renaming_actions(action_counts):
 def mode_object_parameters(phase):
     hostname = html.var("host") # may be empty in new/clone mode
     host = Folder.current().host(hostname)
+    if host is None:
+        raise MKGeneralException(_('The given host does not exist.'))
     host.need_permission("read")
     service = html.var("service")
 

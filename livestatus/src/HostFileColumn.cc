@@ -68,6 +68,7 @@ char *HostFileColumn::getBlob(void *data, int *size) {
              _suffix.c_str());
     int fd = open(path, O_RDONLY);
     if (fd < 0) {
+        logger(LG_WARN, "Requested file %s not existing", path);
         return nullptr;
     }
 

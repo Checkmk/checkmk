@@ -35,6 +35,8 @@
 #include "HostSpecialIntColumn.h"
 #include "HostgroupsColumn.h"
 #include "HostlistColumn.h"
+#include "LogwatchListColumn.h"
+#include "DynamicLogwatchFileColumn.h"
 #include "MetricsColumn.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
@@ -638,6 +640,16 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset,
         prefix + "mk_inventory_gz",
         "The gzipped file content content of the Check_MK HW/SW-Inventory",
         g_mk_inventory_path, ".gz", indirect_offset, extra_offset));
+
+    table->addColumn(new LogwatchListColumn(
+        prefix + "mk_logwatch_files",
+        "This list of logfiles with problems fetched via mk_logwatch",
+        indirect_offset, extra_offset));
+
+    table->addDynamicColumn(new DynamicLogwatchFileColumn(
+        prefix + "mk_logwatch_file",
+        "This contents of a logfile fetched via mk_logwatch",
+        indirect_offset, extra_offset));
 
     table->addColumn(new HostSpecialDoubleColumn(
         prefix + "staleness", "Staleness indicator for this host",

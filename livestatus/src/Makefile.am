@@ -75,6 +75,8 @@ livestatus_so_SOURCES = \
         LogCache.cc \
         LogEntry.cc \
         Logfile.cc \
+        LogwatchListColumn.cc \
+        DynamicLogwatchFileColumn.cc \
         MetricsColumn.cc \
         NullColumn.cc \
         OffsetDoubleColumn.cc \
@@ -127,6 +129,7 @@ livestatus_so_SOURCES = \
         global_counters.c \
         logger.c \
         mk_inventory.cc \
+        mk_logwatch.cc \
         module.c \
         opids.cc \
         pnp4nagios.cc \

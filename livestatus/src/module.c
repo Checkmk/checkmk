@@ -95,7 +95,8 @@ int g_max_fd_ever = 0;
 char g_socket_path[4096];
 char pnp_path_storage[4096];
 char *g_pnp_path = pnp_path_storage;
-char g_mk_inventory_path[4096];  // base path of Check_MK inventor files
+char g_mk_inventory_path[4096];  // base path of Check_MK inventory files
+char g_mk_logwatch_path[4096];  // base path of Check_MK logwatch files
 char g_logfile_path[4096];
 int g_debug_level = 0;
 int g_should_terminate = false;
@@ -784,10 +785,19 @@ void livestatus_parse_arguments(const char *args_orig) {
                     strncat(g_mk_inventory_path, "/",
                             sizeof(g_mk_inventory_path) -
                                 strlen(g_mk_inventory_path) -
-                                1);  // make sure, that trailing slash is always
+                                1);  // make sure, that trailing slash is there
                 }
-                // there
                 check_path("Check_MK Inventory directory", g_mk_inventory_path);
+            } else if (!strcmp(left, "mk_logwatch_path")) {
+                strncpy(g_mk_logwatch_path, right,
+                        sizeof(g_mk_logwatch_path) - 1);
+                if (right[strlen(right) - 1] != '/') {
+                    strncat(g_mk_logwatch_path, "/",
+                            sizeof(g_mk_logwatch_path) -
+                                strlen(g_mk_logwatch_path) -
+                                1);  // make sure, that trailing slash is there
+                }
+                check_path("Check_MK logwatch directory", g_mk_logwatch_path);
             } else if (!strcmp(left, "data_encoding")) {
                 if (!strcmp(right, "utf8")) {
                     g_data_encoding = ENCODING_UTF8;

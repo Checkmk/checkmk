@@ -201,6 +201,7 @@
     * 3525 FIX: Nagios Core: fixed bug, incomplete cleanup of process tree on service check timeout...
     * 3241 FIX: Fixed broken apt plugin
     * 3430 FIX: apc_inrow_temp: fixed wrong data handling if data is not available or incomplete
+    * 3456 FIX: bluecoat_diskcpu: Fixed visualization of graph
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

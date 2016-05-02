@@ -1143,6 +1143,12 @@ metric_info["fpga_util"] = {
     "color" : "#60f020",
 }
 
+metric_info["generic_util"] = {
+    "title" : _("Utilization"),
+    "unit"  : "%",
+    "color" : "26/a",
+}
+
 metric_info["util"] = {
     "title" : _("CPU utilization"),
     "unit"  : "%",
@@ -3533,6 +3539,10 @@ check_metrics["check_mk-dell_powerconnect_temp"] = {
     "temperature" : { "name" : "temp" }
 }
 
+check_metrics["check_mk-bluecoat_diskcpu"] = {
+    "value" : { "name" : "generic_util" }
+}
+
 check_metrics["check_mk-ipmi_sensors"] = {
     "value" : { "name" : "temp" }
 }
@@ -4295,6 +4305,12 @@ perfometer_info.append({
 perfometer_info.append({
     "type"      : "linear",
     "segments"  : [ "util", ],
+    "total"     : 100.0,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "generic_util", ],
     "total"     : 100.0,
 })
 

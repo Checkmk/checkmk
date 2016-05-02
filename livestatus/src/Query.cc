@@ -1079,9 +1079,13 @@ void Query::outputUnicodeEscape(unsigned value) {
 
 void Query::outputBlob(const char *buffer, int size) {
     if (_output_format != OUTPUT_FORMAT_CSV) {
-        outputString(buffer, size);
+        if (buffer)
+            outputString(buffer, size);
+        else
+            outputNull();
     } else {
-        _output->addBuffer(buffer, size);
+        if (buffer)
+            _output->addBuffer(buffer, size);
     }
 }
 

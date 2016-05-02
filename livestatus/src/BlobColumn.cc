@@ -29,10 +29,7 @@
 void BlobColumn::output(void *data, Query *query) {
     int size;
     char *buffer = getBlob(data, &size);
-    if (buffer != nullptr) {
-        query->outputBlob(buffer, size);
+    query->outputBlob(buffer, size);
+    if (buffer != nullptr)
         free(buffer);
-    } else {
-        query->outputBlob("", 0);
-    }
 }

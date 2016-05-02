@@ -67,6 +67,9 @@ void LogwatchListColumn::output(void *data, Query *query)
                     closedir(dir);
                     break;
                 }
+                if (!strcmp(dep->d_name, ".") || !strcmp(dep->d_name, ".."))
+                    continue;
+
                 if (first)
                     first = false;
                 else

@@ -3348,7 +3348,10 @@ class SiteAttribute(Attribute):
         return html.var(varprefix + "site")
 
     def get_tag_list(self, value):
-        return [ "site:" + value ]
+        if value != None:
+            return [ "site:" + value ]
+        else:
+            return []
 
 # The replication status contains information about each
 # site. It is a dictionary from the site id to a dict with

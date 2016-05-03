@@ -1,0 +1,10 @@
+Title: Bulk edit: Fixed mixup of attributes during consecutive bulk edits
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1462254841
+
+

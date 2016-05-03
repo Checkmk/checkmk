@@ -1318,7 +1318,8 @@ register_rule(group,
                  "note, that this setting only applies to active checks (those with the "
                  "%s reschedule button). If you want to change the check interval of "
                  "the Check_MK service only, specify <tt><b>Check_MK$</b></tt> in the list "
-                 "of services.") % '<img class="icon docu" src="images/icon_reload.gif">'),
+                 "of services.") % html.render_icon("reload"),
+    ),
     itemtype = "service")
 
 register_rule(group,

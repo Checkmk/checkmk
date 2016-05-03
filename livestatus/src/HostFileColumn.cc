@@ -23,9 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostFileColumn.h"
+#include <errno.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include "logger.h"
 
@@ -35,7 +35,10 @@
 #include "nagios.h"
 #endif
 
+using std::make_unique;
 using std::string;
+using std::unique_ptr;
+using std::vector;
 
 HostFileColumn::HostFileColumn(string name, string description,
                                const char *base_dir, const char *suffix,
@@ -44,10 +47,7 @@ HostFileColumn::HostFileColumn(string name, string description,
     , _base_dir(base_dir)
     , _suffix(suffix) {}
 
-// returns a buffer to be freed afterwards!! Return 0
-// in size of a missing file
-char *HostFileColumn::getBlob(void *data, int *size) {
-    *size = 0;
+unique_ptr<vector<char>> HostFileColumn::getBlob(void *data) {
     if (_base_dir[0] == 0) {
         return nullptr;  // Path is not configured
     }
@@ -63,37 +63,30 @@ char *HostFileColumn::getBlob(void *data, int *size) {
     const char *host_name = static_cast<host *>(data)->name;
 #endif
 
-    char path[4096];
-    snprintf(path, sizeof(path), "%s/%s%s", _base_dir.c_str(), host_name,
-             _suffix.c_str());
-    int fd = open(path, O_RDONLY);
+    string path = _base_dir + "/" + host_name + _suffix;
+    int fd = open(path.c_str(), O_RDONLY);
     if (fd < 0) {
-        logger(LG_WARN, "Requested file %s not existing", path);
+        logger(LG_WARN, "Cannot open %s: %s", path.c_str(), strerror(errno));
         return nullptr;
     }
 
-    *size = lseek(fd, 0, SEEK_END);
-    if (*size < 0) {
+    off_t size = lseek(fd, 0, SEEK_END);
+    if (size < 0) {
         close(fd);
-        *size = 0;
-        logger(LG_WARN, "Cannot seek to end of file %s", path);
+        logger(LG_WARN, "Cannot seek to end of %s: %s", path.c_str(),
+               strerror(errno));
         return nullptr;
     }
 
     lseek(fd, 0, SEEK_SET);
-    char *buffer = static_cast<char *>(malloc(*size));
-    if (buffer == nullptr) {
-        close(fd);
-        return nullptr;
-    }
-
-    ssize_t read_bytes = read(fd, buffer, *size);
+    unique_ptr<vector<char>> result = make_unique<vector<char>>(size);
+    ssize_t read_bytes = read(fd, &(*result)[0], size);
     close(fd);
-    if (read_bytes != *size) {
-        logger(LG_WARN, "Cannot read %d from %s", *size, path);
-        free(buffer);
+    if (read_bytes != size) {
+        logger(LG_WARN, "Cannot read %ld bytes from %s: %s", long(size),
+               path.c_str(), strerror(errno));
         return nullptr;
     }
 
-    return buffer;
+    return result;
 }

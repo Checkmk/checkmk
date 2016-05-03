@@ -26,7 +26,9 @@
 #define HostFileColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
+#include <vector>
 #include "BlobColumn.h"
 
 class HostFileColumn : public BlobColumn {
@@ -38,8 +40,7 @@ public:
                    const char *base_dir, const char *suffix,
                    int indirect_offset, int extra_offset = -1);
 
-    // returns a buffer to be freed afterwards!!
-    char *getBlob(void *data, int *size) override;
+    std::unique_ptr<std::vector<char>> getBlob(void *data) override;
 };
 
 #endif  // HostFileColumn_h

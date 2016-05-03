@@ -1077,16 +1077,16 @@ void Query::outputUnicodeEscape(unsigned value) {
     _output->addBuffer(buf, 6);
 }
 
-void Query::outputBlob(const char *buffer, int size) {
+void Query::outputBlob(const vector<char> *blob) {
     if (_output_format != OUTPUT_FORMAT_CSV) {
-        if (buffer != nullptr) {
-            outputString(buffer, size);
+        if (blob != nullptr) {
+            outputString(&(*blob)[0], blob->size());
         } else {
             outputNull();
         }
     } else {
-        if (buffer != nullptr) {
-            _output->addBuffer(buffer, size);
+        if (blob != nullptr) {
+            _output->addBuffer(&(*blob)[0], blob->size());
         }
     }
 }

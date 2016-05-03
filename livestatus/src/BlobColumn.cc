@@ -23,14 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "BlobColumn.h"
-#include <stdlib.h>
 #include "Query.h"
 
+using std::unique_ptr;
+using std::vector;
+
 void BlobColumn::output(void *data, Query *query) {
-    int size;
-    char *buffer = getBlob(data, &size);
-    query->outputBlob(buffer, size);
-    if (buffer != nullptr) {
-        free(buffer);
-    }
+    unique_ptr<vector<char>> blob = getBlob(data);
+    query->outputBlob(blob.get());
 }

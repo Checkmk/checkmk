@@ -112,7 +112,7 @@ public:
     void outputAsciiEscape(char value);
     void outputUnicodeEscape(unsigned value);
     void outputString(const char *, int len = -1);
-    void outputBlob(const char *buffer, int size);
+    void outputBlob(const std::vector<char> *blob);
     void outputBeginList();
     void outputListSeparator();
     void outputEndList();

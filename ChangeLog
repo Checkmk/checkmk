@@ -14,6 +14,7 @@
     * 3457 FIX: Bulk edit: Prevent browser auto completion of stored credentials
     * 3458 FIX: Bulk edit: Fixed broken unchecking of attributes after complain
     * 3459 FIX: Bulk edit: Fixed mixup of attributes during consecutive bulk edits
+    * 3461 FIX: Fixed exception in case manpage for non existant check is accessed
 
     HW/SW-Inventory:
     * 3455 FIX: Fixed broken switch port filtering/sorting view

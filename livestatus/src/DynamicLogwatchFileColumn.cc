@@ -31,7 +31,8 @@
 #include "mk_logwatch.h"
 #include "strutil.h"
 
-using namespace std;
+using std::string;
+using std::vector;
 
 // Replace \\ with \ and \s with space
 string unescape_filename(string filename)

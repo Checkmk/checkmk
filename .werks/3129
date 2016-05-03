@@ -1,0 +1,13 @@
+Title: new view and datasource containing the results of the last periodic discovery check
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.9i1
+Date: 1462277160
+Class: feature
+
+With this change, the results of the "Check_MK Discovery"-check can now be presented in their own
+searchable, sortable and filterable view.
+In addition the check was extended to also include information about services disabled through a
+rule. This gives users with no access to wato the chance to see that those checks were intentionally
+suppressed.

@@ -1135,3 +1135,32 @@ class FilterStarred(FilterTristate):
 
 declare_filter(501, FilterStarred("host"))
 declare_filter(501, FilterStarred("service"))
+
+class FilterViewMultiselect(Filter):
+    def __init__(self, name, title, options, info, varname):
+        Filter.__init__(self, name, title,
+                info, ["%s_var%d" % (name, idx) for idx, option in enumerate(options)], [])
+        self.__options = options
+        self.__varname = varname
+
+    def display(self):
+        html.begin_checkbox_group()
+        for idx, option in enumerate(self.__options):
+            html.checkbox("%s_var%d" % (self.name, idx), True, label=option[1])
+        html.end_checkbox_group()
+
+    def filter(self, infoname):
+        filters = []
+        for idx, option in enumerate(self.__options):
+            if html.get_checkbox("%s_var%d" % (self.name, idx)):
+                filters.append("ViewFilter: %s = %s" % (self.__varname, option[0]))
+        if filters:
+            return "\n".join(filters) + "\n"
+        else:
+            return ""
+
+declare_filter(601, FilterViewMultiselect("discovery_state", _("Discovery state"),
+                                          [("ignored", "Hidden"),
+                                           ("vanished", "Vanished"),
+                                           ("unmonitored", "New")], "long_plugin_output",
+                                          "state"))

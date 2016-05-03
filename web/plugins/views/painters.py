@@ -1730,6 +1730,39 @@ multisite_painters["host_custom_vars"] = {
                                                              'ADDRESS_FAMILY', 'NODEIPS', 'NODEIPS_4', 'NODEIPS_6' ]),
 }
 
+def paint_discovery_output(field, row):
+    value = row[field]
+    if field == "discovery_state":
+        ruleset_url   = "wato.py?mode=edit_ruleset&varname=ignored_services"
+        discovery_url = "wato.py?mode=inventory&host=%s&mode=inventory" % row["host_name"]
+        return None, {
+            "ignored"     : '<a href="%s">Hidden by rule</a>' % ruleset_url,
+            "vanished"    : '<a href="%s">No longer available</a>' % discovery_url,
+            "unmonitored" : '<a href="%s">Newly discovered</a>' % discovery_url
+        }.get(value, value)
+    return None, value
+
+multisite_painters["service_discovery_state"] = {
+    "title": _("Service discovery: State"),
+    "short": _("State"),
+    "columns": [ "discovery_state" ],
+    "paint": lambda row: paint_discovery_output("discovery_state", row)
+}
+
+multisite_painters["service_discovery_check"] = {
+    "title": _("Service discovery: Check type"),
+    "short": _("Check type"),
+    "columns": [ "discovery_state", "discovery_check", "discovery_service" ],
+    "paint": lambda row: paint_discovery_output("discovery_check", row)
+}
+
+multisite_painters["service_discovery_service"] = {
+    "title": _("Service discovery: Service description"),
+    "short": _("Service description"),
+    "columns": [ "discovery_state", "discovery_check", "discovery_service" ],
+    "paint": lambda row: paint_discovery_output("discovery_service", row)
+}
+
 
 #    _   _           _
 #   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___

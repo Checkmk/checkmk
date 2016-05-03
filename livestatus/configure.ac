@@ -30,12 +30,18 @@
 AC_PREREQ(2.61)
 AC_INIT([MK Livestatus], [1.4.0i1], [mk@mathias-kettner.de])
 AM_INIT_AUTOMAKE([-Wall foreign])
+AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
 
 # Checks for programs.
-AC_PROG_CC([gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 clang-3.4 gcc-4.9 gcc-4.8 gcc clang])
-AC_PROG_CXX([g++-5 clang++-3.9 clang++-3.8 clang++-3.7 clang++-3.6 clang++-3.5 clang++-3.4 g++-4.9 g++-4.8 g++ clang++])
+AC_PROG_CC([gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang])
+AC_PROG_CC_C99([], [])
+if test "x$ac_cv_prog_cc_c99" = xno; then
+  AC_MSG_ERROR([Need a C99-compliant C compiler])
+fi
+AC_PROG_CXX([g++-5 clang++-3.9 clang++-3.8 clang++-3.7 clang++-3.6 clang++-3.5 g++-4.9 g++ clang++])
+AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory])
 AC_PROG_RANLIB
 AM_CONDITIONAL([HAVE_DIET], [which diet >/dev/null 2>&1])
 # automake 1.12 seems to require this, but automake 1.11 doesn't recognize it. :-P
@@ -51,6 +57,25 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/socket.h sys/time.h sys/timeb.h syslog.h unistd.h])
+
+# Checks for C++ features
+AC_LANG_PUSH([C++])
+
+AC_MSG_CHECKING([whether C++14 headers are supported by default])
+AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM([#include <shared_mutex>], [])],
+    [AC_MSG_RESULT([yes])],
+    [AC_MSG_RESULT([no])
+     CXX="$CXX -stdlib=libc++"
+     CXXCPP="$CXXCPP -stdlib=libc++"
+     AC_MSG_CHECKING([whether C++14 headers are supported with -stdlib=libc++])
+     AC_COMPILE_IFELSE(
+         [AC_LANG_PROGRAM([#include <shared_mutex>], [])],
+         [AC_MSG_RESULT([yes])],
+         [AC_MSG_RESULT([no])
+          AC_MSG_ERROR([C++ headers are too old. Please install a newer g++/clang/libc++-dev package.])])])
+
+AC_LANG_POP([C++])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

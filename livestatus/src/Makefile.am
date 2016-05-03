@@ -25,7 +25,6 @@
 bin_PROGRAMS = unixcat
 
 unixcat_SOURCES = unixcat.c
-unixcat_CFLAGS = -std=c99
 unixcat_LDADD = -lpthread
 
 pkglib_LIBRARIES = livestatus.so
@@ -137,8 +136,8 @@ livestatus_so_SOURCES = \
         strutil.cc \
         waittriggers.cc
 
-livestatus_so_CXXFLAGS = -std=c++14 -fPIC
-livestatus_so_CFLAGS   = -std=c99 -fPIC
+livestatus_so_CXXFLAGS = -fPIC
+livestatus_so_CFLAGS   = -fPIC
 
 livestatus.o: $(livestatus_so_OBJECTS) $(livestatus_so_DEPENDENCIES)
 	-rm -f plugin.so

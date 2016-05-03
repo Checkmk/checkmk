@@ -276,17 +276,17 @@ compile_commands.json: $(FILES_TO_FORMAT)
 	$(BEAR) $(MAKE) -C livestatus -j8
 
 tidy: compile_commands.json
-	./compiled_sources | xargs $(CLANG_TIDY)
+	./compiled_sources | xargs $(CLANG_TIDY) --extra-arg=-D__clang_analyzer__
 
 # Not really perfect rules, but better than nothing
 iwyu:
 	$(MAKE) -C livestatus clean
-	$(MAKE) -C livestatus CC=$(IWYU) CXX=$(IWYU) -k
+	$(MAKE) -C livestatus CC=$(IWYU) CXX="$(IWYU) -std=c++14" -k
 
 # Not really perfect rules, but better than nothing
 analyze:
 	$(MAKE) -C livestatus clean
-	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE)
+	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++14"
 
 cppcheck:
 	$(CPPCHECK) --quiet --enable=all --max-configs=20 --inline-suppr --template=gcc -I livestatus/src -I livestatus livestatus

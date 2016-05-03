@@ -2322,7 +2322,7 @@ class Timerange(CascadingDropdown):
             ( "y1",  _("Last year") ),
 
             ( "age", _("The last..."), Age() ),
-            ( "date", _("Explicit date..."),
+            ( "date", _("Date range"),
                 Tuple(
                     orientation = "horizontal",
                     title_br = False,
@@ -2336,7 +2336,7 @@ class Timerange(CascadingDropdown):
 
         if kwargs.get('include_time', False):
             kwargs['choices'].append(
-                ( "time", _("Explicit time..."),
+                ( "time", _("Date & time range"),
                     Tuple(
                         orientation = "horizontal",
                         title_br = False,

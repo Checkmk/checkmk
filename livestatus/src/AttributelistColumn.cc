@@ -61,24 +61,17 @@ struct al_entry al_entries[] = {
     {"notification_timeperiod", MODATTR_NOTIFICATION_TIMEPERIOD},
     {nullptr, 0}};
 
-unsigned long AttributelistColumn::getValue(void *data) {
-    data = shiftPointer(data);
-    if (data == nullptr) {
+int32_t AttributelistColumn::getValue(void *data, Query * /*unused*/) {
+    char *p = reinterpret_cast<char *>(shiftPointer(data));
+    if (p == nullptr) {
         return 0;
     }
-
-// TODO(sp) Why on earth do we have different types here?
-#ifdef CMC
-    return *reinterpret_cast<uint16_t *>(reinterpret_cast<char *>(data) +
-                                         _offset);
-#else
-    return *reinterpret_cast<unsigned long *>(reinterpret_cast<char *>(data) +
-                                              _offset);
-#endif
+    auto ptr = reinterpret_cast<int *>(p + _offset);
+    return *reinterpret_cast<int32_t *>(ptr);
 }
 
 void AttributelistColumn::output(void *data, Query *query) {
-    unsigned long mask = getValue(data);
+    unsigned long mask = static_cast<unsigned long>(getValue(data, nullptr));
     if (_show_list) {
         unsigned i = 0;
         bool first = true;
@@ -101,7 +94,7 @@ void AttributelistColumn::output(void *data, Query *query) {
 }
 
 string AttributelistColumn::valueAsString(void *data, Query * /*unused*/) {
-    unsigned long mask = getValue(data);
+    unsigned long mask = static_cast<unsigned long>(getValue(data, nullptr));
     char s[16];
     snprintf(s, 16, "%lu", mask);
     return string(s);

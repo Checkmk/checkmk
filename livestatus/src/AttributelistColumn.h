@@ -58,8 +58,7 @@ public:
     Filter *createFilter(int opid, char *value) override;
 
     // API of IntColumn
-    int32_t getValue(void *data, Query *) override { return getValue(data); }
-    unsigned long getValue(void *data);
+    int32_t getValue(void *data, Query *) override;
 };
 
 #endif  // AttributelistColumn_h

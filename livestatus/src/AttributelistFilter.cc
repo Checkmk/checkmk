@@ -48,7 +48,8 @@
  */
 
 bool AttributelistFilter::accepts(void *data) {
-    unsigned long act_value = _column->getValue(data);
+    unsigned long act_value =
+        static_cast<unsigned long>(_column->getValue(data, nullptr));
     bool pass = true;
     switch (_opid) {
         case OP_EQUAL:

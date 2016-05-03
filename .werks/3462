@@ -1,0 +1,10 @@
+Title: Fixed ineffective localizations on werk page after language change
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1462270255
+
+

@@ -1,6 +1,7 @@
 1.2.8b14:
     Checks & Agents:
     * 3456 FIX: bluecoat_diskcpu: Fixed visualization of graph
+    * 3460 FIX: ps: Using command line fix (#3389) only when /usr/ucb/ps exists on solaris systems
 
     Multisite:
     * 3452 FIX: Fixed vertical label of Bytes/day graphs (like filesystem growth)

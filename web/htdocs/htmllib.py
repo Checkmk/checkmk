@@ -335,13 +335,21 @@ class html(GUITester):
             self.write('<br>'.join(self.user_errors.values()))
             self.write('</div>\n')
 
-    def hidden_field(self, var, value, id = None, add_var = False):
-        if value != None:
-            id = id and ' id="%s"' % self.attrencode(id) or ''
-            self.write("<input type=\"hidden\" name=\"%s\" value=\"%s\"%s />" %
-                                (self.attrencode(var), self.attrencode(value), id))
-            if add_var:
-                self.add_form_var(var)
+
+    def hidden_field(self, *args, **kwargs):
+        self.write(self.render_hidden_field(*args, **kwargs))
+
+
+    def render_hidden_field(self, var, value, id=None, add_var=False):
+        if value == None:
+            return ""
+
+        if add_var:
+            self.add_form_var(var)
+
+        id = id and ' id="%s"' % self.attrencode(id) or ''
+        return "<input type=\"hidden\" name=\"%s\" value=\"%s\"%s />" % \
+                            (self.attrencode(var), self.attrencode(value), id)
 
     # Beware: call this method just before end_form(). It will
     # add all current non-underscored HTML variables as hiddedn
@@ -737,14 +745,21 @@ class html(GUITester):
     def end_checkbox_group(self):
         self.end_radio_group()
 
-    def checkbox(self, varname, deflt=False, cssclass = '', onclick = None, label=None, id=None, add_attr = None):
+
+    def checkbox(self, *args, **kwargs):
+        self.write(self.render_checkbox(*args, **kwargs))
+
+
+    def render_checkbox(self, varname, deflt=False, cssclass = '', onclick = None, label=None,
+                        id=None, add_attr = None):
         if add_attr == None:
             add_attr = [] # do not use [] as default element, it will be a global variable!
+        code = ""
         error = self.user_errors.get(varname)
         if error:
-            self.write("<x class=inputerror>")
+            code += "<x class=inputerror>"
 
-        self.write("<span class=checkbox>")
+        code += "<span class=checkbox>"
         # Problem with checkboxes: The browser will add the variable
         # only to the URL if the box is checked. So in order to detect
         # wether we should add the default value, we need to detect
@@ -765,14 +780,17 @@ class html(GUITester):
         add_attr_code = ''
         if add_attr:
             add_attr_code = ' ' + ' '.join(add_attr)
-        self.write("<input type=checkbox name=\"%s\"%s%s%s%s>\n" %
-                        (varname, checked, cssclass, onclick_code, add_attr_code))
+        code += "<input type=checkbox name=\"%s\"%s%s%s%s>\n" % \
+                        (varname, checked, cssclass, onclick_code, add_attr_code)
         self.form_vars.append(varname)
         if label:
-            self.write('<label for="%s">%s</label>\n' % (id, label))
-        self.write("</span>")
+            code += '<label for="%s">%s</label>\n' % (id, label)
+        code += "</span>"
         if error:
-            self.write("</x>")
+            code += "</x>"
+
+        return code
+
 
     # Check if the current form is currently filled in (i.e. we display
     # the form a second time while showing value typed in at the first

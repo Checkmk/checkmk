@@ -15805,12 +15805,13 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             if (for_what == "host" and parent.locked_hosts()) or (for_what == "folder" and myself and myself.locked()):
                 checkbox_code = None
             elif force_entry:
-                checkbox_code = '<input type=checkbox name="ignored_%s" CHECKED DISABLED>' % checkbox_name
-                checkbox_code += '<input type=hidden name="%s" value="on">' % checkbox_name
+                checkbox_code  = html.render_checkbox("ignored_" + checkbox_name, add_attr=["disabled"])
+                checkbox_code += html.render_hidden_field(checkbox_name, "on")
             else:
+                add_attr = disabled and ["disabled"] or []
                 onclick = "wato_fix_visibility(); wato_toggle_attribute(this, '%s');" % attrname
-                checkbox_code = '<input type=checkbox name="%s" %s %s onclick="%s">' % (
-                    checkbox_name, active and "CHECKED" or "", disabled and "DISABLED" or "", onclick)
+                checkbox_code = html.render_checkbox(checkbox_name, active,
+                                                  onclick=onclick, add_attr=add_attr)
 
             forms.section(_u(attr.title()), checkbox=checkbox_code, id="attr_" + attrname)
             html.help(attr.help())

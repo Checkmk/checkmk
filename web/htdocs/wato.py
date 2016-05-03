@@ -3621,6 +3621,16 @@ def mode_bulk_edit(phase):
 
     host_names = get_hostnames_from_checkboxes()
     hosts = dict([(host_name, Folder.current().host(host_name)) for host_name in host_names])
+    current_host_hash = sha256(repr(hosts))
+
+    # When bulk edit has been made with some hosts, then other hosts have been selected
+    # and then another bulk edit has made, the attributes need to be reset before
+    # rendering the form. Otherwise the second edit will have the attributes of the
+    # first set.
+    host_hash = html.var("host_hash")
+    if not host_hash or host_hash != current_host_hash:
+        html.del_all_vars(prefix="attr_")
+        html.del_all_vars(prefix="bulk_change_")
 
     html.write("<p>" + _("You have selected <b>%d</b> hosts for bulk edit. You can now change "
                "host attributes for all selected hosts at once. ") % len(hosts))
@@ -3630,6 +3640,7 @@ def mode_bulk_edit(phase):
 
     html.begin_form("edit_host", method = "POST")
     html.prevent_password_auto_completion()
+    html.hidden_field("host_hash", current_host_hash)
     configure_attributes(False, hosts, "bulk", parent = Folder.current())
     forms.end()
     html.button("_save", _("Save &amp; Finish"))

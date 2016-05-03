@@ -54,24 +54,27 @@ void LogwatchListColumn::output(void *data, Query *query) {
     std::string path = mk_logwatch_path_of_host(host_name);
     if (path != "") {
         DIR *dir = opendir(path.c_str());
-        if (dir) {
+        if (dir != nullptr) {
             struct dirent de;
             struct dirent *dep;
             bool first = true;
 
             while (true) {
                 readdir_r(dir, &de, &dep);
-                if (!dep) {
+                if (dep == nullptr) {
                     closedir(dir);
                     break;
                 }
-                if (!strcmp(dep->d_name, ".") || !strcmp(dep->d_name, ".."))
+                if ((strcmp(dep->d_name, ".") == 0) ||
+                    (strcmp(dep->d_name, "..") == 0)) {
                     continue;
+                }
 
-                if (first)
+                if (first) {
                     first = false;
-                else
+                } else {
                     query->outputListSeparator();
+                }
                 query->outputString(dep->d_name);
             }
         }

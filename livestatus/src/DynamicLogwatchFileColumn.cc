@@ -40,15 +40,17 @@ string unescape_filename(string filename) {
     bool quote_active = false;
     for (auto c : filename) {
         if (quote_active) {
-            if (c == 's')
+            if (c == 's') {
                 filename_native += ' ';
-            else
+            } else {
                 filename_native += c;
+            }
             quote_active = false;
-        } else if (c == '\\')
+        } else if (c == '\\') {
             quote_active = true;
-        else
+        } else {
             filename_native += c;
+        }
     }
     return filename_native;
 }

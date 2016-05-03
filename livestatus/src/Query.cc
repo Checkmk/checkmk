@@ -1079,12 +1079,15 @@ void Query::outputUnicodeEscape(unsigned value) {
 
 void Query::outputBlob(const char *buffer, int size) {
     if (_output_format != OUTPUT_FORMAT_CSV) {
-        if (buffer)
+        if (buffer != nullptr) {
             outputString(buffer, size);
-        else
+        } else {
             outputNull();
+        }
     } else {
-        if (buffer) _output->addBuffer(buffer, size);
+        if (buffer != nullptr) {
+            _output->addBuffer(buffer, size);
+        }
     }
 }
 
@@ -1109,7 +1112,7 @@ void Query::outputString(const char *value, int len) {
         _output->addChar('"');
         const char *r = value;
         int chars_left = len >= 0 ? len : strlen(r);
-        while (chars_left) {
+        while (chars_left != 0) {
             // Always escape control characters (1..31)
             if (*r < 32 && *r >= 0) {
                 if (len < 0) {

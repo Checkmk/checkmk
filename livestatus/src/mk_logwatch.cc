@@ -32,8 +32,9 @@
 
 std::string mk_logwatch_path_of_host(const char *host_name) {
     std::string path(MK_LOGWATCH_PATH);
-    if (path == "") return "";
-
+    if (path == "") {
+        return "";
+    }
     path += pnp_cleanup(host_name);
     return path;
 }
@@ -48,14 +49,17 @@ void mk_logwatch_acknowledge(const std::string &host_name,
     }
 
     std::string path(MK_LOGWATCH_PATH);
-    if (path == "") return;
+    if (path == "") {
+        return;
+    }
     path += pnp_cleanup(host_name);
     path += "/";
     path += file_name;
 
     int r = remove(path.c_str());
-    if (r != 0)
+    if (r != 0) {
         logger(LOG_WARNING,
                "Cannot acknowledge mk_logfile file '%s' of host '%s': %s",
                file_name.c_str(), host_name.c_str(), strerror(errno));
+    }
 }

@@ -2657,8 +2657,13 @@ def mode_inventory(phase, firsttime):
             if html.var("_refresh"):
                 counts, failed_hosts = check_mk_automation(host.site_id(), "inventory", [ "@scan", "refresh", hostname ])
                 count_added, count_removed, count_kept, count_new = counts[hostname]
+
                 message = _("Refreshed check configuration of host [%s] with %d services") % \
                             (hostname, count_added)
+
+                if not host.locked():
+                    host.clear_discovery_failed()
+
                 log_pending(LOCALRESTART, hostname, "refresh-autochecks", message)
 
             else:
@@ -2680,9 +2685,13 @@ def mode_inventory(phase, firsttime):
                         active_checks[(ct, item)] = paramstring
 
                 check_mk_automation(host.site_id(), "set-autochecks", [hostname], active_checks)
-                host.clear_discovery_failed()
+
                 message = _("Saved check configuration of host [%s] with %d services") % \
                             (hostname, len(active_checks))
+
+                if not host.locked():
+                    host.clear_discovery_failed()
+
                 log_pending(LOCALRESTART, hostname, "set-autochecks", message)
 
             host.mark_dirty(need_sync=False)

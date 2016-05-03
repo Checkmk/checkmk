@@ -16,6 +16,7 @@
     * 3458 FIX: Bulk edit: Fixed broken unchecking of attributes after complain
     * 3459 FIX: Bulk edit: Fixed mixup of attributes during consecutive bulk edits
     * 3461 FIX: Fixed exception in case manpage for non existant check is accessed
+    * 3527 FIX: WATO service discovery: fixed warning with locked hosts...
 
     HW/SW-Inventory:
     * 3455 FIX: Fixed broken switch port filtering/sorting view

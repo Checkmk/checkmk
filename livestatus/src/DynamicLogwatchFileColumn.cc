@@ -22,15 +22,16 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "DynamicLogwatchFileColumn.h"
 #include <string.h>
-#include "strutil.h"
+#include <syslog.h>
+#include <vector>
+#include "HostFileColumn.h"
 #include "logger.h"
 #include "mk_logwatch.h"
-#include "DynamicLogwatchFileColumn.h"
-#include "HostFileColumn.h"
-#include <vector>
-using namespace std;
+#include "strutil.h"
 
+using namespace std;
 
 // Replace \\ with \ and \s with space
 string unescape_filename(string filename)

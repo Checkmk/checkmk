@@ -25,8 +25,8 @@
 #ifndef mk_logwatch_h
 #define mk_logwatch_h
 
-#include <string>
 #include "config.h"  // IWYU pragma: keep
+#include <string>
 
 #ifdef CMC
 #include <Config.h>

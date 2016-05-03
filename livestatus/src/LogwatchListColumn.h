@@ -25,7 +25,10 @@
 #ifndef LogwatchListColumn_h
 #define LogwatchListColumn_h
 
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Column.h"
+class Query;
 
 class LogwatchListColumn : public Column {
 public:

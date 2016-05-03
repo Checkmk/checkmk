@@ -25,8 +25,10 @@
 #ifndef DynamicLogwatchFileColumn_h
 #define DynamicLogwatchFileColumn_h
 
+#include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "DynamicColumn.h"
-
+class Column;
 
 class DynamicLogwatchFileColumn : public DynamicColumn {
 public:

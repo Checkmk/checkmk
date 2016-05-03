@@ -22,11 +22,12 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
+#include "mk_logwatch.h"
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 #include "logger.h"
-#include "mk_logwatch.h"
 #include "pnp4nagios.h"
 
 std::string mk_logwatch_path_of_host(const char *host_name)

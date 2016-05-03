@@ -1,0 +1,11 @@
+Title: WATO service discovery: fixed warning with locked hosts
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1462265466
+
+Starting a single or a bulk discovery on locked hosts no longer raises a warning
+when WATO tries to modify an attribute concerning a failed service discovery.

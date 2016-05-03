@@ -341,6 +341,7 @@
     * 3458 FIX: Bulk edit: Fixed broken unchecking of attributes after complain
     * 3459 FIX: Bulk edit: Fixed mixup of attributes during consecutive bulk edits
     * 3461 FIX: Fixed exception in case manpage for non existant check is accessed
+    * 3527 FIX: WATO service discovery: fixed warning with locked hosts...
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

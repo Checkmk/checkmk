@@ -651,6 +651,9 @@ def automation_get_check_manpage(args):
     # Assume active check
     elif check_type.startswith("check_"):
         manpage["type"] = "active"
+    else:
+        raise MKAutomationError("Could not detect type of manpage: %s. "
+                                "Maybe the check is missing." % check_type)
 
     return manpage
 

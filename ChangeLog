@@ -8,6 +8,7 @@
     * 3452 FIX: Fixed vertical label of Bytes/day graphs (like filesystem growth)
     * 3453 FIX: apache_status: Fixed wrong graph labels and improved wordings
     * 3454 FIX: Fixed scaling of numbers in graphs (e.g. inodes of filesystems)
+    * 3462 FIX: Fixed ineffective localizations on werk page after language change
 
     WATO:
     * 3450 FIX: Site properties: It was not possible to switch a site back to "local site" connection

@@ -33,50 +33,56 @@ from valuespec import *
 
 acknowledgement_path = defaults.var_dir + "/acknowledged_werks.mk"
 
+def werk_classes():
+    return {
+        "feature"  : _("New Feature"),
+        "fix"      : _("Bug Fix"),
+        "security" : _("Security Fix"),
+    }
 
-werk_classes = {
-    "feature"  : _("New Feature"),
-    "fix"      : _("Bug Fix"),
-    "security" : _("Security Fix"),
-}
 
-werk_levels = {
-    1 : _("Trivial Change"),
-    2 : _("Prominent Change"),
-    3 : _("Major Feature"),
-}
+def werk_levels():
+    return {
+        1 : _("Trivial Change"),
+        2 : _("Prominent Change"),
+        3 : _("Major Feature"),
+    }
 
-werk_compatibilities = {
-    "compat"       : _("Compatible"),
-    "incomp_ack"   : _("Incompatible"),
-    "incomp_unack" : _("Incompatible - TODO"),
-}
 
-werk_components = {
-    # CRE
-    "core" :          _("Core & Setup"),
-    "checks" :        _("Checks & Agents"),
-    "multisite" :     _("User Interface"),
-    "wato" :          _("WATO"),
-    "notifications" : _("Notifications"),
-    "bi" :            _("BI"),
-    "reporting" :     _("Reporting & Availability"),
-    "ec" :            _("Event Console"),
-    "livestatus" :    _("Livestatus"),
-    "liveproxy" :     _("Livestatus-Proxy"),
-    "inv" :           _("HW/SW-Inventory"),
+def werk_compatibilities():
+    return {
+        "compat"       : _("Compatible"),
+        "incomp_ack"   : _("Incompatible"),
+        "incomp_unack" : _("Incompatible - TODO"),
+    }
 
-    # CEE
-    "cmc" :           _("The Check_MK Micro Core"),
-    "setup" :         _("Setup, Site Management"),
-    "config" :        _("Configuration generation"),
-    "livestatus" :    _("Livestatus"),
-    "inline-snmp" :   _("Inline-SNMP"),
-    "agents" :        _("Agent Bakery"),
-    "reporting" :     _("Reporting"),
-    "metrics" :       _("Metrics System"),
-    "notifications" : _("Notifications"),
-}
+
+def werk_components():
+    return {
+        # CRE
+        "core" :          _("Core & Setup"),
+        "checks" :        _("Checks & Agents"),
+        "multisite" :     _("User Interface"),
+        "wato" :          _("WATO"),
+        "notifications" : _("Notifications"),
+        "bi" :            _("BI"),
+        "reporting" :     _("Reporting & Availability"),
+        "ec" :            _("Event Console"),
+        "livestatus" :    _("Livestatus"),
+        "liveproxy" :     _("Livestatus-Proxy"),
+        "inv" :           _("HW/SW-Inventory"),
+
+        # CEE
+        "cmc" :           _("The Check_MK Micro Core"),
+        "setup" :         _("Setup, Site Management"),
+        "config" :        _("Configuration generation"),
+        "livestatus" :    _("Livestatus"),
+        "inline-snmp" :   _("Inline-SNMP"),
+        "agents" :        _("Agent Bakery"),
+        "reporting" :     _("Reporting"),
+        "metrics" :       _("Metrics System"),
+        "notifications" : _("Notifications"),
+    }
 
 
 # Keep global variable for caching werks between requests. The never change.
@@ -249,111 +255,112 @@ def num_unacknowledged_incompatible_werks():
     return len(unacknowledged_incompatible_werks())
 
 
-werk_table_option_entries = [
-    ( "classes",
-      "double",
-      ListChoice(
-          title = _("Classes"),
-          choices = sorted(werk_classes.items()),
-      ),
-      [ "feature", "fix", "security" ],
-    ),
-    ( "levels",
-      "double",
-      ListChoice(
-          title = _("Levels"),
-          choices = sorted(werk_levels.items()),
-      ),
-      [ 1, 2, 3 ],
-    ),
-     ( "date",
-       "double",
-       Timerange(
-           title = _("Date"),
+def werk_table_option_entries():
+    return [
+        ( "classes",
+          "double",
+          ListChoice(
+              title = _("Classes"),
+              choices = sorted(werk_classes().items()),
+          ),
+          [ "feature", "fix", "security" ],
         ),
-        ( 'date', ( 1383149313, int(time.time()) ) ),
-     ),
-    ( "id",
-      "single",
-      TextAscii(
-          title = _("Werk ID"),
-          label = "#",
-          regex = "[0-9]{4}",
-          allow_empty = True,
-          size = 4,
-      ),
-      "",
-    ),
-    ( "compatibility",
-      "single",
-      DropdownChoice(
-          title = _("Compatibility"),
-          choices = [
-            ( [ "compat", "incomp_ack", "incomp_unack" ], _("Compatible and incompatible Werks") ),
-            ( [ "compat" ],                                _("Compatible Werks") ),
-            ( [ "incomp_ack", "incomp_unack" ],           _("Incompatible Werks") ),
-            ( [ "incomp_unack" ],                         _("Unacknowledged incompatible Werks") ),
-            ( [ "incomp_ack" ],                            _("Acknowledged incompatible Werks") ),
-          ]
-      ),
-      [ "compat", "incomp_ack", "incomp_unack" ],
-    ),
-    ( "component",
-      "single",
-      DropdownChoice(
-          title = _("Component"),
-          choices = [
-            ( None, _("All components") ),
-          ] + sorted(werk_components.items()),
-      ),
-      None,
-     ),
-     ( "edition",
-       "single",
-       DropdownChoice(
-           title = _("Edition"),
-           choices = [
-               ( None, _("All editions") ),
-               ( "cee", _("Werks only concerning the Enterprise Edition") ),
-               ( "cre", _("Werks also concerning the Raw Edition") ),
-            ],
+        ( "levels",
+          "double",
+          ListChoice(
+              title = _("Levels"),
+              choices = sorted(werk_levels().items()),
+          ),
+          [ 1, 2, 3 ],
         ),
-        None,
-     ),
-     ( "content",
-       "single",
-       TextUnicode(
-           title = _("Werk title or content"),
-           size = 41,
-       ),
-       ""
-     ),
-     ( "version",
-       "single",
-       Tuple(
-           title = _("Check_MK Version"),
-           orientation = "float",
-           elements = [
-               TextAscii(label = _("from:"), size=12),
-               TextAscii(label = _("to:"), size=12),
-           ]
-       ),
-       ( "", "" ),
-     ),
-     ( "grouping",
-       "single",
-       DropdownChoice(
-           title = _("Group Werks by"),
-           choices = [
-             ( "version", _("Check_MK Version") ),
-             ( "day",     _("Day of creation") ),
-             ( "week",    _("Week of creation") ),
-             ( None,      _("Do not group") ),
-           ],
-       ),
-       "version",
-     ),
-]
+         ( "date",
+           "double",
+           Timerange(
+               title = _("Date"),
+            ),
+            ( 'date', ( 1383149313, int(time.time()) ) ),
+         ),
+        ( "id",
+          "single",
+          TextAscii(
+              title = _("Werk ID"),
+              label = "#",
+              regex = "[0-9]{4}",
+              allow_empty = True,
+              size = 4,
+          ),
+          "",
+        ),
+        ( "compatibility",
+          "single",
+          DropdownChoice(
+              title = _("Compatibility"),
+              choices = [
+                ( [ "compat", "incomp_ack", "incomp_unack" ], _("Compatible and incompatible Werks") ),
+                ( [ "compat" ],                                _("Compatible Werks") ),
+                ( [ "incomp_ack", "incomp_unack" ],           _("Incompatible Werks") ),
+                ( [ "incomp_unack" ],                         _("Unacknowledged incompatible Werks") ),
+                ( [ "incomp_ack" ],                            _("Acknowledged incompatible Werks") ),
+              ]
+          ),
+          [ "compat", "incomp_ack", "incomp_unack" ],
+        ),
+        ( "component",
+          "single",
+          DropdownChoice(
+              title = _("Component"),
+              choices = [
+                ( None, _("All components") ),
+              ] + sorted(werk_components().items()),
+          ),
+          None,
+         ),
+         ( "edition",
+           "single",
+           DropdownChoice(
+               title = _("Edition"),
+               choices = [
+                   ( None, _("All editions") ),
+                   ( "cee", _("Werks only concerning the Enterprise Edition") ),
+                   ( "cre", _("Werks also concerning the Raw Edition") ),
+                ],
+            ),
+            None,
+         ),
+         ( "content",
+           "single",
+           TextUnicode(
+               title = _("Werk title or content"),
+               size = 41,
+           ),
+           ""
+         ),
+         ( "version",
+           "single",
+           Tuple(
+               title = _("Check_MK Version"),
+               orientation = "float",
+               elements = [
+                   TextAscii(label = _("from:"), size=12),
+                   TextAscii(label = _("to:"), size=12),
+               ]
+           ),
+           ( "", "" ),
+         ),
+         ( "grouping",
+           "single",
+           DropdownChoice(
+               title = _("Group Werks by"),
+               choices = [
+                 ( "version", _("Check_MK Version") ),
+                 ( "day",     _("Day of creation") ),
+                 ( "week",    _("Week of creation") ),
+                 ( None,      _("Do not group") ),
+               ],
+           ),
+           "version",
+         ),
+    ]
 
 
 def render_unacknowleged_werks():
@@ -466,7 +473,7 @@ def werk_matches_options(werk, werk_table_options):
 
 def default_werk_table_options():
     werk_table_options = {}
-    for name, height, vs, default_value in werk_table_option_entries:
+    for name, height, vs, default_value in werk_table_option_entries():
         werk_table_options[name] = default_value
     werk_table_options["date_range"] = (1, time.time())
     return werk_table_options
@@ -479,7 +486,7 @@ def render_werk_table_options():
     html.begin_form("werks")
     html.hidden_field("wo_set", "set")
     begin_floating_options("werks", is_open=True)
-    for name, height, vs, default_value in werk_table_option_entries:
+    for name, height, vs, default_value in werk_table_option_entries():
         if html.var("wo_set"):
             value = vs.from_html_vars("wo_" + name)
         else:
@@ -508,19 +515,21 @@ def render_werk_date(werk):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
 
 def render_werk_level(werk):
-    return werk_levels[werk["level"]]
+    return werk_levels()[werk["level"]]
 
 def render_werk_class(werk):
-    return werk_classes[werk["class"]]
+    return werk_classes()[werk["class"]]
 
 def render_werk_compatibility(werk):
-    return werk_compatibilities[werk["compatible"]]
+    return werk_compatibilities()[werk["compatible"]]
 
 def render_werk_component(werk):
-    if werk["component"] not in werk_components:
-        werk_components[werk["component"]] = werk["component"]
-        html.write("<li>Invalid component %s in werk %s</li>" % (werk["component"], render_werk_id(werk, with_link=True)))
-    return werk_components[werk["component"]]
+    if werk["component"] not in werk_components():
+        html.write("<li>Invalid component %s in werk %s</li>" %
+                    (werk["component"],render_werk_id(werk, with_link=True)))
+        return werk["component"]
+    else:
+        return werk_components()[werk["component"]]
 
 def render_werk_title(werk):
     title = werk["title"]

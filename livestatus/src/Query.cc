@@ -1084,8 +1084,7 @@ void Query::outputBlob(const char *buffer, int size) {
         else
             outputNull();
     } else {
-        if (buffer)
-            _output->addBuffer(buffer, size);
+        if (buffer) _output->addBuffer(buffer, size);
     }
 }
 

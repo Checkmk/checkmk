@@ -96,7 +96,7 @@ char g_socket_path[4096];
 char pnp_path_storage[4096];
 char *g_pnp_path = pnp_path_storage;
 char g_mk_inventory_path[4096];  // base path of Check_MK inventory files
-char g_mk_logwatch_path[4096];  // base path of Check_MK logwatch files
+char g_mk_logwatch_path[4096];   // base path of Check_MK logwatch files
 char g_logfile_path[4096];
 int g_debug_level = 0;
 int g_should_terminate = false;

@@ -33,8 +33,8 @@
 #include "Table.h"
 #include "global_counters.h"
 #include "logger.h"
-#include "strutil.h"
 #include "mk_logwatch.h"
+#include "strutil.h"
 
 // TODO(sp): Remove this hack.
 #ifdef EXTERN
@@ -181,8 +181,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
 }
 
 void Store::answerCommandRequest(const char *command) {
-    if (answerLogwatchCommandRequest(command))
-        return;
+    if (answerLogwatchCommandRequest(command)) return;
 
     lock_guard<mutex> lg(_command_mutex);
 #ifdef NAGIOS4
@@ -195,15 +194,13 @@ void Store::answerCommandRequest(const char *command) {
 }
 
 bool Store::answerLogwatchCommandRequest(const char *command) {
-    // Handle special command "[1462191638] MK_LOGWATCH_ACKNOWLEDGE;host123;\var\log\syslog"
-    if (strlen(command) >= 37 &&
-        command[0] == '[' &&
-        command[11] == ']' &&
+    // Handle special command "[1462191638]
+    // MK_LOGWATCH_ACKNOWLEDGE;host123;\var\log\syslog"
+    if (strlen(command) >= 37 && command[0] == '[' && command[11] == ']' &&
         !strncmp(command + 13, "MK_LOGWATCH_ACKNOWLEDGE;", 24)) {
         const char *host_name_begin = command + 37;
         const char *host_name_end = strchr(host_name_begin, ';');
-        if (!host_name_end)
-            return false;
+        if (!host_name_end) return false;
         std::string host_name(host_name_begin, host_name_end - host_name_begin);
         std::string file_name(host_name_end + 1);
         mk_logwatch_acknowledge(host_name, file_name);

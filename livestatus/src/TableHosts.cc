@@ -29,6 +29,7 @@
 #include "CustomVarsColumn.h"
 #include "CustomVarsExplicitColumn.h"
 #include "DownCommColumn.h"
+#include "DynamicLogwatchFileColumn.h"
 #include "HostContactsColumn.h"
 #include "HostFileColumn.h"
 #include "HostSpecialDoubleColumn.h"
@@ -36,7 +37,6 @@
 #include "HostgroupsColumn.h"
 #include "HostlistColumn.h"
 #include "LogwatchListColumn.h"
-#include "DynamicLogwatchFileColumn.h"
 #include "MetricsColumn.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
@@ -648,8 +648,8 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset,
 
     table->addDynamicColumn(new DynamicLogwatchFileColumn(
         prefix + "mk_logwatch_file",
-        "This contents of a logfile fetched via mk_logwatch",
-        indirect_offset, extra_offset));
+        "This contents of a logfile fetched via mk_logwatch", indirect_offset,
+        extra_offset));
 
     table->addColumn(new HostSpecialDoubleColumn(
         prefix + "staleness", "Staleness indicator for this host",

@@ -35,19 +35,17 @@ using std::string;
 using std::vector;
 
 // Replace \\ with \ and \s with space
-string unescape_filename(string filename)
-{
+string unescape_filename(string filename) {
     string filename_native;
     bool quote_active = false;
-    for (auto c: filename) {
+    for (auto c : filename) {
         if (quote_active) {
             if (c == 's')
                 filename_native += ' ';
             else
                 filename_native += c;
             quote_active = false;
-        }
-        else if (c == '\\')
+        } else if (c == '\\')
             quote_active = true;
         else
             filename_native += c;
@@ -55,10 +53,9 @@ string unescape_filename(string filename)
     return filename_native;
 }
 
-Column *DynamicLogwatchFileColumn::createColumn(
-    int indirect_offset, int extra_offset,
-     const char *arguments) {
-
+Column *DynamicLogwatchFileColumn::createColumn(int indirect_offset,
+                                                int extra_offset,
+                                                const char *arguments) {
     // We expect:
     // COLNAME:FILENAME
 
@@ -96,5 +93,7 @@ Column *DynamicLogwatchFileColumn::createColumn(
     string suffix("/");
     suffix += filename_native;
 
-    return new HostFileColumn(colname, "Contents of logwatch file", MK_LOGWATCH_PATH, suffix.c_str(), indirect_offset, extra_offset);
+    return new HostFileColumn(colname, "Contents of logwatch file",
+                              MK_LOGWATCH_PATH, suffix.c_str(), indirect_offset,
+                              extra_offset);
 }

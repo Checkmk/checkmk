@@ -34,9 +34,7 @@
 #include "nagios.h"
 #endif
 
-
-void LogwatchListColumn::output(void *data, Query *query)
-{
+void LogwatchListColumn::output(void *data, Query *query) {
     data = shiftPointer(data);
     if (data == nullptr) {
         return;
@@ -54,8 +52,7 @@ void LogwatchListColumn::output(void *data, Query *query)
 
     query->outputBeginList();
     std::string path = mk_logwatch_path_of_host(host_name);
-    if (path != "")
-    {
+    if (path != "") {
         DIR *dir = opendir(path.c_str());
         if (dir) {
             struct dirent de;

@@ -39,4 +39,4 @@ public:
     void output(void *, Query *) override;
 };
 
-#endif // LogwatchListColumn_h
+#endif  // LogwatchListColumn_h

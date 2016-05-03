@@ -37,7 +37,7 @@ extern char g_mk_logwatch_path[];
 #endif
 
 std::string mk_logwatch_path_of_host(const char *);
-void mk_logwatch_acknowledge(const std::string &host_name, const std::string &file_name);
+void mk_logwatch_acknowledge(const std::string &host_name,
+                             const std::string &file_name);
 
 #endif  // mk_logwatch_h
-

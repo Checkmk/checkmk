@@ -10,6 +10,7 @@
     * 3467 FIX: logwatch: fix exception in case the logfile name contains non-ascii characters
     * 3563 FIX: fortigate_sslvpn: Fixed broken manpage
     * 3564 FIX: logwatch_ec: Fixed discovery when Logwatch Event Console Forwarding rule is set to "No forwarding"
+    * 3565 FIX: wmi checks: Fixed deprecation warning when WMI keys can not be found in agent output
 
     Multisite:
     * 3452 FIX: Fixed vertical label of Bytes/day graphs (like filesystem growth)

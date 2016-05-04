@@ -276,6 +276,7 @@
     * 3454 FIX: Fixed scaling of numbers in graphs (e.g. inodes of filesystems)
     * 3462 FIX: Fixed ineffective localizations on werk page after language change
     * 3468 FIX: Fix changing a user's language back to English if the default is German...
+    * 3567 FIX: Werk list: Fixed link to not existing check man pages in some cases
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

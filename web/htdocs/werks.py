@@ -28,6 +28,7 @@
 # log
 
 import defaults, config, os, table
+import re
 from lib import *
 from valuespec import *
 
@@ -587,10 +588,10 @@ def render_werk_description(werk):
 def insert_manpage_links(text):
     parts = text.replace(",", " ").split()
     new_parts = []
+    check_regex = re.compile("[-_\.a-z0-9]")
     for part in parts:
-        if os.path.exists(defaults.check_manpages_dir + "/" + part):
-            part = '<a href="wato.py?mode=check_manpage&check_type=%s">%s</a>' % (
-                part, part)
+        if check_regex.match(part) and os.path.exists(defaults.check_manpages_dir + "/" + part):
+            part = '<a href="wato.py?mode=check_manpage&check_type=%s">%s</a>' % (part, part)
         new_parts.append(part)
     return " ".join(new_parts)
 

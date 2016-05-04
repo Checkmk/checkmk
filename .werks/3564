@@ -1,0 +1,10 @@
+Title: logwatch_ec: Fixed discovery when Logwatch Event Console Forwarding rule is set to "No forwarding"
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1462362572
+
+

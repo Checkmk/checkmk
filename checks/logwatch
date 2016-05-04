@@ -634,8 +634,9 @@ def inventory_logwatch_ec(info, one_svc_per_log):
 
         merged_rules = {}
         for rule in forward_settings[-1::-1]:
-            for key, value in rule.items():
-                merged_rules[key] = value
+            if type(rule) == dict:
+                for key, value in rule.items():
+                    merged_rules[key] = value
 
         separate_checks = merged_rules.get("separate_checks", False)
         if separate_checks != one_svc_per_log:

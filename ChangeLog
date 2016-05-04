@@ -3,6 +3,7 @@
     * 3456 FIX: bluecoat_diskcpu: Fixed visualization of graph
     * 3460 FIX: ps: Using command line fix (#3389) only when /usr/ucb/ps exists on solaris systems
     * 3467 FIX: logwatch: fix exception in case the logfile name contains non-ascii characters
+    * 3563 FIX: fortigate_sslvpn: Fixed broken manpage
 
     Multisite:
     * 3452 FIX: Fixed vertical label of Bytes/day graphs (like filesystem growth)

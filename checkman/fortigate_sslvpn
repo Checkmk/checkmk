@@ -8,11 +8,9 @@ description:
  SSL VPN can be enabled/disabled and provides per virtual domain individually,
  hence there is one service per domain.
  This check is currently purely informational and is thus always "OK".
+
 inventory:
  One service per virtual domain will be created
-
-[parameters]
-None
 
 perfdata:
  current number of active tunnels, users and web sessions

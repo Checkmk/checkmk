@@ -1,6 +1,7 @@
 1.2.8p1:
     Multisite:
     * 3468 FIX: Fix changing a user's language back to English if the default is German...
+    * 3567 FIX: Werk list: Fixed link to not existing check man pages in some cases
 
     Event Console:
     * 3566 FIX: Fixed exception on SNMP MIB management page when MIB directory is missing

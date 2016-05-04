@@ -126,7 +126,7 @@ def page_werk():
 
     html.header(("%s %s - %s") % (_("Werk"), render_werk_id(werk, with_link=False), werk["title"]), stylesheets = werks_stylesheets)
     html.begin_context_buttons()
-    back_url = html.makeuri([], filename="version.py") # keeps filter settings
+    back_url = html.makeuri([], filename="version.py", delvars=["werk"]) # keeps filter settings
     html.context_button(_("Back"), back_url, "back")
     if werk["compatible"] == "incomp_unack" and may_acknowledge():
         ack_url = html.makeactionuri([("_werk_ack", werk["id"])], filename="version.py")

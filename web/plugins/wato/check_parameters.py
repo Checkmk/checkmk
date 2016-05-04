@@ -5843,8 +5843,9 @@ register_check_parameters(
                 DropdownChoice(
                   title = _("Expected autoextend setting"),
                   choices = [
-                     ( True, _("Autoextend is expected to be ON")),
+                     ( True,  _("Autoextend is expected to be ON")),
                      ( False, _("Autoextend is expected to be OFF")),
+                     ( None,  _("Autoextend will be ignored")),
                   ]
             )),
             ( "autoextend_severity",

@@ -1,4 +1,7 @@
 1.2.8p1:
+    Multisite:
+    * 3468 FIX: Fix changing a user's language back to English if the default is German...
+
 
 1.2.8:
     Checks & Agents:

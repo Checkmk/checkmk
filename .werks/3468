@@ -1,0 +1,10 @@
+Title: Fix changing a user's language back to English if the default is German
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p1
+Date: 1462365605
+Class: fix
+
+If the global language setting was German then a user could not set this
+back to English. This has been fixed.

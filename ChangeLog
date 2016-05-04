@@ -2,6 +2,9 @@
     Multisite:
     * 3468 FIX: Fix changing a user's language back to English if the default is German...
 
+    Event Console:
+    * 3566 FIX: Fixed exception on SNMP MIB management page when MIB directory is missing
+
 
 1.2.8:
     Checks & Agents:

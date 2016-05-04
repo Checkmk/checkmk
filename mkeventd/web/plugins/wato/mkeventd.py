@@ -1887,7 +1887,15 @@ def mode_mkeventd_mibs(phase):
 
 def load_snmp_mibs(path):
     found = {}
-    for fn in os.listdir(path):
+    try:
+        file_names = os.listdir(path)
+    except OSError, e:
+        if e.errno == 2: # not existing directories are ok
+            return found
+        else:
+            raise
+
+    for fn in file_names:
         if fn[0] != '.':
             mib = parse_snmp_mib_header(path + "/" + fn)
             found[fn] = mib

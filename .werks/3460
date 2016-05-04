@@ -2,7 +2,7 @@ Title: ps: Using command line fix (#3389) only when /usr/ucb/ps exists on solari
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.8b14
+Version: 1.2.8
 Date: 1462255114
 Class: fix
 

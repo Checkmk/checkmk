@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL              := /bin/bash
-VERSION            := 1.2.8b14
+VERSION            := 1.2.8
 NAME               := check_mk
 PREFIX             := /usr
 BINDIR             := $(PREFIX)/bin
@@ -201,6 +201,7 @@ version:
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 14.04" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.04" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.10" \
+          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 16.04" \
           -o "$$(head -c 20 /etc/issue)" = "Debian GNU/Linux 6.0" ] \
           || { echo 'You are not on the reference system!' ; exit 1; }
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \

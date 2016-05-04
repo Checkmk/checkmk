@@ -1,4 +1,4 @@
-1.2.8b14:
+1.2.8:
     Checks & Agents:
     * 3456 FIX: bluecoat_diskcpu: Fixed visualization of graph
     * 3460 FIX: ps: Using command line fix (#3389) only when /usr/ucb/ps exists on solaris systems

@@ -4,7 +4,7 @@ Component: wato
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.8b14
+Version: 1.2.8
 Date: 1462265466
 
 Starting a single or a bulk discovery on locked hosts no longer raises a warning

@@ -2,7 +2,7 @@ Title: logwatch: fix exception in case the logfile name contains non-ascii chara
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.8b14
+Version: 1.2.8
 Date: 1462262342
 Class: fix
 

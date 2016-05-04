@@ -2,7 +2,7 @@ Title: logwatch_ec: Fixed discovery when Logwatch Event Console Forwarding rule 
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.8b14
+Version: 1.2.8
 Date: 1462362572
 Class: fix
 

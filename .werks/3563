@@ -2,7 +2,7 @@ Title: fortigate_sslvpn: Fixed broken manpage
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.8b14
+Version: 1.2.8
 Date: 1462354163
 Class: fix
 

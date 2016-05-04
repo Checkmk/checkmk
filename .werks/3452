@@ -2,7 +2,7 @@ Title: Fixed vertical label of Bytes/day graphs (like filesystem growth)
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.8b14
+Version: 1.2.8
 Date: 1462180507
 Class: fix
 

@@ -2,7 +2,7 @@ Title: Fixed scaling of numbers in graphs (e.g. inodes of filesystems)
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.8b14
+Version: 1.2.8
 Date: 1462189904
 Class: fix
 

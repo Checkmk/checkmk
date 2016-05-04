@@ -94,8 +94,7 @@ def parse_wmi_table(info, key="Name"):
                 try:
                     col_index = self.__headers[column]
                 except KeyError, e:
-                    raise KeyError(e.message + " missing, valid keys: "
-                                   + ", ".join(self.__headers.keys()))
+                    raise KeyError("%s missing, valid keys: %s" % (e, ", ".join(self.__headers.keys())))
 
             return self.__rows[row_index][col_index]
 

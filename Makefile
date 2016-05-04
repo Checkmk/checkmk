@@ -161,7 +161,7 @@ mk-livestatus:
 	cd livestatus ; \
 	for i in aclocal.m4 ar-lib compile config.h.in configure depcomp install-sh Makefile.in missing; do \
 	    if test ! -f $$i; then \
-		autoreconf --install ; \
+		autoreconf --install --include=m4; \
 		break ; \
 	    fi \
 	done

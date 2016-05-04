@@ -45,7 +45,7 @@ BEAR               := bear-fixed
 # File to pack into livestatus-$(VERSION).tar.gz
 LIVESTATUS_SOURCES := configure aclocal.m4 config.guess config.h.in config.sub \
                       configure.ac ltmain.sh Makefile.{in,am} missing ar-lib \
-                      nagios/README nagios/*.h nagios4/README nagios4/*.h \
+                      nagios/README nagios/*.h nagios4/README m4/* nagios4/*.h \
                       src/*.{h,c,cc} src/Makefile.{in,am} \
                       depcomp install-sh api/python/{*.py,README} api/perl/*
 

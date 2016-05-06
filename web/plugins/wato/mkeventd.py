@@ -2240,7 +2240,8 @@ if mkeventd_enabled:
                      "live on a remote site you need to activate remote access to the event status socket "
                      "via TCP. This allows to query the current event status via TCP. If you do not restrict "
                      "this to queries also event actions are possible from remote. This feature is not used "
-                     "by the event status checks nor by Multisite so we propose not allowing commands via TCP."),
+                     "by the event status checks nor by Multisite so we propose not allowing commands via TCP.") % \
+                                                       "wato.py?mode=edit_ruleset&varname=active_checks%3Amkevents",
             none_label = _("no access via TCP"),
         ),
         domain = "mkeventd",

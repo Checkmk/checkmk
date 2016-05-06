@@ -1,0 +1,10 @@
+Title: agent_netapp: fixed problem with older netapp versions (7Mode - Version 8.0)
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1462517694
+
+The agent was unable to determine if the machine is running in 7-mode or cluster-mode.

@@ -404,7 +404,13 @@ if not version_info:
     sys.stderr.write(",".join(section_errors))
     sys.exit(1)
 
-netapp_mode  = version_info.child_get_string("is-clustered").lower() == "false" and "7mode" or "clustermode"
+clustered_info = version_info.child_get_string("is-clustered")
+if clustered_info:
+    netapp_mode  = clustered_info.lower() == "false" and "7mode" or "clustermode"
+else:
+    # Looks like the is-clustered attribute is not set, e.g. NetApp 7-Mode Version 8.0
+    netapp_mode  = "7-mode" in version_info.child_get_string("version").lower() and "7mode" or "clustermode"
+
 
 #.
 #   .--Clustermode Settings------------------------------------------------.

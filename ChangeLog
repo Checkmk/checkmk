@@ -209,6 +209,7 @@
     * 3564 FIX: logwatch_ec: Fixed discovery when Logwatch Event Console Forwarding rule is set to "No forwarding"
     * 3565 FIX: wmi checks: Fixed deprecation warning when WMI keys can not be found in agent output
     * 3528 FIX: netapp_api_protocol: fixed service discovery problem with older 7mode versions
+    * 3529 FIX: agent_netapp: fixed problem with older netapp versions (7Mode - Version 8.0)...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

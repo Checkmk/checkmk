@@ -317,7 +317,7 @@ def set_user_confdir(user_id):
     make_nagios_directory(user_confdir)
 
 def get_language(default = None):
-    if "language" in user:
+    if user and "language" in user:
         return user["language"]
     elif default == None:
         return default_language

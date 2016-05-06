@@ -880,7 +880,7 @@ register_configvar(group,
 register_configvar(group,
     "password_policy",
     Dictionary(
-        title = _('htpasswd: Password Policy'),
+        title = _('Password policy for local accounts'),
         help  = _('You can define some rules to which each user password ahers. By default '
                   'all passwords are accepted, even ones which are made of only a single character, '
                   'which is obviously a bad idea. Using this option you can enforce your users '
@@ -926,7 +926,7 @@ def list_contactgroups():
 register_configvar(group,
     "default_user_profile",
     Dictionary(
-        title = _("Default User Profile"),
+        title = _("Default user profile"),
         help  = _("With this option you can specify the attributes a user which is created during "
                   "its initial login gets added. For example, the default is to add the role \"user\" "
                   "to all automatically created users."),

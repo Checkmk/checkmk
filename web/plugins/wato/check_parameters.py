@@ -6321,29 +6321,29 @@ register_check_parameters(
         title = _("Page Activity Levels"),
         elements = [
             ("page_reads/sec",
-                Tuple(
-                    title = _("Read"),
-                    elements = [
-                      Filesize(title = _("Warning at")),
-                      Filesize(title = _("Critical at")),
-                    ]
-            )),
+             Tuple(
+                 title = _("Reads/sec"),
+                 elements = [
+                     Float(title = _("warning at"), unit = _("/sec") ),
+                     Float(title = _("critical at"), unit = _("/sec") ),
+                 ])
+             ),
             ("page_writes/sec",
-                Tuple(
-                    title = _("Write"),
-                    elements = [
-                      Filesize(title = _("Warning at")),
-                      Filesize(title = _("Critical at")),
-                    ]
-            )),
+             Tuple(
+                 title = _("Writes/sec"),
+                 elements = [
+                     Float(title = _("warning at"), unit = _("/sec") ),
+                     Float(title = _("critical at"), unit = _("/sec") ),
+                 ])
+             ),
             ("page_lookups/sec",
-                Tuple(
-                    title = _("Lookup"),
-                    elements = [
-                      Filesize(title = _("Warning at")),
-                      Filesize(title = _("Critical at")),
-                    ]
-            )),
+             Tuple(
+                 title = _("Lookups/sec"),
+                 elements = [
+                     Float(title = _("warning at"), unit = _("/sec") ),
+                     Float(title = _("critical at"), unit = _("/sec") ),
+                 ])
+             ),
         ]
     ),
     TextAscii(

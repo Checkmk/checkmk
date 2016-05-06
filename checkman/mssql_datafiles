@@ -14,8 +14,8 @@ description:
  for how to install that plugin.
 
 item:
- A combination of the instance-, database- and table-name.
+ A combination of the instance-, database- and (logical) file-name.
 
 inventory:
  One separate check for each datafile will be created. Alternatively
- there is a rule to summarize all files in one service.
+ there is a rule to summarize files per database.

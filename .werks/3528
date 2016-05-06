@@ -1,0 +1,10 @@
+Title: netapp_api_protocol: fixed service discovery problem with older 7mode versions
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1462517440
+Class: fix
+
+
+

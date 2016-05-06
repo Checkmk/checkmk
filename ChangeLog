@@ -208,6 +208,7 @@
     * 3563 FIX: fortigate_sslvpn: Fixed broken manpage
     * 3564 FIX: logwatch_ec: Fixed discovery when Logwatch Event Console Forwarding rule is set to "No forwarding"
     * 3565 FIX: wmi checks: Fixed deprecation warning when WMI keys can not be found in agent output
+    * 3528 FIX: netapp_api_protocol: fixed service discovery problem with older 7mode versions
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

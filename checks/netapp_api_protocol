@@ -34,8 +34,8 @@
 
 def inventory_netapp_api_protocol(parsed):
     for key, values in parsed.items():
-        if len(values) > 2: # only report instances which actuall have infos
-            yield values["instance_name"], None
+        if len(values) > 2: # only create checks for protocols with infos
+            yield values["protocol"], None
 
 def check_netapp_api_protocol(item, _no_params, parsed):
     counter_data = parsed.get(item)

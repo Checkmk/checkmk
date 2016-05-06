@@ -1,0 +1,9 @@
+Title: Fixed broken link in "Access to event status via TCP" help text
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.8p1
+Date: 1462544020
+Class: fix
+
+

@@ -7,11 +7,12 @@
     * 3468 FIX: Fix changing a user's language back to English if the default is German...
     * 3567 FIX: Werk list: Fixed link to not existing check man pages in some cases
 
-    Event Console:
-    * 3566 FIX: Fixed exception on SNMP MIB management page when MIB directory is missing
-
     WATO:
     * 3469 Show type of rule match of a rule (first, per-parameter, all) in WATO...
+
+    Event Console:
+    * 3566 FIX: Fixed exception on SNMP MIB management page when MIB directory is missing
+    * 3568 FIX: Fixed broken link in "Access to event status via TCP" help text
 
 
 1.2.8:

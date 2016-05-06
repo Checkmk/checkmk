@@ -6,5 +6,5 @@ Date: 1395072515
 Class: feature
 
 A BI aggregate now also aggregates the additional information wether it is
-in a scheduled downtime or not. Please refer to the updated <a href="checkmk_bi.html">documentation
+in a scheduled downtime or not. Please refer to the updated <a href="http://mathias-kettner.de/checkmk_bi.html">documentation
 about BI</a> for details.

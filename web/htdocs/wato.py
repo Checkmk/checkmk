@@ -12302,6 +12302,8 @@ def mode_edit_ruleset(phase):
 
     html.help(rulespec["help"])
 
+    explain_ruleset_match_type(rulespec)
+
     # Collect all rulesets
     all_rulesets = load_all_rulesets()
     ruleset = all_rulesets.get(varname)
@@ -12431,6 +12433,20 @@ def mode_edit_ruleset(phase):
         table.end()
 
     create_new_rule_form(rulespec, hostname, item, varname)
+
+
+def explain_ruleset_match_type(rulespec):
+    match_type = rulespec["match"]
+    html.write("<b>%s:</b> " % _("Matching"))
+    if match_type == "first":
+        html.write(_("The first matching rule defines the parameter."))
+    elif match_type == "dict":
+        html.write(_("Each parameter is defined by the first matching rule where that parameter is set (checked)."))
+    elif match_type == "all":
+        html.write(_("All matching rules will add to the resulting list."))
+    else:
+        html.write(_("Unknown match type: %s") % match_type)
+
 
 def show_rule_in_table(rulespec, tag_specs, host_list, item_list, varname, value, folder, rule_options):
 

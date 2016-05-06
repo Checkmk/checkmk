@@ -10,6 +10,9 @@
     Event Console:
     * 3566 FIX: Fixed exception on SNMP MIB management page when MIB directory is missing
 
+    WATO:
+    * 3469 Show type of rule match of a rule (first, per-parameter, all) in WATO...
+
 
 1.2.8:
     Checks & Agents:

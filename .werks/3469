@@ -1,0 +1,12 @@
+Title: Show type of rule match of a rule (first, per-parameter, all) in WATO
+Level: 2
+Component: wato
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.8p1
+Date: 1462526650
+
+This additional information makes it clearer to the user whether a just the
+first matching rule defines the parameter, or further matching rules can
+have influence, too.

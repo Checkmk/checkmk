@@ -447,7 +447,8 @@ def draw_dashlet_content(nr, the_dashlet, wato_folder, stash_html_vars=True):
 
     try:
         visuals.add_context_to_uri_vars(the_dashlet)
-        html.set_var("wato_folder", wato_folder)
+        if wato_folder != None:
+            html.set_var("wato_folder", wato_folder)
 
         dashlet_type = dashlet_types[the_dashlet['type']]
         if 'iframe_render' in dashlet_type:

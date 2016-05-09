@@ -1,0 +1,10 @@
+Title: Dashboard: Fixed wrong links to views in statistics dashlets when using state filters in dashlet
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1462779658
+
+

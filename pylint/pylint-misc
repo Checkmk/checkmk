@@ -8,6 +8,7 @@ import pylint_cmk
 pylint_cmk.ensure_equal_branches()
 
 search_paths = [
+    "../lib",
     "../bin",
     "../notifications",
     "../agents/plugins",

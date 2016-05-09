@@ -96,7 +96,7 @@ history_columns = [
 ] + event_columns
 
 def unsplit(s):
-    if type(s) != str:
+    if not isinstance(s, basestring):
         return s
 
     elif s.startswith('\2'):

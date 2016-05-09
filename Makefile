@@ -101,6 +101,10 @@ dist: mk-livestatus
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
 	tar czf $(DISTNAME)/bin.tar.gz $(TAROPTS) -C bin $$(cd bin ; ls)
+	pycompile lib ; \
+	  tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) -C lib \
+	    --transform 's|^|cmk/|g' $$(cd lib ; ls) ; \
+	  rm lib/*.pyc
 	tar czf $(DISTNAME)/share.tar.gz $(TAROPTS) check_mk_templates.cfg
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks $$(cd .werks ; ls [0-9]*)
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)

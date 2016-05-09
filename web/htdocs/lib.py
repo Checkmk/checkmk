@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import math, grp, pprint, os, errno, marshal, re, fcntl, time
+from cmk.exceptions import MKException, MKGeneralException
 
 # Workaround when the file is included from outside of Multisite
 try:
@@ -45,25 +46,6 @@ LOG_WARNING = 4 # warning conditions
 LOG_NOTICE  = 5 # normal but significant condition
 LOG_INFO    = 6 # informational
 LOG_DEBUG   = 7 # debug-level messages
-
-# never used directly in the code. Just some wrapper to make all of our
-# exceptions handleable with one call
-class MKException(Exception):
-    # Do not use the Exception() __str__, because it uses str()
-    # to convert the message. We want to keep unicode strings untouched
-    # And don't use self.message, because older python versions don't
-    # have this variable set. self.args[0] seems to be the most portable
-    # way at the moment.
-    def __str__(self):
-        return self.args[0]
-
-class MKGeneralException(MKException):
-    plain_title = _("General error")
-    title       = _("Error")
-    def __init__(self, reason):
-        self.reason = reason
-    def __str__(self):
-        return self.reason
 
 class MKAuthException(MKException):
     title       = _("Permission denied")

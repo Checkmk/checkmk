@@ -53,6 +53,8 @@ import tempfile
 import traceback
 import subprocess
 
+from cmklib.exceptions import MKGeneralException
+
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
 #   out because of errors. Remove all explicit "if opt_debug:...".
@@ -222,11 +224,7 @@ ZERO  = 0.0
 
 
 # Exceptions
-class MKGeneralException(Exception):
-    def __init__(self, reason):
-        self.reason = reason
-    def __str__(self):
-        return self.reason
+MKGeneralException = cmk.exceptions.MKGeneralException
 
 class MKBailOut(Exception):
     def __init__(self, reason):

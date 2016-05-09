@@ -3,8 +3,7 @@
 
 import socket, os, time, sys, getopt, signal, thread, pprint, re, \
        select, subprocess, stat
-from pwd import getpwnam
-from grp import getgrnam
+import cmk.daemon
 
 VERSION="1.4.0i1"
 
@@ -331,6 +330,22 @@ class VerboseLock:
             log("LOCK %s: %d -> %d" % (self._name, self._depth+1, self._depth))
 
 
+class MKSignalException(Exception):
+    def __init__(self, signum):
+        Exception.__init__(self, "Got signal %d" % signum)
+        self._signum = signum
+
+
+def signal_handler(signum, stack_frame):
+    verbose("Got signal %d." % signum)
+    raise MKSignalException(signum)
+
+
+class MKClientError(Exception):
+    def __init__(self, t):
+        Exception.__init__(self, t)
+
+
 #.
 #   .--SNMP-Traps----------------------------------------------------------.
 #   |        ____  _   _ __  __ ____     _____                             |
@@ -467,80 +482,6 @@ def check_timeperiod(tpname):
 
     else:
         return g_timeperiods[tpname][1]
-
-
-#.
-#   .--Daemonize-----------------------------------------------------------.
-#   |          ____                                   _                    |
-#   |         |  _ \  __ _  ___ _ __ ___   ___  _ __ (_)_______            |
-#   |         | | | |/ _` |/ _ \ '_ ` _ \ / _ \| '_ \| |_  / _ \           |
-#   |         | |_| | (_| |  __/ | | | | | (_) | | | | |/ /  __/           |
-#   |         |____/ \__,_|\___|_| |_| |_|\___/|_| |_|_/___\___|           |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Code for daemonizing                                                |
-#   '----------------------------------------------------------------------'
-
-def daemonize(user=0, group=0):
-    # do the UNIX double-fork magic, see Stevens' "Advanced
-    # Programming in the UNIX Environment" for details (ISBN 0201563177)
-    try:
-        pid = os.fork()
-        if pid > 0:
-            # exit first parent
-            sys.exit(0)
-    except OSError, e:
-        sys.stderr.write("Fork failed (#1): %d (%s)\n" % (e.errno, e.strerror))
-        sys.exit(1)
-
-    # decouple from parent environment
-    # chdir -> don't prevent unmounting...
-    os.chdir("/")
-
-    # Create new process group with the process as leader
-    os.setsid()
-
-    # Set user/group depending on params
-    if group:
-        os.setregid(getgrnam(group)[2], getgrnam(group)[2])
-    if user:
-        os.setreuid(getpwnam(user)[2], getpwnam(user)[2])
-
-    # do second fork
-    try:
-        pid = os.fork()
-        if pid > 0:
-            sys.exit(0)
-    except OSError, e:
-        sys.stderr.write("Fork failed (#2): %d (%s)\n" % (e.errno, e.strerror))
-        sys.exit(1)
-
-    sys.stdout.flush()
-    sys.stderr.flush()
-
-    si = os.open("/dev/null", os.O_RDONLY)
-    so = os.open("/dev/null", os.O_WRONLY)
-    os.dup2(si, 0)
-    os.dup2(so, 1)
-    os.dup2(so, 2)
-    os.close(si)
-    os.close(so)
-
-    log("Daemonized with PID %d." % os.getpid())
-
-class MKSignalException(Exception):
-    def __init__(self, signum):
-        Exception.__init__(self, "Got signal %d" % signum)
-        self._signum = signum
-
-def signal_handler(signum, stack_frame):
-    verbose("Got signal %d." % signum)
-    raise MKSignalException(signum)
-
-
-class MKClientError(Exception):
-    def __init__(self, t):
-        Exception.__init__(self, t)
 
 #.
 #   .--MongoDB-------------------------------------------------------------.
@@ -4099,7 +4040,8 @@ try:
 
     if not opt_foreground:
         make_parentdirs(g_pid_file)
-        daemonize()
+        cmk.daemon.daemonize()
+        log("Daemonized with PID %d." % os.getpid())
 
     # Create PID file
     file(g_pid_file, "w").write("%d\n" % os.getpid())

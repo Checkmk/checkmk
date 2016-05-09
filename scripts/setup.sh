@@ -256,6 +256,16 @@ ask_dir vardir /var/lib/$NAME $HOMEBASEDIR/var $OMD_ROOT/var/check_mk "working d
 other files into this directory. The setup will create several subdirectories
 and makes them writable by the Nagios process"
 
+PYTHON_PATH=$(python -c "import sys; print([ p for p in sys.path if p.startswith(\"/usr/lib/\") and p.count(\"/\") == 3 ][0])" 2>/dev/null)
+if [ -z "$PYTHON_PATH" ]; then
+    PYTHON_PATH=/usr/lib/python2.7
+fi
+
+ask_dir python_lib_dir $PYTHON_PATH $HOMEBASEDIR/python $OMD_ROOT/lib/python "Check_MK python modules" \
+  "Check_MKs different components share common code in Python modules. These
+have to be installed in a directory where the used Python interpreter is
+searching for modules."
+
 ask_title "Configuration of Linux/UNIX Agents"
 
 
@@ -490,6 +500,7 @@ modules_dir                 = '$modulesdir'
 locale_dir                  = '$localedir'
 agents_dir                  = '$agentsdir'
 lib_dir                     = '$libdir'
+python_lib_dir              = '$python_lib_dir'
 var_dir                     = '$vardir'
 log_dir                     = '$vardir/log'
 snmpwalks_dir               = '$vardir/snmpwalks'
@@ -803,6 +814,8 @@ do
 	   fi &&
            mkdir -p $DESTDIR$sharedir &&
            tar xzf $SRCDIR/share.tar.gz -C $DESTDIR$sharedir &&
+           mkdir -p $DESTDIR$python_lib_dir &&
+           tar xzf $SRCDIR/lib.tar.gz -C $DESTDIR$python_lib_dir &&
            mkdir -p $DESTDIR$sharedir/werks &&
            tar xzf $SRCDIR/werks.tar.gz -C $DESTDIR$sharedir/werks &&
 	   mkdir -p $DESTDIR$modulesdir &&

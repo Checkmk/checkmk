@@ -253,10 +253,16 @@ def render_statistics(pie_id, what, table, filter, dashlet):
     table_entries.append(((_("Total"), "", "all%s" % what, ""), total))
 
     for (name, color, viewurl, query), count in table_entries:
-        url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder="
+        url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1"
         for filter_name, url_params in dashlet['context'].items():
-            # The svcstate filter URL vars are controlled by dashlet
-            if filter_name != "svcstate":
+            if filter_name == "wato_folder" and html.has_var("wato_folder"):
+                url += "&wato_folder=" + html.var("wato_folder")
+
+            elif filter_name == "svcstate":
+                # The svcstate filter URL vars are controlled by dashlet
+                continue
+
+            else:
                 url += '&' + html.urlencode_vars(url_params.items())
 
         html.write('<tr><th><a href="%s">%s</a></th>' % (url, name))

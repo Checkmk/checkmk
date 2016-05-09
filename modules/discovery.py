@@ -142,8 +142,11 @@ def do_discovery_for(hostname, check_types, only_new, use_caches, on_error):
 # determine changed services on host.
 # param mode: can be one of "new", "remove", "fixall", "refresh"
 # param do_snmp_scan: if True, a snmp host will be scanned, otherwise uses only the check types
-#                     previously discovered
-def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"):
+#                     previously discovereda
+# param servic_filter: if a filter is set, it controls whether items are touched by the discovery.
+#                       if it returns False for a new item it will not be added, if it returns
+#                       False for a vanished item, that item is kept
+def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore", service_filter=None):
     counts = {
         "added"   : 0,
         "removed" : 0,
@@ -152,6 +155,9 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
 
     if hostname not in all_active_realhosts():
         return [0, 0, 0, 0], ""
+
+    if service_filter is None:
+        service_filter = lambda hostname, check_type, item: True
 
     err = None
 
@@ -175,7 +181,7 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
                 # that way.
 
             if check_source in ("new"):
-                if mode in ("new", "fixall", "refresh"):
+                if mode in ("new", "fixall", "refresh") and service_filter(hostname, check_type, item):
                     counts["added"] += 1
                     new_items[(check_type, item)] = paramstring
 
@@ -187,7 +193,7 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
             elif check_source in ("obsolete", "vanished"):
                 # keep item, if we are currently only looking for new services
                 # otherwise fix it: remove ignored and non-longer existing services
-                if mode not in ("fixall", "remove"):
+                if mode not in ("fixall", "remove") or not service_filter(hostname, check_type, item):
                     new_items[(check_type, item)] = paramstring
                     counts["kept"] += 1
                 else:
@@ -246,6 +252,10 @@ def default_discovery_check_parameters():
     }
 
 
+def discovery_filter_by_lists(hostname, check_type, item, whitelist, blacklist):
+    description = service_description(hostname, check_type, item)
+    return whitelist.match(description) is not None and\
+        blacklist.match(description) is None
 
 def check_discovery(hostname, ipaddress=None):
     params = discovery_check_parameters(hostname) or \
@@ -270,6 +280,20 @@ def check_discovery(hostname, ipaddress=None):
         long_infotexts = []
         need_rediscovery = False
 
+        params_rediscovery = params.get("inventory_rediscovery", {})
+
+        if params_rediscovery.get("service_whitelist", []) or\
+                params_rediscovery.get("service_blacklist", []):
+            # whitelist. if none is specified, this matches everything
+            whitelist = regex("|".join(["(%s)" % pat for pat in params_rediscovery.get("service_whitelist", [".*"])]))
+            # blacklist. if none is specified, this matches nothing
+            blacklist = regex("|".join(["(%s)" % pat for pat in params_rediscovery.get("service_blacklist", ["(?!x)x"])]))
+
+            item_filters = lambda hostname, check_type, item:\
+                    discovery_filter_by_lists(hostname, check_type, item, whitelist, blacklist)
+        else:
+            item_filters = None
+
         for check_state, title, params_key, default_state in [
                ( "new",      "unmonitored", "severity_unmonitored", inventory_check_severity ),
                ( "vanished", "vanished",    "severity_vanished",   0 ),
@@ -277,12 +301,17 @@ def check_discovery(hostname, ipaddress=None):
 
             affected_check_types = {}
             count = 0
+            unfiltered = False
 
             for (check_type, item), (check_source, paramstring) in services.items():
                 if check_source == check_state:
                     count += 1
                     affected_check_types.setdefault(check_type, 0)
                     affected_check_types[check_type] += 1
+
+                    if not unfiltered and item_filters(hostname, check_type, item):
+                        unfiltered = True
+
                     long_infotexts.append("%s: %s: %s" % (title, check_type, service_description(hostname, check_type, item)))
 
             if affected_check_types:
@@ -293,8 +322,9 @@ def check_discovery(hostname, ipaddress=None):
 
                 if params.get("inventory_rediscovery", False):
                     mode = params["inventory_rediscovery"]["mode"]
-                    if (check_state == "new"      and mode in ( 0, 2, 3 )) or \
-                        check_state == "vanished" and mode in ( 1, 2, 3 ):
+                    if unfiltered and\
+                            ((check_state == "new"      and mode in ( 0, 2, 3 )) or
+                             (check_state == "vanished" and mode in ( 1, 2, 3 ))):
                         need_rediscovery = True
             else:
                 infotexts.append("no %s services found" % title)
@@ -448,12 +478,24 @@ def discover_marked_hosts():
 
         # have to do hosts one-by-one because each could have a different configuration
         params = discovery_check_parameters(hostname) or default_discovery_check_parameters()
+        params_rediscovery = params["inventory_rediscovery"]
+        if "service_blacklist" in params_rediscovery or "service_whitelist" in params_rediscovery:
+            # whitelist. if none is specified, this matches everything
+            whitelist = regex("|".join(["(%s)" % pat for pat in params_rediscovery.get("service_whitelist", [".*"])]))
+            # blacklist. if none is specified, this matches nothing
+            blacklist = regex("|".join(["(%s)" % pat for pat in params_rediscovery.get("service_blacklist", ["(?!x)x"])]))
+            item_filters = lambda hostname, check_type, item:\
+                discovery_filter_by_lists(hostname, check_type, item, whitelist, blacklist)
+        else:
+            item_filters = None
+
         why_not = may_rediscover(params)
         if not why_not:
             redisc_params = params["inventory_rediscovery"]
             verbose("  Doing discovery with mode '%s'...\n" % mode_table[redisc_params["mode"]])
             result, error = discover_on_host(mode_table[redisc_params["mode"]], hostname,
-                                             params["inventory_check_do_scan"], True)
+                                             params["inventory_check_do_scan"], True,
+                                             service_filter=item_filters)
             if error is not None:
                 if error:
                     verbose("failed: %s\n" % error)

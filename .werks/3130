@@ -1,0 +1,13 @@
+Title: periodic service discovery can now be configured to not activate specific service changes
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.9i1
+Date: 1462799265
+Class: feature
+
+The rule "Periodic service discovery" now allows setting a whitelist and a blacklist on service
+description.
+A service for which a change was automatically discovered that doesn't match any whitelist or one
+that does match any blacklist will still show up in the discovery service but it will not be
+activated automatically.

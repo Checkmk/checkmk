@@ -246,14 +246,19 @@ def render_statistics(pie_id, what, table, filter, dashlet):
 
     html.write('<table class="hoststats%s" style="float:left">' % (
         len(pies) > 1 and " narrow" or ""))
+
     table_entries = pies
     while len(table_entries) < 6:
         table_entries = table_entries + [ (("", "#95BBCD", "", ""), "&nbsp;") ]
     table_entries.append(((_("Total"), "", "all%s" % what, ""), total))
+
     for (name, color, viewurl, query), count in table_entries:
         url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder="
         for filter_name, url_params in dashlet['context'].items():
-            url += '&' + html.urlencode_vars(url_params.items())
+            # The svcstate filter URL vars are controlled by dashlet
+            if filter_name != "svcstate":
+                url += '&' + html.urlencode_vars(url_params.items())
+
         html.write('<tr><th><a href="%s">%s</a></th>' % (url, name))
         style = ''
         if color:

@@ -28,6 +28,8 @@
 
 import subprocess
 
+import cmk.tty as tty
+
 OID_END              =  0  # Suffix-part of OID that was not specified
 OID_STRING           = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
 OID_BIN              = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
@@ -612,6 +614,6 @@ def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False, context_name = None
     error = snmp_process.stderr.read()
     exitstatus = snmp_process.wait()
     if exitstatus:
-        verbose(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error: %s\n" % error.strip())
+        verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error: %s\n" % error.strip())
         raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" % (ip, error.strip(), exitstatus))
     return rowinfo

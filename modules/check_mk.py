@@ -45,6 +45,8 @@ import fcntl
 import py_compile
 import inspect
 
+import cmk.tty as tty
+
 # These variable will be substituted at 'make dist' time
 check_mk_version  = '(inofficial)'
 
@@ -497,21 +499,21 @@ def output_check_info():
         try:
             if 'command_line' in check:
                 what = 'active'
-                ty_color = tty_blue
+                ty_color = tty.blue
             elif check_uses_snmp(check_type):
                 what = 'snmp'
-                ty_color = tty_magenta
+                ty_color = tty.magenta
             else:
                 what = 'tcp'
-                ty_color = tty_yellow
+                ty_color = tty.yellow
 
             if man_filename:
                 title = file(man_filename).readlines()[0].split(":", 1)[1].strip()
             else:
                 title = "(no man page present)"
 
-            print (tty_bold + "%-44s" + tty_normal
-                   + ty_color + " %-6s " + tty_normal
+            print (tty.bold + "%-44s" + tty.normal
+                   + ty_color + " %-6s " + tty.normal
                    + "%s") % \
                   (check_type, what, title)
         except Exception, e:
@@ -1693,7 +1695,7 @@ def snmp_get_oid(hostname, ipaddress, oid):
     exitstatus = snmp_process.wait()
     if exitstatus:
         if opt_verbose:
-            sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
+            sys.stderr.write(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
             sys.stderr.write(snmp_process.stderr.read())
         return None
 
@@ -1773,7 +1775,7 @@ def get_single_oid(hostname, ipaddress, oid):
             value = None
 
     if value != None:
-        vverbose("%s%s%s%s\n" % (tty_bold, tty_green, value, tty_normal))
+        vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))
     else:
         vverbose("failed.\n")
 
@@ -2478,19 +2480,6 @@ def read_packed_config():
 #   | that is used by the official Check_MK documentation ("nowiki").      |
 #   '----------------------------------------------------------------------'
 
-def get_tty_size():
-    import termios, struct
-    try:
-        ws = struct.pack("HHHH", 0, 0, 0, 0)
-        ws = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
-        lines, columns, x, y = struct.unpack("HHHH", ws)
-        if lines > 0 and columns > 0:
-            return lines, columns
-    except:
-        pass
-    return (24, 80)
-
-
 def all_manuals():
     entries = dict([(fn, check_manpages_dir + "/" + fn) for fn in os.listdir(check_manpages_dir)])
     if local_check_manpages_dir and os.path.exists(local_check_manpages_dir):
@@ -2512,7 +2501,7 @@ def list_all_manuals():
             pass
 
     table.sort()
-    print_table(['Check type', 'Title'], [tty_bold, tty_normal], table)
+    print_table(['Check type', 'Title'], [tty.bold, tty.normal], table)
 
 
 def read_manpage_catalog():
@@ -2746,18 +2735,17 @@ def load_manpage(checkname):
 
 
 def show_check_manual(checkname):
-
     bg_color = 4
     fg_color = 7
-    bold_color = tty_white + tty_bold
-    normal_color = tty_normal + tty(fg_color, bg_color)
-    title_color_left = tty(0,7,1)
-    title_color_right = tty(0,7)
-    subheader_color = tty(fg_color, bg_color, 1)
-    header_color_left = tty(0,2)
-    header_color_right = tty(7,2,1)
-    parameters_color = tty(6,4,1)
-    examples_color = tty(6,4,1)
+    bold_color         = tty.white + tty.bold
+    normal_color       = tty.normal + tty.colorset(fg_color, bg_color)
+    title_color_left   = tty.colorset(0, 7, 1)
+    title_color_right  = tty.colorset(0, 7)
+    subheader_color    = tty.colorset(fg_color, bg_color, 1)
+    header_color_left  = tty.colorset(0, 2)
+    header_color_right = tty.colorset(7, 2, 1)
+    parameters_color   = tty.colorset(6, 4, 1)
+    examples_color     = tty.colorset(6, 4, 1)
 
     sections = load_manpage(checkname)
     if not sections:
@@ -2765,7 +2753,7 @@ def show_check_manual(checkname):
         return
 
     # Output
-    height, width = get_tty_size()
+    height, width = tty.get_size()
     if os.path.exists("/usr/bin/less") and not opt_nowiki:
         output = os.popen("/usr/bin/less -S -R -Q -u -L", "w")
     else:
@@ -2814,18 +2802,18 @@ def show_check_manual(checkname):
     else:
         def markup(line, attr):
             # Replaces braces in the line but preserves the inner braces
-            return re.sub('(?<!{){', bold_color, re.sub('(?<!})}', tty_normal + attr, line))
+            return re.sub('(?<!{){', bold_color, re.sub('(?<!})}', tty.normal + attr, line))
 
         def print_sectionheader(left, right):
             print_splitline(title_color_left, "%-25s" % left, title_color_right, right)
 
         def print_subheader(line):
             empty_line()
-            output.write(subheader_color + " " + tty_underline +
+            output.write(subheader_color + " " + tty.underline +
                          line.upper() +
                          normal_color +
                          (" " * (width - 1 - len(line))) +
-                         tty_normal + "\n")
+                         tty.normal + "\n")
 
         def print_line(line, attr=normal_color, no_markup = False):
             if no_markup:
@@ -2837,17 +2825,17 @@ def show_check_manual(checkname):
             output.write(attr + " ")
             output.write(text)
             output.write(" " * (width - 2 - l))
-            output.write(" " + tty_normal + "\n")
+            output.write(" " + tty.normal + "\n")
 
         def print_splitline(attr1, left, attr2, right):
             output.write(attr1 + " " + left)
             output.write(attr2)
             output.write(markup(right, attr2))
             output.write(" " * (width - 1 - len(left) - print_len(right)))
-            output.write(tty_normal + "\n")
+            output.write(tty.normal + "\n")
 
         def empty_line():
-            print_line("", tty(7,4))
+            print_line("", tty.colorset(7,4))
 
         def print_len(word):
             # In case of double braces remove only one brace for counting the length
@@ -2893,7 +2881,7 @@ def show_check_manual(checkname):
                 line += " " * (width - printlen)
             return line
 
-        def wrap_text(text, width, attr=tty(7,4)):
+        def wrap_text(text, width, attr=tty.colorset(7, 4)):
             wrapped = []
             line = ""
             col = 0
@@ -2923,16 +2911,16 @@ def show_check_manual(checkname):
                 wrapped = wrapped[:-1]
             return wrapped
 
-        def print_textbody(text, attr=tty(7,4)):
+        def print_textbody(text, attr=tty.colorset(7, 4)):
             wrapped = wrap_text(text, width - 2)
             for line in wrapped:
                 print_line(line, attr)
 
         def print_splitwrap(attr1, left, attr2, text):
             wrapped = wrap_text(left + attr2 + text, width - 2)
-            output.write(attr1 + " " + wrapped[0] + " " + tty_normal + "\n")
+            output.write(attr1 + " " + wrapped[0] + " " + tty.normal + "\n")
             for line in wrapped[1:]:
-                output.write(attr2 + " " + line + " " + tty_normal + "\n")
+                output.write(attr2 + " " + line + " " + tty.normal + "\n")
 
     try:
         header = sections['header']
@@ -2995,7 +2983,8 @@ def show_check_manual(checkname):
                 if not first:
                     empty_line()
                 first = False
-                print_splitwrap(tty(2,4,1), name + ": ", tty_normal + tty(7,4), text)
+                print_splitwrap(tty.colorset(2, 4, 1), name + ": ",
+                                tty.normal + tty.colorset(7, 4), text)
             if opt_nowiki:
                 print "</table>"
         else:
@@ -3200,7 +3189,7 @@ def do_flush(hosts):
         # counters
         try:
             os.remove(counters_directory + "/" + host)
-            sys.stdout.write(tty_bold + tty_blue + " counters")
+            sys.stdout.write(tty.bold + tty.blue + " counters")
             sys.stdout.flush()
             flushed = True
         except:
@@ -3219,15 +3208,15 @@ def do_flush(hosts):
                     except:
                         pass
             if d == 1:
-                sys.stdout.write(tty_bold + tty_green + " cache")
+                sys.stdout.write(tty.bold + tty.green + " cache")
             elif d > 1:
-                sys.stdout.write(tty_bold + tty_green + " cache(%d)" % d)
+                sys.stdout.write(tty.bold + tty.green + " cache(%d)" % d)
             sys.stdout.flush()
 
         # piggy files from this as source host
         d = remove_piggyback_info_from(host)
         if d:
-            sys.stdout.write(tty_bold + tty_magenta  + " piggyback(%d)" % d)
+            sys.stdout.write(tty.bold + tty.magenta  + " piggyback(%d)" % d)
 
 
         # logfiles
@@ -3243,24 +3232,24 @@ def do_flush(hosts):
                     except:
                         pass
             if d > 0:
-                sys.stdout.write(tty_bold + tty_magenta + " logfiles(%d)" % d)
+                sys.stdout.write(tty.bold + tty.magenta + " logfiles(%d)" % d)
 
         # autochecks
         count = remove_autochecks_of(host)
         if count:
             flushed = True
-            sys.stdout.write(tty_bold + tty_cyan + " autochecks(%d)" % count)
+            sys.stdout.write(tty.bold + tty.cyan + " autochecks(%d)" % count)
 
         # inventory
         path = var_dir + "/inventory/" + host
         if os.path.exists(path):
             os.remove(path)
-            sys.stdout.write(tty_bold + tty_yellow + " inventory")
+            sys.stdout.write(tty.bold + tty.yellow + " inventory")
 
         if not flushed:
             sys.stdout.write("(nothing)")
 
-        sys.stdout.write(tty_normal + "\n")
+        sys.stdout.write(tty.normal + "\n")
 
 
 #.
@@ -3279,7 +3268,7 @@ g_configuration_warnings = []
 
 def configuration_warning(text):
     g_configuration_warnings.append(text)
-    sys.stdout.write("\n%sWARNING:%s %s\n" % (tty_bold + tty_yellow, tty_normal, text))
+    sys.stdout.write("\n%sWARNING:%s %s\n" % (tty.bold + tty.yellow, tty.normal, text))
 
 
 def create_core_config():
@@ -3644,7 +3633,7 @@ def do_snmpwalk_on(hostname, filename):
                 raise
 
     out.close()
-    verbose("Successfully Wrote %s%s%s.\n" % (tty_bold, filename, tty_normal))
+    verbose("Successfully Wrote %s%s%s.\n" % (tty.bold, filename, tty.normal))
 
 
 def do_snmpget(oid, hostnames):
@@ -3726,12 +3715,12 @@ def show_paths():
     def show_paths(title, t):
         if t != inst:
             print
-        print(tty_bold + title + tty_normal)
+        print(tty.bold + title + tty.normal)
         for path, filedir, typp, descr in paths:
             if typp == t:
                 if filedir == dir:
                     path += "/"
-                print("  %-47s: %s%s%s" % (descr, tty_bold + tty_blue, path, tty_normal))
+                print("  %-47s: %s%s%s" % (descr, tty.bold + tty.blue, path, tty.normal))
 
     for title, t in [
         ( "Files copied or created during installation", inst ),
@@ -3766,12 +3755,12 @@ def ip_address_for_dump_host(hostname, family=None):
 def dump_host(hostname):
     print
     if is_cluster(hostname):
-        color = tty_bgmagenta
+        color = tty.bgmagenta
         add_txt = " (cluster of " + (", ".join(nodes_of(hostname))) + ")"
     else:
-        color = tty_bgblue
+        color = tty.bgblue
         add_txt = ""
-    print "%s%s%s%-78s %s" % (color, tty_bold, tty_white, hostname + add_txt, tty_normal)
+    print "%s%s%s%-78s %s" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal)
 
     ipaddress = ip_address_for_dump_host(hostname)
 
@@ -3794,18 +3783,18 @@ def dump_host(hostname):
         else:
             addresses += " (Primary: IPv4)"
 
-    print tty_yellow + "Addresses:              " + tty_normal + addresses
+    print tty.yellow + "Addresses:              " + tty.normal + addresses
 
     tags = tags_of_host(hostname)
-    print tty_yellow + "Tags:                   " + tty_normal + ", ".join(tags)
+    print tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags)
     if is_cluster(hostname):
         parents_list = nodes_of(hostname)
     else:
         parents_list = parents_of(hostname)
     if len(parents_list) > 0:
-        print tty_yellow + "Parents:                " + tty_normal + ", ".join(parents_list)
-    print tty_yellow + "Host groups:            " + tty_normal + make_utf8(", ".join(hostgroups_of(hostname)))
-    print tty_yellow + "Contact groups:         " + tty_normal + make_utf8(", ".join(host_contactgroups_of([hostname])))
+        print tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list)
+    print tty.yellow + "Host groups:            " + tty.normal + make_utf8(", ".join(hostgroups_of(hostname)))
+    print tty.yellow + "Contact groups:         " + tty.normal + make_utf8(", ".join(host_contactgroups_of([hostname])))
 
     agenttypes = []
     if is_tcp_host(hostname):
@@ -3845,29 +3834,29 @@ def dump_host(hostname):
     if is_ping_host(hostname):
         agenttypes.append('PING only')
 
-    print tty_yellow + "Type of agent:          " + tty_normal + '\n                        '.join(agenttypes)
+    print tty.yellow + "Type of agent:          " + tty.normal + '\n                        '.join(agenttypes)
     is_aggregated = host_is_aggregated(hostname)
     if is_aggregated:
-        print tty_yellow + "Is aggregated:          " + tty_normal + "yes"
+        print tty.yellow + "Is aggregated:          " + tty.normal + "yes"
         shn = summary_hostname(hostname)
-        print tty_yellow + "Summary host:           " + tty_normal + shn
-        print tty_yellow + "Summary host groups:    " + tty_normal + ", ".join(summary_hostgroups_of(hostname))
-        print tty_yellow + "Summary contact groups: " + tty_normal + ", ".join(host_contactgroups_of([shn]))
+        print tty.yellow + "Summary host:           " + tty.normal + shn
+        print tty.yellow + "Summary host groups:    " + tty.normal + ", ".join(summary_hostgroups_of(hostname))
+        print tty.yellow + "Summary contact groups: " + tty.normal + ", ".join(host_contactgroups_of([shn]))
         notperiod = (host_extra_conf(hostname, summary_host_notification_periods) + [""])[0]
-        print tty_yellow + "Summary notification:   " + tty_normal + notperiod
+        print tty.yellow + "Summary notification:   " + tty.normal + notperiod
     else:
-        print tty_yellow + "Is aggregated:          " + tty_normal + "no"
+        print tty.yellow + "Is aggregated:          " + tty.normal + "no"
 
 
     format_string = " %-15s %s%-10s %s%-17s %s%-14s%s %s%-16s%s"
-    print tty_yellow + "Services:" + tty_normal
+    print tty.yellow + "Services:" + tty.normal
     check_items = get_sorted_check_table(hostname)
 
     headers = ["checktype", "item",    "params", "description", "groups", "summarized to", "groups"]
-    colors =  [ tty_normal,  tty_blue, tty_normal, tty_green,     tty_normal, tty_red, tty_white ]
+    colors =  [ tty.normal,  tty.blue, tty.normal, tty.green,     tty.normal, tty.red, tty.white ]
     if service_dependencies != []:
         headers.append("depends on")
-        colors.append(tty_magenta)
+        colors.append(tty.magenta)
 
     def if_aggr(a):
         if is_aggregated:
@@ -3895,7 +3884,7 @@ def print_table(headers, colors, rows, indent = ""):
     format = indent
     sep = ""
     for l,c in zip(lengths, colors):
-        format += c + sep + "%-" + str(l) + "s" + tty_normal
+        format += c + sep + "%-" + str(l) + "s" + tty.normal
         sep = " "
 
     first = True
@@ -4123,14 +4112,14 @@ def do_create_config(with_agents=True):
     sys.stdout.write("Generating configuration for core (type %s)..." % monitoring_core)
     sys.stdout.flush()
     create_core_config()
-    sys.stdout.write(tty_ok + "\n")
+    sys.stdout.write(tty.ok + "\n")
 
     if bake_agents_on_restart and with_agents and 'do_bake_agents' in globals():
         sys.stdout.write("Baking agents...")
         sys.stdout.flush()
         try:
             do_bake_agents()
-            sys.stdout.write(tty_ok + "\n")
+            sys.stdout.write(tty.ok + "\n")
         except Exception, e:
             if opt_debug:
                raise
@@ -4141,7 +4130,7 @@ def do_precompile_hostchecks():
     sys.stdout.write("Precompiling host checks...")
     sys.stdout.flush()
     precompile_hostchecks()
-    sys.stdout.write(tty_ok + "\n")
+    sys.stdout.write(tty.ok + "\n")
 
 
 def do_pack_config():
@@ -4149,7 +4138,7 @@ def do_pack_config():
     sys.stdout.flush()
     pack_config()
     pack_autochecks()
-    sys.stdout.write(tty_ok + "\n")
+    sys.stdout.write(tty.ok + "\n")
 
 
 def do_update(with_precompile):
@@ -4179,7 +4168,7 @@ def do_check_nagiosconfig():
         output = process.read()
         exit_status = process.close()
         if not exit_status:
-            sys.stdout.write(tty_ok + "\n")
+            sys.stdout.write(tty.ok + "\n")
             return True
         else:
             sys.stdout.write("ERROR:\n")
@@ -4208,7 +4197,7 @@ def do_core_action(action, quiet=False):
         raise MKGeneralException("Cannot %s the monitoring core: %s" % (action, output))
     else:
         if not quiet:
-            sys.stdout.write(tty_ok + "\n")
+            sys.stdout.write(tty.ok + "\n")
 
 def core_is_running():
     if monitoring_core == "nagios":
@@ -4447,7 +4436,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
     # Output marks with status of each single scan
     def dot(color, dot='o'):
         if not silent:
-            sys.stdout.write(tty_bold + color + dot + tty_normal)
+            sys.stdout.write(tty.bold + color + dot + tty.normal)
             sys.stdout.flush()
 
     # Now all run and we begin to read the answers. For each host
@@ -4457,7 +4446,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
         lines = [l.strip() for l in proc.readlines()]
         exitstatus = proc.close()
         if exitstatus:
-            dot(tty_red, '*')
+            dot(tty.red, '*')
             gateways.append((None, "failed", 0, "Traceroute failed with exit code %d" % (exitstatus & 255)))
             continue
 
@@ -4465,7 +4454,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
             message = lines[0][6:].strip()
             if opt_verbose:
                 sys.stderr.write("%s: %s\n" % (host, message))
-            dot(tty_red, "D")
+            dot(tty.red, "D")
             gateways.append((None, "dnserror", 0, message))
             continue
 
@@ -4473,7 +4462,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
             if opt_debug:
                 raise MKGeneralException("Cannot execute %s. Is traceroute installed? Are you root?" % command)
             else:
-                dot(tty_red, '!')
+                dot(tty.red, '!')
             continue
 
         elif len(lines) < 2:
@@ -4481,7 +4470,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
                 sys.stderr.write("%s: %s\n" % (host, ' '.join(lines)))
             gateways.append((None, "garbled", 0, "The output of traceroute seem truncated:\n%s" %
                     ("".join(lines))))
-            dot(tty_blue)
+            dot(tty.blue)
             continue
 
         # Parse output of traceroute:
@@ -4514,7 +4503,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
             error = "incomplete output from traceroute. No routes found."
             sys.stderr.write("%s: %s\n" % (host, error))
             gateways.append((None, "garbled", 0, error))
-            dot(tty_red)
+            dot(tty.red)
             continue
 
         # Only one entry -> host is directly reachable and gets nagios as parent -
@@ -4524,10 +4513,10 @@ def scan_parents_of(hosts, silent=False, settings={}):
         elif len(routes) == 1:
             if ip == nagios_ip:
                 gateways.append( (None, "root", 0, "") ) # We are the root-monitoring host
-                dot(tty_white, 'N')
+                dot(tty.white, 'N')
             elif monitoring_host:
                 gateways.append( ((monitoring_host, nagios_ip, None), "direct", 0, "") )
-                dot(tty_cyan, 'L')
+                dot(tty.cyan, 'L')
             else:
                 gateways.append( (None, "direct", 0, "") )
             continue
@@ -4554,7 +4543,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
             if not silent:
                 sys.stderr.write("%s: %s\n" % (host, error))
             gateways.append((None, "notfound", 0, error))
-            dot(tty_blue)
+            dot(tty.blue)
             continue
 
         # TTLs already have been filtered out)
@@ -4569,7 +4558,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
         # Try to find DNS name of host via reverse DNS lookup
         dns_name = ip_to_dnsname(gateway_ip)
         gateways.append( ((gateway, gateway_ip, dns_name), "gateway", skipped_gateways, "") )
-        dot(tty_green, 'G')
+        dot(tty.green, 'G')
     return gateways
 
 # find hostname belonging to an ip address. We must not use
@@ -5085,7 +5074,7 @@ try:
         elif o in [ '-X', '--config-check' ]:
             done = True
         elif o in [ '-S', '-H' ]:
-            sys.stderr.write(tty_bold + tty_red + "ERROR" + tty_normal + "\n")
+            sys.stderr.write(tty.bold + tty.red + "ERROR" + tty.normal + "\n")
             sys.stderr.write("The options -S and -H have been replaced with the option -N. If you \n")
             sys.stderr.write("want to generate only the service definitions, please set \n")
             sys.stderr.write("'generate_hostconf = False' in main.mk.\n")

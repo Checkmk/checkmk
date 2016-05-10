@@ -26,6 +26,8 @@
 
 import gzip
 
+import cmk.tty as tty
+
 inventory_output_dir = var_dir + "/inventory"
 inventory_archive_dir = var_dir + "/inventory_archive"
 inventory_pprint_output = True
@@ -267,7 +269,7 @@ def do_inv_for(hostname):
             continue
 
         if opt_verbose:
-            sys.stdout.write(tty_green + tty_bold + info_type + " " + tty_normal)
+            sys.stdout.write(tty.green + tty.bold + info_type + " " + tty.normal)
             sys.stdout.flush()
 
         # Inventory functions can optionally have a second argument: parameters.
@@ -284,7 +286,7 @@ def do_inv_for(hostname):
     old_timestamp = save_inv_tree(hostname)
 
     if opt_verbose:
-        sys.stdout.write("..%s%s%d%s entries" % (tty_bold, tty_yellow, count_nodes(g_inv_tree), tty_normal))
+        sys.stdout.write("..%s%s%d%s entries" % (tty.bold, tty.yellow, count_nodes(g_inv_tree), tty.normal))
         sys.stdout.flush()
 
     run_inv_export_hooks(hostname, g_inv_tree)
@@ -348,7 +350,7 @@ def run_inv_export_hooks(hostname, tree):
         entries = host_extra_conf(hostname, ruleset)
         if entries:
             if opt_verbose:
-                sys.stdout.write(", running %s%s%s%s..." % (tty_blue, tty_bold, hookname, tty_normal))
+                sys.stdout.write(", running %s%s%s%s..." % (tty.blue, tty.bold, hookname, tty.normal))
                 sys.stdout.flush()
             params = entries[0]
             try:

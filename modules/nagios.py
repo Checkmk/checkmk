@@ -26,6 +26,8 @@
 
 # Code for support of Nagios (and compatible) cores
 
+import cmk.tty as tty
+
 #   .--Create config-------------------------------------------------------.
 #   |      ____                _                          __ _             |
 #   |     / ___|_ __ ___  __ _| |_ ___    ___ ___  _ __  / _(_) __ _       |
@@ -950,7 +952,7 @@ def stripped_python_file(filename):
 # TODO: move this into a new module nagios.py (for creating Nagios config)
 def precompile_hostcheck(hostname):
     if opt_verbose:
-        sys.stderr.write("%s%s%-16s%s:" % (tty_bold, tty_blue, hostname, tty_normal))
+        sys.stderr.write("%s%s%-16s%s:" % (tty.bold, tty.blue, hostname, tty.normal))
 
     compiled_filename = precompiled_hostchecks_dir + "/" + hostname
     source_filename = compiled_filename + ".py"
@@ -1111,7 +1113,7 @@ no_discovery_possible = None
         output.write(stripped_python_file(filename))
         output.write("\n\n")
         if opt_verbose:
-            sys.stderr.write(" %s%s%s" % (tty_green, filename.split('/')[-1], tty_normal))
+            sys.stderr.write(" %s%s%s" % (tty.green, filename.split('/')[-1], tty.normal))
 
     # Make sure all checks are converted to the new API
     output.write("convert_check_info()\n")

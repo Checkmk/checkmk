@@ -54,6 +54,7 @@ import traceback
 import subprocess
 
 from cmk.exceptions import MKGeneralException
+import cmk.tty as tty
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -93,48 +94,6 @@ def reset_global_caches():
     for cachevar_name in g_global_caches:
         globals()[cachevar_name] = {}
 
-# Prepare colored output if stdout is a TTY. No colors in pipe, etc.
-if sys.stdout.isatty():
-    tty_red       = '\033[31m'
-    tty_green     = '\033[32m'
-    tty_yellow    = '\033[33m'
-    tty_blue      = '\033[34m'
-    tty_magenta   = '\033[35m'
-    tty_cyan      = '\033[36m'
-    tty_white     = '\033[37m'
-    tty_bgblue    = '\033[44m'
-    tty_bgmagenta = '\033[45m'
-    tty_bgwhite   = '\033[47m'
-    tty_bold      = '\033[1m'
-    tty_underline = '\033[4m'
-    tty_normal    = '\033[0m'
-    tty_ok        = tty_green + tty_bold + 'OK' + tty_normal
-    def tty(fg=-1, bg=-1, attr=-1):
-        if attr >= 0:
-            return "\033[3%d;4%d;%dm" % (fg, bg, attr)
-        elif bg >= 0:
-            return "\033[3%d;4%dm" % (fg, bg)
-        elif fg >= 0:
-            return "\033[3%dm" % fg
-        else:
-            return tty_normal
-else:
-    tty_red       = ''
-    tty_green     = ''
-    tty_yellow    = ''
-    tty_blue      = ''
-    tty_magenta   = ''
-    tty_cyan      = ''
-    tty_white     = ''
-    tty_bgblue    = ''
-    tty_bgmagenta = ''
-    tty_bold      = ''
-    tty_underline = ''
-    tty_normal    = ''
-    tty_ok        = 'OK'
-    def tty(fg=-1, bg=-1, attr=-1):
-        return ''
-
 # Output text if opt_verbose is set (-v). Adds no linefeed
 def verbose(text):
     if opt_verbose:
@@ -158,7 +117,7 @@ def bail_out(reason):
 def warning(reason):
     stripped = reason.lstrip()
     indent = reason[:len(reason) - len(stripped)]
-    sys.stderr.write("%s%s%sWARNING:%s %s\n" % (indent, tty_bold, tty_yellow, tty_normal, stripped))
+    sys.stderr.write("%s%s%sWARNING:%s %s\n" % (indent, tty.bold, tty.yellow, tty.normal, stripped))
 
 
 # global variables used to cache temporary values that do not need
@@ -1990,10 +1949,10 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
         else:
             p = ''
             infotext_fmt = "%s"
-        color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[state]
+        color = tty.states[state]
         print ("%-20s %s%s"+infotext_fmt+"%s%s") % (servicedesc.encode('utf-8'),
-                                       tty_bold, color, make_utf8(infotext.split('\n')[0]),
-                                       tty_normal, make_utf8(p))
+                                       tty.bold, color, make_utf8(infotext.split('\n')[0]),
+                                       tty.normal, make_utf8(p))
 
 
 def submit_to_core(host, service, state, output, cached_at = None, cache_interval = None):
@@ -2511,7 +2470,7 @@ def submit_aggregated_results(hostname):
         return
 
     if opt_verbose:
-        print "\n%s%sAggregates Services:%s" % (tty_bold, tty_blue, tty_normal)
+        print "\n%s%sAggregates Services:%s" % (tty.bold, tty.blue, tty.normal)
     global g_aggregated_service_results
     items = g_aggregated_service_results.items()
     items.sort()
@@ -2536,9 +2495,9 @@ def submit_aggregated_results(hostname):
             submit_to_core(aggr_hostname, servicedesc, status, text)
 
         if opt_verbose:
-            color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[status]
+            color = tty.states[status]
             lines = text.split('\\n')
-            print "%-20s %s%s%-70s%s" % (servicedesc, tty_bold, color, lines[0], tty_normal)
+            print "%-20s %s%s%-70s%s" % (servicedesc, tty.bold, color, lines[0], tty.normal)
             if len(lines) > 1:
                 for line in lines[1:]:
                     print "  %s" % line
@@ -2553,8 +2512,8 @@ def submit_check_mk_aggregation(hostname, status, output):
         submit_to_core(summary_hostname(hostname), "Check_MK", status, output)
 
     if opt_verbose:
-        color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[status]
-        print "%-20s %s%s%-70s%s" % ("Check_MK", tty_bold, color, output, tty_normal)
+        color = tty.states[status]
+        print "%-20s %s%s%-70s%s" % ("Check_MK", tty.bold, color, output, tty.normal)
 
 
 #.

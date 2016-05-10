@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.tty as tty
+
 #   .--cmk -I--------------------------------------------------------------.
 #   |                                  _           ___                     |
 #   |                    ___ _ __ ___ | | __      |_ _|                    |
@@ -66,7 +68,7 @@ def do_discovery(hostnames, check_types, only_new):
     # Now loop through all hosts
     for hostname in hostnames:
         try:
-            verbose(tty_bold + hostname + tty_normal + ":\n")
+            verbose(tty.bold + hostname + tty.normal + ":\n")
             if opt_debug:
                 on_error = "raise"
             else:
@@ -134,7 +136,7 @@ def do_discovery_for(hostname, check_types, only_new, use_caches, on_error):
     found_check_types.sort()
     if found_check_types:
         for check_type in found_check_types:
-            verbose("  %s%3d%s %s\n" % (tty_green + tty_bold, stats[check_type], tty_normal, check_type))
+            verbose("  %s%3d%s %s\n" % (tty.green + tty.bold, stats[check_type], tty.normal, check_type))
     else:
         verbose("  nothing%s\n" % (only_new and " new" or ""))
 
@@ -465,7 +467,7 @@ def discover_marked_hosts():
     activation_required = False
 
     for hostname in hosts:
-        verbose("%s%s%s:\n" % (tty_bold, hostname, tty_normal))
+        verbose("%s%s%s:\n" % (tty.bold, hostname, tty.normal))
         host_flag_path = autodiscovery_dir + "/" + hostname
 
         if hostname not in all_configured_hosts():
@@ -771,9 +773,9 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
             found.append(check_type)
             default_found.append(check_type)
 
-    vverbose("   SNMP scan found:       %s%s%s%s\n" % (tty_bold, tty_yellow, " ".join(positive_found), tty_normal))
+    vverbose("   SNMP scan found:       %s%s%s%s\n" % (tty.bold, tty.yellow, " ".join(positive_found), tty.normal))
     if default_found:
-        vverbose("   without scan function: %s%s%s%s\n" % (tty_bold, tty_blue, " ".join(default_found), tty_normal))
+        vverbose("   without scan function: %s%s%s%s\n" % (tty.bold, tty.blue, " ".join(default_found), tty.normal))
 
 
     found.sort()

@@ -26,6 +26,8 @@
 
 import sys, getopt, os, datetime
 
+import cmk.tty as tty
+
 class LocalizeException(Exception):
     def __init__(self, reason):
         self.reason = reason
@@ -114,7 +116,7 @@ def do_localize(args):
     else:
         allc = commands.keys()
         allc.sort()
-        allc = [ tty_bold + c + tty_normal for c in allc ]
+        allc = [ tty.bold + c + tty.normal for c in allc ]
         sys.stderr.write("Invalid localize command. Allowed are: %s and %s.\n" %
                 (", ".join(allc[:-1]), allc[-1]))
         sys.exit(1)

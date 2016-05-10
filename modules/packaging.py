@@ -26,6 +26,8 @@
 
 import pprint, tarfile
 
+import cmk.tty as tty
+
 pac_ext = ".mkp"
 
 class PackageException(Exception):
@@ -118,7 +120,7 @@ def do_packaging(args):
     else:
         allc = commands.keys()
         allc.sort()
-        allc = [ tty_bold + c + tty_normal for c in allc ]
+        allc = [ tty.bold + c + tty.normal for c in allc ]
         sys.stderr.write("Invalid packaging command. Allowed are: %s and %s.\n" %
                 (", ".join(allc[:-1]), allc[-1]))
         sys.exit(1)
@@ -134,7 +136,7 @@ def package_list(args):
             for pacname in all_package_names():
                 package = read_package_info(pacname)
                 table.append((pacname, package["title"], package["num_files"]))
-            print_table(["Name", "Title", "Files"], [ tty_bold, "", "" ], table)
+            print_table(["Name", "Title", "Files"], [ tty.bold, "", "" ], table)
         else:
             for pacname in all_package_names():
                 sys.stdout.write("%s\n" % pacname)
@@ -189,7 +191,7 @@ def show_package(name, show_info = False):
             for part, title, perm, dir in get_package_parts():
                 files = package["files"].get(part, [])
                 if len(files) > 0:
-                    sys.stdout.write("  %s%s%s:\n" % (tty_bold, title, tty_normal))
+                    sys.stdout.write("  %s%s%s:\n" % (tty.bold, title, tty.normal))
                     for f in files:
                         sys.stdout.write("    %s\n" % f)
         else:
@@ -225,14 +227,14 @@ def package_create(args):
         filelists[part] = files
         num_files += len(files)
         if len(files) > 0:
-            verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
+            verbose("  %s%s%s:\n" % (tty.bold, title, tty.normal))
             for f in files:
                 verbose("    %s\n" % f)
 
 
     write_package_info(package)
     verbose("New package %s created with %d files.\n" % (pacname, num_files))
-    verbose("Please edit package details in %s%s%s\n" % (tty_bold, pac_dir + pacname, tty_normal))
+    verbose("Please edit package details in %s%s%s\n" % (tty.bold, pac_dir + pacname, tty.normal))
 
 
 def package_find(_no_args):
@@ -243,7 +245,7 @@ def package_find(_no_args):
             if first:
                 verbose("Unpackaged files:\n")
                 first = False
-            verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
+            verbose("  %s%s%s:\n" % (tty.bold, title, tty.normal))
             for f in files:
                 if opt_verbose:
                     sys.stdout.write("    %s\n" % f)
@@ -267,7 +269,7 @@ def package_release(args):
         for part, title, perm, dir in get_package_parts():
             filenames = package["files"].get(part, [])
             if len(filenames) > 0:
-                verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
+                verbose("  %s%s%s:\n" % (tty.bold, title, tty.normal))
                 for f in filenames:
                     verbose("    %s\n" % f)
     remove_package_info(pacname)
@@ -323,7 +325,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
     for part, title, perm, dir in get_package_parts():
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
-            verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
+            verbose("  %s%s%s:\n" % (tty.bold, title, tty.normal))
             for f in filenames:
                 verbose("    %s\n" % f)
             subtarname = part + ".tar"
@@ -350,7 +352,7 @@ def remove_package(package):
     for part, title, perm, dir in get_package_parts():
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
-            verbose("  %s%s%s\n" % (tty_bold, title, tty_normal))
+            verbose("  %s%s%s\n" % (tty.bold, title, tty.normal))
             for fn in filenames:
                 verbose("    %s" % fn)
                 try:
@@ -463,7 +465,7 @@ def install_package(file_name=None, file_object=None):
     for part, title, perm, dir in get_package_parts():
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
-            verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
+            verbose("  %s%s%s:\n" % (tty.bold, title, tty.normal))
             for fn in filenames:
                 verbose("    %s\n" % fn)
             # make sure target directory exists

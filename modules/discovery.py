@@ -309,7 +309,8 @@ def check_discovery(hostname, ipaddress=None):
                     affected_check_types.setdefault(check_type, 0)
                     affected_check_types[check_type] += 1
 
-                    if not unfiltered and item_filters(hostname, check_type, item):
+                    if not unfiltered and\
+                            (item_filters is None or item_filters(hostname, check_type, item)):
                         unfiltered = True
 
                     long_infotexts.append("%s: %s: %s" % (title, check_type, service_description(hostname, check_type, item)))

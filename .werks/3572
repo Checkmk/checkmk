@@ -1,0 +1,13 @@
+Title: Added user login session idle timeout
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.9i1
+Date: 1462889110
+Class: feature
+
+It is now possible to configure a login session idle timeout globally or for each user
+individually. When a user logs in and leaves the GUI open without interacting with it,
+Check_MK does not invalidate the users login session. The login is valid until the user
+closes the window or logs out. With the new option enabled, it is possible to configure
+a maximum allowed idle time after which each user has to renew the login.

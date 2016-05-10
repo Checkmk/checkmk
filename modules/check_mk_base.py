@@ -223,9 +223,6 @@ RAISE = False
 ZERO  = 0.0
 
 
-# Exceptions
-MKGeneralException = cmk.exceptions.MKGeneralException
-
 class MKBailOut(Exception):
     def __init__(self, reason):
         self.reason = reason

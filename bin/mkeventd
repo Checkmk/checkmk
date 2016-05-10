@@ -102,7 +102,7 @@ def decode_from_bytes(string_as_bytes):
     except:
         return string_as_bytes.decode("latin-1")
 
-# Rip out/replace any characters which have a special meaning see in the UTF-8
+# Rip out/replace any characters which have a special meaning in the UTF-8
 # encoded history files, see e.g. quote_tab. In theory this shouldn't be
 # necessary, because there are a bunch of bytes which are not contained in any
 # valid UTF-8 string, but following Murphy's Law, those are not used in

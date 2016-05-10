@@ -10084,6 +10084,28 @@ def mode_edit_user(phase):
 
     vs_email = EmailAddressUnicode()
 
+    vs_user_idle_timeout = Alternative(
+        title = _("Session idle timeout"),
+        elements = [
+            FixedValue(None,
+                title = _("Use the global configuration"),
+                totext = "",
+            ),
+            FixedValue(False,
+                title = _("Disable the login timeout"),
+                totext = "",
+            ),
+            Age(
+                title = _("Set an individual idle timeout"),
+                display = [ "minutes", "hours", "days" ],
+                minvalue = 60,
+                default_value = 3600,
+            ),
+        ],
+        style = "dropdown",
+        orientation = "horizontal",
+    )
+
     # Returns true if an attribute is locked and should be read only. Is only
     # checked when modifying an existing user
     locked_attributes = userdb.locked_attributes(user.get('connector'))
@@ -10193,6 +10215,13 @@ def mode_edit_user(phase):
         email = vs_email.from_html_vars("email")
         vs_email.validate_value(email, "email")
         new_user["email"] = email
+
+        idle_timeout = vs_user_idle_timeout.from_html_vars("idle_timeout")
+        vs_user_idle_timeout.validate_value(idle_timeout, "idle_timeout")
+        if idle_timeout != None:
+            new_user["idle_timeout"] = idle_timeout
+        elif idle_timeout == None and "idle_timeout" in new_user:
+            del new_user["idle_timeout"]
 
         # Pager
         pager = html.var("pager", '').strip()
@@ -10369,6 +10398,14 @@ def mode_edit_user(phase):
     html.help(_("Disabling the password will prevent a user from logging in while "
                  "retaining the original password. Notifications are not affected "
                  "by this setting."))
+
+    forms.section(_("Idle timeout"))
+    idle_timeout = user.get("idle_timeout")
+    if not is_locked("idle_timeout"):
+        vs_user_idle_timeout.render_input("idle_timeout", idle_timeout)
+    else:
+        html.write(idle_timeout)
+        html.hidden_field("idle_timeout", idle_timeout)
 
     # Roles
     forms.section(_("Roles"))

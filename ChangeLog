@@ -8,6 +8,7 @@
     * 3567 FIX: Werk list: Fixed link to not existing check man pages in some cases
     * 3569 FIX: Dashboard: Fixed wrong links to views in statistics dashlets when using state filters in dashlet
     * 3570 FIX: Dashboard: Fixed different issues with filtering using WATO folders
+    * 3571 FIX: Fixed missing downtime author filter
 
     WATO:
     * 3469 Show type of rule match of a rule (first, per-parameter, all) in WATO...

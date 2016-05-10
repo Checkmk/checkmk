@@ -791,6 +791,7 @@ declare_filter(253, FilterTime("comment", "comment_entry_time", _("Time of comme
 declare_filter(253, FilterTime("downtime", "downtime_entry_time", _("Time when downtime was created"), "downtime_entry_time" ))
 declare_filter(254, FilterText("downtime_comment", _("Downtime comment"), "downtime", "downtime_comment", "downtime_comment", "~"))
 declare_filter(255, FilterTime("downtime", "downtime_start_time", _("Start of downtime"), "downtime_start_time" ))
+declare_filter(256, FilterText("downtime_author", _("Downtime author"), "downtime", "downtime_author", "downtime_author", "~"))
 
 #    _
 #   | |    ___   __ _

@@ -53,7 +53,7 @@ import tempfile
 import traceback
 import subprocess
 
-from cmklib.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing

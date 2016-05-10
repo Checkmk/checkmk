@@ -342,6 +342,8 @@ try:
             load_module(module)
 
 except Exception, e:
+    if opt_debug:
+        raise
     sys.stderr.write("Cannot read module %s: %s\n" % (module, e))
     sys.exit(5)
 

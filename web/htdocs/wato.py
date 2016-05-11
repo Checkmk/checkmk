@@ -14808,7 +14808,9 @@ def mode_check_manpage(phase):
     check_type = html.var("check_type")
 
     if phase == "title":
-        if not re.match("^[a-zA-Z0-9_.]+$", check_type):
+        # TODO: There is one check "sap.value-groups" which will be renamed to "sap.value_groups".
+        # As long as the old one is available, allow a minus here.
+        if not re.match("^[-a-zA-Z0-9_.]+$", check_type):
             raise Exception("Invalid check type")
 
         manpage = check_mk_local_automation("get-check-manpage", [ check_type ])

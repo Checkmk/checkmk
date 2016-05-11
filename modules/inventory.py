@@ -72,9 +72,8 @@ for f in filelist:
 # This is just a small wrapper for the inv_tree() function which makes
 # it clear that the requested tree node is treated as a list.
 def inv_tree_list(path):
-    l = []
-    l += inv_tree(path)
-    return l
+    # The [] is needed to tell pylint that a list is returned
+    return inv_tree(path, [])
 
 
 # Function for accessing the inventory tree of the current host
@@ -82,14 +81,21 @@ def inv_tree_list(path):
 # The path must end with : or .
 # -> software is a dict
 # -> packages is a list
-def inv_tree(path):
+def inv_tree(path, default_value=None):
     global g_inv_tree
 
-    node = g_inv_tree
+    if default_value != None:
+        node = default_value
+    else:
+        node = {}
+
     current_what = "."
     current_path = ""
 
     while path:
+        if current_path == "":
+            node = g_inv_tree
+
         parts = re.split("[:.]", path)
         name = parts[0]
         what = path[len(name)]

@@ -1991,7 +1991,9 @@ register_check_parameters(
        help = _("Specify all expected mount options here. If the list of "
          "actually found options differs from this list, the check will go "
          "warning or critical. Just the option <tt>commit</tt> is being "
-         "ignored since it is modified by the power saving algorithms.")),
+         "ignored since it is modified by the power saving algorithms."),
+       valuespec = TextUnicode(),
+    ),
     TextAscii(
         title = _("Mount point"),
         allow_empty = False),

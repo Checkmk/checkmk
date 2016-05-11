@@ -201,7 +201,7 @@ if [ -x /usr/ucb/ps ]; then
         STATS=${LINE%) *}
         PID=${STATS##*,}
 
-        CMD=$(echo "$UCB_PS" | grep "\s*$PID " | head -n1 | \
+        CMD=$(echo "$UCB_PS" | grep "^\s*$PID " | head -n1 | \
               awk '{ s = ""; for (i = 5; i <= NF; i++) s = s $i " "; print s }')
         # Only use the ucb ps line when it's not empty (process might already been gone) and the
         # ps line is long enough the be potentially stripped.

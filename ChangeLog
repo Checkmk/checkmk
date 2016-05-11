@@ -2,6 +2,7 @@
     Checks & Agents:
     * 3528 FIX: netapp_api_protocol: fixed service discovery problem with older 7mode versions
     * 3529 FIX: agent_netapp: fixed problem with older netapp versions (7Mode - Version 8.0)...
+    * 3573 FIX: ps: Fixed possible wrong matching of ps and ucb ps commands
 
     Multisite:
     * 3468 FIX: Fix changing a user's language back to English if the default is German...

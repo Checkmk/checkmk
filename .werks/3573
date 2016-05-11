@@ -1,0 +1,9 @@
+Title: ps: Fixed possible wrong matching of ps and ucb ps commands
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p1
+Date: 1462948016
+Class: fix
+
+

@@ -1,0 +1,9 @@
+Title: Repair ignoring discovery errors when bogus %s is contained in service description
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.8p1
+Date: 1462973569
+Class: fix
+
+This problem often appeard after an upgrade from 1.2.6 to 1.2.8 on monitored ESX servers.

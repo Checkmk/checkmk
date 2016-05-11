@@ -1,4 +1,7 @@
 1.2.8p1:
+    Core & Setup:
+    * 3471 FIX: Repair ignoring discovery errors when bogus %s is contained in service description...
+
     Checks & Agents:
     * 3528 FIX: netapp_api_protocol: fixed service discovery problem with older 7mode versions
     * 3529 FIX: agent_netapp: fixed problem with older netapp versions (7Mode - Version 8.0)...

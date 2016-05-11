@@ -891,19 +891,28 @@ def get_node_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error):
 
     # Identify clustered services
     for (check_type, item), (check_source, paramstring) in services.items():
-        descr = service_description(hostname, check_type, item)
+        try:
+            descr = service_description(hostname, check_type, item)
+        except Exception, e:
+            if on_error == "raise":
+                raise
+            elif on_error == "warn":
+                sys.stderr.write("Invalid service description: %s\n" % e)
+            else:
+                continue # ignore
+
         if hostname != host_of_clustered_service(hostname, descr):
             if check_source == "vanished":
                 del services[(check_type, item)] # do not show vanished clustered services here
             else:
                 services[(check_type, item)] = ("clustered_" + check_source, paramstring)
 
-    merge_manual_services(services, hostname)
+    merge_manual_services(services, hostname, on_error)
     return services
 
 # To a list of discovered services add/replace manual and active
 # checks and handle ignoration
-def merge_manual_services(services, hostname):
+def merge_manual_services(services, hostname, on_error):
     # Find manual checks. These can override discovered checks -> "manual"
     manual_items = get_check_table(hostname, skip_autochecks=True)
     for (check_type, item), (params, descr, deps) in manual_items.items():
@@ -929,7 +938,16 @@ def merge_manual_services(services, hostname):
 
     # Handle disabled services -> "obsolete" and "ignored"
     for (check_type, item), (check_source, paramstring) in services.items():
-        descr = service_description(hostname, check_type, item)
+        try:
+            descr = service_description(hostname, check_type, item)
+        except Exception, e:
+            if on_error == "raise":
+                raise
+            elif on_error == "warn":
+                sys.stderr.write("Invalid service description: %s\n" % e)
+            else:
+                continue # ignore
+
         if service_ignored(hostname, check_type, descr):
             if check_source == "vanished":
                 new_source = "obsolete"
@@ -966,7 +984,7 @@ def get_cluster_services(hostname, use_caches, with_snmp_scan, on_error):
                     # In all other cases either both must be "new" or "vanished" -> let it be
 
     # Now add manual and active serivce and handle ignored services
-    merge_manual_services(cluster_items, hostname)
+    merge_manual_services(cluster_items, hostname, on_error)
     return cluster_items
 
 
@@ -992,7 +1010,16 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             except:
                 raise MKGeneralException("Invalid check parameter string '%s'" % paramstring)
 
-            descr = service_description(hostname, check_type, item)
+            try:
+                descr = service_description(hostname, check_type, item)
+            except Exception, e:
+                if on_error == "raise":
+                    raise
+                elif on_error == "warn":
+                    sys.stderr.write("Invalid service description: %s\n" % e)
+                else:
+                    continue # ignore
+
             global g_service_description
             g_service_description = descr
             infotype = check_type.split('.')[0]

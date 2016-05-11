@@ -152,6 +152,7 @@ Set service  = Nothing
 Set WMI      = Nothing
 Set registry = Nothing
 
+
 Dim CONN, RS, CFG, AUTH
 
 ' Initialize database connection objects
@@ -275,7 +276,7 @@ For Each instance_id In instances.Keys
             Set RS = RS.NextRecordset
             i = i + 1
         Loop
-        addOutput("MSSQL_" & instance & " " & Replace(dbName, " ", "_") & " " & dbSize & " " & _
+        addOutput("MSSQL_" & instance_id & " " & Replace(dbName, " ", "_") & " " & dbSize & " " & _
                   unallocated & " " & reserved & " " & data & " " & indexSize & " " & unused)
         Set RS = CreateObject("ADODB.Recordset")
     Next
@@ -291,7 +292,7 @@ For Each instance_id In instances.Keys
         Do While Not RS.Eof
             lastBackupDate = Trim(RS("last_backup_date"))
             If lastBackupDate <> "" Then
-                addOutput("MSSQL_" & instance & " " & Replace(dbName, " ", "_") & _
+                addOutput("MSSQL_" & instance_id & " " & Replace(dbName, " ", "_") & _
                           " " & lastBackupDate)
             End If
             RS.MoveNext
@@ -311,7 +312,7 @@ For Each instance_id In instances.Keys
                   "  case when max_size = '-1' then '1' else '0' end as Unlimited" &_
                   " FROM sys.database_files WHERE type_desc = 'LOG'", CONN
         Do While Not RS.Eof
-            addOutput( instId & " " & Replace(dbName, " ", "_") & " " & Replace(RS("name"), " ", "_") & _
+            addOutput( instance_id & " " & Replace(dbName, " ", "_") & " " & Replace(RS("name"), " ", "_") & _
                       " " & Replace(RS("physical_name"), " ", "_") & " " & _
                       RS("MaxSize") & " " & RS("AllocatedSize") & " " & RS("UsedSize")) & _
                       " " & RS("Unlimited")
@@ -332,7 +333,7 @@ For Each instance_id In instances.Keys
                 "  case when max_size = '-1' then '1' else '0' end as Unlimited" &_
                 " FROM sys.database_files WHERE type_desc = 'ROWS'", CONN
         Do While Not RS.Eof
-            addOutput( instId & " " & Replace(dbName, " ", "_") & " " & Replace(RS("name"), " ", "_") & _
+            addOutput( instance_id & " " & Replace(dbName, " ", "_") & " " & Replace(RS("name"), " ", "_") & _
                       " " & Replace(RS("physical_name"), " ", "_") & " " & _
                       RS("MaxSize") & " " & RS("AllocatedSize") & " " & RS("UsedSize")) & _
                       " " & RS("Unlimited")

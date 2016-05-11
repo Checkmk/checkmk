@@ -1,0 +1,12 @@
+Title: if64, if64adm: These checks now display the speed of interfaces slower than 1Mbit correctly
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1462952497
+Class: fix
+
+Previously, the two checks relied on a counter that has 10^6 bit resolution, so interfaces with
+less than 1Mbit speed were reported as "speed unknown", whereas the if check was capped at 4Gbit
+speed, reporting wrong speed for faster interfaces.
+The if64, if64adm checks have now been updated to provide the correct speed for all interfaces.

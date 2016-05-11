@@ -2289,7 +2289,7 @@ def sanitize_service_description(descr):
 def service_description(hostname, check_type, item):
     if check_type not in check_info:
         if item:
-            return "Unimplmented check %s / %s" % (check_type, item)
+            return "Unimplemented check %s / %s" % (check_type, item)
         else:
             return "Unimplemented check %s" % check_type
 

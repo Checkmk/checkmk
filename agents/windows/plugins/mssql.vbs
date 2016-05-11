@@ -31,7 +31,7 @@
 Option Explicit
 
 Dim WMI, FSO, SHO, items, objItem, prop, instVersion, registry
-Dim output, sources, instances, instance, instance_id, instance_name
+Dim sources, instances, instance, instance_id, instance_name
 Dim cfg_dir, cfg_file, hostname
 
 Const HKLM = &H80000002
@@ -50,10 +50,8 @@ Set SHO = CreateObject("WScript.Shell")
 hostname = SHO.ExpandEnvironmentStrings("%COMPUTERNAME%")
 cfg_dir = SHO.ExpandEnvironmentStrings("%MK_CONFDIR%")
 
-output = ""
 Sub addOutput(text)
     wscript.echo text
-    'output = output & text & vbLf
 End Sub
 
 Function readIniFile(path)
@@ -153,8 +151,6 @@ Next
 Set service  = Nothing
 Set WMI      = Nothing
 Set registry = Nothing
-
-wscript.quit(1)
 
 Dim CONN, RS, CFG, AUTH
 
@@ -354,6 +350,3 @@ Set RS = nothing
 Set CONN = nothing
 Set FSO = nothing
 Set SHO = nothing
-
-' finally output collected data
-'WScript.echo output

@@ -1,0 +1,11 @@
+Title: mounts: Fix exception when displaying check parameters in WATO services list
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1462963852
+
+The reason for this exception was that the autodiscovery now creates Unicode
+strings while the WATO parameter definition only allowed normal strings.

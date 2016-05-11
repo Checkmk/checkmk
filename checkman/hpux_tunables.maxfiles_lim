@@ -4,19 +4,37 @@ catalog: os/kernel
 license: GPL
 distribution: check_mk
 description:
+ This check allows for monitoring of admin-tunable kernel limits on HP-UX
+ systems that support the {"kcusage"} command. The command should be available
+ from HP-UX 11.20 to the current 11.31.
+
  The check uses the output of {kcusage -l} for monitoring the
  current number of open files (maxfiles_lim). Per default this
  check is always {OK}, but you can set levels for the used
  percentage.
 
- See check manpage for hpux_tunables too.
+inventory:
+ {hpux_tunables} generates one check per host for each of the supported
+ tunables.
 
 perfdata:
- See check manpage for hpux_tunables.
-
-inventory:
- See check manpage for hpux_tunables.
+  The name of the tunable along with it's usage, threshold and warning /
+  crit levels.
 
 [parameters]
-warn(float): See check manpage for hpux_tunables.
-crit(float): See check manpage for hpux_tunables.
+warn(float): Warning percentage for the tunables allocation
+crit(float): Critical percentage for the  tunables allocation
+
+
+[configuration]:
+ Generally the checks only track the usage and a limit has to be defined
+ using check_parameters.
+ The checks {nproc} and {nkthread} come with pre-configured default levels:
+
+hpux_tunables_nproc_default_levels (float, float):
+  The percentage of running processes compared to the kernel limit for running
+  processes.
+
+hpux_tunables_nkthread_default_levels (float, float):
+  The percentage of threads of running processes compared to the kernel limit
+  for running threads.

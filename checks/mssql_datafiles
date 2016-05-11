@@ -38,7 +38,7 @@ check_info['mssql_datafiles'] = {
     'check_function'          : check_mssql_datafiles,
     'inventory_function'      : lambda info: inventory_mssql_datafiles("datafiles", info),
     'service_description'     : 'Datafile %s',
-    'group'                   : "mssql_transactionlogs",
+    'group'                   : "mssql_datafiles",
     'has_perfdata'            : True,
     'default_levels_variable' : 'mssql_datafiles_default_levels',
     'includes'                : ["mssql.include"]

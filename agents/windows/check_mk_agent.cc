@@ -1574,8 +1574,12 @@ bool output_perfcounter_table(OutputProxy &out, const wchar_t *table_name,
         out.output("instance,%ls\n",
                    join(counter_object.counterNames(), L",").c_str());
         for (const auto &instance_values : value_map) {
+            std::wstring instance_name = L"\"\"";
+            if (static_cast<size_t>(instance_values.first) < instance_names.size()) {
+                instance_name = instance_names[instance_values.first];
+            }
             out.output("%ls,%ls\n",
-                       instance_names[instance_values.first].c_str(),
+                       instance_name.c_str(),
                        join(instance_values.second, L",").c_str());
         }
     } catch (const std::exception &e) {
@@ -1633,6 +1637,58 @@ void section_exchange(OutputProxy &out) {
     if (!any_section_valid) {
         crash_log("exchange wmi tables missing or empty -> section disabled");
         g_config->disableSection(SECTION_EXCHANGE);
+    }
+}
+
+void section_skype(OutputProxy &out) {
+    crash_log("<<<skype>>>");
+    out.output("<<<skype:sep(44)>>>\n");
+    LARGE_INTEGER Counter, Frequency;
+    QueryPerformanceCounter(&Counter);
+    QueryPerformanceFrequency(&Frequency);
+
+    out.output("sampletime,%" PRId64 ",%" PRId64 "\n", Counter.QuadPart,
+               Frequency.QuadPart);
+    bool any_section_valid = false;
+    for (const auto &data_source :
+         {L"LS:WEB - Address Book Web Query",
+          L"LS:WEB - Location Information Service",
+          L"LS:WEB - Distribution List Expansion",
+          L"LS:WEB - UCWA",
+          L"LS:WEB - Mobile Communication Service",
+          L"LS:WEB - Throttling and Authentication",
+          L"LS:SIP - Protocol",
+          L"LS:SIP - Responses",
+          L"LS:SIP - Peers",
+          L"LS:SIP - Load Management",
+          L"LS:DATAMCU - MCU Health And Performance",
+          L"LS:AVMCU - MCU Health And Performance",
+          L"LS:AsMcu - MCU Health And Performance",
+          L"LS:ImMcu - MCU Health And Performance",
+          L"LS:USrv - DBStore",
+          L"LS:MediationServer - Health Indices",
+          L"LS:MediationServer - Global Counters",
+          L"LS:MediationServer - Global Per Gateway Counters",
+          L"LS:MediationServer - Media Relay",
+          L"LS:A/V Auth - Requests",
+          L"LS:DATAPROXY - Server Connections",
+          L"LS:A/V Edge - TCP Counters",
+          L"LS:A/V Edge - UDP Counters"}) {
+        any_section_valid |= output_perfcounter_table(
+            out, data_source, to_utf8(data_source).c_str(), true);
+    }
+
+    if (any_section_valid) {
+        // the following will appear on systems that don't have Skype for Business installed
+        // but we don't care about it without Skype
+        output_perfcounter_table(out, L"ASP.NET Apps v4.0.30319",
+                                 "ASP.NET Apps v4.0.30319", true);
+    }
+
+    if (!any_section_valid) {
+        crash_log(
+            "skype perfcounter tables missing or empty -> section disabled");
+        g_config->disableSection(SECTION_SKYPE);
     }
 }
 
@@ -3335,6 +3391,10 @@ void output_data(OutputProxy &out, const Environment &env,
     }
     if ((section_mask & SECTION_EXCHANGE) != 0) {
         section_exchange(out);
+        if (section_flush) out.flush(false);
+    }
+    if ((section_mask & SECTION_SKYPE) != 0) {
+        section_skype(out);
         if (section_flush) out.flush(false);
     }
     if ((section_mask & SECTION_WEBSERVICES) != 0) {

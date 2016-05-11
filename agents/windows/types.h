@@ -68,6 +68,7 @@ static const unsigned int SECTION_WINPERF_IF = 0x00100000;
 static const unsigned int SECTION_WINPERF_CPU = 0x00200000;
 static const unsigned int SECTION_WINPERF_PHYDISK = 0x00400000;
 static const unsigned int SECTION_WINPERF_CONFIG = 0x00800000;
+static const unsigned int SECTION_SKYPE = 0x01000000;
 
 static const unsigned int SECTION_WINPERF =
     SECTION_WINPERF_IF | SECTION_WINPERF_CPU | SECTION_WINPERF_PHYDISK |

@@ -3099,6 +3099,188 @@ metric_info["page_lookups_sec"] = {
     "color" : "42/a"
 }
 
+metric_info["failed_search"] = {
+    "title" : _("Failed Search requests"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["failed_location"] = {
+    "title" : _("Failed Get Locations Requests"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["failed_ad"] = {
+    "title" : _("Timed out Active Directory Requests"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["http_5xx"] = {
+    "title" : _("HTTP 5xx Responses"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["message_processing_time"] = {
+    "title" : _("Average Incoming Message Processing Time"),
+    "unit": "s",
+    "color": "42/a"
+}
+
+metric_info["asp_requests_rejected"] = {
+    "title" : _("ASP Requests Rejected"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["incoming_responses_dropped"] = {
+    "title" : _("Incoming Responses Dropped"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["incoming_requests_dropped"] = {
+    "title" : _("Incoming Requests Dropped"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["queue_latency"] = {
+    "title" : _("Queue Latency"),
+    "unit": "s",
+    "color": "42/a"
+}
+
+metric_info["sproc_latency"] = {
+    "title" : _("Sproc Latency"),
+    "unit": "s",
+    "color": "42/a"
+}
+
+metric_info["throttled_requests"] = {
+    "title" : _("Throttled requests"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["503_responses"] = {
+    "title" : _("Local 503 Responses"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["incoming_messages_timed_out"] = {
+    "title" : _("Incoming Messages Timed out"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["avg_holding_time_incoming_messages"] = {
+    "title" : _("Average Holding Time For Incoming Messages"),
+    "unit": "s",
+    "color": "42/a"
+}
+
+metric_info["flow_controlled_connections"] = {
+    "title" : _("Flow-controlled Connections"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["avg_outgoing_queue_delay"] = {
+    "title" : _("Average Outgoing Queue Delay"),
+    "unit": "s",
+    "color": "42/a"
+}
+
+metric_info["sends_timed_out"] = {
+    "title" : _("Sends Timed-Out"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["load_call_failure_index"] = {
+    "title" : _("Load Call Failure Index"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["failed_calls_because_of_proxy"] = {
+    "title" : _("Failed calls caused by unexpected interaction from proxy"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["failed_calls_because_of_gateway"] = {
+    "title" : _("Failed calls caused by unexpected interaction from gateway"),
+    "unit": "count",
+    "color": "42/a"
+}
+metric_info["media_connectivity_failure"] = {
+    "title" : _("Media Connectivity Check Failure"),
+    "unit": "count",
+    "color": "42/a"
+}
+metric_info["failed_requests"] = {
+    "title" : _("Bad Requests Received"),
+    "unit": "count",
+    "color": "42/a"
+}
+metric_info["udp_failed_auth"] = {
+    "title" : _("UDP Authentication Failures"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+metric_info["tcp_failed_auth"] = {
+    "title" : _("TCP Authentication Failures"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+metric_info["udp_allocate_requests_exceeding_port_limit"] = {
+    "title" : _("UDP Allocate Requests Exceeding Port Limit"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+metric_info["tcp_allocate_requests_exceeding_port_limit"] = {
+    "title" : _("TCP Allocate Requests Exceeding Port Limit"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+metric_info["udp_packets_dropped"] = {
+    "title" : _("UDP Packets Dropped"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+metric_info["tcp_packets_dropped"] = {
+    "title" : _("TCP Packets Dropped"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+metric_info["connections_throttled"] = {
+    "title" : _("Throttled Server Connections"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+skype_mobile_devices = [("android", "Android", "33/a"),
+                        ("iphone", "iPhone", "42/a"),
+                        ("ipad", "iPad", "45/4")]
+
+for device, name, color in skype_mobile_devices:
+    metric_info["active_sessions_%s" % device] = {
+        "title" : _("Active Sessions (%s)") % name,
+        "unit": "count",
+        "color": color
+    }
+
+metric_info["requests_processing"] = {
+    "title" : _("Requests in Processing"),
+    "unit": "count",
+    "color": "12/a"
+}
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -6442,3 +6624,34 @@ graph_info.append({
         ("data_size", "area" )
     ]
 })
+
+graph_info.append({
+    "title" : _("Authentication Failures"),
+    "metrics" : [
+        ("udp_failed_auth", "line"),
+        ("tcp_failed_auth", "line")
+    ]
+})
+
+graph_info.append({
+    "title" : _("Allocate Requests Exceeding Port Limit"),
+    "metrics" : [
+        ("udp_allocate_requests_exceeding_port_limit", "line"),
+        ("tcp_allocate_requests_exceeding_port_limit", "line")
+    ]
+})
+
+graph_info.append({
+    "title" : _("Packets Dropped"),
+    "metrics" : [
+        ("udp_packets_dropped", "line"),
+        ("tcp_packets_dropped", "line"),
+    ]
+})
+
+graph_info.append({
+    "title" : _("Active Sessions"),
+    "metrics" : [("active_sessions_%s" % device, "line")
+                 for device, name, color in skype_mobile_devices[::-1]]
+})
+

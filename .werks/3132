@@ -1,0 +1,9 @@
+Title: skype, skype.data_proxy, skype.edge, skype.edge_auth, skype.mcu, skype.mediation_server, skype.mobile, skype.sip_stack: added new checks to monitor a Skype For Business installation
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1462957307
+Class: feature
+
+

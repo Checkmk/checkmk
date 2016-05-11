@@ -1210,6 +1210,418 @@ register_check_parameters(
     "dict"
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "skype",
+    _("Skype for Business"),
+    Dictionary(
+        help = _("Warn/Crit levels for various Skype for Business "
+                 "(formerly known as Lync) metrics"),
+        elements = [
+            ('failed_search_requests',
+             Dictionary(
+                 title = _("Failed Search Requests"),
+                 elements = [
+                     ("upper",
+                      Tuple(
+                          elements = [
+                              Float(title = _("Warning at"), unit = _("per second"), default_value = 1.0),
+                              Float(title = _("Critical at"), unit = _("per second"), default_value = 2.0),
+                          ]
+                      )),
+                 ],
+                 optional_keys = []
+             )),
+            ('failed_locations_requests',
+             Dictionary(
+                 title = _("Failed Get Locations Requests"),
+                 elements = [
+                     ("upper",
+                      Tuple(
+                          elements = [
+                              Float(title = _("Warning at"), unit = _("per second"), default_value = 1.0),
+                              Float(title = _("Critical at"), unit = _("per second"), default_value = 2.0),
+                          ]
+                      )),
+                 ],
+                 optional_keys = []
+             )),
+            ('timedout_ad_requests',
+             Dictionary(
+                 title = _("Timed out Active Directory Requests"),
+                 elements = [
+                     ("upper",
+                      Tuple(
+                          elements = [
+                              Integer(title = _("Warning at"), unit = _("per second"), default_value = 1),
+                              Integer(title = _("Critical at"), unit = _("per second"), default_value = 2),
+                          ]
+                      )),
+                 ],
+                 optional_keys = []
+             )),
+            ('5xx_responses',
+             Dictionary(
+                 title = _("HTTP 5xx Responses"),
+                 elements = [
+                     ("upper",
+                      Tuple(
+                          elements = [
+                              Float(title = _("Warning at"), unit = _("per second"), default_value = 1.0),
+                              Float(title = _("Critical at"), unit = _("per second"), default_value = 2.0),
+                          ]
+                      )),
+                 ],
+                 optional_keys = []
+             )),
+            ('message_processing_time',
+            Dictionary(
+                title = _("Average Incoming Message Processing Time"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("seconds"), default_value = 1.0),
+                            Float(title = _("Critical at"), unit = _("seconds"), default_value = 2.0),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('asp_requests_rejected',
+            Dictionary(
+                title = _("ASP Requests Rejected"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Integer(title = _("Warning at"), default_value = 1),
+                            Integer(title = _("Critical at"), default_value = 2),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('incoming_responses_dropped',
+            Dictionary(
+                title = _("Incoming Responses Dropped"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("per second"), default_value = 1.0),
+                            Float(title = _("Critical at"), unit = _("per second"), default_value = 2.0),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('incoming_requests_dropped',
+            Dictionary(
+                title = _("Incoming Requests Dropped"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("per second"), default_value = 1.0),
+                            Float(title = _("Critical at"), unit = _("per second"), default_value = 2.0),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('queue_latency',
+            Dictionary(
+                title = _("Queue Latency"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("seconds"), default_value = 0.1),
+                            Float(title = _("Critical at"), unit = _("seconds"), default_value = 0.2),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('sproc_latency',
+            Dictionary(
+                title = _("Sproc Latency"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("seconds"), default_value = 0.1),
+                            Float(title = _("Critical at"), unit = _("seconds"), default_value = 0.2),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('throttled_requests',
+            Dictionary(
+                title = _("Throttled requests"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("per second"), default_value = 0.2),
+                            Float(title = _("Critical at"), unit = _("per second"), default_value = 0.4),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('timedout_incoming_messages',
+            Dictionary(
+                title = _("Incoming Messages Timed out"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Integer(title = _("Warning at"), default_value = 2),
+                            Integer(title = _("Critical at"), default_value = 4),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('holding_time_incoming',
+            Dictionary(
+                title = _("Average Holding Time For Incoming Messages"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("seconds"), default_value = 1.0),
+                            Float(title = _("Critical at"), unit = _("seconds"), default_value = 2.0),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('flow_controlled_connections',
+            Dictionary(
+                title = _("Flow-controlled Connections"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Integer(title = _("Warning at"), default_value = 2),
+                            Integer(title = _("Critical at"), default_value = 4),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('outgoing_queue_delay',
+            Dictionary(
+                title = _("Average Outgoing Queue Delay"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("seconds"), default_value = 2.0),
+                            Float(title = _("Critical at"), unit = _("seconds"), default_value = 4.0),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('timedout_sends',
+            Dictionary(
+                title = _("Sends Timed-Out"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Integer(title = _("Warning at"), unit = _("per second"), default_value = 10),
+                            Integer(title = _("Critical at"), unit = _("per second"), default_value = 20),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('failed_calls_because_of_proxy',
+            Dictionary(
+                title = _("Failed calls caused by unexpected interaction from proxy"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Integer(title = _("Warning at"), default_value = 10),
+                            Integer(title = _("Critical at"), default_value = 20),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('failed_calls_because_of_gateway',
+            Dictionary(
+                title = _("Failed calls caused by unexpected interaction from gateway"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Integer(title = _("Warning at"), default_value = 10),
+                            Integer(title = _("Critical at"), default_value = 20),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('media_connectivity_failure',
+            Dictionary(
+                title = _("Media Connectivity Check Failure"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Integer(title = _("Warning at"), default_value = 1),
+                            Integer(title = _("Critical at"), default_value = 2),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('bad_requests',
+            Dictionary(
+                title = _("Bad Requests Received"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Integer(title = _("Warning at"), unit = _("per second"), default_value = 20),
+                            Integer(title = _("Critical at"), unit = _("per second"), default_value = 40),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('throttled_connections',
+            Dictionary(
+                title = _("Throttled Server Connections"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Integer(title = _("Warning at"), default_value = 3),
+                            Integer(title = _("Critical at"), default_value = 6),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('requests_processing',
+            Dictionary(
+                title = _("Requests in Processing"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Integer(title = _("Warning at"), unit = _("per second"), default_value = 10000),
+                            Integer(title = _("Critical at"), unit = _("per second"), default_value = 20000),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+        ],
+    ),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "skype_proxy",
+    _("Skype for Business Data Proxy"),
+    Dictionary(
+        help = _("Warn/Crit levels for various Skype for Business "
+                 "(formerly known as Lync) metrics"),
+        elements = [
+            ('throttled_connections',
+             Dictionary(
+                 title = _("Throttled Server Connections"),
+                 elements = [
+                     ("upper",
+                      Tuple(
+                          elements = [
+                              Integer(title = _("Warning at"), default_value = 3),
+                              Integer(title = _("Critical at"), default_value = 6),
+                          ]
+                      )),
+                 ],
+                 optional_keys = []
+             )),
+        ],
+    ),
+    TextAscii(
+        title = _("Name of the Proxy"),
+        help = _("The name of the Data Proxy"),
+        allow_empty = False,
+    ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "skype_edge",
+    _("Skype for Business Edge"),
+    Dictionary(
+        elements = [
+            ('authentication_failures',
+             Dictionary(
+                 title = _("Authentication Failures"),
+                 elements = [
+                     ("upper",
+                      Tuple(
+                          elements = [
+                              Integer(title = _("Warning at"), unit = _("per second"), default_value = 20),
+                              Integer(title = _("Critical at"), unit = _("per second"), default_value = 40),
+                          ]
+                      )),
+                 ],
+                 optional_keys = []
+             )),
+            ('allocate_requests_exceeding',
+             Dictionary(
+                 title = _("Allocate Requests Exceeding Port Limit"),
+                 elements = [
+                     ("upper",
+                      Tuple(
+                          elements = [
+                              Integer(title = _("Warning at"), unit = _("per second"), default_value = 20),
+                              Integer(title = _("Critical at"), unit = _("per second"), default_value = 40),
+                          ]
+                      )),
+                 ],
+                 optional_keys = []
+             )),
+            ('packets_dropped',
+             Dictionary(
+                 title = _("Packets Dropped"),
+                 elements = [
+                     ("upper",
+                      Tuple(
+                          elements = [
+                              Integer(title = _("Warning at"), unit = _("per second"), default_value = 300),
+                              Integer(title = _("Critical at"), unit = _("per second"), default_value = 600),
+                          ]
+                      )),
+                 ],
+                 optional_keys = []
+             )),
+        ]
+    ),
+    TextAscii(
+        title = _("Interface"),
+        help = _("The name of the interface (Public/Private IPv4/IPv6 Network Interface)"),
+    ),
+    "dict"
+)
+
+
 #.
 #   .--Environment---------------------------------------------------------.
 #   |     _____            _                                      _        |

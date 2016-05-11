@@ -203,6 +203,8 @@ bool Configuration::handleGlobalConfigVariable(char *var, char *value) {
                 mask |= SECTION_CPU;
             else if (!strcmp(word, "msexch"))
                 mask |= SECTION_EXCHANGE;
+            else if (!strcmp(word, "skype"))
+                mask |= SECTION_SKYPE;
             else if (!strcmp(word, "dotnet_clrmemory"))
                 mask |= SECTION_DOTNET;
             else if (!strcmp(word, "webservices"))

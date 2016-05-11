@@ -27,7 +27,7 @@
 
 # This set of functions are used for checks that handle "generic" windows
 # performance counters as reported via wmi
-# They should also work with performance counters reported through other means
+# They also work with performance counters reported through other means
 # (i.e. pdh) as long as the data transmitted as a csv table.
 
 # Sample data:
@@ -47,17 +47,35 @@
 #   '----------------------------------------------------------------------'
 
 def parse_wmi_table(info, key="Name"):
-    # represents a 2-dimensional table. columns are fixed after
-    # initialization, rows can be appended. fields can be accessed
-    # by x/y index or using names.
-    # the column name is defined by the header parameter in the constructor,
-    # the row name is determined by the key_field
+
+    # represents a 2-dimensional table of performance metrics.
+    # each table represents a class of objects about which metrics are gathered,
+    #  like "processor" or "physical disk" or "network interface"
+    # columns represent the individiual metrics and are fixed after initialization
+    # rows represent the actual values, one row per actual instance (i.e. a
+    #  specific processor, disk or interface)
+    # the table can also contain the sample time where the metrics were read,
+    #  otherwise the caller will have to assume the sampletime is one of the
+    #  metrics
     class Table:
-        def __init__(self, headers, key_field):
+
+        TOTAL_NAMES = ["_Total", "\"\"", "__Total__", "_Global"]
+
+        def __init__(self, name, headers, key_field, timestamp, frequency):
+            self.__name = name
             self.__headers = {}
+            self.__timestamp = timestamp
+            self.__frequency = frequency
             index = 0
+
+            prev_header = None
             for header in headers:
+                if not header.strip() and prev_header:
+                    # MS apparently doesn't bother to provide a name
+                    # for base columns with performance counters
+                    header = prev_header + "_Base"
                 self.__headers[header] = index
+                prev_header = header
                 index += 1
             self.__key_index = None
             if key_field is not None:
@@ -76,10 +94,14 @@ def parse_wmi_table(info, key="Name"):
 
 
         def add_row(self, row):
-            self.__rows.append(row)
+            row = row[:]
             if self.__key_index is not None:
                 key = row[self.__key_index]
-                self.__row_lookup[key] = len(self.__rows) - 1
+                # there are multiple names to denote the "total" line, normalize that
+                if key in Table.TOTAL_NAMES:
+                    key = row[self.__key_index] = None
+                self.__row_lookup[key] = len(self.__rows)
+            self.__rows.append(row)
 
 
         def get(self, row, column):
@@ -94,7 +116,8 @@ def parse_wmi_table(info, key="Name"):
                 try:
                     col_index = self.__headers[column]
                 except KeyError, e:
-                    raise KeyError("%s missing, valid keys: %s" % (e, ", ".join(self.__headers.keys())))
+                    raise MKGeneralException(e.message + " missing, valid keys: "
+                                   + ", ".join(self.__headers.keys()))
 
             return self.__rows[row_index][col_index]
 
@@ -104,12 +127,26 @@ def parse_wmi_table(info, key="Name"):
         def row_count(self):
             return len(self.__rows)
 
+        def name(self):
+            return self.__name
+
+        def timestamp(self):
+            return self.__timestamp
+
+        def frequency(self):
+            return self.__frequency
+
     try:
         info_iter = iter(info)
         res = None
         # read input line by line. rows with [] start the table name.
         # Each table has to start with a header line
         line = info_iter.next()
+        timestamp = frequency = None
+        if line[0] == "sampletime":
+            timestamp = int(line[1])
+            frequency = int(line[2])
+            line = info_iter.next()
         while line is not None:
             current = None
             if len(line) == 1 and line[0].startswith("["):
@@ -123,11 +160,11 @@ def parse_wmi_table(info, key="Name"):
                     current = res[tablename]
                 else:
                     # table is new, treat as header line
-                    current = Table(line, key)
+                    current = Table(tablename, line, key, timestamp, frequency)
                     res[tablename] = current
             else:
                 # single-table input
-                current = res = Table(line, key)
+                current = res = Table("", line, key, timestamp, frequency)
 
             # read table content
             line = info_iter.next()
@@ -166,20 +203,45 @@ def wmi_filter_global_only(table, row):
 #   |                                                   |___/              |
 #   '----------------------------------------------------------------------'
 
-def inventory_wmi_table(table, **kwargs):
-    if isinstance(table, dict):
-        # TODO if there are multiple tables we can currently only use
-        #  the first line. maybe inventarize every item that exists in
-        #  all tables?
-        return [("", kwargs.get('levels', None))]
-    elif 'filt' in kwargs:
+def inventory_wmi_table(tables, **kwargs):
+    potential_instances = None
+
+    if isinstance(tables, dict):
+        table_names = kwargs.get('required_tables', tables.keys())
+
+        for table_name in table_names:
+            if table_name not in tables:
+                # if table is missing, nothing gets inventorized. This can
+                # only happen if required_tables was set
+                return []
+
+            # inventarize one item per instance that exists in all tables
+            table_rows = tables[table_name].row_labels()
+            if potential_instances is None:
+                potential_instances = set(table_rows)
+            else:
+                potential_instances &= set(table_rows)
+    else:
+        potential_instances = tables.row_labels()
+
+    # if there are multiple instances, don't include the summary line as it is redundant
+    if len(potential_instances) > 1:
+        try:
+            potential_instances.remove(None)
+        except KeyError:
+            pass
+        except ValueError:
+            pass
+
+    # apply row-filter if the caller provided one
+    if 'filt' in kwargs:
         filt = kwargs['filt']
         return [(row, kwargs.get('levels', None))
-                for row in table.row_labels()
-                if filt(table, row)]
+                for row in potential_instances
+                if filt(tables, row)]
     else:
         return [(row, kwargs.get('levels', None))
-                for row in table.row_labels()]
+                for row in potential_instances]
 
 
 #.
@@ -194,11 +256,13 @@ def inventory_wmi_table(table, **kwargs):
 
 # determine time at which a sample was taken
 def get_wmi_time(table, row):
-    return float(table.get(row, "Timestamp_PerfTime")) /\
-        float(table.get(row, "Frequency_PerfTime"))
+    timestamp = table.timestamp() or table.get(row, "Timestamp_PerfTime")
+    frequency = table.frequency() or table.get(row, "Frequency_PerfTime")
+    return float(timestamp) / float(frequency)
 
 
-def wmi_make_perfvar(varname, value, levels, min_value="", max_value=""):
+def wmi_make_perfvar(varname, value, perfscale, levels, min_value="", max_value=""):
+    value = value * perfscale
     if levels is not None:
         upper_levels = levels.get('upper', ("", ""))
     else:
@@ -212,19 +276,30 @@ def wmi_determine_status(value, levels):
         order = [0,1,3,2]
         return sorted(args, key=lambda x: order[x], reverse=True)[0]
 
+    levels_text = ""
+
     statuses = [0]
     if levels:
         if 'upper' in levels:
+            upper_status = 0
             if value >= levels['upper'][1]:
-                statuses.append(2)
-            if value >= levels['upper'][0]:
-                statuses.append(1)
+                upper_status = 2
+            elif value >= levels['upper'][0]:
+                upper_status = 1
+
+            if upper_status != 0:
+                statuses.append(upper_status)
+                levels_text = " (warn/crit at %s/%s)" % levels['upper']
         if 'lower' in levels:
+            lower_status = 0
             if value <= levels['lower'][1]:
-                statuses.append(2)
-            if value <= levels['lower'][0]:
-                statuses.append(1)
-    return worst_status(*statuses)
+                lower_status = 2
+            elif value <= levels['lower'][0]:
+                lower_status = 1
+            if lower_status != 0:
+                statuses.append(lower_status)
+                levels_text = " (warn/crit below %s/%s)" % levels['lower']
+    return worst_status(*statuses), levels_text
 
 
 # to make wato rules simpler, levels are allowed to be passed as tuples if the level
@@ -236,7 +311,7 @@ def wmi_fix_levels(levels):
         return levels
 
 
-def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None):
+def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None, perfscale=1.0):
     if row == "":
         row = 0
 
@@ -247,15 +322,17 @@ def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None):
     except KeyError:
         return 3, "item not present anymore", []
 
-    value_per_sec = get_rate(column, get_wmi_time(table, row), value)
+    value_per_sec = get_rate("%s_%s" % (column, table.name()),
+                             get_wmi_time(table, row), value)
 
-    status = wmi_determine_status(value_per_sec, levels)
+    status, levels_text = wmi_determine_status(value_per_sec, levels)
 
-    return (status, "%s%s" % (value_per_sec, label),
-            [wmi_make_perfvar(perfvar, value_per_sec, levels)])
+    return (status, "%.2f%s%s" % (value_per_sec, label, levels_text),
+            [wmi_make_perfvar(perfvar, value_per_sec, perfscale, levels)])
 
 
-def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None):
+def wmi_yield_raw_counter(table, row, column, label, perfvar,
+                          levels=None, perfscale=1.0):
     if row == "":
         row = 0
 
@@ -266,10 +343,10 @@ def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None):
     except KeyError:
         return 3, "item not present anymore", []
 
-    status = wmi_determine_status(value, levels)
+    status, levels_text = wmi_determine_status(value, levels)
 
-    return (status, "%s%s" % (value, label),
-            [wmi_make_perfvar(perfvar, value, levels)])
+    return (status, "%s%s%s" % (value, label, levels_text),
+            [wmi_make_perfvar(perfvar, value, perfscale, levels)])
 
 
 def wmi_calculate_raw_average(table, row, column, factor):
@@ -298,7 +375,27 @@ def wmi_calculate_raw_average(table, row, column, factor):
     return float(measure) / base
 
 
-def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None):
+def wmi_calculate_raw_average_time(table, row, column):
+    if row == "":
+        row = 0
+
+    value = int(table.get(row, column))
+    base = int(table.get(row, column + "_Base"))
+
+    sample_time = get_wmi_time(table, row)
+
+    value_per_sec = get_rate("%s_%s" % (column, table.name()),
+                             sample_time, value)
+    base_per_sec  = get_rate("%s_%s_Base" % (column, table.name()),
+                             sample_time, base)
+
+    if base_per_sec == 0:
+        return 0
+    else:
+        return value_per_sec / base_per_sec
+
+
+def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None, perfscale=1.0):
     levels = wmi_fix_levels(levels)
 
     try:
@@ -306,10 +403,28 @@ def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None):
     except KeyError:
         return 3, "item not present anymore", []
 
+    status, levels_text = wmi_determine_status(average, levels)
+
     return (
-        wmi_determine_status(average, levels),
-        "%.2f%s" % (average, label),
-        [wmi_make_perfvar(perfvar, average, levels)]
+        status,
+        "%.2f%s%s" % (average, label, levels_text),
+        [wmi_make_perfvar(perfvar, average, perfscale, levels)]
+    )
+
+
+def wmi_yield_raw_average_timer(table, row, column, label, perfvar, levels=None, perfscale=1.0):
+    levels = wmi_fix_levels(levels)
+
+    try:
+        average = wmi_calculate_raw_average_time(table, row, column) / table.frequency()
+    except KeyError:
+        return 3, "item not present anymore", []
+    status, levels_text = wmi_determine_status(average, levels)
+
+    return (
+        status,
+        "%.2f%s%s" % (average, label, levels_text),
+        [wmi_make_perfvar(perfvar, average, perfscale, levels)]
     )
 
 
@@ -321,12 +436,12 @@ def wmi_yield_raw_fraction(table, row, column, label, perfvar, levels=None):
     except KeyError:
         return 3, "item not present anymore", []
 
-    status = wmi_determine_status(average, levels)
+    status, levels_text = wmi_determine_status(average, levels)
 
     return (
         status,
-        "%.2f%s" % (average, label),
-        [wmi_make_perfvar(perfvar, average, levels, 0, 100)]
+        "%.2f%s%s" % (average, label, levels_text),
+        [wmi_make_perfvar(perfvar, average, 1.0, levels, 0, 100)]
     )
 
 #.

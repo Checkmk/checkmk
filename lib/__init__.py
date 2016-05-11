@@ -24,4 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-"""Check_MK's library for code used by different components of Check_MK."""
+"""Check_MK's library for code used by different components of Check_MK.
+
+This library is currently handled as internal module of Check_MK and
+does not offer stable APIs. The code may change at any time."""

@@ -310,7 +310,7 @@ def do_log_ack(site, host_name, file_name):
         except Exception, e:
             html.show_error(_('The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s.') % \
                                       (html.attrencode(display_name), html.attrencode(this_host), e))
-            htmt.footer()
+            html.footer()
             return
 
     html.message('<b>%s</b><p>%s</p>' % (

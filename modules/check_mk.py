@@ -45,6 +45,8 @@ import fcntl
 import py_compile
 import inspect
 
+IPHQQ@RQAR@AR@rq2tt23t6532
+
 import cmk.tty as tty
 
 # These variable will be substituted at 'make dist' time

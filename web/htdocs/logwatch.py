@@ -514,6 +514,11 @@ def logfiles_of_host(site, host_name):
         "Filter: name = %s\n" % lqencode(host_name))
     if site: # Honor site hint if available
         sites.live().set_only_sites(None)
+    if file_names == None: # Not supported by that Livestatus version
+        raise MKGeneralException(
+            _("The monitoring core of the target site '%s' has the version '%s'. That "
+              "does not support fetching logfile information. Please upgrade "
+              "to a newer version.") % (site, sites.state(site)["program_version"]))
     return file_names
 
 

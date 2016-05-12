@@ -18,6 +18,9 @@
     WATO:
     * 3469 Show type of rule match of a rule (first, per-parameter, all) in WATO...
 
+    BI:
+    * 3574 FIX: Fixed broken aggregations snapin when using aggregations based on hard states...
+
     Event Console:
     * 3566 FIX: Fixed exception on SNMP MIB management page when MIB directory is missing
     * 3568 FIX: Fixed broken link in "Access to event status via TCP" help text

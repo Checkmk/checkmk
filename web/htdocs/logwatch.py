@@ -309,14 +309,14 @@ def do_log_ack(site, host_name, file_name):
             if not may_see(site, this_host):
                 raise MKAuthException(_('Permission denied.'))
             os.remove(defaults.logwatch_dir + '/' + this_host + '/' + int_filename)
+            html.message('<b>%s</b><p>%s</p>' % (
+                _('Acknowledged %s') % ack_msg,
+                _('Acknowledged all messages in %s.') % ack_msg
+            ))
         except Exception, e:
             html.show_error(_('The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s.') % \
                                       (html.attrencode(display_name), html.attrencode(this_host), e))
 
-    html.message('<b>%s</b><p>%s</p>' % (
-        _('Acknowledged %s') % ack_msg,
-        _('Acknowledged all messages in %s.') % ack_msg
-    ))
     html.footer()
 
 

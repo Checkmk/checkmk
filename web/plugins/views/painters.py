@@ -1735,12 +1735,20 @@ def paint_discovery_output(field, row):
     if field == "discovery_state":
         ruleset_url   = "wato.py?mode=edit_ruleset&varname=ignored_services"
         discovery_url = "wato.py?mode=inventory&host=%s&mode=inventory" % row["host_name"]
+
         return None, {
-            "ignored"     : '<a href="%s">Hidden by rule</a>' % ruleset_url,
-            "vanished"    : '<a href="%s">No longer available</a>' % discovery_url,
-            "unmonitored" : '<a href="%s">Newly discovered</a>' % discovery_url
+            "ignored"     : html.render_icon_button(ruleset_url, 'Disabled (configured away by admin)', 'rulesets') + "Disabled (configured away by admin)",
+            "vanished"    : html.render_icon_button(discovery_url, 'Vanished (checked, but no longer exist)', 'services') + "Vanished (checked, but no longer exist)",
+            "unmonitored" : html.render_icon_button(discovery_url, 'Available (missing)', 'services') + "Available (missing)"
         }.get(value, value)
-    return None, value
+    elif field == "discovery_service" and row["discovery_state"] == "vanished":
+        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
+                html.urlencode(row["site"]),
+                html.urlencode(row["host_name"]),
+                html.urlencode(value))
+        return None, "<div><a href=\"%s\">%s</a></div>" % (link, value)
+    else:
+        return None, value
 
 multisite_painters["service_discovery_state"] = {
     "title": _("Service discovery: State"),

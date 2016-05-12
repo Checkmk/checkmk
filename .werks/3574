@@ -1,0 +1,11 @@
+Title: Fixed broken aggregations snapin when using aggregations based on hard states
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1463035142
+
+When creating an aggregation which bases it's state computation on hard states, this
+lead to an exception in the sidebar snapin "classobj" not iterable.

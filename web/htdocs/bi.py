@@ -178,13 +178,18 @@ def aggregation_groups():
         migrate_bi_configuration() # convert bi_packs into legacy variables
         # on demand: show all configured groups
         group_names = set([])
-        for a in config.aggregations + config.host_aggregations:
-            if a[0] == config.DISABLED:
+        for entry in config.aggregations + config.host_aggregations:
+            if entry[0] == config.DISABLED:
                 continue
-            if type(a[0]) == list:
-                group_names.update(a[0])
+
+            if entry[0] == config.HARD_STATES:
+                entry = entry[1:]
+
+            if type(entry[0]) == list:
+                group_names.update(entry[0])
             else:
-                group_names.add(a[0])
+                group_names.add(entry[0])
+
         group_names = list(group_names)
 
     else:

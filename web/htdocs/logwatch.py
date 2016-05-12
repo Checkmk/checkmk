@@ -251,31 +251,31 @@ def ack_button(site=None, host_name=None, int_filename=None):
 
 
 def do_log_ack(site, host_name, file_name):
-    todo = []
+    logs_to_ack = []
     if not host_name and not file_name: # all logs on all hosts
-        for site, this_host, logs in all_logs():
+        for this_site, this_host, logs in all_logs():
             for int_filename in logs:
                 file_display = form_file_to_ext(int_filename)
-                todo.append((this_host, int_filename, file_display))
+                logs_to_ack.append((this_site, this_host, int_filename, file_display))
         ack_msg = _('all logfiles on all hosts')
 
     elif host_name and not file_name: # all logs on one host
         for int_filename in logfiles_of_host(site, host_name):
             file_display = form_file_to_ext(int_filename)
-            todo.append((host_name, int_filename, file_display))
+            logs_to_ack.append((site, host_name, int_filename, file_display))
         ack_msg = _('all logfiles of host %s') % html.attrencode(host_name)
 
     elif host_name and file_name: # one log on one host
         int_filename = form_file_to_int(file_name)
-        todo = [ (host_name, int_filename, form_file_to_ext(int_filename)) ]
+        logs_to_ack = [ (site, host_name, int_filename, form_file_to_ext(int_filename)) ]
         ack_msg = _('the log file %s on host %s') % \
                        (html.attrencode(file_name), html.attrencode(host_name))
 
     else:
-        for site, this_host, logs in all_logs():
+        for this_site, this_host, logs in all_logs():
             file_display = form_file_to_ext(file_name)
             if file_name in logs:
-                todo.append((this_host, file_name, file_display))
+                logs_to_ack.append((this_site, this_host, file_name, file_display))
         ack_msg = _('log file %s on all hosts') % (html.attrencode(file_name))
 
 
@@ -304,11 +304,9 @@ def do_log_ack(site, host_name, file_name):
     if ack != '1':
         raise MKUserError('_ack', _('Invalid value for ack parameter.'))
 
-    for this_host, int_filename, display_name in todo:
+    for this_site, this_host, int_filename, display_name in logs_to_ack:
         try:
-            if not may_see(site, this_host):
-                raise MKAuthException(_('Permission denied.'))
-            os.remove(defaults.logwatch_dir + '/' + this_host + '/' + int_filename)
+            acknowledge_logfile(this_site, this_host, int_filename, display_name)
             html.message('<b>%s</b><p>%s</p>' % (
                 _('Acknowledged %s') % ack_msg,
                 _('Acknowledged all messages in %s.') % ack_msg
@@ -318,6 +316,12 @@ def do_log_ack(site, host_name, file_name):
                                       (html.attrencode(display_name), html.attrencode(this_host), e))
 
     html.footer()
+
+
+dthis_nameef acknowledge_logfile(site, host_name, int_filename, display_name):
+    if not may_see(site, host_name):
+        raise MKAuthException(_('Permission denied.'))
+    os.remove(defaults.logwatch_dir + '/' + host_name + '/' + int_filename)
 
 
 #.

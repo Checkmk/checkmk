@@ -307,21 +307,25 @@ def do_log_ack(site, host_name, file_name):
     for this_site, this_host, int_filename, display_name in logs_to_ack:
         try:
             acknowledge_logfile(this_site, this_host, int_filename, display_name)
-            html.message('<b>%s</b><p>%s</p>' % (
-                _('Acknowledged %s') % ack_msg,
-                _('Acknowledged all messages in %s.') % ack_msg
-            ))
         except Exception, e:
             html.show_error(_('The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s.') % \
                                       (html.attrencode(display_name), html.attrencode(this_host), e))
+            htmt.footer()
+            return
 
+    html.message('<b>%s</b><p>%s</p>' % (
+        _('Acknowledged %s') % ack_msg,
+        _('Acknowledged all messages in %s.') % ack_msg
+    ))
     html.footer()
 
 
 def acknowledge_logfile(site, host_name, int_filename, display_name):
     if not may_see(site, host_name):
         raise MKAuthException(_('Permission denied.'))
-    os.remove(defaults.logwatch_dir + '/' + host_name + '/' + int_filename)
+
+    command = "MK_LOGWATCH_ACKNOWLEDGE;%s;%s" % (host_name, int_filename)
+    sites.live().command("[%d] %s" % (int(time.time()), command), site)
 
 
 #.

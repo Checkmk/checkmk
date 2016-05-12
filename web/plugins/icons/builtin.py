@@ -865,13 +865,14 @@ multisite_icons_and_actions['crashed_check'] = {
 
 
 def paint_icon_check_period(what, row, tags, host_custom_vars):
-    if row['%s_in_passive_check_period' % what] == 0\
-            or row['%s_in_check_period' % what] == 0:
-        return 'pause', _("This %s is currently not being checked") % _(what)
+    if what == "service":
+        if row['%s_in_passive_check_period' % what] == 0\
+                or row['%s_in_check_period' % what] == 0:
+            return 'pause', _("This %s is currently not being checked") % _(what)
 
 
 multisite_icons_and_actions['check_period'] = {
-    'columns'  : ['in_passive_check_period', 'in_check_period'],
+    'service_columns'  : ['in_passive_check_period', 'in_check_period'],
     'paint'    : paint_icon_check_period,
     'toplevel' : True,
 }

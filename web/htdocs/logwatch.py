@@ -318,7 +318,7 @@ def do_log_ack(site, host_name, file_name):
     html.footer()
 
 
-dthis_nameef acknowledge_logfile(site, host_name, int_filename, display_name):
+def acknowledge_logfile(site, host_name, int_filename, display_name):
     if not may_see(site, host_name):
         raise MKAuthException(_('Permission denied.'))
     os.remove(defaults.logwatch_dir + '/' + host_name + '/' + int_filename)

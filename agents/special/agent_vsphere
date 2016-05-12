@@ -1304,7 +1304,7 @@ if not error:
                 max_samples = 3
                 if last_cookie_access_time:
                     timedelta = time.time() - last_cookie_access_time
-                    max_samples = min(180, max(1, int(timedelta) / 2))
+                    max_samples = min(180, max(1, int(timedelta) / 20))
 
                 hostnames = hostsystems.keys()
                 counter_data_payload = telegram_list["perfcounterdata"]

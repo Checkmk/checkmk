@@ -1,0 +1,10 @@
+Title: agent_vsphere: improved performance, too much perfcounters were queried
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p1
+Date: 1463057382
+
+

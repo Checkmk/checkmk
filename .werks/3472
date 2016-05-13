@@ -1,0 +1,10 @@
+Title: Service list of a host: Move section of vanished services to top of the page
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.8p1
+Date: 1463120501
+Class: feature
+
+The vanished services usually indicate a problem or invalid service configuration and
+should be shown rather on the top of the page then after the long list of services.

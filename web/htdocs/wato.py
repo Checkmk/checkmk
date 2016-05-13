@@ -2769,10 +2769,10 @@ def show_service_table(host, firsttime):
     divid = 0
     for state_name, check_source, checkbox in [
         ( _("Available (missing) services"), "new", firsttime ),
-        ( _("Already configured services"), "old", True, ),
         ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ), # Cannot happen anymore
-        ( _("Disabled services (configured away by admin)"), "ignored", None),
         ( _("Vanished services (checked, but no longer exist)"), "vanished", True ),
+        ( _("Already configured services"), "old", True, ),
+        ( _("Disabled services (configured away by admin)"), "ignored", None),
         ( _("Active checks"), "active", None ),
         ( _("Manual services (defined in main.mk)"), "manual", None ),
         ( _("Legacy services (defined in main.mk)"), "legacy", None ),

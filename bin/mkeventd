@@ -757,6 +757,8 @@ def to_utf8(x):
 def quote_tab(col):
     if type(col) in [ float, int ]:
         return str(col)
+    elif type(col) == bool:
+        return col and "1" or "0"
     elif type(col) in [ tuple, list ]:
         col = "\1" + "\1".join(map(to_utf8, col))
     elif col == None:
@@ -2669,13 +2671,8 @@ class StatusServer:
                 raise MKClientError("Invalid method %s (allowed are GET, COMMAND and REPLICATE)" % method)
 
         if output_format == "plain":
-            def format_column(value):
-                try:
-                    return value.encode("utf-8")
-                except Exception, e:
-                    return repr(value)
             for line in response:
-                socket.send("\x02".join(map(lambda x: format_column(x), line)))
+                socket.send("\t".join([to_utf8(quote_tab(c)) for c in line]))
                 socket.send("\n")
         else:
             socket.send(repr(response))

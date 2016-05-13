@@ -1,0 +1,10 @@
+Title: windows agent: fixed bug where the last message of an eventlog was always re-read
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1463141164
+
+

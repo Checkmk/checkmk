@@ -680,7 +680,8 @@ void output_eventlog(OutputProxy &out, LPCWSTR logname, uint64_t &first_record,
 
             out.output("[[[%ls]]]\n", logname);
             int worst_state = 0;
-            first_record = log->seek(first_record);
+            // record_number is the last event we read, so we want to seek past it
+            first_record = log->seek(first_record + 1);
 
             uint64_t last_record = first_record;
 
@@ -700,7 +701,7 @@ void output_eventlog(OutputProxy &out, LPCWSTR logname, uint64_t &first_record,
             // second pass - if there were, print everything
             if ((worst_state >= level) || !logwatch_suppress_info) {
                 log->reset();
-                log->seek(first_record);
+                log->seek(first_record + 1);
 
                 std::shared_ptr<IEventLogRecord> record = log->read();
                 while (record.get() != nullptr) {

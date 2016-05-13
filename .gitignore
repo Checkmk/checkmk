@@ -24,4 +24,5 @@ check-mk-agent-*.msi
 RemoteSystemsTempFiles
 .directory
 .DS_Store
+.cache
 tags

@@ -11,35 +11,40 @@ import tempfile
 from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter
 from pylint.utils import Message
 
+from testlib import repo_path
+
 
 def ordered_module_files():
-    modules = [
-        "../defaults",
-        "../modules/check_mk_base.py",
-        "../modules/check_mk.py",
-        "../modules/config.py",
-        "../modules/discovery.py",
-        "../modules/snmp.py",
-        "../modules/agent_simulator.py",
-        "../modules/notify.py",
-        "../modules/events.py",
-        "../modules/nagios.py",
-        "../modules/catalog.py",
-        "../modules/packaging.py",
-        "../modules/prediction.py",
-        "../modules/automation.py",
-        "../modules/inventory.py",
-        "../modules/compresslog.py",
-        "../modules/localize.py",
-        "../../cmc/modules/real_time_checks.py",
-        "../../cmc/modules/alert_handling.py",
-        "../../cmc/modules/keepalive.py",
-        "../../cmc/modules/cmc.py",
-        "../../cmc/modules/inline_snmp.py",
-        "../../cmc/modules/agent_bakery.py",
-        "../../cmc/modules/cap.py",
-        "../../cmc/modules/rrd.py",
+    ordered_modules = [
+        "defaults",
+        "modules/check_mk_base.py",
+        "modules/check_mk.py",
+        "modules/config.py",
+        "modules/discovery.py",
+        "modules/snmp.py",
+        "modules/agent_simulator.py",
+        "modules/notify.py",
+        "modules/events.py",
+        "modules/nagios.py",
+        "modules/catalog.py",
+        "modules/packaging.py",
+        "modules/prediction.py",
+        "modules/automation.py",
+        "modules/inventory.py",
+        "modules/compresslog.py",
+        "modules/localize.py",
+        "../cmc/modules/real_time_checks.py",
+        "../cmc/modules/alert_handling.py",
+        "../cmc/modules/keepalive.py",
+        "../cmc/modules/cmc.py",
+        "../cmc/modules/inline_snmp.py",
+        "../cmc/modules/agent_bakery.py",
+        "../cmc/modules/cap.py",
+        "../cmc/modules/rrd.py",
     ]
+
+    modules = [ os.path.realpath(repo_path() + "/" + p)
+                for p in ordered_modules ]
 
     # Add modules which are not specified above
     for path in module_files():
@@ -50,14 +55,16 @@ def ordered_module_files():
 
 
 def module_files():
-    modules = sorted([ "../modules/" + f for f in os.listdir("../modules")
-                         if not f.startswith(".") ])
-    modules += sorted([ "../../cmc/modules/" + f for f in os.listdir("../../cmc/modules")
-                         if not f.startswith(".") ])
-    return modules
+    modules = []
+    for base_path in [ repo_path() + "/modules",
+                       os.path.realpath(repo_path() + "/../cmc/modules") ]:
+
+        modules += [ base_path + "/" + f for f in os.listdir(base_path)
+                     if not f.startswith(".") ]
+    return sorted(modules)
 
 
-def check_files(base_dir="../checks"):
+def check_files(base_dir):
     filelist = sorted([ base_dir + "/" + f for f in os.listdir(base_dir)
                          if not f.startswith(".") ])
 
@@ -99,14 +106,14 @@ def run_pylint(base_path, check_files=None, cleanup_test_dir=False):
         pylint_args += " "
     pylint_output = os.environ.get("PYLINT_OUTPUT")
 
-    pylint_cfg = os.getcwd() + "/pylintrc"
+    pylint_cfg = repo_path() + "/pylintrc"
 
     check_files = get_pylint_files(base_path, "*")
     if not check_files:
         print "Nothing to do..."
         return 0 # nothing to do
 
-    os.putenv("PYLINT_PATH", os.getcwd())
+    os.putenv("TEST_PATH", repo_path() + "/tests")
     cmd = "pylint --rcfile=\"%s\" %s%s" % (pylint_cfg, pylint_args, " ".join(check_files))
     print("Running pylint with: %s" % cmd)
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
@@ -155,17 +162,6 @@ def is_python_file(path):
         return True
 
     return False
-
-
-def ensure_equal_branches():
-    cmk_branch = os.popen("git rev-parse --abbrev-ref HEAD").read().strip()
-    cmc_branch = os.popen("cd ../../cmc ; "
-                          "git rev-parse --abbrev-ref HEAD").read().strip()
-    if cmk_branch != cmc_branch:
-        sys.stderr.write("ERROR: Different branches (%s != %s)\n" %
-                                              (cmk_branch, cmc_branch))
-        sys.exit(1)
-
 
 
 # Check_MK currently uses a packed version of it's files to

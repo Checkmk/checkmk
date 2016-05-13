@@ -66,7 +66,11 @@ unique_ptr<vector<char>> HostFileColumn::getBlob(void *data) {
     string path = _base_dir + "/" + host_name + _suffix;
     int fd = open(path.c_str(), O_RDONLY);
     if (fd < 0) {
-        logger(LG_WARN, "Cannot open %s: %s", path.c_str(), strerror(errno));
+        // It is OK when inventory/logwatch files do not exist.
+        if (errno != ENOENT) {
+            logger(LG_WARN, "Cannot open %s: %s", path.c_str(),
+                   strerror(errno));
+        }
         return nullptr;
     }
 

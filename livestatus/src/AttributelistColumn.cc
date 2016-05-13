@@ -75,11 +75,11 @@ void AttributelistColumn::output(void *data, Query *query) {
     if (_show_list) {
         unsigned i = 0;
         bool first = true;
-        query->outputBeginSublist();
+        query->outputBeginList();
         while (al_entries[i].name != nullptr) {
             if ((mask & al_entries[i].bitvalue) != 0u) {
                 if (!first) {
-                    query->outputSublistSeparator();
+                    query->outputListSeparator();
                 } else {
                     first = false;
                 }
@@ -87,7 +87,7 @@ void AttributelistColumn::output(void *data, Query *query) {
             }
             i++;
         }
-        query->outputEndSublist();
+        query->outputEndList();
     } else {
         query->outputUnsignedLong(mask);
     }

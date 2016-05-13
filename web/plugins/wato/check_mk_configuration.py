@@ -1887,13 +1887,21 @@ register_rule(group,
                               )),
                              ( "service_whitelist",
                               ListOfStrings(
-                                  title = _("Whitelist Services"),
+                                  title = _("Activate only services matching"),
                                   allow_empty = False,
+                                  help = _("Set service names or regular expression patterns here to "
+                                           "allow only matching services to be activated automatically. "
+                                           "If you set both this and \'Don't activate services matching\', "
+                                           "both rules have to apply for a service to be activated."),
                               )),
                              ( "service_blacklist",
                               ListOfStrings(
-                                  title = _("Blacklist Services"),
+                                  title = _("Don't activate services matching"),
                                   allow_empty = False,
+                                  help = _("Set service names or regular expression patterns here to "
+                                           "prevent matching services from being activated automatically. "
+                                           "If you set both this and \'Activate only services matching\', "
+                                           "both rules have to apply for a service to be activated."),
                               )),
                          ],
                          optional_keys = ["service_whitelist", "service_blacklist"],

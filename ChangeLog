@@ -1,3 +1,5 @@
+1.2.8p2:
+
 1.2.8p1:
     Core & Setup:
     * 3471 FIX: Repair ignoring discovery errors when bogus %s is contained in service description...

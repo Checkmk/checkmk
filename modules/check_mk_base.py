@@ -2401,6 +2401,9 @@ def check_timeperiod(timeperiod):
         try:
             response = simple_livestatus_query("GET timeperiods\nColumns: name\nFilter: in = 0\n")
             g_inactive_timerperiods = response.splitlines()
+        except MKTimeout:
+            raise
+
         except Exception, e:
             if opt_debug:
                 raise

@@ -1220,7 +1220,7 @@ register_check_parameters(
         elements = [
             ('failed_search_requests',
              Dictionary(
-                 title = _("Failed Search Requests"),
+                 title = _("Failed search requests"),
                  elements = [
                      ("upper",
                       Tuple(

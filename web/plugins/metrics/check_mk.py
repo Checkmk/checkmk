@@ -3100,7 +3100,7 @@ metric_info["page_lookups_sec"] = {
 }
 
 metric_info["failed_search"] = {
-    "title" : _("Failed Search requests"),
+    "title" : _("Failed search requests"),
     "unit": "1/s",
     "color": "42/a"
 }

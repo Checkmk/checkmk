@@ -1,7 +1,7 @@
 Title: if64, if64adm: These checks now display the speed of interfaces slower than 1Mbit correctly
 Level: 1
 Component: checks
-Compatible: compat
+Compatible: incomp
 Version: 1.2.9i1
 Date: 1462952497
 Class: fix
@@ -10,3 +10,7 @@ Previously, the two checks relied on a counter that has 10^6 bit resolution, so 
 less than 1Mbit speed were reported as "speed unknown", whereas the if check was capped at 4Gbit
 speed, reporting wrong speed for faster interfaces.
 The if64, if64adm checks have now been updated to provide the correct speed for all interfaces.
+
+This change is incompatible as the interfaces previously reported as "speed unknown" will now report
+warn state as the previously discovered speed (0) was stored during service discovery and deviations from
+that are reported. You need to re-discover these services to get rid of the warning.

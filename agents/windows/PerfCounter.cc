@@ -305,12 +305,12 @@ std::map<DWORD, std::wstring> name_map(const char *language) {
     // preflight
     std::vector<wchar_t> szValueName;
     DWORD dwcbData = 0;
-    RegQueryValueExW(hKey, L"Counter", nullptr, nullptr, (LPBYTE)&szValueName[0],
-                     &dwcbData);
+    RegQueryValueExW(hKey, L"Counter", nullptr, nullptr,
+                     (LPBYTE)&szValueName[0], &dwcbData);
     szValueName.resize(dwcbData);
     // actual read op
-    RegQueryValueExW(hKey, L"Counter", nullptr, nullptr, (LPBYTE)&szValueName[0],
-                     &dwcbData);
+    RegQueryValueExW(hKey, L"Counter", nullptr, nullptr,
+                     (LPBYTE)&szValueName[0], &dwcbData);
     RegCloseKey(hKey);
     if (result == ERROR_SUCCESS) {
         size_t offset = 0;

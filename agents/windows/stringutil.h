@@ -38,6 +38,7 @@
 #endif
 
 char *lstrip(char *s);
+const char *lstrip(const char *s);
 char *rstrip(char *s);
 char *strip(char *s);
 

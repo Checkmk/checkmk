@@ -186,12 +186,16 @@ typedef std::vector<condition_pattern *> condition_patterns_t;
 // A textfile instance containing information about various file
 // parameters and the pointer to the matching pattern_container
 struct logwatch_textfile {
-    char *path;
+    std::string name;  // name used for section headers. this is the
+                       // filename for regular logs and the pattern
+                       // for rotated logs
+    std::vector<std::string> paths;
     unsigned long long file_id;    // used to detect if a file has been replaced
     unsigned long long file_size;  // size of the file
-    unsigned long long offset;     // current fseek offset in the file
-    bool missing;                  // file no longer exists
+    unsigned long long offset{0};  // current fseek offset in the file
+    bool missing{false};           // file no longer exists
     bool nocontext;                // do not report ignored lines
+    bool rotated;                  // assume the logfile is a rotating log
     file_encoding encoding;
     condition_patterns_t *patterns;  // glob patterns applying for this file
 };
@@ -200,7 +204,9 @@ struct logwatch_textfile {
 // C:/tmp/Testfile*.log
 struct glob_token {
     char *pattern;
-    bool nocontext;
+    bool nocontext{false};
+    bool from_start{false};
+    bool rotated{false};
     bool found_match;
 };
 typedef std::vector<glob_token *> glob_tokens_t;
@@ -357,5 +363,9 @@ public:
     OnScopeExit(const std::function<void()> &cleaner) : _cleaner(cleaner) {}
     ~OnScopeExit() { _cleaner(); }
 };
+
+inline uint64_t to_u64(DWORD low, DWORD high) {
+    return static_cast<uint64_t>(low) + (static_cast<uint64_t>(high) << 32);
+}
 
 #endif  // types_h

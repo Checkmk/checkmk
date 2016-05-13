@@ -27,6 +27,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
+#include <regex>
 #include "PerfCounter.h"
 #include "logging.h"
 #include "stringutil.h"
@@ -318,7 +319,8 @@ void Configuration::parseLogwatchStateLine(char *line) {
     unsigned long long offset = string_to_llu(token);
 
     logwatch_textfile *tf = new logwatch_textfile();
-    tf->path = strdup(path);
+    tf->name = std::string(path);
+    tf->paths.push_back(tf->name);
     tf->file_id = file_id;
     tf->file_size = file_size;
     tf->offset = offset;
@@ -342,66 +344,223 @@ void Configuration::loadLogwatchOffsets() {
     }
 }
 
-// Add a new textfile and to the global textfile list
-// and determine some initial values
-bool Configuration::addNewLogwatchTextfile(const char *full_filename,
-                                           glob_token *token,
-                                           condition_patterns_t &patterns) {
-    logwatch_textfile *new_textfile = new logwatch_textfile();
-
+bool Configuration::getFileInformation(const char *filename,
+                                       BY_HANDLE_FILE_INFORMATION *info) {
     HANDLE hFile =
-        CreateFile(full_filename,  // file to open
-                   GENERIC_READ,   // open for reading
+        CreateFile(filename,      // file to open
+                   GENERIC_READ,  // open for reading
                    FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                   NULL,                   // default security
+                   nullptr,                // default security
                    OPEN_EXISTING,          // existing file only
                    FILE_ATTRIBUTE_NORMAL,  // normal file
-                   NULL);                  // no attr. template
+                   nullptr);               // no attr. template
 
-    BY_HANDLE_FILE_INFORMATION fileinfo;
-    GetFileInformationByHandle(hFile, &fileinfo);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+
+    bool res = GetFileInformationByHandle(hFile, info);
     CloseHandle(hFile);
+    return res;
+}
 
-    new_textfile->path = strdup(full_filename);
-    new_textfile->missing = false;
-    new_textfile->patterns = &patterns;
-    new_textfile->nocontext = token->nocontext;
-
-    // Hier aus den gespeicherten Hints was holen....
-    bool found_hint = false;
-    for (logwatch_textfiles_t::const_iterator it_lh = _logwatch_hints.begin();
-         it_lh != _logwatch_hints.end(); ++it_lh) {
-        logwatch_textfile *hint = *it_lh;
-        if (!strcmp(hint->path, full_filename)) {
-            new_textfile->file_size = hint->file_size;
-            new_textfile->file_id = hint->file_id;
-            new_textfile->offset = hint->offset;
-            found_hint = true;
+// erase all files from the specified list that are older than the one
+// with the specified file_id. This assumes that the file_names list is
+// already sorted by file age
+void Configuration::eraseFilesOlder(std::vector<std::string> &file_names,
+                                    uint64_t file_id) {
+    auto iter = file_names.begin();
+    for (; iter != file_names.end(); ++iter) {
+        BY_HANDLE_FILE_INFORMATION fileinfo;
+        if (getFileInformation(iter->c_str(), &fileinfo) &&
+            (file_id ==
+             to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh))) {
+            // great, found  the right file. all older files were probably
+            // processed before
             break;
         }
     }
 
+    if (iter == file_names.end()) {
+        // file index not found. Have to assume all
+        // files available now are new
+        iter = file_names.begin();
+    }
+
+    file_names.erase(file_names.begin(), iter);
+}
+
+bool Configuration::updateFromHint(const char *file_name,
+                                   logwatch_textfile *textfile) {
+    for (logwatch_textfile *hint : _logwatch_hints) {
+        if (strcmp(hint->paths.front().c_str(), file_name) == 0) {
+            textfile->file_size = hint->file_size;
+            textfile->file_id = hint->file_id;
+            textfile->offset = hint->offset;
+            return true;
+        }
+    }
+    return false;
+}
+
+void Configuration::updateLogwatchTextfile(logwatch_textfile *textfile) {
+    BY_HANDLE_FILE_INFORMATION fileinfo;
+    if (!getFileInformation(textfile->paths.front().c_str(), &fileinfo)) {
+        verbose("Cant open file with CreateFile %s\n",
+                textfile->paths.front().c_str());
+        return;
+    }
+
+    // Do some basic checks to ensure its still the same file
+    // try to fill the structure with info regarding the file
+    uint64_t file_id = to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh);
+    textfile->file_size = to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
+
+    if (file_id != textfile->file_id) {  // file has been changed
+        verbose("File %s: id has changed from %" PRIu64,
+                textfile->paths.front().c_str(), textfile->file_id);
+        verbose(" to %" PRIu64 "\n", file_id);
+        textfile->offset = 0;
+        textfile->file_id = file_id;
+    } else if (textfile->file_size <
+               textfile->offset) {  // file has been truncated
+        verbose("File %s: file has been truncated\n",
+                textfile->paths.front().c_str());
+        textfile->offset = 0;
+    }
+
+    textfile->missing = false;
+}
+
+// Add a new textfile to the global textfile list
+// and determine some initial values
+bool Configuration::addNewLogwatchTextfile(const char *full_filename,
+                                           glob_token *token,
+                                           condition_patterns_t &patterns) {
+    BY_HANDLE_FILE_INFORMATION fileinfo;
+    if (!getFileInformation(full_filename, &fileinfo)) {
+        verbose("failed to open %s\n", full_filename);
+        return false;
+    }
+
+    logwatch_textfile *new_textfile = new logwatch_textfile();
+    new_textfile->name = full_filename;
+    new_textfile->paths.push_back(full_filename);
+    new_textfile->missing = false;
+    new_textfile->patterns = &patterns;
+    new_textfile->nocontext = token->nocontext;
+
+    bool found_hint = updateFromHint(full_filename, new_textfile);
+
     if (!found_hint) {
         new_textfile->file_size =
-            (unsigned long long)fileinfo.nFileSizeLow +
-            (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
+            to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
         new_textfile->file_id =
-            (unsigned long long)fileinfo.nFileIndexLow +
-            (((unsigned long long)fileinfo.nFileIndexHigh) << 32);
-        new_textfile->offset = new_textfile->file_size;
+            to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh);
+
+        if (!token->from_start) new_textfile->offset = new_textfile->file_size;
     }
 
     _logwatch_textfiles.add(new_textfile);
     return true;
 }
 
-logwatch_textfile *Configuration::getLogwatchTextfile(const char *filename) {
-    for (logwatch_textfiles_t::const_iterator it_tf =
-             _logwatch_textfiles->begin();
-         it_tf != _logwatch_textfiles->end(); ++it_tf) {
-        if (strcmp(filename, (*it_tf)->path) == 0) return *it_tf;
+bool Configuration::updateCurrentRotatedTextfile(logwatch_textfile *textfile) {
+    const std::string &current_file = textfile->paths.front();
+
+    BY_HANDLE_FILE_INFORMATION fileinfo;
+    if (!getFileInformation(current_file.c_str(), &fileinfo)) {
+        verbose("Can't retrieve file info  %s\n", current_file.c_str());
+        return false;
     }
-    return 0;
+
+    uint64_t file_id = to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh);
+    textfile->file_size = to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
+
+    if (textfile->file_id != file_id) {
+        // the oldest file we know is "newer" than the one read last.
+        verbose("File %s rotated\n", current_file.c_str());
+        textfile->offset = 0;
+        textfile->file_id = file_id;
+        return true;
+    } else if (textfile->file_size < textfile->offset) {
+        // this shouldn't happen on a rotated log
+        verbose("File %s truncated\n", current_file.c_str());
+        textfile->offset = 0;
+        return true;
+    } else if ((textfile->offset == textfile->file_size) &&
+               (textfile->paths.size() > 1)) {
+        // we read to the end of the file and there are newer files.
+        // This means this file is finished and will not be written to anymore.
+        return false;
+    } else {
+        // either there is more data in this file or there is no newer
+        // file (yet).
+        return true;
+    }
+}
+
+void Configuration::updateRotatedLogfile(const char *pattern,
+                                         logwatch_textfile *textfile) {
+    textfile->paths = sortedByTime(globMatches(pattern));
+    eraseFilesOlder(textfile->paths, textfile->file_id);
+
+    // find the file to read from
+    while ((textfile->paths.size() > 0) &&
+           !updateCurrentRotatedTextfile(textfile)) {
+        textfile->paths.erase(textfile->paths.begin());
+        textfile->offset = 0;
+    }
+
+    textfile->missing = textfile->paths.size() == 0;
+}
+
+bool Configuration::addNewRotatedLogfile(
+    const char *pattern, const std::vector<std::string> &filenames,
+    glob_token *token, condition_patterns_t &patterns) {
+    logwatch_textfile *textfile = new logwatch_textfile();
+    textfile->name = token->pattern;
+    textfile->paths = filenames;
+    textfile->missing = false;
+    textfile->patterns = &patterns;
+    textfile->nocontext = token->nocontext;
+
+    auto hint_iter = std::find_if(
+        _logwatch_hints.begin(), _logwatch_hints.end(),
+        [pattern](logwatch_textfile *hint) { return hint->name == pattern; });
+    if (hint_iter != _logwatch_hints.end()) {
+        logwatch_textfile *hint = *hint_iter;
+        // ok, there is a hint. find the file we stopped reading before
+        // by its index
+        eraseFilesOlder(textfile->paths, hint->file_id);
+        textfile->file_size = hint->file_size;
+        textfile->file_id = hint->file_id;
+        textfile->offset = hint->offset;
+    } else {
+        if (!token->from_start) {
+            // keep only the newest file and start reading at the end of it
+            textfile->paths.erase(textfile->paths.begin(),
+                                  textfile->paths.end() - 1);
+        }
+
+        BY_HANDLE_FILE_INFORMATION fileinfo;
+        getFileInformation(textfile->paths.front().c_str(), &fileinfo);
+        textfile->file_size =
+            to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
+        textfile->file_id =
+            to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh);
+        textfile->offset = token->from_start ? 0 : textfile->file_size;
+    }
+
+    _logwatch_textfiles.add(textfile);
+    return true;
+}
+
+logwatch_textfile *Configuration::getLogwatchTextfile(const char *name) {
+    for (logwatch_textfile *textfile : *_logwatch_textfiles) {
+        if (strcmp(name, textfile->name.c_str()) == 0) return textfile;
+    }
+    return nullptr;
 }
 
 // Check if the given full_filename already exists. If so, do some basic file
@@ -410,81 +569,85 @@ logwatch_textfile *Configuration::getLogwatchTextfile(const char *filename) {
 void Configuration::updateOrCreateLogwatchTextfile(
     const char *full_filename, glob_token *token,
     condition_patterns_t &patterns) {
-    logwatch_textfile *textfile;
-    if ((textfile = getLogwatchTextfile(full_filename)) != NULL) {
-        HANDLE hFile =
-            CreateFile(textfile->path,  // file to open
-                       GENERIC_READ,    // open for reading
-                       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                       NULL,                   // default security
-                       OPEN_EXISTING,          // existing file only
-                       FILE_ATTRIBUTE_NORMAL,  // normal file
-                       NULL);                  // no attr. template
-
-        BY_HANDLE_FILE_INFORMATION fileinfo;
-        // Do some basic checks to ensure its still the same file
-        // try to fill the structure with info regarding the file
-        if (hFile != INVALID_HANDLE_VALUE) {
-            if (GetFileInformationByHandle(hFile, &fileinfo)) {
-                unsigned long long file_id =
-                    (unsigned long long)fileinfo.nFileIndexLow +
-                    (((unsigned long long)fileinfo.nFileIndexHigh) << 32);
-                textfile->file_size =
-                    (unsigned long long)fileinfo.nFileSizeLow +
-                    (((unsigned long long)fileinfo.nFileSizeHigh) << 32);
-
-                if (file_id != textfile->file_id) {  // file has been changed
-                    verbose("File %s: id has changed from %" PRIu64,
-                            full_filename, textfile->file_id);
-                    verbose(" to %" PRIu64 "\n", file_id);
-                    textfile->offset = 0;
-                    textfile->file_id = file_id;
-                } else if (textfile->file_size <
-                           textfile->offset) {  // file has been truncated
-                    verbose("File %s: file has been truncated\n",
-                            full_filename);
-                    textfile->offset = 0;
-                }
-
-                textfile->missing = false;
-            }
-            CloseHandle(hFile);
-        } else {
-            verbose("Cant open file with CreateFile %s\n", full_filename);
-        }
-    } else
+    logwatch_textfile *textfile = getLogwatchTextfile(full_filename);
+    if (textfile != nullptr)
+        updateLogwatchTextfile(textfile);
+    else
         addNewLogwatchTextfile(full_filename, token, patterns);  // Add new file
+}
+
+void Configuration::updateOrCreateRotatedLogfile(
+    const std::vector<std::string> &filenames, glob_token *token,
+    condition_patterns_t &patterns) {
+    logwatch_textfile *textfile = getLogwatchTextfile(token->pattern);
+
+    if (textfile != nullptr)
+        updateRotatedLogfile(token->pattern, textfile);
+    else
+        addNewRotatedLogfile(token->pattern, filenames, token, patterns);
+}
+
+std::vector<Configuration::file_entry_type> Configuration::globMatches(
+    const char *pattern) {
+    std::vector<file_entry_type> matches;
+
+    std::string path;
+    const char *end = strrchr(pattern, '\\');
+
+    if (end != nullptr) {
+        path = std::string(static_cast<const char *>(pattern), end + 1);
+    }
+
+    WIN32_FIND_DATA data;
+    HANDLE h = FindFirstFileEx(pattern, FindExInfoStandard, &data,
+                               FindExSearchNameMatch, nullptr, 0);
+
+    bool more = h != INVALID_HANDLE_VALUE;
+
+    while (more) {
+        matches.push_back(
+            std::make_pair(path + data.cFileName, data.ftLastWriteTime));
+        more = FindNextFile(h, &data);
+    }
+    FindClose(h);
+
+    return matches;
+}
+
+std::vector<std::string> Configuration::sortedByTime(
+    const std::vector<file_entry_type> &entries) {
+    std::vector<file_entry_type> sorted(entries);
+    std::sort(sorted.begin(), sorted.end(),
+              [](const file_entry_type &lhs, const file_entry_type &rhs) {
+                  return CompareFileTime(&lhs.second, &rhs.second) < 0;
+              });
+    std::vector<std::string> result;
+    for (const file_entry_type &ent : sorted) {
+        result.push_back(ent.first);
+    }
+    return result;
 }
 
 // Process a single expression (token) of a globline and try to find matching
 // files
 void Configuration::processGlobExpression(glob_token *glob_token,
                                           condition_patterns_t &patterns) {
-    WIN32_FIND_DATA data;
-    char full_filename[512];
-    glob_token->found_match = false;
-    HANDLE h = FindFirstFileEx(glob_token->pattern, FindExInfoStandard, &data,
-                               FindExSearchNameMatch, NULL, 0);
-    if (h != INVALID_HANDLE_VALUE) {
-        glob_token->found_match = true;
-        const char *basename = "";
-        char *end = strrchr(glob_token->pattern, '\\');
-        if (end) {
-            *end = 0;
-            basename = glob_token->pattern;
-        }
-        snprintf(full_filename, sizeof(full_filename), "%s\\%s", basename,
-                 data.cFileName);
-        updateOrCreateLogwatchTextfile(full_filename, glob_token, patterns);
+    std::vector<file_entry_type> matches = globMatches(glob_token->pattern);
+    glob_token->found_match = !matches.empty();
 
-        while (FindNextFile(h, &data)) {
-            snprintf(full_filename, sizeof(full_filename), "%s\\%s", basename,
-                     data.cFileName);
-            updateOrCreateLogwatchTextfile(full_filename, glob_token, patterns);
+    if (glob_token->rotated) {
+        // rotated: all matches are assumed to belong to the same log.
+        // If the file most recently read has been consumed we need to read
+        // the next file. This sorting defines what is considered
+        // "next"
+        updateOrCreateRotatedLogfile(sortedByTime(matches), glob_token,
+                                     patterns);
+    } else {
+        // non-rotated: each match is a separate log
+        for (const file_entry_type &ent : matches) {
+            updateOrCreateLogwatchTextfile(ent.first.c_str(), glob_token,
+                                           patterns);
         }
-
-        if (end) *end = '\\';  // repair string
-        FindClose(h);
     }
 }
 
@@ -492,35 +655,44 @@ void Configuration::processGlobExpression(glob_token *glob_token,
 // C:/Testfile | D:/var/log/data.log D:/tmp/art*.log
 // This globline is split into tokens which are processed by
 // process_glob_expression
-void Configuration::addGlobline(char *value) {
+void Configuration::addGlobline(const char *value) {
     // Each globline receives its own pattern container
     // In case new files matching the glob pattern are we
     // we already have all state,regex patterns available
     globline_container *new_globline = new globline_container();
 
     _logwatch_globlines.add(new_globline);
-
     // Split globline into tokens
-    if (value != 0) {
-        char *copy = strdup(value);
-        char *token = strtok(copy, "|");
-        while (token) {
-            token = lstrip(token);
+    if (value != nullptr) {
+        std::regex split_exp("[^|]+");
+        std::cregex_token_iterator iter(value, value + strlen(value),
+                                        split_exp);
+        std::cregex_token_iterator end;
+
+        for (; iter != end; ++iter) {
+            std::string descriptor = iter->str();
+            const char *token = lstrip(descriptor.c_str());
             glob_token *new_token = new glob_token();
 
-            if (!strncmp(token, "nocontext", 9)) {
-                new_token->nocontext = true;
-                token += 9;
-                token = lstrip(token);
-            } else
-                new_token->nocontext = false;
+            while (true) {
+                if (strncmp(token, "nocontext", 9) == 0) {
+                    new_token->nocontext = true;
+                    token = lstrip(token + 9);
+                } else if (strncmp(token, "from_start", 10) == 0) {
+                    new_token->from_start = true;
+                    token = lstrip(token + 10);
+                } else if (strncmp(token, "rotated", 7) == 0) {
+                    new_token->rotated = true;
+                    token = lstrip(token + 7);
+                } else {
+                    break;
+                }
+            }
 
             new_token->pattern = strdup(token);
             new_globline->tokens.push_back(new_token);
             processGlobExpression(new_token, new_globline->patterns);
-            token = strtok(NULL, "|");
         }
-        free(copy);
     }
 }
 
@@ -528,17 +700,13 @@ void Configuration::addGlobline(char *value) {
 // size) indicate a change
 void Configuration::revalidateLogwatchTextfiles() {
     // First of all invalidate all textfiles
-    for (logwatch_textfiles_t::const_iterator it_tf =
-             _logwatch_textfiles->begin();
-         it_tf != _logwatch_textfiles->end(); ++it_tf) {
-        (*it_tf)->missing = true;
+    for (logwatch_textfile *textfile : *_logwatch_textfiles) {
+        textfile->missing = true;
     }
 
-    for (logwatch_globlines_t::iterator it_line = _logwatch_globlines->begin();
-         it_line != _logwatch_globlines->end(); ++it_line) {
-        for (glob_tokens_t::iterator it_token = (*it_line)->tokens.begin();
-             it_token != (*it_line)->tokens.end(); it_token++) {
-            processGlobExpression(*it_token, (*it_line)->patterns);
+    for (globline_container *globline : *_logwatch_globlines) {
+        for (glob_token *token : globline->tokens) {
+            processGlobExpression(token, globline->patterns);
         }
     }
 }

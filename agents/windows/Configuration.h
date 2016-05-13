@@ -135,6 +135,9 @@ public:
     void revalidateLogwatchTextfiles();
 
 private:
+    typedef std::pair<std::string, FILETIME> file_entry_type;
+
+private:
     void readConfigFile(const std::string &filename);
 
     bool handleGlobalConfigVariable(char *var, char *value);
@@ -156,14 +159,35 @@ private:
 
     void loadEventlogOffsets();
     void loadLogwatchOffsets();
+
+    std::vector<file_entry_type> globMatches(const char *pattern);
+    std::vector<std::string> sortedByTime(
+        const std::vector<file_entry_type> &entries);
+
+    bool getFileInformation(const char *filename,
+                            BY_HANDLE_FILE_INFORMATION *info);
+    void eraseFilesOlder(std::vector<std::string> &file_names,
+                         uint64_t file_id);
+    bool updateFromHint(const char *file_name, logwatch_textfile *textfile);
     bool addNewLogwatchTextfile(const char *full_filename, glob_token *token,
                                 condition_patterns_t &patterns);
+    void updateLogwatchTextfile(logwatch_textfile *textfile);
+    bool updateCurrentRotatedTextfile(logwatch_textfile *textfile);
+    void updateRotatedLogfile(const char *pattern, logwatch_textfile *textfile);
+    bool addNewRotatedLogfile(const char *pattern,
+                              const std::vector<std::string> &filenames,
+                              glob_token *token,
+                              condition_patterns_t &patterns);
+
     void updateOrCreateLogwatchTextfile(const char *full_filename,
                                         glob_token *token,
                                         condition_patterns_t &patterns);
+    void updateOrCreateRotatedLogfile(const std::vector<std::string> &filenames,
+                                      glob_token *token,
+                                      condition_patterns_t &patterns);
     void processGlobExpression(glob_token *glob_token,
                                condition_patterns_t &patterns);
-    void addGlobline(char *value);
+    void addGlobline(const char *value);
     bool checkHostRestriction(char *patterns);
 
     int getCounterIdFromLang(const char *language, const char *counter_name);
@@ -262,8 +286,7 @@ private:
     // logfiles
     ListCollector<logwatch_textfiles_t> _logwatch_textfiles;
     // TODO: this is actually state, but it's only used during interpretation of
-    // the configuration
-    // files
+    // the configuration files
     logwatch_textfiles_t _logwatch_hints;
     ListCollector<logwatch_globlines_t, BlockMode::Nop<logwatch_globlines_t>,
                   AddMode::PriorityAppendGrouped<logwatch_globlines_t> >

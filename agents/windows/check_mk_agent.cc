@@ -277,12 +277,10 @@ void debug_script_container(script_container *container) {
     crash_log("buffer_work: \n<<<<\n%s\n>>>>", container->buffer_work);
 }
 
-
 template <typename T>
 bool in_set(const T &val, const std::set<T> &test_set) {
     return test_set.find(val) != test_set.end();
 }
-
 
 //  .----------------------------------------------------------------------.
 //  |  ______              _                 _   _               ______    |
@@ -1119,13 +1117,10 @@ void save_logwatch_offsets(const std::string &logwatch_statefile) {
         // notices something went wrong.
         // FIXME: unless there aren't any textfiles configured to be monitored
     }
-    for (logwatch_textfiles_t::const_iterator it_tf =
-             g_config->logwatchTextfiles().begin();
-         it_tf != g_config->logwatchTextfiles().end(); ++it_tf) {
-        logwatch_textfile *tf = *it_tf;
+    for (logwatch_textfile *tf : g_config->logwatchTextfiles()) {
         if (!tf->missing) {
             fprintf(file, "%s|%" PRIu64 "|%" PRIu64 "|%" PRIu64 "\r\n",
-                    tf->path, tf->file_id, tf->file_size, tf->offset);
+                    tf->name.c_str(), tf->file_id, tf->file_size, tf->offset);
         }
     }
     if (file != NULL) {
@@ -1193,25 +1188,19 @@ void update_script_statistics() {
 
 // Remove missing files from list
 void cleanup_logwatch_textfiles() {
-    for (logwatch_textfiles_t::iterator it_tf =
-             g_config->logwatchTextfiles().begin();
-         it_tf != g_config->logwatchTextfiles().end();) {
-        if ((*it_tf)->missing) {
-            // remove this file from the list
-            free((*it_tf)->path);
-            it_tf = g_config->logwatchTextfiles().erase(it_tf);
-        } else
-            it_tf++;
-    }
+    logwatch_textfiles_t &textfiles = g_config->logwatchTextfiles();
+    textfiles.erase(
+        std::remove_if(textfiles.begin(), textfiles.end(),
+                       [](logwatch_textfile *file) { return file->missing; }),
+        textfiles.end());
 }
 
 // Called on program exit
 void cleanup_logwatch() {
     // cleanup textfiles
-    for (logwatch_textfiles_t::iterator it_tf =
-             g_config->logwatchTextfiles().begin();
-         it_tf != g_config->logwatchTextfiles().end(); it_tf++)
-        (*it_tf)->missing = true;
+    for (logwatch_textfile *textfile : g_config->logwatchTextfiles()) {
+        textfile->missing = true;
+    }
     cleanup_logwatch_textfiles();
 
     // cleanup globlines and textpatterns
@@ -1269,7 +1258,7 @@ process_textfile_response process_textfile_unicode(FILE *file,
                                                    logwatch_textfile *textfile,
                                                    OutputProxy &out,
                                                    bool write_output) {
-    verbose("Checking UNICODE file %s\n", textfile->path);
+    verbose("Checking UNICODE file %s\n", textfile->paths.front().c_str());
     process_textfile_response response;
     char output_buffer[UNICODE_BUFFER_SIZE];
     char unicode_block[UNICODE_BUFFER_SIZE];
@@ -1364,14 +1353,14 @@ process_textfile_response process_textfile_unicode(FILE *file,
     return response;
 }
 
-process_textfile_response process_textfile(FILE *file,
-                                           logwatch_textfile *textfile,
-                                           OutputProxy &out,
-                                           bool write_output) {
+process_textfile_response process_textfile_default(FILE *file,
+                                                   logwatch_textfile *textfile,
+                                                   OutputProxy &out,
+                                                   bool write_output) {
     char line[4096];
     condition_pattern *pattern = 0;
     process_textfile_response response;
-    verbose("Checking file %s\n", textfile->path);
+    verbose("Checking file %s\n", textfile->paths.front().c_str());
 
     while (!feof(file)) {
         if (!fgets(line, sizeof(line), file)) break;
@@ -1406,6 +1395,94 @@ process_textfile_response process_textfile(FILE *file,
     return response;
 }
 
+file_encoding determine_encoding(logwatch_textfile *textfile) {
+    // Determine Encoding
+    FILE *file = fopen(textfile->paths.front().c_str(), "rb");
+    if (!file) {
+        return UNDEF;
+    }
+
+    OnScopeExit auto_close([file]() { fclose(file); });
+
+    char bytes[2];
+    int read_bytes = fread(bytes, 1, sizeof(bytes), file);
+
+    if ((read_bytes == sizeof(bytes)) &&
+        static_cast<unsigned char>(bytes[0]) == 0xFF &&
+        static_cast<unsigned char>(bytes[1]) == 0xFE)
+        return UNICODE;
+    else
+        return DEFAULT;
+}
+
+FILE *open_logfile(logwatch_textfile *textfile) {
+    FILE *result = nullptr;
+
+    if ((textfile->encoding == UNDEF) || (textfile->offset == 0)) {
+        textfile->encoding = determine_encoding(textfile);
+    }
+
+    if (textfile->encoding != UNDEF) {
+        if (textfile->encoding == UNICODE)
+            result = fopen(textfile->paths.front().c_str(), "rb");
+        else
+            result = fopen(textfile->paths.front().c_str(), "r");
+    }
+
+    return result;
+}
+
+uint64_t logfile_offset(logwatch_textfile *textfile) {
+    uint64_t offset = textfile->offset;
+    if ((offset == 0) && (textfile->encoding == UNICODE)) {
+        offset = 2;
+    }
+    return offset;
+}
+
+process_textfile_response process_textfile(FILE *file,
+                                           logwatch_textfile *textfile,
+                                           OutputProxy &out,
+                                           bool write_output) {
+    fseek(file, logfile_offset(textfile), SEEK_SET);
+    if (textfile->encoding == UNICODE)
+        return process_textfile_unicode(file, textfile, out, write_output);
+    else
+        return process_textfile_default(file, textfile, out, write_output);
+}
+
+void process_textfile(OutputProxy &out, logwatch_textfile *textfile) {
+    if (textfile->missing) {
+        out.output("[[[%s:missing]]]\n", textfile->name.c_str());
+        return;
+    }
+
+    // Start processing file
+    FILE *file = open_logfile(textfile);
+
+    if (!file) {
+        out.output("[[[%s:cannotopen]]]\n", textfile->name.c_str());
+        return;
+    }
+    OnScopeExit auto_close([file]() { fclose(file); });
+
+    out.output("[[[%s]]]\n", textfile->name.c_str());
+
+    if (textfile->offset == textfile->file_size) {  // no new data
+        return;
+    }
+
+    // determine if there is anything important enough to report
+    process_textfile_response response =
+        process_textfile(file, textfile, out, false);
+    if (response.found_match) {
+        // actually report things
+        response = process_textfile(file, textfile, out, true);
+    }
+
+    textfile->offset = textfile->file_size - response.unprocessed_bytes;
+}
+
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
 void section_logfiles(OutputProxy &out, const Environment &env) {
@@ -1414,89 +1491,18 @@ void section_logfiles(OutputProxy &out, const Environment &env) {
 
     g_config->revalidateLogwatchTextfiles();
 
-    logwatch_textfile *textfile;
-
     // Missing glob patterns
-    for (logwatch_globlines_t::iterator it_globline =
-             g_config->logwatchGloblines().begin();
-         it_globline != g_config->logwatchGloblines().end(); ++it_globline) {
-        globline_container *cont = *it_globline;
-        for (glob_tokens_t::iterator it_token = cont->tokens.begin();
-             it_token != cont->tokens.end(); it_token++) {
-            if (!((*it_token)->found_match))
-                out.output("[[[%s:missing]]]\n", (*it_token)->pattern);
+    for (const globline_container *cont : g_config->logwatchGloblines()) {
+        for (const glob_token *token : cont->tokens) {
+            if (!token->found_match) {
+                out.output("[[[%s:missing]]]\n", token->pattern);
+            }
         }
     }
-    for (logwatch_textfiles_t::iterator it_tf =
-             g_config->logwatchTextfiles().begin();
-         it_tf != g_config->logwatchTextfiles().end(); ++it_tf) {
-        textfile = *it_tf;
-        if (textfile->missing) {
-            out.output("[[[%s:missing]]]\n", textfile->path);
-            continue;
-        }
 
-        // Determine Encoding
-        if (textfile->encoding == UNDEF || textfile->offset == 0) {
-            FILE *file = fopen(textfile->path, "rb");
-            if (!file) {
-                out.output("[[[%s:cannotopen]]]\n", textfile->path);
-                continue;
-            }
-
-            char bytes[2];
-            int read_bytes = fread(bytes, 1, sizeof(bytes), file);
-            if (read_bytes == sizeof(bytes) &&
-                (unsigned char)bytes[0] == 0xFF &&
-                (unsigned char)bytes[1] == 0xFE)
-                textfile->encoding = UNICODE;
-            else
-                textfile->encoding = DEFAULT;
-            fclose(file);
-        }
-
-        // Start processing file
-        FILE *file;
-        if (textfile->encoding == UNICODE)
-            file = fopen(textfile->path, "rb");
-        else
-            file = fopen(textfile->path, "r");
-
-        if (!file) {
-            out.output("[[[%s:cannotopen]]]\n", textfile->path);
-            continue;
-        }
-
-        out.output("[[[%s]]]\n", textfile->path);
-
-        if (textfile->offset == textfile->file_size) {  // no new data
-            fclose(file);
-            continue;
-        }
-
-        fseek(file, (textfile->encoding == UNICODE && textfile->offset == 0)
-                        ? 2
-                        : textfile->offset,
-              SEEK_SET);
-        process_textfile_response response;
-        if (textfile->encoding == UNICODE)
-            response = process_textfile_unicode(file, textfile, out, false);
-        else
-            response = process_textfile(file, textfile, out, false);
-
-        if (response.found_match) {
-            fseek(file, (textfile->encoding == UNICODE && textfile->offset == 0)
-                            ? 2
-                            : textfile->offset,
-                  SEEK_SET);
-            if (textfile->encoding == UNICODE)
-                response = process_textfile_unicode(file, textfile, out, true);
-            else
-                response = process_textfile(file, textfile, out, true);
-        }
-
-        fclose(file);
-        textfile->offset = textfile->file_size - response.unprocessed_bytes;
+    // found files
+    for (logwatch_textfile *textfile : g_config->logwatchTextfiles()) {
+        process_textfile(out, textfile);
     }
 
     cleanup_logwatch_textfiles();
@@ -1575,11 +1581,11 @@ bool output_perfcounter_table(OutputProxy &out, const wchar_t *table_name,
                    join(counter_object.counterNames(), L",").c_str());
         for (const auto &instance_values : value_map) {
             std::wstring instance_name = L"\"\"";
-            if (static_cast<size_t>(instance_values.first) < instance_names.size()) {
+            if (static_cast<size_t>(instance_values.first) <
+                instance_names.size()) {
                 instance_name = instance_names[instance_values.first];
             }
-            out.output("%ls,%ls\n",
-                       instance_name.c_str(),
+            out.output("%ls,%ls\n", instance_name.c_str(),
                        join(instance_values.second, L",").c_str());
         }
     } catch (const std::exception &e) {
@@ -1679,7 +1685,8 @@ void section_skype(OutputProxy &out) {
     }
 
     if (any_section_valid) {
-        // the following will appear on systems that don't have Skype for Business installed
+        // the following will appear on systems that don't have Skype for
+        // Business installed
         // but we don't care about it without Skype
         output_perfcounter_table(out, L"ASP.NET Apps v4.0.30319",
                                  "ASP.NET Apps v4.0.30319", true);
@@ -1894,8 +1901,7 @@ void output_fileinfos(OutputProxy &out, const char *path) {
 
 bool output_fileinfo(OutputProxy &out, const char *basename,
                      WIN32_FIND_DATA *data) {
-    unsigned long long size = (unsigned long long)data->nFileSizeLow +
-                              (((unsigned long long)data->nFileSizeHigh) << 32);
+    uint64_t size = to_u64(data->nFileSizeLow, data->nFileSizeHigh);
 
     if (0 == (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
         out.output("%s\\%s|%" PRIu64 "|%.0f\n", basename, data->cFileName, size,

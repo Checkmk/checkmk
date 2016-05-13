@@ -16,6 +16,11 @@ char *lstrip(char *s) {
     return s;
 }
 
+const char *lstrip(const char *s) {
+    while (isspace(*s)) s++;
+    return s;
+}
+
 char *rstrip(char *s) {
     char *end = s + strlen(s);  // point one beyond last character
     while (end > s && isspace(*(end - 1))) {

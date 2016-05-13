@@ -1,0 +1,11 @@
+Title: windows agent: support for rotated log files and for reading new files from the first line
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1463124551
+Class: feature
+
+Please see the check_mk.example.ini for details on how to configure this.
+With rotated logs, a pattern has to be specified to match all "generations" of the log and the agent
+will read each in sequence and report them as one item.

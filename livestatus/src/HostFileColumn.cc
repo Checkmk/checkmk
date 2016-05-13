@@ -23,9 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostFileColumn.h"
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include "logger.h"
 
@@ -68,6 +70,10 @@ char *HostFileColumn::getBlob(void *data, int *size) {
              _suffix.c_str());
     int fd = open(path, O_RDONLY);
     if (fd < 0) {
+        // It is OK when inventory/logwatch files do not exist.
+        if (errno != ENOENT) {
+            logger(LG_WARN, "Cannot open %s: %s", path, strerror(errno));
+        }
         return nullptr;
     }
 
@@ -75,7 +81,8 @@ char *HostFileColumn::getBlob(void *data, int *size) {
     if (*size < 0) {
         close(fd);
         *size = 0;
-        logger(LG_WARN, "Cannot seek to end of file %s", path);
+        logger(LG_WARN, "Cannot seek to end of file %s: %s", path,
+               strerror(errno));
         return nullptr;
     }
 
@@ -89,7 +96,8 @@ char *HostFileColumn::getBlob(void *data, int *size) {
     ssize_t read_bytes = read(fd, buffer, *size);
     close(fd);
     if (read_bytes != *size) {
-        logger(LG_WARN, "Cannot read %d from %s", *size, path);
+        logger(LG_WARN, "Cannot read %d from %s: %s", *size, path,
+               strerror(errno));
         free(buffer);
         return nullptr;
     }

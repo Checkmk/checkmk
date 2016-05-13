@@ -872,7 +872,8 @@ void output_eventlog(OutputProxy &out, const char *logname,
 
         DWORD newest_record = *record_number;
 
-        log.seek(*record_number);
+        // record_number is the last event we read, so we want to seek past it
+        log.seek(*record_number + 1);
 
         // first pass - determine if there are records above level
         EVENTLOGRECORD *record = log.read();
@@ -897,7 +898,7 @@ void output_eventlog(OutputProxy &out, const char *logname,
         // second pass - if there were, print everything
         if ((worst_state >= level) || !logwatch_suppress_info) {
             log.reset();
-            log.seek(*record_number);
+            log.seek(*record_number + 1);
 
             EVENTLOGRECORD *record = log.read();
             while (record != nullptr) {

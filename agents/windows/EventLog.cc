@@ -138,6 +138,16 @@ void EventLog::close() { CloseEventLog(_log); }
 bool EventLog::fillBuffer() {
     _buffer_offset = 0;
 
+    // test if we're at the end of the log, as we don't get
+    // a proper error message when reading beyond the last log record
+    DWORD oldest_record, record_count;
+    if (::GetOldestEventLogRecord(_log, &oldest_record) &&
+        ::GetNumberOfEventLogRecords(_log, &record_count)) {
+        if (_record_offset >= oldest_record + record_count) {
+            return false;
+        }
+    }
+
     DWORD flags = EVENTLOG_FORWARDS_READ;
     if ((_record_offset != 0) && (_seek_possible)) {
         flags |= EVENTLOG_SEEK_READ;

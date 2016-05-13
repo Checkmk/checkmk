@@ -8,6 +8,7 @@
     * 3573 FIX: ps: Fixed possible wrong matching of ps and ucb ps commands
     * 3470 FIX: mounts: Fix exception when displaying check parameters in WATO services list...
     * 3530 FIX: agent_vsphere: improved performance, too much perfcounters were queried
+    * 3134 FIX: windows agent: fixed bug where the last message of an eventlog was always re-read
 
     Multisite:
     * 3468 FIX: Fix changing a user's language back to English if the default is German...

@@ -41,7 +41,7 @@ subgroup_environment =  _("Temperature, Humidity, Electrical Parameters, etc.")
 subgroup_applications = _("Applications, Processes & Services")
 subgroup_virt =         _("Virtualization")
 subgroup_hardware =     _("Hardware, BIOS")
-subgroup_inventory =    _("Inventory - automatic service detection")
+subgroup_inventory =    _("Discovery - automatic service detection")
 
 # register_rule(group, varname, valuespec = None, title = None,
 #               help = None, itemspec = None, itemtype = None, itemname = None,
@@ -3066,7 +3066,7 @@ register_rule(group + '/' + subgroup_storage,
                   'file but also on the count. You can define one or several '
                   'patterns for a group containing <tt>*</tt> and <tt>?</tt>, for example '
                   '<tt>/var/log/apache/*.log</tt>. For files contained in a group '
-                  'the inventory will automatically create a group service instead '
+                  'the discovery will automatically create a group service instead '
                   'of single services for each file. This rule also applies when '
                   'you use manually configured checks instead of inventorized ones. '
                   'Furthermore, the current time/date in a configurable format '

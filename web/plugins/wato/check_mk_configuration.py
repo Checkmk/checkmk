@@ -1746,7 +1746,7 @@ register_rule(group,
     "ignored_services",
     title = _("Disabled services"),
     help = _("Services that are declared as <u>disabled</u> by this rule set will not be added "
-             "to a host during inventory (automatic service detection). Services that already "
+             "to a host during discovery (automatic service detection). Services that already "
              "exist will continued to be monitored but be marked as obsolete in the service "
              "list of a host."),
     itemtype = "service")

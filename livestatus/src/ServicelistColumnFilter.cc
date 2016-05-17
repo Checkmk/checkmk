@@ -24,7 +24,7 @@
 
 #include "ServicelistColumnFilter.h"
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include "ServicelistColumn.h"
 #include "logger.h"
 #include "nagios.h"

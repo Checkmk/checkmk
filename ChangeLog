@@ -1,4 +1,7 @@
 1.2.8p2:
+    Checks & Agents:
+    * 3603 FIX: wut_webtherm: fixed empty data handling
+
 
 1.2.8p1:
     Core & Setup:

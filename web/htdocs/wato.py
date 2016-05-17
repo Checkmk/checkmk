@@ -14029,9 +14029,9 @@ def create_sample_config():
     )
 
 
-    # A contact group where everyone is member of
+    # A contact group for all hosts and services
     groups = {
-        "contact" : { 'all' : {'alias': u'Everybody'} },
+        "contact" : { 'all' : {'alias': u'Everything'} },
     }
     save_group_information(groups)
 

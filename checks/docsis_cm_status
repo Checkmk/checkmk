@@ -52,19 +52,19 @@ def inventory_docsis_cm_status(info):
 
 def check_docsis_cm_status( item, params, info):
     status_table = {
-            1 : "other",
-            2 : "notReady",
-            3 : "notSynchronized",
-            4 : "phySynchronized",
-            5 : "usParametersAcquired",
-            6 : "rangingComplete",
-            7 : "ipComplete",
-            8 : "todEstablished",
-            9 : "securityEstablished",
-            10 :"paramTransferComplete",
-            11 :"registrationComplete",
-            12 :"operational",
-            13 :"accessDenied",
+            1  : "other",
+            2  : "not ready",
+            3  : "not synchronized",
+            4  : "PHY synchronized",
+            5  : "upstream parameters acquired",
+            6  : "ranging complete",
+            7  : "IP complete",
+            8  : "TOD established",
+            9  : "security established",
+            10 : "params transfer complete",
+            11 : "registration complete",
+            12 : "operational",
+            13 : "access denied",
     }
 
     for sid, status, tx_power in info:
@@ -108,4 +108,3 @@ check_info["docsis_cm_status"] = {
     "group"                   : "docsis_cm_status",
     "includes"                : [ "docsis.include" ],
 }
-

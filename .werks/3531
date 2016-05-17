@@ -28,7 +28,7 @@ System setup
 The size of the config is roughly 8MB (this highly depends on the configured rules).
 
 <table>
-<tr><td>Marshal config</td><td>320MB</td></tr>
-<tr><td>Plain text config</td><td>30MB</td></tr>
+<tr><td>Marshaled config</td><td>320 MB</td></tr>
+<tr><td>Plain text config</td><td>30 MB</td></tr>
 </table>
 

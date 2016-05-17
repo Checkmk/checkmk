@@ -23,7 +23,7 @@ System setup
 <li>CentOS6</li>
 <li>Python 2.6</li>
 <li>11k Hosts</li>
-<li>40k Services</li>
+<li>200k Services</li>
 </ul>
 The size of the config is roughly 8MB (this highly depends on the configured rules).
 

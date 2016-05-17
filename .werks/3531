@@ -1,0 +1,34 @@
+Title: Reduced Check_MK helper size for certain dists/python versions
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.9i1
+Date: 1463473106
+Class: feature
+
+The config of the Check_MK check helper is now written as marshaled python code,
+instead of plain python text. This reduces the helpers peak resident memory size
+while parsing the config file.
+
+
+Some distributions (or python versions) tend not to shrink the resident memory
+of the check helper again, so the check helper size can only grow.
+
+
+By using marshaled config data the initial check helper size can be drastically lower.
+Actual use case:
+
+System setup
+<ul>
+<li>CentOS6</li>
+<li>Python 2.6</li>
+<li>11k Hosts</li>
+<li>40k Services</li>
+</ul>
+The size of the config is roughly 8MB (this highly depends on the configured rules).
+
+<table>
+<tr><td>Marshal config</td><td>320MB</td></tr>
+<tr><td>Plain text config</td><td>30MB</td></tr>
+</table>
+

@@ -2421,7 +2421,7 @@ def pack_config():
         except:
             return False
 
-    filepath = var_dir + "/core/config.mk"
+    filepath = var_dir + "/core/helper_config.mk"
     out = file(filepath + ".new", "w")
     out.write("#!/usr/bin/python\n"
               "# encoding: utf-8\n"
@@ -2439,7 +2439,19 @@ def pack_config():
             out.write("\nif %r in globals():\n    del %s\n" % (varname, varname))
 
     out.close()
-    os.rename(filepath + ".new", filepath)
+
+    import marshal
+    code = compile(open(filepath + ".new").read(), '<string>', 'exec')
+    marshal.dump(code, open(filepath + ".compiled", "wb"))
+    os.rename(filepath + ".compiled", filepath)
+    # Remove the configs readable version
+    os.unlink(filepath + ".new")
+
+
+def read_packed_config():
+    import marshal
+    filepath = var_dir + "/core/helper_config.mk"
+    exec(marshal.load(open(filepath)), globals())
 
 def pack_autochecks():
     dstpath = var_dir + "/core/autochecks"
@@ -2462,9 +2474,6 @@ def pack_autochecks():
         if f not in needed:
             os.remove(dstpath + "/" + f)
 
-def read_packed_config():
-    filepath = var_dir + "/core/config.mk"
-    execfile(filepath, globals())
 
 #.
 #   .--Man-Pages-----------------------------------------------------------.

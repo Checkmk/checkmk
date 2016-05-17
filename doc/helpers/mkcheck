@@ -1,17 +1,50 @@
-#!/bin/bash
-# usage:
-# 'mkcheck NAME'        for a standard check
-# 'mkcheck NAME snmp'   for a snmp check
-content_std="#!/usr/bin/python
+#!/usr/bin/python
+
+
+import os, sys, getopt, time
+
+
+def usage():
+    sys.stdout.write("""
+DESCRIPTION:
+  This script creates a basic check file or if '-m'
+  specified a manual page.
+  You have to specify at least one name.
+
+  The created check or manual page are saved to
+  the current directory.
+
+  It is recommended to run this script in the checks folder
+  if you want to create a check or in the manual page folder
+  if you want to create a man page.
+
+USAGE: mkcheck [OPTS] ARGS
+
+OPTIONS:
+ -h, --help        Show this help
+ -s                Adds SNMP info and scan function
+ -p                Adds parse function
+ -m                Creates the manual page instead of
+                   the check
+
+""")
+
+
+def stderr(msg):
+    sys.stderr.write("ERROR: %s\n" % msg)
+
+
+def header():
+    return """#!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \\/  | |/ /           |
-# |           | |   | '_ \\ / _ \\/ __| |/ /   | |\\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \\            |
-# |            \\____|_| |_|\\___|\\___|_|\\_\\___|_|  |_|_|\\_\\           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner YEAR             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner %s             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -29,57 +62,127 @@ content_std="#!/usr/bin/python
 # Boston, MA 02110-1301 USA.
 
 
-# example output:
-#
+# example output
 
 
-factory_settings['CHECKNAME_default_levels'] = {
-}
+""" % time.gmtime(time.time())[0]
 
 
-def inventory_CHECKNAME(info):
-    print info
-    return []
+def get_check_content(check_name, has_parse=False, is_snmp=False):
+    if has_parse:
+        info_str         = "parsed"
+        pprint_info      = ""
+        check_info_parse = \
+          "    'parse_function'        : parse_%s,\n" % check_name
+
+        parse_func_info = ("def parse_%s(info):\n" + \
+          "    pprint.pprint(info)\n" + \
+          "    parsed = {}\n" + \
+          "    return parsed\n\n\n") % check_name
+    else:
+        info_str         = "info"
+        parse_func_info  = ""
+        check_info_parse = ""
+        pprint_info      = "    pprint.pprint(info)\n"
+
+    inventory_func_info = ("def inventory_%s(%s):\n%s" + \
+          "    return []\n\n\n") % (check_name, info_str, pprint_info)
+
+    check_func_info = ("def check_%s(item, params, %s):\n" + \
+          "    return 3, 'not yet implemented'\n\n\n") % (check_name, info_str)
+
+    if is_snmp:
+        snmp_content = \
+          "    'snmp_info'             : ('', []),\n" + \
+          "    'snmp_scan_function'    : lambda oid: False,\n"
+    else:
+        snmp_content = ""
+
+    check_info_title = "check_info['%s'] = {\n" % check_name
+    check_info_keys = ("{1}" + \
+          "    'inventory_function'    : inventory_{0},\n" + \
+          "    'check_function'        : check_{0},\n" + \
+          "    'service_description'   : 'DESCR',\n{2}").format(
+          check_name, check_info_parse, snmp_content)
+
+    return header() + parse_func_info + inventory_func_info + \
+           check_func_info + check_info_title + check_info_keys + '}'
 
 
-def check_CHECKNAME(item, params, info):
-    return (3, 'Not yet implemented')
+def get_man_content(check_name, is_snmp=False):
+    snmp_info = ""
+    if is_snmp:
+        snmp_info = " snmp"
+    return """title:
+agents:%s
+catalog:
+license: GPL
+distribution: check_mk
+description:
+
+item:
+
+inventory:""" % snmp_info
 
 
-check_info['CHECKNAME'] = {
-    'inventory_function'        : inventory_CHECKNAME,
-    'check_function'            : check_CHECKNAME,
-    'service_description'       : 'DESCRIPTION %s',
-    'has_perfdata'              : True,
-    'default_levels_variable'   : 'CHECKNAME_default_levels',
-    'includes'                  : [],"
-content_snmp="
-    'snmp_info'                 : INFO,
-    'snmp_scan_function'        : lambda oid: FUNCTION,
-}"
-path=`pwd`
-filename=$1
-snmp=$2
-path2file=$path"/"$filename
-no_name=$path"/no_name"
-year=`date +"%Y"`
-if [ -z "$filename" ]; then
-    echo "No name or argument given. Please determine one."
-else
-    content_std=${content_std//CHECKNAME/$filename}
-    content_std=${content_std//YEAR/$year}
-    if [ ! -f "$path2file" ]; then
-        if  [ -z $snmp ]; then
-            content_std=$content_std"\n#\n}"
-        elif [ $snmp = "snmp" ]; then
-            content_std=$content_std$content_snmp
-        else
-            echo "Wrong arguments."
-            exit 0
-        fi
-        echo "New check '$filename' is created and stored in '$path2file'."
-        echo -e "${content_std}" > $path2file
-    else
-        echo "File already exists."
-    fi
-fi
+def main(cmdl_args):
+    opts_short = "hspm"
+    opts_long  = [ "help" ]
+
+    try:
+        opts, args = getopt.getopt(cmdl_args, opts_short, opts_long)
+    except Exception, err:
+        stderr(err)
+        sys.exit(1)
+
+    is_snmp      = False
+    has_parse    = False
+    create_man   = False
+    create_check = True
+    for o, a in opts:
+        if o in [ "-h", "--help" ]:
+            usage()
+            sys.exit(0)
+        elif o == "-s":
+            is_snmp = True
+        elif o == "-p":
+            has_parse = True
+        elif o == "-m":
+            create_man   = True
+            create_check = False
+
+    if len(args) > 0:
+        check_names = args
+    else:
+        usage()
+        stderr("specifiy exactly one check name")
+        sys.exit(1)
+
+    whereiam = os.getcwd()
+    for check_name in check_names:
+        filename = "%s/%s" % (whereiam, check_name)
+        if create_check:
+            if os.path.isfile(filename):
+                stderr("check already exists")
+            else:
+                check_content = get_check_content(check_name, has_parse=has_parse, is_snmp=is_snmp)
+                try:
+                    check_f = file(filename, 'w')
+                    check_f.write(check_content)
+                except Exception, err:
+                    stderr(err)
+
+        if create_man:
+            if os.path.isfile(filename):
+                stderr("man page already exists")
+            else:
+                man_content = get_man_content(check_name, is_snmp=is_snmp)
+                try:
+                    man_f = file(filename, 'w')
+                    man_f.write(man_content)
+                except Exception, err:
+                    stderr(err)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

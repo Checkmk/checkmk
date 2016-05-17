@@ -815,6 +815,18 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "rds_licenses",
+    _("Number of used Remote Desktop Licenses"),
+    vs_license,
+    TextAscii(
+       title = _("ID of the license, e.g. <tt>Windows Server 2008 R2</tt>"),
+       allow_empty = False,
+    ),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_applications,
     "citrix_sessions",
     _("Citrix Terminal Server Sessions"),
     Dictionary(

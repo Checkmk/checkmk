@@ -2,6 +2,9 @@
     Checks & Agents:
     * 3603 FIX: wut_webtherm: fixed empty data handling
 
+    WATO:
+    * 3534 FIX: Fixed exception with upload of interlaced PNG files...
+
 
 1.2.8p1:
     Core & Setup:

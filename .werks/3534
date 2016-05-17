@@ -1,0 +1,10 @@
+Title: Fixed exception with upload of interlaced PNG files
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.9i1
+Date: 1463491935
+Class: fix
+
+The upload of interlaced PNG files is not supported with older versions (<1.1.7)
+of the python PIL module.

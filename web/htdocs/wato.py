@@ -14970,7 +14970,12 @@ def upload_icon(icon_info):
     # and finally save the image
     dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % defaults.omd_root
     make_nagios_directories(dest_dir)
-    im.save(dest_dir+'/'+icon_info['icon'][0], 'PNG', pnginfo=meta)
+    try:
+        im.save(dest_dir+'/'+icon_info['icon'][0], 'PNG', pnginfo=meta)
+    except IOError, e:
+        # Might happen with interlaced PNG files and PIL version < 1.1.7
+        raise MKUserError(None, _('Unable to upload icon: %s') % e)
+
 
 
 def load_custom_icons():

@@ -6822,6 +6822,9 @@ register_check_parameters(
     _("MSSQL Transactionlog Sizes"),
     Dictionary(
         title = _("File Size Levels"),
+        help = _("Specify levels for transactionlogs of a database. Please note that relative "
+                 "levels will only work if there is a max_size set for the file on the database "
+                 "side."),
         elements = [
             ("used_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("used"))),
             ("allocated_used_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("used of allocation"))),
@@ -6840,6 +6843,9 @@ register_check_parameters(
     _("MSSQL Datafile Sizes"),
     Dictionary(
         title = _("File Size Levels"),
+        help = _("Specify levels for datafiles of a database. Please note that relative "
+                 "levels will only work if there is a max_size set for the file on the database "
+                 "side."),
         elements = [
             ("used_levels", levels_absolute_or_dynamic(_("Datafile"), _("used"))),
             ("allocated_used_levels", levels_absolute_or_dynamic(_("Datafile"), _("used of allocation"))),

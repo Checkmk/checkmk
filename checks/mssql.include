@@ -57,17 +57,17 @@ def inventory_mssql_datafiles(mode, info):
 def mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, unlimited):
     def calculate_levels(levels, reference_value):
         if isinstance(levels[0], float):
-            if reference_value == -1:
-                return 0, None
-            else:
+            if reference_value != -1:
                 return map(lambda x: (x * reference_value) / 100, levels)
         elif levels[0] is not None:
             return map(lambda x: x * 1024 * 1024, levels)
-        else:
-            return None, None
+
+        return None, None
 
     if unlimited:
         max_size = -1
+
+    rel_levels = False
 
     for param_key,                name,             perf_key,         value,          reference_value in [
         ('used_levels',           "used",           "data_size",      used_size,      max_size),
@@ -85,6 +85,8 @@ def mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, u
                     break
         else:
             warn, crit = calculate_levels(levels, reference_value)
+            if isinstance(levels[0], float):
+                rel_levels = True
 
         if crit is not None and value >= crit:
             status = 2
@@ -92,12 +94,9 @@ def mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, u
             status = 1
 
         if status > 0:
-            if warn == 0:
-                wc_msg = " (max_size is unlimited, please use absolute levels)"
-            else:
-                wc_msg = " (warn/crit at %s/%s)" % (
-                            get_bytes_human_readable(warn),
-                            get_bytes_human_readable(crit))
+            wc_msg = " (warn/crit at %s/%s)" % (
+                        get_bytes_human_readable(warn),
+                        get_bytes_human_readable(crit))
         else:
             wc_msg = ""
 
@@ -113,6 +112,9 @@ def mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, u
                         get_bytes_human_readable(reference_value),
                         name, wc_msg), \
                     [(perf_key, value, warn, crit, 0, reference_value)]
+
+    if unlimited and rel_levels:
+        yield 0, "no maximum size", []
 
 
 def check_mssql_datafiles(item, params, info):

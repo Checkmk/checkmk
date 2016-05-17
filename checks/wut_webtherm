@@ -41,7 +41,7 @@ def parse_wut_webtherm(info):
         # Dependent on webtherm_type we have to determine
         # which sensors are available. Feel free to
         # declare more sensor types here.
-        if "---" not in reading:
+        if "---" not in reading and reading:
             # We have only temperature sensors
             if int(webtherm_type) <= 9: # TODO: this is just a guess
                 parsed[sensor_id] = {

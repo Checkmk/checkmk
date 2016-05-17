@@ -7153,7 +7153,8 @@ def vs_notification_rule(userid = None):
 
         ],
         optional_keys = [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
-                          "match_servicegroups", "match_services", "match_exclude_services",
+                          "match_servicegroups", "match_exclude_servicegroups", "match_servicegroups_regex", "match_exclude_servicegroups_regex",
+                          "match_services", "match_exclude_services",
                           "match_contacts", "match_contactgroups",
                           "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_escalation_throttle",
@@ -7166,8 +7167,9 @@ def vs_notification_rule(userid = None):
             + contact_headers
             + [
             ( _("Conditions"),         [ "match_folder", "match_hosttags", "match_hostgroups",
-                                         "match_hosts", "match_exclude_hosts",
-                                         "match_servicegroups", "match_services", "match_exclude_services",
+                                         "match_hosts", "match_exclude_hosts", "match_servicegroups",
+                                         "match_exclude_servicegroups", "match_servicegroups_regex", "match_exclude_servicegroups_regex",
+                                         "match_services", "match_exclude_services",
                                          "match_checktype",
                                          "match_contacts", "match_contactgroups",
                                          "match_plugin_output",
@@ -7227,6 +7229,32 @@ def generic_rule_match_conditions():
               help = _("The service must be in one of the selected service groups. For host events this condition "
                        "never matches as soon as at least one group is selected."),
               allow_empty = False,
+          )
+        ),
+        ( "match_exclude_servicegroups",
+          userdb.GroupChoice("service",
+              title = _("Exclude Service Groups"),
+              help = _("The service must not be in one of the selected service groups. For host events this condition "
+                       "is simply ignored."),
+              allow_empty = False,
+          )
+        ),
+        ( "match_servicegroups_regex",
+          ListOfStrings(
+              title = _("Match Service Groups (regex)"),
+              help = _("The service group alias must match one of the following regular expressions."
+                       " For host events this condition never matches as soon as at least one group is selected."),
+              valuespec = RegExpUnicode(size = 32),
+              orientation = "horizontal",
+          )
+        ),
+        ( "match_exclude_servicegroups_regex",
+          ListOfStrings(
+              title = _("Exclude Service Groups (regex)"),
+              help = _("The service group alias must not match one of the following regular expressions. "
+                       "For host events this condition is simply ignored."),
+              valuespec = RegExpUnicode(size = 32),
+              orientation = "horizontal",
           )
         ),
         ( "match_services",

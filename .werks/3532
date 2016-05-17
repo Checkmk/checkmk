@@ -1,0 +1,15 @@
+Title: Rule base notifications: Three new conditions for service groups matching
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.9i1
+Date: 1463488768
+Class: feature
+
+The following conditions are now available.
+<ul>
+<li>Exclude Service Groups (Dropdown)</li>
+<li>Match Service Groups (Regex)</li>
+<li>Exclude Service Groups (Regex)</li>
+</ul>
+

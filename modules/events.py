@@ -284,19 +284,22 @@ def complete_raw_context(raw_context, with_dump, event_log):
 
 def event_match_rule(rule, context):
     return \
-        event_match_folder(rule, context)                or \
-        event_match_hosttags(rule, context)              or \
-        event_match_hostgroups(rule, context)            or \
-        event_match_servicegroups(rule, context)         or \
-        event_match_contacts(rule, context)              or \
-        event_match_contactgroups(rule, context)         or \
-        event_match_hosts(rule, context)                 or \
-        event_match_exclude_hosts(rule, context)         or \
-        event_match_services(rule, context)              or \
-        event_match_exclude_services(rule, context)      or \
-        event_match_plugin_output(rule, context)         or \
-        event_match_checktype(rule, context)             or \
-        event_match_timeperiod(rule)                     or \
+        event_match_folder(rule, context)                                 or \
+        event_match_hosttags(rule, context)                               or \
+        event_match_hostgroups(rule, context)                             or \
+        event_match_servicegroups(rule, context)                          or \
+        event_match_exclude_servicegroups(rule, context)                  or \
+        event_match_servicegroups(rule, context, is_regex = True)         or \
+        event_match_exclude_servicegroups(rule, context, is_regex = True) or \
+        event_match_contacts(rule, context)                               or \
+        event_match_contactgroups(rule, context)                          or \
+        event_match_hosts(rule, context)                                  or \
+        event_match_exclude_hosts(rule, context)                          or \
+        event_match_services(rule, context)                               or \
+        event_match_exclude_services(rule, context)                       or \
+        event_match_plugin_output(rule, context)                          or \
+        event_match_checktype(rule, context)                              or \
+        event_match_timeperiod(rule)                                      or \
         event_match_servicelevel(rule, context)
 
 
@@ -331,8 +334,12 @@ def event_match_hosttags(rule, context):
                 "|".join(tags), "|".join(required))
 
 
-def event_match_servicegroups(rule, context):
-    required_groups = rule.get("match_servicegroups")
+def event_match_servicegroups(rule, context, is_regex = False):
+    if is_regex:
+        required_groups = rule.get("match_servicegroups_regex")
+    else:
+        required_groups = rule.get("match_servicegroups")
+
     if context["WHAT"] != "SERVICE":
         if required_groups:
             return "This rule requires membership in a service group, but this is a host notification"
@@ -347,15 +354,55 @@ def event_match_servicegroups(rule, context):
         if sgn:
             servicegroups = sgn.split(",")
         else:
-            return "The service is in no group, but %s is required" % (
+            return "The service is in no service group, but %s%s is required" % ((is_regex and "regex " or ""),
                  " or ".join(required_groups))
 
         for group in required_groups:
-            if group in servicegroups:
+            if is_regex:
+                r = regex(group)
+                for sg in servicegroups:
+                    # The regex must match the alias name!
+                    if r.search(define_servicegroups[sg]):
+                        return
+            elif group in servicegroups:
                 return
 
-        return "The service is only in the groups %s, but %s is required" % (
-              sgn, " or ".join(required_groups))
+        if is_regex:
+            return "The service is only in the groups %s. None of these patterns match: %s" % (
+                  '"' + '", "'.join(map(lambda x: define_servicegroups[x], servicegroups)) + '"',
+                  '"' + '" or "'.join(required_groups)) + '"'
+        else:
+            return "The service is only in the groups %s, but %s is required" % (
+                  sgn, " or ".join(required_groups))
+
+def event_match_exclude_servicegroups(rule, context, is_regex = False):
+    if is_regex:
+        excluded_groups = rule.get("match_exclude_servicegroups_regex")
+    else:
+        excluded_groups = rule.get("match_exclude_servicegroups")
+
+    if context["WHAT"] != "SERVICE":
+        # excluded_groups do not apply to a host notification
+        return
+
+    if excluded_groups != None:
+        context_sgn = context.get("SERVICEGROUPNAMES")
+        if context_sgn == None:
+            # No actual groups means no possible negative match
+            return
+
+        servicegroups = context_sgn.split(",")
+
+        for group in excluded_groups:
+            if is_regex:
+                r = regex(group)
+                for sg in servicegroups:
+                    # The regex must match the alias name!
+                    if r.search(define_servicegroups[sg]):
+                        return "The service group \"%s\" (%s) is excluded per regex pattern: %s" %\
+                             (define_servicegroups[sg], sg, group)
+            elif group in servicegroups:
+                    return "The service group %s is excluded" % group
 
 def event_match_contacts(rule, context):
     if "match_contacts" in rule:

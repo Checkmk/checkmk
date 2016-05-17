@@ -51,7 +51,7 @@ def load_plugins(force):
          [ "admin", "user", "guest" ])
 
     config.declare_permission("general.see_all",
-         _("See all Nagios objects"),
+         _("See all host and services"),
          _("See all objects regardless of contacts and contact groups. "
            "If combined with 'perform commands' then commands may be done on all objects."),
          [ "admin", "guest" ])

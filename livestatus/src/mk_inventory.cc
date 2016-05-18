@@ -27,7 +27,7 @@
 #include <sys/stat.h>
 
 #ifdef CMC
-#include <Config.h>
+#include "Config.h"
 #define MK_INVENTORY_PATH g_config->_mk_inventory_path
 #else
 extern char g_mk_inventory_path[];

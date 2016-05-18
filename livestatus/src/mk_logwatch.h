@@ -29,7 +29,7 @@
 #include <string>
 
 #ifdef CMC
-#include <Config.h>
+#include "Config.h"
 #define MK_LOGWATCH_PATH g_config->_mk_logwatch_path
 #else
 extern char g_mk_logwatch_path[];

@@ -2,6 +2,7 @@
     Checks & Agents:
     * 3603 FIX: wut_webtherm: fixed empty data handling
     * 3535 FIX: docsis_cm_status: fixed missing performance data
+    * 3536 FIX: alcatel_timetra_chassis: fixed exception when check is not OK
 
     WATO:
     * 3534 FIX: Fixed exception with upload of interlaced PNG files...

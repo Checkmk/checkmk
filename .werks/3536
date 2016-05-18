@@ -1,0 +1,10 @@
+Title: alcatel_timetra_chassis: fixed exception when check is not OK
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p2
+Date: 1463572278
+
+

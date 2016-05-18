@@ -31,6 +31,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <unordered_set>
 #include <vector>
 #include "AndingFilter.h"
 #include "global_counters.h"
@@ -90,6 +91,8 @@ class Query {
     typedef std::map<_stats_group_spec_t, Aggregator **> _stats_groups_t;
     _stats_groups_t _stats_groups;
 
+    std::unordered_set<Column *> _all_columns;
+
 public:
     Query(const std::list<std::string> &lines, OutputBuffer *output, Table *);
     ~Query();
@@ -129,6 +132,7 @@ public:
     void optimizeBitmask(const char *columnname, uint32_t *bitmask);
     int timezoneOffset() { return _timezone_offset; }
     AndingFilter *filter() { return &_filter; }
+    std::unordered_set<Column*> *allColumns() { return &_all_columns; }
 
 private:
     bool doStats();

@@ -53,7 +53,24 @@ extern int g_data_encoding;
 
 using std::list;
 using std::string;
+using std::unordered_set;
 using std::vector;
+
+namespace {
+void collectFilterColumns(unordered_set<Column *> &filter_columns,
+                          Filter *filter) {
+    if (filter->isAndingFilter()) {
+        for (const auto &sub_filter : *static_cast<AndingFilter *>(filter)) {
+            collectFilterColumns(filter_columns, sub_filter);
+        }
+    } else if (filter->isNegatingFilter()) {
+        collectFilterColumns(
+            filter_columns, static_cast<NegatingFilter *>(filter)->subfilter());
+    } else {
+        filter_columns.insert(filter->column());
+    }
+}
+}  // namespace
 
 Query::Query(const list<string> &lines, OutputBuffer *output, Table *table)
     : _output(output)
@@ -179,6 +196,13 @@ Query::Query(const list<string> &lines, OutputBuffer *output, Table *table)
         // here, is that really what we want?
         _show_column_headers = true;
     }
+
+    _all_columns.insert(_columns.begin(), _columns.end());
+    for (const auto &sc : _stats_columns) {
+        _all_columns.insert(sc->column());
+    }
+    collectFilterColumns(_all_columns, &_filter);
+    collectFilterColumns(_all_columns, &_wait_condition);
 }
 
 Query::~Query() {

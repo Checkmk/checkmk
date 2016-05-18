@@ -48,6 +48,7 @@ public:
     StatsColumn(Column *c, Filter *f, int o)
         : _column(c), _filter(f), _operation(o) {}
     ~StatsColumn();
+    Column *column() const { return _column; }
     int operation() { return _operation; }
     Filter *stealFilter() {
         Filter *f = _filter;

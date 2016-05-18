@@ -287,6 +287,7 @@ void Logfile::updateReferences() {
 #endif
 }
 
+#ifdef CMC
 // Read complete file into newly allocated buffer. Returns a pointer
 // to a malloced buffer, that the caller must free (or 0, in case of
 // an error). The buffer is 2 bytes larger then the file. One byte
@@ -340,3 +341,4 @@ char *Logfile::readIntoBuffer(int *size) {
     close(fd);
     return buffer;
 }
+#endif

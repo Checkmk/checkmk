@@ -293,7 +293,7 @@ analyze:
 	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++14"
 
 cppcheck:
-	$(CPPCHECK) --quiet --enable=all --max-configs=20 --inline-suppr --template=gcc -I livestatus/src -I livestatus livestatus
+	$(CPPCHECK) --quiet --enable=all -UCMC --max-configs=20 --inline-suppr --template=gcc -I livestatus/src -I livestatus livestatus
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only

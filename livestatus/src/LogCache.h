@@ -51,7 +51,9 @@ public:
     LogCache(const CommandsHolder &commands_holder,
              unsigned long max_cached_messages);
     ~LogCache();
+#ifdef CMC
     void setMaxCachedMessages(unsigned long m);
+#endif
     time_t _last_index_update;
 
     const char *name() { return "log"; }

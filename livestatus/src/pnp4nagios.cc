@@ -62,6 +62,7 @@ int pnpgraph_present(const string& host, const string& service) {
     return access(path.c_str(), R_OK) == 0 ? 1 : 0;
 }
 
+#ifdef CMC
 string rrd_path(const string& host, const string& service,
                 const string& varname) {
     string pnp_path(g_pnp_path);
@@ -78,3 +79,4 @@ string rrd_path(const string& host, const string& service,
     struct stat st;
     return stat(path.c_str(), &st) == 0 ? path : "";
 }
+#endif

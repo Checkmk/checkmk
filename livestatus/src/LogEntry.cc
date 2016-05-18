@@ -28,11 +28,11 @@
 #include "strutil.h"
 
 LogEntry::LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
-                   char *line) {
+                   char *line)
+    : _type(NONE) {
     // TODO(sp) Fix all handleFooEntry() member functions below to always set
     // all fields and remove this set-me-to-zero-to-be-sure-block.
     _logclass = LOGCLASS_INFO;
-    _type = NONE;
     _host_name = nullptr;
     _svc_desc = nullptr;
     _command_name = nullptr;

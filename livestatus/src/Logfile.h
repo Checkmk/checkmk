@@ -65,7 +65,9 @@ public:
     ~Logfile();
 
     char *path() { return _path; }
+#ifdef CMC
     char *readIntoBuffer(int *size);
+#endif
     void load(LogCache *logcache, time_t since, time_t until,
               unsigned logclasses);
     void flush();

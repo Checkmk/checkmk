@@ -95,8 +95,9 @@ struct HostServiceState {
 
     HostServiceState() { bzero(this, sizeof(HostServiceState)); }
     ~HostServiceState();
+#ifdef CMC
     void computePerStateDurations();
-    void debug_me(const char *loginfo, ...);
+#endif
 };
 
 #endif  // HostServiceState_h

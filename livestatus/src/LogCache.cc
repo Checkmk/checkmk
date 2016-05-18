@@ -81,12 +81,14 @@ LogCache::LogCache(const CommandsHolder &commands_holder,
     updateLogfileIndex();
 }
 
+#ifdef CMC
 void LogCache::setMaxCachedMessages(unsigned long m) {
     if (m != _max_cached_messages) {
         logger(LOG_NOTICE, "Logfile cache: Changing max messages to %ld", m);
         _max_cached_messages = m;
     }
 }
+#endif
 
 LogCache::~LogCache() { forgetLogfiles(); }
 

@@ -31,6 +31,7 @@ HostServiceState::~HostServiceState() {
     }
 }
 
+#ifdef CMC
 void HostServiceState::computePerStateDurations() {
     _duration_state_UNMONITORED = 0;
     _duration_part_UNMONITORED = 0;
@@ -66,3 +67,4 @@ void HostServiceState::computePerStateDurations() {
             break;
     }
 }
+#endif

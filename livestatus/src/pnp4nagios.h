@@ -33,10 +33,12 @@ std::string pnp_cleanup(const std::string& name);
 int pnpgraph_present(const std::string& host,
                      const std::string& service = "_HOST_");
 
+#ifdef CMC
 // Determines if a RRD database exists and returns its path name. Returns an
 // empty string otherwise. This assumes paths created in the PNP4Nagios style
 // with storage type MULTIPLE.
 std::string rrd_path(const std::string& host, const std::string& service,
                      const std::string& varname);
+#endif
 
 #endif  // pnp4nagios_h

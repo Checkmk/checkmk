@@ -39,7 +39,7 @@ CLANG_TIDY         := clang-tidy-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 CPPCHECK           := cppcheck
 DOXYGEN            := doxygen
-IWYU               := include-what-you-use
+IWYU_TOOL          := iwyu_tool.py
 BEAR               := bear-fixed
 
 # File to pack into livestatus-$(VERSION).tar.gz
@@ -280,20 +280,20 @@ compile_commands.json: $(FILES_TO_FORMAT)
 	$(BEAR) $(MAKE) -C livestatus -j8
 
 tidy: compile_commands.json
-	./compiled_sources | xargs $(CLANG_TIDY) --extra-arg=-D__clang_analyzer__
+	@./compiled_sources | xargs $(CLANG_TIDY) --extra-arg=-D__clang_analyzer__
 
 # Not really perfect rules, but better than nothing
-iwyu:
-	$(MAKE) -C livestatus clean
-	$(MAKE) -C livestatus CC=$(IWYU) CXX="$(IWYU) -std=c++14" -k
+iwyu: compile_commands.json
+	@$(IWYU_TOOL) -p .
 
 # Not really perfect rules, but better than nothing
 analyze:
 	$(MAKE) -C livestatus clean
 	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++14"
 
+# TODO: Repeating the include paths here is ugly and fragile.
 cppcheck:
-	$(CPPCHECK) --quiet --enable=all -UCMC --max-configs=20 --inline-suppr --template=gcc -I livestatus/src -I livestatus livestatus
+	@$(CPPCHECK) --quiet -UCMC --enable=all --inline-suppr --template=gcc -I livestatus/src -I livestatus livestatus
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only

@@ -222,6 +222,7 @@
     * 3134 FIX: windows agent: fixed bug where the last message of an eventlog was always re-read
     * 3603 FIX: wut_webtherm: fixed empty data handling
     * 3535 FIX: docsis_cm_status: fixed missing performance data
+    * 3536 FIX: alcatel_timetra_chassis: fixed exception when check is not OK
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

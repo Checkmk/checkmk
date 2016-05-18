@@ -1,0 +1,10 @@
+Title: docsis_cm_status: fixed missing performance data
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p2
+Date: 1463555965
+
+

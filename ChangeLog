@@ -221,6 +221,7 @@
     * 3530 FIX: agent_vsphere: improved performance, too much perfcounters were queried
     * 3134 FIX: windows agent: fixed bug where the last message of an eventlog was always re-read
     * 3603 FIX: wut_webtherm: fixed empty data handling
+    * 3535 FIX: docsis_cm_status: fixed missing performance data
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

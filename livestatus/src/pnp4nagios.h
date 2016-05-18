@@ -30,8 +30,10 @@
 
 std::string pnp_cleanup(const std::string& name);
 
+#ifndef CMC
 int pnpgraph_present(const std::string& host,
                      const std::string& service = "_HOST_");
+#endif
 
 #ifdef CMC
 // Determines if a RRD database exists and returns its path name. Returns an

@@ -24,8 +24,12 @@
 
 #include "pnp4nagios.h"
 #include <stddef.h>
+#ifdef CMC
 #include <sys/stat.h>
+#endif
+#ifndef CMC
 #include <unistd.h>
+#endif
 
 using std::string;
 
@@ -50,6 +54,7 @@ string pnp_cleanup(const string& name) {
     return replace_all(name, " /\\:", '_');
 }
 
+#ifndef CMC
 int pnpgraph_present(const string& host, const string& service) {
     string pnp_path(g_pnp_path);
     if (pnp_path.empty()) {
@@ -61,6 +66,7 @@ int pnpgraph_present(const string& host, const string& service) {
                     .append(".xml"));
     return access(path.c_str(), R_OK) == 0 ? 1 : 0;
 }
+#endif
 
 #ifdef CMC
 string rrd_path(const string& host, const string& service,

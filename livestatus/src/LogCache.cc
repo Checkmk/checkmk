@@ -201,12 +201,11 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
         _num_at_last_check + CHECK_MEM_CYCLE) {
         return;  // Do not check this time
     }
-    int foobar;
 
     // [1] Begin by deleting old logfiles
     // Begin deleting with the oldest logfile available
     _logfiles_t::iterator it;
-    for (it = _logfiles.begin(); it != _logfiles.end(); it++) {
+    for (it = _logfiles.begin(); it != _logfiles.end(); ++it) {
         Logfile *log = it->second;
         if (log == logfile) {
             // Do not touch the logfile the Query is currently accessing

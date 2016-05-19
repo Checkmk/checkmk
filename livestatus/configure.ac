@@ -35,12 +35,12 @@ AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
 
 # Checks for programs.
-AC_PROG_CC([gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang])
+AC_PROG_CC([gcc-6 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang])
 AC_PROG_CC_C99([], [])
 if test "x$ac_cv_prog_cc_c99" = xno; then
   AC_MSG_ERROR([Need a C99-compliant C compiler])
 fi
-AC_PROG_CXX([g++-5 clang++-3.9 clang++-3.8 clang++-3.7 clang++-3.6 clang++-3.5 g++-4.9 g++ clang++])
+AC_PROG_CXX([g++-6 g++-5 clang++-3.9 clang++-3.8 clang++-3.7 clang++-3.6 clang++-3.5 g++-4.9 g++ clang++])
 AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory])
 AC_PROG_RANLIB
 AM_CONDITIONAL([HAVE_DIET], [which diet >/dev/null 2>&1])

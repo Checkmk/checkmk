@@ -302,7 +302,7 @@ analyze: livestatus/config.h
 cppcheck: compile_commands.json
 	@./compiled_sources | \
 	sed 's/^"\(.*\)"$$/\1/' | \
-	@$(CPPCHECK) --quiet -UCMC --enable=all --inline-suppr --template=gcc -I livestatus/src -I livestatus --file-list=-
+	$(CPPCHECK) --quiet -UCMC --enable=all --inline-suppr --template=gcc -I livestatus/src -I livestatus --file-list=-
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only

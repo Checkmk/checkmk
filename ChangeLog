@@ -223,6 +223,7 @@
     * 3603 FIX: wut_webtherm: fixed empty data handling
     * 3535 FIX: docsis_cm_status: fixed missing performance data
     * 3536 FIX: alcatel_timetra_chassis: fixed exception when check is not OK
+    * 3604 FIX: ups_capacity.include: fixed displaying wrong levels and cleanup
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

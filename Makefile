@@ -299,8 +299,10 @@ analyze: livestatus/config.h
 	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++14"
 
 # TODO: Repeating the include paths here is ugly and fragile.
-cppcheck: livestatus/config.h
-	@$(CPPCHECK) --quiet -UCMC --enable=all --inline-suppr --template=gcc -I livestatus/src -I livestatus livestatus
+cppcheck: compile_commands.json
+	@./compiled_sources | \
+	sed 's/^"\(.*\)"$$/\1/' | \
+	@$(CPPCHECK) --quiet -UCMC --enable=all --inline-suppr --template=gcc -I livestatus/src -I livestatus --file-list=-
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only

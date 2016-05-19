@@ -132,7 +132,7 @@ public:
     void optimizeBitmask(const char *columnname, uint32_t *bitmask);
     int timezoneOffset() { return _timezone_offset; }
     AndingFilter *filter() { return &_filter; }
-    std::unordered_set<Column*> *allColumns() { return &_all_columns; }
+    std::unordered_set<Column *> *allColumns() { return &_all_columns; }
 
 private:
     bool doStats();

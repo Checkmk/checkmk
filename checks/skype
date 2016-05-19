@@ -427,15 +427,20 @@ def check_skype_mobile(item, params, parsed):
 
     for instance, name in [("AndroidLync", "Android"),
                            ("iPadLync", "iPad"),
-                           ("iPhoneLync", "iPhone")]:
+                           ("iPhoneLync", "iPhone"),
+                           ("LyncForMac", "Mac")]:
         status, infotext, perfdata =\
             wmi_yield_raw_counter(parsed["LS:WEB - UCWA"], instance,
                                   "UCWA - Active Session Count",
                                   label=" active",
                                   perfvar="active_sessions")
-        perfdata = list(perfdata[0])
-        perfdata[0] += "_" + name.lower()
-        yield status, "%s: %s" % (name, infotext), [perfdata]
+        if status != 3:
+            if perfdata:
+                perfdata = list(perfdata[0])
+                perfdata[0] += "_" + name.lower()
+                perfdata = [perfdata]
+
+            yield status, "%s: %s" % (name, infotext), perfdata
     yield wmi_yield_raw_counter(parsed["LS:WEB - Throttling and Authentication"], item,
                                 "WEB - Total Requests In Processing",
                                 label=" requested",

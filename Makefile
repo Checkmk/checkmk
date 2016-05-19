@@ -32,6 +32,7 @@ LIBDIR             := $(PREFIX)/lib/$(NAME)
 DISTNAME           := $(NAME)-$(VERSION)
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12
+C_CXX_FLAGS        := -g -O3 -Wall -Wextra
 
 CLANG_VERSION      := 3.8
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
@@ -113,13 +114,13 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
 	$(MAKE) minify-js
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs plugins
-	
+
 	tar cf $(DISTNAME)/livestatus.tar $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
 	if [ -f livestatus/compile ]; then \
 	    tar rf $(DISTNAME)/livestatus.tar $(TAROPTS) -C livestatus compile ; \
 	fi
 	gzip $(DISTNAME)/livestatus.tar
-	
+
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
 	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc $$(cd doc ; ls)
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
@@ -271,11 +272,17 @@ mrproper:
 setup:
 	sudo apt-get install figlet pngcrush slimit bear dietlibc-dev
 
-GTAGS:
+livestatus/config.h.in: livestatus/configure.ac livestatus/m4/*
+	cd livestatus && autoreconf --install --include=m4
+
+livestatus/config.h: livestatus/config.h.in
+	cd livestatus && ./configure CFLAGS="$(C_CXX_FLAGS)" CXXFLAGS="$(C_CXX_FLAGS)"
+
+GTAGS: livestatus/config.h
 	$(MAKE) -C livestatus distclean-tags
 	$(MAKE) -C livestatus GTAGS
 
-compile_commands.json: $(FILES_TO_FORMAT)
+compile_commands.json: livestatus/config.h $(FILES_TO_FORMAT)
 	$(MAKE) -C livestatus clean
 	$(BEAR) $(MAKE) -C livestatus -j8
 
@@ -287,12 +294,12 @@ iwyu: compile_commands.json
 	@$(IWYU_TOOL) -p .
 
 # Not really perfect rules, but better than nothing
-analyze:
+analyze: livestatus/config.h
 	$(MAKE) -C livestatus clean
 	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++14"
 
 # TODO: Repeating the include paths here is ugly and fragile.
-cppcheck:
+cppcheck: livestatus/config.h
 	@$(CPPCHECK) --quiet -UCMC --enable=all --inline-suppr --template=gcc -I livestatus/src -I livestatus livestatus
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
@@ -302,5 +309,5 @@ format:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT)
 
 # Note: You need the doxygen and graphviz packages.
-documentation:
+documentation: livestatus/config.h
 	$(DOXYGEN) doc/Doxyfile

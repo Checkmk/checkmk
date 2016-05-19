@@ -47,7 +47,7 @@ if defaults.omd_root:
 #   | Declarations of the structure of rules and actions                   |
 #   '----------------------------------------------------------------------'
 substitute_help = _("""
-The following placeholdes will be substituted by value from the actual event:
+The following macros will be substituted by value from the actual event:
 <table class=help>
 <tr><td class=tt>$ID$</td><td>Event ID</td></tr>
 <tr><td class=tt>$COUNT$</td><td>Number of occurrances</td></tr>

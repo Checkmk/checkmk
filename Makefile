@@ -298,11 +298,20 @@ analyze: livestatus/config.h
 	$(MAKE) -C livestatus clean
 	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++14"
 
-# TODO: Repeating the include paths here is ugly and fragile.
+# TODO: Repeating the include paths in the cppcheck targets below is ugly and
+# fragile.
+
+# GCC-like output on stderr intended for human consumption.
 cppcheck: compile_commands.json
 	@./compiled_sources | \
 	sed 's/^"\(.*\)"$$/\1/' | \
-	$(CPPCHECK) --quiet -UCMC --enable=all --inline-suppr --template=gcc -I livestatus/src -I livestatus --file-list=-
+	$(CPPCHECK) -UCMC --enable=all --inline-suppr -I livestatus/src -I livestatus --file-list=- --quiet --template=gcc
+
+# XML output into file intended for machine processing.
+cppcheck-xml: compile_commands.json
+	@./compiled_sources | \
+	sed 's/^"\(.*\)"$$/\1/' | \
+	$(CPPCHECK) -UCMC --enable=all --inline-suppr -I livestatus/src -I livestatus --file-list=- --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only

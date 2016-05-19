@@ -8,6 +8,7 @@ check_mk-*.spec
 check_mk-*.tar.gz
 clang-analyzer/
 compile_commands.json
+cppcheck-result.xml
 mk-livestatus-*.tar.gz
 mkeventd-*.tar.gz
 check-mk-*.exe

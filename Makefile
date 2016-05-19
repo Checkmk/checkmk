@@ -41,7 +41,7 @@ SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 CPPCHECK           := cppcheck
 DOXYGEN            := doxygen
 IWYU_TOOL          := iwyu_tool.py
-BEAR               := bear-fixed
+BEAR               := bear
 
 # File to pack into livestatus-$(VERSION).tar.gz
 LIVESTATUS_SOURCES := configure aclocal.m4 config.guess config.h.in config.sub \

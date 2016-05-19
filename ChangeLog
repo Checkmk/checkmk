@@ -4,6 +4,7 @@
     * 3535 FIX: docsis_cm_status: fixed missing performance data
     * 3536 FIX: alcatel_timetra_chassis: fixed exception when check is not OK
     * 3604 FIX: ups_capacity.include: fixed displaying wrong levels and cleanup
+    * 3605 FIX: kemp_loadmaster_ha, kemp_loadmaster_realserver, kemp_loadmaster_services: fixed discovery if data is wrong or incomplete
 
     WATO:
     * 3534 FIX: Fixed exception with upload of interlaced PNG files...

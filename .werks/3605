@@ -1,0 +1,10 @@
+Title: kemp_loadmaster_ha, kemp_loadmaster_realserver, kemp_loadmaster_services: fixed discovery if data is wrong or incomplete
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1463665694
+
+

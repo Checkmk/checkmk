@@ -1,0 +1,9 @@
+Title: Fix vertical scaling of graph for disk utilization from 0...1% to 0...100%
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p2
+Date: 1463739171
+Class: fix
+
+

@@ -109,6 +109,10 @@ livestatus_so_SOURCES = \
         TableContactgroups.cc \
         TableContacts.cc \
         TableDownComm.cc \
+        TableEventConsole.cc \
+        TableEventConsoleEvents.cc \
+        TableEventConsoleHistory.cc \
+        TableEventConsoleStatus.cc \
         TableHostgroups.cc \
         TableHosts.cc \
         TableHostsByGroup.cc \

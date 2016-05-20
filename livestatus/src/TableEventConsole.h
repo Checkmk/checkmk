@@ -129,13 +129,16 @@ protected:
     public:
         ListEventConsoleColumn(std::string name, std::string description)
             : ListColumn(name, description, -1, -1)
-            , _ecc(name, _column_t(),
-                   [](std::string x) { return split(x, '\001'); }) {}
+            , _ecc(name, _column_t(), [](std::string x) {
+                return x.empty() || x == "\002" ? _column_t()
+                                                : split(x.substr(1), '\001');
+            }) {}
 
         void output(void *data, Query *query) override {
             query->outputBeginList();
             bool first = true;
             for (const auto &elem : _ecc.getValue(data)) {
+                printf("-------------------- [%s]\n", elem.c_str());
                 if (first) {
                     first = false;
                 } else {

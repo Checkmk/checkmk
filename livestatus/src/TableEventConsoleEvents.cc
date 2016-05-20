@@ -70,8 +70,8 @@ void TableEventConsoleEvents::addColumns(Table *table) {
         new StringEventConsoleColumn("event_owner", "The owner of the event"));
     table->addColumn(new ListEventConsoleColumn(
         "event_match_groups", "Text groups from regular expression match"));
-    table->addColumn(new StringEventConsoleColumn("event_contact_groups",
-                                                  "Contact groups"));  // list
+    table->addColumn(
+        new ListEventConsoleColumn("event_contact_groups", "Contact groups"));
     table->addColumn(new StringEventConsoleColumn(
         "event_ipaddress", "The IP address where the event originated"));
 }

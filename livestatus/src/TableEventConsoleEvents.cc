@@ -24,27 +24,56 @@
 
 #include "TableEventConsoleEvents.h"
 
-TableEventConsoleEvents::TableEventConsoleEvents() {
-    addColumn(new StringEventConsoleColumn("event_id", "blah"));
-    addColumn(new StringEventConsoleColumn("event_count", "blah"));
-    addColumn(new StringEventConsoleColumn("event_text", "blah"));
-    addColumn(new StringEventConsoleColumn("event_first", "blah"));
-    addColumn(new StringEventConsoleColumn("event_last", "blah"));
-    addColumn(new StringEventConsoleColumn("event_comment", "blah"));
-    addColumn(new StringEventConsoleColumn("event_sl", "blah"));
-    addColumn(new StringEventConsoleColumn("event_host", "blah"));
-    addColumn(new StringEventConsoleColumn("event_contact", "blah"));
-    addColumn(new StringEventConsoleColumn("event_application", "blah"));
-    addColumn(new StringEventConsoleColumn("event_pid", "blah"));
-    addColumn(new StringEventConsoleColumn("event_priority", "blah"));
-    addColumn(new StringEventConsoleColumn("event_facility", "blah"));
-    addColumn(new StringEventConsoleColumn("event_rule_id", "blah"));
-    addColumn(new StringEventConsoleColumn("event_state", "blah"));
-    addColumn(new StringEventConsoleColumn("event_phase", "blah"));
-    addColumn(new StringEventConsoleColumn("event_owner", "blah"));
-    addColumn(new StringEventConsoleColumn("event_match_groups", "blah"));
-    addColumn(new StringEventConsoleColumn("event_contact_groups", "blah"));
-    addColumn(new StringEventConsoleColumn("event_ipaddress", "blah"));
+TableEventConsoleEvents::TableEventConsoleEvents() { addColumns(this); }
+
+// static
+void TableEventConsoleEvents::addColumns(Table *table) {
+    table->addColumn(
+        new IntEventConsoleColumn("event_id", "The unique ID for this event"));
+    table->addColumn(new IntEventConsoleColumn(
+        "event_count",
+        "The number of occurrences of this event within period"));
+    table->addColumn(new StringEventConsoleColumn(
+        "event_text", "The textual description of the event"));
+    table->addColumn(new TimeEventConsoleColumn(
+        "event_first",
+        "Time of the first occurrence of the event (Unix timestamp)"));
+    table->addColumn(new TimeEventConsoleColumn(
+        "event_last",
+        "Time of the last occurrence of this event (Unix timestamp)"));
+    table->addColumn(
+        new StringEventConsoleColumn("event_comment", "Event comment"));
+    table->addColumn(new IntEventConsoleColumn(
+        "event_sl", "The service level for this event"));
+    table->addColumn(
+        new StringEventConsoleColumn("event_host", "Host name for this event"));
+    table->addColumn(
+        new StringEventConsoleColumn("event_contact", "Contact information"));
+    table->addColumn(new StringEventConsoleColumn("event_application",
+                                                  "Syslog tag/application"));
+    table->addColumn(new IntEventConsoleColumn(
+        "event_pid", "The process ID of the originating process"));
+    table->addColumn(
+        new IntEventConsoleColumn("event_priority", "Syslog priority"));
+    table->addColumn(
+        new IntEventConsoleColumn("event_facility", "Syslog facility"));
+    table->addColumn(
+        new StringEventConsoleColumn("event_rule_id", "The ID of the rule"));
+    table->addColumn(new IntEventConsoleColumn(
+        "event_state", "The state of the event (0/1/2/3)"));
+    table->addColumn(
+        new StringEventConsoleColumn("event_phase",
+                                     "The phase the event is currently in (one "
+                                     "of open/closed/delayed/counting/ack)"));
+    table->addColumn(
+        new StringEventConsoleColumn("event_owner", "The owner of the event"));
+    table->addColumn(new StringEventConsoleColumn(
+        "event_match_groups",
+        "Text groups from regular expression match"));  // list
+    table->addColumn(new StringEventConsoleColumn("event_contact_groups",
+                                                  "Contact groups"));  // list
+    table->addColumn(new StringEventConsoleColumn(
+        "event_ipaddress", "The IP address where the event originated"));
 }
 
 const char *TableEventConsoleEvents::name() const {

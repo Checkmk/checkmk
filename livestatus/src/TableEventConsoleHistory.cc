@@ -23,33 +23,25 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableEventConsoleHistory.h"
+#include "TableEventConsoleEvents.h"
 
 TableEventConsoleHistory::TableEventConsoleHistory() {
-    addColumn(new StringEventConsoleColumn("history_line", "blah"));
-    addColumn(new StringEventConsoleColumn("history_time", "blah"));
-    addColumn(new StringEventConsoleColumn("history_what", "blah"));
-    addColumn(new StringEventConsoleColumn("history_who", "blah"));
-    addColumn(new StringEventConsoleColumn("history_addinfo", "blah"));
-    addColumn(new StringEventConsoleColumn("event_id", "blah"));
-    addColumn(new StringEventConsoleColumn("event_count", "blah"));
-    addColumn(new StringEventConsoleColumn("event_text", "blah"));
-    addColumn(new StringEventConsoleColumn("event_first", "blah"));
-    addColumn(new StringEventConsoleColumn("event_last", "blah"));
-    addColumn(new StringEventConsoleColumn("event_comment", "blah"));
-    addColumn(new StringEventConsoleColumn("event_sl", "blah"));
-    addColumn(new StringEventConsoleColumn("event_host", "blah"));
-    addColumn(new StringEventConsoleColumn("event_contact", "blah"));
-    addColumn(new StringEventConsoleColumn("event_application", "blah"));
-    addColumn(new StringEventConsoleColumn("event_pid", "blah"));
-    addColumn(new StringEventConsoleColumn("event_priority", "blah"));
-    addColumn(new StringEventConsoleColumn("event_facility", "blah"));
-    addColumn(new StringEventConsoleColumn("event_rule_id", "blah"));
-    addColumn(new StringEventConsoleColumn("event_state", "blah"));
-    addColumn(new StringEventConsoleColumn("event_phase", "blah"));
-    addColumn(new StringEventConsoleColumn("event_owner", "blah"));
-    addColumn(new StringEventConsoleColumn("event_match_groups", "blah"));
-    addColumn(new StringEventConsoleColumn("event_contact_groups", "blah"));
-    addColumn(new StringEventConsoleColumn("event_ipaddress", "blah"));
+    addColumn(new IntEventConsoleColumn(
+        "history_line", "The line number of the event in the history file"));
+    addColumn(new TimeEventConsoleColumn("history_time",
+                                         "Time when the event was written into "
+                                         "the history file (Unix timestamp)"));
+    addColumn(new StringEventConsoleColumn(
+        "history_what",
+        "What happened (one of "
+        "ARCHIVED/AUTODELETE/CANCELLED/CHANGESTATE/COUNTFAILED/COUNTREACHED/"
+        "DELAYOVER/DELETE/EMAIL/EXPIRED/NEW/NOCOUNT/ORPHANED/SCRIPT/UPDATE)"));
+    addColumn(new StringEventConsoleColumn(
+        "history_who", "The user who triggered the command"));
+    addColumn(new StringEventConsoleColumn(
+        "history_addinfo",
+        "Additional information, like email recipient/subject or action ID"));
+    TableEventConsoleEvents::addColumns(this);
 }
 
 const char *TableEventConsoleHistory::name() const {

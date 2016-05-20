@@ -33,6 +33,8 @@ public:
     TableEventConsoleEvents();
     const char *name() const override;
     const char *namePrefix() const override;
+
+    static void addColumns(Table *table);
 };
 
 #endif  // TableEventConsoleEvents_h

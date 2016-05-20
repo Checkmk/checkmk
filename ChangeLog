@@ -227,6 +227,7 @@
     * 3604 FIX: ups_capacity.include: fixed displaying wrong levels and cleanup
     * 3605 FIX: kemp_loadmaster_ha, kemp_loadmaster_realserver, kemp_loadmaster_services: fixed discovery if data is wrong or incomplete
     * 3607 FIX: wut_webtherm: fixed missing sensor data if only decimal comma marked values are available
+    * 3613 FIX: Fix vertical scaling of graph for disk utilization from 0...1% to 0...100%
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

@@ -5635,7 +5635,7 @@ graph_info.append({
     "metrics" : [
         ( "disk_utilization",  "area" ),
     ],
-    "range" : (0, 1),
+    "range" : (0, 100),
 })
 
 graph_info.append({

@@ -87,6 +87,9 @@ Store::Store()
     addTable(&_table_statehistory);
     addTable(&_table_status);
     addTable(&_table_timeperiods);
+    addTable(&_table_eventconsoleevents);
+    addTable(&_table_eventconsolehistory);
+    addTable(&_table_eventconsolestatus);
 
     g_table_hosts = &_table_hosts;
     g_table_services = &_table_services;

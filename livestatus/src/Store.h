@@ -38,6 +38,9 @@
 #include "TableContactgroups.h"
 #include "TableContacts.h"
 #include "TableDownComm.h"
+#include "TableEventConsoleEvents.h"
+#include "TableEventConsoleHistory.h"
+#include "TableEventConsoleStatus.h"
 #include "TableHostgroups.h"
 #include "TableHosts.h"
 #include "TableHostsByGroup.h"
@@ -84,6 +87,9 @@ private:
     TableLog _table_log;
     TableStateHistory _table_statehistory;
     TableColumns _table_columns;
+    TableEventConsoleEvents _table_eventconsoleevents;
+    TableEventConsoleHistory _table_eventconsolehistory;
+    TableEventConsoleStatus _table_eventconsolestatus;
 
     std::map<std::string, Table *> _tables;
 

@@ -158,19 +158,19 @@ def unsplit(s):
 # Speed-critical function for converting string representation
 # of log line back to Python values
 def convert_history_line(values):
-    values[0] = float(values[0]) # time
-    values[4] = int(values[4])
-    values[5] = int(values[5])
-    values[7] = float(values[7])
-    values[8] = float(values[8])
-    values[10] = int(values[10])
-    values[14] = int(values[14])
-    values[15] = int(values[15])
-    values[16] = int(values[16])
-    values[18] = int(values[18])
-    values[21] = unsplit(values[21]) # match groups
+    values[0] = float(values[0])         # history_time
+    values[4] = int(values[4])           # event_id
+    values[5] = int(values[5])           # event_count
+    values[7] = float(values[7])         # event_first
+    values[8] = float(values[8])         # event_last
+    values[10] = int(values[10])         # event_sl
+    values[14] = int(values[14])         # event_pid
+    values[15] = int(values[15])         # event_priority
+    values[16] = int(values[16])         # event_facility
+    values[18] = int(values[18])         # event_state
+    values[21] = unsplit(values[21])     # event_match_groups
     if len(values) >= 23:
-        values[22] = unsplit(values[22]) # contact groups
+        values[22] = unsplit(values[22]) # event_contact_groups
     else:
         values.append(None)
 

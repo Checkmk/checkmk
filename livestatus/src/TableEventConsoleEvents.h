@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include "TableEventConsole.h"
+class Table;
 
 class TableEventConsoleEvents : public TableEventConsole {
 public:

@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableEventConsoleEvents.h"
+#include "Table.h"
 
 TableEventConsoleEvents::TableEventConsoleEvents() { addColumns(this); }
 
@@ -67,9 +68,8 @@ void TableEventConsoleEvents::addColumns(Table *table) {
                                      "of open/closed/delayed/counting/ack)"));
     table->addColumn(
         new StringEventConsoleColumn("event_owner", "The owner of the event"));
-    table->addColumn(new StringEventConsoleColumn(
-        "event_match_groups",
-        "Text groups from regular expression match"));  // list
+    table->addColumn(new ListEventConsoleColumn(
+        "event_match_groups", "Text groups from regular expression match"));
     table->addColumn(new StringEventConsoleColumn("event_contact_groups",
                                                   "Contact groups"));  // list
     table->addColumn(new StringEventConsoleColumn(

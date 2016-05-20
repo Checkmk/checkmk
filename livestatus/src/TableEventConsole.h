@@ -32,12 +32,14 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <vector>
 #include "DoubleColumn.h"
 #include "IntColumn.h"
+#include "ListColumn.h"
 #include "OffsetTimeColumn.h"
+#include "Query.h"
 #include "StringColumn.h"
 #include "Table.h"
-class Query;
 
 class TableEventConsole : public Table {
 public:
@@ -45,6 +47,9 @@ public:
 
 protected:
     typedef std::map<std::string, std::string> _row_t;
+
+    // TODO(sp) Move this to some helper.
+    static std::vector<std::string> split(std::string str, char delimiter);
 
     template <typename T>
     class EventConsoleColumn {
@@ -115,6 +120,40 @@ protected:
         int32_t getValue(void *data, Query *) override {
             return _ecc.getValue(data);
         }
+    };
+
+    class ListEventConsoleColumn : public ListColumn {
+        typedef std::vector<std::string> _column_t;
+        EventConsoleColumn<_column_t> _ecc;
+
+    public:
+        ListEventConsoleColumn(std::string name, std::string description)
+            : ListColumn(name, description, -1, -1)
+            , _ecc(name, _column_t(),
+                   [](std::string x) { return split(x, '\001'); }) {}
+
+        void output(void *data, Query *query) override {
+            query->outputBeginList();
+            bool first = true;
+            for (const auto &elem : _ecc.getValue(data)) {
+                if (first) {
+                    first = false;
+                } else {
+                    query->outputListSeparator();
+                }
+                query->outputString(elem.c_str());
+            }
+            query->outputEndList();
+        }
+
+        bool isEmpty(void *data) override {
+            return _ecc.getValue(data).empty();
+        }
+
+        // TODO(sp) We should probably rename the methods below and actually
+        // implement them here for real.
+        void *getNagiosObject(char *) override { return nullptr; }
+        bool isNagiosMember(void *, void *) override { return false; }
     };
 };
 

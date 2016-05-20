@@ -67,8 +67,10 @@ string readLine(int sock) {
     } while (true);
     return line;  // unreachable
 }
+};  // namespace
 
-vector<string> split(string str, char delimiter = '\t') {
+// static
+vector<string> TableEventConsole::split(string str, char delimiter) {
     istringstream iss(str);
     vector<string> result;
     string field;
@@ -77,8 +79,6 @@ vector<string> split(string str, char delimiter = '\t') {
     }
     return result;
 }
-
-};  // namespace
 
 void TableEventConsole::answerQuery(Query *query) {
     string path = "/omd/sites/heute/tmp/run/mkeventd/status";
@@ -125,7 +125,7 @@ void TableEventConsole::answerQuery(Query *query) {
         bytes_to_write -= bytes_written;
     }
 
-    vector<string> headers = split(readLine(sock));
+    vector<string> headers = split(readLine(sock), '\t');
 
     do {
         string line = readLine(sock);
@@ -134,7 +134,7 @@ void TableEventConsole::answerQuery(Query *query) {
         }
         _row_t row;
         int i = 0;
-        for (const auto &field : split(line)) {
+        for (const auto &field : split(line, '\t')) {
             logger(LOG_DEBUG, "setting EC column \"%s\" to \"%s\"",
                    headers[i].c_str(), field.c_str());
             row[headers[i++]] = field;

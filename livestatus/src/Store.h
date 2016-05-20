@@ -92,7 +92,6 @@ private:
     TableEventConsoleStatus _table_eventconsolestatus;
 
     std::map<std::string, Table *> _tables;
-
     std::mutex _command_mutex;
 
     void addTable(Table *table);

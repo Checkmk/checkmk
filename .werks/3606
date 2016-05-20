@@ -1,0 +1,11 @@
+Title: saprouter_cert: new check which monitors the age of validity of a SAP router certificate
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1463731029
+Class: feature
+
+ To make this check work you have to install the <tt>mk_saprouter</tt> plugin
+ and configure the user and path to sapgenpse in the related config file.
+ It's recommended to run the plugin asynchronously.

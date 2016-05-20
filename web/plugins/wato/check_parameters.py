@@ -3397,6 +3397,26 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "saprouter_cert_age",
+    _("SAP router certificate time settings"),
+    Dictionary(
+        elements = [
+            ("validity_age",
+             Tuple(
+                title = _('Lower levels for certificate age'),
+                elements = [
+                    Age( title = _("Warning below"),  default_value = 30*86400 ),
+                    Age( title = _("Critical below"), default_value = 7*86400 ),
+                ]
+            )),
+        ]
+    ),
+    None,
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "sap_dialog",
     ("SAP Dialog"),
     Dictionary(

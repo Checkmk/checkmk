@@ -1,0 +1,124 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# Valid
+# <<<saprouter_cert>>>
+# SSO for USER "prdadm"
+#   with PSE file "/usr/users/prdadm/saprouter/local.pse"
+#
+# Validity  -  NotBefore:   Wed Mar 30 11:21:33 2016 (160330102133Z)
+#               NotAfter:   Thu Mar 30 11:21:33 2017 (170330102133Z)
+
+# No certificate
+# <<<saprouter_cert>>>
+# get_my_name: no PSE name supplied, no SSO credentials found!
+
+# running seclogin with USER="root"
+# seclogin: No SSO credentials available
+
+# PSE broken
+# <<<saprouter_cert>>>
+# get_my_name: Couldn't open PSE "/usr/users/prdadm/saprouter/local.pse" (Decoding error)
+
+
+# Suggested by customer
+factory_settings["saprouter_cert_default_levels"] = {
+    "validity_age" : (86400 * 30, 86400 * 7),
+}
+
+
+def parse_saprouter_cert(info):
+    def parse_date(list):
+        time_struct = time.strptime(" ".join(list), "%b %d %H:%M:%S %Y")
+        return time.mktime(time_struct), "%s-%s-%s" % time_struct[:3]
+
+    parsed   = {}
+    validity = None
+    for line in info:
+        if "Validity" == line[0]:
+            validity = "valid"
+            parsed.setdefault(validity, {})
+
+        if validity and "NotBefore:" in line:
+            parsed[validity].setdefault("not_before", parse_date(line[-5:-1]))
+
+        elif validity and "NotAfter:" in line:
+            parsed[validity].setdefault("not_after", parse_date(line[-5:-1]))
+
+        elif "sso for user" == " ".join(line[:3]).lower():
+            parsed.setdefault("sso_user", line[-1].replace('"', ""))
+
+        elif "with pse file" == " ".join(line[:3]).lower():
+            parsed.setdefault("pse_file", line[-1].replace('"', ""))
+
+        elif not validity:
+            parsed.setdefault("failed", [])
+            parsed["failed"].append( " ".join(line) )
+
+    return parsed
+
+
+def inventory_saprouter_cert(parsed):
+    if parsed:
+        return [ (None, None) ]
+
+
+def check_saprouter_cert(_no_item, params, parsed):
+    if "valid" in parsed:
+        not_before, not_before_readable = parsed["valid"]["not_before"]
+        not_after,  not_after_readable  = parsed["valid"]["not_after"]
+        validity_age = not_after - time.time()
+
+        warn, crit = params["validity_age"]
+        infotext   = "Valid from %s to %s, %s to go" % \
+                     (not_before_readable, not_after_readable,
+                      get_age_human_readable(validity_age))
+
+        state = 0
+        if validity_age < crit:
+            state = 2
+        elif validity_age < warn:
+            state = 1
+
+        if state:
+            infotext += " (warn/crit below %s/%s)" % \
+                (get_age_human_readable(warn), get_age_human_readable(crit))
+
+        return state, infotext
+
+    elif "failed" in parsed:
+        return 3, " - ".join(parsed["failed"])
+
+
+check_info['saprouter_cert'] = {
+    'parse_function'            : parse_saprouter_cert,
+    'inventory_function'        : inventory_saprouter_cert,
+    'check_function'            : check_saprouter_cert,
+    'service_description'       : 'SAP router certificate',
+    'default_levels_variable'   : 'saprouter_cert_default_levels',
+    'group'                     : 'saprouter_cert_age'
+}

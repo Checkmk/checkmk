@@ -59,7 +59,7 @@ def parse_wmi_table(info, key="Name"):
     #  metrics
     class Table:
 
-        TOTAL_NAMES = ["_Total", "\"\"", "__Total__", "_Global"]
+        TOTAL_NAMES = ["_Total", "", "__Total__", "_Global"]
 
         def __init__(self, name, headers, key_field, timestamp, frequency):
             self.__name = name
@@ -96,7 +96,7 @@ def parse_wmi_table(info, key="Name"):
         def add_row(self, row):
             row = row[:]
             if self.__key_index is not None:
-                key = row[self.__key_index]
+                key = row[self.__key_index].strip("\"")
                 # there are multiple names to denote the "total" line, normalize that
                 if key in Table.TOTAL_NAMES:
                     key = row[self.__key_index] = None

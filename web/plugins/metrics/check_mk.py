@@ -3135,6 +3135,24 @@ metric_info["asp_requests_rejected"] = {
     "color": "42/a"
 }
 
+metric_info["failed_file_requests"] = {
+    "title" : _("Failed File Requests"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["join_failures"] = {
+    "title" : _("Join Launcher Service Failures"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["failed_validate_cert"] = {
+    "title" : _("Failed validate cert calls"),
+    "unit": "count",
+    "color": "42/a"
+}
+
 metric_info["incoming_responses_dropped"] = {
     "title" : _("Incoming Responses Dropped"),
     "unit": "1/s",
@@ -3177,6 +3195,24 @@ metric_info["incoming_messages_timed_out"] = {
     "color": "42/a"
 }
 
+metric_info["incomplete_calls"] = {
+    "title" : _("Incomplete Calls"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["create_conference_latency"] = {
+    "title" : _("Create Conference Latency"),
+    "unit": "s",
+    "color": "42/a"
+}
+
+metric_info["allocation_latency"] = {
+    "title" : _("Allocation Latency"),
+    "unit": "s",
+    "color": "42/a"
+}
+
 metric_info["avg_holding_time_incoming_messages"] = {
     "title" : _("Average Holding Time For Incoming Messages"),
     "unit": "s",
@@ -3201,6 +3237,12 @@ metric_info["sends_timed_out"] = {
     "color": "42/a"
 }
 
+metric_info["authentication_errors"] = {
+    "title" : _("Authentication Errors"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
 metric_info["load_call_failure_index"] = {
     "title" : _("Load Call Failure Index"),
     "unit": "count",
@@ -3218,50 +3260,71 @@ metric_info["failed_calls_because_of_gateway"] = {
     "unit": "count",
     "color": "42/a"
 }
+
 metric_info["media_connectivity_failure"] = {
     "title" : _("Media Connectivity Check Failure"),
     "unit": "count",
     "color": "42/a"
 }
+
 metric_info["failed_requests"] = {
     "title" : _("Bad Requests Received"),
     "unit": "count",
     "color": "42/a"
 }
+
 metric_info["udp_failed_auth"] = {
     "title" : _("UDP Authentication Failures"),
     "unit": "1/s",
     "color": "42/a"
 }
+
 metric_info["tcp_failed_auth"] = {
     "title" : _("TCP Authentication Failures"),
     "unit": "1/s",
     "color": "42/a"
 }
+
 metric_info["udp_allocate_requests_exceeding_port_limit"] = {
     "title" : _("UDP Allocate Requests Exceeding Port Limit"),
     "unit": "1/s",
     "color": "42/a"
 }
+
 metric_info["tcp_allocate_requests_exceeding_port_limit"] = {
     "title" : _("TCP Allocate Requests Exceeding Port Limit"),
     "unit": "1/s",
     "color": "42/a"
 }
+
 metric_info["udp_packets_dropped"] = {
     "title" : _("UDP Packets Dropped"),
     "unit": "1/s",
     "color": "42/a"
 }
+
 metric_info["tcp_packets_dropped"] = {
     "title" : _("TCP Packets Dropped"),
     "unit": "1/s",
     "color": "42/a"
 }
+
 metric_info["connections_throttled"] = {
-    "title" : _("Throttled Server Connections"),
+    "title": _("Throttled Server Connections"),
     "unit": "count",
     "color": "42/a"
+}
+
+metric_info["failed_outbound_streams"] = {
+    "title": _("Failed outbound stream establishes"),
+    "unit": "1/s",
+    "color" : "26/a",
+}
+
+metric_info["failed_inbound_streams"] = {
+    "title": _("Failed inbound stream establishes"),
+    "unit": "1/s",
+    "color" : "31/a",
 }
 
 skype_mobile_devices = [("android", "Android", "33/a"),
@@ -6653,5 +6716,13 @@ graph_info.append({
     "title" : _("Active Sessions"),
     "metrics" : [("active_sessions_%s" % device, "line")
                  for device, name, color in skype_mobile_devices[::-1]]
+})
+
+graph_info.append({
+    "title" : _("Streams"),
+    "metrics" : [
+        ("failed_inbound_streams", "area"),
+        ("failed_outbound_streams", "-area")
+    ]
 })
 

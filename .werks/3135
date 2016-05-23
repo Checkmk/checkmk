@@ -1,0 +1,9 @@
+Title: skype, skype.xmpp_proxy, skype.conferencing, skype.sip_stack: added furter metrics and adjusted default levels
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1464003417
+Class: feature
+
+

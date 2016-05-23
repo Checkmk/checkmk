@@ -27,25 +27,35 @@
 
 # these defaults were specified by customer
 factory_settings['skype_defaultlevels'] = {
-    'failed_search_requests':          {"upper": (1, 2)},
-    'failed_locations_requests':       {"upper": (1, 2)},
-    'timedout_ad_requests':            {"upper": (1, 2)},
+    'failed_search_requests':          {"upper": (1.0, 2.0)},
+    'failed_locations_requests':       {"upper": (1.0, 2.0)},
+    'timedout_ad_requests':            {"upper": (0.01, 0.02)},
     '5xx_responses':                   {"upper": (1.0, 2.0)},
     'message_processing_time':         {"upper": (1.0, 2.0)}, # for edge servers: < 3
     'asp_requests_rejected':           {"upper": (1, 2)},
+    'failed_file_requests':            {"upper": (1.0, 2.0)},
+    'join_failures':                   {"upper": (1, 2)},
+    'failed_validate_cert':            {"upper": (1, 2)},
 
     'incoming_responses_dropped':      {"upper": (1.0, 2.0)},
     'incoming_requests_dropped':       {"upper": (1.0, 2.0)},
     'queue_latency':                   {"upper": (0.1, 0.2)},
     'sproc_latency':                   {"upper": (0.1, 0.2)},
     'throttled_requests':              {"upper": (0.2, 0.4)},
+    'local_503_responses':             {"upper": (0.01, 0.02)},
+
+    'incomplete_calls':                {"upper": (20, 40)},
+    'create_conference_latency':       {"upper": (5000, 10000)},
+    'allocation_latency':              {"upper": (5000, 10000)},
 
     'timedout_incoming_messages':      {"upper": (2, 4)},
     'holding_time_incoming':           {"upper": (1.0, 2.0)},
-    'flow_controlled_connections':     {"upper": (2, 4)},  # for edge servers: < 100
+    'flow_controlled_connections':     {"upper": (1, 2)},
     'outgoing_queue_delay':            {"upper": (2.0, 4.0)},
-    'timedout_sends':                  {"upper": (10, 20)},
+    'timedout_sends':                  {"upper": (0.01, 0.02)},
+    'authentication_errors':           {"upper": (1, 2)},
 
+    'load_call_failure_index':         {"upper": (10, 20)},
     'failed_calls_because_of_proxy':   {"upper": (10, 20)},
     'failed_calls_because_of_gateway': {"upper": (10, 20)},
     'media_connectivity_failure':      {"upper": (1, 2)},
@@ -54,10 +64,12 @@ factory_settings['skype_defaultlevels'] = {
 
     'authentication_failures':         {"upper": (20, 40)},
     'allocate_requests_exceeding':     {"upper": (20, 40)},
-    'packets_dropped':                 {"upper": (300, 600)},
+    'packets_dropped':                 {"upper": (200, 400)},
 
-    'throttled_connections':           {"upper": (3, 6)},
-    'requests_processing':             {"upper": (10000, 20000)}
+    'throttled_connections':           {"upper": (1, 2)},
+    'requests_processing':             {"upper": (10000, 20000)},
+    'failed_outbound_streams':         {"upper": (0.01, 0.02)},
+    'failed_inbound_streams':          {"upper": (0.01, 0.02)}
 }
 
 
@@ -68,6 +80,11 @@ def check_skype(item, params, parsed):
     # LS:SIP - Protocol\SIP - Average Incoming Message Processing Time
     # LS:WEB - UCWA\UCWA - HTTP 5xx Responses/Second
     # ASP.NET Apps v4.0.30319(*)\Requests Rejected
+    #
+    # LS:WEB - Address Book File Download\WEB – Failed File Requests/Second
+    # LS: JoinLauncher – Join Launcher Service Failure\JOINLAUNCHER – Join Failures
+    # LS:WEB – Auth Provider related calls\WEB – Failed validate cert calls to the cert auth provider
+
 
     yield wmi_yield_raw_persec(parsed["LS:WEB - Address Book Web Query"], item,
                                "WEB - Failed search requests/sec",
@@ -106,6 +123,24 @@ def check_skype(item, params, parsed):
                                 perfvar="asp_requests_rejected",
                                 levels=params['asp_requests_rejected'])
 
+    yield wmi_yield_raw_persec(parsed["LS:WEB - AdressBookFile Download"], item,
+                               "WEB - Failed File Requests/Second",
+                               label=" failed file requests/sec",
+                               perfvar="failed_file_requests",
+                               levels=params['failed_file_requests'])
+
+    yield wmi_yield_raw_counter(parsed["LS:JoinLauncher - Join Launcher Service Failure"], item,
+                                "JOINLAUNCHER - Join failures",
+                                label=" join failures",
+                                perfvar="join_failures",
+                                levels=params['join_failures'])
+
+    yield wmi_yield_raw_counter(parsed["LS:WEB - Auth Provider related calls"], item,
+                                "Web - Failed validate cert calls to the cert auth provider",
+                                label=" failed cert validations",
+                                perfvar="failed_validate_cert",
+                                levels=params['failed_validate_cert'])
+
 
 check_info['skype'] = {
     'inventory_function'      : lambda table: inventory_wmi_table(table, required_tables=[
@@ -114,7 +149,10 @@ check_info['skype'] = {
         "LS:WEB - Distribution List Expansion",
         "LS:SIP - Protocol",
         "LS:WEB - UCWA",
-        "ASP.NET Apps v4.0.30319"
+        "ASP.NET Apps v4.0.30319",
+        "LS:WEB - Address Book File Download",
+        "LS: JoinLauncher – Join Launcher Service Failure",
+        "LS:WEB – Auth Provider related calls"
     ]),
     'check_function'          : check_skype,
     'parse_function'          : lambda info: parse_wmi_table(info, key="instance"),
@@ -171,6 +209,45 @@ check_info['skype.mcu'] = {
 }
 
 
+def check_skype_conferencing(item, params, parsed):
+    # LS:CAA - Operations\CAA - Incomplete calls per sec
+    # LS:USrv - Conference Mcu Allocator\USrv - Create Conference Latency (msec)
+    # LS:USrv - Conference Mcu Allocator\USrv – Allocation Latency (msec)
+
+    yield wmi_yield_raw_persec(parsed["LS:CAA - Operations"], item,
+                               "CAA - Incomplete calls per sec",
+                               label=" incomplete calls/sec",
+                               perfvar="incomplete_calls",
+                               levels=params['incomplete_calls'])
+
+    yield wmi_yield_raw_average(parsed["LS:USrv - Conference Mcu Allocator"], item,
+                                "USrv - Create Conference Latency (msec)",
+                                label=" create conference latency",
+                                perfvar="create_conference_latency",
+                                levels=params['create_conference_latency'])
+
+    yield wmi_yield_raw_average(parsed["LS:USrv - Conference Mcu Allocator"], item,
+                                "USrv - Allocation Latency (msec)",
+                                label=" allocation latency",
+                                perfvar="allocation_latency",
+                                levels=params['allocation_latency'])
+
+
+check_info['skype.conferencing'] = {
+    'inventory_function'      : lambda table: inventory_wmi_table(table, required_tables=[
+        "LS:CAA - Operations",
+        "LS:USrv - Conference Mcu Allocator",
+    ]),
+    'check_function'          : check_skype_conferencing,
+    'parse_function'          : lambda info: parse_wmi_table(info, key="instance"),
+    'has_perfdata'            : True,
+    'service_description'     : "Skype Conferencing",
+    'includes'                : ['wmi.include'],
+    'group'                   : 'skype',
+    'default_levels_variable' : 'skype_defaultlevels'
+}
+
+
 def check_skype_sip_stack(item, params, parsed):
     # LS:SIP - Protocol\SIP - Average Incoming Message Processing Time
     # LS:SIP - Protocol\SIP - Incoming Responses Dropped /Sec
@@ -184,6 +261,7 @@ def check_skype_sip_stack(item, params, parsed):
     # LS:SIP - Load Management\SIP - Average Holding Time For Incoming Messages
     # LS:SIP - Peers\SIP - Flow-controlled Connections
     # LS:SIP - Peers\SIP - Average Outgoing Queue Delay
+    # LS:SIP - Peers(*)\SIP-Sends Timed-Out/sec
     yield wmi_yield_raw_average_timer(parsed["LS:SIP - Protocol"], item,
                                       "SIP - Average Incoming Message Processing Time",
                                       label=" avg incoming message processing time",
@@ -226,7 +304,7 @@ def check_skype_sip_stack(item, params, parsed):
                                "SIP - Local 503 Responses /Sec",
                                label=" local 503 responses/sec",
                                perfvar="503_responses",
-                               levels=params['5xx_responses'])
+                               levels=params['local_503_responses'])
 
     yield wmi_yield_raw_counter(parsed["LS:SIP - Load Management"], item,
                                 "SIP - Incoming Messages Timed out",
@@ -258,6 +336,13 @@ def check_skype_sip_stack(item, params, parsed):
                                 perfvar="sends_timed_out",
                                 levels=params['timedout_sends'])
 
+    if "LS:SIP - Authentication" in parsed:
+        yield wmi_yield_raw_persec(parsed["LS:SIP - Authentication"], item,
+                                    "SIP - Authentication System Errors /Sec",
+                                    label=" authentication errors/sec",
+                                    perfvar="authentication_errors",
+                                    levels=params['authentication_errors'])
+
 
 check_info['skype.sip_stack'] = {
     'inventory_function'      : lambda parsed: inventory_wmi_table(parsed, required_tables=[
@@ -284,7 +369,8 @@ def check_skype_mediation_server(item, params, parsed):
     yield wmi_yield_raw_counter(parsed["LS:MediationServer - Health Indices"], item,
                                 "- Load Call Failure Index",
                                 label=" load call failure index",
-                                perfvar="load_call_failure_index")
+                                perfvar="load_call_failure_index",
+                                levels=params["load_call_failure_index"])
 
     yield wmi_yield_raw_counter(parsed["LS:MediationServer - Global Counters"], item,
                                 "- Total failed calls caused by unexpected interaction from the Proxy",
@@ -417,6 +503,33 @@ check_info['skype.data_proxy'] = {
     'has_perfdata'            : True,
     'service_description'     : "Skype Data Proxy %s",
     'group'                   : 'skype_proxy',
+    'default_levels_variable' : 'skype_defaultlevels'
+}
+
+
+def check_skype_xmpp_proxy(item, params, parsed):
+    # LS:XmppFederationProxy - Streams\XmppFederationProxy - Failed outbound stream establishes/sec
+    # LS:XmppFederationProxy - Streams\XmppFederationProxy - Failed inbound stream establishes/sec
+    yield wmi_yield_raw_persec(parsed["LS:XmppFederationProxy - Streams"], item,
+                               "XmppFederationProxy - Failed outbound stream establishes/sec",
+                               label=" failed outbound streams",
+                               perfvar="failed_outbound_streams",
+                               levels=params['failed_outbound_streams'])
+
+    yield wmi_yield_raw_persec(parsed["LS:XmppFederationProxy - Streams"], item,
+                               "XmppFederationProxy - Failed inbound stream establishes/sec",
+                               label=" failed inbound streams",
+                               perfvar="failed_inbound_streams",
+                               levels=params['failed_inbound_streams'])
+
+
+check_info['skype.xmpp_proxy'] = {
+    'inventory_function'      : lambda parsed: inventory_wmi_table(parsed, required_tables=[
+        "LS:XmppFederationProxy - Streams"]),
+    'check_function'          : check_skype_xmpp_proxy,
+    'has_perfdata'            : True,
+    'service_description'     : "Skype XMPP Proxy",
+    'group'                   : 'skype',
     'default_levels_variable' : 'skype_defaultlevels'
 }
 

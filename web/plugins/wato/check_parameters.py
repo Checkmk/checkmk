@@ -1258,6 +1258,48 @@ register_check_parameters(
                  ],
                  optional_keys = []
              )),
+            ('failed_file_requests',
+             Dictionary(
+                 title = _("Failed requests to Adressbook files"),
+                 elements = [
+                    ("upper",
+                     Tuple(
+                          elements = [
+                              Float(title = _("Warning at"), unit = _("per second"), default_value = 1.0),
+                              Float(title = _("Critical at"), unit = _("per second"), default_value = 2.0),
+                          ]
+                     ))
+                 ],
+                 optional_keys = []
+             )),
+            ('join_failures',
+             Dictionary(
+                 title = _("Failures of the join launcher service"),
+                 elements = [
+                    ("upper",
+                     Tuple(
+                          elements = [
+                              Integer(title = _("Warning at"), default_value = 1),
+                              Integer(title = _("Critical at"), default_value = 2),
+                          ]
+                     ))
+                 ],
+                 optional_keys = []
+             )),
+            ('failed_validate_cert',
+             Dictionary(
+                 title = _("Failed certificate validations"),
+                 elements = [
+                    ("upper",
+                     Tuple(
+                          elements = [
+                              Integer(title = _("Warning at"), default_value = 1),
+                              Integer(title = _("Critical at"), default_value = 2),
+                          ]
+                     ))
+                 ],
+                 optional_keys = []
+             )),
             ('timedout_ad_requests',
              Dictionary(
                  title = _("Timed out Active Directory Requests"),
@@ -1265,8 +1307,8 @@ register_check_parameters(
                      ("upper",
                       Tuple(
                           elements = [
-                              Integer(title = _("Warning at"), unit = _("per second"), default_value = 1),
-                              Integer(title = _("Critical at"), unit = _("per second"), default_value = 2),
+                              Float(title = _("Warning at"), unit = _("per second"), default_value = 0.01),
+                              Float(title = _("Critical at"), unit = _("per second"), default_value = 0.02),
                           ]
                       )),
                  ],
@@ -1275,6 +1317,20 @@ register_check_parameters(
             ('5xx_responses',
              Dictionary(
                  title = _("HTTP 5xx Responses"),
+                 elements = [
+                     ("upper",
+                      Tuple(
+                          elements = [
+                              Float(title = _("Warning at"), unit = _("per second"), default_value = 1.0),
+                              Float(title = _("Critical at"), unit = _("per second"), default_value = 2.0),
+                          ]
+                      )),
+                 ],
+                 optional_keys = []
+             )),
+            ('local_503_responses',
+             Dictionary(
+                 title = _("Local HTTP 503 Responses"),
                  elements = [
                      ("upper",
                       Tuple(
@@ -1384,6 +1440,48 @@ register_check_parameters(
                 ],
                 optional_keys = []
             )),
+            ('incomplete_calls',
+             Dictionary(
+                title = _("Incomplete Calls"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("per second"), default_value = 20.0),
+                            Float(title = _("Critical at"), unit = _("per second"), default_value = 40.0),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+             )),
+            ('create_conference_latency',
+            Dictionary(
+                title = _("Create Conference Latency"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("seconds"), default_value = 5.0),
+                            Float(title = _("Critical at"), unit = _("seconds"), default_value = 10.0),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('allocation_latency',
+            Dictionary(
+                title = _("Conference Allocation Latency"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("seconds"), default_value = 5.0),
+                            Float(title = _("Critical at"), unit = _("seconds"), default_value = 10.0),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
             ('timedout_incoming_messages',
             Dictionary(
                 title = _("Incoming Messages Timed out"),
@@ -1419,8 +1517,8 @@ register_check_parameters(
                     ("upper",
                     Tuple(
                         elements = [
-                            Integer(title = _("Warning at"), default_value = 2),
-                            Integer(title = _("Critical at"), default_value = 4),
+                            Integer(title = _("Warning at"), default_value = 1),
+                            Integer(title = _("Critical at"), default_value = 2),
                         ]
                     )),
                 ],
@@ -1447,8 +1545,36 @@ register_check_parameters(
                     ("upper",
                     Tuple(
                         elements = [
-                            Integer(title = _("Warning at"), unit = _("per second"), default_value = 10),
-                            Integer(title = _("Critical at"), unit = _("per second"), default_value = 20),
+                            Float(title = _("Warning at"), unit = _("per second"), default_value = 0.01),
+                            Float(title = _("Critical at"), unit = _("per second"), default_value = 0.02),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('authentication_errors',
+            Dictionary(
+                title = _("Authentication System Errors"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("per second"), default_value = 1.0),
+                            Float(title = _("Critical at"), unit = _("per second"), default_value = 2.0),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('load_call_failure_index',
+            Dictionary(
+                title = _("Load Call Failure Index"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Integer(title = _("Warning at"), default_value = 10),
+                            Integer(title = _("Critical at"), default_value = 20),
                         ]
                     )),
                 ],
@@ -1517,8 +1643,8 @@ register_check_parameters(
                     ("upper",
                     Tuple(
                         elements = [
-                            Integer(title = _("Warning at"), default_value = 3),
-                            Integer(title = _("Critical at"), default_value = 6),
+                            Integer(title = _("Warning at"), default_value = 1),
+                            Integer(title = _("Critical at"), default_value = 2),
                         ]
                     )),
                 ],
@@ -1533,6 +1659,34 @@ register_check_parameters(
                         elements = [
                             Integer(title = _("Warning at"), unit = _("per second"), default_value = 10000),
                             Integer(title = _("Critical at"), unit = _("per second"), default_value = 20000),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('failed_outbound_streams',
+            Dictionary(
+                title = _("XMPP Failed outbound stream establishes"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("per second"), default_value = 0.01),
+                            Float(title = _("Critical at"), unit = _("per second"), default_value = 0.02),
+                        ]
+                    )),
+                ],
+                optional_keys = []
+            )),
+            ('failed_inbound_streams',
+            Dictionary(
+                title = _("XMPP Failed inbound stream establishes"),
+                elements = [
+                    ("upper",
+                    Tuple(
+                        elements = [
+                            Float(title = _("Warning at"), unit = _("per second"), default_value = 0.01),
+                            Float(title = _("Critical at"), unit = _("per second"), default_value = 0.02),
                         ]
                     )),
                 ],
@@ -1617,8 +1771,8 @@ register_check_parameters(
                      ("upper",
                       Tuple(
                           elements = [
-                              Integer(title = _("Warning at"), unit = _("per second"), default_value = 300),
-                              Integer(title = _("Critical at"), unit = _("per second"), default_value = 600),
+                              Integer(title = _("Warning at"), unit = _("per second"), default_value = 200),
+                              Integer(title = _("Critical at"), unit = _("per second"), default_value = 400),
                           ]
                       )),
                  ],

@@ -249,8 +249,6 @@ def check_mssql_counters_sqlstats(item, params, info):
             status = 0
             infotext = "%.1f/sec" % rate
 
-            perfdata = [ (counter_type, rate) ]
-
             if params.get(counter_type):
                 warn, crit = params[counter_type]
                 levelstext = " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
@@ -260,6 +258,9 @@ def check_mssql_counters_sqlstats(item, params, info):
                 elif rate >= warn:
                     status = 1
                     infotext += levelstext
+                perfdata = [ (counter_type, rate, warn, crit) ]
+            else:
+                perfdata = [ (counter_type, rate) ]
 
             return status, infotext, perfdata
 
@@ -298,7 +299,6 @@ def check_mssql_counters_pageactivity(item, params, info):
                 rate = get_rate(countername, now, reading)
                 state = 0
                 infotext = "%s %.1f/sec" % (label, rate)
-                perfdata = [ (counter, rate) ]
 
                 if params.get(counter):
                     warn, crit = params[counter]
@@ -309,6 +309,10 @@ def check_mssql_counters_pageactivity(item, params, info):
                     elif rate >= warn:
                         state = 1
                         infotext += levelstext
+                    perfdata = [ (counter, rate, warn, crit) ]
+                else:
+                    perfdata = [ (counter, rate) ]
+
 
                 yield state, infotext, perfdata
 

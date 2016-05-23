@@ -4766,8 +4766,8 @@ def render_audit_log(log, what, with_filename = False, hilite_others=False):
         htmlcode += '<td class=nobreak>'
         user = user == '-' and ('<i>%s</i>' % _('internal')) or user
         if hilite:
-            htmlcode += '<img class=icon src="images/icon_foreign_changes.png" title="%s">' \
-                     % _("This change has been made by another user")
+            htmlcode += html.render_icon("foreign_changes",
+                            _("This change has been made by another user"))
         htmlcode += user + '</td>'
 
         htmlcode += '</td><td width="100%%">%s</td></tr>\n' % html.attrencode(text)

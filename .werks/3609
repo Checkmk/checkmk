@@ -1,0 +1,9 @@
+Title: apc_rackpdu_power: now upper levels for electrical current are confiugurable
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1464004147
+Class: feature
+
+

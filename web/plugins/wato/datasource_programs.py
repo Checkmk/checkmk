@@ -456,10 +456,9 @@ register_rule(group,
      FixedValue(
         {},
         title = _("Check ACME Session Border Controller"),
-        help = _("This rule activates an agent who connects"
-                 "to an ACME Session Border Controller (SBC). This agent uses SSH, this"
-                 "means that you have to exchange an SSH key to make a passwordless"
-                 "connect possible"),
+        help = _("This rule activates an agent which connects "
+                 "to an ACME Session Border Controller (SBC). This agent uses SSH, so "
+                 "you have to exchange an SSH key to make a passwordless connect possible."),
         totext = _("Connect to ACME SBC"),
     ),
     factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches

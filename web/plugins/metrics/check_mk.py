@@ -3364,6 +3364,19 @@ check_metrics["check_mk_active-icmp"] = {
     "rtmin" : { "scale" : m },
 }
 
+
+check_metrics["check-mk-host-ping"] = {
+    "rta"   : { "scale" : m },
+    "rtmax" : { "scale" : m },
+    "rtmin" : { "scale" : m },
+}
+
+check_metrics["check-mk-ping"] = {
+    "rta"   : { "scale" : m },
+    "rtmax" : { "scale" : m },
+    "rtmin" : { "scale" : m },
+}
+
 check_metrics["check-mk-host-ping-cluster"] = {
     "~.*rta"   : { "name" : "rta",   "scale": m },
     "~.*pl"    : { "name" : "pl",    "scale": m },

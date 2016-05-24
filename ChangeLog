@@ -304,6 +304,7 @@
     * 3569 FIX: Dashboard: Fixed wrong links to views in statistics dashlets when using state filters in dashlet
     * 3570 FIX: Dashboard: Fixed different issues with filtering using WATO folders
     * 3571 FIX: Fixed missing downtime author filter
+    * 3537 FIX: PNP/Graph Templates: fixed incorrect scaling of check-mk-ping and check-mk-host-ping...
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

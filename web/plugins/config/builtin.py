@@ -242,6 +242,7 @@ default_user_profile  = {
 }
 lock_on_logon_failures = False
 user_idle_timeout      = None
+single_user_session    = None
 password_policy        = {}
 
 user_localizations = {

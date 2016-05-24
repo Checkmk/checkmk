@@ -147,7 +147,7 @@ LONG WINAPI exception_handler(LPEXCEPTION_POINTERS ptrs) {
     log_backtrace(ptrs->ExceptionRecord->ExceptionAddress);
 
     ::SymCleanup(proc);
-#else  // __x86_64
+#else   // __x86_64
 // on x86 the backtrace can't be implemented in the same way
 #endif  // __x86_64
 

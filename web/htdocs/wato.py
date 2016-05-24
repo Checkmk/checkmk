@@ -4226,6 +4226,41 @@ def mode_auditlog(phase):
 #   | remote sites in distributed WATO.                                    |
 #   '----------------------------------------------------------------------'
 
+def get_activation_blocked_reasons():
+    act_blocked_reasons = {}
+    repstatus = load_replication_status()
+    for site, values in repstatus.items():
+        if values.get("update_started"):
+            what, update_start_time = values["update_started"]
+
+            times = values.get("times")
+            if not times:
+                continue
+
+            # Fix for a strange scenario. Syncing a slave site actually updates the "restart" field...
+            last_duration = times.get(what, times.get("restart"))
+            if not last_duration:
+                continue
+
+            if time.time() - update_start_time > 2 * last_duration:
+                # Ignore updates which take way too long.
+                # We do not modify the replication status file. The update_started value will
+                # be automatically reset on the activation call
+                continue
+            else:
+                act_blocked_reasons.setdefault("sites", {})
+                infotext = _("Activation running since: %s.") % fmt_time(update_start_time)
+                if last_duration:
+                    est_time_left = last_duration - (time.time() - update_start_time)
+                    if est_time_left < 0:
+                        infotext += " " + _("Takes %.1f seconds longer than expected") % abs(est_time_left)
+                    else:
+                        infotext += " " + _("Approximately finishes in %.1f seconds") % est_time_left
+
+                act_blocked_reasons["sites"][site] = infotext
+
+    return act_blocked_reasons
+
 def mode_changelog(phase):
     # See below for the usage of this weird variable...
     global sitestatus_do_async_replication
@@ -4233,6 +4268,10 @@ def mode_changelog(phase):
         sitestatus_do_async_replication
     except:
         sitestatus_do_async_replication = False
+
+
+    if phase != "title":
+        activation_blocked_reasons = get_activation_blocked_reasons()
 
     if phase == "title":
         return _("Pending changes to activate")
@@ -4243,16 +4282,18 @@ def mode_changelog(phase):
         if is_distributed() and global_replication_state() == "clean":
             log_commit_pending()
 
-        if config.may("wato.activate") and (
-                (not is_distributed() and log_exists("pending"))
-            or (is_distributed() and global_replication_state() == "dirty")):
-            html.context_button(_("Activate Changes!"),
-                html.makeactionuri([("_action", "activate")]),
-                             "apply", True, id="act_changes_button")
-            if get_last_wato_snapshot_file():
-                html.context_button(_("Discard Changes!"),
-                    html.makeactionuri([("_action", "discard")]),
-                                 "discard", id="discard_changes_button")
+
+        if html.var("_action") != "activate":
+            if config.may("wato.activate") and not activation_blocked_reasons and (
+                    (not is_distributed() and log_exists("pending"))
+                or (is_distributed() and global_replication_state() == "dirty")):
+                html.context_button(_("Activate Changes!"),
+                    html.makeactionuri([("_action", "activate")]),
+                                 "apply", True, id="act_changes_button")
+                if get_last_wato_snapshot_file():
+                    html.context_button(_("Discard Changes!"),
+                        html.makeactionuri([("_action", "discard")]),
+                                     "discard", id="discard_changes_button")
 
         if is_distributed():
             html.context_button(_("Site Configuration"), folder_preserving_link([("mode", "sites")]), "sites")
@@ -4341,6 +4382,7 @@ def mode_changelog(phase):
             action = html.var("_siteaction")
             if transaction_already_checked or html.check_transaction():
                 try:
+                    update_replication_status(site_id, {"update_started": (action.replace("_", "+"), time.time())})
                     # If the site has no pending changes but just needs restart,
                     # the button text is just "Restart". We do a sync anyway. This
                     # can be optimized in future but is the save way for now.
@@ -4364,6 +4406,8 @@ def mode_changelog(phase):
                     if config.debug:
                         raise
                     raise MKUserError(None, _("Remote command on site %s failed: <pre>%s</pre>") % (site_id, e))
+                finally:
+                    update_replication_status(site_id, {"update_started": None})
 
         elif transaction_already_checked or html.check_transaction():
             config.need_permission("wato.activate")
@@ -4375,6 +4419,10 @@ def mode_changelog(phase):
             sitestatus_do_async_replication = True
 
     else: # phase: regular page rendering
+
+        if activation_blocked_reasons:
+            html.show_warning(_("Another activation is currently running."))
+
         changes_activated = False
 
         if is_distributed():
@@ -4473,37 +4521,46 @@ def mode_changelog(phase):
 
                     # Actions
                     table.cell(_("Activate"), css="buttons")
-                    sync_url = make_action_link([("mode", "changelog"),
-                            ("_site", site_id), ("_siteaction", "sync")])
-                    restart_url = make_action_link([("mode", "changelog"),
-                            ("_site", site_id), ("_siteaction", "restart")])
-                    sync_restart_url = make_action_link([("mode", "changelog"),
-                            ("_site", site_id), ("_siteaction", "sync_restart")])
-                    if not config.site_is_local(site_id) and "secret" not in site:
-                        html.write("<b>%s</b>" % _("Not logged in."))
-                    elif not uptodate:
-                        if not config.site_is_local(site_id):
-                            if srs.get("need_sync"):
-                                html.buttonlink(sync_url, _("Sync"))
-                                if srs.get("need_restart"):
-                                    html.buttonlink(sync_restart_url, _("Sync & Restart"))
+                    if site_id not in activation_blocked_reasons.get("sites", {}):
+                        sync_url = make_action_link([("mode", "changelog"),
+                                ("_site", site_id), ("_siteaction", "sync")])
+                        restart_url = make_action_link([("mode", "changelog"),
+                                ("_site", site_id), ("_siteaction", "restart")])
+                        sync_restart_url = make_action_link([("mode", "changelog"),
+                                ("_site", site_id), ("_siteaction", "sync_restart")])
+                        if not config.site_is_local(site_id) and "secret" not in site:
+                            html.write("<b>%s</b>" % _("Not logged in."))
+                        elif not uptodate:
+                            if not config.site_is_local(site_id):
+                                if srs.get("need_sync"):
+                                    html.buttonlink(sync_url, _("Sync"))
+                                    if srs.get("need_restart"):
+                                        html.buttonlink(sync_restart_url, _("Sync & Restart"))
+                                else:
+                                    html.buttonlink(restart_url, _("Restart"))
                             else:
                                 html.buttonlink(restart_url, _("Restart"))
-                        else:
-                            html.buttonlink(restart_url, _("Restart"))
 
                     # Last result
-                    table.cell(_("Last Result"))
-                    result = srs.get("result", "")
-                    if len(result) > 20:
-                        result = html.strip_tags(result)
-                        html.write('<span title="%s">%s...</span>' % \
-                            (html.attrencode(result), result[:20]))
-
+                    if activation_blocked_reasons:
+                        table.cell(_("Update status"))
                     else:
-                        configuration_warnings = srs.get("warnings", [])
-                        if configuration_warnings:
-                            html.write(render_replication_warnings(configuration_warnings))
+                        table.cell(_("Last Result"))
+
+                    site_reason = activation_blocked_reasons.get("sites", {}).get(site_id)
+                    if site_reason:
+                        html.write(html.attrencode(site_reason))
+                    else:
+                        result = srs.get("result", "")
+                        if len(result) > 20:
+                            result = html.strip_tags(result)
+                            html.write('<span title="%s">%s...</span>' % \
+                                (html.attrencode(result), result[:20]))
+
+                        else:
+                            configuration_warnings = srs.get("warnings", [])
+                            if configuration_warnings:
+                                html.write(render_replication_warnings(configuration_warnings))
 
             table.end()
 
@@ -4536,6 +4593,8 @@ def ajax_replication():
 
     site = config.site(site_id)
     try:
+        update_replication_status(site_id, {"update_started":\
+                            (need_restart and "sync+restart" or "sync", time.time())})
         if need_sync:
             result = synchronize_site(site, need_restart)
         else:
@@ -4545,6 +4604,8 @@ def ajax_replication():
         if config.debug:
             raise
         result = str(e)
+    finally:
+        update_replication_status(site_id, {"update_started": None})
 
     # Pre 1.2.7i3 sites return True on success and a string on error.
     # 1.2.7i3 and later return a ist of warning messages on success.

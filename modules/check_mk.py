@@ -4637,6 +4637,7 @@ def cleanup_globals():
     g_walk_cache = {}
     global g_timeout
     g_timeout = None
+    clear_other_hosts_oid_cache(None)
 
     if has_inline_snmp:
         cleanup_inline_snmp_globals()

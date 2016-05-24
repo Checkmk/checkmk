@@ -240,8 +240,7 @@ def check_auth_http_header():
     user_id = html.get_request_header(config.auth_by_http_header)
     if user_id:
         user_id = user_id.decode("utf-8")
-        serial = load_serial(user_id)
-        renew_cookie(auth_cookie_name(), user_id, serial)
+        renew_cookie(auth_cookie_name(), user_id)
     else:
         user_id = None
     return user_id

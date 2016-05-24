@@ -13920,6 +13920,7 @@ def page_user_profile(change_pw=False):
                                     users[config.user_id][name] = value
 
             # Change the password if requested
+            password_changed = False
             if config.may('general.change_password'):
                 cur_password = html.var('cur_password')
                 password     = html.var('password')
@@ -13954,8 +13955,7 @@ def page_user_profile(change_pw=False):
                     else:
                         users[config.user_id]['serial'] += 1
 
-                    # Set the new cookie to prevent logout for the current user
-                    login.set_auth_cookie(config.user_id, users[config.user_id]['serial'])
+                    password_changed = True
 
             # Now, if in distributed environment, set the trigger for pushing the new
             # auth information to the slave sites asynchronous
@@ -13963,6 +13963,11 @@ def page_user_profile(change_pw=False):
                 start_async_replication = True
 
             userdb.save_users(users)
+
+            if password_changed:
+                # Set the new cookie to prevent logout for the current user
+                login.set_auth_cookie(config.user_id)
+
             success = True
         except MKUserError, e:
             html.add_user_error(e.varname, e)

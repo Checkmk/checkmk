@@ -8,6 +8,9 @@
     * 3607 FIX: wut_webtherm: fixed missing sensor data if only decimal comma marked values are available
     * 3613 FIX: Fix vertical scaling of graph for disk utilization from 0...1% to 0...100%
 
+    Multisite:
+    * 3537 FIX: PNP/Graph Templates: fixed incorrect scaling of check-mk-ping and check-mk-host-ping...
+
     WATO:
     * 3534 FIX: Fixed exception with upload of interlaced PNG files...
 

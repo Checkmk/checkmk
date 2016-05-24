@@ -1,0 +1,10 @@
+Title: PNP/Graph Templates: fixed incorrect scaling of check-mk-ping and check-mk-host-ping
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p2
+Date: 1464083314
+
+The values were off by a factor of 1000.

@@ -1,0 +1,13 @@
+Title: linux and solaris agent: mrpe checks now support option to append the cache age to cached results
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1464098117
+Class: feature
+
+To setup mrpe checks that also display the age of the cache, use a line in mrpe.cfg like this:
+LOAD   (interval=360:appendage=1)    /usr/bin/check_load
+
+interval specifies the maximum cache age in seconds (here: 6 minutes) and appendage=1 instructs the
+agent to append the cache age to the output.

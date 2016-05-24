@@ -1,0 +1,22 @@
+Title: windows agent: improved crash reporting
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1464079421
+Class: feature
+
+With crash debug enabled the agent will now report the windows exception code on crash
+as well as the address causing the crash and the exact git revision he agent was built
+from.
+On 64bit systems it will also print a full backtrace including register contents.
+
+Technical details:
+Our official builds are built with mingw-w64, so we can't use windows api to resolve
+debugging symbols in our own binaryi. These frames will only include addresses, while
+api calls are resolved.
+
+However, the agent is now built with dwarf-2 debugging symbols (outdated but better
+tool support) and stripped of symbols in a separate build step. With the correct
+unstripped exe the adresses can still be resolved using addr2line:
+addr2line -e check_mk_agent-64.unstripped.exe <address>

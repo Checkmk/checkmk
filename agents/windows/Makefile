@@ -27,7 +27,8 @@ SHELL         = /bin/bash
 VERSION       = 1.4.0i1
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i686-w64-mingw32-windres
-COPTIONS      = -s -O2 -Wall -Wformat=2 -Werror -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO
+GIT_REV       = $(shell git describe --abbrev=4 --dirty --always --tags)
+COPTIONS      = -O2 -gdwarf-2 -Wall -Wformat=2 -Werror -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO -DVCS_REV=\"$(GIT_REV)\"
 # for debug builds
 #COPTIONS      = -O0 -Wall -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -gdwarf-2 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO
 MKDIR         = mkdir -p
@@ -91,7 +92,7 @@ directories:
 # number. Instead a placeholder is being used as version.a
 # -----------------------------------------------------------------------------
 
-SRCS = check_mk_agent.cc SettingsCollector.cc Configuration.cc Environment.cc stringutil.cc wmiHelper.cc ListenSocket.cc PerfCounter.cc PerfCounterCommon.cc Thread.cc OutputProxy.cc logging.cc Crypto.cc OHMMonitor.cc EventLog.cc ExternalCmd.cc EventLogVista.cc IEventLog.cc
+SRCS = check_mk_agent.cc SettingsCollector.cc Configuration.cc Environment.cc stringutil.cc wmiHelper.cc ListenSocket.cc PerfCounter.cc PerfCounterCommon.cc Thread.cc OutputProxy.cc logging.cc Crypto.cc OHMMonitor.cc EventLog.cc ExternalCmd.cc EventLogVista.cc IEventLog.cc crashhandling.cc
 OBJS = $(addprefix obj/,$(SRCS:.cc=.o))
 OBJS64 = $(addprefix obj64/,$(SRCS:.cc=.o))
 
@@ -110,16 +111,22 @@ obj/%.o: %.cc
 obj64/%.o: %.cc
 	$(CXX_64) -c $(COPTIONS) -o $@  $<
 
-
-check_mk_agent.unversioned.exe: $(OBJS)
+check_mk_agent.unstripped.exe: $(OBJS)
 	$(MAKE) inc_build_version
 	$(MAKE) check_mk_agent.res
-	$(CXX) $(COPTIONS) -o $@ $^ check_mk_agent.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi
+	$(CXX) $(COPTIONS) -o $@ $^ check_mk_agent.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi -limagehlp
 
-check_mk_agent-64.unversioned.exe: $(OBJS64)
+check_mk_agent-64.unstripped.exe: $(OBJS64)
 	$(MAKE) inc_build_version
 	$(MAKE) check_mk_agent-64.res
-	$(CXX_64) $(COPTIONS) -o $@ $^ check_mk_agent-64.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi
+	$(CXX_64) $(COPTIONS) -o $@ $^ check_mk_agent-64.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi -limagehlp
+
+
+check_mk_agent.unversioned.exe: check_mk_agent.unstripped.exe
+	strip -o $@ $^
+
+check_mk_agent-64.unversioned.exe: check_mk_agent-64.unstripped.exe
+	strip -o $@ $^
 
 
 # -----------------------------------------------------------------------------

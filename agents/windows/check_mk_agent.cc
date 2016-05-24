@@ -74,6 +74,7 @@
 #include "OutputProxy.h"
 #include "PerfCounter.h"
 #include "Thread.h"
+#include "crashhandling.h"
 #include "dynamic_func.h"
 #include "logging.h"
 #include "stringutil.h"
@@ -680,7 +681,8 @@ void output_eventlog(OutputProxy &out, LPCWSTR logname, uint64_t &first_record,
 
             out.output("[[[%ls]]]\n", logname);
             int worst_state = 0;
-            // record_number is the last event we read, so we want to seek past it
+            // record_number is the last event we read, so we want to seek past
+            // it
             first_record = log->seek(first_record + 1);
 
             uint64_t last_record = first_record;
@@ -974,8 +976,7 @@ void section_ps_wmi(OutputProxy &out) {
         }
         crash_log(
             "Data types are different than expected, please report this and "
-            "include "
-            "the following: %ls",
+            "include the following: %ls",
             types.c_str());
         abort();
     }
@@ -3835,6 +3836,8 @@ void RunImmediate(const char *mode, int argc, char **argv) {
 
 int main(int argc, char **argv) {
     wsa_startup();
+
+    SetUnhandledExceptionFilter(exception_handler);
 
     SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrl_handler, TRUE);
 

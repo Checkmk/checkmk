@@ -593,17 +593,37 @@ class LDAPUserConnector(UserConnector):
             [user_id_attr],
             self._config['user_scope']
         )
-        if result:
-            dn = result[0][0]
-            user_id = self.sanitize_user_id(result[0][1][user_id_attr][0])
-            if user_id is None:
-                return None
-            self._user_cache[username] = (dn, user_id)
 
-            if no_escape:
-                return (dn, user_id)
-            else:
-                return (dn.replace('\\', '\\\\'), user_id)
+        if not result:
+            return None
+
+        dn = result[0][0]
+        raw_user_id = result[0][1][user_id_attr][0]
+
+        # Filter out users by the optional filter_group
+        filter_group_dn = self._config.get('user_filter_group', None)
+        if filter_group_dn:
+            member_attr = self.member_attr().lower()
+            is_member = False
+            for member in self.get_filter_group_members(filter_group_dn):
+                if member_attr == "memberuid" and raw_user_id == member:
+                    is_member = True
+                elif dn == member:
+                    is_member = True
+
+            if not is_member:
+                return None
+
+        user_id = self.sanitize_user_id(raw_user_id)
+        if user_id is None:
+            return None
+        self._user_cache[username] = (dn, user_id)
+
+        if no_escape:
+            return (dn, user_id)
+        else:
+            return (dn.replace('\\', '\\\\'), user_id)
+
 
 
     def get_users(self, add_filter = ''):
@@ -617,7 +637,6 @@ class LDAPUserConnector(UserConnector):
 
         # Create filter by the optional filter_group
         filter_group_dn = self._config.get('user_filter_group', None)
-        member_filter = ''
         if filter_group_dn:
             member_attr = self.member_attr().lower()
             # posixGroup objects use the memberUid attribute to specify the group memberships.
@@ -625,21 +644,8 @@ class LDAPUserConnector(UserConnector):
             # for filtering here.
             user_cmp_attr = member_attr == 'memberuid' and user_id_attr or 'distinguishedname'
 
-            # Apply configured group ldap filter
-            try:
-                group = self.ldap_search(self.replace_macros(filter_group_dn), columns=[member_attr], scope='base')
-            except MKLDAPException:
-                group = None
-
-            if not group:
-                raise MKLDAPException(_('The configured ldap user filter group could not be found. '
-                                        'Please check <a href="%s">your configuration</a>.') %
-                                            'wato.py?mode=ldap_config&varname=ldap_userspec')
-
-            members = group[0][1].values()[0]
-
             member_filter_items = []
-            for member in members:
+            for member in self.get_filter_group_members(filter_group_dn):
                 member_filter_items.append('(%s=%s)' % (user_cmp_attr, member))
             add_filter += '(|%s)' % ''.join(member_filter_items)
 
@@ -658,6 +664,23 @@ class LDAPUserConnector(UserConnector):
                 result[user_id] = ldap_user
 
         return result
+
+
+    # TODO: Use get_group_memberships()?
+    def get_filter_group_members(self, filter_group_dn):
+        member_attr = self.member_attr().lower()
+
+        try:
+            group = self.ldap_search(self.replace_macros(filter_group_dn), columns=[member_attr], scope='base')
+        except MKLDAPException:
+            group = None
+
+        if not group:
+            raise MKLDAPException(_('The configured ldap user filter group could not be found. '
+                                    'Please check <a href="%s">your configuration</a>.') %
+                                        'wato.py?mode=ldap_config&varname=ldap_userspec')
+
+        return [ m.lower() for m in group[0][1].values()[0] ]
 
 
     def get_groups(self, specific_dn = None):

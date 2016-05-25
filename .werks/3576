@@ -1,0 +1,9 @@
+Title: LDAP: Fixed "Internal error" when using the "Filter Group" option in an LDAP connection
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p2
+Date: 1464163656
+Class: fix
+
+This exception occured when a user which is not in the group tried to log in to the GUI.

@@ -856,6 +856,28 @@ register_configvar(group,
     domain = "multisite"
 )
 
+register_configvar(group,
+    "single_user_session",
+    Optional(
+        Age(
+            title = None,
+            display = [ "minutes", "hours" ],
+            label = _("Session timeout:"),
+            minvalue = 30,
+            default_value = 60,
+        ),
+        title = _("Limit login to single session at a time"),
+        label = _("Users can only login from one client at a time"),
+        help = _("Normally a user can login to the GUI from unlimited number of clients at "
+                 "the same time. If you want to enforce your users to be able to login only once "
+                 " (from one client which means device and browser), you can enable this option. "
+                 "When the user logs out or is inactive for the configured amount of time, the "
+                 "session is invalidated automatically and the user has to log in again from the "
+                 "current or another device."),
+    ),
+    domain = "multisite"
+)
+
 def list_roles():
     roles = userdb.load_roles()
     return [ (i, r["alias"]) for i, r in roles.items() ]

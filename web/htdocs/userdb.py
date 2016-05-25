@@ -202,7 +202,7 @@ def user_locked(username):
     return users[username].get('locked', False)
 
 
-def login_session_timed_out(username, last_activity):
+def login_timed_out(username, last_activity):
     idle_timeout = load_custom_attr(username, "idle_timeout", convert_idle_timeout, None)
     if idle_timeout == None:
         idle_timeout = config.user_idle_timeout
@@ -212,9 +212,9 @@ def login_session_timed_out(username, last_activity):
 
     timed_out = (time.time() - last_activity) > idle_timeout
 
-    # TODO: Reenable this for easier debugging when log levels can be configured easily
+    # TODO: uncomment this once log level can be configured
     #if timed_out:
-    #    html.log("%s login session timed out (Inactive for %d seconds)" %
+    #    logger(LOG_DEBUG, "%s login timed out (Inactive for %d seconds)" %
     #                                (username, time.time() - last_activity))
 
     return timed_out
@@ -225,12 +225,14 @@ def update_user_access_time(username):
         return
     save_custom_attr(username, 'last_seen', repr(time.time()))
 
+
 def on_succeeded_login(username):
     num_failed = load_custom_attr(username, 'num_failed', saveint)
     if num_failed != None and num_failed != 0:
         save_custom_attr(username, 'num_failed', '0')
 
     update_user_access_time(username)
+
 
 # userdb.need_to_change_pw returns either False or the reason description why the
 # password needs to be changed
@@ -295,6 +297,120 @@ def transform_userdb_automatic_sync(val):
 
     else:
         return val
+
+#.
+#   .--User Session--------------------------------------------------------.
+#   |       _   _                 ____                _                    |
+#   |      | | | |___  ___ _ __  / ___|  ___  ___ ___(_) ___  _ __         |
+#   |      | | | / __|/ _ \ '__| \___ \ / _ \/ __/ __| |/ _ \| '_ \        |
+#   |      | |_| \__ \  __/ |     ___) |  __/\__ \__ \ | (_) | | | |       |
+#   |       \___/|___/\___|_|    |____/ \___||___/___/_|\___/|_| |_|       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | When single users sessions are activated, a user an only login once  |
+#   | a time. In case a user tries to login a second time, an error is     |
+#   | shown to the later login.                                            |
+#   |                                                                      |
+#   | To make this feature possible a session ID is computed during login, |
+#   | saved in the users cookie and stored in the user profile together    |
+#   | with the current time as "last activity" timestamp. This timestamp   |
+#   | is updated during each user activity in the GUI.                     |
+#   |                                                                      |
+#   | Once a user logs out or the "last activity" is older than the        |
+#   | configured session timeout, the session is invalidated. The user     |
+#   | can then login again from the same client or another one.            |
+#   '----------------------------------------------------------------------'
+
+def is_valid_user_session(username, session_id):
+    if config.single_user_session == None:
+        return True # No login session limitation enabled, no validation
+
+    active_session_id, last_activity = load_session_info(username)
+    if session_id == active_session_id:
+        return True # Current session. Fine.
+
+    # TODO: uncomment this once log level can be configured
+    #logger(LOG_DEBUG, "%s session_id not valid (timed out?) (Inactive for %d seconds)" %
+    #                                (username, time.time() - last_activity))
+
+    return False
+
+
+def ensure_user_can_init_session(username):
+    if config.single_user_session == None:
+        return True # No login session limitation enabled, no validation
+
+    session_timeout = config.single_user_session
+
+    session_info = load_session_info(username)
+    if session_info == None:
+        return True # No session active
+
+    last_activity = session_info[1]
+    if (time.time() - last_activity) > session_timeout:
+        return True # Former active session timed out
+
+    # TODO: uncomment this once log level can be configured
+    #logger(LOG_DEBUG, "%s another session is active (inactive for: %d seconds)" %
+    #                                (username, time.time() - last_activity))
+
+    raise MKUserError(None, _("Another session is active"))
+
+
+# Creates a new user login session (if single user session mode is enabled) and
+# returns the session_id of the new session.
+def initialize_session(username):
+    if not config.single_user_session:
+        return ""
+
+    session_id = create_session_id()
+    save_session_info(username, session_id)
+    return session_id
+
+
+# Creates a random session id for the user and returns it.
+def create_session_id():
+    return gen_id()
+
+
+# Updates the current session of the user and returns the session_id or only
+# returns an empty string when single user session mode is not enabled.
+def refresh_session(username):
+    if not config.single_user_session:
+        return ""
+
+    session_info = load_session_info(username)
+    if session_info == None:
+        return # Don't refresh. Session is not valid anymore
+
+    session_id = session_info[0]
+    save_session_info(username, session_id)
+
+
+def invalidate_session(username):
+    remove_custom_attr(username, "session_info")
+
+
+# Saves the current session_id and the current time (last activity)
+def save_session_info(username, session_id):
+    save_custom_attr(username, "session_info", "%s|%s" % (session_id, int(time.time())))
+
+
+# Returns either None (when no session_id available) or a two element
+# tuple where the first element is the sesssion_id and the second the
+# timestamp of the last activity.
+def load_session_info(username):
+    return load_custom_attr(username, "session_info", convert_session_info)
+
+
+def convert_session_info(value):
+    if value == "":
+        return None
+    else:
+        session_id, last_activity = value.split("|", 1)
+        return session_id, int(last_activity)
+
+
 
 #.
 #   .-Users----------------------------------------------------------------.
@@ -461,6 +577,7 @@ def load_users(lock = False):
                         ('last_seen',         savefloat),
                         ('enforce_pw_change', lambda x: bool(saveint(x))),
                         ('idle_timeout',      convert_idle_timeout),
+                        ('session_id',        convert_session_info),
                     ]:
                     val = load_custom_attr(id, attr, conv_func)
                     if val != None:
@@ -1114,7 +1231,6 @@ def execute_userdb_job():
             if config.debug:
                 raise
             else:
-                import traceback
                 logger(LOG_ERR, 'Exception (%s, userdb_job): %s' %
                             (connection_id, traceback.format_exc()))
 

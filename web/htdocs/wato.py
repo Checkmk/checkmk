@@ -789,8 +789,7 @@ def show_hosts(folder):
             icon = "autherr"
             title = html.strip_tags(reason)
 
-        table.cell(_('Auth'), '<img class=icon src="images/icon_%s.png" title="%s">' % (icon, title), sortable=False)
-
+        table.cell(_('Auth'), html.render_icon(icon, title), sortable=False)
 
         # Permissions and Contact groups - through complete recursion and inhertance
         permitted_groups, host_contact_groups, use_for_services = host.groups()
@@ -4510,14 +4509,11 @@ def mode_changelog(phase):
                     # State
                     table.cell("", css="buttons")
                     if srs.get("need_sync") and not config.site_is_local(site_id):
-                        html.write('<img class=icon title="%s" src="images/icon_need_replicate.png">' %
-                            _("This site is not update and needs a replication."))
+                        html.icon(_("This site is not update and needs a replication."), "need_replicate")
                     if srs.get("need_restart"):
-                        html.write('<img class=icon title="%s" src="images/icon_need_restart.png">' %
-                            _("This site needs a restart for activating the changes."))
+                        html.icon(_("This site needs a restart for activating the changes."), "need_restart")
                     if uptodate:
-                        html.write('<img class=icon title="%s" src="images/icon_siteuptodate.png">' %
-                            _("This site is up-to-date."))
+                        html.icon(_("This site is up-to-date."), "siteuptodate")
 
                     # Actions
                     table.cell(_("Activate"), css="buttons")

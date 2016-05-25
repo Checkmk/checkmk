@@ -1537,8 +1537,7 @@ class RadioChoice(DropdownChoice):
             if self._columns != None:
                 html.write("<td>")
             if len(entry) > 2 and entry[2] != None: # icon!
-                label = '<img class=icon align=absmiddle src="images/icon_%s.png" title="%s">' % \
-                        ( entry[2], entry[1].encode("utf-8"))
+                label = html.render_icon(entry[2], entry[1])
             else:
                 label = entry[1]
             html.radiobutton(varprefix, str(n), value == entry[0], label)

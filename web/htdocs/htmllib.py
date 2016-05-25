@@ -461,7 +461,7 @@ class html(GUITester):
             return "images/icons/%s.png" % icon_name
 
     def icon(self, help, icon, **kwargs):
-       self.write(self.render_icon(icon, help, **kwargs))
+        self.write(self.render_icon(icon, help, **kwargs))
 
     def render_icon(self, icon_name, help="", middle=True, id=None, cssclass=None):
         align = middle and ' align=absmiddle' or ''

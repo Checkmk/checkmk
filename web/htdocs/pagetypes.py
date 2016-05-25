@@ -1074,10 +1074,13 @@ class OverridableContainer(Overridable, Container):
 
     @classmethod
     def render_addto_popup_entry(self, type_name, name, title):
-        html.write('<li><a href="javascript:void(0)" '
-                   'onclick="pagetype_add_to_container(\'%s\', \'%s\'); reload_sidebar();">'
-                   '<img src="images/icon_%s.png"> %s</a></li>' %
-                   (type_name, name, type_name, title))
+        html.write("<li>")
+        html.write("<a href=\"javascript:void(0)\" "
+                   "onclick=\"pagetype_add_to_container('%s', '%s');reload_sidebar();\">" %
+                    (type_name, name))
+        html.render_icon(type_name)
+        html.write(html.attrencode(title))
+        html.write("</li>")
 
 
     # Callback for the Javascript function pagetype_add_to_container(). The

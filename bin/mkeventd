@@ -475,6 +475,30 @@ def initialize_snmp_credentials():
                 securityEngineId=snmp_v2c.OctetString(hexValue=engine_id)
             )
 
+#.
+#   .--Livestatus----------------------------------------------------------.
+#   |            _     _                _        _                         |
+#   |           | |   (_)_   _____  ___| |_ __ _| |_ _   _ ___             |
+#   |           | |   | \ \ / / _ \/ __| __/ _` | __| | | / __|            |
+#   |           | |___| |\ V /  __/\__ \ || (_| | |_| |_| \__ \            |
+#   |           |_____|_| \_/ \___||___/\__\__,_|\__|\__,_|___/            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Livestatus connection                                                |
+#   '----------------------------------------------------------------------'
+
+def livestatus_query(query):
+    try:
+        livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        livesock.connect(g_livestatus_socket)
+        livesock.send(query)
+        livesock.shutdown(socket.SHUT_WR)
+        return livesock.recv(10000000)
+    except Exception, e:
+        log("Unable to contact monitoring core")
+        if opt_debug:
+            raise
+
 
 #.
 #   .--Timeperiods---------------------------------------------------------.
@@ -498,13 +522,8 @@ def update_timeperiods():
     if g_timeperiods != None and int(time.time()) / 60 == g_last_timeperiod_update:
         return # only update once a minute
     log("Updating timeperiod information")
-
     try:
-        livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        livesock.connect(g_livestatus_socket)
-        livesock.send("GET timeperiods\nColumns: name alias in\n")
-        livesock.shutdown(socket.SHUT_WR)
-        answer = livesock.recv(10000000)
+        answer = livestatus_query("GET timeperiods\nColumns: name alias in\n")
         table = [ line.split(';') for line in answer.split('\n')[:-1] ]
         new_timeperiods = {}
         for tpname, alias, isin in table:
@@ -3411,6 +3430,18 @@ def do_event_action(action, event, user=""):
 monitoring_state_names = [ "OK", "WARN", "CRIT", "UNKNOWN" ]
 
 def do_notify(event, username, is_cancelling):
+    # Check if notifications are enabled at all
+    try:
+        answer = livestatus_query("GET status\nColumns: enable_notifications\nOutputFormat: python\n")
+        if answer:
+            notifications_enabled = eval(answer)
+            if not notifications_enabled[0][0]:
+                log("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
+                return
+    except:
+        # On any error, assume that notifications are enabled
+        pass
+
     # Create notification context based on event
 
     # If the host name is the IP address, then use that. Otherwise let

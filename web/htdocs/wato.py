@@ -6930,17 +6930,6 @@ def FolderChoice(**kwargs):
     return DropdownChoice(**kwargs)
 
 
-class GroupChoice(DualListChoice):
-    def __init__(self, what, **kwargs):
-        DualListChoice.__init__(self, **kwargs)
-        self.what = what
-        self._choices = lambda: self.load_groups()
-
-    def load_groups(self):
-        all_groups = userdb.load_group_information()
-        this_group = all_groups.get(self.what, {})
-        return [ (k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items() ]
-
 def vs_notification_bulkby():
     return ListChoice(
       title = _("Create separate notification bulks based on"),
@@ -7201,7 +7190,7 @@ def simple_host_rule_match_conditions():
               title = _("Match Host Tags"))
         ),
         ( "match_hostgroups",
-          GroupChoice("host",
+          userdb.GroupChoice("host",
               title = _("Match Host Groups"),
               help = _("The host must be in one of the selected host groups"),
               allow_empty = False,
@@ -7229,7 +7218,7 @@ def simple_host_rule_match_conditions():
 def generic_rule_match_conditions():
     return simple_host_rule_match_conditions() + [
         ( "match_servicegroups",
-          GroupChoice("service",
+          userdb.GroupChoice("service",
               title = _("Match Service Groups"),
               help = _("The service must be in one of the selected service groups. For host events this condition "
                        "never matches as soon as at least one group is selected."),
@@ -7280,7 +7269,7 @@ def generic_rule_match_conditions():
           )
         ),
         ( "match_contactgroups",
-          GroupChoice("contact",
+          userdb.GroupChoice("contact",
               title = _("Match Contact Groups"),
               help = _("The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. " \
                        "If you don't use the CMC that filter will not apply"),
@@ -10046,6 +10035,28 @@ def mode_edit_user(phase):
 
     vs_email = EmailAddressUnicode()
 
+    vs_user_idle_timeout = Alternative(
+        title = _("Session idle timeout"),
+        elements = [
+            FixedValue(None,
+                title = _("Use the global configuration"),
+                totext = "",
+            ),
+            FixedValue(False,
+                title = _("Disable the login timeout"),
+                totext = "",
+            ),
+            Age(
+                title = _("Set an individual idle timeout"),
+                display = [ "minutes", "hours", "days" ],
+                minvalue = 60,
+                default_value = 3600,
+            ),
+        ],
+        style = "dropdown",
+        orientation = "horizontal",
+    )
+
     # Returns true if an attribute is locked and should be read only. Is only
     # checked when modifying an existing user
     locked_attributes = userdb.locked_attributes(user.get('connector'))
@@ -10155,6 +10166,13 @@ def mode_edit_user(phase):
         email = vs_email.from_html_vars("email")
         vs_email.validate_value(email, "email")
         new_user["email"] = email
+
+        idle_timeout = vs_user_idle_timeout.from_html_vars("idle_timeout")
+        vs_user_idle_timeout.validate_value(idle_timeout, "idle_timeout")
+        if idle_timeout != None:
+            new_user["idle_timeout"] = idle_timeout
+        elif idle_timeout == None and "idle_timeout" in new_user:
+            del new_user["idle_timeout"]
 
         # Pager
         pager = html.var("pager", '').strip()
@@ -10331,6 +10349,14 @@ def mode_edit_user(phase):
     html.help(_("Disabling the password will prevent a user from logging in while "
                  "retaining the original password. Notifications are not affected "
                  "by this setting."))
+
+    forms.section(_("Idle timeout"))
+    idle_timeout = user.get("idle_timeout")
+    if not is_locked("idle_timeout"):
+        vs_user_idle_timeout.render_input("idle_timeout", idle_timeout)
+    else:
+        html.write(idle_timeout)
+        html.hidden_field("idle_timeout", idle_timeout)
 
     # Roles
     forms.section(_("Roles"))

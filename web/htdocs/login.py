@@ -79,7 +79,7 @@ def load_serial(username):
 # Generates the hash to be added into the cookie value
 def generate_hash(username, now, serial):
     secret = load_secret()
-    return md5(username.encode("utf-8") + now + str(serial) + secret).hexdigest()
+    return md5(username.encode("utf-8") + str(now) + str(serial) + secret).hexdigest()
 
 
 def del_auth_cookie():
@@ -104,14 +104,22 @@ def renew_cookie(cookie_name, username, serial):
     # Do not renew if:
     # a) The _ajaxid var is set
     # b) A logout is requested
-    if (html.myfile != 'logout' or html.has_var('_ajaxid')) \
+    if (html.myfile != 'logout' and not html.has_var('_ajaxid')) \
        and cookie_name == site_cookie_name():
+        # TODO: Reenable this for easier debugging when log levels can be configured easily
+        #html.log("Renewing auth cookie (%s.py, vars: %r)" % (html.myfile, html.vars))
         set_auth_cookie(username, serial)
 
 
 def check_auth_cookie(cookie_name):
     username, issue_time, cookie_hash = parse_auth_cookie(cookie_name)
     serial = check_parsed_auth_cookie(username, issue_time, cookie_hash)
+
+    # Check whether or not there is an idle timeout configured, delete cookie and
+    # require the user to renew the log when the timeout exceeded.
+    if userdb.login_session_timed_out(username, issue_time):
+        del_auth_cookie()
+        return
 
     # Once reached this the cookie is a good one. Renew it!
     renew_cookie(cookie_name, username, serial)
@@ -128,7 +136,7 @@ def check_auth_cookie(cookie_name):
 def parse_auth_cookie(cookie_name):
     username, issue_time, cookie_hash = html.cookie(cookie_name, '::').split(':', 2)
     username = username.decode("utf-8")
-    return username, issue_time, cookie_hash
+    return username, float(issue_time), cookie_hash
 
 
 def check_parsed_auth_cookie(username, issue_time, cookie_hash):

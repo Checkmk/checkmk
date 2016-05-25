@@ -604,10 +604,10 @@ def transform_view_to_valuespec_value(view):
         if view.get(key):
             view['view']['options'].append(key)
 
-    view['visibility'] = []
+    view['visibility'] = {}
     for key in [ 'hidden', 'hidebutton', 'public' ]:
         if view.get(key):
-            view['visibility'].append(key)
+            view['visibility'][key] = view[key]
 
     view['grouping'] = { "grouping" : view.get('group_painters', []) }
     view['sorting']  = { "sorters" : view.get('sorters', {}) }

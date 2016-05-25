@@ -490,12 +490,20 @@ function call_ajax(url, args)
 
 function get_url(url, handler, data, errorHandler, addAjaxId)
 {
-    call_ajax(url, {
-        response_handler : handler,
-        handler_data     : data,
-        error_handler    : errorHandler,
-        add_ajax_id      : addAjaxId
-    });
+    var args = {
+        response_handler: handler
+    };
+
+    if (typeof data !== 'undefined')
+        args.handler_data = data;
+
+    if (typeof errorHandler !== 'undefined')
+        args.error_handler = errorHandler;
+
+    if (typeof addAjaxId !== 'undefined')
+        args.add_ajax_id = addAjaxId;
+
+    call_ajax(url, args);
 }
 
 function get_url_sync(url)

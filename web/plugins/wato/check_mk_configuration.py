@@ -834,6 +834,28 @@ register_configvar(group,
     domain = "multisite",
 )
 
+register_configvar(group,
+    "user_idle_timeout",
+    Optional(
+        Age(
+            title = None,
+            display = [ "minutes", "hours", "days" ],
+            minvalue = 60,
+            default_value = 3600,
+        ),
+        title = _("Login session idle timeout"),
+        label = _("Enable a login session idle timeout"),
+        help = _("Normally a user login session is valid until the password is changed or "
+                 "the user is locked. By enabling this option, you can apply a time limit "
+                 "to login sessions which is applied when the user stops interacting with "
+                 "the GUI for a given amount of time. When a user is exceeding the configured "
+                 "maximum idle time, the user will be logged out and redirected to the login "
+                 "screen to renew the login session. This setting can be overriden for each "
+                 "user individually in the profile of the users."),
+    ),
+    domain = "multisite"
+)
+
 def list_roles():
     roles = userdb.load_roles()
     return [ (i, r["alias"]) for i, r in roles.items() ]

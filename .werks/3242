@@ -1,0 +1,9 @@
+Title: Fixed hostname translation for empty optional groups
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8p2
+Date: 1464180857
+Class: fix
+
+

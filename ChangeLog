@@ -15,6 +15,7 @@
 
     WATO:
     * 3534 FIX: Fixed exception with upload of interlaced PNG files...
+    * 3242 FIX: Fixed hostname translation for empty optional groups
 
 
 1.2.8p1:

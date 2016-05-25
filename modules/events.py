@@ -336,7 +336,7 @@ def event_match_hosttags(rule, context):
 
 def event_match_servicegroups(rule, context, is_regex = False):
     if is_regex:
-        required_groups = rule.get("match_servicegroups_regex")
+        match_type, required_groups = rule.get("match_servicegroups_regex", (None, None))
     else:
         required_groups = rule.get("match_servicegroups")
 
@@ -361,23 +361,27 @@ def event_match_servicegroups(rule, context, is_regex = False):
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    # The regex must match the alias name!
-                    if r.search(define_servicegroups[sg]):
+                    match_value = match_type == "match_alias" and define_servicegroups[sg] or sg
+                    if r.search(match_value):
                         return
             elif group in servicegroups:
                 return
 
         if is_regex:
-            return "The service is only in the groups %s. None of these patterns match: %s" % (
-                  '"' + '", "'.join(map(lambda x: define_servicegroups[x], servicegroups)) + '"',
-                  '"' + '" or "'.join(required_groups)) + '"'
+            if match_type == "match_alias":
+                return "The service is only in the groups %s. None of these patterns match: %s" % (
+                      '"' + '", "'.join(map(lambda x: define_servicegroups[x], servicegroups)) + '"',
+                      '"' + '" or "'.join(required_groups)) + '"'
+            else:
+                return "The service is only in the groups %s. None of these patterns match: %s" % (
+                      '"' + '", "'.join(servicegroups) + '"', '"' + '" or "'.join(required_groups)) + '"'
         else:
             return "The service is only in the groups %s, but %s is required" % (
                   sgn, " or ".join(required_groups))
 
 def event_match_exclude_servicegroups(rule, context, is_regex = False):
     if is_regex:
-        excluded_groups = rule.get("match_exclude_servicegroups_regex")
+        match_type, excluded_groups = rule.get("match_exclude_servicegroups_regex", (None, None))
     else:
         excluded_groups = rule.get("match_exclude_servicegroups")
 
@@ -397,10 +401,12 @@ def event_match_exclude_servicegroups(rule, context, is_regex = False):
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    # The regex must match the alias name!
-                    if r.search(define_servicegroups[sg]):
+                    match_value         = match_type == "match_alias" and define_servicegroups[sg] or sg
+                    match_value_inverse = match_type == "match_alias" and sg or define_servicegroups[sg]
+
+                    if r.search(match_value):
                         return "The service group \"%s\" (%s) is excluded per regex pattern: %s" %\
-                             (define_servicegroups[sg], sg, group)
+                             (match_value, match_value_inverse, group)
             elif group in servicegroups:
                     return "The service group %s is excluded" % group
 

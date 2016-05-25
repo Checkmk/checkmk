@@ -7301,21 +7301,43 @@ def generic_rule_match_conditions():
           )
         ),
         ( "match_servicegroups_regex",
-          ListOfStrings(
-              title = _("Match Service Groups (regex)"),
-              help = _("The service group alias must match one of the following regular expressions."
-                       " For host events this condition never matches as soon as at least one group is selected."),
-              valuespec = RegExpUnicode(size = 32),
-              orientation = "horizontal",
+          Tuple(
+                title = _("Match Service Groups (regex)"),
+                elements = [
+                DropdownChoice(
+                    choices = [
+                        ( "match_id",    _("Match the internal identifier")),
+                        ( "match_alias", _("Match the alias"))
+                    ],
+                    default = "match_id"
+                  ),
+                  ListOfStrings(
+                      help = _("The service group alias must match one of the following regular expressions."
+                               " For host events this condition never matches as soon as at least one group is selected."),
+                      valuespec = RegExpUnicode(size = 32),
+                      orientation = "horizontal",
+                  )
+                ]
           )
         ),
         ( "match_exclude_servicegroups_regex",
-          ListOfStrings(
-              title = _("Exclude Service Groups (regex)"),
-              help = _("The service group alias must not match one of the following regular expressions. "
-                       "For host events this condition is simply ignored."),
-              valuespec = RegExpUnicode(size = 32),
-              orientation = "horizontal",
+          Tuple(
+                title = _("Exclude Service Groups (regex)"),
+                elements = [
+                  DropdownChoice(
+                    choices = [
+                        ( "match_id",    _("Match the internal identifier")),
+                        ( "match_alias", _("Match the alias"))
+                    ],
+                    default = "match_id"
+                  ),
+                  ListOfStrings(
+                      help = _("The service group alias must not match one of the following regular expressions. "
+                               "For host events this condition is simply ignored."),
+                      valuespec = RegExpUnicode(size = 32),
+                      orientation = "horizontal",
+                  )
+                ]
           )
         ),
         ( "match_services",

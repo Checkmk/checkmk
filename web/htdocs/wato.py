@@ -13750,10 +13750,11 @@ def do_hostname_translation(translation, hostname):
         if not expr.endswith('$'):
             expr += '$'
         rcomp = regex(expr)
+        # re.RegexObject.sub() by hand to handle non-existing references
         mo = rcomp.match(hostname)
         if mo:
             hostname = subst
-            for nr, text in enumerate(mo.groups()):
+            for nr, text in enumerate(mo.groups("")):
                 hostname = hostname.replace("\\%d" % (nr+1), text)
 
     # 4. Explicit mapping

@@ -26,6 +26,7 @@
 
 import math, grp, pprint, os, errno, marshal, re, fcntl, time
 from cmk.exceptions import MKException, MKGeneralException
+from cmk.regex import regex
 
 # Workaround when the file is included from outside of Multisite
 try:
@@ -412,28 +413,6 @@ def release_all_locks():
         os.close(fd)
     g_aquired_locks = []
     g_locked_paths = []
-
-
-regex_cache = {}
-def regex(r):
-    rx = regex_cache.get(r)
-    if rx:
-        return rx
-    try:
-        rx = re.compile(r)
-    except Exception, e:
-        raise MKConfigError(_("Invalid regular expression '%s': %s") % (r, e))
-    regex_cache[r] = rx
-    return rx
-
-def escape_regex_chars(text):
-    escaped = ""
-    for c in text:
-        if c in '().^$[]{}+*\\':
-            escaped += '\\'
-        escaped += c
-    return escaped
-
 
 # Splits a word into sequences of numbers and non-numbers.
 # Creates a tuple from these where the number are converted

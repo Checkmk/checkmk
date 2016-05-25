@@ -28,6 +28,7 @@
 # only) by the alert handling
 
 import pprint, urllib, select, subprocess, socket
+from cmk.regex import regex
 
 def event_keepalive(event_function, log_function, call_every_loop=None, loop_interval=None, shutdown_function=None):
     last_config_timestamp = config_timestamp()

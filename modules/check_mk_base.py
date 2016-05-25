@@ -54,6 +54,7 @@ import traceback
 import subprocess
 
 from cmk.exceptions import MKGeneralException
+from cmk.regex import regex
 import cmk.tty as tty
 
 # PLANNED CLEANUP:
@@ -138,7 +139,6 @@ g_single_oid_cache           = {}
 g_broken_snmp_hosts          = set([])
 g_broken_agent_hosts         = set([])
 g_timeout                    = None
-g_compiled_regexes           = {}
 g_global_caches              = []
 
 # global variables used to cache temporary values that need to
@@ -2046,19 +2046,6 @@ def check_uses_snmp(check_type):
     info_type = check_type.split(".")[0]
     return snmp_info.get(info_type) != None or \
        (info_type in inv_info and "snmp_info" in inv_info[info_type])
-
-# compile regex or look it up in already compiled regexes
-# (compiling is a CPU consuming process. We cache compiled
-# regexes).
-def regex(pattern):
-    reg = g_compiled_regexes.get(pattern)
-    if not reg:
-        try:
-            reg = re.compile(pattern)
-        except Exception, e:
-            raise MKGeneralException("Invalid regular expression '%s': %s" % (pattern, e))
-        g_compiled_regexes[pattern] = reg
-    return reg
 
 
 def worst_monitoring_state(status_a, status_b):

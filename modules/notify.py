@@ -37,6 +37,8 @@
 #    -> These already bear all information about the contact, the plugin
 #       to call and its parameters.
 
+from cmk.regex import regex
+
 #   .--Configuration-------------------------------------------------------.
 #   |    ____             __ _                       _   _                 |
 #   |   / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __      |

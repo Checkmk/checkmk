@@ -45,6 +45,7 @@ import fcntl
 import py_compile
 import inspect
 
+from cmk.regex import regex, is_regex
 import cmk.tty as tty
 
 # These variable will be substituted at 'make dist' time
@@ -847,13 +848,6 @@ def get_rule_options(entry):
         return entry[:-1], entry[-1]
     else:
         return entry, {}
-
-
-def is_regex(pattern):
-    for c in pattern:
-        if c in '.?*+^$|[](){}\\':
-            return True
-    return False
 
 
 # Converts a regex pattern which is used to e.g. match services within Check_MK

@@ -65,6 +65,8 @@
 import bi # Needed for BI Icon. For arkane reasons (ask htdocs/module.py) this
           # cannot be imported in views.py directly.
 
+from cmk.regex import regex
+
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
 #   |                  |  _ \ __ _(_)_ __ | |_ ___ _ __                    |

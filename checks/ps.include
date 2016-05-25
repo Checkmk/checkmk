@@ -147,17 +147,9 @@ def instantiate_regex_pattern(pattern, matches):
     return pattern
 
 def instantiate_regex_pattern_once(pattern, match):
+    from cmk.regex import escape_regex_chars
     # this correctly handles \( and \) but not [^)] - sorry
     return re.compile(r"(?<!\\)\(.*?(?<!\\)\)").sub(escape_regex_chars(match), pattern, 1)
-
-def escape_regex_chars(match):
-    r = ""
-    for c in match:
-        if c in r"[]\().?{}|*^$+":
-            r += "\\"
-        r += c
-    return r
-
 
 # FIXME: Merge logic of process_matches_for_* functions
 def process_matches_for_discovery(process_line, process_pattern, userspec):

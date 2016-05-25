@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import inventory
+from cmk.regex import regex
 
 def paint_host_inventory(row, invpath):
     invdata = inventory.get(row.get("host_inventory"), invpath)

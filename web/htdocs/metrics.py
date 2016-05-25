@@ -40,6 +40,7 @@ import sites
 from lib import *
 from valuespec import *
 from livestatus import MKLivestatusNotFoundError
+from cmk.regex import regex
 
 try:
     import simplejson as json

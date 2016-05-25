@@ -95,6 +95,7 @@ import forms
 import modules as multisite_modules
 from watolib import *
 
+from cmk.regex import escape_regex_chars, regex
 
 g_html_head_open = False
 

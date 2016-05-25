@@ -27,6 +27,7 @@
 import config, re, pprint, time
 import sites
 from lib import *
+from cmk.regex import regex
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False

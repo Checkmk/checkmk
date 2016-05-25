@@ -3,6 +3,7 @@
 
 import socket, os, time, sys, getopt, signal, thread, pprint, re, \
        select, subprocess, stat, string
+from cmk.regex import regex, is_regex
 import cmk.daemon
 
 VERSION="1.4.0i1"
@@ -254,25 +255,6 @@ def verbose(text):
     if is_verbose:
         log(text)
 
-
-g_regex_cache = {}
-def regex(reg):
-    if reg in g_regex_cache:
-        return g_regex_cache[reg]
-    r = re.compile(reg)
-    g_regex_cache[reg] = r
-    return r
-
-get_regex = regex # make compatible with check_mk_base.py
-
-# Checks if a text contains characters that make it
-# neccessary to use regular expression logic in order
-# to match it.
-def is_regex(text):
-    for c in text:
-        if c in ".*?[](){}\\^$+|":
-            return True
-    return False
 
 def match(pattern, text, complete = True):
     if pattern == None:
@@ -2315,7 +2297,7 @@ class EventServer:
                 regex, subst = translation.get("regex")
                 if not regex.endswith('$'):
                     regex += '$'
-                rcomp = get_regex(regex)
+                rcomp = regex(regex)
                 mo = rcomp.match(backedhost)
                 if mo:
                     backedhost = subst

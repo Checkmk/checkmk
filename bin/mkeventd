@@ -1849,7 +1849,8 @@ class EventServer:
                     self._rules.append(rule)
                     self._rule_by_id[rule["id"]] = rule
                     try:
-                        for key in [ "match", "match_ok", "match_host", "match_application" ]:
+                        for key in [ "match", "match_ok", "match_host", "match_application",
+                                     "cancel_application" ]:
                             if key in rule:
                                 value = compile_matching_value(key, rule[key])
                                 if value == None:
@@ -1858,7 +1859,8 @@ class EventServer:
 
                                 rule[key] = value
 
-                        if 'state' in rule and type(rule['state']) == tuple and rule['state'][0] == 'text_pattern':
+                        if 'state' in rule and type(rule['state']) == tuple \
+                           and rule['state'][0] == 'text_pattern':
                             for key in [ '2', '1', '0' ]:
                                 if key in rule['state'][1]:
                                     value = compile_matching_value('state', rule['state'][1][key])
@@ -2110,11 +2112,12 @@ class EventServer:
                 log("  did not match because of wrong source IP address '%s' (need '%s')" % (event["ipaddress"], rule.get("match_ipaddress")))
             return False
 
-        if False == match(rule.get("match_application"), event["application"], complete=False):
-            if debug:
-                log("  did not match because of wrong application '%s' (need '%s')" %
-                        (event["application"], pattern(rule.get("match_application"))))
-            return False
+        if match(rule.get("match_application"), event["application"], complete=False) == False \
+           and "cancel_application" not in rule:
+                if debug:
+                    log("  did not match because of wrong application '%s' (need '%s')" %
+                            (event["application"], pattern(rule.get("match_application"))))
+                return False
 
         if "match_facility" in rule and event["facility"] != rule["match_facility"]:
             if debug:
@@ -2136,7 +2139,7 @@ class EventServer:
             if "cancel_application" in rule:
                 cancel_by_application = match(rule.get("cancel_application"),
                                                        event["application"],
-                                                       complete=False)
+                                                       complete=False) != False
             else:
                 cancel_by_application = True
 

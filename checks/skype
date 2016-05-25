@@ -124,7 +124,7 @@ def check_skype(item, params, parsed):
                                 levels=params['asp_requests_rejected'])
 
     if "LS:WEB - Address Book File Download" in parsed:
-        yield wmi_yield_raw_persec(parsed["LS:WEB - AdressBookFile Download"], item,
+        yield wmi_yield_raw_persec(parsed["LS:WEB - Address Book File Download"], item,
                                 "WEB - Failed File Requests/Second",
                                 label=" failed file requests/sec",
                                 perfvar="failed_file_requests",
@@ -139,7 +139,7 @@ def check_skype(item, params, parsed):
 
     if "LS:WEB - Auth Provider related calls" in parsed:
         yield wmi_yield_raw_counter(parsed["LS:WEB - Auth Provider related calls"], item,
-                                    "Web - Failed validate cert calls to the cert auth provider",
+                                    "WEB - Failed validate cert calls to the cert auth provider",
                                     label=" failed cert validations",
                                     perfvar="failed_validate_cert",
                                     levels=params['failed_validate_cert'])

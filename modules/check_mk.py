@@ -4224,7 +4224,7 @@ def do_restart(only_reload = False):
     try:
         backup_path = None
 
-        if another_activation_is_in_progress():
+        if try_get_activation_lock():
             sys.stderr.write("Other restart currently in progress. Aborting.\n")
             sys.exit(1)
 
@@ -4275,7 +4275,7 @@ def do_restart(only_reload = False):
         sys.exit(1)
 
 restart_lock_fd = None
-def another_activation_is_in_progress():
+def try_get_activation_lock():
     global restart_lock_fd
     # In some bizarr cases (as cmk -RR) we need to avoid duplicate locking!
     if restart_locking and restart_lock_fd == None:

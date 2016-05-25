@@ -211,11 +211,16 @@ if [ -x /usr/ucb/ps ]; then
         STATS=${LINE%) *}
         PID=${STATS##*,}
 
+        # Directly use ps output when line is too slow to be stripped
+        if [ ${#LINE} -lt 100 ]; then
+            echo "$LINE"
+            continue
+        fi
+
         CMD=$(echo "$UCB_PS" | grep "^[ ]*$PID " | head -n1 | \
               awk '{ s = ""; for (i = 5; i <= NF; i++) s = s $i " "; print s }')
-        # Only use the ucb ps line when it's not empty (process might already been gone) and the
-        # ps line is long enough the be potentially stripped.
-        if [ -z "$CMD" ] || [ ${#LINE} -lt 100 ]; then
+        # Only use the ucb ps line when it's not empty (process might already been gone)
+        if [ -z "$CMD" ]; then
             echo "$LINE"
         else
             echo "${STATS}) ${CMD}"

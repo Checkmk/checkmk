@@ -1,0 +1,10 @@
+Title: Solaris agent: Fixed performance issue introduced with #3389
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1464164530
+
+

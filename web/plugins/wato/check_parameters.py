@@ -439,6 +439,7 @@ def transform_websphere_mq(source):
     else:
         return source
 
+
 register_check_parameters(
     subgroup_applications,
     "websphere_mq",
@@ -447,22 +448,38 @@ register_check_parameters(
         Dictionary(
             elements = [
                 ("message_count",
-                 Tuple(
-                     title = _('Maximum number of messages'),
-                     elements = [
-                         Integer(title = _("Warning at"), default_value = 1000 ),
-                         Integer(title = _("Critical at"), default_value = 1200 ),
-                     ]
-                 )),
+                    OptionalDropdownChoice(
+                        title      = _('Maximum number of messages'),
+                        choices    = [ (None, _("Ignore these levels")) ],
+                        otherlabel = _("Set absolute levels"),
+                        explicit   = \
+                            Tuple(
+                                title = _('Maximum number of messages'),
+                                elements = [
+                                    Integer(title = _("Warning at")),
+                                    Integer(title = _("Critical at")),
+                                ]
+                            ),
+                        default_value = (1000, 1200)
+                    )
+                ),
                 ("message_count_perc",
-                 Tuple(
-                     title = _('Percentage of Queue Length'),
-                     help  = _('This setting only applies if the WebSphere MQ reports the queue length'),
-                     elements = [
-                         Percentage(title = _("Warning at"), default_value = 80.0 ),
-                         Percentage(title = _("Critical at"), default_value = 90.0 ),
-                     ]
-                 )),
+                    OptionalDropdownChoice(
+                        title      = _('Percentage of Queue Length'),
+                        help       = _('This setting only applies if the WebSphere MQ reports the queue length'),
+                        choices    = [ (None, _("Ignore these levels")) ],
+                        otherlabel = _("Set relative levels"),
+                        explicit   = \
+                            Tuple(
+                                title = _('Percentage of queue length'),
+                                elements = [
+                                    Percentage(title = _("Warning at")),
+                                    Percentage(title = _("Critical at")),
+                                ]
+                            ),
+                        default_value = (80.0, 90.0)
+                    )
+                ),
                 ("status",
                  Dictionary(
                      title = _('Override check state based on channel state (only for channels)'),
@@ -482,6 +499,14 @@ register_check_parameters(
                      ],
                      optional_keys = []
                  )),
+                ("messages_not_processed_age",
+                    Tuple(
+                        title    = _("Time settings for messages not processed"),
+                        elements = [
+                            Age(title = _("Warning at")),
+                            Age(title = _("Critical at")),
+                        ],
+                )),
             ],
         ),
         forth = transform_websphere_mq

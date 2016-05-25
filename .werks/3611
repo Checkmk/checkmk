@@ -1,0 +1,9 @@
+Title: websphere_mq_queues: now age of messages not processed is configurable
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1464180355
+Class: feature
+
+To make this check work you have to install the <tt>websphere_mq</tt> plugin.

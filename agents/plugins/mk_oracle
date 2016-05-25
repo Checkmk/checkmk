@@ -677,6 +677,49 @@ sql_asm_diskgroup()
 }
 
 #.
+#   .--set_osenv-----------------------------------------------------------.
+#   |                       _                                              |
+#   |              ___  ___| |_     ___  ___  ___ _ ____   __              |
+#   |             / __|/ _ \ __|   / _ \/ __|/ _ \ '_ \ \ / /              |
+#   |             \__ \  __/ |_   | (_) \__ \  __/ | | \ V /               |
+#   |             |___/\___|\__|___\___/|___/\___|_| |_|\_/                |
+#   |                         |_____|                                      |
+#   +----------------------------------------------------------------------+
+#   | Functions for Operating System dependent stuff                       |
+#   '----------------------------------------------------------------------'
+
+function set_osenv () {
+    ostype=$(uname -s)
+
+    if [ ${ostype} = 'Linux' ] ; then
+
+        GREP=$(which grep)
+        STATCX='stat -c %X'
+        STATCY='stat -c %Y'
+
+    elif [ ${ostype} = 'SunOS' ] ; then
+
+        # expand the PATH for inetd. Otherwise some stuff in /opt/sfw/bin is not found!
+        export PATH=$PATH:/usr/ucb:/usr/proc/bin:opt/sfw/bin:/opt/sfw/sbin:/usr/sfw/bin:/usr/sfw/sbin:/opt/csw/bin
+
+        GREP=/usr/xpg4/bin/grep
+
+        if [ ! -x $GREP ] ; then
+            echo "Please make sure that "$GREP" is existing on Solaris!"
+            echo "Aborting mk_oracle plugin."
+            exit 999
+        fi
+
+        STATCX='file_mtime'
+        STATCY='file_mtime'
+
+    else
+        ostype="unknown OS: "${ostype}
+    fi
+
+}
+
+#.
 #   .--oraenv--------------------------------------------------------------.
 #   |                                                                      |
 #   |                    ___  _ __ __ _  ___ _ ____   __                   |
@@ -1005,6 +1048,10 @@ export -f ora_session_environment
 export -f do_async_checks
 export -f set_oraenv
 
+function file_mtime() {
+    /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($mtime);' "$1"
+}
+
 function run_cached () {
     local section=
     if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
@@ -1018,9 +1065,10 @@ function run_cached () {
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
-    local NOW=$(date +%s)
+    # perl is needed for Solaris => no date +%s availible
+    local NOW=$(perl -le "print time()")
     if [ -e "$CACHEFILE.new" ] ; then
-        local CF_ATIME=$(stat -c %X "$CACHEFILE.new")
+        local CF_ATIME=$($STATCX "$CACHEFILE.new")
         if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then
             # Kill the process still accessing that file in case
             # it is still running. This avoids overlapping processes!
@@ -1032,7 +1080,7 @@ function run_cached () {
 
     # Check if cache file exists and is recent enough
     if [ -s "$CACHEFILE" ] ; then
-        local MTIME=$(stat -c %Y "$CACHEFILE")
+        local MTIME=$($STATCY "$CACHEFILE")
         if [ $((NOW - MTIME)) -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
         # Output the file in any case, even if it is
         # outdated. The new file will not yet be available
@@ -1052,6 +1100,7 @@ function run_cached () {
 
 function do_testmode() {
     echo "-----------------------------------------------"
+    echo "Operating System: "${ostype}
     echo "Logincheck to Instance: "$SID"  Version: "$ORACLE_VERSION
     echo "select 'Login ok User: ' || user || ' on ' || host_name ||' Instance ' || instance_name
           from v\$instance;" | sqlplus $SID
@@ -1113,8 +1162,11 @@ function do_instance() {
 #   |  Iterate over all instances and execute sync and async sections.     |
 #   '----------------------------------------------------------------------'
 
+# set some basic operating system stuff
+set_osenv
+
 # Are there any remote configurations?
-for element in $(compgen -A variable | grep -E "^REMOTE_INSTANCE_.*") ; do
+for element in $(compgen -A variable | ${GREP} -E "^REMOTE_INSTANCE_.*") ; do
 
     REMOTE_DBS=$REMOTE_DBS" "$element
 
@@ -1148,7 +1200,7 @@ fi
 
 # Get list of all running databases
 # Do not work on ASM in this plugin. => Ignore a running ASM-Instance!
-SIDS=$(UNIX95=true ps -ef | awk '{print $NF}' | grep -E '^asm_pmon_|^ora_pmon_|^xe_pmon_XE' | cut -d"_" -f3-)
+SIDS=$(UNIX95=true ps -ef | awk '{print $NF}' | ${GREP} -E '^asm_pmon_|^ora_pmon_|^xe_pmon_XE' | cut -d"_" -f3-)
 
 # If we do not have found any running database instance, then either
 # no ORACLE is present on this system or it's just currently not running.

@@ -1,0 +1,12 @@
+Title: Outage statistics for hosts now also work in PDF reports
+Level: 1
+Component: reporting
+Compatible: compat
+Version: 1.2.8p2
+Date: 1464348499
+Class: fix
+
+If you created a PDF report containing an availability table of hosts with some of the
+outage statistics contained, then these were missing. This problem did not arise when
+you did an PDF export or simply added an availability table to an existing report via
+the context menu.

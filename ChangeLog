@@ -18,6 +18,9 @@
     * 3534 FIX: Fixed exception with upload of interlaced PNG files...
     * 3242 FIX: Fixed hostname translation for empty optional groups
 
+    Reporting & Availability:
+    * 3614 FIX: Outage statistics for hosts now also work in PDF reports...
+
 
 1.2.8p1:
     Core & Setup:

@@ -1,0 +1,10 @@
+Title: Fixed visibility of SNMP community attribute when SNMP tag is inherited
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1464350115
+
+

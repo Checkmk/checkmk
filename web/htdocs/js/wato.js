@@ -96,10 +96,10 @@ function wato_fix_visibility() {
             }
             var oTdContent = oTr.childNodes[1];
             /* If the Checkbox is unchecked try to get a value from the inherited_tags */
-            var oCheckbox = oTdLegend.childNodes[1].childNodes[0];
+            var oCheckbox = oTdLegend.getElementsByTagName("input")[0];
             if (oCheckbox.checked == false ){
                 var attrname = 'attr_' + oCheckbox.name.replace(/.*_change_/, '');
-                if(attrname in inherited_tags && inherited_tags[attrname] !== null){
+                if (attrname in inherited_tags && inherited_tags[attrname] !== null){
                     currentTags = currentTags.concat(inherited_tags[attrname].split("|"));
                 }
             } else {

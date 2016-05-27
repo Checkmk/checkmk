@@ -236,6 +236,7 @@
     * 3607 FIX: wut_webtherm: fixed missing sensor data if only decimal comma marked values are available
     * 3613 FIX: Fix vertical scaling of graph for disk utilization from 0...1% to 0...100%
     * 3577 FIX: Solaris agent: Fixed performance issue introduced with #3389
+    * 3623 FIX: ipmi: fixed discrete sensor discovery if sensor is disable
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

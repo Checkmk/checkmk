@@ -1,0 +1,8 @@
+Title: --cache not working on -I with explicity hosts
+Component: core
+State: open
+Date: 2016-05-27 12:13:19
+Targetversion: 1.2.8
+Class: bug
+
+This option seems to be without function.

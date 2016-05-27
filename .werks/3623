@@ -1,0 +1,9 @@
+Title: ipmi: fixed discrete sensor discovery if sensor is disable
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p2
+Date: 1464338418
+Class: fix
+
+

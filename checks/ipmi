@@ -128,7 +128,7 @@ def ipmi_get_ignored_sensors(hostname):
 
 
 def ipmi_ignore_entry(name, state, ignored_sensors):
-    if ipmi_ignore_nr and state.startswith('nr'):
+    if ipmi_ignore_nr and (state.startswith('nr') or state.startswith('ns')):
         return True
 
     for e in ignored_sensors:

@@ -106,12 +106,6 @@ def render_availability_options(what):
     if html.form_submitted():
         config.save_user_file("avoptions", avoptions)
 
-    # Convert outage-options from service to host
-    states = avoptions["outage_statistics"][1]
-    for os, oh in [ ("ok","up"), ("crit","down"), ("unknown", "unreach") ]:
-        if os in states:
-            states.append(oh)
-
     return avoptions
 
 

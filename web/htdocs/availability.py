@@ -531,6 +531,18 @@ def get_default_avoptions():
         },
     }
 
+def get_outage_statistic_options(avoptions):
+    # Outage options are stored with keys matching service states (like "ok" and "crit").
+    # For hosts we use the same checkbox but mean "up" and "down". We simply add these states
+    # to the list of selected states.
+    aggrs, states = avoptions.get("outage_statistics", ([], []))
+    fixed_states = states[:]
+    for os, oh in [ ("ok","up"), ("crit","down"), ("unknown", "unreach") ]:
+        if os in fixed_states:
+            fixed_states.append(oh)
+    return aggrs, fixed_states
+
+
 #.
 #   .--Computation---------------------------------------------------------.
 #   |      ____                            _        _   _                  |
@@ -633,7 +645,7 @@ def compute_availability(what, av_rawdata, avoptions):
     #                    2.2.2.2.3 "crit"
     #                    2.2.2.2.4 "unknown"
     availability_table = []
-    os_aggrs, os_states = avoptions.get("outage_statistics", ([],[]))
+    os_aggrs, os_states = get_outage_statistic_options(avoptions)
     need_statistics = os_aggrs and os_states
     grouping = avoptions["grouping"]
     timeline_rows = [] # Need this as a global variable if just one service is affected
@@ -1091,7 +1103,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
 
     # Headers for availability cells
     av_table["cell_titles"] = []
-    os_aggrs, os_states = avoptions.get("outage_statistics", ([],[]))
+    os_aggrs, os_states = get_outage_statistic_options(avoptions)
     for sid, css, sname, help in availability_columns[what]:
         if not cell_active(sid, avoptions):
             continue
@@ -1183,7 +1195,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
 
             # Statistics?
             x_cnt, x_min, x_max = entry["statistics"].get(sid, (None, None, None))
-            os_aggrs, os_states = avoptions.get("outage_statistics", ([],[]))
+            os_aggrs, os_states = get_outage_statistic_options(avoptions)
             if sid in os_states:
                 for aggr in os_aggrs:
                     if x_cnt != None:

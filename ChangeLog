@@ -18,6 +18,7 @@
     WATO:
     * 3534 FIX: Fixed exception with upload of interlaced PNG files...
     * 3242 FIX: Fixed hostname translation for empty optional groups
+    * 3579 FIX: Fixed visibility of SNMP community attribute when SNMP tag is inherited
 
     Reporting & Availability:
     * 3614 FIX: Outage statistics for hosts now also work in PDF reports...

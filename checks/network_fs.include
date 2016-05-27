@@ -34,7 +34,7 @@ def inventory_network_fs_mounts(info):
     return [ (" ".join(line[:-5]), None) for line in info ]
 
 
-def check_network_fs_mounts(item, _no_params, info):
+def check_network_fs_mounts(item, params, info):
     for line in info:
         mountpoint = " ".join(line[:-5])
         if mountpoint == item:
@@ -57,7 +57,9 @@ def check_network_fs_mounts(item, _no_params, info):
             free_bytes = free_blocks * blocksize
             used_bytes = size_bytes - free_bytes
             used_perc  = 100.0 * used_bytes / size_bytes
-            perfdata   = [("fs_size", size_bytes), ("fs_used", used_bytes)]
+            perfdata   = None
+            if params.get("has_perfdata"):
+                perfdata = [("fs_size", size_bytes), ("fs_used", used_bytes)]
 
             if line[-5] == 'ok':
                 if size_bytes == 0:

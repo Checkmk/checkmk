@@ -8424,11 +8424,24 @@ register_check_parameters(
     subgroup_storage,
     "network_fs",
     _("Network filesystem - overall status (e.g. NFS)"),
-    None,
+    Dictionary(
+        elements = [
+            ("has_perfdata",
+                DropdownChoice(
+                    title = _("Performance data settings"),
+                    choices = [
+                         (True,  _("Enable performance data")),
+                         (False, _("Disable performance data")),
+                    ],
+                    default_value = False
+                ),
+            ),
+        ],
+    ),
     TextAscii(
         title = _("Name of the mount point"),
         help = _("For NFS enter the name of the mount point.")),
-    "first"
+    "dict"
 )
 
 register_check_parameters(

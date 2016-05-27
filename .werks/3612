@@ -1,4 +1,4 @@
-Title: nfsmounts: now has performance data
+Title: nfsmounts: new rule for en/disabling performance data
 Level: 1
 Component: checks
 Compatible: compat

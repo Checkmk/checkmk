@@ -1,4 +1,4 @@
-Title: ipmi: fixed discrete sensor discovery if sensor is disable
+Title: ipmi: fixed discrete sensor discovery if sensor is disabled
 Level: 1
 Component: checks
 Compatible: compat

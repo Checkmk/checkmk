@@ -1670,6 +1670,12 @@ metric_info["if_in_octets"] = {
     "color" : "#00e060",
 }
 
+metric_info["if_in_bps"] = {
+    "title" : _("Input bandwidth"),
+    "unit"  : "bits/s",
+    "color" : "#00e060",
+}
+
 metric_info["if_in_pkts"] = {
     "title" : _("Input Packets"),
     "unit"  : "1/s",
@@ -1681,6 +1687,13 @@ metric_info["if_out_pkts"] = {
     "unit"  : "1/s",
     "color" : "#0080e0",
 }
+
+metric_info["if_out_bps"] = {
+    "title" : _("Output bandwidth"),
+    "unit"  : "bits/s",
+    "color" : "#0080e0",
+}
+
 
 metric_info["if_out_octets"] = {
     "title" : _("Output Octets"),
@@ -3690,8 +3703,8 @@ check_metrics["check_mk-arbor_pravail.disk_usage"]      = disk_utilization_trans
 
 # in=0;;;0; inucast=0;;;; innucast=0;;;; indisc=0;;;; inerr=0;0.01;0.1;; out=0;;;0; outucast=0;;;; outnucast=0;;;; outdisc=0;;;; outerr=0;0.01;0.1;; outqlen=0;;;0;
 if_translation = {
-    "in"        : { "name": "if_in_octets" },
-    "out"       : { "name": "if_out_octets" },
+    "in"        : { "name": "if_in_bps", "scale": 8 },
+    "out"       : { "name": "if_out_bps", "scale": 8 },
     "indisc"    : { "name": "if_in_discards" },
     "inerr"     : { "name": "if_in_errors" },
     "outdisc"   : { "name": "if_out_discards" },
@@ -4706,6 +4719,7 @@ perfometer_info.append(("dual", [
         "exponent"      : 2,
     }
 ]))
+
 
 perfometer_info.append(("dual", [
     {
@@ -5913,6 +5927,16 @@ graph_info.append({
         ( "if_out_octets,8,*@bits/s",  "-area", _("Output bandwidth") ),
     ],
 })
+
+# Same but for checks that have been translated in to bits/s
+graph_info.append({
+    "title" : _("Bandwidth"),
+    "metrics" : [
+        ( "if_in_bps",   "area", ),
+        ( "if_out_bps",  "-area", ),
+    ],
+})
+
 
 graph_info.append({
     "title" : _("Packets"),

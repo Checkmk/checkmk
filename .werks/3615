@@ -1,0 +1,11 @@
+Title: if: Convert bandwidth from octets into bits for graph display
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.9i1
+Date: 1464359025
+Class: feature
+
+This makes it easier to create custom graphs based on bits/sec. If you have any
+existing custom graphs that make use of <i>Input octets</i> or <i>Output octets</i>
+then you need to replace those metrics with <i>Input bandwidth</i> or <i>Output bandwidth</i>.

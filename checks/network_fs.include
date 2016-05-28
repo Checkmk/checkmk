@@ -58,7 +58,7 @@ def check_network_fs_mounts(item, params, info):
             used_bytes = size_bytes - free_bytes
             used_perc  = 100.0 * used_bytes / size_bytes
             perfdata   = None
-            if params.get("has_perfdata"):
+            if params is not None and params.get("has_perfdata"):
                 perfdata = [("fs_size", size_bytes), ("fs_used", used_bytes)]
 
             if line[-5] == 'ok':

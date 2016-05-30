@@ -374,6 +374,30 @@ class MKClientError(Exception):
         Exception.__init__(self, t)
 
 
+class Queries:
+    def __init__(self, sock):
+        self._socket = sock
+        self._buffer = ""
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        while True:
+            parts = self._buffer.split("\n\n", 1)
+            if len(parts) > 1:
+                break
+            data = self._socket.recv(4096)
+            if len(data) == 0:
+                if len(self._buffer) == 0:
+                    raise StopIteration()
+                parts = [self._buffer, ""]
+                break
+            self._buffer += data
+        request, self._buffer = parts
+        return request.decode("utf-8").splitlines()
+
+
 #.
 #   .--SNMP-Traps----------------------------------------------------------.
 #   |        ____  _   _ __  __ ____     _____                             |
@@ -2649,38 +2673,37 @@ class StatusServer:
 
 
     def handle_client(self, socket, allow_commands, client_ip):
-        query = decode_from_bytes(socket.recv(8192)).splitlines()
-        parts = query[0].split(None, 1)
-        if len(parts) != 2:
-            raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
+        for query in Queries(socket):
+            parts = query[0].split(None, 1)
+            if len(parts) != 2:
+                raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
 
-        method, table = parts
+            method, table = parts
+            output_format = "python"
 
-        output_format     = "python"
+            with lock_eventstatus:
+                if method == "GET":
+                    response, output_format = self.handle_get_request(table, query[1:])
 
-        with lock_eventstatus:
-            if method == "GET":
-                response, output_format = self.handle_get_request(table, query[1:])
+                elif method == "REPLICATE":
+                    response = self.handle_replicate(table, client_ip)
 
-            elif method == "REPLICATE":
-                response = self.handle_replicate(table, client_ip)
+                elif method == "COMMAND":
+                    if not allow_commands:
+                        raise MKClientError("Sorry. Commands are disallowed via TCP")
+                    self.handle_command_request(table)
+                    response = None
 
-            elif method == "COMMAND":
-                if not allow_commands:
-                    raise MKClientError("Sorry. Commands are disallowed via TCP")
-                self.handle_command_request(table)
-                response = None
+                else:
+                    raise MKClientError("Invalid method %s (allowed are GET, COMMAND and REPLICATE)" % method)
 
-            else:
-                raise MKClientError("Invalid method %s (allowed are GET, COMMAND and REPLICATE)" % method)
-
-        if output_format == "plain":
-            for line in response:
-                socket.send("\t".join([to_utf8(quote_tab(c)) for c in line]))
-                socket.send("\n")
-        else:
-            socket.send(repr(response))
-            socket.send("\n")
+                if output_format == "plain":
+                    for line in response:
+                        socket.send("\t".join([to_utf8(quote_tab(c)) for c in line]))
+                        socket.send("\n")
+                else:
+                    socket.send(repr(response))
+                    socket.send("\n")
 
         socket.close()
 

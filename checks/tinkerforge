@@ -32,10 +32,7 @@
 
 
 # based on customers investigation
-factory_settings['tinkerforge_humidity_default_levels'] = {
-    'upper': (50, 55),
-    'lower': (40, 35)
-}
+tinkerforge_humidity_default_levels = (35, 40, 50, 55)
 
 
 def parse_tinkerforge(info):
@@ -87,7 +84,11 @@ def parse_tinkerforge(info):
 
 def inventory_tinkerforge(brick_type, parsed):
     for path in parsed.get(brick_type, {}).keys():
-        yield path, {}
+        if brick_type == "humidity":
+            # stupid wato rule with its stupid tuple-based parameters is stupid
+            yield path, "tinkerforge_humidity_default_levels"
+        else:
+            yield path, None
 
 
 def check_tinkerforge_master(item, params, parsed):
@@ -125,18 +126,19 @@ def check_tinkerforge_humidity(item, params, parsed):
         return max([abs(x[0] - x[1][0]) for x in enumerate(sorted_by_val)])
 
     if 'humidity' in parsed and item in parsed['humidity']:
+        crit_lower, warn_lower, warn_upper, crit_upper = params
+
         reading = float(parsed['humidity'][item][0]) / 10.0
-        status = expect_order(params['lower'][1], params['lower'][0],
+        status = expect_order(crit_lower, warn_lower,
                               reading,
-                              params['upper'][0], params['upper'][1])
+                              warn_upper, crit_upper)
         if status != 0:
-            level_msg = " (warn/crit below %.1f/%.1f or above %.1f/%.1f)" % \
-                (params['lower'][0], params['lower'][1],
-                 params['upper'][0], params['upper'][1])
+            level_msg = " (warn/crit at or below %.1f/%.1f or at or above %.1f/%.1f)" % \
+                (warn_lower, crit_lower, warn_upper, crit_upper)
         else:
             level_msg = ""
         return (status, "%.1f %%RH%s" % (reading, level_msg),
-                [('humidity', reading, params['upper'][0], params['upper'][1])])
+                [('humidity', reading, warn_upper, crit_upper)])
 
 
 def check_tinkerforge_motion(item, params, parsed):
@@ -199,7 +201,6 @@ check_info['tinkerforge.humidity'] = {
     'has_perfdata'            : True,
     'group'                   : 'humidity',
     'service_description'     : "Humidity %s",
-    'default_levels_variable' : 'tinkerforge_humidity_default_levels'
 }
 
 

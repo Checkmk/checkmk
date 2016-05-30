@@ -914,6 +914,9 @@ register_rule(group,
             ( "segment_display_uid",
             TextAscii(
                 title = _("7-segment display uid"),
+                help = _("This is the uid of the sensor you want to display in the 7-segment display, "
+                         "not the uid of the display itself. There is currently no support for "
+                         "controling multiple displays.")
             )
             ),
             ( "segment_display_brightness",

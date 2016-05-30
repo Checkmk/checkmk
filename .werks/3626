@@ -1,0 +1,10 @@
+Title: dell_eql_storage: fixed scan function if sysDescr is empty
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1464599947
+
+

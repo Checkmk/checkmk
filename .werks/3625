@@ -1,0 +1,10 @@
+Title: zfs_arc_cache: fixed data handling if hits and misses are missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1464596505
+
+

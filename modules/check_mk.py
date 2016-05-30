@@ -1200,7 +1200,9 @@ def host_check_command(hostname, ip, is_clust):
             return "check-mk-host-service!" + service
         command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
         hostcheck_commands_to_define.append((command,
-           'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' % (hostname, service, hostname, service)))
+           'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
+                (hostname, service.replace('$HOSTNAME$', hostname),
+                 hostname, service.replace('$HOSTNAME$', hostname))))
         return command
 
     elif value[0] == "tcp":

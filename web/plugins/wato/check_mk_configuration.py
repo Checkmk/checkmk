@@ -1499,6 +1499,8 @@ register_rule(
                 size = 45,
                 allow_empty = False,
                 attrencode = True,
+                help = _("You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced "
+                         "with the name of the current host."),
             )),
           ( "custom",     _("Use a custom check plugin..."), PluginCommandLine() ),
         ],

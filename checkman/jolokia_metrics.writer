@@ -1,0 +1,13 @@
+title: JVM ehcache statistics: cache writer
+agents: linux
+catalog: app/java
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the utilization (queue length) of the ehcache cache writer.
+
+ These metrics are purely informational, there are currently no warn/crit levels.
+
+inventory:
+ One service per cache is created.
+

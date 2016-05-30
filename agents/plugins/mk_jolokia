@@ -89,9 +89,9 @@ class HTTPSAuthHandler(urllib2.HTTPSHandler):
         return HTTPSValidatingConnection(host, ca_file=self.__ca_file,
                                          key_file=self.__key, cert_file=self.__cert)
 
-def fetch_url_get(base_url, path):
+def fetch_url_get(base_url, path, function):
     if path:
-        url = "%s/read/%s" % (base_url, path)
+        url = "%s/%s/%s" % (base_url, function, path)
     else:
         url = base_url
 
@@ -109,11 +109,11 @@ def fetch_url_get(base_url, path):
     return json_data
 
 
-def fetch_url_post(base_url, path, service_url, service_user, service_password):
+def fetch_url_post(base_url, path, service_url, service_user, service_password, function):
     segments = path.split("/")
 
     data = {
-        "type":      "READ",
+        "type":      function.upper(),
         "mbean":     segments[0],
         "attribute": segments[1],
         "target":    {
@@ -140,12 +140,15 @@ def fetch_url_post(base_url, path, service_url, service_user, service_password):
         return []
     return json_data
 
-def fetch_var(protocol, server, port, path, suburi, itemspec, service_url, service_user, service_password):
+def fetch_var(protocol, server, port, path, suburi, itemspec, service_url, service_user,
+              service_password, function="read"):
     base_url = "%s://%s:%d/%s" % (protocol, server, port, suburi)
+
     if service_url is not None:
-        json_data = fetch_url_post(base_url, path, service_url, service_user, service_password)
+        json_data = fetch_url_post(base_url, path,
+                                   service_url, service_user, service_password, function)
     else:
-        json_data = fetch_url_get(base_url, path)
+        json_data = fetch_url_get(base_url, path, function)
 
     try:
         true = True
@@ -225,6 +228,49 @@ def extract_item(key, itemspec):
     return item
 
 
+def fetch_metric(inst, path, title, itemspec, inst_add=None):
+    try:
+        values = fetch_var(inst["protocol"], inst["server"], inst["port"], path,
+                            inst["suburi"], itemspec,
+                            inst["service_url"], inst["service_user"], inst["service_password"])
+
+    # In case of network errors skip this server
+    except IOError:
+        return False
+    except socket.timeout:
+        return False
+    except:
+        if opt_debug:
+            raise
+        # Simply ignore exceptions. Need to be removed for debugging
+        return True
+
+    for subinstance, value in values:
+        if not subinstance and not title:
+            print "INTERNAL ERROR: %s" % value
+            continue
+
+        if "threadStatus" in subinstance or "threadParam" in subinstance:
+            continue
+
+        if len(subinstance) > 1:
+            item = ",".join((inst["instance"],) + subinstance[:-1])
+        elif inst_add is not None:
+            item = inst["instance"] + "," + inst_add
+        else:
+            item = inst["instance"]
+        if title:
+            if subinstance:
+                tit = title + "." + subinstance[-1]
+            else:
+                tit = title
+        else:
+            tit = subinstance[-1]
+
+        sys.stdout.write("%s %s %s\n" % (item.replace(" ", "_"), tit, value))
+    return True
+
+
 def query_instance(inst):
     # Prepare user/password authentication via HTTP Auth
     password_mngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
@@ -272,46 +318,36 @@ def query_instance(inst):
         sys.stdout.write("%s ERROR\n" % (inst["instance"],))
         return
 
+
+    mbean_search_results = {}
+
     sys.stdout.write('<<<jolokia_metrics>>>\n')
     # Fetch the general information first
-    for path, title, itemspec in global_vars + specific_vars.get(product, []):
-        try:
-            values = fetch_var(inst["protocol"], inst["server"], inst["port"], path,
-                               inst["suburi"], itemspec,
-                               inst["service_url"], inst["service_user"], inst["service_password"])
+    for var in global_vars + specific_vars.get(product, []):
+        # support old and new configuration format so we stay compatible with older
+        # configuration files
+        if len(var) == 3:
+            path, title, itemspec = var
+            mbean, path = path.split("/", 1)
+            do_search = False
+        else:
+            mbean, path, title, itemspec, do_search = var
 
-        # In case of network errors skip this server
-        except IOError:
-            return
-        except socket.timeout:
-            return
-        except:
-            if opt_debug:
-                raise
-            # Simply ignore exceptions. Need to be removed for debugging
-            continue
-
-        for subinstance, value in values:
-            if not subinstance and not title:
-                print "INTERNAL ERROR: %s" % value
-                continue
-
-            if "threadStatus" in subinstance or "threadParam" in subinstance:
-                continue
-
-            if len(subinstance) > 1:
-                item = ",".join((inst["instance"],) + subinstance[:-1])
+        if do_search:
+            if mbean in mbean_search_results:
+                paths = mbean_search_results[mbean]
             else:
-                item = inst["instance"]
-            if title:
-                if subinstance:
-                    tit = title + "." + subinstance[-1]
-                else:
-                    tit = title
-            else:
-                tit = subinstance[-1]
+                paths = fetch_var(inst["protocol"], inst["server"], inst["port"], mbean,
+                                inst["suburi"], "", None, None, None, function="search")[0][1]
+                mbean_search_results[mbean] = paths
 
-            sys.stdout.write("%s %s %s\n" % (item.replace(" ", "_"), tit, value))
+            for mbean_exp in paths:
+                if not fetch_metric(inst, "%s/%s" % (urllib2.quote(mbean_exp), path), path,
+                                    itemspec, inst_add=mbean_exp):
+                    return
+        else:
+            if not fetch_metric(inst, mbean + "/" + path, title, itemspec):
+                return
 
 
 # Default configuration for all instances
@@ -331,46 +367,67 @@ service_user     = None
 service_password = None
 
 global_vars = [
-  ( "java.lang:type=Memory/NonHeapMemoryUsage/used",              "NonHeapMemoryUsage",      [] ),
-  ( "java.lang:type=Memory/NonHeapMemoryUsage/max",               "NonHeapMemoryMax",        [] ),
-  ( "java.lang:type=Memory/HeapMemoryUsage/used",                 "HeapMemoryUsage",         [] ),
-  ( "java.lang:type=Memory/HeapMemoryUsage/max",                  "HeapMemoryMax",           [] ),
-  ( "java.lang:type=Threading/ThreadCount",                       "ThreadCount",             [] ),
-  ( "java.lang:type=Threading/DaemonThreadCount",                 "DeamonThreadCount",       [] ),
-  ( "java.lang:type=Threading/PeakThreadCount",                   "PeakThreadCount",         [] ),
-  ( "java.lang:type=Threading/TotalStartedThreadCount",           "TotalStartedThreadCount", [] ),
-  ( "java.lang:type=Runtime/Uptime",                              "Uptime",                  [] ),
-  ( "java.lang:type=GarbageCollector,name=*/CollectionCount",     "",                        [] ),
-  ( "java.lang:type=GarbageCollector,name=*/CollectionTime",      "",                        [] ),
-  ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/used", "PermGenUsage",            [] ),
-  ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/max",  "PermGenMax",              [] ),
+  ( "java.lang:type=Memory",                           "NonHeapMemoryUsage/used", "NonHeapMemoryUsage",      [], False),
+  ( "java.lang:type=Memory",                           "NonHeapMemoryUsage/max",  "NonHeapMemoryMax",        [], False),
+  ( "java.lang:type=Memory",                           "HeapMemoryUsage/used",    "HeapMemoryUsage",         [], False),
+  ( "java.lang:type=Memory",                           "HeapMemoryUsage/max",     "HeapMemoryMax",           [], False),
+  ( "java.lang:type=Threading",                        "ThreadCount",             "ThreadCount",             [], False),
+  ( "java.lang:type=Threading",                        "DaemonThreadCount",       "DeamonThreadCount",       [], False),
+  ( "java.lang:type=Threading",                        "PeakThreadCount",         "PeakThreadCount",         [], False),
+  ( "java.lang:type=Threading",                        "TotalStartedThreadCount", "TotalStartedThreadCount", [], False),
+  ( "java.lang:type=Runtime",                          "Uptime",                  "Uptime",                  [], False),
+  ( "java.lang:type=GarbageCollector,name=*",          "CollectionCount",         "",                        [], False),
+  ( "java.lang:type=GarbageCollector,name=*",          "CollectionTime",          "",                        [], False),
+  ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/used",              "PermGenUsage",            [], False),
+  ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/max",               "PermGenMax",              [], False),
+
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapHits",             "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskHits",              "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "InMemoryHitPercentage",   "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheMisses",             "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskHitPercentage",     "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "MemoryStoreObjectCount",  "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "DiskStoreObjectCount",    "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheMissPercentage",     "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheHitPercentage",      "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapHitPercentage",    "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "InMemoryMisses",          "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapStoreObjectCount", "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "WriterQueueLength",       "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "WriterMaxQueueSize",      "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapMisses",           "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "InMemoryHits",            "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "AssociatedCacheName",     "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "ObjectCount",             "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskMisses",            "", [], True),
+  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheHits",               "", [], True),
 ]
 
 
 specific_vars = {
   "weblogic" : [
-      ( "*:*/CompletedRequestCount",                                None, [ "ServerRuntime" ] ),
-      ( "*:*/QueueLength",                                          None, [ "ServerRuntime" ] ),
-      ( "*:*/StandbyThreadCount",                                   None, [ "ServerRuntime" ] ),
-      ( "*:*/PendingUserRequestCount",                              None, [ "ServerRuntime" ] ),
-      ( "*:Name=ThreadPoolRuntime,*/ExecuteThreadTotalCount",       None, [ "ServerRuntime" ] ),
-      ( "*:*/ExecuteThreadIdleCount",                               None, [ "ServerRuntime" ] ),
-      ( "*:*/HoggingThreadCount",                                   None, [ "ServerRuntime" ] ),
-      ( "*:Type=WebAppComponentRuntime,*/OpenSessionsCurrentCount", None, [ "ServerRuntime", "ApplicationRuntime" ] ),
+      ( "*:*",                               "CompletedRequestCount",            None, [ "ServerRuntime" ] , False),
+      ( "*:*",                               "QueueLength",                      None, [ "ServerRuntime" ] , False),
+      ( "*:*",                               "StandbyThreadCount",               None, [ "ServerRuntime" ] , False),
+      ( "*:*",                               "PendingUserRequestCount",          None, [ "ServerRuntime" ] , False),
+      ( "*:Name=ThreadPoolRuntime,*",        "ExecuteThreadTotalCount",          None, [ "ServerRuntime" ] , False),
+      ( "*:*",                               "ExecuteThreadIdleCount",           None, [ "ServerRuntime" ] , False),
+      ( "*:*",                               "HoggingThreadCount",               None, [ "ServerRuntime" ] , False),
+      ( "*:Type=WebAppComponentRuntime,*",   "OpenSessionsCurrentCount",         None, [ "ServerRuntime",     "ApplicationRuntime" ] , False),
   ],
   "tomcat" : [
-      ( "*:type=Manager,*/activeSessions,maxActiveSessions",        None, [ "path", "context" ] ),
-      ( "*:j2eeType=Servlet,name=default,*/stateName",              None, [ "WebModule" ] ),
+      ( "*:type=Manager,*",                  "activeSessions,maxActiveSessions", None, [ "path",              "context" ] , False),
+      ( "*:j2eeType=Servlet,name=default,*", "stateName",                        None, [ "WebModule" ] , False),
       # Check not yet working
-      ( "*:j2eeType=Servlet,name=default,*/requestCount",           None, [ "WebModule" ]),
-      ( "*:name=*,type=ThreadPool/maxThreads",                      None, []),
-      ( "*:name=*,type=ThreadPool/currentThreadCount",              None, []),
-      ( "*:name=*,type=ThreadPool/currentThreadsBusy",              None, []),
+      ( "*:j2eeType=Servlet,name=default,*", "requestCount",                     None, [ "WebModule" ], False),
+      ( "*:name=*,type=ThreadPool",          "maxThreads",                       None, [], False),
+      ( "*:name=*,type=ThreadPool",          "currentThreadCount",               None, [], False),
+      ( "*:name=*,type=ThreadPool",          "currentThreadsBusy",               None, [], False),
      # too wide location for addressing the right info
-     # ( "*:j2eeType=Servlet,*/requestCount", None, [ "WebModule" ] ),
+     # ( "*:j2eeType=Servlet,*", "requestCount", None, [ "WebModule" ] , False),
   ],
   "jboss" : [
-      ( "*:type=Manager,*/activeSessions,maxActiveSessions",        None, [ "path", "context" ] ),
+      ( "*:type=Manager,*",                  "activeSessions,maxActiveSessions", None, [ "path",              "context" ] , False),
   ],
 }
 

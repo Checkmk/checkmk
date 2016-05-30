@@ -1,0 +1,9 @@
+Title: jolokia_metrics.cache_hits, jolokia_metrics.in_memory, jolokia_metrics.off_heap, jolokia_metrics.on_disk, jolokia_metrics.writer: added checks for monitoring of ehcache metrics through jolokia
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1464602197
+Class: feature
+
+To make this work the jolokia plugin was extended to support client-side wildcard resolution.

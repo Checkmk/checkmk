@@ -1,0 +1,9 @@
+Title: oracle_asm_diskgroup: fixed dismounted disk handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p3
+Date: 1464592188
+Class: fix
+
+

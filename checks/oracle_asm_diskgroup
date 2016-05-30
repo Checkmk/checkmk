@@ -61,6 +61,10 @@ def check_oracle_asm_diskgroup(item, params, info):
         dg_name = name.rstrip('/')
 
         if dg_name == item:
+
+            if state == "DISMOUNTED":
+                return 2, "Disk dismounted"
+
             add_text = ""
             if typ in ('NORMAL', 'HIGH'):
                 if typ == 'NORMAL':

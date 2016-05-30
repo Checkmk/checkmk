@@ -1,4 +1,7 @@
 1.2.8p3:
+    Checks & Agents:
+    * 3624 FIX: oracle_asm_diskgroup: fixed dismounted disk handling
+
 
 1.2.8p2:
     Checks & Agents:

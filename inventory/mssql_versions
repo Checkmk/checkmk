@@ -35,6 +35,26 @@
 def inv_mssql_versions(info):
     node = inv_tree_list("software.applications.mssql.instances:")
 
+    def product(v):
+        parts = map(int, v.split("."))
+        if parts[0] == 12:
+            return "SQL Server 2014"
+        elif parts[0] == 11:
+            return "SQL Server 2012"
+        elif parts[0] == 10:
+            if parts[1] == 50:
+                return "SQL Server 2005 R2"
+            else:
+                return "SQL Server 2005"
+        elif parts[0] == 9:
+            return "SQL Server 2005"
+        elif parts[0] == 8:
+            return "SQL Server 2000"
+        elif parts[0] == 7:
+            return "SQL Server 7.0"
+        else:
+            return "Unknown Product"
+
     for line in info:
         if len(line) not in [2, 4]:
             continue
@@ -48,6 +68,7 @@ def inv_mssql_versions(info):
         instance = {
             "name"         : instance_id,
             "version"      : version,
+            "product"      : product(version),
             "edition"      : edition,
             "clustered"    : clustered,
             "cluster_name" : cluster_name,

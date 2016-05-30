@@ -695,7 +695,7 @@ inventory_displayhints.update({
 
     ".software.applications.mssql."                    : { "title" : _("MSSQL") },
     ".software.applications.mssql.instances:"          : { "title" : _("Instances"), "render" : render_inv_dicttable,
-                                                           "keyorder" : [ "name", "edition", "version", "clustered", "cluster_name" ],
+                                                           "keyorder" : [ "name", "product", "edition", "version", "clustered", "cluster_name" ],
                                                          },
     ".software.applications.mssql.instances:*.clustered" : { "title" : _("Clustered"), "paint" : "mssql_is_clustered"},
 

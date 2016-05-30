@@ -1,6 +1,7 @@
 1.2.8p3:
     Checks & Agents:
     * 3624 FIX: oracle_asm_diskgroup: fixed dismounted disk handling
+    * 3625 FIX: zfs_arc_cache: fixed data handling if hits and misses are missing
 
 
 1.2.8p2:

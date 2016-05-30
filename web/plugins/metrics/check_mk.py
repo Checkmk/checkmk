@@ -5802,11 +5802,12 @@ graph_info.append({
         ( "indexes_size",  "stack" ),
         ( "unused_size",  "stack" ),
     ],
-})
-
-graph_info.append({
-    "metrics" : [
-        ( "database_size",  "area" ),
+    "optional_metrics" : [
+        "unallocated_size",
+        "reserved_size",
+        "data_size",
+        "indexes_size",
+        "unused_size",
     ],
     "legend_scale" : MB,
 })

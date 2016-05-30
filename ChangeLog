@@ -4,6 +4,9 @@
     * 3625 FIX: zfs_arc_cache: fixed data handling if hits and misses are missing
     * 3626 FIX: dell_eql_storage: fixed scan function if sysDescr is empty
 
+    Multisite:
+    * 3627 FIX: fixed double graphs of database size
+
 
 1.2.8p2:
     Checks & Agents:

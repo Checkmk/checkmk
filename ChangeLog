@@ -241,6 +241,7 @@
     * 3577 FIX: Solaris agent: Fixed performance issue introduced with #3389
     * 3623 FIX: ipmi: fixed discrete sensor discovery if sensor is disabled
     * 3578 FIX: df: Fixed exception when monitoring filesystems without inode infos
+    * 3624 FIX: oracle_asm_diskgroup: fixed dismounted disk handling
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

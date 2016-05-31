@@ -103,13 +103,14 @@ mortypes       = [ 'all' ]
 fetch_agent_info = False
 
 naviseccli_options = {
-    "disks"       : {"cmd_option" : "getall -disk",    "active" : False, "sep" : None},
-    "hba"         : {"cmd_option" : "getall -hba",     "active" : False, "sep" : None},
-    "hwstatus"    : {"cmd_option" : "getall -array",   "active" : False, "sep" : None},
-    "raidgroups"  : {"cmd_option" : "getall -rg",      "active" : False, "sep" : None},
-#   "agent-info"  : {"cmd_option" : "-sp",             "active" : False, "sep" : None},
-    "sp_util"     : {"cmd_option" : "getcontrol -cbt", "active" : False, "sep" : 58},
-    "writecache"  : {"cmd_option" : "getcache -wst",   "active" : False, "sep" : None},
+    "disks"       : {"cmd_option" : "getall -disk",     "active" : False, "sep" : None},
+    "hba"         : {"cmd_option" : "getall -hba",      "active" : False, "sep" : None},
+    "hwstatus"    : {"cmd_option" : "getall -array",    "active" : False, "sep" : None},
+    "raidgroups"  : {"cmd_option" : "getall -rg",       "active" : False, "sep" : None},
+#   "agent-info"  : {"cmd_option" : "-sp",              "active" : False, "sep" : None},
+    "sp_util"     : {"cmd_option" : "getcontrol -cbt",  "active" : False, "sep" : 58},
+    "writecache"  : {"cmd_option" : "getcache -wst",    "active" : False, "sep" : None},
+    "mirrorview"  : {"cmd_option" : "mirrorview -list", "active" : False, "sep" : 58},
 }
 
 for o,a in opts:

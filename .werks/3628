@@ -1,0 +1,10 @@
+Title: emcvnx_mirrorview: new check which monitors the mirrorviews of EMC VNX storage system
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1464679896
+Class: feature
+
+ The information is retrieved by the special agent agent_emcvnx which uses
+ EMC's command line tool naviseccli.

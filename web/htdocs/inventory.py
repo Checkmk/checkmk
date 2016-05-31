@@ -34,7 +34,7 @@ except ImportError:
 
 import config
 import sites
-from lib import MKException, MKGeneralException, lqencode
+from lib import MKException, MKGeneralException, MKAuthException, lqencode
 
 # Load data of a host, cache it in the current HTTP request
 def host(hostname):

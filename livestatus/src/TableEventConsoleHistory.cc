@@ -25,7 +25,17 @@
 #include "TableEventConsoleHistory.h"
 #include "TableEventConsoleEvents.h"
 
-TableEventConsoleHistory::TableEventConsoleHistory() {
+#ifdef CMC
+TableEventConsoleHistory::TableEventConsoleHistory(
+    const Notes &downtimes_holder, const Notes &comments_holder,
+    std::recursive_mutex &holder_lock, Core *core)
+    : TableEventConsole(core)
+#else
+TableEventConsoleHistory::TableEventConsoleHistory(
+    const DowntimesOrComments &downtimes_holder,
+    const DowntimesOrComments &comments_holder)
+#endif
+{
     addColumn(new IntEventConsoleColumn(
         "history_line", "The line number of the event in the history file"));
     addColumn(new TimeEventConsoleColumn("history_time",
@@ -41,7 +51,12 @@ TableEventConsoleHistory::TableEventConsoleHistory() {
     addColumn(new StringEventConsoleColumn(
         "history_addinfo",
         "Additional information, like email recipient/subject or action ID"));
-    TableEventConsoleEvents::addColumns(this);
+    TableEventConsoleEvents::addColumns(this, downtimes_holder, comments_holder
+#ifdef CMC
+                                        ,
+                                        holder_lock, core
+#endif
+                                        );
 }
 
 const char *TableEventConsoleHistory::name() const {

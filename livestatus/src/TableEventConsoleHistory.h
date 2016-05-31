@@ -27,10 +27,24 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include "TableEventConsole.h"
+#ifdef CMC
+#include <mutex>
+struct Core;
+class Notes;
+#else
+class DowntimesOrComments;
+#endif
 
 class TableEventConsoleHistory : public TableEventConsole {
 public:
-    TableEventConsoleHistory();
+#ifdef CMC
+    TableEventConsoleHistory(const Notes &downtimes_holder,
+                             const Notes &comments_holder,
+                             std::recursive_mutex &holder_lock, Core *core);
+#else
+    TableEventConsoleHistory(const DowntimesOrComments &downtimes_holder,
+                             const DowntimesOrComments &comments_holder);
+#endif
     const char *name() const override;
     const char *namePrefix() const override;
 };

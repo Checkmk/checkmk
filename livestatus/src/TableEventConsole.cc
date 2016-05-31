@@ -46,10 +46,15 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 #include "Column.h"
 #include "Logger.h"
 #include "Query.h"
+#ifdef CMC
+#include "Core.h"
+#include "World.h"
+#endif
 
 // using boost::asio::local::stream_protocol;
 using std::string;
@@ -71,6 +76,13 @@ struct MkEventD {
     }
 };
 }  // namespace
+
+#ifdef CMC
+TableEventConsole::TableEventConsole(Core *core) : _core(core) {}
+TableEventConsole::TableEventConsole() : _core(nullptr) {}
+#else
+TableEventConsole::TableEventConsole() {}
+#endif
 
 void TableEventConsole::answerQuery(Query *query) {
 #if 0
@@ -154,7 +166,8 @@ void TableEventConsole::sendRequest(stream_protocol::iostream &ios,
 #else
 bool TableEventConsole::sendRequest(int sock, Query *query) {
     // NOTE: The EC ignores Columns: at the moment!
-    string ec_query = "GET " + internalName() + "\nOutputFormat: plain\nColumns:";
+    string ec_query =
+        "GET " + internalName() + "\nOutputFormat: plain\nColumns:";
     for (const auto &c : *query->allColumns()) {
         ec_query += " " + string(c->name());
     }
@@ -242,12 +255,24 @@ bool TableEventConsole::receiveReply(int sock, Query *query) {
             headers = std::move(columns);
             is_header = false;
         } else {
-            _row_t row;
+            Row row;
             int i = 0;
             columns.resize(headers.size());  // just to be sure...
             for (const auto &field : columns) {
-                row[headers[i++]] = field;
+                row._map[headers[i++]] = field;
             }
+
+            auto it = row._map.find("event_host");
+#ifdef CMC
+            row._host = (it == row._map.end() || _core == nullptr)
+                            ? nullptr
+                            : _core->_world->getHost(it->second);
+#else
+            // Older Nagios headers are not const-correct... :-P
+            row._host = it == row._map.end()
+                            ? nullptr
+                            : find_host(const_cast<char *>(it->second.c_str()));
+#endif
             query->processDataset(&row);
         }
     } while (true);

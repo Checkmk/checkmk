@@ -23,12 +23,45 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableEventConsoleEvents.h"
+#include <string>
 #include "Table.h"
+#include "TableHosts.h"
+#ifdef CMC
+#include "Core.h"
+#include "World.h"
+using std::recursive_mutex;
+#endif
 
-TableEventConsoleEvents::TableEventConsoleEvents() { addColumns(this); }
+using std::string;
+
+#ifdef CMC
+TableEventConsoleEvents::TableEventConsoleEvents(
+    const Notes &downtimes_holder, const Notes &comments_holder,
+    std::recursive_mutex &holder_lock, Core *core)
+    : TableEventConsole(core) {
+    addColumns(this, downtimes_holder, comments_holder, holder_lock, core);
+}
+#else
+TableEventConsoleEvents::TableEventConsoleEvents(
+    const DowntimesOrComments &downtimes_holder,
+    const DowntimesOrComments &comments_holder) {
+    addColumns(this, downtimes_holder, comments_holder);
+}
+#endif
 
 // static
-void TableEventConsoleEvents::addColumns(Table *table) {
+#ifdef CMC
+void TableEventConsoleEvents::addColumns(Table *table,
+                                         const Notes &downtimes_holder,
+                                         const Notes &comments_holder,
+                                         std::recursive_mutex &holder_lock,
+                                         Core *core)
+#else
+void TableEventConsoleEvents::addColumns(
+    Table *table, const DowntimesOrComments &downtimes_holder,
+    const DowntimesOrComments &comments_holder)
+#endif
+{
     table->addColumn(
         new IntEventConsoleColumn("event_id", "The unique ID for this event"));
     table->addColumn(new IntEventConsoleColumn(
@@ -74,6 +107,17 @@ void TableEventConsoleEvents::addColumns(Table *table) {
         new ListEventConsoleColumn("event_contact_groups", "Contact groups"));
     table->addColumn(new StringEventConsoleColumn(
         "event_ipaddress", "The IP address where the event originated"));
+
+    Row row;
+    TableHosts::addColumns(
+        table, "host_",
+        reinterpret_cast<char *>(&row._host) - reinterpret_cast<char *>(&row),
+        -1, downtimes_holder, comments_holder
+#ifdef CMC
+        ,
+        holder_lock, core
+#endif
+        );
 }
 
 const char *TableEventConsoleEvents::name() const {

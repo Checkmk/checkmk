@@ -41,13 +41,26 @@
 #include "Query.h"
 #include "StringColumn.h"
 #include "Table.h"
+#ifdef CMC
+#include "cmc.h"
+struct Core;
+#else
+#include "nagios.h"
+#endif
 
 class TableEventConsole : public Table {
 public:
+#ifdef CMC
+    explicit TableEventConsole(Core *core);
+#endif
+    TableEventConsole();
     void answerQuery(Query *) override;
 
 protected:
-    typedef std::map<std::string, std::string> _row_t;
+    struct Row {
+        std::map<std::string, std::string> _map;
+        host *_host;
+    };
 
     // TODO(sp) Move this to some helper.
     static std::vector<std::string> split(std::string str, char delimiter);
@@ -64,8 +77,8 @@ protected:
             : _name(name), _default_value(default_value), _f(f) {}
 
         T getValue(void *data) const {
-            auto row = static_cast<_row_t *>(data);
-            return row == nullptr ? _default_value : _f(row->at(_name));
+            auto row = static_cast<Row *>(data);
+            return row == nullptr ? _default_value : _f(row->_map.at(_name));
         }
     };
 
@@ -160,6 +173,9 @@ protected:
     };
 
 private:
+#ifdef CMC
+    Core *_core;
+#endif
     std::string internalName() const;
 #if 0
     void sendRequest(boost::asio::local::stream_protocol::iostream &ios,

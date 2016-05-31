@@ -69,7 +69,9 @@ Store::Store()
     , _table_downtimes(true, _downtimes, _comments)
     , _table_comments(false, _downtimes, _comments)
     , _table_log(&_log_cache, _downtimes, _comments)
-    , _table_statehistory(&_log_cache, _downtimes, _comments) {
+    , _table_statehistory(&_log_cache, _downtimes, _comments)
+    , _table_eventconsoleevents(_downtimes, _comments)
+    , _table_eventconsolehistory(_downtimes, _comments) {
     addTable(&_table_columns);
     addTable(&_table_commands);
     addTable(&_table_comments);

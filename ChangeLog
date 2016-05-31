@@ -473,6 +473,7 @@
     * 3028 statgrab_mem, solaris_mem: updated inventory plugins for solaris systems...
     * 3447 mssql_versions: Added inventory plugin for MSSQL instances
     * 3581 mssql_versions: Added product name to inventory information
+    * 3585 Implemented API for exporting the full host inventory...
     * 3219 FIX: lnx_distro: Now detecting Oracle VM Server correctly
     * 3229 FIX: lnx_distro: SLES based systems have now an OS name inventorized\
     * 3265 FIX: mk_inventory.solaris: fix problem on Solaris 10, do prtdiag and prtpicl only in global zone

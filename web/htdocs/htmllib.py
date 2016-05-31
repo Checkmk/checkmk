@@ -192,6 +192,9 @@ class html(GUITester):
         elif f == "html":
             content_type = "text/html; charset=UTF-8"
 
+        elif f == "xml":
+            content_type = "text/xml; charset=UTF-8"
+
         elif f == "pdf":
             content_type = "application/pdf"
 

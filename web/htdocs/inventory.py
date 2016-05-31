@@ -25,7 +25,16 @@
 # Boston, MA 02110-1301 USA.
 
 import defaults, re, os
-from lib import MKGeneralException
+
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
+
+import config
+import sites
+from lib import MKException, MKGeneralException, lqencode
 
 # Load data of a host, cache it in the current HTTP request
 def host(hostname):
@@ -286,3 +295,62 @@ def count_items(tree):
         return sum(map(count_items, tree))
     else:
         return 1
+
+
+# The response is always a top level dict with two elements:
+# a) result_code - This is 0 for expected processing and 1 for an error
+# b) result      - In case of an error this is the error message, a UTF-8 encoded string.
+#                  In case of success this is a dictionary containing the host inventory.
+def page_host_inv_api():
+    try:
+        host_name = html.var("host")
+        if not may_see(host_name):
+            raise MKAuthException(_("Sorry, you are not allowed to access this host."))
+
+        host_inv = host(host_name)
+
+        if not host_inv and not has_inventory(host_name):
+            raise MKGeneralException(_("Found no inventory data for this host."))
+
+        response = { "result_code": 0, "result": host_inv }
+
+    except MKException, e:
+        response = { "result_code": 1, "result": "%s" % e }
+
+    except Exception, e:
+        if config.debug:
+            raise
+        response = { "result_code": 1, "result": "%s" % e }
+
+    if html.output_format == "json":
+        write_json(response)
+    elif html.output_format == "xml":
+        write_xml(response)
+    else:
+        write_python(response)
+
+
+def may_see(host_name):
+    if config.may("general.see_all"):
+        return True
+
+    return sites.live().query_value("GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host_name)) > 0
+
+
+def write_xml(response):
+    try:
+        import dicttoxml
+    except ImportError:
+        raise MKGeneralException(_("You need to have the \"dicttoxml\" python module installed to "
+                                   "be able to use the XML format."))
+
+    html.write(dicttoxml.dicttoxml(response))
+
+
+def write_json(response):
+    html.write(json.dumps(response,
+                          sort_keys=True, indent=4, separators=(',', ': ')))
+
+
+def write_python(response):
+    html.write(repr(response))

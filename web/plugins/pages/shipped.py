@@ -44,6 +44,7 @@ import visuals
 import crash_reporting
 import metrics
 import werks
+import inventory
 
 # map URLs to page rendering functions
 
@@ -61,6 +62,7 @@ pagehandlers.update({
     "ajax_set_viewoption"           : views.ajax_set_viewoption,
     "view"                          : views.page_view,
     "ajax_inv_render_tree"          : views.ajax_inv_render_tree,
+    "host_inv_api"                  : inventory.page_host_inv_api,
     "host_service_graph_popup"      : metrics.page_host_service_graph_popup,
     "graph_dashlet"                 : metrics.page_graph_dashlet,
     "ajax_set_rowselection"         : weblib.ajax_set_rowselection,

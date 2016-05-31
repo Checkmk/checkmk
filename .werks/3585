@@ -1,0 +1,44 @@
+Title: Implemented API for exporting the full host inventory
+Level: 2
+Component: inv
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1464704941
+
+The HW/SW inventory data can now be exported using a webservice. This webservice
+outputs the raw structured inventory data of a host.
+
+The URL to this webservice is <tt>http://[MONITORING-SERVER]/[SITE]/check_mk/host_inv_api.py?host=[HOST]&output_format=json</tt>.
+
+You choose one of these output formats: <tt>json</tt>, <tt>xml</tt>, <tt>python</tt>.
+
+The data provided by this webservice looks as follows:
+
+C+:
+{
+    "result": {
+        "hardware": {
+            "memory": {
+                "total_ram_usable": 16697331712,
+                "total_swap": 17049841664,
+                "total_vmalloc": 35184372087808
+            }
+        },
+        "networking": {
+            "hostname": "Klappspaten"
+        }
+    },
+    "result_code": 0
+}
+C-:
+
+The data below the key <tt>result</tt> is the HW/SW inventory data.
+
+In case an error occurs during processing of the request, for example a host can not be found,
+the <tt>result_code</tt> is set to 1 and the result contains the error message:
+
+C+:
+{"result": "Found no inventory data for this host.", "result_code": 1}
+C+:

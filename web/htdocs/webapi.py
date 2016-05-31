@@ -101,5 +101,3 @@ def page_api():
     else:
         html.set_output_format("python")
         html.write(repr(response))
-
-

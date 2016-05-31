@@ -10993,8 +10993,8 @@ def mode_role_matrix(phase):
     html.write("<table class=data>")
     html.write("<tr class=dualheader><th></th>")
     num_roles = 1
-    for id, role in role_list:
-        html.write('<th>%s</th>' % role['alias'])
+    for role_id, role in role_list:
+        html.write('<th>%s</th>' % role_id)
         num_roles += 1
     html.write("</tr>\n")
 
@@ -11027,9 +11027,17 @@ def mode_role_matrix(phase):
                 base_on_id = role.get('basedon', id)
                 pvalue = role["permissions"].get(pname)
                 if pvalue is None:
-                    pvalue = base_on_id in perm["defaults"]
+                    if base_on_id in perm["defaults"]:
+                        icon_name = "perm_yes_default"
+                    else:
+                        icon_name = None
+                else:
+                    icon_name = "perm_%s" % (pvalue and "yes" or "no")
 
-                html.write('<td>%s</td>' % (pvalue and 'X' or ''))
+                html.write('<td align=center>')
+                if icon_name:
+                    html.icon(None, icon_name)
+                html.write('</td>')
 
             html.write('</tr>')
 

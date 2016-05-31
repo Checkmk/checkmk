@@ -300,8 +300,13 @@ def forward_to_ec(mails):
         log_line = subject
         # Now add the body to the event
         if msg.is_multipart():
-            for payload in msg.get_payload():
-                log_line += '|' + payload.get_payload()[:body_limit]
+            # only care for the first text/plain element
+            for part in msg.walk():
+                content_type = part.get_content_type()
+                disposition = str(part.get('Content-Disposition'))
+                if content_type == 'text/plain' and 'attachment' not in disposition:
+                    log_line += '|' + part.get_payload()[:body_limit]
+                    break
         else:
             log_line += '|' + msg.get_payload()[:body_limit]
         log_line = log_line.replace('\r\n', '\0')

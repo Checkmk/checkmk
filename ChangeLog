@@ -3,6 +3,7 @@
     * 3624 FIX: oracle_asm_diskgroup: fixed dismounted disk handling
     * 3625 FIX: zfs_arc_cache: fixed data handling if hits and misses are missing
     * 3626 FIX: dell_eql_storage: fixed scan function if sysDescr is empty
+    * 3582 FIX: check_mail: Fixed issue with processing multipart mails...
 
     Multisite:
     * 3627 FIX: fixed double graphs of database size

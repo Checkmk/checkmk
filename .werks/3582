@@ -1,0 +1,12 @@
+Title: check_mail: Fixed issue with processing multipart mails
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p3
+Date: 1464681864
+Class: fix
+
+When the check is configured to forward mails to the event console,
+it was unable to parse multipart mails. This has been fixed. The
+events now get the contents of the first text/plain part added until
+the configured body limit.

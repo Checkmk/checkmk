@@ -8,6 +8,9 @@
     Multisite:
     * 3627 FIX: fixed double graphs of database size
 
+    WATO:
+    * 3583 FIX: Fixed loosing some services after saving services in WATO...
+
 
 1.2.8p2:
     Checks & Agents:

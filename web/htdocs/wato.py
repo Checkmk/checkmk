@@ -2782,7 +2782,6 @@ def show_service_table(host, firsttime):
         ]:
         first = True
         for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in checktable:
-            item = html.attrencode(item or 'None')
             if check_source != st:
                 continue
             if first:
@@ -2806,7 +2805,7 @@ def show_service_table(host, firsttime):
             manpage_url = folder_preserving_link([("mode", "check_manpage"), ("check_type", ctype)])
             table.cell(_("Status"),              statename, css=stateclass)
             table.cell(_("Checkplugin"),         '<a href="%s">%s</a>' % (manpage_url, ctype))
-            table.cell(_("Item"),                item)
+            table.cell(_("Item"),                html.attrencode(item))
             table.cell(_("Service Description"), html.attrencode(descr))
             table.cell(_("Plugin output"))
 

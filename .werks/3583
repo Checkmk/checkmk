@@ -1,0 +1,10 @@
+Title: Fixed loosing some services after saving services in WATO
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8p3
+Date: 1464684618
+Class: fix
+
+Checks which were creating services with empty strings as check items,
+where dropped while saving the service configuration via "save manual check configuration".

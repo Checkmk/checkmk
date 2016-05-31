@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <stdlib.h>
 #include <sys/types.h>
+//#include <boost/asio/local/stream_protocol.hpp>
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -138,7 +139,6 @@ protected:
             query->outputBeginList();
             bool first = true;
             for (const auto &elem : _ecc.getValue(data)) {
-                printf("-------------------- [%s]\n", elem.c_str());
                 if (first) {
                     first = false;
                 } else {
@@ -158,6 +158,18 @@ protected:
         void *getNagiosObject(char *) override { return nullptr; }
         bool isNagiosMember(void *, void *) override { return false; }
     };
+
+private:
+    std::string internalName() const;
+#if 0
+    void sendRequest(boost::asio::local::stream_protocol::iostream &ios,
+                     Query *query);
+    void receiveReply(boost::asio::local::stream_protocol::iostream &ios,
+                      Query *query);
+#else
+    bool sendRequest(int sock, Query *query);
+    bool receiveReply(int sock, Query *query);
+#endif
 };
 
 #endif  // TableEventConsole_h

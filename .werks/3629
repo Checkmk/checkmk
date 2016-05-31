@@ -1,0 +1,9 @@
+Title: gude_relayport: new check which monitors the ON/OFF state of a GUDE Power Control device
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1464687418
+Class: feature
+
+

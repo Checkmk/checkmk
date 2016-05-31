@@ -4,6 +4,7 @@
     * 3625 FIX: zfs_arc_cache: fixed data handling if hits and misses are missing
     * 3626 FIX: dell_eql_storage: fixed scan function if sysDescr is empty
     * 3582 FIX: check_mail: Fixed issue with processing multipart mails...
+    * 3630 FIX: docsis_channels_upstream: fixed channel discovery
 
     Multisite:
     * 3627 FIX: fixed double graphs of database size

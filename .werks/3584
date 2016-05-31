@@ -1,0 +1,12 @@
+Title: check_mkevents: Fixed "failed to parse perfdata" errors in web.log caused by "Events" checks
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1464694172
+
+When the last worst event found in the Event Console contained a pipe character the remaining
+output was treated as performance data string and resulted in "failed to parse perfdata" errors
+in web.log e.g. when opening the service detail page of such an Events service.

@@ -309,6 +309,19 @@ int main(int argc, char** argv)
             unhandled++;
     }
 
+    // make sure that plugin output does not contain a vertical bar. If that is the
+    // case then replace it with a Uniocode "Light vertical bar". Same as in Check_MK.
+    string text;
+    text.reserve(worst_row_event_text.size());
+    for (size_t i = 0; i < worst_row_event_text.size(); i++) {
+        if (worst_row_event_text[i] == '|') {
+            text += "\xe2\x94\x82"; // \u2758 (utf-8 encoded light vertical bar)
+        }
+        else {
+            text += worst_row_event_text[i];
+        }
+    }
+
     if (count == 0 && application)
         printf("OK - no events for %s on host %s\n", application, host);
     else if (count == 0)
@@ -316,8 +329,8 @@ int main(int argc, char** argv)
     else {
         const char* state_text = worst_state == 0 ? "OK" : worst_state == 1 ? "WARN" : worst_state == 2 ? "CRIT" : "UNKNOWN";
         printf("%s - %d events (%d unacknowledged)", state_text, count, unhandled);
-        if (worst_row_event_text.length() > 0)
-            printf(", worst state is %s (Last line: %s)", state_text, worst_row_event_text.c_str());
+        if (text.length() > 0)
+            printf(", worst state is %s (Last line: %s)", state_text, text.c_str());
         printf("\n");
     }
     return worst_state;

@@ -249,6 +249,7 @@
     * 3626 FIX: dell_eql_storage: fixed scan function if sysDescr is empty
     * 3582 FIX: check_mail: Fixed issue with processing multipart mails...
     * 3630 FIX: docsis_channels_upstream: fixed channel discovery
+    * 3584 FIX: check_mkevents: Fixed "failed to parse perfdata" errors in web.log caused by "Events" checks...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

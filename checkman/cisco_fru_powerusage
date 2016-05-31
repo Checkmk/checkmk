@@ -1,0 +1,21 @@
+title: Cisco Core Switches: Power usage
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the voltage, current and power usage
+ of Cisco Core Switches which support the
+ CISCO-ENTITY-FRU-CONTROL MIB.
+
+ There are no default levels set. Lower levels for voltage,
+ and upper levels for current and power can be configured.
+
+ Please note: voltage is shown as an information, it's determine
+ by the device itself: cefcPowerUnits from above MIB.
+
+item:
+ Can be system total or drawn or inline total or drawn.
+
+inventory:
+ One service per phase is created.

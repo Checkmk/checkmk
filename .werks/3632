@@ -1,0 +1,11 @@
+Title: oracle_performance: new check which displays some statistics of ORACLE DBs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1464702065
+Class: feature
+
+ To make this check work you have to install <tt>mk_oracle</tt> plugin.
+ These statistics include physical IO, DB time, buffer pool and library cache
+ statistics, buffer and library cache hit ratio.

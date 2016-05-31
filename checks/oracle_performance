@@ -1,0 +1,143 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# In cooperation with Thorsten Bruhns from OPITZ Consulting
+
+# <<oracle_performance:sep(124)>>>
+# TUX12C|DB CPU|64
+# TUX12C|DB time|86
+
+# server-linux-oracle-12:
+# <<<oracle_performance:sep(124)>>>
+# ENLT1|sys_time_model|DB CPU|223408
+# ENLT1|sys_time_model|DB time|630525
+# ENLT1|buffer_pool_statistics|DEFAULT|207456769|194044148|3075188333|126417048|10935918|0|419514
+# ENLT1|librarycache|SQL AREA|84972008|84406451|196493113|193867707|791310|39140
+# ENLT1|librarycache|TABLE/PROCEDURE|13196582|12937687|120405491|118546232|869542|0
+# ENLT1|librarycache|BODY|8682469|8666221|11047659|11025730|3932|0
+# ENLT1|librarycache|TRIGGER|21238|19599|21238|19599|0|0
+# ENLT1|librarycache|INDEX|192359|171580|173880|112887|22742|0
+# ENLT1|librarycache|CLUSTER|287523|284618|297990|294967|118|0
+# ENLT1|librarycache|DIRECTORY|647|118|1297|232|0|0
+# ENLT1|librarycache|QUEUE|6916850|6916397|14069290|14068271|367|0
+# ENLT1|librarycache|APP CONTEXT|32|15|63|35|11|0
+# ENLT1|librarycache|RULESET|2|1|15|9|4|0
+# ENLT1|librarycache|SUBSCRIPTION|63|59|123|84|31|0
+# ENLT1|librarycache|LOCATION|388|277|388|277|0|0
+# ENLT1|librarycache|TRANSFORMATION|3452154|3451741|3452154|3451741|0|0
+# ENLT1|librarycache|USER AGENT|24|15|12|2|1|0
+# ENLT1|librarycache|TEMPORARY TABLE|45298|33939|45298|0|33939|0
+# ENLT1|librarycache|TEMPORARY INDEX|18399|3046|18399|0|3046|0
+# ENLT1|librarycache|EDITION|4054576|4054369|7846832|7846023|366|0
+
+
+def parse_oracle_performance(info):
+    parsed = {}
+    for line in info:
+        parsed.setdefault(line[0], {})
+        parsed[line[0]].setdefault(line[1], {})
+        counters = line[3:]
+        if len(counters) == 1:
+            parsed[line[0]][line[1]].setdefault(line[2], int(counters[0]))
+        else:
+            parsed[line[0]][line[1]].setdefault(line[2], map(int, counters))
+
+    return parsed
+
+
+def inventory_oracle_performance(parsed):
+    for sid in parsed:
+        yield sid, None
+
+
+def check_oracle_performance(item, _no_params, parsed):
+    map_db_time_vars = {
+        "DB CPU"  : "oracle_db_cpu",
+        "DB time" : "oracle_db_time",
+    }
+
+    if item in parsed:
+        data     = parsed[item]
+        now      = time.time()
+        perfdata = []
+
+        buffer_pool_stats = data["buffer_pool_statistics"]
+        if "DEFAULT" in buffer_pool_stats:
+            db_block_gets, db_block_change, consistent_gets, physical_reads, \
+                physical_writes, free_buffer_wait, buffer_busy_wait = \
+                buffer_pool_stats["DEFAULT"]
+
+            for what, val in [
+                ('oracle_db_block_gets',    db_block_gets),
+                ('oracle_db_block_change',  db_block_change),
+                ('oracle_consistent_gets',  consistent_gets),
+                ('oracle_physical_reads',   physical_reads),
+                ('oracle_physical_writes',  physical_writes),
+                ('oracle_free_buffer_wait', free_buffer_wait),
+                ('oracle_buffer_busy_wait', buffer_busy_wait)]:
+                rate = get_rate("oracle_perf.%s.buffer_pool_statistics.%s" % (item, what), now, val)
+                perfdata.append((what, rate))
+
+            if db_block_gets + consistent_gets > 0:
+                hit_ratio = (1 - (physical_reads / (db_block_gets + consistent_gets))) * 100
+                yield 0, "Buffer hit ratio: %.1f%%" % hit_ratio, \
+                      [('oracle_buffer_hit_ratio', hit_ratio)]
+
+        pins_sum     = 0
+        pin_hits_sum = 0
+        for what, vals in data["librarycache"].items():
+            gets, gethits, pins, pin_hits, reloads, invalidations = vals
+            pins_sum     += pins
+            pin_hits_sum += pin_hits
+
+        for what, val in [
+            ("oracle_pins_sum",     pins_sum),
+            ("oracle_pin_hits_sum", pin_hits_sum)]:
+            rate = get_rate("oracle_perf.%s.librarycache.%s" % (item, what), now, val)
+            perfdata.append((what, rate))
+
+        if pins_sum > 0:
+            pin_ratio = float(pin_hits_sum) / pins_sum * 100
+            yield 0, "Library cache hit ratio: %.1f%%" % pin_ratio, \
+                  [('oracle_library_cache_hit_ratio', pin_ratio)]
+
+        infotexts = []
+        for what, val in data["sys_time_model"].items():
+            perfvar = map_db_time_vars[what]
+            rate = get_rate("oracle_perf.%s.sys_time_model.%s" % (item, perfvar), now, val)
+            infotexts.append("%s: %.1f/s" % (what, rate))
+            perfdata.append((perfvar, rate))
+
+        yield 0, ", ".join(infotexts), perfdata
+
+
+check_info['oracle_performance'] = {
+    "parse_function"          : parse_oracle_performance,
+    "inventory_function"      : inventory_oracle_performance,
+    "check_function"          : check_oracle_performance,
+    "service_description"     : "ORA %s Performance",
+    "has_perfdata"            : True,
+}

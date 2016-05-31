@@ -1,0 +1,16 @@
+title: ORACLE tablespaces: perfomance data
+agents: linux, hpux, solaris, windows
+catalog: app/oracle
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the DB time statistics, buffer pool statistics,
+ library cache statistics and physical IO,
+
+ The check is not configurable and always OK.
+
+item:
+ The SID identifier.
+
+inventory:
+ One service per SID is created.

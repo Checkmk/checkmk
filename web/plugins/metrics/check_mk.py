@@ -3357,6 +3357,26 @@ metric_info["requests_processing"] = {
     "color": "12/a"
 }
 
+for what, descr, unit, color in [
+    ("db_cpu",                  "DB CPU time",       "1/s", "11/a"),
+    ("db_time",                 "DB time",           "1/s", "15/a"),
+    ("buffer_hit_ratio",        "buffer hit ratio",  "%",   "21/a"),
+    ("physical_reads",          "physical reads",    "1/s", "43/b"),
+    ("physical_writes",         "physical writes",   "1/s", "26/a"),
+    ("db_block_gets",           "block gets",        "1/s", "13/a"),
+    ("db_block_change",         "block change",      "1/s", "15/a"),
+    ("consistent_gets",         "consistent gets",   "1/s", "23/a"),
+    ("free_buffer_wait",        "free buffer wait",  "1/s", "25/a"),
+    ("buffer_busy_wait",        "buffer busy wait",  "1/s", "41/a"),
+    ("library_cache_hit_ratio", "library cache hit ratio", "%",   "21/b"),
+    ("pins_sum",                "pins sum",          "1/s", "41/a"),
+    ("pin_hits_sum",            "pin hits sum",      "1/s", "46/a")]:
+    metric_info["oracle_%s" % what] = {
+        "title" : _("ORACLE %s") % descr,
+        "unit"  : unit,
+        "color" : color,
+    }
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -4061,6 +4081,22 @@ check_metrics["check_mk-oracle_logswitches"] = {
 
 check_metrics["check_mk-oracle_dataguard_stats"] = {
     "apply_lag" : { "name" : "database_apply_lag" }
+}
+
+check_metrics["check_mk-oracle_performance"] = {
+    "DB_CPU"                  : { "name" : "oracle_db_cpu" },
+    "DB_time"                 : { "name" : "oracle_db_time" },
+    "buffer_hit_ratio"        : { "name" : "oracle_buffer_hit_ratio" },
+    "db_block_gets"           : { "name" : "oracle_db_block_gets" },
+    "db_block_change"         : { "name" : "oracle_db_block_change" },
+    "consistent_gets"         : { "name" : "oracle_db_block_gets" },
+    "physical_reads"          : { "name" : "oracle_physical_reads" },
+    "physical_writes"         : { "name" : "oracle_physical_writes" },
+    "free_buffer_wait"        : { "name" : "oracle_free_buffer_wait" },
+    "buffer_busy_wait"        : { "name" : "oracle_buffer_busy_wait" },
+    "library_cache_hit_ratio" : { "name" : "oracle_library_cache_hit_ratio" },
+    "pinssum"                 : { "name" : "oracle_pins_sum" },
+    "pinhitssum"              : { "name" : "oracle_pin_hits_sum" },
 }
 
 check_metrics["check_mk-db2_logsize"] = {
@@ -5237,6 +5273,14 @@ for x in reversed(range(1, MAX_NUMBER_HOPS)):
             "exponent"      : 4
         }
     ]))
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "oracle_db_cpu",
+    "half_value" : 50.0,
+    "exponent"   : 2,
+})
+
 
 #.
 #   .--Graphs--------------------------------------------------------------.
@@ -6764,3 +6808,37 @@ graph_info.append({
     ]
 })
 
+graph_info.append({
+    "title"   : _("ORACLE physical IO"),
+    "metrics" : [
+        ("oracle_physical_reads",  "area"),
+        ("oracle_physical_writes", "-area"),
+    ]
+})
+
+graph_info.append({
+    "title"   : _("ORACLE DB time statistics"),
+    "metrics" : [
+        ("oracle_db_cpu",  "line"),
+        ("oracle_db_time", "line"),
+    ]
+})
+
+graph_info.append({
+    "title"   : _("ORACLE buffer pool statistics"),
+    "metrics" : [
+        ("oracle_db_block_gets",    "line"),
+        ("oracle_db_block_change",  "line"),
+        ("oracle_consistent_gets",  "line"),
+        ("oracle_free_buffer_wait", "line"),
+        ("oracle_buffer_busy_wait", "line"),
+    ],
+})
+
+graph_info.append({
+    "title"   : _("ORACLE library cache statistics"),
+    "metrics" : [
+        ("oracle_pins_sum",     "line"),
+        ("oracle_pin_hits_sum", "line"),
+    ],
+})

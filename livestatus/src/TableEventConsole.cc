@@ -52,10 +52,14 @@
 #include "Logger.h"
 #include "Query.h"
 #ifdef CMC
+#include "Config.h"
 #include "Core.h"
 #include "World.h"
 #else
 #include "store_c.h"
+extern "C" {
+extern char g_mkeventd_socket_path[4096];
+}
 #endif
 
 // using boost::asio::local::stream_protocol;
@@ -87,8 +91,12 @@ TableEventConsole::TableEventConsole() {}
 #endif
 
 void TableEventConsole::answerQuery(Query *query) {
+#ifdef CMC
+    string path = _core->_world->_config->_mkeventd_socket_path;
+#else
+    string path = g_mkeventd_socket_path;
+#endif
 #if 0
-    string path = "/omd/sites/heute/tmp/run/mkeventd/status";
     stream_protocol::endpoint ep(path);
     stream_protocol::iostream ios(ep);
     if (!ios) {
@@ -96,7 +104,6 @@ void TableEventConsole::answerQuery(Query *query) {
         return;
     }
 #else
-    string path = "/omd/sites/heute/tmp/run/mkeventd/status";
     int sock = socket(PF_LOCAL, SOCK_STREAM, 0);
     if (sock == -1) {
         Alert() << "Cannot create socket for " << MkEventD(path, errno);

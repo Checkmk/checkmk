@@ -6479,11 +6479,16 @@ register_check_parameters(
                   default_value = 2,
             )),
             ( "defaultincrement",
-                Checkbox(
-                  title = _("Default Increment"),
-                  label = _("State is WARNING in case the next extent has the default size."),
-                  help = "")),
-                   ]),
+                DropdownChoice(
+                  title   = _("Default Increment"),
+                  choices = [
+                     ( True, _("State is WARNING in case the next extent has the default size.")),
+                     ( False, _("Ignore default increment")),
+                  ]
+                )
+            ),
+        ],
+    ),
     TextAscii(
         title = _("Explicit tablespaces"),
         help = _("Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"),

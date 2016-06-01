@@ -15,6 +15,7 @@
     * 3627 FIX: fixed double graphs of database size
 
     WATO:
+    * 3618 Better layout for role & permission matrix, also allow sorting and searching
     * 3583 FIX: Fixed loosing some services after saving services in WATO...
 
 

@@ -10990,22 +10990,13 @@ def mode_role_matrix(phase):
     role_list = roles.items()
     role_list.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
 
-    html.write("<table class=data>")
-    html.write("<tr class=dualheader><th></th>")
-    num_roles = 1
-    for role_id, role in role_list:
-        html.write('<th>%s</th>' % role_id)
-        num_roles += 1
-    html.write("</tr>\n")
-
     # Loop all permission sections, but sorted plz
-    odd = "even"
     for section, (prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
                                                  key = lambda x: x[1][0], reverse = True):
 
-        html.write('<tr>')
-        html.write('<th colspan=%d>%s</th>' % (num_roles, section_title))
-        html.write('</tr>')
+        html.begin_foldable_container("perm_matrix", section, section == "general", section_title, indent = True)
+
+        table.begin(section)
 
         # Loop all permissions
         permlist = config.permissions_by_order[:]
@@ -11018,13 +11009,11 @@ def mode_role_matrix(phase):
             if section != this_section:
                 continue # Skip permissions of other sections
 
-            odd = odd == "odd" and "even" or "odd"
-
-            html.write('<tr class="data %s0">' % odd)
-            html.write('<td class=title>%s</td>' % perm["title"])
-
-            for id, role in role_list:
-                base_on_id = role.get('basedon', id)
+            table.row()
+            table.cell(_("Permission"), perm["title"], css="wide")
+            html.help(perm["description"])
+            for role_id, role in role_list:
+                base_on_id = role.get('basedon', role_id)
                 pvalue = role["permissions"].get(pname)
                 if pvalue is None:
                     if base_on_id in perm["defaults"]:
@@ -11034,12 +11023,12 @@ def mode_role_matrix(phase):
                 else:
                     icon_name = "perm_%s" % (pvalue and "yes" or "no")
 
-                html.write('<td align=center>')
+                table.cell(role_id, css="center")
                 if icon_name:
                     html.icon(None, icon_name)
-                html.write('</td>')
 
-            html.write('</tr>')
+        table.end()
+        html.end_foldable_container()
 
     html.write("</table>")
 

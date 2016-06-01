@@ -23,17 +23,39 @@
 // Boston, MA 02110-1301 USA.
 
 #include "store_c.h"
+#include <string>
+#include <unordered_map>
+#include <utility>
 #include "ClientQueue.h"
 #include "InputBuffer.h"
 #include "OutputBuffer.h"
 #include "Store.h"
+#include "StringUtils.h"
 #include "TimeperiodsCache.h"
+
+extern host *host_list;
+
+using mk::unsafe_tolower;
+using std::string;
+using std::unordered_map;
+
+// Map to speed up access via name/alias/address
+unordered_map<string, host *> fl_hosts_by_designation;
 
 static Store *fl_store = nullptr;
 static ClientQueue *fl_client_queue = nullptr;
 TimeperiodsCache *g_timeperiods_cache = nullptr;
 
 void store_init() {
+    for (host *hst = host_list; hst != nullptr; hst = hst->next) {
+        if (const char *address = hst->address) {
+            fl_hosts_by_designation[unsafe_tolower(address)] = hst;
+        }
+        if (const char *alias = hst->alias) {
+            fl_hosts_by_designation[unsafe_tolower(alias)] = hst;
+        }
+        fl_hosts_by_designation[unsafe_tolower(hst->name)] = hst;
+    }
     fl_store = new Store();
     fl_client_queue = new ClientQueue();
     g_timeperiods_cache = new TimeperiodsCache();
@@ -86,3 +108,8 @@ void delete_inputbuffer(void *ib) { delete static_cast<InputBuffer *>(ib); }
 void update_timeperiods_cache(time_t now) { g_timeperiods_cache->update(now); }
 
 void log_timeperiods_cache() { g_timeperiods_cache->logCurrentTimeperiods(); }
+
+host *getHostByDesignation(const char *designation) {
+    auto it = fl_hosts_by_designation.find(unsafe_tolower(designation));
+    return it == fl_hosts_by_designation.end() ? nullptr : it->second;
+}

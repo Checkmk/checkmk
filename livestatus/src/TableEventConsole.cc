@@ -54,6 +54,8 @@
 #ifdef CMC
 #include "Core.h"
 #include "World.h"
+#else
+#include "store_c.h"
 #endif
 
 // using boost::asio::local::stream_protocol;
@@ -268,10 +270,9 @@ bool TableEventConsole::receiveReply(int sock, Query *query) {
                             ? nullptr
                             : _core->_world->getHostByDesignation(it->second);
 #else
-            // Older Nagios headers are not const-correct... :-P
             row._host = it == row._map.end()
                             ? nullptr
-                            : find_host(const_cast<char *>(it->second.c_str()));
+                            : getHostByDesignation(it->second.c_str());
 #endif
             query->processDataset(&row);
         }

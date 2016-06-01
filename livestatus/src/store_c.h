@@ -48,6 +48,7 @@ int queue_pop_connection();
 void queue_terminate();
 void update_timeperiods_cache(time_t);
 void log_timeperiods_cache();
+host *getHostByDesignation(const char *designation);
 
 #ifdef __cplusplus
 }

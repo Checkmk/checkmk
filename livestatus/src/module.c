@@ -515,6 +515,7 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
     struct nebstruct_process_struct *ps =
         (struct nebstruct_process_struct *)data;
     if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART) {
+        store_init();
         update_timeperiods_cache(time(0));
         start_threads();
     }
@@ -874,7 +875,6 @@ int nebmodule_init(int flags __attribute__((__unused__)), char *args,
                "the overall nagios performance");
     }
 
-    store_init();
     register_callbacks();
 
     /* Unfortunately, we cannot start our socket thread right now.

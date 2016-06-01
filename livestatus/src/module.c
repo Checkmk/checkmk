@@ -98,6 +98,7 @@ char *g_pnp_path = pnp_path_storage;
 char g_mk_inventory_path[4096];  // base path of Check_MK inventory files
 char g_mk_logwatch_path[4096];   // base path of Check_MK logwatch files
 char g_logfile_path[4096];
+char g_mkeventd_socket_path[4096];
 int g_debug_level = 0;
 int g_should_terminate = false;
 pthread_t g_mainthread_id;
@@ -514,10 +515,16 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
 int broker_process(int event_type __attribute__((__unused__)), void *data) {
     struct nebstruct_process_struct *ps =
         (struct nebstruct_process_struct *)data;
-    if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART) {
-        store_init();
-        update_timeperiods_cache(time(0));
-        start_threads();
+    switch (ps->type) {
+        case NEBTYPE_PROCESS_START:
+            store_init();
+            break;
+        case NEBTYPE_PROCESS_EVENTLOOPSTART:
+            update_timeperiods_cache(time(0));
+            start_threads();
+            break;
+        default:
+            break;
     }
     return 0;
 }
@@ -672,6 +679,8 @@ void livestatus_parse_arguments(const char *args_orig) {
         strncpy(slash + 1, "livestatus.log", 15);
     }
 
+    g_mkeventd_socket_path[0] = 0;
+
     /* there is no default PNP path */
     g_pnp_path[0] = 0;
 
@@ -694,6 +703,9 @@ void livestatus_parse_arguments(const char *args_orig) {
                 logger(LG_INFO, "Setting debug level to %d", g_debug_level);
             } else if (!strcmp(left, "log_file")) {
                 strncpy(g_logfile_path, right, sizeof(g_logfile_path));
+            } else if (!strcmp(left, "mkeventd_socket_path")) {
+                strncpy(g_mkeventd_socket_path, right,
+                        sizeof(g_mkeventd_socket_path));
             } else if (!strcmp(left, "max_cached_messages")) {
                 g_max_cached_messages = strtoul(right, 0, 10);
                 logger(LG_INFO,
@@ -822,6 +834,20 @@ void livestatus_parse_arguments(const char *args_orig) {
             }
         }
     }
+
+    if (g_mkeventd_socket_path[0] == 0) {
+        strncpy(g_mkeventd_socket_path, g_socket_path,
+                sizeof(g_mkeventd_socket_path));
+        char *slash = strrchr(g_mkeventd_socket_path, '/');
+        char *pos = slash == NULL ? g_mkeventd_socket_path : (slash + 1);
+        strncpy(
+            pos, "mkeventd/status",
+            &g_mkeventd_socket_path[sizeof(g_mkeventd_socket_path)] - slash);
+        g_mkeventd_socket_path[sizeof(g_mkeventd_socket_path) - 1] = 0;
+    }
+    logger(LG_WARN, "g_socket_path=[%s], g_mkeventd_socket_path=[%s]",
+           g_socket_path, g_mkeventd_socket_path);
+
     // free(args); won't free, since we use pointers?
 }
 

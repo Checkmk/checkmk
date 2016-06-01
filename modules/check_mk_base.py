@@ -370,6 +370,7 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
 # only once for each host.
 def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
                       ignore_check_interval=False, use_snmpwalk_cache=True):
+
     info = get_cached_hostinfo(hostname)
     if info and info.has_key(check_type):
         return info[check_type]
@@ -677,8 +678,8 @@ def read_cache_file(relpath, max_cache_age):
             if len(result) > 0:
                 verbose("Using data from cachefile %s.\n" % cachefile)
                 return result
-        elif opt_debug:
-            sys.stderr.write("Skipping cache file %s: Too old "
+        else:
+            vverbose("Skipping cache file %s: Too old "
                              "(age is %d sec, allowed is %d sec)\n" %
                    (cachefile, cachefile_age(cachefile), max_cache_age))
 

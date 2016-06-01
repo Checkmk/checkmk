@@ -1,6 +1,7 @@
 1.2.8p3:
     Core & Setup:
     * 3616 FIX: Fix cmk -I ignoring the option --cache...
+    * 3617 FIX: cmk -I without host specification now (again) always uses cache files...
 
     Checks & Agents:
     * 3624 FIX: oracle_asm_diskgroup: fixed dismounted disk handling

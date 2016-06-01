@@ -1,0 +1,12 @@
+Title: cmk -I without host specification now (again) always uses cache files
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.8p3
+Date: 1464776419
+Class: fix
+
+If you do a discovery of all hosts then <tt>cmk -I</tt> always defaulted to
+using cache files (like an implicit <tt>--cache</tt>). This behaviour has
+gone lost recently and is no revived. You always can use <tt>--no-cache</tt>
+if you want fresh data.

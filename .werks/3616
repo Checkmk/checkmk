@@ -1,0 +1,12 @@
+Title: Fix cmk -I ignoring the option --cache
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.8p3
+Date: 1464776061
+Class: fix
+
+When you use <tt>cmk --cache -I myhost123<tt> on the command line in order
+to discovery services on a specific host then the option <tt>--cache</tt> was ignored
+and always fresh data had been fetched from the target host. This has been
+fixed.

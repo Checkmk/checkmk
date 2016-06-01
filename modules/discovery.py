@@ -40,7 +40,7 @@
 # hostnames is already prepared by the main code. If it is
 # empty then we use all hosts and switch to using cache files.
 def do_discovery(hostnames, check_types, only_new):
-    use_caches = False
+    use_caches = opt_use_cachefile
     if not hostnames:
         verbose("Discovering services on all hosts:\n")
         hostnames = all_active_realhosts()

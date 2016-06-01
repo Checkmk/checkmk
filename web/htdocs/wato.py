@@ -12594,7 +12594,7 @@ def explain_ruleset_match_type(rulespec):
         html.write(_("The first matching rule defines the parameter."))
     elif match_type == "dict":
         html.write(_("Each parameter is defined by the first matching rule where that parameter is set (checked)."))
-    elif match_type == "all":
+    elif match_type in ("all", "list"):
         html.write(_("All matching rules will add to the resulting list."))
     else:
         html.write(_("Unknown match type: %s") % match_type)

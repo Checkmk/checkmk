@@ -201,25 +201,6 @@ def user_locked(username):
     users = load_users()
     return users[username].get('locked', False)
 
-
-def login_session_timed_out(username, last_activity):
-    idle_timeout = load_custom_attr(username, "idle_timeout", convert_idle_timeout, None)
-    if idle_timeout == None:
-        idle_timeout = config.user_idle_timeout
-
-    if idle_timeout in [ None, False ]:
-        return False # no timeout activated at all
-
-    timed_out = (time.time() - last_activity) > idle_timeout
-
-    # TODO: Reenable this for easier debugging when log levels can be configured easily
-    #if timed_out:
-    #    html.log("%s login session timed out (Inactive for %d seconds)" %
-    #                                (username, time.time() - last_activity))
-
-    return timed_out
-
-
 def update_user_access_time(username):
     if not config.save_user_access_times:
         return
@@ -460,7 +441,6 @@ def load_users(lock = False):
                         ('last_pw_change',    saveint),
                         ('last_seen',         savefloat),
                         ('enforce_pw_change', lambda x: bool(saveint(x))),
-                        ('idle_timeout',      convert_idle_timeout),
                     ]:
                     val = load_custom_attr(id, attr, conv_func)
                     if val != None:
@@ -486,31 +466,17 @@ def load_users(lock = False):
 
     return result
 
-
-def custom_attr_path(userid, key):
-    return defaults.var_dir + "/web/" + make_utf8(userid) + "/" + key + ".mk"
-
-
 def load_custom_attr(userid, key, conv_func, default = None):
-    path = custom_attr_path(userid, key)
+    basedir = defaults.var_dir + "/web/" + make_utf8(userid)
     try:
-        return conv_func(file(path).read().strip())
+        return conv_func(file(basedir + '/' + key + '.mk').read().strip())
     except IOError:
         return default
 
-
 def save_custom_attr(userid, key, val):
-    path = custom_attr_path(userid, key)
-    make_nagios_directory(os.path.dirname(path))
-    create_user_file(path, 'w').write('%s\n' % val)
-
-
-def remove_custom_attr(userid, key):
-    try:
-        os.unlink(custom_attr_path(userid, key))
-    except OSError:
-        pass # Ignore non existing files
-
+    basedir = defaults.var_dir + "/web/" + make_utf8(userid)
+    make_nagios_directory(basedir)
+    create_user_file('%s/%s.mk' % (basedir, key), 'w').write('%s\n' % val)
 
 def get_online_user_ids():
     online_threshold = time.time() - config.user_online_maxage
@@ -546,7 +512,6 @@ def save_users(profiles):
         "enforce_pw_change",
         "last_pw_change",
         "last_seen",
-        "idle_timeout",
     ] + multisite_custom_values
 
     # Keys to put into multisite configuration
@@ -629,11 +594,6 @@ def save_users(profiles):
         save_custom_attr(user_id, 'enforce_pw_change', str(int(user.get('enforce_pw_change', False))))
         save_custom_attr(user_id, 'last_pw_change', str(user.get('last_pw_change', int(time.time()))))
 
-        if "idle_timeout" in user:
-            save_custom_attr(user_id, "idle_timeout", user["idle_timeout"])
-        else:
-            remove_custom_attr(user_id, "idle_timeout")
-
         # Write out the last seent time
         if 'last_seen' in user:
             save_custom_attr(user_id, 'last_seen', repr(user['last_seen']))
@@ -682,10 +642,6 @@ def contactgroups_of_user(user_id):
         return []
     else:
         return users[user_id].get("contactgroups", [])
-
-
-def convert_idle_timeout(value):
-    return value != "False" and int(value) or False
 
 
 #.
@@ -751,7 +707,6 @@ def load_roles():
 #   |                   \____|_|  \___/ \__,_| .__/|___/                   |
 #   |                                        |_|                           |
 #   +----------------------------------------------------------------------+
-# TODO: Contact groups are fine here, but service / host groups?
 
 def load_group_information():
     try:
@@ -798,25 +753,6 @@ def load_group_information():
             logger(LOG_ERR, 'load_group_information: Problem while loading groups (%s - %s). '
                      'Initializing structure...' % (filename, e))
         return {}
-
-
-class GroupChoice(DualListChoice):
-    def __init__(self, what, **kwargs):
-        DualListChoice.__init__(self, **kwargs)
-        self.what = what
-        self._choices = lambda: self.load_groups()
-
-    def load_groups(self):
-        all_groups = load_group_information()
-        this_group = all_groups.get(self.what, {})
-        return [ (k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items() ]
-
-
-# TODO: This is not performing good with a large user base. Hope it works for our needs.
-# Maybe we need to change it to livestatus or change our data structures somehow in the future.
-def groups_of_user(user_id):
-    users = load_users(lock=False)
-    return users[user_id]["contactgroups"]
 
 #.
 #   .-Custom-Attrs.--------------------------------------------------------.

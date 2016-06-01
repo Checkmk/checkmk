@@ -235,7 +235,6 @@ default_user_profile  = {
     'roles': ['user'],
 }
 lock_on_logon_failures = False
-user_idle_timeout      = None
 password_policy        = {}
 
 user_localizations = {

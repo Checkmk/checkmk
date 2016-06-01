@@ -28,9 +28,10 @@ VERSION       = 1.4.0i1
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i686-w64-mingw32-windres
 GIT_REV       = $(shell git describe --abbrev=4 --dirty --always --tags)
-COPTIONS      = -O2 -gdwarf-2 -Wall -Wformat=2 -Werror -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO -DVCS_REV=\"$(GIT_REV)\"
+COMMON_OPTS   = -Wall -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -gdwarf-2 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO -DVCS_REV=\"$(GIT_REV)\"
+COPTIONS      = -O2 -Wformat=2 -Werror $(COMMON_OPTS)
 # for debug builds
-#COPTIONS      = -O0 -Wall -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -gdwarf-2 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO
+#COPTIONS      = -O0 $(COMMON_OPTS)
 MKDIR         = mkdir -p
 
 ifeq ($(shell uname),Linux)

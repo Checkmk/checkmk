@@ -544,12 +544,16 @@ bool Configuration::addNewRotatedLogfile(
         }
 
         BY_HANDLE_FILE_INFORMATION fileinfo;
-        getFileInformation(textfile->paths.front().c_str(), &fileinfo);
-        textfile->file_size =
-            to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
-        textfile->file_id =
-            to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh);
-        textfile->offset = token->from_start ? 0 : textfile->file_size;
+        if (textfile->paths.size() > 0) {
+            getFileInformation(textfile->paths.front().c_str(), &fileinfo);
+            textfile->file_size =
+                to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
+            textfile->file_id =
+                to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh);
+            textfile->offset = token->from_start ? 0 : textfile->file_size;
+        } else {
+            textfile->file_size = textfile->offset = textfile->file_id = 0;
+        }
     }
 
     _logwatch_textfiles.add(textfile);

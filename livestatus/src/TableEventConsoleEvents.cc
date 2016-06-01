@@ -26,11 +26,6 @@
 #include <string>
 #include "Table.h"
 #include "TableHosts.h"
-#ifdef CMC
-#include "Core.h"
-#include "World.h"
-using std::recursive_mutex;
-#endif
 
 using std::string;
 

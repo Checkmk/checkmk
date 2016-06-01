@@ -266,7 +266,7 @@ bool TableEventConsole::receiveReply(int sock, Query *query) {
 #ifdef CMC
             row._host = (it == row._map.end() || _core == nullptr)
                             ? nullptr
-                            : _core->_world->getHost(it->second);
+                            : _core->_world->getHostByDesignation(it->second);
 #else
             // Older Nagios headers are not const-correct... :-P
             row._host = it == row._map.end()

@@ -103,6 +103,7 @@ livestatus_so_SOURCES = \
         Store.cc \
         StringColumn.cc \
         StringColumnFilter.cc \
+        StringUtils.cc \
         Table.cc \
         TableColumns.cc \
         TableCommands.cc \

@@ -24,6 +24,6 @@ def create_tactical_overview_snapin(title, tag_group, tag_name):
         "styles" : snapin_tactical_overview_styles,
     }
 
-# Here you declare which copies of the snapin you wnat:
+# Here you declare which copies of the snapin you want:
 create_tactical_overview_snapin(u"München", "stadt", "muc")
 create_tactical_overview_snapin(u"Göttingen", "stadt", "got")

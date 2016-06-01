@@ -5255,6 +5255,8 @@ try:
     # handle -I / -II
     if not done and seen_I > 0:
         hostnames = parse_hostname_list(args)
+        if not hostnames:
+            opt_use_cachefile = not opt_no_cache
         do_discovery(hostnames, check_types, seen_I == 1)
         done = True
 

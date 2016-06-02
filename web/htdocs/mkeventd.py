@@ -187,7 +187,7 @@ def execute_command(name, args=None, site=None):
     else:
         formated_args = ""
 
-    query = "[%d] COMMAND %s%s" % (int(time.time()), name, formated_args)
+    query = "[%d] EC_%s%s" % (int(time.time()), name, formated_args)
     sites.live().command(query, site)
 
 

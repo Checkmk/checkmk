@@ -252,6 +252,24 @@ bool globmatch(const wchar_t *pattern, const wchar_t *astring) {
     return *p == 0;
 }
 
+
+std::string replaceAll(const std::string &str, const std::string &from,
+                       const std::string &to) {
+    if (from.empty()) {
+        return str;
+    }
+
+    std::string result(str);
+    size_t pos = 0;
+
+    while ((pos = result.find(from, pos)) != std::string::npos) {
+        result.replace(pos, from.length(), to);
+        pos += to.length();
+    }
+    return result;
+}
+
+
 #ifdef _WIN32
 std::string get_win_error_as_string(DWORD error_id) {
     // Get the error message, if any.

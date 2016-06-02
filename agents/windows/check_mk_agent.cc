@@ -1468,7 +1468,8 @@ void process_textfile(OutputProxy &out, logwatch_textfile *textfile) {
     }
     OnScopeExit auto_close([file]() { fclose(file); });
 
-    out.output("[[[%s]]]\n", textfile->name.c_str());
+    out.output("[[[%s]]]\n",
+               replaceAll(textfile->name, "*", "__all__").c_str());
 
     if (textfile->offset == textfile->file_size) {  // no new data
         return;
@@ -1504,7 +1505,11 @@ void section_logfiles(OutputProxy &out, const Environment &env) {
 
     // found files
     for (logwatch_textfile *textfile : g_config->logwatchTextfiles()) {
-        process_textfile(out, textfile);
+        // for rotated log, this list may contain entries where the pattern
+        // currently matches nothing
+        if (!textfile->paths.empty()) {
+            process_textfile(out, textfile);
+        }
     }
 
     cleanup_logwatch_textfiles();

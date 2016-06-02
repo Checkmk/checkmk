@@ -64,6 +64,8 @@ bool ci_equal(const std::string &lhs, const std::string &rhs);
 bool globmatch(const char *pattern, const char *astring);
 bool globmatch(const wchar_t *pattern, const wchar_t *astring);
 
+std::string replaceAll(const std::string &str, const std::string &from,
+                       const std::string &to);
 template <typename T>
 std::basic_string<T> join(const std::vector<std::basic_string<T>> &input,
                           const T *sep) {

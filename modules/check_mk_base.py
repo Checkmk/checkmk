@@ -1183,8 +1183,7 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
 # This is the main check function - the central entry point to all and
 # everything
 def do_check(hostname, ipaddress, only_check_types = None):
-    if opt_verbose:
-        sys.stderr.write("Check_mk version %s\n" % check_mk_version)
+    verbose("Check_mk version %s\n" % check_mk_version)
 
     start_time = time.time()
 
@@ -1273,6 +1272,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     if opt_keepalive:
         add_keepalive_result_line(output)
+        verbose(output)
     else:
         sys.stdout.write(core_state_names[status] + " - " + output.encode('utf-8'))
 
@@ -1399,13 +1399,11 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
         # Skip checks that are not in their check period
         period = check_period_of(hostname, description)
         if period and not check_timeperiod(period):
-            if opt_debug:
-                sys.stderr.write("Skipping service %s: currently not in timeperiod %s.\n" %
-                        (description, period))
+            verbose("Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
             continue
-        elif period and opt_debug:
-            sys.stderr.write("Service %s: timeperiod %s is currently active.\n" %
-                    (description, period))
+
+        elif period:
+            vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))
 
         infotype = checkname.split('.')[0]
         try:
@@ -1952,9 +1950,9 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
             p = ''
             infotext_fmt = "%s"
         color = tty.states[state]
-        print ("%-20s %s%s"+infotext_fmt+"%s%s") % (servicedesc.encode('utf-8'),
-                                       tty.bold, color, make_utf8(infotext.split('\n')[0]),
-                                       tty.normal, make_utf8(p))
+        verbose(("%-20s %s%s"+infotext_fmt+"%s%s\n") % (servicedesc.encode('utf-8'),
+                                       tty_bold, color, make_utf8(infotext.split('\n')[0]),
+                                       tty_normal, make_utf8(p)))
 
 
 def submit_to_core(host, service, state, output, cached_at = None, cache_interval = None):

@@ -52,8 +52,9 @@ class TableEventConsole : public Table {
 public:
 #ifdef CMC
     explicit TableEventConsole(Core *core);
-#endif
+#else
     TableEventConsole();
+#endif
     void answerQuery(Query *) override;
 
     struct Row {

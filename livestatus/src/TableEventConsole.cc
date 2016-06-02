@@ -102,7 +102,7 @@ private:
                 auto it = row._map.find("event_host");
 #ifdef CMC
                 row._host =
-                    (it == row._map.end() || _core == nullptr)
+                    it == row._map.end()
                         ? nullptr
                         : _core->_world->getHostByDesignation(it->second);
 #else
@@ -126,7 +126,6 @@ private:
 
 #ifdef CMC
 TableEventConsole::TableEventConsole(Core *core) : _core(core) {}
-TableEventConsole::TableEventConsole() : _core(nullptr) {}
 #else
 TableEventConsole::TableEventConsole() {}
 #endif
@@ -139,11 +138,10 @@ void TableEventConsole::answerQuery(Query *query) {
 #endif
     // skip "eventconsole" prefix :-P
     string internal_name = name() + 12;
-    ECTableConnection(path, internal_name, query
 #ifdef CMC
-                      ,
-                      _core
+    ECTableConnection(path, internal_name, query, _core)
+#else
+    ECTableConnection(path, internal_name, query)
 #endif
-                      )
         .run();
 }

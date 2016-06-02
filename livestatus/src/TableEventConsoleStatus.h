@@ -27,10 +27,17 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include "TableEventConsole.h"
+#ifdef CMC
+struct Core;
+#endif
 
 class TableEventConsoleStatus : public TableEventConsole {
 public:
+#ifdef CMC
+    explicit TableEventConsoleStatus(Core *core);
+#else
     TableEventConsoleStatus();
+#endif
     const char *name() const override;
     const char *namePrefix() const override;
 };

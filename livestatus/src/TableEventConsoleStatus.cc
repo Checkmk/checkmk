@@ -24,7 +24,13 @@
 
 #include "TableEventConsoleStatus.h"
 
-TableEventConsoleStatus::TableEventConsoleStatus() {
+#ifdef CMC
+TableEventConsoleStatus::TableEventConsoleStatus(Core *core)
+    : TableEventConsole(core)
+#else
+TableEventConsoleStatus::TableEventConsoleStatus()
+#endif
+{
     addColumn(
         new IntEventConsoleColumn("status_messages", "The number of messages"));
     addColumn(new DoubleEventConsoleColumn("status_message_rate",

@@ -2443,16 +2443,6 @@ if mkeventd_enabled:
     )
 
     register_configvar(group,
-        "debug_mkeventd_queries",
-        Checkbox(title = _("Debug queries to Event Console"),
-                 label = _("Enable debugging of queries"),
-                 help = _("With this option turned on all queries asking for data of the Event Console "
-                          "will be displayed in the views."),
-                default_value = False),
-        domain = "mkeventd",
-    )
-
-    register_configvar(group,
         "actions",
         vs_mkeventd_actions,
         allow_reset = False,

@@ -30,7 +30,6 @@ mkeventd_notify_contactgroup    = None
 mkeventd_notify_facility        = 16
 mkeventd_notify_remotehost      = None
 mkeventd_connect_timeout        = 10
-debug_mkeventd_queries          = False
 log_level                       = 0
 log_rulehits                    = False
 rule_optimizer                  = True

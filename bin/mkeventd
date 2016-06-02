@@ -2674,6 +2674,7 @@ class StatusServer:
 
     def handle_client(self, socket, allow_commands, client_ip):
         for query in Queries(socket):
+            verbose("Query: %s" % "\\n".join(query))
             parts = query[0].split(None, 1)
             if len(parts) != 2:
                 raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")

@@ -415,6 +415,7 @@
     * 3242 FIX: Fixed hostname translation for empty optional groups
     * 3579 FIX: Fixed visibility of SNMP community attribute when SNMP tag is inherited
     * 3583 FIX: Fixed loosing some services after saving services in WATO...
+    * 3588 FIX: BI aggregation: Fixed folding of tag groups in aggregation rules using host/service searches
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

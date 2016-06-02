@@ -1162,21 +1162,27 @@ def call_notification_script(plugin, plugin_context):
         p = subprocess.Popen([path], shell=False, stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT, env=notification_script_env(plugin_context))
 
-        for line in p.stdout:
-            plugin_log("Output: %s" % line.rstrip().decode('utf-8'))
-
-        exitcode = p.returncode
+        while True:
+            # read and output stdout linewise to ensure we don't force python to produce
+            # one - potentially huge - memory buffer
+            line = p.stdout.readline()
+            if line != '':
+                plugin_log("Output: %s" % line.rstrip().decode('utf-8'))
+            else:
+                break
+        # the stdout is closed but the return code may not be available just yet - wait for the
+        # process to actually finish
+        exitcode = p.wait()
         clear_notification_timeout()
     except NotificationTimeout:
         plugin_log("Notification plugin did not finish within %d seconds. Terminating." %
                                                                     notification_plugin_timeout)
-        p.kill()
+        # p.kill() requires python 2.6!
+        os.kill(p.pid, signal.SIGTERM)
         exitcode = 1
 
-    if exitcode:
+    if exitcode != 0:
         plugin_log("Plugin exited with code %d" % exitcode)
-    else:
-        exitcode = 0
 
     return exitcode
 

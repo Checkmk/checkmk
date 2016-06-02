@@ -1,0 +1,16 @@
+Title: fixed a couple of minor issues in call to notification scripts
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.8p4
+Date: 1464879023
+Class: fix
+
+The fixed issues are as follows:
+ - in case of a timeout of the notification script, the script is supposed to be
+   terminated. This worked only on python 2.6 and newer
+ - due to timing there was a good chance the exit code of the notification script
+   was ignored
+ - the output of the notification script was buffered in memory until the process
+   exited before being written. Theoretically this could cause high memory usage
+   in the notification processes

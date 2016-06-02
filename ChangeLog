@@ -468,6 +468,7 @@
     * 3026 FIX: Event console: The "Add comment" option of a rule is now able to add the original text (\0)
     * 3566 FIX: Fixed exception on SNMP MIB management page when MIB directory is missing
     * 3568 FIX: Fixed broken link in "Access to event status via TCP" help text
+    * 3589 FIX: Fixed processing of RFC 5424 syslog messages
 
     Livestatus:
     * 3233 FIX: Fixed shutdown of Nagios core with Livestatus module...

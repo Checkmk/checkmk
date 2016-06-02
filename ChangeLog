@@ -11,6 +11,9 @@
     Notifications:
     * 3139 FIX: fixed a couple of minor issues in call to notification scripts...
 
+    Event Console:
+    * 3589 FIX: Fixed processing of RFC 5424 syslog messages
+
 
 1.2.8p3:
     Core & Setup:

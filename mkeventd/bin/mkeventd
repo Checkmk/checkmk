@@ -351,7 +351,7 @@ def update_timeperiods():
     try:
         livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         livesock.connect(g_livestatus_socket)
-        livesock.send("GET timeperiods\nColumns: name alias in\n")
+        livesock.sendall("GET timeperiods\nColumns: name alias in\n")
         livesock.shutdown(socket.SHUT_WR)
         answer = livesock.recv(10000000)
         table = [ line.split(';') for line in answer.split('\n')[:-1] ]
@@ -2537,7 +2537,7 @@ class StatusServer:
                 log("Error handling client %s: %s" % (addr_info, e))
                 if client_socket:
                     try:
-                        client_socket.send("ERROR: %s\n" % e)
+                        client_socket.sendall("ERROR: %s\n" % e)
                     except:
                         pass # avoid next exception because of broken pipe!
 
@@ -2582,11 +2582,11 @@ class StatusServer:
                 except Exception, e:
                     return repr(value)
             for line in response:
-                socket.send("\x02".join(map(lambda x: format_column(x), line)))
-                socket.send("\n")
+                socket.sendall("\x02".join(map(lambda x: format_column(x), line)))
+                socket.sendall("\n")
         else:
-            socket.send(repr(response))
-            socket.send("\n")
+            socket.sendall(repr(response))
+            socket.sendall("\n")
 
         socket.close()
 
@@ -3610,7 +3610,7 @@ def get_state_from_master():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(repl_settings["connect_timeout"])
         sock.connect(repl_settings["master"])
-        sock.send("REPLICATE %d\n" % (g_slave_status["last_sync"] and g_slave_status["last_sync"] or 0))
+        sock.sendall("REPLICATE %d\n" % (g_slave_status["last_sync"] and g_slave_status["last_sync"] or 0))
 
         response_text = ""
         while True:

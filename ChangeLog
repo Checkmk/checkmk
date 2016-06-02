@@ -1,4 +1,7 @@
 1.2.8p4:
+    Checks & Agents:
+    * 3587 FIX: SNMP: Fixed possible random IO issues when using classic SNMP...
+
     Multisite:
     * 3586 FIX: Fixed file locking issues (rare and random errors that settings file could not be loaded)
 

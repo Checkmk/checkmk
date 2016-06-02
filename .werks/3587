@@ -1,0 +1,10 @@
+Title: SNMP: Fixed possible random IO issues when using classic SNMP
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p4
+Date: 1464865901
+Class: fix
+
+The file descriptors of Check_MK were not properly closed when launching
+the SNMP subprocesses.

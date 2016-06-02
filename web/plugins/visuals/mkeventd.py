@@ -79,33 +79,18 @@ if mkeventd_enabled:
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
 
-    # All filters for events define a function event_headers, that
-    # returns header lines for the event daemon, if the filter is in
-    # use.
-    class EventFilterText(FilterText):
-        def __init__(self, table, filter_name, column, title, op):
-           FilterText.__init__(self, filter_name, title, table, column, filter_name, op)
-           self._table = table
-
-        # Disable Livestatus filter
-        def filter(self, infoname):
-            return ""
-
-        def event_headers(self):
-            return FilterText.filter(self, self._table)
-
-    declare_filter(200, EventFilterText("event",   "event_id",         "event_id",          _("Event ID"),                              "="))
-    declare_filter(200, EventFilterText("event",   "event_rule_id",    "event_rule_id",     _("ID of rule"),                            "="))
-    declare_filter(201, EventFilterText("event",   "event_text",       "event_text",        _("Message/Text of event"),                 "~~"))
-    declare_filter(201, EventFilterText("event",   "event_application","event_application", _("Application / Syslog-Tag"),              "~~"))
-    declare_filter(201, EventFilterText("event",   "event_contact",    "event_contact",     _("Contact Person"),                        "~~"))
-    declare_filter(201, EventFilterText("event",   "event_comment",    "event_comment",     _("Comment to the event"),                  "~~"))
-    declare_filter(201, EventFilterText("event",   "event_host_regex", "event_host",        _("Hostname of original event"),            "~~"))
-    declare_filter(201, EventFilterText("event",   "event_host",       "event_host",        _("Hostname of event, exact match"),        "="))
-    declare_filter(201, EventFilterText("event",   "event_ipaddress",  "event_ipaddress",   _("Original IP Address of event"),          "~~"))
-    declare_filter(201, EventFilterText("event",   "event_owner",      "event_owner",       _("Owner of event"),                        "~~"))
-    declare_filter(221, EventFilterText("history", "history_who",      "history_who",       _("User that performed action"),            "~~"))
-    declare_filter(222, EventFilterText("history", "history_line",     "history_line",      _("Line number in history logfile"),        "="))
+    declare_filter(200, FilterText("event_id",         _("Event ID"),                        "event",   "event_id",           "event_id",               "="))
+    declare_filter(200, FilterText("event_rule_id",    _("ID of rule"),                      "event",   "event_rule_id",      "event_rule_id",          "="))
+    declare_filter(201, FilterText("event_text",       _("Message/Text of event"),           "event",   "event_text",         "event_text",             "~~"))
+    declare_filter(201, FilterText("event_application",_("Application / Syslog-Tag"),        "event",   "event_application",  "event_application",      "~~"))
+    declare_filter(201, FilterText("event_contact",    _("Contact Person"),                  "event",   "event_contact",      "event_contact",          "~~"))
+    declare_filter(201, FilterText("event_comment",    _("Comment to the event"),            "event",   "event_comment",      "event_comment",          "~~"))
+    declare_filter(201, FilterText("event_host_regex", _("Hostname of original event"),      "event",   "event_host",         "event_host",             "~~"))
+    declare_filter(201, FilterText("event_host",       _("Hostname of event, exact match"),  "event",   "event_host",         "event_host",             "="))
+    declare_filter(201, FilterText("event_ipaddress",  _("Original IP Address of event"),    "event",   "event_ipaddress",    "event_ipaddress",        "~~"))
+    declare_filter(201, FilterText("event_owner",      _("Owner of event"),                  "event",   "event_owner",        "event_owner",            "~~"))
+    declare_filter(221, FilterText("history_who",      _("User that performed action"),      "history", "history_who",        "history_who",            "~~"))
+    declare_filter(222, FilterText("history_line",     _("Line number in history logfile"),  "history", "history_line",       "history_line",           "="))
 
 
     class EventFilterCount(Filter):
@@ -120,18 +105,12 @@ if mkeventd_enabled:
             html.number_input(self._name + "_to", "")
 
         def filter(self, infoname):
-            return ""
-
-        def event_headers(self):
-            try:
-                f = ""
-                if html.var(self._name + "_from"):
-                    f += "Filter: event_count >= %d\n" % int(html.var(self._name + "_from"))
-                if html.var(self._name + "_to"):
-                    f += "Filter: event_count <= %d\n" % int(html.var(self._name + "_to"))
-                return f
-            except:
-                return ""
+            f = ""
+            if html.var(self._name + "_from"):
+                f += "Filter: event_count >= %d\n" % int(html.var(self._name + "_from"))
+            if html.var(self._name + "_to"):
+                f += "Filter: event_count <= %d\n" % int(html.var(self._name + "_to"))
+            return f
 
 
     declare_filter(205, EventFilterCount("event_count", _("Message count")))
@@ -159,16 +138,23 @@ if mkeventd_enabled:
             html.end_checkbox_group()
 
         def filter(self, infoname):
-            return ""
-
-        def event_headers(self):
-            sel = []
+            selected = []
             for name, title in self._choices:
                 if html.get_checkbox(self._name + "_" + str(name)):
-                    sel.append(str(name))
-            if len(sel) > 0 and len(sel) < len(self._choices):
-                return "Filter: %s in %s\n" % (self._name, " ".join(sel))
+                    selected.append(str(name))
 
+            if not selected:
+                return ""
+
+            filters = []
+            for sel in selected:
+                filters.append("Filter: %s = %s" % (self._name, sel))
+
+            f = "\n".join(filters)
+            if len(filters) > 1:
+                f += "\nOr: %d" % len(filters)
+
+            return f + "\n"
 
 
     declare_filter(206, EventFilterState("event", "event_state", _("State classification"), [ (0, _("OK")), (1, _("WARN")), (2, _("CRIT")), (3,_("UNKNOWN")) ]))
@@ -176,21 +162,9 @@ if mkeventd_enabled:
     declare_filter(209, EventFilterState("event", "event_priority", _("Syslog Priority"), mkeventd.syslog_priorities))
     declare_filter(225, EventFilterState("history", "history_what", _("History action type"), [(k,k) for k in mkeventd.action_whats.keys()]))
 
-
-    class EventFilterTime(FilterTime):
-        def __init__(self, table, name, title):
-            FilterTime.__init__(self, table, name, title, name)
-            self._table = table
-
-        def filter(self, infoname):
-            return ""
-
-        def event_headers(self):
-            return FilterTime.filter(self, self._table)
-
-    declare_filter(220, EventFilterTime("event", "event_first", _("First occurrance of event")))
-    declare_filter(221, EventFilterTime("event", "event_last", _("Last occurrance of event")))
-    declare_filter(222, EventFilterTime("history", "history_time", _("Time of entry in event history")))
+    declare_filter(220, FilterTime("event",   "event_first",  _("First occurrance of event"),      "event_first", ))
+    declare_filter(221, FilterTime("event",   "event_last",   _("Last occurrance of event"),       "event_last",  ))
+    declare_filter(222, FilterTime("history", "history_time", _("Time of entry in event history"), "history_time",))
 
 
     class EventFilterDropdown(Filter):
@@ -211,13 +185,11 @@ if mkeventd_enabled:
             html.select(self._varname, [ ("", "") ] + [(str(n),t) for (n,t) in choices])
 
         def filter(self, infoname):
-            return ""
-
-        def event_headers(self):
             val = html.var(self._varname)
             if val:
                 return "Filter: event_%s %s %s\n" % (self._column, self._operator, val)
-
+            else:
+                return ""
 
 
     declare_filter(210, EventFilterDropdown("facility", _("Syslog Facility"), mkeventd.syslog_facilities))

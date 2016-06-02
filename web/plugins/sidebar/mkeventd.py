@@ -36,16 +36,10 @@ def render_mkeventd_performance():
         html.write("<tr><td class=left>%s:</td>"
                    "<td class=right><strong>%s</strong></td></tr>" % (left, right))
 
-    try:
-        raw_data = mkeventd.query("GET status")
-    except:
-        html.write(_("Event Console is not running."))
-        return
+    status = mkeventd.get_status()
 
     html.write("<table class=\"content_center mkeventd_performance\">\n")
 
-
-    data = dict(zip(raw_data[0], raw_data[1]))
     columns = [
           (_("Received messages"),   "message",   "%.2f/s"),
           (_("Rule hits"),           "rule_hit",  "%.2f/s"),
@@ -54,13 +48,13 @@ def render_mkeventd_performance():
           (_("Client connects"),     "connect",   "%.2f/s"),
     ]
     for what, col, format in columns:
-        write_line(what, format % data["status_average_%s_rate" % col])
+        write_line(what, format % status["status_average_%s_rate" % col])
 
     # Hit rate
     try:
         write_line(_("Rule hit ratio"), "%.2f %%" % (
-           data["status_average_rule_hit_rate"] /
-           data["status_average_rule_trie_rate"] * 100))
+           status["status_average_rule_hit_rate"] /
+           status["status_average_rule_trie_rate"] * 100))
     except: # division by zero
         write_line(_("Rule hit ratio"), _("-.-- %"))
 
@@ -71,7 +65,7 @@ def render_mkeventd_performance():
         (_("Replication synchronization"), "sync"),
     ]
     for title, name in time_columns:
-        value = data.get("status_average_%s_time" % name)
+        value = status.get("status_average_%s_time" % name)
         if value:
             write_line(title, "%.2f ms" % (value * 1000))
         else:

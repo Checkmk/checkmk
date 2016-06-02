@@ -71,6 +71,12 @@
 #
 # ignore_limit: Ignore the soft/hard query limits in view.py/query_data(). This
 #               fixes stats queries on e.g. the log table.
+#
+# auth_domain: Querying a table might require to use another auth domain than
+#              the default one (read). When this is set, the given auth domain
+#              will be used while fetching the data for this datasource from
+#              livestatus.
+#
 
 multisite_datasources["hosts"] = {
     "title"   : _("All hosts"),
@@ -248,7 +254,7 @@ def query_service_discovery(columns, query, only_sites, limit, all_active_filter
     rows = do_query_data(
         "GET services\n",
         ["host_state", "host_has_been_checked", "long_plugin_output", "host_name"], [], [],
-        "\n".join(lq_filters), only_sites, limit)
+        "\n".join(lq_filters), only_sites, limit, "read")
 
     # convert list of strings "ViewFilter: var = value" to list of tuples (var, value)
     view_filters = [map(lambda s: s.strip(), filt.split(":")[1].split("="))

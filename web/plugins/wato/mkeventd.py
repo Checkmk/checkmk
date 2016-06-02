@@ -960,13 +960,12 @@ def mode_mkeventd_rule_packs(phase):
             c = wato_confirm(_("Confirm counter reset"),
                              _("Do you really want to reset all rule hit counters in <b>all rule packs</b> to zero?"))
             if c:
-                mkeventd.query("COMMAND RESETCOUNTERS")
+                mkeventd.execute_command("RESETCOUNTERS", site=defaults.omd_site)
                 log_mkeventd("counter-reset", _("Resetted all rule hit counters to zero"))
             elif c == False:
                 return ""
 
         # Copy rules from master
-        # TODO: Wo ist der Knopf dafür?
         elif html.has_var("_copy_rules"):
             c = wato_confirm(_("Confirm copying rules"),
                              _("Do you really want to copy all event rules from the master and "
@@ -1352,7 +1351,10 @@ def mode_mkeventd_rules(phase):
         table.end()
 
 
+# TODO: Make use of ec via livestatus when core is ready
 def copy_rules_from_master():
+    raise MKGeneralException(_("This is not working at the moment. Will fix this soon."))
+
     answer = mkeventd.query("REPLICATE 0")
     if "rules" not in answer:
         raise MKGeneralException(_("Cannot get rules from local event daemon."))
@@ -1553,7 +1555,7 @@ def mode_mkeventd_edit_rule(phase):
         else:
             log_mkeventd("edit-rule", _("Modified event correlation rule %s" % rule["id"]))
             # Reset hit counters of this rule
-            mkeventd.query("COMMAND RESETCOUNTERS;" + rule["id"])
+            mkeventd.execute_command("RESETCOUNTERS", [rule["id"]], defaults.omd_site)
         return "mkeventd_rules"
 
 
@@ -1668,7 +1670,7 @@ def mode_mkeventd_status(phase):
                     _("Do you really want to switch the event daemon to %s mode?" %
                         new_mode))
             if c:
-                mkeventd.query("COMMAND SWITCHMODE;%s" % new_mode)
+                mkeventd.execute_command("SWITCHMODE", [new_mode], defaults.omd_site)
                 log_audit(None, "mkeventd-switchmode", _("Switched replication slave mode to %s" % new_mode))
                 return None, _("Switched to %s mode") % new_mode
             elif c == False:
@@ -1686,8 +1688,7 @@ def mode_mkeventd_status(phase):
         html.show_warning(warning)
         return
 
-    response = mkeventd.query("GET status")
-    status = dict(zip(response[0], response[1]))
+    status = mkeventd.get_status()
     repl_mode = status["status_replication_slavemode"]
     html.write("<h3>%s</h3>" % _("Current Server Status"))
     html.write("<ul>")

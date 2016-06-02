@@ -42,253 +42,6 @@ except:
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def table_event_history(*args):
-    return table_event_table("history", *args)
-
-
-def table_events(*args):
-    return table_event_table("events", *args)
-
-
-def table_event_table(what, columns, add_headers, only_sites, limit, filters):
-    # First we fetch the list of all events from mkeventd - either current
-    # or historic ones. We ignore any filters for host_ here. Note:
-    # event_host and host_name needn't be compatible. They might differ
-    # in case. Also in the events table instead of the host name there
-    # might be the IP address of the host - while in the monitoring we
-    # name. We will join later.
-
-    # If due to limitation of visibility we do a post-filtering, we cannot
-    # impose a limit when fetching the data. This is dangerous, but we
-    # have no other chance, currently.
-    if not config.may("mkeventd.seeall"):
-        use_limit = None
-    else:
-        use_limit = limit
-    rows = get_all_events(what, filters, use_limit)
-
-    # Now we join the stuff with the host information. Therefore we
-    # get the information about all hosts that are referred to in
-    # any of the events.
-    required_hosts = set()
-    for row in rows:
-        host = row.get("event_host")
-        if host:
-            required_hosts.add(host.lower())
-
-    # Get information about these hosts via Livestatus. We
-    # allow event_host to match either the host_name or
-    # the host_address.
-    host_filters = ""
-    for host in required_hosts:
-        host_utf8 = host.encode("utf-8")
-        host_filters += "Filter: host_name =~ %s\n" \
-                        "Filter: host_alias =~ %s\n" \
-                        "Filter: host_address = %s\n" % \
-                        (host_utf8, host_utf8, host_utf8)
-    if len(required_hosts) > 0:
-        host_filters += "Or: %d\n" % (len(required_hosts) * 3)
-
-    # Make sure that the host name is fetched. We need it for
-    # joining. The event columns are always fetched all. The event
-    # daemon currently does not implement any Columns: header.
-    if "host_name" not in columns:
-        columns.append("host_name")
-    if "host_alias" not in columns:
-        columns.append("host_alias")
-    if "host_address" not in columns:
-        columns.append("host_address")
-
-    # Fetch list of hosts. Here is much room for optimization.
-    # If no host filter is set, then the data of all hosts would
-    # be fetched before we even know if there are any events
-    # for those hosts. Better would be first fetching all events
-    # and later fetch the data of the relevant hosts.
-    hostrows = event_hostrows(columns, only_sites, filters, host_filters)
-
-    # Sichtbarkeit: Wenn der Benutzer *nicht* das Recht hat, alle Events
-    # zu sehen, dann müssen wir die Abfrage zweimal machen. Einmal with
-    # AuthUser: (normal) und einmal zusätzlich ohne AuthUser. Dabei brauchen
-    # wir dann nicht mehr alle Spalten, sondern nur noch die Liste der
-    # Kontaktgruppen.
-    # 1. Wenn ein Host bei der ersten Anfrage fehlt, aber bei der zweiten kommt,
-    # heißt das, dass der User diesen Host nicht sehen darf. Und der Event wird
-    # nicht angezeigt.
-    # 2. Wenn ein Host bei beiden Abfragen fehlt, gibt es diesen Host nicht im
-    # Monitoring. Dann gibt es zwei Fälle:
-    # a) Wenn im Event eine Liste von Kontaktgruppen eingetragen ist (kommt durch
-    # eine Regel), dann darf der User den Event sehen, wenn er Mitglied einer
-    # der Kontaktgruppen ist. Dies bekommen wir einfach aus dem User-Profil
-    # heraus. Für solche Events brauchen wir das Ergebnis der Abfrage nicht.
-    # b) Wenn im Event diese Option fehlt, dann darf der User das Event immer sehen.
-    # Wir können das aber nochmal global steuern über eine Permission.
-
-    if not config.may("mkeventd.seeall"):
-        hosts_contact_groups = {}
-        query = "GET hosts\nColumns: name address contact_groups\n" + host_filters
-        sites.live().set_only_sites(only_sites)
-        sites.live().set_auth_domain('mkeventd')
-        data = sites.live().query(query)
-        sites.live().set_auth_domain('read')
-        sites.live().set_only_sites(None)
-        for host, address, groups in data:
-            hosts_contact_groups[host.lower()] = groups
-            hosts_contact_groups[address] = groups
-
-    else:
-        hosts_contact_groups = None
-
-    # Create lookup dict from hostname/alias/address to the dataset of the host.
-    # This speeds up the mapping to the events.
-    hostdict = {}
-    for row in hostrows:
-        hostdict[row["host_name"].lower()] = row
-        hostdict[row["host_alias"].lower()] = row
-        hostdict[row["host_address"]] = row
-
-    # If there is at least one host filter, then we do not show event
-    # entries with an empty host information
-    have_host_filter = False
-    for filt in filters:
-        if filt.info == "host":
-            filter_code = filt.filter('event')
-            if filter_code:
-                have_host_filter = True
-                break
-
-    if not have_host_filter:
-        # Create empty host for outer join on host table
-        empty_host = dict([ (c, "") for c in columns if c.startswith("host_") ])
-        empty_host["site"] = ''
-        empty_host["host_state"] = 0
-        empty_host["host_has_been_checked"] = 0
-
-    # We're ready to join the host-data with the event data now. The question
-    # is what to do with events that cannot be mapped to a host...
-    new_rows = []
-    user_contact_groups = None
-    for event in rows:
-        host_name_lower = event["event_host"].lower()
-        monitoring_host = hostdict.get(host_name_lower)
-
-        if not user_may_see_event(event, monitoring_host, hosts_contact_groups):
-            continue
-
-        if monitoring_host:
-            event.update(monitoring_host)
-            new_rows.append(event)
-
-        # If we have any host filters we cannot add an incomplete host here
-        # since the filters will crash. So simply drop those hosts.
-        elif not have_host_filter:
-            # This event does not belong to any host known by
-            # the monitoring. We need to create the columns nevertheless.
-            event.update(empty_host)
-            new_rows.append(event)
-
-    return new_rows
-
-
-def user_may_see_event(event, monitoring_host, hosts_contact_groups):
-    if config.may("mkeventd.seeall"):
-        return True
-
-    host_name_lower = event["event_host"].lower()
-
-    # Get contact groups of host from monitoring
-    if hosts_contact_groups and host_name_lower in hosts_contact_groups:
-        host_contact_groups = hosts_contact_groups[host_name_lower]
-    else:
-        host_contact_groups = None
-
-    # Get contact groups specified in event
-    event_contact_groups = event.get("event_contact_groups")
-
-    # Handle precedence
-    if host_contact_groups != None and event_contact_groups != None:
-        if config.mkeventd_contact_group_handling == "host":
-            contact_groups = host_contact_groups
-        else:
-            contact_groups = event_contact_groups
-    elif host_contact_groups:
-        contact_groups = host_contact_groups
-    elif event_contact_groups:
-        contact_groups = event_contact_groups
-    else:
-        contact_groups = None
-
-    if contact_groups == None:
-        return config.may("mkeventd.seeunrelated")
-    else:
-        for user_cg in get_user_contact_groups():
-            if user_cg in contact_groups:
-                return True
-
-        return False
-
-
-def event_hostrows(columns, only_sites, filters, host_filters):
-    filter_code = ""
-    for filt in filters:
-        header = filt.filter("event")
-        if not header.startswith("Sites:"):
-            filter_code += header
-    filter_code += host_filters
-
-    host_columns = filter(lambda c: c.startswith("host_"), columns)
-    return get_host_table(filter_code, only_sites, host_columns)
-
-
-def get_user_contact_groups():
-    query = "GET contactgroups\nFilter: members >= %s\nColumns: name\nCache: reload" % (config.user_id)
-    contacts = sites.live().query_column(query)
-    return set(contacts)
-
-def get_host_table(filter_header, only_sites, add_columns):
-    columns = [ "host_name" ] + add_columns
-
-    sites.live().set_only_sites(only_sites)
-    sites.live().set_prepend_site(True)
-    data = sites.live().query(
-            "GET hosts\n" +
-            "Columns: " + (" ".join(columns)) + "\n" +
-            filter_header)
-    sites.live().set_prepend_site(False)
-    sites.live().set_only_sites(None)
-
-    headers = [ "site" ] + columns
-    rows = [ dict(zip(headers, row)) for row in data ]
-    return rows
-
-def get_all_events(what, filters, limit):
-    headers = ""
-    for f in filters:
-        try:
-            headers += f.event_headers()
-        except:
-            pass
-    if limit:
-        headers += "Limit: %d\n" % limit
-
-    query = "GET %s\n%s" % (what, headers)
-    try:
-        debug = config.debug_mkeventd_queries
-    except:
-        debug = False
-    if debug \
-       and html.output_format == "html" and DisplayOptions.enabled(DisplayOptions.W):
-        html.write('<div class="livestatus message" onmouseover="this.style.display=\'none\';">'
-                   '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
-    response = mkeventd.query(query)
-
-    # First line of the response is the list of column names.
-    headers = response[0]
-    rows = []
-    for r in response[1:]:
-        rows.append(dict(zip(headers, r)))
-    return rows
-
-
 # Declare datasource only if the event console is activated. We do
 # not want to irritate users that do not know anything about the EC.
 if mkeventd_enabled:
@@ -301,13 +54,14 @@ if mkeventd_enabled:
     config.declare_permission("mkeventd.seeunrelated",
            _("See events not related to a known host"),
            _("If that user does not have the permission <i>See all events</i> then this permission "
-             "controls wether he/she can see events that are not related to a host in the montioring "
-             "and that do not have been assigned specific contract groups to via the event rule."),
+             "controls wether he/she can see events that are not related to a host in the monitoring "
+             "and that do not have been assigned specific contact groups to via the event rule."),
            [ "user", "admin", "guest" ])
 
     multisite_datasources["mkeventd_events"] = {
         "title"       : _("Event Console: Current Events"),
-        "table"       : table_events,
+        "table"       : "eventconsoleevents",
+        "auth_domain" : "ec",
         "infos"       : [ "event", "host" ],
         "keys"        : [],
         "idkeys"      : [ 'site', 'host_name', 'event_id' ],
@@ -316,7 +70,8 @@ if mkeventd_enabled:
 
     multisite_datasources["mkeventd_history"] = {
         "title"       : _("Event Console: Event History"),
-        "table"       : table_event_history,
+        "table"       : "eventconsolehistory",
+        "auth_domain" : "ec",
         "infos"       : [ "history", "event", "host" ],
         "keys"        : [],
         "idkeys"      : [ 'site', 'host_name', 'event_id', 'history_line' ],
@@ -338,7 +93,8 @@ if mkeventd_enabled:
         "title"   : _("ID of the event"),
         "short"   : _("ID"),
         "columns" : ["event_id"],
-        "paint"   : lambda row: ("number", str(row["event_id"])),
+        "paint"   : lambda row: ("number", repr(mkeventd.replication_mode())),
+        #str(row["event_id"])),
     }
 
     multisite_painters["event_count"] = {
@@ -645,8 +401,7 @@ if mkeventd_enabled:
     #   '----------------------------------------------------------------------'
 
     def command_executor_mkeventd(command, site):
-        response = mkeventd.query("COMMAND %s" % command)
-
+        response = mkeventd.execute_command(command, site=site)
 
     # Acknowledge and update comment and contact
     config.declare_permission("mkeventd.update",

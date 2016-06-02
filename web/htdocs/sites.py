@@ -160,6 +160,10 @@ def set_livestatus_auth():
     if not config.may("bi.see_all"):
         _live.set_auth_user('bi', user_id)
 
+    # May the user see all Event Console events or only some?
+    if not config.may("mkeventd.seeall"):
+        _live.set_auth_user('ec', user_id)
+
     # Default auth domain is read. Please set to None to switch off authorization
     _live.set_auth_domain('read')
 

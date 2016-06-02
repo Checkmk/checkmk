@@ -3667,7 +3667,7 @@ def automation_push_snapshot():
 
 def mkeventd_reload():
     import mkeventd
-    mkeventd.query("COMMAND RELOAD")
+    mkeventd.execute_command("RELOAD", site=defaults.omd_site)
     try:
         os.remove(log_dir + "mkeventd.log")
     except OSError:

@@ -1687,14 +1687,17 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
             if c not in columns:
                 columns.append(c)
 
+    auth_domain = datasource.get("auth_domain", "read")
+
     # Remove columns which are implicitely added by the datasource
     columns = [ c for c in columns if c not in add_columns ]
     query = "GET %s\n" % tablename
     return do_query_data(query, columns, add_columns, merge_column,
-                         add_headers, only_sites, limit)
+                         add_headers, only_sites, limit, auth_domain)
+
 
 def do_query_data(query, columns, add_columns, merge_column,
-                  add_headers, only_sites, limit):
+                  add_headers, only_sites, limit, auth_domain):
     query += "Columns: %s\n" % " ".join(columns)
     query += add_headers
     sites.live().set_prepend_site(True)
@@ -1707,7 +1710,9 @@ def do_query_data(query, columns, add_columns, merge_column,
 
     if only_sites:
         sites.live().set_only_sites(only_sites)
+    sites.live().set_auth_domain(auth_domain)
     data = sites.live().query(query)
+    sites.live().set_auth_domain("read")
     sites.live().set_only_sites(None)
     sites.live().set_prepend_site(False)
     sites.live().set_limit() # removes limit

@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import socket, config, defaults, re, time
+
+import sites
 from lib import *
 
 
@@ -174,39 +176,29 @@ def send_event(event):
         rfc = rfc.encode("utf-8")
     pipe = file(pipe_path, "w")
     pipe.write(rfc + "\n")
+    pipe.close()
+
     return rfc
 
-def query(query):
-    try:
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        try:
-            timeout = config.mkeventd_connect_timeout
-        except:
-            timeout = 10
 
-        sock.settimeout(timeout)
-        sock.connect(socket_path)
-        sock.sendall(query)
-        sock.shutdown(socket.SHUT_WR)
+def execute_command(name, args=None, site=None):
+    if args:
+        formated_args = ";" + ";".join(args)
+    else:
+        formated_args = ""
 
-        response_text = ""
-        while True:
-            chunk = sock.recv(8192)
-            response_text += chunk
-            if not chunk:
-                break
+    query = "[%d] COMMAND %s%s" % (int(time.time()), name, formated_args)
+    sites.live().command(query, site)
 
-        return eval(response_text)
-    except SyntaxError, e:
-        raise MKGeneralException("Invalid response from event daemon: <pre>%s</pre>" % response_text)
 
-    except Exception, e:
-        raise MKGeneralException("Cannot connect to event daemon via %s: %s" % (socket_path, e))
+def get_status():
+    response = sites.live().query("GET eventconsolestatus")
+    return dict(zip(response[0], response[1]))
+
 
 def replication_mode():
     try:
-        response = query("GET status")
-        status = dict(zip(response[0], response[1]))
+        status = get_status()
         return status["status_replication_slavemode"]
     except:
         return None

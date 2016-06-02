@@ -5,6 +5,9 @@
     Multisite:
     * 3586 FIX: Fixed file locking issues (rare and random errors that settings file could not be loaded)
 
+    WATO:
+    * 3588 FIX: BI aggregation: Fixed folding of tag groups in aggregation rules using host/service searches
+
 
 1.2.8p3:
     Core & Setup:

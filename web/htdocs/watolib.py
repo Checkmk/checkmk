@@ -4281,7 +4281,8 @@ def render_condition_editor(tag_specs, varprefix=""):
     make_foldable = len(all_topics) > 1
     for topic in all_topics:
         if make_foldable:
-            html.begin_foldable_container("topic", topic, True, HTML("<b>%s</b>" % (_u(topic))))
+            html.begin_foldable_container("topic", varprefix + topic, True,
+                                          HTML("<b>%s</b>" % (_u(topic))))
         html.write("<table class=\"hosttags\">")
 
         # Show main tags

@@ -400,7 +400,7 @@ if mkeventd_enabled:
     #   '----------------------------------------------------------------------'
 
     def command_executor_mkeventd(command, site):
-        response = mkeventd.execute_command(command, site=site)
+        mkeventd.execute_command(command, site=site)
 
     # Acknowledge and update comment and contact
     config.declare_permission("mkeventd.update",

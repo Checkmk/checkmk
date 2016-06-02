@@ -1,4 +1,7 @@
 1.2.8p4:
+    Multisite:
+    * 3586 FIX: Fixed file locking issues (rare and random errors that settings file could not be loaded)
+
 
 1.2.8p3:
     Core & Setup:

@@ -389,8 +389,21 @@ g_locked_paths = []
 def aquire_lock(path):
     if path in g_locked_paths:
         return # No recursive locking
-    fd = os.open(path, os.O_RDONLY)
-    fcntl.flock(fd, fcntl.LOCK_EX)
+
+    # Create file for locking if not existant yet
+    fd = os.open(path, os.O_RDONLY | os.O_CREAT)
+
+    # Handle the case where the file has been renamed in the meantime
+    while True:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        fd_new = os.open(path, os.O_RDONLY | os.O_CREAT)
+        if os.path.sameopenfile(fd, fd_new):
+            os.close(fd_new)
+            break
+        else:
+            os.close(fd)
+            fd = fd_new
+
     g_aquired_locks.append((path, fd))
     g_locked_paths.append(path)
 

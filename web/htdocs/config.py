@@ -453,12 +453,14 @@ def load_user_file(name, deflt, lock = False):
             return deflt # No user known at this point of time
 
     path = user_confdir + "/" + name + ".mk"
-    try:
-        if lock:
-            aquire_lock(path)
 
+    if lock:
+        aquire_lock(path)
+
+    try:
         return eval(file(path).read())
     except:
+        # TODO: Really "throw user data away" and start over?
         return deflt
 
 def save_user_file(name, content, unlock=False, user=None):
@@ -467,19 +469,19 @@ def save_user_file(name, content, unlock=False, user=None):
     dirname = config_dir + "/" + user
     make_nagios_directory(dirname)
     path = dirname + "/" + name + ".mk"
-    try:
-        write_settings_file(path + ".new", content)
-        os.rename(path + ".new", path)
 
+    try:
+        try:
+            write_settings_file(path + ".new", content)
+            os.rename(path + ".new", path)
+        except Exception, e:
+            if debug:
+                raise
+            raise MKConfigError(_("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s") % \
+                    (name, user, path, e))
+    finally:
         if unlock:
             release_lock(path)
-    except Exception, e:
-        # Error while writing file -> release lock
-        release_lock(path)
-        if debug:
-            raise
-        raise MKConfigError(_("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s") % \
-                (name, user, path, e))
 
 #.
 #   .--Sites---------------------------------------------------------------.

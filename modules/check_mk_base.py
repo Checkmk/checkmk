@@ -1951,8 +1951,8 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
             infotext_fmt = "%s"
         color = tty.states[state]
         verbose(("%-20s %s%s"+infotext_fmt+"%s%s\n") % (servicedesc.encode('utf-8'),
-                                       tty_bold, color, make_utf8(infotext.split('\n')[0]),
-                                       tty_normal, make_utf8(p)))
+                                       tty.bold, color, make_utf8(infotext.split('\n')[0]),
+                                       tty.normal, make_utf8(p)))
 
 
 def submit_to_core(host, service, state, output, cached_at = None, cache_interval = None):

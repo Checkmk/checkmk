@@ -577,7 +577,8 @@ def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False, context_name = None
     command += " -OQ -OU -On -Ot %s%s%s %s" % (protospec, ip, portspec, oid)
     vverbose('   Running %s\n' % command)
 
-    snmp_process = subprocess.Popen(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    snmp_process = subprocess.Popen(command, shell=True, close_fds=True, stdin=open(os.devnull),
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Ugly(1): in some cases snmpwalk inserts line feed within one
     # dataset. This happens for example on hexdump outputs longer

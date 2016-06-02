@@ -23,18 +23,27 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StringUtils.h"
-#include <algorithm>
 #include <cctype>
+#include <sstream>
 
 using std::string;
-using std::transform;
 
 namespace mk {
 
-string unsafe_tolower(const string &str) {
+string unsafe_tolower(const string& str) {
     string result = str;
-    transform(str.begin(), str.end(), result.begin(), ::tolower);
+    std::transform(str.begin(), str.end(), result.begin(), ::tolower);
     return result;
 }
 
-}  // namespace
+std::vector<string> split(string str, char delimiter) {
+    std::istringstream iss(str);
+    std::vector<string> result;
+    string field;
+    while (std::getline(iss, field, delimiter)) {
+        result.push_back(field);
+    }
+    return result;
+}
+
+}  // namespace mk

@@ -54,6 +54,7 @@ livestatus_so_SOURCES = \
         DowntimesOrComments.cc \
         DynamicColumn.cc \
         EmptyColumn.cc \
+        EventConsoleConnection.cc \
         Filter.cc \
         GlobalCountersColumn.cc \
         HostContactsColumn.cc \

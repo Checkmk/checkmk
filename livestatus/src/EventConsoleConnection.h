@@ -22,24 +22,28 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef StringUtils_h
-#define StringUtils_h
+#ifndef EventConsoleConnection_h
+#define EventConsoleConnection_h
 
-#include "config.h"   // IWYU pragma: keep
-#include <algorithm>  // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
+#include <iosfwd>
 #include <string>
-#include <vector>
 
-namespace mk {
-std::string unsafe_tolower(const std::string& str);
+class EventConsoleConnection {
+public:
+    explicit EventConsoleConnection(std::string path);
+    void run();
 
-template <class T>
-bool starts_with(const T& input, const T& test) {
-    return input.size() >= test.size() &&
-           std::equal(test.begin(), test.end(), input.begin());
-}
+protected:
+    bool getline(std::string& line);
 
-std::vector<std::string> split(std::string str, char delimiter);
-}  // namespace
+private:
+    virtual void sendRequest(std::ostream& os) = 0;
+    virtual bool receiveReply() = 0;
 
-#endif  // StringUtils_h
+    std::string _path;
+    int _socket;
+    bool writeRequest();
+};
+
+#endif  // EventConsoleConnection_h

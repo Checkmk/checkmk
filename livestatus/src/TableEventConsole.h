@@ -28,7 +28,6 @@
 #include "config.h"  // IWYU pragma: keep
 #include <stdlib.h>
 #include <sys/types.h>
-//#include <boost/asio/local/stream_protocol.hpp>
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -40,6 +39,7 @@
 #include "OffsetTimeColumn.h"
 #include "Query.h"
 #include "StringColumn.h"
+#include "StringUtils.h"
 #include "Table.h"
 #ifdef CMC
 #include "cmc.h"
@@ -56,15 +56,12 @@ public:
     TableEventConsole();
     void answerQuery(Query *) override;
 
-protected:
     struct Row {
         std::map<std::string, std::string> _map;
         host *_host;
     };
 
-    // TODO(sp) Move this to some helper.
-    static std::vector<std::string> split(std::string str, char delimiter);
-
+protected:
     template <typename T>
     class EventConsoleColumn {
         std::string _name;
@@ -144,8 +141,9 @@ protected:
         ListEventConsoleColumn(std::string name, std::string description)
             : ListColumn(name, description, -1, -1)
             , _ecc(name, _column_t(), [](std::string x) {
-                return x.empty() || x == "\002" ? _column_t()
-                                                : split(x.substr(1), '\001');
+                return x.empty() || x == "\002"
+                           ? _column_t()
+                           : mk::split(x.substr(1), '\001');
             }) {}
 
         void output(void *data, Query *query) override {
@@ -175,16 +173,6 @@ protected:
 private:
 #ifdef CMC
     Core *_core;
-#endif
-    std::string internalName() const;
-#if 0
-    void sendRequest(boost::asio::local::stream_protocol::iostream &ios,
-                     Query *query);
-    void receiveReply(boost::asio::local::stream_protocol::iostream &ios,
-                      Query *query);
-#else
-    bool sendRequest(int sock, Query *query);
-    bool receiveReply(int sock, Query *query);
 #endif
 };
 

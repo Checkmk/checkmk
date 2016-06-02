@@ -93,8 +93,7 @@ if mkeventd_enabled:
         "title"   : _("ID of the event"),
         "short"   : _("ID"),
         "columns" : ["event_id"],
-        "paint"   : lambda row: ("number", repr(mkeventd.replication_mode())),
-        #str(row["event_id"])),
+        "paint"   : lambda row: ("number", str(row["event_id"])),
     }
 
     multisite_painters["event_count"] = {

@@ -5382,16 +5382,23 @@ register_check_parameters(
                  "This rule allows you to define checks on the size of tablespaces."),
         elements = db_levels_common + [
             ( "autoextend",
-                Checkbox(
-                  title = _("Autoextend"),
-                  label = _("Autoextension is expected"),
-                  help = "")),
+                DropdownChoice(
+                  title   = _("Expected autoextend setting"),
+                  choices = [
+                     ( True,  _("Autoextend is expected to be ON")),
+                     ( False, _("Autoextend is expected to be OFF")),
+                     ( None,  _("Autoextend will be ignored")),
+                  ]
+            )),
             ( "defaultincrement",
-                Checkbox(
-                  title = _("Default Increment"),
-                  label = _("State is WARNING in case the next extent has the default size."),
-                  help = "")),
-                   ]),
+                DropdownChoice(
+                  title   = _("Default Increment"),
+                  choices = [
+                     ( True, _("State is WARNING in case the next extent has the default size.")),
+                     ( False, _("Ignore default increment")),
+                  ]
+            )),
+    ]),
     TextAscii(
         title = _("Explicit tablespaces"),
         help = _("Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"),

@@ -24,6 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+#   .--output--------------------------------------------------------------.
+#   |                               _               _                      |
+#   |                    ___  _   _| |_ _ __  _   _| |_                    |
+#   |                   / _ \| | | | __| '_ \| | | | __|                   |
+#   |                  | (_) | |_| | |_| |_) | |_| | |_                    |
+#   |                   \___/ \__,_|\__| .__/ \__,_|\__|                   |
+#   |                                  |_|                                 |
+#   '----------------------------------------------------------------------'
+
 # Example output from agent:
 # <<<zfs_arc_cache>>>
 # hits                      = 106259988004
@@ -85,7 +94,7 @@
 # arc_meta_limit            =        80 MB
 # arc_meta_max              =      2077 MB
 
-# newer output under solaris 11.3
+# newer output under solaris 11.3 with old agent
 # <<<zfs_arc_cache>>>
 # size                      =        46751 MB
 # target size (c)           =      1027788 MB
@@ -105,6 +114,73 @@
 # mfu_size                  =        30605 MB
 # mru_size                  =        11601 MB
 
+# newer output under solaris 11.3 with updated agent
+# <<<zfs_arc_cache>>>
+# buf_size = 742832600
+# c = 48841615704
+# c_max = 1077714329600
+# c_min = 4214015904
+# class = misc
+# crtime = 6389056,11403263
+# data_freed = 2633453157248
+# data_size = 45014421888
+# deleted = 9360622
+# demand_data_hits = 645028929
+# demand_data_misses = 9656913
+# demand_metadata_hits = 3819285336
+# demand_metadata_misses = 1934895
+# evict_l2_cached = 0
+# evict_l2_eligible = 0
+# evict_l2_ineligible = 607708484608
+# evict_prefetch = 977715200
+# evicted_mfu = 44603686912
+# evicted_mru = 563104797696
+# hash_chain_max = 5
+# hash_chains = 70415
+# hash_collisions = 2812966
+# hash_elements = 1585475
+# hash_elements_max = 1810662
+# hits = 4467022475
+# l2_abort_lowmem = 0
+# l2_cksum_bad = 0
+# l2_feeds = 0
+# l2_hdr_size = 0
+# l2_hits = 0
+# l2_imports = 0
+# l2_io_error = 0
+# l2_misses = 7259729
+# l2_persistence_hits = 0
+# l2_read_bytes = 0
+# l2_rw_clash = 0
+# l2_size = 0
+# l2_write_bytes = 0
+# l2_writes_done = 0
+# l2_writes_error = 0
+# l2_writes_sent = 0
+# memory_throttle_count = 0
+# meta_limit = 0
+# meta_max = 4519225600
+# meta_used = 3836680704
+# mfu_ghost_hits = 27965
+# mfu_hits = 4444241817
+# misses = 11591808
+# mru_ghost_hits = 499269
+# mru_hits = 47780363
+# mutex_miss = 46709
+# other_size = 3058023880
+# p = 15479322529
+# prefetch_behind_prefetch = 429897
+# prefetch_data_hits = 1849310
+# prefetch_joins = 1305700
+# prefetch_meta_size = 35824224
+# prefetch_metadata_hits = 858900
+# prefetch_reads = 3616694
+# prefetch_size = 9486336
+# rawdata_size = 0
+# size = 48851102592
+# snaptime = 6646791,81811455
+
+#.
 
 # parses agent output in a structure like
 # {'arc_meta_limit': 80,
@@ -118,7 +194,8 @@ def parse_zfs_arc_cache(info):
     parsed = {}
     for line in info:
         if len(line) > 2 and line[1] == "=":
-            parsed[line[0]] = int(line[2])
+            if line[2].isdigit():
+                parsed[line[0]] = int(line[2])
     return parsed
 
 
@@ -140,25 +217,27 @@ def inventory_zfs_arc_cache(parsed):
 
 
 def check_zfs_arc_cache(_no_item, _no_params, parsed):
-    if parsed.get("hits") and parsed.get("misses"):
-        for key in [ "", "prefetch_data_", "prefetch_metadata_" ]:
-            human_key = key.replace("_", " ")
+    # Solaris >= 11.3 do not provide these data pretech_*data
+    for key in [ "", "prefetch_data_", "prefetch_metadata_" ]:
+        if "%shits" % key in parsed and "%smisses" % key in parsed:
             total_hits_misses = parsed["%shits" % key] + parsed["%smisses" % key]
-            if not total_hits_misses:
-                yield 0, "No %sHits or Misses" % human_key, \
-                      [("%shit_ratio" % key, 0, '', '', 0, 100)]
+            human_key         = key.replace("_", " ")
 
-            else:
+            if total_hits_misses:
                 hit_ratio = float(parsed["%shits" % key]) / total_hits_misses * 100
                 yield 0, "%sHit Ratio: %0.2f%%" % (human_key.title(), hit_ratio), \
                       [("%shit_ratio" % key, "%0.2f" % hit_ratio, '', '', 0, 100)]
-    else:
-        yield 3, "No info about hit ratio available"
+
+            else:
+                yield 0, "No %sHits or Misses" % human_key, \
+                      [("%shit_ratio" % key, 0, '', '', 0, 100)]
 
     # size
     if "size" in parsed.keys():
-        yield 0, "Cache size: %d MB" % parsed["size"], \
-              [("size", parsed["size"] * 1024 * 1024, '', '', 0)]
+        size_bytes    = parsed["size"] * 1024.0 * 1024.0
+        size_readable = get_bytes_human_readable(size_bytes)
+        yield 0, "Cache size: %s" % size_readable, \
+              [("size", size_bytes, '', '', 0)]
 
     # arc_meta
     # these values may be missing, this is ok too

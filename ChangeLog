@@ -255,6 +255,7 @@
     * 3630 FIX: docsis_channels_upstream: fixed channel discovery
     * 3584 FIX: check_mkevents: Fixed "failed to parse perfdata" errors in web.log caused by "Events" checks...
     * 3587 FIX: SNMP: Fixed possible random IO issues when using classic SNMP...
+    * 3619 FIX: esx_vsphere_vm.mem_usage: add missing declaration for metrics, use correct unit
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

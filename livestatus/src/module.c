@@ -52,19 +52,6 @@
 #include "strutil.h"
 #include "waittriggers.h"
 
-#ifndef AF_LOCAL
-#define AF_LOCAL AF_UNIX
-#endif
-#ifndef PF_LOCAL
-#define PF_LOCAL PF_UNIX
-#endif
-
-// usually - but not always - in sys/un.h
-#ifndef SUN_LEN
-#define SUN_LEN(ptr) \
-    ((size_t)(((struct sockaddr_un *)0)->sun_path) + strlen((ptr)->sun_path))
-#endif
-
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 #ifndef NAGIOS4
 extern int event_broker_options;
@@ -316,7 +303,7 @@ int open_unix_socket() {
         }
     }
 
-    g_unix_socket = socket(PF_LOCAL, SOCK_STREAM, 0);
+    g_unix_socket = socket(PF_UNIX, SOCK_STREAM, 0);
     g_max_fd_ever = g_unix_socket;
     if (g_unix_socket < 0) {
         logger(LG_CRIT, "Unable to create UNIX socket: %s", strerror(errno));
@@ -330,9 +317,9 @@ int open_unix_socket() {
 
     // Bind it to its address. This creates the file with the name g_socket_path
     struct sockaddr_un sockaddr;
-    sockaddr.sun_family = AF_LOCAL;
+    sockaddr.sun_family = AF_UNIX;
     strncpy(sockaddr.sun_path, g_socket_path, sizeof(sockaddr.sun_path));
-    if (bind(g_unix_socket, (struct sockaddr *)&sockaddr, SUN_LEN(&sockaddr)) <
+    if (bind(g_unix_socket, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) <
         0) {
         logger(LG_ERR, "Unable to bind adress %s to UNIX socket: %s",
                g_socket_path, strerror(errno));

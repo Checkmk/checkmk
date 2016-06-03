@@ -54,14 +54,14 @@ EventConsoleConnection::EventConsoleConnection(string path)
     : _path(move(path)), _socket(-1) {}
 
 void EventConsoleConnection::run() {
-    _socket = socket(PF_LOCAL, SOCK_STREAM, 0);
+    _socket = socket(PF_UNIX, SOCK_STREAM, 0);
     if (_socket == -1) {
         Alert() << "Cannot create socket for " << MkEventD(_path, errno);
         return;
     }
 
     struct sockaddr_un sa;
-    sa.sun_family = AF_LOCAL;
+    sa.sun_family = AF_UNIX;
     strncpy(sa.sun_path, _path.c_str(), sizeof(sa.sun_path));
     if (connect(_socket, reinterpret_cast<const struct sockaddr *>(&sa),
                 sizeof(sockaddr_un)) == -1) {

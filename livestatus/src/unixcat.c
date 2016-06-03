@@ -39,20 +39,6 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#ifndef AF_LOCAL
-#define AF_LOCAL AF_UNIX
-#endif
-#ifndef PF_LOCAL
-#define PF_LOCAL PF_UNIX
-#endif
-
-/* Ist normalerweise in sys/un.h, aber dietc hat dieses Makro nicht */
-/* Evaluate to actual length of the `sockaddr_un' structure.  */
-#ifndef SUN_LEN
-#define SUN_LEN(ptr) \
-    ((size_t)(((struct sockaddr_un *)0)->sun_path) + strlen((ptr)->sun_path))
-#endif
-
 int copy_data(int from, int to);
 void *voidp;
 
@@ -139,7 +125,7 @@ int main(int argc, char **argv) {
         exit(2);
     }
 
-    int sock = socket(PF_LOCAL, SOCK_STREAM, 0);
+    int sock = socket(PF_UNIX, SOCK_STREAM, 0);
     if (sock < 0) {
         fprintf(stderr, "Cannot create client socket: %s\n", strerror(errno));
         exit(3);
@@ -147,9 +133,9 @@ int main(int argc, char **argv) {
 
     /* Connect */
     struct sockaddr_un sockaddr;
-    sockaddr.sun_family = AF_LOCAL;
+    sockaddr.sun_family = AF_UNIX;
     strncpy(sockaddr.sun_path, unixpath, sizeof(sockaddr.sun_path));
-    if (connect(sock, (struct sockaddr *)&sockaddr, SUN_LEN(&sockaddr))) {
+    if (connect(sock, (struct sockaddr *)&sockaddr, sizeof(sockaddr))) {
         fprintf(stderr, "Couldn't connect to UNIX-socket at %s: %s.\n",
                 unixpath, strerror(errno));
         close(sock);

@@ -390,7 +390,8 @@ def aquire_lock(path):
     if path in g_locked_paths:
         return # No recursive locking
 
-    # Create file for locking if not existant yet
+    # Create file (and base dir) for locking if not existant yet
+    make_nagios_directory(os.path.dirname(path))
     fd = os.open(path, os.O_RDONLY | os.O_CREAT)
 
     # Handle the case where the file has been renamed in the meantime

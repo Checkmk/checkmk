@@ -19,10 +19,10 @@ Those files are stored at following locations:
 </ul>
 
 You can delete those files with those commands:
-<code>
+C+:
   find ~/var/check_mk/rrd -type f -iname "postfix_mail_queue_*_size*" -exec rm '{}' \;
   find ~/var/pnp4nagios/perfdata -type f -iname "postfix_mail_queue_*_size*" -exec rm '{}' \;
-</code>
+C-:
 
 If you have set up a new monitoring site with version 1.2.8, there are multi RRDs in use.
 If you want to clean up those files, please contact us with via your support address.

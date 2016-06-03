@@ -191,10 +191,21 @@ then
 fi
 
 # ZFS arc cache
+# newer Solaris (>=11.3) do not provide hits and misses via mdb -k
+function get_zfs_arc_cache_data () {
+    if [ ! -z `echo "::arc" | mdb -k | grep -q "hits"` ]
+    then
+        echo "::arc" | mdb -k
+    else
+        kstat -p zfs:0:arcstats | sed -e 's/.*arcstats://g' | \
+            /usr/gnu/bin/sed -e 's/[ \t][ \t]*/ = /g'
+    fi
+}
+
 if type mdb >/dev/null 2>&1
-then
+    then
     echo '<<<zfs_arc_cache>>>'
-    echo "::arc" | mdb -k
+    get_zfs_arc_cache_data
 fi
 
 # Processes

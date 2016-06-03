@@ -1,0 +1,30 @@
+Title: postfix_mailq: Fixed incorrect creation of RRDs, Fixed graphs of size and length of queues
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.8p4
+Date: 1464959618
+Class: fix
+
+Postfix mail queue check creates incorrect rrd data sources. This results in a lot of unnecessary rrd files.
+
+You can delete those files to save hard disc space. But keep in mind, that you will loose the historic
+data. Graphs can have areas with missing data.
+
+Those files are stored at following locations:
+<ul>
+  <li>~/var/check_mk/rrd</li>
+  <li>~/var/pnp4nagios/perfdata</li>
+</ul>
+
+You can delete those files with those commands:
+<code>
+  find ~/var/check_mk/rrd -type f -iname "postfix_mail_queue_*_size*" -exec rm '{}' \;
+  find ~/var/pnp4nagios/perfdata -type f -iname "postfix_mail_queue_*_size*" -exec rm '{}' \;
+</code>
+
+If you have set up a new monitoring site with version 1.2.8, there are multi RRDs in use.
+If you want to clean up those files, please contact us with via your support address.
+
+The graphs of size and length of the queues have been adapted to correct this mistake.
+All several performance data is collected in one graph.

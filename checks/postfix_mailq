@@ -110,7 +110,7 @@ def check_postfix_mailq(_no_item, params, info):
                 size_var = "size"
             else:
                 length_var = "mail_queue_%s_length" % queue
-                size_var = "mail_queue_%s_size" % size
+                size_var = "mail_queue_%s_size" % queue
             if queue in params:
                 warn, crit = params[queue]
                 if length >= crit:

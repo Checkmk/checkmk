@@ -2210,28 +2210,34 @@ metric_info["call_legs"] = {
     "color" : "#60bbbb",
 }
 
-metric_info["mail_queue_deferred_length"] = {
-    "title" : _("Length of deferred mail queue"),
-    "unit"  : "count",
-    "color" : "#40a0b0",
-}
-
 metric_info["mails_received_time"] = {
     "title" : _("Received mails"),
     "unit"  : "s",
     "color" : "31/a",
 }
 
-metric_info["mail_queue_deferred_size"] = {
-    "title" : _("Size of deferred mail queue"),
-    "unit"  : "bytes",
-    "color" : "#402010",
+metric_info["mail_queue_deferred_length"] = {
+    "title" : _("Length of deferred mail queue"),
+    "unit"  : "count",
+    "color" : "#40a0b0",
 }
 
 metric_info["mail_queue_active_length"] = {
     "title" : _("Length of active mail queue"),
     "unit"  : "count",
     "color" : "#ff6000",
+}
+
+metric_info["mail_queue_deferred_size"] = {
+    "title" : _("Size of deferred mail queue"),
+    "unit"  : "bytes",
+    "color" : "43/a",
+}
+
+metric_info["mail_queue_active_size"] = {
+    "title" : _("Size of active mail queue"),
+    "unit"  : "bytes",
+    "color" : "31/a",
 }
 
 metric_info["messages_inbound"] = {
@@ -2997,6 +3003,13 @@ check_metrics["check_mk_active-tcp"] = {
 
 check_metrics["check_mk-citrix_serverload"] = {
     "perf" : { "name" : "citrix_load", "scale" : 0.01 }
+}
+
+check_metrics["check_mk-postfix_mailq"] = {
+    "length"                : { "name" : "mail_queue_deferred_length" },
+    "size"                  : { "name" : "mail_queue_deferred_size" },
+    "~mail_queue_.*_size"   : { "name" : "mail_queue_active_size" },
+    "~mail_queue_.*_length" : { "name" : "mail_queue_active_length" },
 }
 
 check_metrics["check-mk-host-tcp"] = {
@@ -5936,10 +5949,18 @@ graph_info.append({
 })
 
 graph_info.append({
-    "title" : _("Outgoing Mails"),
+    "title" : _("Amount of mails in queues"),
     "metrics" : [
-        ( "mail_queue_deferred_length",   "stack" ),
-        ( "mail_queue_active_length",     "stack" ),
+        ( "mail_queue_deferred_length", "stack" ),
+        ( "mail_queue_active_length",   "stack" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Size of mails in queues"),
+    "metrics" : [
+        ( "mail_queue_deferred_size", "stack" ),
+        ( "mail_queue_active_size",   "stack" ),
     ],
 })
 

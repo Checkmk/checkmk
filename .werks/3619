@@ -1,0 +1,9 @@
+Title: esx_vsphere_vm.mem_usage: add missing declaration for metrics, use correct unit
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p4
+Date: 1464936825
+Class: fix
+
+

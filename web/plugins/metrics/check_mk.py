@@ -780,6 +780,38 @@ metric_info["mem_lnx_hardware_corrupted"] = {
     "unit" : "bytes",
 }
 
+# Consumed Host Memory usage is defined as the amount of host memory that is allocated to the virtual machine
+metric_info["mem_esx_host"] = {
+    "title" : _("Consumed host memory"),
+    "color": "#70f038",
+    "unit" : "bytes",
+}
+
+# Active Guest Memory is defined as the amount of guest memory that is currently being used by the guest operating system and its applications
+metric_info["mem_esx_guest"] = {
+    "title" : _("Active guest memory"),
+    "color": "15/a",
+    "unit" : "bytes",
+}
+
+metric_info["mem_esx_ballooned"] = {
+    "title" : _("Ballooned memory"),
+    "color": "21/a",
+    "unit" : "bytes",
+}
+
+metric_info["mem_esx_shared"] = {
+    "title" : _("Shared memory"),
+    "color": "34/a",
+    "unit" : "bytes",
+}
+
+metric_info["mem_esx_private"] = {
+    "title" : _("Private memory"),
+    "color": "25/a",
+    "unit" : "bytes",
+}
+
 
 metric_info["load1"] = {
     "title" : _("CPU load average of last minute"),
@@ -3037,6 +3069,14 @@ check_metrics["check_mk-mem.used"] = {
     "pagetable"     : { "name" : "mem_lnx_page_tables", "scale" : MB },
     "mapped"        : { "name" : "mem_lnx_mapped", "scale" : MB },
     "committed_as"  : { "name" : "mem_lnx_committed_as", "scale" : MB },
+}
+
+check_metrics["check_mk-esx_vsphere_vm.mem_usage"] = {
+    "host"      : { "name" : "mem_esx_host" },
+    "guest"     : { "name" : "mem_esx_guest" },
+    "ballooned" : { "name" : "mem_esx_ballooned" },
+    "shared"    : { "name" : "mem_esx_shared" },
+    "private"   : { "name" : "mem_esx_private" },
 }
 
 check_metrics["check_mk-ibm_svc_nodestats.disk_latency"] = {
@@ -5695,6 +5735,15 @@ graph_info.append({
         "mem_nonheap:crit",
         "mem_nonheap:max",
     ]
+})
+
+
+graph_info.append({
+    "title" : _("Private and shared memory"),
+    "metrics" : [
+        ("mem_esx_shared", "area"),
+        ("mem_esx_private", "area"),
+    ],
 })
 
 

@@ -40,6 +40,7 @@
 #include "TableDownComm.h"
 #include "TableEventConsoleEvents.h"
 #include "TableEventConsoleHistory.h"
+#include "TableEventConsoleReplication.h"
 #include "TableEventConsoleStatus.h"
 #include "TableHostgroups.h"
 #include "TableHosts.h"
@@ -90,6 +91,7 @@ private:
     TableEventConsoleEvents _table_eventconsoleevents;
     TableEventConsoleHistory _table_eventconsolehistory;
     TableEventConsoleStatus _table_eventconsolestatus;
+    TableEventConsoleReplication _table_eventconsolereplication;
 
     std::map<std::string, Table *> _tables;
 

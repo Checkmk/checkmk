@@ -114,6 +114,7 @@ livestatus_so_SOURCES = \
         TableEventConsole.cc \
         TableEventConsoleEvents.cc \
         TableEventConsoleHistory.cc \
+        TableEventConsoleReplication.cc \
         TableEventConsoleStatus.cc \
         TableHostgroups.cc \
         TableHosts.cc \

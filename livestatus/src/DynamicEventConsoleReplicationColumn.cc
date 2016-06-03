@@ -22,18 +22,14 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableEventConsoleReplication_h
-#define TableEventConsoleReplication_h
+#include "DynamicEventConsoleReplicationColumn.h"
 
-#include "config.h"  // IWYU pragma: keep
-#include "Table.h"
+DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
+    std::string name, std::string description, int indirect_offset,
+    int extra_offset)
+    : DynamicColumn(name, description, indirect_offset, extra_offset) {}
 
-class TableEventConsoleReplication : public Table {
-public:
-    TableEventConsoleReplication();
-    const char *name() const override;
-    const char *namePrefix() const override;
-    void answerQuery(Query *query) override;
-};
-
-#endif  // TableEventConsoleReplication_h
+Column *DynamicEventConsoleReplicationColumn::createColumn(
+    int indirect_offset, int extra_offset, const char *arguments) {
+    return nullptr;
+}

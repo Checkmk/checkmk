@@ -23,13 +23,19 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableEventConsoleReplication.h"
+#include "DynamicEventConsoleReplicationColumn.h"
+
+TableEventConsoleReplication::TableEventConsoleReplication() {
+    addDynamicColumn(new DynamicEventConsoleReplicationColumn(
+        "value", "The replication value", -1, -1));
+}
 
 const char *TableEventConsoleReplication::name() const {
-    return "eventconsoleevents";
+    return "eventconsolereplication";
 }
 
 const char *TableEventConsoleReplication::namePrefix() const {
-    return "eventconsoleevents_";
+    return "eventconsolereplication_";
 }
 
 void TableEventConsoleReplication::answerQuery(Query *query) {}

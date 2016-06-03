@@ -53,6 +53,8 @@ livestatus_so_SOURCES = \
         DowntimeOrComment.cc \
         DowntimesOrComments.cc \
         DynamicColumn.cc \
+        DynamicEventConsoleReplicationColumn.cc \
+        DynamicLogwatchFileColumn.cc \
         EmptyColumn.cc \
         EventConsoleConnection.cc \
         Filter.cc \
@@ -76,7 +78,6 @@ livestatus_so_SOURCES = \
         LogEntry.cc \
         Logfile.cc \
         LogwatchListColumn.cc \
-        DynamicLogwatchFileColumn.cc \
         MetricsColumn.cc \
         NullColumn.cc \
         OffsetDoubleColumn.cc \

@@ -12,6 +12,7 @@
 
     WATO:
     * 3588 FIX: BI aggregation: Fixed folding of tag groups in aggregation rules using host/service searches
+    * 3620 FIX: Do not longer put SNMP MIB files into WATO snapshots...
 
     Notifications:
     * 3139 FIX: fixed a couple of minor issues in call to notification scripts...

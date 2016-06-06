@@ -216,7 +216,6 @@ else:
           "paths"       : [
                             ("dir",  "local/share/check_mk/mibs"),
                           ],
-          "default"     : True
         },
         "extensions" : {
             "title"    : _("Extensions in <tt>~/local/</tt> and MKPs"),

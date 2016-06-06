@@ -1,0 +1,13 @@
+Title: Do not longer put SNMP MIB files into WATO snapshots
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8p4
+Date: 1465221527
+Class: fix
+
+WATO used to put uploaded MIB files into the automatically created
+snapshots. The snapshots are used for configuration roll back in
+case of a manually garbled configuration. They are not ment to replace
+a real backup. MIB files slew down configuration creation on
+{{Activate changes}} a lot. No any longer...

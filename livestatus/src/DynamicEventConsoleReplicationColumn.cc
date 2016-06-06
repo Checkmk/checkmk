@@ -40,6 +40,7 @@ extern char g_mkeventd_socket_path[4096];
 #endif
 
 using std::make_unique;
+using std::move;
 using std::string;
 using std::unique_ptr;
 using std::vector;
@@ -64,9 +65,9 @@ public:
     ReplicationColumn(string name, string description, int indirect_offset,
                       int extra_offset, string blob)
         : BlobColumn(name, description, indirect_offset, extra_offset)
-        , _blob(blob) {}
+        , _blob(move(blob)) {}
 
-    unique_ptr<vector<char>> getBlob(void *) override {
+    unique_ptr<vector<char>> getBlob(void * /* unused */) override {
         return make_unique<vector<char>>(_blob.begin(), _blob.end());
     };
 

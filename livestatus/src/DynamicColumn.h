@@ -31,7 +31,7 @@ class Column;
 
 class DynamicColumn {
 public:
-    DynamicColumn(const std::string &name, const std::string &description,
+    DynamicColumn(std::string name, std::string description,
                   int indirect_offset, int extra_offset);
     virtual ~DynamicColumn();
     std::string name() const;

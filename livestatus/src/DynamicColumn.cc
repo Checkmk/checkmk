@@ -23,13 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DynamicColumn.h"
+#include <utility>
 
+using std::move;
 using std::string;
 
-DynamicColumn::DynamicColumn(const string& name, const string& description,
+DynamicColumn::DynamicColumn(string name, string description,
                              int indirect_offset, int extra_offset)
-    : _name(name)
-    , _description(description)
+    : _name(move(name))
+    , _description(move(description))
     , _indirect_offset(indirect_offset)
     , _extra_offset(extra_offset) {}
 

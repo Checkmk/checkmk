@@ -35,8 +35,7 @@ public:
     DynamicEventConsoleReplicationColumn(std::string name,
                                          std::string description,
                                          int indirect_offset, int extra_offset);
-    Column *createColumn(int indirect_offset, int extra_offset,
-                         const char *arguments) override;
+    Column *createColumn(const std::string &arguments) override;
 };
 
 #endif  // DynamicEventConsoleReplicationColumn_h

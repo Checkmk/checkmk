@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include "Table.h"
+class Query;
 
 class TableEventConsoleReplication : public Table {
 public:

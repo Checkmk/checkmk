@@ -24,8 +24,15 @@
 
 #include "DynamicColumn.h"
 
+using std::string;
+
+DynamicColumn::DynamicColumn(const string& name, const string& description,
+                             int indirect_offset, int extra_offset)
+    : _name(name)
+    , _description(description)
+    , _indirect_offset(indirect_offset)
+    , _extra_offset(extra_offset) {}
+
 DynamicColumn::~DynamicColumn() = default;
 
-Column *DynamicColumn::createColumn(const char *arguments) {
-    return createColumn(_indirect_offset, _extra_offset, arguments);
-}
+string DynamicColumn::name() const { return _name; }

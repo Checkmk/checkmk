@@ -55,23 +55,22 @@ string unescape_filename(string filename) {
     return filename_native;
 }
 
-Column *DynamicLogwatchFileColumn::createColumn(int indirect_offset,
-                                                int extra_offset,
-                                                const char *arguments) {
+Column *DynamicLogwatchFileColumn::createColumn(const std::string &arguments) {
     // We expect:
     // COLNAME:FILENAME
 
     // Example:
     // file_contents:var\log\messages
 
-    vector<char> args(arguments, arguments + strlen(arguments) + 1);
+    vector<char> args(arguments.begin(), arguments.end());
+    args.push_back('\0');
     char *scan = &args[0];
 
     char *colname = next_token(&scan, ':');
     if ((colname == nullptr) || (colname[0] == 0)) {
         logger(LOG_WARNING,
                "Invalid arguments for column %s: missing result column name",
-               name());
+               _name.c_str());
         return nullptr;
     }
 
@@ -79,14 +78,15 @@ Column *DynamicLogwatchFileColumn::createColumn(int indirect_offset,
     char *filename = scan;
     if ((filename == nullptr) || (filename[0] == 0)) {
         logger(LOG_WARNING,
-               "Invalid arguments for column %s: missing file name", name());
+               "Invalid arguments for column %s: missing file name",
+               _name.c_str());
         return nullptr;
     }
 
     if (nullptr != strchr(filename, '/')) {
         logger(LOG_WARNING,
                "Invalid arguments for column %s: file name '%s' contains slash",
-               name(), filename);
+               _name.c_str(), filename);
         return nullptr;
     }
 
@@ -96,6 +96,6 @@ Column *DynamicLogwatchFileColumn::createColumn(int indirect_offset,
     suffix += filename_native;
 
     return new HostFileColumn(colname, "Contents of logwatch file",
-                              MK_LOGWATCH_PATH, suffix.c_str(), indirect_offset,
-                              extra_offset);
+                              MK_LOGWATCH_PATH, suffix.c_str(),
+                              _indirect_offset, _extra_offset);
 }

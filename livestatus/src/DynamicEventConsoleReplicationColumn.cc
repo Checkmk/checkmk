@@ -30,6 +30,6 @@ DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
     : DynamicColumn(name, description, indirect_offset, extra_offset) {}
 
 Column *DynamicEventConsoleReplicationColumn::createColumn(
-    int indirect_offset, int extra_offset, const char *arguments) {
+    const std::string &arguments) {
     return nullptr;
 }

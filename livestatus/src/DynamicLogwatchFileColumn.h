@@ -36,8 +36,7 @@ public:
                               int indirect_offset, int extra_offset = -1)
         : DynamicColumn(name, description, indirect_offset, extra_offset) {}
     ~DynamicLogwatchFileColumn() {}
-    Column *createColumn(int indirect_offset, int extra_offset,
-                         const char *arguments) override;
+    Column *createColumn(const std::string &arguments) override;
 };
 
 #endif  // DynamicLogwatchFileColumn_h

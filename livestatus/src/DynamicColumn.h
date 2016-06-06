@@ -30,24 +30,18 @@
 class Column;
 
 class DynamicColumn {
-    std::string _name;
-    std::string _description;
-    int _indirect_offset;
-    int _extra_offset;
-
 public:
-    DynamicColumn(std::string name, std::string description,
-                  int indirect_offset, int extra_offset)
-        : _name(name)
-        , _description(description)
-        , _indirect_offset(indirect_offset)
-        , _extra_offset(extra_offset) {}
+    DynamicColumn(const std::string &name, const std::string &description,
+                  int indirect_offset, int extra_offset);
     virtual ~DynamicColumn();
-    const char *name() const { return _name.c_str(); }
-    const char *description() const { return _description.c_str(); }
-    Column *createColumn(const char *arguments);
-    virtual Column *createColumn(int indirect_offset, int extra_offset,
-                                 const char *arguments) = 0;
+    std::string name() const;
+    virtual Column *createColumn(const std::string &arguments) = 0;
+
+protected:
+    const std::string _name;
+    const std::string _description;  // Note: Currently unused!
+    const int _indirect_offset;
+    const int _extra_offset;
 };
 
 #endif  // DynamicColumn_h

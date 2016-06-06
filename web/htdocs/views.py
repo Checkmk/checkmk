@@ -364,8 +364,7 @@ def prepare_display_options():
     # "DisplayOptions.options" but this contains the implicit options which should
     # not be added to the URLs. So the real parameters need to be preserved for
     # this case.
-    if html.var('display_options'):
-        DisplayOptions.title_options = html.var("display_options")
+    DisplayOptions.title_options = html.var("display_options")
 
     # If display option 'M' is set, then all links are targetet to the 'main'
     # frame. Also the display options are removed since the view in the main

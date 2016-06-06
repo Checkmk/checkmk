@@ -32,11 +32,11 @@ class Query;
 
 class TableEventConsoleReplication : public Table {
 public:
-    TableEventConsoleReplication(
 #ifdef CMC
-        Core *core
+    explicit TableEventConsoleReplication(Core *core);
+#else
+    TableEventConsoleReplication();
 #endif
-        );
     const char *name() const override;
     const char *namePrefix() const override;
     void answerQuery(Query *query) override;

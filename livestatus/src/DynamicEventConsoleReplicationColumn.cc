@@ -23,12 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DynamicEventConsoleReplicationColumn.h"
+#include <iosfwd>
 #include <memory>
 #include <utility>
 #include <vector>
 #include "BlobColumn.h"
 #include "EventConsoleConnection.h"
-#include "Logger.h"
 #ifdef CMC
 #include "Config.h"
 #include "Core.h"

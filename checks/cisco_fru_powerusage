@@ -46,33 +46,34 @@
 
 
 def parse_cisco_fru_powerusage(info):
-    powerunit, powervals    = info
-    oidend, powerunit_str   = powerunit[0]
-    factor_str, voltage_str = powerunit_str.lower().split("amps")
-
-    if "milli" in factor_str.lower():
-        factor = 0.001
-    elif "centi" in factor_str.lower():
-        factor = 0.01
-    else:
-        factor = 1.0
-
-    voltage = float(voltage_str.lower().replace("at", "").\
-                    replace("@", "").replace("v", "").strip())
-
     parsed = {}
-    if oidend == powervals[0][0]:
-        system_total, system_drawn, inline_total, inline_drawn = map(float, powervals[0][1:])
-        for what, val in [
-            ("system total", system_total),        # Gesamtstrom
-            ("system drawn", system_drawn),        # aufgenommene Gesamtstromstaerke
-            ("inline total", inline_total),
-            ("inline drawn", inline_drawn)]:
-            parsed.setdefault(what, {
-                "power"   : factor * val * voltage,
-                "current" : factor * val,
-                "voltage" : voltage,
-            })
+    powerunit, powervals = info
+    if powerunit and powervals:
+        oidend, powerunit_str   = powerunit[0]
+        factor_str, voltage_str = powerunit_str.lower().split("amps")
+
+        if "milli" in factor_str.lower():
+            factor = 0.001
+        elif "centi" in factor_str.lower():
+            factor = 0.01
+        else:
+            factor = 1.0
+
+        voltage = float(voltage_str.lower().replace("at", "").\
+                        replace("@", "").replace("v", "").strip())
+
+        if oidend == powervals[0][0]:
+            system_total, system_drawn, inline_total, inline_drawn = map(float, powervals[0][1:])
+            for what, val in [
+                ("system total", system_total),        # Gesamtstrom
+                ("system drawn", system_drawn),        # aufgenommene Gesamtstromstaerke
+                ("inline total", inline_total),
+                ("inline drawn", inline_drawn)]:
+                parsed.setdefault(what, {
+                    "power"   : factor * val * voltage,
+                    "current" : factor * val,
+                    "voltage" : voltage,
+                })
 
     return parsed
 

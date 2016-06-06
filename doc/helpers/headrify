@@ -26,7 +26,7 @@ the Free Software Foundation in version 2.  check_mk is  distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-ails.  You should have  received  a copy of the  GNU  General Public
+tails. You should have  received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
@@ -44,8 +44,8 @@ headrify ()
       return
   fi
 
-  if [ "${file##*/}" = README ] ; then
-      echo "skipping README file."
+  if [[ "${file##*/}" =~ ^[A-Z]+$ ]]; then
+      echo "skipping $file. It's a documentation file."
       return
   fi
 
@@ -82,7 +82,7 @@ headrify ()
           *.h|*.c|*.cc|*.h.in|*.js) comment="// " ;;
           *.conf|*.cfg)   comment="# " ;;
           *.spec|Makefile*) comment="# " ;;
-          *.py|*)     comment="# "  ; bangpath="#!/usr/bin/python
+          *.py|*)     comment="# "  ; bangpath="#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-"; ;;
       esac
   fi
@@ -137,8 +137,22 @@ else
       -name "*.php" -or \
       -name "*.sh" -or \
       -name "*.spec" \) ; \
-    rm -f checks/*~ ; ls checks/* ; echo agents/plugins/* agents/special/* agents/* | tr ' ' \\n | grep -vx agents/waitmax | fgrep -v windows | fgrep -v .exe | fgrep -v windows/plugins ; ls agents/windows/*.cc ; echo agents/windows/Makefile ; } \
-	| egrep -v 'livestatus/nagios4?/' | grep -vx '' | \
+    rm -f checks/*~ ; ls checks/* ; \
+    echo agents/plugins/* agents/special/* agents/* \
+        | tr ' ' \\n \
+        | grep -vx agents/waitmax \
+        | fgrep -v windows \
+        | fgrep -v .exe \
+        | fgrep -v .deb \
+        | fgrep -v .rpm \
+        | fgrep -v windows/plugins ; \
+    ls agents/windows/*.cc ;
+    echo agents/windows/Makefile ;
+  } \
+  | egrep -v 'livestatus/nagios4?/' \
+  | grep -v 'agents/cfg_examples' \
+  | grep -vx '' \
+  | \
   while read file
   do
     headrify "$file" &

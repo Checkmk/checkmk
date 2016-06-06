@@ -77,7 +77,7 @@ Query::Query(const list<string> &lines, OutputBuffer *output, Table *table)
     , _timezone_offset(0) {
     for (auto &line : lines) {
         vector<char> line_copy(line.begin(), line.end());
-        line_copy.push_back(0);
+        line_copy.push_back('\0');
         char *buffer = &line_copy[0];
         rstrip(buffer);
         if (g_debug_level > 0) {

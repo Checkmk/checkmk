@@ -281,6 +281,9 @@ def show_crash_report(info):
     html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_traceback(info["exc_traceback"])))
     html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Local Variables"))
     html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_local_vars(info["local_vars"])))
+    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Python Module Paths"))
+    joined_paths = "<br>".join([ html.attrencode(p) for p in info.get("python_paths", [_("Unknown")]) ])
+    html.write("<td>%s</td></tr>" % joined_paths)
     html.write("</table>")
 
 
@@ -445,6 +448,7 @@ def create_crash_dump_info_file(tar):
         "os"            : get_os_info(),
         "version"       : defaults.check_mk_version,
         "python_version": sys.version,
+        "python_paths"  : sys.path,
         "exc_type"      : exc_type.__name__,
         "exc_value"     : "%s" % exc_value,
         "exc_traceback" : traceback.extract_tb(exc_traceback),

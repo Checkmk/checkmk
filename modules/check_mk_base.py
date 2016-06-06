@@ -1600,6 +1600,7 @@ def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, d
         "os"            : get_os_info(),
         "version"       : check_mk_version,
         "python_version": sys.version,
+        "python_paths"  : sys.path,
         "exc_type"      : exc_type.__name__,
         "exc_value"     : "%s" % exc_value,
         "exc_traceback" : traceback.extract_tb(exc_traceback),

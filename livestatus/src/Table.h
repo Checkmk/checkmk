@@ -69,10 +69,10 @@ public:
     /// \brief Retrieve a column with a give name.
     ///
     /// If the name contains a ':' then we have a dynamic column with column
-    /// arguments: The part before the colon is the column name and the part
-    /// after it represents the arguments, which are passed to
-    /// DynamicColumn::createColumn. This whole mechanism is used to access RRD
-    /// metrics data.
+    /// arguments: The part before the colon is the column name of the dynamic
+    /// column and the part after it is the name of the fresh, dynamically
+    /// created column (up to the 2nd ':') and further arguments. This whole
+    /// mechanism is e.g. used to access RRD metrics data.
     ///
     /// \todo This member function is virtual just because TableStateHistory and
     /// TableLog override it for some dubious reason: They first try the normal
@@ -85,7 +85,7 @@ public:
     virtual void *findObject(char *objectspec);
 
 private:
-    Column *dynamicColumn(const char *colname_with_args);
+    Column *dynamicColumn(const std::string &name, const std::string &rest);
 
     std::map<std::string, Column *> _columns;
     std::map<std::string, DynamicColumn *> _dynamic_columns;

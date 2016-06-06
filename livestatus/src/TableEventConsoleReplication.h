@@ -27,7 +27,9 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include "Table.h"
+#ifdef CMC
 class Core;
+#endif
 class Query;
 
 class TableEventConsoleReplication : public Table {

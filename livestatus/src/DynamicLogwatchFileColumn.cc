@@ -23,16 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DynamicLogwatchFileColumn.h"
-#include <string.h>
-#include <syslog.h>
-#include <vector>
+#include <ostream>
 #include "HostFileColumn.h"
-#include "logger.h"
+#include "Logger.h"
 #include "mk_logwatch.h"
-#include "strutil.h"
 
 using std::string;
-using std::vector;
 
 // Replace \\ with \ and \s with space
 string unescape_filename(string filename) {
@@ -55,47 +51,23 @@ string unescape_filename(string filename) {
     return filename_native;
 }
 
-Column *DynamicLogwatchFileColumn::createColumn(const std::string &arguments) {
-    // We expect:
-    // COLNAME:FILENAME
-
-    // Example:
-    // file_contents:var\log\messages
-
-    vector<char> args(arguments.begin(), arguments.end());
-    args.push_back('\0');
-    char *scan = &args[0];
-
-    char *colname = next_token(&scan, ':');
-    if ((colname == nullptr) || (colname[0] == 0)) {
-        logger(LOG_WARNING,
-               "Invalid arguments for column %s: missing result column name",
-               _name.c_str());
+Column *DynamicLogwatchFileColumn::createColumn(const std::string &name,
+                                                const std::string &arguments) {
+    // arguments contains a file name
+    if (arguments.empty()) {
+        Warning() << "Invalid arguments for column '" << _name
+                  << "': missing file name";
         return nullptr;
     }
 
-    // Start time of queried range - UNIX time stamp
-    char *filename = scan;
-    if ((filename == nullptr) || (filename[0] == 0)) {
-        logger(LOG_WARNING,
-               "Invalid arguments for column %s: missing file name",
-               _name.c_str());
+    if (arguments.find('/') != string::npos) {
+        Warning() << "Invalid arguments for column '" << _name
+                  << "': file name '" << arguments << "' contains slash";
         return nullptr;
     }
 
-    if (nullptr != strchr(filename, '/')) {
-        logger(LOG_WARNING,
-               "Invalid arguments for column %s: file name '%s' contains slash",
-               _name.c_str(), filename);
-        return nullptr;
-    }
-
-    string filename_native = unescape_filename(filename);
-
-    string suffix("/");
-    suffix += filename_native;
-
-    return new HostFileColumn(colname, "Contents of logwatch file",
-                              MK_LOGWATCH_PATH, suffix.c_str(),
+    return new HostFileColumn(name, "Contents of logwatch file",
+                              MK_LOGWATCH_PATH,
+                              ("/" + unescape_filename(arguments)).c_str(),
                               _indirect_offset, _extra_offset);
 }

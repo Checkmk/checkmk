@@ -92,7 +92,7 @@ DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
 }
 
 Column *DynamicEventConsoleReplicationColumn::createColumn(
-    const std::string &arguments) {
+    const std::string &name, const std::string &arguments) {
 #ifdef CMC
     string path = _core->_world->_config->_mkeventd_socket_path;
 #else
@@ -100,6 +100,6 @@ Column *DynamicEventConsoleReplicationColumn::createColumn(
 #endif
     ECTableConnection ec(path, "REPLICATE " + arguments);
     ec.run();
-    return new ReplicationColumn("replication", "replication value", -1, -1,
+    return new ReplicationColumn(name, "replication value", -1, -1,
                                  ec.getResult());
 }

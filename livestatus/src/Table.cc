@@ -24,8 +24,10 @@
 
 #include "Table.h"
 #include <string.h>
+#include <ostream>
 #include "Column.h"
 #include "DynamicColumn.h"
+#include "Logger.h"
 
 using std::string;
 
@@ -63,8 +65,9 @@ Column *Table::column(const char *colname) {
         colname += prefix_len;
     }
 
-    if (strchr(colname, ':') != nullptr) {
-        return dynamicColumn(colname);
+    const char *sep_pos = strchr(colname, ':');
+    if (sep_pos != nullptr) {
+        return dynamicColumn(string(colname, sep_pos), string(sep_pos + 1));
     }
 
     // First try exact match...
@@ -83,17 +86,26 @@ Column *Table::column(const char *colname) {
     return nullptr;
 }
 
-Column *Table::dynamicColumn(const char *colname_with_args) {
-    const char *sep_pos = strchr(colname_with_args, ':');
-    string name(colname_with_args, sep_pos - colname_with_args);
-
-    const char *argstring = sep_pos + 1;
-
+Column *Table::dynamicColumn(const string &name, const string &rest) {
     auto it = _dynamic_columns.find(name);
-    if (it != _dynamic_columns.end()) {
-        return it->second->createColumn(argstring);
+    if (it == _dynamic_columns.end()) {
+        Warning() << "Unknown dynamic column '" << name << "'";
+        return nullptr;
     }
-    return nullptr;
+
+    auto sep_pos = rest.find(':');
+    if (sep_pos == string::npos) {
+        Warning() << "Missing separator in dynamic column '" << name << "'";
+        return nullptr;
+    }
+
+    string name2 = rest.substr(0, sep_pos);
+    if (name2.empty()) {
+        Warning() << "Empty column name for dynamic column '" << name << "'";
+        return nullptr;
+    }
+
+    return it->second->createColumn(name2, rest.substr(sep_pos + 1));
 }
 
 bool Table::isAuthorized(contact * /*unused*/, void * /*unused*/) {

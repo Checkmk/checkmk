@@ -29,7 +29,9 @@
 #include <string>
 #include "DynamicColumn.h"
 class Column;
+#ifdef CMC
 class Core;
+#endif
 
 class DynamicEventConsoleReplicationColumn : public DynamicColumn {
 public:
@@ -41,7 +43,8 @@ public:
                                          Core *core
 #endif
                                          );
-    Column *createColumn(const std::string &arguments) override;
+    Column *createColumn(const std::string &name,
+                         const std::string &arguments) override;
 #ifdef CMC
 private:
     Core *_core;

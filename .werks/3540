@@ -1,0 +1,12 @@
+Title: Fixed exception on reading cachefiles
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1465203854
+
+
+This fixes the Check_MK agent error <i>%d format: a number is required, not NoneType</i>
+which was introduced in the last version.

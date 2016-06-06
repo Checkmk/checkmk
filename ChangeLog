@@ -258,6 +258,7 @@
     * 3619 FIX: esx_vsphere_vm.mem_usage: add missing declaration for metrics, use correct unit
     * 2238 FIX: postfix_mailq: Fixed incorrect creation of RRDs, Fixed graphs of size and length of queues...
     * 3633 FIX: check_sql: minor cleanup in active check_sql, fixed performance data handling
+    * 3540 FIX: Fixed exception on reading cachefiles...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

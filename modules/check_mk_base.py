@@ -680,7 +680,7 @@ def read_cache_file(relpath, max_cache_age):
                 return result
         else:
             vverbose("Skipping cache file %s: Too old "
-                             "(age is %d sec, allowed is %d sec)\n" %
+                             "(age is %d sec, allowed is %s sec)\n" %
                    (cachefile, cachefile_age(cachefile), max_cache_age))
 
     if simulation_mode and not opt_no_cache:

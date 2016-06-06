@@ -43,7 +43,7 @@
 #include "Table.h"
 #ifdef CMC
 #include "cmc.h"
-struct Core;
+class Core;
 #else
 #include "nagios.h"
 #endif

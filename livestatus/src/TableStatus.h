@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include "Table.h"
 #ifdef CMC
-struct Core;
+class Core;
 #endif
 class Query;
 

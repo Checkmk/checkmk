@@ -30,7 +30,7 @@
 #include "nagios.h"  // IWYU pragma: keep
 #ifdef CMC
 #include <mutex>
-struct Core;
+class Core;
 class Notes;
 #else
 class DowntimesOrComments;

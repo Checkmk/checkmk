@@ -35,13 +35,13 @@
 class Column;
 #ifdef CMC
 #include <mutex>
-struct Core;
+class Core;
 class Notes;
 #else
 class DowntimesOrComments;
 #endif
 class Query;
-struct HostServiceState;
+class HostServiceState;
 struct LogEntry;
 
 #define CLASSMASK_STATEHIST 0xC6

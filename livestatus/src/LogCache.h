@@ -33,7 +33,7 @@
 class Column;
 class CommandsHolder;
 #ifdef CMC
-struct Core;
+class Core;
 #endif
 class Logfile;
 

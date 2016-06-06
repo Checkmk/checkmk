@@ -32,7 +32,7 @@
 class Column;
 #ifdef CMC
 #include <mutex>
-struct Core;
+class Core;
 class Notes;
 #else
 class DowntimesOrComments;

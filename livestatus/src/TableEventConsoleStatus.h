@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include "TableEventConsole.h"
 #ifdef CMC
-struct Core;
+class Core;
 #endif
 
 class TableEventConsoleStatus : public TableEventConsole {

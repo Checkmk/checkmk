@@ -36,7 +36,7 @@ class Query;
 struct LogEntry;
 
 #ifdef CMC
-struct World;
+class World;
 #endif
 
 #define MAX_LOGLINE 65536

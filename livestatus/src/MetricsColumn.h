@@ -29,7 +29,7 @@
 #include <string>
 #include "Column.h"
 #ifdef CMC
-struct Core;
+class Core;
 #endif
 class Query;
 

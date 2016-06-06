@@ -30,13 +30,14 @@
 #include <time.h>
 #include <vector>
 #include "nagios.h"  // IWYU pragma: keep
-struct HostServiceState;
+class HostServiceState;
 
 typedef std::vector<HostServiceState *> HostServices;
 
 typedef void *HostServiceKey;
 
-struct HostServiceState {
+class HostServiceState {
+public:
     bool _is_host;
     time_t _time;
     int _lineno;

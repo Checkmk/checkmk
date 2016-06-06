@@ -78,7 +78,8 @@
    }nebstruct_comment_data;
  */
 
-struct DowntimeOrComment {
+class DowntimeOrComment {
+public:
     int _type;
     host *_host;
     service *_service;
@@ -92,7 +93,8 @@ struct DowntimeOrComment {
     virtual ~DowntimeOrComment();
 };
 
-struct Downtime : public DowntimeOrComment {
+class Downtime : public DowntimeOrComment {
+public:
     time_t _start_time;
     time_t _end_time;
     int _fixed;
@@ -101,7 +103,8 @@ struct Downtime : public DowntimeOrComment {
     explicit Downtime(nebstruct_downtime_struct *dt);
 };
 
-struct Comment : public DowntimeOrComment {
+class Comment : public DowntimeOrComment {
+public:
     time_t _expire_time;
     int _persistent;
     int _source;

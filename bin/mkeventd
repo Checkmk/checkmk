@@ -2705,11 +2705,6 @@ class StatusServer:
             except Exception, e:
                 log("Error handling client %s: %s" % (addr_info, e))
                 if client_socket:
-                    try:
-                        client_socket.sendall("ERROR: %s\n" % e)
-                    except:
-                        pass # avoid next exception because of broken pipe!
-
                     client_socket.close()
                     client_socket = None
                 if opt_debug:

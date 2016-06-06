@@ -146,10 +146,11 @@ def compute_foldertree():
         for num_parts in range(0, len(path_parts)):
             this_folder_path = '/'.join(path_parts[:num_parts])
 
-            if this_folder_path not in user_folders:
-                user_folders[this_folder_path] = get_folder(this_folder_path, num)
-            else:
-                user_folders[this_folder_path]['.num_hosts'] += num
+            if wato.Folder.folder_exists(this_folder_path):
+                if this_folder_path not in user_folders:
+                    user_folders[this_folder_path] = get_folder(this_folder_path, num)
+                else:
+                    user_folders[this_folder_path]['.num_hosts'] += num
 
     #
     # Now build the folder tree

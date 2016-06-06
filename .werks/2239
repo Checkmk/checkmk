@@ -1,0 +1,12 @@
+Title: Fixed exception in WATO snapins Folders, Tree of folders and Virtual Host Tree
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p4
+Date: 1465212884
+Class: fix
+
+An exception is thrown, if you want to use the WATO snapins Folders, Tree of folders and
+Virtual Host Tree in a distributed monitoring setup. The master site is used as viewer
+for the slave sites. If you create folders on slave sites and activate one of the snapins
+at teh master site there is an error shown like No WATO folder ... . This have been fixed.

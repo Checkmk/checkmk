@@ -1626,7 +1626,8 @@ def compute_tag_tree(taglist):
             if wato_folder.startswith("/wato/"):
                 folder_path = wato_folder[6:-9]
                 folder_path_components = folder_path.split("/")
-                folder_titles = wato.get_folder_title_path(folder_path)[1:] # omit main folder
+                if wato.Folder.folder_exists(folder_path):
+                    folder_titles = wato.get_folder_title_path(folder_path)[1:] # omit main folder
             else:
                 folder_titles = []
 

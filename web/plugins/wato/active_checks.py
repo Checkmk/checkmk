@@ -431,48 +431,75 @@ register_rule(group,
         optional_keys = [ "levels", "levels_low", "perfdata", "port", "procedure" ],
         elements = [
             ( "description",
-              TextUnicode(title = _("Service Description"),
-                 help = _("The name of this active service to be displayed."),
-                 allow_empty = False,
-            )),
+                TextUnicode(
+                    title = _("Service Description"),
+                    help  = _("The name of this active service to be displayed."),
+                    allow_empty = False,
+                )
+            ),
             ( "dbms",
-               DropdownChoice(
-                   title = _("Type of Database"),
-                   choices = [
-                      ("mysql",    _("MySQL")),
-                      ("postgres", _("PostgreSQL")),
-                      ("mssql",    _("MSSQL")),
-                      ("oracle",   _("Oracle")),
-                      ("db2",      _("DB2")),
-                   ],
-                   default_value = "postgres",
-               ),
+                DropdownChoice(
+                    title   = _("Type of Database"),
+                    choices = [
+                        ("mysql",    _("MySQL")),
+                        ("postgres", _("PostgreSQL")),
+                        ("mssql",    _("MSSQL")),
+                        ("oracle",   _("Oracle")),
+                        ("db2",      _("DB2")),
+                    ],
+                    default_value = "postgres",
+                ),
             ),
             ( "port",
-               Integer(title = _("Database Port"), allow_empty = True,
-                      help = _('The port the DBMS listens to'))
+                Integer(
+                    title = _("Database Port"),
+                    help  = _('The port the DBMS listens to'),
+                    allow_empty = True,
+                )
             ),
             ( "name",
-               TextAscii(title = _("Database Name"), allow_empty = False,
-                      help = _('The name of the database on the DBMS'))
+                TextAscii(
+                    title = _("Database Name"),
+                    help  = _('The name of the database on the DBMS'),
+                    allow_empty = False,
+                )
             ),
             ( "user",
-               TextAscii(title = _("Database User"), allow_empty = False,
-                      help = _('The username used to connect to the database'))
+                TextAscii(
+                    title = _("Database User"),
+                    help = _('The username used to connect to the database'),
+                    allow_empty = False,
+                )
             ),
             ( "password",
-               Password(title = _("Database Password"), allow_empty = False,
-                      help = _('The password used to connect to the database'))
+                Password(
+                    title = _("Database Password"),
+                    help = _('The password used to connect to the database'),
+                    allow_empty = False,
+                )
             ),
             ( "sql",
-              TextAscii(title = _("SQL-statement or procedure name"), allow_empty = False,
-                      help = _('The SQL-statement or procedure name which is executed on the DBMS. It must return '
-                               'a result table with one row and at least two columns. The first column must be '
-                               'an integer and is interpreted as the state (0 is OK, 1 is WARN, 2 is CRIT). '
-                               'Alternatively the first column can be interpreted as number value and you can '
-                               'define levels for this number. The '
-                               'second column is used as check output. The third column is optional and can '
-                               'contain performance data.'))
+                Alternative(
+                    title = _("Query or SQL statement"),
+                    elements = [
+                        TextAscii(
+                            title = _("SQL statement or procedure name"),
+                            help  = _('The SQL-statement or procedure name which is executed on the DBMS. It must return '
+                                      'a result table with one row and at least two columns. The first column must be '
+                                      'an integer and is interpreted as the state (0 is OK, 1 is WARN, 2 is CRIT). '
+                                      'Alternatively the first column can be interpreted as number value and you can '
+                                      'define levels for this number. The '
+                                      'second column is used as check output. The third column is optional and can '
+                                      'contain performance data.')
+                        ),
+                        UploadOrPasteTextFile(
+                            title = _("Import Query"),
+                            file_title = _("File including Query"),
+                            default_mode = "upload",
+                        ),
+                    ],
+                    allow_empty = False,
+                )
             ),
             ( "procedure",
             Dictionary(
@@ -485,10 +512,11 @@ register_rule(group,
                     "are required, they may be specified below."),
                 elements = [
                         ("useprocs",
-                        FixedValue(
-                            value = True,
-                            totext = _("procedure call is used"),
-                        )),
+                            FixedValue(
+                                value = True,
+                                totext = _("procedure call is used"),
+                            )
+                        ),
                         ("input",
                         TextAscii(
                             title = _("Input Parameters"),
@@ -500,23 +528,29 @@ register_rule(group,
                 ),
             ),
             ( "levels",
-            Tuple(
-                title = _("Upper levels for first output item"),
-                elements = [
-                    Float( title = _("Warning if above")),
-                    Float( title = _("Critical if above"))
-                ])
+                Tuple(
+                    title = _("Upper levels for first output item"),
+                    elements = [
+                        Float( title = _("Warning if above")),
+                        Float( title = _("Critical if above"))
+                    ]
+                )
             ),
             ( "levels_low",
-            Tuple(
-                title = _("Lower levels for first output item"),
-                elements = [
-                    Float( title = _("Warning if below")),
-                    Float( title = _("Critical if below"))
-                ])
+                Tuple(
+                    title = _("Lower levels for first output item"),
+                    elements = [
+                        Float( title = _("Warning if below")),
+                        Float( title = _("Critical if below"))
+                    ]
+                )
             ),
             ( "perfdata",
-              FixedValue(True, totext=_("Store output value into RRD database"), title = _("Performance Data"), ),
+                FixedValue(
+                    title  = _("Performance Data"),
+                    totext =_("Store output value into RRD database"),
+                    value  = True,
+                ),
             )
         ]
     ),

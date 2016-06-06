@@ -29,7 +29,9 @@
 # as well as the ibm_db2 Python DBI driver for DB2:
 #  https://pypi.python.org/pypi/ibm_db
 
+
 import sys, getopt
+
 
 def usage():
     sys.stderr.write("""Check_MK SQL Test
@@ -65,27 +67,27 @@ OPTIONS:
 
 """)
 
+
 def saverfloat(f):
     if f == "":
         return None
     else:
         return float(f)
 
-#
-# defining and collection input parameters
-#
+
 short_options = 'hou:i:p:d:n:H:P:w:c:v'
 long_options  = [
     'help', 'user=', 'password=', 'dbms=', 'name=', 'warning=', 'critical=', 'hostname=',
-    'port=', 'debug', 'verbose', 'procedure', 'inputvars='
-]
+    'port=', 'debug', 'verbose', 'procedure', 'inputvars=']
+
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 
 except getopt.GetoptError, e:
-    print "UNKOWN - Error in command options: %s" % e
+    sys.stderr.write("UNKOWN - Error in command options: %s\n" % e)
     sys.exit(3)
+
 
 opt_debug         = False
 opt_verbose       = False
@@ -100,6 +102,7 @@ opt_input         = []
 opt_procedure     = False
 warn              = [ None, None ]
 crit              = [ None, None ]
+
 
 try:
     for o,a in opts:
@@ -135,21 +138,17 @@ try:
         opt_sql_tmp = ' '.join(map(str,args))
         opt_sql = opt_sql_tmp.replace(r"\n", "\n").replace('\;', ";")
     else:
-        print "UNKNOWN - no SQL statement/procedure name given"
+        sys.stderr.write("UNKNOWN - no query or SQL statement/procedure name given\n")
         sys.exit(3)
 
 except Exception, e:
     if opt_debug:
         raise
-    print "UNKNOWN - Error while processing input: %s" % e
+    sys.stderr.write("UNKNOWN - Error while processing input: %s\n" % e)
     sys.exit(3)
 
 
-#
-# database connection
-#
 try:
-
     if opt_dbms == "postgres":
         import psycopg2 # postgres driver
         db = psycopg2
@@ -197,21 +196,19 @@ try:
         db_connection = ibm_db_dbi.Connection(ibm_db_conn)
 
     else:
-        print "UNKNOWN - dbms not found"
+        sys.stderr.write("UNKNOWN - dbms not found\n")
         sys.exit(3)
 
     cursor = db_connection.cursor()
 
 except Exception, e:
     if len(e.args) > 1:
-        print "UNKNOWN - Error while connecting to database: [%d] %s" % (e.args[0], e.args[1])
+        sys.stderr.write("UNKNOWN - Error while connecting to database: [%d] %s\n" % (e.args[0], e.args[1]))
     else:
-        print "UNKNOWN - Error while connecting to database: %s" % e
+        sys.stderr.write("UNKNOWN - Error while connecting to database: %s\n" % e)
     sys.exit(3)
 
-#
-# excecuting the sql statement
-#
+
 try:
     if opt_verbose:
         if opt_procedure:
@@ -238,37 +235,36 @@ except Exception, e:
     if opt_debug:
         raise
     if len(e.args) > 1:
-        print "UNKNOWN - Error while executing SQL statement/procedure: [%d] %s" % (e.args[0], e.args[1])
+        sys.stderr.write("UNKNOWN - Error while executing SQL statement/procedure: [%d] %s\n" % (e.args[0], e.args[1]))
     else:
-        print "UNKNOWN - Error while executing SQL statement/procedure: %s" % e
+        sys.stderr.write("UNKNOWN - Error while executing SQL statement/procedure: %s\n" % e)
     sys.exit(3)
 
-if opt_verbose:
-    sys.stderr.write("\nSQL Result:\n %s\n\n" % result)
 
-#
-# processing of result
-#
+if opt_verbose:
+    sys.stderr.write("SQL Result:\n %s\n" % " ".join(result))
+
+
 try:
     #if len(result) > 1:
-    #    print "UNKNOWN - SQL statement/procedure returned more than one line"
+    #    sys.stderr.write("UNKNOWN - SQL statement/procedure returned more than one line\n")
     #    sys.exit(3)
     if result == None or len(result) == 0:
-        print "UNKNOWN - SQL statement/procedure returned no data"
+        sys.stderr.write("UNKNOWN - SQL statement/procedure returned no data\n")
         sys.exit(3)
 
     number = float(result[0])
-    text = str(result[1])
+    text   = str(result[1])
 
     try:
-        perf = "|"+str(result[2])
+        perf = " | performance_data=%s" % str(result[2])
     except IndexError:
         if opt_debug:
             raise
-        perf = ""  # no perf data
+        perf = ""
 
     state = 0
-    if warn != [ None, None] or crit != [ None, None ]:
+    if warn != [ None, None ] or crit != [ None, None ]:
         if (warn[0] != None and warn[0] > number) or \
            (warn[1] != None and warn[1] < number):
             state = 1
@@ -276,19 +272,19 @@ try:
            (crit[1] != None and crit[1] < number):
             state = 2
     else:
-        if number  in [ 0 ,1 ,2 ,3 ]:
+        if number in [ 0, 1, 2, 3 ]:
             state = int(number)
         else:
-            print "UNKNOWN - <%s> is not a state, and no levels given" % str(number)
+            sys.stderr.write("UNKNOWN - <%s> is not a state, and no levels given\n" % str(number))
             sys.exit(3)
 
 except Exception, e:
     if opt_debug:
         raise
-    print "UNKNOWN - Error while processing result of SQL statement: %s" % e
+    sys.stderr.write("UNKNOWN - Error while processing result of SQL statement: %s\n" % e)
     sys.exit(3)
 
-result = ["OK", "WARN", "CRIT", "UNKNOWN" ][state]
-print "%s - %s %s %s" % (result, number, text, perf)
-sys.exit(state)
 
+state_readable = ["OK", "WARN", "CRIT", "UNKNOWN" ][state]
+sys.stdout.write("%s - %s%s\n" % (state_readable, text, perf))
+sys.exit(state)

@@ -834,6 +834,14 @@ def reclassify_service_by_annotation(history_entry, annotation, key_to_change):
                 new_entry["duration"] = p_until - p_from
                 if is_in:
                     new_entry[key_to_change] = annotation["downtime"] and 1 or 0
+                    # If the annotation removes a downtime from the services, but
+                    # the actual reason for the service being in downtime is a host
+                    # downtime, then we must cancel the host downtime (also), or else
+                    # that would override the unset service downtime.
+                    if key_to_change == "in_downtime" \
+                        and history_entry.get("in_host_downtime") \
+                        and annotation["downtime"] == False:
+	                new_entry["in_host_downtime"] = 0
                 new_history.append(new_entry)
     else:
         new_history.append(history_entry)

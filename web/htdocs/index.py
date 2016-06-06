@@ -237,7 +237,7 @@ def init_profiling(is_profiling):
         p.dump_stats(profile_file)
 
         file(profile_file + ".py", "w").write(
-            "#!/usr/bin/python\n"
+            "#!/usr/bin/env python\n"
             "import pstats\n"
             "stats = pstats.Stats(%r)\n"
             "stats.sort_stats('time').print_stats()\n" % profile_file)

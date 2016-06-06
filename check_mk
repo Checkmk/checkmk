@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # Small wrapper for being able to start check_mk from git directory
 
 import sys

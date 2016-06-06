@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # encoding: utf-8
 
 import socket, os, time, sys, getopt, signal, thread, pprint, re, \
@@ -1220,7 +1220,7 @@ class EventServer:
             except:
                 raise
             finally:
-                file(profilefile + ".py", "w").write("#!/usr/bin/python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
+                file(profilefile + ".py", "w").write("#!/usr/bin/env python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
                 os.chmod(profilefile + ".py", 0755)
                 log("Created profile conversion script %s.py." % profilefile)
 
@@ -2653,7 +2653,7 @@ class StatusServer:
                     profilefile = omd_root + "/var/mkeventd/status.profile"
                     log("Writing profile of status thread to %s." % profilefile)
                     cProfile.run("g_status_server.serve()", profilefile)
-                    file(profilefile + ".py", "w").write("#!/usr/bin/python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
+                    file(profilefile + ".py", "w").write("#!/usr/bin/env python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
                     os.chmod(profilefile + ".py", 0755)
                 else:
                     self.serve()

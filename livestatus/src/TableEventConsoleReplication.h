@@ -27,11 +27,16 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include "Table.h"
+class Core;
 class Query;
 
 class TableEventConsoleReplication : public Table {
 public:
-    TableEventConsoleReplication();
+    TableEventConsoleReplication(
+#ifdef CMC
+        Core *core
+#endif
+        );
     const char *name() const override;
     const char *namePrefix() const override;
     void answerQuery(Query *query) override;

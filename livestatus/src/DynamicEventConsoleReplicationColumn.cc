@@ -23,13 +23,82 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DynamicEventConsoleReplicationColumn.h"
+#include <memory>
+#include <utility>
+#include <vector>
+#include "BlobColumn.h"
+#include "EventConsoleConnection.h"
+#include "Logger.h"
+#ifdef CMC
+#include "Config.h"
+#include "Core.h"
+#include "World.h"
+#else
+extern "C" {
+extern char g_mkeventd_socket_path[4096];
+}
+#endif
+
+using std::make_unique;
+using std::string;
+using std::unique_ptr;
+using std::vector;
+
+namespace {
+class ECTableConnection : public EventConsoleConnection {
+public:
+    ECTableConnection(string path, string command)
+        : EventConsoleConnection(path), _command(move(command)) {}
+    string getResult() const { return _result; }
+
+private:
+    void sendRequest(std::ostream &os) override { os << _command; }
+    bool receiveReply() override { return getline(_result); }
+
+    const string _command;
+    string _result;
+};
+
+class ReplicationColumn : public BlobColumn {
+public:
+    ReplicationColumn(string name, string description, int indirect_offset,
+                      int extra_offset, string blob)
+        : BlobColumn(name, description, indirect_offset, extra_offset)
+        , _blob(blob) {}
+
+    unique_ptr<vector<char>> getBlob(void *) override {
+        return make_unique<vector<char>>(_blob.begin(), _blob.end());
+    };
+
+private:
+    const string _blob;
+};
+}  // namespace
 
 DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
     std::string name, std::string description, int indirect_offset,
-    int extra_offset)
-    : DynamicColumn(name, description, indirect_offset, extra_offset) {}
+    int extra_offset
+#ifdef CMC
+    ,
+    Core *core
+#endif
+    )
+    : DynamicColumn(name, description, indirect_offset, extra_offset)
+#ifdef CMC
+    , _core(core)
+#endif
+{
+}
 
 Column *DynamicEventConsoleReplicationColumn::createColumn(
     const std::string &arguments) {
-    return nullptr;
+#ifdef CMC
+    string path = _core->_world->_config->_mkeventd_socket_path;
+#else
+    string path = g_mkeventd_socket_path;
+#endif
+    ECTableConnection ec(path, "REPLICATE " + arguments);
+    ec.run();
+    return new ReplicationColumn("replication", "replication value", -1, -1,
+                                 ec.getResult());
 }

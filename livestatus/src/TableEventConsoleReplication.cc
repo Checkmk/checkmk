@@ -24,10 +24,20 @@
 
 #include "TableEventConsoleReplication.h"
 #include "DynamicEventConsoleReplicationColumn.h"
+#include "Query.h"
 
-TableEventConsoleReplication::TableEventConsoleReplication() {
+TableEventConsoleReplication::TableEventConsoleReplication(
+#ifdef CMC
+    Core *core
+#endif
+    ) {
     addDynamicColumn(new DynamicEventConsoleReplicationColumn(
-        "value", "The replication value", -1, -1));
+        "value", "The replication value", -1, -1
+#ifdef CMC
+        ,
+        core
+#endif
+        ));
 }
 
 const char *TableEventConsoleReplication::name() const {
@@ -38,4 +48,6 @@ const char *TableEventConsoleReplication::namePrefix() const {
     return "eventconsolereplication_";
 }
 
-void TableEventConsoleReplication::answerQuery(Query *query) {}
+void TableEventConsoleReplication::answerQuery(Query *query) {
+    query->processDataset(nullptr);
+}

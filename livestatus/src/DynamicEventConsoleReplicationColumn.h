@@ -29,13 +29,23 @@
 #include <string>
 #include "DynamicColumn.h"
 class Column;
+class Core;
 
 class DynamicEventConsoleReplicationColumn : public DynamicColumn {
 public:
     DynamicEventConsoleReplicationColumn(std::string name,
                                          std::string description,
-                                         int indirect_offset, int extra_offset);
+                                         int indirect_offset, int extra_offset
+#ifdef CMC
+                                         ,
+                                         Core *core
+#endif
+                                         );
     Column *createColumn(const std::string &arguments) override;
+#ifdef CMC
+private:
+    Core *_core;
+#endif
 };
 
 #endif  // DynamicEventConsoleReplicationColumn_h

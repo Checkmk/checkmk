@@ -40,6 +40,7 @@ using std::vector;
 void PerfdataAggregator::consume(void *data, Query * /*unused*/) {
     string perf_data = _column->getValue(data);
     vector<char> perf_data_vec(perf_data.begin(), perf_data.end());
+    perf_data_vec.push_back('\0');
     char *scan = &perf_data_vec[0];
 
     char *entry;

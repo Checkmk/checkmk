@@ -36,12 +36,6 @@ Dim cfg_dir, cfg_file, hostname
 
 Const HKLM = &H80000002
 
-' Don't make this timeout too low. We saw the "sp_spaceused" stored procedure
-' to sometimes come back instantly but sometimes it takes several seconds to
-' come back. If this is needed to be changed, please make it configurable using
-' the plugins mssql*.ini config files.
-WScript.Timeout = 30
-
 ' Directory of all database instance names
 Set instances = CreateObject("Scripting.Dictionary")
 Set FSO = CreateObject("Scripting.FileSystemObject")

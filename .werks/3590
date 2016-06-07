@@ -1,0 +1,11 @@
+Title: mssql.vbs: Completely removed plugin output
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.9i1
+Date: 1465289261
+
+The timeout / async handling of agent plugins should be handled in
+the agent configuration.

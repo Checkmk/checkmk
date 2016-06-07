@@ -3380,7 +3380,7 @@ metric_info["failed_inbound_streams"] = {
 
 skype_mobile_devices = [("android", "Android", "33/a"),
                         ("iphone", "iPhone", "42/a"),
-                        ("ipad", "iPad", "45/4")]
+                        ("ipad", "iPad", "45/a")]
 
 for device, name, color in skype_mobile_devices:
     metric_info["active_sessions_%s" % device] = {

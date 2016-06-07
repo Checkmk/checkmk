@@ -282,6 +282,8 @@ def end():
                 if first_col:
                     first_col = False
                     if actions_enabled:
+                        if not header:
+                            header = "&nbsp;" # Fixes layout problem with white triangle
                         if actions_visible:
                             state = '0'
                             help  = _('Hide table actions')

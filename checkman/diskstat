@@ -7,7 +7,7 @@ description:
 
  This check measures the throughput of block devices (disks) on Linux
  hosts. You can either have a single check for every single disk
- (which is the default) or a summary check summing up the throughput
+ or a summary check (which is the default) summing up the throughput
  of all disks.
 
  For legacy reasons it is also possible (but not advisable) to have all disks

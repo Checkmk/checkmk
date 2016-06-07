@@ -17,7 +17,7 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails. You should have  received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
@@ -26,13 +26,14 @@
 #include <string.h>
 #include <time.h>
 #include <chrono>
+#include <ostream>
 #include <utility>
 #include "InputBuffer.h"
+#include "Logger.h"
 #include "OutputBuffer.h"
 #include "Query.h"
 #include "Table.h"
 #include "global_counters.h"
-#include "logger.h"
 #include "mk_logwatch.h"
 #include "strutil.h"
 
@@ -152,7 +153,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
     if (res != InputBuffer::Result::request_read) {
         if (res != InputBuffer::Result::eof) {
             output->setError(
-                RESPONSE_CODE_INCOMPLETE_REQUEST,
+                OutputBuffer::ResponseCode::incomplete_request,
                 "Client connection terminated while request still incomplete");
         }
         return false;
@@ -160,7 +161,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
     string l = input->nextLine();
     const char *line = l.c_str();
     if (g_debug_level > 0) {
-        logger(LG_INFO, "Query: %s", line);
+        Informational() << "Query: " << line;
     }
     if (strncmp(line, "GET ", 4) == 0) {
         answerGetRequest(getLines(input), output,
@@ -172,15 +173,15 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
         answerCommandRequest(lstrip(const_cast<char *>(line) + 8));
         output->setDoKeepalive(true);
     } else if (strncmp(line, "LOGROTATE", 9) == 0) {
-        logger(LG_INFO, "Forcing logfile rotation");
+        Informational() << "Forcing logfile rotation";
         rotate_log_file(time(nullptr));
         schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
                            0, 0,
                            reinterpret_cast<void *>(get_next_log_rotation_time),
                            1, nullptr, nullptr, 0);
     } else {
-        logger(LG_INFO, "Invalid request '%s'", line);
-        output->setError(RESPONSE_CODE_INVALID_REQUEST,
+        Informational() << "Invalid request '" << line << "'";
+        output->setError(OutputBuffer::ResponseCode::invalid_request,
                          "Invalid request method");
     }
     return output->doKeepalive();
@@ -224,15 +225,16 @@ void Store::answerGetRequest(const list<string> &lines, OutputBuffer *output,
     output->reset();
 
     if (tablename[0] == 0) {
-        output->setError(RESPONSE_CODE_INVALID_REQUEST,
+        output->setError(OutputBuffer::ResponseCode::invalid_request,
                          "Invalid GET request, missing tablename");
         return;
     }
 
     Table *table = findTable(tablename);
     if (table == nullptr) {
-        output->setError(RESPONSE_CODE_NOT_FOUND,
-                         "Invalid GET request, no such table '%s'", tablename);
+        output->setError(
+            OutputBuffer::ResponseCode::not_found,
+            "Invalid GET request, no such table '" + string(tablename) + "'");
         return;
     }
 
@@ -240,9 +242,7 @@ void Store::answerGetRequest(const list<string> &lines, OutputBuffer *output,
     Query(lines, output, table).process();
     if (g_debug_level > 0) {
         auto elapsed = duration_cast<microseconds>(system_clock::now() - start);
-        logger(LG_INFO, "%s",
-               ("Time to process request: " + to_string(elapsed.count()) +
-                " us. Size of answer: " + to_string(output->size()) + " bytes")
-                   .c_str());
+        Informational() << "Time to process request: " << elapsed.count()
+                        << "us. Size of answer: " << output->size() << " bytes";
     }
 }

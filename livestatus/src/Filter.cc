@@ -17,21 +17,15 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails. You should have  received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
 #include "Filter.h"
-#include <stdarg.h>
-#include <stdio.h>
 
-void Filter::setError(unsigned code, const char *format, ...) {
-    char buffer[8192];
-    va_list ap;
-    va_start(ap, format);
-    vsnprintf(buffer, sizeof(buffer) - 1, format, ap);
-    va_end(ap);
-    _error_message = buffer;
+void Filter::setError(OutputBuffer::ResponseCode code,
+                      const std::string &message) {
+    _error_message = message;
     _error_code = code;
 }

@@ -17,7 +17,7 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails. You should have  received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
@@ -25,9 +25,10 @@
 #include "StringColumnFilter.h"
 #include <stdlib.h>
 #include <string.h>
+#include <ostream>
+#include "Logger.h"
 #include "OutputBuffer.h"
 #include "StringColumn.h"
-#include "logger.h"
 #include "opids.h"
 
 using std::string;
@@ -42,17 +43,16 @@ StringColumnFilter::StringColumnFilter(StringColumn *column, int opid,
     if (_opid == OP_REGEX || _opid == OP_REGEX_ICASE) {
         if ((strchr(value, '{') != nullptr) ||
             (strchr(value, '}') != nullptr)) {
-            setError(
-                RESPONSE_CODE_INVALID_HEADER,
-                "disallowed regular expression '%s': must not contain { or }",
-                value);
+            setError(OutputBuffer::ResponseCode::invalid_header,
+                     "disallowed regular expression '" + string(value) +
+                         "': must not contain { or }");
         } else {
             _regex = new regex_t();
             if (0 != regcomp(_regex, value,
                              REG_EXTENDED | REG_NOSUB |
                                  (_opid == OP_REGEX_ICASE ? REG_ICASE : 0))) {
-                setError(RESPONSE_CODE_INVALID_HEADER,
-                         "invalid regular expression '%s'", value);
+                setError(OutputBuffer::ResponseCode::invalid_header,
+                         "invalid regular expression '" + string(value) + "'");
                 delete _regex;
                 _regex = nullptr;
             }
@@ -90,8 +90,8 @@ bool StringColumnFilter::accepts(void *data) {
             break;
         default:
             // this should never be reached, all operators are handled
-            logger(LG_INFO, "Sorry. Operator %s for strings not implemented.",
-                   op_names_plus_8[_opid]);
+            Informational() << "Sorry. Operator " << op_names_plus_8[_opid]
+                            << " for strings not implemented.";
             break;
     }
     return pass != _negate;

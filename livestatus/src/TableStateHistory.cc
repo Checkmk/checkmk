@@ -17,7 +17,7 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails. You should have  received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
@@ -25,16 +25,17 @@
 #include "TableStateHistory.h"
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
 #include <time.h>
 #include <deque>
 #include <mutex>
+#include <ostream>
 #include <set>
 #include <utility>
 #include "Column.h"
 #include "Filter.h"
 #include "HostServiceState.h"
 #include "LogEntry.h"
+#include "Logger.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
@@ -43,7 +44,6 @@
 #include "Query.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "logger.h"
 
 #ifdef CMC
 #include "Host.h"
@@ -328,12 +328,9 @@ void TableStateHistory::answerQuery(Query *query) {
                     (strncmp(column_name, "host_", 5) == 0) ||
                     (strncmp(column_name, "service_", 8) == 0)) {
                     object_filter.push_back(filter);
-                    // logger(LOG_NOTICE, "Nehme Column: %s", column_name);
                 } else {
-                    // logger(LOG_NOTICE, "Column geht nciht: %s", column_name);
                 }
             } else {
-                // logger(LOG_NOTICE, "Mist: Filter ohne Column");
             }
         }
     }
@@ -368,14 +365,14 @@ void TableStateHistory::answerQuery(Query *query) {
     _query->findIntLimits("time", &_since, &_until);
     if (_since == 0) {
         query->setError(
-            RESPONSE_CODE_INVALID_REQUEST,
+            OutputBuffer::ResponseCode::invalid_request,
             "Start of timeframe required. e.g. Filter: time > 1234567890");
         return;
     }
 
     _query_timeframe = _until - _since - 1;
     if (_query_timeframe == 0) {
-        query->setError(RESPONSE_CODE_INVALID_REQUEST,
+        query->setError(OutputBuffer::ResponseCode::invalid_request,
                         "Query timeframe is 0 seconds");
         return;
     }
@@ -669,9 +666,9 @@ void TableStateHistory::answerQuery(Query *query) {
 
                 if (tp_state == nullptr) {
                     // This line is broken...
-                    logger(LOG_WARNING,
-                           "Error: Invalid syntax of TIMEPERIOD TRANSITION: %s",
-                           entry->_complete);
+                    Warning()
+                        << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
+                        << entry->_complete;
                     free(buffer);
                     break;
                 }

@@ -17,30 +17,29 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails. You should have  received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
 #include "OutputBuffer.h"
 #include <errno.h>
-#include <stdarg.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <cinttypes>
+#include <ostream>
+#include "Logger.h"
 #include "Query.h"
-#include "logger.h"
 
 using std::string;
+using std::vector;
 
 #define WRITE_TIMEOUT_USEC 100000
 
-OutputBuffer::OutputBuffer() : _max_size(INITIAL_OUTPUT_BUFFER_SIZE) {
+OutputBuffer::OutputBuffer() : _max_size(1) {
     _buffer = static_cast<char *>(malloc(_max_size));
     _end = _buffer + _max_size;
     reset();
@@ -51,22 +50,20 @@ OutputBuffer::~OutputBuffer() { free(_buffer); }
 void OutputBuffer::reset() {
     _writepos = _buffer;
     _response_header = RESPONSE_HEADER_OFF;
-    _response_code = RESPONSE_CODE_OK;
+    _response_code = ResponseCode::ok;
     _do_keepalive = false;
     _error_message = "";
 }
 
-void OutputBuffer::addChar(char c) {
-    needSpace(1);
-    *_writepos++ = c;
+void OutputBuffer::add(const string &str) {
+    addBuffer(str.c_str(), str.size());
 }
 
-void OutputBuffer::addString(const char *s) {
-    int l = strlen(s);
-    addBuffer(s, l);
+void OutputBuffer::add(const vector<char> &blob) {
+    addBuffer(&blob[0], blob.size());
 }
 
-void OutputBuffer::addBuffer(const char *buf, unsigned len) {
+void OutputBuffer::addBuffer(const char *buf, size_t len) {
     needSpace(len);
     memcpy(_writepos, buf, len);
     _writepos += len;
@@ -103,13 +100,14 @@ void OutputBuffer::flush(int fd, int *termination_flag) {
 
         // if response code is not OK, output error
         // message instead of data
-        if (_response_code != RESPONSE_CODE_OK) {
+        if (_response_code != ResponseCode::ok) {
             buffer = _error_message.c_str();
             s = _error_message.size();
         }
 
         char header[17];
-        snprintf(header, sizeof(header), "%03u %11d\n", _response_code, s);
+        snprintf(header, sizeof(header), "%03u %11d\n",
+                 static_cast<unsigned>(_response_code), s);
         writeData(fd, termination_flag, header, 16);
         writeData(fd, termination_flag, buffer, s);
     } else {
@@ -133,9 +131,9 @@ void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
         if (retval > 0 && FD_ISSET(fd, &fds)) {
             ssize_t bytes_written = write(fd, buffer, bytes_to_write);
             if (bytes_written == -1) {
-                logger(LG_INFO,
-                       "Couldn't write %" PRIdMAX " bytes to client socket: %s",
-                       static_cast<intmax_t>(bytes_to_write), strerror(errno));
+                Informational()
+                    << "Couldn't write " << bytes_to_write
+                    << " bytes to client socket: " << strerror(errno);
                 break;
             }
             buffer += bytes_written;
@@ -144,16 +142,11 @@ void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
     }
 }
 
-void OutputBuffer::setError(unsigned code, const char *format, ...) {
+void OutputBuffer::setError(ResponseCode code, const string &message) {
     // only the first error is being returned
     if (_error_message == "") {
-        char buffer[8192];
-        va_list ap;
-        va_start(ap, format);
-        vsnprintf(buffer, sizeof(buffer) - 1, format, ap);
-        logger(LG_INFO, "error: %s", buffer);
-        va_end(ap);
-        _error_message = string(buffer) + "\n";
+        Informational() << "error: " << message;
+        _error_message = message + "\n";
         _response_code = code;
     }
 }

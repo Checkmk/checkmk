@@ -17,7 +17,7 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails. You should have  received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
@@ -34,12 +34,12 @@
 #include <unordered_set>
 #include <vector>
 #include "AndingFilter.h"
+#include "OutputBuffer.h"
 #include "global_counters.h"
 #include "nagios.h"  // IWYU pragma: keep
 class Aggregator;
 class Column;
 class Filter;
-class OutputBuffer;
 class StatsColumn;
 class Table;
 
@@ -100,7 +100,7 @@ public:
     bool processDataset(void *);
     bool timelimitReached();
     void addColumn(Column *column);
-    void setError(int error_code, const char *msg);
+    void setError(OutputBuffer::ResponseCode code, const std::string&message);
     contact *authUser() { return _auth_user; }
     void outputDatasetBegin();
     void outputDatasetEnd();

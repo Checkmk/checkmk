@@ -43,7 +43,7 @@ class CustomVarsFilter : public Filter {
 
 public:
     CustomVarsFilter(CustomVarsColumn *column, int opid, char *value);
-    ~CustomVarsFilter();
+    virtual ~CustomVarsFilter();
     bool accepts(void *data);
 };
 

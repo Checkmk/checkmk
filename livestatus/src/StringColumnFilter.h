@@ -40,7 +40,7 @@ class StringColumnFilter : public Filter {
 
 public:
     StringColumnFilter(StringColumn *column, int opid, char *value);
-    ~StringColumnFilter();
+    virtual ~StringColumnFilter();
     bool accepts(void *data);
     void *indexFilter(const char *column);
 };

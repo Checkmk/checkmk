@@ -40,7 +40,7 @@ protected:
 
 public:
     AndingFilter() {}
-    ~AndingFilter();
+    virtual ~AndingFilter();
     bool isAndingFilter() { return true; }
     void addSubfilter(Filter *);
     Filter *stealLastSubfiler();

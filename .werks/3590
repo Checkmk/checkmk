@@ -1,4 +1,4 @@
-Title: mssql.vbs: Completely removed plugin output
+Title: mssql.vbs: Completely removed plugin timeout
 Level: 1
 Component: checks
 Class: fix

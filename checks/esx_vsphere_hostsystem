@@ -295,6 +295,9 @@ def inventory_esx_vsphere_hostsystem_state(info):
 def check_esx_vsphere_hostsystem_state(_no_item, _no_params, info):
     data = esx_vsphere_hostsystem_convert(info)
     state = 0
+    if "overallStatus" not in data:
+        return
+
     overallStatus = str(data['overallStatus'][0])
     if overallStatus == "yellow":
         state = 1

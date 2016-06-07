@@ -1,0 +1,14 @@
+Title: esx_vsphere_hostsystem.state: no longer crashes when data is missing
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p5
+Date: 1465286242
+Class: fix
+
+Sometimes ESX systems decide not report any data at all.
+This check no longer crashes when this happens, it simply reports UNKNOWN.
+
+An upcoming update will change this behaviour so that the checks will go stale
+in case the data is missing.
+

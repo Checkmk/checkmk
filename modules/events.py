@@ -384,7 +384,7 @@ def event_match_contactgroups(rule, context):
     if required_groups != None:
         if cgn == None:
             notify_log("Warning: No information about contact groups in the context. " \
-                       "Seams that you don't use the Check_MK Microcore. ")
+                       "Seems that you don't use the Check_MK Microcore. ")
             return
         if cgn:
             contactgroups = cgn.split(",")
@@ -441,7 +441,7 @@ def event_match_services(rule, context):
         servicelist = rule["match_services"]
         service = context["SERVICEDESC"]
         if not in_extraconf_servicelist(servicelist, service):
-            return "The service's description '%s' dows not match by the list of " \
+            return "The service's description '%s' does not match by the list of " \
                    "allowed services (%s)" % (service, ", ".join(servicelist))
 
 

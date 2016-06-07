@@ -165,16 +165,7 @@ ask_title ()
 }
 
 if [ -z "$YES" ] ; then cat <<EOF
-
-
-
-
-
-
-
-
-
-
+[H[2J
 [1;44;37m               ____ _               _        __  __ _  __               [0m
 [1;44;37m              / ___| |__   ___  ___| | __   |  \/  | |/ /               [0m
 [1;44;37m             | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /                [0m
@@ -182,8 +173,45 @@ if [ -z "$YES" ] ; then cat <<EOF
 [1;44;37m              \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\               [0m
 [1;44;37m                                       |_____|                          [0m
 [1;44;37m                                                                        [0m
-[1;45;37m   Check_MK setup                  $(printf "%32s" Version:' '$VERSION)     [0m
+[1;45;37m   Check_MK manual setup           $(printf "%32s" Version:' '$VERSION)     [0m
+[1;41;33m                                                                        [0m
+[1;41;33m  WARNING                                                               [0m
+[1;41;33m                                                                        [0m
+[1;41;37m  The manual setup of Check_MK via ./setup.sh is deprecated and will    [0m
+[1;41;37m  not be maintained any longer in future. We recommend using the        [0m
+[1;41;37m  Check_MK Raw Edition packages. These have many advantages:            [0m
+[1;41;37m                                                                        [0m
+[1;41;37m   - Very easy installation via a single RPM/DEB package                [0m
+[1;41;37m   - Contains fully integrated complete monitoring environment          [0m
+[1;41;37m   - Does not need installation of Nagios, PNP4Nagios or plugins        [0m
+[1;41;37m   - Supports multiple versions of Check_MK at the same time            [0m
+[1;41;37m   - Supports multiple monitoring instances on one server               [0m
+[1;41;37m   - Actively maintainained by the Check_MK project                     [0m
+[1;41;37m                                                                        [0m
+[1;44;37m                                                                        [0m
+[1;44;37m  You can download the Check_MK Raw Edition for free here:              [0m
+[1;44;33m                                                                        [0m
+[1;44;36m  http://mathias-kettner.com/download                                   [0m
+[1;44;37m                                                                        [0m
+[1;44;37m  Installation instructions are here:                                   [0m
+[1;44;37m                                                                        [0m
+[1;44;36m  http://mathias-kettner.com/cms_introduction_packages.html             [0m
+[1;44;37m                                                                        [0m
 
+EOF
+
+echo -n "Are you sure you want to proceed with manual setup [no]? "
+if [ "$YES" != yes ]
+then
+    read YESNO
+    [ "${YESNO:0:1}" = y -o "${YESNO:0:1}" = Y ] || {
+        echo "Aborted."
+        exit
+    }
+fi
+
+clear
+cat << EOF
 
 Welcome to Check_MK. This setup will install Check_MK into user defined
 directories. If you run this script as root, installation paths below

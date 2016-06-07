@@ -33,8 +33,6 @@ Dim WMI, FSO, SHO, items, objItem, prop, instId, instIdx, instVersion
 Dim instIds, instName, output, isClustered, instServers
 Dim WMIservice, colRunningServices, objService, cfg_dir, cfg_file, hostname
 
-WScript.Timeout = 10
-
 ' Directory of all database instance names
 Set instIds = CreateObject("Scripting.Dictionary")
 Set FSO = CreateObject("Scripting.FileSystemObject")

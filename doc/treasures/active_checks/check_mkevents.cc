@@ -214,8 +214,25 @@ int main(int argc, char** argv)
     }
 
     // Send message
-    ssize_t length = write(sock, query_message.c_str(), query_message.length());
-    (void)length;  // Make GCC happy
+    {
+        const char *buffer = query_message.c_str();
+        size_t bytes_to_write = query_message.size();
+        while (bytes_to_write > 0) {
+            ssize_t bytes_written = write(sock, buffer, bytes_to_write);
+            if (bytes_written == -1) {
+                printf("UNKNOWN - Cannot send query to event daemon via TCP %s:%d (%s)\n",
+                       remote_hostipaddress, remote_port, strerror(errno));
+                exit(3);
+            }
+            buffer += bytes_written;
+            bytes_to_write -= bytes_written;
+        }
+        if (shutdown(sock, SHUT_WR) == -1) {
+            printf("UNKNOWN - Cannot shutdown socket to event daemon via TCP %s:%d (%s)\n",
+                   remote_hostipaddress, remote_port, strerror(errno));
+            exit(3);
+        }
+    }
 
     // Get response
     char response_chunk[4096];

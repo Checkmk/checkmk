@@ -52,7 +52,8 @@ def query(query, remote_host):
             sock.settimeout(3)
             sock.connect(socket_path)
 
-        sock.send(query)
+        sock.sendall(query)
+        sock.shutdown(socket.SHUT_WR)
 
         response_text = ""
         while True:

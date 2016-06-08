@@ -1,0 +1,11 @@
+Title: Fixed check_mkevents active check.
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.9i1
+Date: 1465378101
+Class: fix
+
+check_mkevents didn't make sure that the whole request was sent. Furthermore,
+it didn't shutdown the socket after sending the request.  This (or sending an
+empty line) is necessary in recent versions of mkeventd.

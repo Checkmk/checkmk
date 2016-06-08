@@ -344,7 +344,12 @@ def write_xml(response):
         raise MKGeneralException(_("You need to have the \"dicttoxml\" python module installed to "
                                    "be able to use the XML format."))
 
-    html.write(dicttoxml.dicttoxml(response))
+    unformated_xml = dicttoxml.dicttoxml(response)
+
+    from xml.dom.minidom import parseString
+    dom = parseString(unformated_xml)
+
+    html.write(dom.toprettyxml())
 
 
 def write_json(response):

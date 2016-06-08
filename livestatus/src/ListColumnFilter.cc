@@ -24,8 +24,9 @@
 
 #include "ListColumnFilter.h"
 #include <string.h>
+#include <string>
 #include "ListColumn.h"
-#include "logger.h"
+#include "Logger.h"
 #include "opids.h"
 
 ListColumnFilter::ListColumnFilter(ListColumn *column, int opid, char *value)
@@ -49,13 +50,14 @@ bool ListColumnFilter::accepts(void *data) {
             if (_empty_ref) {
                 return _column->isEmpty(data) == (_opid == OP_EQUAL);
             }
-            logger(LG_INFO,
-                   "Sorry, equality for lists implemented only for emptyness");
+            Informational()
+                << "Sorry, equality for lists implemented only for emptyness";
             return false;
 
         default:
-            logger(LG_INFO, "Sorry, Operator %s for lists not implemented.",
-                   op_names_plus_8[_opid]);
+            Informational() << "Sorry, Operator "
+                            << nameOfRelationalOperator(_opid)
+                            << " for lists not implemented.";
             return true;
     }
 }

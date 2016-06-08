@@ -26,6 +26,7 @@
 #define opids_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <string>
 
 #define OP_INVALID 0
 #define OP_EQUAL 1        // =
@@ -35,7 +36,8 @@
 #define OP_GREATER 5      // >
 #define OP_LESS 6         // <
 
-extern const char *op_names_plus_8[];
+std::string nameOfRelationalOperator(int relOp);
+int relationalOperatorForName(const std::string &name);
 
 // Note: The operators !=, <= and >= are parsed into ! =, ! > and ! <.
 // The negation is represented by negating the value of the operator.

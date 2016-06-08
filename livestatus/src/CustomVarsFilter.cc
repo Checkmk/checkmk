@@ -131,7 +131,8 @@ bool CustomVarsFilter::accepts(void *data) {
         case OP_LESS:
             return (!is_member) == (!_negate);
         default:
-            Informational() << "Sorry, Operator " << op_names_plus_8[_opid]
+            Informational() << "Sorry, Operator "
+                            << nameOfRelationalOperator(_opid)
                             << " for custom variable lists not implemented.";
             return true;
     }

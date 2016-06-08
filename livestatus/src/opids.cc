@@ -24,6 +24,45 @@
 
 #include "opids.h"
 
+using std::string;
+
+namespace {
 const char *op_names_plus_8[] = {"",    "",   ">=", "<=",        "!~~",
                                  "!=~", "!~", "!=", "(invalid)", "=",
                                  "~",   "=~", "~~", ">",         "<"};
+};  // namespace
+
+string nameOfRelationalOperator(int relOp) { return op_names_plus_8[relOp]; }
+
+int relationalOperatorForName(const string &name) {
+    if (name.empty()) {
+        return OP_INVALID;
+    }
+
+    int negate = name[0] == '!';
+    string n = negate ? name.substr(1) : name;
+
+    int opid;
+    if (n == "=") {
+        opid = OP_EQUAL;
+    } else if (n == "~") {
+        opid = OP_REGEX;
+    } else if (n == "=~") {
+        opid = OP_EQUAL_ICASE;
+    } else if (n == "~~") {
+        opid = OP_REGEX_ICASE;
+    } else if (n == ">") {
+        opid = OP_GREATER;
+    } else if (n == "<") {
+        opid = OP_LESS;
+    } else if (n == ">=") {
+        opid = OP_LESS;
+        negate = !negate;
+    } else if (n == "<=") {
+        opid = OP_GREATER;
+        negate = !negate;
+    } else {
+        opid = OP_INVALID;
+    }
+    return negate ? -opid : opid;
+}

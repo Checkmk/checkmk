@@ -163,7 +163,6 @@ private:
     void parseLocaltimeLine(char *line);
     void start();
     void finish();
-    int lookupOperator(const char *opname);
     Column *createDummyColumn(const char *name);
 };
 

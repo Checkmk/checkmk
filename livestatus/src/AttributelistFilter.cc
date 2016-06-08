@@ -23,8 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AttributelistFilter.h"
+#include <string>
 #include "AttributelistColumn.h"
-#include "logger.h"
+#include "Logger.h"
 #include "opids.h"
 
 /* The following operators are defined:
@@ -68,9 +69,9 @@ bool AttributelistFilter::accepts(void *data) {
             pass = (act_value & _ref) != 0;
             break;
         default:
-            logger(LG_INFO,
-                   "Sorry. Operator %s not implemented for attribute lists",
-                   op_names_plus_8[_opid]);
+            Informational() << "Sorry. Operator "
+                            << nameOfRelationalOperator(_opid)
+                            << " not implemented for attribute lists";
     }
     return pass != _negate;
 }

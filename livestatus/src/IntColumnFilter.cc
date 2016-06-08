@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "IntColumn.h"
-#include "logger.h"
+#include "Logger.h"
 #include "opids.h"
 
 IntColumnFilter::IntColumnFilter(IntColumn *column, int opid, char *value)
@@ -54,8 +54,9 @@ bool IntColumnFilter::accepts(void *data) {
             pass = act_value < ref_value;
             break;
         default:
-            logger(LG_INFO, "Sorry. Operator %s for integers not implemented.",
-                   op_names_plus_8[_opid]);
+            Informational() << "Sorry. Operator "
+                            << nameOfRelationalOperator(_opid)
+                            << " for integers not implemented.";
             break;
     }
     return pass != _negate;

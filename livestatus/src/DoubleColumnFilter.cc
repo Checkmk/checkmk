@@ -24,8 +24,9 @@
 
 #include "DoubleColumnFilter.h"
 #include <stdlib.h>
+#include <string>
 #include "DoubleColumn.h"
-#include "logger.h"
+#include "Logger.h"
 #include "opids.h"
 
 DoubleColumnFilter::DoubleColumnFilter(DoubleColumn *column, int opid,
@@ -49,9 +50,9 @@ bool DoubleColumnFilter::accepts(void *data) {
             pass = act_value < _ref_value;
             break;
         default:
-            logger(LG_INFO,
-                   "Sorry. Operator %s for float columns not implemented.",
-                   op_names_plus_8[_opid]);
+            Informational() << "Sorry. Operator "
+                            << nameOfRelationalOperator(_opid)
+                            << " for float columns not implemented.";
             break;
     }
     return pass != _negate;

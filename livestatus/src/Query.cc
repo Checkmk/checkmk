@@ -252,38 +252,6 @@ void Query::setError(OutputBuffer::ResponseCode code, const string &message) {
     _output->setError(code, message);
 }
 
-int Query::lookupOperator(const char *opname) {
-    int opid;
-    int negate = 1;
-    if (opname[0] == '!') {
-        negate = -1;
-        opname++;
-    }
-
-    if (strcmp(opname, "=") == 0) {
-        opid = OP_EQUAL;
-    } else if (strcmp(opname, "~") == 0) {
-        opid = OP_REGEX;
-    } else if (strcmp(opname, "=~") == 0) {
-        opid = OP_EQUAL_ICASE;
-    } else if (strcmp(opname, "~~") == 0) {
-        opid = OP_REGEX_ICASE;
-    } else if (strcmp(opname, ">") == 0) {
-        opid = OP_GREATER;
-    } else if (strcmp(opname, "<") == 0) {
-        opid = OP_LESS;
-    } else if (strcmp(opname, ">=") == 0) {
-        opid = OP_LESS;
-        negate = -negate;
-    } else if (strcmp(opname, "<=") == 0) {
-        opid = OP_GREATER;
-        negate = -negate;
-    } else {
-        opid = OP_INVALID;
-    }
-    return negate * opid;
-}
-
 Filter *Query::createFilter(Column *column, int operator_id, char *value) {
     Filter *filter = column->createFilter(operator_id, value);
     if (filter == nullptr) {
@@ -466,7 +434,7 @@ void Query::parseStatsLine(char *line) {
                          string(column_name) + "'");
             return;
         }
-        int operator_id = lookupOperator(operator_name);
+        int operator_id = relationalOperatorForName(operator_name);
         if (operator_id == OP_INVALID) {
             setError(OutputBuffer::ResponseCode::invalid_header,
                      "invalid stats operator '" + string(operator_name) + "'");
@@ -518,7 +486,7 @@ void Query::parseFilterLine(char *line, AndingFilter &filter) {
                      string(column_name) + "'");
         return;
     }
-    int operator_id = lookupOperator(operator_name);
+    int operator_id = relationalOperatorForName(operator_name);
     if (operator_id == OP_INVALID) {
         setError(OutputBuffer::ResponseCode::invalid_header,
                  "invalid filter operator '" + string(operator_name) + "'");

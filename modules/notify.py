@@ -1075,6 +1075,26 @@ def notify_via_email(plugin_context):
 # 1: Could not send now, please retry later
 # 2: Cannot send, retry does not make sense
 
+
+# recursively turns a python object (with lists, dictionaries and pods) containing parameters
+#  into a flat contextlist for use as environment variables in plugins
+#
+# this: { "LVL1": [{"VALUE": 42}, {"VALUE": 13}] }
+# would be added as:
+#   PARAMETER_LVL1_1_VALUE = 42
+#   PARAMETER_LVL1_2_VALUE = 13
+def add_to_context(plugin_context, prefix, param):
+    if isinstance(param, list):
+        plugin_context[prefix + "S"] = " ".join(param)
+        for nr, value in enumerate(param):
+            add_to_context(plugin_context, "%s_%d" % (prefix, nr + 1), value)
+    elif isinstance(param, dict):
+        for key, value in param.items():
+            add_to_context(plugin_context, "%s_%s" % (prefix, key.upper()), value)
+    else:
+        plugin_context[prefix] = plugin_param_to_string(param)
+
+
 # Add the plugin parameters to the envinroment. We have two types of parameters:
 # - list, the legacy style. This will lead to PARAMETERS_1, ...
 # - dict, the new style for scripts with WATO rule. This will lead to
@@ -1083,13 +1103,8 @@ def create_plugin_context(raw_context, params):
     plugin_context = {}
     plugin_context.update(raw_context) # Make a real copy
 
-    if type(params) == list:
-        plugin_context["PARAMETERS"] = " ".join(params)
-        for nr, param in enumerate(params):
-            plugin_context["PARAMETER_%d" % (nr + 1)] = param
-    else:
-        for key, value in params.items():
-            plugin_context["PARAMETER_" + key.upper()] = plugin_param_to_string(value)
+    add_to_context(plugin_context, "PARAMETER", params)
+
     return plugin_context
 
 

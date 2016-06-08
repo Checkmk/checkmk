@@ -92,6 +92,7 @@ from hashlib import sha256
 from lib import *
 from valuespec import *
 import forms
+import backup
 import modules as multisite_modules
 from watolib import *
 
@@ -5587,6 +5588,184 @@ def create_snapshot(data = {}, sync_mode=False):
     do_snapshot_maintenance()
 
     return snapshot_name
+
+#.
+#   .--Backups-------------------------------------------------------------.
+#   |                ____             _                                    |
+#   |               | __ )  __ _  ___| | ___   _ _ __  ___                 |
+#   |               |  _ \ / _` |/ __| |/ / | | | '_ \/ __|                |
+#   |               | |_) | (_| | (__|   <| |_| | |_) \__ \                |
+#   |               |____/ \__,_|\___|_|\_\\__,_| .__/|___/                |
+#   |                                           |_|                        |
+#   +----------------------------------------------------------------------+
+#   | Pages for managing backup and restore of WATO                        |
+#   '----------------------------------------------------------------------'
+
+
+class SiteBackupSchedules(backup.Schedules):
+    def __init__(self):
+        super(SiteBackupSchedules, self).__init__(defaults.default_config_dir + "/backup.mk")
+
+
+
+class SiteBackupTargets(backup.Targets):
+    def __init__(self):
+        super(SiteBackupTargets, self).__init__(defaults.default_config_dir + "/backup.mk")
+
+
+
+class SystemBackupTargets(backup.Targets):
+    def __init__(self):
+        super(SystemBackupTargets, self).__init__("/etc/cma/backup.conf")
+
+
+
+class ModeBackup(WatoMode):
+    def __init__(self):
+        super(ModeBackup, self).__init__()
+
+
+    def title(self):
+        return _("Site backup")
+
+
+    def buttons(self):
+        home_button()
+        html.context_button(_("Backup targets"), html.makeuri([("mode", "backup_targets")]), "backup_targets")
+        html.context_button(_("New schedule"), html.makeuri([("mode", "backup_schedule")]), "backup_schedule_new")
+
+
+    #def action(self):
+    #    if html.transaction_valid():
+    #        if html.has_var("_do_upload"):
+    #            self._upload_csv_file()
+
+    #        self._read_csv_file()
+
+    #        if html.var("_do_import"):
+    #            return self._import()
+
+
+    def page(self):
+        SiteBackupSchedules().show_list()
+
+
+class ModeBackupTargets(WatoMode):
+    def __init__(self):
+        super(ModeBackupTargets, self).__init__()
+
+
+    def title(self):
+        return _("Site backup targets")
+
+
+    def buttons(self):
+        html.context_button(_("Back"), html.makeuri([("mode", "backup")]), "back")
+        html.context_button(_("New backup target"), html.makeuri([("mode", "edit_backup_target")]), "backup_target_edit")
+
+
+    #def action(self):
+    #    if html.transaction_valid():
+    #        if html.has_var("_do_upload"):
+    #            self._upload_csv_file()
+
+    #        self._read_csv_file()
+
+    #        if html.var("_do_import"):
+    #            return self._import()
+
+
+    def page(self):
+        SiteBackupTargets().show_list()
+        SystemBackupTargets().show_list(editable=False, title=_("System global targets"))
+
+
+
+def validate_backup_target_ident(value, varprefix):
+    if value in SiteBackupTargets().targets:
+        raise MKUserError(varprefix, _("This ID is already used by another backup target."))
+
+
+
+class ModeEditBackupTarget(WatoMode):
+    def __init__(self):
+        super(ModeEditBackupTarget, self).__init__()
+        target_ident = html.var("target")
+
+        if target_ident != None:
+            target = SiteBackupTargets().get(target_ident)
+            self._new        = False
+            self._ident      = target_ident
+            self._target_cfg = target.to_config()
+            self._title      = _("Edit backup target: %s") % target.name
+        else:
+            self._new        = True
+            self._ident      = None
+            self._target_cfg = {}
+            self._title      = _("New backup target")
+
+
+    def vs_backup_target(self):
+        if self._new:
+            ident_attr = [
+                ("ident", TextAscii(
+                    title = _("Unique ID"),
+                    help = _("The ID of the connection must be a unique text. It will be used as an internal key "
+                             "when objects refer to the target."),
+                    allow_empty = False,
+                    size = 12,
+                    validate = validate_backup_target_ident,
+                )),
+            ]
+        else:
+            ident_attr = []
+
+
+        return Dictionary(
+            title = _("Backup target"),
+            elements = ident_attr + [
+                ("title", TextUnicode(
+                    title = _("Title"),
+                    allow_empty = False,
+                )),
+            ],
+            optional_keys = [],
+            render = "form",
+        )
+
+
+    def title(self):
+        return self._title
+
+
+    def buttons(self):
+        html.context_button(_("Back"), html.makeuri([("mode", "backup_targets")]), "back")
+
+
+    def action(self):
+        if html.transaction_valid():
+            vs = self.vs_backup_target()
+
+            config = vs.from_html_vars("edit_target")
+            vs.validate_value(config, "edit_target")
+
+            backup.Target(config["ident"], config)
+
+
+    def page(self):
+        html.begin_form("edit_target", method="POST")
+        html.prevent_password_auto_completion()
+
+        vs = self.vs_backup_target()
+
+        vs.render_input("edit_target", self._target_cfg)
+        vs.set_focus("edit_target")
+        forms.end()
+
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
+
 
 
 #.
@@ -16299,6 +16478,9 @@ modes = {
    "pattern_editor"     : (["pattern_editor"], mode_pattern_editor),
    "icons"              : (["icons"], mode_icons),
    "download_agents"    : (["download_agents"], mode_download_agents),
+   "backup"             : (["backups"], ModeBackup),
+   "backup_targets"     : (["backups"], ModeBackupTargets),
+   "edit_backup_target" : (["backups"], ModeEditBackupTarget),
 }
 
 builtin_host_attribute_names = []
@@ -16530,6 +16712,13 @@ def load_plugins(force):
          [ "admin", ])
 
     config.declare_permission("wato.snapshots",
+         _("Manage snapshots"),
+         _("Access to the module <i>Snaphsots</i>. Please note: a user with "
+           "write access to this module "
+           "can make arbitrary changes to the configuration by restoring uploaded snapshots."),
+         [ "admin", ])
+
+    config.declare_permission("wato.backups",
          _("Backup & Restore"),
          _("Access to the module <i>Backup & Restore</i>. Please note: a user with "
            "write access to this module "

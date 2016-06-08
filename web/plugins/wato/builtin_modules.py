@@ -80,6 +80,9 @@ modules += [
       ( "snapshot", _("Backup & Restore"), "backup", "snapshots",
         _("Make snapshots of your configuration, download, upload and restore snapshots.")),
 
+      ( "backup", _("Backup & Restore"), "backup", "backups",
+        _("Make backups of your whole site and restore previous backups.")),
+
       ( "icons", _("Custom Icons"), "icons", "icons",
         _("Upload your own icons that can be used in views or custom actions")),
 ]

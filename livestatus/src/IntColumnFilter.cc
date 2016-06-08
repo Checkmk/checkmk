@@ -25,6 +25,7 @@
 #include "IntColumnFilter.h"
 #include <stdlib.h>
 #include <string.h>
+#include <ostream>
 #include "IntColumn.h"
 #include "Logger.h"
 #include "opids.h"

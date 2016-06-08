@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AttributelistFilter.h"
+#include <ostream>
 #include <string>
 #include "AttributelistColumn.h"
 #include "Logger.h"

@@ -24,8 +24,9 @@
 
 #include "HostlistColumnFilter.h"
 #include <stdlib.h>
+#include <ostream>
 #include "HostlistColumn.h"
-#include "logger.h"
+#include "Logger.h"
 #include "nagios.h"
 #include "opids.h"
 
@@ -58,9 +59,9 @@ bool HostlistColumnFilter::accepts(void *data) {
         case OP_LESS:
             return !is_member;
         default:
-            logger(LG_INFO,
-                   "Sorry, Operator %s for host lists lists not implemented.",
-                   op_names_plus_8[_opid]);
+            Informational() << "Sorry, Operator "
+                            << nameOfRelationalOperator(_opid)
+                            << " for host lists not implemented.";
             return true;
     }
 }

@@ -25,8 +25,9 @@
 #include "ServicelistColumnFilter.h"
 #include <stdlib.h>
 #include <string.h>
+#include <ostream>
+#include "Logger.h"
 #include "ServicelistColumn.h"
-#include "logger.h"
 #include "nagios.h"
 #include "opids.h"
 
@@ -45,10 +46,9 @@ ServicelistColumnFilter::ServicelistColumnFilter(ServicelistColumn *column,
     // service_description
     char *sep = index(refvalue, HOSTSERVICE_SEPARATOR);
     if (sep == nullptr) {
-        logger(LG_INFO,
-               "Invalid reference value for service list membership. Must be "
-               "'hostname%cservicename'",
-               HOSTSERVICE_SEPARATOR);
+        Informational() << "Invalid reference value for service list "
+                           "membership. Must be 'hostname"
+                        << string(1, HOSTSERVICE_SEPARATOR) << "servicename'";
         _ref_host = "";
         _ref_service = "";
     } else {
@@ -82,10 +82,9 @@ bool ServicelistColumnFilter::accepts(void *data) {
         case OP_LESS:
             return !is_member;
         default:
-            logger(
-                LG_INFO,
-                "Sorry, Operator %s for service lists lists not implemented.",
-                op_names_plus_8[_opid]);
+            Informational() << "Sorry, Operator "
+                            << nameOfRelationalOperator(_opid)
+                            << " for service lists lists not implemented.";
             return true;
     }
 }

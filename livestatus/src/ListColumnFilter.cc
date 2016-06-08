@@ -24,6 +24,7 @@
 
 #include "ListColumnFilter.h"
 #include <string.h>
+#include <ostream>
 #include <string>
 #include "ListColumn.h"
 #include "Logger.h"

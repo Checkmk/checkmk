@@ -24,6 +24,7 @@
 
 #include "DoubleColumnFilter.h"
 #include <stdlib.h>
+#include <ostream>
 #include <string>
 #include "DoubleColumn.h"
 #include "Logger.h"

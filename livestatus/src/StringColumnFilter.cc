@@ -90,7 +90,8 @@ bool StringColumnFilter::accepts(void *data) {
             break;
         default:
             // this should never be reached, all operators are handled
-            Informational() << "Sorry. Operator " << nameOfRelationalOperator(_opid)
+            Informational() << "Sorry. Operator "
+                            << nameOfRelationalOperator(_opid)
                             << " for strings not implemented.";
             break;
     }

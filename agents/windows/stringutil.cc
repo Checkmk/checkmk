@@ -252,7 +252,6 @@ bool globmatch(const wchar_t *pattern, const wchar_t *astring) {
     return *p == 0;
 }
 
-
 std::string replaceAll(const std::string &str, const std::string &from,
                        const std::string &to) {
     if (from.empty()) {
@@ -268,7 +267,6 @@ std::string replaceAll(const std::string &str, const std::string &from,
     }
     return result;
 }
-
 
 #ifdef _WIN32
 std::string get_win_error_as_string(DWORD error_id) {

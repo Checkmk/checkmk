@@ -5660,19 +5660,23 @@ class ModeBackupTargets(WatoMode):
 
 
     def buttons(self):
-        html.context_button(_("Back"), html.makeuri([("mode", "backup")]), "back")
-        html.context_button(_("New backup target"), html.makeuri([("mode", "edit_backup_target")]), "backup_target_edit")
+        html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
+        html.context_button(_("New backup target"), html.makeuri_contextless([("mode", "edit_backup_target")]), "backup_target_edit")
 
 
-    #def action(self):
-    #    if html.transaction_valid():
-    #        if html.has_var("_do_upload"):
-    #            self._upload_csv_file()
+    def action(self):
+        if html.transaction_valid():
+            ident = html.var("target")
+            targets = SiteBackupTargets()
+            try:
+                target = targets.get(ident)
+            except KeyError:
+                raise MKUserError("target", _("This backup target does not exist."))
 
-    #        self._read_csv_file()
-
-    #        if html.var("_do_import"):
-    #            return self._import()
+            if wato_confirm(self.title(), _("Do you really want to delete this target?")):
+                targets.remove(ident)
+                targets.save()
+                return None, _("The target has been deleted.")
 
 
     def page(self):
@@ -5693,16 +5697,28 @@ class ModeEditBackupTarget(WatoMode):
         target_ident = html.var("target")
 
         if target_ident != None:
-            target = SiteBackupTargets().get(target_ident)
+            try:
+                target = SiteBackupTargets().get(target_ident)
+            except KeyError:
+                raise MKUserError("target", _("This backup target does not exist."))
+
             self._new        = False
             self._ident      = target_ident
             self._target_cfg = target.to_config()
-            self._title      = _("Edit backup target: %s") % target.name
+            self._title      = _("Edit backup target: %s") % target.title()
         else:
             self._new        = True
             self._ident      = None
             self._target_cfg = {}
             self._title      = _("New backup target")
+
+
+    def title(self):
+        return self._title
+
+
+    def buttons(self):
+        html.context_button(_("Back"), html.makeuri([("mode", "backup_targets")]), "back")
 
 
     def vs_backup_target(self):
@@ -5728,18 +5744,40 @@ class ModeEditBackupTarget(WatoMode):
                     title = _("Title"),
                     allow_empty = False,
                 )),
+                ("remote", CascadingDropdown(
+                    title = _("Destination"),
+                    choices = [
+                        ("nfs", _("Network: NFS share"), Dictionary(
+                            elements = [
+                                ("share", Tuple(
+                                    title = _("NFS share"),
+                                    elements = [
+                                        Hostname(
+                                            title = _("Host address"),
+                                            help = _("The host address (name or IP address) to reach the NFS server.")
+                                        ),
+                                        AbsoluteDirname(
+                                            title = _("Share path"),
+                                            help = _("The export path used to mount the share.")
+                                        ),
+                                    ],
+                                    orientation = "horizontal",
+                                )),
+                                ("mount_options", ListOfStrings(
+                                    title = _("Mount options"),
+                                    help = _("Options to be used when mounting the NFS share."),
+                                    default_value = ["user", "noatime"],
+                                    orientation = "horizontal",
+                                )),
+                            ],
+                            optional_keys = [],
+                        )),
+                    ]
+                )),
             ],
             optional_keys = [],
             render = "form",
         )
-
-
-    def title(self):
-        return self._title
-
-
-    def buttons(self):
-        html.context_button(_("Back"), html.makeuri([("mode", "backup_targets")]), "back")
 
 
     def action(self):
@@ -5749,7 +5787,20 @@ class ModeEditBackupTarget(WatoMode):
             config = vs.from_html_vars("edit_target")
             vs.validate_value(config, "edit_target")
 
-            backup.Target(config["ident"], config)
+            if "ident" in config:
+                self._ident = config.pop("ident")
+            self._target_cfg = config
+
+            targets = SiteBackupTargets()
+            if self._new:
+                target = backup.Target(self._ident, self._target_cfg)
+                targets.add(target)
+            else:
+                target = targets.get(self._ident)
+                target.from_config(self._target_cfg)
+
+            targets.save()
+            return "backup_targets"
 
 
     def page(self):

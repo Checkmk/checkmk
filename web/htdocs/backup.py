@@ -24,10 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
 import pprint
 
 import defaults
 import table
+import valuespec
+from lib import create_user_file
 
 class BackupConfig(object):
     def __init__(self, path):
@@ -35,6 +38,7 @@ class BackupConfig(object):
 
         self.schedules = {}
         self.targets   = {}
+        self.load()
 
 
     def load(self):
@@ -45,16 +49,16 @@ class BackupConfig(object):
             "schedules" : {},
             "targets"   : {},
         }
-        execfile(filename, cfg, cfg)
+        execfile(self._path, cfg, cfg)
 
         self.schedules = cfg["schedules"]
         self.targets   = cfg["targets"]
 
 
     def save(self):
-        with create_user_file(path, "w") as f:
+        with create_user_file(self._path, "w") as f:
             f.write("schedules = \\\n%s\n" % pprint.pformat(self.schedules))
-            f.write("targets  = \\\n%s\n" % pprint.pformat(self.schedules))
+            f.write("targets  = \\\n%s\n" % pprint.pformat(self.targets))
 
 
 
@@ -75,10 +79,10 @@ class Schedules(object):
         html.write("<h2>%s</h2>" % _("Schedules"))
         table.begin(sortable=False, searchable=False)
 
-        for schedule in sorted(self.schedules.items()):
+        for schedule_ident, schedule in sorted(self.schedules.items()):
             table.row()
-            for cell in row:
-                table.cell(_("Name"), html.attrencode(schedule.name))
+            table.cell(_("Actions"), css="buttons")
+            table.cell(_("Name"), html.attrencode(schedule.name))
 
         table.end()
 
@@ -86,10 +90,18 @@ class Schedules(object):
 
 class Target(object):
     def __init__(self, ident, config):
-        self._ident = ident
-        self.title  = None
+        self._ident  = ident
+        self._config = {}
 
         self.from_config(config)
+
+
+    def ident(self):
+        return self._ident
+
+
+    def title(self):
+        return self._config["title"]
 
 
     def to_config(self):
@@ -97,9 +109,7 @@ class Target(object):
 
 
     def from_config(self, config):
-        for k, v in config.items():
-            if hasattr(self, k):
-                setattr(self, k, v)
+        self._config = config
 
 
 
@@ -114,15 +124,44 @@ class Targets(object):
         return self.targets[ident]
 
 
-    def show_list(self, title=None, editable=False):
+    def remove(self, ident):
+        try:
+            del self.targets[ident]
+        except KeyError:
+            pass
+
+
+    def show_list(self, title=None, editable=True):
         title = title if title else _("Targets")
         html.write("<h2>%s</h2>" % title)
+        if not editable:
+            html.write("<p>%s</p>" % _("These backup targets can not be edited here."))
+
         table.begin(sortable=False, searchable=False)
 
-        for target in sorted(self.targets.items()):
+        for target_ident, target in sorted(self.targets.items()):
             table.row()
-            for cell in row:
-                # Buttons: editable True/False
-                table.cell(_("Title"), html.attrencode(target.title))
+            table.cell(_("Actions"), css="buttons")
+            if editable:
+                delete_url = html.makeactionuri_contextless(
+                                [("mode", "backup_targets"), ("target", target_ident)])
+                edit_url = html.makeuri_contextless(
+                                [("mode", "edit_backup_target"), ("target", target_ident)])
+
+                html.icon_button(edit_url, _("Edit this backup target"), "edit")
+                html.icon_button(delete_url, _("Delete this backup target"), "delete")
+
+            table.cell(_("Title"), html.attrencode(target.title()))
+            # TODO: Destination to_text
 
         table.end()
+
+
+    def add(self, target):
+        self.targets[target.ident()] = target
+
+
+    def save(self):
+        self._config.targets = dict([ (ident, target.to_config())
+                              for ident, target in self.targets.items() ])
+        self._config.save()

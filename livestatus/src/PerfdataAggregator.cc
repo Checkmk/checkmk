@@ -30,7 +30,6 @@
 #include <utility>
 #include <vector>
 #include "Query.h"
-#include "StatsColumn.h"
 #include "StringColumn.h"
 #include "strutil.h"
 
@@ -80,31 +79,33 @@ void PerfdataAggregator::consumeVariable(const char *varname, double value) {
     } else {
         it->second._count++;
         switch (_operation) {
-            case STATS_OP_SUM:
-            case STATS_OP_AVG:
+            case StatsOperation::sum:
+            case StatsOperation::avg:
                 it->second._aggr += value;
                 break;
 
-            case STATS_OP_SUMINV:
-            case STATS_OP_AVGINV:
+            case StatsOperation::suminv:
+            case StatsOperation::avginv:
                 it->second._aggr += 1.0 / value;
                 break;
 
-            case STATS_OP_MIN:
+            case StatsOperation::min:
                 if (value < it->second._aggr) {
                     it->second._aggr = value;
                 }
                 break;
 
-            case STATS_OP_MAX:
+            case StatsOperation::max:
                 if (value > it->second._aggr) {
                     it->second._aggr = value;
                 }
                 break;
 
-            case STATS_OP_STD:
+            case StatsOperation::std:
                 it->second._aggr += value;
                 it->second._sumq += value * value;
+                break;
+            case StatsOperation::count:
                 break;
         }
     }
@@ -116,15 +117,15 @@ void PerfdataAggregator::output(Query *q) {
     for (const auto &entry : _aggr) {
         double value;
         switch (_operation) {
-            case STATS_OP_SUM:
-            case STATS_OP_MIN:
-            case STATS_OP_MAX:
-            case STATS_OP_SUMINV:
+            case StatsOperation::sum:
+            case StatsOperation::min:
+            case StatsOperation::max:
+            case StatsOperation::suminv:
                 value = entry.second._aggr;
                 break;
 
-            case STATS_OP_AVG:
-            case STATS_OP_AVGINV:
+            case StatsOperation::avg:
+            case StatsOperation::avginv:
                 if (entry.second._count == 0) {
                     value = 0.00;
                 } else {
@@ -132,7 +133,7 @@ void PerfdataAggregator::output(Query *q) {
                 }
                 break;
 
-            case STATS_OP_STD:
+            case StatsOperation::std:
                 if (entry.second._count <= 1) {
                     value = 0.0;
                 } else {

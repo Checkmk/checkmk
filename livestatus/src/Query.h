@@ -43,17 +43,7 @@ class Filter;
 class StatsColumn;
 class Table;
 
-#define OUTPUT_FORMAT_CSV 0
-#define OUTPUT_FORMAT_JSON 1
-#define OUTPUT_FORMAT_PYTHON 2
-
-#define RESPONSE_HEADER_OFF 0
-#define RESPONSE_HEADER_FIXED16 1
-#define RESPONSE_HEADER_HTTP 2  // not yet implemented
-
-#define ANDOR_OR 0
-#define ANDOR_AND 1
-#define ANDOR_NEGATE 2
+enum class OutputFormat { csv, json, python };
 
 class Query {
     OutputBuffer *_output;
@@ -70,7 +60,7 @@ class Query {
     std::string _host_service_separator;
     bool _show_column_headers;
     bool _need_ds_separator;
-    int _output_format;
+    OutputFormat _output_format;
     int _limit;
     int _time_limit;
     time_t _time_limit_timeout;
@@ -100,7 +90,17 @@ public:
     bool processDataset(void *);
     bool timelimitReached();
     void addColumn(Column *column);
-    void setError(OutputBuffer::ResponseCode code, const std::string&message);
+
+    OutputFormat getOutputFormat() const;
+    void setOutputFormat(OutputFormat format);
+
+    void add(const std::string &str);
+    void add(const std::vector<char> &blob);
+    size_t size();
+    void setResponseHeader(OutputBuffer::ResponseHeader r);
+    void setDoKeepalive(bool d);
+    void setError(OutputBuffer::ResponseCode code, const std::string &message);
+
     contact *authUser() { return _auth_user; }
     void outputDatasetBegin();
     void outputDatasetEnd();
@@ -143,10 +143,10 @@ private:
     void parseFilterLine(char *line, AndingFilter &filter);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
-    void parseAndOrLine(char *line, int andor, AndingFilter &filter,
+    void parseAndOrLine(char *line, LogicalOperator andor, AndingFilter &filter,
                         std::string header);
     void parseNegateLine(char *line, AndingFilter &filter, std::string header);
-    void parseStatsAndOrLine(char *line, int andor);
+    void parseStatsAndOrLine(char *line, LogicalOperator andor);
     void parseStatsNegateLine(char *line);
     void parseColumnsLine(char *line);
     void parseColumnHeadersLine(char *line);

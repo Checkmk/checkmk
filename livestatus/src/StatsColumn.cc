@@ -41,7 +41,7 @@ StatsColumn::~StatsColumn() {
 }
 
 Aggregator *StatsColumn::createAggregator() {
-    if (_operation == STATS_OP_COUNT) {
+    if (_operation == StatsOperation::count) {
         return new CountAggregator(_filter);
     }
     if (_column->type() == COLTYPE_INT || _column->type() == COLTYPE_TIME) {

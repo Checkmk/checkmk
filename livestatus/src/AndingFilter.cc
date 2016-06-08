@@ -25,7 +25,6 @@
 #include "AndingFilter.h"
 #include <cinttypes>
 #include "OringFilter.h"
-#include "Query.h"
 #include "logger.h"
 
 AndingFilter::~AndingFilter() {
@@ -81,17 +80,17 @@ bool AndingFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
     return optimized;
 }
 
-void AndingFilter::combineFilters(int count, int andor) {
+void AndingFilter::combineFilters(int count, LogicalOperator andor) {
     if (count > static_cast<int>(_subfilters.size())) {
         logger(LG_INFO, "Cannot combine %d filters with '%s': only %" PRIuMAX
                         " are on stack",
-               count, andor == ANDOR_AND ? "AND" : "OR",
+               count, andor == LogicalOperator::and_ ? "AND" : "OR",
                static_cast<uintmax_t>(_subfilters.size()));
         return;
     }
 
     AndingFilter *andorfilter;  // OringFilter is subclassed from AndingFilter
-    if (andor == ANDOR_AND) {
+    if (andor == LogicalOperator::and_) {
         andorfilter = new AndingFilter();
     } else {
         andorfilter = new OringFilter();

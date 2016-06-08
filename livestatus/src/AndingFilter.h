@@ -31,6 +31,8 @@
 #include <memory>
 #include "Filter.h"
 
+enum class LogicalOperator { and_, or_ };
+
 class AndingFilter : public Filter {
 public:
     typedef std::deque<Filter *> _subfilters_t;
@@ -45,7 +47,7 @@ public:
     void addSubfilter(Filter *);
     Filter *stealLastSubfiler();
     bool accepts(void *data);
-    void combineFilters(int count, int andor);
+    void combineFilters(int count, LogicalOperator andor);
     unsigned numFilters() { return _subfilters.size(); }
     _subfilters_t::iterator begin() { return _subfilters.begin(); }
     _subfilters_t::iterator end() { return _subfilters.end(); }

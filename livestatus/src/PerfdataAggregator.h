@@ -44,7 +44,8 @@ class PerfdataAggregator : public Aggregator {
     _aggr_t _aggr;
 
 public:
-    PerfdataAggregator(StringColumn *c, int o) : Aggregator(o), _column(c) {}
+    PerfdataAggregator(StringColumn *c, StatsOperation o)
+        : Aggregator(o), _column(c) {}
     void consume(void *data, Query *);
     void output(Query *);
 

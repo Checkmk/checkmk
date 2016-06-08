@@ -43,6 +43,8 @@ public:
         unknown_column = 450,
     };
 
+    enum class ResponseHeader { off, fixed16 };
+
     OutputBuffer();
     ~OutputBuffer();
 
@@ -51,9 +53,9 @@ public:
 
     void reset();
     void flush(int fd, int *termination_flag);
-    unsigned size() { return _writepos - _buffer; }
+    size_t size() { return _writepos - _buffer; }
 
-    void setResponseHeader(int r) { _response_header = r; }
+    void setResponseHeader(ResponseHeader r) { _response_header = r; }
 
     void setDoKeepalive(bool d) { _do_keepalive = d; }
     bool doKeepalive() { return _do_keepalive; }
@@ -65,7 +67,7 @@ private:
     char *_writepos;
     char *_end;
     unsigned _max_size;
-    int _response_header;
+    ResponseHeader _response_header;
     ResponseCode _response_code;
     std::string _error_message;
     bool _do_keepalive;

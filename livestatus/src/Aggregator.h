@@ -29,13 +29,15 @@
 #include <stdint.h>
 class Query;
 
+enum class StatsOperation { count, sum, min, max, avg, std, suminv, avginv };
+
 class Aggregator {
 protected:
-    int _operation;
+    StatsOperation _operation;
     uint32_t _count;
 
 public:
-    explicit Aggregator(int o) : _operation(o), _count(0) {}
+    explicit Aggregator(StatsOperation o) : _operation(o), _count(0) {}
     virtual ~Aggregator() {}
     virtual void consume(void *data, Query *) = 0;
     virtual void output(Query *) = 0;

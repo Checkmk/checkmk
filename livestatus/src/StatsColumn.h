@@ -26,30 +26,21 @@
 #define StatsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-class Aggregator;
+#include "Aggregator.h"
 class Column;
 class Filter;
-
-#define STATS_OP_COUNT 0
-#define STATS_OP_SUM 1
-#define STATS_OP_MIN 2
-#define STATS_OP_MAX 3
-#define STATS_OP_AVG 4
-#define STATS_OP_STD 5
-#define STATS_OP_SUMINV 6
-#define STATS_OP_AVGINV 7
 
 class StatsColumn {
     Column *_column;
     Filter *_filter;
-    int _operation;
+    StatsOperation _operation;
 
 public:
-    StatsColumn(Column *c, Filter *f, int o)
+    StatsColumn(Column *c, Filter *f, StatsOperation o)
         : _column(c), _filter(f), _operation(o) {}
     ~StatsColumn();
     Column *column() const { return _column; }
-    int operation() { return _operation; }
+    StatsOperation operation() { return _operation; }
     Filter *stealFilter() {
         Filter *f = _filter;
         _filter = 0;

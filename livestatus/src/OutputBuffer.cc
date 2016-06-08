@@ -32,7 +32,6 @@
 #include <unistd.h>
 #include <ostream>
 #include "Logger.h"
-#include "Query.h"
 
 using std::string;
 using std::vector;
@@ -49,7 +48,7 @@ OutputBuffer::~OutputBuffer() { free(_buffer); }
 
 void OutputBuffer::reset() {
     _writepos = _buffer;
-    _response_header = RESPONSE_HEADER_OFF;
+    _response_header = ResponseHeader::off;
     _response_code = ResponseCode::ok;
     _do_keepalive = false;
     _error_message = "";
@@ -94,7 +93,7 @@ void OutputBuffer::needSpace(unsigned len) {
 }
 
 void OutputBuffer::flush(int fd, int *termination_flag) {
-    if (_response_header == RESPONSE_HEADER_FIXED16) {
+    if (_response_header == ResponseHeader::fixed16) {
         const char *buffer = _buffer;
         int s = size();
 

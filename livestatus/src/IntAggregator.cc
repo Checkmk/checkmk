@@ -26,23 +26,22 @@
 #include <math.h>
 #include "IntColumn.h"
 #include "Query.h"
-#include "StatsColumn.h"
 
 void IntAggregator::consume(void *data, Query *query) {
     _count++;
     int32_t value = _column->getValue(data, query);
     switch (_operation) {
-        case STATS_OP_SUM:
-        case STATS_OP_AVG:
+        case StatsOperation::sum:
+        case StatsOperation::avg:
             _aggr += value;
             break;
 
-        case STATS_OP_SUMINV:
-        case STATS_OP_AVGINV:
+        case StatsOperation::suminv:
+        case StatsOperation::avginv:
             _sumq += 1.0 / static_cast<double>(value);
             break;
 
-        case STATS_OP_MIN:
+        case StatsOperation::min:
             if (_count == 1) {
                 _aggr = value;
             } else if (value < _aggr) {
@@ -50,7 +49,7 @@ void IntAggregator::consume(void *data, Query *query) {
             }
             break;
 
-        case STATS_OP_MAX:
+        case StatsOperation::max:
             if (_count == 1) {
                 _aggr = value;
             } else if (value > _aggr) {
@@ -58,34 +57,36 @@ void IntAggregator::consume(void *data, Query *query) {
             }
             break;
 
-        case STATS_OP_STD:
+        case StatsOperation::std:
             _aggr += value;
             _sumq += static_cast<double>(value) * static_cast<double>(value);
+            break;
+        case StatsOperation::count:
             break;
     }
 }
 
 void IntAggregator::output(Query *q) {
     switch (_operation) {
-        case STATS_OP_SUM:
-        case STATS_OP_MIN:
-        case STATS_OP_MAX:
+        case StatsOperation::sum:
+        case StatsOperation::min:
+        case StatsOperation::max:
             q->outputInteger64(_aggr);
             break;
 
-        case STATS_OP_SUMINV:
+        case StatsOperation::suminv:
             q->outputInteger64(_sumq);
             break;
 
-        case STATS_OP_AVG:
+        case StatsOperation::avg:
             q->outputDouble(double(_aggr) / _count);
             break;
 
-        case STATS_OP_AVGINV:
+        case StatsOperation::avginv:
             q->outputInteger64(_sumq / _count);
             break;
 
-        case STATS_OP_STD:
+        case StatsOperation::std:
             if (_count <= 1) {
                 q->outputDouble(0.0);
             } else {
@@ -95,6 +96,8 @@ void IntAggregator::output(Query *q) {
                          _count) /
                     (_count - 1)));
             }
+            break;
+        case StatsOperation::count:
             break;
     }
 }

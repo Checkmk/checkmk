@@ -26,7 +26,6 @@
 #include <math.h>
 #include "DoubleColumn.h"
 #include "Query.h"
-#include "StatsColumn.h"
 
 /* SORRY: This file is copy&pasted from IntAggregator.
    I hate copy & paste. But I also dislike complicating
@@ -37,12 +36,12 @@ void DoubleAggregator::consume(void *data, Query * /*unused*/) {
     _count++;
     double value = _column->getValue(data);
     switch (_operation) {
-        case STATS_OP_SUM:
-        case STATS_OP_AVG:
+        case StatsOperation::sum:
+        case StatsOperation::avg:
             _aggr += value;
             break;
 
-        case STATS_OP_MIN:
+        case StatsOperation::min:
             if (_count == 1) {
                 _aggr = value;
             } else if (value < _aggr) {
@@ -50,7 +49,7 @@ void DoubleAggregator::consume(void *data, Query * /*unused*/) {
             }
             break;
 
-        case STATS_OP_MAX:
+        case StatsOperation::max:
             if (_count == 1) {
                 _aggr = value;
             } else if (value > _aggr) {
@@ -58,29 +57,31 @@ void DoubleAggregator::consume(void *data, Query * /*unused*/) {
             }
             break;
 
-        case STATS_OP_STD:
+        case StatsOperation::std:
             _aggr += value;
             _sumq += value * value;
             break;
 
-        case STATS_OP_SUMINV:
-        case STATS_OP_AVGINV:
+        case StatsOperation::suminv:
+        case StatsOperation::avginv:
             _aggr += 1.0 / value;
+            break;
+        case StatsOperation::count:
             break;
     }
 }
 
 void DoubleAggregator::output(Query *q) {
     switch (_operation) {
-        case STATS_OP_SUM:
-        case STATS_OP_MIN:
-        case STATS_OP_MAX:
-        case STATS_OP_SUMINV:
+        case StatsOperation::sum:
+        case StatsOperation::min:
+        case StatsOperation::max:
+        case StatsOperation::suminv:
             q->outputDouble(_aggr);
             break;
 
-        case STATS_OP_AVG:
-        case STATS_OP_AVGINV:
+        case StatsOperation::avg:
+        case StatsOperation::avginv:
             if (_count == 0) {
                 q->outputDouble(0.0);
             } else {
@@ -88,13 +89,15 @@ void DoubleAggregator::output(Query *q) {
             }
             break;
 
-        case STATS_OP_STD:
+        case StatsOperation::std:
             if (_count <= 1) {
                 q->outputDouble(0.0);
             } else {
                 q->outputDouble(
                     sqrt((_sumq - (_aggr * _aggr) / _count) / (_count - 1)));
             }
+            break;
+        case StatsOperation::count:
             break;
     }
 }

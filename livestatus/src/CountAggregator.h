@@ -27,7 +27,6 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include "Aggregator.h"
-#include "StatsColumn.h"
 class Filter;
 class Query;
 
@@ -36,7 +35,7 @@ class CountAggregator : public Aggregator {
 
 public:
     explicit CountAggregator(Filter *f)
-        : Aggregator(STATS_OP_COUNT), _filter(f) {}
+        : Aggregator(StatsOperation::count), _filter(f) {}
     void consume(void *data, Query *);
     void output(Query *);
 };

@@ -500,6 +500,8 @@ def send_mail_smtp_impl(message, target, host, from_address, context):
 
     # evil hack: the smtplib doesn't allow access to the reply code/message
     #  in case of success. But we want it!
+    conn.last_code = 0
+    conn.last_repl = ""
     conn.getreply = types.MethodType(getreply_wrapper, conn)
 
     if encryption == "STARTTLS":

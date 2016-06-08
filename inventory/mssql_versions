@@ -43,9 +43,9 @@ def inv_mssql_versions(info):
             return "SQL Server 2012"
         elif parts[0] == 10:
             if parts[1] == 50:
-                return "SQL Server 2005 R2"
+                return "SQL Server 2008 R2"
             else:
-                return "SQL Server 2005"
+                return "SQL Server 2008"
         elif parts[0] == 9:
             return "SQL Server 2005"
         elif parts[0] == 8:

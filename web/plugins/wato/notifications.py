@@ -115,6 +115,59 @@ register_notification_parameters(
                     title = _("Notification sort order for bulk notifications"),
                     default = "oldest_first"
                 )
+            ),
+            ('smtp',
+             Dictionary(
+                 title = _("Enable synchronous delivery via SMTP"),
+                 help = _("Configuring this to have the notification plugin connect directly to "
+                          "the smtp server. This has the advantage of providing better error "
+                          "messages in case of an error but it does require more configuration "
+                          "and is strictly synchronous so we advice use only on enterprise "
+                          "installations using the notification spooler."),
+                 elements = [
+                     ("smarthosts",
+                      ListOfStrings(
+                          title = _("Smarthosts"),
+                          orientation = "horizontal"
+                      )),
+                     ("port",
+                      Integer(
+                          title = _("Port"),
+                          default_value = 25
+                      )),
+                     ("auth",
+                      Dictionary(
+                          title = _("Authentication"),
+                          elements = [
+                              ("method",
+                               DropdownChoice(
+                                   title = _("Authmethod"),
+                                   choices = [
+                                       ("plaintext", _("Plaintext"))
+                                   ]
+                               )),
+                              ("user",
+                               TextAscii(
+                                   title = _("User")
+                               )),
+                              ("password",
+                               Password(
+                                   title = _("Password")
+                               ))
+                          ],
+                          optional_keys = []
+                      )),
+                     ("encryption",
+                      DropdownChoice(
+                          title = ("Encryption"),
+                          choices = [
+                              ("ssl_tls", _("SSL/TLS")),
+                              ("starttls", _("STARTTLS"))
+                          ]
+                      )),
+                 ],
+                 optional_keys = ["auth", "encryption"]
+             )
             )
         ]
     )

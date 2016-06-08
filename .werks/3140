@@ -1,0 +1,10 @@
+Title: mail notification script can now optionally connect directly to a smtp server instead of using sendmail
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.4.0i1
+Date: 1465385978
+Class: feature
+
+Please note that as of right now, not all features of the smtp protocol are supported (i.e.
+non-plaintext password transmission).

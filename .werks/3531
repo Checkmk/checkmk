@@ -2,7 +2,7 @@ Title: Reduced Check_MK helper size for certain dists/python versions
 Level: 1
 Component: core
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1463473106
 Class: feature
 

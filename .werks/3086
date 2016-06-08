@@ -4,7 +4,7 @@ Component: wato
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1457013618
 
 When a view is filtered by a wato folder, that search was a pure prefix match, so if a view was

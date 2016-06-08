@@ -2,7 +2,7 @@ Title: if64, if64adm: These checks now display the speed of interfaces slower th
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1462952497
 Class: fix
 

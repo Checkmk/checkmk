@@ -2,7 +2,7 @@ Title: linux and windows agent can now be configured to directly encrypt their o
 Level: 2
 Component: core
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1459867428
 Class: feature
 

@@ -2,7 +2,7 @@ Title: jolokia_metrics.threads: Improved check output, now showing the actual pr
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1458142474
 Class: feature
 

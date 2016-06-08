@@ -2,7 +2,7 @@ Title: fortigate_signatures: new check to monitor av and ips signatures on forti
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1456914423
 Class: feature
 

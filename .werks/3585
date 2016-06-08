@@ -4,7 +4,7 @@ Component: inv
 Class: feature
 Compatible: compat
 State: unknown
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1464704941
 
 The HW/SW inventory data can now be exported using a webservice. This webservice

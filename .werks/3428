@@ -2,7 +2,7 @@ Title: bluenet2_powerrail, bluenet2_powerrail.rcm, bluenet2_powerrail.temp, blue
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1461653409
 Class: feature
 

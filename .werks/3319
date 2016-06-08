@@ -2,7 +2,7 @@ Title: HW/SW-Inventory service can now be OK in case of unreachable host
 Level: 2
 Component: inv
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1459776126
 Class: feature
 

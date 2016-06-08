@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1464959618
 
 Postfix mail queue check creates incorrect rrd data sources. This results in a lot of unnecessary rrd files.

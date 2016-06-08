@@ -2,7 +2,7 @@ Title: Inventory scripts are no longer called when no data is available for thei
 Level: 1
 Component: inv
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1461853219
 Class: fix
 

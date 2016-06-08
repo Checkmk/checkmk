@@ -2,7 +2,7 @@ Title: fileinfo.groups: the include patterns now also support the pattern YESTER
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1461330445
 Class: feature
 

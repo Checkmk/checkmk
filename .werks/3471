@@ -4,7 +4,7 @@ Component: core
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1462973569
 
 This problem often appeard after an upgrade from 1.2.6 to 1.2.8 on monitored ESX servers.

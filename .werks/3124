@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1461243484
 
 Please note that this is just a workaround, it will still produce wrong output at some point.

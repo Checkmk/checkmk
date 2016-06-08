@@ -2,7 +2,7 @@ Title: zpool: new check to monitor usage of zfs pools
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1458048130
 Class: feature
 

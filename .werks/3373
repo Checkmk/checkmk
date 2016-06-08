@@ -2,7 +2,7 @@ Title: Fixed exception when handling syntax errors while loading pagetype files
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1459957038
 Class: fix
 

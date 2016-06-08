@@ -2,7 +2,7 @@ Title: pvecm_status, pvecm_nodes: new checks which monitor a Proxmox Virtual Env
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1459341332
 Class: feature
 

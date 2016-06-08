@@ -2,7 +2,7 @@ Title: Event Console can now process SNMPv3 traps
 Level: 2
 Component: ec
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1461146267
 Class: feature
 

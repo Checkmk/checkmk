@@ -2,7 +2,7 @@ Title: check_sql: upload/content field for longer queries is now available
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1465203920
 Class: feature
 

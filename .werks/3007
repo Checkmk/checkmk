@@ -2,7 +2,7 @@ Title: Interface groups: fixed exception when port type or interface items were 
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1457605216
 Class: fix
 

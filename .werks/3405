@@ -2,7 +2,7 @@ Title: cisco_fantray, cisco_fru_power: now these checks have readable item names
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1460558684
 Class: feature
 

@@ -2,7 +2,7 @@ Title: jolokia_metrics.cache_hits, jolokia_metrics.in_memory, jolokia_metrics.of
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1464602197
 Class: feature
 

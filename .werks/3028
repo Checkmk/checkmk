@@ -2,7 +2,7 @@ Title: statgrab_mem, solaris_mem: updated inventory plugins for solaris systems
 Level: 1
 Component: inv
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1460977554
 Class: feature
 

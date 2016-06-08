@@ -4,7 +4,7 @@ Component: multisite
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1459249594
 
 When having a lot of users (>1000) configured via WATO, e.g. created by the LDAP sync,

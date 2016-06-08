@@ -4,7 +4,7 @@ Component: multisite
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1465212884
 
 An exception is thrown, if you want to use the WATO snapins Folders, Tree of folders and

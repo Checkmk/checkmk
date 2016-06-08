@@ -2,7 +2,7 @@ Title: esx_vsphere_hostsystem: inventory now adds information about memory, uuid
 Level: 1
 Component: inv
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1459933454
 Class: feature
 

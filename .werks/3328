@@ -4,7 +4,7 @@ Component: multisite
 Class: feature
 Compatible: compat
 State: unknown
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1459950688
 
 If you create a view as a clone from an existing view than the new view

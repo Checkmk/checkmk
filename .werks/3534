@@ -2,7 +2,7 @@ Title: Fixed exception with upload of interlaced PNG files
 Level: 1
 Component: wato
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1463491935
 Class: fix
 

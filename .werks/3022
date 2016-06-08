@@ -2,7 +2,7 @@ Title: mk_logwatch (linux): now able to handle queries from multiple servers (no
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1459777575
 Class: fix
 

@@ -2,7 +2,7 @@ Title: netextreme_cpu_util: new check which monitors the CPU utilization of a Ex
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1462207393
 Class: feature
 

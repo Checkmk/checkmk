@@ -2,7 +2,7 @@ Title: cisco_mem_asa64: new check which monitors the used memory of Cisco Adapti
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1460560557
 Class: feature
 

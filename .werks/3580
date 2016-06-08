@@ -2,7 +2,7 @@ Title: The macro $HOSTNAME$ is now available for host checks which are based on 
 Level: 1
 Component: core
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1464590736
 Class: feature
 

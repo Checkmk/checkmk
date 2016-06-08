@@ -2,7 +2,7 @@ Title: snmp_extended_info: now inventorizes all physical components of devices w
 Level: 1
 Component: inv
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1456736344
 Class: feature
 

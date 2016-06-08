@@ -4,7 +4,7 @@ Component: core
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1464776061
 
 When you use <tt>cmk --cache -I myhost123<tt> on the command line in order

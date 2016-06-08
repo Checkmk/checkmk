@@ -2,7 +2,7 @@ Title: fileinfo, fileinfo.groups: both checks are now cluster ready
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1461664629
 Class: feature
 

@@ -2,7 +2,7 @@ Title: AIX agent: Cached local scripts / plugins need to be configured in second
 Level: 2
 Component: checks
 Compatible: incomp
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1461057535
 Class: fix
 

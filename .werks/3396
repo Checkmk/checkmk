@@ -4,7 +4,7 @@ Component: bi
 Class: feature
 Compatible: compat
 State: unknown
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1460547726
 
 The global setting {{Precompile aggregations on demand}} improves the

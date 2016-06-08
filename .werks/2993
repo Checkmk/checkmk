@@ -2,7 +2,7 @@ Title: zfs_arc_cache: fixed crash, no longer reports unknown if not all data is 
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1455709812
 Class: fix
 

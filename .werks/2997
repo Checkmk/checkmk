@@ -2,7 +2,7 @@ Title: Fixed broken SNMP subchecks
 Level: 2
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1456315853
 Class: fix
 

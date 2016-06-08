@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1455809865
 
 This bug was only recently introduced and 1.2.8b1 should be the only release that included it

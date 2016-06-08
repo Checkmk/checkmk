@@ -2,7 +2,7 @@ Title: Treasure script wato_import.py: now able to set wato host tag groups
 Level: 1
 Component: wato
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1457440808
 Class: feature
 

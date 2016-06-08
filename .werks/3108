@@ -2,7 +2,7 @@ Title: network interface and switch port discovery rules can now be combined to 
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1459406991
 Class: feature
 

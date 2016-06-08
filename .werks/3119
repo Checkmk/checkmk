@@ -2,7 +2,7 @@ Title: mssql: fixed counter calculation when caching plugin output
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1460473140
 Class: feature
 

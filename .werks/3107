@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1458655464
 
 The service "Heartbeat CRM General" calculated the status output age incorrectly, using comparing a

@@ -2,7 +2,7 @@ Title: Host check command: "Use a custom check plugin" was not working with CMC
 Level: 1
 Component: wato
 Compatible: compat
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1456844854
 Class: fix
 

@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.9i1
+Version: 1.4.0i1
 Date: 1455546420
 
 The windows agent used sha-1 hashes to derive the key/iv-pair from the pass phrase while check_mk

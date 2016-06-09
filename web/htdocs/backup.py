@@ -29,7 +29,7 @@ import pprint
 
 import defaults
 import table
-import valuespec
+from valuespec import *
 from lib import create_user_file
 
 class BackupConfig(object):
@@ -62,33 +62,7 @@ class BackupConfig(object):
 
 
 
-class Schedule(object):
-    def __init__(self):
-        self.name = "XXX"
-
-
-
-class Schedules(object):
-    def __init__(self, config_file_path):
-        self._config = BackupConfig(config_file_path)
-        self.schedules = dict([ (ident, Schedule(ident, config))
-                                for ident, config in self._config.schedules.items() ])
-
-
-    def show_list(self):
-        html.write("<h2>%s</h2>" % _("Schedules"))
-        table.begin(sortable=False, searchable=False)
-
-        for schedule_ident, schedule in sorted(self.schedules.items()):
-            table.row()
-            table.cell(_("Actions"), css="buttons")
-            table.cell(_("Name"), html.attrencode(schedule.name))
-
-        table.end()
-
-
-
-class Target(object):
+class BackupEntity(object):
     def __init__(self, ident, config):
         self._ident  = ident
         self._config = {}
@@ -113,22 +87,86 @@ class Target(object):
 
 
 
-class Targets(object):
-    def __init__(self, config_file_path):
-        self._config = BackupConfig(config_file_path)
-        self.targets = dict([ (ident, Target(ident, config))
-                              for ident, config in self._config.targets.items() ])
+class Schedule(BackupEntity):
+    pass
+
+
+
+class Target(BackupEntity):
+    pass
+
+
+
+class BackupEntityCollection(object):
+    def __init__(self, config_file_path, cls, config_attr):
+        self._config      = BackupConfig(config_file_path)
+        self._cls         = cls
+        self._config_attr = config_attr
+        self.objects = dict([ (ident, cls(ident, config))
+                              for ident, config
+                              in getattr(self._config, config_attr).items() ])
 
 
     def get(self, ident):
-        return self.targets[ident]
+        return self.objects[ident]
 
 
     def remove(self, ident):
         try:
-            del self.targets[ident]
+            del self.objects[ident]
         except KeyError:
             pass
+
+
+    def choices(self):
+        return sorted([ (ident, obj.title()) for ident, obj in self.objects.items() ],
+                        key=lambda (x, y): y.title())
+
+
+    def add(self, obj):
+        self.objects[obj.ident()] = obj
+
+
+    def save(self):
+        setattr(self._config, self._config_attr,
+            dict([ (ident, obj.to_config()) for ident, obj in self.objects.items() ]))
+        self._config.save()
+
+
+
+class Schedules(BackupEntityCollection):
+    def __init__(self, config_file_path):
+        super(Schedules, self).__init__(config_file_path, cls=Schedule, config_attr="schedules")
+
+
+    def show_list(self):
+        html.write("<h2>%s</h2>" % _("Schedules"))
+        table.begin(sortable=False, searchable=False)
+
+        for schedule_ident, schedule in sorted(self.objects.items()):
+            table.row()
+            table.cell(_("Actions"), css="buttons")
+            delete_url = html.makeactionuri_contextless(
+                            [("mode", "backup"), ("delete_schedule", schedule_ident)])
+            edit_url = html.makeuri_contextless(
+                            [("mode", "edit_backup_schedule"), ("schedule", schedule_ident)])
+
+            html.icon_button(edit_url, _("Edit this backup schedule"), "edit")
+            html.icon_button(delete_url, _("Delete this backup schedule"), "delete")
+
+            table.cell(_("Name"),     html.attrencode(schedule.title()))
+            schedule_html = SchedulePeriod().value_to_text(schedule._config["period"]) \
+                            + _(" at ") \
+                            + ListOf(Timeofday()).value_to_text(schedule._config["timeofday"])
+            table.cell(_("Schedule"), schedule_html)
+
+        table.end()
+
+
+
+class Targets(BackupEntityCollection):
+    def __init__(self, config_file_path):
+        super(Targets, self).__init__(config_file_path, cls=Target, config_attr="targets")
 
 
     def show_list(self, title=None, editable=True):
@@ -139,7 +177,7 @@ class Targets(object):
 
         table.begin(sortable=False, searchable=False)
 
-        for target_ident, target in sorted(self.targets.items()):
+        for target_ident, target in sorted(self.objects.items()):
             table.row()
             table.cell(_("Actions"), css="buttons")
             if editable:
@@ -157,11 +195,115 @@ class Targets(object):
         table.end()
 
 
-    def add(self, target):
-        self.targets[target.ident()] = target
+#.
+#   .--Target Types--------------------------------------------------------.
+#   |      _____                    _     _____                            |
+#   |     |_   _|_ _ _ __ __ _  ___| |_  |_   _|   _ _ __   ___  ___       |
+#   |       | |/ _` | '__/ _` |/ _ \ __|   | || | | | '_ \ / _ \/ __|      |
+#   |       | | (_| | | | (_| |  __/ |_    | || |_| | |_) |  __/\__ \      |
+#   |       |_|\__,_|_|  \__, |\___|\__|   |_| \__, | .__/ \___||___/      |
+#   |                    |___/                 |___/|_|                    |
+#   +----------------------------------------------------------------------+
+#   | A target type implements the handling of different protocols to use  |
+#   | for storing the backup to, like NFS, a local directory or SSH/SFTP.  |
+#   '----------------------------------------------------------------------'
 
 
-    def save(self):
-        self._config.targets = dict([ (ident, target.to_config())
-                              for ident, target in self.targets.items() ])
-        self._config.save()
+class BackupTargetType(object):
+    ident = None
+
+    @classmethod
+    def choices(cls):
+        choices = []
+        for cls in cls.__subclasses__():
+            choices.append((cls.ident, cls.title(), cls().valuespec()))
+        return sorted(choices, key=lambda x: x[1])
+
+
+    @classmethod
+    def title(cls):
+        raise NotImplementedError()
+
+
+    def __init__(self):
+        pass
+
+
+    def valuespec(self):
+        raise NotImplementedError()
+
+
+
+class BackupTargetNFS(BackupTargetType):
+    ident = "nfs"
+
+    @classmethod
+    def title(cls):
+        return _("Network: NFS")
+
+
+    def valuespec(self):
+        return Dictionary(
+            elements = [
+                ("share", Tuple(
+                    title = _("NFS share"),
+                    elements = [
+                        Hostname(
+                            title = _("Host address"),
+                            help = _("The host address (name or IP address) to reach the NFS server.")
+                        ),
+                        AbsoluteDirname(
+                            title = _("Share path"),
+                            help = _("The export path used to mount the share.")
+                        ),
+                    ],
+                    orientation = "horizontal",
+                )),
+                ("mount_options", ListOfStrings(
+                    title = _("Mount options"),
+                    help = _("Options to be used when mounting the NFS share."),
+                    default_value = ["user", "noatime"],
+                    orientation = "horizontal",
+                )),
+            ],
+            optional_keys = [],
+        )
+
+
+
+class BackupTargetLocal(BackupTargetType):
+    ident = "local"
+
+    @classmethod
+    def title(cls):
+        return _("Local path")
+
+
+    def valuespec(self):
+        return Dictionary(
+            elements = [
+                ("path", AbsoluteDirname(
+                    title = _("Directory to save the backup to"),
+                    allow_empty = False,
+                )),
+            ],
+            optional_keys = [],
+        )
+
+
+
+class BackupTargetSSH(BackupTargetType):
+    ident = "ssh"
+
+    @classmethod
+    def title(cls):
+        return _("Network: SSH (SCP/SFTP)")
+
+
+    def valuespec(self):
+        return Dictionary(
+            # TODO
+            elements = [
+            ],
+            optional_keys = [],
+        )

@@ -3753,6 +3753,7 @@ class Color(ValueSpec):
             raise MKUserError(varprefix, _("You need to select a color."))
 
 
+
 class SSHKeyPair(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
@@ -3823,3 +3824,21 @@ class SSHKeyPair(ValueSpec):
         fd, path = tempfile.mkstemp(dir=defaults.tmp_dir)
         os.close(fd)
         return path
+
+
+
+def SchedulePeriod():
+    return \
+        CascadingDropdown(
+            title = _("Period"),
+            orientation = "horizontal",
+            choices = [
+                ( "day",   _("Every day"), ),
+                ( "week",  _("Every week on..."),
+                  Weekday(title = _("Day of the week"))),
+                ( "month_begin", _("At the beginning of every month at day"),
+                  Integer(minvalue=1, maxvalue=28)),
+                ( "month_end", _("At the end of every month at day"),
+                  Integer(minvalue=1, maxvalue=28, unit=_("from the end"))),
+            ]
+        )

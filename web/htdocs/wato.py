@@ -5635,18 +5635,22 @@ class ModeBackup(WatoMode):
     def buttons(self):
         home_button()
         html.context_button(_("Backup targets"), html.makeuri([("mode", "backup_targets")]), "backup_targets")
-        html.context_button(_("New schedule"), html.makeuri([("mode", "backup_schedule")]), "backup_schedule_new")
+        html.context_button(_("New schedule"), html.makeuri([("mode", "edit_backup_schedule")]), "backup_schedule_new")
 
 
-    #def action(self):
-    #    if html.transaction_valid():
-    #        if html.has_var("_do_upload"):
-    #            self._upload_csv_file()
+    def action(self):
+        if html.transaction_valid():
+            ident = html.var("delete_schedule")
+            schedules = SiteBackupSchedules()
+            try:
+                schedule = schedules.get(ident)
+            except KeyError:
+                raise MKUserError("delete_schedule", _("This backup schedule does not exist."))
 
-    #        self._read_csv_file()
-
-    #        if html.var("_do_import"):
-    #            return self._import()
+            if wato_confirm(self.title(), _("Do you really want to delete this schedule?")):
+                schedules.remove(ident)
+                schedules.save()
+                return None, _("The schedule has been deleted.")
 
 
     def page(self):
@@ -5689,7 +5693,7 @@ class ModeBackupTargets(WatoMode):
 
 
 def validate_backup_target_ident(value, varprefix):
-    if value in SiteBackupTargets().targets:
+    if value in SiteBackupTargets().objects:
         raise MKUserError(varprefix, _("This ID is already used by another backup target."))
 
 
@@ -5729,7 +5733,7 @@ class ModeEditBackupTarget(WatoMode):
             ident_attr = [
                 ("ident", TextAscii(
                     title = _("Unique ID"),
-                    help = _("The ID of the connection must be a unique text. It will be used as an internal key "
+                    help = _("The ID of the target must be a unique text. It will be used as an internal key "
                              "when objects refer to the target."),
                     allow_empty = False,
                     size = 12,
@@ -5749,33 +5753,7 @@ class ModeEditBackupTarget(WatoMode):
                 )),
                 ("remote", CascadingDropdown(
                     title = _("Destination"),
-                    choices = [
-                        ("nfs", _("Network: NFS share"), Dictionary(
-                            elements = [
-                                ("share", Tuple(
-                                    title = _("NFS share"),
-                                    elements = [
-                                        Hostname(
-                                            title = _("Host address"),
-                                            help = _("The host address (name or IP address) to reach the NFS server.")
-                                        ),
-                                        AbsoluteDirname(
-                                            title = _("Share path"),
-                                            help = _("The export path used to mount the share.")
-                                        ),
-                                    ],
-                                    orientation = "horizontal",
-                                )),
-                                ("mount_options", ListOfStrings(
-                                    title = _("Mount options"),
-                                    help = _("Options to be used when mounting the NFS share."),
-                                    default_value = ["user", "noatime"],
-                                    orientation = "horizontal",
-                                )),
-                            ],
-                            optional_keys = [],
-                        )),
-                    ]
+                    choices = backup.BackupTargetType.choices,
                 )),
             ],
             optional_keys = [],
@@ -5803,7 +5781,7 @@ class ModeEditBackupTarget(WatoMode):
                 target.from_config(self._target_cfg)
 
             targets.save()
-            return "backup_targets"
+        html.http_redirect(html.makeuri([("mode", "backup_targets")]))
 
 
     def page(self):
@@ -5820,6 +5798,130 @@ class ModeEditBackupTarget(WatoMode):
         html.hidden_fields()
         html.end_form()
 
+
+
+def validate_backup_schedule_ident(value, varprefix):
+    if value in SiteBackupSchedules().objects:
+        raise MKUserError(varprefix, _("This ID is already used by another backup schedule."))
+
+
+
+class ModeEditBackupSchedule(WatoMode):
+    def __init__(self):
+        super(ModeEditBackupSchedule, self).__init__()
+        schedule_ident = html.var("schedule")
+
+        if schedule_ident != None:
+            try:
+                schedule = SiteBackupSchedules().get(schedule_ident)
+            except KeyError:
+                raise MKUserError("target", _("This backup schedule does not exist."))
+
+            self._new          = False
+            self._ident        = schedule_ident
+            self._schedule_cfg = schedule.to_config()
+            self._title        = _("Edit backup schedule: %s") % schedule.title()
+        else:
+            self._new        = True
+            self._ident      = None
+            self._schedule_cfg = {}
+            self._title      = _("New backup schedule")
+
+
+    def title(self):
+        return self._title
+
+
+    def buttons(self):
+        html.context_button(_("Back"), html.makeuri([("mode", "backup")]), "back")
+
+
+    def vs_backup_schedule(self):
+        if self._new:
+            ident_attr = [
+                ("ident", TextAscii(
+                    title = _("Unique ID"),
+                    help = _("The ID of the schedule must be a unique text. It will be used as an internal key "
+                             "when objects refer to the schedule."),
+                    allow_empty = False,
+                    size = 12,
+                    validate = validate_backup_schedule_ident,
+                )),
+            ]
+        else:
+            ident_attr = []
+
+
+        return Dictionary(
+            title = _("Backup schedule"),
+            elements = ident_attr + [
+                ("title", TextUnicode(
+                    title = _("Title"),
+                    allow_empty = False,
+                )),
+                ("target", DropdownChoice(
+                    title = _("Target"),
+                    choices = self.backup_target_choices,
+                )),
+                ("period", SchedulePeriod()),
+                ("timeofday", ListOf(
+                    Timeofday(
+                        default_value = (0, 0),
+                    ),
+                    title = _("Time of day to start the backup at"),
+                    movable = False,
+                    default_value = [(0, 0)],
+                    add_label = _("Add new time"),
+                    empty_text = _("Please specify at least one time."),
+                    allow_empty = False,
+                )),
+            ],
+        optional_keys = [],
+        render = "form",
+    )
+
+
+    def backup_target_choices(self):
+        return sorted(SiteBackupTargets().choices() + SystemBackupTargets().choices(),
+                        key=lambda (x, y): y.title())
+
+
+    def action(self):
+        if html.transaction_valid():
+            vs = self.vs_backup_schedule()
+
+            config = vs.from_html_vars("edit_schedule")
+            vs.validate_value(config, "edit_schedule")
+
+            if "ident" in config:
+                self._ident = config.pop("ident")
+            self._schedule_cfg = config
+
+            schedules = SiteBackupSchedules()
+            if self._new:
+                schedule = backup.Schedule(self._ident, self._schedule_cfg)
+                schedules.add(schedule)
+            else:
+                schedule = schedules.get(self._ident)
+                schedule.from_config(self._schedule_cfg)
+
+            schedules.save()
+        html.http_redirect(html.makeuri([("mode", "backup")]))
+
+
+    def page(self):
+        html.begin_form("edit_schedule", method="POST")
+        html.prevent_password_auto_completion()
+
+        vs = self.vs_backup_schedule()
+
+        vs.render_input("edit_schedule", self._schedule_cfg)
+        vs.set_focus("edit_schedule")
+        forms.end()
+
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
 
 
 #.
@@ -16535,6 +16637,7 @@ modes = {
    "backup"             : (["backups"], ModeBackup),
    "backup_targets"     : (["backups"], ModeBackupTargets),
    "edit_backup_target" : (["backups"], ModeEditBackupTarget),
+   "edit_backup_schedule" : (["backups"], ModeEditBackupSchedule),
 }
 
 builtin_host_attribute_names = []
@@ -16774,7 +16877,7 @@ def load_plugins(force):
 
     config.declare_permission("wato.backups",
          _("Backup & Restore"),
-         _("Access to the module <i>Backup & Restore</i>. Please note: a user with "
+         _("Access to the module <i>Site backup</i>. Please note: a user with "
            "write access to this module "
            "can make arbitrary changes to the configuration by restoring uploaded snapshots."),
          [ "admin", ])

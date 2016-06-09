@@ -77,7 +77,7 @@ modules += [
       ( "sites",  _("Distributed Monitoring"), "sites", "sites",
       _("Distributed monitoring via Multsite, distributed configuration via WATO")),
 
-      ( "backup", _("Backup & Restore"), "backup", "backups",
+      ( "backup", _("Backup"), "backup", "backups",
         _("Make backups of your whole site and restore previous backups.")),
 
       ( "icons", _("Custom Icons"), "icons", "icons",

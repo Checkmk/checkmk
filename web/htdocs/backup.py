@@ -24,6 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# This module implements generic functionality of the Check_MK backup
+# system. It is used to configure the site and system backup.
+#
+# BE AWARE: This code is directly used by the appliance. So if you are
+# about to refactor things, you will have to care about the appliance!
+
 import os
 import pprint
 
@@ -31,6 +37,20 @@ import defaults
 import table
 from valuespec import *
 from lib import create_user_file
+
+#.
+#   .--Config--------------------------------------------------------------.
+#   |                     ____             __ _                            |
+#   |                    / ___|___  _ __  / _(_) __ _                      |
+#   |                   | |   / _ \| '_ \| |_| |/ _` |                     |
+#   |                   | |__| (_) | | | |  _| | (_| |                     |
+#   |                    \____\___/|_| |_|_| |_|\__, |                     |
+#   |                                           |___/                      |
+#   +----------------------------------------------------------------------+
+#   | Handling of the backup configuration files. This is used to handle   |
+#   | either the global system config for the appliance and the site       |
+#   | specific configuration of the site backup.                           |
+#   '----------------------------------------------------------------------'
 
 class BackupConfig(object):
     def __init__(self, path):
@@ -61,6 +81,16 @@ class BackupConfig(object):
             f.write("targets  = \\\n%s\n" % pprint.pformat(self.targets))
 
 
+#.
+#   .--Abstract------------------------------------------------------------.
+#   |                 _    _         _                  _                  |
+#   |                / \  | |__  ___| |_ _ __ __ _  ___| |_                |
+#   |               / _ \ | '_ \/ __| __| '__/ _` |/ __| __|               |
+#   |              / ___ \| |_) \__ \ |_| | | (_| | (__| |_                |
+#   |             /_/   \_\_.__/|___/\__|_|  \__,_|\___|\__|               |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 
 class BackupEntity(object):
     def __init__(self, ident, config):
@@ -84,17 +114,6 @@ class BackupEntity(object):
 
     def from_config(self, config):
         self._config = config
-
-
-
-class Schedule(BackupEntity):
-    pass
-
-
-
-class Target(BackupEntity):
-    pass
-
 
 
 class BackupEntityCollection(object):
@@ -133,6 +152,24 @@ class BackupEntityCollection(object):
         self._config.save()
 
 
+#.
+#   .--Schedules-----------------------------------------------------------.
+#   |            ____       _              _       _                       |
+#   |           / ___|  ___| |__   ___  __| |_   _| | ___  ___             |
+#   |           \___ \ / __| '_ \ / _ \/ _` | | | | |/ _ \/ __|            |
+#   |            ___) | (__| | | |  __/ (_| | |_| | |  __/\__ \            |
+#   |           |____/ \___|_| |_|\___|\__,_|\__,_|_|\___||___/            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Backup schedule handling. A schedule is a single backup job which    |
+#   | runs in the configured interval and saves the backup to the choosen  |
+#   | backup target.                                                       |
+#   '----------------------------------------------------------------------'
+
+
+class Schedule(BackupEntity):
+    pass
+
 
 class Schedules(BackupEntityCollection):
     def __init__(self, config_file_path):
@@ -162,6 +199,24 @@ class Schedules(BackupEntityCollection):
 
         table.end()
 
+
+#.
+#   .--Targets-------------------------------------------------------------.
+#   |                  _____                    _                          |
+#   |                 |_   _|_ _ _ __ __ _  ___| |_ ___                    |
+#   |                   | |/ _` | '__/ _` |/ _ \ __/ __|                   |
+#   |                   | | (_| | | | (_| |  __/ |_\__ \                   |
+#   |                   |_|\__,_|_|  \__, |\___|\__|___/                   |
+#   |                                |___/                                 |
+#   +----------------------------------------------------------------------+
+#   | Specifying backup targets, the user tells the backup system which    |
+#   | destinations can be used for the backups. Each destination has it's  |
+#   | own protocol and specific parameters to specify how to backup.       |
+#   '----------------------------------------------------------------------'
+
+
+class Target(BackupEntity):
+    pass
 
 
 class Targets(BackupEntityCollection):

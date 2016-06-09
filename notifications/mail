@@ -489,14 +489,13 @@ def send_mail_smtp_impl(message, target, host, from_address, context):
         return self.last_code, self.last_repl
 
     port = int(context['PARAMETER_SMTP_PORT'])
-    timeout = int(context['PARAMETER_SMTP_TIMEOUT'])
 
     encryption = context.get('PARAMETER_SMTP_ENCRYPTION', "NONE")
 
     if encryption == "SSL_TLS":
-        conn = smtplib.SMTP_SSL(host, port, from_address, timeout=timeout)
+        conn = smtplib.SMTP_SSL(host, port, from_address)
     else:
-        conn = smtplib.SMTP(host, port, from_address, timeout=timeout)
+        conn = smtplib.SMTP(host, port, from_address)
 
     # evil hack: the smtplib doesn't allow access to the reply code/message
     #  in case of success. But we want it!

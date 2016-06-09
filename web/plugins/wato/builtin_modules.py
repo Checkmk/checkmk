@@ -77,9 +77,6 @@ modules += [
       ( "sites",  _("Distributed Monitoring"), "sites", "sites",
       _("Distributed monitoring via Multsite, distributed configuration via WATO")),
 
-      ( "snapshot", _("Backup & Restore"), "backup", "snapshots",
-        _("Make snapshots of your configuration, download, upload and restore snapshots.")),
-
       ( "backup", _("Backup & Restore"), "backup", "backups",
         _("Make backups of your whole site and restore previous backups.")),
 

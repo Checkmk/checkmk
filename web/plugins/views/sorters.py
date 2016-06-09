@@ -100,9 +100,18 @@ def cmp_site_host(r1, r2):
            cmp_num_split("host_name", r1, r2)
 
 multisite_sorters["site_host"] = {
-    "title"   : _("Host"),
+    "title"   : _("Host site and name"),
     "columns" : ["site", "host_name" ],
     "cmp"     : cmp_site_host
+}
+
+def cmp_host_name(r1, r2):
+    return cmp_num_split("host_name", r1, r2)
+
+multisite_sorters["host_name"] = {
+    "title"   : _("Host name"),
+    "columns" : ["host_name" ],
+    "cmp"     : cmp_host_name,
 }
 
 def cmp_site_alias(r1, r2):

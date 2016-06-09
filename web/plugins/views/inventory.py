@@ -479,6 +479,9 @@ def inv_paint_mssql_is_clustered(clustered):
     return "mssql_" + (clustered and "is_clustered" or "is_not_clustered"), \
        (clustered and _("is clustered") or _("is not clustered"))
 
+def inv_paint_mssql_node_names(node_names):
+    return "", ", ".join(node_names)
+
 def inv_paint_ipv4_network(nw):
     if nw == "0.0.0.0/0":
         return "", _("Default")
@@ -695,7 +698,8 @@ inventory_displayhints.update({
 
     ".software.applications.mssql."                    : { "title" : _("MSSQL") },
     ".software.applications.mssql.instances:"          : { "title" : _("Instances"), "render" : render_inv_dicttable,
-                                                           "keyorder" : [ "name", "product", "edition", "version", "clustered", "cluster_name" ],
+                                                           "keyorder" : [ "name", "product", "edition", "version", "clustered",
+                                                                          "cluster_name", "active_node", "node_names" ],
                                                          },
     ".software.applications.mssql.instances:*.clustered" : { "title" : _("Clustered"), "paint" : "mssql_is_clustered"},
 

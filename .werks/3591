@@ -1,0 +1,9 @@
+Title: mssql_clusters: Added information about nodes to MSSQL instance inventory
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.4.0i1
+Date: 1465455101
+Class: feature
+
+

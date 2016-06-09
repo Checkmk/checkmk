@@ -317,7 +317,6 @@ For Each instance_id In instances.Keys
 
     'Loop all databases to get the size of the transaction log
     addOutput( "<<<mssql_datafiles>>>" )
-
     For Each dbName in dbNames.Keys
         RS.Open "USE [" & dbName & "];", CONN
         RS.Open "SELECT name, physical_name," &_
@@ -334,6 +333,41 @@ For Each instance_id In instances.Keys
             RS.MoveNext
         Loop
         RS.Close
+    Next
+    
+    addOutput("<<<mssql_clusters>>>")
+    Dim active_node, nodes
+    For Each dbName in dbNames.Keys
+        RS.Open "USE [" & dbName & "];", CONN
+    
+        ' Skip non cluster instances
+        RS.Open "SELECT SERVERPROPERTY('IsClustered') AS is_clustered", CONN
+        If RS("is_clustered") = 0 Then
+            RS.Close
+            Continue
+        End If
+        RS.Close
+        
+        nodes = ""
+        RS.Open "SELECT nodename FROM sys.dm_os_cluster_nodes", CONN
+        Do While Not RS.Eof
+            If nodes <> "" Then
+                nodes = nodes & ","
+            End If    
+            nodes = nodes & RS("nodename")
+            RS.MoveNext
+        Loop
+        RS.Close
+
+        active_node = "-"
+        RS.Open "SELECT SERVERPROPERTY('ComputerNamePhysicalNetBIOS') AS active_node", CONN
+        Do While Not RS.Eof
+            active_node = RS("active_node")
+            RS.MoveNext
+        Loop
+        RS.Close
+        
+        addOutput(instance_id & " " & Replace(dbName, " ", "_") & " " & active_node & " " & nodes)
     Next
 
     CONN.Close

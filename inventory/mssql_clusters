@@ -24,36 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# pre 1.4.0i1 output (without edition, space separated)
-# <<<mssql_versions>>>
-# MSSQL_SQLEXPRESS  10.50.1600.1
+# <<<mssql_clusters>>>
+# MSSQL_VIM_SQLEXP node1 node1,node2
 
-# 1.4.0i1 output
-# <<<mssql_versions:sep(124)>>>
-# MSSQL_MSSQLSERVER|10.50.1600.1|Enterprise Edition
-
-def inv_mssql_versions(info):
+def inv_mssql_clusters(info):
     node = inv_tree_list("software.applications.mssql.instances:")
-
-    def product(v):
-        parts = map(int, v.split("."))
-        if parts[0] == 12:
-            return "SQL Server 2014"
-        elif parts[0] == 11:
-            return "SQL Server 2012"
-        elif parts[0] == 10:
-            if parts[1] == 50:
-                return "SQL Server 2008 R2"
-            else:
-                return "SQL Server 2008"
-        elif parts[0] == 9:
-            return "SQL Server 2005"
-        elif parts[0] == 8:
-            return "SQL Server 2000"
-        elif parts[0] == 7:
-            return "SQL Server 7.0"
-        else:
-            return "Unknown Product"
 
     def get_list_item(key, val):
         for item in node:
@@ -64,25 +39,18 @@ def inv_mssql_versions(info):
         return node[-1]
 
     for line in info:
-        if len(line) not in [2, 4]:
-            continue
-
-        instance_id  = line[0].split("_", 1)[1]
-        version      = line[1]
-        edition      = len(line) == 4 and line[2] or ""
-        clustered    = len(line) == 4 and line[3] != ""
-        cluster_name = len(line) == 4 and line[3] or ""
+        instance_id  = line[0]
+        database     = line[1]
+        active_node  = line[2]
+        nodes        = line[3].split(",")
 
         instance = get_list_item("name", instance_id)
         instance.update({
             "name"         : instance_id,
-            "version"      : version,
-            "product"      : product(version),
-            "edition"      : edition,
-            "clustered"    : clustered,
-            "cluster_name" : cluster_name,
+            "active_node"  : active_node,
+            "node_names"   : nodes,
         })
 
-inv_info["mssql_versions"] = {
-   "inv_function"           : inv_mssql_versions,
+inv_info["mssql_clusters"] = {
+   "inv_function"           : inv_mssql_clusters,
 }

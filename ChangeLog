@@ -2,6 +2,7 @@
     Checks & Agents:
     * 3541 FIX: esx_vsphere_hostsystem.state: no longer crashes when data is missing...
     * 3590 FIX: mssql.vbs: Completely removed plugin timeout...
+    * 3635 FIX: get_average: fixed overflow error
 
 
 1.2.8p4:

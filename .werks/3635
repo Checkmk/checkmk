@@ -1,0 +1,9 @@
+Title: get_average: fixed overflow error
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p5
+Date: 1465484004
+Class: fix
+
+

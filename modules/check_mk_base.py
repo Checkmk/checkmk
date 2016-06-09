@@ -1147,18 +1147,26 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
     if timedif < 0:
         timedif = 0
 
-    # Compute the weight: We do it like this: First we assume that
-    # we get one sample per minute. And that backlog_minutes is the number
-    # of minutes we should average over. Then we want that the weight
-    # of the values of the last average minutes have a fraction of W%
-    # in the result and the rest until infinity the rest (1-W%).
-    # Then the weight can be computed as backlog_minutes'th root of 1-W
-    percentile = 0.50
+    # Overflow error occurs if weigth exceeds 1e308 or falls below 1e-308
+    # Under the conditions 0<=percentile<=1, backlog_minutes>=1 and timedif>=0
+    # first case is not possible because weigth is max. 1.
+    # In the second case weigth goes to zero.
+    try:
+        # Compute the weight: We do it like this: First we assume that
+        # we get one sample per minute. And that backlog_minutes is the number
+        # of minutes we should average over. Then we want that the weight
+        # of the values of the last average minutes have a fraction of W%
+        # in the result and the rest until infinity the rest (1-W%).
+        # Then the weight can be computed as backlog_minutes'th root of 1-W
+        percentile = 0.50
 
-    weight_per_minute = (1 - percentile) ** (1.0 / backlog_minutes)
+        weight_per_minute = (1 - percentile) ** (1.0 / backlog_minutes)
 
-    # now let's compute the weight per second. This is done
-    weight = weight_per_minute ** (timedif / 60.0)
+        # now let's compute the weight per second. This is done
+        weight = weight_per_minute ** (timedif / 60.0)
+
+    except OverflowError:
+        weight = 0
 
     new_val = last_val * weight + this_val * (1 - weight)
 

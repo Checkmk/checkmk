@@ -488,8 +488,7 @@ void Query::parseFilterLine(char *line, AndingFilter &filter) {
         return;
     }
     RelationalOperator relOp;
-    ;
-    if (relationalOperatorForName(operator_name, relOp)) {
+    if (!relationalOperatorForName(operator_name, relOp)) {
         setError(OutputBuffer::ResponseCode::invalid_header,
                  "invalid filter operator '" + string(operator_name) + "'");
         return;

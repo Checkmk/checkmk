@@ -32,7 +32,7 @@ using std::unordered_map;
 
 namespace {
 unordered_map<string, RelationalOperator> fromString = {
-    {"==", RelationalOperator::equal},
+    {"=", RelationalOperator::equal},
     {"!=", RelationalOperator::not_equal},
     {"~", RelationalOperator::matches},
     {"!~", RelationalOperator::doesnt_match},

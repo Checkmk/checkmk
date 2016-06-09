@@ -24,10 +24,13 @@
 
 #include "AttributelistFilter.h"
 #include <ostream>
-#include <string>
 #include "AttributelistColumn.h"
 #include "Logger.h"
-#include "opids.h"
+
+AttributelistFilter::AttributelistFilter(AttributelistColumn *column,
+                                         RelationalOperator relOp,
+                                         unsigned long ref)
+    : _column(column), _relOp(relOp), _ref(ref) {}
 
 /* The following operators are defined:
 
@@ -52,27 +55,32 @@
 bool AttributelistFilter::accepts(void *data) {
     unsigned long act_value =
         static_cast<unsigned long>(_column->getValue(data, nullptr));
-    bool pass = true;
-    switch (_opid) {
-        case OP_EQUAL:
-            pass = act_value == _ref;
-            break;
-        case OP_GREATER:
-            pass = act_value > _ref;
-            break;
-        case OP_LESS:
-            pass = act_value < _ref;
-            break;
-        case OP_REGEX:
-            pass = (act_value & _ref) == _ref;
-            break;
-        case OP_REGEX_ICASE:
-            pass = (act_value & _ref) != 0;
-            break;
-        default:
-            Informational() << "Sorry. Operator "
-                            << nameOfRelationalOperator(_opid)
-                            << " not implemented for attribute lists";
+    switch (_relOp) {
+        case RelationalOperator::equal:
+            return act_value == _ref;
+        case RelationalOperator::not_equal:
+            return act_value != _ref;
+        case RelationalOperator::matches:
+            return (act_value & _ref) == _ref;
+        case RelationalOperator::doesnt_match:
+            return (act_value & _ref) != _ref;
+        case RelationalOperator::matches_icase:
+            return (act_value & _ref) != 0;
+        case RelationalOperator::doesnt_match_icase:
+            return (act_value & _ref) == 0;
+        case RelationalOperator::less:
+            return act_value < _ref;
+        case RelationalOperator::greater_or_equal:
+            return act_value >= _ref;
+        case RelationalOperator::greater:
+            return act_value > _ref;
+        case RelationalOperator::less_or_equal:
+            return act_value <= _ref;
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+            Informational() << "Sorry. Operator " << _relOp
+                            << " for attribute list columns not implemented.";
+            return false;
     }
-    return pass != _negate;
+    return false;  // unreachable
 }

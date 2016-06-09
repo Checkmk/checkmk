@@ -25,36 +25,41 @@
 #include "DoubleColumnFilter.h"
 #include <stdlib.h>
 #include <ostream>
-#include <string>
 #include "DoubleColumn.h"
 #include "Logger.h"
 #include "opids.h"
 
-DoubleColumnFilter::DoubleColumnFilter(DoubleColumn *column, int opid,
-                                       char *value)
-    : _column(column)
-    , _ref_value(atof(value))
-    , _opid(abs(opid))
-    , _negate(opid < 0) {}
+using std::string;
+
+DoubleColumnFilter::DoubleColumnFilter(DoubleColumn *column,
+                                       RelationalOperator relOp,
+                                       const string &value)
+    : _column(column), _relOp(relOp), _ref_value(atof(value.c_str())) {}
 
 bool DoubleColumnFilter::accepts(void *data) {
-    bool pass = true;
     double act_value = _column->getValue(data);
-    switch (_opid) {
-        case OP_EQUAL:
-            pass = act_value == _ref_value;
-            break;
-        case OP_GREATER:
-            pass = act_value > _ref_value;
-            break;
-        case OP_LESS:
-            pass = act_value < _ref_value;
-            break;
-        default:
-            Informational() << "Sorry. Operator "
-                            << nameOfRelationalOperator(_opid)
+    switch (_relOp) {
+        case RelationalOperator::equal:
+            return act_value == _ref_value;
+        case RelationalOperator::not_equal:
+            return act_value != _ref_value;
+        case RelationalOperator::less:
+            return act_value < _ref_value;
+        case RelationalOperator::greater_or_equal:
+            return act_value >= _ref_value;
+        case RelationalOperator::greater:
+            return act_value > _ref_value;
+        case RelationalOperator::less_or_equal:
+            return act_value <= _ref_value;
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+            Informational() << "Sorry. Operator " << _relOp
                             << " for float columns not implemented.";
-            break;
+            return false;
     }
-    return pass != _negate;
+    return false;  // unreachable
 }

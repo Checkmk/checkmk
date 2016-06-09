@@ -28,18 +28,20 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Filter.h"
+#include "opids.h"
 class ServicelistColumn;
 
 class ServicelistColumnFilter : public Filter {
+public:
+    ServicelistColumnFilter(ServicelistColumn *column, RelationalOperator relOp,
+                            const std::string &value);
+    bool accepts(void *data);
+
+private:
     ServicelistColumn *_servicelist_column;
-    int _opid;
+    RelationalOperator _relOp;
     std::string _ref_host;
     std::string _ref_service;
-
-public:
-    ServicelistColumnFilter(ServicelistColumn *column, int opid,
-                            char *refvalue);
-    bool accepts(void *data);
 };
 
 #endif  // ServicelistColumnFilter_h

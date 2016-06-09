@@ -26,8 +26,11 @@
 #include "HostlistColumnFilter.h"
 #include "Query.h"
 #include "TableHosts.h"
+#include "opids.h"
 
 extern TableHosts *g_table_hosts;
+
+using std::string;
 
 hostsmember *HostlistColumn::getMembers(void *data) {
     data = shiftPointer(data);
@@ -71,6 +74,7 @@ void HostlistColumn::output(void *data, Query *query) {
     query->outputEndList();
 }
 
-Filter *HostlistColumn::createFilter(int opid, char *value) {
-    return new HostlistColumnFilter(this, opid, value);
+Filter *HostlistColumn::createFilter(RelationalOperator relOp,
+                                     const string &value) {
+    return new HostlistColumnFilter(this, relOp, value);
 }

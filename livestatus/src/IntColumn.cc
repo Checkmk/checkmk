@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include "IntColumnFilter.h"
 #include "Query.h"
+#include "opids.h"
 
 using std::string;
 
@@ -33,8 +34,8 @@ void IntColumn::output(void *data, Query *query) {
     query->outputInteger(getValue(data, query));
 }
 
-Filter *IntColumn::createFilter(int operator_id, char *value) {
-    return new IntColumnFilter(this, operator_id, value);
+Filter *IntColumn::createFilter(RelationalOperator relOp, const string &value) {
+    return new IntColumnFilter(this, relOp, value);
 }
 
 string IntColumn::valueAsString(void *data, Query *query) {

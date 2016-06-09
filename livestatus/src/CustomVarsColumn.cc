@@ -27,6 +27,8 @@
 #include "CustomVarsFilter.h"
 #include "Query.h"
 
+using std::string;
+
 void CustomVarsColumn::output(void *data, Query *query) {
     if (_what == CVT_DICT) {
         query->outputBeginDict();
@@ -64,8 +66,9 @@ void CustomVarsColumn::output(void *data, Query *query) {
     }
 }
 
-Filter *CustomVarsColumn::createFilter(int opid, char *value) {
-    return new CustomVarsFilter(this, opid, value);
+Filter *CustomVarsColumn::createFilter(RelationalOperator relOp,
+                                       const string &value) {
+    return new CustomVarsFilter(this, relOp, value);
 }
 
 customvariablesmember *CustomVarsColumn::getCVM(void *data) {

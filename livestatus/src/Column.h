@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
+#include "opids.h"
 class Filter;
 class Query;
 
@@ -59,9 +60,11 @@ public:
     virtual int type() = 0;
     virtual void output(void *data, Query *) = 0;
     virtual bool mustDelete() {
-        return false;
-    }  // true for dynamic Columns to be deleted after Query
-    virtual Filter *createFilter(int, char *) { return 0; }
+        return false;  // true for dynamic Columns to be deleted after Query
+    }
+    virtual Filter *createFilter(RelationalOperator, const std::string &) {
+        return nullptr;
+    }
 };
 
 #endif  // Column_h

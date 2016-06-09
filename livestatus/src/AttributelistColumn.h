@@ -30,6 +30,7 @@
 #include <string>
 #include "Column.h"
 #include "IntColumn.h"
+#include "opids.h"
 class Filter;
 class Query;
 
@@ -55,7 +56,8 @@ public:
     int type() override { return _show_list ? COLTYPE_LIST : COLTYPE_INT; }
     std::string valueAsString(void *data, Query *) override;
     void output(void *, Query *) override;
-    Filter *createFilter(int opid, char *value) override;
+    Filter *createFilter(RelationalOperator relOp,
+                         const std::string &value) override;
 
     // API of IntColumn
     int32_t getValue(void *data, Query *) override;

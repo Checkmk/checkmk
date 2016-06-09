@@ -27,13 +27,16 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
+#include <string>
 #include "IntColumnFilter.h"
+#include "opids.h"
 class IntColumn;
 
 class TimeColumnFilter : public IntColumnFilter {
 public:
-    TimeColumnFilter(IntColumn *column, int opid, char *value)
-        : IntColumnFilter(column, opid, value) {}
+    TimeColumnFilter(IntColumn *column, RelationalOperator relOp,
+                     const std::string &value)
+        : IntColumnFilter(column, relOp, value) {}
     virtual int32_t convertRefValue() override;
 };
 

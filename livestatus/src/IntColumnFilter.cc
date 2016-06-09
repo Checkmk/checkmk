@@ -26,41 +26,49 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ostream>
+#include <utility>
 #include "IntColumn.h"
 #include "Logger.h"
 #include "opids.h"
 
-IntColumnFilter::IntColumnFilter(IntColumn *column, int opid, char *value)
-    : _column(column)
-    , _opid(abs(opid))
-    , _negate(opid < 0)
-    , _ref_string(value) {}
+using std::move;
+using std::string;
+
+IntColumnFilter::IntColumnFilter(IntColumn *column, RelationalOperator relOp,
+                                 string value)
+    : _column(column), _relOp(relOp), _ref_string(move(value)) {}
 
 // overridden by TimeColumnFilter in order to apply timezone
 // offset from Localtime: header
 int32_t IntColumnFilter::convertRefValue() { return atoi(_ref_string.c_str()); }
 
 bool IntColumnFilter::accepts(void *data) {
-    bool pass = true;
     int32_t act_value = _column->getValue(data, _query);
     int32_t ref_value = convertRefValue();
-    switch (_opid) {
-        case OP_EQUAL:
-            pass = act_value == ref_value;
-            break;
-        case OP_GREATER:
-            pass = act_value > ref_value;
-            break;
-        case OP_LESS:
-            pass = act_value < ref_value;
-            break;
-        default:
-            Informational() << "Sorry. Operator "
-                            << nameOfRelationalOperator(_opid)
-                            << " for integers not implemented.";
-            break;
+    switch (_relOp) {
+        case RelationalOperator::equal:
+            return act_value == ref_value;
+        case RelationalOperator::not_equal:
+            return act_value != ref_value;
+        case RelationalOperator::less:
+            return act_value < ref_value;
+        case RelationalOperator::greater_or_equal:
+            return act_value >= ref_value;
+        case RelationalOperator::greater:
+            return act_value > ref_value;
+        case RelationalOperator::less_or_equal:
+            return act_value <= ref_value;
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+            Informational() << "Sorry. Operator " << _relOp
+                            << " for integer columns not implemented.";
+            return false;
     }
-    return pass != _negate;
+    return false;  // unreachable
 }
 
 void IntColumnFilter::findIntLimits(const char *columnname, int *lower,
@@ -72,15 +80,14 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower,
         return;  // already empty interval
     }
 
-    int32_t ref_value =
-        convertRefValue();  // TimeColumnFilter applies timezone offset here
+    // TimeColumnFilter applies timezone offset here
+    int32_t ref_value = convertRefValue();
 
-    /* [lower, upper[ is some interval. This filter might restrict
-       that interval to a smaller interval.
+    /* [lower, upper[ is some interval. This filter might restrict that interval
+       to a smaller interval.
      */
-    int opref = _opid * (_negate ? -1 : 1);
-    switch (opref) {
-        case OP_EQUAL:
+    switch (_relOp) {
+        case RelationalOperator::equal:
             if (ref_value >= *lower && ref_value < *upper) {
                 *lower = ref_value;
                 *upper = ref_value + 1;
@@ -88,38 +95,41 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower,
                 *lower = *upper;
             }
             return;
-
-        case -OP_EQUAL:
+        case RelationalOperator::not_equal:
             if (ref_value == *lower) {
                 *lower = *lower + 1;
             } else if (ref_value == *upper - 1) {
                 *upper = *upper - 1;
             }
             return;
-
-        case OP_GREATER:
-            if (ref_value >= *lower) {
-                *lower = ref_value + 1;
-            }
-
-            return;
-
-        case OP_LESS:
+        case RelationalOperator::less:
             if (ref_value < *upper) {
                 *upper = ref_value;
             }
             return;
-
-        case -OP_GREATER:  // LESS OR EQUAL
+        case RelationalOperator::greater_or_equal:
+            if (ref_value > *lower) {
+                *lower = ref_value;
+            }
+            return;
+        case RelationalOperator::greater:
+            if (ref_value >= *lower) {
+                *lower = ref_value + 1;
+            }
+            return;
+        case RelationalOperator::less_or_equal:
             if (ref_value < *upper - 1) {
                 *upper = ref_value + 1;
             }
             return;
-
-        case -OP_LESS:  // GREATER OR EQUAL
-            if (ref_value > *lower) {
-                *lower = ref_value;
-            }
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+            Emergency() << "Invalid relational operator " << _relOp
+                        << " in IntColumnFilter::findIntLimits";
             return;
     }
 }
@@ -135,35 +145,33 @@ bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
         return true;  // not optimizable by 32bit bit mask
     }
 
-    // Our task is to remove those bits from mask that are deselected
-    // by the filter.
+    // Our task is to remove those bits from mask that are deselected by the
+    // filter.
     uint32_t bit = 1 << ref_value;
 
-    int opref = _opid * (_negate ? -1 : 1);
-    switch (opref) {
-        case OP_EQUAL:
+    switch (_relOp) {
+        case RelationalOperator::equal:
             *mask &= bit;  // bit must be set
             return true;
-
-        case -OP_EQUAL:
+        case RelationalOperator::not_equal:
             *mask &= ~bit;  // bit must not be set
             return true;
-
-        case -OP_LESS:  // >=
+        case RelationalOperator::greater_or_equal:
             bit >>= 1;
-        case OP_GREATER:
+        // fallthrough
+        case RelationalOperator::greater:
             while (bit != 0u) {
                 *mask &= ~bit;
                 bit >>= 1;
             }
             return true;
-
-        case -OP_GREATER:  // <=
+        case RelationalOperator::less_or_equal:
             if (ref_value == 31) {
                 return true;
             }
             bit <<= 1;
-        case OP_LESS:
+        // fallthrough
+        case RelationalOperator::less:
             while (true) {
                 *mask &= ~bit;
                 if (bit == 0x80000000) {
@@ -172,6 +180,15 @@ bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
                 bit <<= 1;
             }
             return true;
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+            Emergency() << "Invalid relational operator " << _relOp
+                        << " in IntColumnFilter::optimizeBitmask";
+            return false;
     }
-    return false;  // should not be reached
+    return false;  // unreachable
 }

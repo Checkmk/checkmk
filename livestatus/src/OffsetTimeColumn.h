@@ -29,6 +29,7 @@
 #include <string>
 #include "Column.h"
 #include "OffsetIntColumn.h"
+#include "opids.h"
 class Filter;
 class Query;
 
@@ -44,7 +45,8 @@ public:
                           extra_offset) {}
     int type() override { return COLTYPE_TIME; }
     void output(void *data, Query *query) override;
-    Filter *createFilter(int operator_id, char *value) override;
+    Filter *createFilter(RelationalOperator relOp,
+                         const std::string &value) override;
 };
 
 #endif  // OffsetTimeColumn_h

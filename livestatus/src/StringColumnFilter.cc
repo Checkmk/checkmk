@@ -23,40 +23,52 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StringColumnFilter.h"
-#include <stdlib.h>
 #include <string.h>
-#include <ostream>
-#include "Logger.h"
 #include "OutputBuffer.h"
 #include "StringColumn.h"
 #include "opids.h"
 
 using std::string;
 
-StringColumnFilter::StringColumnFilter(StringColumn *column, int opid,
-                                       char *value)
-    : _column(column)
-    , _ref_string(value)
-    , _opid(abs(opid))
-    , _negate(opid < 0)
-    , _regex(nullptr) {
-    if (_opid == OP_REGEX || _opid == OP_REGEX_ICASE) {
-        if ((strchr(value, '{') != nullptr) ||
-            (strchr(value, '}') != nullptr)) {
-            setError(OutputBuffer::ResponseCode::invalid_header,
-                     "disallowed regular expression '" + string(value) +
-                         "': must not contain { or }");
-        } else {
-            _regex = new regex_t();
-            if (0 != regcomp(_regex, value,
-                             REG_EXTENDED | REG_NOSUB |
-                                 (_opid == OP_REGEX_ICASE ? REG_ICASE : 0))) {
+StringColumnFilter::StringColumnFilter(StringColumn *column,
+                                       RelationalOperator relOp,
+                                       const string &value)
+    : _column(column), _relOp(relOp), _ref_string(value), _regex(nullptr) {
+    switch (_relOp) {
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+            if (strchr(value.c_str(), '{') != nullptr ||
+                strchr(value.c_str(), '}') != nullptr) {
                 setError(OutputBuffer::ResponseCode::invalid_header,
-                         "invalid regular expression '" + string(value) + "'");
-                delete _regex;
-                _regex = nullptr;
+                         "disallowed regular expression '" + string(value) +
+                             "': must not contain { or }");
+            } else {
+                _regex = new regex_t();
+                bool ignore_case =
+                    _relOp == RelationalOperator::matches_icase ||
+                    _relOp == RelationalOperator::doesnt_match_icase;
+                if (regcomp(_regex, value.c_str(),
+                            REG_EXTENDED | REG_NOSUB |
+                                (ignore_case ? REG_ICASE : 0)) != 0) {
+                    setError(
+                        OutputBuffer::ResponseCode::invalid_header,
+                        "invalid regular expression '" + string(value) + "'");
+                    delete _regex;
+                    _regex = nullptr;
+                }
             }
-        }
+            break;
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::less:
+        case RelationalOperator::greater_or_equal:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            break;
     }
 }
 
@@ -68,41 +80,56 @@ StringColumnFilter::~StringColumnFilter() {
 }
 
 bool StringColumnFilter::accepts(void *data) {
-    bool pass = true;
     string act_string = _column->getValue(data);
-    switch (_opid) {
-        case OP_EQUAL:
-            pass = _ref_string == act_string;
-            break;
-        case OP_EQUAL_ICASE:
-            pass = (strcasecmp(_ref_string.c_str(), act_string.c_str()) == 0);
-            break;
-        case OP_REGEX:
-        case OP_REGEX_ICASE:
-            pass = _regex != nullptr &&
-                   0 == regexec(_regex, act_string.c_str(), 0, nullptr, 0);
-            break;
-        case OP_GREATER:
-            pass = 0 > strcmp(_ref_string.c_str(), act_string.c_str());
-            break;
-        case OP_LESS:
-            pass = 0 < strcmp(_ref_string.c_str(), act_string.c_str());
-            break;
-        default:
-            // this should never be reached, all operators are handled
-            Informational() << "Sorry. Operator "
-                            << nameOfRelationalOperator(_opid)
-                            << " for strings not implemented.";
-            break;
+    switch (_relOp) {
+        case RelationalOperator::equal:
+            return act_string == _ref_string;
+        case RelationalOperator::not_equal:
+            return act_string != _ref_string;
+        case RelationalOperator::matches:
+        case RelationalOperator::matches_icase:
+            return _regex != nullptr &&
+                   regexec(_regex, act_string.c_str(), 0, nullptr, 0) == 0;
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::doesnt_match_icase:
+            return _regex == nullptr &&
+                   regexec(_regex, act_string.c_str(), 0, nullptr, 0) != 0;
+        case RelationalOperator::equal_icase:
+            return strcasecmp(_ref_string.c_str(), act_string.c_str()) == 0;
+        case RelationalOperator::not_equal_icase:
+            return strcasecmp(_ref_string.c_str(), act_string.c_str()) != 0;
+        case RelationalOperator::less:
+            return act_string < _ref_string;
+        case RelationalOperator::greater_or_equal:
+            return act_string >= _ref_string;
+        case RelationalOperator::greater:
+            return act_string > _ref_string;
+        case RelationalOperator::less_or_equal:
+            return act_string <= _ref_string;
     }
-    return pass != _negate;
+    return false;  // unreachable
 }
 
 void *StringColumnFilter::indexFilter(const char *column) {
-    if (_opid == OP_EQUAL && (strcmp(column, _column->name()) == 0)) {
-        // TODO(sp) The cast looks very dubious, but the whole void* story is
-        // quite dangerous...
-        return const_cast<char *>(_ref_string.c_str());
+    switch (_relOp) {
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+            // TODO(sp) The cast looks very dubious, but the whole void* story
+            // is quite dangerous...
+            return strcmp(column, _column->name()) == 0
+                       ? const_cast<char *>(_ref_string.c_str())
+                       : nullptr;
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+        case RelationalOperator::less:
+        case RelationalOperator::greater_or_equal:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            return nullptr;
     }
-    return nullptr;
+    return nullptr;  // unreachable
 }

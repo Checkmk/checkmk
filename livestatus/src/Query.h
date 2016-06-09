@@ -37,6 +37,7 @@
 #include "OutputBuffer.h"
 #include "global_counters.h"
 #include "nagios.h"  // IWYU pragma: keep
+#include "opids.h"
 class Aggregator;
 class Column;
 class Filter;
@@ -139,7 +140,8 @@ private:
     void doWait();
     Aggregator **getStatsGroup(_stats_group_spec_t &groupspec);
     void computeStatsGroupSpec(_stats_group_spec_t &groupspec, void *data);
-    Filter *createFilter(Column *column, int operator_id, char *value);
+    Filter *createFilter(Column *column, RelationalOperator relOp,
+                         const std::string &value);
     void parseFilterLine(char *line, AndingFilter &filter);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);

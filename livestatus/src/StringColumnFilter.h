@@ -29,20 +29,22 @@
 #include <regex.h>
 #include <string>
 #include "Filter.h"
+#include "opids.h"
 class StringColumn;
 
 class StringColumnFilter : public Filter {
-    StringColumn *_column;
-    std::string _ref_string;
-    int _opid;
-    bool _negate;
-    regex_t *_regex;
-
 public:
-    StringColumnFilter(StringColumn *column, int opid, char *value);
+    StringColumnFilter(StringColumn *column, RelationalOperator relOp,
+                       const std::string &value);
     virtual ~StringColumnFilter();
     bool accepts(void *data);
     void *indexFilter(const char *column);
+
+private:
+    StringColumn *_column;
+    RelationalOperator _relOp;
+    std::string _ref_string;
+    regex_t *_regex;
 };
 
 #endif  // StringColumnFilter_h

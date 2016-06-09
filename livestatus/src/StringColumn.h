@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
+#include "opids.h"
 class Filter;
 class Query;
 
@@ -42,7 +43,8 @@ public:
     }
     void output(void *, Query *) override;
     int type() override { return COLTYPE_STRING; }
-    Filter *createFilter(int operator_id, char *value) override;
+    Filter *createFilter(RelationalOperator relOp,
+                         const std::string &value) override;
 };
 
 #endif  // StringColumn_h

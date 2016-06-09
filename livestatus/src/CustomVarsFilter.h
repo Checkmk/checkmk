@@ -29,22 +29,24 @@
 #include <regex.h>
 #include <string>
 #include "Filter.h"
+#include "opids.h"
 class CustomVarsColumn;
 
 class CustomVarsFilter : public Filter {
+public:
+    CustomVarsFilter(CustomVarsColumn *column, RelationalOperator relOp,
+                     const std::string &value);
+    virtual ~CustomVarsFilter();
+    bool accepts(void *data);
+
+private:
     CustomVarsColumn *_column;
-    int _opid;
-    bool _negate;
+    RelationalOperator _relOp;
     std::string _ref_text;
     regex_t *_regex;
     // needed in case of COLTYPE_DICT
     std::string _ref_string;
     std::string _ref_varname;
-
-public:
-    CustomVarsFilter(CustomVarsColumn *column, int opid, char *value);
-    virtual ~CustomVarsFilter();
-    bool accepts(void *data);
 };
 
 #endif  // CustomVarsFilter_h

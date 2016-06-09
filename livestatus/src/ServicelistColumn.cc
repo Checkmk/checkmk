@@ -28,9 +28,12 @@
 #include "ServicelistColumnFilter.h"
 #include "TableServices.h"
 #include "TimeperiodsCache.h"
+#include "opids.h"
 
 extern TimeperiodsCache *g_timeperiods_cache;
 extern TableServices *g_table_services;
+
+using std::string;
 
 servicesmember *ServicelistColumn::getMembers(void *data) {
     data = shiftPointer(data);
@@ -100,8 +103,9 @@ void ServicelistColumn::output(void *data, Query *query) {
     query->outputEndList();
 }
 
-Filter *ServicelistColumn::createFilter(int opid, char *value) {
-    return new ServicelistColumnFilter(this, opid, value);
+Filter *ServicelistColumn::createFilter(RelationalOperator relOp,
+                                        const string &value) {
+    return new ServicelistColumnFilter(this, relOp, value);
 }
 
 int ServicelistColumn::inCustomTimeperiod(service *svc, const char *varname) {

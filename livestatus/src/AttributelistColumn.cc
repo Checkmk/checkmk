@@ -27,14 +27,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 #include "AttributelistFilter.h"
 #include "Query.h"
 #include "logger.h"
 #include "nagios.h"
+#include "opids.h"
 #include "strutil.h"
 class Filter;
 
 using std::string;
+using std::vector;
 
 struct al_entry {
     const char *name;
@@ -100,12 +103,15 @@ string AttributelistColumn::valueAsString(void *data, Query * /*unused*/) {
     return string(s);
 }
 
-Filter *AttributelistColumn::createFilter(int opid, char *value) {
+Filter *AttributelistColumn::createFilter(RelationalOperator relOp,
+                                          const string &value) {
     unsigned long ref = 0;
     if (isdigit(value[0]) != 0) {
-        ref = strtoul(value, nullptr, 10);
+        ref = strtoul(value.c_str(), nullptr, 10);
     } else {
-        char *scan = value;
+        vector<char> value_vec(value.begin(), value.end());
+        value_vec.push_back('\0');
+        char *scan = &value_vec[0];
         char *t;
         while ((t = next_token(&scan, ',')) != nullptr) {
             unsigned i = 0;
@@ -122,5 +128,5 @@ Filter *AttributelistColumn::createFilter(int opid, char *value) {
             }
         }
     }
-    return new AttributelistFilter(this, opid, ref);
+    return new AttributelistFilter(this, relOp, ref);
 }

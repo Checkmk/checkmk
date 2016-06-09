@@ -50,7 +50,6 @@ public:
 #endif
     int type() override { return COLTYPE_LIST; }
     void output(void *, Query *) override;
-    // Filter *createFilter(int opid, char *value);
 };
 
 #endif  // MetricsColumn_h

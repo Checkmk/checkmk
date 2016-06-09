@@ -25,15 +25,18 @@
 #include "ListColumnFilter.h"
 #include <string.h>
 #include <ostream>
-#include <string>
 #include "ListColumn.h"
 #include "Logger.h"
 #include "opids.h"
 
-ListColumnFilter::ListColumnFilter(ListColumn *column, int opid, char *value)
-    : _column(column), _opid(opid), _empty_ref(value[0] == 0) {
-    _ref_member = _column->getNagiosObject(value);
-}
+using std::string;
+
+ListColumnFilter::ListColumnFilter(ListColumn *column, RelationalOperator relOp,
+                                   const string &value)
+    : _column(column)
+    , _relOp(relOp)
+    , _ref_member(_column->getNagiosObject(const_cast<char *>(value.c_str())))
+    , _empty_ref(value.empty()) {}
 
 bool ListColumnFilter::accepts(void *data) {
     data = _column->shiftPointer(data);
@@ -41,31 +44,51 @@ bool ListColumnFilter::accepts(void *data) {
         return false;
     }
     bool is_member = _column->isNagiosMember(data, _ref_member);
-    switch (_opid) {
-        case -OP_LESS: /* !< means >= means 'contains' */
-            return is_member;
-        case OP_LESS:
-            return !is_member;
-        case OP_EQUAL:
-        case -OP_EQUAL:
-            if (_empty_ref) {
-                return _column->isEmpty(data) == (_opid == OP_EQUAL);
+    switch (_relOp) {
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+            if (!_empty_ref) {
+                Informational() << "Sorry, equality for lists implemented only "
+                                   "for emptyness";
             }
-            Informational()
-                << "Sorry, equality for lists implemented only for emptyness";
+            return _column->isEmpty(data) ==
+                   (_relOp == RelationalOperator::equal);
+        case RelationalOperator::less:
+            return !is_member;
+        case RelationalOperator::greater_or_equal:
+            return is_member;
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            Informational() << "Sorry. Operator " << _relOp
+                            << " for list columns not implemented.";
             return false;
-
-        default:
-            Informational() << "Sorry, Operator "
-                            << nameOfRelationalOperator(_opid)
-                            << " for lists not implemented.";
-            return true;
     }
+    return false;  // unreachable
 }
 
 void *ListColumnFilter::indexFilter(const char *columnname) {
-    if (_opid == -OP_LESS && (strcmp(columnname, _column->name()) == 0)) {
-        return _ref_member;
+    switch (_relOp) {
+        case RelationalOperator::greater_or_equal:
+            return strcmp(columnname, _column->name()) == 0 ? _ref_member
+                                                            : nullptr;
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+        case RelationalOperator::less:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            return nullptr;
     }
-    return nullptr;
+    return nullptr;  // unreachable
 }

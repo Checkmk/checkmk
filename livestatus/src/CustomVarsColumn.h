@@ -29,6 +29,7 @@
 #include <string>
 #include "Column.h"
 #include "nagios.h"
+#include "opids.h"
 class Filter;
 class Query;
 
@@ -50,7 +51,8 @@ public:
         return _what == CVT_DICT ? COLTYPE_DICT : COLTYPE_LIST;
     }
     void output(void *, Query *) override;
-    Filter *createFilter(int opid, char *value) override;
+    Filter *createFilter(RelationalOperator relOp,
+                         const std::string &value) override;
     bool contains(void *data, const char *value);
     char *getVariable(void *data, const char *varname);
 

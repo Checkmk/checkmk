@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
+#include "opids.h"
 class Filter;
 
 class ListColumn : public Column {
@@ -39,7 +40,8 @@ public:
     virtual void *getNagiosObject(char *name) = 0;
     virtual bool isNagiosMember(void *data, void *member) = 0;
     virtual bool isEmpty(void *data) = 0;
-    Filter *createFilter(int opid, char *value) override;
+    Filter *createFilter(RelationalOperator relOp,
+                         const std::string &value) override;
 };
 
 #endif  // ListColumn_h

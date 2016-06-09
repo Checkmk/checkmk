@@ -28,17 +28,19 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Filter.h"
+#include "opids.h"
 class HostlistColumn;
 
 class HostlistColumnFilter : public Filter {
-    HostlistColumn *_hostlist_column;
-    int _opid;
-    std::string _ref_value;
-
 public:
-    HostlistColumnFilter(HostlistColumn *column, int opid, char *refvalue)
-        : _hostlist_column(column), _opid(opid), _ref_value(refvalue) {}
+    HostlistColumnFilter(HostlistColumn *column, RelationalOperator relOp,
+                         std::string value);
     bool accepts(void *data);
+
+private:
+    HostlistColumn *_hostlist_column;
+    RelationalOperator _relOp;
+    std::string _ref_value;
 };
 
 #endif  // HostlistColumnFilter_h

@@ -26,18 +26,21 @@
 #define DoubleColumnFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Filter.h"
+#include "opids.h"
 class DoubleColumn;
 
 class DoubleColumnFilter : public Filter {
-    DoubleColumn *_column;
-    double _ref_value;
-    int _opid;
-    bool _negate;
-
 public:
-    DoubleColumnFilter(DoubleColumn *column, int opid, char *value);
+    DoubleColumnFilter(DoubleColumn *column, RelationalOperator relOp,
+                       const std::string &value);
     bool accepts(void *data);
+
+private:
+    DoubleColumn *_column;
+    RelationalOperator _relOp;
+    double _ref_value;
 };
 
 #endif  // DoubleColumnFilter_h

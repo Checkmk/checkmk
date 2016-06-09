@@ -26,21 +26,20 @@
 #define AttributelistFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <stdlib.h>
 #include "Filter.h"
+#include "opids.h"
 class AttributelistColumn;
 
 class AttributelistFilter : public Filter {
-    AttributelistColumn *_column;
-    int _opid;
-    bool _negate;
-    unsigned long _ref;
-
 public:
-    AttributelistFilter(AttributelistColumn *column, int opid,
-                        unsigned long ref)
-        : _column(column), _opid(abs(opid)), _negate(opid < 0), _ref(ref) {}
+    AttributelistFilter(AttributelistColumn *column, RelationalOperator relOp,
+                        unsigned long ref);
     bool accepts(void *data);
+
+private:
+    AttributelistColumn *_column;
+    RelationalOperator _relOp;
+    unsigned long _ref;
 };
 
 #endif  // AttributelistFilter_h

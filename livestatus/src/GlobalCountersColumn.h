@@ -28,7 +28,6 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
-class Filter;
 class Query;
 
 class GlobalCountersColumn : public Column {
@@ -44,7 +43,6 @@ public:
         , _do_average(do_average) {}
     int type() override { return _do_average ? COLTYPE_DOUBLE : COLTYPE_INT; }
     void output(void *, Query *) override;
-    Filter *createFilter(int, char *) override { return 0; }
 };
 
 #endif  // GlobalCountersColumn_h

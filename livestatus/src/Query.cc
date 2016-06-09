@@ -252,8 +252,9 @@ void Query::setError(OutputBuffer::ResponseCode code, const string &message) {
     _output->setError(code, message);
 }
 
-Filter *Query::createFilter(Column *column, int operator_id, char *value) {
-    Filter *filter = column->createFilter(operator_id, value);
+Filter *Query::createFilter(Column *column, RelationalOperator relOp,
+                            const string &value) {
+    Filter *filter = column->createFilter(relOp, value);
     if (filter == nullptr) {
         setError(OutputBuffer::ResponseCode::invalid_header,
                  "cannot create filter on table " + string(_table->name()));
@@ -434,8 +435,8 @@ void Query::parseStatsLine(char *line) {
                          string(column_name) + "'");
             return;
         }
-        int operator_id = relationalOperatorForName(operator_name);
-        if (operator_id == OP_INVALID) {
+        RelationalOperator relOp;
+        if (!relationalOperatorForName(operator_name, relOp)) {
             setError(OutputBuffer::ResponseCode::invalid_header,
                      "invalid stats operator '" + string(operator_name) + "'");
             return;
@@ -448,7 +449,7 @@ void Query::parseStatsLine(char *line) {
             return;
         }
 
-        Filter *filter = createFilter(column, operator_id, value);
+        Filter *filter = createFilter(column, relOp, value);
         if (filter == nullptr) {
             return;
         }
@@ -486,8 +487,9 @@ void Query::parseFilterLine(char *line, AndingFilter &filter) {
                      string(column_name) + "'");
         return;
     }
-    int operator_id = relationalOperatorForName(operator_name);
-    if (operator_id == OP_INVALID) {
+    RelationalOperator relOp;
+    ;
+    if (relationalOperatorForName(operator_name, relOp)) {
         setError(OutputBuffer::ResponseCode::invalid_header,
                  "invalid filter operator '" + string(operator_name) + "'");
         return;
@@ -500,7 +502,7 @@ void Query::parseFilterLine(char *line, AndingFilter &filter) {
         return;
     }
 
-    if (Filter *sub_filter = createFilter(column, operator_id, value)) {
+    if (Filter *sub_filter = createFilter(column, relOp, value)) {
         filter.addSubfilter(sub_filter);
     }
 }

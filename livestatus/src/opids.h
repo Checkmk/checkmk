@@ -26,21 +26,28 @@
 #define opids_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <iosfwd>
 #include <string>
 
-#define OP_INVALID 0
-#define OP_EQUAL 1        // =
-#define OP_REGEX 2        // ~
-#define OP_EQUAL_ICASE 3  // =~
-#define OP_REGEX_ICASE 4  // ~~
-#define OP_GREATER 5      // >
-#define OP_LESS 6         // <
+enum class RelationalOperator {
+    equal,
+    not_equal,
+    matches,
+    doesnt_match,
+    equal_icase,
+    not_equal_icase,
+    matches_icase,
+    doesnt_match_icase,
+    less,
+    greater_or_equal,
+    greater,
+    less_or_equal
+};
 
-std::string nameOfRelationalOperator(int relOp);
-int relationalOperatorForName(const std::string &name);
+std::ostream &operator<<(std::ostream &os, const RelationalOperator &relOp);
 
-// Note: The operators !=, <= and >= are parsed into ! =, ! > and ! <.
-// The negation is represented by negating the value of the operator.
-// Example >= is represented as -6 (- OP_LESS)
+// TODO(sp) Stream interface?
+bool relationalOperatorForName(const std::string &name,
+                               RelationalOperator &relOp);
 
 #endif  // opids_h

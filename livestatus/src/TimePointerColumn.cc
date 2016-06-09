@@ -25,13 +25,17 @@
 #include "TimePointerColumn.h"
 #include "Query.h"
 #include "TimeColumnFilter.h"
+#include "opids.h"
+
+using std::string;
 
 void TimePointerColumn::output(void *data, Query *query) {
     query->outputTime(getValue(data, query));
 }
 
-Filter *TimePointerColumn::createFilter(int operator_id, char *value) {
-    // The TimeColumnFilter applies the timezone offset
-    // from the Localtime: header
-    return new TimeColumnFilter(this, operator_id, value);
+Filter *TimePointerColumn::createFilter(RelationalOperator relOp,
+                                        const string &value) {
+    // The TimeColumnFilter applies the timezone offset from the Localtime:
+    // header
+    return new TimeColumnFilter(this, relOp, value);
 }

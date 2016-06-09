@@ -23,25 +23,38 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostlistColumnFilter.h"
-#include <stdlib.h>
 #include <ostream>
+#include <utility>
 #include "HostlistColumn.h"
 #include "Logger.h"
 #include "nagios.h"
 #include "opids.h"
 
+using std::move;
+using std::string;
+
+HostlistColumnFilter::HostlistColumnFilter(HostlistColumn *column,
+                                           RelationalOperator relOp,
+                                           string value)
+    : _hostlist_column(column), _relOp(relOp), _ref_value(move(value)) {}
+
 bool HostlistColumnFilter::accepts(void *data) {
-    // data points to a primary data object. We need to extract
-    // a pointer to a host list
+    // data points to a primary data object. We need to extract a pointer to a
+    // host list
     hostsmember *mem = _hostlist_column->getMembers(data);
 
     // test for empty list
-    if (abs(_opid) == OP_EQUAL && _ref_value == "") {
-        return (mem == nullptr) == (_opid == OP_EQUAL);
+    if (_ref_value.empty()) {
+        if (_relOp == RelationalOperator::equal) {
+            return mem == nullptr;
+        }
+        if (_relOp == RelationalOperator::not_equal) {
+            return mem != nullptr;
+        }
     }
 
     bool is_member = false;
-    while (mem != nullptr) {
+    for (; mem != nullptr; mem = mem->next) {
         char *host_name = mem->host_name;
         if (host_name == nullptr) {
             host_name = mem->host_ptr->name;
@@ -51,17 +64,26 @@ bool HostlistColumnFilter::accepts(void *data) {
             is_member = true;
             break;
         }
-        mem = mem->next;
     }
-    switch (_opid) {
-        case -OP_LESS: /* !< means >= means 'contains' */
-            return is_member;
-        case OP_LESS:
+
+    switch (_relOp) {
+        case RelationalOperator::less:
             return !is_member;
-        default:
-            Informational() << "Sorry, Operator "
-                            << nameOfRelationalOperator(_opid)
+        case RelationalOperator::greater_or_equal:
+            return is_member;
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            Informational() << "Sorry. Operator " << _relOp
                             << " for host lists not implemented.";
-            return true;
+            return false;
     }
+    return false;  // unreachable
 }

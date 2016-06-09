@@ -23,46 +23,45 @@
 // Boston, MA 02110-1301 USA.
 
 #include "opids.h"
+#include <unordered_map>
+#include <utility>
 
+using std::ostream;
 using std::string;
+using std::unordered_map;
 
 namespace {
-const char *op_names_plus_8[] = {"",    "",   ">=", "<=",        "!~~",
-                                 "!=~", "!~", "!=", "(invalid)", "=",
-                                 "~",   "=~", "~~", ">",         "<"};
-};  // namespace
+unordered_map<string, RelationalOperator> fromString = {
+    {"==", RelationalOperator::equal},
+    {"!=", RelationalOperator::not_equal},
+    {"~", RelationalOperator::matches},
+    {"!~", RelationalOperator::doesnt_match},
+    {"=~", RelationalOperator::equal_icase},
+    {"!=~", RelationalOperator::not_equal_icase},
+    {"~~", RelationalOperator::matches_icase},
+    {"!~~", RelationalOperator::doesnt_match_icase},
+    {"<", RelationalOperator::less},
+    {">=", RelationalOperator::greater_or_equal},
+    {">", RelationalOperator::greater},
+    {"<=", RelationalOperator::less_or_equal}};
+}  // namespace
 
-string nameOfRelationalOperator(int relOp) { return op_names_plus_8[relOp]; }
-
-int relationalOperatorForName(const string &name) {
-    if (name.empty()) {
-        return OP_INVALID;
+ostream &operator<<(ostream &os, const RelationalOperator &relOp) {
+    // Slightly inefficient, but this doesn't matter for our purposes. We could
+    // use Boost.Bimap or use 2 maps if really necessary.
+    for (const auto &strAndOp : fromString) {
+        if (strAndOp.second == relOp) {
+            return os << strAndOp.first;
+        }
     }
+    return os;
+}
 
-    int negate = name[0] == '!';
-    string n = negate ? name.substr(1) : name;
-
-    int opid;
-    if (n == "=") {
-        opid = OP_EQUAL;
-    } else if (n == "~") {
-        opid = OP_REGEX;
-    } else if (n == "=~") {
-        opid = OP_EQUAL_ICASE;
-    } else if (n == "~~") {
-        opid = OP_REGEX_ICASE;
-    } else if (n == ">") {
-        opid = OP_GREATER;
-    } else if (n == "<") {
-        opid = OP_LESS;
-    } else if (n == ">=") {
-        opid = OP_LESS;
-        negate = !negate;
-    } else if (n == "<=") {
-        opid = OP_GREATER;
-        negate = !negate;
-    } else {
-        opid = OP_INVALID;
+bool relationalOperatorForName(const string &name, RelationalOperator &relOp) {
+    auto it = fromString.find(name);
+    if (it == fromString.end()) {
+        return false;
     }
-    return negate ? -opid : opid;
+    relOp = it->second;
+    return true;
 }

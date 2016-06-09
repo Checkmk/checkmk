@@ -25,6 +25,9 @@
 #include "StringColumn.h"
 #include "Query.h"
 #include "StringColumnFilter.h"
+#include "opids.h"
+
+using std::string;
 
 void StringColumn::output(void *data, Query *query) {
     if (data != nullptr) {
@@ -34,6 +37,7 @@ void StringColumn::output(void *data, Query *query) {
     }
 }
 
-Filter *StringColumn::createFilter(int operator_id, char *value) {
-    return new StringColumnFilter(this, operator_id, value);
+Filter *StringColumn::createFilter(RelationalOperator relOp,
+                                   const string &value) {
+    return new StringColumnFilter(this, relOp, value);
 }

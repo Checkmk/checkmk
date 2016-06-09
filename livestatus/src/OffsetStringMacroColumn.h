@@ -29,6 +29,7 @@
 #include <string>
 #include "OffsetStringColumn.h"
 #include "nagios.h"
+#include "opids.h"
 class Filter;
 class Query;
 
@@ -42,7 +43,8 @@ public:
 
     std::string valueAsString(void *data, Query *) override;
     void output(void *data, Query *) override;
-    Filter *createFilter(int opid, char *value) override;
+    Filter *createFilter(RelationalOperator relOp,
+                         const std::string &value) override;
 
     // overriden by host and service macro columns
     virtual host *getHost(void *) = 0;

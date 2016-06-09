@@ -24,56 +24,55 @@
 
 #include "CustomVarsFilter.h"
 #include <ctype.h>
-#include <stdlib.h>
 #include <string.h>
 #include <ostream>
 #include "Column.h"
 #include "CustomVarsColumn.h"
 #include "Logger.h"
 #include "OutputBuffer.h"
-#include "opids.h"
 
 using std::string;
 
-CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column, int opid,
-                                   char *value)
-    : _column(column)
-    , _opid(abs(opid))
-    , _negate(opid < 0)
-    , _ref_text(value)
-    , _regex(nullptr) {
-    // Prepare part in case of DICT filter
-    if (_column->type() == COLTYPE_DICT) {
-        /* Filter for custom_variables:
-Filter: custom_variables = PATH /hirni.mk
+CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column,
+                                   RelationalOperator relOp,
+                                   const string &value)
+    : _column(column), _relOp(relOp), _ref_text(value), _regex(nullptr) {
+    if (_column->type() != COLTYPE_DICT) {
+        return;
+    }
+    // Filter for custom_variables:
+    //    Filter: custom_variables = PATH /hirni.mk
+    // The variable name is part of the value and separated with spaces
+    const char *cstr = _ref_text.c_str();
+    const char *search_space = cstr;
+    while ((*search_space != 0) && (isspace(*search_space) == 0)) {
+        search_space++;
+    }
+    _ref_varname = string(cstr, search_space - cstr);
+    while ((*search_space != 0) && (isspace(*search_space) != 0)) {
+        search_space++;
+    }
+    _ref_string = search_space;
 
-The variable name is part of the value and separated
-with spaces
-         */
-        const char *cstr = _ref_text.c_str();
-        const char *search_space = cstr;
-        while ((*search_space != 0) && (isspace(*search_space) == 0)) {
-            search_space++;
-        }
-        _ref_varname = string(cstr, search_space - cstr);
-        while ((*search_space != 0) && (isspace(*search_space) != 0)) {
-            search_space++;
-        }
-        _ref_string = search_space;
-
-        // Prepare regular expression
-        if (_opid == OP_REGEX || _opid == OP_REGEX_ICASE) {
-            if ((strchr(search_space, '{') != nullptr) ||
-                (strchr(search_space, '}') != nullptr)) {
+    // Prepare regular expression
+    switch (_relOp) {
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+            if (strchr(search_space, '{') != nullptr ||
+                strchr(search_space, '}') != nullptr) {
                 setError(OutputBuffer::ResponseCode::invalid_header,
                          "disallowed regular expression '" + string(value) +
                              "': must not contain { or }");
             } else {
                 _regex = new regex_t();
-                if (0 !=
-                    regcomp(_regex, search_space,
+                bool ignore_case =
+                    _relOp == RelationalOperator::matches_icase ||
+                    _relOp == RelationalOperator::doesnt_match_icase;
+                if (regcomp(_regex, search_space,
                             REG_EXTENDED | REG_NOSUB |
-                                (_opid == OP_REGEX_ICASE ? REG_ICASE : 0))) {
+                                (ignore_case ? REG_ICASE : 0)) != 0) {
                     setError(
                         OutputBuffer::ResponseCode::invalid_header,
                         "invalid regular expression '" + string(value) + "'");
@@ -81,7 +80,16 @@ with spaces
                     _regex = nullptr;
                 }
             }
-        }
+            break;
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::less:
+        case RelationalOperator::greater_or_equal:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            break;
     }
 }
 
@@ -99,41 +107,53 @@ bool CustomVarsFilter::accepts(void *data) {
         if (act_string == nullptr) {
             act_string = "";
         }
-        bool pass = true;
-        switch (_opid) {
-            case OP_EQUAL:
-                pass = _ref_string == act_string;
-                break;
-            case OP_EQUAL_ICASE:
-                pass = (strcasecmp(_ref_string.c_str(), act_string) == 0);
-                break;
-            case OP_REGEX:
-            case OP_REGEX_ICASE:
-                pass = _regex != nullptr &&
-                       0 == regexec(_regex, act_string, 0, nullptr, 0);
-                break;
-            case OP_GREATER:
-                pass = 0 > strcmp(_ref_string.c_str(), act_string);
-                break;
-            case OP_LESS:
-                pass = 0 < strcmp(_ref_string.c_str(), act_string);
-                break;
-            default:
-                // this should never be reached, all operators are handled
-                Informational() << "Sorry. Operator " << _opid
-                                << " for strings not implemented.";
-                break;
+        switch (_relOp) {
+            case RelationalOperator::equal:
+                return act_string == _ref_string;
+            case RelationalOperator::not_equal:
+                return act_string != _ref_string;
+            case RelationalOperator::matches:
+            case RelationalOperator::matches_icase:
+                return _regex != nullptr &&
+                       regexec(_regex, act_string, 0, nullptr, 0) == 0;
+            case RelationalOperator::doesnt_match:
+            case RelationalOperator::doesnt_match_icase:
+                return _regex != nullptr &&
+                       regexec(_regex, act_string, 0, nullptr, 0) != 0;
+            case RelationalOperator::equal_icase:
+                return strcasecmp(_ref_string.c_str(), act_string) == 0;
+            case RelationalOperator::not_equal_icase:
+                return strcasecmp(_ref_string.c_str(), act_string) != 0;
+            case RelationalOperator::less:
+                return act_string < _ref_string;
+            case RelationalOperator::greater_or_equal:
+                return act_string >= _ref_string;
+            case RelationalOperator::greater:
+                return act_string > _ref_string;
+            case RelationalOperator::less_or_equal:
+                return act_string <= _ref_string;
         }
-        return pass != _negate;
     }
     bool is_member = _column->contains(data, _ref_text.c_str());
-    switch (_opid) {
-        case OP_LESS:
-            return (!is_member) == (!_negate);
-        default:
-            Informational() << "Sorry, Operator "
-                            << nameOfRelationalOperator(_opid)
-                            << " for custom variable lists not implemented.";
-            return true;
+    switch (_relOp) {
+        case RelationalOperator::less:
+            return !is_member;
+        case RelationalOperator::greater_or_equal:
+            return is_member;
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            Informational()
+                << "Sorry. Operator " << _relOp
+                << " for custom variable list columns not implemented.";
+            return false;
     }
+    return false;  // unreachable
 }

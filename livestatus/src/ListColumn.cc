@@ -24,7 +24,11 @@
 
 #include "ListColumn.h"
 #include "ListColumnFilter.h"
+#include "opids.h"
 
-Filter *ListColumn::createFilter(int opid, char *value) {
-    return new ListColumnFilter(this, opid, value);
+using std::string;
+
+Filter *ListColumn::createFilter(RelationalOperator relOp,
+                                 const string &value) {
+    return new ListColumnFilter(this, relOp, value);
 }

@@ -23,28 +23,29 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServicelistColumnFilter.h"
-#include <stdlib.h>
 #include <string.h>
 #include <ostream>
 #include "Logger.h"
 #include "ServicelistColumn.h"
 #include "nagios.h"
-#include "opids.h"
 
 using std::string;
 
 #define HOSTSERVICE_SEPARATOR '|'
 
 ServicelistColumnFilter::ServicelistColumnFilter(ServicelistColumn *column,
-                                                 int opid, char *refvalue)
-    : _servicelist_column(column), _opid(opid) {
-    if (abs(_opid) == OP_EQUAL && (refvalue[0] == 0)) {
+                                                 RelationalOperator relOp,
+                                                 const string &value)
+    : _servicelist_column(column), _relOp(relOp) {
+    if ((_relOp == RelationalOperator::equal ||
+         _relOp == RelationalOperator::not_equal) &&
+        value.empty()) {
         return;  // test for emptiness is allowed
     }
 
     // ref_value must be of from hostname HOSTSERVICE_SEPARATOR
     // service_description
-    char *sep = index(refvalue, HOSTSERVICE_SEPARATOR);
+    const char *sep = index(value.c_str(), HOSTSERVICE_SEPARATOR);
     if (sep == nullptr) {
         Informational() << "Invalid reference value for service list "
                            "membership. Must be 'hostname"
@@ -52,7 +53,7 @@ ServicelistColumnFilter::ServicelistColumnFilter(ServicelistColumn *column,
         _ref_host = "";
         _ref_service = "";
     } else {
-        _ref_host = string(refvalue, sep - refvalue);
+        _ref_host = string(&value[0], sep - &value[0]);
         _ref_service = sep + 1;
     }
 }
@@ -63,28 +64,42 @@ bool ServicelistColumnFilter::accepts(void *data) {
     servicesmember *mem = _servicelist_column->getMembers(data);
 
     // test for empty list
-    if (abs(_opid) == OP_EQUAL && _ref_host == "") {
-        return (mem == nullptr) == (_opid == OP_EQUAL);
+    if (_ref_host.empty()) {
+        if (_relOp == RelationalOperator::equal) {
+            return mem == nullptr;
+        }
+        if (_relOp == RelationalOperator::not_equal) {
+            return mem != nullptr;
+        }
     }
 
     bool is_member = false;
-    while (mem != nullptr) {
+    for (; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
         if (svc->host_name == _ref_host && svc->description == _ref_service) {
             is_member = true;
             break;
         }
-        mem = mem->next;
     }
-    switch (_opid) {
-        case -OP_LESS: /* !< means >= means 'contains' */
-            return is_member;
-        case OP_LESS:
+
+    switch (_relOp) {
+        case RelationalOperator::less:
             return !is_member;
-        default:
-            Informational() << "Sorry, Operator "
-                            << nameOfRelationalOperator(_opid)
-                            << " for service lists lists not implemented.";
-            return true;
+        case RelationalOperator::greater_or_equal:
+            return is_member;
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            Informational() << "Sorry. Operator " << _relOp
+                            << " for service lists not implemented.";
+            return false;
     }
+    return false;  // unreachable
 }

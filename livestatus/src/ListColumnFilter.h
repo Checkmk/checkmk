@@ -26,19 +26,23 @@
 #define ListColumnFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Filter.h"
+#include "opids.h"
 class ListColumn;
 
 class ListColumnFilter : public Filter {
-    ListColumn *_column;
-    void *_ref_member;
-    int _opid;
-    bool _empty_ref;  // distinct from unknown ref
-
 public:
-    ListColumnFilter(ListColumn *column, int opid, char *value);
+    ListColumnFilter(ListColumn *column, RelationalOperator relOp,
+                     const std::string &value);
     bool accepts(void *data);
     void *indexFilter(const char *columnname);
+
+private:
+    ListColumn *_column;
+    RelationalOperator _relOp;
+    void *_ref_member;
+    bool _empty_ref;  // distinct from unknown ref
 };
 
 #endif  // ListColumnFilter_h

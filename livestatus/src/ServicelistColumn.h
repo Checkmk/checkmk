@@ -29,6 +29,7 @@
 #include <string>
 #include "Column.h"
 #include "nagios.h"
+#include "opids.h"
 class Filter;
 class Query;
 
@@ -47,7 +48,8 @@ public:
         , _info_depth(info_depth) {}
     int type() override { return COLTYPE_LIST; };
     void output(void *, Query *) override;
-    Filter *createFilter(int opid, char *value) override;
+    Filter *createFilter(RelationalOperator relOp,
+                         const std::string &value) override;
     servicesmember *getMembers(void *data);
 
 private:

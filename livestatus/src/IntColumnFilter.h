@@ -29,20 +29,22 @@
 #include <stdint.h>
 #include <string>
 #include "Filter.h"
+#include "opids.h"
 class IntColumn;
 
 class IntColumnFilter : public Filter {
-    IntColumn *_column;
-    int _opid;
-    bool _negate;
-    std::string _ref_string;
-
 public:
-    IntColumnFilter(IntColumn *column, int opid, char *value);
+    IntColumnFilter(IntColumn *column, RelationalOperator relOp,
+                    std::string value);
     virtual int32_t convertRefValue();  // see TimeColumnFilter
     bool accepts(void *data);
     void findIntLimits(const char *columnname, int *lower, int *upper);
     bool optimizeBitmask(const char *columnname, uint32_t *mask);
+
+private:
+    IntColumn *_column;
+    RelationalOperator _relOp;
+    std::string _ref_string;
 };
 
 #endif  // IntColumnFilter_h

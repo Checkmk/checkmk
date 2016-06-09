@@ -73,8 +73,8 @@ void OffsetStringMacroColumn::output(void *data, Query *query) {
     query->outputString(s.c_str());
 }
 
-Filter *OffsetStringMacroColumn::createFilter(int /*operator_id*/,
-                                              char * /*value*/) {
+Filter *OffsetStringMacroColumn::createFilter(RelationalOperator /*unused */,
+                                              const string & /*unused*/) {
     logger(LG_INFO, "Sorry. No filtering on macro columns implemented yet");
     return new AndingFilter();  // always true
 }

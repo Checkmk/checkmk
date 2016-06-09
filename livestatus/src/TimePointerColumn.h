@@ -29,6 +29,7 @@
 #include <string>
 #include "Column.h"
 #include "IntPointerColumn.h"
+#include "opids.h"
 class Filter;
 class Query;
 
@@ -40,7 +41,8 @@ public:
                            extra_offset) {}
     void output(void *data, Query *query) override;
     int type() override { return COLTYPE_TIME; }
-    Filter *createFilter(int operator_id, char *value) override;
+    Filter *createFilter(RelationalOperator relOp,
+                         const std::string &value) override;
 };
 
 #endif  // TimePointerColumn_h

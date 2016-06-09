@@ -4,7 +4,7 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 OMD_ROOT=/omd/sites/${SITE}
 
 make
-sudo install -m 755 mkeventd mkeventd_open514 mkevent $OMD_ROOT/bin/
+sudo install -m 755 mkeventd mkeventd_open514 mkevent mkbackup $OMD_ROOT/bin/
 sudo chown root.omd $OMD_ROOT/bin/mkeventd_open514
 sudo chmod 4750 $OMD_ROOT/bin/mkeventd_open514
 echo "Installed to $OMD_ROOT/bin"

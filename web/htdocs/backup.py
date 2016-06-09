@@ -36,7 +36,7 @@ import pprint
 import defaults
 import table
 from valuespec import *
-from lib import create_user_file
+from lib import write_settings_file
 
 #.
 #   .--Config--------------------------------------------------------------.
@@ -52,33 +52,34 @@ from lib import create_user_file
 #   | specific configuration of the site backup.                           |
 #   '----------------------------------------------------------------------'
 
-class BackupConfig(object):
-    def __init__(self, path):
-        self._path = path
+def system_config_path():
+    return "/etc/cma/backup.conf"
 
-        self.schedules = {}
-        self.targets   = {}
-        self.load()
+
+def site_config_path():
+    if "OMD_ROOT" not in os.environ:
+	raise Exception(_("Not executed in OMD environment!"))
+    return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
+
+
+# TODO: Locking!
+class Config(object):
+    def __init__(self, file_path):
+        self._file_path = file_path
 
 
     def load(self):
-        if not os.path.exists(self._path):
-            return
+        if not os.path.exists(self._file_path):
+            return {
+                "targets"   : {},
+                "schedules" : {},
+            }
 
-        cfg = {
-            "schedules" : {},
-            "targets"   : {},
-        }
-        execfile(self._path, cfg, cfg)
-
-        self.schedules = cfg["schedules"]
-        self.targets   = cfg["targets"]
+        return eval(file(self._file_path).read())
 
 
-    def save(self):
-        with create_user_file(self._path, "w") as f:
-            f.write("schedules = \\\n%s\n" % pprint.pformat(self.schedules))
-            f.write("targets  = \\\n%s\n" % pprint.pformat(self.targets))
+    def save(self, config):
+        write_settings_file(self._file_path, config)
 
 
 #.
@@ -116,14 +117,16 @@ class BackupEntity(object):
         self._config = config
 
 
+
 class BackupEntityCollection(object):
     def __init__(self, config_file_path, cls, config_attr):
-        self._config      = BackupConfig(config_file_path)
+        self._config_path = config_file_path
+        self._config      = Config(config_file_path).load()
         self._cls         = cls
         self._config_attr = config_attr
         self.objects = dict([ (ident, cls(ident, config))
                               for ident, config
-                              in getattr(self._config, config_attr).items() ])
+                              in self._config[config_attr].items() ])
 
 
     def get(self, ident):
@@ -147,9 +150,9 @@ class BackupEntityCollection(object):
 
 
     def save(self):
-        setattr(self._config, self._config_attr,
-            dict([ (ident, obj.to_config()) for ident, obj in self.objects.items() ]))
-        self._config.save()
+        self._config[self._config_attr] = dict([ (ident, obj.to_config())
+                                           for ident, obj in self.objects.items() ])
+        Config(self._config_path).save(self._config)
 
 
 #.

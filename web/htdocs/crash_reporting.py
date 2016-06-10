@@ -393,8 +393,13 @@ def show_agent_output(tardata):
 
 def get_local_vars_of_last_exception():
     local_vars = {}
-    for key, val in inspect.trace()[-1][0].f_locals.items():
-        local_vars[key] = format_var_for_export(val)
+    try:
+        for key, val in inspect.trace()[-1][0].f_locals.items():
+            local_vars[key] = format_var_for_export(val)
+    except IndexError:
+        # please don't crash in the attempt to report a crash.
+        # Don't know why inspect.trace() causes an IndexError but it does happen
+        pass
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.

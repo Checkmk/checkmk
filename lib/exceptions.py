@@ -55,3 +55,12 @@ class MKGeneralException(MKException):
 
     def __str__(self):
         return self.reason
+
+
+# This exception is raises when the current program execution should be
+# terminated. For example it is raised by the SIGINT signal handler to
+# propagate the termination up the callstack. This should be raised in
+# all cases where the program termination is a "normal" case and no
+# exception handling like printing a stack trace should be done.
+class MKTerminate(Exception):
+    pass

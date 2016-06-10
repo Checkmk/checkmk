@@ -46,6 +46,7 @@ import py_compile
 import inspect
 
 from cmk.regex import regex, is_regex
+from cmk.exceptions import MKGeneralException, MKTerminate
 import cmk.tty as tty
 
 # These variable will be substituted at 'make dist' time

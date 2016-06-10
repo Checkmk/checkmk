@@ -27,6 +27,10 @@
 import os
 import sys
 import getopt
+import fcntl
+import time
+
+from cmk.exceptions import MKTerminate, MKGeneralException
 
 # TODO: Clean this up one day by using the way recommended by gettext.
 # (See https://docs.python.org/2/library/gettext.html). For this we
@@ -35,6 +39,8 @@ try:
     _
 except NameError:
     _ = lambda x: x # Fake i18n when not available
+
+g_run_path = "/var/run/mkbackup"
 
 def is_root():
     return os.getuid() == 0
@@ -48,6 +54,16 @@ def site_config_path():
     if "OMD_ROOT" not in os.environ:
 	raise Exception(_("Not executed in OMD environment!"))
     return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
+
+
+def acquire_backup_lock():
+    global g_backup_lock_f
+    g_backup_lock_f = open("%s/mkbackup.lock" % g_run_path, "a+")
+    try:
+        fcntl.flock(g_backup_lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except IOError:
+        raise MKTerminate(_("Failed to get the exclusive backup lock. "
+                            "Another backup/restore seems to be running."))
 
 
 # Wenn als root ausgeführt:
@@ -175,11 +191,16 @@ modes = {
 
 # TODO: Implement this
 def mode_backup(target_id, opts):
-    print target_id, opts
+    acquire_backup_lock()
+    time.sleep(10)
+
+    print "BLA", target_id, opts
 
 
 # TODO: Implement this
 def mode_restore(target_id, backup_id, opts):
+    acquire_backup_lock()
+
     print target_id, backup_id, opts
 
 
@@ -279,4 +300,14 @@ def main():
     globals()["mode_%s" % mode_name](*args, opts=dict(opts + mode_opts))
 
 
-main()
+try:
+    main()
+except MKTerminate, e:
+    sys.stderr.write("%s\n" % e)
+    sys.exit(0)
+
+except MKGeneralException, e:
+    sys.stderr.write("%s\n" % e)
+    if opt_debug:
+        raise
+    sys.exit(3)

@@ -53,7 +53,7 @@ import tempfile
 import traceback
 import subprocess
 
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTerminate
 from cmk.regex import regex
 import cmk.tty as tty
 
@@ -220,13 +220,6 @@ class MKSkipCheck(Exception):
 # It is used during keepalive mode. It is also used by the automations
 # which have a timeout set.
 class MKTimeout(Exception):
-    pass
-
-
-# This exception is raises when the current Check_MK execution should be
-# terminated. Currently it is raised by the SIGINT signal handler to propagate
-# the termination up the callstack.
-class MKTerminate(Exception):
     pass
 
 

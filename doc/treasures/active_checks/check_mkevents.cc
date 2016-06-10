@@ -265,7 +265,7 @@ int main(int argc, char** argv)
     int idx_event_text  = -1;
     int current_index = 0;
     vector<string> headers;
-    while (getline(linestream, token, '\x02')) {
+    while (getline(linestream, token, '\t')) {
         if (!strcmp(token.c_str(), "event_phase"))
             idx_event_phase = current_index;
         else if (!strcmp(token.c_str(), "event_state"))
@@ -293,7 +293,7 @@ int main(int argc, char** argv)
         linestream << line;
         vector<string> data_line;
         bool has_data = false;
-        while (getline(linestream, token, '\x02')) {
+        while (getline(linestream, token, '\t')) {
             has_data = true;
             data_line.push_back(token);
         }

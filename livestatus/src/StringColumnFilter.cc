@@ -79,6 +79,7 @@ StringColumnFilter::~StringColumnFilter() {
     }
 }
 
+
 bool StringColumnFilter::accepts(void *data) {
     string act_string = _column->getValue(data);
     switch (_relOp) {
@@ -92,7 +93,7 @@ bool StringColumnFilter::accepts(void *data) {
                    regexec(_regex, act_string.c_str(), 0, nullptr, 0) == 0;
         case RelationalOperator::doesnt_match:
         case RelationalOperator::doesnt_match_icase:
-            return _regex == nullptr &&
+            return _regex != nullptr &&
                    regexec(_regex, act_string.c_str(), 0, nullptr, 0) != 0;
         case RelationalOperator::equal_icase:
             return strcasecmp(_ref_string.c_str(), act_string.c_str()) == 0;

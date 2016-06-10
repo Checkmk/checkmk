@@ -32,6 +32,7 @@
 #include <utility>
 #include <vector>
 #include "Aggregator.h"
+#include "AndingFilter.h"
 #include "Column.h"
 #include "Filter.h"
 #include "Logger.h"
@@ -41,6 +42,7 @@
 #include "OutputBuffer.h"
 #include "StatsColumn.h"
 #include "Table.h"
+#include "VariadicFilter.h"
 #include "auth.h"
 #include "data_encoding.h"
 #include "opids.h"
@@ -60,8 +62,8 @@ using std::vector;
 namespace {
 void collectFilterColumns(unordered_set<Column *> &filter_columns,
                           Filter *filter) {
-    if (filter->isAndingFilter()) {
-        for (const auto &sub_filter : *static_cast<AndingFilter *>(filter)) {
+    if (filter->isVariadicFilter()) {
+        for (const auto &sub_filter : *static_cast<VariadicFilter *>(filter)) {
             collectFilterColumns(filter_columns, sub_filter);
         }
     } else if (filter->isNegatingFilter()) {
@@ -327,14 +329,18 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
     }
 
     // The last 'number' StatsColumns must be of type StatsOperation::count
-    AndingFilter *anding = (andor == LogicalOperator::or_) ? new OringFilter()
-                                                           : new AndingFilter();
+    VariadicFilter *variadic;
+    if (andor == LogicalOperator::or_) {
+        variadic = new OringFilter();
+    } else {
+        variadic = new AndingFilter();
+    }
     while (number > 0) {
         if (_stats_columns.empty()) {
             setError(OutputBuffer::ResponseCode::invalid_header,
                      "Invalid count for " + kind +
                          ": too few Stats: headers available");
-            delete anding;
+            delete variadic;
             return;
         }
 
@@ -343,16 +349,16 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
             setError(
                 OutputBuffer::ResponseCode::invalid_header,
                 "Can use " + kind + " only on Stats: headers of filter type");
-            delete anding;
+            delete variadic;
             return;
         }
-        anding->addSubfilter(col->stealFilter());
+        variadic->addSubfilter(col->stealFilter());
         delete col;
         _stats_columns.pop_back();
         number--;
     }
     _stats_columns.push_back(
-        new StatsColumn(nullptr, anding, StatsOperation::count));
+        new StatsColumn(nullptr, variadic, StatsOperation::count));
 }
 
 void Query::parseStatsNegateLine(char *line) {
@@ -1245,13 +1251,13 @@ void Query::computeStatsGroupSpec(Query::_stats_group_spec_t &groupspec,
 void Query::doWait() {
     // If no wait condition and no trigger is set,
     // we do not wait at all.
-    if (_wait_condition.numFilters() == 0 && _wait_trigger == nullptr) {
+    if (!_wait_condition.hasSubFilters() && _wait_trigger == nullptr) {
         return;
     }
 
     // If a condition is set, we check the condition. If it
     // is already true, we do not need to way
-    if (_wait_condition.numFilters() > 0 &&
+    if (_wait_condition.hasSubFilters() &&
         _wait_condition.accepts(_wait_object)) {
         if (g_debug_level >= 2) {
             Informational() << "Wait condition true, no waiting neccessary";

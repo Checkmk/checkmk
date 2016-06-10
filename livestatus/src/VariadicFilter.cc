@@ -1,0 +1,89 @@
+// +------------------------------------------------------------------+
+// |             ____ _               _        __  __ _  __           |
+// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+// |                                                                  |
+// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+// +------------------------------------------------------------------+
+//
+// This file is part of Check_MK.
+// The official homepage is at http://mathias-kettner.de/check_mk.
+//
+// check_mk is free software;  you can redistribute it and/or modify it
+// under the  terms of the  GNU General Public License  as published by
+// the Free Software Foundation in version 2.  check_mk is  distributed
+// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+// tails. You should have  received  a copy of the  GNU  General Public
+// License along with GNU Make; see the file  COPYING.  If  not,  write
+// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+// Boston, MA 02110-1301 USA.
+
+#include "VariadicFilter.h"
+#include <stdint.h>
+#include <cinttypes>
+#include "AndingFilter.h"
+#include "OringFilter.h"
+#include "logger.h"
+
+using std::string;
+
+VariadicFilter::~VariadicFilter() {
+    for (auto &subfilter : _subfilters) {
+        delete subfilter;
+    }
+}
+
+void VariadicFilter::addSubfilter(Filter *f) { _subfilters.push_back(f); }
+
+Filter *VariadicFilter::stealLastSubfiler() {
+    if (_subfilters.empty()) {
+        return nullptr;
+    }
+    Filter *l = _subfilters.back();
+    _subfilters.pop_back();
+    return l;
+}
+
+void *VariadicFilter::findIndexFilter(const string &column_name) {
+    for (auto filter : _subfilters) {
+        void *refvalue = filter->indexFilter(column_name);
+        if (refvalue != nullptr) {
+            return refvalue;
+        }
+    }
+    return nullptr;
+}
+
+void VariadicFilter::findIntLimits(const string &colum_nname, int *lower,
+                                   int *upper) {
+    for (auto filter : _subfilters) {
+        filter->findIntLimits(colum_nname, lower, upper);
+    }
+}
+
+void VariadicFilter::combineFilters(int count, LogicalOperator andor) {
+    if (count > static_cast<int>(_subfilters.size())) {
+        logger(LG_INFO, "Cannot combine %d filters with '%s': only %" PRIuMAX
+                        " are on stack",
+               count, andor == LogicalOperator::and_ ? "AND" : "OR",
+               static_cast<uintmax_t>(_subfilters.size()));
+        return;
+    }
+
+    VariadicFilter
+        *andorfilter;  // OringFilter is subclassed from VariadicFilter
+    if (andor == LogicalOperator::and_) {
+        andorfilter = new AndingFilter();
+    } else {
+        andorfilter = new OringFilter();
+    }
+    while ((count--) != 0) {
+        andorfilter->addSubfilter(_subfilters.back());
+        _subfilters.pop_back();
+    }
+    addSubfilter(andorfilter);
+}

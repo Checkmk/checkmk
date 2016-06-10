@@ -22,50 +22,35 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef Filter_h
-#define Filter_h
+#ifndef VariadicFilter_h
+#define VariadicFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <stdint.h>
+#include <deque>
 #include <string>
-#include "OutputBuffer.h"
-class Column;
-class Query;
+#include "Filter.h"
 
-class Filter {
+enum class LogicalOperator { and_, or_ };
+
+class VariadicFilter : public Filter {
 public:
-    Filter()
-        : _query(nullptr)
-        , _error_code(OutputBuffer::ResponseCode::ok)
-        , _column(nullptr) {}
-    virtual ~Filter() {}
-    virtual bool isVariadicFilter() { return false; }
-    virtual bool isNegatingFilter() { return false; }
-    std::string errorMessage() { return _error_message; }
-    OutputBuffer::ResponseCode errorCode() { return _error_code; }
-    bool hasError() { return _error_message != ""; }
-    void setQuery(Query *q) { _query = q; }
-    void setColumn(Column *c) { _column = c; }
-    Column *column() { return _column; }
-    virtual bool accepts(void *data) = 0;
-    virtual void *indexFilter(const std::string & /* column_name */) {
-        return nullptr;
-    }
-    virtual void findIntLimits(const std::string & /* column_name */,
-                               int * /* lower */, int * /* upper */) {}
-    virtual bool optimizeBitmask(const std::string & /* column_name */,
-                                 uint32_t * /* mask */) {
-        return false;
-    }
+    typedef std::deque<Filter *> _subfilters_t;
+
+    VariadicFilter() {}
+    virtual ~VariadicFilter();
+    bool isVariadicFilter() override { return true; }
+    void addSubfilter(Filter *);
+    Filter *stealLastSubfiler();
+    void combineFilters(int count, LogicalOperator andor);
+    bool hasSubFilters() { return !_subfilters.empty(); }
+    _subfilters_t::iterator begin() { return _subfilters.begin(); }
+    _subfilters_t::iterator end() { return _subfilters.end(); }
+    void *findIndexFilter(const std::string &column_name);
+    void findIntLimits(const std::string &colum_nname, int *lower,
+                       int *upper) override;
 
 protected:
-    Query *_query;  // needed by TimeOffsetFilter (currently)
-    void setError(OutputBuffer::ResponseCode code, const std::string &message);
-
-private:
-    std::string _error_message;
-    OutputBuffer::ResponseCode _error_code;
-    Column *_column;
+    _subfilters_t _subfilters;
 };
 
-#endif  // Filter_h
+#endif  // VariadicFilter_h

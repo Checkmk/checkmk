@@ -35,6 +35,7 @@
 #include <vector>
 #include "AndingFilter.h"
 #include "OutputBuffer.h"
+#include "VariadicFilter.h"
 #include "global_counters.h"
 #include "nagios.h"  // IWYU pragma: keep
 #include "opids.h"

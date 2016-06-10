@@ -28,9 +28,9 @@
 #include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
 #include <string>
-#include "AndingFilter.h"
+#include "VariadicFilter.h"
 
-class OringFilter : public AndingFilter {
+class OringFilter : public VariadicFilter {
 public:
     bool accepts(void *data) override;
     bool optimizeBitmask(const std::string &column_name,

@@ -131,6 +131,7 @@ livestatus_so_SOURCES = \
         TimeColumnFilter.cc \
         TimePointerColumn.cc \
         TimeperiodsCache.cc \
+        VariadicFilter.cc \
         WorldNagios.cc \
         auth.cc \
         global_counters.c \

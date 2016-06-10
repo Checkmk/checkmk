@@ -23,28 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AndingFilter.h"
-#include <cinttypes>
-#include "OringFilter.h"
-#include "logger.h"
+#include "Filter.h"
 
 using std::string;
-
-AndingFilter::~AndingFilter() {
-    for (auto &subfilter : _subfilters) {
-        delete subfilter;
-    }
-}
-
-void AndingFilter::addSubfilter(Filter *f) { _subfilters.push_back(f); }
-
-Filter *AndingFilter::stealLastSubfiler() {
-    if (_subfilters.empty()) {
-        return nullptr;
-    }
-    Filter *l = _subfilters.back();
-    _subfilters.pop_back();
-    return l;
-}
 
 bool AndingFilter::accepts(void *data) {
     for (auto filter : _subfilters) {
@@ -55,23 +36,6 @@ bool AndingFilter::accepts(void *data) {
     return true;
 }
 
-void *AndingFilter::findIndexFilter(const string &column_name) {
-    for (auto filter : _subfilters) {
-        void *refvalue = filter->indexFilter(column_name);
-        if (refvalue != nullptr) {
-            return refvalue;
-        }
-    }
-    return nullptr;
-}
-
-void AndingFilter::findIntLimits(const string &colum_nname, int *lower,
-                                 int *upper) {
-    for (auto filter : _subfilters) {
-        filter->findIntLimits(colum_nname, lower, upper);
-    }
-}
-
 bool AndingFilter::optimizeBitmask(const string &column_name, uint32_t *mask) {
     bool optimized = false;
     for (auto filter : _subfilters) {
@@ -80,26 +44,4 @@ bool AndingFilter::optimizeBitmask(const string &column_name, uint32_t *mask) {
         }
     }
     return optimized;
-}
-
-void AndingFilter::combineFilters(int count, LogicalOperator andor) {
-    if (count > static_cast<int>(_subfilters.size())) {
-        logger(LG_INFO, "Cannot combine %d filters with '%s': only %" PRIuMAX
-                        " are on stack",
-               count, andor == LogicalOperator::and_ ? "AND" : "OR",
-               static_cast<uintmax_t>(_subfilters.size()));
-        return;
-    }
-
-    AndingFilter *andorfilter;  // OringFilter is subclassed from AndingFilter
-    if (andor == LogicalOperator::and_) {
-        andorfilter = new AndingFilter();
-    } else {
-        andorfilter = new OringFilter();
-    }
-    while ((count--) != 0) {
-        andorfilter->addSubfilter(_subfilters.back());
-        _subfilters.pop_back();
-    }
-    addSubfilter(andorfilter);
 }

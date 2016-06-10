@@ -34,7 +34,7 @@ class AttributelistFilter : public Filter {
 public:
     AttributelistFilter(AttributelistColumn *column, RelationalOperator relOp,
                         unsigned long ref);
-    bool accepts(void *data);
+    bool accepts(void *data) override;
 
 private:
     AttributelistColumn *_column;

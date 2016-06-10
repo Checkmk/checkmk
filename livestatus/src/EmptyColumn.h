@@ -35,7 +35,7 @@ public:
     EmptyColumn(std::string name, std::string description,
                 int indirect_offset = -1, int extra_offset = -1)
         : Column(name, description, indirect_offset, extra_offset) {}
-    int type() override { return COLTYPE_STRING; }
+    ColumnType type() override { return ColumnType::string; }
     void output(void *data, Query *) override;
 };
 

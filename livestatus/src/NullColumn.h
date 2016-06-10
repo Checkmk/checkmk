@@ -35,7 +35,7 @@ public:
     NullColumn(std::string name, std::string description,
                int indirect_offset = -1, int extra_offset = -1)
         : Column(name, description, indirect_offset, extra_offset) {}
-    int type() override { return COLTYPE_NULL; }
+    ColumnType type() override { return ColumnType::null; }
     void output(void *data, Query *) override;
 };
 

@@ -35,7 +35,7 @@ public:
     LogwatchListColumn(std::string name, std::string description,
                        int indirect_offset, int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
-    int type() override { return COLTYPE_LIST; }
+    ColumnType type() override { return ColumnType::list; }
     void output(void *, Query *) override;
 };
 

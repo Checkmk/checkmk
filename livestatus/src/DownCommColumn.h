@@ -53,7 +53,7 @@ public:
         , _with_info(with_info)
         , _is_service(is_service)
         , _with_extra_info(with_extra_info) {}
-    int type() override { return COLTYPE_LIST; }
+    ColumnType type() override { return ColumnType::list; }
     void output(void *, Query *) override;
     void *getNagiosObject(char *name) override;
     bool isEmpty(void *data) override;

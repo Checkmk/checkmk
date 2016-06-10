@@ -37,8 +37,8 @@ public:
     StringColumnFilter(StringColumn *column, RelationalOperator relOp,
                        const std::string &value);
     virtual ~StringColumnFilter();
-    bool accepts(void *data);
-    void *indexFilter(const char *column);
+    bool accepts(void *data) override;
+    void *indexFilter(const std::string &column_name) override;
 
 private:
     StringColumn *_column;

@@ -51,7 +51,7 @@ void TableColumns::answerQuery(Query *query) {
     }
 }
 
-const char *TableColumns::getValue(Column *column, int colcol) {
+const char *TableColumns::getValue(Column *column, int colcol) { // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     static const char *typenames[8] = {"int",  "float", "string", "list",
                                        "time", "dict",  "blob",   "null"};
 
@@ -63,8 +63,7 @@ const char *TableColumns::getValue(Column *column, int colcol) {
         case COLCOL_DESCR:
             return column->description();
         case COLCOL_TYPE:
-            int type = column->type();
-            return typenames[type];
+            return typenames[static_cast<int>(column->type())];
     }
     return "";
 }

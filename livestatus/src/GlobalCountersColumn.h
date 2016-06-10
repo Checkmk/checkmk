@@ -41,7 +41,9 @@ public:
         : Column(name, description, indirect_offset, extra_offset)
         , _counter_index(counter_index)
         , _do_average(do_average) {}
-    int type() override { return _do_average ? COLTYPE_DOUBLE : COLTYPE_INT; }
+    ColumnType type() override {
+        return _do_average ? ColumnType::double_ : ColumnType::int_;
+    }
     void output(void *, Query *) override;
 };
 

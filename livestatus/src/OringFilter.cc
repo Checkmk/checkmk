@@ -25,6 +25,8 @@
 #include "OringFilter.h"
 #include "Filter.h"
 
+using std::string;
+
 bool OringFilter::accepts(void *data) {
     for (auto filter : _subfilters) {
         if (filter->accepts(data)) {
@@ -34,14 +36,14 @@ bool OringFilter::accepts(void *data) {
     return false;
 }
 
-bool OringFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
+bool OringFilter::optimizeBitmask(const string &column_name, uint32_t *mask) {
     // We can only optimize, if *all* subfilters are filters for the
     // same column.
     uint32_t m = 0;
 
     for (auto filter : _subfilters) {
         uint32_t mm = 0xffffffff;
-        if (!filter->optimizeBitmask(columnname, &mm)) {
+        if (!filter->optimizeBitmask(column_name, &mm)) {
             return false;  // wrong column
         }
         m |= mm;

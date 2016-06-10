@@ -36,7 +36,7 @@ public:
                        int indirect_offset, int extra_offset = -1)
         : ContactsColumn(name, description, indirect_offset,
                          extra_offset = -1) {}
-    int type() override { return COLTYPE_LIST; }
+    ColumnType type() override { return ColumnType::list; }
     bool isNagiosMember(void *hst, void *ctc) override;
 };
 

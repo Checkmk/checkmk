@@ -47,8 +47,8 @@ public:
         : Column(name, description, indirect_offset, extra_offset)
         , _offset(offset)
         , _what(what) {}
-    int type() override {
-        return _what == CVT_DICT ? COLTYPE_DICT : COLTYPE_LIST;
+    ColumnType type() override {
+        return _what == CVT_DICT ? ColumnType::dict : ColumnType::list;
     }
     void output(void *, Query *) override;
     Filter *createFilter(RelationalOperator relOp,

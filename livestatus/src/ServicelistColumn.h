@@ -46,7 +46,7 @@ public:
         , _offset(offset)
         , _show_host(show_host)
         , _info_depth(info_depth) {}
-    int type() override { return COLTYPE_LIST; };
+    ColumnType type() override { return ColumnType::list; };
     void output(void *, Query *) override;
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;

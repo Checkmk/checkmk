@@ -48,7 +48,7 @@ public:
                   int indirect_offset, int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
 #endif
-    int type() override { return COLTYPE_LIST; }
+    ColumnType type() override { return ColumnType::list; }
     void output(void *, Query *) override;
 };
 

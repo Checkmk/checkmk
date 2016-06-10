@@ -42,7 +42,7 @@ public:
         return getValue(data);
     }
     void output(void *, Query *) override;
-    int type() override { return COLTYPE_STRING; }
+    ColumnType type() override { return ColumnType::string; }
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
 };

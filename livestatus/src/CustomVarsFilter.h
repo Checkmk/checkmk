@@ -37,7 +37,7 @@ public:
     CustomVarsFilter(CustomVarsColumn *column, RelationalOperator relOp,
                      const std::string &value);
     virtual ~CustomVarsFilter();
-    bool accepts(void *data);
+    bool accepts(void *data) override;
 
 private:
     CustomVarsColumn *_column;

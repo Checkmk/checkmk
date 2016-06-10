@@ -43,7 +43,7 @@ public:
         : Column(name, description, indirect_offset, extra_offset)
         , _offset(offset)
         , _show_state(show_state) {}
-    int type() override { return COLTYPE_LIST; }
+    ColumnType type() override { return ColumnType::list; }
     void output(void *, Query *) override;
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;

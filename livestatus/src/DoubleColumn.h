@@ -39,7 +39,7 @@ public:
         : Column(name, description, indirect_offset, extra_offset) {}
     virtual double getValue(void *data) = 0;
     void output(void *, Query *) override;
-    int type() override { return COLTYPE_DOUBLE; }
+    ColumnType type() override { return ColumnType::double_; }
     std::string valueAsString(void *data, Query *) override;
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;

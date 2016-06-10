@@ -35,7 +35,7 @@ class HostlistColumnFilter : public Filter {
 public:
     HostlistColumnFilter(HostlistColumn *column, RelationalOperator relOp,
                          std::string value);
-    bool accepts(void *data);
+    bool accepts(void *data) override;
 
 private:
     HostlistColumn *_hostlist_column;

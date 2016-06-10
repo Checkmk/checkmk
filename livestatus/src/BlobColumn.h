@@ -39,7 +39,7 @@ public:
         : Column(name, description, indirect_offset, extra_offset) {}
     virtual std::unique_ptr<std::vector<char>> getBlob(void *data) = 0;
     void output(void *, Query *) override;
-    int type() override { return COLTYPE_BLOB; }
+    ColumnType type() override { return ColumnType::blob; }
 };
 
 #endif  // BlobColumn_h

@@ -110,13 +110,13 @@ bool StringColumnFilter::accepts(void *data) {
     return false;  // unreachable
 }
 
-void *StringColumnFilter::indexFilter(const char *column) {
+void *StringColumnFilter::indexFilter(const string &column_name) {
     switch (_relOp) {
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
             // TODO(sp) The cast looks very dubious, but the whole void* story
             // is quite dangerous...
-            return strcmp(column, _column->name()) == 0
+            return column_name == _column->name()
                        ? const_cast<char *>(_ref_string.c_str())
                        : nullptr;
         case RelationalOperator::matches:

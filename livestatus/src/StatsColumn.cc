@@ -44,14 +44,15 @@ Aggregator *StatsColumn::createAggregator() {
     if (_operation == StatsOperation::count) {
         return new CountAggregator(_filter);
     }
-    if (_column->type() == COLTYPE_INT || _column->type() == COLTYPE_TIME) {
+    if (_column->type() == ColumnType::int_ ||
+        _column->type() == ColumnType::time) {
         return new IntAggregator(static_cast<IntColumn *>(_column), _operation);
     }
-    if (_column->type() == COLTYPE_DOUBLE) {
+    if (_column->type() == ColumnType::double_) {
         return new DoubleAggregator(static_cast<DoubleColumn *>(_column),
                                     _operation);
     }
-    if (_column->type() == COLTYPE_STRING and
+    if (_column->type() == ColumnType::string and
         (ends_with(_column->name(), "perf_data") != 0)) {
         return new PerfdataAggregator(static_cast<StringColumn *>(_column),
                                       _operation);

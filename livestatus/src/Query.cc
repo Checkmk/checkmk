@@ -963,16 +963,16 @@ void Query::finish() {
     }
 }
 
-void *Query::findIndexFilter(const char *columnname) {
-    return _filter.findIndexFilter(columnname);
+void *Query::findIndexFilter(const string &column_name) {
+    return _filter.findIndexFilter(column_name);
 }
 
-void Query::findIntLimits(const char *columnname, int *lower, int *upper) {
-    return _filter.findIntLimits(columnname, lower, upper);
+void Query::findIntLimits(const string &column_name, int *lower, int *upper) {
+    return _filter.findIntLimits(column_name, lower, upper);
 }
 
-void Query::optimizeBitmask(const char *columnname, uint32_t *bitmask) {
-    _filter.optimizeBitmask(columnname, bitmask);
+void Query::optimizeBitmask(const string &column_name, uint32_t *bitmask) {
+    _filter.optimizeBitmask(column_name, bitmask);
 }
 
 // output helpers, called from columns

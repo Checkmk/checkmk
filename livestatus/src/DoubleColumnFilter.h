@@ -35,7 +35,7 @@ class DoubleColumnFilter : public Filter {
 public:
     DoubleColumnFilter(DoubleColumn *column, RelationalOperator relOp,
                        const std::string &value);
-    bool accepts(void *data);
+    bool accepts(void *data) override;
 
 private:
     DoubleColumn *_column;

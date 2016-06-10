@@ -36,7 +36,7 @@ public:
     ContactsColumn(std::string name, std::string description,
                    int indirect_offset, int extra_offset)
         : ListColumn(name, description, indirect_offset, extra_offset) {}
-    int type() override { return COLTYPE_LIST; }
+    ColumnType type() override { return ColumnType::list; }
     void *getNagiosObject(char *name) override;
     bool isEmpty(void *svc) override;
     void output(void *, Query *) override;

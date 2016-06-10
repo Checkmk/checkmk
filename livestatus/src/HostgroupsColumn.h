@@ -40,7 +40,7 @@ public:
                      int indirect_offset, int extra_offset = -1)
         : ListColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset) {}
-    int type() override { return COLTYPE_LIST; }
+    ColumnType type() override { return ColumnType::list; }
     void output(void *, Query *) override;
     void *getNagiosObject(char *name) override;  // return pointer to host group
     bool isNagiosMember(void *data, void *nagobject) override;

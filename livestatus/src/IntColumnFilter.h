@@ -37,9 +37,11 @@ public:
     IntColumnFilter(IntColumn *column, RelationalOperator relOp,
                     std::string value);
     virtual int32_t convertRefValue();  // see TimeColumnFilter
-    bool accepts(void *data);
-    void findIntLimits(const char *columnname, int *lower, int *upper);
-    bool optimizeBitmask(const char *columnname, uint32_t *mask);
+    bool accepts(void *data) override;
+    void findIntLimits(const std::string &column_name, int *lower,
+                       int *upper) override;
+    bool optimizeBitmask(const std::string &column_name,
+                         uint32_t *mask) override;
 
 private:
     IntColumn *_column;

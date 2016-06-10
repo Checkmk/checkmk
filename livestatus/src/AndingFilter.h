@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
 #include <deque>
-#include <memory>
+#include <string>
 #include "Filter.h"
 
 enum class LogicalOperator { and_, or_ };
@@ -43,17 +43,19 @@ protected:
 public:
     AndingFilter() {}
     virtual ~AndingFilter();
-    bool isAndingFilter() { return true; }
+    bool isAndingFilter() override { return true; }
     void addSubfilter(Filter *);
     Filter *stealLastSubfiler();
-    bool accepts(void *data);
+    bool accepts(void *data) override;
     void combineFilters(int count, LogicalOperator andor);
     unsigned numFilters() { return _subfilters.size(); }
     _subfilters_t::iterator begin() { return _subfilters.begin(); }
     _subfilters_t::iterator end() { return _subfilters.end(); }
-    void *findIndexFilter(const char *columnname);
-    void findIntLimits(const char *columnname, int *lower, int *upper);
-    bool optimizeBitmask(const char *columnname, uint32_t *mask);
+    void *findIndexFilter(const std::string &column_name);
+    void findIntLimits(const std::string &colum_nname, int *lower,
+                       int *upper) override;
+    bool optimizeBitmask(const std::string &column_name,
+                         uint32_t *mask) override;
 };
 
 #endif  // AndingFilter_h

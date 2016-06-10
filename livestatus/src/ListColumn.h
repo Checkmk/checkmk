@@ -36,7 +36,7 @@ public:
     ListColumn(std::string name, std::string description, int indirect_offset,
                int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
-    int type() override { return COLTYPE_LIST; }
+    ColumnType type() override { return ColumnType::list; }
     virtual void *getNagiosObject(char *name) = 0;
     virtual bool isNagiosMember(void *data, void *member) = 0;
     virtual bool isEmpty(void *data) = 0;

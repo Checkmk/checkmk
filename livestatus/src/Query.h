@@ -127,10 +127,10 @@ public:
     void outputDictSeparator();
     void outputDictValueSeparator();
     void outputEndDict();
-    void *findIndexFilter(const char *columnname);
+    void *findIndexFilter(const std::string &column_name);
     void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
-    void findIntLimits(const char *columnname, int *lower, int *upper);
-    void optimizeBitmask(const char *columnname, uint32_t *bitmask);
+    void findIntLimits(const std::string &column_name, int *lower, int *upper);
+    void optimizeBitmask(const std::string &column_name, uint32_t *bitmask);
     int timezoneOffset() { return _timezone_offset; }
     AndingFilter *filter() { return &_filter; }
     std::unordered_set<Column *> *allColumns() { return &_all_columns; }

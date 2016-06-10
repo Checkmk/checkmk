@@ -35,7 +35,7 @@ class ServicelistColumnFilter : public Filter {
 public:
     ServicelistColumnFilter(ServicelistColumn *column, RelationalOperator relOp,
                             const std::string &value);
-    bool accepts(void *data);
+    bool accepts(void *data) override;
 
 private:
     ServicelistColumn *_servicelist_column;

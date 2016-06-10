@@ -35,8 +35,8 @@ class ListColumnFilter : public Filter {
 public:
     ListColumnFilter(ListColumn *column, RelationalOperator relOp,
                      const std::string &value);
-    bool accepts(void *data);
-    void *indexFilter(const char *columnname);
+    bool accepts(void *data) override;
+    void *indexFilter(const std::string &column_name) override;
 
 private:
     ListColumn *_column;

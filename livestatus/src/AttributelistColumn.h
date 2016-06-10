@@ -53,7 +53,9 @@ public:
         , _show_list(show_list) {}
 
     // API of Column
-    int type() override { return _show_list ? COLTYPE_LIST : COLTYPE_INT; }
+    ColumnType type() override {
+        return _show_list ? ColumnType::list : ColumnType::int_;
+    }
     std::string valueAsString(void *data, Query *) override;
     void output(void *, Query *) override;
     Filter *createFilter(RelationalOperator relOp,

@@ -48,9 +48,15 @@ public:
     void setColumn(Column *c) { _column = c; }
     Column *column() { return _column; }
     virtual bool accepts(void *data) = 0;
-    virtual void *indexFilter(const char *) { return 0; }
-    virtual void findIntLimits(const char *, int *, int *) {}
-    virtual bool optimizeBitmask(const char *, uint32_t *) { return false; }
+    virtual void *indexFilter(const std::string & /* column_name */) {
+        return nullptr;
+    }
+    virtual void findIntLimits(const std::string & /* column_name */,
+                               int * /* lower */, int * /* upper */) {}
+    virtual bool optimizeBitmask(const std::string & /* column_name */,
+                                 uint32_t * /* mask */) {
+        return false;
+    }
 
 protected:
     Query *_query;  // needed by TimeOffsetFilter (currently)

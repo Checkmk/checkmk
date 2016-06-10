@@ -27,6 +27,8 @@
 #include "OringFilter.h"
 #include "logger.h"
 
+using std::string;
+
 AndingFilter::~AndingFilter() {
     for (auto &subfilter : _subfilters) {
         delete subfilter;
@@ -53,9 +55,9 @@ bool AndingFilter::accepts(void *data) {
     return true;
 }
 
-void *AndingFilter::findIndexFilter(const char *columnname) {
+void *AndingFilter::findIndexFilter(const string &column_name) {
     for (auto filter : _subfilters) {
-        void *refvalue = filter->indexFilter(columnname);
+        void *refvalue = filter->indexFilter(column_name);
         if (refvalue != nullptr) {
             return refvalue;
         }
@@ -63,17 +65,17 @@ void *AndingFilter::findIndexFilter(const char *columnname) {
     return nullptr;
 }
 
-void AndingFilter::findIntLimits(const char *columnname, int *lower,
+void AndingFilter::findIntLimits(const string &colum_nname, int *lower,
                                  int *upper) {
     for (auto filter : _subfilters) {
-        filter->findIntLimits(columnname, lower, upper);
+        filter->findIntLimits(colum_nname, lower, upper);
     }
 }
 
-bool AndingFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
+bool AndingFilter::optimizeBitmask(const string &column_name, uint32_t *mask) {
     bool optimized = false;
     for (auto filter : _subfilters) {
-        if (filter->optimizeBitmask(columnname, mask)) {
+        if (filter->optimizeBitmask(column_name, mask)) {
             optimized = true;
         }
     }

@@ -34,9 +34,9 @@ class NegatingFilter : public Filter {
 public:
     explicit NegatingFilter(Filter *filter) : _filter(filter) {}
     virtual ~NegatingFilter() { delete _filter; }
-    bool isNegatingFilter() { return true; }
+    bool isNegatingFilter() override { return true; }
     Filter *subfilter() { return _filter; }
-    bool accepts(void *data) { return !_filter->accepts(data); }
+    bool accepts(void *data) override { return !_filter->accepts(data); }
 };
 
 #endif  // NegatingFilter_h

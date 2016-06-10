@@ -41,7 +41,7 @@ public:
                  extra_extra_offset) {}
     virtual int32_t getValue(void *data, Query *) = 0;
     void output(void *, Query *) override;
-    int type() override { return COLTYPE_INT; }
+    ColumnType type() override { return ColumnType::int_; }
     std::string valueAsString(void *data, Query *) override;
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;

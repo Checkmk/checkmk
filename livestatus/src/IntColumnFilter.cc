@@ -24,7 +24,6 @@
 
 #include "IntColumnFilter.h"
 #include <stdlib.h>
-#include <string.h>
 #include <ostream>
 #include <utility>
 #include "IntColumn.h"
@@ -71,9 +70,9 @@ bool IntColumnFilter::accepts(void *data) {
     return false;  // unreachable
 }
 
-void IntColumnFilter::findIntLimits(const char *columnname, int *lower,
+void IntColumnFilter::findIntLimits(const string &column_name, int *lower,
                                     int *upper) {
-    if (strcmp(columnname, _column->name()) != 0) {
+    if (column_name != _column->name()) {
         return;  // wrong column
     }
     if (*lower >= *upper) {
@@ -134,10 +133,10 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower,
     }
 }
 
-bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask) {
+bool IntColumnFilter::optimizeBitmask(const string &column_name, uint32_t *mask) {
     int32_t ref_value = convertRefValue();
 
-    if (strcmp(columnname, _column->name()) != 0) {
+    if (column_name != _column->name()) {
         return false;  // wrong column
     }
 

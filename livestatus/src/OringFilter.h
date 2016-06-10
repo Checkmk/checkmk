@@ -27,12 +27,14 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
+#include <string>
 #include "AndingFilter.h"
 
 class OringFilter : public AndingFilter {
 public:
-    bool accepts(void *data);
-    bool optimizeBitmask(const char *columnname, uint32_t *mask);
+    bool accepts(void *data) override;
+    bool optimizeBitmask(const std::string &column_name,
+                         uint32_t *mask) override;
 };
 
 #endif  // OringFilter_h

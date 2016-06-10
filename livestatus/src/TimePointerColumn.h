@@ -40,7 +40,7 @@ public:
         : IntPointerColumn(name, description, number, indirect_offset,
                            extra_offset) {}
     void output(void *data, Query *query) override;
-    int type() override { return COLTYPE_TIME; }
+    ColumnType type() override { return ColumnType::time; }
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
 };

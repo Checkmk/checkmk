@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ListColumnFilter.h"
-#include <string.h>
 #include <ostream>
 #include "ListColumn.h"
 #include "Logger.h"
@@ -72,11 +71,10 @@ bool ListColumnFilter::accepts(void *data) {
     return false;  // unreachable
 }
 
-void *ListColumnFilter::indexFilter(const char *columnname) {
+void *ListColumnFilter::indexFilter(const string &column_name) {
     switch (_relOp) {
         case RelationalOperator::greater_or_equal:
-            return strcmp(columnname, _column->name()) == 0 ? _ref_member
-                                                            : nullptr;
+            return column_name == _column->name() ? _ref_member : nullptr;
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:

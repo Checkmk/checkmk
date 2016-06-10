@@ -37,7 +37,7 @@ CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column,
                                    RelationalOperator relOp,
                                    const string &value)
     : _column(column), _relOp(relOp), _ref_text(value), _regex(nullptr) {
-    if (_column->type() != COLTYPE_DICT) {
+    if (_column->type() != ColumnType::dict) {
         return;
     }
     // Filter for custom_variables:
@@ -101,7 +101,7 @@ CustomVarsFilter::~CustomVarsFilter() {
 }
 
 bool CustomVarsFilter::accepts(void *data) {
-    if (_column->type() == COLTYPE_DICT) {
+    if (_column->type() == ColumnType::dict) {
         const char *act_string =
             _column->getVariable(data, _ref_varname.c_str());
         if (act_string == nullptr) {

@@ -43,7 +43,7 @@ public:
                      int indirect_offset = -1, int extra_offset = -1)
         : OffsetIntColumn(name, description, offset, indirect_offset,
                           extra_offset) {}
-    int type() override { return COLTYPE_TIME; }
+    ColumnType type() override { return ColumnType::time; }
     void output(void *data, Query *query) override;
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;

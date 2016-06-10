@@ -51,6 +51,8 @@ import cmk.tty as tty
 # These variable will be substituted at 'make dist' time
 check_mk_version  = '(inofficial)'
 
+TRKN@R:KN@KR:
+
 #   .--Prelude-------------------------------------------------------------.
 #   |                  ____           _           _                        |
 #   |                 |  _ \ _ __ ___| |_   _  __| | ___                   |

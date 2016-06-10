@@ -1,0 +1,9 @@
+Title: fileinfo.groups: Fixed UNKNOWN shown in WATO discovery when configured as manual check
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p5
+Date: 1465561058
+Class: fix
+
+

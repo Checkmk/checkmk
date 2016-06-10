@@ -25,8 +25,9 @@
 #include "OffsetStringMacroColumn.h"
 #include <stdlib.h>
 #include <string.h>
-#include "AndingFilter.h"
+#include <memory>
 #include "Query.h"
+#include "VariadicFilter.h"
 #include "logger.h"
 class Filter;
 
@@ -76,7 +77,9 @@ void OffsetStringMacroColumn::output(void *data, Query *query) {
 Filter *OffsetStringMacroColumn::createFilter(RelationalOperator /*unused */,
                                               const string & /*unused*/) {
     logger(LG_INFO, "Sorry. No filtering on macro columns implemented yet");
-    return new AndingFilter();  // always true
+    // TODO(sp) Use unique_ptr
+    return VariadicFilter::make(LogicalOperator::and_)
+        .release();  // always true
 }
 
 const char *OffsetStringMacroColumn::expandMacro(const char *macroname,

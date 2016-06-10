@@ -29,7 +29,22 @@
 #include "OringFilter.h"
 #include "logger.h"
 
+using std::make_unique;
 using std::string;
+using std::unique_ptr;
+
+// static
+unique_ptr<VariadicFilter> VariadicFilter::make(LogicalOperator logicOp) {
+    switch (logicOp) {
+        case LogicalOperator::and_:
+            return make_unique<AndingFilter>();
+        case LogicalOperator::or_:
+            return make_unique<OringFilter>();
+    }
+    return nullptr;  // unreachable
+}
+
+VariadicFilter::VariadicFilter() {}
 
 VariadicFilter::~VariadicFilter() {
     for (auto &subfilter : _subfilters) {
@@ -74,16 +89,11 @@ void VariadicFilter::combineFilters(int count, LogicalOperator andor) {
         return;
     }
 
-    VariadicFilter
-        *andorfilter;  // OringFilter is subclassed from VariadicFilter
-    if (andor == LogicalOperator::and_) {
-        andorfilter = new AndingFilter();
-    } else {
-        andorfilter = new OringFilter();
-    }
+    auto variadic = VariadicFilter::make(andor);
     while ((count--) != 0) {
-        andorfilter->addSubfilter(_subfilters.back());
+        variadic->addSubfilter(_subfilters.back());
         _subfilters.pop_back();
     }
-    addSubfilter(andorfilter);
+    // TODO(sp) Use unique_ptr in addSubfilter.
+    addSubfilter(variadic.release());
 }

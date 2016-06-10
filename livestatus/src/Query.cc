@@ -28,17 +28,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <memory>
 #include <ostream>
 #include <utility>
 #include <vector>
 #include "Aggregator.h"
-#include "AndingFilter.h"
 #include "Column.h"
 #include "Filter.h"
 #include "Logger.h"
 #include "NegatingFilter.h"
 #include "NullColumn.h"
-#include "OringFilter.h"
 #include "OutputBuffer.h"
 #include "StatsColumn.h"
 #include "Table.h"
@@ -273,7 +272,7 @@ Filter *Query::createFilter(Column *column, RelationalOperator relOp,
 }
 
 void Query::parseAndOrLine(char *line, LogicalOperator andor,
-                           AndingFilter &filter, string header) {
+                           VariadicFilter &filter, string header) {
     char *value = next_field(&line);
     if (value == nullptr) {
         setError(
@@ -293,7 +292,7 @@ void Query::parseAndOrLine(char *line, LogicalOperator andor,
     filter.combineFilters(number, andor);
 }
 
-void Query::parseNegateLine(char *line, AndingFilter &filter, string header) {
+void Query::parseNegateLine(char *line, VariadicFilter &filter, string header) {
     if (next_field(&line) != nullptr) {
         setError(OutputBuffer::ResponseCode::invalid_header,
                  header + ": does not take any arguments");
@@ -329,18 +328,12 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
     }
 
     // The last 'number' StatsColumns must be of type StatsOperation::count
-    VariadicFilter *variadic;
-    if (andor == LogicalOperator::or_) {
-        variadic = new OringFilter();
-    } else {
-        variadic = new AndingFilter();
-    }
+    auto variadic = VariadicFilter::make(andor);
     while (number > 0) {
         if (_stats_columns.empty()) {
             setError(OutputBuffer::ResponseCode::invalid_header,
                      "Invalid count for " + kind +
                          ": too few Stats: headers available");
-            delete variadic;
             return;
         }
 
@@ -349,7 +342,6 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
             setError(
                 OutputBuffer::ResponseCode::invalid_header,
                 "Can use " + kind + " only on Stats: headers of filter type");
-            delete variadic;
             return;
         }
         variadic->addSubfilter(col->stealFilter());
@@ -357,8 +349,9 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
         _stats_columns.pop_back();
         number--;
     }
+    // TODO(sp) Use unique_ptr in StatsColumn.
     _stats_columns.push_back(
-        new StatsColumn(nullptr, variadic, StatsOperation::count));
+        new StatsColumn(nullptr, variadic.release(), StatsOperation::count));
 }
 
 void Query::parseStatsNegateLine(char *line) {
@@ -470,7 +463,7 @@ void Query::parseStatsLine(char *line) {
     _show_column_headers = false;
 }
 
-void Query::parseFilterLine(char *line, AndingFilter &filter) {
+void Query::parseFilterLine(char *line, VariadicFilter &filter) {
     char *column_name = next_field(&line);
     if (column_name == nullptr) {
         setError(OutputBuffer::ResponseCode::invalid_header,

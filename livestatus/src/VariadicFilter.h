@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <deque>
+#include <memory>
 #include <string>
 #include "Filter.h"
 
@@ -36,8 +37,9 @@ class VariadicFilter : public Filter {
 public:
     typedef std::deque<Filter *> _subfilters_t;
 
-    VariadicFilter() {}
+    static std::unique_ptr<VariadicFilter> make(LogicalOperator logicOp);
     virtual ~VariadicFilter();
+
     bool isVariadicFilter() override { return true; }
     void addSubfilter(Filter *);
     Filter *stealLastSubfiler();
@@ -50,6 +52,7 @@ public:
                        int *upper) override;
 
 protected:
+    VariadicFilter();
     _subfilters_t _subfilters;
 };
 

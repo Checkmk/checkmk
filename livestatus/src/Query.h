@@ -143,12 +143,13 @@ private:
     void computeStatsGroupSpec(_stats_group_spec_t &groupspec, void *data);
     Filter *createFilter(Column *column, RelationalOperator relOp,
                          const std::string &value);
-    void parseFilterLine(char *line, AndingFilter &filter);
+    void parseFilterLine(char *line, VariadicFilter &filter);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
-    void parseAndOrLine(char *line, LogicalOperator andor, AndingFilter &filter,
-                        std::string header);
-    void parseNegateLine(char *line, AndingFilter &filter, std::string header);
+    void parseAndOrLine(char *line, LogicalOperator andor,
+                        VariadicFilter &filter, std::string header);
+    void parseNegateLine(char *line, VariadicFilter &filter,
+                         std::string header);
     void parseStatsAndOrLine(char *line, LogicalOperator andor);
     void parseStatsNegateLine(char *line);
     void parseColumnsLine(char *line);

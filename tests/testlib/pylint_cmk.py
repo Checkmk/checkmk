@@ -92,7 +92,8 @@ def get_test_dir():
     base_path = os.environ.get("WORKDIR")
     if base_path:
         base_path += "/" + os.path.basename(sys.argv[0])
-        os.makedirs(base_path)
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
     else:
         base_path = tempfile.mkdtemp(prefix="cmk_pylint")
 

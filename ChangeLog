@@ -264,6 +264,7 @@
     * 3590 FIX: mssql.vbs: Completely removed plugin timeout...
     * 3643 FIX: Fixed check_mkevents active check....
     * 3635 FIX: get_average: fixed overflow error
+    * 3653 FIX: fileinfo.groups: Fixed UNKNOWN shown in WATO discovery when configured as manual check
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

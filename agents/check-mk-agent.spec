@@ -66,6 +66,7 @@ mkdir -p $R/usr/lib/check_mk_agent/plugins
 mkdir -p $R/usr/lib/check_mk_agent/local
 mkdir -p $R/var/lib/check_mk_agent
 mkdir -p $R/var/lib/check_mk_agent/job
+mkdir -p $R/var/lib/check_mk_agent/spool
 
 %clean
 rm -rf $RPM_BUILD_ROOT

@@ -689,6 +689,9 @@ def date_human_readable(timestamp):
     # This can be localized:
     return time.strftime(_("%m/%d/%Y"), time.localtime(timestamp))
 
+def datetime_human_readable(timestamp):
+    # This can be localized:
+    return time.strftime(_("%m/%d/%Y %H:%M:%S"), time.localtime(timestamp))
 
 def date_range_human_readable(start_time, end_time):
     start_time_local = time.localtime(start_time)

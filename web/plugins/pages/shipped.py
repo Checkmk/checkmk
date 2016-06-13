@@ -45,6 +45,7 @@ import crash_reporting
 import metrics
 import werks
 import inventory
+import notifications
 
 # map URLs to page rendering functions
 
@@ -118,4 +119,5 @@ pagehandlers.update({
 
     "version"                       : werks.page_version,
     "werk"                          : werks.page_werk,
+    "clear_failed_notifications"    : notifications.page_clear,
 })

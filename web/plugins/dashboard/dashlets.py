@@ -30,6 +30,8 @@ except ImportError:
     import json
 
 import sites, notify, table
+import livestatus
+import notifications
 
 #   .--Overview------------------------------------------------------------.
 #   |              ___                       _                             |
@@ -900,4 +902,84 @@ dashlet_types["notify_users"] = {
     "sort_index"  : 75,
     "allowed"     : config.builtin_role_ids,
     "styles"      : ".notify_users { width: 100%; height: 100%; overflow: auto; }"
+}
+
+
+#.
+#   .--Failed Notifications------------------------------------------------.
+#   |                      _____     _ _          _                        |
+#   |                     |  ___|_ _(_) | ___  __| |                       |
+#   |                     | |_ / _` | | |/ _ \/ _` |                       |
+#   |                     |  _| (_| | | |  __/ (_| |                       |
+#   |                     |_|  \__,_|_|_|\___|\__,_|                       |
+#   |                                                                      |
+#   |       _   _       _   _  __ _           _   _                        |
+#   |      | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __  ___        |
+#   |      |  \| |/ _ \| __| | |_| |/ __/ _` | __| |/ _ \| '_ \/ __|       |
+#   |      | |\  | (_) | |_| |  _| | (_| (_| | |_| | (_) | | | \__ \       |
+#   |      |_| \_|\___/ \__|_|_| |_|\___\__,_|\__|_|\___/|_| |_|___/       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Dashlet notifying users in case of failure to send notifications     |
+#   '----------------------------------------------------------------------'
+
+def dashlet_failed_notifications(nr, dashlet):
+    notification_query = \
+        "GET log\n" \
+        "Stats: log_state != 0\n" \
+        "Filter: class = 3\n" \
+        "Filter: log_type = SERVICE NOTIFICATION RESULT\n"\
+        "Filter: time > %d" % notifications.acknowledged_time()
+
+    try:
+        notdata = sites.live().query_summed_stats(notification_query)
+    except livestatus.MKLivestatusNotFoundError:
+        html.write("<center>No data from any site</center>")
+        return
+
+    failed_notifications = notdata[0]
+    if failed_notifications > 0:
+        view_url = html.makeuri_contextless(
+            [("view_name", "failed_notifications")], filename="view.py")
+        content = '<a target="main" href="%s">%d failed notifications</a>' %\
+            (view_url, failed_notifications)
+
+        if config.may("general.acknowledge_failed_notifications"):
+            confirm_url = html.makeuri_contextless(
+                [("acktime", str(time.time()))],
+                filename="clear_failed_notifications.py")
+            content = ('<a target="main" href="%s">'
+                       '<img src="images/button_closetimewarp.png" style="width:32px;height:32px;">'
+                       '</a>&nbsp;' % confirm_url) + content
+
+        html.write('<div class="has_failed_notifications">'
+                   '  <div class="failed_notifications_inner">%s</div>'
+                   '</div>' % content)
+
+dashlet_types["notify_failed_notifications"] = {
+    "title"       : _("Failed notifications"),
+    "description" : _("Display GUI notifications in case notification mechanism fails"),
+    "render"      : dashlet_failed_notifications,
+    "sort_index"  : 0,
+    "refresh"     : 60,
+    "selectable"  : False,
+    "styles"      : """
+.has_failed_notifications {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    font-weight: bold;
+    font-size: 14pt;
+
+    text-align: center;
+    background-color: #ff5500;
+}
+.failed_notifications_inner {
+    display:inline-block;
+    margin: auto;
+    position: absolute;
+    top:0; bottom:0; left:0; right:0;
+    height:32px;
+}
+    """
 }

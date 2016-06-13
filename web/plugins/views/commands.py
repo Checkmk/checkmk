@@ -837,3 +837,38 @@ multisite_commands.append({
     "executor"       : command_executor_star,
 })
 
+
+#.
+#   .--Failed Notifications------------------------------------------------.
+#   |                      _____     _ _          _                        |
+#   |                     |  ___|_ _(_) | ___  __| |                       |
+#   |                     | |_ / _` | | |/ _ \/ _` |                       |
+#   |                     |  _| (_| | | |  __/ (_| |                       |
+#   |                     |_|  \__,_|_|_|\___|\__,_|                       |
+#   |                                                                      |
+#   |       _   _       _   _  __ _           _   _                        |
+#   |      | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __  ___        |
+#   |      |  \| |/ _ \| __| | |_| |/ __/ _` | __| |/ _ \| '_ \/ __|       |
+#   |      | |\  | (_) | |_| |  _| | (_| (_| | |_| | (_) | | | \__ \       |
+#   |      |_| \_|\___/ \__|_|_| |_|\___\__,_|\__|_|\___/|_| |_|___/       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def command_acknowledge_failed_notification(cmdtag, spec, row):
+    return str(row['log_time']), _("<b>acknowledge failed notifications up to</b>")
+
+def executor_acknowledge_failed_notification(command, site):
+    import notifications
+    acktime = int(command)
+    notifications.acknowledge_failed_notifications(acktime)
+
+multisite_commands.append({
+    "tables"     : [ "log" ],
+    "permission" : "general.acknowledge_failed_notifications",
+    "title"      : _("Acknowledge"),
+    "render"     : lambda: html.button("_acknowledge_failed_notification", _("Acknowledge")),
+    "action"     : command_acknowledge_failed_notification,
+    "executor"   : executor_acknowledge_failed_notification
+})
+

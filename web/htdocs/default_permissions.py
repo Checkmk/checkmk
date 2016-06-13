@@ -148,6 +148,12 @@ def load_plugins(force):
            "if the user has this permission."),
          [ "admin" ])
 
+    config.declare_permission("general.acknowledge_failed_notifications",
+         _("Acknowledge Failed Notifications"),
+         _("If check_mk is unable to notify users about problems, the site will warn about this situation "
+           "very visibly inside the UI (both in the Tactical Overview and the Dashboard). Only a user "
+           "with this permission can acknowledge this situation and thereby disable the warnings."),
+         [ "admin" ])
 
     loaded_with_language = current_language
 

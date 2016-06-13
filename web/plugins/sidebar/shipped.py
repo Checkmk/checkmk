@@ -28,6 +28,7 @@ import views, time, defaults, dashboard
 import pagetypes, table
 import sites
 import livestatus
+import notifications
 from valuespec import *
 from lib import *
 
@@ -576,9 +577,18 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=[]):
         "Filter: host_custom_variable_names < _REALNAME\n" + \
         extra_filter_headers
 
+    notification_query = \
+        "GET log\n" \
+        "Stats: log_state != 0\n" \
+        "Filter: class = 3\n" \
+        "Filter: log_type = SERVICE NOTIFICATION RESULT\n"\
+        "Filter: time > %d" % notifications.acknowledged_time() + \
+        extra_filter_headers
+
     try:
         hstdata = sites.live().query_summed_stats(host_query)
         svcdata = sites.live().query_summed_stats(service_query)
+        notdata = sites.live().query_summed_stats(notification_query)
     except livestatus.MKLivestatusNotFoundError:
         html.write("<center>No data from any site</center>")
         return
@@ -603,6 +613,23 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=[]):
         html.write("</tr>\n")
     html.write("</table>\n")
 
+    failed_notifications = notdata[0]
+    if failed_notifications > 0:
+        view_url = html.makeuri_contextless(
+            [("view_name", "failed_notifications")] + extra_url_variables, filename="view.py")
+        content = '<a target="main" href="%s">%d failed notifications</a>' %\
+            (view_url, failed_notifications)
+
+        if config.may("general.acknowledge_failed_notifications"):
+
+            confirm_url = html.makeuri_contextless(
+                [("acktime", str(time.time()))] + extra_url_variables,
+                filename="clear_failed_notifications.py")
+            content = ('<a target="main" href="%s">'
+                       '<img src="images/button_closetimewarp.png" style="width:16px;height:16px;">'
+                       '</a>&nbsp;' % confirm_url) + content
+
+        html.write('<div class=spacertop><div class=tacticalalert>%s</div></div>' % content)
 
 snapin_tactical_overview_styles = """
 table.tacticaloverview {
@@ -638,6 +665,17 @@ table.tacticaloverview td.prob {
     box-shadow: 0px 0px 4px #ffd000;
 }
 table.tacticaloverview a { display: block; margin-right: 2px; }
+div.tacticalalert {
+    font-weight: bold;
+    font-size: 14pt;
+
+    text-align: center;
+    background-color: #ff5500;
+    box-shadow: 0px 0px 4px #ffd000;
+}
+div.spacertop {
+    padding-top: 5px;
+}
 """ % snapin_width
 
 

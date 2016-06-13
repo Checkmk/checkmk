@@ -26,6 +26,7 @@
 #define strutil_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {

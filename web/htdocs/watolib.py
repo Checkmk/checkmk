@@ -92,6 +92,13 @@ def initialize_before_loading_plugins():
     global backup_domains
     backup_domains = {}
 
+def init_watolib_datastructures():
+    if config.wato_use_git:
+        prepare_git_commit()
+
+    declare_host_tag_attributes() # create attributes out of tag definitions
+    declare_site_attribute()      # create attribute for distributed WATO
+
 #.
 #   .--Constants-----------------------------------------------------------.
 #   |              ____                _              _                    |

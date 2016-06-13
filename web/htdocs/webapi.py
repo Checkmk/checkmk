@@ -65,9 +65,13 @@ def page_api():
         config.need_permission("wato.use")
         config.need_permission("wato.api_allowed")
 
+
         action = html.var('action')
         if action not in api_actions:
             raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
+
+        # Initialize host and site attributes
+        init_watolib_datastructures()
 
         # Prepare request_object
         # Most of the time the request is given as json

@@ -103,12 +103,8 @@ wato_styles = [ "pages", "wato", "status" ]
 
 
 def init_wato_datastructures():
-    if config.wato_use_git:
-        prepare_git_commit()
-
     create_sample_config()        # if called for the very first time!
-    declare_host_tag_attributes() # create attributes out of tag definitions
-    declare_site_attribute()      # create attribute for distributed WATO
+    init_watolib_datastructures()
 
 
 #.
@@ -14163,6 +14159,10 @@ def create_sample_config():
         or os.path.exists(wato_root_dir + "notifications.mk") \
         or os.path.exists(wato_root_dir + "global.mk"):
         return
+
+    # Just in case. If any of the following functions try to write Git messages
+    if config.wato_use_git:
+        prepare_git_commit()
 
     # Global configuration settings
     save_configuration_settings(

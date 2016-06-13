@@ -1,0 +1,11 @@
+Title: WATO Web API: fixed exception when WATO Git is activated
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p5
+Date: 1465807142
+
+The Web API was unusable with activated WATO Git.
+

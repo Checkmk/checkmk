@@ -5,6 +5,9 @@
     * 3635 FIX: get_average: fixed overflow error
     * 3653 FIX: fileinfo.groups: Fixed UNKNOWN shown in WATO discovery when configured as manual check
 
+    WATO:
+    * 3542 FIX: WATO Web API: fixed exception when WATO Git is activated...
+
 
 1.2.8p4:
     Checks & Agents:

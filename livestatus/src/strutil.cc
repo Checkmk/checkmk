@@ -103,3 +103,17 @@ int ends_with(const char *a, const char *b) {
     return static_cast<int>(len_a >= len_b &&
                             strcmp(a + len_a - len_b, b) == 0);
 }
+
+bool starts_with(const char *lhs, const char *rhs) {
+    while (*lhs == *rhs) {
+        ++rhs;
+        if (*rhs == '\0') {
+            // end of prefix found without a difference
+            return true;
+        }
+        ++lhs;
+    }
+    // difference found before end of prefix
+    return false;
+}
+

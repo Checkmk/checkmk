@@ -96,14 +96,35 @@ struct LogEntry {
     static int hostStateToInt(const char *s);
 
 private:
-    bool handleStatusEntry();
-    bool handleStatusEntryBetter();
-    bool handleNotificationEntry();
-    bool handlePassiveCheckEntry();
-    bool handleExternalCommandEntry();
+    enum class Param {
+        HostName,
+        SvcDesc,
+        CommandName,
+        ContactName,
+        HostState,
+        ServiceState,
+        State,
+        StateType,
+        Attempt,
+        Comment,
+        CheckOutput
+    };
+
+    struct LogDef {
+        const char *prefix;
+        unsigned log_class;
+        LogEntryType log_type;
+        std::vector<Param> params;
+    };
+
+    static std::vector<LogDef> log_definitions;
+
+private:
+    bool assign(Param par, char **scan);
+    void applyWorkarounds();
+    bool classifyLogMessage();
+
     bool handleProgrammEntry();
-    bool handleLogversionEntry();
-    bool handleInfoEntry();
     bool handleTextEntry();
 };
 

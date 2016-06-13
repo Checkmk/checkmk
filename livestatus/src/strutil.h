@@ -34,6 +34,7 @@ extern "C" {
 char *rstrip(char *);
 char *lstrip(char *);
 int ends_with(const char *a, const char *b);
+bool starts_with(const char *lhs, const char *rhs);
 char *next_token(char **c, char delim);
 const char *safe_next_token(char **c, char delim);
 char *next_field(char **c);

@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "strutil.h"
+#include "logger.h"
 
 LogEntry::LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
                    char *line)
@@ -81,10 +82,7 @@ LogEntry::LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
     _time = atoi(_msg + 1);
     _text = _msg + 13;  // also skip space after timestamp
 
-    // now classify the log message. Some messages
-    // refer to other table, some do not.
-    if (handleStatusEntry() || handleNotificationEntry() ||
-        handlePassiveCheckEntry() || handleExternalCommandEntry()) {
+    if (classifyLogMessage()) {
         updateReferences(commands_holder);
     } else {
         handleTextEntry() || handleProgrammEntry();  // Performance killer
@@ -99,256 +97,197 @@ LogEntry::~LogEntry() {
     free(_complete);
 }
 
-bool LogEntry::handleStatusEntry() {
-    //// TODO: check if its worth of implementing
-    //// Most lines are status entries anyway...
-    //    int len_text = strlen(_text);
-    //    if (len_text < 12)
-    //        return false;
-    //
-    //    // Quick basic check
-    //    // We can skip all other strcmp() calls
-    //    // if the first letter does not match
-    //    switch (_text[0]) {
-    //        case 'I':
-    //        case 'C':
-    //        case 'S':
-    //        case 'T':
-    //        case 'H':
-    //            break;
-    //        default:
-    //            return false;
-    //    }
-
-    // HOST states
-    if ((strncmp(_text, "INITIAL HOST STATE: ", 20) == 0) ||
-        (strncmp(_text, "CURRENT HOST STATE: ", 20) == 0) ||
-        (strncmp(_text, "HOST ALERT: ", 12) == 0)) {
-        if (_text[0] == 'H') {
-            _logclass = LOGCLASS_ALERT;
-            _type = ALERT_HOST;
-        } else if (_text[0] == 'I') {
-            _logclass = LOGCLASS_STATE;
-            _type = STATE_HOST_INITIAL;
-        } else {
-            _logclass = LOGCLASS_STATE;
-            _type = STATE_HOST;
-        }
-
-        char *scan = _text;
-        _text = next_token(&scan, ':');
-        scan++;
-
-        _host_name = next_token(&scan, ';');
-        _state = hostStateToInt(safe_next_token(&scan, ';'));
-        _state_type = next_token(&scan, ';');
-        _attempt = atoi(safe_next_token(&scan, ';'));
-        _check_output = next_token(&scan, ';');
-        return true;
-    }
-    if (strncmp(_text, "HOST DOWNTIME ALERT: ", 21) == 0) {
-        _logclass = LOGCLASS_ALERT;
-        _type = DOWNTIME_ALERT_HOST;
-        char *scan = _text;
-        _text = next_token(&scan, ':');
-        scan++;
-
-        _host_name = next_token(&scan, ';');
-        _state_type = next_token(&scan, ';');
-        _comment = next_token(&scan, ';');
-        return true;
-    }
-    if (strncmp(_text, "HOST ACKNOWLEDGE ALERT: ", 24) == 0) {
-        _logclass = LOGCLASS_ALERT;
-        _type = ACKNOWLEDGE_ALERT_HOST;
-        char *scan = _text;
-        _text = next_token(&scan, ':');
-        scan++;
-
-        _host_name = next_token(&scan, ';');
-        _state_type = next_token(&scan, ';');
-        _contact_name = next_token(&scan, ';');
-        _comment = next_token(&scan, ';');
-        return true;
-    }
-    if (strncmp(_text, "HOST FLAPPING ALERT: ", 21) == 0) {
-        _logclass = LOGCLASS_ALERT;
-        _type = FLAPPING_HOST;
-        char *scan = _text;
-        _text = next_token(&scan, ':');
-        scan++;
-
-        _host_name = next_token(&scan, ';');
-        _state_type = next_token(&scan, ';');
-        _comment = next_token(&scan, ';');
-        return true;
+bool LogEntry::assign(Param par, char **scan) {
+    switch (par) {
+        case Param::HostName:
+            this->_host_name = next_token(scan, ';');
+            break;
+        case Param::SvcDesc:
+            this->_svc_desc = next_token(scan, ';');
+            break;
+        case Param::HostState:
+            // textual host state (UP, DOWN, ...)
+            this->_state = hostStateToInt(safe_next_token(scan, ';'));
+            break;
+        case Param::ServiceState:
+            // textual service state (OK, WARN, ...)
+            this->_state = serviceStateToInt(safe_next_token(scan, ';'));
+            break;
+        case Param::State:
+            // numeric state
+            this->_state = atoi(safe_next_token(scan, ';'));
+            break;
+        case Param::StateType:
+            this->_state_type = next_token(scan, ';');
+            break;
+        case Param::Attempt:
+            this->_attempt = atoi(safe_next_token(scan, ';'));
+            break;
+        case Param::Comment:
+            this->_comment = next_token(scan, ';');
+            break;
+        case Param::CommandName:
+            this->_command_name = next_token(scan, ';');
+            break;
+        case Param::ContactName:
+            this->_contact_name = next_token(scan, ';');
+            break;
+        case Param::CheckOutput:
+            this->_check_output = next_token(scan, ';');
+            break;
     }
 
-    // SERVICE states
-    if ((strncmp(_text, "INITIAL SERVICE STATE: ", 23) == 0) ||
-        (strncmp(_text, "CURRENT SERVICE STATE: ", 23) == 0) ||
-        (strncmp(_text, "SERVICE ALERT: ", 15) == 0)) {
-        if (_text[0] == 'S') {
-            _logclass = LOGCLASS_ALERT;
-            _type = ALERT_SERVICE;
-        } else if (_text[0] == 'I') {
-            _logclass = LOGCLASS_STATE;
-            _type = STATE_SERVICE_INITIAL;
-        } else {
-            _logclass = LOGCLASS_STATE;
-            _type = STATE_SERVICE;
-        }
-        char *scan = _text;
-        _text = next_token(&scan, ':');
-        scan++;
+    return true;
+};
 
-        _host_name = next_token(&scan, ';');
-        _svc_desc = next_token(&scan, ';');
-        _state = serviceStateToInt(safe_next_token(&scan, ';'));
-        _state_type = next_token(&scan, ';');
-        _attempt = atoi(safe_next_token(&scan, ';'));
-        _check_output = next_token(&scan, ';');
-        return true;
-    }
+std::vector<LogEntry::LogDef> LogEntry::log_definitions{
+    ////////////////
+    LogDef{"INITIAL HOST STATE: ",
+           LOGCLASS_ALERT,
+           ALERT_HOST,
+           {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
+            Param::CheckOutput}},
+    ////////////////
+    LogDef{"CURRENT HOST STATE: ",
+           LOGCLASS_STATE,
+           STATE_HOST_INITIAL,
+           {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
+            Param::CheckOutput}},
+    ////////////////
+    LogDef{"HOST ALERT: ",
+           LOGCLASS_STATE,
+           STATE_HOST,
+           {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
+            Param::CheckOutput}},
+    ////////////////
+    LogDef{"HOST DOWNTIME ALERT: ",
+           LOGCLASS_ALERT,
+           DOWNTIME_ALERT_HOST,
+           {Param::HostName, Param::StateType, Param::Comment}},
+    ////////////////
+    LogDef{"HOST ACKNOWLEDGE ALERT: ",
+           LOGCLASS_ALERT,
+           ACKNOWLEDGE_ALERT_HOST,
+           {Param::HostName, Param::StateType, Param::ContactName,
+            Param::Comment}},
+    ////////////////
+    LogDef{"HOST FLAPPING ALERT: ",
+           LOGCLASS_ALERT,
+           FLAPPING_HOST,
+           {Param::HostName, Param::StateType, Param::Comment}},
+    ////////////////
+    LogDef{"INITIAL SERVICE STATE: ",
+           LOGCLASS_STATE,
+           STATE_SERVICE_INITIAL,
+           {Param::HostName, Param::SvcDesc, Param::ServiceState,
+            Param::StateType, Param::Attempt, Param::CheckOutput}},
+    ////////////////
+    LogDef{"CURRENT SERVICE STATE: ",
+           LOGCLASS_STATE,
+           STATE_SERVICE,
+           {Param::HostName, Param::SvcDesc, Param::ServiceState,
+            Param::StateType, Param::Attempt, Param::CheckOutput}},
+    ////////////////
+    LogDef{"SERVICE ALERT: ",
+           LOGCLASS_ALERT,
+           ALERT_SERVICE,
+           {Param::HostName, Param::SvcDesc, Param::ServiceState,
+            Param::StateType, Param::Attempt, Param::CheckOutput}},
+    ////////////////
+    LogDef{"SERVICE DOWNTIME ALERT: ",
+           LOGCLASS_ALERT,
+           DOWNTIME_ALERT_SERVICE,
+           {Param::HostName, Param::SvcDesc, Param::StateType, Param::Comment}},
+    ////////////////
+    LogDef{"SERVICE ACKNOWLEDGE ALERT: ",
+           LOGCLASS_ALERT,
+           ACKNOWLEDGE_ALERT_SERVICE,
+           {Param::HostName, Param::SvcDesc, Param::StateType,
+            Param::ContactName, Param::Comment}},
+    ////////////////
+    LogDef{"SERVICE FLAPPING ALERT: ",
+           LOGCLASS_ALERT,
+           FLAPPING_SERVICE,
+           {Param::HostName, Param::SvcDesc, Param::StateType, Param::Comment}},
+    ////////////////
+    LogDef{
+        "TIMEPERIOD_TRANSITION: ", LOGCLASS_STATE, TIMEPERIOD_TRANSITION, {}},
+    ////////////////
+    LogDef{"HOST NOTIFICATION: ",
+           LOGCLASS_NOTIFICATION,
+           NONE,
+           {Param::ContactName, Param::HostName, Param::StateType,
+            Param::CommandName}},
+    ////////////////
+    LogDef{"SERVICE NOTIFICATION: ",
+           LOGCLASS_NOTIFICATION,
+           NONE,
+           {Param::ContactName, Param::HostName, Param::SvcDesc,
+            Param::StateType, Param::CommandName}},
+    ////////////////
+    LogDef{"HOST NOTIFICATION RESULT: ",
+           LOGCLASS_NOTIFICATION,
+           NONE,
+           {Param::ContactName, Param::HostName, Param::StateType,
+            Param::CommandName, Param::Comment}},
+    ////////////////
+    LogDef{"SERVICE NOTIFICATION RESULT: ",
+           LOGCLASS_NOTIFICATION,
+           NONE,
+           {Param::ContactName, Param::HostName, Param::SvcDesc,
+            Param::StateType, Param::CommandName, Param::Comment}},
+    ////////////////
+    LogDef{"PASSIVE SERVICE CHECK: ",
+           LOGCLASS_PASSIVECHECK,
+           NONE,
+           {Param::HostName, Param::SvcDesc, Param::State, Param::CheckOutput}},
+    ////////////////
+    LogDef{"PASSIVE HOST CHECK: ",
+           LOGCLASS_PASSIVECHECK,
+           NONE,
+           {Param::HostName, Param::State, Param::CheckOutput}},
+    ////////////////
+    LogDef{"EXTERNAL COMMAND: ", LOGCLASS_COMMAND, NONE, {}}};
 
-    if (strncmp(_text, "SERVICE DOWNTIME ALERT: ", 24) == 0) {
-        _logclass = LOGCLASS_ALERT;
-        _type = DOWNTIME_ALERT_SERVICE;
-        char *scan = _text;
-        _text = next_token(&scan, ':');
-        scan++;
+bool LogEntry::classifyLogMessage() {
+    for (const auto &def : log_definitions) {
+        if (starts_with(_text, def.prefix)) {
+            _logclass = def.log_class;
+            _type = def.log_type;
+            char *scan = _text;
+            _text = next_token(&scan, ':');
+            ++scan;
 
-        _host_name = next_token(&scan, ';');
-        _svc_desc = next_token(&scan, ';');
-        _state_type = next_token(&scan, ';');
-        _comment = next_token(&scan, ';');
-        return true;
-    }
-
-    if (strncmp(_text, "SERVICE ACKNOWLEDGE ALERT: ", 27) == 0) {
-        _logclass = LOGCLASS_ALERT;
-        _type = ACKNOWLEDGE_ALERT_SERVICE;
-        char *scan = _text;
-        _text = next_token(&scan, ':');
-        scan++;
-
-        _host_name = next_token(&scan, ';');
-        _svc_desc = next_token(&scan, ';');
-        _state_type = next_token(&scan, ';');
-        _contact_name = next_token(&scan, ';');
-        _comment = next_token(&scan, ';');
-        return true;
-    }
-
-    if (strncmp(_text, "SERVICE FLAPPING ALERT: ", 24) == 0) {
-        _logclass = LOGCLASS_ALERT;
-        _type = FLAPPING_SERVICE;
-        char *scan = _text;
-        _text = next_token(&scan, ':');
-        scan++;
-
-        _host_name = next_token(&scan, ';');
-        _svc_desc = next_token(&scan, ';');
-        _state_type = next_token(&scan, ';');
-        _comment = next_token(&scan, ';');
-        return true;
-    }
-
-    if (strncmp(_text, "TIMEPERIOD TRANSITION: ", 23) == 0) {
-        _logclass = LOGCLASS_STATE;
-        _type = TIMEPERIOD_TRANSITION;
-        return true;
-    }
-
-    return false;
-}
-
-// Examples of host notifications. Beware CUSTOM and DOWNTIME notifications
-// have a different column order. This can be considered as a bug. But we
-// need to parse that anyway.
-// HOST NOTIFICATION: omdadmin;localhost;check-mk-notify;DOWNTIMESTOPPED (UP);mk
-// HOST NOTIFICATION: omdadmin;localhost;CUSTOM (UP);check-mk-notify;OK -
-// 127.0.0.1: rta 0.055ms, lost 0%;omdadmin;TEST
-// HOST NOTIFICATION: omdadmin;localhost;DOWN;check-mk-notify;Manually set to
-// Down by omdadmin
-bool LogEntry::handleNotificationEntry() {
-    if ((strncmp(_text, "HOST NOTIFICATION: ", 19) == 0) ||
-        (strncmp(_text, "SERVICE NOTIFICATION: ", 22) == 0)) {
-        _logclass = LOGCLASS_NOTIFICATION;
-        bool svc = _text[0] == 'S';
-        char *scan = _text;
-        _text = next_token(&scan, ':');
-        scan++;
-
-        _contact_name = next_token(&scan, ';');
-        _host_name = next_token(&scan, ';');
-        if (svc) {
-            _svc_desc = next_token(&scan, ';');
-        }
-
-        _state_type = safe_next_token(&scan, ';');
-        _command_name = next_token(&scan, ';');
-
-        if (svc) {
-            _state = serviceStateToInt(_state_type);
-        } else {
-            _state = hostStateToInt(_state_type);
-        }
-
-        // If that state is not parsable then we assume that the order
-        // is swapped
-        if ((svc && _state == 4) || (!svc && _state == 3)) {
-            const char *swap = _state_type;
-            _state_type = _command_name;
-            _command_name = swap;
-            if (svc) {
-                _state = serviceStateToInt(_state_type);
-            } else {
-                _state = hostStateToInt(_state_type);
+            for (Param par : def.params) {
+                assign(par, &scan);
             }
+
+            applyWorkarounds();
+
+            return true;
         }
-
-        _check_output = next_token(&scan, ';');
-        return true;
     }
 
-    return false;
+    return true;
 }
 
-bool LogEntry::handlePassiveCheckEntry() {
-    if ((strncmp(_text, "PASSIVE SERVICE CHECK: ", 23) == 0) ||
-        (strncmp(_text, "PASSIVE HOST CHECK: ", 20) == 0)) {
-        _logclass = LOGCLASS_PASSIVECHECK;
-        bool svc = _text[8] == 'S';
-        char *scan = _text;
-        _text = next_token(&scan, ':');
-        scan++;
+void LogEntry::applyWorkarounds() {
+    if (_logclass == LOGCLASS_NOTIFICATION) {
+        // in notification messages the state is derived from the "state type".
+        // CUSTOM and DOWNTIME notifications have a different column order. This
+        // is as a bug, but we need to parse that anyway.
+        _state = (_svc_desc == nullptr) ? hostStateToInt(_state_type)
+                                        : serviceStateToInt(_state_type);
 
-        _host_name = next_token(&scan, ';');
-        if (svc) {
-            _svc_desc = next_token(&scan, ';');
+        if (((_svc_desc == nullptr) && (_state == 3)) ||
+            ((_svc_desc != nullptr) && (_state == 4))) {
+            std::swap(_state_type, _command_name);
+            _state = (_svc_desc == nullptr) ? hostStateToInt(_state_type)
+                                            : serviceStateToInt(_state_type);
         }
-        _state = atoi(safe_next_token(&scan, ';'));
-        _check_output = next_token(&scan, ';');
-        return true;
     }
-
-    return false;
 }
 
-bool LogEntry::handleExternalCommandEntry() {
-    if (strncmp(_text, "EXTERNAL COMMAND:", 17) == 0) {
-        _logclass = LOGCLASS_COMMAND;
-        char *scan = _text;
-        _text = next_token(&scan, ':');
-        return true;  // TODO(mk): join with host/service information?
-        /* Damit wir die restlichen Spalten ordentlich befuellen, braeuchten
-           wir eine komplette Liste von allen external commands und
-           deren Parameteraufbau. Oder gibt es hier auch eine bessere
-           Loesung? */
-    }
-    return false;
-}
 
 bool LogEntry::handleTextEntry() {
     if (strncmp(_text, "LOG VERSION: 2.0", 16) == 0) {

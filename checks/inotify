@@ -1,0 +1,130 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<inotify:sep(9)>>>
+# monitored folder    /tmp/noti
+# monitored file  /tmp/noti/test
+# monitored file  /tmp/noti/other
+# 1465470055  modify  /tmp/noti/test  5   1465470055
+# 1465470055  open    /tmp/noti/test  5   1465470055
+# 1465470055  modify  /tmp/noti/test  5   1465470055
+# 1465470056  modify  /tmp/noti/test  5   1465470056
+# 1465470056  open    /tmp/noti/test  5   1465470056
+
+def parse_inotify(info):
+    parsed = {"meta": {"warnings": {}},
+              "configured": {"file": set([]), "folder": set([])},
+              "stats": {}}
+    for line in info:
+        if line[0].startswith("warning"):
+            parsed["meta"]["warnings"].setdefault(line[1], 0)
+            parsed["meta"]["warnings"][line[1]] += 1
+            continue
+        elif line[0].startswith("configured"):
+            parsed["configured"][line[1]].add(line[2])
+            continue
+
+        timestamp, mode, filepath = line[:3]
+        parsed["stats"].setdefault(filepath, [])
+        folderpath = os.path.dirname(filepath)
+        parsed["stats"].setdefault(folderpath, [])
+
+        file_dict = {}
+        file_dict["timestamp"] = int(timestamp)
+        file_dict["mode"]      = mode
+        # Unused
+        if len(line) > 3:
+            file_dict["size"] = line[3]
+            file_dict["mtime"] = line[4]
+        parsed["stats"][filepath].append(file_dict)
+        parsed["stats"][folderpath].append(file_dict)
+
+    return parsed
+
+def inventory_inotify(parsed):
+    for what in [ "file", "folder" ]:
+        for path in parsed["configured"][what]:
+            yield "%s %s" % (what.title(), path), {}
+
+def check_inotify(item, params, parsed):
+    what, path = item.split(" ", 1)
+    if path not in parsed["configured"][what.lower()]:
+        return
+
+    data = parsed["stats"].get(path, {})
+
+    last_status = get_item_state(None, default = {})
+    for file_dict in data:
+        mode = file_dict["mode"]
+        for key, value in file_dict.items():
+            last_status.setdefault(mode, {})
+            last_status[mode][key] = value
+
+    set_item_state(None, last_status)
+    now = time.time()
+    def check_levels(what):
+        for mode, warn, crit in params.get("age_last_operation", []):
+            if mode != what:
+                continue
+            timestamp = last_status[what]["timestamp"]
+            if now - timestamp >= crit:
+                return (2, "> %s" % get_age_human_readable(crit))
+            elif now - timestamp >= warn:
+                return (1, "> %s" % get_age_human_readable(warn))
+        return
+
+    for mode in sorted(last_status.keys()):
+        attr = last_status[mode]
+        levels_info = check_levels(mode)
+        if levels_info:
+            state = levels_info[0]
+            yield state, "Last %s: %s ago (%s)" % (mode.title(),
+                    get_age_human_readable(now - attr["timestamp"]),
+                    levels_info[1])
+        else:
+            yield 0, "Last %s: %s ago" % (mode.title(), get_age_human_readable(now - attr["timestamp"]))
+
+    for mode, warn, crit in params.get("age_last_operation", []):
+        if mode not in last_status:
+            yield 3, "Last %s unknown" % mode.title()
+
+    warnings = parsed.get("meta", {}).get("warnings")
+    if warnings:
+        yield 1, "Incomplete data!"
+        for warning, count in warnings.items():
+            yield 1, "%d Warnings: %s" % (count, warning)
+
+    if not last_status:
+        yield 0, "No data available yet"
+
+
+check_info["inotify"] = {
+    "parse_function"        : parse_inotify,
+    "inventory_function"    : inventory_inotify,
+    "check_function"        : check_inotify,
+    "service_description"   : "INotify %s",
+    "group"                 : "inotify"
+}

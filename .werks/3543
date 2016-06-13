@@ -1,0 +1,15 @@
+Title: mk_inotify: new plugin to monitor file system operations (linux)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1465820483
+Class: feature
+
+This plugin allows you to check the age of the last file operation
+on configurable files and folders. You can check the age of the files or folders
+last <tt>create</tt>, <tt>open</tt>, <tt>delete</tt>, <tt>modify</tt> and <tt>access</tt>
+operation.
+
+For further information have a look at the agent bakery or the example configuration in
+the cfg_examples directory.

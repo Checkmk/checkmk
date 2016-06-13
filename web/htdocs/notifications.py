@@ -28,6 +28,7 @@ from ast import literal_eval
 import config
 import defaults
 import lib
+import errno
 
 g_acknowledgement_path = defaults.var_dir + "/acknowledged_notifications.mk"
 g_acknowledgement_time = None
@@ -50,12 +51,16 @@ def acknowledged_time():
 
 def load_acknowledgements():
     global g_acknowledgement_time
-    with open(g_acknowledgement_path, "r") as f:
-        content = f.read().strip()
-        if content:
-            g_acknowledgement_time = literal_eval(content)
-
-    return []
+    try:
+        with open(g_acknowledgement_path, "r") as f:
+            content = f.read().strip()
+            if content:
+                g_acknowledgement_time = literal_eval(content)
+    except IOError, e:
+        if e.errno == errno.ENOENT:
+            g_acknowledgement_time = 0
+        else:
+            raise
 
 def render_page_confirm(acktime, prev_url):
     html.set_render_headfoot(False)

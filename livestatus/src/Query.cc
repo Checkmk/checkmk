@@ -1088,7 +1088,10 @@ void Query::outputString(const char *value, int len) {
 
             // Output ASCII characters unencoded
             else if (*r >= 32 || len >= 0) {
-                add((*r == '"' || *r == '\\') ? "\\" : string(r, 1));
+                if (*r == '"' || *r == '\\') {
+                    add("\\");
+                }
+                add(string(r, 1));
             }
 
             // interprete two-Byte UTF-8 sequences in mode 'utf8' and 'mixed'

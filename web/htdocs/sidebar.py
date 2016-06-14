@@ -370,12 +370,9 @@ def render_snapin(name, state):
     return refresh_url
 
 def snapin_exception(e):
-    if config.debug:
-        raise e
-    else:
-        html.write("<div class=snapinexception>\n"
-                "<h2>%s</h2>\n"
-                "<p>%s</p></div>" % (_('Error'), e))
+    html.write("<div class=snapinexception>\n"
+            "<h2>%s</h2>\n"
+            "<p>%s</p></div>" % (_('Error'), e))
 
 def ajax_fold():
     config = load_user_config()
@@ -430,6 +427,8 @@ def ajax_snapin():
             try:
                 snapin["render"]()
             except Exception, e:
+                if config.debug:
+                    raise
                 snapin_exception(e)
             snapin_code.append(html.drain())
 

@@ -267,6 +267,9 @@ def mode_backup(local_job_id, opts):
     if local_job_id not in g_config["jobs"]:
         raise MKGeneralException("This backup job does not exist.")
 
+    global g_job_config
+    g_job_config = g_config["jobs"][local_job_id]
+
     init_new_run()
 
     if "background" in opts:
@@ -325,13 +328,41 @@ def do_site_backup(opts, site=None):
                                      "but not running as root." % site_id)
         cmd.append(site)
 
-    # TODO: Hier weiter machen!
-    cmd += ""
+    # TODO: Nicht direkt speichern, sondern durch gpg/openssl pipen, wenn
+    # Verschlüsselung aktiv ist
+    cmd.append(site_backup_path(site))
 
-    p = subprocess.Popen(cmd, shell=False, close_fds=True, stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT, stdin=open(os.devnull))
+    # TODO: Create missing directories. Ensure group permissions.
+
+    p = subprocess.Popen(cmd, shell=False, close_fds=True,
+                         stdout=open(os.devnull, "w"),
+                         stderr=subprocess.PIPE, stdin=open(os.devnull))
     if p.wait() != 0:
-        raise MKGeneralException(_("Site backup failed: %s") % p.stdout.read())
+        raise MKGeneralException(_("Site backup failed: %s") % p.stderr.read())
+
+
+def site_backup_path(site_id):
+    return "%s/site-%s.tar.gz" % (job_backup_path_during_backup(), site_id)
+
+
+def job_backup_path_during_backup():
+    return "%s-incomplete" % job_backup_path()
+
+
+def job_backup_path_complete():
+    return "%s-complete" % job_backup_path()
+
+
+def job_backup_path():
+    target_ident = g_job_config["target"]
+    target_cfg = g_config["targets"][target_ident]
+
+    if target_cfg["remote"][0] != "local":
+        raise NotImplementedError()
+
+    target_path = target_cfg["remote"][1]["path"]
+
+    return "%s/%s" % (target_path, g_job_id)
 
 
 def do_system_backup(opts):
@@ -339,10 +370,20 @@ def do_system_backup(opts):
 
 
 def globalize_job_id(local_job_id):
-    if not is_root():
-        return "site-%s-%s" % (site_id, local_job_id)
+    parts = []
+    site = site_id()
+
+    if site:
+        parts.append("Check_MK")
     else:
-        return "system-%s" % (local_job_id)
+        parts.append("Check_MK_Appliance")
+
+    parts.append("Klappspaten") # TODO
+
+    if site:
+        parts.append(site)
+
+    return "-".join([ p.replace("-", "+") for p in parts ])
 
 
 def init_new_run():

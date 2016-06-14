@@ -4765,6 +4765,9 @@ def fmt_date(t):
 def fmt_time(t):
     return time.strftime('%H:%M:%S', time.localtime(t))
 
+def fmt_datetime(t):
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t))
+
 def fmt_bytes(num):
     for x in ['Bytes', 'KB', 'MB', 'GB', 'TB']:
         if num < 1024.0:
@@ -5605,9 +5608,9 @@ def create_snapshot(data = {}, sync_mode=False):
 #   '----------------------------------------------------------------------'
 
 
-class SiteBackupSchedules(backup.Schedules):
+class SiteBackupJobs(backup.Jobs):
     def __init__(self):
-        super(SiteBackupSchedules, self).__init__(defaults.default_config_dir + "/backup.mk")
+        super(SiteBackupJobs, self).__init__(defaults.default_config_dir + "/backup.mk")
 
 
 
@@ -5635,26 +5638,57 @@ class ModeBackup(WatoMode):
     def buttons(self):
         home_button()
         html.context_button(_("Backup targets"), html.makeuri([("mode", "backup_targets")]), "backup_targets")
-        html.context_button(_("New schedule"), html.makeuri([("mode", "edit_backup_schedule")]), "backup_schedule_new")
+        html.context_button(_("New job"), html.makeuri([("mode", "edit_backup_job")]), "backup_job_new")
 
 
     def action(self):
-        if html.transaction_valid():
-            ident = html.var("delete_schedule")
-            schedules = SiteBackupSchedules()
-            try:
-                schedule = schedules.get(ident)
-            except KeyError:
-                raise MKUserError("delete_schedule", _("This backup schedule does not exist."))
+        if not html.check_transaction():
+            return
 
-            if wato_confirm(self.title(), _("Do you really want to delete this schedule?")):
-                schedules.remove(ident)
-                schedules.save()
-                return None, _("The schedule has been deleted.")
+        ident = html.var("_job")
+        jobs = SiteBackupJobs()
+        try:
+            job = jobs.get(ident)
+        except KeyError:
+            raise MKUserError("_job", _("This backup job does not exist."))
+
+        action = html.var("_action")
+
+        if action == "delete":
+            return self._delete_job(job)
+
+        elif action == "start":
+            return self._start_job(job)
+
+        elif action == "stop":
+            return self._stop_job(job)
+
+        else:
+            raise NotImplementedError()
+
+
+    def _delete_job(self, job):
+        if job.is_running():
+            raise MKUserError("_job", _("This job is currently running."))
+
+        if wato_confirm(self.title(), _("Do you really want to delete this job?")):
+            jobs.remove(ident)
+            jobs.save()
+            return None, _("The job has been deleted.")
+
+
+    def _start_job(self, job):
+        job.start()
+        return None, _("The backup has been started.")
+
+
+    def _stop_job(self, job):
+        job.stop()
+        return None, _("The backup has been stopped.")
 
 
     def page(self):
-        SiteBackupSchedules().show_list()
+        SiteBackupJobs().show_list()
 
 
 class ModeBackupTargets(WatoMode):
@@ -5731,7 +5765,7 @@ class ModeEditBackupTarget(WatoMode):
     def vs_backup_target(self):
         if self._new:
             ident_attr = [
-                ("ident", TextAscii(
+                ("ident", ID(
                     title = _("Unique ID"),
                     help = _("The ID of the target must be a unique text. It will be used as an internal key "
                              "when objects refer to the target."),
@@ -5800,32 +5834,35 @@ class ModeEditBackupTarget(WatoMode):
 
 
 
-def validate_backup_schedule_ident(value, varprefix):
-    if value in SiteBackupSchedules().objects:
-        raise MKUserError(varprefix, _("This ID is already used by another backup schedule."))
+def validate_backup_job_ident(value, varprefix):
+    if value in SiteBackupJobs().objects:
+        raise MKUserError(varprefix, _("This ID is already used by another backup job."))
 
 
 
-class ModeEditBackupSchedule(WatoMode):
+class ModeEditBackupJob(WatoMode):
     def __init__(self):
-        super(ModeEditBackupSchedule, self).__init__()
-        schedule_ident = html.var("schedule")
+        super(ModeEditBackupJob, self).__init__()
+        job_ident = html.var("job")
 
-        if schedule_ident != None:
+        if job_ident != None:
             try:
-                schedule = SiteBackupSchedules().get(schedule_ident)
+                job = SiteBackupJobs().get(job_ident)
             except KeyError:
-                raise MKUserError("target", _("This backup schedule does not exist."))
+                raise MKUserError("target", _("This backup job does not exist."))
+
+            if job.is_running():
+                raise MKUserError("_job", _("This job is currently running."))
 
             self._new          = False
-            self._ident        = schedule_ident
-            self._schedule_cfg = schedule.to_config()
-            self._title        = _("Edit backup schedule: %s") % schedule.title()
+            self._ident        = job_ident 
+            self._job_cfg      = job.to_config()
+            self._title        = _("Edit backup job: %s") % job.title()
         else:
             self._new        = True
             self._ident      = None
-            self._schedule_cfg = {}
-            self._title      = _("New backup schedule")
+            self._job_cfg    = {}
+            self._title      = _("New backup job")
 
 
     def title(self):
@@ -5837,15 +5874,45 @@ class ModeEditBackupSchedule(WatoMode):
 
 
     def vs_backup_schedule(self):
+        return Alternative(
+            title = _("Schedule"),
+            style = "dropdown",
+            elements = [
+                FixedValue(None,
+                    title = _("Execute manually"),
+                    totext = _("Only execute manually"),
+                ),
+                Dictionary(
+                    title = _("Schedule execution"),
+                    elements = [
+                        ("period", SchedulePeriod()),
+                        ("timeofday", ListOf(
+                            Timeofday(
+                                default_value = (0, 0),
+                            ),
+                            title = _("Time of day to start the backup at"),
+                            movable = False,
+                            default_value = [(0, 0)],
+                            add_label = _("Add new time"),
+                            empty_text = _("Please specify at least one time."),
+                            allow_empty = False,
+                        )),
+                    ],
+                ),
+            ]
+        )
+
+
+    def vs_backup_job(self):
         if self._new:
             ident_attr = [
-                ("ident", TextAscii(
+                ("ident", ID(
                     title = _("Unique ID"),
-                    help = _("The ID of the schedule must be a unique text. It will be used as an internal key "
-                             "when objects refer to the schedule."),
+                    help = _("The ID of the job must be a unique text. It will be used as an internal key "
+                             "when objects refer to the job."),
                     allow_empty = False,
                     size = 12,
-                    validate = validate_backup_schedule_ident,
+                    validate = validate_backup_job_ident,
                 )),
             ]
         else:
@@ -5853,7 +5920,7 @@ class ModeEditBackupSchedule(WatoMode):
 
 
         return Dictionary(
-            title = _("Backup schedule"),
+            title = _("Backup job"),
             elements = ident_attr + [
                 ("title", TextUnicode(
                     title = _("Title"),
@@ -5863,18 +5930,7 @@ class ModeEditBackupSchedule(WatoMode):
                     title = _("Target"),
                     choices = self.backup_target_choices,
                 )),
-                ("period", SchedulePeriod()),
-                ("timeofday", ListOf(
-                    Timeofday(
-                        default_value = (0, 0),
-                    ),
-                    title = _("Time of day to start the backup at"),
-                    movable = False,
-                    default_value = [(0, 0)],
-                    add_label = _("Add new time"),
-                    empty_text = _("Please specify at least one time."),
-                    allow_empty = False,
-                )),
+                ("schedule", self.vs_backup_schedule()),
             ],
         optional_keys = [],
         render = "form",
@@ -5888,40 +5944,93 @@ class ModeEditBackupSchedule(WatoMode):
 
     def action(self):
         if html.transaction_valid():
-            vs = self.vs_backup_schedule()
+            vs = self.vs_backup_job()
 
-            config = vs.from_html_vars("edit_schedule")
-            vs.validate_value(config, "edit_schedule")
+            config = vs.from_html_vars("edit_job")
+            vs.validate_value(config, "edit_job")
 
             if "ident" in config:
                 self._ident = config.pop("ident")
-            self._schedule_cfg = config
+            self._job_cfg = config
 
-            schedules = SiteBackupSchedules()
+            jobs = SiteBackupJobs()
             if self._new:
-                schedule = backup.Schedule(self._ident, self._schedule_cfg)
-                schedules.add(schedule)
+                job = backup.Job(self._ident, self._job_cfg)
+                jobs.add(job)
             else:
-                schedule = schedules.get(self._ident)
-                schedule.from_config(self._schedule_cfg)
+                job = jobs.get(self._ident)
+                job.from_config(self._job_cfg)
 
-            schedules.save()
+            jobs.save()
         html.http_redirect(html.makeuri([("mode", "backup")]))
 
 
     def page(self):
-        html.begin_form("edit_schedule", method="POST")
+        html.begin_form("edit_job", method="POST")
         html.prevent_password_auto_completion()
 
-        vs = self.vs_backup_schedule()
+        vs = self.vs_backup_job()
 
-        vs.render_input("edit_schedule", self._schedule_cfg)
-        vs.set_focus("edit_schedule")
+        vs.render_input("edit_job", self._job_cfg)
+        vs.set_focus("edit_job")
         forms.end()
 
         html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
+
+
+
+class ModeBackupJobState(WatoMode):
+    def __init__(self):
+        super(ModeBackupJobState, self).__init__()
+        job_ident = html.var("job")
+        if job_ident != None:
+            try:
+                self._job = SiteBackupJobs().get(job_ident)
+            except KeyError:
+                raise MKUserError("job", _("This backup job does not exist."))
+
+            self._ident = job_ident
+        else:
+            raise MKUserError("job", _("You need to specify a backup job."))
+
+
+    def title(self):
+        return _("Job state: %s") % self._job.title()
+
+
+    def buttons(self):
+        html.context_button(_("Back"), html.makeuri([("mode", "backup")]), "back")
+
+
+    def page(self):
+        job   = self._job
+        state = job.state()
+
+        html.write("<table class=\"data backup_job\">")
+        state_num = 0
+        if state["state"] == "finished" and not state["success"]:
+            state_num = 2
+        html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("State"))
+        html.write("<td class=\"state state%d\">%s</td></tr>" %
+                    (state_num, html.attrencode(job.state_name(state["state"]))))
+
+        html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Runtime"))
+        html.write("<td>")
+        html.write(_("Started at %s") % fmt_datetime(state["started"]))
+        duration = time.time() - state["started"]
+        if state["state"] == "finished":
+            html.write(", Finished at %s" % fmt_datetime(state["started"]))
+            duration = state["finished"] - state["started"]
+
+        html.write(_(" (Duration: %s)") % age_human_readable(duration))
+        html.write("</td></tr>")
+
+        html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("Output"))
+        html.write("<td class=\"log\"><pre>%s</pre></td></tr>" % html.attrencode(state["output"]))
+
+        html.write("</table>")
 
 
 #.
@@ -16636,8 +16745,9 @@ modes = {
    "download_agents"    : (["download_agents"], mode_download_agents),
    "backup"             : (["backups"], ModeBackup),
    "backup_targets"     : (["backups"], ModeBackupTargets),
+   "backup_job_state"   : (["backups"], ModeBackupJobState),
    "edit_backup_target" : (["backups"], ModeEditBackupTarget),
-   "edit_backup_schedule" : (["backups"], ModeEditBackupSchedule),
+   "edit_backup_job"    : (["backups"], ModeEditBackupJob),
 }
 
 builtin_host_attribute_names = []

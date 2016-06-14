@@ -24,12 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+VERSION = "1.4.0i1"
+
 import os
-import sys
 import getopt
 import fcntl
+import pprint
+import re
+import signal
+import subprocess
+import sys
 import time
+import traceback
 
+import cmk.daemon as daemon
 from cmk.exceptions import MKTerminate, MKGeneralException
 
 # TODO: Clean this up one day by using the way recommended by gettext.
@@ -40,10 +48,61 @@ try:
 except NameError:
     _ = lambda x: x # Fake i18n when not available
 
-g_run_path = "/var/run/mkbackup"
+g_var_path = "/var/lib/mkbackup"
+
+# Is used to duplicate output from stdout/stderr to a the job log. This
+# is e.g. used during "mkbackup backup" to store the output.
+class Log(object):
+    def __init__(self, fd):
+        self.fd  = fd
+
+        if self.fd == 1:
+            self.orig  = sys.stdout
+            sys.stdout = self
+        else:
+            self.orig  = sys.stderr
+            sys.stderr = self
+
+        self.color_replace = re.compile("\033\[\d{1,2}m", re.UNICODE)
+
+
+    def __del__(self):
+        if self.fd == 1:
+            sys.stdout = self.orig
+        else:
+            sys.stderr = self.orig
+
+
+    def write(self, data):
+        self.orig.write(data)
+        add_output(self.color_replace.sub('', data))
+
+
+    def flush(self):
+        self.orig.flush()
+
+
+g_stdout_log = None
+g_stderr_log = None
+
+def start_logging():
+    global g_stdout_log, g_stderr_log
+    g_stdout_log = Log(1)
+    g_stderr_log = Log(2)
+
+
+def stop_logging():
+    global g_stdout_log, g_stderr_log
+    g_stdout_log = None
+    g_stderr_log = None
+
 
 def is_root():
     return os.getuid() == 0
+
+
+def site_id():
+    return os.environ.get("OMD_SITE")
 
 
 def system_config_path():
@@ -51,18 +110,18 @@ def system_config_path():
 
 
 def site_config_path():
-    if "OMD_ROOT" not in os.environ:
+    if not site_id():
 	raise Exception(_("Not executed in OMD environment!"))
     return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
 
 
 def acquire_backup_lock():
     global g_backup_lock_f
-    g_backup_lock_f = open("%s/mkbackup.lock" % g_run_path, "a+")
+    g_backup_lock_f = open("%s/mkbackup.lock" % g_var_path, "a+")
     try:
         fcntl.flock(g_backup_lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError:
-        raise MKTerminate(_("Failed to get the exclusive backup lock. "
+        raise MKGeneralException(_("Failed to get the exclusive backup lock. "
                             "Another backup/restore seems to be running."))
 
 
@@ -80,8 +139,13 @@ def load_config():
     else:
         config = load_file(site_config_path())
 
-        system_targets = load_file(system_config_path())["targets"]
-        config["targets"].update(system_targets)
+        try:
+            system_targets = load_file(system_config_path())["targets"]
+            config["targets"].update(system_targets)
+        except IOError:
+            # Not existing system wide config is OK. In this case there
+            # are only backup targets from site config available.
+            pass
 
     return config
 
@@ -96,7 +160,7 @@ def load_config():
 #       Als Site-Nutzer wird immer ein Site-Backup der aktuellen Site
 #       erstellt. Als root wird ein Systembackup ausgeführt. Per Default
 #       sind dabei auch alle Sites mit enthalten.
-#   - ID des Backup targets
+#   - ID des Backup jobs 
 #   - Optional (als root):
 #     - Sites ausschließen
 #
@@ -110,7 +174,7 @@ def load_config():
 #   List: Alle Backups auflisten
 #       Als Site-Nutzer sieht man nur die Site-Backups (auch die, die
 #       durch die Systembackups erstellt wurden)
-#   - Target-ID
+#   - Job-ID
 #
 #   Beispielbefehle:
 #     # listet alle Backups auf die man sehen darf
@@ -120,7 +184,7 @@ def load_config():
 #     mkbackup list nfs --job=xxx
 #
 #   Restore:
-#   - Target-ID
+#   - Job-ID
 #   - Backup-ID
 #     - Als Site-Nutzer muss man die Backup-ID eines Site-Backups angeben
 #
@@ -129,7 +193,7 @@ def load_config():
 #     mkbackup restore nfs backup-id-20
 #
 #   Show: Zeigt Metainfos zu einem Backup an
-#   - Target-ID
+#   - Job-ID
 #   - Backup-ID
 #
 #   Beispielbefehle:
@@ -141,10 +205,15 @@ modes = {
 	"description": _("Starts creating a new backup"),
 	"args": [
 	    {
-		"id": _("Target-ID"),
-		"description": _("The ID of the backup target to work with"),
+		"id": _("Job-ID"),
+		"description": _("The ID of the backup job to work with"),
 	    },
 	],
+	"opts": {
+	    "background": {
+		"description": _("Fork and execute the program in the background."),
+	    },
+	},
 	"root_opts": {
 	    "without-sites": {
 		"description": _("Create a system backup but exclude the Check_MK sites."),
@@ -189,12 +258,125 @@ modes = {
 }
 
 
-# TODO: Implement this
-def mode_backup(target_id, opts):
+def mode_backup(local_job_id, opts):
     acquire_backup_lock()
-    time.sleep(10)
 
-    print "BLA", target_id, opts
+    global g_job_id
+    g_job_id = globalize_job_id(local_job_id)
+
+    if local_job_id not in g_config["jobs"]:
+        raise MKGeneralException("This backup job does not exist.")
+
+    init_new_run()
+
+    if "background" in opts:
+        daemon.daemonize()
+        save_state({"pid": os.getpid()})
+
+    start_logging()
+
+    success = False
+    try:
+        save_state({
+            "state" : "running",
+        })
+
+        do_backup(opts)
+        success = True
+
+    except KeyboardInterrupt:
+        raise
+
+    except:
+        if not opt_debug:
+            sys.stderr.write("An exception occured:\n")
+            sys.stderr.write(traceback.format_exc())
+        else:
+            raise
+
+    finally:
+        stop_logging()
+        save_state({
+            "state"    : "finished",
+            "finished" : time.time(),
+            "success"  : success,
+        })
+
+
+def do_backup(opts):
+    if not is_root():
+        do_site_backup(opts)
+    else:
+        do_system_backup(opts)
+
+
+def do_site_backup(opts, site=None):
+    cmd = ["omd", "backup"]
+
+    # When executed as site user, "omd backup" is executed without the site
+    # name and always performing backup for the current site. When executed
+    # as root, the site argument has to be given and must be handed over to
+    # "omd backup".
+    if site == None:
+        site = site_id()
+    else:
+        if not is_root():
+            raise MKGeneralException("Requested backup of site %s, "
+                                     "but not running as root." % site_id)
+        cmd.append(site)
+
+    # TODO: Hier weiter machen!
+    cmd += ""
+
+    p = subprocess.Popen(cmd, shell=False, close_fds=True, stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT, stdin=open(os.devnull))
+    if p.wait() != 0:
+        raise MKGeneralException(_("Site backup failed: %s") % p.stdout.read())
+
+
+def do_system_backup(opts):
+    pass # TODO
+
+
+def globalize_job_id(local_job_id):
+    if not is_root():
+        return "site-%s-%s" % (site_id, local_job_id)
+    else:
+        return "system-%s" % (local_job_id)
+
+
+def init_new_run():
+    save_state({
+        "state"    : "started",
+        "pid"      : os.getpid(),
+        "started"  : time.time(),
+        "output"   : "",
+    }, update=False)
+
+
+def load_state():
+    return eval(file(state_path(g_job_id)).read())
+
+
+def save_state(new_attrs, update=True):
+    if update:
+        state = load_state()
+    else:
+        state = {}
+    state.update(new_attrs)
+
+    with open(state_path(g_job_id), "w") as f:
+        f.write(pprint.pformat(state)+"\n")
+
+
+def state_path(job_id):
+    return "%s/%s.state" % (g_var_path, job_id)
+
+
+def add_output(s):
+    state = load_state()
+    state["output"] += s
+    save_state(state, update=False)
 
 
 # TODO: Implement this
@@ -242,8 +424,8 @@ def usage(error=None):
             sys.stdout.write("      MODE OPTIONS:\n")
             sys.stdout.write("\n")
 
-            for opt_id, opt in sorted(opts):
-                sys.stdout.write("        %-10s %s\n" % (opt_id, opt["description"]))
+            for opt_id, opt in sorted(opts.items(), key=lambda (k, v): k):
+                sys.stdout.write("        --%-12s %s\n" % (opt_id, opt["description"]))
             sys.stdout.write("\n")
 
     sys.stdout.write("\n")
@@ -251,18 +433,30 @@ def usage(error=None):
 
 
 def mode_options(mode):
-    mode_options = mode.get("opts", {}).keys()
+    opts = {}
+    opts.update(mode.get("opts", {}))
     if is_root():
-        mode_options += mode.get("root_opts", {}).keys()
-    return mode_options
+        opts.update(mode.get("root_opts", {}))
+    return opts
 
 
+def interrupt_handler(signum, frame):
+    raise MKTerminate("Caught signal: %d" % signum)
+
+
+def register_signal_handlers():
+    signal.signal(signal.SIGTERM, interrupt_handler)
+
+g_config    = {}
 opt_verbose = 0
 opt_debug   = False
 
 
 def main():
-    global opt_debug, opt_verbose
+    global opt_debug, opt_verbose, g_config
+
+    register_signal_handlers()
+
     short_options = "h"
     # TODO: Implement handling
     long_options = [ "help", "version", "verbose", "debug" ]
@@ -290,20 +484,33 @@ def main():
     except KeyError:
 	usage("Invalid operation mode")
 
-    # Validate arguments
-    if len(args) != len(mode["args"]):
-	usage("Invalid number of arguments for this mode")
+    try:
+        g_config = load_config()
+    except IOError:
+        if opt_debug:
+            raise
+        raise MKGeneralException("mkbackup is not configured yet.")
 
     # Load the mode specific options
-    mode_opts = getopt.getopt(sys.argv[1:], [], mode_options(mode))[0]
+    mode_opts, mode_args = getopt.getopt(sys.argv[2:], [], mode_options(mode).keys())
 
-    globals()["mode_%s" % mode_name](*args, opts=dict(opts + mode_opts))
+    # Validate arguments
+    if len(mode_args) != len(mode["args"]):
+	usage("Invalid number of arguments for this mode")
+
+    opt_dict = dict([ (k.lstrip("-"), v) for k, v in opts + mode_opts ])
+
+    globals()["mode_%s" % mode_name](*mode_args, opts=opt_dict)
 
 
 try:
     main()
 except MKTerminate, e:
     sys.stderr.write("%s\n" % e)
+    sys.exit(1)
+
+except KeyboardInterrupt:
+    sys.stderr.write("Terminated.\n")
     sys.exit(0)
 
 except MKGeneralException, e:

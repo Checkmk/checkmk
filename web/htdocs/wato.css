@@ -1139,7 +1139,8 @@ table.data td.bi_rule_tree > li {
     margin-bottom:15px;
 }
 
-.wato .diag_host .log {
+.wato .diag_host .log,
+.wato .backup_job .log {
     height: 113px;
     width: 700px;
     font-family: monospace, sans-serif;

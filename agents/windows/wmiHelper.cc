@@ -28,6 +28,8 @@
 #include <ios>
 #include <iostream>
 #include <sstream>
+#include <string>
+#include "logging.h"
 #include "stringutil.h"
 
 using namespace wmi;
@@ -36,21 +38,21 @@ using namespace std;
 std::string ComException::resolveError(HRESULT result) {
     switch (static_cast<ULONG>(result)) {
         case WBEM_E_INVALID_NAMESPACE:
-            return "Invalid Namespace";
+            return string("Invalid Namespace");
         case WBEM_E_ACCESS_DENIED:
-            return "Access Denied";
+            return string("Access Denied");
         case WBEM_E_INVALID_CLASS:
-            return "Invalid Class";
+            return string("Invalid Class");
         case WBEM_E_INVALID_QUERY:
-            return "Invalid Query";
+            return string("Invalid Query");
         default:
             return to_utf8(_com_error(result, getErrorInfo()).ErrorMessage());
     }
 }
 
 ComException::ComException(const string &message, HRESULT result)
-    : runtime_error(message + ": " + resolveError(result) + " (" +
-                    toStringHex(result) + ")") {}
+    : runtime_error(message + string(": ") + resolveError(result) +
+                    string(" (") + toStringHex(result) + string(")")) {}
 
 ComTypeException::ComTypeException(const string &message)
     : runtime_error(message) {}
@@ -72,7 +74,7 @@ Variant::Variant(const VARIANT &val) : _value(val) {}
 Variant::~Variant() { VariantClear(&_value); }
 
 void releaseInterface(IUnknown *ptr) {
-    if (ptr != NULL) {
+    if (ptr != nullptr) {
         ptr->Release();
     }
 }
@@ -85,7 +87,7 @@ ObjectWrapper::ObjectWrapper(const ObjectWrapper &reference)
 
 bool ObjectWrapper::contains(const wchar_t *key) const {
     VARIANT value;
-    HRESULT res = _current->Get(key, 0, &value, NULL, NULL);
+    HRESULT res = _current->Get(key, 0, &value, nullptr, nullptr);
     if (FAILED(res)) {
         return false;
     }
@@ -96,7 +98,7 @@ bool ObjectWrapper::contains(const wchar_t *key) const {
 
 int ObjectWrapper::typeId(const wchar_t *key) const {
     VARIANT value;
-    HRESULT res = _current->Get(key, 0, &value, NULL, NULL);
+    HRESULT res = _current->Get(key, 0, &value, nullptr, nullptr);
     if (FAILED(res)) {
         return 0;
     }
@@ -105,39 +107,41 @@ int ObjectWrapper::typeId(const wchar_t *key) const {
     return type_id;
 }
 
-ObjectWrapper::~ObjectWrapper() {}
+ObjectWrapper::~ObjectWrapper() noexcept {}
 
 VARIANT ObjectWrapper::getVarByKey(const wchar_t *key) const {
     VARIANT value;
-    HRESULT res = _current->Get(key, 0, &value, NULL, NULL);
+    HRESULT res = _current->Get(key, 0, &value, nullptr, nullptr);
     if (FAILED(res)) {
-        throw ComException("Failed to retrieve key: " + to_utf8(key), res);
+        throw ComException(
+            std::string("Failed to retrieve key: ") + to_utf8(key), res);
     }
 
     return value;
 }
 
-Result::Result() : ObjectWrapper(NULL), _enumerator(NULL, releaseInterface) {}
+Result::Result()
+    : ObjectWrapper(nullptr), _enumerator(nullptr, releaseInterface) {}
 
 Result::Result(const Result &reference)
-    : ObjectWrapper(NULL), _enumerator(reference._enumerator) {}
+    : ObjectWrapper(nullptr), _enumerator(reference._enumerator) {}
 
 Result::Result(IEnumWbemClassObject *enumerator)
-    : ObjectWrapper(NULL), _enumerator(enumerator, releaseInterface) {
+    : ObjectWrapper(nullptr), _enumerator(enumerator, releaseInterface) {
     if (!next()) {
         // if the first enumeration fails the result is empty
         // we abstract away two possible reasons:
         //   a) The class doesn't exist at all
         //   b) The result is indeed empty
-        _enumerator = NULL;
+        _enumerator = nullptr;
     }
 }
 
-Result::~Result() {}
+Result::~Result() noexcept {}
 
 Result &Result::operator=(const Result &reference) {
     if (&reference != this) {
-        if (_enumerator != NULL) {
+        if (_enumerator != nullptr) {
             _enumerator->Release();
         }
         _enumerator = reference._enumerator;
@@ -146,20 +150,20 @@ Result &Result::operator=(const Result &reference) {
     return *this;
 }
 
-bool Result::valid() const { return _current.get() != NULL; }
+bool Result::valid() const { return _current.get() != nullptr; }
 
 vector<wstring> Result::names() const {
     vector<wstring> result;
-    SAFEARRAY *names = NULL;
+    SAFEARRAY *names = nullptr;
     HRESULT res = _current->GetNames(
-        NULL, WBEM_FLAG_ALWAYS | WBEM_FLAG_NONSYSTEM_ONLY, NULL, &names);
+        nullptr, WBEM_FLAG_ALWAYS | WBEM_FLAG_NONSYSTEM_ONLY, nullptr, &names);
 
     if (FAILED(res)) {
         throw ComException("Failed to retrieve field names", res);
     }
 
     long lLower, lUpper;
-    BSTR propName = NULL;
+    BSTR propName = nullptr;
     SafeArrayGetLBound(names, 1, &lLower);
     SafeArrayGetUBound(names, 1, &lUpper);
 
@@ -174,7 +178,7 @@ vector<wstring> Result::names() const {
 }
 
 bool Result::next() {
-    if (_enumerator == NULL) {
+    if (_enumerator == nullptr) {
         return false;
     }
 
@@ -350,15 +354,15 @@ private:
         }
 
         res = CoInitializeSecurity(
-            NULL,                         // security descriptor
+            nullptr,                      // security descriptor
             -1,                           // authentication
-            NULL,                         // authentication services
-            NULL,                         // reserved
+            nullptr,                      // authentication services
+            nullptr,                      // reserved
             RPC_C_AUTHN_LEVEL_DEFAULT,    // authentication level
             RPC_C_IMP_LEVEL_IMPERSONATE,  // impersonation level
-            NULL,                         // authentication info
+            nullptr,                      // authentication info
             EOAC_NONE,                    // additional capabilities
-            NULL                          // reserved
+            nullptr                       // reserved
             );
         if (FAILED(res)) {
             throw ComException("Failed to initialize COM security", res);
@@ -368,7 +372,7 @@ private:
 private:
 };
 
-Helper::Helper(LPCWSTR path) : _locator(NULL), _path(path) {
+Helper::Helper(LPCWSTR path) : _locator(nullptr), _path(path) {
     COMManager::init();
 
     _locator = getWBEMLocator();
@@ -376,16 +380,16 @@ Helper::Helper(LPCWSTR path) : _locator(NULL), _path(path) {
 }
 
 Helper::~Helper() {
-    if (_locator != NULL) {
+    if (_locator != nullptr) {
         _locator->Release();
     }
-    if (_services != NULL) {
+    if (_services != nullptr) {
         _services->Release();
     }
 }
 
 IWbemLocator *Helper::getWBEMLocator() {
-    IWbemLocator *locator = NULL;
+    IWbemLocator *locator = nullptr;
 
     HRESULT res = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
                                    IID_IWbemLocator, (LPVOID *)&locator);
@@ -397,11 +401,11 @@ IWbemLocator *Helper::getWBEMLocator() {
 }
 
 IWbemServices *Helper::connectServer(IWbemLocator *locator) {
-    IWbemServices *services = NULL;
+    IWbemServices *services = nullptr;
 
     HRESULT res = locator->ConnectServer(_bstr_t(_path.c_str()),  // WMI path
-                                         NULL,                    // user name
-                                         NULL,      // user password
+                                         nullptr,                 // user name
+                                         nullptr,   // user password
                                          0,         // locale
                                          0,         // security flags
                                          0,         // authority
@@ -420,10 +424,10 @@ void Helper::setProxyBlanket(IWbemServices *services) {
         CoSetProxyBlanket(services,                // the proxy to set
                           RPC_C_AUTHN_WINNT,       // authentication service
                           RPC_C_AUTHZ_NONE,        // authorization service
-                          NULL,                    // server principal name
+                          nullptr,                 // server principal name
                           RPC_C_AUTHN_LEVEL_CALL,  // authentication level
                           RPC_C_IMP_LEVEL_IMPERSONATE,  // impersonation level
-                          NULL,                         // client identity
+                          nullptr,                      // client identity
                           EOAC_NONE                     // proxy capabilities
                           );
 
@@ -433,17 +437,14 @@ void Helper::setProxyBlanket(IWbemServices *services) {
 }
 
 Result Helper::query(LPCWSTR query) {
-    IEnumWbemClassObject *enumerator = NULL;
+    IEnumWbemClassObject *enumerator = nullptr;
     // WBEM_FLAG_RETURN_IMMEDIATELY makes the call semi-synchronous which means
-    // we can
-    // return to caller immediately, iterating the result may break until data
-    // is available.
-    // WBEM_FLAG_FORWARD_ONLY allows wmi to free the memory of results already
-    // iterated,
-    // thus reducing memory usage
+    // we can return to caller immediately, iterating the result may break until
+    // data is available. WBEM_FLAG_FORWARD_ONLY allows wmi to free the memory
+    // of results already iterated, thus reducing memory usage
     HRESULT res = _services->ExecQuery(
         _bstr_t(L"WQL"), _bstr_t(query),
-        WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, NULL,
+        WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr,
         &enumerator);
 
     if (FAILED(res)) {
@@ -453,14 +454,11 @@ Result Helper::query(LPCWSTR query) {
     return Result(enumerator);
 }
 
-extern void crash_log(const char *format, ...)
-    __attribute__((format(gnu_printf, 1, 2)));
-
 Result Helper::getClass(LPCWSTR className) {
-    IEnumWbemClassObject *enumerator = NULL;
+    IEnumWbemClassObject *enumerator = nullptr;
     HRESULT res = _services->CreateInstanceEnum(
         _bstr_t(className),
-        WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, NULL,
+        WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr,
         &enumerator);
     if (FAILED(res)) {
         throw ComException(
@@ -472,7 +470,7 @@ Result Helper::getClass(LPCWSTR className) {
 ObjectWrapper Helper::call(ObjectWrapper &result, LPCWSTR method) {
     // NOTE: currently broken and unused, only here as a starting point for
     // future implementation
-    IWbemClassObject *outParams = NULL;
+    IWbemClassObject *outParams = nullptr;
 
     BSTR className;
     HRESULT res = result._current->GetMethodOrigin(method, &className);
@@ -486,8 +484,8 @@ ObjectWrapper Helper::call(ObjectWrapper &result, LPCWSTR method) {
     // buffer...
     BSTR methodName = SysAllocString(method);
 
-    res = _services->ExecMethod(className, methodName, 0, NULL,
-                                result._current.get(), &outParams, NULL);
+    res = _services->ExecMethod(className, methodName, 0, nullptr,
+                                result._current.get(), &outParams, nullptr);
 
     SysFreeString(methodName);
 

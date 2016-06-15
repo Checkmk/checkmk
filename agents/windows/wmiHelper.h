@@ -91,7 +91,7 @@ public:
     ObjectWrapper(IWbemClassObject *object);
 
     ObjectWrapper(const ObjectWrapper &reference);
-    ~ObjectWrapper();
+    ~ObjectWrapper() noexcept;
 
     bool contains(const wchar_t *key) const;
 
@@ -108,8 +108,7 @@ public:
     T get(const wchar_t *key) const;
 
 private:
-    // not implemented
-    ObjectWrapper &operator=(const ObjectWrapper &reference);
+    ObjectWrapper &operator=(const ObjectWrapper &reference) = delete;
 
     VARIANT getVarByKey(const wchar_t *key) const;
 };
@@ -132,7 +131,7 @@ public:
     Result();
     Result(IEnumWbemClassObject *enumerator);
     Result(const Result &reference);
-    ~Result();
+    ~Result() noexcept;
 
     Result &operator=(const Result &reference);
 

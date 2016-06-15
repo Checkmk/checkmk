@@ -135,16 +135,16 @@ check_mk_agent-64.unversioned.exe: check_mk_agent-64.unstripped.exe
 # recompilation is thus needed during 'make version'
 # -----------------------------------------------------------------------------
 
-check_mk_agent.exe.versioned:
+check_mk_agent.exe.versioned: check_mk_agent.unversioned.exe
 	./bin_replace $(VERSION_DUMMY) "$(VERSION)" < check_mk_agent.unversioned.exe > check_mk_agent.exe
 	chmod 755 check_mk_agent.exe
 
-check_mk_agent-64.exe.versioned:
+check_mk_agent-64.exe.versioned: check_mk_agent-64.unversioned.exe
 	./bin_replace $(VERSION_DUMMY) "$(VERSION)" < check_mk_agent-64.unversioned.exe > check_mk_agent-64.exe
 	chmod 755 check_mk_agent-64.exe
 
 
-%.exe: %.unversioned.exe %.exe.versioned
+%.exe: %.exe.versioned
 	true
 
 # -----------------------------------------------------------------------------

@@ -59,8 +59,29 @@
 # 3616 Fan_FAN_PSU1 6840.00_RPM_(2760.00/NA) [OK]
 # 3680 Fan_FAN_PSU2 0.00_RPM_(2760.00/NA) [OK]
 
+# <<<ipmi_sensors>>>
+# 4 Temperature_System_Temp 23.00_C_(NA/NA) [OK]
+# 71 Temperature_Peripheral_Temp 29.00_C_(NA/NA) [OK]
+# 138 OEM_Reserved_CPU_Temp NA_NA_(NA/NA) [OEM_Event_=_0000h] <= unknown sensor state, we do not discover
+# 205 Fan_FAN 3225.00_RPM_(NA/NA) [OK]
+# 272 Voltage_Vcore 0.68_V_(NA/NA) [OK]
+# 339 Voltage_3.3VCC 3.33_V_(NA/NA) [OK]
+# 406 Voltage_12V 12.08_V_(NA/NA) [OK]
+# 473 Voltage_VDIMM 1.50_V_(NA/NA) [OK]
+# 540 Voltage_5VCC 5.12_V_(NA/NA) [OK]
+# 607 Voltage_VCC_PCH 1.06_V_(NA/NA) [OK]
+# 674 Voltage_VBAT 3.17_V_(NA/NA) [OK]
+# 741 Voltage_VSB 3.33_V_(NA/NA) [OK]
+# 808 Voltage_AVCC 3.33_V_(NA/NA) [OK]
+# 875 Power_Supply_PS_Status NA_NA_(NA/NA) [Presence_detected]
+
+
+
 def inventory_freeipmi(info):
-    return [ (line[1], "", None) for line in info if line[-1] not in ( '[Unknown]', '[NA]' ) ]
+    return [ (line[1], "", None) for line in info
+             if not ( line[-1] in ['[Unknown]', '[NA]'] or
+                      "_=_" in line[-1] )]
+
 
 def check_freeipmi(item, _no_params, info):
     for line in info:
@@ -104,10 +125,11 @@ def check_freeipmi(item, _no_params, info):
 
                     # Do not save performance data for FANs. This produces
                     # much data and is - in my opinion - useless.
-                    if item.startswith("Fan_"):
-                        perfdata = []
-                    else:
+                    if "temperature" in item.lower():
                         perfdata = [ ("value", current, None, crit) ]
+                    else:
+                        perfdata = []
+
                     infotext = "Current value %.1f%s%s" % (current, unit, levelstext)
             if status == "OK" \
                     or status == "Entity_Present" \
@@ -121,7 +143,6 @@ def check_freeipmi(item, _no_params, info):
                 return (2, infotext, perfdata)
 
     return (3, "item %s not found" % item)
-
 
 
 check_info["ipmi_sensors"] = {

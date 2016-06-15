@@ -172,7 +172,7 @@ std::vector<BYTE> PerfCounterObject::retrieveCounterData(
     result.resize(DEFAULT_BUFFER_SIZE);
 
     DWORD buffer_size = result.size();
-    DWORD type;
+    DWORD type {0};
     DWORD ret;
 
     while ((ret = RegQueryValueExW(HKEY_PERFORMANCE_DATA, counterList, nullptr,

@@ -202,6 +202,7 @@ bool g_found_crash = false;
 
 std::unique_ptr<OHMMonitor> g_ohmMonitor;
 
+
 class WMILookup {
 public:
     static wmi::Helper &get(const std::wstring &path = L"Root\\Cimv2") {
@@ -2075,8 +2076,12 @@ int launch_program(script_container *cont) {
         memset(buf, 0, BUFFER_SIZE);
         time_t process_start = time(0);
 
+        if (cont->buffer_work != NULL) {
+            HeapFree(GetProcessHeap(), 0, cont->buffer_work);
+        }
         cont->buffer_work = (char *)HeapAlloc(
             GetProcessHeap(), HEAP_ZERO_MEMORY, HEAP_BUFFER_DEFAULT);
+
         unsigned long current_heap_size =
             HeapSize(GetProcessHeap(), 0, cont->buffer_work);
 
@@ -2347,7 +2352,6 @@ void output_external_programs(OutputProxy &out, script_type type) {
                     HeapFree(GetProcessHeap(), 0, cont->buffer_work);
                     cont->buffer = cache_buffer;
                 }
-
                 cont->buffer_work = NULL;
                 cont->status = SCRIPT_IDLE;
             } else if (cont->retry_count < 0 && cont->buffer != NULL) {
@@ -2908,7 +2912,7 @@ void stop_threads() {
     // just check the script_container status
     int sizedt = script_containers.size();
     HANDLE hThreadArray[sizedt];
-    int active_thread_count = 0;
+    DWORD active_thread_count = 0;
 
     script_containers_t::iterator it_cont = script_containers.begin();
     while (it_cont != script_containers.end()) {
@@ -3505,6 +3509,18 @@ void cleanup() {
 
         cleanup_logwatch();
     }
+
+    for (auto ptr : g_eventlog_hints) {
+        free(ptr->name);
+        delete ptr;
+    }
+    g_eventlog_hints.clear();
+
+    for (auto kv : script_containers) {
+        delete kv.second;
+    }
+    script_containers.clear();
+    CloseHandle(g_collection_thread);
 }
 
 void show_version() { printf("Check_MK_Agent version %s\n", check_mk_version); }

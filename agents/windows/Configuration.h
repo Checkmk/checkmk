@@ -61,6 +61,7 @@ check = MEM mrpe/check_mem -w 10 -c 20
 class Configuration {
 public:
     Configuration(const Environment &env);
+    ~Configuration();
 
     unsigned long enabledSections() const;
     unsigned long realtimeSections() const;

@@ -143,6 +143,17 @@ struct runas_include {
 };
 
 struct script_container {
+    ~script_container() {
+        if (worker_thread != INVALID_HANDLE_VALUE) {
+            CloseHandle(worker_thread);
+        }
+        // allocated with strdup
+        free(path);
+        free(script_path);
+        // allocated with HeapAlloc (may be null)
+        HeapFree(GetProcessHeap(), 0, buffer);
+        HeapFree(GetProcessHeap(), 0, buffer_work);
+    }
     char *path;         // full path with interpreter, cscript, etc.
     char *script_path;  // path of script
     int max_age;

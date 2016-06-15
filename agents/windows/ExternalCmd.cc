@@ -48,10 +48,10 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     // child process needs to be able to inherit the pipe handles
     security_attributes.bInheritHandle = true;
 
-    HANDLE script_stdout;
-    HANDLE script_stderr;
+    HANDLE script_stdout { INVALID_HANDLE_VALUE };
+    HANDLE script_stderr { INVALID_HANDLE_VALUE };
 
-    OnScopeExit release_handles([&]() {
+    OnScopeExit release_handles([script_stdout, script_stderr]() {
         ::CloseHandle(script_stdout);
         ::CloseHandle(script_stderr);
     });
@@ -68,6 +68,8 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
 
     // base new process statup info on current process
     STARTUPINFO si;
+    ZeroMemory(&si, sizeof(STARTUPINFO));
+    si.cb = sizeof(STARTUPINFO);
     GetStartupInfo(&si);
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
@@ -75,6 +77,7 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     si.hStdError = with_stderr ? script_stdout : script_stderr;
 
     PROCESS_INFORMATION pi;
+    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
     std::unique_ptr<char[], decltype(free) *> cmdline_buf(strdup(cmdline),
                                                           free);
     if (!CreateProcess(nullptr, cmdline_buf.get(), nullptr, nullptr, TRUE,

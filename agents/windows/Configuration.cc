@@ -54,7 +54,9 @@ Configuration::Configuration(const Environment &env)
     , _encrypted_rt(true)
     , _environment(env)
     , _ps_use_wmi(false)
-    , _ps_full_path(false) {
+    , _ps_full_path(false)
+    , _eventlog_vista_api(false)
+{
     _logwatch_globlines.setGroupFunction(&Configuration::addConditionPattern);
 
     CollectorRegistry::instance().startFile();
@@ -67,6 +69,14 @@ Configuration::Configuration(const Environment &env)
     _realtime_sections &= VALID_REALTIME_SECTIONS;
 
     postProcessOnlyFrom();
+}
+
+Configuration::~Configuration()
+{
+    for (const auto &textfile : *_logwatch_textfiles) {
+        delete textfile;
+    }
+    _logwatch_textfiles.clear();
 }
 
 unsigned long Configuration::enabledSections() const {

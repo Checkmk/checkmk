@@ -5,6 +5,7 @@
     * 3635 FIX: get_average: fixed overflow error
     * 3653 FIX: fileinfo.groups: Fixed UNKNOWN shown in WATO discovery when configured as manual check
     * 3636 FIX: juniper_fru: fixed present state handling
+    * 3142 FIX: windows agent: fixed rare crash when wmi query for uptime fails...
 
     WATO:
     * 3542 FIX: WATO Web API: fixed exception when WATO Git is activated...

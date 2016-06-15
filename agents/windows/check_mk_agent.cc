@@ -331,7 +331,7 @@ void section_systemtime(OutputProxy &out) {
 void section_uptime(OutputProxy &out) {
     crash_log("<<<uptime>>>");
 
-    std::string uptime = "0";
+    std::string uptime;
 
     typedef ULONGLONG WINAPI (*GetTickCount64_type)(void);
     DYNAMIC_FUNC(GetTickCount64, L"kernel32.dll");
@@ -339,16 +339,28 @@ void section_uptime(OutputProxy &out) {
         // GetTickCount64 is only available on Vista/2008 and newer
         uptime = std::to_string(GetTickCount64_dyn() / 1000);
     } else {
-        // fallback if GetTickCount64 is not available
-        wmi::Result res = WMILookup::get().query(
-            L"SELECT SystemUpTime FROM Win32_PerfFormattedData_PerfOS_System");
-        uptime = res.get<std::string>(L"SystemUpTime");
+        int tries = 2;
+        while (tries-- > 0) {
+            // fallback if GetTickCount64 is not available
+            try {
+                wmi::Result res = WMILookup::get().query(
+                    L"SELECT SystemUpTime FROM "
+                    L"Win32_PerfFormattedData_PerfOS_System");
+                if (res.valid()) {
+                    uptime = res.get<std::string>(L"SystemUpTime");
+                }
+            } catch (const wmi::ComException &e) {
+                crash_log("wmi request for SystemUpTime failed: %s", e.what());
+            }
+        }
     }
 
-    out.output(
-        "<<<uptime>>>\n"
-        "%s\n",
-        uptime.c_str());
+    if (!uptime.empty()) {
+        out.output(
+            "<<<uptime>>>\n"
+            "%s\n",
+            uptime.c_str());
+    }
 }
 
 //  .----------------------------------------------------------------------.
@@ -3353,8 +3365,12 @@ void do_adhoc(const Environment &env) {
 
             SetEnvironmentVariable("REMOTE_HOST", ip_hr.c_str());
             update_script_statistics();
-            output_data(out, env, g_config->enabledSections(),
-                        g_config->sectionFlush());
+            try {
+                output_data(out, env, g_config->enabledSections(),
+                            g_config->sectionFlush());
+            } catch (const std::exception &e) {
+                crash_log("unhandled exception: %s", e.what());
+            }
             closesocket(connection);
         }
     }

@@ -1,0 +1,9 @@
+Title: netapp_api_vs_traffic: fixed crash when NFSv4.1 information was available
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1465993111
+Class: fix
+
+

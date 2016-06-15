@@ -2756,24 +2756,28 @@ metric_info["http_bandwidth"] = {
     "color" : "53/b",
 }
 
-# netapp api volumes
-
-for volume_info in [ "NFS", "NFSv4", "NFSv4_1", "CIFS", "SAN", "FCP", "ISCSI" ]:
+for volume_info in [ "NFS", "NFSv4", "CIFS", "SAN", "FCP", "ISCSI" ]:
     for what, unit in [ ("data", "bytes"), ("latency", "s"), ("ios", "1/s") ]:
 
         volume = volume_info.lower()
 
-        metric_info[ "%s_read_%s" % (volume, what) ] = {
+        metric_info["%s_read_%s" % (volume, what)] = {
             "title" : _( "%s read %s" % (volume_info, what) ),
             "unit"  : unit,
             "color" : "31/a",
         }
 
-        metric_info[ "%s_write_%s" % (volume, what) ] = {
+        metric_info["%s_write_%s" % (volume, what)] = {
             "title" : _( "%s write %s" % (volume_info, what) ),
             "unit"  : unit,
             "color" : "44/a",
         }
+
+metric_info["nfsv4_1_ios"] = {
+    "title" : _( "NFSv4.1 operations"),
+    "unit"  : "1/s",
+    "color" : "31/a",
+}
 
 metric_info["harddrive_power_cycles"] = {
     "title" : _("Harddrive power cycles"),

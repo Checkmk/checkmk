@@ -1,0 +1,10 @@
+Title: ipmi_sensors: fixed sensor discovery if sensor is unknown and perfdata handling
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1465991282
+
+

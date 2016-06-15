@@ -269,6 +269,7 @@
     * 3653 FIX: fileinfo.groups: Fixed UNKNOWN shown in WATO discovery when configured as manual check
     * 3636 FIX: juniper_fru: fixed present state handling
     * 3142 FIX: windows agent: fixed rare crash when wmi query for uptime fails...
+    * 3637 FIX: ipmi_sensors: fixed sensor discovery if sensor is unknown and perfdata handling
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

@@ -546,7 +546,7 @@ table.sitestate td.state {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def render_tactical_overview(extra_filter_headers="", extra_url_variables=[]):
+def get_tactical_overview_data(extra_filter_headers):
     host_query = \
         "GET hosts\n" \
         "Stats: state >= 0\n" \
@@ -588,15 +588,28 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=[]):
     try:
         hstdata = sites.live().query_summed_stats(host_query)
         svcdata = sites.live().query_summed_stats(service_query)
-        notdata = sites.live().query_summed_stats(notification_query)
+        if config.may("general.see_failed_notifications"):
+            notdata = sites.live().query_summed_stats(notification_query)
+        else:
+            notdata = [0]
     except livestatus.MKLivestatusNotFoundError:
+        return None, None, None
+
+    return hstdata, svcdata, notdata
+
+def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
+    if extra_url_variables is None:
+        extra_url_variables = []
+
+    hstdata, svcdata, notdata = get_tactical_overview_data(extra_filter_headers)
+    if hstdata is None or svcdata is None or notdata is None:
         html.write("<center>No data from any site</center>")
         return
+
     html.write("<table class=\"content_center tacticaloverview\" cellspacing=2 cellpadding=0 border=0>\n")
     for title, data, view, what in [
             (_("Hosts"),    hstdata, 'hostproblems', 'host'),
-            (_("Services"), svcdata, 'svcproblems',  'service'),
-            ]:
+            (_("Services"), svcdata, 'svcproblems',  'service')]:
         html.write("<tr><th>%s</th><th>%s</th><th>%s</th></tr>\n" % (title, _('Problems'), _('Unhandled')))
         html.write("<tr>")
 
@@ -620,14 +633,12 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=[]):
         content = '<a target="main" href="%s">%d failed notifications</a>' %\
             (view_url, failed_notifications)
 
-        if config.may("general.acknowledge_failed_notifications"):
-
-            confirm_url = html.makeuri_contextless(
-                [("acktime", str(time.time()))] + extra_url_variables,
-                filename="clear_failed_notifications.py")
-            content = ('<a target="main" href="%s">'
-                       '<img src="images/button_closetimewarp.png" style="width:16px;height:16px;">'
-                       '</a>&nbsp;' % confirm_url) + content
+        confirm_url = html.makeuri_contextless(
+            [("acktime", str(time.time()))] + extra_url_variables,
+            filename="clear_failed_notifications.py")
+        content = ('<a target="main" href="%s">'
+                    '<img src="images/button_closetimewarp.png" style="width:16px;height:16px;">'
+                    '</a>&nbsp;' % confirm_url) + content
 
         html.write('<div class=spacertop><div class=tacticalalert>%s</div></div>' % content)
 

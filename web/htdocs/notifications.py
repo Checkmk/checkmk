@@ -29,46 +29,37 @@ import config
 import defaults
 import lib
 import errno
+import os
 
-g_acknowledgement_path = defaults.var_dir + "/acknowledged_notifications.mk"
-g_acknowledgement_time = None
+g_acknowledgement_time = {}
+
 
 def acknowledge_failed_notifications(timestamp):
-    config.need_permission("general.acknowledge_failed_notifications")
+    config.need_permission("general.see_failed_notifications")
     global g_acknowledgement_time
-    g_acknowledgement_time = timestamp
+    g_acknowledgement_time[config.user_id] = timestamp
     save_acknowledgements()
 
 def save_acknowledgements():
-    config.need_permission("general.acknowledge_failed_notifications")
-    with open(g_acknowledgement_path, "w") as f:
-        f.write("%r\n" % g_acknowledgement_time)
+    config.need_permission("general.see_failed_notifications")
+    config.save_user_file("acknowledged_notifications", int(g_acknowledgement_time[config.user_id]))
 
 def acknowledged_time():
-    if g_acknowledgement_time is None:
+    if g_acknowledgement_time.get(config.user_id) is None:
         load_acknowledgements()
-    return g_acknowledgement_time
+    return g_acknowledgement_time[config.user_id]
 
 def load_acknowledgements():
     global g_acknowledgement_time
-    try:
-        with open(g_acknowledgement_path, "r") as f:
-            content = f.read().strip()
-            if content:
-                g_acknowledgement_time = literal_eval(content)
-    except IOError, e:
-        if e.errno == errno.ENOENT:
-            g_acknowledgement_time = 0
-        else:
-            raise
+    g_acknowledgement_time[config.user_id] = config.load_user_file("acknowledged_notifications", 0)
 
 def render_page_confirm(acktime, prev_url):
     html.set_render_headfoot(False)
     html.header(_("Confirm"), javascripts=[], stylesheets=[ "pages", "check_mk" ])
     html.debug_vars()
     html.write('<div class="really">\n')
-    html.write(_("Do you really want to acknowledge all failed notifications up to %s?</br>"
-                 "This removes the warning for all users.") % lib.datetime_human_readable(acktime))
+    html.write(_("Do you really want to acknowledge all failed notifications up to %s?") %\
+               lib.datetime_human_readable(acktime))
     html.begin_form("confirm", method="GET", action=prev_url)
     html.hidden_field('acktime', acktime),
     html.image_button('_confirm', _("Yes"))

@@ -24,8 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, views, pprint, os, copy, userdb, pagetypes
-import notify, werks, urlparse
+import pprint
+import os
+import copy
+import urlparse
+
+import config, defaults, views, userdb, pagetypes
+import notify, werks
 import sites
 from lib import *
 

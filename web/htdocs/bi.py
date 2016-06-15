@@ -1872,6 +1872,7 @@ def table(columns, add_headers, only_sites, limit, filters):
     # later out again.
     only_group = None
     only_service = None
+    only_aggr_name = None
 
     for filter in filters:
         if filter.name == "aggr_group":
@@ -1880,6 +1881,10 @@ def table(columns, add_headers, only_sites, limit, filters):
                 only_group = val
         elif filter.name == "aggr_service":
             only_service = filter.service_spec()
+        elif filter.name == "aggr_name":
+            only_aggr_name = filter.value().get("aggr_name")
+        # TODO: can be further improved by filtering aggr_name_regex
+        #       See BITextFilter(Filter): filter_table(self, rows)
 
     if config.bi_precompile_on_demand and only_group:
         # optimized mode: if aggregation group known only precompile this one
@@ -1901,7 +1906,6 @@ def table(columns, add_headers, only_sites, limit, filters):
                 entries.append(aggr)
                 by_groups[group] = entries
             items = by_groups.items()
-
     else:
         items = g_user_cache["forest"].items()
 
@@ -1910,6 +1914,9 @@ def table(columns, add_headers, only_sites, limit, filters):
             continue
 
         for tree in trees:
+            if only_aggr_name and only_aggr_name != tree.get("title"):
+                continue
+
             row = create_aggregation_row(tree)
             row["aggr_group"] = group
             rows.append(row)

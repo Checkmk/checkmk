@@ -1,0 +1,13 @@
+Title: Drastically sped up response time on querying single aggregations
+Level: 1
+Component: bi
+Compatible: compat
+Version: 1.4.0i1
+Date: 1465993843
+Class: feature
+
+Querying a single aggregation (e.g. through <i>Filter: Aggregation name (exact match)</i>) took
+considerably longer than it should. The query time was proportional to the number of
+available aggregations. This has been fixed.
+
+The main beneficiary of this fix is the active check "Check State of BI Aggregation".

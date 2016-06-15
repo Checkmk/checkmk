@@ -97,12 +97,14 @@ ExternalCmd::~ExternalCmd() {
     ::CloseHandle(_stderr);
     if (_job_object != INVALID_HANDLE_VALUE) {
         ::TerminateJobObject(_job_object, 1);
+        ::CloseHandle(_job_object);
     }
     ::CloseHandle(_process);
 }
 
 void ExternalCmd::terminateJob(DWORD exit_code) {
     ::TerminateJobObject(_job_object, exit_code);
+    ::CloseHandle(_job_object);
     _job_object = INVALID_HANDLE_VALUE;
 }
 

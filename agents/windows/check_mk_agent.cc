@@ -1203,10 +1203,19 @@ void update_script_statistics() {
 // Remove missing files from list
 void cleanup_logwatch_textfiles() {
     logwatch_textfiles_t &textfiles = g_config->logwatchTextfiles();
-    textfiles.erase(
+
+    // remove_if puts the missing textfiles to the end of the list, it doesn't
+    // actually remove anything
+    auto first_missing =
         std::remove_if(textfiles.begin(), textfiles.end(),
-                       [](logwatch_textfile *file) { return file->missing; }),
-        textfiles.end());
+                       [](logwatch_textfile *file) { return file->missing; });
+
+    for (logwatch_textfiles_t::iterator iter = first_missing;
+         iter != textfiles.end(); ++iter) {
+        delete *iter;
+    }
+
+    textfiles.erase(first_missing, textfiles.end());
 }
 
 // Called on program exit
@@ -2910,8 +2919,10 @@ void stop_threads() {
         }
         it_cont++;
     }
+
     WaitForMultipleObjects(active_thread_count, hThreadArray, TRUE, 5000);
     TerminateJobObject(g_workers_job_object, 0);
+    ::CloseHandle(g_workers_job_object);
 }
 
 //   .----------------------------------------------------------------------.

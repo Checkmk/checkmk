@@ -27,6 +27,7 @@
 #include <ws2ipdef.h>
 #include <cassert>
 #include <cstring>
+#include <memory>
 #include "logging.h"
 #include "stringutil.h"
 
@@ -122,13 +123,13 @@ SOCKET ListenSocket::init_listen_socket(int port) {
     SOCKET s = RemoveSocketInheritance(tmp_s);
 
     int addr_size = 0;
-    SOCKADDR *addr = create_sockaddr(&addr_size);
+    std::unique_ptr<SOCKADDR> addr(create_sockaddr(&addr_size));
 
     int optval = 1;
     setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval,
                sizeof(optval));
     if (_use_ipv6) {
-        ((SOCKADDR_IN6 *)addr)->sin6_port = htons(port);
+        ((SOCKADDR_IN6 *)addr.get())->sin6_port = htons(port);
 
         int v6only = 0;
         if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&v6only,
@@ -137,11 +138,11 @@ SOCKET ListenSocket::init_listen_socket(int port) {
             _supports_ipv4 = false;
         }
     } else {
-        ((SOCKADDR_IN *)addr)->sin_port = htons(port);
-        ((SOCKADDR_IN *)addr)->sin_addr.s_addr = ADDR_ANY;
+        ((SOCKADDR_IN *)addr.get())->sin_port = htons(port);
+        ((SOCKADDR_IN *)addr.get())->sin_addr.s_addr = ADDR_ANY;
     }
 
-    if (SOCKET_ERROR == bind(s, addr, addr_size)) {
+    if (SOCKET_ERROR == bind(s, addr.get(), addr_size)) {
         int error_id = ::WSAGetLastError();
         fprintf(stderr, "Cannot bind socket to port %d: %s (%d)\n", port,
                 get_win_error_as_string(error_id).c_str(), error_id);
@@ -221,12 +222,11 @@ SOCKET ListenSocket::acceptConnection() {
     // never return
     while (1 == select(1, &fds, NULL, NULL, &timeout)) {
         int addr_len = 0;
-        sockaddr *remote_addr = create_sockaddr(&addr_len);
-        connection = accept(_socket, remote_addr, &addr_len);
+        std::unique_ptr<sockaddr> remote_addr(create_sockaddr(&addr_len));
+        connection = accept(_socket, remote_addr.get(), &addr_len);
         connection = RemoveSocketInheritance(connection);
         if (connection != INVALID_SOCKET) {
-            bool allowed = check_only_from(remote_addr);
-            delete remote_addr;
+            bool allowed = check_only_from(remote_addr.get());
 
             if (allowed) {
                 return connection;

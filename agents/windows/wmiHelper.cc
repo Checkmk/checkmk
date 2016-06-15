@@ -348,6 +348,8 @@ public:
 
 private:
     COMManager() {
+        // Dr.Memory reports a memory leak here, despite the fact CoUninitialize
+        // does get called. Am I doing something wrong?
         HRESULT res = CoInitializeEx(0, COINIT_MULTITHREADED);
         if (FAILED(res)) {
             throw ComException("Failed to initialize COM", res);

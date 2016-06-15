@@ -1,0 +1,10 @@
+Title: windows agent: fixed some minor memory and handle leaks
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1465993766
+
+

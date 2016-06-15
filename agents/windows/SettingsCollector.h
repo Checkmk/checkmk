@@ -171,12 +171,10 @@ public:
     const ContainerT &operator*() const { return _values; }
 
 public:  // only valid with a grouping adder. it's important to understand that
-         // due to how templates in C++ work,
-    // these functions are not compiled for template-instantiations where they
-    // aren't used so
-    // even though they wouldn't comple with non-grouping adders, this is not a
-    // problem.
-
+         // due to how templates in C++ work, these functions are not compiled
+         // for template-instantiations where they aren't used so even though
+         // they wouldn't comple with non-grouping adders, this is not a
+         // problem.
     void setGroupFunction(typename AddMode::PriorityAppendGrouped<
                           ContainerT>::GroupFunction function) {
         _add_mode.setGroupFunction(function);

@@ -13,6 +13,9 @@
     WATO:
     * 3542 FIX: WATO Web API: fixed exception when WATO Git is activated...
 
+    BI:
+    * 3546 Drastically sped up response time on querying single aggregations...
+
 
 1.2.8p4:
     Checks & Agents:

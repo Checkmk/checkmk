@@ -138,13 +138,11 @@ public:
 
     std::vector<std::wstring> names() const;
 
-    // proceed to the next element.
-    // returns true on success, false if there are no more elements. An
-    // exception
-    // is thrown if an error happens (i.e. timeout in the query).
-    // unless true is returned, the current element is not changed, to once the
-    // end
-    // of the result has been reached, the iterator stays there.
+    // proceed to the next element. returns true on success, false if there are
+    // no more elements. An exception is thrown if an error happens (i.e.
+    // timeout in the query). unless true is returned, the current element is
+    // not changed, to once the end of the result has been reached, the iterator
+    // stays there.
     bool next();
 
     // return true if this is a valid result. Please note that

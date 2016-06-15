@@ -168,7 +168,7 @@ static const size_t DEFAULT_BUFFER_SIZE = 40960L;
 PerfCounterObject::PerfCounterObject(unsigned int counter_base_number)
     : _buffer(DEFAULT_BUFFER_SIZE), _datablock(NULL) {
     DWORD buffer_size = _buffer.size();
-    DWORD type;
+    DWORD type {0};
     DWORD ret;
 
     while ((ret = RegQueryValueEx(HKEY_PERFORMANCE_DATA,

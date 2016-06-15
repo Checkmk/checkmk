@@ -1,0 +1,10 @@
+Title: windows agent: fixed rare crash when wmi query for uptime fails
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1465977006
+
+This crash could only occur on windows versions older than windows server 2008 R2

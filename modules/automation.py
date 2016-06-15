@@ -683,6 +683,20 @@ def automation_diag_host(args):
     agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
     cmd = args[7]
 
+    snmpv3_use               = None
+    snmpv3_auth_proto        = None
+    snmpv3_security_name     = None
+    snmpv3_security_password = None
+    snmpv3_privacy_proto     = None
+    snmpv3_privacy_password  = None
+
+    if len(args) > 8:
+        snmpv3_use = args[8]
+        if snmpv3_use in ["authNoPriv", "authPriv"]:
+            snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password = args[9:12]
+        if snmpv3_use == "authPriv":
+            snmpv3_privacy_proto, snmpv3_privacy_password = args[12:14]
+
     if not ipaddress:
         try:
             ipaddress = lookup_ip_address(hostname)
@@ -718,10 +732,32 @@ def automation_diag_host(args):
                 return (p.wait(), response)
 
         elif test.startswith('snmp'):
-            if snmp_community:
-                explicit_snmp_communities[hostname] = snmp_community
+            # SNMPv3 tuples
+            # ('noAuthNoPriv',)
+            # ('authNoPriv', 'md5', '11111111', '22222222')
+            # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
 
-            # override timing settings if provided
+            # Insert preconfigured communitiy
+            if test != "snmpv3" and snmp_community:
+                explicit_snmp_communities[hostname] = snmp_community
+            else:
+                if snmpv3_use:
+                    snmpv3_credentials = [snmpv3_use]
+                    if snmpv3_use in ["authNoPriv", "authPriv"]:
+                        snmpv3_credentials.extend([snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password])
+                    if snmpv3_use == "authPriv":
+                        snmpv3_credentials.extend([snmpv3_privacy_proto, snmpv3_privacy_password])
+                    explicit_snmp_communities[hostname] = tuple(snmpv3_credentials)
+
+            # Determine SNMPv2/v3 community
+            if hostname not in explicit_snmp_communities:
+                communities = host_extra_conf(hostname, snmp_communities)
+                for entry in communities:
+                    if (type(entry) == tuple) == (test == "snmpv3"):
+                        explicit_snmp_communities[hostname] = entry
+                        break
+
+            # Override timing settings if provided
             if snmp_timeout or snmp_retries:
                 timing = {}
                 if snmp_timeout:
@@ -732,9 +768,8 @@ def automation_diag_host(args):
 
             # SNMP versions
             global bulkwalk_hosts, snmpv2c_hosts
-            if test == 'snmpv2':
+            if test in ['snmpv2', 'snmpv3']:
                 bulkwalk_hosts = [hostname]
-
             elif test == 'snmpv2_nobulk':
                 bulkwalk_hosts = []
                 snmpv2c_hosts  = [hostname]

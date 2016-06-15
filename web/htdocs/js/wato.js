@@ -764,7 +764,29 @@ function start_host_diag_test(ident, hostname) {
 
     var vars = '';
     vars = '&ipaddress=' + encodeURIComponent(document.getElementsByName('vs_host_p_ipaddress')[0].value);
-    vars += '&snmp_community=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_community')[0].value);
+
+
+    if (document.getElementsByName("vs_host_p_snmp_community_USE")[0].checked)
+        vars += '&snmp_community=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_community')[0].value);
+
+    if (document.getElementsByName("vs_host_p_snmp_v3_credentials_USE")[0].checked) {
+        v3_use = encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_use')[0].value);
+        vars += '&snmpv3_use=' + v3_use;
+        if (v3_use == "1") {
+            vars += '&snmpv3_auth_proto=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_1_1')[0].value);
+            vars += '&snmpv3_security_name=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_1_2')[0].value);
+            vars += '&snmpv3_security_password=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_1_3')[0].value);
+        }
+        else if (v3_use == "2") {
+            vars += '&snmpv3_auth_proto=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_2_1')[0].value);
+            vars += '&snmpv3_security_name=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_2_2')[0].value);
+            vars += '&snmpv3_security_password=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_2_3')[0].value);
+            vars += '&snmpv3_privacy_proto=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_2_4')[0].value);
+            vars += '&snmpv3_privacy_password=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_2_5')[0].value);
+        }
+    }
+
+
     vars += '&agent_port=' + encodeURIComponent(document.getElementsByName('vs_rules_p_agent_port')[0].value);
     vars += '&snmp_timeout=' + encodeURIComponent(document.getElementsByName('vs_rules_p_snmp_timeout')[0].value);
     vars += '&snmp_retries=' + encodeURIComponent(document.getElementsByName('vs_rules_p_snmp_retries')[0].value);

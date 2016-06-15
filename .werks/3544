@@ -1,0 +1,13 @@
+Title: The edit host and diagnostic page are now able to handle SNMPv3 credentials
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i1
+Date: 1465989340
+Class: feature
+
+You can now set SNMPv3 credentials explicitly in the edit host page.
+Furthermore the host diagnostic page now also supports the input of custom SNMPv3 credentials.
+
+Please note that the SNMPv3 option <i>Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)</i>
+is currently broken and will return no valid information. This will be fixed soon.

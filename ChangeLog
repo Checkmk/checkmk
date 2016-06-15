@@ -7,6 +7,7 @@
     * 3636 FIX: juniper_fru: fixed present state handling
     * 3142 FIX: windows agent: fixed rare crash when wmi query for uptime fails...
     * 3637 FIX: ipmi_sensors: fixed sensor discovery if sensor is unknown and perfdata handling
+    * 3545 FIX: netapp_api_vs_traffic: fixed crash when NFSv4.1 information was available
 
     WATO:
     * 3542 FIX: WATO Web API: fixed exception when WATO Git is activated...

@@ -73,10 +73,8 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
             [  ("nfsv4_read_ops",     "nfsv4_read_ios",       "read OPs",           1,        int),
                ("nfsv4_write_ops",    "nfsv4_write_ios",      "write OPs",          1,        int)]),
 
-        # Untested: This value might be wrong
         "nfsv4_1": ("NFSv4.1",
-            [  ("nfsv4_1_read_ops",   "nfsv4_1_read_ios",     "read OPs",           1,        int),
-               ("nfsv4_1_write_ops",  "nfsv4_1_write_ios",    "write OPs",          1,        int)]),
+            [  ("nfsv4_1_ops",        "nfsv4_1_ios",          "OPs",                1,        int) ])
     }
     vserver = item.split(" ", 3)
 

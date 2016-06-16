@@ -1,0 +1,9 @@
+Title: bugfix: replacing pipe symbol in plugin output was broken
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p5
+Date: 1466060960
+Class: fix
+
+

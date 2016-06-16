@@ -1918,7 +1918,7 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
 
     # make sure that plugin output does not contain a vertical bar. If that is the
     # case then replace it with a Uniocode "Light vertical bar"
-    infotext = infotext.replace("|", "\u2758")
+    infotext = infotext.replace("|", u"\u2758".encode("utf8"))
 
     # Aggregated service -> store for later
     if sa != "":

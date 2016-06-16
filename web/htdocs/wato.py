@@ -5637,14 +5637,11 @@ class ModeBackup(WatoMode):
 
     def buttons(self):
         home_button()
-        html.context_button(_("Backup targets"), html.makeuri([("mode", "backup_targets")]), "backup_targets")
-        html.context_button(_("New job"), html.makeuri([("mode", "edit_backup_job")]), "backup_job_new")
+        html.context_button(_("Backup targets"), folder_preserving_link([("mode", "backup_targets")]), "backup_targets")
+        html.context_button(_("New job"), folder_preserving_link([("mode", "edit_backup_job")]), "backup_job_new")
 
 
     def action(self):
-        if not html.check_transaction():
-            return
-
         ident = html.var("_job")
         jobs = SiteBackupJobs()
         try:
@@ -5653,6 +5650,13 @@ class ModeBackup(WatoMode):
             raise MKUserError("_job", _("This backup job does not exist."))
 
         action = html.var("_action")
+
+        if action == "delete":
+            if not html.transaction_valid():
+                return
+        else:
+            if not html.check_transaction():
+                return
 
         if action == "delete":
             return self._delete_job(job)
@@ -5672,7 +5676,9 @@ class ModeBackup(WatoMode):
             raise MKUserError("_job", _("This job is currently running."))
 
         if wato_confirm(self.title(), _("Do you really want to delete this job?")):
-            jobs.remove(ident)
+            html.check_transaction() # invalidate transid
+            jobs = SiteBackupJobs()
+            jobs.remove(job)
             jobs.save()
             return None, _("The job has been deleted.")
 
@@ -5701,8 +5707,9 @@ class ModeBackupTargets(WatoMode):
 
 
     def buttons(self):
-        html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
-        html.context_button(_("New backup target"), html.makeuri_contextless([("mode", "edit_backup_target")]), "backup_target_edit")
+        html.context_button(_("Back"), folder_preserving_link([("mode", "backup")]), "back")
+        html.context_button(_("New backup target"), folder_preserving_link([
+                                    ("mode", "edit_backup_target")]), "backup_target_edit")
 
 
     def action(self):
@@ -5715,7 +5722,7 @@ class ModeBackupTargets(WatoMode):
                 raise MKUserError("target", _("This backup target does not exist."))
 
             if wato_confirm(self.title(), _("Do you really want to delete this target?")):
-                targets.remove(ident)
+                targets.remove(target)
                 targets.save()
                 return None, _("The target has been deleted.")
 
@@ -5759,7 +5766,7 @@ class ModeEditBackupTarget(WatoMode):
 
 
     def buttons(self):
-        html.context_button(_("Back"), html.makeuri([("mode", "backup_targets")]), "back")
+        html.context_button(_("Back"), folder_preserving_link([("mode", "backup_targets")]), "back")
 
 
     def vs_backup_target(self):
@@ -5815,7 +5822,7 @@ class ModeEditBackupTarget(WatoMode):
                 target.from_config(self._target_cfg)
 
             targets.save()
-        html.http_redirect(html.makeuri([("mode", "backup_targets")]))
+        html.http_redirect(folder_preserving_link([("mode", "backup_targets")]))
 
 
     def page(self):
@@ -5855,7 +5862,7 @@ class ModeEditBackupJob(WatoMode):
                 raise MKUserError("_job", _("This job is currently running."))
 
             self._new          = False
-            self._ident        = job_ident 
+            self._ident        = job_ident
             self._job_cfg      = job.to_config()
             self._title        = _("Edit backup job: %s") % job.title()
         else:
@@ -5870,7 +5877,7 @@ class ModeEditBackupJob(WatoMode):
 
 
     def buttons(self):
-        html.context_button(_("Back"), html.makeuri([("mode", "backup")]), "back")
+        html.context_button(_("Back"), folder_preserving_link([("mode", "backup")]), "back")
 
 
     def vs_backup_schedule(self):
@@ -5929,12 +5936,22 @@ class ModeEditBackupJob(WatoMode):
                 ("target", DropdownChoice(
                     title = _("Target"),
                     choices = self.backup_target_choices,
+                    validate = self._validate_target,
                 )),
                 ("schedule", self.vs_backup_schedule()),
             ],
         optional_keys = [],
         render = "form",
     )
+
+
+    def _validate_target(self, value, varprefix):
+        target = SiteBackupTargets().get(value)
+        if target.type_ident() != "local":
+            raise NotImplementedError()
+
+        path = target.type_params()["path"]
+        target.type_class()().validate_local_directory(path, varprefix)
 
 
     def backup_target_choices(self):
@@ -5962,7 +5979,7 @@ class ModeEditBackupJob(WatoMode):
                 job.from_config(self._job_cfg)
 
             jobs.save()
-        html.http_redirect(html.makeuri([("mode", "backup")]))
+        html.http_redirect(folder_preserving_link([("mode", "backup")]))
 
 
     def page(self):
@@ -6001,7 +6018,7 @@ class ModeBackupJobState(WatoMode):
 
 
     def buttons(self):
-        html.context_button(_("Back"), html.makeuri([("mode", "backup")]), "back")
+        html.context_button(_("Back"), folder_preserving_link([("mode", "backup")]), "back")
 
 
     def page(self):
@@ -6018,13 +6035,14 @@ class ModeBackupJobState(WatoMode):
 
         html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Runtime"))
         html.write("<td>")
-        html.write(_("Started at %s") % fmt_datetime(state["started"]))
-        duration = time.time() - state["started"]
-        if state["state"] == "finished":
-            html.write(", Finished at %s" % fmt_datetime(state["started"]))
-            duration = state["finished"] - state["started"]
+        if state["started"]:
+            html.write(_("Started at %s") % fmt_datetime(state["started"]))
+            duration = time.time() - state["started"]
+            if state["state"] == "finished":
+                html.write(", Finished at %s" % fmt_datetime(state["started"]))
+                duration = state["finished"] - state["started"]
 
-        html.write(_(" (Duration: %s)") % age_human_readable(duration))
+            html.write(_(" (Duration: %s)") % age_human_readable(duration))
         html.write("</td></tr>")
 
         html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("Output"))

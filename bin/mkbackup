@@ -29,8 +29,11 @@ VERSION = "1.4.0i1"
 import os
 import getopt
 import fcntl
+import grp
 import pprint
+import pwd
 import re
+import shutil
 import signal
 import subprocess
 import sys
@@ -97,8 +100,16 @@ def stop_logging():
     g_stderr_log = None
 
 
+def log(s):
+    sys.stdout.write("%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), s))
+
+
 def is_root():
     return os.getuid() == 0
+
+
+def is_cma():
+    return os.path.exists("/etc/cma/cma.conf")
 
 
 def site_id():
@@ -117,12 +128,57 @@ def site_config_path():
 
 def acquire_backup_lock():
     global g_backup_lock_f
-    g_backup_lock_f = open("%s/mkbackup.lock" % g_var_path, "a+")
+    lock_file_path = "%s/mkbackup.lock" % g_var_path
+    try:
+        g_backup_lock_f = open(lock_file_path, "a+")
+    except IOError, e:
+        raise MKGeneralException(_("Failed to open lock file \"%s\": %s") %
+                    (lock_file_path, e))
+
     try:
         fcntl.flock(g_backup_lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError:
         raise MKGeneralException(_("Failed to get the exclusive backup lock. "
                             "Another backup/restore seems to be running."))
+
+
+# TODO: Move to cmklib?
+def makedirs(path, user=None, group=None, mode=None):
+    head, tail = os.path.split(path)
+    if not tail:
+        head, tail = os.path.split(head)
+
+    if head and tail and not os.path.exists(head):
+        try:
+            makedirs(head, user, group, mode)
+        except OSError, e:
+            # be happy if someone already created the path
+            if e.errno != errno.EEXIST:
+                raise
+        if tail == ".": # xxx/newdir/. exists if xxx/newdir exists
+            return
+    makedir(path, user, group, mode)
+
+
+# TODO: Move to cmklib?
+def makedir(path, user=None, group=None, mode=None):
+    if os.path.exists(path):
+        return
+
+    os.mkdir(path)
+
+    if user != None:
+        uid = pwd.getpwnam(user).pw_uid
+    else:
+        uid = -1
+
+    if group != None:
+        gid = grp.getgrnam(group).gr_gid
+    else:
+        gid = -1
+
+    os.chown(path, uid, gid)
+    os.chmod(path, mode)
 
 
 # Wenn als root ausgeführt:
@@ -280,6 +336,8 @@ def mode_backup(local_job_id, opts):
 
     success = False
     try:
+        cleanup_previous_incomplete_backup()
+
         save_state({
             "state" : "running",
         })
@@ -309,8 +367,11 @@ def mode_backup(local_job_id, opts):
 def do_backup(opts):
     if not is_root():
         do_site_backup(opts)
-    else:
+    elif is_cma():
         do_system_backup(opts)
+    else:
+        raise MKGeneralException(_("System backup not supported."))
+    complete_backup()
 
 
 def do_site_backup(opts, site=None):
@@ -328,11 +389,14 @@ def do_site_backup(opts, site=None):
                                      "but not running as root." % site_id)
         cmd.append(site)
 
+    backup_path = site_backup_path(site)
+
     # TODO: Nicht direkt speichern, sondern durch gpg/openssl pipen, wenn
     # Verschlüsselung aktiv ist
-    cmd.append(site_backup_path(site))
+    cmd.append(backup_path)
 
-    # TODO: Create missing directories. Ensure group permissions.
+    # Create missing directories. Ensure group permissions and mode.
+    makedirs(os.path.dirname(backup_path), group="omd", mode=0775)
 
     p = subprocess.Popen(cmd, shell=False, close_fds=True,
                          stdout=open(os.devnull, "w"),
@@ -366,7 +430,46 @@ def job_backup_path():
 
 
 def do_system_backup(opts):
+    # Perform backup of the /rw volume on all devices
+    do_system_rw_backup(opts)
+
+    # The data volume (/omd) is not backed up on slave cluster nodes
+    if not is_cluster_inactive():
+        do_system_data_backup(opts)
+
+
+def do_system_rw_backup(opts):
+    # TODO
+    return
+    #dest_path = "%s/system.tar.gz" % (job_backup_path_during_backup())
+    #fobj = file(dest_path, "w")
+    #backup_files_to_tarfile(fobj, "/rw", opts)
+    #fobj.close()
+
+
+def do_system_data_backup(opts):
     pass # TODO
+
+
+def backup_files_to_tarfile(fobj, base_path, opts):
+    tar = TarFile.open(fileobj=fobj, mode="w:gz")
+    tar.add(base_path)
+
+
+def complete_backup():
+    if os.path.exists(job_backup_path_complete()):
+        log("Cleaning up previously completed backup")
+        shutil.rmtree(job_backup_path_complete())
+
+    os.rename(job_backup_path_during_backup(),
+              job_backup_path_complete())
+    log("Backup completed.")
+
+
+def cleanup_previous_incomplete_backup():
+    if os.path.exists(job_backup_path_during_backup()):
+        log("Found previous incomplete backup. Cleaning up those files.")
+        shutil.rmtree(job_backup_path_during_backup())
 
 
 def globalize_job_id(local_job_id):
@@ -382,6 +485,8 @@ def globalize_job_id(local_job_id):
 
     if site:
         parts.append(site)
+
+    parts.append(local_job_id)
 
     return "-".join([ p.replace("-", "+") for p in parts ])
 

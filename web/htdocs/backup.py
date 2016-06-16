@@ -143,9 +143,9 @@ class BackupEntityCollection(object):
         return self.objects[ident]
 
 
-    def remove(self, ident):
+    def remove(self, obj):
         try:
-            del self.objects[ident]
+            del self.objects[obj.ident()]
         except KeyError:
             pass
 
@@ -188,24 +188,49 @@ class Job(BackupEntity):
             "started"  : _("Started"),
             "running"  : _("Currently running"),
             "finished" : _("Ended"),
+            None       : _("Never executed"),
         }[state]
 
 
-    # TODO: Duplicated code with mkbackup
-    def ident(self):
-        site_id = defaults.omd_site
-        if site_id:
-            return "site-%s-%s" % (site_id, self._ident)
+    # TODO: Duplicated code with mkbackup (globalize_job_id())
+    def global_ident(self):
+        parts = []
+        site = os.environ.get("OMD_SITE")
+
+        if site:
+            parts.append("Check_MK")
         else:
-            return "system-%s" % (self._ident)
+            parts.append("Check_MK_Appliance")
+
+        parts.append("Klappspaten") # TODO
+
+        if site:
+            parts.append(site)
+
+        parts.append(self._ident)
+
+        return "-".join([ p.replace("-", "+") for p in parts ])
 
 
     def state_file_path(self):
-        return "%s/%s.state" % (g_var_path, self.ident())
+        return "%s/%s.state" % (g_var_path, self.global_ident())
 
 
     def state(self):
-        state = eval(file(self.state_file_path()).read())
+        try:
+            state = eval(file(self.state_file_path()).read())
+        except IOError, e:
+            if e.errno == 2: # not existant
+                state = {
+                    "state"   : None,
+                    "started" : None,
+                    "output"  : "",
+                }
+            else:
+                raise
+        except Exception, e:
+            raise MKGeneralException(_("Failed to parse state file \"%s\": %s" %
+                                        (self.state_file_path(), e)))
 
         # Fix data structure when the process has been killed
         if state["state"] == "running" and not os.path.exists("/proc/%d" % state["pid"]):
@@ -228,7 +253,7 @@ class Job(BackupEntity):
 
 
     def start(self):
-        p = subprocess.Popen([mkbackup_path(), "backup", "--background", self._ident],
+        p = subprocess.Popen([mkbackup_path(), "backup", "--background", self.ident()],
                          shell=False, close_fds=True, stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, stdin=open(os.devnull))
         if p.wait() != 0:
@@ -316,13 +341,14 @@ class Jobs(BackupEntityCollection):
             html.write(html.attrencode(job.state_name(state["state"])))
 
             table.cell(_("Runtime"))
-            html.write(_("Started at %s") % fmt_datetime(state["started"]))
-            duration = time.time() - state["started"]
-            if state["state"] == "finished":
-                html.write(", Finished at %s" % fmt_datetime(state["started"]))
-                duration = state["finished"] - state["started"]
+            if state["started"]:
+                html.write(_("Started at %s") % fmt_datetime(state["started"]))
+                duration = time.time() - state["started"]
+                if state["state"] == "finished":
+                    html.write(", Finished at %s" % fmt_datetime(state["started"]))
+                    duration = state["finished"] - state["started"]
 
-            html.write(_(" (Duration: %s)") % age_human_readable(duration))
+                html.write(_(" (Duration: %s)") % age_human_readable(duration))
 
             # TODO: Render schedule
             #job_html = SchedulePeriod().value_to_text(job._config["period"]) \
@@ -351,6 +377,10 @@ class Jobs(BackupEntityCollection):
 class Target(BackupEntity):
     def type_ident(self):
         return self._config["remote"][0]
+
+
+    def type_class(self):
+        return BackupTargetType.get_type(self.type_ident())
 
 
     def type_params(self):
@@ -385,7 +415,7 @@ class Targets(BackupEntityCollection):
 
             table.cell(_("Title"), html.attrencode(target.title()))
 
-            vs_target = BackupTargetType.get_type(target.type_ident())().valuespec()
+            vs_target = target.type_class()().valuespec()
             table.cell(_("Destination"), vs_target.value_to_text(target.type_params()))
 
         table.end()
@@ -455,14 +485,25 @@ class BackupTargetLocal(BackupTargetType):
                              "NFS, Samba or similar. But you will have to care about mounting the "
                              "network share on your own."),
                     allow_empty = False,
-                    validate = self._validate_local_directory,
+                    validate = self.validate_local_directory,
                 )),
             ],
             optional_keys = [],
         )
 
 
-    def _validate_local_directory(self, value, varprefix):
+    def validate_local_directory(self, value, varprefix):
         if not os.path.isdir(value):
             raise MKUserError(varprefix, _("The path does not exist or is not a directory. You "
                                            "need to specify an already existing directory."))
+
+        # Check write access for the site user
+        test_file_path = os.tempnam(value, "write_test")
+        try:
+            file(test_file_path, "w")
+            os.unlink(test_file_path)
+        except IOError, e:
+            raise MKUserError(varprefix,
+                _("Failed to write to the configured directory. The site user needs to be able to "
+                  "write the target directory. The recommended way is to make it writable by the "
+                  "group \"omd\"."))

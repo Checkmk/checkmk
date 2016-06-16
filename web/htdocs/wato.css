@@ -1152,6 +1152,9 @@ table.data td.bi_rule_tree > li {
     /* below resize option is css3 */
     resize:both;
 }
+.wato .backup_job .log pre {
+    margin: 2px;
+}
 .wato .diag_host .log.diag_success {
     background-color: #efe;
 }

@@ -577,20 +577,12 @@ def get_tactical_overview_data(extra_filter_headers):
         "Filter: host_custom_variable_names < _REALNAME\n" + \
         extra_filter_headers
 
-    notification_query = \
-        "GET log\n" \
-        "Stats: log_state != 0\n" \
-        "Filter: class = 3\n" \
-        "Filter: log_type = SERVICE NOTIFICATION RESULT\n"\
-        "Filter: time > %d" % notifications.acknowledged_time() + \
-        extra_filter_headers
-
     try:
         hstdata = sites.live().query_summed_stats(host_query)
         svcdata = sites.live().query_summed_stats(service_query)
-        if config.may("general.see_failed_notifications"):
-            notdata = sites.live().query_summed_stats(notification_query)
-        else:
+        notdata = notifications.load_failed_notifications(after=notifications.acknowledged_time(),
+                                                          stat_only=True)
+        if notdata is None:
             notdata = [0]
     except livestatus.MKLivestatusNotFoundError:
         return None, None, None
@@ -602,6 +594,7 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
         extra_url_variables = []
 
     hstdata, svcdata, notdata = get_tactical_overview_data(extra_filter_headers)
+
     if hstdata is None or svcdata is None or notdata is None:
         html.write("<center>No data from any site</center>")
         return
@@ -633,9 +626,8 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
         content = '<a target="main" href="%s">%d failed notifications</a>' %\
             (view_url, failed_notifications)
 
-        confirm_url = html.makeuri_contextless(
-            [("acktime", str(time.time()))] + extra_url_variables,
-            filename="clear_failed_notifications.py")
+        confirm_url = html.makeuri_contextless(extra_url_variables,
+                                               filename="clear_failed_notifications.py")
         content = ('<a target="main" href="%s">'
                     '<img src="images/button_closetimewarp.png" style="width:16px;height:16px;">'
                     '</a>&nbsp;' % confirm_url) + content

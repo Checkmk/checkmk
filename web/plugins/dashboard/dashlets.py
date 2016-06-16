@@ -924,33 +924,24 @@ dashlet_types["notify_users"] = {
 #   '----------------------------------------------------------------------'
 
 def dashlet_failed_notifications(nr, dashlet):
-    notification_query = \
-        "GET log\n" \
-        "Stats: log_state != 0\n" \
-        "Filter: class = 3\n" \
-        "Filter: log_type = SERVICE NOTIFICATION RESULT\n"\
-        "Filter: time > %d" % notifications.acknowledged_time()
+    notdata = notifications.load_failed_notifications(after=notifications.acknowledged_time(),
+                                                      stat_only=True)
 
-    try:
-        notdata = sites.live().query_summed_stats(notification_query)
-    except livestatus.MKLivestatusNotFoundError:
-        html.write("<center>No data from any site</center>")
-        return
+    if notdata is None:
+        failed_notifications = 0
+    else:
+        failed_notifications = notdata[0]
 
-    failed_notifications = notdata[0]
     if failed_notifications > 0:
         view_url = html.makeuri_contextless(
             [("view_name", "failed_notifications")], filename="view.py")
         content = '<a target="main" href="%s">%d failed notifications</a>' %\
             (view_url, failed_notifications)
 
-        if config.may("general.acknowledge_failed_notifications"):
-            confirm_url = html.makeuri_contextless(
-                [("acktime", str(time.time()))],
-                filename="clear_failed_notifications.py")
-            content = ('<a target="main" href="%s">'
-                       '<img src="images/button_closetimewarp.png" style="width:32px;height:32px;">'
-                       '</a>&nbsp;' % confirm_url) + content
+        confirm_url = html.makeuri_contextless([], filename="clear_failed_notifications.py")
+        content = ('<a target="main" href="%s">'
+                    '<img src="images/button_closetimewarp.png" style="width:32px;height:32px;">'
+                    '</a>&nbsp;' % confirm_url) + content
 
         html.write('<div class="has_failed_notifications">'
                    '  <div class="failed_notifications_inner">%s</div>'

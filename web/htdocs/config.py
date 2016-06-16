@@ -483,6 +483,18 @@ def save_user_file(name, content, unlock=False, user=None):
         if unlock:
             release_lock(path)
 
+def user_file_modified(name):
+    if user_confdir == None:
+        return 0
+
+    try:
+        return os.stat(user_confdir + "/" + name + ".mk").st_mtime
+    except OSError, e:
+        if e.errno == errno.ENOENT:
+            return 0
+        else:
+            raise
+
 #.
 #   .--Sites---------------------------------------------------------------.
 #   |                        ____  _ _                                     |

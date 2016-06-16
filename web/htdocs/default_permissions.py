@@ -148,12 +148,21 @@ def load_plugins(force):
            "if the user has this permission."),
          [ "admin" ])
 
-    config.declare_permission("general.see_failed_notifications",
-         _("See Failed Notifications"),
+    config.declare_permission("general.see_failed_notifications_24h",
+         _("See failed Notifications (last 24 hours)"),
          _("If check_mk is unable to notify users about problems, the site will warn about this situation "
            "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
-           "users with this permission ."),
-         [ "admin", "user" ])
+           "users with this permission. Users with this permission will only see failed notifications "
+           "that occured within the last 24 hours."),
+         [ "user" ])
+
+    config.declare_permission("general.see_failed_notifications",
+         _("See failed Notifications (all)"),
+         _("If check_mk is unable to notify users about problems, the site will warn about this situation "
+           "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
+           "users with this permission. Users with this permission will also see failed notifications "
+           "older than 24 hours."),
+         [ "admin" ])
 
     loaded_with_language = current_language
 

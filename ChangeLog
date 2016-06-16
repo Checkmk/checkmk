@@ -272,6 +272,7 @@
     * 3637 FIX: ipmi_sensors: fixed sensor discovery if sensor is unknown and perfdata handling
     * 3545 FIX: netapp_api_vs_traffic: fixed crash when NFSv4.1 information was available
     * 3143 FIX: windows agent: fixed some minor memory and handle leaks
+    * 3144 FIX: bugfix: replacing pipe symbol in plugin output was broken
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

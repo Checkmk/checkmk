@@ -98,7 +98,7 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
     query = "\n".join(query)
 
     if extra_headers is not None:
-        query += extra_filter_headers
+        query += extra_headers
 
     if stat_only:
         return sites.live().query_summed_stats(query)

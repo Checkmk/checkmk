@@ -48,3 +48,7 @@ def date(timestamp):
 
 def date_and_time(timestamp):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+
+
+def time_of_day(timestamp):
+    return time.strftime("%H:%M:%S", time.localtime(timestamp))

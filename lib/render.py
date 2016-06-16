@@ -44,3 +44,7 @@ except NameError:
 
 def date(timestamp):
     return time.strftime("%Y-%m-%d", time.localtime(timestamp))
+
+
+def date_and_time(timestamp):
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))

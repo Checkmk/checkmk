@@ -738,9 +738,7 @@ def automation_diag_host(args):
             # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
 
             # Insert preconfigured communitiy
-            if test != "snmpv3" and snmp_community:
-                explicit_snmp_communities[hostname] = snmp_community
-            else:
+            if test == "snmpv3":
                 if snmpv3_use:
                     snmpv3_credentials = [snmpv3_use]
                     if snmpv3_use in ["authNoPriv", "authPriv"]:
@@ -748,6 +746,8 @@ def automation_diag_host(args):
                     if snmpv3_use == "authPriv":
                         snmpv3_credentials.extend([snmpv3_privacy_proto, snmpv3_privacy_password])
                     explicit_snmp_communities[hostname] = tuple(snmpv3_credentials)
+            elif snmp_community:
+                explicit_snmp_communities[hostname] = snmp_community
 
             # Determine SNMPv2/v3 community
             if hostname not in explicit_snmp_communities:

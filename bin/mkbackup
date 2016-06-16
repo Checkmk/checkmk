@@ -34,11 +34,13 @@ import pprint
 import pwd
 import re
 import shutil
+import socket
 import signal
 import subprocess
 import sys
 import time
 import traceback
+from tarfile import TarFile
 
 import cmk.daemon as daemon
 from cmk.exceptions import MKTerminate, MKGeneralException
@@ -102,6 +104,10 @@ def stop_logging():
 
 def log(s):
     sys.stdout.write("%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), s))
+
+
+def hostname():
+    return socket.gethostname()
 
 
 def is_root():
@@ -409,6 +415,10 @@ def site_backup_path(site_id):
     return "%s/site-%s.tar.gz" % (job_backup_path_during_backup(), site_id)
 
 
+def system_backup_path():
+    return "%s/system.tar.gz" % (job_backup_path_during_backup())
+
+
 def job_backup_path_during_backup():
     return "%s-incomplete" % job_backup_path()
 
@@ -430,6 +440,9 @@ def job_backup_path():
 
 
 def do_system_backup(opts):
+    # Create missing directories. Ensure group permissions and mode.
+    makedirs(os.path.dirname(system_backup_path()), group="omd", mode=0775)
+
     # Perform backup of the /rw volume on all devices
     do_system_rw_backup(opts)
 
@@ -437,23 +450,34 @@ def do_system_backup(opts):
     if not is_cluster_inactive():
         do_system_data_backup(opts)
 
+    # Now run the site backup for all sites
+    for site_id in existing_sites():
+        do_site_backup(opts, site=site_id)
+
 
 def do_system_rw_backup(opts):
-    # TODO
-    return
-    #dest_path = "%s/system.tar.gz" % (job_backup_path_during_backup())
-    #fobj = file(dest_path, "w")
-    #backup_files_to_tarfile(fobj, "/rw", opts)
-    #fobj.close()
+    fobj = file(system_backup_path(), "w")
+    backup_files_to_tarfile(fobj, "/rw", opts)
+    fobj.close()
 
 
 def do_system_data_backup(opts):
     pass # TODO
 
 
+def is_cluster_inactive():
+    return False # TODO
+
+
+def existing_sites():
+    return sorted([ s for s in os.listdir("/omd/sites")
+                    if os.path.isdir(os.path.join("/omd/sites/", s)) ])
+
+
 def backup_files_to_tarfile(fobj, base_path, opts):
     tar = TarFile.open(fileobj=fobj, mode="w:gz")
     tar.add(base_path)
+    tar.close()
 
 
 def complete_backup():
@@ -481,7 +505,7 @@ def globalize_job_id(local_job_id):
     else:
         parts.append("Check_MK_Appliance")
 
-    parts.append("Klappspaten") # TODO
+    parts.append(hostname())
 
     if site:
         parts.append(site)

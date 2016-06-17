@@ -29,6 +29,7 @@ VERSION = "1.4.0i1"
 import os
 import getopt
 import fcntl
+import fnmatch
 import grp
 import pprint
 import pwd
@@ -44,14 +45,6 @@ from tarfile import TarFile
 
 import cmk.daemon as daemon
 from cmk.exceptions import MKTerminate, MKGeneralException
-
-# TODO: Clean this up one day by using the way recommended by gettext.
-# (See https://docs.python.org/2/library/gettext.html). For this we
-# need the path to the locale files here.
-try:
-    _
-except NameError:
-    _ = lambda x: x # Fake i18n when not available
 
 g_var_path = "/var/lib/mkbackup"
 
@@ -128,24 +121,27 @@ def system_config_path():
 
 def site_config_path():
     if not site_id():
-	raise Exception(_("Not executed in OMD environment!"))
+	raise Exception("Not executed in OMD environment!")
     return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
 
 
+# Es gibt ein globales Backup-Lock, das bei modifizierenden Aktionen
+# geholt wird. D.h. es kann Systemweit immer nur ein Backup oder Restore
+# zur Zeit ausgeführt werden.
 def acquire_backup_lock():
     global g_backup_lock_f
     lock_file_path = "%s/mkbackup.lock" % g_var_path
     try:
         g_backup_lock_f = open(lock_file_path, "a+")
     except IOError, e:
-        raise MKGeneralException(_("Failed to open lock file \"%s\": %s") %
+        raise MKGeneralException("Failed to open lock file \"%s\": %s" %
                     (lock_file_path, e))
 
     try:
         fcntl.flock(g_backup_lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError:
-        raise MKGeneralException(_("Failed to get the exclusive backup lock. "
-                            "Another backup/restore seems to be running."))
+        raise MKGeneralException("Failed to get the exclusive backup lock. "
+                            "Another backup/restore seems to be running.")
 
 
 # TODO: Move to cmklib?
@@ -211,28 +207,6 @@ def load_config():
 
     return config
 
-# Es gibt ein globales Backup-Lock, das bei modifizierenden Aktionen
-# geholt wird. D.h. es kann Systemweit immer nur ein Backup oder Restore
-# zur Zeit ausgeführt werden.
-
-# Parameter:
-# - Modus (backup, restore, list, show)
-#
-#   Backup: Erstellt eine neue Sicherung
-#       Als Site-Nutzer wird immer ein Site-Backup der aktuellen Site
-#       erstellt. Als root wird ein Systembackup ausgeführt. Per Default
-#       sind dabei auch alle Sites mit enthalten.
-#   - ID des Backup jobs 
-#   - Optional (als root):
-#     - Sites ausschließen
-#
-#   Beispielbefehle:
-#     # Site- oder Systemsicherung:
-#     mkbackup backup nfs
-#
-#     # Systemsicherung ohne Sites:
-#     mkbackup backup nfs --without-sites
-#
 #   List: Alle Backups auflisten
 #       Als Site-Nutzer sieht man nur die Site-Backups (auch die, die
 #       durch die Systembackups erstellt wurden)
@@ -264,56 +238,59 @@ def load_config():
 
 modes = {
     "backup": {
-	"description": _("Starts creating a new backup"),
+	"description":
+            "Starts creating a new backup. When executed as Check_MK site user, a backup of the "
+            "current site is executed to the target of the given backup job. When executed as "
+            "root user on the Check_MK Appliance, a backup of the whole system is created.",
 	"args": [
 	    {
-		"id": _("Job-ID"),
-		"description": _("The ID of the backup job to work with"),
+		"id": "Job-ID",
+		"description": "The ID of the backup job to work with",
 	    },
 	],
 	"opts": {
 	    "background": {
-		"description": _("Fork and execute the program in the background."),
+		"description": "Fork and execute the program in the background.",
 	    },
 	},
 	"root_opts": {
 	    "without-sites": {
-		"description": _("Create a system backup but exclude the Check_MK sites."),
+		"description": "Create a system backup but exclude the Check_MK sites.",
 	    },
 	},
     },
     "restore": {
-	"description": _("Starts the restore of a backup"),
+	"description": "Starts the restore of a backup",
 	"args": [
 	    {
-		"id": _("Target-ID"),
-		"description": _("The ID of the backup target to work with"),
+		"id": "Target-ID",
+		"description": "The ID of the backup target to work with",
 	    },
 	    {
-		"id": _("Backup-ID"),
-		"description": _("The ID of the backup to restore"),
+		"id": "Backup-ID",
+		"description": "The ID of the backup to restore",
 	    },
 	],
     },
     "list": {
-	"description": _("Output the list of all backups"),
+	"description": "Output the list of all backups",
 	"args": [
 	    {
-		"id": _("Target-ID"),
-		"description": _("The ID of the backup target to work with"),
+		"id": "Target-ID",
+		"description": "The ID of the backup target to work with",
 	    },
 	],
     },
     "show": {
-	"description": _("Shows information about a backup"),
+	"description": "Shows information about a backup",
 	"args": [
 	    {
-		"id": _("Target-ID"),
-		"description": _("The ID of the backup target to work with"),
+		"id": "Target-ID",
+		"description": "The ID of the backup target to work with",
 	    },
 	    {
-		"id": _("Backup-ID"),
-		"description": _("The ID of the backup to show"),
+		"id": "Backup-ID",
+		"description": "The ID of the backup to show",
 	    },
 	],
     },
@@ -339,6 +316,7 @@ def mode_backup(local_job_id, opts):
         save_state({"pid": os.getpid()})
 
     start_logging()
+    log("--- Starting backup (%s) ---" % g_job_id)
 
     success = False
     try:
@@ -376,7 +354,7 @@ def do_backup(opts):
     elif is_cma():
         do_system_backup(opts)
     else:
-        raise MKGeneralException(_("System backup not supported."))
+        raise MKGeneralException("System backup not supported.")
     complete_backup()
 
 
@@ -408,7 +386,7 @@ def do_site_backup(opts, site=None):
                          stdout=open(os.devnull, "w"),
                          stderr=subprocess.PIPE, stdin=open(os.devnull))
     if p.wait() != 0:
-        raise MKGeneralException(_("Site backup failed: %s") % p.stderr.read())
+        raise MKGeneralException("Site backup failed: %s" % p.stderr.read())
 
 
 def site_backup_path(site_id):
@@ -417,6 +395,10 @@ def site_backup_path(site_id):
 
 def system_backup_path():
     return "%s/system.tar.gz" % (job_backup_path_during_backup())
+
+
+def system_data_backup_path():
+    return "%s/system-data.tar.gz" % (job_backup_path_during_backup())
 
 
 def job_backup_path_during_backup():
@@ -444,25 +426,37 @@ def do_system_backup(opts):
     makedirs(os.path.dirname(system_backup_path()), group="omd", mode=0775)
 
     # Perform backup of the /rw volume on all devices
+    log("Performing system backup (system.tar.gz)")
     do_system_rw_backup(opts)
 
     # The data volume (/omd) is not backed up on slave cluster nodes
     if not is_cluster_inactive():
+        log("Performing system data backup (system-data.tar.gz)")
         do_system_data_backup(opts)
+    else:
+        log("Skipping system data backup (inactive cluster node)")
 
     # Now run the site backup for all sites
-    for site_id in existing_sites():
-        do_site_backup(opts, site=site_id)
+    if "without-sites" not in opts:
+        for site_id in existing_sites():
+            log("Performing site backup: %s" % site_id)
+            do_site_backup(opts, site=site_id)
+    else:
+        log("Skipping site backup (disabled)")
 
 
 def do_system_rw_backup(opts):
+    # TODO: Nicht direkt speichern, sondern durch gpg/openssl pipen, wenn
+    # Verschlüsselung aktiv ist
     fobj = file(system_backup_path(), "w")
-    backup_files_to_tarfile(fobj, "/rw", opts)
+    backup_files_to_tarfile(fobj, "/rw")
     fobj.close()
 
 
 def do_system_data_backup(opts):
-    pass # TODO
+    fobj = file(system_data_backup_path(), "w")
+    backup_files_to_tarfile(fobj, "/opt/omd", exclude_patterns=["sites/*"])
+    fobj.close()
 
 
 def is_cluster_inactive():
@@ -474,9 +468,21 @@ def existing_sites():
                     if os.path.isdir(os.path.join("/omd/sites/", s)) ])
 
 
-def backup_files_to_tarfile(fobj, base_path, opts):
+def backup_files_to_tarfile(fobj, base_path, exclude_patterns=None):
+    if exclude_patterns:
+        def filter_files(filename):
+            for glob_pattern in exclude_patterns:
+                # patterns are relative to base_path, filename is full path.
+                # strip of the base_path prefix from full path
+                if fnmatch.fnmatch(filename[len(base_path)+1:], glob_pattern):
+                    return True # exclude this file
+            return False
+
+    else:
+        filter_files = lambda x: True
+
     tar = TarFile.open(fileobj=fobj, mode="w:gz")
-    tar.add(base_path)
+    tar.add(base_path, exclude=filter_files)
     tar.close()
 
 
@@ -487,7 +493,9 @@ def complete_backup():
 
     os.rename(job_backup_path_during_backup(),
               job_backup_path_complete())
-    log("Backup completed.")
+
+    duration = time.time() - load_state()["started"]
+    log("--- Backup completed (%0.2f sec) ---" % duration)
 
 
 def cleanup_previous_incomplete_backup():
@@ -628,7 +636,7 @@ def main():
     register_signal_handlers()
 
     short_options = "h"
-    # TODO: Implement handling
+    # TODO: Implement verbose handling
     long_options = [ "help", "version", "verbose", "debug" ]
 
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)

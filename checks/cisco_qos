@@ -228,23 +228,27 @@ def check_cisco_qos(item, params, info):
     for b_key, b_value in parents.items():
         if parent_value_cache[class_id] == b_value:
             if object_types[b_key] == "4":
-                 try:
-                     # 1 kbps
-                     # 2 percentage
-                     # 3 percentageRemaining
-                     # 4 ratioRemaining
-                     # 5 perThousand
-                     # 6 perMillion
-                     qos_unit      = int(if_qos_bandwidth_units[config[b_key]])
-                     qos_bandwidth = saveint(if_qos_bandwidth[config[b_key]])
-                     if qos_unit == 1:
-                         speed = qos_bandwidth * 1000
-                     elif qos_unit == 3:
-                         remaining = (speed / 100) * qos_bandwidth
-                         speed = speed - remaining
-                     break
-                 except KeyError:
-                     pass
+                try:
+                    # 1 kbps
+                    # 2 percentage
+                    # 3 percentageRemaining
+                    # 4 ratioRemaining
+                    # 5 perThousand
+                    # 6 perMillion
+                    qos_unit      = int(if_qos_bandwidth_units[config[b_key]])
+                    qos_bandwidth = saveint(if_qos_bandwidth[config[b_key]])
+                    if qos_unit == 1:
+                        speed = qos_bandwidth * 1000
+
+                    elif qos_unit == 2:
+                        speed = speed * (qos_bandwidth / 100.0)
+
+                    elif qos_unit == 3:
+                        remaining = (speed / 100) * qos_bandwidth
+                        speed = speed - remaining
+                    break
+                except KeyError:
+                    pass
 
     # Bandwidth needs to be in bytes for later calculations
     bw = speed / 8.0

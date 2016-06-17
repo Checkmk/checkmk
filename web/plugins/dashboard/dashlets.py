@@ -948,7 +948,7 @@ def dashlet_failed_notifications(nr, dashlet):
                    '</div>' % content)
 
 dashlet_types["notify_failed_notifications"] = {
-    "title"       : _("Failed notifications"),
+    "title"       : _("Failed Notifications"),
     "description" : _("Display GUI notifications in case notification mechanism fails"),
     "render"      : dashlet_failed_notifications,
     "sort_index"  : 0,

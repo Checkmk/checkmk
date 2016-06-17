@@ -10,6 +10,7 @@
     * 3545 FIX: netapp_api_vs_traffic: fixed crash when NFSv4.1 information was available
     * 3143 FIX: windows agent: fixed some minor memory and handle leaks
     * 3144 FIX: bugfix: replacing pipe symbol in plugin output was broken
+    * 3638 FIX: cisco_qos: fixed wrong unit handling
 
     WATO:
     * 3542 FIX: WATO Web API: fixed exception when WATO Git is activated...

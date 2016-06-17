@@ -251,6 +251,7 @@ def convert_esx_counters_if(parsed):
     nics = by_item.keys()
     nics.sort()
 
+    # This is for the if Check
     converted = [
         [], #  0 ifIndex                   0
         [], #  1 ifDescr                   1
@@ -274,6 +275,8 @@ def convert_esx_counters_if(parsed):
         [], # 19 ifPhysAddress            19
     ]
 
+    # This is for mapping the incoming ESX counter data to table indeces above
+    # These can be passed directly to if
     tableindex = {
         'bytesRx':      5,  # is in Kilobytes!
         'packetsRx':    6,

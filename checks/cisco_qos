@@ -235,11 +235,11 @@ def check_cisco_qos(item, params, info):
                      # 4 ratioRemaining
                      # 5 perThousand
                      # 6 perMillion
-                     unit = int(if_qos_bandwidth_units[config[b_key]])
+                     qos_unit      = int(if_qos_bandwidth_units[config[b_key]])
                      qos_bandwidth = saveint(if_qos_bandwidth[config[b_key]])
-                     if unit == 1:
+                     if qos_unit == 1:
                          speed = qos_bandwidth * 1000
-                     elif unit == 3:
+                     elif qos_unit == 3:
                          remaining = (speed / 100) * qos_bandwidth
                          speed = speed - remaining
                      break

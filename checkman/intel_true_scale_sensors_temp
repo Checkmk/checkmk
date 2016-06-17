@@ -1,0 +1,20 @@
+title: Intel True Fabric Scale Switches: Slot temperature sensors
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the temperature sensors of the slots of
+ of True Scale Fabric Switches which support the ICS-CHASSIS MIB.
+
+ For each sensor connected to a slot the status can be invalid (CRIT),
+ unknown (UNKNOWN), bad (CRIT), warning (WARN), good (OK) or
+ disabled (UNKNOWN).
+
+ Moreover the temperature reading is reported.
+
+item:
+ The slot ID.
+
+inventory:
+ One service for each slot is created.

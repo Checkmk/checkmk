@@ -1,0 +1,104 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# .1.3.6.1.4.1.10222.2.1.6.5.1.2.6.1 Fan 201 --> ICS-CHASSIS-MIB::icsChassisFanDescription.6.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.2.7.1 Fan 202 --> ICS-CHASSIS-MIB::icsChassisFanDescription.7.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.2.8.1 Fan 203 --> ICS-CHASSIS-MIB::icsChassisFanDescription.8.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.2.9.1 Fan 204 --> ICS-CHASSIS-MIB::icsChassisFanDescription.9.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.2.10.1 Fan 205 --> ICS-CHASSIS-MIB::icsChassisFanDescription.10.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.2.11.1 Fan 101 --> ICS-CHASSIS-MIB::icsChassisFanDescription.11.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.2.12.1 Fan 102 --> ICS-CHASSIS-MIB::icsChassisFanDescription.12.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.2.13.1 Fan 103 --> ICS-CHASSIS-MIB::icsChassisFanDescription.13.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.3.6.1 2 --> ICS-CHASSIS-MIB::icsChassisFanOperStatus.6.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.3.7.1 2 --> ICS-CHASSIS-MIB::icsChassisFanOperStatus.7.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.3.8.1 2 --> ICS-CHASSIS-MIB::icsChassisFanOperStatus.8.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.3.9.1 2 --> ICS-CHASSIS-MIB::icsChassisFanOperStatus.9.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.3.10.1 2 --> ICS-CHASSIS-MIB::icsChassisFanOperStatus.10.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.3.11.1 2 --> ICS-CHASSIS-MIB::icsChassisFanOperStatus.11.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.3.12.1 2 --> ICS-CHASSIS-MIB::icsChassisFanOperStatus.12.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.3.13.1 2 --> ICS-CHASSIS-MIB::icsChassisFanOperStatus.13.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.4.6.1 2 --> ICS-CHASSIS-MIB::icsChassisFanSpeed.6.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.4.7.1 2 --> ICS-CHASSIS-MIB::icsChassisFanSpeed.7.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.4.8.1 2 --> ICS-CHASSIS-MIB::icsChassisFanSpeed.8.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.4.9.1 2 --> ICS-CHASSIS-MIB::icsChassisFanSpeed.9.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.4.10.1 2 --> ICS-CHASSIS-MIB::icsChassisFanSpeed.10.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.4.11.1 2 --> ICS-CHASSIS-MIB::icsChassisFanSpeed.11.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.4.12.1 2 --> ICS-CHASSIS-MIB::icsChassisFanSpeed.12.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.4.13.1 2 --> ICS-CHASSIS-MIB::icsChassisFanSpeed.13.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.5.6.1 0 --> ICS-CHASSIS-MIB::icsChassisFanNonFatalErrors.6.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.5.7.1 0 --> ICS-CHASSIS-MIB::icsChassisFanNonFatalErrors.7.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.5.8.1 0 --> ICS-CHASSIS-MIB::icsChassisFanNonFatalErrors.8.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.5.9.1 0 --> ICS-CHASSIS-MIB::icsChassisFanNonFatalErrors.9.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.5.10.1 0 --> ICS-CHASSIS-MIB::icsChassisFanNonFatalErrors.10.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.5.11.1 0 --> ICS-CHASSIS-MIB::icsChassisFanNonFatalErrors.11.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.5.12.1 0 --> ICS-CHASSIS-MIB::icsChassisFanNonFatalErrors.12.1
+# .1.3.6.1.4.1.10222.2.1.6.5.1.5.13.1 0 --> ICS-CHASSIS-MIB::icsChassisFanNonFatalErrors.13.1
+
+
+def inventory_intel_true_scale_fans(info):
+    return [ (fan_name.replace("Fan", "").strip(), None)
+              for fan_name, operstate, speed_state in info
+              if operstate != "4"]
+
+
+def check_intel_true_scale_fans(item, _no_params, info):
+    map_states = {
+        "operational" : {
+            "1" : (0, "online"),
+            "2" : (0, "operational"),
+            "3" : (2, "failed"),
+            "4" : (1, "offline"),
+        },
+        "speed" : {
+            "1" : (2, "low"),
+            "2" : (0, "normal"),
+            "3" : (2, "high"),
+            "4" : (3, "unknown"),
+        }
+    }
+
+    for fan_name, operstate, speedstate in info:
+        if item == fan_name.replace("Fan", "").strip():
+            for what, what_descr, what_mapping in [
+                (operstate,  "Operational", "operational"),
+                (speedstate, "Speed",       "speed")]:
+                state, state_readable = map_states[what_mapping][what]
+                yield state, "%s status: %s" % (what_descr, state_readable)
+
+
+check_info['intel_true_scale_fans'] = {
+    'inventory_function'        : inventory_intel_true_scale_fans,
+    'check_function'            : check_intel_true_scale_fans,
+    'service_description'       : 'Fan %s',
+    'snmp_info'                 : (".1.3.6.1.4.1.10222.2.1.6.5.1", [
+                                        "2",    # ICS-CHASSIS-MIB::icsChassisFanDescription
+                                        "3",    # ICS-CHASSIS-MIB::icsChassisFanOperStatus
+                                        "4",    # ICS-CHASSIS-MIB::icsChassisFanSpeed
+                                  ]),
+    'snmp_scan_function'        : scan_intel_true_scale,
+    'includes'                  : [ 'intel_true_scale.include' ],
+}

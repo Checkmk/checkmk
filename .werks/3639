@@ -1,0 +1,9 @@
+Title: intel_true_scale_chassis_temp, intel_true_scale_fans, intel_true_scale_psus, intel_true_scale_sensors_temp: new checks for Intel True Fabric Scale Switches
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1466180430
+Class: feature
+
+

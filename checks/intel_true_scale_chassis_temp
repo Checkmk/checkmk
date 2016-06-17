@@ -1,0 +1,69 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# .1.3.6.1.4.1.10222.2.1.5.1.0 1 --> ICS-CHASSIS-MIB::icsChassisTemperatureStatus.0
+# .1.3.6.1.4.1.10222.2.1.5.2.0 0 --> ICS-CHASSIS-MIB::icsChassisTemperatureWarning.0
+
+
+def inventory_intel_true_scale_chassis_temp(info):
+    if info and info[0][0] != "6":
+        return [ (None, None) ]
+
+
+def check_intel_true_scale_chassis_temp(_no_item, _no_params, info):
+    map_status = {
+        "1" : (0, "normal"),
+        "2" : (1, "high"),
+        "3" : (2, "excessively high"),
+        "4" : (1, "low"),
+        "5" : (2, "excessively low"),
+        "6" : (3, "no sensor"),
+        "7" : (3, "unknown"),
+    }
+    map_warn_config = {
+        "0" : "unspecified",
+        "1" : "heed warning",
+        "2" : "ignore warning",
+        "3" : "no warning feature",
+    }
+
+    state, state_readable = map_status[info[0][0]]
+    return state, "Status: %s, Warning configuration: %s" % \
+                  (state_readable, map_warn_config[info[0][1]])
+
+
+check_info['intel_true_scale_chassis_temp'] = {
+    'inventory_function'        : inventory_intel_true_scale_chassis_temp,
+    'check_function'            : check_intel_true_scale_chassis_temp,
+    'service_description'       : 'Temperature status chassis',
+    'snmp_info'                 : (".1.3.6.1.4.1.10222.2.1.5", [
+                                    "1",    # ICS-CHASSIS-MIB::icsChassisTemperatureStatus
+                                    "2",    # ICS-CHASSIS-MIB::icsChassisTemperatureWarning
+                                  ]),
+    'snmp_scan_function'        : scan_intel_true_scale,
+    'includes'                  : [ 'intel_true_scale.include' ],
+}

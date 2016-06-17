@@ -1,0 +1,18 @@
+title: Intel True Fabric Scale Switches: Chassis temperature status
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the chassis temperature status of True Scale Fabric Switches
+ which support the ICS-CHASSIS MIB.
+
+ The check reports OK if the status is normal, It's WARN if the status is
+ high or low. The check goes CRIT if the status is excessively high or low.
+ Otherwise the check is UNKNOWN.
+
+item:
+ No item.
+
+inventory:
+ One service is created.

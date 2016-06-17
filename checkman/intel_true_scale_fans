@@ -1,0 +1,19 @@
+title: Intel True Fabric Scale Switches: Fans status and speed
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the operational and speed status of fans
+ of True Scale Fabric Switches which support the ICS-CHASSIS MIB.
+
+ The operational status can be online (OK), operational (OK),
+ failed (CRIT) or offline (WARN).
+ The speed status can be low (CRIT), normal (OK), high (CRIT)
+ or unknown (UNKNOWN).
+
+item:
+ The fan ID.
+
+inventory:
+ One service for each fan is created.

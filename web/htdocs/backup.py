@@ -33,6 +33,7 @@
 import os
 import pprint
 import signal
+import socket
 import subprocess
 
 import defaults
@@ -62,6 +63,7 @@ def mkbackup_path():
     else:
         return "%s/bin/mkbackup" % os.environ["OMD_ROOT"]
 
+
 def system_config_path():
     return "/etc/cma/backup.conf"
 
@@ -70,6 +72,10 @@ def site_config_path():
     if "OMD_ROOT" not in os.environ:
 	raise Exception(_("Not executed in OMD environment!"))
     return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
+
+
+def hostname():
+    return socket.gethostname()
 
 
 # TODO: Locking!
@@ -202,7 +208,7 @@ class Job(BackupEntity):
         else:
             parts.append("Check_MK_Appliance")
 
-        parts.append("Klappspaten") # TODO
+        parts.append(hostname())
 
         if site:
             parts.append(site)
@@ -420,6 +426,11 @@ class Targets(BackupEntityCollection):
 
         table.end()
 
+
+
+class SystemBackupTargets(Targets):
+    def __init__(self):
+        super(SystemBackupTargets, self).__init__(system_config_path())
 
 #.
 #   .--Target Types--------------------------------------------------------.

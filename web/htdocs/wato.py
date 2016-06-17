@@ -5620,12 +5620,6 @@ class SiteBackupTargets(backup.Targets):
 
 
 
-class SystemBackupTargets(backup.Targets):
-    def __init__(self):
-        super(SystemBackupTargets, self).__init__("/etc/cma/backup.conf")
-
-
-
 class ModeBackup(WatoMode):
     def __init__(self):
         super(ModeBackup, self).__init__()
@@ -5729,7 +5723,7 @@ class ModeBackupTargets(WatoMode):
 
     def page(self):
         SiteBackupTargets().show_list()
-        SystemBackupTargets().show_list(editable=False, title=_("System global targets"))
+        backup.SystemBackupTargets().show_list(editable=False, title=_("System global targets"))
 
 
 
@@ -5955,7 +5949,7 @@ class ModeEditBackupJob(WatoMode):
 
 
     def backup_target_choices(self):
-        return sorted(SiteBackupTargets().choices() + SystemBackupTargets().choices(),
+        return sorted(SiteBackupTargets().choices() + backup.SystemBackupTargets().choices(),
                         key=lambda (x, y): y.title())
 
 

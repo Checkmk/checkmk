@@ -30,6 +30,7 @@ import os
 import getopt
 import fcntl
 import fnmatch
+import glob
 import grp
 import pprint
 import pwd
@@ -42,6 +43,7 @@ import sys
 import time
 import traceback
 from tarfile import TarFile
+from hashlib import md5
 
 import cmk.daemon as daemon
 from cmk.exceptions import MKTerminate, MKGeneralException
@@ -207,6 +209,46 @@ def load_config():
 
     return config
 
+
+def load_backup_info(path):
+    return eval(file(path).read())
+
+
+def save_backup_info():
+    info = {
+        "type"     : "Check_MK" if not is_root() \
+                     else "Appliance",
+        "job_id"   : g_local_job_id,
+        "hostname" : hostname(),
+        "files"    : backup_info_files(),
+        "finished" : time.time(),
+    }
+
+    if not is_root():
+        info["site_id"] = site_id()
+
+    with open(backup_info_path(), "w") as f:
+        f.write(pprint.pformat(info)+"\n")
+
+
+def backup_info_files():
+    files = []
+    backup_path = job_backup_path_during_backup()
+    for f in sorted(os.listdir(backup_path)):
+        files.append((f, os.path.getsize(backup_path + "/" + f),
+                      file_checksum(backup_path + "/" + f)))
+
+    return files
+
+
+def file_checksum(path):
+    hash_md5 = md5()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+
 #   List: Alle Backups auflisten
 #       Als Site-Nutzer sieht man nur die Site-Backups (auch die, die
 #       durch die Systembackups erstellt wurden)
@@ -273,7 +315,7 @@ modes = {
 	],
     },
     "list": {
-	"description": "Output the list of all backups",
+	"description": "Output the list of all backups found on the given backup target",
 	"args": [
 	    {
 		"id": "Target-ID",
@@ -300,8 +342,9 @@ modes = {
 def mode_backup(local_job_id, opts):
     acquire_backup_lock()
 
-    global g_job_id
+    global g_job_id, g_local_job_id
     g_job_id = globalize_job_id(local_job_id)
+    g_local_job_id = local_job_id
 
     if local_job_id not in g_config["jobs"]:
         raise MKGeneralException("This backup job does not exist.")
@@ -389,6 +432,10 @@ def do_site_backup(opts, site=None):
         raise MKGeneralException("Site backup failed: %s" % p.stderr.read())
 
 
+def backup_info_path():
+    return "%s/mkbackup.info" % (job_backup_path_during_backup())
+
+
 def site_backup_path(site_id):
     return "%s/site-%s.tar.gz" % (job_backup_path_during_backup(), site_id)
 
@@ -410,15 +457,16 @@ def job_backup_path_complete():
 
 
 def job_backup_path():
-    target_ident = g_job_config["target"]
+    return "%s/%s" % (target_path(g_job_config["target"]), g_job_id)
+
+
+def target_path(target_ident):
     target_cfg = g_config["targets"][target_ident]
 
     if target_cfg["remote"][0] != "local":
         raise NotImplementedError()
 
-    target_path = target_cfg["remote"][1]["path"]
-
-    return "%s/%s" % (target_path, g_job_id)
+    return target_cfg["remote"][1]["path"]
 
 
 def do_system_backup(opts):
@@ -490,6 +538,8 @@ def complete_backup():
     if os.path.exists(job_backup_path_complete()):
         log("Cleaning up previously completed backup")
         shutil.rmtree(job_backup_path_complete())
+
+    save_backup_info()
 
     os.rename(job_backup_path_during_backup(),
               job_backup_path_complete())
@@ -564,9 +614,21 @@ def mode_restore(target_id, backup_id, opts):
     print target_id, backup_id, opts
 
 
-# TODO: Implement this
 def mode_list(target_id, opts):
-    print target_id, opts
+    if target_id not in g_config["targets"]:
+        raise MKGeneralException("This backup target does not exist.")
+
+    fmt = "%-9s %-20s %-30s %-16s\n"
+    sys.stdout.write(fmt % ("Type", "Job", "From", "Finished"))
+    sys.stdout.write("%s\n" % ("-" * 80))
+    for path in sorted(glob.glob("%s/*/mkbackup.info" % target_path(target_id))):
+        info = load_backup_info(path)
+        from_info = info["hostname"]
+        if "site_id" in info:
+            from_info += " (Site: %s)" % info["site_id"] 
+        sys.stdout.write(fmt % (info["type"], info["job_id"], from_info,
+                   time.strftime("%Y-%m-%d %H:%M", time.localtime(info["finished"]))))
+    sys.stdout.write("\n")
 
 
 # TODO: Implement this
@@ -589,6 +651,7 @@ def usage(error=None):
     sys.stdout.write("\n")
 
     for mode_name, mode in sorted(modes.items()):
+        # TODO: Textwrap (textwrap.wrap())
         sys.stdout.write("    %-13s %s\n" % (mode_name, mode["description"]))
         sys.stdout.write("\n")
         sys.stdout.write("      MODE ARGUMENTS:\n")

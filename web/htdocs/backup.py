@@ -39,7 +39,7 @@ import subprocess
 import defaults
 import table
 from valuespec import *
-from lib import write_settings_file, age_human_readable
+from lib import write_settings_file, age_human_readable, MKUserError
 
 #.
 #   .--Config--------------------------------------------------------------.
@@ -365,6 +365,306 @@ class Jobs(BackupEntityCollection):
         table.end()
 
 
+
+class PageBackup(object):
+    def __init__(self):
+        super(PageBackup, self).__init__()
+
+
+    def title(self):
+        raise NotImplementedError()
+
+
+    def jobs(self):
+        raise NotImplementedError()
+
+
+    def home_button(self):
+        raise NotImplementedError()
+
+
+    def buttons(self):
+        self.home_button()
+        html.context_button(_("Backup targets"), html.makeuri_contextless([("mode", "backup_targets")]), "backup_targets")
+        html.context_button(_("New job"), html.makeuri_contextless([("mode", "edit_backup_job")]), "backup_job_new")
+
+
+    def action(self):
+        ident = html.var("_job")
+        jobs = jobs()
+        try:
+            job = jobs.get(ident)
+        except KeyError:
+            raise MKUserError("_job", _("This backup job does not exist."))
+
+        action = html.var("_action")
+
+        if action == "delete":
+            if not html.transaction_valid():
+                return
+        else:
+            if not html.check_transaction():
+                return
+
+        if action == "delete":
+            return self._delete_job(job)
+
+        elif action == "start":
+            return self._start_job(job)
+
+        elif action == "stop":
+            return self._stop_job(job)
+
+        else:
+            raise NotImplementedError()
+
+
+    def _delete_job(self, job):
+        if job.is_running():
+            raise MKUserError("_job", _("This job is currently running."))
+
+        if wato_confirm(self.title(), _("Do you really want to delete this job?")):
+            html.check_transaction() # invalidate transid
+            jobs = SiteBackupJobs()
+            jobs.remove(job)
+            jobs.save()
+            return None, _("The job has been deleted.")
+
+
+    def _start_job(self, job):
+        job.start()
+        return None, _("The backup has been started.")
+
+
+    def _stop_job(self, job):
+        job.stop()
+        return None, _("The backup has been stopped.")
+
+
+    def page(self):
+        self.jobs().show_list()
+
+
+
+class PageEditBackupJob(object):
+    def __init__(self):
+        super(PageEditBackupJob, self).__init__()
+        job_ident = html.var("job")
+
+        if job_ident != None:
+            try:
+                job = self.jobs().get(job_ident)
+            except KeyError:
+                raise MKUserError("target", _("This backup job does not exist."))
+
+            if job.is_running():
+                raise MKUserError("_job", _("This job is currently running."))
+
+            self._new          = False
+            self._ident        = job_ident
+            self._job_cfg      = job.to_config()
+            self._title        = _("Edit backup job: %s") % job.title()
+        else:
+            self._new        = True
+            self._ident      = None
+            self._job_cfg    = {}
+            self._title      = _("New backup job")
+
+
+    def jobs(self):
+        raise NotImplementedError()
+
+
+    def targets(self):
+        raise NotImplementedError()
+
+
+    def title(self):
+        return self._title
+
+
+    def buttons(self):
+        html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
+
+
+    def vs_backup_schedule(self):
+        return Alternative(
+            title = _("Schedule"),
+            style = "dropdown",
+            elements = [
+                FixedValue(None,
+                    title = _("Execute manually"),
+                    totext = _("Only execute manually"),
+                ),
+                Dictionary(
+                    title = _("Schedule execution"),
+                    elements = [
+                        ("period", SchedulePeriod()),
+                        ("timeofday", ListOf(
+                            Timeofday(
+                                default_value = (0, 0),
+                            ),
+                            title = _("Time of day to start the backup at"),
+                            movable = False,
+                            default_value = [(0, 0)],
+                            add_label = _("Add new time"),
+                            empty_text = _("Please specify at least one time."),
+                            allow_empty = False,
+                        )),
+                    ],
+                ),
+            ]
+        )
+
+
+    def vs_backup_job(self):
+        if self._new:
+            ident_attr = [
+                ("ident", ID(
+                    title = _("Unique ID"),
+                    help = _("The ID of the job must be a unique text. It will be used as an internal key "
+                             "when objects refer to the job."),
+                    allow_empty = False,
+                    size = 12,
+                    validate = self._validate_backup_job_ident,
+                )),
+            ]
+        else:
+            ident_attr = []
+
+
+        return Dictionary(
+            title = _("Backup job"),
+            elements = ident_attr + [
+                ("title", TextUnicode(
+                    title = _("Title"),
+                    allow_empty = False,
+                )),
+                ("target", DropdownChoice(
+                    title = _("Target"),
+                    choices = self.backup_target_choices,
+                    validate = self._validate_target,
+                )),
+                ("schedule", self.vs_backup_schedule()),
+            ],
+        optional_keys = [],
+        render = "form",
+    )
+
+
+    def _validate_backup_job_ident(self, value, varprefix):
+        if value in self.jobs().objects:
+            raise MKUserError(varprefix, _("This ID is already used by another backup job."))
+
+
+    def _validate_target(self, value, varprefix):
+        target = self.targets().get(value)
+        if target.type_ident() != "local":
+            raise NotImplementedError()
+
+        path = target.type_params()["path"]
+        target.type_class()().validate_local_directory(path, varprefix)
+
+
+    def backup_target_choices(self):
+        return sorted(self.targets().choices(), key=lambda (x, y): y.title())
+
+
+    def action(self):
+        if html.transaction_valid():
+            vs = self.vs_backup_job()
+
+            config = vs.from_html_vars("edit_job")
+            vs.validate_value(config, "edit_job")
+
+            if "ident" in config:
+                self._ident = config.pop("ident")
+            self._job_cfg = config
+
+            jobs = self.jobs()
+            if self._new:
+                job = Job(self._ident, self._job_cfg)
+                jobs.add(job)
+            else:
+                job = jobs.get(self._ident)
+                job.from_config(self._job_cfg)
+
+            jobs.save()
+        html.http_redirect(html.makeuri_contextless([("mode", "backup")]))
+
+
+    def page(self):
+        html.begin_form("edit_job", method="POST")
+        html.prevent_password_auto_completion()
+
+        vs = self.vs_backup_job()
+
+        vs.render_input("edit_job", self._job_cfg)
+        vs.set_focus("edit_job")
+        forms.end()
+
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
+
+
+
+class PageBackupJobState(object):
+    def __init__(self):
+        super(ModeBackupJobState, self).__init__()
+        job_ident = html.var("job")
+        if job_ident != None:
+            try:
+                self._job = self.jobs().get(job_ident)
+            except KeyError:
+                raise MKUserError("job", _("This backup job does not exist."))
+
+            self._ident = job_ident
+        else:
+            raise MKUserError("job", _("You need to specify a backup job."))
+
+
+    def jobs(self):
+        raise NotImplementedError()
+
+
+    def title(self):
+        return _("Job state: %s") % self._job.title()
+
+
+    def buttons(self):
+        html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
+
+
+    def page(self):
+        job   = self._job
+        state = job.state()
+
+        html.write("<table class=\"data backup_job\">")
+        state_num = 0
+        if state["state"] == "finished" and not state["success"]:
+            state_num = 2
+        html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("State"))
+        html.write("<td class=\"state state%d\">%s</td></tr>" %
+                    (state_num, html.attrencode(job.state_name(state["state"]))))
+
+        html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Runtime"))
+        html.write("<td>")
+        if state["started"]:
+            html.write(_("Started at %s") % fmt_datetime(state["started"]))
+            duration = time.time() - state["started"]
+            if state["state"] == "finished":
+                html.write(", Finished at %s" % fmt_datetime(state["started"]))
+                duration = state["finished"] - state["started"]
+
+            html.write(_(" (Duration: %s)") % age_human_readable(duration))
+        html.write("</td></tr>")
+
+        html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("Output"))
+        html.write("<td class=\"log\"><pre>%s</pre></td></tr>" % html.attrencode(state["output"]))
+
+        html.write("</table>")
+
 #.
 #   .--Targets-------------------------------------------------------------.
 #   |                  _____                    _                          |
@@ -425,6 +725,158 @@ class Targets(BackupEntityCollection):
             table.cell(_("Destination"), vs_target.value_to_text(target.type_params()))
 
         table.end()
+
+
+
+class PageBackupTargets(object):
+    def __init__(self):
+        super(PageBackupTargets, self).__init__()
+
+
+    def title(self):
+        raise NotImplementedError()
+
+
+    def targets(self):
+        raise NotImplementedError()
+
+
+    def buttons(self):
+        html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
+        html.context_button(_("New backup target"), html.makeuri_contextless([
+                                    ("mode", "edit_backup_target")]), "backup_target_edit")
+
+
+    def action(self):
+        if html.transaction_valid():
+            ident = html.var("target")
+            targets = self.targets()
+            try:
+                target = targets.get(ident)
+            except KeyError:
+                raise MKUserError("target", _("This backup target does not exist."))
+
+            # TODO: Fix with WATO
+            if html.confirm(self.title(), _("Do you really want to delete this target?")):
+                targets.remove(target)
+                targets.save()
+                return None, _("The target has been deleted.")
+
+
+    def page(self):
+        self.targets().show_list()
+        SystemBackupTargets().show_list(editable=False, title=_("System global targets"))
+
+
+
+class PageEditBackupTarget(object):
+    def __init__(self):
+        super(PageEditBackupTarget, self).__init__()
+        target_ident = html.var("target")
+
+        if target_ident != None:
+            try:
+                target = self.targets().get(target_ident)
+            except KeyError:
+                raise MKUserError("target", _("This backup target does not exist."))
+
+            self._new        = False
+            self._ident      = target_ident
+            self._target_cfg = target.to_config()
+            self._title      = _("Edit backup target: %s") % target.title()
+        else:
+            self._new        = True
+            self._ident      = None
+            self._target_cfg = {}
+            self._title      = _("New backup target")
+
+
+    def targets(self):
+        raise NotImplementedError()
+
+
+    def title(self):
+        return self._title
+
+
+    def buttons(self):
+        html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup_targets")]), "back")
+
+
+    def vs_backup_target(self):
+        if self._new:
+            ident_attr = [
+                ("ident", ID(
+                    title = _("Unique ID"),
+                    help = _("The ID of the target must be a unique text. It will be used as an internal key "
+                             "when objects refer to the target."),
+                    allow_empty = False,
+                    size = 12,
+                    validate = self.validate_backup_target_ident,
+                )),
+            ]
+        else:
+            ident_attr = []
+
+
+        return Dictionary(
+            title = _("Backup target"),
+            elements = ident_attr + [
+                ("title", TextUnicode(
+                    title = _("Title"),
+                    allow_empty = False,
+                )),
+                ("remote", CascadingDropdown(
+                    title = _("Destination"),
+                    choices = BackupTargetType.choices,
+                )),
+            ],
+            optional_keys = [],
+            render = "form",
+        )
+
+
+    def validate_backup_target_ident(self, value, varprefix):
+        if value in self.targets().objects:
+            raise MKUserError(varprefix, _("This ID is already used by another backup target."))
+
+
+    def action(self):
+        if html.transaction_valid():
+            vs = self.vs_backup_target()
+
+            config = vs.from_html_vars("edit_target")
+            vs.validate_value(config, "edit_target")
+
+            if "ident" in config:
+                self._ident = config.pop("ident")
+            self._target_cfg = config
+
+            targets = self.targets()
+            if self._new:
+                target = Target(self._ident, self._target_cfg)
+                targets.add(target)
+            else:
+                target = targets.get(self._ident)
+                target.from_config(self._target_cfg)
+
+            targets.save()
+        html.http_redirect(html.makeuri_contextless([("mode", "backup_targets")]))
+
+
+    def page(self):
+        html.begin_form("edit_target", method="POST")
+        html.prevent_password_auto_completion()
+
+        vs = self.vs_backup_target()
+
+        vs.render_input("edit_target", self._target_cfg)
+        vs.set_focus("edit_target")
+        forms.end()
+
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
 
 
 

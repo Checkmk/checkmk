@@ -5647,6 +5647,10 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
         return SiteBackupTargets()
 
 
+    def jobs(self):
+        return SiteBackupJobs()
+
+
     def page(self):
         self.targets().show_list()
         backup.SystemBackupTargets().show_list(editable=False, title=_("System global targets"))
@@ -5677,7 +5681,7 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
 
 class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
     def jobs(self):
-        raise SiteBackupJobs()
+        return SiteBackupJobs()
 
 
 #.

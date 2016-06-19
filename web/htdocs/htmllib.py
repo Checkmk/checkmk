@@ -1449,12 +1449,18 @@ class html(GUITester):
     # But there are use cases where the confirm dialog is used during rendering
     # a normal page, for example when deleting a dashlet from a dashboard. In
     # such cases, the transid must be added by the confirm dialog.
-    def confirm(self, msg, method="POST", action=None, add_transid=False):
+    # add_header: A title can be given to make the confirm method render the HTML
+    #             header when showing the confirm message.
+    def confirm(self, msg, method="POST", action=None, add_transid=False, add_header=False):
         if self.var("_do_actions") == _("No"):
             # User has pressed "No", now invalidate the unused transid
             self.check_transaction()
             return # None --> "No"
+
         if not self.has_var("_do_confirm"):
+            if add_header != False:
+                self.header(add_header)
+
             if self.mobile:
                 self.write('<center>')
             self.write("<div class=really>%s" % self.permissive_attrencode(msg))
@@ -1467,6 +1473,7 @@ class html(GUITester):
             self.write("</div>")
             if self.mobile:
                 self.write('</center>')
+
             return False # False --> "Dialog shown, no answer yet"
         else:
             # Now check the transaction

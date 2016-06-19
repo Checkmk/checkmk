@@ -78,6 +78,10 @@ def hostname():
     return socket.gethostname()
 
 
+def is_cma():
+    return os.path.exists("/etc/cma/cma.conf")
+
+
 # TODO: Locking!
 class Config(object):
     def __init__(self, file_path):
@@ -196,6 +200,10 @@ class Job(BackupEntity):
             "finished" : _("Ended"),
             None       : _("Never executed"),
         }[state]
+
+
+    def target_ident(self):
+        return self._config["target"]
 
 
     # TODO: Duplicated code with mkbackup (globalize_job_id())
@@ -391,7 +399,7 @@ class PageBackup(object):
 
     def action(self):
         ident = html.var("_job")
-        jobs = jobs()
+        jobs = self.jobs()
         try:
             job = jobs.get(ident)
         except KeyError:
@@ -423,9 +431,10 @@ class PageBackup(object):
         if job.is_running():
             raise MKUserError("_job", _("This job is currently running."))
 
-        if wato_confirm(self.title(), _("Do you really want to delete this job?")):
+        if html.confirm(_("Do you really want to delete this job?"),
+                        add_header=self.title()):
             html.check_transaction() # invalidate transid
-            jobs = SiteBackupJobs()
+            jobs = self.jobs()
             jobs.remove(job)
             jobs.save()
             return None, _("The job has been deleted.")
@@ -611,7 +620,7 @@ class PageEditBackupJob(object):
 
 class PageBackupJobState(object):
     def __init__(self):
-        super(ModeBackupJobState, self).__init__()
+        super(PageBackupJobState, self).__init__()
         job_ident = html.var("job")
         if job_ident != None:
             try:
@@ -703,14 +712,15 @@ class Targets(BackupEntityCollection):
         title = title if title else _("Targets")
         html.write("<h2>%s</h2>" % title)
         if not editable:
-            html.write("<p>%s</p>" % _("These backup targets can not be edited here."))
+            html.write("<p>%s</p>" % _("These backup targets can not be edited here. You need to "
+                                       "open the device backup management."))
 
         table.begin(sortable=False, searchable=False)
 
         for target_ident, target in sorted(self.objects.items()):
             table.row()
-            table.cell(_("Actions"), css="buttons")
             if editable:
+                table.cell(_("Actions"), css="buttons")
                 delete_url = html.makeactionuri_contextless(
                                 [("mode", "backup_targets"), ("target", target_ident)])
                 edit_url = html.makeuri_contextless(
@@ -741,6 +751,10 @@ class PageBackupTargets(object):
         raise NotImplementedError()
 
 
+    def jobs(self):
+        raise NotImplementedError()
+
+
     def buttons(self):
         html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
         html.context_button(_("New backup target"), html.makeuri_contextless([
@@ -756,11 +770,24 @@ class PageBackupTargets(object):
             except KeyError:
                 raise MKUserError("target", _("This backup target does not exist."))
 
-            # TODO: Fix with WATO
-            if html.confirm(self.title(), _("Do you really want to delete this target?")):
+            job_titles = [ j.title() for j in self._jobs_using_target(target) ]
+            if job_titles:
+                raise MKUserError("target", _("You can not delete this target because it is used "
+                                              "by these backup jobs: %s") % ", ".join(job_titles))
+
+            if html.confirm(_("Do you really want to delete this target?"),
+                            add_header=self.title()):
                 targets.remove(target)
                 targets.save()
                 return None, _("The target has been deleted.")
+
+
+    def _jobs_using_target(self, target):
+        jobs = []
+        for job in self.jobs().objects.values():
+            if job.target_ident() == target.ident():
+                jobs.append(job)
+        return jobs
 
 
     def page(self):
@@ -884,6 +911,12 @@ class SystemBackupTargets(Targets):
     def __init__(self):
         super(SystemBackupTargets, self).__init__(system_config_path())
 
+
+    def show_list(self, *args, **kwargs):
+        if is_cma():
+            super(SystemBackupTargets, self).show_list(*args, **kwargs)
+
+
 #.
 #   .--Target Types--------------------------------------------------------.
 #   |      _____                    _     _____                            |
@@ -956,6 +989,10 @@ class BackupTargetLocal(BackupTargetType):
 
 
     def validate_local_directory(self, value, varprefix):
+        if is_cma() and not value.startswith("/mnt/"):
+            raise MKUserError(varprefix, _("You can only use mountpoints below the <tt>/mnt</tt> "
+                                           "directory as backup targets."))
+
         if not os.path.isdir(value):
             raise MKUserError(varprefix, _("The path does not exist or is not a directory. You "
                                            "need to specify an already existing directory."))

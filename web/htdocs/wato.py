@@ -5666,7 +5666,7 @@ def render_main_menu(some_modules, columns = 2):
             if not config.may(permission) and not config.may("wato.seeall"):
                 continue
 
-        if '?' in mode_or_url or '/' in mode_or_url:
+        if '?' in mode_or_url or '/' in mode_or_url or mode_or_url.endswith(".py"):
             url = mode_or_url
         else:
             url = folder_preserving_link([("mode", mode_or_url)])

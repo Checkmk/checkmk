@@ -52,3 +52,18 @@ def date_and_time(timestamp):
 
 def time_of_day(timestamp):
     return time.strftime("%H:%M:%S", time.localtime(timestamp))
+
+
+# Precise size of a file - separated decimal separator
+# 1234 -> "1234"
+# 12345 => "12,345"
+def filesize(size):
+    dec_sep = ","
+    if size < 10000:
+        return str(size)
+    elif size < 1000000:
+        return str(size)[:-3] + dec_sep + str(size)[-3:]
+    elif size < 1000000000:
+        return str(size)[:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(size)[-3:]
+    else:
+        return str(size)[:-9] + dec_sep + str(size)[-9:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(size)[-3:]

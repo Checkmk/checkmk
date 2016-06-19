@@ -46,6 +46,7 @@ from tarfile import TarFile
 from hashlib import md5
 
 import cmk.daemon as daemon
+import cmk.render as render
 from cmk.exceptions import MKTerminate, MKGeneralException
 
 g_var_path = "/var/lib/mkbackup"
@@ -215,13 +216,16 @@ def load_backup_info(path):
 
 
 def save_backup_info():
+    files = get_files_for_backup_info()
+
     info = {
         "type"     : "Check_MK" if not is_root() \
                      else "Appliance",
         "job_id"   : g_local_job_id,
         "hostname" : hostname(),
-        "files"    : backup_info_files(),
+        "files"    : get_files_for_backup_info(),
         "finished" : time.time(),
+        "size"     : sum([ f[1] for f in files ]),
     }
 
     if not is_root():
@@ -231,7 +235,7 @@ def save_backup_info():
         f.write(pprint.pformat(info)+"\n")
 
 
-def backup_info_files():
+def get_files_for_backup_info():
     files = []
     backup_path = job_backup_path_during_backup()
     for f in sorted(os.listdir(backup_path)):
@@ -616,18 +620,23 @@ def mode_restore(target_id, backup_id, opts):
 
 def mode_list(target_id, opts):
     if target_id not in g_config["targets"]:
-        raise MKGeneralException("This backup target does not exist.")
+        raise MKGeneralException("This backup target does not exist. Choose one of: %s" %
+                                    ", ".join(g_config["targets"].keys()))
 
-    fmt = "%-9s %-20s %-30s %-16s\n"
-    sys.stdout.write(fmt % ("Type", "Job", "From", "Finished"))
+    fmt = "%-9s %-20s %-20s %28s\n"
+    fmt_detail = (" " * 30) + " %-20s %28s\n"
+    sys.stdout.write(fmt % ("Type", "Job", "Details", ""))
     sys.stdout.write("%s\n" % ("-" * 80))
     for path in sorted(glob.glob("%s/*/mkbackup.info" % target_path(target_id))):
         info = load_backup_info(path)
         from_info = info["hostname"]
         if "site_id" in info:
-            from_info += " (Site: %s)" % info["site_id"] 
-        sys.stdout.write(fmt % (info["type"], info["job_id"], from_info,
-                   time.strftime("%Y-%m-%d %H:%M", time.localtime(info["finished"]))))
+            from_info += " (Site: %s)" % info["site_id"]
+        sys.stdout.write(fmt % (info["type"], info["job_id"], "From:", from_info))
+
+        sys.stdout.write(fmt_detail % ("Finished:", render.date_and_time(info["finished"])))
+        # TODO: Format bytes human readable (render.bytes())?
+        sys.stdout.write(fmt_detail % ("Size:", info["size"]))
     sys.stdout.write("\n")
 
 

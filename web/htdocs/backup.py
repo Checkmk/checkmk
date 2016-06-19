@@ -40,6 +40,7 @@ import defaults
 import table
 from valuespec import *
 from lib import write_settings_file, age_human_readable, MKUserError
+import cmk.render as render
 
 #.
 #   .--Config--------------------------------------------------------------.
@@ -312,9 +313,6 @@ class Jobs(BackupEntityCollection):
         html.write("<h2>%s</h2>" % _("Jobs"))
         table.begin(sortable=False, searchable=False)
 
-        def fmt_datetime(t):
-            return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t))
-
         for job_ident, job in sorted(self.objects.items()):
             table.row()
             table.cell(_("Actions"), css="buttons")
@@ -356,10 +354,10 @@ class Jobs(BackupEntityCollection):
 
             table.cell(_("Runtime"))
             if state["started"]:
-                html.write(_("Started at %s") % fmt_datetime(state["started"]))
+                html.write(_("Started at %s") % render.date_and_time(state["started"]))
                 duration = time.time() - state["started"]
                 if state["state"] == "finished":
-                    html.write(", Finished at %s" % fmt_datetime(state["started"]))
+                    html.write(", Finished at %s" % render.date_and_time(state["started"]))
                     duration = state["finished"] - state["started"]
 
                 html.write(_(" (Duration: %s)") % age_human_readable(duration))
@@ -660,10 +658,10 @@ class PageBackupJobState(object):
         html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Runtime"))
         html.write("<td>")
         if state["started"]:
-            html.write(_("Started at %s") % fmt_datetime(state["started"]))
+            html.write(_("Started at %s") % render.date_and_time(state["started"]))
             duration = time.time() - state["started"]
             if state["state"] == "finished":
-                html.write(", Finished at %s" % fmt_datetime(state["started"]))
+                html.write(", Finished at %s" % render.date_and_time(state["started"]))
                 duration = state["finished"] - state["started"]
 
             html.write(_(" (Duration: %s)") % age_human_readable(duration))

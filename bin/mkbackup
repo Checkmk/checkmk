@@ -318,6 +318,12 @@ modes = {
 	    },
 	],
     },
+    "jobs": {
+	"description": "Lists all configured backup jobs of the current user context.",
+    },
+    "targets": {
+	"description": "Lists all configured backup targets of the current user context.",
+    },
     "list": {
 	"description": "Output the list of all backups found on the given backup target",
 	"args": [
@@ -327,19 +333,19 @@ modes = {
 	    },
 	],
     },
-    "show": {
-	"description": "Shows information about a backup",
-	"args": [
-	    {
-		"id": "Target-ID",
-		"description": "The ID of the backup target to work with",
-	    },
-	    {
-		"id": "Backup-ID",
-		"description": "The ID of the backup to show",
-	    },
-	],
-    },
+#    "show": {
+#	"description": "Shows information about a backup",
+#	"args": [
+#	    {
+#		"id": "Target-ID",
+#		"description": "The ID of the backup target to work with",
+#	    },
+#	    {
+#		"id": "Backup-ID",
+#		"description": "The ID of the backup to show",
+#	    },
+#	],
+#    },
 }
 
 
@@ -640,9 +646,20 @@ def mode_list(target_id, opts):
     sys.stdout.write("\n")
 
 
-# TODO: Implement this
-def mode_show(target_id, backup_id, opts):
-    print target_id, backup_id, opts
+def mode_jobs(opts):
+    fmt = "%-29s %-30s\n"
+    sys.stdout.write(fmt % ("Job-ID", "Title"))
+    sys.stdout.write("%s\n" % ("-" * 60))
+    for job_id, job_cfg in sorted(g_config["jobs"].items(), key=lambda (x, y): x):
+        sys.stdout.write(fmt % (job_id, job_cfg["title"]))
+
+
+def mode_targets(opts):
+    fmt = "%-29s %-30s\n"
+    sys.stdout.write(fmt % ("Target-ID", "Title"))
+    sys.stdout.write("%s\n" % ("-" * 60))
+    for job_id, job_cfg in sorted(g_config["targets"].items(), key=lambda (x, y): x):
+        sys.stdout.write(fmt % (job_id, job_cfg["title"]))
 
 
 def usage(error=None):
@@ -663,11 +680,12 @@ def usage(error=None):
         # TODO: Textwrap (textwrap.wrap())
         sys.stdout.write("    %-13s %s\n" % (mode_name, mode["description"]))
         sys.stdout.write("\n")
-        sys.stdout.write("      MODE ARGUMENTS:\n")
-        sys.stdout.write("\n")
-        for arg in mode["args"]:
-            sys.stdout.write("        %-10s %s\n" % (arg["id"], arg["description"]))
-        sys.stdout.write("\n")
+        if "args" in mode:
+            sys.stdout.write("      MODE ARGUMENTS:\n")
+            sys.stdout.write("\n")
+            for arg in mode["args"]:
+                sys.stdout.write("        %-10s %s\n" % (arg["id"], arg["description"]))
+            sys.stdout.write("\n")
 
         opts = mode_options(mode)
         if opts:
@@ -745,7 +763,7 @@ def main():
     mode_opts, mode_args = getopt.getopt(sys.argv[2:], [], mode_options(mode).keys())
 
     # Validate arguments
-    if len(mode_args) != len(mode["args"]):
+    if len(mode_args) != len(mode.get("args", [])):
 	usage("Invalid number of arguments for this mode")
 
     opt_dict = dict([ (k.lstrip("-"), v) for k, v in opts + mode_opts ])

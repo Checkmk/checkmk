@@ -1917,8 +1917,13 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
         infotext = core_state_names[state] + " - " + infotext
 
     # make sure that plugin output does not contain a vertical bar. If that is the
-    # case then replace it with a Uniocode "Light vertical bar"
-    infotext = infotext.replace("|", u"\u2758".encode("utf8"))
+    # case then replace it with a Uniocode "Light vertical bar
+    if isinstance(infotext, unicode):
+        # regular check results are unicode...
+        infotext = infotext.replace(u"|", u"\u2758")
+    else:
+        # ...crash dumps, and hard-coded outputs are regular strings
+        infotext = infotext.replace("|", u"\u2758".encode("utf8"))
 
     # Aggregated service -> store for later
     if sa != "":

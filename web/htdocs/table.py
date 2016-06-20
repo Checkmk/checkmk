@@ -42,7 +42,7 @@ def begin(table_id=None, title=None, **kwargs):
     try:
         limit = config.table_row_limit
     except:
-        pass
+        limit = None
 
     limit = kwargs.get('limit', limit)
     if html.var('limit') == 'none' or kwargs.get("output_format", "html") != "html":

@@ -1499,7 +1499,7 @@ class Folder(BaseFolder):
         subfolder = self.subfolder(name)
         subfolder.mark_hosts_dirty()
         call_hook_folder_deleted(subfolder)
-        log_pending(AFFECTED, self, "delete-folder", _("Deleted folder %s") % self.alias_path())
+        log_pending(AFFECTED, self, "delete-folder", _("Deleted folder %s") % subfolder.alias_path())
         self._remove_subfolder(name)
         shutil.rmtree(subfolder.filesystem_path())
         Folder.invalidate_caches()

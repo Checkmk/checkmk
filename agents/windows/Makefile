@@ -123,10 +123,10 @@ check_mk_agent-64.unstripped.exe: $(OBJS64)
 	$(CXX_64) $(COPTIONS) -o $@ $^ check_mk_agent-64.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi -limagehlp
 
 
-check_mk_agent.unversioned.exe: check_mk_agent.unstripped.exe
+check_mk_agent.unversioned.exe:
 	strip -o $@ $^
 
-check_mk_agent-64.unversioned.exe: check_mk_agent-64.unstripped.exe
+check_mk_agent-64.unversioned.exe:
 	strip -o $@ $^
 
 

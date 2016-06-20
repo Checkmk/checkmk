@@ -63,12 +63,14 @@ def parse_mknotifyd(info):
             site_entry = {
                 "spools"      : {},
                 "connections" : {},
+                "queues"      : {}
             }
             sub_entry = site_entry
             parsed[site] = site_entry
         else:
             varname, value = line[0].split(":", 1)
             value = value.strip()
+
             if varname == "Spool":
                 sub_entry = {}
                 site_entry["spools"][value] = sub_entry
@@ -76,6 +78,10 @@ def parse_mknotifyd(info):
             elif varname == "Connection":
                 sub_entry = {}
                 site_entry["connections"][value] = sub_entry
+
+            elif varname == "Queue":
+                sub_entry = {}
+                site_entry["queues"][value] = sub_entry
 
             else:
                 if value == "None":

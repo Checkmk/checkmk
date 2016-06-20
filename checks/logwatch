@@ -657,9 +657,9 @@ def inventory_logwatch_ec(info, one_svc_per_log):
 
 def check_logwatch_ec(item, params, info):
     if len(info) == 1:
-        line = " ".join(info[0])
+        line = " ".join(info[0][1:])
         if line.startswith("CANNOT READ CONFIG FILE"):
-            return 3, "Error in agent configuration: %s" % " ".join(info[0][4:])
+            return 3, "Error in agent configuration: %s" % " ".join(info[0][5:])
 
     # 1. Parse lines in info and separate by logfile
     logs = {}

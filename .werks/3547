@@ -1,0 +1,11 @@
+Title: Deleting a subfolder now generates a correct audit message
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8p5
+Date: 1466423596
+Class: fix
+
+The subfolders name was skipped in the audit message.
+Instead of <i>Deleted folder Main directory/myfolder/otherfolder</i> it
+showed <i>Deleted folder Main direcotry/myfolder</i>.

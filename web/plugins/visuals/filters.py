@@ -119,7 +119,7 @@ declare_filter(201, FilterUnicode("service", _("Service (exact match)"),        
 declare_filter(202, FilterUnicode("service_display_name", _("Service alternative display name"),   "service", "service_display_name",   "service_display_name", "~~"),
                           _("Alternative display name of the service, regex match"))
 
-declare_filter(202, FilterUnicode("output",  _("Status detail"), "service", "service_plugin_output", "service_output", "~~"))
+declare_filter(202, FilterUnicode("output",  _("Status detail"), "service", "service_plugin_output", "service_output", "~~", True))
 
 declare_filter(102, FilterHostnameOrAlias("hostnameoralias",   _("Hostname or Alias"), "host", ["host_alias", "host_name"],  "hostnameoralias", "~~", False),
                           _("Search field allowing regular expressions and partial matches"))

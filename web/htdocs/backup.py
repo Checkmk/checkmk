@@ -672,6 +672,12 @@ class PageBackupJobState(object):
 
         html.write("</table>")
 
+
+
+class SystemBackupJobs(Jobs):
+    def __init__(self):
+        super(SystemBackupJobs, self).__init__(system_config_path())
+
 #.
 #   .--Targets-------------------------------------------------------------.
 #   |                  _____                    _                          |

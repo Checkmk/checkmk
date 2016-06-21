@@ -554,10 +554,16 @@ class PageEditBackupJob(object):
                     validate = self._validate_target,
                 )),
                 ("schedule", self.vs_backup_schedule()),
-            ],
+            ] + self.custom_job_attributes(),
         optional_keys = [],
         render = "form",
     )
+
+
+    # Can be overridden by subclasses to add custom attributes to the
+    # job configuration. e.g. system jobs can exclude sites optionally.
+    def custom_job_attributes(self):
+        return []
 
 
     def _validate_backup_job_ident(self, value, varprefix):

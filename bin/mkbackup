@@ -365,6 +365,8 @@ def mode_backup(local_job_id, opts):
     global g_job_config
     g_job_config = g_config["jobs"][local_job_id]
 
+    verify_target_is_ready(g_job_config["target"])
+
     init_new_run()
 
     if "background" in opts:
@@ -505,13 +507,26 @@ def job_backup_path():
     return "%s/%s" % (target_path(g_job_config["target"]), g_job_id)
 
 
-def target_path(target_ident):
-    target_cfg = g_config["targets"][target_ident]
+def target_cfg(target_ident):
+    return g_config["targets"][target_ident]
 
-    if target_cfg["remote"][0] != "local":
+
+def target_path(target_ident):
+    cfg = target_cfg(target_ident)
+    if cfg["remote"][0] != "local":
         raise NotImplementedError()
 
-    return target_cfg["remote"][1]["path"]
+    return cfg["remote"][1]["path"]
+
+
+def verify_target_is_ready(target_ident):
+    cfg = target_cfg(target_ident)
+    if cfg["remote"][0] != "local":
+        raise NotImplementedError()
+
+    if cfg["remote"][1]["is_mountpoint"] and not os.path.ismount(cfg["remote"][1]["path"]):
+        raise MKGeneralException("The backup target path is configured to be a mountpoint, "
+                                 "but nothing is mounted.")
 
 
 def do_system_backup(opts):

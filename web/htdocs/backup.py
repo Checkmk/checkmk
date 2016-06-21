@@ -995,6 +995,13 @@ class BackupTargetLocal(BackupTargetType):
                     allow_empty = False,
                     validate = self.validate_local_directory,
                 )),
+                ("is_mountpoint", Checkbox(
+                    title = _("Is mountpoint"),
+                    help = _("When this is checked, the backup ensures that the configured path "
+                             "is a mountpoint. If there is no active mount on the path, the backup "
+                             "fails with an error message."),
+                    default_value = True,
+             )),
             ],
             optional_keys = [],
         )

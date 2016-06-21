@@ -43,6 +43,10 @@ def check_netapp_api_snapshots(item, params, parsed):
     if not data:
         return
 
+    if data[0].get("state") != "online":
+        yield 3, "No snapshot information available. Volume is %s" % data[0].get("state")
+        return
+
     snapshot_total   = int(data[0]["reserve-used-actual"]) * 1024.0
     size_total       = int(data[0]["size-total"])
     reserved_bytes   = int(data[0]["snapshot-blocks-reserved"]) * 1024.0

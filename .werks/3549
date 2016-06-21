@@ -1,0 +1,10 @@
+Title: netapp_api_snapshots: now correctly processes offline volumes
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p5
+Date: 1466494794
+Class: fix
+
+Offline volumes do not provide the information the netapp_api_snapshots check requires.
+The check now reports an UNKNOWN state whenever the volume state differs from <i>online</i>.

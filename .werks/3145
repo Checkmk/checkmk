@@ -1,0 +1,11 @@
+Title: solaris agent: fileinfo patterns that match a directory will no longer output items for the files in that directory
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1466508571
+
+Please note that this behaviour was not intended and differed from other agents. The created items
+are also incorrectly formatted so we assume no one used/wanted this.

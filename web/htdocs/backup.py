@@ -361,7 +361,8 @@ class Jobs(BackupEntityCollection):
                     html.write(", Finished at %s" % render.date_and_time(state["started"]))
                     duration = state["finished"] - state["started"]
 
-                html.write(_(" (Duration: %s)") % age_human_readable(duration))
+                html.write(_(" (Duration: %s, IO: %s/s)") % (age_human_readable(duration),
+                                                 render.bytes(state["bytes_per_second"])))
 
             # TODO: Render schedule
             #job_html = SchedulePeriod().value_to_text(job._config["period"]) \

@@ -26,12 +26,13 @@
 
 VERSION = "1.4.0i1"
 
-import os
 import getopt
 import fcntl
 import fnmatch
 import glob
 import grp
+import io
+import os
 import pprint
 import pwd
 import re
@@ -42,6 +43,7 @@ import subprocess
 import sys
 import textwrap
 import time
+import threading
 import traceback
 from tarfile import TarFile
 from hashlib import md5
@@ -427,20 +429,52 @@ def do_site_backup(opts, site=None):
                                      "but not running as root." % site_id)
         cmd.append(site)
 
-    backup_path = site_backup_path(site)
+    cmd.append("-")
 
-    # TODO: Nicht direkt speichern, sondern durch gpg/openssl pipen, wenn
-    # Verschlüsselung aktiv ist
-    cmd.append(backup_path)
+    backup_path = site_backup_path(site)
 
     # Create missing directories. Ensure group permissions and mode.
     makedirs(os.path.dirname(backup_path), group="omd", mode=0775)
 
     p = subprocess.Popen(cmd, shell=False, close_fds=True,
-                         stdout=open(os.devnull, "w"),
-                         stderr=subprocess.PIPE, stdin=open(os.devnull))
-    if p.wait() != 0:
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                         stdin=open(os.devnull))
+
+    with open(backup_path, "w") as backup_file:
+        for chunk in backup_stream(stream=p.stdout, is_alive=lambda: p.poll() is None):
+            backup_file.write(chunk)
+
+    if p.returncode != 0:
         raise MKGeneralException("Site backup failed: %s" % p.stderr.read())
+
+
+def backup_stream(stream, is_alive):
+    last_state_update, last_bps, bytes_copied = time.time(), None, 0
+    while True:
+        # TODO: Nicht direkt speichern, sondern durch gpg/openssl pipen, wenn
+        # Verschlüsselung aktiv ist
+        chunk = stream.read(1024*1024)
+
+        if chunk == "" and not is_alive():
+            break # end of tar archive reached
+
+        bytes_copied += len(chunk)
+        yield chunk
+
+        timedif = time.time() - last_state_update
+        if timedif >= 1:
+            this_bps = float(bytes_copied) / timedif
+
+            if last_bps == None:
+                bps = this_bps # initialize the value
+            else:
+                percentile, backlog_sec = 0.50, 10
+                weight_per_sec = (1 - percentile) ** (1.0 / backlog_sec)
+                weight = weight_per_sec ** timedif
+                bps = last_bps * weight + this_bps * (1 - weight)
+
+            save_state({"bytes_per_second": bps})
+            last_state_update, last_bps, bytes_copied = time.time(), bps, 0
 
 
 def backup_info_path():
@@ -509,15 +543,41 @@ def do_system_backup(opts):
 
 
 def do_system_rw_backup(opts):
-    # TODO: Nicht direkt speichern, sondern durch gpg/openssl pipen, wenn
-    # Verschlüsselung aktiv ist
-    with file(system_backup_path(), "w") as f:
-        backup_files_to_tarfile(f, "/rw", exclude_patterns=["mnt/*/*"])
+    with open(system_backup_path(), "w") as backup_file:
+        pipein_fd, pipeout_fd = os.pipe()
+        pipein  = os.fdopen(pipein_fd)
+
+        # Write to buffer in dedicated thread
+        t = threading.Thread(target=lambda: write_to_tarfile_threaded(
+                                                pipeout_fd, "/rw", ["mnt/*/*"]))
+        t.daemon = True
+        t.start()
+
+        # Process backup stream and write to destination file
+        for chunk in backup_stream(stream=pipein, is_alive=lambda: t.is_alive()):
+            backup_file.write(chunk)
 
 
 def do_system_data_backup(opts):
-    with file(system_data_backup_path(), "w") as f:
-        backup_files_to_tarfile(f, "/opt/omd/", exclude_patterns=["sites/*"])
+    with file(system_data_backup_path(), "w") as backup_file:
+        pipein_fd, pipeout_fd = os.pipe()
+        pipein  = os.fdopen(pipein_fd)
+
+        # Write to buffer in dedicated thread
+        t = threading.Thread(target=lambda: write_to_tarfile_threaded(
+                                                pipeout_fd, "/opt/omd/", ["sites/*"]))
+        t.daemon = True
+        t.start()
+
+        # Process backup stream and write to destination file
+        for chunk in backup_stream(stream=pipein, is_alive=lambda: t.is_alive()):
+            backup_file.write(chunk)
+
+
+def write_to_tarfile_threaded(pipeout_fd, base_path, exclude_patterns):
+    pipeout = os.fdopen(pipeout_fd, "w")
+    backup_files_to_tarfile(pipeout, base_path, exclude_patterns)
+    pipeout.close()
 
 
 def is_cluster_inactive():
@@ -588,10 +648,11 @@ def globalize_job_id(local_job_id):
 
 def init_new_run():
     save_state({
-        "state"    : "started",
-        "pid"      : os.getpid(),
-        "started"  : time.time(),
-        "output"   : "",
+        "state"            : "started",
+        "pid"              : os.getpid(),
+        "started"          : time.time(),
+        "output"           : "",
+        "bytes_per_second" : 0,
     }, update=False)
 
 

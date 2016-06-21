@@ -68,6 +68,7 @@ stats_retention           = config.getint("global", "stats_retention")
 config.remove_section("global")
 
 def output_data():
+    sys.stdout.write("<<<inotify:sep(9)>>>\n")
     if os.path.exists(configured_paths):
         sys.stdout.write(file(configured_paths).read())
 

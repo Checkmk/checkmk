@@ -731,7 +731,7 @@ else:
         container = NaElement("container")
         container.child_add(volume)
         print format_config(container, "volume_snapshot", "name",
-                    config_report = ["name", "size-total", "snapshot-percent-reserved",
+                    config_report = ["name", "size-total", "snapshot-percent-reserved", "state",
                                      "snapshot-blocks-reserved", "reserve-used-actual"])
 
     # Protocols

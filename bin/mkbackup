@@ -40,6 +40,7 @@ import socket
 import signal
 import subprocess
 import sys
+import textwrap
 import time
 import traceback
 from tarfile import TarFile
@@ -301,7 +302,7 @@ modes = {
 	},
 	"root_opts": {
 	    "without-sites": {
-		"description": "Create a system backup but exclude the Check_MK sites.",
+		"description": "Exclude the Check_MK site files during backup.",
 	    },
 	},
     },
@@ -643,8 +644,7 @@ def mode_list(target_id, opts):
         sys.stdout.write(fmt % (info["type"], info["job_id"], "From:", from_info))
 
         sys.stdout.write(fmt_detail % ("Finished:", render.date_and_time(info["finished"])))
-        # TODO: Format bytes human readable (render.bytes())?
-        sys.stdout.write(fmt_detail % ("Size:", info["size"]))
+        sys.stdout.write(fmt_detail % ("Size:", render.bytes(info["size"])))
     sys.stdout.write("\n")
 
 
@@ -679,23 +679,26 @@ def usage(error=None):
     sys.stdout.write("\n")
 
     for mode_name, mode in sorted(modes.items()):
-        # TODO: Textwrap (textwrap.wrap())
-        sys.stdout.write("    %-13s %s\n" % (mode_name, mode["description"]))
+        mode_indent = " " * 18
+        wrapped_descr = textwrap.fill(mode["description"], width=82,
+                                      initial_indent="    %-13s " % mode_name,
+                                      subsequent_indent=mode_indent)
+        sys.stdout.write(wrapped_descr + "\n")
         sys.stdout.write("\n")
         if "args" in mode:
-            sys.stdout.write("      MODE ARGUMENTS:\n")
+            sys.stdout.write("%sMODE ARGUMENTS:\n" % mode_indent)
             sys.stdout.write("\n")
             for arg in mode["args"]:
-                sys.stdout.write("        %-10s %s\n" % (arg["id"], arg["description"]))
+                sys.stdout.write("%s  %-10s %s\n" % (mode_indent, arg["id"], arg["description"]))
             sys.stdout.write("\n")
 
         opts = mode_options(mode)
         if opts:
-            sys.stdout.write("      MODE OPTIONS:\n")
+            sys.stdout.write("%sMODE OPTIONS:\n" % mode_indent)
             sys.stdout.write("\n")
 
             for opt_id, opt in sorted(opts.items(), key=lambda (k, v): k):
-                sys.stdout.write("        --%-12s %s\n" % (opt_id, opt["description"]))
+                sys.stdout.write("%s  --%-13s %s\n" % (mode_indent, opt_id, opt["description"]))
             sys.stdout.write("\n")
 
     sys.stdout.write("\n")

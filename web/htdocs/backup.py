@@ -69,10 +69,13 @@ def system_config_path():
     return "/etc/cma/backup.conf"
 
 
-def site_config_path():
-    if "OMD_ROOT" not in os.environ:
-	raise Exception(_("Not executed in OMD environment!"))
-    return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
+def site_config_path(site_id=None):
+    if site_id == None:
+        if "OMD_SITE" not in os.environ:
+            raise Exception(_("Not executed in OMD environment!"))
+        site_id = os.environ["OMD_SITE"]
+
+    return "/omd/sites/%s/etc/check_mk/backup.mk" % site_id
 
 
 def hostname():
@@ -371,6 +374,14 @@ class Jobs(BackupEntityCollection):
             #table.cell(_("job"), job_html)
 
         table.end()
+
+
+    def jobs_using_target(self, target):
+        jobs = []
+        for job in self.objects.values():
+            if job.target_ident() == target.ident():
+                jobs.append(job)
+        return jobs
 
 
 
@@ -782,10 +793,7 @@ class PageBackupTargets(object):
             except KeyError:
                 raise MKUserError("target", _("This backup target does not exist."))
 
-            job_titles = [ j.title() for j in self._jobs_using_target(target) ]
-            if job_titles:
-                raise MKUserError("target", _("You can not delete this target because it is used "
-                                              "by these backup jobs: %s") % ", ".join(job_titles))
+            self._verify_not_used(target)
 
             if html.confirm(_("Do you really want to delete this target?"),
                             add_header=self.title()):
@@ -794,12 +802,11 @@ class PageBackupTargets(object):
                 return None, _("The target has been deleted.")
 
 
-    def _jobs_using_target(self, target):
-        jobs = []
-        for job in self.jobs().objects.values():
-            if job.target_ident() == target.ident():
-                jobs.append(job)
-        return jobs
+    def _verify_not_used(self, target):
+        job_titles = [ j.title() for j in self.jobs().jobs_using_target(target) ]
+        if job_titles:
+            raise MKUserError("target", _("You can not delete this target because it is used "
+                                          "by these backup jobs: %s") % ", ".join(job_titles))
 
 
     def page(self):

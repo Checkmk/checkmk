@@ -5610,13 +5610,13 @@ def create_snapshot(data = {}, sync_mode=False):
 
 class SiteBackupJobs(backup.Jobs):
     def __init__(self):
-        super(SiteBackupJobs, self).__init__(defaults.default_config_dir + "/backup.mk")
+        super(SiteBackupJobs, self).__init__(backup.site_config_path())
 
 
 
 class SiteBackupTargets(backup.Targets):
     def __init__(self):
-        super(SiteBackupTargets, self).__init__(defaults.default_config_dir + "/backup.mk")
+        super(SiteBackupTargets, self).__init__(backup.site_config_path())
 
 
 

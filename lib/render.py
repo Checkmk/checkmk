@@ -63,6 +63,31 @@ def timespan(seconds):
 def time_since(timestamp):
     return timespan(time.time() - timestamp)
 
+# Takes bytes as integer and returns a string which represents the bytes in a
+# more human readable form scaled to TB/GB/MB/KB
+# The unit parameter simply changes the returned string, but does not interfere
+# with any calcluations
+def bytes(b, base=1024.0, bytefrac=True, unit="B"):
+    base = float(base)
+
+    # Handle negative bytes correctly
+    prefix = ''
+    if b < 0:
+        prefix = '-'
+        b *= -1
+
+    if b >= base * base * base * base:
+        return '%s%.2f T%s' % (prefix, b / base / base / base / base, unit)
+    elif b >= base * base * base:
+        return '%s%.2f G%s' % (prefix, b / base / base / base, unit)
+    elif b >= base * base:
+        return '%s%.2f M%s' % (prefix, b / base / base, unit)
+    elif b >= base:
+        return '%s%.2f k%s' % (prefix, b / base, unit)
+    elif bytefrac:
+        return '%s%.2f %s' % (prefix, b, unit)
+    else: # Omit byte fractions
+        return '%s%.0f %s' % (prefix, b, unit)
 
 
 # Precise size of a file - separated decimal separator

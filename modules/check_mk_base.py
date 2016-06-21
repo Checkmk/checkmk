@@ -56,6 +56,7 @@ import subprocess
 from cmk.exceptions import MKGeneralException, MKTerminate
 from cmk.regex import regex
 import cmk.tty as tty
+import cmk.render as render
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -2264,31 +2265,7 @@ def binstring_to_int(binstring):
         mult *= 256
     return value
 
-
-# Takes bytes as integer and returns a string which represents the bytes in a
-# more human readable form scaled to GB/MB/KB
-# The unit parameter simply changes the returned string, but does not interfere
-# with any calcluations
-def get_bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
-    base = float(base)
-    # Handle negative bytes correctly
-    prefix = ''
-    if b < 0:
-        prefix = '-'
-        b *= -1
-
-    if b >= base * base * base * base:
-        return '%s%.2f T%s' % (prefix, b / base / base / base / base, unit)
-    elif b >= base * base * base:
-        return '%s%.2f G%s' % (prefix, b / base / base / base, unit)
-    elif b >= base * base:
-        return '%s%.2f M%s' % (prefix, b / base / base, unit)
-    elif b >= base:
-        return '%s%.2f k%s' % (prefix, b / base, unit)
-    elif bytefrac:
-        return '%s%.2f %s' % (prefix, b, unit)
-    else: # Omit byte fractions
-        return '%s%.0f %s' % (prefix, b, unit)
+get_bytes_human_readable = render.bytes
 
 # Similar to get_bytes_human_readable, but optimized for file
 # sizes. Really only use this for files. We assume that for smaller

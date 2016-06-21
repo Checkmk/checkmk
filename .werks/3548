@@ -1,0 +1,14 @@
+Title: agent_netapp: fixed agent exception for channels without shelfes. improved 7mode/clustermode differentation
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p5
+Date: 1466494329
+
+An exception has been fixed when a channel has 0 shelfes configured.
+
+
+Furthermore, the agent has now a slightly more reliable 7mode/clustermode detection mechanism.
+The 7mode/clustermode detection will be revised in an upcoming agent version.

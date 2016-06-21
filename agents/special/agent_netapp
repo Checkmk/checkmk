@@ -409,7 +409,14 @@ if clustered_info:
     netapp_mode  = clustered_info.lower() == "false" and "7mode" or "clustermode"
 else:
     # Looks like the is-clustered attribute is not set, e.g. NetApp 7-Mode Version 8.0
-    netapp_mode  = "7-mode" in version_info.child_get_string("version").lower() and "7mode" or "clustermode"
+    version_string = version_info.child_get_string("version").lower()
+    # TODO: Needs improvement. Unfortunately the version info string does not provide
+    # exact info whether its a 7mode or a clustermode system
+    # Possible approach: Query a class which does not exist in 7-mode and evaluate response
+    if "NetApp Release 7.3.5.1".lower() in version_string:
+        netapp_mode  = "7mode"
+    else:
+        netapp_mode  = "7-mode" in version_string and "7mode" or "clustermode"
 
 
 #.
@@ -812,14 +819,16 @@ else:
         environ_info = query("storage-shelf-environment-list-info")
         if environ_info:
             for channel in environ_info.children_get():
-                for shelf in channel.child_get("shelf-environ-shelf-list").children_get():
-                    shelf_id = shelf.child_get_string("shelf-id")
-                    for what, section in [ ("power-supply-list",    "netapp_api_psu"),
-                                           ("cooling-element-list", "netapp_api_fan"),
-                                           ("temp-sensor-list",     "netapp_api_temp") ]:
-                        print "<<<%s:sep(9)>>>" % section
-                        node = shelf.child_get(what)
-                        print format_config(node, what, shelf_id)
+                shelf_list = channel.child_get("shelf-environ-shelf-list")
+                if shelf_list:
+                    for shelf in shelf_list.children_get():
+                        shelf_id = shelf.child_get_string("shelf-id")
+                        for what, section in [ ("power-supply-list",    "netapp_api_psu"),
+                                               ("cooling-element-list", "netapp_api_fan"),
+                                               ("temp-sensor-list",     "netapp_api_temp") ]:
+                            print "<<<%s:sep(9)>>>" % section
+                            node = shelf.child_get(what)
+                            print format_config(node, what, shelf_id)
 
     # License information
     print "<<<netapp_api_licenses:sep(9)>>>"

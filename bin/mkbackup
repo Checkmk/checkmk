@@ -506,15 +506,13 @@ def do_system_backup(opts):
 def do_system_rw_backup(opts):
     # TODO: Nicht direkt speichern, sondern durch gpg/openssl pipen, wenn
     # Verschlüsselung aktiv ist
-    fobj = file(system_backup_path(), "w")
-    backup_files_to_tarfile(fobj, "/rw")
-    fobj.close()
+    with file(system_backup_path(), "w") as f:
+        backup_files_to_tarfile(f, "/rw", exclude_patterns=["mnt/*/*"])
 
 
 def do_system_data_backup(opts):
-    fobj = file(system_data_backup_path(), "w")
-    backup_files_to_tarfile(fobj, "/opt/omd", exclude_patterns=["sites/*"])
-    fobj.close()
+    with file(system_data_backup_path(), "w") as f:
+        backup_files_to_tarfile(f, "/opt/omd/", exclude_patterns=["sites/*"])
 
 
 def is_cluster_inactive():
@@ -532,12 +530,12 @@ def backup_files_to_tarfile(fobj, base_path, exclude_patterns=None):
             for glob_pattern in exclude_patterns:
                 # patterns are relative to base_path, filename is full path.
                 # strip of the base_path prefix from full path
-                if fnmatch.fnmatch(filename[len(base_path)+1:], glob_pattern):
+                if fnmatch.fnmatch(filename[len(base_path.rstrip("/"))+1:], glob_pattern):
                     return True # exclude this file
             return False
 
     else:
-        filter_files = lambda x: True
+        filter_files = lambda x: False
 
     tar = TarFile.open(fileobj=fobj, mode="w:gz")
     tar.add(base_path, exclude=filter_files)

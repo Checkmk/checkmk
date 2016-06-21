@@ -323,12 +323,15 @@ class Jobs(BackupEntityCollection):
             state_url  = html.makeuri_contextless(
                             [("mode", "backup_job_state"), ("job", job_ident)])
 
+            state = job.state()
+
             if not job.is_running():
                 html.icon_button(edit_url, _("Edit this backup job"), "edit")
                 html.icon_button(delete_url, _("Delete this backup job"), "delete")
 
-            html.icon_button(state_url, _("Show current / last state of this backup job"),
-                             "backup_state")
+            if state["state"] != None:
+                html.icon_button(state_url, _("Show current / last state of this backup job"),
+                                 "backup_state")
 
             if not job.is_running():
                 start_url = html.makeactionuri_contextless(
@@ -342,8 +345,6 @@ class Jobs(BackupEntityCollection):
                 html.icon_button(stop_url, _("Stop this backup job"), "backup_stop")
 
             table.cell(_("Name"), html.attrencode(job.title()))
-
-            state = job.state()
 
             css = "state0"
             if state["state"] == "finished" and not state["success"]:

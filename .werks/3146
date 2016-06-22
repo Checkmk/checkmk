@@ -1,0 +1,12 @@
+Title: notification scripts will now also timeout when sending a bulk notification
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1466600205
+
+Werk #2843 introduced a timeout for notification scripts, as a single long-running notification
+could stall the whole notification system.
+That werk only affected regular notifications, not bulk notifications. This is now rectified

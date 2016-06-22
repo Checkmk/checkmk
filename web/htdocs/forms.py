@@ -109,10 +109,11 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                     html.add_user_error(e.varname, e)
 
         if messages:
+            messages_joined = "".join(["%s<br>\n" % m for m in messages])
             if not preview:
-                html.show_error("".join(["%s<br>\n" % m for m in messages]))
+                html.show_error(messages_joined)
             else:
-                return None
+                raise MKUserError(None, messages_joined)
         else:
             return new_value
 

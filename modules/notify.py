@@ -1510,13 +1510,28 @@ def call_bulk_notification_script(plugin, context_text):
     if not path:
         raise MKGeneralException("Notification plugin %s not found" % plugin)
 
-    # Protocol: The script gets the context on standard input and
-    # read until that is closed. It is being called with the parameter
-    # --bulk.
-    p = subprocess.Popen([path, "--bulk"], shell=False,
-                         stdout = subprocess.PIPE, stderr = subprocess.PIPE, stdin = subprocess.PIPE)
-    stdout_txt, stderr_txt = p.communicate(context_text.encode("utf-8"))
-    exitcode = p.returncode
+    stdout_txt = stderr_txt = ""
+    try:
+        set_notification_timeout()
+
+        # Protocol: The script gets the context on standard input and
+        # read until that is closed. It is being called with the parameter
+        # --bulk.
+        p = subprocess.Popen([path, "--bulk"], shell=False,
+                             stdout = subprocess.PIPE, stderr = subprocess.PIPE,
+                             stdin = subprocess.PIPE)
+
+        stdout_txt, stderr_txt = p.communicate(context_text.encode("utf-8"))
+        exitcode = p.returncode
+
+        clear_notification_timeout()
+    except NotificationTimeout:
+        notify_log("Notification plugin did not finish within %d seconds. Terminating." %
+                   notification_plugin_timeout)
+        # p.kill() requires python 2.6!
+        os.kill(p.pid, signal.SIGTERM)
+        exitcode = 1
+
     if exitcode:
         notify_log("ERROR: script %s --bulk returned with exit code %s" % (path, exitcode))
     for line in (stdout_txt + stderr_txt).splitlines():

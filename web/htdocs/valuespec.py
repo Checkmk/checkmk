@@ -3827,7 +3827,15 @@ class SSHKeyPair(ValueSpec):
 
 
 
-def SchedulePeriod():
+def SchedulePeriod(from_end=True):
+    if from_end:
+        from_end_choice = [
+            ("month_end", _("At the end of every month at day"),
+              Integer(minvalue=1, maxvalue=28, unit=_("from the end"))),
+        ]
+    else:
+        from_end_choice = []
+
     return \
         CascadingDropdown(
             title = _("Period"),
@@ -3838,7 +3846,5 @@ def SchedulePeriod():
                   Weekday(title = _("Day of the week"))),
                 ( "month_begin", _("At the beginning of every month at day"),
                   Integer(minvalue=1, maxvalue=28)),
-                ( "month_end", _("At the end of every month at day"),
-                  Integer(minvalue=1, maxvalue=28, unit=_("from the end"))),
-            ]
+            ] + from_end_choice
         )

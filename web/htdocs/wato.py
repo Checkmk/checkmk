@@ -5613,6 +5613,14 @@ class SiteBackupJobs(backup.Jobs):
         super(SiteBackupJobs, self).__init__(backup.site_config_path())
 
 
+    def _apply_cron_config(self):
+        p = subprocess.Popen(["omd", "restart", "crontab"],
+                         shell=False, close_fds=True, stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT, stdin=open(os.devnull))
+        if p.wait() != 0:
+            raise MKGeneralException(_("Failed to apply the cronjob config: %s") % p.stderr.read())
+
+
 
 class SiteBackupTargets(backup.Targets):
     def __init__(self):

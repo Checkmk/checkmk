@@ -306,10 +306,65 @@ class Job(BackupEntity):
                     raise
 
 
+    def cron_config(self):
+        if not self._config["schedule"]:
+            return
+
+        timespecs = self._cron_timespecs()
+        userspec = self._cron_userspec()
+        cmdline  = self._cron_cmdline()
+
+        lines = []
+        for timespec in timespecs:
+            lines.append("%s %s%s" % (timespec, userspec, cmdline))
+
+        return lines
+
+
+    def _cron_timespecs(self):
+        period = self._config["schedule"]["period"]
+        times  = self._config["schedule"]["timeofday"]
+
+        if period == "day":
+            dayspec = "* * *"
+
+        elif period[0] == "week":
+            # 0-6
+            dayspec = "* * %d" % (period[1] + 1,)
+
+        elif period[0] == "month_begin":
+            # 1-28
+            dayspec = "%d * *" % period[1]
+
+        else:
+            raise NotImplementedError()
+
+        # times: list of two element tuples (hours, minutes)
+        timespecs = []
+        for hour, minute in times:
+            timespecs.append("%d %d %s" % (minute, hour, dayspec))
+
+        return timespecs
+
+
+    def _cron_userspec(self):
+        if os.environ.get("OMD_SITE"):
+            return ""
+        else:
+            return "root "
+
+
+    def _cron_cmdline(self):
+        return "mkbackup backup %s >/dev/null" % self.ident()
+
+
 
 class Jobs(BackupEntityCollection):
     def __init__(self, config_file_path):
         super(Jobs, self).__init__(config_file_path, cls=Job, config_attr="jobs")
+
+        etc_path = os.path.dirname(os.path.dirname(config_file_path))
+        self._cronjob_path = "%s/cron.d/mkbackup" % etc_path
 
 
     def show_list(self):
@@ -382,6 +437,26 @@ class Jobs(BackupEntityCollection):
             if job.target_ident() == target.ident():
                 jobs.append(job)
         return jobs
+
+
+    def save(self):
+        super(Jobs, self).save()
+        self.save_cronjobs()
+
+
+    def save_cronjobs(self):
+        with open(self._cronjob_path, "w") as f:
+            f.write("# Written by mkbackup configuration\n")
+            for job in self.objects.values():
+                cron_config = job.cron_config()
+                if cron_config:
+                    f.write("%s\n" % "\n".join(cron_config))
+
+        self._apply_cron_config()
+
+
+    def _apply_cron_config(self):
+        pass
 
 
 
@@ -519,7 +594,7 @@ class PageEditBackupJob(object):
                 Dictionary(
                     title = _("Schedule execution"),
                     elements = [
-                        ("period", SchedulePeriod()),
+                        ("period", SchedulePeriod(from_end=False)),
                         ("timeofday", ListOf(
                             Timeofday(
                                 default_value = (0, 0),
@@ -532,6 +607,7 @@ class PageEditBackupJob(object):
                             allow_empty = False,
                         )),
                     ],
+                    optional_keys = [],
                 ),
             ]
         )

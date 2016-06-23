@@ -199,6 +199,10 @@ def do_inv_check(hostname):
 
         infotext = "found %d entries" % num_entries
         state = 0
+        if not inv_tree.get("software") and opt_inv_sw_missing:
+            infotext += ", software information is missing"
+            state = opt_inv_sw_missing
+            infotext += state_markers[opt_inv_sw_missing]
 
         if old_timestamp:
             path = inventory_archive_dir + "/" + hostname + "/%d" % old_timestamp

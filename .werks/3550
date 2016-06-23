@@ -1,0 +1,9 @@
+Title: HW/SW inventory: Now able to raise an alert when SW packages info is missing
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.4.0i1
+Date: 1466686328
+Class: feature
+
+This option can be configured in the WATO rule <i>Do HW/SW Inventory</i>.

@@ -39,6 +39,11 @@ register_rule(group,
                       title = _("State when software changes are detected"),
                       default_value = 0,
                 )),
+                ( "sw_missing",
+                  MonitoringState(
+                      title = _("State when software packages info is missing"),
+                      default_value = 0,
+                )),
                 ( "hw_changes",
                   MonitoringState(
                       title = _("State when hardware changes are detected"),

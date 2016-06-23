@@ -1,0 +1,9 @@
+Title: windows agent: fixed bug where all placeholders in messages were replaced with the same parameter
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p5
+Date: 1466664466
+Class: fix
+
+

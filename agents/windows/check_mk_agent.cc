@@ -828,6 +828,7 @@ void process_eventlog_entry(OutputProxy &out, EventLog &event_log,
     const WCHAR *string = (WCHAR *)(((char *)event) + event->StringOffset);
     for (int i = 0; i < event->NumStrings; ++i) {
         strings.push_back(string);
+        string += wcslen(string) + 1;
     }
 
     // Sometimes the eventlog record does not provide

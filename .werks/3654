@@ -1,0 +1,9 @@
+Title: apc_symmetra: Improved output in case of unknown battery state / calibration result
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p5
+Date: 1466683905
+Class: fix
+
+

@@ -111,9 +111,16 @@ def check_apc(item, params, info):
                    12:"on smart trim" }
     calib_text = { 1:"", 2:" (calibration invalid)", 3:" (calibration in progress)" }
     stest_text = self_test_in_progress and " (self-test running)" or ""
-    infotxt = "output status: %s%s%s" % (status_text.get(output_status), calib_text.get(calib_result), stest_text)
+
+    infotxt = "output status: %s%s%s" % \
+               (status_text.get(output_status, "unknown (%d)" % output_status),
+                calib_text.get(calib_result, " (calibration unknown: %d)" % calib_result),
+                stest_text)
+
     # during calibration test is OK
-    if output_status not in [2, 4, 12] and calib_result != 3 and not self_test_in_progress:
+    if output_status not in status_text:
+        state = 3
+    elif output_status not in [2, 4, 12] and calib_result != 3 and not self_test_in_progress:
         state = 2
     else:
         state = 0

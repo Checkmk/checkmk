@@ -1,0 +1,9 @@
+Title: if64adm: Can now be used with OID range limits
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p5
+Date: 1466752555
+Class: fix
+
+

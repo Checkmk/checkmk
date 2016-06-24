@@ -82,7 +82,7 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                         vp = keyname + "_" + varprefix
                     try:
                         v = vs.from_html_vars(vp + name)
-                        vs.validate_value(v, keyname + "_" + varprefix + name)
+                        vs.validate_value(v, vp + name)
                         new_value[keyname][name] = v
                     except MKUserError, e:
                         messages.append("%s: %s" % (vs.title(), e))

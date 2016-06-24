@@ -7931,7 +7931,7 @@ def mode_notifications(phase):
             for nr, context in enumerate(backlog):
                 convert_context_to_unicode(context)
                 table.row()
-                table.cell(css="buttons")
+                table.cell("&nbsp;", css="buttons")
 
                 analyse_url = html.makeuri([("analyse", str(nr))])
                 tooltip = "".join(("%s: %s\n" % e) for e in sorted(context.items()))

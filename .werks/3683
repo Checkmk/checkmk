@@ -1,0 +1,9 @@
+Title: infoblox_dhcp_stats, infoblox_dns_stats, infoblox_grid_status, infoblox_node_services, infoblox_replication_status, infoblox_services, infoblox_temp: new checks for Infoblox devices which monitor DHCP and DNS statistics, grid and replication status, services and node services and temperature of the system or CPUs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1466766141
+Class: feature
+
+

@@ -1,0 +1,16 @@
+title: Infoblox devices: Replication status
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the replication status of the node
+ of Infoblox devices which support the IB-PLATFORMONE MIB.
+
+ The check is OK if the status is online, otherwise it's CRIT.
+
+item:
+ The node identifier.
+
+inventory:
+ One service for each node is created.

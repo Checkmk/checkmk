@@ -1,0 +1,22 @@
+title: Infoblox devices: System and CPU temperature
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the system and CPU temperature of
+ Infoblox devices which support the IB-PLATFORMONE MIB.
+
+ The device sends its own status. The check is OK if the
+ status is working. It is WARN if the status is warning or
+ inactive. The check reports CRIT if the status is failed.
+ Otherwise the check is UNKNOWN.
+
+ Moreover upper and lower levels are configurable. There are
+ no default levels set.
+
+item:
+ System or CPU1 or CPU2.
+
+inventory:
+ One service for each sensor is created.

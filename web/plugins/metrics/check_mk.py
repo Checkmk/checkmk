@@ -3419,6 +3419,89 @@ for what, descr, unit, color in [
         "color" : color,
     }
 
+metric_info["dhcp_requests"] = {
+    "title" : _("DHCP received requests"),
+    "unit"  : "count",
+    "color" : "14/a",
+}
+
+metric_info["dhcp_releases"] = {
+    "title" : _("DHCP received releases"),
+    "unit"  : "count",
+    "color" : "21/a",
+}
+
+metric_info["dhcp_declines"] = {
+    "title" : _("DHCP received declines"),
+    "unit"  : "count",
+    "color" : "24/a",
+}
+
+metric_info["dhcp_informs"] = {
+    "title" : _("DHCP received informs"),
+    "unit"  : "count",
+    "color" : "31/a",
+}
+
+metric_info["dhcp_others"] = {
+    "title" : _("DHCP received other messages"),
+    "unit"  : "count",
+    "color" : "34/a",
+}
+
+metric_info["dhcp_offers"] = {
+    "title" : _("DHCP sent offers"),
+    "unit"  : "count",
+    "color" : "12/a",
+}
+
+metric_info["dhcp_acks"] = {
+    "title" : _("DHCP sent acks"),
+    "unit"  : "count",
+    "color" : "15/a",
+}
+
+metric_info["dhcp_nacks"] = {
+    "title" : _("DHCP sent nacks"),
+    "unit"  : "count",
+    "color" : "22/b",
+}
+
+metric_info["dns_successes"] = {
+    "title" : _("DNS successful responses"),
+    "unit"  : "count",
+    "color" : "11/a",
+}
+
+metric_info["dns_referrals"] = {
+    "title" : _("DNS referrals"),
+    "unit"  : "count",
+    "color" : "14/a",
+}
+
+metric_info["dns_recursion"] = {
+    "title" : _("DNS queries received using recursion"),
+    "unit"  : "count",
+    "color" : "21/a",
+}
+
+metric_info["dns_failures"] = {
+    "title" : _("DNS failed queries"),
+    "unit"  : "count",
+    "color" : "24/a",
+}
+
+metric_info["dns_nxrrset"] = {
+    "title" : _("DNS query received for non-existent record"),
+    "unit"  : "count",
+    "color" : "31/a",
+}
+
+metric_info["dns_nxdomain"] = {
+    "title" : _("DNS query received for non-existent domain"),
+    "unit"  : "count",
+    "color" : "34/a",
+}
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -6915,4 +6998,37 @@ graph_info.append({
         ("oracle_pins_sum",     "line"),
         ("oracle_pin_hits_sum", "line"),
     ],
+})
+
+graph_info.append({
+    "title" : _("DHCP statistics (received messages)"),
+    "metrics" : [
+        ( "dhcp_discovery", "area" ),
+        ( "dhcp_requests",  "stack" ),
+        ( "dhcp_releases",  "stack" ),
+        ( "dhcp_declines",  "stack" ),
+        ( "dhcp_informs",   "stack" ),
+        ( "dhcp_others",    "stack" ),
+    ]
+})
+
+graph_info.append({
+    "title" : _("DHCP statistics (sent messages)"),
+    "metrics" : [
+        ( "dhcp_offers", "area" ),
+        ( "dhcp_acks",   "stack" ),
+        ( "dhcp_nacks",  "stack" ),
+    ]
+})
+
+graph_info.append({
+    "title" : _("DNS statistics"),
+    "metrics" : [
+        ( "dns_successes", "area" ),
+        ( "dns_referrals", "stack" ),
+        ( "dns_recursion", "stack" ),
+        ( "dns_failures",  "stack" ),
+        ( "dns_nxrrset",   "stack" ),
+        ( "dns_nxdomain",  "stack" ),
+    ]
 })

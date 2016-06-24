@@ -140,6 +140,8 @@ def handler(req, fields = None, is_profiling = False):
 
     except (MKUserError, MKAuthException, MKUnauthenticatedException, MKConfigError, MKGeneralException,
             livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusException), e:
+        if html.is_plugged():
+            html.unplug()
         ty = type(e)
         if ty == livestatus.MKLivestatusNotFoundError:
             title       = _("Data not found")

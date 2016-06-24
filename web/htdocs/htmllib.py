@@ -226,6 +226,11 @@ class html(GUITester):
         self.plugged = True
         self.plugged_text = ''
 
+
+    def is_plugged(self):
+        return self.plugged
+
+
     def flush(self):
         if self.plugged:
             text = self.plugged_text
@@ -239,6 +244,7 @@ class html(GUITester):
             self.lowlevel_write(text)
             self.plugged_text = ''
 
+
     def drain(self):
         if self.plugged:
             t = self.plugged_text
@@ -246,6 +252,7 @@ class html(GUITester):
             return t
         else:
             return ''
+
 
     def unplug(self):
         self.flush()

@@ -644,8 +644,23 @@ class PageEditBackupJob(object):
                     validate = self._validate_target,
                 )),
                 ("schedule", self.vs_backup_schedule()),
+                ("compress", FixedValue(True,
+                    title = _("Compression"),
+                    help = _("Enable gzip compression of the backed up files. The tar archives "
+                             "created by the backup are gzipped during backup."),
+                    totext = _("Compress the backed up files"),
+                )),
+                # TODO
+                #("encrypt", DropdownChoice(
+                #    title = _("Encrypt"),
+                #    help = _("Enable encryption of the backed up files. The tar archives "
+                #             "created by the backup are encrypted using the specified key "
+                #             "during backup. You will need the private key and the passphrase "
+                #             "to decrypt the backup."),
+                #    choices = self.backup_key_choices,
+                #)),
             ] + self.custom_job_attributes(),
-        optional_keys = [],
+        optional_keys = ["compress"],
         render = "form",
     )
 

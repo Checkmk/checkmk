@@ -222,13 +222,15 @@ def save_backup_info():
     files = get_files_for_backup_info()
 
     info = {
-        "type"     : "Check_MK" if not is_root() \
-                     else "Appliance",
-        "job_id"   : g_local_job_id,
-        "hostname" : hostname(),
-        "files"    : get_files_for_backup_info(),
-        "finished" : time.time(),
-        "size"     : sum([ f[1] for f in files ]),
+        "type"       : "Check_MK" if not is_root() \
+                       else "Appliance",
+        "job_id"     : g_local_job_id,
+        "compressed" : compress_archives(),
+        "encrypted"  : encrypt_archives(),
+        "hostname"   : hostname(),
+        "files"      : get_files_for_backup_info(),
+        "finished"   : time.time(),
+        "size"       : sum([ f[1] for f in files ]),
     }
 
     if not is_root():
@@ -419,6 +421,9 @@ def do_backup(opts):
 def do_site_backup(opts, site=None):
     cmd = ["omd", "backup"]
 
+    if not compress_archives():
+        cmd.append("--no-compression")
+
     # When executed as site user, "omd backup" is executed without the site
     # name and always performing backup for the current site. When executed
     # as root, the site argument has to be given and must be handed over to
@@ -484,15 +489,15 @@ def backup_info_path():
 
 
 def site_backup_path(site_id):
-    return "%s/site-%s.tar.gz" % (job_backup_path_during_backup(), site_id)
+    return "%s/site-%s%s" % (job_backup_path_during_backup(), site_id, archive_suffix())
 
 
 def system_backup_path():
-    return "%s/system.tar.gz" % (job_backup_path_during_backup())
+    return "%s/system" % (job_backup_path_during_backup(), archive_suffix())
 
 
 def system_data_backup_path():
-    return "%s/system-data.tar.gz" % (job_backup_path_during_backup())
+    return "%s/system-data%s" % (job_backup_path_during_backup(), archive_suffix())
 
 
 def job_backup_path_during_backup():
@@ -505,6 +510,23 @@ def job_backup_path_complete():
 
 def job_backup_path():
     return "%s/%s" % (target_path(g_job_config["target"]), g_job_id)
+
+
+def archive_suffix():
+    suffix = ".tar"
+    if compress_archives():
+        suffix += ".gz"
+    if encrypt_archives():
+        suffix += ".enc"
+    return suffix
+
+
+def compress_archives():
+    return "compress" in g_job_config
+
+
+def encrypt_archives():
+    return "encrypt" in g_job_config
 
 
 def target_cfg(target_ident):
@@ -534,12 +556,12 @@ def do_system_backup(opts):
     makedirs(os.path.dirname(system_backup_path()), group="omd", mode=0775)
 
     # Perform backup of the /rw volume on all devices
-    log("Performing system backup (system.tar.gz)")
+    log("Performing system backup (system%s)" % archive_suffix())
     do_system_rw_backup(opts)
 
     # The data volume (/omd) is not backed up on slave cluster nodes
     if not is_cluster_inactive():
-        log("Performing system data backup (system-data.tar.gz)")
+        log("Performing system data backup (system-data%s)" % archive_suffix())
         do_system_data_backup(opts)
     else:
         log("Skipping system data backup (inactive cluster node)")
@@ -617,7 +639,8 @@ def backup_files_to_tarfile(fobj, base_path, exclude_patterns=None):
     else:
         filter_files = lambda x: False
 
-    tar = TarFile.open(fileobj=fobj, mode="w:gz")
+    tar_mode = "w:gz" if compress_archives() else "w:"
+    tar = TarFile.open(fileobj=fobj, mode=tar_mode)
     tar.add(base_path, exclude=filter_files)
     tar.close()
 

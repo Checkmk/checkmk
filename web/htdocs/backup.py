@@ -38,6 +38,7 @@ import subprocess
 
 import defaults
 import table
+import key_mgmt
 from valuespec import *
 from lib import write_settings_file, age_human_readable, MKUserError
 import cmk.render as render
@@ -1109,3 +1110,24 @@ class BackupTargetLocal(BackupTargetType):
                 _("Failed to write to the configured directory. The site user needs to be able to "
                   "write the target directory. The recommended way is to make it writable by the "
                   "group \"omd\"."))
+
+
+#.
+#   .--Key Management------------------------------------------------------.
+#   |             _  __            __  __                 _                |
+#   |            | |/ /___ _   _  |  \/  | __ _ _ __ ___ | |_              |
+#   |            | ' // _ \ | | | | |\/| |/ _` | '_ ` _ \| __|             |
+#   |            | . \  __/ |_| | | |  | | (_| | | | | | | |_              |
+#   |            |_|\_\___|\__, | |_|  |_|\__, |_| |_| |_|\__|             |
+#   |                      |___/          |___/                            |
+#   +----------------------------------------------------------------------+
+#   | Managing of the keys that are used for signing the agents            |
+#   '----------------------------------------------------------------------'
+
+class BackupKeypairStore(key_mgmt.KeypairStore):
+    def __init__(self):
+        # TODO: Path?
+        super(BackupKeypairStore, self).__init__(self,
+            multisite_dir + "backup_keys.mk",
+            "keys")
+

@@ -5692,6 +5692,23 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
         return SiteBackupJobs()
 
 
+
+class SiteBackupKeypairStore(backup.BackupKeypairStore):
+    def __init__(self):
+        super(SiteBackupKeypairStore, self).__init__(
+            defaults.default_config_dir + "/backup_keys.mk",
+            "keys")
+
+
+
+class ModeBackupKeyManagement(SiteBackupKeypairStore, backup.PageBackupKeyManagement, WatoMode):
+    pass
+
+
+
+class ModeBackupEditKey(SiteBackupKeypairStore, backup.PageBackupEditKey, WatoMode):
+    pass
+
 #.
 #   .--Value-Editor--------------------------------------------------------.
 #   |       __     __    _              _____    _ _ _                     |
@@ -16407,6 +16424,8 @@ modes = {
    "backup_job_state"   : (["backups"], ModeBackupJobState),
    "edit_backup_target" : (["backups"], ModeEditBackupTarget),
    "edit_backup_job"    : (["backups"], ModeEditBackupJob),
+   "backup_keys"        : (["backups"], ModeBackupKeyManagement),
+   "backup_edit_key"    : (["backups"], ModeBackupEditKey),
 }
 
 builtin_host_attribute_names = []

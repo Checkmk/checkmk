@@ -76,7 +76,7 @@ def site_config_path(site_id=None):
             raise Exception(_("Not executed in OMD environment!"))
         site_id = os.environ["OMD_SITE"]
 
-    return "/omd/sites/%s/etc/check_mk/backup.mk" % site_id
+    return defaults.default_config_dir + "/backup.mk"
 
 
 def hostname():
@@ -481,6 +481,7 @@ class PageBackup(object):
     def buttons(self):
         self.home_button()
         html.context_button(_("Backup targets"), html.makeuri_contextless([("mode", "backup_targets")]), "backup_targets")
+        html.context_button(_("Backup keys"), html.makeuri_contextless([("mode", "backup_keys")]), "backup_key")
         html.context_button(_("New job"), html.makeuri_contextless([("mode", "edit_backup_job")]), "backup_job_new")
 
 
@@ -1125,9 +1126,51 @@ class BackupTargetLocal(BackupTargetType):
 #   '----------------------------------------------------------------------'
 
 class BackupKeypairStore(key_mgmt.KeypairStore):
-    def __init__(self):
-        # TODO: Path?
-        super(BackupKeypairStore, self).__init__(self,
-            multisite_dir + "backup_keys.mk",
-            "keys")
+    pass
 
+
+
+class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
+    edit_mode = "backup_edit_key"
+
+    def title(self):
+        return _("Keys for backups")
+
+
+    def _back_button(self):
+        html.context_button(_("Back"), html.makeuri_contextless(
+                                            [("mode", "backup")]), "back")
+
+
+    def _key_in_use(self, key):
+        # TODO
+        return False
+
+
+    def _table_title(self):
+        return self.title()
+
+
+    def _delete_confirm_msg(self):
+        return _("Are you sure you want to delete this key?<br><br>"
+                 "<b>Beware:</b> Deleting this key "
+                 "means that you will not be able to encrypt or sign backups with the key. "
+                 "Already created backups which have been encrypted, can not be decrypted "
+                 "without access to this key. So please be sure that you either have a "
+                 "backup or don't need this key anymore.")
+
+
+
+class PageBackupEditKey(key_mgmt.PageEditKey):
+    back_mode = "backup_keys"
+
+    def title(self):
+        return _("Create backup key")
+
+
+    def _passphrase_help(self):
+        return _("The backup key will be stored encrypted using this passphrase on your "
+                 "disk. The passphrase will not be stored anywhere. The backup will use "
+                 "the public key part of the key to sign or encrypt the backups. If you "
+                 "encrypt a backup, you will need the private key part together with the "
+                 "passphrase to decrypt the backup.")

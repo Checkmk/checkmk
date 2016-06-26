@@ -46,15 +46,9 @@ class KeypairStore(object):
         if not os.path.exists(filename):
             return {}
 
-        try:
-            variables = { self._attr : {} }
-            execfile(filename, variables, variables)
-            return variables[self._attr]
-
-        except (IOError, OSError, SyntaxError), e:
-            if config.debug:
-                raise
-            return {}
+        variables = { self._attr : {} }
+        execfile(filename, variables, variables)
+        return variables[self._attr]
 
 
     def save(self, keys):
@@ -66,6 +60,8 @@ class KeypairStore(object):
 
 
 class PageKeyManagement(object):
+    edit_mode = "edit_key"
+
     def __init__(self):
         self.keys = self.load()
         super(PageKeyManagement, self).__init__()
@@ -82,7 +78,7 @@ class PageKeyManagement(object):
     def buttons(self):
         self._back_button()
         html.context_button(_("Create Key"), html.makeuri_contextless(
-                                            [("mode", "edit_key")]), "new")
+                                      [("mode", self.edit_mode)]), "new")
 
 
     def _back_button(self):

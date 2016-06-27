@@ -1276,6 +1276,10 @@ class DropdownChoice(ValueSpec):
             if entry[0] == value:
                 defval = str(n)
 
+        if value == None and not options:
+            html.write(self._empty_text)
+            return
+
         if self._invalid_choice == "complain" and self._value_is_invalid(value):
             defval = "invalid"
             options.append((defval, _("(element does not exist anymore)")))
@@ -1302,14 +1306,19 @@ class DropdownChoice(ValueSpec):
 
     def from_html_vars(self, varprefix):
         sel = html.var(varprefix)
-        for n, entry in enumerate(self.choices()):
+        choices = self.choices()
+        for n, entry in enumerate(choices):
             val = entry[0]
             if sel == str(n):
                 return val
+
         if self._invalid_choice == "replace":
             return self.default_value() # garbled URL or len(choices) == 0
         else:
-            raise MKUserError(varprefix, _("The selected element is not longer available. Please select something else."))
+            if choices:
+                raise MKUserError(varprefix, _("The selected element is not longer available. Please select something else."))
+            else:
+                raise MKUserError(varprefix, _("There is element available to choose from."))
 
     def validate_value(self, value, varprefix):
         if self._no_preselect and value == self._no_preselect_value:

@@ -628,6 +628,7 @@ class PageEditBackupJob(object):
                 )),
             ]
         else:
+            # TODO: Show ident in edit mode?
             ident_attr = []
 
 
@@ -642,6 +643,7 @@ class PageEditBackupJob(object):
                     title = _("Target"),
                     choices = self.backup_target_choices,
                     validate = self._validate_target,
+                    invalid_choice = "complain",
                 )),
                 ("schedule", self.vs_backup_schedule()),
                 ("compress", FixedValue(True,

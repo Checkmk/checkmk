@@ -628,8 +628,11 @@ class PageEditBackupJob(object):
                 )),
             ]
         else:
-            # TODO: Show ident in edit mode?
-            ident_attr = []
+            ident_attr = [
+                ("ident", FixedValue(self._ident,
+                    title = _("Unique ID"),
+                )),
+            ]
 
 
         return Dictionary(
@@ -957,7 +960,11 @@ class PageEditBackupTarget(object):
                 )),
             ]
         else:
-            ident_attr = []
+            ident_attr = [
+                ("ident", FixedValue(self._ident,
+                    title = _("Unique ID"),
+                )),
+            ]
 
 
         return Dictionary(

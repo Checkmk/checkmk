@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <time.h>
+#include <vector>
 #include "CommandsHolder.h"
 #include "nagios.h"
 

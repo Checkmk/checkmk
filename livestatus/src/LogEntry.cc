@@ -25,8 +25,8 @@
 #include "LogEntry.h"
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 #include "strutil.h"
-#include "logger.h"
 
 LogEntry::LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
                    char *line)

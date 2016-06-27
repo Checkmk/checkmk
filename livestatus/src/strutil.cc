@@ -116,4 +116,3 @@ bool starts_with(const char *lhs, const char *rhs) {
     // difference found before end of prefix
     return false;
 }
-

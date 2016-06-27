@@ -133,7 +133,8 @@ void IntColumnFilter::findIntLimits(const string &column_name, int *lower,
     }
 }
 
-bool IntColumnFilter::optimizeBitmask(const string &column_name, uint32_t *mask) {
+bool IntColumnFilter::optimizeBitmask(const string &column_name,
+                                      uint32_t *mask) {
     int32_t ref_value = convertRefValue();
 
     if (column_name != _column->name()) {

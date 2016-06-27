@@ -288,7 +288,6 @@ void LogEntry::applyWorkarounds() {
     }
 }
 
-
 bool LogEntry::handleTextEntry() {
     if (strncmp(_text, "LOG VERSION: 2.0", 16) == 0) {
         _logclass = LOGCLASS_PROGRAM;

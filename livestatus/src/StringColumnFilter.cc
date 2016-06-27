@@ -79,7 +79,6 @@ StringColumnFilter::~StringColumnFilter() {
     }
 }
 
-
 bool StringColumnFilter::accepts(void *data) {
     string act_string = _column->getValue(data);
     switch (_relOp) {

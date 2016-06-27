@@ -1,0 +1,9 @@
+Title: brocade_fcport: fixed unknown state texts
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p5
+Date: 1467037616
+Class: fix
+
+

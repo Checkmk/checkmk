@@ -2423,6 +2423,10 @@ class EventServer:
             # Variant 9: syslog message (RFC 5424)
             # <134>1 2016-06-02T12:49:05.181+02:00 chrissw7 ChrisApp - TestID - coming from  java code
 
+            # Variant 10:
+            # 2016 May 26 15:41:47 IST STOD-DH1-H26-CO-B Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet45 (XXX.CO-A.Et45), changed state to up
+            # year month day hh:mm:ss timezone HOSTNAME KeyAgent:
+
             # FIXME: Would be better to parse the syslog messages in another way:
             # Split the message by the first ":", then split the syslog header part
             # and detect which information are present. Take a look at the syslog RFCs
@@ -2483,6 +2487,14 @@ class EventServer:
                 # There is no host information, use the provided address
                 if address and type(address) == tuple:
                     event["host"] = address[0]
+
+            # Variant 10
+            elif line[4] == " " and line[:4].isdigit():
+                time_part = line[:20] # ignoring tz info
+                event["host"], application, line = line[25:].split(" ", 2)
+                event["application"] = application.rstrip(":")
+                event["text"] = line
+                event['time'] = time.mktime(time.strptime(time_part, '%Y %b %d %H:%M:%S'))
 
             # Variant 1,2,4
             else:

@@ -1,0 +1,17 @@
+Title: Added support for syslog messages produced by Aristana devices
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.4.0i1
+Date: 1467013515
+Class: feature
+
+The EC can now parse and process syslog messages produced by Aristana devices.
+These devices produce a strange syslog message format:
+
+2016 May 26 15:41:47 IST STOD-DH1-H26-CO-B Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet45 (XXX.CO-A.Et45), changed state to up
+
+To break it down
+year month day hh:mm:ss timezone HOSTNAME KeyAgent: 
+
+Some more documentation: http://www.arista.com/docs/Manuals/QuickStart-Managing7100Series.pdf

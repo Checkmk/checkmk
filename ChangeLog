@@ -284,6 +284,7 @@
     * 3147 FIX: windows agent: fixed bug where all placeholders in messages were replaced with the same parameter
     * 3654 FIX: apc_symmetra: Improved output in case of unknown battery state / calibration result
     * 3655 FIX: if64adm: Can now be used with OID range limits
+    * 3685 FIX: brocade_fcport: fixed unknown state texts
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

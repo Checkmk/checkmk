@@ -26,15 +26,53 @@
 
 # lookup tables for check implementation
 # Taken from swFCPortPhyState
-brocade_fcport_phystates = [ '', 'noCard', 'noTransceiver', 'laserFault', 'noLight',
-                              'noSync', 'inSync', 'portFault', 'diagFault', 'lockRef',
-                              'validating', 'invalidModule', 'noSigDet', 'unkown' ]
+brocade_fcport_phystates = {
+    0  : '',
+    1  : 'noCard',
+    2  : 'noTransceiver',
+    3  : 'laserFault',
+    4  : 'noLight',
+    5  : 'noSync',
+    6  : 'inSync',
+    7  : 'portFault',
+    8  : 'diagFault',
+    9  : 'lockRef',
+    10 : 'validating',
+    11 : 'invalidModule',
+    12 : 'noSigDet',
+    13 : 'unkown',
+}
+
 # Taken from swFCPortOpStatus
-brocade_fcport_opstates  = [ 'unknown', 'online', 'offline', 'testing', 'faulty' ]
+brocade_fcport_opstates  = {
+    0 : 'unknown',
+    1 : 'online',
+    2 : 'offline',
+    3 : 'testing',
+    4 : 'faulty',
+}
+
 # Taken from swFCPortAdmStatus
-brocade_fcport_admstates = [ '', 'online', 'offline', 'testing', 'faulty' ]
+brocade_fcport_admstates = {
+    0 : '',
+    1 : 'online',
+    2 : 'offline',
+    3 : 'testing',
+    4 : 'faulty',
+}
+
 # Taken from swFCPortSpeed
-brocade_fcport_speed     = [ 'unknown', '1Gbit', '2Gbit', 'auto-Neg', '4Gbit', '8Gbit', '10Gbit', 'unknown', '16Gbit' ]
+brocade_fcport_speed = {
+    0 : 'unknown',
+    1 : '1Gbit',
+    2 : '2Gbit',
+    3 : 'auto-Neg',
+    4 : '4Gbit',
+    5 : '8Gbit',
+    6 : '10Gbit',
+    7 : 'unknown',
+    8 : '16Gbit',
+}
 
 # Taken from swNbBaudRate
 isl_speed = {
@@ -139,7 +177,7 @@ def check_brocade_fcport(item, params, info):
         gbit = isl_speed.get( isl_ports.get( str(index) ) )
         speedmsg = ("ISL at %.0fGbit/s"  % gbit)
     else: # no ISL port
-        if brocade_fcport_speed[speed] in [ "auto-Neg", "unknown" ]:
+        if brocade_fcport_speed.get(speed, "unknown") in [ "auto-Neg", "unknown" ]:
             try:
                 # extract the speed from IF-MIB::ifHighSpeed.
                 # unfortunately ports in the IF-MIB and the brocade MIB
@@ -289,7 +327,7 @@ def check_brocade_fcport(item, params, info):
         else:
             errorflag = "(!!)"
             summarystate = 2
-    output.append("Phy:%s(%d)%s" % (brocade_fcport_phystates[phystate], phystate, errorflag))
+    output.append("Phy:%s(%d)%s" % (brocade_fcport_phystates.get(phystate, "unknown"), phystate, errorflag))
 
     errorflag = ""
     #unknown(0) online(1) offline(2) testing(3) faulty(4) ]
@@ -301,7 +339,7 @@ def check_brocade_fcport(item, params, info):
         else:
             errorflag = "(!!)"
             summarystate = 2
-    output.append("Op:%s(%d)%s" % (brocade_fcport_opstates[opstate], opstate, errorflag))
+    output.append("Op:%s(%d)%s" % (brocade_fcport_opstates.get(opstate, "unknown"), opstate, errorflag))
 
     errorflag = ""
     # online(1) offline(2) testing(3) faulty(4)
@@ -313,7 +351,7 @@ def check_brocade_fcport(item, params, info):
         else:
             errorflag = "(!!)"
             summarystate = 2
-    output.append("Adm:%s(%d)%s" % (brocade_fcport_admstates[admstate], admstate, errorflag))
+    output.append("Adm:%s(%d)%s" % (brocade_fcport_admstates.get(admstate, "unknown"), admstate, errorflag))
 
     return (summarystate, ', '.join(output), perfdata)
 

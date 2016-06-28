@@ -497,43 +497,44 @@ def page_create_visual(what, info_keys, next_url = None):
 def get_context_specs(visual, info_handler):
     context_specs = []
     info_keys = info_handler and info_handler(visual) or infos.keys()
-    for info_key in info_keys:
+
+    single_info_keys = [key for key in info_keys if key in visual['single_infos']]
+    multi_info_keys =  [key for key in info_keys if key not in single_info_keys]
+
+    def visual_spec_single(info_key):
         info = infos[info_key]
+        params = info['single_spec']
+        optional = True
+        isopen = True
+        return Dictionary(
+            title = info['title'],
+            # render = 'form',
+            form_isopen = isopen,
+            optional_keys = optional,
+            elements = params,
+        )
 
-        if info_key in visual['single_infos']:
-            params = info['single_spec']
-            optional = True
-            isopen = True
-            vs = Dictionary(
-                title = info['title'],
-                # render = 'form',
-                form_isopen = isopen,
-                optional_keys = optional,
-                elements = params,
-            )
-        else:
-            filter_list  = VisualFilterList([info_key], title=info['title'])
-            filter_names = filter_list.filter_names()
+    def visual_spec_multi(info_key):
+        info = infos[info_key]
+        filter_list  = VisualFilterList([info_key], title=info['title'], ignore=set(single_info_keys))
+        filter_names = filter_list.filter_names()
 
-            if not filter_names:
-                continue # Skip infos which have no filters available
+        if not filter_names:
+            return [] # Skip infos which have no filters available
 
-            params = [
-                ('filters', filter_list),
-            ]
-            optional = None
-            # Make it open by default when at least one filter is used
-            isopen = bool([ fn for fn in visual.get('context', {}).keys()
-                                                   if fn in filter_names ])
-            vs = filter_list
+        params = [
+            ('filters', filter_list),
+        ]
+        optional = None
+        # Make it open by default when at least one filter is used
+        isopen = bool([ fn for fn in visual.get('context', {}).keys()
+                                                if fn in filter_names ])
+        return filter_list
 
+    # single infos first, the rest afterwards
+    return [(info_key, visual_spec_single(info_key)) for info_key in single_info_keys] +\
+        [(info_key, visual_spec_multi(info_key)) for info_key in multi_info_keys]
 
-        # Single info context specifications should be listed first
-        if info_key in visual['single_infos']:
-            context_specs.insert(0, (info_key, vs))
-        else:
-            context_specs.append((info_key, vs))
-    return context_specs
 
 def process_context_specs(context_specs):
     context = {}
@@ -1116,13 +1117,15 @@ class VisualFilterList(ListOfMultiple):
     def __init__(self, infos, **kwargs):
         self._infos = infos
 
+        ignore = kwargs.get("ignore", set())
+
         # First get all filters useful for the infos, then create VisualFilter
         # valuespecs from them and then sort them
         fspecs = {}
         self._filters = {}
         for info in self._infos:
             for fname, filter in filters_allowed_for_info(info).items():
-                if fname not in fspecs:
+                if fname not in fspecs and fname not in ignore:
                     fspecs[fname] = VisualFilter(fname,
                         title = filter.title,
                     )

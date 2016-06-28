@@ -1055,8 +1055,14 @@ def page_edit_dashlet():
         ],
     )
 
-    context_specs = visuals.get_context_specs(dashlet,
-        info_handler=lambda dashlet: dashlet_types[dashlet['type']].get('infos'))
+    def dashlet_info_handler(dashlet):
+        if dashlet['type'] == 'view':
+            import views
+            return views.get_view_infos(dashlet)
+        else:
+            return dashlet_types[dashlet['type']].get('infos')
+
+    context_specs = visuals.get_context_specs(dashlet, info_handler=dashlet_info_handler)
 
     vs_type = None
     params = dashlet_type.get('parameters')

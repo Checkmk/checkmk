@@ -1,0 +1,15 @@
+Title: fixed Edit View/Dashlet Dialogs offering non-sensical filter choices
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1467104831
+
+This is actually two separate but similar bugfixes:
+When editing a dashlet that represented a view, the search/context filter offered all possible
+filter choices even when they made no sense for the data visualised.
+Also, when editing a aggregation group view (and potentially other views), the filter list
+offered the same filter option (aggregation group) twice, with different semantics, causing
+exceptions if either one of these options was used.

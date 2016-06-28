@@ -20,6 +20,9 @@
     * 3685 FIX: brocade_fcport: fixed unknown state texts
     * 3686 FIX: hp_proliant_temp: fixed wrong device thresholds handling. If no thresholds available the device reports -99
 
+    Multisite:
+    * 3148 FIX: fixed Edit View/Dashlet Dialogs offering non-sensical filter choices...
+
     WATO:
     * 3542 FIX: WATO Web API: fixed exception when WATO Git is activated...
     * 3547 FIX: Deleting a subfolder now generates a correct audit message...

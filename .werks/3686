@@ -1,0 +1,10 @@
+Title: hp_proliant_temp: fixed wrong device thresholds handling. If no thresholds available the device reports -99
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1467097884
+
+

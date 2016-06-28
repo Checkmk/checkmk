@@ -325,6 +325,8 @@ def main():
         attributes["mask"] = 0
         for mode in attributes["modes"]:
             attributes["mask"] |= map_events[mode][0]
+        for mode in attributes["monitor_all"]:
+            attributes["mask"] |= map_events[mode][0]
 
     update_watched_folders()
 

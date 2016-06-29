@@ -211,6 +211,10 @@ class Job(BackupEntity):
         return self._config["target"]
 
 
+    def key_ident(self):
+        return self._config.get("encrypt")
+
+
     # TODO: Duplicated code with mkbackup (globalize_job_id())
     def global_ident(self):
         parts = []
@@ -576,6 +580,10 @@ class PageEditBackupJob(object):
         raise NotImplementedError()
 
 
+    def keys(self):
+        raise NotImplementedError()
+
+
     def title(self):
         return self._title
 
@@ -655,17 +663,16 @@ class PageEditBackupJob(object):
                              "created by the backup are gzipped during backup."),
                     totext = _("Compress the backed up files"),
                 )),
-                # TODO
-                #("encrypt", DropdownChoice(
-                #    title = _("Encrypt"),
-                #    help = _("Enable encryption of the backed up files. The tar archives "
-                #             "created by the backup are encrypted using the specified key "
-                #             "during backup. You will need the private key and the passphrase "
-                #             "to decrypt the backup."),
-                #    choices = self.backup_key_choices,
-                #)),
+                ("encrypt", DropdownChoice(
+                    title = _("Encrypt"),
+                    help = _("Enable encryption of the backed up files. The tar archives "
+                             "created by the backup are encrypted using the specified key "
+                             "during backup. You will need the private key and the passphrase "
+                             "to decrypt the backup."),
+                    choices = self.backup_key_choices,
+                )),
             ] + self.custom_job_attributes(),
-        optional_keys = ["compress"],
+        optional_keys = ["compress", "encrypt"],
         render = "form",
     )
 
@@ -688,6 +695,10 @@ class PageEditBackupJob(object):
 
         path = target.type_params()["path"]
         target.type_class()().validate_local_directory(path, varprefix)
+
+
+    def backup_key_choices(self):
+        return self.keys().choices()
 
 
     def backup_target_choices(self):
@@ -1157,6 +1168,10 @@ class BackupKeypairStore(key_mgmt.KeypairStore):
 class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
     edit_mode = "backup_edit_key"
 
+    def jobs(self):
+        raise NotImplementedError()
+
+
     def title(self):
         return _("Keys for backups")
 
@@ -1166,8 +1181,11 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
                                             [("mode", "backup")]), "back")
 
 
-    def _key_in_use(self, key):
-        # TODO
+    def _key_in_use(self, key_id, key):
+        for ident, job in self.jobs().objects.items():
+            job_key_id = job.key_ident()
+            if job_key_id != None and key_id == job_key_id:
+                return True
         return False
 
 

@@ -58,6 +58,12 @@ class KeypairStore(object):
         out.write("%s.update(%s)\n\n" % (self._attr, pprint.pformat(keys)))
 
 
+    def choices(self):
+        return sorted([ (ident, key["alias"]) for ident, key in self.load().items() ],
+                        key=lambda k: k[1])
+
+
+
 
 class PageKeyManagement(object):
     edit_mode = "edit_key"
@@ -93,7 +99,7 @@ class PageKeyManagement(object):
 
             key = self.keys[key_id]
 
-            if self._key_in_use(key):
+            if self._key_in_use(key_id, key):
                 raise MKUserError("", _("This key is still used."))
 
             message = self._delete_confirm_msg()

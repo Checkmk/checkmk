@@ -5686,6 +5686,10 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
         return sorted(choices, key=lambda (x, y): y.title())
 
 
+    def keys(self):
+        return SiteBackupKeypairStore()
+
+
 
 class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
     def jobs(self):
@@ -5702,7 +5706,8 @@ class SiteBackupKeypairStore(backup.BackupKeypairStore):
 
 
 class ModeBackupKeyManagement(SiteBackupKeypairStore, backup.PageBackupKeyManagement, WatoMode):
-    pass
+    def jobs(self):
+        return SiteBackupJobs()
 
 
 

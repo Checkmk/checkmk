@@ -42,7 +42,7 @@
 
 
 def inv_perle_psmu(parsed):
-    node = inv_tree("hardware.components.psus:")
+    node = inv_tree_list("hardware.components.psus:")
     for itemname, data in parsed.items():
         itemname_splitted = itemname.split(" ")
 

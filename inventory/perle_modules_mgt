@@ -31,7 +31,7 @@
 
 
 def inv_perle_modules_mgt(info):
-    node = inv_tree("hardware.components.modules:")
+    node = inv_tree_list("hardware.components.modules:")
     for index, name, descr, status in info:
         node.append({
             "index"       : index,

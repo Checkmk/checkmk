@@ -61,7 +61,7 @@ def inv_perle_chassis_slots(info):
         "10" : "cm4gpt",
     }
 
-    node = inv_tree("hardware.components.modules:")
+    node = inv_tree_list("hardware.components.modules:")
     for index, name, serial, bootloader, fw, \
         alarms, diagstate, ty in info:
 

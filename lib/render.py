@@ -54,6 +54,17 @@ def time_of_day(timestamp):
     return time.strftime("%H:%M:%S", time.localtime(timestamp))
 
 
+def timespan(seconds):
+    hours, secs = divmod(seconds, 3600)
+    mins, secs = divmod(secs, 60)
+    return "%d:%02d:%02d" % (hours, mins, secs)
+
+
+def time_since(timestamp):
+    return timespan(time.time() - timestamp)
+
+
+
 # Precise size of a file - separated decimal separator
 # 1234 -> "1234"
 # 12345 => "12,345"

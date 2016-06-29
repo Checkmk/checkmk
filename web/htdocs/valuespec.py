@@ -1495,7 +1495,8 @@ class CascadingDropdown(ValueSpec):
                 type(value) == self._encoding_type and value[0] == val):
                 if vs:
                     if type(value) != self._encoding_type or len(value) != 2:
-                        raise MKUserError(varprefix + "_sel", _("Value must a %s with two elements."), self._encoding_type.__name__)
+                        raise MKUserError(varprefix + "_sel",
+                             _("Value must be a %s with two elements.") % self._encoding_type.__name__)
                     vs.validate_datatype(value[1], varprefix + "_%d" % nr)
                 return
         raise MKUserError(varprefix, _("Value %r is not allowed here.") % value)

@@ -1,0 +1,9 @@
+Title: perle_chassis, perle_chassis.temp, perle_chassis_slots, perle_modules_cm1000, perle_modules_cm1110, perle_modules_mgt, perle_psmu, perle_psmu.fan: new checks for Perle Mediaconverter devices which support the PERLE-MCR-MGT MIB
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1467201564
+Class: feature
+
+

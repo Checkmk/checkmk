@@ -1,0 +1,16 @@
+title: Perle Mediaconverter: Management module
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of the power LED on the management module of
+ Perle Meadiconverter devices which support the PERLE-MCR-MGT MIB.
+
+ The check is OK if there are no alarms, otherwise CRIT.
+
+item:
+ The module name.
+
+inventory:
+ One service per module is created.

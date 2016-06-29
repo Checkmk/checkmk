@@ -1,0 +1,26 @@
+title: Perle Mediaconverter: CM 1000 modules states
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the power state and fiber and copper LPRF and
+ link status of CM 1000 modules of Perle Meadiconverter devices
+ which support the PERLE-MCR-MGT MIB.
+
+ The check reports CRIT if no power to module. Otherwise it is OK.
+
+ The check is OK if the fiber and copper link states are UP. Otherwise
+ the check goes CRIT.
+
+ If the fiber LPRF state is OK the check is OK. If it is OFFLINE,
+ link fault, auto neg error or not applicable, the check goes CRIT.
+
+ If the copper LPRF state is OK the check is OK. Otherwise, in case of
+ remote fault, the check goes CRIT.
+
+item:
+ The module name.
+
+inventory:
+ One service per module is created.

@@ -1,0 +1,19 @@
+title: Perle Mediaconverter: Power supplies
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the power usage and status of the power supplies
+ of Perle Meadiconverter devices which support the PERLE-MCR-MGT MIB.
+
+ The check is OK if the status is good, otherwise CRIT.
+ Moreover the voltage and power usage is reported.
+ There are no default levels set. Lower levels for the voltage and
+ upper levels for the power usage are configurable.
+
+item:
+ The power supply identifier.
+
+inventory:
+ One service per power supply is created

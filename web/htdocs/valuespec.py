@@ -1370,6 +1370,11 @@ class CascadingDropdown(ValueSpec):
         self._separator = kwargs.get("separator", ", ")
         self._sorted = kwargs.get("sorted", True)
         self._orientation = kwargs.get("orientation", "vertical") # or horizontal
+        if kwargs.get("encoding", "tuple") == "list":
+            self._encoding_type = list
+        else:
+            self._encoding_type = tuple
+
 
     def normalize_choices(self, choices):
         new_choices = []
@@ -1388,7 +1393,7 @@ class CascadingDropdown(ValueSpec):
     def canonical_value(self):
         choices = self.choices()
         if choices[0][2]:
-            return (choices[0][0], choices[0][2].canonical_value())
+            return self._encoding_type((choices[0][0], choices[0][2].canonical_value()))
         else:
             return choices[0][0]
 
@@ -1398,7 +1403,7 @@ class CascadingDropdown(ValueSpec):
         except:
             choices = self.choices()
             if choices[0][2]:
-                return (choices[0][0], choices[0][2].default_value())
+                return self._encoding_type((choices[0][0], choices[0][2].default_value()))
             else:
                 return choices[0][0]
 
@@ -1414,7 +1419,7 @@ class CascadingDropdown(ValueSpec):
             # selection, if the HTML variable varprefix_sel aleady
             # exists.
             if value == val or (
-                type(value) == tuple and value[0] == val):
+                type(value) == self._encoding_type and value[0] == val):
                 def_val = str(nr)
 
         vp = varprefix + "_sel"
@@ -1449,7 +1454,7 @@ class CascadingDropdown(ValueSpec):
                         disp = "none"
                 else: # form painted the first time
                     if value == val \
-                       or (type(value) == tuple and value[0] == val):
+                       or (type(value) == self._encoding_type and value[0] == val):
                         def_val_2 = value[1]
                         disp = ""
                     else:
@@ -1480,17 +1485,17 @@ class CascadingDropdown(ValueSpec):
             sel = 0
         val, title, vs = choices[sel]
         if vs:
-            val = (val, vs.from_html_vars(varprefix + "_%d" % sel))
+            val = self._encoding_type((val, vs.from_html_vars(varprefix + "_%d" % sel)))
         return val
 
     def validate_datatype(self, value, varprefix):
         choices = self.choices()
         for nr, (val, title, vs) in enumerate(choices):
             if value == val or (
-                type(value) == tuple and value[0] == val):
+                type(value) == self._encoding_type and value[0] == val):
                 if vs:
-                    if type(value) != tuple or len(value) != 2:
-                        raise MKUserError(varprefix + "_sel", _("Value must a tuple with two elements."))
+                    if type(value) != self._encoding_type or len(value) != 2:
+                        raise MKUserError(varprefix + "_sel", _("Value must a %s with two elements."), self._encoding_type.__name__)
                     vs.validate_datatype(value[1], varprefix + "_%d" % nr)
                 return
         raise MKUserError(varprefix, _("Value %r is not allowed here.") % value)
@@ -1499,7 +1504,7 @@ class CascadingDropdown(ValueSpec):
         choices = self.choices()
         for nr, (val, title, vs) in enumerate(choices):
             if value == val or (
-                type(value) == tuple and value[0] == val):
+                type(value) == self._encoding_type and value[0] == val):
                 if vs:
                     vs.validate_value(value[1], varprefix + "_%d" % nr)
                 ValueSpec.custom_validate(self, value, varprefix)

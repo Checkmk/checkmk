@@ -41,6 +41,7 @@ import socket
 import signal
 import subprocess
 import sys
+import tempfile
 import textwrap
 import time
 import threading
@@ -56,8 +57,6 @@ import Crypto.Util.number
 import cmk.daemon as daemon
 import cmk.render as render
 from cmk.exceptions import MKTerminate, MKGeneralException
-
-g_var_path = "/var/lib/mkbackup"
 
 # Is used to duplicate output from stdout/stderr to a the job log. This
 # is e.g. used during "mkbackup backup" to store the output.
@@ -141,9 +140,11 @@ def site_config_path():
 # zur Zeit ausgeführt werden.
 def acquire_backup_lock():
     global g_backup_lock_f
-    lock_file_path = "%s/mkbackup.lock" % g_var_path
+    lock_file_path = "/tmp/mkbackup.lock"
+
     try:
-        g_backup_lock_f = open(lock_file_path, "a+")
+        g_backup_lock_f = tempfile.NamedTemporaryFile(mode="a+", dir="/tmp", delete=False)
+        os.rename(g_backup_lock_f.name, lock_file_path)
     except IOError, e:
         raise MKGeneralException("Failed to open lock file \"%s\": %s" %
                     (lock_file_path, e))
@@ -800,7 +801,7 @@ def init_new_run():
 
 
 def load_state():
-    return eval(file(state_path(g_job_id)).read())
+    return eval(file(state_path(g_local_job_id)).read())
 
 
 def save_state(new_attrs, update=True):
@@ -810,12 +811,17 @@ def save_state(new_attrs, update=True):
         state = {}
     state.update(new_attrs)
 
-    with open(state_path(g_job_id), "w") as f:
+    with open(state_path(g_local_job_id), "w") as f:
         f.write(pprint.pformat(state)+"\n")
 
 
 def state_path(job_id):
-    return "%s/%s.state" % (g_var_path, job_id)
+    if is_root():
+        path = "/var/lib/mkbackup"
+    else:
+        path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
+
+    return "%s/%s.state" % (path, job_id)
 
 
 def add_output(s):

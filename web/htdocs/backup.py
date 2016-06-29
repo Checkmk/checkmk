@@ -57,8 +57,6 @@ import cmk.render as render
 #   | specific configuration of the site backup.                           |
 #   '----------------------------------------------------------------------'
 
-g_var_path = "/var/lib/mkbackup"
-
 def mkbackup_path():
     if "OMD_ROOT" not in os.environ:
         return "/usr/sbin/mkbackup"
@@ -236,7 +234,12 @@ class Job(BackupEntity):
 
 
     def state_file_path(self):
-        return "%s/%s.state" % (g_var_path, self.global_ident())
+        if "OMD_ROOT" not in os.environ:
+            path = "/var/lib/mkbackup"
+        else:
+            path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
+
+        return "%s/%s.state" % (path, self.ident())
 
 
     def state(self):

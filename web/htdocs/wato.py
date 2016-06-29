@@ -13719,29 +13719,40 @@ def HostnameTranslation(**kwargs):
                   totext = _("Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"),
             )),
             ( "regex",
-              Tuple(
-                  title = _("Regular expression substitution"),
-                  help = _("Please specify a regular expression in the first field. This expression should at "
-                           "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
-                           "In the second field you specify the translated host name and can refer to the first matched "
-                           "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>"),
-                  elements = [
-                      RegExpUnicode(
-                          title = _("Regular expression"),
-                          help = _("Must contain at least one subgroup <tt>(...)</tt>"),
-                          mingroups = 0,
-                          maxgroups = 9,
-                          size = 30,
-                          allow_empty = False,
-                      ),
-                      TextUnicode(
-                          title = _("Replacement"),
-                          help = _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"),
-                          size = 30,
-                          allow_empty = False,
-                      )
-                 ]
-            )),
+                Transform(
+                    ListOf(
+                        Tuple(
+                            orientation = "horizontal",
+                            elements    =  [
+                                RegExpUnicode(
+                                    title       = _("Regular expression"),
+                                    help        = _("Must contain at least one subgroup <tt>(...)</tt>"),
+                                    mingroups   = 0,
+                                    maxgroups   = 9,
+                                    size        = 30,
+                                    allow_empty = False,
+                                ),
+                                TextUnicode(
+                                    title       = _("Replacement"),
+                                    help        = _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"),
+                                    size        = 30,
+                                    allow_empty = False,
+                                )
+                            ],
+                        ),
+                        title     = _("Multiple regular expressions"),
+                        help      = _("You can add any number of expressions here which are executed succesively until the first match. "
+                                      "Please specify a regular expression in the first field. This expression should at "
+                                      "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
+                                      "In the second field you specify the translated host name and can refer to the first matched "
+                                      "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>. "
+                                      ""),
+                        add_label = _("Add expression"),
+                        movable   = False,
+                    ),
+                    forth = lambda x: type(x) == tuple and [x] or x,
+                )
+            ),
             ( "mapping",
               ListOf(
                   Tuple(
@@ -13788,9 +13799,13 @@ def do_hostname_translation(translation, hostname):
     if translation.get("drop_domain") and not hostname[0].isdigit():
         hostname = hostname.split(".", 1)[0]
 
-    # 3. Regular expression conversion
-    if "regex" in translation:
-        expr, subst = translation.get("regex")
+    # 3. Multiple regular expression conversion
+    if type(translation.get("regex")) == tuple:
+        translations = [translation.get("regex")]
+    else:
+        translations = translation.get("regex", [])
+
+    for expr, subst in translations:
         if not expr.endswith('$'):
             expr += '$'
         rcomp = regex(expr)
@@ -13800,6 +13815,7 @@ def do_hostname_translation(translation, hostname):
             hostname = subst
             for nr, text in enumerate(mo.groups("")):
                 hostname = hostname.replace("\\%d" % (nr+1), text)
+            break
 
     # 4. Explicit mapping
     for from_host, to_host in translation.get("mapping", []):

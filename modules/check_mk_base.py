@@ -643,9 +643,13 @@ def do_hostname_translation(translation, hostname):
     # We assume the incoming name is correctly encoded in UTF-8
     hostname = decode_incoming_string(hostname)
 
-    # 3. Regular expression conversion
-    if "regex" in translation:
-        expr, subst = translation.get("regex")
+    # 3. Multiple regular expression conversion
+    if type(translation.get("regex")) == tuple:
+        translations = [translation.get("regex")]
+    else:
+        translations = translation.get("regex", [])
+
+    for expr, subst in translations:
         if not expr.endswith('$'):
             expr += '$'
         rcomp = regex(expr)
@@ -655,6 +659,7 @@ def do_hostname_translation(translation, hostname):
             hostname = subst
             for nr, text in enumerate(mo.groups("")):
                 hostname = hostname.replace("\\%d" % (nr+1), text)
+            break
 
     # 4. Explicity mapping
     for from_host, to_host in translation.get("mapping", []):

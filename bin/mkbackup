@@ -48,6 +48,11 @@ import traceback
 from tarfile import TarFile
 from hashlib import md5
 
+from OpenSSL import crypto
+from Crypto.Cipher import AES
+from Crypto.PublicKey import RSA
+import Crypto.Util.number
+
 import cmk.daemon as daemon
 import cmk.render as render
 from cmk.exceptions import MKTerminate, MKGeneralException
@@ -127,7 +132,7 @@ def system_config_path():
 
 def site_config_path():
     if not site_id():
-	raise Exception("Not executed in OMD environment!")
+        raise Exception("Not executed in OMD environment!")
     return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
 
 
@@ -289,67 +294,67 @@ def file_checksum(path):
 
 modes = {
     "backup": {
-	"description":
+        "description":
             "Starts creating a new backup. When executed as Check_MK site user, a backup of the "
             "current site is executed to the target of the given backup job. When executed as "
             "root user on the Check_MK Appliance, a backup of the whole system is created.",
-	"args": [
-	    {
-		"id": "Job-ID",
-		"description": "The ID of the backup job to work with",
-	    },
-	],
-	"opts": {
-	    "background": {
-		"description": "Fork and execute the program in the background.",
-	    },
-	},
-	"root_opts": {
-	    "without-sites": {
-		"description": "Exclude the Check_MK site files during backup.",
-	    },
-	},
+        "args": [
+            {
+                "id": "Job-ID",
+                "description": "The ID of the backup job to work with",
+            },
+        ],
+        "opts": {
+            "background": {
+                "description": "Fork and execute the program in the background.",
+            },
+        },
+        "root_opts": {
+            "without-sites": {
+                "description": "Exclude the Check_MK site files during backup.",
+            },
+        },
     },
     "restore": {
-	"description": "Starts the restore of a backup",
-	"args": [
-	    {
-		"id": "Target-ID",
-		"description": "The ID of the backup target to work with",
-	    },
-	    {
-		"id": "Backup-ID",
-		"description": "The ID of the backup to restore",
-	    },
-	],
+        "description": "Starts the restore of a backup",
+        "args": [
+            {
+                "id": "Target-ID",
+                "description": "The ID of the backup target to work with",
+            },
+            {
+                "id": "Backup-ID",
+                "description": "The ID of the backup to restore",
+            },
+        ],
     },
     "jobs": {
-	"description": "Lists all configured backup jobs of the current user context.",
+        "description": "Lists all configured backup jobs of the current user context.",
     },
     "targets": {
-	"description": "Lists all configured backup targets of the current user context.",
+        "description": "Lists all configured backup targets of the current user context.",
     },
     "list": {
-	"description": "Output the list of all backups found on the given backup target",
-	"args": [
-	    {
-		"id": "Target-ID",
-		"description": "The ID of the backup target to work with",
-	    },
-	],
+        "description": "Output the list of all backups found on the given backup target",
+        "args": [
+            {
+                "id": "Target-ID",
+                "description": "The ID of the backup target to work with",
+            },
+        ],
     },
 #    "show": {
-#	"description": "Shows information about a backup",
-#	"args": [
-#	    {
-#		"id": "Target-ID",
-#		"description": "The ID of the backup target to work with",
-#	    },
-#	    {
-#		"id": "Backup-ID",
-#		"description": "The ID of the backup to show",
-#	    },
-#	],
+#        "description": "Shows information about a backup",
+#        "args": [
+#            {
+#                "id": "Target-ID",
+#                "description": "The ID of the backup target to work with",
+#            },
+#            {
+#                "id": "Backup-ID",
+#                "description": "The ID of the backup to show",
+#            },
+#        ],
 #    },
 }
 
@@ -455,18 +460,53 @@ def do_site_backup(opts, site=None):
         raise MKGeneralException("Site backup failed: %s" % p.stderr.read())
 
 
+# Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA
+# public key to generate and encrypt a shared secret which is then used to encrypt
+# the backup with AES.
+#
+# When encryption is active, this function uses the configured RSA public key to
+# a) create a random secret key which is encrypted with the RSA public key
+# b) the encrypted key is used written to the backup file
+# c) the unencrypted random key is used as AES key for encrypting the backup stream
 def backup_stream(stream, is_alive):
     last_state_update, last_bps, bytes_copied = time.time(), None, 0
-    while True:
-        # TODO: Nicht direkt speichern, sondern durch gpg/openssl pipen, wenn
-        # Verschlüsselung aktiv ist
-        chunk = stream.read(1024*1024)
 
-        if chunk == "" and not is_alive():
-            break # end of tar archive reached
+    if encrypt_archives():
+        secret_key, encrypted_secret_key, iv = derive_key_and_iv(get_encryption_public_key(), 32,
+                                                                 AES.block_size)
+        cipher = AES.new(secret_key, AES.MODE_CBC, iv)
+
+        # Write out a file version marker and  the encrypted secret key, preceded by 
+        # a length indication. All separated by \0.
+        yield "%d\0%d\0%s\0" % (1, len(encrypted_secret_key), encrypted_secret_key)
+    else:
+        pubkey = None
+
+    while True:
+        finished = False
+        if encrypt_archives():
+            chunk = stream.read(1024 * AES.block_size)
+
+            # Detect end of file and add padding to fill up to block size
+            if chunk == "" or len(chunk) % AES.block_size != 0:
+                padding_length = (AES.block_size - len(chunk) % AES.block_size) or AES.block_size
+                chunk += padding_length * chr(padding_length)
+                finished = True
+        else:
+            chunk = stream.read(1024 * 1024)
+
+            if chunk == "":
+                finished = True
 
         bytes_copied += len(chunk)
-        yield chunk
+
+        if encrypt_archives():
+            yield cipher.encrypt(chunk)
+        else:
+            yield chunk
+
+        if finished and not is_alive():
+            break # end of tar archive reached
 
         timedif = time.time() - last_state_update
         if timedif >= 1:
@@ -482,6 +522,71 @@ def backup_stream(stream, is_alive):
 
             save_state({"bytes_per_second": bps})
             last_state_update, last_bps, bytes_copied = time.time(), bps, 0
+
+
+# logic from http://stackoverflow.com/questions/6309958/encrypting-a-file-with-rsa-in-python
+def derive_key_and_iv(pubkey, key_length, iv_length):
+    secret_key = os.urandom(key_length)
+
+    # Padding (see explanations below)
+    plaintext_length = (Crypto.Util.number.size(pubkey.n) - 2) / 8
+    padding = '\xff' + os.urandom(16)
+    padding += '\0' * (plaintext_length - len(padding) - len(secret_key))
+
+    # Encrypt the secret key with the RSA public key
+    encrypted_secret_key = pubkey.encrypt(padding + secret_key, None)[0]
+
+    # The iv is an initialization vector for the CBC mode of operation. It
+    # needs to be unique per key per message. Normally, it's sent alongside
+    # the data in cleartext. Here, since the key is only ever used once,
+    # you can use a known IV.
+    iv = '\x00' * iv_length
+
+    return secret_key, encrypted_secret_key, iv
+
+
+#def decrypt(in_file, out_file, password, key_length=32):
+#    bs = AES.block_size
+#    key, iv = derive_key_and_iv(password, key_length, bs)
+#    cipher = AES.new(key, AES.MODE_CBC, iv)
+#    next_chunk = ''
+#    finished = False
+#    while not finished:
+#        chunk, next_chunk = next_chunk, cipher.decrypt(in_file.read(1024 * bs))
+#        if len(next_chunk) == 0:
+#            padding_length = ord(chunk[-1])
+#            chunk = chunk[:-padding_length]
+#            finished = True
+#        out_file.write(chunk)
+
+
+def get_encryption_public_key():
+    key_id = g_job_config["encrypt"]
+    keys = load_backup_keys()
+
+    try:
+        key = keys[key_id]
+    except KeyError:
+        raise MKGeneralException("Failed to load the configured backup key: %d" % key_id)
+
+    # First extract the public key part from the certificate
+    cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+    pub  = cert.get_pubkey()
+    pub_pem = crypto.dump_publickey(crypto.FILETYPE_PEM, pub)
+
+    # Now constuct the public key object
+    return RSA.importKey(pub_pem)
+
+
+def load_backup_keys():
+    if is_root():
+        path = "/etc/cma/backup_keys.conf"
+    else:
+        path = "%s/etc/check_mk/backup_keys.mk" % os.environ["OMD_ROOT"]
+
+    variables = { "keys" : {} }
+    execfile(path, variables, variables)
+    return variables["keys"]
 
 
 def backup_info_path():
@@ -765,7 +870,7 @@ def mode_targets(opts):
 
 def usage(error=None):
     if error:
-	sys.stderr.write("ERROR: %s\n" % error)
+        sys.stderr.write("ERROR: %s\n" % error)
     sys.stdout.write("Usage: mkbackup [OPTIONS] MODE [MODE_ARGUMENTS...] [MODE_OPTIONS...]\n")
     sys.stdout.write("\n")
     sys.stdout.write("OPTIONS:\n")
@@ -849,12 +954,12 @@ def main():
     try:
         mode_name = args.pop(0)
     except IndexError:
-	usage("Missing operation mode")
+        usage("Missing operation mode")
 
     try:
-	mode = modes[mode_name]
+        mode = modes[mode_name]
     except KeyError:
-	usage("Invalid operation mode")
+        usage("Invalid operation mode")
 
     try:
         g_config = load_config()
@@ -868,7 +973,7 @@ def main():
 
     # Validate arguments
     if len(mode_args) != len(mode.get("args", [])):
-	usage("Invalid number of arguments for this mode")
+        usage("Invalid number of arguments for this mode")
 
     opt_dict = dict([ (k.lstrip("-"), v) for k, v in opts + mode_opts ])
 

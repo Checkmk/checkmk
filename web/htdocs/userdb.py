@@ -959,6 +959,8 @@ class GroupChoice(DualListChoice):
 #   | Mange custom attributes of users (in future hosts etc.)              |
 #   '----------------------------------------------------------------------'
 
+# TODO: userdb is a bad place for this when it manages user and host attributes!
+#       Maybe move to own module?
 def load_custom_attrs():
     try:
         filename = multisite_dir + "custom_attrs.mk"
@@ -967,22 +969,21 @@ def load_custom_attrs():
 
         vars = {
             'wato_user_attrs': [],
+            'wato_host_attrs': [],
         }
         execfile(filename, vars, vars)
 
         attrs = {}
-        for what in [ "user" ]:
+        for what in [ "user", "host" ]:
             attrs[what] = vars.get("wato_%s_attrs" % what, [])
         return attrs
 
     except Exception, e:
         if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
-        else:
-            logger(LOG_ERR, 'load_custom_attrs: Problem while loading custom attributes (%s - %s). '
-                     'Initializing structure...' % (filename, e))
-        return {}
+            raise
+        raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                      (filename, e)))
+
 
 def declare_custom_user_attrs():
     all_attrs = load_custom_attrs()

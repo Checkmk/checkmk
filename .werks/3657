@@ -1,0 +1,19 @@
+Title: Custom host attributes can now be configured
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i1
+Date: 1467188828
+Class: feature
+
+It is now possible to declare custom host attributes (just like for users). By default the
+custom attributes are just fields in the configuration GUI which you can use to store
+host related values in.
+
+Each of the attributes can be configured to be exported as custom variable to the
+monitoring core. In case you do this for a custom attribute, the variable will be available
+in the monitoring GUI, in notifications and via raw livestatus for your scripts or 3rd party
+tools.
+
+If you create a custom variable "my_custom_variable", it will result in a custom variable
+"_MY_CUSTOM_VARIABLE" in the monitoring core.

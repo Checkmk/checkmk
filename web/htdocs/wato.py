@@ -370,6 +370,7 @@ def mode_folder(phase):
                             "inventory")
             if config.may("wato.rename_hosts"):
                 html.context_button(_("Bulk renaming"), folder.url([("mode", "bulk_rename_host")]), "rename_host")
+            html.context_button(_("Custom attributes"), folder_preserving_link([("mode", "host_attrs")]), "custom_attr")
             if not folder.locked_hosts() and config.may("wato.parentscan") and folder.may("write"):
                 html.context_button(_("Parent scan"), folder.url([("mode", "parentscan"), ("all", "1")]),
                             "parentscan")
@@ -14589,27 +14590,32 @@ custom_attr_types = [
 
 def save_custom_attrs(attrs):
     make_nagios_directory(multisite_dir)
-    out = create_user_file(multisite_dir + "custom_attrs.mk", "w")
-    out.write(wato_fileheader())
-    for what in [ "user" ]:
-        if what in attrs and len(attrs[what]) > 0:
-            out.write("if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what))
-            out.write("wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what])))
+    with create_user_file(multisite_dir + "custom_attrs.mk", "w") as out:
+        out.write(wato_fileheader())
+        for what in [ "user", "host" ]:
+            if what in attrs and len(attrs[what]) > 0:
+                out.write("if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what))
+                out.write("wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what])))
+
 
 def mode_edit_custom_attr(phase, what):
-    name = html.var("edit") # missing -> new group
+    name = html.var("edit") # missing -> new custom attr
     new = name == None
 
     if phase == "title":
         if new:
             if what == "user":
                 return _("Create User Attribute")
+            else:
+                return _("Create Host Attribute")
         else:
             if what == "user":
                 return _("Edit User Attribute")
+            else:
+                return _("Edit Host Attribute")
 
     elif phase == "buttons":
-        html.context_button(_("User Attributes"), folder_preserving_link([("mode", "%s_attrs" % what)]), "back")
+        html.context_button(_("Back"), folder_preserving_link([("mode", "%s_attrs" % what)]), "back")
         return
 
     all_attrs = userdb.load_custom_attrs()
@@ -14635,7 +14641,8 @@ def mode_edit_custom_attr(phase, what):
 
             topic = html.var('topic', '').strip()
             help  = html.get_unicode_input('help').strip()
-            user_editable = html.get_checkbox('user_editable')
+            if what == "user":
+                user_editable = html.get_checkbox('user_editable')
             show_in_table = html.get_checkbox('show_in_table')
             add_custom_macro = html.get_checkbox('add_custom_macro')
 
@@ -14667,16 +14674,14 @@ def mode_edit_custom_attr(phase, what):
                 'title'            : title,
                 'topic'            : topic,
                 'help'             : help,
-                'user_editable'    : user_editable,
                 'show_in_table'    : show_in_table,
                 'add_custom_macro' : add_custom_macro,
             })
 
-            save_custom_attrs(all_attrs)
             if what == "user":
-                userdb.declare_custom_user_attrs()
-                userdb.rewrite_users()
+                attr['user_editable'] = user_editable
 
+            save_changed_custom_attrs(all_attrs, what)
 
         return what + "_attrs"
 
@@ -14698,12 +14703,21 @@ def mode_edit_custom_attr(phase, what):
 
     forms.section(_('Topic'))
     html.help(_('The attribute is added to this section in the edit dialog.'))
-    html.select('topic', [
-        ('ident',    _('Identity')),
-        ('security', _('Security')),
-        ('notify',   _('Notifications')),
-        ('personal', _('Personal Settings')),
-    ], attr.get('topic', 'personal'))
+
+    if what == "user":
+        topics = [
+            ('ident',    _('Identity')),
+            ('security', _('Security')),
+            ('notify',   _('Notifications')),
+            ('personal', _('Personal Settings')),
+        ]
+        default_topic = "personal"
+    else:
+        topics = list(set([ (a[1], a[1]) for a in all_host_attributes() if a[1] != None ]))
+        topics.insert(0, (_("Custom attributes"), _("Custom attributes")))
+        default_topic = _("Custom attributes")
+
+    html.select('topic', topics, attr.get('topic', 'personal'))
 
     forms.section(_('Help Text') + "<sup>*</sup>")
     html.help(_('You might want to add some helpful description for the attribute.'))
@@ -14716,16 +14730,17 @@ def mode_edit_custom_attr(phase, what):
     else:
         html.write(dict(custom_attr_types)[attr.get('type')])
 
-    forms.section(_('Editable by Users'))
-    html.help(_('It is possible to let users edit their custom attributes.'))
-    html.checkbox('user_editable', attr.get('user_editable', True),
-                  label = _("Users can change this attribute in their personal settings"))
+    if what == "user":
+        forms.section(_('Editable by Users'))
+        html.help(_('It is possible to let users edit their custom attributes.'))
+        html.checkbox('user_editable', attr.get('user_editable', True),
+                      label = _("Users can change this attribute in their personal settings"))
 
     forms.section(_('Show in Table'))
     html.help(_('This attribute is only visibile on the detail pages by default, but '
                 'you can also make it visible in the overview tables.'))
     html.checkbox('show_in_table', attr.get('show_in_table', False),
-                  label = _("Show the setting of the attribute in the user table"))
+                  label = _("Show the setting of the attribute in the list table"))
 
     forms.section(_('Add as custom macro'))
     html.help(_('The attribute can be added to the contact definiton in order  '
@@ -14742,13 +14757,17 @@ def mode_edit_custom_attr(phase, what):
 def mode_custom_attrs(phase, what):
     if what == "user":
         title = _("Custom User Attributes")
+    else:
+        title = _("Custom Host Attributes")
 
     if phase == "title":
         return title
 
     elif phase == "buttons":
-        global_buttons()
-        html.context_button(_("Users"), folder_preserving_link([("mode", "users")]), "back")
+        if what == "user":
+            html.context_button(_("Users"), folder_preserving_link([("mode", "users")]), "back")
+        else:
+            html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "back")
         html.context_button(_("New Attribute"), folder_preserving_link([("mode", "edit_%s_attr" % what)]), "new")
         return
 
@@ -14776,7 +14795,7 @@ def mode_custom_attrs(phase, what):
                 for index, attr in enumerate(attrs):
                     if attr['name'] == delname:
                         attrs.pop(index)
-                save_custom_attrs(all_attrs)
+                save_changed_custom_attrs(all_attrs, what)
                 log_pending(SYNCRESTART, None, "edit-%sattrs" % what, _("Deleted attribute %s" % (delname)))
             elif c == False:
                 return ""
@@ -14802,6 +14821,40 @@ def mode_custom_attrs(phase, what):
         table.cell(_("Type"),  attr['type'])
 
     table.end()
+
+
+def save_changed_custom_attrs(all_attrs, what):
+    save_custom_attrs(all_attrs)
+    if what == "user":
+        userdb.declare_custom_user_attrs()
+        userdb.rewrite_users()
+    else:
+        declare_custom_host_attrs()
+        Folder.invalidate_caches()
+        Folder.root_folder().rewrite_hosts_files()
+
+
+def declare_custom_host_attrs():
+    # First remove all previously registered custom host attributes
+    for attr_name in g_host_attribute.keys():
+        if attr_name not in builtin_host_attribute_names:
+            undeclare_host_attribute(attr_name)
+
+    # now declare the custom attributes
+    all_attrs = userdb.load_custom_attrs()
+    attrs = all_attrs.setdefault('host', [])
+    for attr in attrs:
+        vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
+
+        if attr['add_custom_macro']:
+            a = NagiosValueSpecAttribute(attr["name"], "_" + attr["name"], vs)
+        else:
+            a = ValueSpecAttribute(attr["name"], vs)
+
+        declare_host_attribute(a,
+            show_in_table = attr['show_in_table'],
+            topic = attr['topic'],
+        )
 
 #.
 #   .--Check Plugins-------------------------------------------------------.
@@ -16190,6 +16243,8 @@ modes = {
    "rename_host"        : (["hosts", "manage_hosts"], mode_rename_host),
    "bulk_rename_host"   : (["hosts", "manage_hosts"], mode_bulk_rename_host),
    "bulk_import"        : (["hosts", "manage_hosts"], ModeBulkImport),
+   "host_attrs"         : (["hosts", "manage_hosts"], lambda phase: mode_custom_attrs(phase, "host")),
+   "edit_host_attr"     : (["hosts", "manage_hosts"], lambda phase: mode_edit_custom_attr(phase, "host")),
    "edit_host"          : (["hosts"], lambda phase: mode_edit_host(phase, new=False, is_cluster=None)),
    "parentscan"         : (["hosts"], mode_parentscan),
    "firstinventory"     : (["hosts", "services"], lambda phase: mode_inventory(phase, True)),
@@ -16250,8 +16305,18 @@ modes = {
    "download_agents"    : (["download_agents"], mode_download_agents),
 }
 
+builtin_host_attribute_names = []
+
 loaded_with_language = False
 def load_plugins(force):
+    global builtin_host_attribute_names
+
+    # Do not cache the custom attributes. They can be created by the user
+    # during runtime, means they need to be loaded during each page request.
+    # But delete the old definitions before to also apply removals of attributes
+    if builtin_host_attribute_names:
+        declare_custom_host_attrs()
+
     global loaded_with_language
     if loaded_with_language == current_language and not force:
         return
@@ -16500,6 +16565,9 @@ def load_plugins(force):
     load_web_plugins("wato", globals())
 
     declare_host_tag_attributes(force = True)
+
+    builtin_host_attribute_names = g_host_attribute.keys()
+    declare_custom_host_attrs()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins

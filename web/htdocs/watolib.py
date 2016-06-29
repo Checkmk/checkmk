@@ -2649,6 +2649,24 @@ class ValueSpecAttribute(Attribute):
         self._valuespec.validate_value(value, varprefix + self._name)
 
 
+
+class NagiosValueSpecAttribute(ValueSpecAttribute):
+    def __init__(self, name, nag_name, vs):
+        ValueSpecAttribute.__init__(self, name, vs)
+        self.nag_name = nag_name
+
+    def nagios_name(self):
+        return self.nag_name
+
+    def to_nagios(self, value):
+        value = self._valuespec.value_to_text(value)
+        if value:
+            return value
+        else:
+            return None
+
+
+
 # Convert old tuple representation to new dict representation of
 # folder's group settings
 def convert_cgroups_from_tuple(value):

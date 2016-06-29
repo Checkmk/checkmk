@@ -1,4 +1,7 @@
 1.2.8p5:
+    Core & Setup:
+    * 3149 FIX: fixed rare crash if alert handling tried to long non-latin characters
+
     Checks & Agents:
     * 3541 FIX: esx_vsphere_hostsystem.state: no longer crashes when data is missing...
     * 3590 FIX: mssql.vbs: Completely removed plugin timeout...

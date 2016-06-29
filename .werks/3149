@@ -1,0 +1,9 @@
+Title: fixed rare crash if alert handling tried to long non-latin characters
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.8p5
+Date: 1467204048
+Class: fix
+
+

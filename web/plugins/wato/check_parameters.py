@@ -2986,6 +2986,15 @@ register_check_parameters(
                     ]
                 )
             ),
+            ("rxencinframes",
+                Tuple (
+                    title = _("Enc-In frames rate"),
+                    elements = [
+                        Percentage( title = _("Warning at"), unit = _("percent")),
+                        Percentage( title = _("Critical at"), unit = _("percent")),
+                    ]
+                )
+            ),
             ("notxcredits",
                 Tuple (
                     title = _("No-TxCredits errors"),

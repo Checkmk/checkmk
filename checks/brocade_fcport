@@ -100,6 +100,7 @@ brocade_fcport_inventory = []
 factory_settings["brocade_fcport_default_levels"] = {
     "rxcrcs":           (3.0, 20.0),   # allowed percentage of CRC errors
     "rxencoutframes":   (3.0, 20.0),   # allowed percentage of Enc-OUT Frames
+    "rxencinframes":    (3.0, 20.0),   # allowed percentage of Enc-In Frames
     "notxcredits":      (3.0, 20.0),   # allowed percentage of No Tx Credits
     "c3discards":       (3.0, 20.0),   # allowed percentage of C3 discards
     "assumed_speed":    2.0,           # used if speed not available in SNMP data
@@ -135,7 +136,7 @@ def inventory_brocade_fcport(info):
         isl_ports = dict(info[1])
 
     for line in info[0]:
-        if len(line) == 14:
+        if len(line) >= 14:
             try:
                 index    = int(line[0])
                 phystate = int(line[1])
@@ -162,7 +163,7 @@ def check_brocade_fcport(item, params, info):
     item_index = int(item.split()[0])
     portinfo = [ line for line in info[0] if int(line[0]) == item_index + 1]
     index, phystate, opstate, admstate, txwords, rxwords, txframes, rxframes, \
-         notxcredits, rxcrcs, rxencoutframes, c3discards = map(int, portinfo[0][:-2])
+         notxcredits, rxcrcs, rxencinframes, rxencoutframes, c3discards = map(int, portinfo[0][:-2])
     speed = saveint(portinfo[0][-2])
 
     summarystate = 0
@@ -277,6 +278,7 @@ def check_brocade_fcport(item, params, info):
     for descr, counter, value, ref in [
            ("CRC errors",           "rxcrcs",              rxcrcs,          rxframes_rate, ),
            ("ENC-Out",              "rxencoutframes",      rxencoutframes,  rxframes_rate, ),
+           ("ENC-In",               "rxencinframes",       rxencinframes,   rxframes_rate, ),
            ("C3 discards",          "c3discards",          c3discards,      txframes_rate, ),
            ("no TX buffer credits", "notxcredits",         notxcredits,     txframes_rate, ),]:
         per_sec = get_rate("brocade_fcport.%s.%s" % (counter, index), this_time, value)
@@ -303,7 +305,7 @@ def check_brocade_fcport(item, params, info):
             text += ", Avg: %.2f%%" % (rate * 100.0)
 
         error_percentage = rate * 100.0
-        warn, crit = params[counter]
+        warn, crit = params.get(counter, (None, None))
         if crit != None and error_percentage >= crit:
             summarystate = 2
             text += "(!!)"
@@ -353,6 +355,13 @@ def check_brocade_fcport(item, params, info):
             summarystate = 2
     output.append("Adm:%s(%d)%s" % (brocade_fcport_admstates.get(admstate, "unknown"), admstate, errorflag))
 
+    if info[3]:
+        for oidend, bbcredit in info[3]:
+            if index == int(oidend.split(".")[-1]):
+                bbcredit_rate = get_rate("brocade_fcport.bbcredit.%s" % (item),
+                                          this_time, binstring_to_int(bbcredit))
+                perfdata.append( ("fc_bbcredit_zero", bbcredit_rate) )
+
     return (summarystate, ', '.join(output), perfdata)
 
 check_info["brocade_fcport"] = {
@@ -372,6 +381,7 @@ check_info["brocade_fcport"] = {
             14, # swFCPortRxFrames
             20, # swFCPortNoTxCredits
             22, # swFCPortRxCrcs
+            21, # swFCPortRxEncInFrs
             26, # swFCPortRxEncOutFrs
             28, # swFCPortC3Discards
             35, # swFCPortSpeed, deprecated from at least firmware version 7.2.1
@@ -388,6 +398,11 @@ check_info["brocade_fcport"] = {
         ( ".1.3.6.1.2.1", [
             "2.2.1.3",      # ifType, needed to extract fibre channel ifs only (type 56)
             "31.1.1.1.15",  # IF-MIB::ifHighSpeed
+        ]),
+        # Not every device supports that
+        (".1.3.6.1.3.94.4.5.1", [
+            OID_END,
+            "8", # FCMGMT-MIB::connUnitPortStatCountBBCreditZero
         ]),
     ],
     'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1") \

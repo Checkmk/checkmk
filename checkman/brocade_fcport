@@ -15,7 +15,7 @@ description:
  percentual levels.
 
  {[3]} An error counter exceeds its  configured levels (CRC errors, Enc-OUT
- frames, no Tx credits, C3 discards)
+ Enc-IN, frames, no Tx credits, C3 discards)
 
  Averaging: This check supports averaging on all counters. Averaging is
  turned on but setting the check parameter {"average"} to a number of minutes.

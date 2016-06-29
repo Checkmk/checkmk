@@ -107,6 +107,7 @@
     * 2240 check_mk_agent.openwrt: New agent for OpenWRT based systems...
     * 3684 infoblox_systeminfo: new inventory plugin for Infoblox devices which support the IB-PLATFORMONE MIB
     * 3688 perle_chassis, perle_chassis.temp, perle_chassis_slots, perle_modules_cm1000, perle_modules_cm1110, perle_modules_mgt, perle_psmu, perle_psmu.fan: new checks for Perle Mediaconverter devices which support the PERLE-MCR-MGT MIB
+    * 3689 brocade_fcport: now monitors BBcredit zero stats and the number of encoding error or disparity error inside frames received
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

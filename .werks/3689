@@ -1,0 +1,9 @@
+Title: brocade_fcport: now monitors BBcredit zero stats and the number of encoding error or disparity error inside frames received
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1467209823
+Class: feature
+
+

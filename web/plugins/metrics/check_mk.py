@@ -1862,13 +1862,25 @@ metric_info["fc_tx_frames"] = {
 metric_info["fc_crc_errors"] = {
     "title" : _("Receive CRC errors"),
     "unit"  : "1/s",
-    "color" : "12/a",
+    "color" : "21/a",
 }
 
 metric_info["fc_encouts"] = {
     "title" : _("Enc-Outs"),
     "unit"  : "1/s",
-    "color" : "13/a",
+    "color" : "12/a",
+}
+
+metric_info["fc_encins"] = {
+    "title" : _("Enc-Ins"),
+    "unit"  : "1/s",
+    "color" : "13/b",
+}
+
+metric_info["fc_bbcredit_zero"] = {
+    "title" : _("BBcredit zero"),
+    "unit"  : "1/s",
+    "color" : "46/a",
 }
 
 metric_info["fc_c3discards"] = {
@@ -3902,6 +3914,7 @@ check_metrics["check_mk-brocade_fcport"] = {
     "txframes"       : { "name": "fc_tx_frames", },
     "rxcrcs"         : { "name": "fc_crc_errors" },
     "rxencoutframes" : { "name": "fc_encouts" },
+    "rxencinframes"  : { "name": "fc_encins" },
     "c3discards"     : { "name": "fc_c3discards" },
     "notxcredits"    : { "name": "fc_notxcredits" },
 }
@@ -6671,11 +6684,17 @@ graph_info.append({
 graph_info.append({
     "title" : _("Errors"),
     "metrics" : [
-        ( "fc_crc_errors", "area" ),
-        ( "fc_encouts", "stack" ),
-        ( "fc_c3discards", "stack" ),
-        ( "fc_notxcredits", "stack" ),
-    ]
+        ( "fc_crc_errors",    "area" ),
+        ( "fc_c3discards",    "stack" ),
+        ( "fc_notxcredits",   "stack" ),
+        ( "fc_encouts",       "stack" ),
+        ( "fc_encins",        "stack" ),
+        ( "fc_bbcredit_zero", "stack" ),
+    ],
+    "optional_metrics" : [
+        "fc_encins",
+        "fc_bbcredit_zero",
+    ],
 })
 
 graph_info.append({

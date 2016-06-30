@@ -65,6 +65,7 @@ check_info['perle_chassis'] = {
                                     '9',    # PERLE-MCR-MGT-MIB::chassisTemperature
                               ]),
     'snmp_scan_function'    : perle_scan_function,
+    'includes'              : [ 'perle.include' ],
 }
 
 

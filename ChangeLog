@@ -37,6 +37,7 @@
 
     BI:
     * 3546 Drastically sped up response time on querying single aggregations...
+    * 3551 FIX: Now able to open BI aggregations containing a few hundred hosts...
 
 
 1.2.8p4:

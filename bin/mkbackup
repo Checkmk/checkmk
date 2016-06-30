@@ -221,18 +221,31 @@ def load_config():
 
 
 def load_backup_info(path):
-    return eval(file(path).read())
+    info = eval(file(path).read())
+
+    # Load the backup_id from the second right path component. This is the
+    # base directory of the mkbackup.info file. The user might have moved
+    # the directory, e.g. for having multiple backups. Allow that.
+    # Maybe we need to changed this later when we allow multiple generations
+    # of backups.
+    info["backup_id"] = os.path.basename(os.path.dirname(path))
+
+    return info
 
 
-def save_backup_info():
+def save_backup_info(info):
+    with open(backup_info_path(), "w") as f:
+        f.write(pprint.pformat(info)+"\n")
+
+
+def create_backup_info():
     files = get_files_for_backup_info()
 
     info = {
         "type"       : "Check_MK" if not is_root() \
                        else "Appliance",
         "job_id"     : g_local_job_id,
-        "compressed" : compress_archives(),
-        "encrypted"  : encrypt_archives(),
+        "config"     : g_job_config,
         "hostname"   : hostname(),
         "files"      : get_files_for_backup_info(),
         "finished"   : time.time(),
@@ -242,8 +255,8 @@ def save_backup_info():
     if not is_root():
         info["site_id"] = site_id()
 
-    with open(backup_info_path(), "w") as f:
-        f.write(pprint.pformat(info)+"\n")
+    return info
+
 
 
 def get_files_for_backup_info():
@@ -359,20 +372,16 @@ modes = {
 #    },
 }
 
+g_job_id       = None
+g_local_job_id = None
+g_job_config   = None
+g_target_id    = None
+g_backup_id    = None
+
 
 def mode_backup(local_job_id, opts):
     acquire_backup_lock()
-
-    global g_job_id, g_local_job_id
-    g_job_id = globalize_job_id(local_job_id)
-    g_local_job_id = local_job_id
-
-    if local_job_id not in g_config["jobs"]:
-        raise MKGeneralException("This backup job does not exist.")
-
-    global g_job_config
-    g_job_config = g_config["jobs"][local_job_id]
-
+    load_job(local_job_id)
     verify_target_is_ready(g_job_config["target"])
 
     init_new_run()
@@ -444,7 +453,7 @@ def do_site_backup(opts, site=None):
 
     cmd.append("-")
 
-    backup_path = site_backup_path(site)
+    backup_path = site_backup_archive_path(site)
 
     # Create missing directories. Ensure group permissions and mode.
     makedirs(os.path.dirname(backup_path), group="omd", mode=0775)
@@ -454,7 +463,8 @@ def do_site_backup(opts, site=None):
                          stdin=open(os.devnull))
 
     with open(backup_path, "w") as backup_file:
-        for chunk in backup_stream(stream=p.stdout, is_alive=lambda: p.poll() is None):
+        s = BackupStream(stream=p.stdout, is_alive=lambda: p.poll() is None)
+        for chunk in s.process():
             backup_file.write(chunk)
 
     if p.returncode != 0:
@@ -469,24 +479,107 @@ def do_site_backup(opts, site=None):
 # a) create a random secret key which is encrypted with the RSA public key
 # b) the encrypted key is used written to the backup file
 # c) the unencrypted random key is used as AES key for encrypting the backup stream
-def backup_stream(stream, is_alive):
-    last_state_update, last_bps, bytes_copied = time.time(), None, 0
+class MKBackupStream(object):
+    def __init__(self, stream, is_alive):
+        self._stream    = stream
+        self._is_alive  = is_alive
+        self._cipher    = None
 
-    if encrypt_archives():
-        secret_key, encrypted_secret_key, iv = derive_key_and_iv(get_encryption_public_key(), 32,
-                                                                 AES.block_size)
-        cipher = AES.new(secret_key, AES.MODE_CBC, iv)
+        self._last_state_update = time.time()
+        self._last_bps          = None
+        self._bytes_copied      = 0
 
-        # Write out a file version marker and  the encrypted secret key, preceded by 
-        # a length indication. All separated by \0.
-        yield "%d\0%d\0%s\0" % (1, len(encrypted_secret_key), encrypted_secret_key)
-    else:
-        pubkey = None
+        # The iv is an initialization vector for the CBC mode of operation. It
+        # needs to be unique per key per message. Normally, it's sent alongside
+        # the data in cleartext. Here, since the key is only ever used once,
+        # you can use a known IV.
+        self._iv = '\x00' * AES.block_size
 
-    while True:
+
+    def process(self):
+        head = self._init_processing()
+        if head != None:
+            yield head
+
+        while True:
+            chunk, finished = self._read_chunk()
+
+            self._bytes_copied += len(chunk)
+
+            yield self._process_chunk(chunk)
+
+            if finished and not self._is_alive():
+                break # end of stream reached
+
+            self._update_state()
+
+
+    def _init_processing(self):
+        raise NotImplementedError()
+
+
+    def _read_chunk(self):
+        raise NotImplementedError()
+
+
+    def _process_chunk(self):
+        raise NotImplementedError()
+
+
+    def _update_state(self):
+        timedif = time.time() - self._last_state_update
+        if timedif >= 1:
+            this_bps = float(self._bytes_copied) / timedif
+
+            if self._last_bps == None:
+                bps = this_bps # initialize the value
+            else:
+                percentile, backlog_sec = 0.50, 10
+                weight_per_sec = (1 - percentile) ** (1.0 / backlog_sec)
+                weight = weight_per_sec ** timedif
+                bps = self._last_bps * weight + this_bps * (1 - weight)
+
+            save_state({"bytes_per_second": bps})
+            self._last_state_update, self._last_bps, self._bytes_copied = time.time(), bps, 0
+
+
+    def _get_key_spec(self, key_id):
+        keys = self._load_backup_keys()
+
+        try:
+            key = keys[key_id]
+        except KeyError:
+            raise MKGeneralException("Failed to load the configured backup key: %d" % key_id)
+
+
+    def _load_backup_keys(self):
+        if is_root():
+            path = "/etc/cma/backup_keys.conf"
+        else:
+            path = "%s/etc/check_mk/backup_keys.mk" % os.environ["OMD_ROOT"]
+
+        variables = { "keys" : {} }
+        execfile(path, variables, variables)
+        return variables["keys"]
+
+
+
+class BackupStream(MKBackupStream):
+    def _init_processing(self):
+        if encrypt_archives():
+            secret_key, encrypted_secret_key = self._derive_key(
+                                          self._get_encryption_public_key(), 32)
+            self._cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
+
+            # Write out a file version marker and  the encrypted secret key, preceded by 
+            # a length indication. All separated by \0.
+            return "%d\0%d\0%s\0" % (1, len(encrypted_secret_key), encrypted_secret_key)
+
+
+    def _read_chunk(self):
         finished = False
         if encrypt_archives():
-            chunk = stream.read(1024 * AES.block_size)
+            chunk = self._stream.read(1024 * AES.block_size)
 
             # Detect end of file and add padding to fill up to block size
             if chunk == "" or len(chunk) % AES.block_size != 0:
@@ -494,116 +587,165 @@ def backup_stream(stream, is_alive):
                 chunk += padding_length * chr(padding_length)
                 finished = True
         else:
-            chunk = stream.read(1024 * 1024)
+            chunk = self._stream.read(1024 * 1024)
 
             if chunk == "":
                 finished = True
 
-        bytes_copied += len(chunk)
+        return chunk, finished
 
+
+    def _process_chunk(self, chunk):
         if encrypt_archives():
-            yield cipher.encrypt(chunk)
+            return self._cipher.encrypt(chunk)
         else:
-            yield chunk
-
-        if finished and not is_alive():
-            break # end of tar archive reached
-
-        timedif = time.time() - last_state_update
-        if timedif >= 1:
-            this_bps = float(bytes_copied) / timedif
-
-            if last_bps == None:
-                bps = this_bps # initialize the value
-            else:
-                percentile, backlog_sec = 0.50, 10
-                weight_per_sec = (1 - percentile) ** (1.0 / backlog_sec)
-                weight = weight_per_sec ** timedif
-                bps = last_bps * weight + this_bps * (1 - weight)
-
-            save_state({"bytes_per_second": bps})
-            last_state_update, last_bps, bytes_copied = time.time(), bps, 0
+            return chunk
 
 
-# logic from http://stackoverflow.com/questions/6309958/encrypting-a-file-with-rsa-in-python
-def derive_key_and_iv(pubkey, key_length, iv_length):
-    secret_key = os.urandom(key_length)
+    def _get_encryption_public_key(self):
+        # TODO: Refactor to hand over the key_id via constructor
+        key = self._get_key_spec(g_job_config["encrypt"])
 
-    # Padding (see explanations below)
-    plaintext_length = (Crypto.Util.number.size(pubkey.n) - 2) / 8
-    padding = '\xff' + os.urandom(16)
-    padding += '\0' * (plaintext_length - len(padding) - len(secret_key))
+        # First extract the public key part from the certificate
+        cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+        pub  = cert.get_pubkey()
+        pub_pem = crypto.dump_publickey(crypto.FILETYPE_PEM, pub)
 
-    # Encrypt the secret key with the RSA public key
-    encrypted_secret_key = pubkey.encrypt(padding + secret_key, None)[0]
-
-    # The iv is an initialization vector for the CBC mode of operation. It
-    # needs to be unique per key per message. Normally, it's sent alongside
-    # the data in cleartext. Here, since the key is only ever used once,
-    # you can use a known IV.
-    iv = '\x00' * iv_length
-
-    return secret_key, encrypted_secret_key, iv
+        # Now constuct the public key object
+        return RSA.importKey(pub_pem)
 
 
-#def decrypt(in_file, out_file, password, key_length=32):
-#    bs = AES.block_size
-#    key, iv = derive_key_and_iv(password, key_length, bs)
-#    cipher = AES.new(key, AES.MODE_CBC, iv)
-#    next_chunk = ''
-#    finished = False
-#    while not finished:
-#        chunk, next_chunk = next_chunk, cipher.decrypt(in_file.read(1024 * bs))
-#        if len(next_chunk) == 0:
-#            padding_length = ord(chunk[-1])
-#            chunk = chunk[:-padding_length]
-#            finished = True
-#        out_file.write(chunk)
+    # logic from http://stackoverflow.com/questions/6309958/encrypting-a-file-with-rsa-in-python
+    def _derive_key(self, pubkey, key_length):
+        secret_key = os.urandom(key_length)
+
+        # Padding (see explanations below)
+        plaintext_length = (Crypto.Util.number.size(pubkey.n) - 2) / 8
+        padding = '\xff' + os.urandom(16)
+        padding += '\0' * (plaintext_length - len(padding) - len(secret_key))
+
+        # Encrypt the secret key with the RSA public key
+        encrypted_secret_key = pubkey.encrypt(padding + secret_key, None)[0]
+
+        return secret_key, encrypted_secret_key
 
 
-def get_encryption_public_key():
-    key_id = g_job_config["encrypt"]
-    keys = load_backup_keys()
 
-    try:
-        key = keys[key_id]
-    except KeyError:
-        raise MKGeneralException("Failed to load the configured backup key: %d" % key_id)
+class RestoreStream(BackupStream):
+    def _init_processing(self):
+        if not encrypt_archives():
+            return
 
-    # First extract the public key part from the certificate
-    cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
-    pub  = cert.get_pubkey()
-    pub_pem = crypto.dump_publickey(crypto.FILETYPE_PEM, pub)
-
-    # Now constuct the public key object
-    return RSA.importKey(pub_pem)
+        encrypted_secret_key = self._read_encrypted_secret_key()
+        secret_key = self._decrypt_secret_key(encrypted_secret_key)
 
 
-def load_backup_keys():
-    if is_root():
-        path = "/etc/cma/backup_keys.conf"
+    def _read_chunk(self):
+        if not encrypt_archives():
+            chunk = self._stream.read(1024 * 1024)
+            return chunk, chunk == ""
+
+        chunk = self._cipher.decrypt(self._stream.read(1024 * AES.block_size))
+        if self._next_chunk == None:
+            # First chunk. Only store for next loop
+            self._next_chunk = chunk
+            return "", False
+        else:
+            if len(chunk) == 0:
+                # Processing last chunk. Stip off padding.
+                padding_length = ord(chunk[-1])
+                chunk = chunk[:-padding_length]
+
+            return chunk, True
+
+
+    def _process_chunk(self, chunk):
+        return chunk
+
+
+    def _read_encrypted_secret_key(self):
+        buf = ""
+
+        def read_field():
+            while True:
+                c = self._stream.read(1)
+                if c == "\0":
+                    break
+                else:
+                    buf += c
+
+        file_version = read_field()
+        if file_version != "1":
+            raise MKGeneralException("Failed to process backup file (invalid version)")
+
+        try:
+            key_len = int(read_field())
+        except ValueError:
+            raise MKGeneralException("Failed to parse the encrypted backup file (key length)")
+
+        if int(key_len) > 256:
+            raise MKGeneralException("Failed to process backup file (invalid key length)")
+
+        encrypted_secret_key = self._stream.read(int(key_len))
+
+        if self._stream.read(1) != "\0":
+            raise MKGeneralException("Failed to parse the encrypted backup file (header broken)")
+
+
+        return encrypted_secret_key
+
+
+    def _get_encryption_private_key(self):
+        # TODO: Refactor to hand over the key_id via constructor
+        key = self._get_key_spec(g_job_config["encrypt"])
+
+        try:
+            passphrase = os.environ["MKBACKUP_PASSPHRASE"]
+        except KeyError:
+            raise MKGeneralException("Failed to get passphrase for decryption the backup. "
+                                     "It needs to be given as environment variable "
+                                     "\"MKBACKUP_PASSPHRASE\".")
+
+        try:
+            return RSA.importKey(key["private_key"], passphrase)
+        except (ValueError, IndexError, TypeError):
+            if opt_debug:
+                raise
+            raise MKGeneralException("Failed to load private key (wrong passphrase?)")
+
+
+    def _decrypt_secret_key(self, encrypted_secret_key):
+        private_key = self._get_encryption_private_key()
+        return private_key.decrypt(encrypted_secret_key)
+
+
+# Returns the base path for the backup to work with. In backup mode, this is
+# the directory of the target+job. In restore mode it is the target+backup path.
+def backup_base_path():
+    if g_job_id != None:
+        return job_backup_path_during_backup()
     else:
-        path = "%s/etc/check_mk/backup_keys.mk" % os.environ["OMD_ROOT"]
+        return existing_backup_path()
 
-    variables = { "keys" : {} }
-    execfile(path, variables, variables)
-    return variables["keys"]
+
+def existing_backup_path():
+    return "%s/%s" % (target_path(g_target_id), g_backup_id)
 
 
 def backup_info_path():
-    return "%s/mkbackup.info" % (job_backup_path_during_backup())
+    return "%s/mkbackup.info" % (backup_base_path())
 
 
-def site_backup_path(site_id):
-    return "%s/site-%s%s" % (job_backup_path_during_backup(), site_id, archive_suffix())
+def site_backup_archive_path(site_id):
+    return "%s/site-%s%s" % (backup_base_path(), site_id, archive_suffix())
 
 
-def system_backup_path():
-    return "%s/system" % (job_backup_path_during_backup(), archive_suffix())
+def system_backup_archive_path():
+    return "%s/system%s" % (backup_base_path(), archive_suffix())
 
 
-def system_data_backup_path():
-    return "%s/system-data%s" % (job_backup_path_during_backup(), archive_suffix())
+def system_data_backup_archive_path():
+    return "%s/system-data%s" % (backup_base_path(), archive_suffix())
 
 
 def job_backup_path_during_backup():
@@ -627,6 +769,16 @@ def archive_suffix():
     return suffix
 
 
+def needed_backup_archive_files():
+    if is_root():
+        needed_files = [ "system", "system-data" ]
+        needed_files += [ "site-%s" % s for s in existing_sites() ]
+    else:
+        needed_files = [ "site-%s" % site_id() ]
+
+    return [ f + archive_suffix() for f in needed_files ]
+
+
 def compress_archives():
     return "compress" in g_job_config
 
@@ -648,7 +800,11 @@ def target_path(target_ident):
 
 
 def verify_target_is_ready(target_ident):
-    cfg = target_cfg(target_ident)
+    try:
+        cfg = target_cfg(target_ident)
+    except KeyError:
+        raise MKGeneralException("The backup target \"%s\" does not exist." % target_ident)
+
     if cfg["remote"][0] != "local":
         raise NotImplementedError()
 
@@ -657,9 +813,34 @@ def verify_target_is_ready(target_ident):
                                  "but nothing is mounted.")
 
 
+def verify_backup_exists():
+    if not os.path.exists(backup_base_path()) or not os.path.exists(backup_info_path()):
+        raise MKGeneralException("This backup does not exist (Use \"mkbackup list %s\" to "
+                                 "show a list of available backups)." % g_target_id)
+
+
+def verify_backup_consistency(info):
+    for archive_file in needed_backup_archive_files():
+        size, checksum = None, None
+        for entry in info["files"]:
+            if entry[0] == archive_file:
+                size, checksum = entry[1:]
+                break
+
+        if size == None:
+            raise MKGeneralException("The backup is missing the needed archive %s." % f)
+
+        archive_path = "%s/%s" % (backup_base_path(), archive_file)
+        this_checksum = file_checksum(archive_path)
+        if this_checksum != checksum:
+            raise MKGeneralException("The backup seems to be damaged and can not be restored. "
+                                     "The checksum of the archive %s is wrong (got %s but "
+                                     "expected %s)." % (archive_path, this_checksum, checksum))
+
+
 def do_system_backup(opts):
     # Create missing directories. Ensure group permissions and mode.
-    makedirs(os.path.dirname(system_backup_path()), group="omd", mode=0775)
+    makedirs(os.path.dirname(system_backup_archive_path()), group="omd", mode=0775)
 
     # Perform backup of the /rw volume on all devices
     log("Performing system backup (system%s)" % archive_suffix())
@@ -686,7 +867,7 @@ def do_system_backup(opts):
 
 
 def do_system_rw_backup(opts):
-    with open(system_backup_path(), "w") as backup_file:
+    with open(system_backup_archive_path(), "w") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
         pipein  = os.fdopen(pipein_fd)
 
@@ -697,12 +878,13 @@ def do_system_rw_backup(opts):
         t.start()
 
         # Process backup stream and write to destination file
-        for chunk in backup_stream(stream=pipein, is_alive=lambda: t.is_alive()):
+        s = BackupStream(stream=pipein, is_alive=lambda: t.is_alive())
+        for chunk in s.process():
             backup_file.write(chunk)
 
 
 def do_system_data_backup(opts):
-    with file(system_data_backup_path(), "w") as backup_file:
+    with file(system_data_backup_archive_path(), "w") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
         pipein  = os.fdopen(pipein_fd)
 
@@ -713,7 +895,8 @@ def do_system_data_backup(opts):
         t.start()
 
         # Process backup stream and write to destination file
-        for chunk in backup_stream(stream=pipein, is_alive=lambda: t.is_alive()):
+        s = BackupStream(stream=pipein, is_alive=lambda: t.is_alive())
+        for chunk in s.process():
             backup_file.write(chunk)
 
 
@@ -756,7 +939,10 @@ def complete_backup():
         log("Cleaning up previously completed backup")
         shutil.rmtree(job_backup_path_complete())
 
-    save_backup_info()
+    info = create_backup_info()
+    save_backup_info(info)
+
+    verify_backup_consistency(info)
 
     os.rename(job_backup_path_during_backup(),
               job_backup_path_complete())
@@ -769,6 +955,17 @@ def cleanup_previous_incomplete_backup():
     if os.path.exists(job_backup_path_during_backup()):
         log("Found previous incomplete backup. Cleaning up those files.")
         shutil.rmtree(job_backup_path_during_backup())
+
+
+def load_job(local_job_id):
+    global g_job_id, g_local_job_id, g_job_config
+    g_job_id = globalize_job_id(local_job_id)
+    g_local_job_id = local_job_id
+
+    if local_job_id not in g_config["jobs"]:
+        raise MKGeneralException("This backup job does not exist.")
+
+    g_job_config = g_config["jobs"][local_job_id]
 
 
 def globalize_job_id(local_job_id):
@@ -801,7 +998,7 @@ def init_new_run():
 
 
 def load_state():
-    return eval(file(state_path(g_local_job_id)).read())
+    return eval(file(state_path()).read())
 
 
 def save_state(new_attrs, update=True):
@@ -811,17 +1008,32 @@ def save_state(new_attrs, update=True):
         state = {}
     state.update(new_attrs)
 
-    with open(state_path(g_local_job_id), "w") as f:
+    with open(state_path(), "w") as f:
         f.write(pprint.pformat(state)+"\n")
 
 
-def state_path(job_id):
+def state_path():
     if is_root():
         path = "/var/lib/mkbackup"
     else:
-        path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
+        if g_job_id:
+            # backup as site user
+            path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
+        else:
+            # restore as site user
+            path = "/tmp"
 
-    return "%s/%s.state" % (path, job_id)
+    if g_job_id:
+        # backup
+        name = g_local_job_id
+    else:
+        # restore
+        if is_root():
+            name = "restore"
+        else:
+            name = "restore-%s" % site_id()
+
+    return "%s/%s.state" % (path, name)
 
 
 def add_output(s):
@@ -830,11 +1042,114 @@ def add_output(s):
     save_state(state, update=False)
 
 
-# TODO: Implement this
 def mode_restore(target_id, backup_id, opts):
     acquire_backup_lock()
 
-    print target_id, backup_id, opts
+    global g_target_id, g_backup_id
+    g_target_id, g_backup_id = target_id, backup_id
+
+    verify_target_is_ready(target_id)
+    verify_backup_exists()
+
+    info = load_backup_info(backup_info_path())
+    global g_job_config
+    g_job_config = info["config"]
+
+    verify_backup_consistency(info)
+
+    init_new_run()
+
+    start_logging()
+    log("--- Starting restore (%s) ---" % g_backup_id)
+
+    success = False
+    try:
+        save_state({
+            "state" : "running",
+        })
+
+        do_restore(opts)
+        success = True
+
+    except KeyboardInterrupt:
+        raise
+
+    except:
+        if not opt_debug:
+            sys.stderr.write("An exception occured:\n")
+            sys.stderr.write(traceback.format_exc())
+        else:
+            raise
+
+    finally:
+        stop_logging()
+        save_state({
+            "state"    : "finished",
+            "finished" : time.time(),
+            "success"  : success,
+        })
+
+
+def do_restore(opts):
+    if not is_root():
+        do_site_restore(opts)
+    elif is_cma():
+        do_system_restore(opts)
+    else:
+        raise MKGeneralException("System backup not supported.")
+    complete_restore()
+
+
+def do_site_restore(opts, site=None):
+    cmd = ["omd", "restore", "--kill"]
+
+    if not compress_archives():
+        cmd.append("--no-compression")
+
+    # When executed as site user, "omd restore" is executed without the site
+    # name and always performing restore for the current site. When executed
+    # as root, the site argument has to be given and must be handed over to
+    # "omd restore".
+    if site == None:
+        site = site_id()
+    else:
+        if not is_root():
+            raise MKGeneralException("Requested restore of site %s, "
+                                     "but not running as root." % site_id)
+        cmd.append(site)
+
+    cmd.append("-")
+
+    backup_path = site_backup_archive_path(site)
+
+    p = subprocess.Popen(cmd, shell=False, close_fds=True,
+                         stdin=subprocess.PIPE)
+
+    with open(backup_path, "r") as backup_file:
+        s = RestoreStream(stream=backup_file, is_alive=lambda: False)
+        try:
+            for chunk in s.process():
+                p.stdin.write(chunk)
+        except IOError, e:
+            log("Error while sending data to restore process: %s" % e)
+
+        # s.process() ends when backup_file is processed. Then end the restore process.
+        p.stdin.close()
+
+    if p.wait() != 0:
+        raise MKGeneralException("Site restore failed")
+
+    if os.system("omd start %s" % (is_root() and site or "")) >> 8 != 0:
+        raise MKGeneralException("Failed to start the site after restore")
+
+
+def do_system_restore(opts):
+    raise NotImplementedError()
+
+
+def complete_restore():
+    duration = time.time() - load_state()["started"]
+    log("--- Restore completed (%0.2f sec) ---" % duration)
 
 
 def mode_list(target_id, opts):
@@ -842,7 +1157,7 @@ def mode_list(target_id, opts):
         raise MKGeneralException("This backup target does not exist. Choose one of: %s" %
                                     ", ".join(g_config["targets"].keys()))
 
-    fmt = "%-9s %-20s %-20s %28s\n"
+    fmt = "%-9s %-20s %-16s %32s\n"
     fmt_detail = (" " * 30) + " %-20s %28s\n"
     sys.stdout.write(fmt % ("Type", "Job", "Details", ""))
     sys.stdout.write("%s\n" % ("-" * 80))
@@ -851,8 +1166,9 @@ def mode_list(target_id, opts):
         from_info = info["hostname"]
         if "site_id" in info:
             from_info += " (Site: %s)" % info["site_id"]
-        sys.stdout.write(fmt % (info["type"], info["job_id"], "From:", from_info))
+        sys.stdout.write(fmt % (info["type"], info["job_id"], "Backup-ID:", info["backup_id"]))
 
+        sys.stdout.write(fmt_detail % ("From:", from_info))
         sys.stdout.write(fmt_detail % ("Finished:", render.date_and_time(info["finished"])))
         sys.stdout.write(fmt_detail % ("Size:", render.bytes(info["size"])))
     sys.stdout.write("\n")
@@ -944,7 +1260,10 @@ def main():
     # TODO: Implement verbose handling
     long_options = [ "help", "version", "verbose", "debug" ]
 
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+    except getopt.GetoptError, e:
+        usage("%s" % e)
 
     for o, a in opts:
         if o in [ "-h", "--help" ]:
@@ -975,7 +1294,10 @@ def main():
         raise MKGeneralException("mkbackup is not configured yet.")
 
     # Load the mode specific options
-    mode_opts, mode_args = getopt.getopt(sys.argv[2:], [], mode_options(mode).keys())
+    try:
+        mode_opts, mode_args = getopt.getopt(args, [], mode_options(mode).keys())
+    except getopt.GetoptError, e:
+        usage("%s" % e)
 
     # Validate arguments
     if len(mode_args) != len(mode.get("args", [])):

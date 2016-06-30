@@ -1,0 +1,13 @@
+Title: fixed helpers failing to start and high cpu load when an unparsable local check is installed
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p5
+Date: 1467278454
+Class: fix
+
+When python fails to parse a check file (local or shipped), the check_mk helpers would produce an
+erro message and exit. check_mk would then restart the helper, repeating the process infinitely
+which left check_mk in a non-working state, causing high cpu load and quickly growing the cmc.log.
+
+This only occurs when installing syntactically broken checks so most users shouldn't be affected.

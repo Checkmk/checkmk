@@ -49,7 +49,7 @@ factory_settings['skype_defaultlevels'] = {
     'allocation_latency':              {"upper": (5000, 10000)},
 
     'timedout_incoming_messages':      {"upper": (2, 4)},
-    'holding_time_incoming':           {"upper": (1.0, 2.0)},
+    'holding_time_incoming':           {"upper": (6.0, 12.0)},
     'flow_controlled_connections':     {"upper": (1, 2)},
     'outgoing_queue_delay':            {"upper": (2.0, 4.0)},
     'timedout_sends':                  {"upper": (0.01, 0.02)},
@@ -554,6 +554,11 @@ def check_skype_mobile(item, params, parsed):
                 perfdata = [perfdata]
 
             yield status, "%s: %s" % (name, infotext), perfdata
+        else:
+            # add a perfcounter with 0 sessions for all missing devices so we can
+            # still properly build a combined graph for active sessions
+            yield 0, None, [("active_sessions_%s" % name.lower(), 0)]
+
     yield wmi_yield_raw_counter(parsed["LS:WEB - Throttling and Authentication"], item,
                                 "WEB - Total Requests In Processing",
                                 label=" requested",

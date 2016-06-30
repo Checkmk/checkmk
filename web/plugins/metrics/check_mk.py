@@ -3396,7 +3396,8 @@ metric_info["failed_inbound_streams"] = {
 
 skype_mobile_devices = [("android", "Android", "33/a"),
                         ("iphone", "iPhone", "42/a"),
-                        ("ipad", "iPad", "45/a")]
+                        ("ipad", "iPad", "45/a"),
+                        ("mac", "Mac", "23/a")]
 
 for device, name, color in skype_mobile_devices:
     metric_info["active_sessions_%s" % device] = {
@@ -3514,6 +3515,7 @@ metric_info["dns_nxdomain"] = {
     "unit"  : "count",
     "color" : "34/a",
 }
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -5434,6 +5436,14 @@ perfometer_info.append({
     "exponent"   : 2,
 })
 
+perfometer_info.append({
+    "type" : "linear",
+    "segments" : ["active_sessions_%s" % device
+                  for device, name, color in skype_mobile_devices],
+    # there is no limit and no way to determine the max so far for
+    # all segments
+})
+
 
 #.
 #   .--Graphs--------------------------------------------------------------.
@@ -6972,8 +6982,8 @@ graph_info.append({
 
 graph_info.append({
     "title" : _("Active Sessions"),
-    "metrics" : [("active_sessions_%s" % device, "line")
-                 for device, name, color in skype_mobile_devices[::-1]]
+    "metrics" : [("active_sessions_%s" % device, idx == 0 and "area" or "stack")
+                 for idx, (device, name, color) in enumerate(skype_mobile_devices[::-1])]
 })
 
 graph_info.append({

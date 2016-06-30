@@ -1,0 +1,10 @@
+Title: Now able to open BI aggregations containing a few hundred hosts
+Level: 1
+Component: bi
+Compatible: compat
+Version: 1.4.0i1
+Date: 1467299366
+Class: fix
+
+A BI in the GUI could not get unfolded correctly if it had too much hosts.
+This has been fixed.

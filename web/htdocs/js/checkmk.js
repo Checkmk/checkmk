@@ -524,12 +524,24 @@ function get_url_sync(url)
     return AJAX.responseText;
 }
 
-function post_url(url, params)
+function post_url(url, post_params, responseHandler, handler_data, errorHandler)
 {
-    call_ajax(url, {
+    var args = {
         method: "POST",
-        post_data: params
-    });
+        post_data: post_params
+    }
+
+    if (typeof responseHandler !== 'undefined') {
+        args.response_handler = responseHandler;
+    }
+
+    if (typeof handler_data !== 'undefined')
+        args.handler_data = handler_data;
+
+    if (typeof errorHandler !== 'undefined')
+        args.error_handler = errorHandler;
+
+    call_ajax(url, args);
 }
 
 function bulkUpdateContents(ids, codes)
@@ -2958,8 +2970,8 @@ function bi_update_tree(oImg, code)
     while (oDiv.className != "bi_tree_container") {
         oDiv = oDiv.parentNode;
     }
-    var url = "bi_render_tree.py?" + oDiv.id;
-    get_url(url, bi_update_tree_response, oDiv);
+
+    post_url("bi_render_tree.py", oDiv.id, bi_update_tree_response, oDiv);
 }
 
 function bi_update_tree_response(oDiv, code) {

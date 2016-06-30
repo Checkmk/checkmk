@@ -1556,7 +1556,13 @@ void dump_wmi_table(OutputProxy &out, wmi::Result &result) {
 
 bool output_wmi_table(OutputProxy &out, const wchar_t *table_name,
                       const char *section_name, bool as_subtable = false) {
-    wmi::Result result = WMILookup::get().getClass(table_name);
+    wmi::Result result;
+    try {
+        result = WMILookup::get().getClass(table_name);
+    } catch (const wmi::ComException &e) {
+        crash_log("wmi request for %ls failed: %s", table_name, e.what());
+        return true;
+    }
 
     if (!result.valid()) {
         crash_log("table %ls is empty or doesn't exist", table_name);

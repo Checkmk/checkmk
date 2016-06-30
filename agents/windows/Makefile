@@ -123,10 +123,10 @@ check_mk_agent-64.unstripped.exe: $(OBJS64)
 	$(CXX_64) $(COPTIONS) -o $@ $^ check_mk_agent-64.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi -limagehlp
 
 
-check_mk_agent.unversioned.exe:
+check_mk_agent.unversioned.exe: check_mk_agent.unstripped.exe
 	strip -o $@ $^
 
-check_mk_agent-64.unversioned.exe:
+check_mk_agent-64.unversioned.exe: check_mk_agent-64.unstripped.exe
 	strip -o $@ $^
 
 
@@ -135,16 +135,18 @@ check_mk_agent-64.unversioned.exe:
 # recompilation is thus needed during 'make version'
 # -----------------------------------------------------------------------------
 
-check_mk_agent.exe.versioned: check_mk_agent.unversioned.exe
+check_mk_agent.exe.versioned:
 	./bin_replace $(VERSION_DUMMY) "$(VERSION)" < check_mk_agent.unversioned.exe > check_mk_agent.exe
 	chmod 755 check_mk_agent.exe
 
-check_mk_agent-64.exe.versioned: check_mk_agent-64.unversioned.exe
+check_mk_agent-64.exe.versioned:
 	./bin_replace $(VERSION_DUMMY) "$(VERSION)" < check_mk_agent-64.unversioned.exe > check_mk_agent-64.exe
 	chmod 755 check_mk_agent-64.exe
 
-
-%.exe: %.exe.versioned
+# important: %.exe.versioned must not depend on %.exe.unversioned because on the
+# automated build system, "make ...versioned" is called and that system doesn't
+# provide the right compiler to build this agent
+%.exe: %.exe.unversioned %.exe.versioned
 	true
 
 # -----------------------------------------------------------------------------

@@ -429,7 +429,12 @@ def load_checks():
                     sys.stderr.write("Error in plugin file %s: %s\n" % (f, e))
                     if opt_debug:
                         raise
-                    sys.exit(5)
+                    # If we exit here, from a check_mk helper, check_mk will just
+                    # try to restart the helper. This causes a tight loop of helper
+                    # crashing and helper restarting that spams the log file and
+                    # causes high cpu load which is a bit pointless because an
+                    # invalid plugin file isn't going to fix itself
+                    #sys.exit(5)
 
     for varname, value in globals().iteritems():
         if varname[0] != '_' \

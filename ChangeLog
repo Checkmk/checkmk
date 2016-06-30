@@ -289,6 +289,7 @@
     * 3655 FIX: if64adm: Can now be used with OID range limits
     * 3685 FIX: brocade_fcport: fixed unknown state texts
     * 3686 FIX: hp_proliant_temp: fixed wrong device thresholds handling. If no thresholds available the device reports -99
+    * 3150 FIX: fixed helpers failing to start and high cpu load when an unparsable local check is installed...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

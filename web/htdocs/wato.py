@@ -2686,7 +2686,6 @@ def mode_inventory(phase, firsttime):
             html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
     elif phase == "action":
-        host.need_permission("write")
         if html.check_transaction():
             # Settings for showing parameters
             if html.var("_show_parameters"):

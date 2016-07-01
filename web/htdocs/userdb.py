@@ -333,7 +333,12 @@ def is_valid_user_session(username, session_id):
     if config.single_user_session == None:
         return True # No login session limitation enabled, no validation
 
-    active_session_id, last_activity = load_session_info(username)
+    session_info = load_session_info(username)
+    if session_info == None:
+        return False # no session active
+    else:
+        active_session_id, last_activity = session_info
+
     if session_id == active_session_id:
         return True # Current session. Fine.
 

@@ -49,7 +49,8 @@ perfdata:
 [parameters]
 parameters(dict): a dictionary with the optional key
 
- {"OpenSlots"} : (int, int) -  warn/crit levels for the number of remaining open slots
+ {"OpenSlots"}   : (int, int) -  lower warn/crit levels for the number of remaining open slots
+ {"BusyWorkers"} : (int, int) -  upper warn/crit levels for the number busy workers
 
 
 

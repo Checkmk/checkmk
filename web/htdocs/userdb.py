@@ -98,6 +98,12 @@ def active_connections():
     return get_connections(only_enabled=True)
 
 
+def connection_choices():
+    return sorted([ (cid, "%s (%s)" % (cid, c.type())) for cid, c in get_connections()
+                     if c.type() == "ldap"],
+                  key=lambda (x, y): y)
+
+
 # When at least one LDAP connection is defined and active a sync is possible
 def sync_possible():
     for connection_id, connection in active_connections():
@@ -290,9 +296,11 @@ multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
 #),
 def transform_userdb_automatic_sync(val):
     if val == []:
+        # legacy compat - disabled
         return None
 
     elif type(val) == list and val:
+        # legacy compat - all connections
         return "all"
 
     else:
@@ -1238,6 +1246,14 @@ def execute_userdb_job():
         return
 
     for connection_id, connection in active_connections():
+        if connection.type() != "ldap":
+            continue # currently only ldap can sync
+
+        sync_config = user_sync_config()
+        if type(sync_config) == tuple and connection_id not in sync_config[1]:
+            #logger(LOG_DEBUG, 'Skipping disabled connection %s' % (connection_id))
+            continue
+
         try:
             connection.on_cron_job()
         except:
@@ -1250,8 +1266,34 @@ def execute_userdb_job():
     general_userdb_job()
 
 
+# Legacy option config.userdb_automatic_sync defaulted to "master".
+# Can be: None: (no sync), "all": all sites sync, "master": only master site sync
+# Take that option into account for compatibility reasons.
+# For remote sites in distributed setups, the default is to do no sync.
+def user_sync_default_config(site_name):
+    global_user_sync = transform_userdb_automatic_sync(config.userdb_automatic_sync)
+    if global_user_sync == "master":
+        import wato # FIXME: Cleanup!
+        if config.site_is_local(site_name) and not wato.is_wato_slave_site():
+            user_sync_default = "all"
+        else:
+            user_sync_default = None
+    else:
+        user_sync_default = global_user_sync
+
+    return user_sync_default
+
+
+def user_sync_config():
+    # use global option as default for reading legacy options and on remote site
+    # for reading the value set by the WATO master site
+    default_cfg = user_sync_default_config(defaults.omd_site)
+    return config.site(defaults.omd_site).get("user_sync", default_cfg)
+
+
 def userdb_sync_job_enabled():
-    cfg = transform_userdb_automatic_sync(config.userdb_automatic_sync)
+    cfg = user_sync_config()
+
     if cfg == None:
         return False # not enabled at all
 

@@ -3041,6 +3041,8 @@ def save_configuration_settings(vars):
     # since the user must not change it directly. It is set by D-WATO on slave sites.
     if "wato_enabled" in vars:
         per_domain.setdefault("multisite", {})["wato_enabled"] = vars["wato_enabled"]
+    if "userdb_automatic_sync" in vars:
+        per_domain.setdefault("multisite", {})["userdb_automatic_sync"] = vars["userdb_automatic_sync"]
 
     for domain, domain_info in g_configvar_domains.items():
         if 'save' in domain_info:
@@ -3216,6 +3218,9 @@ def create_site_globals_file(siteid, tmp_dir):
     # The default value is True - even for sites configured with an
     # older version of Check_MK.
     config["wato_enabled"] = not site.get("disable_wato", True)
+
+    config["userdb_automatic_sync"] = site.get("user_sync", userdb.user_sync_default_config(siteid))
+
     file(tmp_dir + "/sitespecific.mk", "w").write("%r\n" % config)
 
 

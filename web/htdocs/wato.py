@@ -9299,6 +9299,17 @@ def mode_edit_site(phase):
         choices = conn_choices,
     )
 
+    vs_user_sync = CascadingDropdown(
+        orientation = "horizontal",
+        choices = [
+            (None, _("Disable automatic user synchronization (use master site users)")),
+            ("all", _("Sync users with all connections")),
+            ("list", _("Sync with the following LDAP connections"), ListChoice(
+                choices = userdb.connection_choices,
+                allow_empty = False,
+            )),
+        ]
+    )
 
     if phase == "action":
         if not html.check_transaction():
@@ -9407,6 +9418,11 @@ def mode_edit_site(phase):
 
         # Allow direct user login
         new_site["user_login"] = html.get_checkbox("user_login")
+
+        # User synchronization
+        user_sync = vs_user_sync.from_html_vars("user_sync")
+        vs_user_sync.validate_value(user_sync, "user_sync")
+        new_site["user_sync"] = user_sync
 
         # Event Console Replication
         new_site["replicate_ec"] = html.get_checkbox("replicate_ec")
@@ -9578,6 +9594,21 @@ def mode_edit_site(phase):
                   label = _('Users are allowed to directly login into the Web GUI of this site'))
     html.help(_('When enabled, this site is marked for synchronisation every time a Web GUI '
                 'related option is changed in the master site.'))
+
+    forms.section(_("Sync with LDAP connections"), simple=True)
+    vs_user_sync.render_input("user_sync",
+                              site.get("user_sync", userdb.user_sync_default_config(siteid)))
+    html.write("<br>")
+    html.help(_('By default the users are synchronized automatically in the interval configured '
+                'in the connection. For example the LDAP connector synchronizes the users every '
+                'five minutes by default. The interval can be changed for each connection '
+                'individually in the <a href="wato.py?mode=ldap_config">connection settings</a>. '
+                'Please note that the synchronization is only performed on the master site in '
+                'distributed setups by default.<br>'
+                'The remote sites don\'t perform automatic user synchronizations with the '
+                'configured connections. But you can configure each site to either '
+                'synchronize the users with all configured connections or a specific list of '
+                'connections.')),
 
     if config.mkeventd_enabled:
         forms.section(_('Event Console'), simple=True)
@@ -10017,7 +10048,7 @@ def mode_users(phase):
                     import traceback
                     raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
                 else:
-                    raise MKUserError(None, str(e))
+                    raise MKUserError(None, "%s" % e)
 
         elif html.var("_bulk_delete_users"):
             return bulk_delete_users_after_confirm(users)

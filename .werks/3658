@@ -1,0 +1,14 @@
+Title: LDAP: Connections can now be enabled/disabled per site
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i1
+Date: 1467364635
+Class: feature
+
+The global setting "Automatic User Synchronization" has been deprecated. The
+configuration option has been moved to the site configuration.
+
+Now you can specify whether or not to synchronize users with the connections
+per site. You can also choose an option to individually enable single LDAP
+connections per site.

@@ -839,28 +839,6 @@ group = _("User Management")
 configvar_order()[group] = 40
 
 register_configvar(group,
-    "userdb_automatic_sync",
-    Transform(
-        DropdownChoice(
-           title = _('Automatic User Synchronization'),
-           help  = _('By default the users are synchronized automatically in the interval configured '
-                     'in the connection. For example the LDAP connector synchronizes the users every '
-                     'five minutes by default. The interval can be changed for each connection '
-                     'individually in the <a href="wato.py?mode=ldap_config">connection settings</a>. '
-                     'Please note that the synchronization is only performed '
-                     'on the master site in distributed setups by default.'),
-            choices = [
-                ("master", _("On master site")),
-                ("all",    _("On all sites")),
-                (None,     _("Don't perform automatic user synchronization.")),
-            ],
-        ),
-        forth = userdb.transform_userdb_automatic_sync,
-    ),
-    domain = "multisite",
-)
-
-register_configvar(group,
     "lock_on_logon_failures",
     Optional(
         Integer(

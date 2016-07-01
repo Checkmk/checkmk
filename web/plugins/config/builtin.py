@@ -232,6 +232,9 @@ guitests_enabled = False
 #     \___/|___/\___|_|  |____/|____/
 #
 
+# This option can not be configured through WATO anymore. Config has been
+# moved to the sites configuration. This might have been configured in master/remote
+# in previous versions and is set on remote sites during WATO synchronization.
 userdb_automatic_sync = "master"
 
 # Holds dicts defining user connector instances and their properties

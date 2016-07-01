@@ -1,0 +1,9 @@
+Title: Fixed GUI exceptions for users having special characters in ther user names
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p5
+Date: 1467365886
+Class: fix
+
+

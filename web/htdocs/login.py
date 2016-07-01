@@ -190,11 +190,9 @@ def check_auth():
                     user_id = check_auth_cookie(cookie_name)
                     break
                 except Exception, e:
-                    #if html.enable_debug:
-                    #    html.write('Exception occured while checking cookie %s' % cookie_name)
-                    #    raise
-                    #else:
-                    pass
+                    import traceback
+                    html.log("Exception occured while checking cookie '%s': %s" %
+                                                (cookie_name, traceback.format_exc()))
 
     if (user_id != None and type(user_id) != unicode) or user_id == u'':
         raise MKInternalError(_("Invalid user authentication"))

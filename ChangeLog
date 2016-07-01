@@ -27,6 +27,7 @@
 
     Multisite:
     * 3148 FIX: fixed Edit View/Dashlet Dialogs offering non-sensical filter choices...
+    * 3659 FIX: Fixed GUI exceptions for users having special characters in ther user names
 
     WATO:
     * 3542 FIX: WATO Web API: fixed exception when WATO Git is activated...

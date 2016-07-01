@@ -481,6 +481,10 @@ class PageBackup(object):
         raise NotImplementedError()
 
 
+    def keys(self):
+        raise NotImplementedError()
+
+
     def home_button(self):
         raise NotImplementedError()
 
@@ -546,6 +550,7 @@ class PageBackup(object):
 
 
     def page(self):
+        show_key_download_warning(self.keys().load())
         self.jobs().show_list()
 
 
@@ -1169,7 +1174,9 @@ class BackupKeypairStore(key_mgmt.KeypairStore):
 
 
 class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
-    edit_mode = "backup_edit_key"
+    edit_mode     = "backup_edit_key"
+    upload_mode   = "backup_upload_key"
+    download_mode = "backup_download_key"
 
     def jobs(self):
         raise NotImplementedError()
@@ -1177,6 +1184,11 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
 
     def title(self):
         return _("Keys for backups")
+
+
+    def page(self):
+        show_key_download_warning(self.keys)
+        super(PageBackupKeyManagement, self).page()
 
 
     def _back_button(self):
@@ -1219,3 +1231,56 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
                  "the public key part of the key to sign or encrypt the backups. If you "
                  "encrypt a backup, you will need the private key part together with the "
                  "passphrase to decrypt the backup.")
+
+
+    def _generate_key(self, alias, passphrase):
+        key = super(PageBackupEditKey, self)._generate_key(alias, passphrase)
+        # Mark key as not downloaded yet to issue a warning to the user that the key
+        # should be backed up. The warning is removed on first download.
+        key["not_downloaded"] = True
+        return key
+
+
+
+class PageBackupUploadKey(key_mgmt.PageUploadKey):
+    back_mode = "backup_keys"
+
+    def title(self):
+        return _("Upload backup key")
+
+
+    def _passphrase_help(self):
+        return _("The backup key will be stored encrypted using this passphrase on your "
+                 "disk. The passphrase will not be stored anywhere. The backup will use "
+                 "the public key part of the key to sign or encrypt the backups. If you "
+                 "encrypt a backup, you will need the private key part together with the "
+                 "passphrase to decrypt the backup.")
+
+
+
+class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
+    back_mode = "backup_keys"
+
+    def title(self):
+        return _("Download backup key")
+
+
+    def _send_download(self, keys, key_id):
+        super(PageBackupDownloadKey, self)._send_download(keys, key_id)
+        if "not_downloaded" in keys[key_id]:
+            del keys[key_id]["not_downloaded"]
+        self.save(keys)
+
+
+    def _file_name(self, key_id, key):
+        raise NotImplementedError()
+
+
+def show_key_download_warning(keys):
+    to_load = [ k["alias"] for k in keys.values() if "not_downloaded" in k ]
+    if to_load:
+        html.show_warning(_("To be able to restore your encrypted backups, you need to "
+                            "download and keep the backup encryption keys in a safe place. "
+                            "If you loose your keys or the keys passphrases, your backup "
+                            "can not be restored.<br>"
+                            "The following keys have not been downloaded yet: %s") % ", ".join(to_load))

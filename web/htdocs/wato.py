@@ -5637,6 +5637,10 @@ class ModeBackup(backup.PageBackup, WatoMode):
         return SiteBackupJobs()
 
 
+    def keys(self):
+        return SiteBackupKeypairStore()
+
+
     def home_button(self):
         home_button()
 
@@ -5713,6 +5717,22 @@ class ModeBackupKeyManagement(SiteBackupKeypairStore, backup.PageBackupKeyManage
 
 class ModeBackupEditKey(SiteBackupKeypairStore, backup.PageBackupEditKey, WatoMode):
     pass
+
+
+class ModeBackupEditKey(SiteBackupKeypairStore, backup.PageBackupEditKey, WatoMode):
+    pass
+
+
+class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, WatoMode):
+    def _upload_key(self, key_file, value):
+        log_audit(None, "upload-backup-key",
+                  _("Uploaded backup key '%s'") % value["alias"])
+        super(ModeBackupUploadKey, self)._upload_key(key_file, value)
+
+
+class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey, WatoMode):
+    def _file_name(self, key_id, key):
+        return "Check_MK-backup_key-%s.pem" % defaults.omd_site
 
 #.
 #   .--Value-Editor--------------------------------------------------------.
@@ -16431,6 +16451,8 @@ modes = {
    "edit_backup_job"    : (["backups"], ModeEditBackupJob),
    "backup_keys"        : (["backups"], ModeBackupKeyManagement),
    "backup_edit_key"    : (["backups"], ModeBackupEditKey),
+   "backup_upload_key"  : (["backups"], ModeBackupUploadKey),
+   "backup_download_key": (["backups"], ModeBackupDownloadKey),
 }
 
 builtin_host_attribute_names = []

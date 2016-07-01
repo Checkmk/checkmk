@@ -6598,7 +6598,7 @@ def mode_groups(phase, what):
             html.context_button(_("New contact group"), folder_preserving_link([("mode", "edit_contact_group")]), "new")
         if what == "contact":
             html.context_button(_("Rules"), folder_preserving_link([("mode", "rulesets"),
-                ("filled_in", "search"), ("search", _("contact group"))]), "rulesets")
+                ("filled_in", "search"), ("search", "contactgroups")]), "rulesets")
         else:
             varname = what + "_groups"
             html.context_button(_("Rules"), folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)]), "rulesets")

@@ -9862,7 +9862,7 @@ def mode_users(phase):
                     import traceback
                     raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
                 else:
-                    raise MKUserError(None, str(e))
+                    raise MKUserError(None, "%s" % e)
 
         return None
 

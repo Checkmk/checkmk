@@ -107,12 +107,16 @@ def check_oracle_jobs(item, params, info):
         raise MKCounterWrapped("Login not possible for check %s" % item)
 
     if not service_found:
-        return (2, 'Job is missing')
+        state = 2
+        infotext = "Job is missing"
+        if "status_missing_jobs" in params:
+            state = params["status_missing_jobs"]
+            infotext += " (configured through WATO)"
+        return state, infotext
 
     state = 0
     output = []
     perfdata = []
-
 
     txt = "Job-State: %s" % job_state
     if job_state == "BROKEN":

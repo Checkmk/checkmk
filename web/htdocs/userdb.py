@@ -191,7 +191,7 @@ def user_exists(username):
 
 
 def _user_exists_according_to_profile(username):
-    base_path = config.config_dir + "/" + username + "/"
+    base_path = config.config_dir + "/" + username.encode("utf-8") + "/"
     return os.path.exists(base_path + "transids.mk") \
             or os.path.exists(base_path + "serial.mk")
 

@@ -466,7 +466,7 @@ def load_user_file(name, deflt, lock = False):
 def save_user_file(name, content, unlock=False, user=None):
     if user == None:
         user = user_id
-    dirname = config_dir + "/" + user
+    dirname = config_dir + "/" + user.encode("utf-8")
     make_nagios_directory(dirname)
     path = dirname + "/" + name + ".mk"
 

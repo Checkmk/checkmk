@@ -1,0 +1,11 @@
+Title: Service discovery is now possible with only "modify services" permission
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8p5
+Date: 1467366512
+Class: fix
+
+Users which are permitted on a host, are not permitted to modify existing hosts
+but have the permission "modify services" are now able to perform service discoveries
+again using WATO.

@@ -26,9 +26,10 @@
 
 VERSION = "1.4.0i1"
 
-import getopt
+import base64
 import fcntl
 import fnmatch
+import getopt
 import glob
 import grp
 import io
@@ -501,6 +502,8 @@ class MKBackupStream(object):
         if head != None:
             yield head
 
+        self._next_chunk = None
+
         while True:
             chunk, finished = self._read_chunk()
 
@@ -547,7 +550,7 @@ class MKBackupStream(object):
         keys = self._load_backup_keys()
 
         try:
-            key = keys[key_id]
+            return keys[key_id]
         except KeyError:
             raise MKGeneralException("Failed to load the configured backup key: %d" % key_id)
 
@@ -638,25 +641,33 @@ class RestoreStream(BackupStream):
 
         encrypted_secret_key = self._read_encrypted_secret_key()
         secret_key = self._decrypt_secret_key(encrypted_secret_key)
+        self._cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
 
 
     def _read_chunk(self):
         if not encrypt_archives():
+            # process unencrypted backup
             chunk = self._stream.read(1024 * 1024)
             return chunk, chunk == ""
 
-        chunk = self._cipher.decrypt(self._stream.read(1024 * AES.block_size))
+        this_chunk = self._cipher.decrypt(self._stream.read(1024 * AES.block_size))
+
         if self._next_chunk == None:
             # First chunk. Only store for next loop
-            self._next_chunk = chunk
+            self._next_chunk = this_chunk
             return "", False
-        else:
-            if len(chunk) == 0:
-                # Processing last chunk. Stip off padding.
-                padding_length = ord(chunk[-1])
-                chunk = chunk[:-padding_length]
 
+        elif len(this_chunk) == 0:
+            # Processing last chunk. Stip off padding.
+            padding_length = ord(self._next_chunk[-1])
+            chunk = self._next_chunk[:-padding_length]
             return chunk, True
+
+        else:
+            # Processing regular chunk
+            chunk = self._next_chunk
+            self._next_chunk = this_chunk
+            return chunk, False
 
 
     def _process_chunk(self, chunk):
@@ -664,15 +675,15 @@ class RestoreStream(BackupStream):
 
 
     def _read_encrypted_secret_key(self):
-        buf = ""
-
         def read_field():
+            buf = ""
             while True:
                 c = self._stream.read(1)
                 if c == "\0":
                     break
                 else:
                     buf += c
+            return buf
 
         file_version = read_field()
         if file_version != "1":
@@ -691,7 +702,6 @@ class RestoreStream(BackupStream):
         if self._stream.read(1) != "\0":
             raise MKGeneralException("Failed to parse the encrypted backup file (header broken)")
 
-
         return encrypted_secret_key
 
 
@@ -706,8 +716,14 @@ class RestoreStream(BackupStream):
                                      "It needs to be given as environment variable "
                                      "\"MKBACKUP_PASSPHRASE\".")
 
+        # First decrypt the private key using PyOpenSSL (was unable to archieve
+        # this with RSA.importKey(). :-(
+        key = crypto.load_privatekey(crypto.FILETYPE_PEM, key["private_key"],
+                                     passphrase)
+        priv_pem = crypto.dump_privatekey(crypto.FILETYPE_PEM, key)
+
         try:
-            return RSA.importKey(key["private_key"], passphrase)
+            return RSA.importKey(priv_pem)
         except (ValueError, IndexError, TypeError):
             if opt_debug:
                 raise
@@ -716,7 +732,8 @@ class RestoreStream(BackupStream):
 
     def _decrypt_secret_key(self, encrypted_secret_key):
         private_key = self._get_encryption_private_key()
-        return private_key.decrypt(encrypted_secret_key)
+        secret_key_with_padding = private_key.decrypt(encrypted_secret_key)
+        return secret_key_with_padding[-32:]
 
 
 # Returns the base path for the backup to work with. In backup mode, this is
@@ -942,13 +959,22 @@ def complete_backup():
     info = create_backup_info()
     save_backup_info(info)
 
+    save_state({
+        "size": info["size"],
+    })
+
     verify_backup_consistency(info)
 
     os.rename(job_backup_path_during_backup(),
               job_backup_path_complete())
 
-    duration = time.time() - load_state()["started"]
-    log("--- Backup completed (%0.2f sec) ---" % duration)
+    state = load_state()
+    duration = time.time() - state["started"]
+
+    log("--- Backup completed (Duration: %s, Size: %s, IO: %s/s) ---" %
+           render.age(duration),
+           render.bytes(info["size"]),
+           render.bytes(state["bytes_per_second"]))
 
 
 def cleanup_previous_incomplete_backup():
@@ -1123,12 +1149,14 @@ def do_site_restore(opts, site=None):
     backup_path = site_backup_archive_path(site)
 
     p = subprocess.Popen(cmd, shell=False, close_fds=True,
-                         stdin=subprocess.PIPE)
+                         stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
+    file("/tmp/backup-decrypted", "w+")
     with open(backup_path, "r") as backup_file:
         s = RestoreStream(stream=backup_file, is_alive=lambda: False)
         try:
             for chunk in s.process():
+                file("/tmp/backup-decrypted", "a+").write(chunk)
                 p.stdin.write(chunk)
         except IOError, e:
             log("Error while sending data to restore process: %s" % e)
@@ -1137,6 +1165,7 @@ def do_site_restore(opts, site=None):
         p.stdin.close()
 
     if p.wait() != 0:
+        log(p.stderr.read())
         raise MKGeneralException("Site restore failed")
 
     if os.system("omd start %s" % (is_root() and site or "")) >> 8 != 0:
@@ -1148,8 +1177,10 @@ def do_system_restore(opts):
 
 
 def complete_restore():
-    duration = time.time() - load_state()["started"]
-    log("--- Restore completed (%0.2f sec) ---" % duration)
+    state = load_state()
+    duration = time.time() - state["started"]
+    log("--- Restore completed (Duration: %s, IO: %s) ---" %
+        (render.age(duration), render.bytes(state["bytes_per_second"])))
 
 
 def mode_list(target_id, opts):

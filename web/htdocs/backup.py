@@ -40,7 +40,7 @@ import defaults
 import table
 import key_mgmt
 from valuespec import *
-from lib import write_settings_file, age_human_readable, MKUserError
+from lib import write_settings_file, MKUserError
 import cmk.render as render
 
 #.
@@ -427,8 +427,14 @@ class Jobs(BackupEntityCollection):
                     html.write(", Finished at %s" % render.date_and_time(state["started"]))
                     duration = state["finished"] - state["started"]
 
-                html.write(_(" (Duration: %s, IO: %s/s)") % (age_human_readable(duration),
-                                                 render.bytes(state["bytes_per_second"])))
+                if "size" in state:
+                    size_txt = "Size: %s, " % render.bytes(state["size"])
+                else:
+                    size_txt = ""
+
+                html.write(_(" (Duration: %s, %sIO: %s/s)") %
+                            (render.age(duration), size_txt,
+                             render.bytes(state["bytes_per_second"])))
 
             # TODO: Render schedule
             #job_html = SchedulePeriod().value_to_text(job._config["period"]) \
@@ -800,7 +806,7 @@ class PageBackupJobState(object):
                 html.write(", Finished at %s" % render.date_and_time(state["started"]))
                 duration = state["finished"] - state["started"]
 
-            html.write(_(" (Duration: %s)") % age_human_readable(duration))
+            html.write(_(" (Duration: %s)") % render.age(duration))
         html.write("</td></tr>")
 
         html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("Output"))

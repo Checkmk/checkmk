@@ -972,9 +972,9 @@ def complete_backup():
     duration = time.time() - state["started"]
 
     log("--- Backup completed (Duration: %s, Size: %s, IO: %s/s) ---" %
-           render.age(duration),
+           (render.timespan(duration),
            render.bytes(info["size"]),
-           render.bytes(state["bytes_per_second"]))
+           render.bytes(state["bytes_per_second"])))
 
 
 def cleanup_previous_incomplete_backup():
@@ -1180,7 +1180,7 @@ def complete_restore():
     state = load_state()
     duration = time.time() - state["started"]
     log("--- Restore completed (Duration: %s, IO: %s) ---" %
-        (render.age(duration), render.bytes(state["bytes_per_second"])))
+        (render.timespan(duration), render.bytes(state["bytes_per_second"])))
 
 
 def mode_list(target_id, opts):

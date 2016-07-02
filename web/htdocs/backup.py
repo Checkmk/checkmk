@@ -433,7 +433,7 @@ class Jobs(BackupEntityCollection):
                     size_txt = ""
 
                 html.write(_(" (Duration: %s, %sIO: %s/s)") %
-                            (render.age(duration), size_txt,
+                            (render.timespan(duration), size_txt,
                              render.bytes(state["bytes_per_second"])))
 
             # TODO: Render schedule
@@ -806,7 +806,7 @@ class PageBackupJobState(object):
                 html.write(", Finished at %s" % render.date_and_time(state["started"]))
                 duration = state["finished"] - state["started"]
 
-            html.write(_(" (Duration: %s)") % render.age(duration))
+            html.write(_(" (Duration: %s)") % render.timespan(duration))
         html.write("</td></tr>")
 
         html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("Output"))

@@ -417,11 +417,18 @@ class Jobs(BackupEntityCollection):
             table.cell(_("Name"), html.attrencode(job.title()))
 
             css = "state0"
-            if state["state"] == "finished" and not state["success"]:
-                css = "state2"
+            state_txt = job.state_name(state["state"])
+            if state["state"] == "finished":
+                if not state["success"]:
+                    css = "state2"
+                    state_txt = _("Failed")
+                else:
+                    state_txt = _("Finished")
+            elif state["state"] == None:
+                css = ""
 
             table.cell(_("State"), css=css)
-            html.write(html.attrencode(job.state_name(state["state"])))
+            html.write(html.attrencode(state_txt))
 
             table.cell(_("Runtime"))
             if state["started"]:

@@ -5686,8 +5686,26 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
 
     def backup_target_choices(self):
         choices = self.targets().choices()
-        choices += backup.SystemBackupTargets().choices()
+
+        # Only add system wide defined targets that don't conflict with
+        # the site specific backup targets
+        choice_dict = dict(choices)
+        for key, title in backup.SystemBackupTargets().choices():
+            if key not in choice_dict:
+                choices.append((key, _("%s (system wide)") % title))
+
         return sorted(choices, key=lambda (x, y): y.title())
+
+
+    def _validate_target(self, value, varprefix):
+        targets = self.targets()
+        try:
+            targets.get(value)
+        except KeyError:
+            backup.SystemBackupTargets().validate_target(value, varprefix)
+            return
+
+        targets.validate_target(value, varprefix)
 
 
     def keys(self):

@@ -212,7 +212,12 @@ def load_config():
 
         try:
             system_targets = load_file(system_config_path())["targets"]
-            config["targets"].update(system_targets)
+
+            # only load non conflicting targets
+            for target_ident, target_cfg in system_targets.items():
+                if target_ident not in config["targets"]:
+                    config["targets"][target_ident] = target_cfg
+
         except IOError:
             # Not existing system wide config is OK. In this case there
             # are only backup targets from site config available.

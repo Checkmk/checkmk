@@ -706,6 +706,10 @@ class PageEditBackupJob(object):
     )
 
 
+    def _validate_target(self, value, varprefix):
+        self.targets().validate_target(value, varprefix)
+
+
     # Can be overridden by subclasses to add custom attributes to the
     # job configuration. e.g. system jobs can exclude sites optionally.
     def custom_job_attributes(self):
@@ -715,15 +719,6 @@ class PageEditBackupJob(object):
     def _validate_backup_job_ident(self, value, varprefix):
         if value in self.jobs().objects:
             raise MKUserError(varprefix, _("This ID is already used by another backup job."))
-
-
-    def _validate_target(self, value, varprefix):
-        target = self.targets().get(value)
-        if target.type_ident() != "local":
-            raise NotImplementedError()
-
-        path = target.type_params()["path"]
-        target.type_class()().validate_local_directory(path, varprefix)
 
 
     def backup_key_choices(self):
@@ -896,6 +891,17 @@ class Targets(BackupEntityCollection):
             table.cell(_("Destination"), vs_target.value_to_text(target.type_params()))
 
         table.end()
+
+
+    def validate_target(self, value, varprefix):
+        target = self.get(value)
+        if target.type_ident() != "local":
+            raise NotImplementedError()
+
+        path = target.type_params()["path"]
+        target.type_class()().validate_local_directory(path, varprefix)
+
+
 
 
 

@@ -318,6 +318,10 @@ class Job(BackupEntity):
         if not self._config["schedule"]:
             return
 
+        period = self._config["schedule"]["period"]
+        if self._config["schedule"]["disabled"]:
+            return
+
         timespecs = self._cron_timespecs()
         userspec = self._cron_userspec()
         cmdline  = self._cron_cmdline()
@@ -618,6 +622,10 @@ class PageEditBackupJob(object):
                 Dictionary(
                     title = _("Schedule execution"),
                     elements = [
+                        ("disabled", Checkbox(
+                            title = _("Disable"),
+                            label = _("Currently disable scheduled execution of this job"),
+                        )),
                         ("period", SchedulePeriod(from_end=False)),
                         ("timeofday", ListOf(
                             Timeofday(

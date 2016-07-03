@@ -336,7 +336,11 @@ modes = {
         },
     },
     "restore": {
-        "description": "Starts the restore of a backup",
+        "description":
+            "Starts the restore of a backup. In case you want to restore an encrypted backup, "
+            "you have to provide the passphrase of the used backup key via the environment "
+            "variable 'MKBACKUP_PASSPHRASE'. For example: MKBACKUP_PASSPHRASE='secret' mkbackup "
+            "restore ARGS.",
         "args": [
             {
                 "id": "Target-ID",
@@ -363,19 +367,6 @@ modes = {
             },
         ],
     },
-#    "show": {
-#        "description": "Shows information about a backup",
-#        "args": [
-#            {
-#                "id": "Target-ID",
-#                "description": "The ID of the backup target to work with",
-#            },
-#            {
-#                "id": "Backup-ID",
-#                "description": "The ID of the backup to show",
-#            },
-#        ],
-#    },
 }
 
 g_job_id       = None

@@ -59,9 +59,13 @@ class KeypairStore(object):
 
 
     def choices(self):
-        return sorted([ (ident, key["alias"]) for ident, key in self.load().items() ],
-                        key=lambda k: k[1])
+        choices = []
+        for ident, key in self.load().items():
+            cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+            digest = cert.digest("md5")
+            choices.append((digest, key["alias"]))
 
+        return sorted(choices, key=lambda x: x[1])
 
 
 

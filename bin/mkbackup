@@ -469,7 +469,8 @@ def do_site_backup(opts, site=None):
                          stdin=open(os.devnull))
 
     with open(backup_path, "w") as backup_file:
-        s = BackupStream(stream=p.stdout, is_alive=lambda: p.poll() is None)
+        s = BackupStream(stream=p.stdout, is_alive=lambda: p.poll() is None,
+                         key_ident=g_job_config.get("encrypt"))
         for chunk in s.process():
             backup_file.write(chunk)
 
@@ -486,10 +487,11 @@ def do_site_backup(opts, site=None):
 # b) the encrypted key is used written to the backup file
 # c) the unencrypted random key is used as AES key for encrypting the backup stream
 class MKBackupStream(object):
-    def __init__(self, stream, is_alive):
+    def __init__(self, stream, is_alive, key_ident):
         self._stream    = stream
         self._is_alive  = is_alive
         self._cipher    = None
+        self._key_ident = key_ident
 
         self._last_state_update = time.time()
         self._last_bps          = None
@@ -520,6 +522,10 @@ class MKBackupStream(object):
                 break # end of stream reached
 
             self._update_state()
+
+
+    def _encrypt(self):
+        return self._key_ident != None
 
 
     def _init_processing(self):
@@ -554,10 +560,12 @@ class MKBackupStream(object):
     def _get_key_spec(self, key_id):
         keys = self._load_backup_keys()
 
-        try:
-            return keys[key_id]
-        except KeyError:
-            raise MKGeneralException("Failed to load the configured backup key: %d" % key_id)
+        for ident, key in keys.items():
+            cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+            if key_id == cert.digest("md5"):
+                return key
+
+        raise MKGeneralException("Failed to load the configured backup key: %s" % key_id)
 
 
     def _load_backup_keys(self):
@@ -574,7 +582,7 @@ class MKBackupStream(object):
 
 class BackupStream(MKBackupStream):
     def _init_processing(self):
-        if encrypt_archives():
+        if self._encrypt():
             secret_key, encrypted_secret_key = self._derive_key(
                                           self._get_encryption_public_key(), 32)
             self._cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
@@ -586,7 +594,7 @@ class BackupStream(MKBackupStream):
 
     def _read_chunk(self):
         finished = False
-        if encrypt_archives():
+        if self._encrypt():
             chunk = self._stream.read(1024 * AES.block_size)
 
             # Detect end of file and add padding to fill up to block size
@@ -604,15 +612,14 @@ class BackupStream(MKBackupStream):
 
 
     def _process_chunk(self, chunk):
-        if encrypt_archives():
+        if self._encrypt():
             return self._cipher.encrypt(chunk)
         else:
             return chunk
 
 
     def _get_encryption_public_key(self):
-        # TODO: Refactor to hand over the key_id via constructor
-        key = self._get_key_spec(g_job_config["encrypt"])
+        key = self._get_key_spec(self._key_ident)
 
         # First extract the public key part from the certificate
         cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
@@ -639,9 +646,9 @@ class BackupStream(MKBackupStream):
 
 
 
-class RestoreStream(BackupStream):
+class RestoreStream(MKBackupStream):
     def _init_processing(self):
-        if not encrypt_archives():
+        if not self._encrypt():
             return
 
         encrypted_secret_key = self._read_encrypted_secret_key()
@@ -650,7 +657,7 @@ class RestoreStream(BackupStream):
 
 
     def _read_chunk(self):
-        if not encrypt_archives():
+        if not self._encrypt():
             # process unencrypted backup
             chunk = self._stream.read(1024 * 1024)
             return chunk, chunk == ""
@@ -711,8 +718,7 @@ class RestoreStream(BackupStream):
 
 
     def _get_encryption_private_key(self):
-        # TODO: Refactor to hand over the key_id via constructor
-        key = self._get_key_spec(g_job_config["encrypt"])
+        key = self._get_key_spec(self._key_ident)
 
         try:
             passphrase = os.environ["MKBACKUP_PASSPHRASE"]
@@ -1156,12 +1162,11 @@ def do_site_restore(opts, site=None):
     p = subprocess.Popen(cmd, shell=False, close_fds=True,
                          stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
-    file("/tmp/backup-decrypted", "w+")
     with open(backup_path, "r") as backup_file:
-        s = RestoreStream(stream=backup_file, is_alive=lambda: False)
+        s = RestoreStream(stream=backup_file, is_alive=lambda: False,
+                          key_ident=g_job_config.get("encrypt"))
         try:
             for chunk in s.process():
-                file("/tmp/backup-decrypted", "a+").write(chunk)
                 p.stdin.write(chunk)
         except IOError, e:
             log("Error while sending data to restore process: %s" % e)
@@ -1193,10 +1198,10 @@ def mode_list(target_id, opts):
         raise MKGeneralException("This backup target does not exist. Choose one of: %s" %
                                     ", ".join(g_config["targets"].keys()))
 
-    fmt = "%-9s %-20s %-16s %32s\n"
-    fmt_detail = (" " * 30) + " %-20s %28s\n"
+    fmt = "%-9s %-20s %-16s %52s\n"
+    fmt_detail = (" " * 30) + " %-20s %48s\n"
     sys.stdout.write(fmt % ("Type", "Job", "Details", ""))
-    sys.stdout.write("%s\n" % ("-" * 80))
+    sys.stdout.write("%s\n" % ("-" * 100))
     for path in sorted(glob.glob("%s/*/mkbackup.info" % target_path(target_id))):
         info = load_backup_info(path)
         from_info = info["hostname"]
@@ -1207,6 +1212,11 @@ def mode_list(target_id, opts):
         sys.stdout.write(fmt_detail % ("From:", from_info))
         sys.stdout.write(fmt_detail % ("Finished:", render.date_and_time(info["finished"])))
         sys.stdout.write(fmt_detail % ("Size:", render.bytes(info["size"])))
+        if "encrypt" in info["config"]:
+            sys.stdout.write(fmt_detail % ("Encrypted:", info["config"]["encrypt"]))
+        else:
+            sys.stdout.write(fmt_detail % ("Encrypted:", "No"))
+        sys.stdout.write("\n")
     sys.stdout.write("\n")
 
 

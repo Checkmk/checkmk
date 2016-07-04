@@ -57,6 +57,7 @@ import Crypto.Util.number
 
 import cmk.daemon as daemon
 import cmk.render as render
+import cmk.store as store
 from cmk.exceptions import MKTerminate, MKGeneralException
 
 # Is used to duplicate output from stdout/stderr to a the job log. This
@@ -1036,7 +1037,7 @@ def save_state(new_attrs, update=True):
         state = {}
     state.update(new_attrs)
 
-    with open(state_path(), "w") as f:
+    with store.open(state_path(), "w") as f:
         f.write(pprint.pformat(state)+"\n")
 
 

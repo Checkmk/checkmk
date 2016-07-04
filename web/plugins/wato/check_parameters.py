@@ -3598,7 +3598,7 @@ register_check_parameters(
     TextAscii(
         title = _("Volume Group"),
         allow_empty = False),
-    "dict"
+    "first"
 )
 
 register_check_parameters(

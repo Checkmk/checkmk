@@ -1,0 +1,9 @@
+Title: lvm_vgs: fixed exception in host-specific settings if rule for LVM groups is set
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8p6
+Date: 1467634183
+Class: fix
+
+

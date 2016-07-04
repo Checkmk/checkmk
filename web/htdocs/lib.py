@@ -388,7 +388,7 @@ g_aquired_locks = []
 g_locked_paths = []
 def aquire_lock(path):
     if path in g_locked_paths:
-        return # No recursive locking
+        return True # No recursive locking
 
     # Create file (and base dir) for locking if not existant yet
     make_nagios_directory(os.path.dirname(path))
@@ -407,6 +407,7 @@ def aquire_lock(path):
 
     g_aquired_locks.append((path, fd))
     g_locked_paths.append(path)
+
 
 def release_lock(path):
     if path not in g_locked_paths:

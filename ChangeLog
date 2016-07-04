@@ -295,6 +295,7 @@
     * 3151 FIX: windows agent: further fix to crashes on failures to query wmi
     * 3693 FIX: ups_eaton_enviroment: Fixed handling of dictionary-based parameters...
             NOTE: Please refer to the migration notes!
+    * 3552 FIX: SNMPv3: Fixed login with security level noAuthNoPriv...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

@@ -97,7 +97,7 @@ class SNMPCredentials(Alternative):
                 return x and (len(x) == 6 and 2 or len(x) == 4 and 1) or 0
             else:
                 return type(x) == tuple and ( \
-                            len(x) == 1 and 1 or \
+                            len(x) in [1, 2] and 1 or \
                             len(x) == 4 and 2 or 3) or 0
 
         kwargs.update({
@@ -106,14 +106,22 @@ class SNMPCredentials(Alternative):
                     title = _("SNMP community (SNMP Versions 1 and 2c)"),
                     allow_empty = False,
                 ),
-                Tuple(
-                    title = _("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
-                    elements = [
-                        FixedValue("noAuthNoPriv",
-                            title = _("Security Level"),
-                            totext = _("No authentication, no privacy"),
-                        ),
-                    ]
+                Transform(
+                    Tuple(
+                        title = _("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
+                        elements = [
+                            FixedValue("noAuthNoPriv",
+                                title = _("Security Level"),
+                                totext = _("No authentication, no privacy"),
+                            ),
+                            TextAscii(
+                                title = _("Security name"),
+                                attrencode  = True,
+                                allow_empty = False
+                            ),
+                        ]
+                    ),
+                    forth = lambda x: len(x) == 2 and x or (x[0], "")
                 ),
                 Tuple(
                     title = _("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),

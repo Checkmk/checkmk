@@ -1,0 +1,9 @@
+Title: fortigate_sessions_base: Added missing WATO rule
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p6
+Date: 1467642109
+Class: fix
+
+

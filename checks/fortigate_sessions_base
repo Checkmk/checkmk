@@ -31,18 +31,19 @@ def inventory_fortigate_sessions_base(info):
 
 def check_fortigate_sessions_base(item, params, info):
     warn, crit = params
-    current = saveint(info[0][0])
-    state = 0
-    icon = ''
-    if current >= warn:
-        state = 1
-	icon = "(!)"
+    current = int(info[0][0])
+    status = 0
     if current >= crit:
-        state = 2
-	icon = "(!!)"
+        status = 2
+    elif current >= warn:
+        status = 1
 
-    perf = [("session", current, warn, crit)]
-    return state, "%d Session%s (warn/crit at %d/%d)" % (current, icon, warn, crit), perf
+    infotext = "%d active sessions" % current
+    if status:
+        infotext += " (warn/crit at %d/%d)" % (warn, crit)
+
+    perfdata = [("session", current, warn, crit)]
+    return status, infotext, perfdata
 
 check_info["fortigate_sessions_base"] = {
     "inventory_function"    : inventory_fortigate_sessions_base,
@@ -53,5 +54,6 @@ check_info["fortigate_sessions_base"] = {
     "snmp_scan_function"    : lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0") and\
                                      oid(".1.3.6.1.4.1.12356.101.4.1.8.0"),
     "snmp_info"		    : ( ".1.3.6.1.4.1.12356.101.4.1", [ 8 ]),
+    "group"                 : "fortigate_sessions",
 }
 

@@ -1,0 +1,10 @@
+Title: ups_eaton_enviroment: Fixed handling of dictionary-based parameters
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+State: unknown
+Version: 1.4.0i1
+Date: 1467618964
+
+Rediscovery of the affected hosts is required

@@ -2628,6 +2628,8 @@ def ajax_diag_host():
                     snmpv3_privacy_proto = { "0": "DES", "1": "AES" }.get(html.var("snmpv3_privacy_proto"))
                     args[10] = snmpv3_privacy_proto
                     args[11] = html.var("snmpv3_privacy_password")
+            else:
+                args[8] = html.var("snmpv3_security_name")
 
         result = check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
         # API is defined as follows: Two data fields, separated by space.

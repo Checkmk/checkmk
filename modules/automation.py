@@ -694,6 +694,8 @@ def automation_diag_host(args):
         snmpv3_use = args[8]
         if snmpv3_use in ["authNoPriv", "authPriv"]:
             snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password = args[9:12]
+        else:
+            snmpv3_security_name = args[10]
         if snmpv3_use == "authPriv":
             snmpv3_privacy_proto, snmpv3_privacy_password = args[12:14]
 
@@ -733,7 +735,7 @@ def automation_diag_host(args):
 
         elif test.startswith('snmp'):
             # SNMPv3 tuples
-            # ('noAuthNoPriv',)
+            # ('noAuthNoPriv', "username")
             # ('authNoPriv', 'md5', '11111111', '22222222')
             # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
 
@@ -743,6 +745,8 @@ def automation_diag_host(args):
                     snmpv3_credentials = [snmpv3_use]
                     if snmpv3_use in ["authNoPriv", "authPriv"]:
                         snmpv3_credentials.extend([snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password])
+                    else:
+                        snmpv3_credentials.extend([snmpv3_security_name])
                     if snmpv3_use == "authPriv":
                         snmpv3_credentials.extend([snmpv3_privacy_proto, snmpv3_privacy_password])
                     explicit_snmp_communities[hostname] = tuple(snmpv3_credentials)

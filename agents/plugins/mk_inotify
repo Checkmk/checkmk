@@ -115,26 +115,27 @@ if os.path.exists(pid_filename):
 #   +----------------------------------------------------------------------+
 #   Reaching this point means that no mk_inotify is currently running
 
-try:
-    pid = os.fork()
-    if pid > 0:
-        sys.exit(0)
-    # Decouple from parent environment
-    os.chdir("/")
-    os.umask(0)
-    os.setsid()
+if not opt_foreground:
+    try:
+        pid = os.fork()
+        if pid > 0:
+            sys.exit(0)
+        # Decouple from parent environment
+        os.chdir("/")
+        os.umask(0)
+        os.setsid()
 
-    # Close all fd
-    for fd in range(0, 256):
-        try:
-            os.close(fd)
-        except OSError:
-            pass
-except Exception, e:
-    sys.stderr.write("Error forking mk_inotify: %s" % e)
+        # Close all fd
+        for fd in range(0, 256):
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+    except Exception, e:
+        sys.stderr.write("Error forking mk_inotify: %s" % e)
 
-# Save pid of working process.
-file(pid_filename, "w").write("%d" % os.getpid())
+    # Save pid of working process.
+    file(pid_filename, "w").write("%d" % os.getpid())
 
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -216,21 +217,26 @@ def do_output(what, event):
 
 
 map_events = {
-    # Mode     Mask                 Report_filestats (currently unused)
-    "access": (pyinotify.IN_ACCESS, False),
-    "open":   (pyinotify.IN_OPEN,   False),
-    "create": (pyinotify.IN_CREATE, False),
-    "delete": (pyinotify.IN_DELETE, False),
-    "modify": (pyinotify.IN_MODIFY, False),
+    # Mode     Mask                        Report_filestats (currently unused)
+    "access"   : (pyinotify.IN_ACCESS,     False),
+    "open"     : (pyinotify.IN_OPEN,       False),
+    "create"   : (pyinotify.IN_CREATE,     False),
+    "delete"   : (pyinotify.IN_DELETE,     False),
+    "modify"   : (pyinotify.IN_MODIFY,     False),
+    "movedto"  : (pyinotify.IN_MOVED_TO,   False),
+    "movedfrom": (pyinotify.IN_MOVED_FROM, False),
+    "moveself" : (pyinotify.IN_MOVE_SELF,  False),
 }
 
 class NotifyEventHandler(pyinotify.ProcessEvent):
-    def process_IN_ACCESS(self, event):
-        do_output("access", event)
+    def process_IN_MOVED_TO(self, event):
+        do_output("movedto", event)
 
-#    def process_IN_ATTRIB(self, event):
-#        print "ATTRIB event:", event.pathname
-#
+    def process_IN_MOVED_FROM(self, event):
+        do_output("movedfrom", event)
+
+    def process_IN_MOVE_SELF(self, event):
+        do_output("moveself", event)
 #    def process_IN_CLOSE_NOWRITE(self, event):
 #        print "CLOSE_NOWRITE event:", event.pathname
 #
@@ -329,6 +335,9 @@ def main():
             attributes["mask"] |= map_events[mode][0]
 
     update_watched_folders()
+    if opt_foreground:
+        import pprint
+        pprint.pprint(folder_configs)
 
     # Save monitored file/folder information specified in mk_inotify.cfg
     file(configured_paths, "w").write("\n".join(get_watched_files())+"\n")

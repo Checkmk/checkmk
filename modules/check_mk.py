@@ -1659,8 +1659,10 @@ def snmp_base_command(what, hostname):
            options = "-v3 -l '%s' -a '%s' -u '%s' -A '%s' -x '%s' -X '%s'" % tuple(credentials)
         elif len(credentials) == 4:
            options = "-v3 -l '%s' -a '%s' -u '%s' -A '%s'" % tuple(credentials)
+        elif len(credentials) == 2:
+           options = "-v3 -l '%s' -u '%s'" % tuple(credentials)
         else:
-            raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be string, 4-tuple or 6-tuple" % (credentials, hostname))
+            raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be string, 2-tuple, 4-tuple or 6-tuple" % (credentials, hostname))
 
     # Do not load *any* MIB files. This save lot's of CPU.
     options += " -m '' -M ''"

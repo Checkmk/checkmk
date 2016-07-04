@@ -1,0 +1,10 @@
+Title: SNMPv3: Fixed login with security level noAuthNoPriv
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p6
+Date: 1467622758
+
+The security level noAuthNoPriv did never work.

@@ -2,6 +2,7 @@
     Checks & Agents:
     * 3693 FIX: ups_eaton_enviroment: Fixed handling of dictionary-based parameters...
             NOTE: Please refer to the migration notes!
+    * 3552 FIX: SNMPv3: Fixed login with security level noAuthNoPriv...
 
 
 1.2.8p5:

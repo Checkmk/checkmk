@@ -981,7 +981,8 @@ class Targets(BackupEntityCollection):
 
             table.cell(_("Title"), html.attrencode(target.title()))
 
-            vs_target = target.type_class()().valuespec()
+            target_class = target.type_class()
+            vs_target = target_class(target.type_params()).valuespec()
             table.cell(_("Destination"), vs_target.value_to_text(target.type_params()))
 
         table.end()
@@ -989,7 +990,7 @@ class Targets(BackupEntityCollection):
 
     def validate_target(self, value, varprefix):
         target = self.get(value)
-        path = self.type_params()["path"]
+        path = target.type_params()["path"]
         target.type().validate_local_directory(path, varprefix)
 
 

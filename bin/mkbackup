@@ -144,18 +144,31 @@ def acquire_backup_lock():
     global g_backup_lock_f
     lock_file_path = "/tmp/mkbackup.lock"
 
-    try:
-        g_backup_lock_f = tempfile.NamedTemporaryFile(mode="a+", dir="/tmp", delete=False)
-        os.rename(g_backup_lock_f.name, lock_file_path)
-    except IOError, e:
-        raise MKGeneralException("Failed to open lock file \"%s\": %s" %
-                    (lock_file_path, e))
+    if not os.path.exists(lock_file_path):
+        try:
+            g_backup_lock_f = tempfile.NamedTemporaryFile(mode="a+", dir="/tmp", delete=False)
+            os.chown(g_backup_lock_f.name, -1, grp.getgrnam("omd").gr_gid)
+            os.chmod(g_backup_lock_f.name, 0660)
+            os.rename(g_backup_lock_f.name, lock_file_path)
+        except (IOError, OSError), e:
+            raise MKGeneralException("Failed to open lock file \"%s\": %s" %
+                        (lock_file_path, e))
+    else:
+        g_backup_lock_f = file(lock_file_path, "a")
 
     try:
         fcntl.flock(g_backup_lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except IOError:
+    except IOError, e:
         raise MKGeneralException("Failed to get the exclusive backup lock. "
-                            "Another backup/restore seems to be running.")
+                            "Another backup/restore seems to be running (%s)." % e)
+
+    # Ensure that the lock is not inherited to subprocessess
+    try:
+        cloexec_flag = fcntl.FD_CLOEXEC
+    except AttributeError:
+        cloexec_flag = 1
+    fd = g_backup_lock_f.fileno()
+    fcntl.fcntl(fd, fcntl.F_SETFD, fcntl.fcntl(fd, fcntl.F_GETFD) | cloexec_flag)
 
 
 # TODO: Move to cmklib?
@@ -795,12 +808,15 @@ def archive_suffix():
     return suffix
 
 
-def needed_backup_archive_files():
+def needed_backup_archive_files(info):
     if is_root():
         needed_files = [ "system", "system-data" ]
-        needed_files += [ "site-%s" % s for s in existing_sites() ]
+        # Sites may have been deleted or new sites added. Site files archives are optional.
+        #needed_files += [ "site-%s" % s for s in existing_sites() ]
     else:
-        needed_files = [ "site-%s" % site_id() ]
+        # Care about restore from a backup made in a site with another site_id
+        site = info.get("site_id", site_id())
+        needed_files = [ "site-%s" % site ]
 
     return [ f + archive_suffix() for f in needed_files ]
 
@@ -847,7 +863,15 @@ def verify_backup_exists():
 
 
 def verify_backup_consistency(info):
-    for archive_file in needed_backup_archive_files():
+    needed_files   = needed_backup_archive_files(info)
+    optional_files = [ e[0] for e in info["files"] if e[0] not in needed_files ]
+
+    verify_backup_files(info, needed_files, needed=True)
+    verify_backup_files(info, optional_files, needed=False)
+
+
+def verify_backup_files(info, files, needed):
+    for archive_file in files:
         size, checksum = None, None
         for entry in info["files"]:
             if entry[0] == archive_file:
@@ -855,7 +879,11 @@ def verify_backup_consistency(info):
                 break
 
         if size == None:
-            raise MKGeneralException("The backup is missing the needed archive %s." % f)
+            if needed:
+                raise MKGeneralException("The backup is missing the needed archive %s." %
+                                                                              archive_file)
+            else:
+                continue # missing optional files are OK
 
         archive_path = "%s/%s" % (backup_base_path(), archive_file)
         this_checksum = file_checksum(archive_path)
@@ -1108,7 +1136,7 @@ def mode_restore(target_id, backup_id, opts):
             "state" : "running",
         })
 
-        do_restore(opts)
+        do_restore(opts, info)
         success = True
 
     except KeyboardInterrupt:
@@ -1130,9 +1158,9 @@ def mode_restore(target_id, backup_id, opts):
         })
 
 
-def do_restore(opts):
+def do_restore(opts, info):
     if not is_root():
-        do_site_restore(opts)
+        do_site_restore(opts, info)
     elif is_cma():
         do_system_restore(opts)
     else:
@@ -1140,7 +1168,7 @@ def do_restore(opts):
     complete_restore()
 
 
-def do_site_restore(opts, site=None):
+def do_site_restore(opts, info, site=None):
     cmd = ["omd", "restore", "--kill"]
 
     # When executed as site user, "omd restore" is executed without the site
@@ -1148,7 +1176,8 @@ def do_site_restore(opts, site=None):
     # as root, the site argument has to be given and must be handed over to
     # "omd restore".
     if site == None:
-        site = site_id()
+        # Care about restore from a backup made in a site with another site_id
+        site = info.get("site_id", site_id())
     else:
         if not is_root():
             raise MKGeneralException("Requested restore of site %s, "

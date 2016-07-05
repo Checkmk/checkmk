@@ -22,14 +22,28 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "TimeColumnFilter.h"
-#include "Query.h"
+#ifndef ListFilter_h
+#define ListFilter_h
 
-int32_t TimeColumnFilter::convertRefValue() {
-    int32_t ref_remote = IntColumnFilter::convertRefValue();
-    if (_query != nullptr) {
-        int32_t timezone_offset = _query->timezoneOffset();
-        return ref_remote - timezone_offset;
-    }
-    return ref_remote;  // should never happen
-}
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "ColumnFilter.h"
+#include "ListColumn.h"
+#include "opids.h"
+
+class ListFilter : public ColumnFilter {
+public:
+    ListFilter(ListColumn *column, RelationalOperator relOp,
+               const std::string &value);
+    bool accepts(void *data) override;
+    void *indexFilter(const std::string &column_name) override;
+    ListColumn *column() override;
+
+private:
+    ListColumn *_column;
+    RelationalOperator _relOp;
+    void *_ref_member;
+    bool _empty_ref;  // distinct from unknown ref
+};
+
+#endif  // ListFilter_h

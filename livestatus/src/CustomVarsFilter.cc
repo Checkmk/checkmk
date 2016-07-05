@@ -157,3 +157,5 @@ bool CustomVarsFilter::accepts(void *data) {
     }
     return false;  // unreachable
 }
+
+CustomVarsColumn *CustomVarsFilter::column() { return _column; }

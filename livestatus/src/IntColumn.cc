@@ -24,7 +24,7 @@
 
 #include "IntColumn.h"
 #include <stdio.h>
-#include "IntColumnFilter.h"
+#include "IntFilter.h"
 #include "Query.h"
 #include "opids.h"
 
@@ -35,7 +35,7 @@ void IntColumn::output(void *data, Query *query) {
 }
 
 Filter *IntColumn::createFilter(RelationalOperator relOp, const string &value) {
-    return new IntColumnFilter(this, relOp, value);
+    return new IntFilter(this, relOp, value);
 }
 
 string IntColumn::valueAsString(void *data, Query *query) {

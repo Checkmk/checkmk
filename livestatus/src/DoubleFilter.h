@@ -22,25 +22,26 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef HostlistColumnFilter_h
-#define HostlistColumnFilter_h
+#ifndef DoubleFilter_h
+#define DoubleFilter_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
-#include "Filter.h"
+#include "ColumnFilter.h"
+#include "DoubleColumn.h"
 #include "opids.h"
-class HostlistColumn;
 
-class HostlistColumnFilter : public Filter {
+class DoubleFilter : public ColumnFilter {
 public:
-    HostlistColumnFilter(HostlistColumn *column, RelationalOperator relOp,
-                         std::string value);
+    DoubleFilter(DoubleColumn *column, RelationalOperator relOp,
+                 const std::string &value);
     bool accepts(void *data) override;
+    DoubleColumn *column() override;
 
 private:
-    HostlistColumn *_hostlist_column;
+    DoubleColumn *_column;
     RelationalOperator _relOp;
-    std::string _ref_value;
+    double _ref_value;
 };
 
-#endif  // HostlistColumnFilter_h
+#endif  // DoubleFilter_h

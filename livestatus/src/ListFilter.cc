@@ -22,73 +22,40 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "ServicelistColumnFilter.h"
-#include <string.h>
+#include "ListFilter.h"
 #include <ostream>
+#include "ListColumn.h"
 #include "Logger.h"
-#include "ServicelistColumn.h"
-#include "nagios.h"
+#include "opids.h"
 
 using std::string;
 
-#define HOSTSERVICE_SEPARATOR '|'
+ListFilter::ListFilter(ListColumn *column, RelationalOperator relOp,
+                       const string &value)
+    : _column(column)
+    , _relOp(relOp)
+    , _ref_member(_column->getNagiosObject(const_cast<char *>(value.c_str())))
+    , _empty_ref(value.empty()) {}
 
-ServicelistColumnFilter::ServicelistColumnFilter(ServicelistColumn *column,
-                                                 RelationalOperator relOp,
-                                                 const string &value)
-    : _servicelist_column(column), _relOp(relOp) {
-    if ((_relOp == RelationalOperator::equal ||
-         _relOp == RelationalOperator::not_equal) &&
-        value.empty()) {
-        return;  // test for emptiness is allowed
+bool ListFilter::accepts(void *data) {
+    data = _column->shiftPointer(data);
+    if (data == nullptr) {
+        return false;
     }
-
-    // ref_value must be of from hostname HOSTSERVICE_SEPARATOR
-    // service_description
-    const char *sep = index(value.c_str(), HOSTSERVICE_SEPARATOR);
-    if (sep == nullptr) {
-        Informational() << "Invalid reference value for service list "
-                           "membership. Must be 'hostname"
-                        << string(1, HOSTSERVICE_SEPARATOR) << "servicename'";
-        _ref_host = "";
-        _ref_service = "";
-    } else {
-        _ref_host = string(&value[0], sep - &value[0]);
-        _ref_service = sep + 1;
-    }
-}
-
-bool ServicelistColumnFilter::accepts(void *data) {
-    // data points to a primary data object. We need to extract
-    // a pointer to a service list
-    servicesmember *mem = _servicelist_column->getMembers(data);
-
-    // test for empty list
-    if (_ref_host.empty()) {
-        if (_relOp == RelationalOperator::equal) {
-            return mem == nullptr;
-        }
-        if (_relOp == RelationalOperator::not_equal) {
-            return mem != nullptr;
-        }
-    }
-
-    bool is_member = false;
-    for (; mem != nullptr; mem = mem->next) {
-        service *svc = mem->service_ptr;
-        if (svc->host_name == _ref_host && svc->description == _ref_service) {
-            is_member = true;
-            break;
-        }
-    }
-
+    bool is_member = _column->isNagiosMember(data, _ref_member);
     switch (_relOp) {
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+            if (!_empty_ref) {
+                Informational() << "Sorry, equality for lists implemented only "
+                                   "for emptyness";
+            }
+            return _column->isEmpty(data) ==
+                   (_relOp == RelationalOperator::equal);
         case RelationalOperator::less:
             return !is_member;
         case RelationalOperator::greater_or_equal:
             return is_member;
-        case RelationalOperator::equal:
-        case RelationalOperator::not_equal:
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
         case RelationalOperator::equal_icase:
@@ -98,8 +65,30 @@ bool ServicelistColumnFilter::accepts(void *data) {
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
             Informational() << "Sorry. Operator " << _relOp
-                            << " for service lists not implemented.";
+                            << " for list columns not implemented.";
             return false;
     }
     return false;  // unreachable
 }
+
+void *ListFilter::indexFilter(const string &column_name) {
+    switch (_relOp) {
+        case RelationalOperator::greater_or_equal:
+            return column_name == _column->name() ? _ref_member : nullptr;
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+        case RelationalOperator::less:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            return nullptr;
+    }
+    return nullptr;  // unreachable
+}
+
+ListColumn *ListFilter::column() { return _column; }

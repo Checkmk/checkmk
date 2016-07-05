@@ -22,29 +22,22 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef StringColumnFilter_h
-#define StringColumnFilter_h
+#ifndef TimeFilter_h
+#define TimeFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <regex.h>
+#include <stdint.h>
 #include <string>
-#include "Filter.h"
+#include "IntFilter.h"
 #include "opids.h"
-class StringColumn;
+class IntColumn;
 
-class StringColumnFilter : public Filter {
+class TimeFilter : public IntFilter {
 public:
-    StringColumnFilter(StringColumn *column, RelationalOperator relOp,
-                       const std::string &value);
-    virtual ~StringColumnFilter();
-    bool accepts(void *data) override;
-    void *indexFilter(const std::string &column_name) override;
-
-private:
-    StringColumn *_column;
-    RelationalOperator _relOp;
-    std::string _ref_string;
-    regex_t *_regex;
+    TimeFilter(IntColumn *column, RelationalOperator relOp,
+               const std::string &value)
+        : IntFilter(column, relOp, value) {}
+    virtual int32_t convertRefValue() override;
 };
 
-#endif  // StringColumnFilter_h
+#endif  // TimeFilter_h

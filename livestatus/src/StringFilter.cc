@@ -22,7 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "StringColumnFilter.h"
+#include "StringFilter.h"
 #include <string.h>
 #include "OutputBuffer.h"
 #include "StringColumn.h"
@@ -30,9 +30,8 @@
 
 using std::string;
 
-StringColumnFilter::StringColumnFilter(StringColumn *column,
-                                       RelationalOperator relOp,
-                                       const string &value)
+StringFilter::StringFilter(StringColumn *column, RelationalOperator relOp,
+                           const string &value)
     : _column(column), _relOp(relOp), _ref_string(value), _regex(nullptr) {
     switch (_relOp) {
         case RelationalOperator::matches:
@@ -72,14 +71,14 @@ StringColumnFilter::StringColumnFilter(StringColumn *column,
     }
 }
 
-StringColumnFilter::~StringColumnFilter() {
+StringFilter::~StringFilter() {
     if (_regex != nullptr) {
         regfree(_regex);
         delete _regex;
     }
 }
 
-bool StringColumnFilter::accepts(void *data) {
+bool StringFilter::accepts(void *data) {
     string act_string = _column->getValue(data);
     switch (_relOp) {
         case RelationalOperator::equal:
@@ -110,7 +109,7 @@ bool StringColumnFilter::accepts(void *data) {
     return false;  // unreachable
 }
 
-void *StringColumnFilter::indexFilter(const string &column_name) {
+void *StringFilter::indexFilter(const string &column_name) {
     switch (_relOp) {
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
@@ -133,3 +132,5 @@ void *StringColumnFilter::indexFilter(const string &column_name) {
     }
     return nullptr;  // unreachable
 }
+
+StringColumn *StringFilter::column() { return _column; }

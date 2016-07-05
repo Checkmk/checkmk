@@ -52,6 +52,8 @@ AttributelistFilter::AttributelistFilter(AttributelistColumn *column,
    Also number comparisons
  */
 
+AttributelistColumn *AttributelistFilter::column() { return _column; }
+
 bool AttributelistFilter::accepts(void *data) {
     unsigned long act_value =
         static_cast<unsigned long>(_column->getValue(data, nullptr));

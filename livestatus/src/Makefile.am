@@ -48,7 +48,7 @@ livestatus_so_SOURCES = \
         CustomVarsFilter.cc \
         DoubleAggregator.cc \
         DoubleColumn.cc \
-        DoubleColumnFilter.cc \
+        DoubleFilter.cc \
         DownCommColumn.cc \
         DowntimeOrComment.cc \
         DowntimesOrComments.cc \
@@ -66,14 +66,14 @@ livestatus_so_SOURCES = \
         HostSpecialIntColumn.cc \
         HostgroupsColumn.cc \
         HostlistColumn.cc \
-        HostlistColumnFilter.cc \
+        HostlistFilter.cc \
         HostlistStateColumn.cc \
         InputBuffer.cc \
         IntAggregator.cc \
         IntColumn.cc \
-        IntColumnFilter.cc \
+        IntFilter.cc \
         ListColumn.cc \
-        ListColumnFilter.cc \
+        ListFilter.cc \
         LogCache.cc \
         LogEntry.cc \
         Logfile.cc \
@@ -98,13 +98,13 @@ livestatus_so_SOURCES = \
         ServiceSpecialIntColumn.cc \
         ServicegroupsColumn.cc \
         ServicelistColumn.cc \
-        ServicelistColumnFilter.cc \
+        ServicelistFilter.cc \
         ServicelistStateColumn.cc \
         StatsColumn.cc \
         StatusSpecialIntColumn.cc \
         Store.cc \
         StringColumn.cc \
-        StringColumnFilter.cc \
+        StringFilter.cc \
         StringUtils.cc \
         Table.cc \
         TableColumns.cc \
@@ -128,7 +128,7 @@ livestatus_so_SOURCES = \
         TableStateHistory.cc \
         TableStatus.cc \
         TableTimeperiods.cc \
-        TimeColumnFilter.cc \
+        TimeFilter.cc \
         TimePointerColumn.cc \
         TimeperiodsCache.cc \
         VariadicFilter.cc \

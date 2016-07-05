@@ -25,7 +25,7 @@
 #include "ServicelistColumn.h"
 #include <string.h>
 #include "Query.h"
-#include "ServicelistColumnFilter.h"
+#include "ServicelistFilter.h"
 #include "TableServices.h"
 #include "TimeperiodsCache.h"
 #include "opids.h"
@@ -105,7 +105,7 @@ void ServicelistColumn::output(void *data, Query *query) {
 
 Filter *ServicelistColumn::createFilter(RelationalOperator relOp,
                                         const string &value) {
-    return new ServicelistColumnFilter(this, relOp, value);
+    return new ServicelistFilter(this, relOp, value);
 }
 
 int ServicelistColumn::inCustomTimeperiod(service *svc, const char *varname) {

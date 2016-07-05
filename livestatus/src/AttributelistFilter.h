@@ -26,15 +26,16 @@
 #define AttributelistFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include "Filter.h"
+#include "AttributelistColumn.h"
+#include "ColumnFilter.h"
 #include "opids.h"
-class AttributelistColumn;
 
-class AttributelistFilter : public Filter {
+class AttributelistFilter : public ColumnFilter {
 public:
     AttributelistFilter(AttributelistColumn *column, RelationalOperator relOp,
                         unsigned long ref);
     bool accepts(void *data) override;
+    AttributelistColumn *column() override;
 
 private:
     AttributelistColumn *_column;

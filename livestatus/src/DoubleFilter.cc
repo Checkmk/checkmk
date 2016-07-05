@@ -22,7 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "DoubleColumnFilter.h"
+#include "DoubleFilter.h"
 #include <stdlib.h>
 #include <ostream>
 #include "DoubleColumn.h"
@@ -31,12 +31,11 @@
 
 using std::string;
 
-DoubleColumnFilter::DoubleColumnFilter(DoubleColumn *column,
-                                       RelationalOperator relOp,
-                                       const string &value)
+DoubleFilter::DoubleFilter(DoubleColumn *column, RelationalOperator relOp,
+                           const string &value)
     : _column(column), _relOp(relOp), _ref_value(atof(value.c_str())) {}
 
-bool DoubleColumnFilter::accepts(void *data) {
+bool DoubleFilter::accepts(void *data) {
     double act_value = _column->getValue(data);
     switch (_relOp) {
         case RelationalOperator::equal:
@@ -63,3 +62,5 @@ bool DoubleColumnFilter::accepts(void *data) {
     }
     return false;  // unreachable
 }
+
+DoubleColumn *DoubleFilter::column() { return _column; }

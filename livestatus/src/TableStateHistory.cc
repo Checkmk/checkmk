@@ -32,6 +32,7 @@
 #include <set>
 #include <utility>
 #include "Column.h"
+#include "ColumnFilter.h"
 #include "Filter.h"
 #include "HostServiceState.h"
 #include "LogEntry.h"
@@ -321,16 +322,14 @@ void TableStateHistory::answerQuery(Query *query) {
 
     if (g_disable_statehist_filtering == 0) {
         for (auto filter : *query->filter()) {
-            Column *column = filter->column();
-            if (column != nullptr) {
-                const char *column_name = column->name();
+            if (filter->isColumnFilter()) {
+                const char *column_name =
+                    static_cast<ColumnFilter *>(filter)->column()->name();
                 if ((strncmp(column_name, "current_", 8) == 0) ||
                     (strncmp(column_name, "host_", 5) == 0) ||
                     (strncmp(column_name, "service_", 8) == 0)) {
                     object_filter.push_back(filter);
-                } else {
                 }
-            } else {
             }
         }
     }

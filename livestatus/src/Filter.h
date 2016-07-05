@@ -29,24 +29,19 @@
 #include <stdint.h>
 #include <string>
 #include "OutputBuffer.h"
-class Column;
 class Query;
 
 class Filter {
 public:
-    Filter()
-        : _query(nullptr)
-        , _error_code(OutputBuffer::ResponseCode::ok)
-        , _column(nullptr) {}
+    Filter() : _query(nullptr), _error_code(OutputBuffer::ResponseCode::ok) {}
     virtual ~Filter() {}
+    virtual bool isColumnFilter() { return false; }
     virtual bool isVariadicFilter() { return false; }
     virtual bool isNegatingFilter() { return false; }
     std::string errorMessage() { return _error_message; }
     OutputBuffer::ResponseCode errorCode() { return _error_code; }
     bool hasError() { return _error_message != ""; }
     void setQuery(Query *q) { _query = q; }
-    void setColumn(Column *c) { _column = c; }
-    Column *column() { return _column; }
     virtual bool accepts(void *data) = 0;
     virtual void *indexFilter(const std::string & /* column_name */) {
         return nullptr;
@@ -65,7 +60,6 @@ protected:
 private:
     std::string _error_message;
     OutputBuffer::ResponseCode _error_code;
-    Column *_column;
 };
 
 #endif  // Filter_h

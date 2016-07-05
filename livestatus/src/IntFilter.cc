@@ -22,7 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "IntColumnFilter.h"
+#include "IntFilter.h"
 #include <stdlib.h>
 #include <ostream>
 #include <utility>
@@ -33,15 +33,16 @@
 using std::move;
 using std::string;
 
-IntColumnFilter::IntColumnFilter(IntColumn *column, RelationalOperator relOp,
-                                 string value)
+IntFilter::IntFilter(IntColumn *column, RelationalOperator relOp, string value)
     : _column(column), _relOp(relOp), _ref_string(move(value)) {}
 
-// overridden by TimeColumnFilter in order to apply timezone
-// offset from Localtime: header
-int32_t IntColumnFilter::convertRefValue() { return atoi(_ref_string.c_str()); }
+IntColumn *IntFilter::column() { return _column; }
 
-bool IntColumnFilter::accepts(void *data) {
+// overridden by TimeFilter in order to apply timezone offset from Localtime:
+// header
+int32_t IntFilter::convertRefValue() { return atoi(_ref_string.c_str()); }
+
+bool IntFilter::accepts(void *data) {
     int32_t act_value = _column->getValue(data, _query);
     int32_t ref_value = convertRefValue();
     switch (_relOp) {
@@ -70,8 +71,8 @@ bool IntColumnFilter::accepts(void *data) {
     return false;  // unreachable
 }
 
-void IntColumnFilter::findIntLimits(const string &column_name, int *lower,
-                                    int *upper) {
+void IntFilter::findIntLimits(const string &column_name, int *lower,
+                              int *upper) {
     if (column_name != _column->name()) {
         return;  // wrong column
     }
@@ -79,7 +80,7 @@ void IntColumnFilter::findIntLimits(const string &column_name, int *lower,
         return;  // already empty interval
     }
 
-    // TimeColumnFilter applies timezone offset here
+    // TimeFilter applies timezone offset here
     int32_t ref_value = convertRefValue();
 
     /* [lower, upper[ is some interval. This filter might restrict that interval
@@ -128,13 +129,12 @@ void IntColumnFilter::findIntLimits(const string &column_name, int *lower,
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
             Emergency() << "Invalid relational operator " << _relOp
-                        << " in IntColumnFilter::findIntLimits";
+                        << " in IntFilter::findIntLimits";
             return;
     }
 }
 
-bool IntColumnFilter::optimizeBitmask(const string &column_name,
-                                      uint32_t *mask) {
+bool IntFilter::optimizeBitmask(const string &column_name, uint32_t *mask) {
     int32_t ref_value = convertRefValue();
 
     if (column_name != _column->name()) {
@@ -187,7 +187,7 @@ bool IntColumnFilter::optimizeBitmask(const string &column_name,
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
             Emergency() << "Invalid relational operator " << _relOp
-                        << " in IntColumnFilter::optimizeBitmask";
+                        << " in IntFilter::optimizeBitmask";
             return false;
     }
     return false;  // unreachable

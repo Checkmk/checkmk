@@ -22,31 +22,27 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef IntColumnFilter_h
-#define IntColumnFilter_h
+#ifndef ServicelistFilter_h
+#define ServicelistFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <stdint.h>
 #include <string>
-#include "Filter.h"
+#include "ColumnFilter.h"
+#include "ServicelistColumn.h"
 #include "opids.h"
-class IntColumn;
 
-class IntColumnFilter : public Filter {
+class ServicelistFilter : public ColumnFilter {
 public:
-    IntColumnFilter(IntColumn *column, RelationalOperator relOp,
-                    std::string value);
-    virtual int32_t convertRefValue();  // see TimeColumnFilter
+    ServicelistFilter(ServicelistColumn *column, RelationalOperator relOp,
+                      const std::string &value);
     bool accepts(void *data) override;
-    void findIntLimits(const std::string &column_name, int *lower,
-                       int *upper) override;
-    bool optimizeBitmask(const std::string &column_name,
-                         uint32_t *mask) override;
+    ServicelistColumn *column() override;
 
 private:
-    IntColumn *_column;
+    ServicelistColumn *_column;
     RelationalOperator _relOp;
-    std::string _ref_string;
+    std::string _ref_host;
+    std::string _ref_service;
 };
 
-#endif  // IntColumnFilter_h
+#endif  // ServicelistFilter_h

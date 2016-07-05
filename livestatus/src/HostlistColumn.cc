@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostlistColumn.h"
-#include "HostlistColumnFilter.h"
+#include "HostlistFilter.h"
 #include "Query.h"
 #include "TableHosts.h"
 #include "opids.h"
@@ -76,5 +76,5 @@ void HostlistColumn::output(void *data, Query *query) {
 
 Filter *HostlistColumn::createFilter(RelationalOperator relOp,
                                      const string &value) {
-    return new HostlistColumnFilter(this, relOp, value);
+    return new HostlistFilter(this, relOp, value);
 }

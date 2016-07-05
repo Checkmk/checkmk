@@ -22,25 +22,14 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef DoubleColumnFilter_h
-#define DoubleColumnFilter_h
+#include "TimeFilter.h"
+#include "Query.h"
 
-#include "config.h"  // IWYU pragma: keep
-#include <string>
-#include "Filter.h"
-#include "opids.h"
-class DoubleColumn;
-
-class DoubleColumnFilter : public Filter {
-public:
-    DoubleColumnFilter(DoubleColumn *column, RelationalOperator relOp,
-                       const std::string &value);
-    bool accepts(void *data) override;
-
-private:
-    DoubleColumn *_column;
-    RelationalOperator _relOp;
-    double _ref_value;
-};
-
-#endif  // DoubleColumnFilter_h
+int32_t TimeFilter::convertRefValue() {
+    int32_t ref_remote = IntFilter::convertRefValue();
+    if (_query != nullptr) {
+        int32_t timezone_offset = _query->timezoneOffset();
+        return ref_remote - timezone_offset;
+    }
+    return ref_remote;  // should never happen
+}

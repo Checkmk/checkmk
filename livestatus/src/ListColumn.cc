@@ -23,12 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ListColumn.h"
-#include "ListColumnFilter.h"
+#include "ListFilter.h"
 #include "opids.h"
 
 using std::string;
 
 Filter *ListColumn::createFilter(RelationalOperator relOp,
                                  const string &value) {
-    return new ListColumnFilter(this, relOp, value);
+    return new ListFilter(this, relOp, value);
 }

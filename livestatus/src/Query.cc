@@ -34,6 +34,7 @@
 #include <vector>
 #include "Aggregator.h"
 #include "Column.h"
+#include "ColumnFilter.h"
 #include "Filter.h"
 #include "Logger.h"
 #include "NegatingFilter.h"
@@ -68,8 +69,8 @@ void collectFilterColumns(unordered_set<Column *> &filter_columns,
     } else if (filter->isNegatingFilter()) {
         collectFilterColumns(
             filter_columns, static_cast<NegatingFilter *>(filter)->subfilter());
-    } else {
-        filter_columns.insert(filter->column());
+    } else if (filter->isColumnFilter()) {
+        filter_columns.insert(static_cast<ColumnFilter *>(filter)->column());
     }
 }
 }  // namespace
@@ -266,7 +267,6 @@ Filter *Query::createFilter(Column *column, RelationalOperator relOp,
         filter = nullptr;
     } else {
         filter->setQuery(this);
-        filter->setColumn(column);
     }
     return filter;
 }

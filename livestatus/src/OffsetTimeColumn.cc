@@ -24,7 +24,7 @@
 
 #include "OffsetTimeColumn.h"
 #include "Query.h"
-#include "TimeColumnFilter.h"
+#include "TimeFilter.h"
 #include "opids.h"
 
 using std::string;
@@ -35,7 +35,6 @@ void OffsetTimeColumn::output(void *data, Query *query) {
 
 Filter *OffsetTimeColumn::createFilter(RelationalOperator relOp,
                                        const string &value) {
-    // The TimeColumnFilter applies the timezone offset from the Localtime:
-    // header
-    return new TimeColumnFilter(this, relOp, value);
+    // The TimeFilter applies the timezone offset from the Localtime: header
+    return new TimeFilter(this, relOp, value);
 }

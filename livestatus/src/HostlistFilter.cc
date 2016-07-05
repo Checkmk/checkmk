@@ -22,7 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "HostlistColumnFilter.h"
+#include "HostlistFilter.h"
 #include <ostream>
 #include <utility>
 #include "HostlistColumn.h"
@@ -33,15 +33,14 @@
 using std::move;
 using std::string;
 
-HostlistColumnFilter::HostlistColumnFilter(HostlistColumn *column,
-                                           RelationalOperator relOp,
-                                           string value)
-    : _hostlist_column(column), _relOp(relOp), _ref_value(move(value)) {}
+HostlistFilter::HostlistFilter(HostlistColumn *column, RelationalOperator relOp,
+                               string value)
+    : _column(column), _relOp(relOp), _ref_value(move(value)) {}
 
-bool HostlistColumnFilter::accepts(void *data) {
+bool HostlistFilter::accepts(void *data) {
     // data points to a primary data object. We need to extract a pointer to a
     // host list
-    hostsmember *mem = _hostlist_column->getMembers(data);
+    hostsmember *mem = _column->getMembers(data);
 
     // test for empty list
     if (_ref_value.empty()) {
@@ -87,3 +86,5 @@ bool HostlistColumnFilter::accepts(void *data) {
     }
     return false;  // unreachable
 }
+
+HostlistColumn *HostlistFilter::column() { return _column; }

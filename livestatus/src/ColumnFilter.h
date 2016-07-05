@@ -22,27 +22,17 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef ListColumnFilter_h
-#define ListColumnFilter_h
+#ifndef ColumnFilter_h
+#define ColumnFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <string>
 #include "Filter.h"
-#include "opids.h"
-class ListColumn;
+class Column;
 
-class ListColumnFilter : public Filter {
+class ColumnFilter : public Filter {
 public:
-    ListColumnFilter(ListColumn *column, RelationalOperator relOp,
-                     const std::string &value);
-    bool accepts(void *data) override;
-    void *indexFilter(const std::string &column_name) override;
-
-private:
-    ListColumn *_column;
-    RelationalOperator _relOp;
-    void *_ref_member;
-    bool _empty_ref;  // distinct from unknown ref
+    bool isColumnFilter() override { return true; }
+    virtual Column *column() = 0;
 };
 
-#endif  // ListColumnFilter_h
+#endif  // ColumnFilter_h

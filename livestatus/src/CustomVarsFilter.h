@@ -28,16 +28,17 @@
 #include "config.h"  // IWYU pragma: keep
 #include <regex.h>
 #include <string>
-#include "Filter.h"
+#include "ColumnFilter.h"
+#include "CustomVarsColumn.h"
 #include "opids.h"
-class CustomVarsColumn;
 
-class CustomVarsFilter : public Filter {
+class CustomVarsFilter : public ColumnFilter {
 public:
     CustomVarsFilter(CustomVarsColumn *column, RelationalOperator relOp,
                      const std::string &value);
     virtual ~CustomVarsFilter();
     bool accepts(void *data) override;
+    CustomVarsColumn *column() override;
 
 private:
     CustomVarsColumn *_column;

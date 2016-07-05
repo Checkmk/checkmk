@@ -22,19 +22,30 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "TimePointerColumn.h"
-#include "Query.h"
-#include "TimeFilter.h"
+#ifndef StringFilter_h
+#define StringFilter_h
+
+#include "config.h"  // IWYU pragma: keep
+#include <regex.h>
+#include <string>
+#include "ColumnFilter.h"
+#include "StringColumn.h"
 #include "opids.h"
 
-using std::string;
+class StringFilter : public ColumnFilter {
+public:
+    StringFilter(StringColumn *column, RelationalOperator relOp,
+                 const std::string &value);
+    virtual ~StringFilter();
+    bool accepts(void *data) override;
+    void *indexFilter(const std::string &column_name) override;
+    StringColumn *column() override;
 
-void TimePointerColumn::output(void *data, Query *query) {
-    query->outputTime(getValue(data, query));
-}
+private:
+    StringColumn *_column;
+    RelationalOperator _relOp;
+    std::string _ref_string;
+    regex_t *_regex;
+};
 
-Filter *TimePointerColumn::createFilter(RelationalOperator relOp,
-                                        const string &value) {
-    // The TimeFilter applies the timezone offset from the Localtime: header
-    return new TimeFilter(this, relOp, value);
-}
+#endif  // StringFilter_h

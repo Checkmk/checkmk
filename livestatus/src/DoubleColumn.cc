@@ -24,7 +24,7 @@
 
 #include "DoubleColumn.h"
 #include <stdio.h>
-#include "DoubleColumnFilter.h"
+#include "DoubleFilter.h"
 #include "Query.h"
 #include "opids.h"
 
@@ -36,7 +36,7 @@ void DoubleColumn::output(void *data, Query *query) {
 
 Filter *DoubleColumn::createFilter(RelationalOperator relOp,
                                    const string &value) {
-    return new DoubleColumnFilter(this, relOp, value);
+    return new DoubleFilter(this, relOp, value);
 }
 
 string DoubleColumn::valueAsString(void *data, Query * /*unused*/) {

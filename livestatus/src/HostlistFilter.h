@@ -22,22 +22,26 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TimeColumnFilter_h
-#define TimeColumnFilter_h
+#ifndef HostlistFilter_h
+#define HostlistFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <stdint.h>
 #include <string>
-#include "IntColumnFilter.h"
+#include "ColumnFilter.h"
+#include "HostlistColumn.h"
 #include "opids.h"
-class IntColumn;
 
-class TimeColumnFilter : public IntColumnFilter {
+class HostlistFilter : public ColumnFilter {
 public:
-    TimeColumnFilter(IntColumn *column, RelationalOperator relOp,
-                     const std::string &value)
-        : IntColumnFilter(column, relOp, value) {}
-    virtual int32_t convertRefValue() override;
+    HostlistFilter(HostlistColumn *column, RelationalOperator relOp,
+                   std::string value);
+    bool accepts(void *data) override;
+    HostlistColumn *column() override;
+
+private:
+    HostlistColumn *_column;
+    RelationalOperator _relOp;
+    std::string _ref_value;
 };
 
-#endif  // TimeColumnFilter_h
+#endif  // HostlistFilter_h

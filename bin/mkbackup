@@ -227,6 +227,7 @@ def load_config():
     return config
 
 
+# TODO: Duplicate code with htdocs/backup.py
 def load_backup_info(path):
     info = eval(file(path).read())
 
@@ -352,6 +353,11 @@ modes = {
                 "description": "The ID of the backup to restore",
             },
         ],
+        "opts": {
+            "background": {
+                "description": "Fork and execute the program in the background.",
+            },
+        },
     },
     "jobs": {
         "description": "Lists all configured backup jobs of the current user context.",
@@ -819,6 +825,7 @@ def target_path(target_ident):
     return cfg["remote"][1]["path"]
 
 
+# TODO: Duplicate code with htdocs/backup.py
 def verify_target_is_ready(target_ident):
     try:
         cfg = target_cfg(target_ident)
@@ -1088,6 +1095,10 @@ def mode_restore(target_id, backup_id, opts):
 
     init_new_run()
 
+    if "background" in opts:
+        daemon.daemonize()
+        save_state({"pid": os.getpid()})
+
     start_logging()
     log("--- Starting restore (%s) ---" % g_backup_id)
 
@@ -1131,9 +1142,6 @@ def do_restore(opts):
 
 def do_site_restore(opts, site=None):
     cmd = ["omd", "restore", "--kill"]
-
-    if not compress_archives():
-        cmd.append("--no-compression")
 
     # When executed as site user, "omd restore" is executed without the site
     # name and always performing restore for the current site. When executed

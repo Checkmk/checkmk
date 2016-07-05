@@ -5752,6 +5752,36 @@ class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey
     def _file_name(self, key_id, key):
         return "Check_MK-backup_key-%s.pem" % defaults.omd_site
 
+
+class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
+    def title(self):
+        return _("Site restore")
+
+
+    def targets(self):
+        return SiteBackupTargets()
+
+
+    def backup_target_choices(self):
+        choices = self.targets().choices()
+
+        # Only add system wide defined targets that don't conflict with
+        # the site specific backup targets
+        choice_dict = dict(choices)
+        for key, title in backup.SystemBackupTargets().choices():
+            if key not in choice_dict:
+                choices.append((key, _("%s (system wide)") % title))
+
+        return sorted(choices, key=lambda (x, y): y.title())
+
+
+
+class ModeBackupRestoreState(backup.PageBackupRestoreState, WatoMode):
+    def targets(self):
+        return SiteBackupTargets()
+
+
+
 #.
 #   .--Value-Editor--------------------------------------------------------.
 #   |       __     __    _              _____    _ _ _                     |
@@ -16471,6 +16501,8 @@ modes = {
    "backup_edit_key"    : (["backups"], ModeBackupEditKey),
    "backup_upload_key"  : (["backups"], ModeBackupUploadKey),
    "backup_download_key": (["backups"], ModeBackupDownloadKey),
+   "backup_restore"     : (["backups"], ModeBackupRestore),
+   "backup_restore_state" : (["backups"], ModeBackupRestoreState),
 }
 
 builtin_host_attribute_names = []

@@ -30,8 +30,10 @@
 # BE AWARE: This code is directly used by the appliance. So if you are
 # about to refactor things, you will have to care about the appliance!
 
+import glob
 import os
 import pprint
+import shutil
 import signal
 import socket
 import subprocess
@@ -193,8 +195,8 @@ class BackupEntityCollection(object):
 #   | and also scheduled to be executed in a predefined interval.          |
 #   '----------------------------------------------------------------------'
 
-
-class Job(BackupEntity):
+# Abstract class for backup jobs (Job) and restore job (RestoreJob)
+class MKBackupJob(object):
     @classmethod
     def state_name(self, state):
         return {
@@ -205,41 +207,8 @@ class Job(BackupEntity):
         }[state]
 
 
-    def target_ident(self):
-        return self._config["target"]
-
-
-    def key_ident(self):
-        return self._config.get("encrypt")
-
-
-    # TODO: Duplicated code with mkbackup (globalize_job_id())
-    def global_ident(self):
-        parts = []
-        site = os.environ.get("OMD_SITE")
-
-        if site:
-            parts.append("Check_MK")
-        else:
-            parts.append("Check_MK_Appliance")
-
-        parts.append(hostname())
-
-        if site:
-            parts.append(site)
-
-        parts.append(self._ident)
-
-        return "-".join([ p.replace("-", "+") for p in parts ])
-
-
     def state_file_path(self):
-        if "OMD_ROOT" not in os.environ:
-            path = "/var/lib/mkbackup"
-        else:
-            path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
-
-        return "%s/%s.state" % (path, self.ident())
+        raise NotImplementedError()
 
 
     def state(self):
@@ -279,11 +248,19 @@ class Job(BackupEntity):
 
 
     def start(self):
-        p = subprocess.Popen([mkbackup_path(), "backup", "--background", self.ident()],
+        p = subprocess.Popen(self._start_command(), env=self._start_env(),
                          shell=False, close_fds=True, stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, stdin=open(os.devnull))
         if p.wait() != 0:
-            raise MKGeneralException(_("Failed to start the backup: %s") % p.stdout.read())
+            raise MKGeneralException(_("Failed to start the job: %s") % p.stdout.read())
+
+
+    def _start_command(self):
+        raise NotImplementedError()
+
+
+    def _start_env(self):
+        raise NotImplementedError()
 
 
     def stop(self):
@@ -312,6 +289,53 @@ class Job(BackupEntity):
                     pass
                 else:
                     raise
+
+
+
+class Job(MKBackupJob, BackupEntity):
+    def target_ident(self):
+        return self._config["target"]
+
+
+    def key_ident(self):
+        return self._config.get("encrypt")
+
+
+    # TODO: Duplicated code with mkbackup (globalize_job_id())
+    def global_ident(self):
+        parts = []
+        site = os.environ.get("OMD_SITE")
+
+        if site:
+            parts.append("Check_MK")
+        else:
+            parts.append("Check_MK_Appliance")
+
+        parts.append(hostname())
+
+        if site:
+            parts.append(site)
+
+        parts.append(self._ident)
+
+        return "-".join([ p.replace("-", "+") for p in parts ])
+
+
+    def state_file_path(self):
+        if "OMD_ROOT" not in os.environ:
+            path = "/var/lib/mkbackup"
+        else:
+            path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
+
+        return "%s/%s.state" % (path, self.ident())
+
+
+    def _start_command(self):
+        return [mkbackup_path(), "backup", "--background", self.ident()]
+
+
+    def _start_env(self):
+        return None # use inherited envionment
 
 
     def cron_config(self):
@@ -511,6 +535,7 @@ class PageBackup(object):
         html.context_button(_("Backup targets"), html.makeuri_contextless([("mode", "backup_targets")]), "backup_targets")
         html.context_button(_("Backup keys"), html.makeuri_contextless([("mode", "backup_keys")]), "backup_key")
         html.context_button(_("New job"), html.makeuri_contextless([("mode", "edit_backup_job")]), "backup_job_new")
+        html.context_button(_("Restore"), html.makeuri_contextless([("mode", "backup_restore")]), "backup_restore")
 
 
     def action(self):
@@ -800,12 +825,20 @@ class PageBackupJobState(object):
         state = job.state()
 
         html.write("<table class=\"data backup_job\">")
-        state_num = 0
-        if state["state"] == "finished" and not state["success"]:
-            state_num = 2
+
+        css = "state0"
+        state_txt = job.state_name(state["state"])
+        if state["state"] == "finished":
+            if not state["success"]:
+                css = "state2"
+                state_txt = _("Failed")
+            else:
+                state_txt = _("Finished")
+        elif state["state"] == None:
+            css = ""
+
         html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("State"))
-        html.write("<td class=\"state state%d\">%s</td></tr>" %
-                    (state_num, html.attrencode(job.state_name(state["state"]))))
+        html.write("<td class=\"state %s\">%s</td></tr>" % (css, state_txt))
 
         html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Runtime"))
         html.write("<td>")
@@ -829,6 +862,8 @@ class PageBackupJobState(object):
 class SystemBackupJobs(Jobs):
     def __init__(self):
         super(SystemBackupJobs, self).__init__(system_config_path())
+
+
 
 #.
 #   .--Targets-------------------------------------------------------------.
@@ -856,6 +891,65 @@ class Target(BackupEntity):
 
     def type_params(self):
         return self._config["remote"][1]
+
+
+    def type(self):
+        if self.type_ident() != "local":
+            raise NotImplementedError()
+        return self.type_class()(self.type_params())
+
+
+    def show_backup_list(self):
+        html.write("<h2>%s</h2>" % html.attrencode(_("Backups of target: %s") % self.title()))
+
+        table.begin(sortable=False, searchable=False)
+
+        for backup_ident, info in sorted(self.backups().items()):
+            table.row()
+            table.cell(_("Actions"), css="buttons")
+
+            delete_url = html.makeactionuri(
+                            [("_action", "delete"),
+                             ("_backup", backup_ident)])
+            html.icon_button(delete_url, _("Delete this backup"), "delete")
+
+            if not RestoreJob(self.ident(), backup_ident).is_running():
+                start_url = html.makeactionuri(
+                            [("_action", "start"), ("_backup", backup_ident)])
+
+                html.icon_button(start_url, _("Start restore of this backup"),
+                                 "backup_restore_start")
+            else:
+                stop_url = html.makeactionuri(
+                            [("_action", "stop"), ("_backup", backup_ident)])
+
+                html.icon_button(stop_url, _("Stop restore of this backup"),
+                                 "backup_restore_stop")
+
+            from_info = info["hostname"]
+            if "site_id" in info:
+                from_info += " (Site: %s)" % info["site_id"]
+
+            table.cell(_("Backup-ID"), html.attrencode(backup_ident))
+            table.cell(_("From"), html.attrencode(from_info))
+            table.cell(_("Finished"), render.date_and_time(info["finished"]))
+            table.cell(_("Size"), render.bytes(info["size"]))
+            table.cell(_("Encrypted"))
+            if "encrypt" in info["config"]:
+                html.write(info["config"]["encrypt"])
+            else:
+                html.write(_("No"))
+
+        table.end()
+
+
+    def backups(self):
+        return self.type().backups()
+
+
+    def remove_backup(self, backup_ident):
+        self.type().remove_backup(backup_ident)
+
 
 
 
@@ -895,11 +989,9 @@ class Targets(BackupEntityCollection):
 
     def validate_target(self, value, varprefix):
         target = self.get(value)
-        if target.type_ident() != "local":
-            raise NotImplementedError()
+        path = self.type_params()["path"]
+        target.type().validate_local_directory(path, varprefix)
 
-        path = target.type_params()["path"]
-        target.type_class()().validate_local_directory(path, varprefix)
 
 
 
@@ -1121,11 +1213,15 @@ class BackupTargetType(object):
         raise NotImplementedError()
 
 
-    def __init__(self):
-        pass
+    def __init__(self, params):
+        self._params = params
 
 
     def valuespec(self):
+        raise NotImplementedError()
+
+
+    def backups(self):
         raise NotImplementedError()
 
 
@@ -1181,6 +1277,45 @@ class BackupTargetLocal(BackupTargetType):
                 _("Failed to write to the configured directory. The site user needs to be able to "
                   "write the target directory. The recommended way is to make it writable by the "
                   "group \"omd\"."))
+
+
+    # TODO: Duplicate code with mkbackup
+    def backups(self):
+        backups = {}
+
+        self.verify_target_is_ready()
+
+        for path in glob.glob("%s/*/mkbackup.info" % self._params["path"]):
+            info = self._load_backup_info(path)
+            backups[info["backup_id"]] = info
+
+        return backups
+
+
+    # TODO: Duplocate code with mkbackup
+    def verify_target_is_ready(self):
+        if self._params["is_mountpoint"] and not os.path.ismount(self._params["path"]):
+            raise MKGeneralException("The backup target path is configured to be a mountpoint, "
+                                     "but nothing is mounted.")
+
+
+    # TODO: Duplicate code with mkbackup
+    def _load_backup_info(self, path):
+        info = eval(file(path).read())
+
+        # Load the backup_id from the second right path component. This is the
+        # base directory of the mkbackup.info file. The user might have moved
+        # the directory, e.g. for having multiple backups. Allow that.
+        # Maybe we need to changed this later when we allow multiple generations
+        # of backups.
+        info["backup_id"] = os.path.basename(os.path.dirname(path))
+
+        return info
+
+
+    def remove_backup(self, backup_ident):
+        self.verify_target_is_ready()
+        shutil.rmtree("%s/%s" % (self._params["path"], backup_ident))
 
 
 #.
@@ -1311,3 +1446,192 @@ def show_key_download_warning(keys):
                             "If you loose your keys or the keys passphrases, your backup "
                             "can not be restored.<br>"
                             "The following keys have not been downloaded yet: %s") % ", ".join(to_load))
+
+
+#.
+#   .--Restore-------------------------------------------------------------.
+#   |                  ____           _                                    |
+#   |                 |  _ \ ___  ___| |_ ___  _ __ ___                    |
+#   |                 | |_) / _ \/ __| __/ _ \| '__/ _ \                   |
+#   |                 |  _ <  __/\__ \ || (_) | | |  __/                   |
+#   |                 |_| \_\___||___/\__\___/|_|  \___|                   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Listing backups of targets and controlling the the restore procedure |
+#   '----------------------------------------------------------------------'
+
+
+class RestoreJob(MKBackupJob):
+    def __init__(self, target_ident, backup_ident):
+        self._target_ident = target_ident
+        self._backup_ident = backup_ident
+
+
+    def title(self):
+        return _("Restore")
+
+
+    def state_file_path(self):
+        if "OMD_SITE" not in os.environ:
+            return "/var/lib/mkbackup/restore.state"
+        else:
+            return "/tmp/restore-%s.state" % os.environ["OMD_SITE"]
+
+
+    def _start_command(self):
+        return [mkbackup_path(), "restore", "--background", self._target_ident, self._backup_ident]
+
+
+    def _start_env(self):
+        # TODO: Encryption secret?
+        return None
+
+
+class PageBackupRestore(object):
+    def __init__(self):
+        self._load_target()
+        super(PageBackupRestore, self).__init__()
+
+
+    def _load_target(self):
+        if not html.form_submitted():
+            self._target_ident = None
+            self._target = None
+            return
+
+        spec = self._vs_target().from_html_vars("target")
+        self._vs_target().validate_value(spec, "target")
+
+        self._target_ident = spec["target"]
+
+        targets = self.targets()
+        try:
+            self._target = targets.get(self._target_ident)
+        except KeyError:
+            if self._target_ident != None:
+                raise MKUserError("target_p_target", _("This backup target does not exist."))
+
+
+    def title(self):
+        raise NotImplementedError()
+
+
+    def targets(self):
+        raise NotImplementedError()
+
+
+    def buttons(self):
+        html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
+        # TODO: Only show when restore state is available
+        html.context_button(_("Restore state"),html.makeuri([
+                                ("mode", "backup_restore_state")]), "backup_restore_state")
+
+
+    def action(self):
+        action = html.var("_action")
+        backup_ident = html.var("_backup")
+
+        if action == None:
+            return # Only choosen the target
+
+        if not html.transaction_valid():
+            return
+
+        if action == "delete":
+            return self._delete_backup(backup_ident)
+
+        elif action == "start":
+            return self._start_restore(backup_ident)
+
+        elif action == "stop":
+            return self._stop_restore(backup_ident)
+
+        else:
+            raise NotImplementedError()
+
+
+    def _delete_backup(self, backup_ident):
+        if self._restore_is_running(backup_ident):
+            raise MKUserError(None, _("A restore is currently running. You can only delete "
+                                      "backups while no restore is running."))
+
+        if backup_ident not in self._target.backups():
+            raise MKUserError(None, _("This backup does not exist."))
+
+        if html.confirm(_("Do you really want to delete this backup?"),
+                        add_header=self.title(), method="GET"):
+            html.check_transaction() # invalidate transid
+            self._target.remove_backup(backup_ident)
+            return None, _("The backup has been deleted.")
+
+
+    def _restore_is_running(self, backup_ident):
+        return RestoreJob(self._target_ident, backup_ident).is_running()
+
+
+    def _start_restore(self, backup_ident):
+        if html.confirm(_("Do you really want to start the restore of this backup?"),
+                        add_header=self.title(), method="GET"):
+            html.check_transaction() # invalidate transid
+            RestoreJob(self._target_ident, backup_ident).start()
+            return None, _("The restore has been started.")
+
+
+    def _stop_restore(self, backup_ident):
+        if html.confirm(_("Do you really want to stopt the restore of this backup? This will "
+                          "leave your environment in an undefined state."),
+                        add_header=self.title(), method="GET"):
+            html.check_transaction() # invalidate transid
+            RestoreJob(self._target_ident, backup_ident).stop()
+            return None, _("The restore has been stopped.")
+
+
+    def page(self):
+        self._select_target_form()
+
+        if self._target:
+            self._target.show_backup_list()
+
+
+    def _select_target_form(self):
+        html.begin_form("target", add_transid=False)
+
+        vs = self._vs_target()
+
+        vs.render_input("target", self._target_ident)
+        vs.set_focus("target")
+        forms.end()
+
+        html.button("list", _("List backups"))
+        html.hidden_fields()
+        html.end_form()
+
+
+    def _vs_target(self):
+        return Dictionary(
+            elements = [
+                ("target", DropdownChoice(
+                    title = _("Target"),
+                    choices = self.backup_target_choices,
+                    no_preselect = True,
+                    on_change = "this.form.submit()",
+                )),
+            ],
+            render = "form",
+            optional_keys = [],
+            title = _("Choose backup target to restore from"),
+        )
+
+
+    def backup_target_choices(self):
+        return sorted(self.targets().choices(), key=lambda (x, y): y.title())
+
+
+
+class PageBackupRestoreState(PageBackupJobState):
+    def __init__(self):
+        self._job = RestoreJob(None, None) # TODO: target_ident and backup_ident needed?
+
+
+    def buttons(self):
+        html.context_button(_("Back"), html.makeuri([("mode", "backup_restore")]), "back")

@@ -124,7 +124,9 @@ Result::Result()
     : ObjectWrapper(nullptr), _enumerator(nullptr, releaseInterface) {}
 
 Result::Result(const Result &reference)
-    : ObjectWrapper(nullptr), _enumerator(reference._enumerator) {}
+    : ObjectWrapper(reference)
+    , _enumerator(reference._enumerator)
+    , _last_error(reference._last_error) {}
 
 Result::Result(IEnumWbemClassObject *enumerator)
     : ObjectWrapper(nullptr), _enumerator(enumerator, releaseInterface) {
@@ -145,7 +147,8 @@ Result &Result::operator=(const Result &reference) {
             _enumerator->Release();
         }
         _enumerator = reference._enumerator;
-        next();
+        _current = reference._current;
+        _last_error = reference._last_error;
     }
     return *this;
 }
@@ -191,13 +194,13 @@ bool Result::next() {
         // in this case the "current" object isn't changed to guarantee that the
         // Result remains valid
         // throw ComException("Failed to retrieve element", res);
+        _last_error = res;
         return false;
     }
 
     if (numReturned == 0) {
         // no more values. the current object remains at the last element so
-        // that
-        // a call to get continues to work
+        // that a call to get continues to work
         return false;
     }
 

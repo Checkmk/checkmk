@@ -1539,8 +1539,11 @@ void section_logfiles(OutputProxy &out, const Environment &env) {
 }
 
 void dump_wmi_table(OutputProxy &out, wmi::Result &result) {
+    if (!result.valid()) {
+        return;
+    }
     out.output("%ls\n", join(result.names(), L",").c_str());
-    bool more = result.valid();
+    bool more = true;
     while (more) {
         std::vector<std::wstring> values = result.names();
         // resolve all table keys to their value on this row.
@@ -1565,8 +1568,9 @@ bool output_wmi_table(OutputProxy &out, const wchar_t *table_name,
     }
 
     if (!result.valid()) {
-        crash_log("table %ls is empty or doesn't exist", table_name);
-        return false;
+        crash_log("table %ls %s", table_name,
+                  FAILED(result.last_error()) ? "doesn't exist" : "is empty");
+        return !FAILED(result.last_error());
     }
 
     if (as_subtable) {

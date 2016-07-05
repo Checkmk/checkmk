@@ -1505,12 +1505,16 @@ class PageBackupRestore(object):
 
         self._target_ident = spec["target"]
 
-        targets = self.targets()
         try:
-            self._target = targets.get(self._target_ident)
+            self._get_target(self._target_ident)
         except KeyError:
             if self._target_ident != None:
                 raise MKUserError("target_p_target", _("This backup target does not exist."))
+
+
+    def _get_target(self, target_ident):
+        targets = self.targets()
+        self._target = targets.get(target_ident)
 
 
     def title(self):

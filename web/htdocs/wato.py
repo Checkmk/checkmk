@@ -5775,6 +5775,15 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
         return sorted(choices, key=lambda (x, y): y.title())
 
 
+    def _get_target(self, target_ident):
+        targets = self.targets()
+        try:
+            super(ModeBackupRestore, self)._get_target(target_ident)
+        except KeyError:
+            targets = backup.SystemBackupTargets()
+            self._target = targets.get(target_ident)
+
+
 
 class ModeBackupRestoreState(backup.PageBackupRestoreState, WatoMode):
     def targets(self):

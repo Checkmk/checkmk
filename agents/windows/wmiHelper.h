@@ -127,6 +127,7 @@ T ObjectWrapper::get(const wchar_t *key) const {
 
 class Result : public ObjectWrapper {
     std::shared_ptr<IEnumWbemClassObject> _enumerator{NULL};
+    HRESULT _last_error{S_OK};
 
 public:
     Result();
@@ -144,6 +145,9 @@ public:
     // not changed, to once the end of the result has been reached, the iterator
     // stays there.
     bool next();
+
+    // returns the last error that occured during iteration
+    HRESULT last_error() const { return _last_error; }
 
     // return true if this is a valid result. Please note that
     // once a result is valid it remains so, it doesn't become invalid

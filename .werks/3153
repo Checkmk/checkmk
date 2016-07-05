@@ -1,0 +1,11 @@
+Title: windows agent: fixed two problems that could cause missing wmi results
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p6
+Date: 1467721715
+Class: fix
+
+The first problem was that under certain circumstances, the first row of each wmi result was
+skipped.
+The second problem was, that a wmi section could get disabled if the wmi result is valid but empty.

@@ -134,7 +134,9 @@ check_mk_agent-64.exe.versioned:
 	./bin_replace $(VERSION_DUMMY) "$(VERSION)" < check_mk_agent-64.unversioned.exe > check_mk_agent-64.exe
 	chmod 755 check_mk_agent-64.exe
 
-
+# important: %.exe.versioned must not depend on %.exe.unversioned because on the
+# automated build system, "make ...versioned" is called and that system doesn't
+# provide the right compiler to build this agent
 %.exe: %.unversioned.exe %.exe.versioned
 	true
 

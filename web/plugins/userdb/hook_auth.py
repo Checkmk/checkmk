@@ -60,7 +60,14 @@
 # may(<USER_NAME>, <PERMISSION>)
 # Returns true/false wether or not the user is permitted
 
+from cmk.passwordstore import CryptoBackend, NonePasswordProvider, PasswordStore,\
+    NotAuthorizedException
+import errno
+
 g_auth_base_dir = defaults.var_dir + '/wato/auth'
+g_keys_dir = defaults.var_dir + '/private_keys'
+g_passwords_file = defaults.var_dir + '/passwords.mk'
+
 
 def format_php(data, lvl = 1):
     s = ''
@@ -239,6 +246,12 @@ function permitted_maps($username) {
 def create_auth_file(callee, users):
     make_nagios_directory(g_auth_base_dir)
 
+    users = copy.deepcopy(users)
+
+    for user in users.values():
+        if 'passwords' in user:
+            del user['passwords']
+
     if config.export_folder_permissions:
         import wato # HACK: cleanup!
         folder_permissions = get_folder_permissions_of_users(users)
@@ -252,6 +265,50 @@ def create_auth_file(callee, users):
             groups[gid] = group['nagvis_maps']
 
     create_php_file(callee, users, config.get_role_permissions(), groups, folder_permissions)
+
+
+def save_passwords(users):
+    try:
+        os.makedirs(g_keys_dir)
+    except OSError, e:
+        if e.errno != errno.EEXIST:
+            raise
+
+    backend = CryptoBackend(g_keys_dir, NonePasswordProvider())
+
+    with PasswordStore(g_passwords_file, backend) as store:
+        known_users = set(backend.all_users())
+
+        for username, user in users.iteritems():
+            owner = "user:" + username
+            if owner not in known_users:
+                store.add_user(owner, None)
+                known_users.add(owner)
+                keys_before = set()
+            else:
+                keys_before = set(store.list(owner))
+
+            keys_now = set([pw['key'] for pw in user.get('passwords', [])])
+
+            for deleted_pw in keys_before - keys_now:
+                tore.remove(deleted_pw, owner)
+
+            for pw in user.get('passwords', []):
+                if not pw['secret']:
+                    # when reading the stored passwords, the secret is left empty.
+                    # Therefore if the password is empty we leave it unchanged
+                    continue
+
+                group_names = ["group:" + user for user in pw['contactgroups']]
+                for shared in group_names:
+                    if shared not in known_users:
+                        store.add_user(shared, None)
+                        known_users.add(shared)
+                try:
+                    store.set(pw['key'], owner, pw['secret'])
+                    store.share(pw['key'], group_names)
+                except NotAuthorizedException:
+                    html.show_error("Key \"%s\" is owned by a different user" % pw['key'])
 
 
 def get_folder_permissions_of_users(users):
@@ -277,9 +334,9 @@ def get_folder_permissions_of_users(users):
     return permissions
 
 
-
 # TODO: Should we not execute this hook also when folders are modified?
 hooks.register('users-saved',         lambda users: create_auth_file("users-saved", users))
+hooks.register('users-saved',         lambda users: save_passwords(users))
 hooks.register('roles-saved',         lambda x: create_auth_file("roles-saved", load_users()))
 hooks.register('contactgroups-saved', lambda x: create_auth_file("contactgroups-saved", load_users()))
 hooks.register('activate-changes',    lambda x: create_auth_file("activate-changes", load_users()))

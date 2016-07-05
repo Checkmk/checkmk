@@ -77,3 +77,32 @@ declare_user_attribute(
               attrencode = True),
     domain = "multisite")
 
+def list_contactgroups():
+    contact_groups = load_group_information().get("contact", {})
+    entries = [ (c, g['alias']) for c, g in contact_groups.items() ]
+    entries.sort()
+    return entries
+
+declare_user_attribute(
+    "passwords",
+    ListOf(
+        Dictionary(
+            title = _("Password Store"),
+            elements = [
+                ("key", TextAscii(title=_("Key"))),
+                ("secret", PasswordSpec(title=_("Password"), allow_empty=True, hidden=True)),
+                ('contactgroups', ListChoice(
+                    title = _('Share with Contact groups'),
+                    help  = _('Specify the contact groups that may access the password.'),
+                    default_value = [],
+                    choices = list_contactgroups,
+                ))
+            ],
+            optional_keys=[]
+        ),
+        title = _("Password"),
+        add_label = _("Add Password")
+    ),
+    domain = "passwords"
+)
+

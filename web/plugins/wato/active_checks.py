@@ -888,11 +888,9 @@ register_rule(group,
                                             size = 12,
                                             allow_empty = False
                                         ),
-                                        Password(
+                                        PasswordFromStore(
                                             title = _("Password"),
-                                            size = 12,
-                                            allow_empty = False
-                                        ),
+                                        )
                                     ]
                                 )
                             ),

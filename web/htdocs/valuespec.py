@@ -2617,14 +2617,16 @@ class Alternative(ValueSpec):
     # Return the alternative (i.e. valuespec)
     # that matches the datatype of a given value. We assume
     # that always one matches. No error handling here.
+    # This may also tranform the input value in case it gets
+    # "decorated" in the from_html_vars function
     def matching_alternative(self, value):
         if self._match:
-            return self._elements[self._match(value)]
+            return self._elements[self._match(value)], value
 
         for vs in self._elements:
             try:
                 vs.validate_datatype(value, "")
-                return vs
+                return vs, value
             except:
                 pass
 
@@ -2635,7 +2637,7 @@ class Alternative(ValueSpec):
             self.render_input_dropdown(varprefix, value)
 
     def render_input_dropdown(self, varprefix, value):
-        mvs = self.matching_alternative(value)
+        mvs, value = self.matching_alternative(value)
         options = []
         sel_option = html.var(varprefix + "_use")
         for nr, vs in enumerate(self._elements):
@@ -2671,7 +2673,7 @@ class Alternative(ValueSpec):
             html.write("</td></tr></table>")
 
     def render_input_radio(self, varprefix, value):
-        mvs = self.matching_alternative(value)
+        mvs, value = self.matching_alternative(value)
         for nr, vs in enumerate(self._elements):
             if html.has_var(varprefix + "_use"):
                 checked = html.var(varprefix + "_use") == str(nr)
@@ -2711,7 +2713,7 @@ class Alternative(ValueSpec):
             return self._elements[0].default_value()
 
     def value_to_text(self, value):
-        vs = self.matching_alternative(value)
+        vs, value = self.matching_alternative(value)
         if vs:
             output = ""
             if self._show_alternative_title and vs.title():
@@ -2737,7 +2739,7 @@ class Alternative(ValueSpec):
               "allowed alternatives."))
 
     def validate_value(self, value, varprefix):
-        vs = self.matching_alternative(value)
+        vs, value = self.matching_alternative(value)
         for nr, v in enumerate(self._elements):
             if vs == v:
                 vs.validate_value(value, varprefix + "_%d" % nr)
@@ -3357,6 +3359,77 @@ class PasswordSpec(TextAscii):
         if self._hidden:
             html.icon_button("#", _(u"Show/Hide password"), "showhide",
                              onclick="vs_toggle_hidden(this);")
+
+class PasswordFromStore(Alternative):
+    def __init__(self, **kwargs):
+        kwargs["elements"] = [
+            TextAscii(
+                title = _("Immediate"),
+                allow_empty = kwargs.get("allow_empty", True))
+        ]
+        self.__passwords = self.__stored_passwords()
+        if self.__passwords:
+            kwargs["elements"].append(
+                DropdownChoice(
+                    title = _("From Store"),
+                    choices = [(pw['key'], pw['key']) for pw in self.__passwords],
+                    sorted = True
+                )
+            )
+        Alternative.__init__(self, **kwargs)
+
+    def __stored_passwords(self):
+        from cmk.passwordstore import CryptoBackend, PasswordStore, NonePasswordProvider
+        backend = CryptoBackend(defaults.var_dir + "/private_keys", NonePasswordProvider())
+
+        # TODO: we can't limit the view to only the passwords accessible by the user because at
+        # this point the user_id has not been set yet
+        with PasswordStore(defaults.var_dir + "/passwords.mk", backend) as store:
+            return store.list(with_details=True)
+
+    def matching_alternative(self, value):
+        if value.startswith("store:") and len(self._elements) > 1:
+            return self._elements[1], value.split(':', 2)[2]
+        elif value.startswith("imm:"):
+            return self._elements[0], value.split(':', 1)[1]
+        else:
+            return self._elements[0], value
+
+    def value_to_text(self, value):
+        return value.split(':', 1)[1]
+
+    def validate_datatype(self, value, varprefix):
+        return Alternative.validate_datatype(self, value.split(':', 2)[2], varprefix)
+
+    def __find_contactgroup(self, value, varprefix):
+        for pw in self.__passwords:
+            if pw['key'] == value:
+                import config, userdb
+                for group in userdb.contactgroups_of_user(config.user_id):
+                    if "group:" + group in pw['shared']:
+                        return group
+                raise MKUserError(varprefix,
+                                    _("You don't belong to a contact group with access to "
+                                    "password key %s") % value)
+        raise MKUserError(varprefix, _("Unknown password key %s") % value)
+
+    def validate_value(self, value, varprefix):
+        prefix, group, val = value.split(':', 2)
+        if prefix == "store":
+            # couldn't check user permission before, but now I can
+            self.__find_contactgroup(val, varprefix)
+        else:
+            return Alternative.validate_value(self, val, varprefix)
+
+    def from_html_vars(self, varprefix):
+        nr = int(html.var(varprefix + "_use"))
+        if nr == 0:
+            return "imm:" + Alternative.from_html_vars(self, varprefix)
+        else:
+            key = Alternative.from_html_vars(self, varprefix)
+            group = self.__find_contactgroup(key, varprefix)
+            return ":".join(["store", group, key])
+
 
 class FileUpload(ValueSpec):
     def __init__(self, **kwargs):

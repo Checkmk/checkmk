@@ -30,11 +30,12 @@
 #include "ColumnFilter.h"
 #include "ServicelistColumn.h"
 #include "opids.h"
+class Query;
 
 class ServicelistFilter : public ColumnFilter {
 public:
-    ServicelistFilter(ServicelistColumn *column, RelationalOperator relOp,
-                      const std::string &value);
+    ServicelistFilter(Query *query, ServicelistColumn *column,
+                      RelationalOperator relOp, const std::string &value);
     bool accepts(void *data) override;
     ServicelistColumn *column() override;
 

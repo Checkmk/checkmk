@@ -29,11 +29,12 @@
 #include "AttributelistColumn.h"
 #include "ColumnFilter.h"
 #include "opids.h"
+class Query;
 
 class AttributelistFilter : public ColumnFilter {
 public:
-    AttributelistFilter(AttributelistColumn *column, RelationalOperator relOp,
-                        unsigned long ref);
+    AttributelistFilter(Query *query, AttributelistColumn *column,
+                        RelationalOperator relOp, unsigned long ref);
     bool accepts(void *data) override;
     AttributelistColumn *column() override;
 

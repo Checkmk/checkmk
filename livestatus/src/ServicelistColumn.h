@@ -48,7 +48,7 @@ public:
         , _info_depth(info_depth) {}
     ColumnType type() override { return ColumnType::list; };
     void output(void *, Query *) override;
-    Filter *createFilter(RelationalOperator relOp,
+    Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
     servicesmember *getMembers(void *data);
 

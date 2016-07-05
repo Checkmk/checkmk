@@ -33,8 +33,8 @@ void TimePointerColumn::output(void *data, Query *query) {
     query->outputTime(getValue(data, query));
 }
 
-Filter *TimePointerColumn::createFilter(RelationalOperator relOp,
+Filter *TimePointerColumn::createFilter(Query *query, RelationalOperator relOp,
                                         const string &value) {
     // The TimeFilter applies the timezone offset from the Localtime: header
-    return new TimeFilter(this, relOp, value);
+    return new TimeFilter(query, this, relOp, value);
 }

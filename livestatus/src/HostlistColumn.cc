@@ -74,7 +74,7 @@ void HostlistColumn::output(void *data, Query *query) {
     query->outputEndList();
 }
 
-Filter *HostlistColumn::createFilter(RelationalOperator relOp,
+Filter *HostlistColumn::createFilter(Query *query, RelationalOperator relOp,
                                      const string &value) {
-    return new HostlistFilter(this, relOp, value);
+    return new HostlistFilter(query, this, relOp, value);
 }

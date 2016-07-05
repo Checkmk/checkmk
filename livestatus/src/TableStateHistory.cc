@@ -34,6 +34,7 @@
 #include "Column.h"
 #include "ColumnFilter.h"
 #include "Filter.h"
+#include "FilterVisitor.h"
 #include "HostServiceState.h"
 #include "LogEntry.h"
 #include "Logger.h"
@@ -45,6 +46,8 @@
 #include "Query.h"
 #include "TableHosts.h"
 #include "TableServices.h"
+class NegatingFilter;
+class VariadicFilter;
 
 #ifdef CMC
 #include "Host.h"
@@ -314,6 +317,26 @@ LogEntry *TableStateHistory::getNextLogentry() {
     return _it_entries->second;
 }
 
+// TODO(sp) IsObjectFilter in TableCachedStatehist recurses into sub-filters,
+// while we don't. Is this really intentional?
+namespace {
+class IsObjectFilter : public FilterVisitor {
+public:
+    void visit(ColumnFilter &f) override {
+        if (_value) {
+            const char *column_name = f.column()->name();
+            _value = strncmp(column_name, "current_", 8) == 0 ||
+                     strncmp(column_name, "host_", 5) == 0 ||
+                     strncmp(column_name, "service_", 8) == 0;
+        }
+    }
+    void visit(NegatingFilter & /*unused*/) override {}
+    void visit(VariadicFilter & /*unused*/) override {}
+
+    bool _value = true;
+};
+}  // namespace
+
 void TableStateHistory::answerQuery(Query *query) {
     // Create a partial filter, that contains only such filters that
     // check attributes of current hosts and services
@@ -322,14 +345,10 @@ void TableStateHistory::answerQuery(Query *query) {
 
     if (g_disable_statehist_filtering == 0) {
         for (auto filter : *query->filter()) {
-            if (filter->isColumnFilter()) {
-                const char *column_name =
-                    static_cast<ColumnFilter *>(filter)->column()->name();
-                if ((strncmp(column_name, "current_", 8) == 0) ||
-                    (strncmp(column_name, "host_", 5) == 0) ||
-                    (strncmp(column_name, "service_", 8) == 0)) {
-                    object_filter.push_back(filter);
-                }
+            IsObjectFilter is_obj;
+            filter->accept(is_obj);
+            if (is_obj._value) {
+                object_filter.push_back(filter);
             }
         }
     }

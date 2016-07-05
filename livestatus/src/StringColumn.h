@@ -43,7 +43,7 @@ public:
     }
     void output(void *, Query *) override;
     ColumnType type() override { return ColumnType::string; }
-    Filter *createFilter(RelationalOperator relOp,
+    Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
 };
 

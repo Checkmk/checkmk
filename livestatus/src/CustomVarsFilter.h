@@ -31,11 +31,12 @@
 #include "ColumnFilter.h"
 #include "CustomVarsColumn.h"
 #include "opids.h"
+class Query;
 
 class CustomVarsFilter : public ColumnFilter {
 public:
-    CustomVarsFilter(CustomVarsColumn *column, RelationalOperator relOp,
-                     const std::string &value);
+    CustomVarsFilter(Query *query, CustomVarsColumn *column,
+                     RelationalOperator relOp, const std::string &value);
     virtual ~CustomVarsFilter();
     bool accepts(void *data) override;
     CustomVarsColumn *column() override;

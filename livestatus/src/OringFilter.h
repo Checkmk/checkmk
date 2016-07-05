@@ -29,9 +29,11 @@
 #include <stdint.h>
 #include <string>
 #include "VariadicFilter.h"
+class Query;
 
 class OringFilter : public VariadicFilter {
 public:
+    explicit OringFilter(Query *query);
     bool accepts(void *data) override;
     bool optimizeBitmask(const std::string &column_name,
                          uint32_t *mask) override;

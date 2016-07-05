@@ -31,10 +31,11 @@
 #include "ColumnFilter.h"
 #include "StringColumn.h"
 #include "opids.h"
+class Query;
 
 class StringFilter : public ColumnFilter {
 public:
-    StringFilter(StringColumn *column, RelationalOperator relOp,
+    StringFilter(Query *query, StringColumn *column, RelationalOperator relOp,
                  const std::string &value);
     virtual ~StringFilter();
     bool accepts(void *data) override;

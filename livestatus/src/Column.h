@@ -55,7 +55,8 @@ public:
     virtual bool mustDelete() {
         return false;  // true for dynamic Columns to be deleted after Query
     }
-    virtual Filter *createFilter(RelationalOperator, const std::string &) {
+    virtual Filter *createFilter(Query * /*unused*/, RelationalOperator,
+                                 const std::string &) {
         return nullptr;
     }
 };

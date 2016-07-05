@@ -30,6 +30,8 @@
 #include <memory>
 #include <string>
 #include "Filter.h"
+class FilterVisitor;
+class Query;
 
 enum class LogicalOperator { and_, or_ };
 
@@ -37,13 +39,13 @@ class VariadicFilter : public Filter {
 public:
     typedef std::deque<Filter *> _subfilters_t;
 
-    static std::unique_ptr<VariadicFilter> make(LogicalOperator logicOp);
+    static std::unique_ptr<VariadicFilter> make(Query *query,
+                                                LogicalOperator logicOp);
     virtual ~VariadicFilter();
-
-    bool isVariadicFilter() override { return true; }
+    void accept(FilterVisitor &v) override;
     void addSubfilter(Filter *);
     Filter *stealLastSubfiler();
-    void combineFilters(int count, LogicalOperator andor);
+    void combineFilters(Query *query, int count, LogicalOperator andor);
     bool hasSubFilters() { return !_subfilters.empty(); }
     _subfilters_t::iterator begin() { return _subfilters.begin(); }
     _subfilters_t::iterator end() { return _subfilters.end(); }
@@ -52,7 +54,7 @@ public:
                        int *upper) override;
 
 protected:
-    VariadicFilter();
+    explicit VariadicFilter(Query *query);
     _subfilters_t _subfilters;
 };
 

@@ -30,10 +30,11 @@
 #include "ColumnFilter.h"
 #include "ListColumn.h"
 #include "opids.h"
+class Query;
 
 class ListFilter : public ColumnFilter {
 public:
-    ListFilter(ListColumn *column, RelationalOperator relOp,
+    ListFilter(Query *query, ListColumn *column, RelationalOperator relOp,
                const std::string &value);
     bool accepts(void *data) override;
     void *indexFilter(const std::string &column_name) override;

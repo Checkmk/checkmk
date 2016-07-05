@@ -30,11 +30,12 @@
 #include "ColumnFilter.h"
 #include "HostlistColumn.h"
 #include "opids.h"
+class Query;
 
 class HostlistFilter : public ColumnFilter {
 public:
-    HostlistFilter(HostlistColumn *column, RelationalOperator relOp,
-                   std::string value);
+    HostlistFilter(Query *query, HostlistColumn *column,
+                   RelationalOperator relOp, std::string value);
     bool accepts(void *data) override;
     HostlistColumn *column() override;
 

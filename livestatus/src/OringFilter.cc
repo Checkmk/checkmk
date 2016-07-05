@@ -27,6 +27,8 @@
 
 using std::string;
 
+OringFilter::OringFilter(Query *query) : VariadicFilter(query) {}
+
 bool OringFilter::accepts(void *data) {
     for (auto filter : _subfilters) {
         if (filter->accepts(data)) {

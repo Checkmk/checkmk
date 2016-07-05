@@ -33,10 +33,14 @@
 
 using std::string;
 
-CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column,
+CustomVarsFilter::CustomVarsFilter(Query *query, CustomVarsColumn *column,
                                    RelationalOperator relOp,
                                    const string &value)
-    : _column(column), _relOp(relOp), _ref_text(value), _regex(nullptr) {
+    : ColumnFilter(query)
+    , _column(column)
+    , _relOp(relOp)
+    , _ref_text(value)
+    , _regex(nullptr) {
     if (_column->type() != ColumnType::dict) {
         return;
     }

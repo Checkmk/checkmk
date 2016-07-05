@@ -29,19 +29,19 @@
 #include <stdint.h>
 #include <string>
 #include "OutputBuffer.h"
+class FilterVisitor;
 class Query;
 
 class Filter {
 public:
-    Filter() : _query(nullptr), _error_code(OutputBuffer::ResponseCode::ok) {}
+    explicit Filter(Query *query)
+        : _query(query), _error_code(OutputBuffer::ResponseCode::ok) {}
     virtual ~Filter() {}
-    virtual bool isColumnFilter() { return false; }
-    virtual bool isVariadicFilter() { return false; }
-    virtual bool isNegatingFilter() { return false; }
-    std::string errorMessage() { return _error_message; }
-    OutputBuffer::ResponseCode errorCode() { return _error_code; }
-    bool hasError() { return _error_message != ""; }
-    void setQuery(Query *q) { _query = q; }
+    virtual void accept(FilterVisitor &) = 0;
+    std::string errorMessage() const { return _error_message; }
+    OutputBuffer::ResponseCode errorCode() const { return _error_code; }
+    bool hasError() const { return _error_message != ""; }
+    Query *query() const { return _query; }
     virtual bool accepts(void *data) = 0;
     virtual void *indexFilter(const std::string & /* column_name */) {
         return nullptr;
@@ -54,12 +54,12 @@ public:
     }
 
 protected:
-    Query *_query;  // needed by TimeOffsetFilter (currently)
     void setError(OutputBuffer::ResponseCode code, const std::string &message);
 
 private:
-    std::string _error_message;
+    Query *_query;
     OutputBuffer::ResponseCode _error_code;
+    std::string _error_message;
 };
 
 #endif  // Filter_h

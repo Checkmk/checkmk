@@ -30,9 +30,10 @@
 
 using std::string;
 
-ListFilter::ListFilter(ListColumn *column, RelationalOperator relOp,
-                       const string &value)
-    : _column(column)
+ListFilter::ListFilter(Query *query, ListColumn *column,
+                       RelationalOperator relOp, const string &value)
+    : ColumnFilter(query)
+    , _column(column)
     , _relOp(relOp)
     , _ref_member(_column->getNagiosObject(const_cast<char *>(value.c_str())))
     , _empty_ref(value.empty()) {}

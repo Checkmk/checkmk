@@ -66,9 +66,9 @@ void CustomVarsColumn::output(void *data, Query *query) {
     }
 }
 
-Filter *CustomVarsColumn::createFilter(RelationalOperator relOp,
+Filter *CustomVarsColumn::createFilter(Query *query, RelationalOperator relOp,
                                        const string &value) {
-    return new CustomVarsFilter(this, relOp, value);
+    return new CustomVarsFilter(query, this, relOp, value);
 }
 
 customvariablesmember *CustomVarsColumn::getCVM(void *data) {

@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <cinttypes>
 #include "AndingFilter.h"
+#include "FilterVisitor.h"
 #include "OringFilter.h"
 #include "logger.h"
 
@@ -34,23 +35,26 @@ using std::string;
 using std::unique_ptr;
 
 // static
-unique_ptr<VariadicFilter> VariadicFilter::make(LogicalOperator logicOp) {
+unique_ptr<VariadicFilter> VariadicFilter::make(Query *query,
+                                                LogicalOperator logicOp) {
     switch (logicOp) {
         case LogicalOperator::and_:
-            return make_unique<AndingFilter>();
+            return make_unique<AndingFilter>(query);
         case LogicalOperator::or_:
-            return make_unique<OringFilter>();
+            return make_unique<OringFilter>(query);
     }
     return nullptr;  // unreachable
 }
 
-VariadicFilter::VariadicFilter() {}
+VariadicFilter::VariadicFilter(Query *query) : Filter(query) {}
 
 VariadicFilter::~VariadicFilter() {
     for (auto &subfilter : _subfilters) {
         delete subfilter;
     }
 }
+
+void VariadicFilter::accept(FilterVisitor &v) { v.visit(*this); }
 
 void VariadicFilter::addSubfilter(Filter *f) { _subfilters.push_back(f); }
 
@@ -80,7 +84,8 @@ void VariadicFilter::findIntLimits(const string &colum_nname, int *lower,
     }
 }
 
-void VariadicFilter::combineFilters(int count, LogicalOperator andor) {
+void VariadicFilter::combineFilters(Query *query, int count,
+                                    LogicalOperator andor) {
     if (count > static_cast<int>(_subfilters.size())) {
         logger(LG_INFO, "Cannot combine %d filters with '%s': only %" PRIuMAX
                         " are on stack",
@@ -89,7 +94,7 @@ void VariadicFilter::combineFilters(int count, LogicalOperator andor) {
         return;
     }
 
-    auto variadic = VariadicFilter::make(andor);
+    auto variadic = VariadicFilter::make(query, andor);
     while ((count--) != 0) {
         variadic->addSubfilter(_subfilters.back());
         _subfilters.pop_back();

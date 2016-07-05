@@ -58,7 +58,7 @@ public:
     }
     std::string valueAsString(void *data, Query *) override;
     void output(void *, Query *) override;
-    Filter *createFilter(RelationalOperator relOp,
+    Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
 
     // API of IntColumn

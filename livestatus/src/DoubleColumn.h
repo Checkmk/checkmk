@@ -41,7 +41,7 @@ public:
     void output(void *, Query *) override;
     ColumnType type() override { return ColumnType::double_; }
     std::string valueAsString(void *data, Query *) override;
-    Filter *createFilter(RelationalOperator relOp,
+    Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
 };
 

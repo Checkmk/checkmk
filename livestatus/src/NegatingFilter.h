@@ -32,9 +32,10 @@ class NegatingFilter : public Filter {
     Filter *_filter;
 
 public:
-    explicit NegatingFilter(Filter *filter) : _filter(filter) {}
+    NegatingFilter(Query *query, Filter *filter)
+        : Filter(query), _filter(filter) {}
     virtual ~NegatingFilter() { delete _filter; }
-    bool isNegatingFilter() override { return true; }
+    void accept(FilterVisitor &v) override { v.visit(*this); }
     Filter *subfilter() { return _filter; }
     bool accepts(void *data) override { return !_filter->accepts(data); }
 };

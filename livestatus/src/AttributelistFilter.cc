@@ -27,10 +27,11 @@
 #include "AttributelistColumn.h"
 #include "Logger.h"
 
-AttributelistFilter::AttributelistFilter(AttributelistColumn *column,
+AttributelistFilter::AttributelistFilter(Query *query,
+                                         AttributelistColumn *column,
                                          RelationalOperator relOp,
                                          unsigned long ref)
-    : _column(column), _relOp(relOp), _ref(ref) {}
+    : ColumnFilter(query), _column(column), _relOp(relOp), _ref(ref) {}
 
 /* The following operators are defined:
 

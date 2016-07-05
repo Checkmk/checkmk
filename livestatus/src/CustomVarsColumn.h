@@ -51,7 +51,7 @@ public:
         return _what == CVT_DICT ? ColumnType::dict : ColumnType::list;
     }
     void output(void *, Query *) override;
-    Filter *createFilter(RelationalOperator relOp,
+    Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
     bool contains(void *data, const char *value);
     char *getVariable(void *data, const char *varname);

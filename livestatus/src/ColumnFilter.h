@@ -27,11 +27,13 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include "Filter.h"
+#include "FilterVisitor.h"
 class Column;
 
 class ColumnFilter : public Filter {
 public:
-    bool isColumnFilter() override { return true; }
+    explicit ColumnFilter(Query *query) : Filter(query) {}
+    void accept(FilterVisitor &v) override { v.visit(*this); }
     virtual Column *column() = 0;
 };
 

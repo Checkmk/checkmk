@@ -45,7 +45,7 @@ public:
                           extra_offset) {}
     ColumnType type() override { return ColumnType::time; }
     void output(void *data, Query *query) override;
-    Filter *createFilter(RelationalOperator relOp,
+    Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
 };
 

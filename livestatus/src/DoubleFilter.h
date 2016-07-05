@@ -30,10 +30,11 @@
 #include "ColumnFilter.h"
 #include "DoubleColumn.h"
 #include "opids.h"
+class Query;
 
 class DoubleFilter : public ColumnFilter {
 public:
-    DoubleFilter(DoubleColumn *column, RelationalOperator relOp,
+    DoubleFilter(Query *query, DoubleColumn *column, RelationalOperator relOp,
                  const std::string &value);
     bool accepts(void *data) override;
     DoubleColumn *column() override;

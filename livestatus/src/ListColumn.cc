@@ -28,7 +28,7 @@
 
 using std::string;
 
-Filter *ListColumn::createFilter(RelationalOperator relOp,
+Filter *ListColumn::createFilter(Query *query, RelationalOperator relOp,
                                  const string &value) {
-    return new ListFilter(this, relOp, value);
+    return new ListFilter(query, this, relOp, value);
 }

@@ -30,9 +30,13 @@
 
 using std::string;
 
-StringFilter::StringFilter(StringColumn *column, RelationalOperator relOp,
-                           const string &value)
-    : _column(column), _relOp(relOp), _ref_string(value), _regex(nullptr) {
+StringFilter::StringFilter(Query *query, StringColumn *column,
+                           RelationalOperator relOp, const string &value)
+    : ColumnFilter(query)
+    , _column(column)
+    , _relOp(relOp)
+    , _ref_string(value)
+    , _regex(nullptr) {
     switch (_relOp) {
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:

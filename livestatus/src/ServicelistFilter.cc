@@ -33,10 +33,10 @@ using std::string;
 
 #define HOSTSERVICE_SEPARATOR '|'
 
-ServicelistFilter::ServicelistFilter(ServicelistColumn *column,
+ServicelistFilter::ServicelistFilter(Query *query, ServicelistColumn *column,
                                      RelationalOperator relOp,
                                      const string &value)
-    : _column(column), _relOp(relOp) {
+    : ColumnFilter(query), _column(column), _relOp(relOp) {
     if ((_relOp == RelationalOperator::equal ||
          _relOp == RelationalOperator::not_equal) &&
         value.empty()) {

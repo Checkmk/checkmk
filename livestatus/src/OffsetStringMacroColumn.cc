@@ -74,11 +74,12 @@ void OffsetStringMacroColumn::output(void *data, Query *query) {
     query->outputString(s.c_str());
 }
 
-Filter *OffsetStringMacroColumn::createFilter(RelationalOperator /*unused */,
+Filter *OffsetStringMacroColumn::createFilter(Query *query,
+                                              RelationalOperator /*unused */,
                                               const string & /*unused*/) {
     logger(LG_INFO, "Sorry. No filtering on macro columns implemented yet");
     // TODO(sp) Use unique_ptr
-    return VariadicFilter::make(LogicalOperator::and_)
+    return VariadicFilter::make(query, LogicalOperator::and_)
         .release();  // always true
 }
 

@@ -30,6 +30,7 @@
 #include "Column.h"
 #include "opids.h"
 class Filter;
+class Query;
 
 class ListColumn : public Column {
 public:
@@ -40,7 +41,7 @@ public:
     virtual void *getNagiosObject(char *name) = 0;
     virtual bool isNagiosMember(void *data, void *member) = 0;
     virtual bool isEmpty(void *data) = 0;
-    Filter *createFilter(RelationalOperator relOp,
+    Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
 };
 

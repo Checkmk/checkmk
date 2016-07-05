@@ -26,10 +26,5 @@
 #include "Query.h"
 
 int32_t TimeFilter::convertRefValue() {
-    int32_t ref_remote = IntFilter::convertRefValue();
-    if (_query != nullptr) {
-        int32_t timezone_offset = _query->timezoneOffset();
-        return ref_remote - timezone_offset;
-    }
-    return ref_remote;  // should never happen
+    return IntFilter::convertRefValue() - query()->timezoneOffset();
 }

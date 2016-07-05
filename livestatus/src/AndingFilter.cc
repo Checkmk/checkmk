@@ -27,6 +27,8 @@
 
 using std::string;
 
+AndingFilter::AndingFilter(Query *query) : VariadicFilter(query) {}
+
 bool AndingFilter::accepts(void *data) {
     for (auto filter : _subfilters) {
         if (!filter->accepts(data)) {

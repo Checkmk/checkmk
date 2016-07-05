@@ -33,9 +33,12 @@
 using std::move;
 using std::string;
 
-HostlistFilter::HostlistFilter(HostlistColumn *column, RelationalOperator relOp,
-                               string value)
-    : _column(column), _relOp(relOp), _ref_value(move(value)) {}
+HostlistFilter::HostlistFilter(Query *query, HostlistColumn *column,
+                               RelationalOperator relOp, string value)
+    : ColumnFilter(query)
+    , _column(column)
+    , _relOp(relOp)
+    , _ref_value(move(value)) {}
 
 bool HostlistFilter::accepts(void *data) {
     // data points to a primary data object. We need to extract a pointer to a

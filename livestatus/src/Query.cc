@@ -36,6 +36,7 @@
 #include "Column.h"
 #include "ColumnFilter.h"
 #include "Filter.h"
+#include "FilterVisitor.h"
 #include "Logger.h"
 #include "NegatingFilter.h"
 #include "NullColumn.h"
@@ -60,25 +61,29 @@ using std::unordered_set;
 using std::vector;
 
 namespace {
-void collectFilterColumns(unordered_set<Column *> &filter_columns,
-                          Filter *filter) {
-    if (filter->isVariadicFilter()) {
-        for (const auto &sub_filter : *static_cast<VariadicFilter *>(filter)) {
-            collectFilterColumns(filter_columns, sub_filter);
+class ColumnCollector : public FilterVisitor {
+public:
+    explicit ColumnCollector(unordered_set<Column *> &columns)
+        : _columns(columns) {}
+    void visit(ColumnFilter &f) override { _columns.insert(f.column()); }
+    void visit(NegatingFilter &f) override { f.subfilter()->accept(*this); }
+    void visit(VariadicFilter &f) override {
+        for (const auto &sub_filter : f) {
+            sub_filter->accept(*this);
         }
-    } else if (filter->isNegatingFilter()) {
-        collectFilterColumns(
-            filter_columns, static_cast<NegatingFilter *>(filter)->subfilter());
-    } else if (filter->isColumnFilter()) {
-        filter_columns.insert(static_cast<ColumnFilter *>(filter)->column());
     }
-}
+
+private:
+    unordered_set<Column *> &_columns;
+};
 }  // namespace
 
 Query::Query(const list<string> &lines, OutputBuffer *output, Table *table)
     : _output(output)
     , _table(table)
+    , _filter(this)
     , _auth_user(nullptr)
+    , _wait_condition(this)
     , _wait_timeout(0)
     , _wait_trigger(nullptr)
     , _wait_object(nullptr)
@@ -206,8 +211,10 @@ Query::Query(const list<string> &lines, OutputBuffer *output, Table *table)
     for (const auto &sc : _stats_columns) {
         _all_columns.insert(sc->column());
     }
-    collectFilterColumns(_all_columns, &_filter);
-    collectFilterColumns(_all_columns, &_wait_condition);
+
+    ColumnCollector cc(_all_columns);
+    _filter.accept(cc);
+    _wait_condition.accept(cc);
 }
 
 Query::~Query() {
@@ -256,17 +263,17 @@ void Query::setError(OutputBuffer::ResponseCode code, const string &message) {
 
 Filter *Query::createFilter(Column *column, RelationalOperator relOp,
                             const string &value) {
-    Filter *filter = column->createFilter(relOp, value);
+    Filter *filter = column->createFilter(this, relOp, value);
     if (filter == nullptr) {
         setError(OutputBuffer::ResponseCode::invalid_header,
                  "cannot create filter on table " + string(_table->name()));
-    } else if (filter->hasError()) {
+        return nullptr;
+    }
+    if (filter->hasError()) {
         setError(filter->errorCode(),
                  "error in Filter header: " + filter->errorMessage());
         delete filter;
-        filter = nullptr;
-    } else {
-        filter->setQuery(this);
+        return nullptr;
     }
     return filter;
 }
@@ -289,7 +296,7 @@ void Query::parseAndOrLine(char *line, LogicalOperator andor,
         return;
     }
 
-    filter.combineFilters(number, andor);
+    filter.combineFilters(this, number, andor);
 }
 
 void Query::parseNegateLine(char *line, VariadicFilter &filter, string header) {
@@ -306,7 +313,7 @@ void Query::parseNegateLine(char *line, VariadicFilter &filter, string header) {
         return;
     }
 
-    filter.addSubfilter(new NegatingFilter(to_negate));
+    filter.addSubfilter(new NegatingFilter(this, to_negate));
 }
 
 void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
@@ -328,7 +335,7 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
     }
 
     // The last 'number' StatsColumns must be of type StatsOperation::count
-    auto variadic = VariadicFilter::make(andor);
+    auto variadic = VariadicFilter::make(this, andor);
     while (number > 0) {
         if (_stats_columns.empty()) {
             setError(OutputBuffer::ResponseCode::invalid_header,
@@ -371,7 +378,7 @@ void Query::parseStatsNegateLine(char *line) {
                  "Can use StatsNegate only on Stats: headers of filter type");
         return;
     }
-    auto negated = new NegatingFilter(col->stealFilter());
+    auto negated = new NegatingFilter(this, col->stealFilter());
     delete col;
     _stats_columns.pop_back();
     _stats_columns.push_back(

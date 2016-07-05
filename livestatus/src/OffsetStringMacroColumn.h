@@ -43,7 +43,7 @@ public:
 
     std::string valueAsString(void *data, Query *) override;
     void output(void *data, Query *) override;
-    Filter *createFilter(RelationalOperator relOp,
+    Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
 
     // overriden by host and service macro columns

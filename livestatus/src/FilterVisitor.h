@@ -22,22 +22,20 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "StringColumn.h"
-#include "Query.h"
-#include "StringFilter.h"
-#include "opids.h"
+#ifndef FilterVisitor_h
+#define FilterVisitor_h
 
-using std::string;
+#include "config.h"  // IWYU pragma: keep
+class ColumnFilter;
+class NegatingFilter;
+class VariadicFilter;
 
-void StringColumn::output(void *data, Query *query) {
-    if (data != nullptr) {
-        query->outputString(getValue(data).c_str());
-    } else {
-        query->outputString(nullptr);
-    }
-}
+class FilterVisitor {
+public:
+    virtual ~FilterVisitor() {}
+    virtual void visit(ColumnFilter &) = 0;
+    virtual void visit(NegatingFilter &) = 0;
+    virtual void visit(VariadicFilter &) = 0;
+};
 
-Filter *StringColumn::createFilter(Query *query, RelationalOperator relOp,
-                                   const string &value) {
-    return new StringFilter(query, this, relOp, value);
-}
+#endif  // FilterVisitor_h

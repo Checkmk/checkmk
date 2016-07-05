@@ -31,12 +31,13 @@
 #include "IntFilter.h"
 #include "opids.h"
 class IntColumn;
+class Query;
 
 class TimeFilter : public IntFilter {
 public:
-    TimeFilter(IntColumn *column, RelationalOperator relOp,
+    TimeFilter(Query *query, IntColumn *column, RelationalOperator relOp,
                const std::string &value)
-        : IntFilter(column, relOp, value) {}
+        : IntFilter(query, column, relOp, value) {}
     virtual int32_t convertRefValue() override;
 };
 

@@ -2260,11 +2260,16 @@ register_check_parameters(
                     Tuple(
                         elements = [
                             DropdownChoice( title = _("INotify Operation"),
-                                choices = [ ("create", _("Create")),
-                                            ("delete", _("Delete")),
-                                            ("access", _("Access")),
-                                            ("modify", _("Modify")),
-                                            ("open", _("Open")) ]
+                                choices = [
+                                            ("create",    _("Create")),
+                                            ("delete",    _("Delete")),
+                                            ("open",      _("Open")),
+                                            ("modify",    _("Modify")),
+                                            ("access",    _("Access")),
+                                            ("movedfrom", _("Moved from")),
+                                            ("movedto",   _("Moved to")),
+                                            ("moveself",  _("Move self")),
+                                          ]
                             ),
                             Age(title=_("Warning at")),
                             Age(title=_("Critical at")),

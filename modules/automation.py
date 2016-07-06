@@ -407,9 +407,11 @@ def automation_delete_host(args):
             os.unlink("%s/%s" % (tcp_cache_dir, filename))
 
     # softlinks for baked agents. obsolete packages are removed upon next bake action
-    for folder in os.listdir("%s/agents" % var_dir):
-        if os.path.exists("%s/%s" % (folder, hostname)):
-            os.unlink("%s/%s" % (folder, hostname))
+    agents_dir = var_dir + "/agents/"
+    if os.path.exists(agents_dir):
+        for folder in os.listdir(agents_dir):
+            if os.path.exists("%s/%s" % (folder, hostname)):
+                os.unlink("%s/%s" % (folder, hostname))
 
     # logwatch folders
     if os.path.exists("%s/%s" % (logwatch_dir, hostname)):

@@ -1,0 +1,10 @@
+Title: Fixed creation/editing of dashboards (regression since 1.2.8p5)
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1467794282
+
+

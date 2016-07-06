@@ -520,7 +520,7 @@ def get_context_specs(visual, info_handler):
         filter_names = filter_list.filter_names()
 
         if not filter_names:
-            return [] # Skip infos which have no filters available
+            return # Skip infos which have no filters available
 
         params = [
             ('filters', filter_list),
@@ -533,7 +533,8 @@ def get_context_specs(visual, info_handler):
 
     # single infos first, the rest afterwards
     return [(info_key, visual_spec_single(info_key)) for info_key in single_info_keys] +\
-        [(info_key, visual_spec_multi(info_key)) for info_key in multi_info_keys]
+        [(info_key, visual_spec_multi(info_key)) for info_key in multi_info_keys
+                            if visual_spec_multi(info_key) ]
 
 
 def process_context_specs(context_specs):

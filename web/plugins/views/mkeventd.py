@@ -42,6 +42,23 @@ except:
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
+def query_ec_table(datasource, columns, add_columns, query, only_sites, limit, tablename):
+    if "event_contact_groups" not in columns:
+        columns.append("event_contact_groups")
+    if "host_contact_groups" not in columns:
+        columns.append("host_contact_groups")
+
+    rows = query_data(datasource, columns, add_columns, query, only_sites, limit,
+                      tablename=tablename)
+
+    if config.may("mkeventd.seeunrelated"):
+        return rows # user is allowed to see all events returned by the core
+
+    return [ r for r in rows if r["event_contact_groups"] != [] or r["host_name"] != "" ]
+
+
+
 # Declare datasource only if the event console is activated. We do
 # not want to irritate users that do not know anything about the EC.
 if mkeventd_enabled:
@@ -60,7 +77,7 @@ if mkeventd_enabled:
 
     multisite_datasources["mkeventd_events"] = {
         "title"       : _("Event Console: Current Events"),
-        "table"       : "eventconsoleevents",
+        "table"       : (query_ec_table, ["eventconsoleevents"]),
         "auth_domain" : "ec",
         "infos"       : [ "event", "host" ],
         "keys"        : [],
@@ -70,7 +87,7 @@ if mkeventd_enabled:
 
     multisite_datasources["mkeventd_history"] = {
         "title"       : _("Event Console: Event History"),
-        "table"       : "eventconsolehistory",
+        "table"       : (query_ec_table, ["eventconsolehistory"]),
         "auth_domain" : "ec",
         "infos"       : [ "history", "event", "host" ],
         "keys"        : [],

@@ -1126,9 +1126,15 @@ def show_view(view, show_heading = False, show_buttons = True,
 
         # tablename may be a function instead of a livestatus tablename
         # In that case that function is used to compute the result.
+        # It may also be a tuple. In this case the first element is a function and the second element
+        # is a list of argument to hand over to the function together with all other arguments that
+        # are passed to query_data().
 
         if type(tablename) == type(lambda x:None):
             rows = tablename(columns, query, only_sites, limit, all_active_filters)
+        elif type(tablename) == tuple:
+            func, args = tablename
+            rows = func(datasource, columns, add_columns, query, only_sites, limit, *args)
         else:
             rows = query_data(datasource, columns, add_columns, query, only_sites, limit)
 
@@ -1664,8 +1670,10 @@ def ajax_count_button():
 # add_headers: additional livestatus headers to add
 # only_sites: list of sites the query is limited to
 # limit: maximum number of data rows to query
-def query_data(datasource, columns, add_columns, add_headers, only_sites = [], limit = None):
-    tablename = datasource["table"]
+def query_data(datasource, columns, add_columns, add_headers, only_sites = [], limit = None, tablename=None):
+    if tablename == None:
+        tablename = datasource["table"]
+
     add_headers += datasource.get("add_headers", "")
     merge_column = datasource.get("merge_by")
     if merge_column:
@@ -1691,8 +1699,15 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
     # Remove columns which are implicitely added by the datasource
     columns = [ c for c in columns if c not in add_columns ]
     query = "GET %s\n" % tablename
-    return do_query_data(query, columns, add_columns, merge_column,
+    rows = do_query_data(query, columns, add_columns, merge_column,
                          add_headers, only_sites, limit, auth_domain)
+
+    # Datasource may have optional post processing function to filter out rows
+    post_process_func = datasource.get("post_process")
+    if post_process_func:
+        return post_process_func(rows)
+    else:
+        return rows
 
 
 def do_query_data(query, columns, add_columns, merge_column,

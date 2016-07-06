@@ -1,0 +1,11 @@
+Title: esx_vsphere_sensors: fixed incorrect default parameter during service discovery
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p6
+Date: 1467814944
+
+This fixes an display only bug in the WATO service discovery page.
+

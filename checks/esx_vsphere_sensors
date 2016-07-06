@@ -36,7 +36,7 @@
 # Power Supply 2 Power Supply 2 0: Power Supply AC lost - Assert;;0;power;0;;red;Red;Sensor is operating under critical conditions
 
 def inventory_esx_vsphere_sensors(info):
-    return [(None, None)]
+    return [(None, [])]
 
 def check_esx_vsphere_sensors(_no_item, params, info):
     state = 0

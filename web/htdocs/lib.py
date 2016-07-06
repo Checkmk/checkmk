@@ -69,7 +69,7 @@ class MKUserError(MKException):
     plain_title = _("User error")
     def __init__(self, varname, message):
         self.varname = varname
-        Exception.__init__(self, message)
+        super(MKUserError, self).__init__(message)
 
 class MKInternalError(MKException):
     pass

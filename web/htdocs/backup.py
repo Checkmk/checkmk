@@ -247,19 +247,15 @@ class MKBackupJob(object):
                and os.path.exists("/proc/%d" % state["pid"])
 
 
-    def start(self):
-        p = subprocess.Popen(self._start_command(), env=self._start_env(),
+    def start(self, env=None):
+        p = subprocess.Popen(self._start_command(),
                          shell=False, close_fds=True, stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT, stdin=open(os.devnull))
+                         stderr=subprocess.STDOUT, stdin=open(os.devnull), env=env)
         if p.wait() != 0:
             raise MKGeneralException(_("Failed to start the job: %s") % p.stdout.read())
 
 
     def _start_command(self):
-        raise NotImplementedError()
-
-
-    def _start_env(self):
         raise NotImplementedError()
 
 
@@ -332,10 +328,6 @@ class Job(MKBackupJob, BackupEntity):
 
     def _start_command(self):
         return [mkbackup_path(), "backup", "--background", self.ident()]
-
-
-    def _start_env(self):
-        return None # use inherited envionment
 
 
     def cron_config(self):
@@ -947,6 +939,10 @@ class Target(BackupEntity):
         return self.type().backups()
 
 
+    def get_backup(self, backup_ident):
+        return self.type().get_backup(backup_ident)
+
+
     def remove_backup(self, backup_ident):
         self.type().remove_backup(backup_ident)
 
@@ -1314,6 +1310,11 @@ class BackupTargetLocal(BackupTargetType):
         return info
 
 
+    def get_backup(self, backup_ident):
+        backups = self.backups()
+        return backups[backup_ident]
+
+
     def remove_backup(self, backup_ident):
         self.verify_target_is_ready()
         shutil.rmtree("%s/%s" % (self._params["path"], backup_ident))
@@ -1483,15 +1484,24 @@ class RestoreJob(MKBackupJob):
         return [mkbackup_path(), "restore", "--background", self._target_ident, self._backup_ident]
 
 
-    def _start_env(self):
-        # TODO: Encryption secret?
-        return None
+    def start(self, passphrase=None):
+        if passphrase != None:
+            env = os.environ.copy()
+            env["MKBACKUP_PASSPHRASE"] = passphrase
+        else:
+            env = None
+
+        super(RestoreJob, self).start(env)
 
 
 class PageBackupRestore(object):
     def __init__(self):
         self._load_target()
         super(PageBackupRestore, self).__init__()
+
+
+    def keys(self):
+        raise NotImplementedError()
 
 
     def _load_target(self):
@@ -1575,6 +1585,76 @@ class PageBackupRestore(object):
 
 
     def _start_restore(self, backup_ident):
+        backup_info = self._target.get_backup(backup_ident)
+        if "encrypt" in backup_info["config"]:
+            return self._start_encrypted_restore(backup_ident, backup_info)
+        else:
+            return self._start_unencrypted_restore(backup_ident)
+
+
+    def _start_encrypted_restore(self, backup_ident, backup_info):
+        key_digest = backup_info["config"]["encrypt"]
+
+        try:
+            key_id, key = self.keys().get_key_by_digest(key_digest)
+        except KeyError:
+            raise MKUserError(None, _("The key with the fingerprint %s which is needed to decrypt "
+                                      "the backup is misssing."))
+
+
+        if html.form_submitted("key"):
+            try:
+                value = self._vs_key().from_html_vars("_key")
+                if html.has_var("_key_p_passphrase"):
+                    self._vs_key().validate_value(value, "_key")
+                    passphrase = value["passphrase"]
+
+                    # Validate the passphrase
+                    key_mgmt.decrypt_private_key(key["private_key"], passphrase)
+
+                    html.check_transaction() # invalidate transid
+                    RestoreJob(self._target_ident, backup_ident).start(passphrase)
+                    return None, _("The restore has been started.")
+            except MKUserError, e:
+                html.add_user_error(e.varname, e)
+
+        html.header(_("Insert passphrase"))
+        html.begin_context_buttons()
+        html.context_button(_("Back"), html.makeuri([("mode", "backup_restore")]), "back")
+        html.end_context_buttons()
+        html.show_user_errors()
+        html.write("<p>%s</p>" %
+            _("To be able to decrypt and restore the encrypted backup, you need to enter the "
+              "passphrase of the encryption key."))
+        html.begin_form("key", method="GET")
+        html.hidden_field("_action", "start")
+        html.hidden_field("_backup", backup_ident)
+        html.prevent_password_auto_completion()
+        self._vs_key().render_input("_key", {})
+        html.button("upload", _("Start restore"))
+        self._vs_key().set_focus("_key")
+        html.hidden_fields()
+        html.end_form()
+        html.footer()
+        return False
+
+
+    def _vs_key(self):
+        return Dictionary(
+            title = _("Properties"),
+            elements = [
+                ( "passphrase",
+                  Password(
+                      title = _("Passphrase"),
+                      allow_empty = False,
+                )),
+            ],
+            optional_keys = False,
+            render = "form",
+        )
+
+
+    def _start_unencrypted_restore(self, backup_ident):
         if html.confirm(_("Do you really want to start the restore of this backup?"),
                         add_header=self.title(), method="GET"):
             html.check_transaction() # invalidate transid

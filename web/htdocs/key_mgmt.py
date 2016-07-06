@@ -68,6 +68,15 @@ class KeypairStore(object):
         return sorted(choices, key=lambda x: x[1])
 
 
+    def get_key_by_digest(self, digest):
+        for key_id, key in self.load().items():
+            other_cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+            other_digest = other_cert.digest("md5")
+            if other_digest == digest:
+                return key_id, key
+        raise KeyError()
+
+
 
 class PageKeyManagement(object):
     edit_mode   = "edit_key"

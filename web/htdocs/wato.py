@@ -5762,6 +5762,10 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
         return SiteBackupTargets()
 
 
+    def keys(self):
+        return SiteBackupKeypairStore()
+
+
     def backup_target_choices(self):
         choices = self.targets().choices()
 

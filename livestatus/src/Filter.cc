@@ -28,14 +28,14 @@ Filter::Filter(Query *query) : _query(query) {}
 
 Filter::~Filter() = default;
 
-void *Filter::indexFilter(const std::string & /* column_name */) {
+void *Filter::indexFilter(const std::string & /* column_name */) const {
     return nullptr;
 }
 
 void Filter::findIntLimits(const std::string & /* column_name */,
-                           int * /* lower */, int * /* upper */) {}
+                           int * /* lower */, int * /* upper */) const {}
 
 bool Filter::optimizeBitmask(const std::string & /* column_name */,
-                             uint32_t * /* mask */) {
+                             uint32_t * /* mask */) const {
     return false;
 }

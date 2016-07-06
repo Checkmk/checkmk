@@ -25,6 +25,6 @@
 #include "TimeFilter.h"
 #include "Query.h"
 
-int32_t TimeFilter::convertRefValue() {
+int32_t TimeFilter::convertRefValue() const {
     return IntFilter::convertRefValue() - query()->timezoneOffset();
 }

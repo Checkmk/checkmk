@@ -38,11 +38,11 @@ public:
     virtual void accept(FilterVisitor &) = 0;
     Query *query() const { return _query; }
     virtual bool accepts(void *data) = 0;
-    virtual void *indexFilter(const std::string &column_name);
+    virtual void *indexFilter(const std::string &column_name) const;
     virtual void findIntLimits(const std::string &column_name, int *lower,
-                               int *upper);
+                               int *upper) const;
     virtual bool optimizeBitmask(const std::string &column_name,
-                                 uint32_t *mask);
+                                 uint32_t *mask) const;
 
 private:
     Query *const _query;

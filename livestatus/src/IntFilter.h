@@ -37,13 +37,13 @@ class IntFilter : public ColumnFilter {
 public:
     IntFilter(Query *query, IntColumn *column, RelationalOperator relOp,
               std::string value);
-    virtual int32_t convertRefValue();  // see TimeFilter
+    virtual int32_t convertRefValue() const;  // see TimeFilter
     bool accepts(void *data) override;
     IntColumn *column() override;
     void findIntLimits(const std::string &column_name, int *lower,
-                       int *upper) override;
+                       int *upper) const override;
     bool optimizeBitmask(const std::string &column_name,
-                         uint32_t *mask) override;
+                         uint32_t *mask) const override;
 
 private:
     IntColumn *_column;

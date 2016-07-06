@@ -37,7 +37,7 @@ public:
     ListFilter(Query *query, ListColumn *column, RelationalOperator relOp,
                const std::string &value);
     bool accepts(void *data) override;
-    void *indexFilter(const std::string &column_name) override;
+    void *indexFilter(const std::string &column_name) const override;
     ListColumn *column() override;
 
 private:

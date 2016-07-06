@@ -72,7 +72,7 @@ bool ListFilter::accepts(void *data) {
     return false;  // unreachable
 }
 
-void *ListFilter::indexFilter(const string &column_name) {
+void *ListFilter::indexFilter(const string &column_name) const {
     switch (_relOp) {
         case RelationalOperator::greater_or_equal:
             return column_name == _column->name() ? _ref_member : nullptr;

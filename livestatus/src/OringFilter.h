@@ -36,7 +36,7 @@ public:
     explicit OringFilter(Query *query);
     bool accepts(void *data) override;
     bool optimizeBitmask(const std::string &column_name,
-                         uint32_t *mask) override;
+                         uint32_t *mask) const override;
 };
 
 #endif  // OringFilter_h

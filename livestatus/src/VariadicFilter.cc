@@ -78,7 +78,7 @@ void *VariadicFilter::findIndexFilter(const string &column_name) {
 }
 
 void VariadicFilter::findIntLimits(const string &colum_nname, int *lower,
-                                   int *upper) {
+                                   int *upper) const {
     for (auto filter : _subfilters) {
         filter->findIntLimits(colum_nname, lower, upper);
     }

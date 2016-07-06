@@ -38,7 +38,7 @@ public:
     TimeFilter(Query *query, IntColumn *column, RelationalOperator relOp,
                const std::string &value)
         : IntFilter(query, column, relOp, value) {}
-    virtual int32_t convertRefValue() override;
+    int32_t convertRefValue() const override;
 };
 
 #endif  // TimeFilter_h

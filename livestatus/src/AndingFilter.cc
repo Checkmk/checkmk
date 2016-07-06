@@ -38,7 +38,8 @@ bool AndingFilter::accepts(void *data) {
     return true;
 }
 
-bool AndingFilter::optimizeBitmask(const string &column_name, uint32_t *mask) {
+bool AndingFilter::optimizeBitmask(const string &column_name,
+                                   uint32_t *mask) const {
     bool optimized = false;
     for (auto filter : _subfilters) {
         if (filter->optimizeBitmask(column_name, mask)) {

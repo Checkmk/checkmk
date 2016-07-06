@@ -111,7 +111,7 @@ bool StringFilter::accepts(void *data) {
     return false;  // unreachable
 }
 
-void *StringFilter::indexFilter(const string &column_name) {
+void *StringFilter::indexFilter(const string &column_name) const {
     switch (_relOp) {
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:

@@ -38,7 +38,8 @@ bool OringFilter::accepts(void *data) {
     return false;
 }
 
-bool OringFilter::optimizeBitmask(const string &column_name, uint32_t *mask) {
+bool OringFilter::optimizeBitmask(const string &column_name,
+                                  uint32_t *mask) const {
     // We can only optimize, if *all* subfilters are filters for the
     // same column.
     uint32_t m = 0;

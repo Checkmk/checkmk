@@ -51,7 +51,7 @@ public:
     _subfilters_t::iterator end() { return _subfilters.end(); }
     void *findIndexFilter(const std::string &column_name);
     void findIntLimits(const std::string &colum_nname, int *lower,
-                       int *upper) override;
+                       int *upper) const override;
 
 protected:
     explicit VariadicFilter(Query *query);

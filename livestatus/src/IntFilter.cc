@@ -44,7 +44,7 @@ IntColumn *IntFilter::column() { return _column; }
 
 // overridden by TimeFilter in order to apply timezone offset from Localtime:
 // header
-int32_t IntFilter::convertRefValue() { return atoi(_ref_string.c_str()); }
+int32_t IntFilter::convertRefValue() const { return atoi(_ref_string.c_str()); }
 
 bool IntFilter::accepts(void *data) {
     int32_t act_value = _column->getValue(data, query());
@@ -76,7 +76,7 @@ bool IntFilter::accepts(void *data) {
 }
 
 void IntFilter::findIntLimits(const string &column_name, int *lower,
-                              int *upper) {
+                              int *upper) const {
     if (column_name != _column->name()) {
         return;  // wrong column
     }
@@ -138,7 +138,8 @@ void IntFilter::findIntLimits(const string &column_name, int *lower,
     }
 }
 
-bool IntFilter::optimizeBitmask(const string &column_name, uint32_t *mask) {
+bool IntFilter::optimizeBitmask(const string &column_name,
+                                uint32_t *mask) const {
     int32_t ref_value = convertRefValue();
 
     if (column_name != _column->name()) {

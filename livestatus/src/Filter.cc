@@ -24,8 +24,18 @@
 
 #include "Filter.h"
 
-void Filter::setError(OutputBuffer::ResponseCode code,
-                      const std::string &message) {
-    _error_message = message;
-    _error_code = code;
+Filter::Filter(Query *query) : _query(query) {}
+
+Filter::~Filter() = default;
+
+void *Filter::indexFilter(const std::string & /* column_name */) {
+    return nullptr;
+}
+
+void Filter::findIntLimits(const std::string & /* column_name */,
+                           int * /* lower */, int * /* upper */) {}
+
+bool Filter::optimizeBitmask(const std::string & /* column_name */,
+                             uint32_t * /* mask */) {
+    return false;
 }

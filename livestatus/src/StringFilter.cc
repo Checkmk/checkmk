@@ -24,10 +24,11 @@
 
 #include "StringFilter.h"
 #include <string.h>
-#include "OutputBuffer.h"
+#include <stdexcept>
 #include "StringColumn.h"
 #include "opids.h"
 
+using std::runtime_error;
 using std::string;
 
 StringFilter::StringFilter(Query *query, StringColumn *column,
@@ -44,9 +45,8 @@ StringFilter::StringFilter(Query *query, StringColumn *column,
         case RelationalOperator::doesnt_match_icase:
             if (strchr(value.c_str(), '{') != nullptr ||
                 strchr(value.c_str(), '}') != nullptr) {
-                setError(OutputBuffer::ResponseCode::invalid_header,
-                         "disallowed regular expression '" + string(value) +
-                             "': must not contain { or }");
+                throw runtime_error("disallowed regular expression '" + value +
+                                    "': must not contain { or }");
             } else {
                 _regex = new regex_t();
                 bool ignore_case =
@@ -55,11 +55,9 @@ StringFilter::StringFilter(Query *query, StringColumn *column,
                 if (regcomp(_regex, value.c_str(),
                             REG_EXTENDED | REG_NOSUB |
                                 (ignore_case ? REG_ICASE : 0)) != 0) {
-                    setError(
-                        OutputBuffer::ResponseCode::invalid_header,
-                        "invalid regular expression '" + string(value) + "'");
                     delete _regex;
-                    _regex = nullptr;
+                    throw runtime_error("invalid regular expression '" + value +
+                                        "'");
                 }
             }
             break;

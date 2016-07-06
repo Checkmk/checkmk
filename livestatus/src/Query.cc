@@ -30,6 +30,7 @@
 #include <string.h>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 #include "Aggregator.h"
@@ -55,6 +56,7 @@ extern unsigned long g_max_response_size;
 extern int g_data_encoding;
 
 using std::list;
+using std::runtime_error;
 using std::string;
 using std::to_string;
 using std::unordered_set;
@@ -263,19 +265,14 @@ void Query::setError(OutputBuffer::ResponseCode code, const string &message) {
 
 Filter *Query::createFilter(Column *column, RelationalOperator relOp,
                             const string &value) {
-    Filter *filter = column->createFilter(this, relOp, value);
-    if (filter == nullptr) {
+    try {
+        return column->createFilter(this, relOp, value);
+    } catch (const runtime_error &e) {
         setError(OutputBuffer::ResponseCode::invalid_header,
-                 "cannot create filter on table " + string(_table->name()));
+                 "error creating filter on table" + string(_table->name()) +
+                     ": " + e.what());
         return nullptr;
     }
-    if (filter->hasError()) {
-        setError(filter->errorCode(),
-                 "error in Filter header: " + filter->errorMessage());
-        delete filter;
-        return nullptr;
-    }
-    return filter;
 }
 
 void Query::parseAndOrLine(char *line, LogicalOperator andor,

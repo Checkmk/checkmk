@@ -23,8 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Column.h"
+#include <stdexcept>
 #include <utility>
 
+using std::runtime_error;
 using std::string;
 
 Column::Column(string name, string description, int indirect_offset,
@@ -61,4 +63,9 @@ void *Column::shiftPointer(void *data) const {
     }
 
     return data;
+}
+
+Filter *Column::createFilter(Query * /*unused*/, RelationalOperator /*unused*/,
+                             const std::string & /*unused*/) {
+    throw runtime_error("filtering on column " + _name + " not supported");
 }

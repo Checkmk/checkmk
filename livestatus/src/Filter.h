@@ -28,38 +28,24 @@
 #include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
 #include <string>
-#include "OutputBuffer.h"
 class FilterVisitor;
 class Query;
 
 class Filter {
 public:
-    explicit Filter(Query *query)
-        : _query(query), _error_code(OutputBuffer::ResponseCode::ok) {}
-    virtual ~Filter() {}
+    explicit Filter(Query *query);
+    virtual ~Filter();
     virtual void accept(FilterVisitor &) = 0;
-    std::string errorMessage() const { return _error_message; }
-    OutputBuffer::ResponseCode errorCode() const { return _error_code; }
-    bool hasError() const { return _error_message != ""; }
     Query *query() const { return _query; }
     virtual bool accepts(void *data) = 0;
-    virtual void *indexFilter(const std::string & /* column_name */) {
-        return nullptr;
-    }
-    virtual void findIntLimits(const std::string & /* column_name */,
-                               int * /* lower */, int * /* upper */) {}
-    virtual bool optimizeBitmask(const std::string & /* column_name */,
-                                 uint32_t * /* mask */) {
-        return false;
-    }
-
-protected:
-    void setError(OutputBuffer::ResponseCode code, const std::string &message);
+    virtual void *indexFilter(const std::string &column_name);
+    virtual void findIntLimits(const std::string &column_name, int *lower,
+                               int *upper);
+    virtual bool optimizeBitmask(const std::string &column_name,
+                                 uint32_t *mask);
 
 private:
-    Query *_query;
-    OutputBuffer::ResponseCode _error_code;
-    std::string _error_message;
+    Query *const _query;
 };
 
 #endif  // Filter_h

@@ -26,11 +26,12 @@
 #include <ctype.h>
 #include <string.h>
 #include <ostream>
+#include <stdexcept>
 #include "Column.h"
 #include "CustomVarsColumn.h"
 #include "Logger.h"
-#include "OutputBuffer.h"
 
+using std::runtime_error;
 using std::string;
 
 CustomVarsFilter::CustomVarsFilter(Query *query, CustomVarsColumn *column,
@@ -66,9 +67,8 @@ CustomVarsFilter::CustomVarsFilter(Query *query, CustomVarsColumn *column,
         case RelationalOperator::doesnt_match_icase:
             if (strchr(search_space, '{') != nullptr ||
                 strchr(search_space, '}') != nullptr) {
-                setError(OutputBuffer::ResponseCode::invalid_header,
-                         "disallowed regular expression '" + string(value) +
-                             "': must not contain { or }");
+                throw runtime_error("disallowed regular expression '" + value +
+                                    "': must not contain { or }");
             } else {
                 _regex = new regex_t();
                 bool ignore_case =
@@ -77,11 +77,9 @@ CustomVarsFilter::CustomVarsFilter(Query *query, CustomVarsColumn *column,
                 if (regcomp(_regex, search_space,
                             REG_EXTENDED | REG_NOSUB |
                                 (ignore_case ? REG_ICASE : 0)) != 0) {
-                    setError(
-                        OutputBuffer::ResponseCode::invalid_header,
-                        "invalid regular expression '" + string(value) + "'");
                     delete _regex;
-                    _regex = nullptr;
+                    throw runtime_error("invalid regular expression '" + value +
+                                        "'");
                 }
             }
             break;

@@ -572,6 +572,7 @@ inventory_displayhints.update({
     ".hardware.system.product"                         : { "title" : _("Product") },
     ".hardware.system.serial_number"                   : { "title" : _("Serial Number") },
     ".hardware.system.model_name"                      : { "title" : _("Model Name") },
+    ".hardware.system.manufacturer"                    : { "title" : _("Manufacturer") },
     ".hardware.storage."                               : { "title" : _("Storage") },
     ".hardware.storage.disks:"                         : { "title" : _("Block Devices") },
     ".hardware.storage.disks:*."                       : { "title" : _("Block Device %d") },

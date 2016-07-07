@@ -1,0 +1,9 @@
+Title: ups_*: Fixed discovery for Vision UPS devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p6
+Date: 1467897794
+Class: fix
+
+

@@ -7,6 +7,7 @@
     * 3153 FIX: windows agent: fixed two problems that could cause missing wmi results...
     * 3555 FIX: esx_vsphere_sensors: fixed incorrect default parameter during service discovery...
     * 3665 FIX: hitachi_hnas_*: Fixed service discovery on some devices (e.g. HM800)
+    * 3666 FIX: ups_*: Fixed discovery for Vision UPS devices
 
     Multisite:
     * 3662 FIX: Fixed creation/editing of dashboards (regression since 1.2.8p5)

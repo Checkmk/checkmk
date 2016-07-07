@@ -36,11 +36,11 @@ def inv_snmp_extended_info(info):
 
     if len(info) >= 3:
         if info[0][0].split(".")[-1] == "0":
-            node["serial_number"] = info[1][0].split(".")[-1]
-            node["model_name"]    = info[2][0].split(".")[-1]
+            node["serial"] = info[1][0].split(".")[-1]
+            node["model"]  = info[2][0].split(".")[-1]
         elif info[0][1].split(".")[-1] == "0":
-            node["serial_number"] = info[1][1].split(".")[-1]
-            node["model_name"]    = info[2][1].split(".")[-1]
+            node["serial"] = info[1][1].split(".")[-1]
+            node["model"]  = info[2][1].split(".")[-1]
 
     return node
 

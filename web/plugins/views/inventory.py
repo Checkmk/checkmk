@@ -570,8 +570,13 @@ inventory_displayhints.update({
     ".hardware.memory.arrays:*.devices:*.speed"        : { "title" : _("Speed"),                  "paint" : "hz", },
     ".hardware.system."                                : { "title" : _("System") },
     ".hardware.system.product"                         : { "title" : _("Product") },
-    ".hardware.system.serial_number"                   : { "title" : _("Serial Number") },
-    ".hardware.system.model_name"                      : { "title" : _("Model Name") },
+    ".hardware.system.serial"                          : { "title" : _("Serial Number") },
+    ".hardware.system.model"                           : { "title" : _("Model Name") },
+
+    # Legacy ones. Kept to not break existing views - DON'T use these values for new plugins
+    ".hardware.system.serial_number"                   : { "title" : _("Serial Number - LEGACY, don't use") },
+    ".hardware.system.model_name"                      : { "title" : _("Model Name - LEGACY, don't use") },
+
     ".hardware.system.manufacturer"                    : { "title" : _("Manufacturer") },
     ".hardware.storage."                               : { "title" : _("Storage") },
     ".hardware.storage.disks:"                         : { "title" : _("Block Devices") },

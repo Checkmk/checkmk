@@ -15,6 +15,7 @@
 
     HW/SW-Inventory:
     * 3663 FIX: Added missing system manufacturer filter/painter
+    * 3664 FIX: Fixed not working hardware/system serial and model painters and filters...
 
 
 1.2.8p5:

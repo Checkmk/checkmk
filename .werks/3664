@@ -1,0 +1,10 @@
+Title: Fixed not working hardware/system serial and model painters and filters
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.8p6
+Date: 1467877979
+Class: fix
+
+If you already configured them in your views and they were not working, you will have
+to remove them from your view and re-add them.

@@ -28,11 +28,14 @@
 #include "config.h"  // IWYU pragma: keep
 #include "TableEventConsole.h"
 class Table;
+
 #ifdef CMC
 #include <mutex>
+#include "cmc.h"
 class Core;
 class Notes;
 #else
+#include "nagios.h"
 class DowntimesOrComments;
 #endif
 
@@ -56,6 +59,8 @@ public:
                            const DowntimesOrComments &downtimes_holder,
                            const DowntimesOrComments &comments_holder);
 #endif
+
+    bool isAuthorized(contact *ctc, void *data) override;
 };
 
 #endif  // TableEventConsoleEvents_h

@@ -27,6 +27,12 @@
 #include "Table.h"
 #include "TableHosts.h"
 
+#ifdef CMC
+#include "Host.h"
+#else
+#include "auth.h"
+#endif
+
 using std::string;
 
 #ifdef CMC
@@ -121,4 +127,13 @@ const char *TableEventConsoleEvents::name() const {
 
 const char *TableEventConsoleEvents::namePrefix() const {
     return "eventconsoleevents_";
+}
+
+bool TableEventConsoleEvents::isAuthorized(contact *ctc, void *data) {
+    host *host = static_cast<Row *>(data)->_host;
+#ifdef CMC
+    return host == nullptr || host->hasContact(ctc);
+#else
+    return host == nullptr || is_authorized_for(ctc, host, nullptr);
+#endif
 }

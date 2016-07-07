@@ -27,11 +27,14 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include "TableEventConsole.h"
+
 #ifdef CMC
 #include <mutex>
+#include "cmc.h"
 class Core;
 class Notes;
 #else
+#include "nagios.h"
 class DowntimesOrComments;
 #endif
 
@@ -47,6 +50,8 @@ public:
 #endif
     const char *name() const override;
     const char *namePrefix() const override;
+
+    bool isAuthorized(contact *ctc, void *data) override;
 };
 
 #endif  // TableEventConsoleHistory_h

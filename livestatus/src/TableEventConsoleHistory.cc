@@ -26,6 +26,12 @@
 #include "TableEventConsoleEvents.h"
 
 #ifdef CMC
+#include "Host.h"
+#else
+#include "auth.h"
+#endif
+
+#ifdef CMC
 TableEventConsoleHistory::TableEventConsoleHistory(
     const Notes &downtimes_holder, const Notes &comments_holder,
     std::recursive_mutex &holder_lock, Core *core)
@@ -65,4 +71,13 @@ const char *TableEventConsoleHistory::name() const {
 
 const char *TableEventConsoleHistory::namePrefix() const {
     return "eventconsolehistory_";
+}
+
+bool TableEventConsoleHistory::isAuthorized(contact *ctc, void *data) {
+    host *host = static_cast<Row *>(data)->_host;
+#ifdef CMC
+    return host == nullptr || host->hasContact(ctc);
+#else
+    return host == nullptr || is_authorized_for(ctc, host, nullptr);
+#endif
 }

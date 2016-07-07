@@ -560,6 +560,7 @@
     * 3526 FIX: Inventory scripts are no longer called when no data is available for their section...
     * 3455 FIX: Fixed broken switch port filtering/sorting view
     * 3663 FIX: Added missing system manufacturer filter/painter
+    * 3664 FIX: Fixed not working hardware/system serial and model painters and filters...
 
 
 1.2.8b1:

@@ -24,9 +24,7 @@
 
 #include "HostlistStateColumn.h"
 #include "Query.h"
-#include "TableServices.h"
-
-extern TableServices *g_table_hosts;
+#include "auth.h"
 
 static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
     if (state1 == 0) {
@@ -63,7 +61,7 @@ int32_t HostlistStateColumn::getValue(void *data, Query *query) {
     while (mem != nullptr) {
         host *hst = mem->host_ptr;
         if ((auth_user == nullptr) ||
-            g_table_hosts->isAuthorized(auth_user, hst)) {
+            is_authorized_for(auth_user, hst, nullptr)) {
             switch (_logictype) {
                 case HLSC_NUM_SVC_PENDING:
                 case HLSC_NUM_SVC_OK:

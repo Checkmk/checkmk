@@ -27,9 +27,7 @@
 #include "HostlistStateColumn.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"
-#include "TableHosts.h"
 #include "auth.h"
-#include "tables.h"
 
 using std::string;
 
@@ -202,7 +200,7 @@ bool TableHostgroups::isAuthorized(contact *ctc, void *data) {
     hostsmember *mem = hg->members;
     while (mem != nullptr) {
         host *hst = mem->host_ptr;
-        bool is = g_table_hosts->isAuthorized(ctc, hst);
+        bool is = is_authorized_for(ctc, hst, nullptr);
         if (is && g_group_authorization == AUTH_LOOSE) {
             return true;
         }

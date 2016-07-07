@@ -25,10 +25,8 @@
 #include "HostlistColumn.h"
 #include "HostlistFilter.h"
 #include "Query.h"
-#include "TableHosts.h"
+#include "auth.h"
 #include "opids.h"
-
-extern TableHosts *g_table_hosts;
 
 using std::string;
 
@@ -51,7 +49,7 @@ void HostlistColumn::output(void *data, Query *query) {
     while (mem != nullptr) {
         host *hst = mem->host_ptr;
         if ((auth_user == nullptr) ||
-            g_table_hosts->isAuthorized(auth_user, hst)) {
+            is_authorized_for(auth_user, hst, nullptr)) {
             if (!first) {
                 query->outputListSeparator();
             } else {

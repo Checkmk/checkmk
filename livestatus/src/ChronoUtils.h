@@ -22,47 +22,43 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef tables_h
-#define tables_h
+#ifndef ChronoUtils_h
+#define ChronoUtils_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <stdlib.h>
+#include <sys/time.h>
+#include <time.h>
+#include <chrono>
+#include <string>
 
-#ifndef EXTERN
-#define EXTERN extern
-#endif
+inline double elapsed_ms_since(std::chrono::system_clock::time_point then) {
+    using namespace std::chrono;
+    return duration_cast<duration<double, std::milli>>(system_clock::now() -
+                                                       then)
+        .count();
+}
 
-class TableContacts;
-EXTERN TableContacts *g_table_contacts;
-class TableCommands;
-EXTERN TableCommands *g_table_commands;
-class TableHosts;
-EXTERN TableHosts *g_table_hosts;
-class TableHostsByGroup;
-EXTERN TableHostsByGroup *g_table_hostsbygroup;
-class TableServices;
-EXTERN TableServices *g_table_services;
-class TableServicesByGroup;
-EXTERN TableServicesByGroup *g_table_servicesbygroup;
-class TableServicesByHostGroup;
-EXTERN TableServicesByHostGroup *g_table_servicesbyhostgroup;
-class TableHostgroups;
-EXTERN TableHostgroups *g_table_hostgroups;
-class TableServicegroups;
-EXTERN TableServicegroups *g_table_servicegroups;
-class TableDownComm;
-EXTERN TableDownComm *g_table_downtimes;
-EXTERN TableDownComm *g_table_comments;
-class TableTimeperiods;
-EXTERN TableTimeperiods *g_table_timeperiods;
-class TableContactgroups;
-EXTERN TableContactgroups *g_table_contactgroups;
-class TableStatus;
-EXTERN TableStatus *g_table_status;
-class TableLog;
-EXTERN TableLog *g_table_log;
-class TableStateHistory;
-EXTERN TableStateHistory *g_table_statehistory;
-class TableColumns;
-EXTERN TableColumns *g_table_columns;
+inline tm to_tm(std::chrono::system_clock::time_point tp) {
+    time_t t = std::chrono::system_clock::to_time_t(tp);
+    struct tm ret;
+    localtime_r(&t, &ret);
+    return ret;
+}
 
-#endif  // tables_h
+template <typename Rep, typename Period>
+inline timeval to_timeval(std::chrono::duration<Rep, Period> dur) {
+    using namespace std::chrono;
+    timeval tv;
+    tv.tv_sec = static_cast<time_t>(duration_cast<seconds>(dur).count());
+    tv.tv_usec = static_cast<suseconds_t>(
+        duration_cast<microseconds>(dur % seconds(1)).count());
+    return tv;
+}
+
+inline std::chrono::system_clock::time_point parse_time_t(
+    const std::string& str) {
+    return std::chrono::system_clock::from_time_t(atoi(str.c_str()));
+}
+
+#endif  // ChronoUtils_h

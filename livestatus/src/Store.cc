@@ -33,17 +33,8 @@
 #include "OutputBuffer.h"
 #include "Query.h"
 #include "Table.h"
-#include "global_counters.h"
 #include "mk_logwatch.h"
 #include "strutil.h"
-
-// TODO(sp): Remove this hack.
-#ifdef EXTERN
-#undef EXTERN
-#endif
-#define EXTERN
-#include "tables.h"  // IWYU pragma: keep
-#undef EXTERN
 
 extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
@@ -94,23 +85,6 @@ Store::Store()
     addTable(&_table_eventconsolehistory);
     addTable(&_table_eventconsolestatus);
     addTable(&_table_eventconsolereplication);
-
-    g_table_hosts = &_table_hosts;
-    g_table_services = &_table_services;
-    g_table_servicesbygroup = &_table_servicesbygroup;
-    g_table_servicesbyhostgroup = &_table_servicesbyhostgroup;
-    g_table_hostgroups = &_table_hostgroups;
-    g_table_servicegroups = &_table_servicegroups;
-    g_table_contacts = &_table_contacts;
-    g_table_commands = &_table_commands;
-    g_table_downtimes = &_table_downtimes;
-    g_table_comments = &_table_comments;
-    g_table_status = &_table_status;
-    g_table_timeperiods = &_table_timeperiods;
-    g_table_contactgroups = &_table_contactgroups;
-    g_table_log = &_table_log;
-    g_table_statehistory = &_table_statehistory;
-    g_table_columns = &_table_columns;
 }
 
 void Store::addTable(Table *table) {

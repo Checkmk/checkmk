@@ -24,9 +24,7 @@
 
 #include "ServicelistStateColumn.h"
 #include "Query.h"
-#include "TableServices.h"
-
-extern TableServices *g_table_services;
+#include "auth.h"
 
 // return true if state1 is worse than state2
 bool ServicelistStateColumn::svcStateIsWorse(int32_t state1, int32_t state2) {
@@ -63,7 +61,7 @@ int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem,
     while (mem != nullptr) {
         service *svc = mem->service_ptr;
         if ((auth_user == nullptr) ||
-            g_table_services->isAuthorized(auth_user, svc)) {
+            is_authorized_for(auth_user, svc->host_ptr, svc)) {
             int lt = logictype;
             int state;
             int has_been_checked;

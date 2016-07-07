@@ -58,7 +58,6 @@ public:
 
     const char *name() { return "log"; }
     const char *namePrefix() { return "logs"; }
-    bool isAuthorized(contact *ctc, void *data);
     void handleNewMessage(Logfile *logfile, time_t since, time_t until,
                           unsigned logclasses);
     Column *column(

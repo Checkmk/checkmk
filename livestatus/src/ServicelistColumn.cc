@@ -26,12 +26,11 @@
 #include <string.h>
 #include "Query.h"
 #include "ServicelistFilter.h"
-#include "TableServices.h"
 #include "TimeperiodsCache.h"
+#include "auth.h"
 #include "opids.h"
 
 extern TimeperiodsCache *g_timeperiods_cache;
-extern TableServices *g_table_services;
 
 using std::string;
 
@@ -54,7 +53,7 @@ void ServicelistColumn::output(void *data, Query *query) {
     while (mem != nullptr) {
         service *svc = mem->service_ptr;
         if ((auth_user == nullptr) ||
-            g_table_services->isAuthorized(auth_user, svc)) {
+            is_authorized_for(auth_user, svc->host_ptr, svc)) {
             if (!first) {
                 query->outputListSeparator();
             } else {

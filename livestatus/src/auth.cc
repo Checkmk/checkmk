@@ -24,25 +24,23 @@
 
 #include "auth.h"
 
-int is_authorized_for(contact *ctc, host *hst, service *svc) {
+bool is_authorized_for(contact *ctc, host *hst, service *svc) {
     if (ctc == UNKNOWN_AUTH_USER) {
-        return 0;
+        return false;
     }
 
     if (svc != nullptr) {
         if (g_service_authorization == AUTH_STRICT) {
-            return static_cast<int>(
-                (is_contact_for_service(svc, ctc) != 0) ||
-                (is_escalated_contact_for_service(svc, ctc) != 0));
+            return is_contact_for_service(svc, ctc) != 0 ||
+                   is_escalated_contact_for_service(svc, ctc) != 0;
         }  // AUTH_LOOSE
-        return static_cast<int>(
-            (is_contact_for_host(hst, ctc) != 0) ||
-            (is_escalated_contact_for_host(hst, ctc) != 0) ||
-            (is_contact_for_service(svc, ctc) != 0) ||
-            (is_escalated_contact_for_service(svc, ctc) != 0));
+        return is_contact_for_host(hst, ctc) != 0 ||
+               is_escalated_contact_for_host(hst, ctc) != 0 ||
+               is_contact_for_service(svc, ctc) != 0 ||
+               is_escalated_contact_for_service(svc, ctc) != 0;
     }
-    // Entries for hosts
 
-    return static_cast<int>((is_contact_for_host(hst, ctc) != 0) ||
-                            (is_escalated_contact_for_host(hst, ctc) != 0));
+    // Entries for hosts
+    return is_contact_for_host(hst, ctc) != 0 ||
+           is_escalated_contact_for_host(hst, ctc) != 0;
 }

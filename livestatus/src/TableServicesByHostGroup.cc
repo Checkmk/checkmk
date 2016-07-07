@@ -72,7 +72,7 @@ void TableServicesByHostGroup::answerQuery(Query *query) {
 
 bool TableServicesByHostGroup::isAuthorized(contact *ctc, void *data) {
     service *svc = static_cast<service *>(data);
-    return is_authorized_for(ctc, svc->host_ptr, svc) != 0;
+    return is_authorized_for(ctc, svc->host_ptr, svc);
 }
 
 void *TableServicesByHostGroup::findObject(char *objectspec) {

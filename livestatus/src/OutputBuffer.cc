@@ -30,13 +30,15 @@
 #include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <chrono>
 #include <ostream>
+#include <ratio>
+#include "ChronoUtils.h"
 #include "Logger.h"
 
+using std::chrono::milliseconds;
 using std::string;
 using std::vector;
-
-#define WRITE_TIMEOUT_USEC 100000
 
 OutputBuffer::OutputBuffer() : _max_size(1) {
     _buffer = static_cast<char *>(malloc(_max_size));
@@ -118,14 +120,11 @@ void OutputBuffer::flush(int fd, int *termination_flag) {
 void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
                              size_t bytes_to_write) {
     while ((*termination_flag == 0) && bytes_to_write > 0) {
-        struct timeval tv;
-        tv.tv_sec = WRITE_TIMEOUT_USEC / 1000000;
-        tv.tv_usec = WRITE_TIMEOUT_USEC % 1000000;
-
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(fd, &fds);
 
+        timeval tv = to_timeval(milliseconds(100));
         int retval = select(fd + 1, nullptr, &fds, nullptr, &tv);
         if (retval > 0 && FD_ISSET(fd, &fds)) {
             ssize_t bytes_written = write(fd, buffer, bytes_to_write);

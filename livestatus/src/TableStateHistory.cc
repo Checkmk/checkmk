@@ -1021,11 +1021,8 @@ bool TableStateHistory::isAuthorized(contact *ctc, void *data) {
     HostServiceState *entry = static_cast<HostServiceState *>(data);
     service *svc = entry->_service;
     host *hst = entry->_host;
-
-    if ((hst != nullptr) || (svc != nullptr)) {
-        return static_cast<int>(is_authorized_for(ctc, hst, svc)) != 0;
-    }
-    return false;
+    return (hst != nullptr || svc != nullptr) &&
+           is_authorized_for(ctc, hst, svc);
 }
 
 Column *TableStateHistory::column(const char *colname) {

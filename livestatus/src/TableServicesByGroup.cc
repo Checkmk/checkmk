@@ -64,9 +64,9 @@ void TableServicesByGroup::answerQuery(Query *query) {
         bool show_service_group = true;
         if (requires_precheck) {
             for (servicesmember *m = sg->members; m != nullptr; m = m->next) {
-                if (is_authorized_for(query->authUser(),
-                                      m->service_ptr->host_ptr,
-                                      m->service_ptr) == 0) {
+                if (!is_authorized_for(query->authUser(),
+                                       m->service_ptr->host_ptr,
+                                       m->service_ptr)) {
                     show_service_group = false;
                     break;
                 }
@@ -86,7 +86,7 @@ void TableServicesByGroup::answerQuery(Query *query) {
 
 bool TableServicesByGroup::isAuthorized(contact *ctc, void *data) {
     service *svc = static_cast<service *>(data);
-    return is_authorized_for(ctc, svc->host_ptr, svc) != 0;
+    return is_authorized_for(ctc, svc->host_ptr, svc);
 }
 
 void *TableServicesByGroup::findObject(char *objectspec) {

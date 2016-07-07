@@ -716,7 +716,7 @@ void TableHosts::answerQuery(Query *query) {
     }
 }
 bool TableHosts::isAuthorized(contact *ctc, void *data) {
-    return is_authorized_for(ctc, static_cast<host *>(data), nullptr) != 0;
+    return is_authorized_for(ctc, static_cast<host *>(data), nullptr);
 }
 
 void *TableHosts::findObject(char *objectspec) { return find_host(objectspec); }

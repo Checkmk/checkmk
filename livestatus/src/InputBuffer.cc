@@ -29,8 +29,12 @@
 #include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <chrono>
+#include <ratio>
+#include "ChronoUtils.h"
 #include "logger.h"
 
+using std::chrono::milliseconds;
 using std::list;
 using std::string;
 
@@ -41,8 +45,6 @@ namespace {
 const size_t initial_buffer_size = 4096;
 // TODO(sp): Make this configurable?
 const size_t maximum_buffer_size = 500 * 1024 * 1024;
-
-const int read_timeout_usec = 200000;
 
 bool timeout_reached(const struct timeval *start, int timeout_ms) {
     if (timeout_ms == 0) {
@@ -210,19 +212,16 @@ InputBuffer::Result InputBuffer::readData() {
     struct timeval start;
     gettimeofday(&start, nullptr);
 
-    struct timeval tv;
     while (*_termination_flag == 0) {
         if (timeout_reached(&start, g_query_timeout_msec)) {
             return Result::timeout;
         }
 
-        tv.tv_sec = read_timeout_usec / 1000000;
-        tv.tv_usec = read_timeout_usec % 1000000;
-
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(_fd, &fds);
 
+        timeval tv = to_timeval(milliseconds(200));
         int retval = select(_fd + 1, &fds, nullptr, nullptr, &tv);
         if (retval > 0 && FD_ISSET(_fd, &fds)) {
             ssize_t r = read(_fd, &_readahead_buffer[_write_index],

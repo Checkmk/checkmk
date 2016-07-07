@@ -152,5 +152,5 @@ void TableDownComm::answerQuery(Query *query) {
 
 bool TableDownComm::isAuthorized(contact *ctc, void *data) {
     DowntimeOrComment *dtc = static_cast<DowntimeOrComment *>(data);
-    return is_authorized_for(ctc, dtc->_host, dtc->_service) != 0;
+    return is_authorized_for(ctc, dtc->_host, dtc->_service);
 }

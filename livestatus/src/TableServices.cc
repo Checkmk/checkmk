@@ -538,7 +538,7 @@ void TableServices::answerQuery(Query *query) {
 
 bool TableServices::isAuthorized(contact *ctc, void *data) {
     service *svc = static_cast<service *>(data);
-    return is_authorized_for(ctc, svc->host_ptr, svc) != 0;
+    return is_authorized_for(ctc, svc->host_ptr, svc);
 }
 
 void *TableServices::findObject(char *objectspec) {

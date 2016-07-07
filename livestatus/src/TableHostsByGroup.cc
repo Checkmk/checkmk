@@ -64,8 +64,8 @@ void TableHostsByGroup::answerQuery(Query *query) {
         bool show_host_group = true;
         if (requires_precheck) {
             for (hostsmember *m = hg->members; m != nullptr; m = m->next) {
-                if (is_authorized_for(query->authUser(), m->host_ptr,
-                                      nullptr) == 0) {
+                if (!is_authorized_for(query->authUser(), m->host_ptr,
+                                       nullptr)) {
                     show_host_group = false;
                     break;
                 }
@@ -84,7 +84,7 @@ void TableHostsByGroup::answerQuery(Query *query) {
 }
 
 bool TableHostsByGroup::isAuthorized(contact *ctc, void *data) {
-    return is_authorized_for(ctc, static_cast<host *>(data), nullptr) != 0;
+    return is_authorized_for(ctc, static_cast<host *>(data), nullptr);
 }
 
 void *TableHostsByGroup::findObject(char *objectspec) {

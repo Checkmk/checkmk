@@ -82,9 +82,9 @@ check_info["hitachi_hnas_fc_if"] = {
         20, # fcStatsProtocolErrors       12
         18, # fcStatsDiscardedFrameErrors 13
     ]),
-    "snmp_scan_function"     : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.11096.6"),
+    "snmp_scan_function"    : hitachin_hnas_scan_function,
     "group"                  : "if",
     "default_levels_variable": "if_default_levels",
-    "includes"               : [ "if.include" ],
+    "includes"               : [ "hitachi_hnas.include", "if.include" ],
 }
 

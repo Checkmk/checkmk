@@ -1,0 +1,9 @@
+Title: hitachi_hnas_*: Fixed service discovery on some devices (e.g. HM800)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p6
+Date: 1467883064
+Class: fix
+
+

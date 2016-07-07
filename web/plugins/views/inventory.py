@@ -581,6 +581,7 @@ inventory_displayhints.update({
     ".hardware.system.product"                         : { "title" : _("Product") },
     ".hardware.system.serial"                          : { "title" : _("Serial Number") },
     ".hardware.system.model"                           : { "title" : _("Model Name") },
+    ".hardware.system.manufacturer"                    : { "title" : _("Manufacturer") },
 
     ".hardware.components."                            : { "title" : _("Physical Components") },
     ".hardware.components.backplanes:"                 : { "title" : _("Backplanes"), "render" : render_inv_dicttable,

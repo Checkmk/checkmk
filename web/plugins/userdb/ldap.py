@@ -1075,6 +1075,14 @@ class LDAPUserConnector(UserConnector):
                 self.persist_sync_failure()
 
 
+    def is_enabled(self):
+        sync_config = user_sync_config()
+        if type(sync_config) == tuple and self.id() not in sync_config[1]:
+            #logger(LOG_DEBUG, 'Skipping disabled connection %s' % (self.id()))
+            return False
+        return True
+
+
     def sync_is_needed(self):
         return self.get_last_sync_time() + self.get_cache_livetime() <= time.time()
 

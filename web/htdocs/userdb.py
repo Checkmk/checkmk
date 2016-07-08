@@ -89,8 +89,15 @@ def get_connections(only_enabled=False):
             connections.insert(0, ('htpasswd', connector_class({})))
         else:
             for connection_config in config.user_connections:
-                if not only_enabled or not connection_config.get('disabled'):
-                    connections.append((connection_config['id'], connector_class(connection_config)))
+                if only_enabled and connection_config.get('disabled'):
+                    continue
+
+                connection = connector_class(connection_config)
+
+                if only_enabled and not connection.is_enabled():
+                    continue
+
+                connections.append((connection_config['id'], connection))
     return connections
 
 
@@ -99,8 +106,8 @@ def active_connections():
 
 
 def connection_choices():
-    return sorted([ (cid, "%s (%s)" % (cid, c.type())) for cid, c in get_connections()
-                     if c.type() == "ldap"],
+    return sorted([ (cid, "%s (%s)" % (cid, c.type())) for cid, c in get_connections(only_enabled=False)
+                     if c.type() == "ldap" ],
                   key=lambda (x, y): y)
 
 
@@ -1251,14 +1258,6 @@ def execute_userdb_job():
         return
 
     for connection_id, connection in active_connections():
-        if connection.type() != "ldap":
-            continue # currently only ldap can sync
-
-        sync_config = user_sync_config()
-        if type(sync_config) == tuple and connection_id not in sync_config[1]:
-            #logger(LOG_DEBUG, 'Skipping disabled connection %s' % (connection_id))
-            continue
-
         try:
             connection.on_cron_job()
         except:

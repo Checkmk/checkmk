@@ -70,6 +70,10 @@ def system_config_path():
     return "/etc/cma/backup.conf"
 
 
+def system_key_path():
+    return "/etc/cma/backup_keys.conf"
+
+
 def site_config_path(site_id=None):
     if site_id == None:
         if "OMD_SITE" not in os.environ:
@@ -1449,6 +1453,11 @@ def show_key_download_warning(keys):
                             "can not be restored.<br>"
                             "The following keys have not been downloaded yet: %s") % ", ".join(to_load))
 
+
+
+class SystemBackupKeypairStore(BackupKeypairStore):
+    def __init__(self):
+        super(SystemBackupKeypairStore, self).__init__(system_key_path(), "keys")
 
 #.
 #   .--Restore-------------------------------------------------------------.

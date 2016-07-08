@@ -5737,10 +5737,6 @@ class ModeBackupEditKey(SiteBackupKeypairStore, backup.PageBackupEditKey, WatoMo
     pass
 
 
-class ModeBackupEditKey(SiteBackupKeypairStore, backup.PageBackupEditKey, WatoMode):
-    pass
-
-
 class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, WatoMode):
     def _upload_key(self, key_file, value):
         log_audit(None, "upload-backup-key",

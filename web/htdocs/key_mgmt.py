@@ -143,7 +143,7 @@ class PageKeyManagement(object):
 
 
     def page(self):
-        table.begin(title = self._table_title())
+        table.begin(title = self._table_title(), searchable=False, sortable=False)
 
         for key_id, key in sorted(self.keys.items()):
             cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
@@ -267,18 +267,11 @@ class PageUploadKey(object):
 
 
     def action(self):
-        def get_uploaded(cert_spec, key):
-            if key in cert_spec:
-                if cert_spec[key][0] == "upload":
-                    return cert_spec[key][1][2]
-                else:
-                    return cert_spec[key][1]
-
         if html.check_transaction():
             value = self._vs_key().from_html_vars("key")
             self._vs_key().validate_value(value, "key")
 
-            key_file = get_uploaded(value, "key_file")
+            key_file = self._get_uploaded(value, "key_file")
             if not key_file:
                 raise MKUserError(None, _("You need to provide a key file."))
 
@@ -290,6 +283,14 @@ class PageUploadKey(object):
 
             self._upload_key(key_file, value)
             return self.back_mode
+
+
+    def _get_uploaded(self, cert_spec, key):
+        if key in cert_spec:
+            if cert_spec[key][0] == "upload":
+                return cert_spec[key][1][2]
+            else:
+                return cert_spec[key][1]
 
 
     def _upload_key(self, key_file, value):
@@ -463,7 +464,7 @@ class PageDownloadKey(object):
 def create_self_signed_cert(pkey):
     cert = crypto.X509()
     cert.get_subject().O = "Check_MK Site %s" % defaults.omd_site
-    cert.get_subject().CN = config.user_id
+    cert.get_subject().CN = config.user_id or "### Check_MK ###"
     cert.set_serial_number(1)
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(30*365*24*60*60) # valid for 30 years.

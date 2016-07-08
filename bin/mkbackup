@@ -486,7 +486,18 @@ def do_site_backup(opts, site=None):
             backup_file.write(chunk)
 
     if p.returncode != 0:
-        raise MKGeneralException("Site backup failed: %s" % p.stderr.read())
+        err = p.stderr.read()
+        if not compress_archives() and "Invalid option '--no-compression'" in err:
+            err = "The Check_MK version of this site does not support uncompressed backups. " \
+                  "you can either re-enable the compression or update your site to version " \
+                  "1.2.8p5 or later."
+
+        elif "The site needs to be stopped" in err:
+            err = "The Check_MK version of this site does not support online backups. " \
+                  "You can either exclude the sites from this backup job, stop your sites " \
+                  "manually or update your sites to version 1.4.0i1 or later."
+
+        raise MKGeneralException("Site backup failed: %s" % err)
 
 
 # Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA
@@ -992,7 +1003,14 @@ def backup_files_to_tarfile(fobj, base_path, exclude_patterns=None):
         filter_files = lambda x: False
 
     tar_mode = "w:gz" if compress_archives() else "w:"
-    tar = TarFile.open(fileobj=fobj, mode=tar_mode)
+    try:
+        tar = TarFile.open(fileobj=fobj, mode=tar_mode)
+    except IOError, e:
+        if not opt_debug and e.errno == 29:
+            log("Failed to init backup to tarfile: %s" % e)
+            return
+        else:
+            raise
     tar.add(base_path, exclude=filter_files)
     tar.close()
 

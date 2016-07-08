@@ -80,7 +80,7 @@ def site_config_path(site_id=None):
             raise Exception(_("Not executed in OMD environment!"))
         site_id = os.environ["OMD_SITE"]
 
-    return defaults.default_config_dir + "/backup.mk"
+    return "/omd/sites/%s/etc/check_mk/backup.mk" % site_id
 
 
 def hostname():
@@ -724,6 +724,7 @@ class PageEditBackupJob(object):
                              "during backup. You will need the private key and the passphrase "
                              "to decrypt the backup."),
                     choices = self.backup_key_choices,
+                    invalid_choice = "complain",
                 )),
             ] + self.custom_job_attributes(),
         optional_keys = ["compress", "encrypt"],

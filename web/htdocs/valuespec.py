@@ -1318,7 +1318,7 @@ class DropdownChoice(ValueSpec):
             if choices:
                 raise MKUserError(varprefix, _("The selected element is not longer available. Please select something else."))
             else:
-                raise MKUserError(varprefix, _("There is element available to choose from."))
+                raise MKUserError(varprefix, _("There is no element available to choose from."))
 
     def validate_value(self, value, varprefix):
         if self._no_preselect and value == self._no_preselect_value:

@@ -109,6 +109,7 @@ def init_language(lang, domain="multisite", locale_path=None):
 # Prepares the builtin-scope for localization, registers the _() function and
 # current_language variable. Is also used to disable localization
 def unlocalize():
+    # TODO: Make behaviour like gettext _(): Always return unicode strings
     __builtin__._ = lambda x: x
     __builtin__.current_language = None
 

@@ -279,8 +279,9 @@ def show_crash_report(info):
                                                      html.attrencode(info["exc_value"])))
     html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Traceback"))
     html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_traceback(info["exc_traceback"])))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Local Variables"))
-    html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_local_vars(info["local_vars"])))
+    if "local_vars" in info:
+        html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Local Variables"))
+        html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_local_vars(info["local_vars"])))
     html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Python Module Paths"))
     joined_paths = "<br>".join([ html.attrencode(p) for p in info.get("python_paths", [_("Unknown")]) ])
     html.write("<td>%s</td></tr>" % joined_paths)

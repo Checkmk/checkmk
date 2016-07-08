@@ -2466,7 +2466,13 @@ class TextAttribute(Attribute):
     def filter_matches(self, crit, value, hostname):
         if value == None:  # Host does not have this attribute
             value = ""
-        return crit.lower() in value.lower()
+
+        if crit[0] == "~":
+            # insensitive infix regex match
+            return re.search(crit[1:], value, re.IGNORECASE) != None
+        else:
+            # insensitive infix search
+            return crit.lower() in value.lower()
 
 # A simple text attribute that is not editable by the user.
 # It can be used to store context information from other

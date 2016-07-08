@@ -1,0 +1,12 @@
+Title: Search expressions in host search can now be given as regexes
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i1
+Date: 1467979934
+Class: feature
+
+The host search in WATO is normally performing a case insensitive infix search on the
+set text attributes (e.g. name, alias, IP addresses). Now you can specify regular expressions
+by prefixing the search term with a <tt>~</tt>. The regex searches are also performed as
+case insensitive infix searches.

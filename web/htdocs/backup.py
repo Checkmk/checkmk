@@ -1198,7 +1198,7 @@ class BackupTargetType(object):
     def choices(cls):
         choices = []
         for type_class in cls.__subclasses__():
-            choices.append((type_class.ident, type_class.title(), type_class().valuespec()))
+            choices.append((type_class.ident, type_class.title(), type_class.valuespec()))
         return sorted(choices, key=lambda x: x[1])
 
 
@@ -1235,7 +1235,8 @@ class BackupTargetLocal(BackupTargetType):
         return _("Local path")
 
 
-    def valuespec(self):
+    @classmethod
+    def valuespec(cls):
         return Dictionary(
             elements = [
                 ("path", AbsoluteDirname(
@@ -1245,7 +1246,7 @@ class BackupTargetLocal(BackupTargetType):
                              "NFS, Samba or similar. But you will have to care about mounting the "
                              "network share on your own."),
                     allow_empty = False,
-                    validate = self.validate_local_directory,
+                    validate = cls.validate_local_directory,
                 )),
                 ("is_mountpoint", Checkbox(
                     title = _("Is mountpoint"),
@@ -1259,7 +1260,8 @@ class BackupTargetLocal(BackupTargetType):
         )
 
 
-    def validate_local_directory(self, value, varprefix):
+    @classmethod
+    def validate_local_directory(cls, value, varprefix):
         if is_cma() and not value.startswith("/mnt/"):
             raise MKUserError(varprefix, _("You can only use mountpoints below the <tt>/mnt</tt> "
                                            "directory as backup targets."))

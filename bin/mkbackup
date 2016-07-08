@@ -895,7 +895,13 @@ def verify_backup_files(info, files, needed):
 
 def do_system_backup(opts):
     # Create missing directories. Ensure group permissions and mode.
-    makedirs(os.path.dirname(system_backup_archive_path()), group="omd", mode=0775)
+    try:
+        makedirs(os.path.dirname(system_backup_archive_path()), group="omd", mode=0775)
+    except OSError, e:
+        if e.errno == 13:
+            raise MKGeneralException("Failed to create the backup directory: %s" % e)
+        else:
+            raise
 
     # Perform backup of the /rw volume on all devices
     log("Performing system backup (system%s)" % archive_suffix())
@@ -933,7 +939,8 @@ def do_system_rw_backup(opts):
         t.start()
 
         # Process backup stream and write to destination file
-        s = BackupStream(stream=pipein, is_alive=lambda: t.is_alive())
+        s = BackupStream(stream=pipein, is_alive=lambda: t.is_alive(),
+                         key_ident=g_job_config.get("encrypt"))
         for chunk in s.process():
             backup_file.write(chunk)
 
@@ -950,7 +957,8 @@ def do_system_data_backup(opts):
         t.start()
 
         # Process backup stream and write to destination file
-        s = BackupStream(stream=pipein, is_alive=lambda: t.is_alive())
+        s = BackupStream(stream=pipein, is_alive=lambda: t.is_alive(),
+                         key_ident=g_job_config.get("encrypt"))
         for chunk in s.process():
             backup_file.write(chunk)
 
@@ -1018,7 +1026,13 @@ def complete_backup():
 def cleanup_previous_incomplete_backup():
     if os.path.exists(job_backup_path_during_backup()):
         log("Found previous incomplete backup. Cleaning up those files.")
-        shutil.rmtree(job_backup_path_during_backup())
+        try:
+            shutil.rmtree(job_backup_path_during_backup())
+        except OSError, e:
+            if e.errno == 13:
+                raise MKGeneralException("Failed to write the backup directory: %s" % e)
+            else:
+                raise
 
 
 def load_job(local_job_id):

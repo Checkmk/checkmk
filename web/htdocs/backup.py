@@ -491,13 +491,17 @@ class Jobs(BackupEntityCollection):
 
     def save_cronjobs(self):
         with open(self._cronjob_path, "w") as f:
-            f.write("# Written by mkbackup configuration\n")
+            self._write_cronjob_header(f)
             for job in self.objects.values():
                 cron_config = job.cron_config()
                 if cron_config:
                     f.write("%s\n" % "\n".join(cron_config))
 
         self._apply_cron_config()
+
+
+    def _write_cronjob_header(self, f):
+        f.write("# Written by mkbackup configuration\n")
 
 
     def _apply_cron_config(self):
@@ -858,6 +862,11 @@ class PageBackupJobState(object):
 class SystemBackupJobs(Jobs):
     def __init__(self):
         super(SystemBackupJobs, self).__init__(system_config_path())
+
+
+    def _write_cronjob_header(self, f):
+        super(SystemBackupJobs, self)._write_cronjob_header(f)
+        f.write("PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin\n")
 
 
 

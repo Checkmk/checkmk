@@ -399,7 +399,8 @@ g_backup_id    = None
 def mode_backup(local_job_id, opts):
     acquire_backup_lock()
     load_job(local_job_id)
-    verify_target_is_ready(g_job_config["target"])
+    target_ident = g_job_config["target"]
+    verify_target_is_ready(target_ident)
 
     init_new_run()
 
@@ -408,7 +409,7 @@ def mode_backup(local_job_id, opts):
         save_state({"pid": os.getpid()})
 
     start_logging()
-    log("--- Starting backup (%s) ---" % g_job_id)
+    log("--- Starting backup (%s to %s) ---" % (g_job_id, target_ident))
 
     success = False
     try:
@@ -1002,7 +1003,7 @@ def backup_files_to_tarfile(fobj, base_path, exclude_patterns=None):
     else:
         filter_files = lambda x: False
 
-    tar_mode = "w:gz" if compress_archives() else "w:"
+    tar_mode = "w|gz" if compress_archives() else "w|"
     try:
         tar = TarFile.open(fileobj=fobj, mode=tar_mode)
     except IOError, e:

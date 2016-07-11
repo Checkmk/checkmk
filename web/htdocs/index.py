@@ -194,7 +194,7 @@ def handler(req, fields = None, is_profiling = False):
 def finalize_request(is_error=False):
     release_all_locks()
     userdb.finalize()
-    html.finalize(is_error=True)
+    html.finalize(is_error=is_error)
 
 
 # Ajax-Functions want no HTML output in case of an error but

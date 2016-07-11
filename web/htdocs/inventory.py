@@ -334,7 +334,12 @@ def may_see(host_name):
     if config.may("general.see_all"):
         return True
 
-    return sites.live().query_value("GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host_name)) > 0
+    query = "GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host_name)
+    result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
+    if not result:
+        return False
+    else:
+        return result[0] > 0
 
 
 def write_xml(response):

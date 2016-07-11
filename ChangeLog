@@ -388,6 +388,7 @@
     * 3659 FIX: Fixed GUI exceptions for users having special characters in ther user names
     * 3662 FIX: Fixed creation/editing of dashboards (regression since 1.2.8p5)
     * 3668 FIX: Fixed slow loading of GUI pages when using a localized GUI
+    * 3669 FIX: LDAP: Fixed very long running LDAP sync when using group based sync plugins
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

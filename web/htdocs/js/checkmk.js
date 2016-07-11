@@ -425,7 +425,7 @@ if (!("nextElementSibling" in document.documentElement)) {
 //#   | AJAX call related functions                                        |
 //#   '--------------------------------------------------------------------'
 
-function call_ajax(url, args)
+function call_ajax(url, optional_args)
 {
     args = merge_args({
         add_ajax_id      : true,
@@ -436,7 +436,7 @@ function call_ajax(url, args)
         method           : "GET",
         post_data        : null,
         sync             : false
-    }, args);
+    }, optional_args);
 
     var AJAX = window.XMLHttpRequest ? new XMLHttpRequest()
                                      : new ActiveXObject("Microsoft.XMLHTTP");

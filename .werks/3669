@@ -1,0 +1,9 @@
+Title: LDAP: Fixed very long running LDAP sync when using group based sync plugins
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p6
+Date: 1468221930
+Class: fix
+
+

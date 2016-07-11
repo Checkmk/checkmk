@@ -35,7 +35,11 @@ loaded_with_language = False
 # Custom user attributes
 user_attributes  = {}
 builtin_user_attribute_names = []
+
+# Connection configuration
 connection_dict = {}
+# Connection object dictionary
+g_connections   = {}
 
 # Load all userdb plugins
 def load_plugins(force):
@@ -55,6 +59,10 @@ def load_plugins(force):
     connection_dict.clear()
     for connection in config.user_connections:
         connection_dict[connection['id']] = connection
+
+    # Cleanup eventual still open connections
+    if g_connections:
+        g_connections.clear()
 
     global loaded_with_language
     if loaded_with_language == current_language and not force:
@@ -77,6 +85,12 @@ def load_plugins(force):
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
     loaded_with_language = current_language
+
+
+# Cleans up at the end of a request: Cleanup eventual open connections
+def finalize():
+    if g_connections:
+        g_connections.clear()
 
 
 # Returns a list of two part tuples where the first element is the unique
@@ -120,9 +134,19 @@ def cleanup_connection_id(connection_id):
     return connection_id
 
 
-# Returns the connector dictionary of the given id
+# Returns the connection object of the requested connection id. This function
+# maintains a cache that for a single connection_id only one object per request
+# is created.
 def get_connection(connection_id):
-    return dict(get_connections()).get(connection_id)
+    if connection_id in g_connections:
+        return g_connections[connection_id]
+
+    connection = dict(get_connections()).get(connection_id)
+
+    if connection:
+        g_connections[connection_id] = connection
+
+    return connection
 
 
 # Returns a list of connection specific locked attributes

@@ -29,6 +29,7 @@ import sys, os, pprint, __builtin__
 import i18n
 import livestatus
 import modules
+import userdb
 import defaults, config, login
 from lib import *
 from html_mod_python import *
@@ -170,8 +171,7 @@ def handler(req, fields = None, is_profiling = False):
     except (apache.SERVER_RETURN,
             (apache.SERVER_RETURN, apache.HTTP_UNAUTHORIZED),
             (apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY)):
-        release_all_locks()
-        html.finalize(is_error=True)
+        finalize_request(is_error=True)
         raise
 
     except Exception, e:
@@ -187,9 +187,14 @@ def handler(req, fields = None, is_profiling = False):
             modules.get_handler("gui_crash")()
         response_code = apache.OK
 
-    release_all_locks()
-    html.finalize()
+    finalize_request()
     return response_code
+
+
+def finalize_request(is_error=False):
+    release_all_locks()
+    userdb.finalize()
+    html.finalize(is_error=True)
 
 
 # Ajax-Functions want no HTML output in case of an error but

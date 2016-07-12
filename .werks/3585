@@ -10,7 +10,11 @@ Date: 1464704941
 The HW/SW inventory data can now be exported using a webservice. This webservice
 outputs the raw structured inventory data of a host.
 
-The URL to this webservice is <tt>http://[MONITORING-SERVER]/[SITE]/check_mk/host_inv_api.py?host=[HOST]&output_format=json</tt>.
+The URL to this webservice is:
+
+C+:
+http://[MONITORING-SERVER]/[SITE]/check_mk/host_inv_api.py?host=[HOST]&output_format=json
+C-:
 
 You choose one of these output formats: <tt>json</tt>, <tt>xml</tt>, <tt>python</tt>.
 
@@ -46,7 +50,9 @@ C-:
 
 You can also request data of multiple hosts at once. In this case, you need to specify your request like this:
 
-<tt>http://[MONITORING-SERVER]/[SITE]/check_mk/host_inv_api.py?request={"hosts": ["host1", "host2"]}&output_format=json</tt>
+C+:
+http://[MONITORING-SERVER]/[SITE]/check_mk/host_inv_api.py?request={"hosts": ["host1", "host2"]}&output_format=json
+C-:
 
 You will then get an answer that is similar to the answer above. With the difference that the top level dictionary
 uses the host names as keys and the values are the inventory tree of this host.
@@ -93,7 +99,9 @@ used to filter the tree. Only hosts that have those paths will show the trees.
 
 For example, if you only want to see the total and swap memory information of a single host, you can use the following URL:
 
-<tt>http://[MONITORING-SERVER]/[SITE]/check_mk/host_inv_api.py?host=[HOST]&request={"paths": [".hardware.memory.total_ram_usable", ".hardware.memory.total_swap"]}&output_format=json</tt>
+C+:
+http://[MONITORING-SERVER]/[SITE]/check_mk/host_inv_api.py?host=[HOST]&request={"paths": [".hardware.memory.total_ram_usable", ".hardware.memory.total_swap"]}&output_format=json
+C-:
 
 You will get back only the requested data:
 

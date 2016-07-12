@@ -23,27 +23,31 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ListFilter.h"
+#include <algorithm>
 #include <ostream>
 #include "ListColumn.h"
 #include "Logger.h"
 #include "opids.h"
 
+using std::move;
 using std::string;
+using std::unique_ptr;
 
 ListFilter::ListFilter(Query *query, ListColumn *column,
-                       RelationalOperator relOp, const string &value)
+                       RelationalOperator relOp,
+                       unique_ptr<ListColumn::Contains> predicate,
+                       bool isEmptyValue)
     : ColumnFilter(query)
     , _column(column)
     , _relOp(relOp)
-    , _ref_member(_column->getNagiosObject(const_cast<char *>(value.c_str())))
-    , _empty_ref(value.empty()) {}
+    , _predicate(move(predicate))
+    , _empty_ref(isEmptyValue) {}
 
 bool ListFilter::accepts(void *data) {
     data = _column->shiftPointer(data);
     if (data == nullptr) {
         return false;
     }
-    bool is_member = _column->isNagiosMember(data, _ref_member);
     switch (_relOp) {
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
@@ -54,9 +58,9 @@ bool ListFilter::accepts(void *data) {
             return _column->isEmpty(data) ==
                    (_relOp == RelationalOperator::equal);
         case RelationalOperator::less:
-            return !is_member;
+            return !((*_predicate)(data));
         case RelationalOperator::greater_or_equal:
-            return is_member;
+            return (*_predicate)(data);
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
         case RelationalOperator::equal_icase:
@@ -75,7 +79,8 @@ bool ListFilter::accepts(void *data) {
 void *ListFilter::indexFilter(const string &column_name) const {
     switch (_relOp) {
         case RelationalOperator::greater_or_equal:
-            return column_name == _column->name() ? _ref_member : nullptr;
+            return column_name == _column->name() ? _predicate->element()
+                                                  : nullptr;
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:

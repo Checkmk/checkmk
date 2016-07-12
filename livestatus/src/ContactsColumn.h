@@ -26,9 +26,11 @@
 #define ContactsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Column.h"
 #include "ListColumn.h"
+#include "nagios.h"
 class Query;
 
 class ContactsColumn : public ListColumn {
@@ -37,8 +39,8 @@ public:
                    int indirect_offset, int extra_offset)
         : ListColumn(name, description, indirect_offset, extra_offset) {}
     ColumnType type() override { return ColumnType::list; }
-    void *getNagiosObject(char *name) override;
-    bool isEmpty(void *svc) override;
+    virtual std::unique_ptr<Contains> containsContact(contact *ctc) = 0;
+    bool isEmpty(void *data) override;
     void output(void *, Query *) override;
 };
 

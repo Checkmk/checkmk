@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DownCommColumn.h"
-#include <stdint.h>
 #include <stdlib.h>
 #include <memory>
 #include <utility>
@@ -31,6 +30,10 @@
 #include "DowntimesOrComments.h"
 #include "Query.h"
 #include "nagios.h"
+
+using std::make_unique;
+using std::string;
+using std::unique_ptr;
 
 void DownCommColumn::output(void *data, Query *query) {
     query->outputBeginList();
@@ -88,20 +91,32 @@ bool DownCommColumn::match(DowntimeOrComment *dt, void *data) {
     return dt->_host->name == h->name;
 }
 
-void *DownCommColumn::getNagiosObject(char *name) {
-    // Hack. Convert number into pointer.
-    return static_cast<char *>(nullptr) + strtoul(name, nullptr, 10);
-}
+unique_ptr<ListColumn::Contains> DownCommColumn::makeContains(const string &name) {
+    class ContainsDownCommID : public Contains {
+    public:
+        explicit ContainsDownCommID(unsigned long element,
+                                    const DowntimesOrComments &holder)
+            : _element(element), _holder(holder) {}
 
-bool DownCommColumn::isNagiosMember(void *data, void *member) {
-    // data points to a host or service
-    // member is not a pointer, but an unsigned int (hack)
-    unsigned long id = static_cast<unsigned long>(
-        reinterpret_cast<uintptr_t>(member));  // Hack. Convert it back.
-    DowntimeOrComment *dt = _holder.findEntry(id);
-    return dt != nullptr && (dt->_service == static_cast<service *>(data) ||
-                             (dt->_service == nullptr &&
-                              dt->_host == static_cast<host *>(data)));
+        bool operator()(void *row) override {
+            DowntimeOrComment *dt = _holder.findEntry(_element);
+            return dt != nullptr &&
+                   (dt->_service == static_cast<service *>(row) ||
+                    (dt->_service == nullptr &&
+                     dt->_host == static_cast<host *>(row)));
+        }
+
+        void *element() override {
+            return static_cast<char *>(nullptr) + _element;
+        }
+
+    private:
+        const unsigned long _element;
+        const DowntimesOrComments &_holder;
+    };
+
+    return make_unique<ContainsDownCommID>(strtoul(name.c_str(), nullptr, 10),
+                                           _holder);
 }
 
 bool DownCommColumn::isEmpty(void *data) {

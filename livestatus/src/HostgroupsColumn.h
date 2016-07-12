@@ -26,6 +26,7 @@
 #define HostgroupsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Column.h"
 #include "ListColumn.h"
@@ -41,9 +42,8 @@ public:
         : ListColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset) {}
     ColumnType type() override { return ColumnType::list; }
+    std::unique_ptr<Contains> makeContains(const std::string &name) override;
     void output(void *, Query *) override;
-    void *getNagiosObject(char *name) override;  // return pointer to host group
-    bool isNagiosMember(void *data, void *nagobject) override;
     bool isEmpty(void *data) override;
 
 private:

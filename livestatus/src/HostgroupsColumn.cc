@@ -25,6 +25,10 @@
 #include "HostgroupsColumn.h"
 #include "Query.h"
 
+using std::make_unique;
+using std::string;
+using std::unique_ptr;
+
 objectlist *HostgroupsColumn::getData(void *data) {
     if (data != nullptr) {
         data = shiftPointer(data);
@@ -55,27 +59,41 @@ void HostgroupsColumn::output(void *data, Query *query) {
     query->outputEndList();
 }
 
-void *HostgroupsColumn::getNagiosObject(char *name) {
-    return find_hostgroup(name);
-}
+unique_ptr<ListColumn::Contains> HostgroupsColumn::makeContains(
+    const string &name) {
+    class ContainsHostGroup : public Contains {
+    public:
+        explicit ContainsHostGroup(hostgroup *element, int offset)
+            : _element(element), _offset(offset) {}
 
-bool HostgroupsColumn::isNagiosMember(void *data, void *nagobject) {
-    if ((nagobject == nullptr) || (data == nullptr)) {
-        return false;
-    }
+        bool operator()(void *row) override {
+            if (_element == nullptr || row == nullptr) {
+                return false;
+            }
 
-    // data is already shifted (_indirect_offset is taken into account)
-    // But _offset needs still to be accounted for
-    objectlist *list = *reinterpret_cast<objectlist **>(
-        reinterpret_cast<char *>(data) + _offset);
+            // row is already shifted (_indirect_offset is taken into account),
+            // but _offset needs still to be accounted for
+            objectlist *list = *reinterpret_cast<objectlist **>(
+                reinterpret_cast<char *>(row) + _offset);
 
-    while (list != nullptr) {
-        if (list->object_ptr == nagobject) {
-            return true;
+            while (list != nullptr) {
+                if (list->object_ptr == _element) {
+                    return true;
+                }
+                list = list->next;
+            }
+            return false;
         }
-        list = list->next;
-    }
-    return false;
+
+        void *element() override { return _element; }
+
+    private:
+        hostgroup *const _element;
+        const int _offset;
+    };
+
+    return make_unique<ContainsHostGroup>(
+        find_hostgroup(const_cast<char *>(name.c_str())), _offset);
 }
 
 bool HostgroupsColumn::isEmpty(void *data) {

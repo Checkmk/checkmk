@@ -31,6 +31,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 #include "DoubleColumn.h"
@@ -165,10 +166,15 @@ protected:
             return _ecc.getValue(data).empty();
         }
 
-        // TODO(sp) We should probably rename the methods below and actually
-        // implement them here for real.
-        void *getNagiosObject(char *) override { return nullptr; }
-        bool isNagiosMember(void *, void *) override { return false; }
+        std::unique_ptr<Contains> makeContains(
+            const std::string & /*unused*/) override {
+            struct ContainsElem : public Contains {
+                // TODO(sp) Actually implement those methods below.
+                bool operator()(void * /*unused*/) override { return false; }
+                void *element() override { return nullptr; }
+            };
+            return std::make_unique<ContainsElem>();
+        }
     };
 
 private:

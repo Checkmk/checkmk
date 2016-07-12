@@ -26,6 +26,7 @@
 #define ListFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "ColumnFilter.h"
 #include "ListColumn.h"
@@ -35,7 +36,8 @@ class Query;
 class ListFilter : public ColumnFilter {
 public:
     ListFilter(Query *query, ListColumn *column, RelationalOperator relOp,
-               const std::string &value);
+               std::unique_ptr<ListColumn::Contains> predicate,
+               bool isEmptyValue);
     bool accepts(void *data) override;
     void *indexFilter(const std::string &column_name) const override;
     ListColumn *column() override;
@@ -43,7 +45,7 @@ public:
 private:
     ListColumn *_column;
     RelationalOperator _relOp;
-    void *_ref_member;
+    std::unique_ptr<ListColumn::Contains> _predicate;
     bool _empty_ref;  // distinct from unknown ref
 };
 

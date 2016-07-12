@@ -26,6 +26,7 @@
 #define ListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Column.h"
 #include "opids.h"
@@ -34,12 +35,20 @@ class Query;
 
 class ListColumn : public Column {
 public:
+    /// Given a row, does a given list-valued column contain a given element?
+    class Contains {
+    public:
+        virtual ~Contains();
+        virtual bool operator()(void *row) = 0;
+        // TODO(sp) This doesn't really belong here...
+        virtual void *element() = 0;
+    };
+
     ListColumn(std::string name, std::string description, int indirect_offset,
                int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
     ColumnType type() override { return ColumnType::list; }
-    virtual void *getNagiosObject(char *name) = 0;
-    virtual bool isNagiosMember(void *data, void *member) = 0;
+    virtual std::unique_ptr<Contains> makeContains(const std::string &name) = 0;
     virtual bool isEmpty(void *data) = 0;
     Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;

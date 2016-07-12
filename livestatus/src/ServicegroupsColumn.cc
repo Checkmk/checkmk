@@ -24,6 +24,11 @@
 
 #include "ServicegroupsColumn.h"
 #include "Query.h"
+#include "nagios.h"
+
+using std::make_unique;
+using std::string;
+using std::unique_ptr;
 
 objectlist *ServicegroupsColumn::getData(void *data) {
     if (data != nullptr) {
@@ -56,21 +61,35 @@ void ServicegroupsColumn::output(void *data, Query *query) {
     query->outputEndList();
 }
 
-void *ServicegroupsColumn::getNagiosObject(char *name) {
-    return find_servicegroup(name);
-}
+unique_ptr<ListColumn::Contains> ServicegroupsColumn::makeContains(
+    const string &name) {
+    class ContainsServiceGroup : public Contains {
+    public:
+        explicit ContainsServiceGroup(servicegroup *element, int offset)
+            : _element(element), _offset(offset) {}
 
-bool ServicegroupsColumn::isNagiosMember(void *data, void *nagobject) {
-    // data is already shifted
-    objectlist *list = *reinterpret_cast<objectlist **>(
-        reinterpret_cast<char *>(data) + _offset);
-    while (list != nullptr) {
-        if (list->object_ptr == nagobject) {
-            return true;
+        bool operator()(void *row) override {
+            // row is already shifted
+            objectlist *list = *reinterpret_cast<objectlist **>(
+                reinterpret_cast<char *>(row) + _offset);
+            while (list != nullptr) {
+                if (list->object_ptr == _element) {
+                    return true;
+                }
+                list = list->next;
+            }
+            return false;
         }
-        list = list->next;
-    }
-    return false;
+
+        void *element() override { return _element; }
+
+    private:
+        servicegroup *const _element;
+        int _offset;
+    };
+
+    return make_unique<ContainsServiceGroup>(
+        find_servicegroup(const_cast<char *>(name.c_str())), _offset);
 }
 
 bool ServicegroupsColumn::isEmpty(void *data) {

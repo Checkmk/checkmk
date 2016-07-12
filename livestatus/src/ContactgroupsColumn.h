@@ -26,6 +26,7 @@
 #define ContactgroupsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "ListColumn.h"
 class Query;
@@ -39,9 +40,7 @@ public:
         : ListColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset) {}
     void output(void *, Query *) override;
-    void *getNagiosObject(
-        char *name) override;  // return pointer to contact group
-    bool isNagiosMember(void *data, void *nagobject) override;
+    std::unique_ptr<Contains> makeContains(const std::string &name) override;
     bool isEmpty(void *data) override;
 };
 

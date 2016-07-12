@@ -26,6 +26,7 @@
 #define ServicegroupsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Column.h"
 #include "ListColumn.h"
@@ -42,10 +43,8 @@ public:
         , _offset(offset) {}
     ColumnType type() override { return ColumnType::list; }
     void output(void *, Query *) override;
-    void *getNagiosObject(
-        char *name) override;  // return pointer to service group
+    std::unique_ptr<Contains> makeContains(const std::string &name) override;
     bool isEmpty(void *data) override;
-    bool isNagiosMember(void *data, void *nagobject) override;
 
 private:
     objectlist *getData(void *);

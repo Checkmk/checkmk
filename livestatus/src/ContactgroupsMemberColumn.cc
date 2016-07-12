@@ -23,15 +23,43 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ContactgroupsMemberColumn.h"
+#include "ListColumn.h"
 #include "nagios.h"
 
-bool ContactgroupsMemberColumn::isNagiosMember(void *cg, void *ctc) {
-    contactsmember *mem;
-    for (mem = (reinterpret_cast<contactgroup *>(cg))->members; mem != nullptr;
-         mem = mem->next) {
-        if (mem->contact_ptr == ctc) {
-            return true;
+using std::make_unique;
+using std::string;
+using std::unique_ptr;
+
+namespace {
+class ContainsContact : public ListColumn::Contains {
+public:
+    explicit ContainsContact(contact *element) : _element(element) {}
+
+    bool operator()(void *row) override {
+        contactgroup *cg = static_cast<contactgroup *>(row);
+        for (contactsmember *mem = cg->members; mem != nullptr;
+             mem = mem->next) {
+            if (mem->contact_ptr == _element) {
+                return true;
+            }
         }
+        return false;
     }
-    return false;
+
+    void *element() override { return _element; }
+
+private:
+    contact *const _element;
+};
+}  // namespace
+
+unique_ptr<ListColumn::Contains> ContactgroupsMemberColumn::makeContains(
+    const string &name) {
+    return make_unique<ContainsContact>(
+        find_contact(const_cast<char *>(name.c_str())));
+}
+
+unique_ptr<ListColumn::Contains> ContactgroupsMemberColumn::containsContact(
+    contact *ctc) {
+    return make_unique<ContainsContact>(ctc);
 }

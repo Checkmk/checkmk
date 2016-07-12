@@ -26,6 +26,10 @@
 #include "Query.h"
 #include "nagios.h"
 
+using std::make_unique;
+using std::string;
+using std::unique_ptr;
+
 void ContactgroupsColumn::output(void *data, Query *query) {
     query->outputBeginList();
 
@@ -52,27 +56,42 @@ void ContactgroupsColumn::output(void *data, Query *query) {
     query->outputEndList();
 }
 
-void *ContactgroupsColumn::getNagiosObject(char *name) {
-    return find_contactgroup(name);
-}
+unique_ptr<ListColumn::Contains> ContactgroupsColumn::makeContains(
+    const string &name) {
+    class ContainsContactGroup : public Contains {
+    public:
+        explicit ContainsContactGroup(contactgroup *element, int offset)
+            : _element(element), _offset(offset) {}
 
-bool ContactgroupsColumn::isNagiosMember(void *data, void *nagobject) {
-    if ((nagobject == nullptr) || (data == nullptr)) {
-        return false;
-    }
+        bool operator()(void *row) override {
+            if (_element == nullptr || row == nullptr) {
+                return false;
+            }
 
-    // data is already shifted (_indirect_offset is taken into account)
-    // But _offset needs still to be accounted for
-    contactgroupsmember *cgm = *reinterpret_cast<contactgroupsmember **>(
-        reinterpret_cast<char *>(data) + _offset);
+            // row is already shifted (_indirect_offset is taken into account),
+            // but _offset needs still to be accounted for
+            contactgroupsmember *cgm =
+                *reinterpret_cast<contactgroupsmember **>(
+                    reinterpret_cast<char *>(row) + _offset);
 
-    while (cgm != nullptr) {
-        if (cgm->group_ptr == nagobject) {
-            return true;
+            while (cgm != nullptr) {
+                if (cgm->group_ptr == _element) {
+                    return true;
+                }
+                cgm = cgm->next;
+            }
+            return false;
         }
-        cgm = cgm->next;
-    }
-    return false;
+
+        void *element() override { return _element; }
+
+    private:
+        contactgroup *const _element;
+        int _offset;
+    };
+
+    return make_unique<ContainsContactGroup>(
+        find_contactgroup(const_cast<char *>(name.c_str())), _offset);
 }
 
 bool ContactgroupsColumn::isEmpty(void *data) {

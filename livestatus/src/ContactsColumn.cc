@@ -28,18 +28,14 @@
 
 extern contact *contact_list;
 
-void *ContactsColumn::getNagiosObject(char *name) { return find_contact(name); }
-
 void ContactsColumn::output(void *data, Query *query) {
     query->outputBeginList();
     data = shiftPointer(data);
 
     if (data != nullptr) {
         bool first = true;
-
-        contact *ctc = contact_list;
-        while (ctc != nullptr) {
-            if (isNagiosMember(data, ctc)) {
+        for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
+            if ((*containsContact(ctc))(data)) {
                 if (first) {
                     first = false;
                 } else {
@@ -47,19 +43,16 @@ void ContactsColumn::output(void *data, Query *query) {
                 }
                 query->outputString(ctc->name);
             }
-            ctc = ctc->next;
         }
     }
     query->outputEndList();
 }
 
-bool ContactsColumn::isEmpty(void *svc) {
-    contact *ct = contact_list;
-    while (ct != nullptr) {
-        if (isNagiosMember(svc, ct)) {
+bool ContactsColumn::isEmpty(void *data) {
+    for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
+        if ((*containsContact(ctc))(data)) {
             return false;
         }
-        ct = ct->next;
     }
     return true;
 }

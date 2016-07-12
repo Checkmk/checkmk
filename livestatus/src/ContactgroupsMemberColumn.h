@@ -26,9 +26,11 @@
 #define ContactgroupsMemberColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Column.h"
 #include "ContactsColumn.h"
+#include "nagios.h"
 
 class ContactgroupsMemberColumn : public ContactsColumn {
 public:
@@ -36,7 +38,8 @@ public:
                               int indirect_offset, int extra_offset = -1)
         : ContactsColumn(name, description, indirect_offset, extra_offset) {}
     ColumnType type() override { return ColumnType::list; }
-    bool isNagiosMember(void *cg, void *ctc) override;
+    std::unique_ptr<Contains> makeContains(const std::string &name) override;
+    std::unique_ptr<Contains> containsContact(contact *ctc) override;
 };
 
 #endif  // ContactgroupsMemberColumn_h

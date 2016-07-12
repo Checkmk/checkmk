@@ -28,7 +28,10 @@
 
 using std::string;
 
+ListColumn::Contains::~Contains() = default;
+
 Filter *ListColumn::createFilter(Query *query, RelationalOperator relOp,
                                  const string &value) {
-    return new ListFilter(query, this, relOp, value);
+    return new ListFilter(query, this, relOp, makeContains(value),
+                          value.empty());
 }

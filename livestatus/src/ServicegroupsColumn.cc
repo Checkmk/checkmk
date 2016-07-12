@@ -65,7 +65,7 @@ unique_ptr<ListColumn::Contains> ServicegroupsColumn::makeContains(
     const string &name) {
     class ContainsServiceGroup : public Contains {
     public:
-        explicit ContainsServiceGroup(servicegroup *element, int offset)
+        ContainsServiceGroup(servicegroup *element, int offset)
             : _element(element), _offset(offset) {}
 
         bool operator()(void *row) override {

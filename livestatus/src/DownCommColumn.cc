@@ -91,11 +91,12 @@ bool DownCommColumn::match(DowntimeOrComment *dt, void *data) {
     return dt->_host->name == h->name;
 }
 
-unique_ptr<ListColumn::Contains> DownCommColumn::makeContains(const string &name) {
+unique_ptr<ListColumn::Contains> DownCommColumn::makeContains(
+    const string &name) {
     class ContainsDownCommID : public Contains {
     public:
-        explicit ContainsDownCommID(unsigned long element,
-                                    const DowntimesOrComments &holder)
+        ContainsDownCommID(unsigned long element,
+                           const DowntimesOrComments &holder)
             : _element(element), _holder(holder) {}
 
         bool operator()(void *row) override {

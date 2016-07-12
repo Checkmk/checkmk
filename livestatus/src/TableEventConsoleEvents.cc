@@ -28,7 +28,9 @@
 #include "TableHosts.h"
 
 #ifdef CMC
+#include "ContactGroup.h"
 #include "Host.h"
+#include "World.h"
 #else
 #include "auth.h"
 #endif
@@ -129,11 +131,50 @@ const char *TableEventConsoleEvents::namePrefix() const {
     return "eventconsoleevents_";
 }
 
-bool TableEventConsoleEvents::isAuthorized(contact *ctc, void *data) {
-    host *host = static_cast<Row *>(data)->_host;
+// TODO(sp) Move this into some kind of abstraction layer.
+namespace {
+bool hasContact(host *hst, contact *ctc) {
 #ifdef CMC
-    return host == nullptr || host->hasContact(ctc);
+    return hst != nullptr && hst->hasContact(ctc);
 #else
-    return host == nullptr || is_authorized_for(ctc, host, nullptr);
+    return is_authorized_for(ctc, hst, nullptr);
 #endif
+}
+
+bool hasContact(contactgroup *cg, contact *ctc) {
+#ifdef CMC
+    return cg != nullptr && cg->isMember(ctc);
+#else
+    return is_contact_member_of_contactgroup(cg, ctc) != 0;
+#endif
+}
+
+contactgroup *getContactGroup(const string &name) {
+#ifdef CMC
+    return g_live_world->getContactGroup(name);
+#else
+    // Older Nagios headers are not const-correct... :-P
+    return find_contactgroup(const_cast<char *>(name.c_str()));
+#endif
+}
+}  // namespace
+
+// TODO(sp) This is copy-n-pasted in TableEventConsoleHistory.
+bool TableEventConsoleEvents::isAuthorized(contact *ctc, void *data) {
+    if (host *hst = static_cast<Row *>(data)->_host) {
+        return hasContact(hst, ctc);
+    }
+
+    ListEventConsoleColumn *col =
+        static_cast<ListEventConsoleColumn *>(column("event_contact_groups"));
+    if (col->isNone(data)) {
+        return true;
+    }
+
+    for (const auto &name : col->getValue(data)) {
+        if (hasContact(getContactGroup(name), ctc)) {
+            return true;
+        }
+    }
+    return false;
 }

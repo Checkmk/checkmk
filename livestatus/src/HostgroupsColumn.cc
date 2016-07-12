@@ -63,7 +63,7 @@ unique_ptr<ListColumn::Contains> HostgroupsColumn::makeContains(
     const string &name) {
     class ContainsHostGroup : public Contains {
     public:
-        explicit ContainsHostGroup(hostgroup *element, int offset)
+        ContainsHostGroup(hostgroup *element, int offset)
             : _element(element), _offset(offset) {}
 
         bool operator()(void *row) override {

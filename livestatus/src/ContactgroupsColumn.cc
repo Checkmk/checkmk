@@ -60,7 +60,7 @@ unique_ptr<ListColumn::Contains> ContactgroupsColumn::makeContains(
     const string &name) {
     class ContainsContactGroup : public Contains {
     public:
-        explicit ContainsContactGroup(contactgroup *element, int offset)
+        ContainsContactGroup(contactgroup *element, int offset)
             : _element(element), _offset(offset) {}
 
         bool operator()(void *row) override {

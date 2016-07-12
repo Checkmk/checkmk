@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <stdlib.h>
 #include <sys/types.h>
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -74,6 +75,11 @@ protected:
         EventConsoleColumn(std::string name, T default_value,
                            std::function<T(std::string)> f)
             : _name(name), _default_value(default_value), _f(f) {}
+
+        std::string getRaw(void *data) const {
+            auto row = static_cast<Row *>(data);
+            return row == nullptr ? "" : row->_map.at(_name);
+        }
 
         T getValue(void *data) const {
             auto row = static_cast<Row *>(data);
@@ -148,6 +154,14 @@ protected:
                            : mk::split(x.substr(1), '\001');
             }) {}
 
+        bool isNone(void *data) {
+            return _ecc.getRaw(data) == "\002";
+        }
+
+        _column_t getValue(void *data) {
+            return _ecc.getValue(data);
+        }
+
         void output(void *data, Query *query) override {
             query->outputBeginList();
             bool first = true;
@@ -167,12 +181,23 @@ protected:
         }
 
         std::unique_ptr<Contains> makeContains(
-            const std::string & /*unused*/) override {
-            struct ContainsElem : public Contains {
-                // TODO(sp) Actually implement this.
-                bool operator()(void * /*unused*/) override { return false; }
+            const std::string &name) override {
+            class ContainsElem : public Contains {
+            public:
+                ContainsElem(const std::string &name,
+                             const EventConsoleColumn<_column_t> &ecc)
+                    : _name(name), _ecc(ecc) {}
+                bool operator()(void *row) override {
+                    const _column_t &values = _ecc.getValue(row);
+                    return std::find(values.begin(), values.end(), _name) !=
+                           values.end();
+                }
+
+            private:
+                std::string _name;
+                const EventConsoleColumn<_column_t> &_ecc;
             };
-            return std::make_unique<ContainsElem>();
+            return std::make_unique<ContainsElem>(name, _ecc);
         }
     };
 

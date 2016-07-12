@@ -8250,6 +8250,41 @@ def mode_notification_rule(phase, profilemode):
     html.end_form()
 
 
+def load_notification_scripts():
+    return load_user_scripts("notifications")
+
+
+def notification_script_choices():
+    return user_script_choices("notifications") + [(None, _("ASCII Email (legacy)")) ]
+
+
+def notification_script_choices_with_parameters():
+    choices = []
+    for script_name, title in notification_script_choices():
+        if script_name in g_notification_parameters:
+            vs = g_notification_parameters[script_name]
+        else:
+            vs = ListOfStrings(
+                 title = _("Call with the following parameters:"),
+                 valuespec = TextUnicode(size = 24),
+                 orientation = "horizontal",
+            )
+        choices.append((script_name, title,
+            Alternative(
+                style = "dropdown",
+                elements = [
+                    vs,
+                    FixedValue(None, totext = _("previous notifications of this type are cancelled"),
+                               title = _("Cancel previous notifications")),
+                ]
+            )
+        ))
+    return choices
+
+
+def notification_script_title(name):
+    return dict(notification_script_choices()).get(name, name)
+
 
 
 
@@ -9752,102 +9787,6 @@ def service_levels():
         return config.mkeventd_service_levels
     except:
         return [(0, "(no service level)")]
-
-# Example header of a notification script:
-#!/usr/bin/python
-# HTML Emails with included graphs
-# Bulk: yes
-# Argument 1: Full system path to the pnp4nagios index.php for fetching the graphs. Usually auto configured in OMD.
-# Argument 2: HTTP-URL-Prefix to open Multisite. When provided, several links are added to the mail.
-#
-# This script creates a nifty HTML email in multipart format with
-# attached graphs and such neat stuff. Sweet!
-
-def load_notification_scripts_from(adir):
-    scripts = {}
-    if os.path.exists(adir):
-        for entry in os.listdir(adir):
-            path = adir + "/" + entry
-            if os.path.isfile(path) and os.access(path, os.X_OK):
-                info = { "title" : entry, "bulk" : False }
-                try:
-                    lines = file(path)
-                    lines.next()
-                    line = lines.next().strip()
-                    if line.startswith("#") and "encoding:" in line:
-                        line = lines.next().strip()
-                    if line.startswith("#"):
-                        info["title"] = line.lstrip("#").strip().split("#", 1)[0]
-                    while True:
-                        line = lines.next().strip()
-                        if not line.startswith("#") or ":" not in line:
-                            break
-                        key, value = line[1:].strip().split(":", 1)
-                        value = value.strip()
-                        if key.lower() == "bulk":
-                            info["bulk"] = (value == "yes")
-
-                except:
-                    pass
-                scripts[entry] = info
-    return scripts
-
-
-def load_notification_scripts():
-    scripts = {}
-    try:
-        not_dir = defaults.notifications_dir
-    except:
-        not_dir = defaults.share_dir + "/notifications" # for those with not up-to-date defaults
-
-    scripts = load_notification_scripts_from(not_dir)
-    try:
-        local_dir = defaults.omd_root + "/local/share/check_mk/notifications"
-        scripts.update(load_notification_scripts_from(local_dir))
-    except:
-        pass
-
-    return scripts
-
-def notification_script_choices():
-    scripts = load_notification_scripts()
-
-    choices = [ (name, info["title"].decode('utf-8')) for (name, info) in scripts.items() ]
-    choices.append((None, _("ASCII Email (legacy)")))
-    choices.sort(cmp = lambda a,b: cmp(a[1], b[1]))
-    # Make choices localizable
-    choices = [ (k, _(v)) for k, v in choices ]
-    return choices
-
-
-def notification_script_choices_with_parameters():
-    choices = []
-    for script_name, title in notification_script_choices():
-        if script_name in g_notification_parameters:
-            vs = g_notification_parameters[script_name]
-        else:
-            vs = ListOfStrings(
-                 title = _("Call with the following parameters:"),
-                 valuespec = TextUnicode(size = 24),
-                 orientation = "horizontal",
-            )
-        choices.append((script_name, title,
-            Alternative(
-                style = "dropdown",
-                elements = [
-                    vs,
-                    FixedValue(None, totext = _("previous notifications of this type are cancelled"),
-                               title = _("Cancel previous notifications")),
-                ]
-            )
-        ))
-    return choices
-
-
-
-def notification_script_title(name):
-    return dict(notification_script_choices()).get(name, name)
-
 
 def load_notification_table():
     # Make sure, that list is not trivially false

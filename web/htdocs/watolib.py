@@ -4464,6 +4464,96 @@ def get_tag_conditions(varprefix=""):
 
     return tag_list
 
+#.
+#   .--Handler scripts-----------------------------------------------------.
+#   |                 _   _                 _ _                            |
+#   |                | | | | __ _ _ __   __| | | ___ _ __                  |
+#   |                | |_| |/ _` | '_ \ / _` | |/ _ \ '__|                 |
+#   |                |  _  | (_| | | | | (_| | |  __/ |                    |
+#   |                |_| |_|\__,_|_| |_|\__,_|_|\___|_|                    |
+#   |                                                                      |
+#   |                                  _       _                           |
+#   |                    ___  ___ _ __(_)_ __ | |_ ___                     |
+#   |                   / __|/ __| '__| | '_ \| __/ __|                    |
+#   |                   \__ \ (__| |  | | |_) | |_\__ \                    |
+#   |                   |___/\___|_|  |_| .__/ \__|___/                    |
+#   |                                   |_|                                |
+#   +----------------------------------------------------------------------+
+#   | Common code for reading and offering notification scripts and alert  |
+#   | handlers.                                                            |
+#   '----------------------------------------------------------------------'
+
+
+# Example header of a notification script:
+#!/usr/bin/python
+# HTML Emails with included graphs
+# Bulk: yes
+# Argument 1: Full system path to the pnp4nagios index.php for fetching the graphs. Usually auto configured in OMD.
+# Argument 2: HTTP-URL-Prefix to open Multisite. When provided, several links are added to the mail.
+#
+# This script creates a nifty HTML email in multipart format with
+# attached graphs and such neat stuff. Sweet!
+
+def load_user_scripts_from(adir):
+    scripts = {}
+    if os.path.exists(adir):
+        for entry in os.listdir(adir):
+            entry = entry.decode("utf-8")
+            path = adir + "/" + entry
+            if os.path.isfile(path) and os.access(path, os.X_OK):
+                info = { "title" : entry, "bulk" : False }
+                try:
+                    lines = file(path)
+                    lines.next()
+                    line = lines.next().strip().decode("utf-8")
+                    if line.startswith("#") and "encoding:" in line:
+                        line = lines.next().strip()
+                    if line.startswith("#"):
+                        info["title"] = line.lstrip("#").strip().split("#", 1)[0]
+                    while True:
+                        line = lines.next().strip()
+                        if not line.startswith("#") or ":" not in line:
+                            break
+                        key, value = line[1:].strip().split(":", 1)
+                        value = value.strip()
+                        if key.lower() == "bulk":
+                            info["bulk"] = (value == "yes")
+
+                except:
+                    pass
+                scripts[entry] = info
+    return scripts
+
+
+def load_user_scripts(what):
+    scripts = {}
+    not_dir = defaults.share_dir + "/" + what
+    try:
+        if what == "notifications":
+             # Support for setup.sh
+             not_dir = defaults.notifications_dir
+    except:
+        pass
+
+    scripts = load_user_scripts_from(not_dir)
+    try:
+        local_dir = defaults.omd_root + "/local/share/check_mk/" + what
+        scripts.update(load_user_scripts_from(local_dir))
+    except:
+        pass
+
+    return scripts
+
+
+def user_script_choices(what):
+    scripts = load_user_scripts(what)
+    choices = [ (name, info["title"]) for (name, info) in scripts.items() ]
+    choices.sort(cmp = lambda a,b: cmp(a[1], b[1]))
+    # Make choices localizable
+    choices = [ (k, _(v)) for k, v in choices ]
+    return choices
+
+
 
 #.
 #   .--MIXED STUFF---------------------------------------------------------.

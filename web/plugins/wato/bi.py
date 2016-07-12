@@ -205,12 +205,15 @@ class ModeBI(WatoMode):
             conv = (aggr["groups"],)
         node = self._convert_node_to_bi(aggr["node"])
         convaggr = conv + node
-        if aggr["hard_states"]:
-            convaggr = (self._bi_constants["HARD_STATES"],) + convaggr
-        if aggr["downtime_aggr_warn"]:
-            convaggr = (self._bi_constants["DT_AGGR_WARN"],) + convaggr
-        if aggr["disabled"]:
-            convaggr = (self._bi_constants["DISABLED"],) + convaggr
+
+        # Create dict with all aggregation options
+        options = {}
+        for option in ["hard_states",
+                       "downtime_aggr_warn",
+                       "disabled"]:
+            options[option] = aggr.get(option, False)
+
+        convaggr = (options,) + convaggr
         return convaggr
 
 
@@ -252,37 +255,44 @@ class ModeBI(WatoMode):
 
 
     def _convert_aggregation_from_bi(self, aggr, single_host):
-        if aggr[0] == self._bi_constants["DISABLED"]:
-            disabled = True
+        if type(aggr[0]) == dict:
+            options = aggr[0]
             aggr = aggr[1:]
         else:
-            disabled = False
+            # Legacy configuration
+            options = {}
+            if aggr[0] == self._bi_constants["DISABLED"]:
+                options["disabled"] = True
+                aggr = aggr[1:]
+            else:
+                options["disabled"] = False
 
-        if aggr[0] == self._bi_constants["DT_AGGR_WARN"]:
-            downtime_aggr_warn = True
-            aggr = aggr[1:]
-        else:
-            downtime_aggr_warn = False
+            if aggr[0] == self._bi_constants["DT_AGGR_WARN"]:
+                options["downtime_aggr_warn"] = True
+                aggr = aggr[1:]
+            else:
+                options["downtime_aggr_warn"] = False
 
-        if aggr[0] == self._bi_constants["HARD_STATES"]:
-            hard_states = True
-            aggr = aggr[1:]
-        else:
-            hard_states = False
+            if aggr[0] == self._bi_constants["HARD_STATES"]:
+                options["hard_states"] = True
+                aggr = aggr[1:]
+            else:
+                options["hard_states"] = False
+
 
         if type(aggr[0]) != list:
             groups = [aggr[0]]
         else:
             groups = aggr[0]
+
         node = self._convert_node_from_bi(aggr[1:])
-        return {
-            "disabled"           : disabled,
-            "hard_states"        : hard_states,
-            "downtime_aggr_warn" : downtime_aggr_warn,
+        aggr_dict = {
             "groups"             : groups,
             "node"               : node,
             "single_host"        : single_host,
         }
+        aggr_dict.update(options)
+        return aggr_dict
 
     # Make some conversions so that the format of the
     # valuespecs is matched

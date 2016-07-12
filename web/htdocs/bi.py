@@ -179,17 +179,14 @@ def aggregation_groups():
         migrate_bi_configuration() # convert bi_packs into legacy variables
         # on demand: show all configured groups
         group_names = set([])
-        for entry in config.aggregations + config.host_aggregations:
-            if entry[0] == config.DISABLED:
+        for aggr_def in config.aggregations + config.host_aggregations:
+            if aggr_def[0].get("disabled"):
                 continue
 
-            if entry[0] == config.HARD_STATES:
-                entry = entry[1:]
-
-            if type(entry[0]) == list:
-                group_names.update(entry[0])
+            if type(aggr_def[1]) == list:
+                group_names.update(aggr_def[1])
             else:
-                group_names.add(entry[0])
+                group_names.add(aggr_def[1])
 
         group_names = list(group_names)
 
@@ -314,30 +311,23 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
     single_affected_hosts = []
     for aggr_type, aggregations in aggr_list:
-        for entry in aggregations:
-            if entry[0] == config.DISABLED:
+        for aggr_def in aggregations:
+            options = aggr_def[0]
+
+            if options.get("disabled"):
                 continue
 
-            if entry[0] == config.DT_AGGR_WARN:
-                downtime_aggr_warn = True
-                entry = entry[1:]
-            else:
-                downtime_aggr_warn = False
+            downtime_aggr_warn = options.get("downtime_aggr_warn", False)
+            use_hard_states    = options.get("use_hard_states", False)
 
-            if entry[0] == config.HARD_STATES:
-                use_hard_states = True
-                entry = entry[1:]
-            else:
-                use_hard_states = False
-
-            if len(entry) < 3:
+            if len(aggr_def) < 3:
                 raise MKConfigError(_("<h1>Invalid aggregation <tt>%s</tt></h1>"
-                                      "Must have at least 3 entries (has %d)") % (entry, len(entry)))
+                                      "Must have at least 3 entries (has %d)") % (aggr_def, len(aggr_def)))
 
-            if type(entry[0]) == list:
-                groups = entry[0]
+            if type(aggr_def[1]) == list:
+                groups = aggr_def[1]
             else:
-                groups = [ entry[0] ]
+                groups = [ aggr_def[1] ]
             groups_set = set(groups)
 
             if only_groups and not groups_set.intersection(only_groups):
@@ -348,7 +338,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                 log('Skip aggr (All groups have already been compiled')
                 continue # skip if all groups have already been compiled
 
-            new_entries = compile_rule_node(aggr_type, entry[1:], 0)
+            new_entries = compile_rule_node(aggr_type, aggr_def[2:], 0)
 
             for this_entry in new_entries:
                 remove_empty_nodes(this_entry)
@@ -2117,9 +2107,32 @@ def get_state_name(node):
 
 
 def migrate_bi_configuration():
+    def convert_aggregation(aggr_tuple):
+        if type(aggr_tuple[0]) == dict:
+            return aggr_tuple # already converted
+
+        options = {}
+        map_class_to_key = {
+            config.DISABLED:     "disabled",
+            config.HARD_STATES:  "hard_states",
+            config.DT_AGGR_WARN: "downtime_aggr_warn",
+        }
+        for idx, token in enumerate(list(aggr_tuple)):
+            if token in map_class_to_key:
+                options[map_class_to_key[token]] = True
+            else:
+                aggr_tuple = aggr_tuple[idx:]
+                break
+        return (options,) + aggr_tuple
+
     if config.bi_packs:
         for pack in config.bi_packs.values():
-            config.aggregations += pack["aggregations"]
-            config.host_aggregations += pack["host_aggregations"]
+            config.aggregations += map(convert_aggregation, pack["aggregations"])
+            config.host_aggregations += map(convert_aggregation, pack["host_aggregations"])
             config.aggregation_rules.update(pack["rules"])
         config.bi_packs = {}
+    else:
+        if config.host_aggregations and type(config.host_aggregations[0]) != dict:
+            config.host_aggregations = map(convert_aggregation, config.host_aggregation)
+        if config.aggregations and type(config.aggregations[0]) != dict:
+            config.aggregations = map(convert_aggregation, config.aggregation)

@@ -2131,6 +2131,6 @@ def migrate_bi_configuration():
         config.bi_packs = {}
     else:
         if config.host_aggregations and type(config.host_aggregations[0]) != dict:
-            config.host_aggregations = map(convert_aggregation, config.host_aggregation)
+            config.host_aggregations = map(convert_aggregation, config.host_aggregations)
         if config.aggregations and type(config.aggregations[0]) != dict:
-            config.aggregations = map(convert_aggregation, config.aggregation)
+            config.aggregations = map(convert_aggregation, config.aggregations)

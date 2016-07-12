@@ -1314,6 +1314,21 @@ class html(GUITester):
     def unstash_vars(self):
         self.vars = self.var_stash.pop()
 
+
+    # Returns a dictionary containing all parameters the user handed over to this request.
+    # The concept is that the user can either provide the data in a single "request" variable,
+    # which contains the request data encoded as JSON, or provide multiple GET/POST vars which
+    # are then used as top level entries in the request object.
+    def get_request(self):
+        request = json.loads(self.var("request", "{}"))
+
+        for key, val in self.all_vars().items():
+            if key not in [ "request", "output_format" ]:
+                request[key] = val
+
+        return request
+
+
     def render_javascript(self, code):
         return "<script language=\"javascript\">\n%s\n</script>\n" % code
 

@@ -81,10 +81,7 @@ def page_api():
             if api_actions[action].get("dont_eval_request"):
                 request_object = html.var("request")
             else:
-                request = html.var("request")
-                request_object = json.loads(request)
-        else:
-            request_object = {}
+                request_object = html.get_request()
 
         if api_actions[action].get("locking", True):
             lock_exclusive() # unlock is done automatically

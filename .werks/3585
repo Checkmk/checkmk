@@ -42,3 +42,73 @@ the <tt>result_code</tt> is set to 1 and the result contains the error message:
 C+:
 {"result": "Found no inventory data for this host.", "result_code": 1}
 C+:
+
+
+You can also request data of multiple hosts at once. In this case, you need to specify your request like this:
+
+<tt>http://[MONITORING-SERVER]/[SITE]/check_mk/host_inv_api.py?request={"hosts": ["host1", "host2"]}&output_format=json</tt>
+
+You will then get an answer that is similar to the answer above. With the difference that the top level dictionary
+uses the host names as keys and the values are the inventory tree of this host.
+
+C+:
+{
+    "result": {
+        "gestern": {
+            "hardware": {
+                "memory": {
+                    "total_ram_usable": 16697307136,
+                    "total_swap": 17049841664,
+                    "total_vmalloc": 35184372087808
+                }
+            },
+            "networking": {
+                "hostname": "Klappspaten"
+            }
+        },
+        "heute": {
+            "hardware": {
+                "memory": {
+                    "total_ram_usable": 16697307136,
+                    "total_swap": 17049841664,
+                    "total_vmalloc": 35184372087808
+                }
+            },
+            "networking": {
+                "hostname": "Klappspaten"
+            }
+        },
+        "slave": {}
+    },
+    "result_code": 0
+}
+C-:
+
+Another difference in this mode: When a host has no inventory data, the host has an empty dictionary as value
+instead of providing an error result.
+
+
+If you want to only have a subset of inventory data, you can specify a list of <i>inventory paths</i> which are then
+used to filter the tree. Only hosts that have those paths will show the trees.
+
+For example, if you only want to see the total and swap memory information of a single host, you can use the following URL:
+
+<tt>http://[MONITORING-SERVER]/[SITE]/check_mk/host_inv_api.py?host=[HOST]&request={"paths": [".hardware.memory.total_ram_usable", ".hardware.memory.total_swap"]}&output_format=json</tt>
+
+You will get back only the requested data:
+
+C+:
+{
+    "result": {
+        "": {
+            "hardware": {
+                "memory": {
+                    "total_ram_usable": 16697307136,
+                    "total_swap": 17049841664
+                }
+            }
+        }
+    },
+    "result_code": 0
+}
+C-:

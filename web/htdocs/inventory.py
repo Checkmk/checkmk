@@ -34,7 +34,7 @@ except ImportError:
 
 import config
 import sites
-from lib import MKException, MKGeneralException, MKAuthException, lqencode
+from lib import MKException, MKGeneralException, MKAuthException, MKUserError, lqencode
 
 # Load data of a host, cache it in the current HTTP request
 def host(hostname):
@@ -303,16 +303,27 @@ def count_items(tree):
 #                  In case of success this is a dictionary containing the host inventory.
 def page_host_inv_api():
     try:
-        host_name = html.var("host")
-        if not may_see(host_name):
-            raise MKAuthException(_("Sorry, you are not allowed to access this host."))
+        request = html.get_request()
 
-        host_inv = host(host_name)
+        # The user can either specify a single host or provide a list of host names. In case
+        # multiple hosts are handled, there is a top level dict added with "host > invdict" pairs
+        hosts = request.get("hosts")
+        if hosts:
+            result = {}
+            for host_name in hosts:
+                result[host_name] = inventory_of_host(host_name, request)
 
-        if not host_inv and not has_inventory(host_name):
-            raise MKGeneralException(_("Found no inventory data for this host."))
+        else:
+            host_name = request.get("host")
+            if host_name == None:
+                raise MKUserError("host", _("You need to provide a \"host\"."))
 
-        response = { "result_code": 0, "result": host_inv }
+            result = inventory_of_host(host_name, request)
+
+            if not result and not has_inventory(host_name):
+                raise MKGeneralException(_("Found no inventory data for this host."))
+
+        response = { "result_code": 0, "result": result }
 
     except MKException, e:
         response = { "result_code": 1, "result": "%s" % e }
@@ -330,12 +341,52 @@ def page_host_inv_api():
         write_python(response)
 
 
-def may_see(host_name):
+def inventory_of_host(host_name, request):
+    if not may_see(host_name, site=request.get("site")):
+        raise MKAuthException(_("Sorry, you are not allowed to access the host %s.") % host_name)
+
+    host_inv = host(host_name)
+
+    if "paths" in request:
+        host_inv = filter_tree_by_paths(host_inv, request["paths"])
+
+    return host_inv
+
+
+def filter_tree_by_paths(tree, paths):
+    filtered = {}
+
+    for path in paths:
+        node = get(tree, path)
+
+        parts = path.split(".")
+        this_tree = filtered
+        while True:
+            key = parts.pop(0)
+            if parts:
+                this_tree = this_tree.setdefault(key, {})
+            else:
+                this_tree[key] = node
+                break
+
+    return filtered
+
+
+def may_see(host_name, site=None):
     if config.may("general.see_all"):
         return True
 
+
     query = "GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host_name)
+
+    if site:
+        sites.live().set_only_sites([site])
+
     result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
+
+    if site:
+        sites.live().set_only_sites()
+
     if not result:
         return False
     else:

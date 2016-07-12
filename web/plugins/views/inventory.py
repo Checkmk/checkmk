@@ -640,7 +640,7 @@ inventory_displayhints.update({
     ".hardware.components.modules:*.location"          : { "title" : _("Location") },
 
     ".hardware.storage."                               : { "title" : _("Storage") },
-    ".hardware.storage.disks:"                         : { "title" : _("Block Devices") },
+    ".hardware.storage.disks:"                         : { "title" : _("Block Devices"), "render" : render_inv_dicttable },
     ".hardware.storage.disks:*."                       : { "title" : _("Block Device %d") },
     ".hardware.storage.disks:*.signature"              : { "title" : _("Disk ID") },
     ".hardware.storage.disks:*.vendor"                 : { "title" : _("Vendor") },

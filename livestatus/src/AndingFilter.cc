@@ -48,3 +48,13 @@ bool AndingFilter::optimizeBitmask(const string &column_name,
     }
     return optimized;
 }
+
+const string *AndingFilter::findValueForIndexing(
+    const string &column_name) const {
+    for (auto filter : _subfilters) {
+        if (const string *value = filter->valueForIndexing(column_name)) {
+            return value;
+        }
+    }
+    return nullptr;
+}

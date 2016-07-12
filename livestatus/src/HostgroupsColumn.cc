@@ -85,8 +85,6 @@ unique_ptr<ListColumn::Contains> HostgroupsColumn::makeContains(
             return false;
         }
 
-        void *element() override { return _element; }
-
     private:
         hostgroup *const _element;
         const int _offset;

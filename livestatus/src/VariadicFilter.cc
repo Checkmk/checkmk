@@ -67,16 +67,6 @@ Filter *VariadicFilter::stealLastSubfiler() {
     return l;
 }
 
-void *VariadicFilter::findIndexFilter(const string &column_name) {
-    for (auto filter : _subfilters) {
-        void *refvalue = filter->indexFilter(column_name);
-        if (refvalue != nullptr) {
-            return refvalue;
-        }
-    }
-    return nullptr;
-}
-
 void VariadicFilter::findIntLimits(const string &colum_nname, int *lower,
                                    int *upper) const {
     for (auto filter : _subfilters) {

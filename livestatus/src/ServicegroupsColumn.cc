@@ -81,8 +81,6 @@ unique_ptr<ListColumn::Contains> ServicegroupsColumn::makeContains(
             return false;
         }
 
-        void *element() override { return _element; }
-
     private:
         servicegroup *const _element;
         int _offset;

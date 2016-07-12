@@ -128,7 +128,7 @@ public:
     void outputDictSeparator();
     void outputDictValueSeparator();
     void outputEndDict();
-    void *findIndexFilter(const std::string &column_name);
+    const std::string *findValueForIndexing(const std::string &column_name);
     void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
     void findIntLimits(const std::string &column_name, int *lower, int *upper);
     void optimizeBitmask(const std::string &column_name, uint32_t *bitmask);

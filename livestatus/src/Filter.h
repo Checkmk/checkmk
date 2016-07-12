@@ -38,7 +38,8 @@ public:
     virtual void accept(FilterVisitor &) = 0;
     Query *query() const { return _query; }
     virtual bool accepts(void *data) = 0;
-    virtual void *indexFilter(const std::string &column_name) const;
+    virtual const std::string *valueForIndexing(
+        const std::string &column_name) const;
     virtual void findIntLimits(const std::string &column_name, int *lower,
                                int *upper) const;
     virtual bool optimizeBitmask(const std::string &column_name,

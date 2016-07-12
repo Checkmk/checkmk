@@ -39,7 +39,8 @@ public:
                  const std::string &value);
     virtual ~StringFilter();
     bool accepts(void *data) override;
-    void *indexFilter(const std::string &column_name) const override;
+    const std::string *valueForIndexing(
+        const std::string &column_name) const override;
     StringColumn *column() override;
 
 private:

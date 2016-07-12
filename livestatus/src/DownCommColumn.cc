@@ -106,10 +106,6 @@ unique_ptr<ListColumn::Contains> DownCommColumn::makeContains(const string &name
                      dt->_host == static_cast<host *>(row)));
         }
 
-        void *element() override {
-            return static_cast<char *>(nullptr) + _element;
-        }
-
     private:
         const unsigned long _element;
         const DowntimesOrComments &_holder;

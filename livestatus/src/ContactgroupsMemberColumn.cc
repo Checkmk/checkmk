@@ -46,8 +46,6 @@ public:
         return false;
     }
 
-    void *element() override { return _element; }
-
 private:
     contact *const _element;
 };

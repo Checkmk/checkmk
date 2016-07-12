@@ -40,8 +40,6 @@ public:
         return is_contact_for_host(hst, _element) != 0;
     }
 
-    void *element() override { return _element; }
-
 private:
     contact *const _element;
 };

@@ -34,12 +34,13 @@ using std::string;
 using std::unique_ptr;
 
 ListFilter::ListFilter(Query *query, ListColumn *column,
-                       RelationalOperator relOp,
+                       RelationalOperator relOp, string element,
                        unique_ptr<ListColumn::Contains> predicate,
                        bool isEmptyValue)
     : ColumnFilter(query)
     , _column(column)
     , _relOp(relOp)
+    , _element(move(element))
     , _predicate(move(predicate))
     , _empty_ref(isEmptyValue) {}
 
@@ -76,11 +77,10 @@ bool ListFilter::accepts(void *data) {
     return false;  // unreachable
 }
 
-void *ListFilter::indexFilter(const string &column_name) const {
+const string *ListFilter::valueForIndexing(const string &column_name) const {
     switch (_relOp) {
         case RelationalOperator::greater_or_equal:
-            return column_name == _column->name() ? _predicate->element()
-                                                  : nullptr;
+            return column_name == _column->name() ? &_element : nullptr;
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:

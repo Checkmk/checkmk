@@ -40,8 +40,6 @@ public:
     public:
         virtual ~Contains();
         virtual bool operator()(void *row) = 0;
-        // TODO(sp) This doesn't really belong here...
-        virtual void *element() = 0;
     };
 
     ListColumn(std::string name, std::string description, int indirect_offset,

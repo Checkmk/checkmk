@@ -966,8 +966,8 @@ void Query::finish() {
     }
 }
 
-void *Query::findIndexFilter(const string &column_name) {
-    return _filter.findIndexFilter(column_name);
+const string *Query::findValueForIndexing(const string &column_name) {
+    return _filter.findValueForIndexing(column_name);
 }
 
 void Query::findIntLimits(const string &column_name, int *lower, int *upper) {

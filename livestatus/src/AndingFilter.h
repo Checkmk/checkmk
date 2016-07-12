@@ -37,6 +37,8 @@ public:
     bool accepts(void *data) override;
     bool optimizeBitmask(const std::string &column_name,
                          uint32_t *mask) const override;
+    const std::string *findValueForIndexing(
+        const std::string &column_name) const;
 };
 
 #endif  // AndingFilter_h

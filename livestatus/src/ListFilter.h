@@ -36,15 +36,18 @@ class Query;
 class ListFilter : public ColumnFilter {
 public:
     ListFilter(Query *query, ListColumn *column, RelationalOperator relOp,
+               std::string element,
                std::unique_ptr<ListColumn::Contains> predicate,
                bool isEmptyValue);
     bool accepts(void *data) override;
-    void *indexFilter(const std::string &column_name) const override;
+    const std::string *valueForIndexing(
+        const std::string &column_name) const override;
     ListColumn *column() override;
 
 private:
     ListColumn *_column;
     RelationalOperator _relOp;
+    std::string _element;
     std::unique_ptr<ListColumn::Contains> _predicate;
     bool _empty_ref;  // distinct from unknown ref
 };

@@ -32,6 +32,6 @@ ListColumn::Contains::~Contains() = default;
 
 Filter *ListColumn::createFilter(Query *query, RelationalOperator relOp,
                                  const string &value) {
-    return new ListFilter(query, this, relOp, makeContains(value),
+    return new ListFilter(query, this, relOp, value, makeContains(value),
                           value.empty());
 }

@@ -83,8 +83,6 @@ unique_ptr<ListColumn::Contains> ContactgroupsColumn::makeContains(
             return false;
         }
 
-        void *element() override { return _element; }
-
     private:
         contactgroup *const _element;
         int _offset;

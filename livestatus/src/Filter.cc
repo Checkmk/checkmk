@@ -24,18 +24,20 @@
 
 #include "Filter.h"
 
+using std::string;
+
 Filter::Filter(Query *query) : _query(query) {}
 
 Filter::~Filter() = default;
 
-void *Filter::indexFilter(const std::string & /* column_name */) const {
+const string *Filter::valueForIndexing(const string & /* column_name */) const {
     return nullptr;
 }
 
-void Filter::findIntLimits(const std::string & /* column_name */,
-                           int * /* lower */, int * /* upper */) const {}
+void Filter::findIntLimits(const string & /* column_name */, int * /* lower */,
+                           int * /* upper */) const {}
 
-bool Filter::optimizeBitmask(const std::string & /* column_name */,
+bool Filter::optimizeBitmask(const string & /* column_name */,
                              uint32_t * /* mask */) const {
     return false;
 }

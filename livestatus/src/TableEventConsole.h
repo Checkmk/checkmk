@@ -169,9 +169,8 @@ protected:
         std::unique_ptr<Contains> makeContains(
             const std::string & /*unused*/) override {
             struct ContainsElem : public Contains {
-                // TODO(sp) Actually implement those methods below.
+                // TODO(sp) Actually implement this.
                 bool operator()(void * /*unused*/) override { return false; }
-                void *element() override { return nullptr; }
             };
             return std::make_unique<ContainsElem>();
         }

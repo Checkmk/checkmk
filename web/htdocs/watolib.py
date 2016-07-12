@@ -4554,6 +4554,8 @@ def user_script_choices(what):
     return choices
 
 
+def user_script_title(what, name):
+    return dict(user_script_choices(what)).get(name, name)
 
 #.
 #   .--MIXED STUFF---------------------------------------------------------.

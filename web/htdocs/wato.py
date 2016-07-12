@@ -8283,8 +8283,7 @@ def notification_script_choices_with_parameters():
 
 
 def notification_script_title(name):
-    return dict(notification_script_choices()).get(name, name)
-
+    return user_script_title("notifications", name)
 
 
 

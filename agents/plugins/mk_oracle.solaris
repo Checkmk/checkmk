@@ -27,6 +27,7 @@
 
 # This plugin is a port of the linux agent plugin. It has been
 # tested with solaris 10.
+# This plugin is deprecated. Please use the mk_oracle plugin instead.
 
 # Get list of all running databases
 SIDS=$(UNIX95=true ps -ef -o args | sed -n '/^ora_pmon_/p;/^xe_pmon_/p' | sed -n '/^[a-z]*_pmon_\([^ ]*\)/s//\1/p')

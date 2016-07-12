@@ -302,6 +302,7 @@
     * 3555 FIX: esx_vsphere_sensors: fixed incorrect default parameter during service discovery...
     * 3665 FIX: hitachi_hnas_*: Fixed service discovery on some devices (e.g. HM800)
     * 3666 FIX: ups_*: Fixed discovery for Vision UPS devices
+    * 3692 FIX: f5_bigip_conns: fixed empty data handling
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

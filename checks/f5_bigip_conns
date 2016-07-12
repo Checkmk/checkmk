@@ -25,81 +25,53 @@
 # Boston, MA 02110-1301 USA.
 
 
-# {iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) 3375 bigipTrafficMgmt(2) bigipSystem(1) sysGlobals(1) sysGlobalStats(2) sysGlobalStat(1) sysStatClientCurConns(8)}
+# .1.3.6.1.4.1.3375.2.1.1.2.1.8.0 594 --> F5-BIGIP-SYSTEM-MIB::sysStatClientCurConns.0
+# .1.3.6.1.4.1.3375.2.1.1.2.9.2.0 --> F5-BIGIP-SYSTEM-MIB::sysClientsslStatCurConns.0
 
-# {iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) 3375 bigipTrafficMgmt(2) bigipSystem(1) sysGlobals(1) sysGlobalStats(2) sysGlobalClientSslStat(9) sysClientsslStatCurConns(2)}
 
 factory_settings["f5_bigip_conns_default_levels"] = {
         "conns"     : (25000, 30000),
         "ssl_conns" : (25000, 30000),
 }
 
+
 def inventory_f5_bigip_conns(info):
     if info:
         return [ ( None, {} ) ]
 
+
 def check_f5_bigip_conns(item, params, info):
-    type_list = { 'conns': ('Connections', 0),
-                  'ssl_conns': ('SSL Connections', 1),
-                }
-    perfdata = []
-    infotext = ""
-    state = 0
+    for val, what, title in [
+        (info[0][0], "conns",     "Connections"),
+        (info[0][1], "ssl_conns", "SSL connections")]:
 
-    separator = ""
-    for typ, values in type_list.iteritems():
-        param = params.get(typ)
-        desc = values[0]
-        index = values[1]
-        conns   = int(info[0][index])
-        infotext += separator
-        separator = " - "
-        if type(param) == tuple:
-            warn, crit = param
-            perfdata.append( (typ, conns, warn, crit) )
-            if conns >=crit:
-                sstate = 2
-                sym = "(!!)"
-            elif conns >= warn:
-                sstate = 1
-                sym = "(!)"
-            else:
-                sstate = 0
-                sym = ""
-            infotext += "%d %s%s (%d/%d)" % (conns, desc, sym, warn, crit)
+        state    = 0
+        infotext = "%s:" % title
+        perfdata = []
+
+        # SSL may not be configured, eg. on test servers
+        if val == "":
+            infotext += " not configured"
+
         else:
-            warn, crit = None, None
-            perf = ( (typ, conns, warn, crit) )
-            sstate, text, extraperf = check_levels(conns, typ, param)
-            if sstate == 2:
-                sym == "(!!)"
-            elif sstate == 1:
-                sym = "(!)"
-            else:
-                sym = ""
-            perfdata.append(perf)
-            if len(extraperf) > 0:
-                perfdata.append(extraperf[0])
-            infotext += "%d %s%s" % (conns, desc, sym)
-            if text:
-                infotext += ", " + text
-        if state < sstate:
-            state = sstate
+            state, extrainfo, perfdata = check_levels(int(val), what, params.get(what))
+            infotext += " %s%s" % (what, extrainfo)
 
-    return (state, infotext, perfdata)
+        yield state, infotext, perfdata
+
 
 check_info["f5_bigip_conns"] = {
     'check_function'            : check_f5_bigip_conns,
     'inventory_function'        : inventory_f5_bigip_conns,
     'service_description'       : 'Open Connections',
+    'snmp_info'                 : ( '.1.3.6.1.4.1.3375.2.1.1.2', [
+                                        '1.8',  # F5-BIGIP-SYSTEM-MIB::sysStatServerCurConns
+                                        '9.2',  # F5-BIGIP-SYSTEM-MIB::sysClientsslStatCurConns
+                                  ]),
+    'snmp_scan_function'        : lambda oid: '.1.3.6.1.4.1.3375.2' in \
+                                         oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in \
+                                         oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
     'has_perfdata'              : True,
     'group'                     : 'f5_connections',
     'default_levels_variable'   : 'f5_bigip_conns_default_levels',
-    'snmp_info'                 : ( '.1.3.6.1.4.1.3375.2.1.1.2', [
-                                        '1.8', # sysStatServerCurConns
-                                        '9.2', # sysClientsslStatCurConns
-                                    ] ),
-    'snmp_scan_function'        : lambda oid: '.1.3.6.1.4.1.3375.2' in \
-                        oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in \
-                        oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
 }

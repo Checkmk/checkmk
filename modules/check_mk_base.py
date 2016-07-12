@@ -2133,6 +2133,9 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
         else:
             return v * factor * scale
 
+    def levelsinfo_ty(ty, warn, crit, unit):
+        return ("warn/crit %s %.2f/%.2f %s" % (ty, warn, crit, unit)).strip()
+
     # None or (None, None) -> do not check any levels
     if params == None or params == (None, None):
         return 0, "", []
@@ -2142,9 +2145,11 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
         if len(params) == 2: # upper warn and crit
             warn_upper, crit_upper = scale_value(params[0]), scale_value(params[1])
             warn_lower, crit_lower = None, None
-        else: # uppwer and lower warn and crit
+
+        else: # upper and lower warn and crit
             warn_upper, crit_upper = scale_value(params[0]), scale_value(params[1])
             warn_lower, crit_lower = scale_value(params[2]), scale_value(params[3])
+
         ref_value = None
 
     # Dictionary -> predictive levels
@@ -2174,18 +2179,18 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
     # Critical cases
     if crit_upper != None and value >= crit_upper:
         state = 2
-        infotexts.append("critical level at %.2f%s" % (crit_upper / scale, unit))
-    elif crit_lower != None and value <= crit_lower:
+        infotexts.append(levelsinfo_ty("at", warn_upper / scale, crit_upper / scale, unit))
+    elif crit_lower != None and value < crit_lower:
         state = 2
-        infotexts.append("too low: critical level at %.2f%s" % (crit_lower / scale, unit))
+        infotexts.append(levelsinfo_ty("below", warn_lower / scale, crit_lower / scale, unit))
 
     # Warning cases
     elif warn_upper != None and value >= warn_upper:
         state = 1
-        infotexts.append("warning level at %.2f%s" % (warn_upper / scale, unit))
-    elif warn_lower != None and value <= warn_lower:
+        infotexts.append(levelsinfo_ty("at", warn_upper / scale, crit_upper / scale, unit))
+    elif warn_lower != None and value < warn_lower:
         state = 1
-        infotexts.append("too low: warning level at %.2f%s" % (warn_lower / scale, unit))
+        infotexts.append(levelsinfo_ty("below", warn_lower / scale, crit_lower / scale, unit))
 
     # OK
     else:

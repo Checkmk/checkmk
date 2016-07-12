@@ -41,7 +41,7 @@ the <tt>result_code</tt> is set to 1 and the result contains the error message:
 
 C+:
 {"result": "Found no inventory data for this host.", "result_code": 1}
-C+:
+C-:
 
 
 You can also request data of multiple hosts at once. In this case, you need to specify your request like this:

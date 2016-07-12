@@ -47,7 +47,7 @@ def inv_hp_proliant_mem(info):
         "18" : 'FB-DIMM DDR3',
     }
 
-    node = inv_tree("hardware.memory.arrays:")
+    node = inv_tree_list("hardware.memory.arrays:")
 
     infos = {}
     for board_index, module_index, module_size_str, module_type, \

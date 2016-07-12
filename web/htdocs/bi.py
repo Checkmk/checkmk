@@ -1168,7 +1168,6 @@ def execute_rule_node(node, status_info, aggregation_options):
     node_states = []
     assumed_states = []
     downtime_states = []
-    host_downtime_states = []
     service_period_states = []
     ack_states = [] # Needed for computing the acknowledgement of non-OK nodes
     one_assumption = False
@@ -1201,7 +1200,6 @@ def execute_rule_node(node, status_info, aggregation_options):
 
     # Compute downtime state
     downtime_state = func(*([downtime_states] + funcargs))
-    host_downtime_state = func(*([host_downtime_states] + funcargs))
 
     if aggregation_options["downtime_aggr_warn"]:
         state["in_downtime"] = downtime_state["state"] >= 1

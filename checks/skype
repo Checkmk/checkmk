@@ -77,7 +77,6 @@ def check_skype(item, params, parsed):
     # LS:WEB - Address Book Web Query\WEB - Failed search requests/sec
     # LS:WEB - Location Information Service\WEB - Failed Get Locations Requests/Second
     # LS:WEB - Distribution List Expansion\WEB - Timed out Active Directory Requests/sec
-    # LS:SIP - Protocol\SIP - Average Incoming Message Processing Time
     # LS:WEB - UCWA\UCWA - HTTP 5xx Responses/Second
     # ASP.NET Apps v4.0.30319(*)\Requests Rejected
     #
@@ -110,12 +109,6 @@ def check_skype(item, params, parsed):
                                perfvar="http_5xx",
                                levels=params['5xx_responses']
                                )
-
-    yield wmi_yield_raw_average_timer(parsed["LS:SIP - Protocol"], item,
-                                      "SIP - Average Incoming Message Processing Time",
-                                      label="s avg incoming message processing time",
-                                      perfvar="message_processing_time",
-                                      levels=params['message_processing_time'])
 
     yield wmi_yield_raw_counter(parsed["ASP.NET Apps v4.0.30319"], item,
                                 "Requests Rejected",
@@ -150,7 +143,6 @@ check_info['skype'] = {
         "LS:WEB - Address Book Web Query",
         "LS:WEB - Location Information Service",
         "LS:WEB - Distribution List Expansion",
-        "LS:SIP - Protocol",
         "LS:WEB - UCWA",
         "ASP.NET Apps v4.0.30319"
     ]),

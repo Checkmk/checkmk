@@ -35,6 +35,7 @@
 #include <vector>
 #include "AndingFilter.h"
 #include "OutputBuffer.h"
+#include "Renderer.h"
 #include "VariadicFilter.h"
 #include "global_counters.h"
 #include "nagios.h"  // IWYU pragma: keep
@@ -45,10 +46,11 @@ class Filter;
 class StatsColumn;
 class Table;
 
-enum class OutputFormat { csv, json, python };
-
 class Query {
-    OutputBuffer *_output;
+    Renderer *_renderer;
+    OutputBuffer::ResponseHeader _response_header;
+    bool _do_keepalive;
+    std::string _invalid_header_message;
     Table *_table;
     AndingFilter _filter;
     contact *_auth_user;
@@ -86,22 +88,23 @@ class Query {
     std::unordered_set<Column *> _all_columns;
 
 public:
-    Query(const std::list<std::string> &lines, OutputBuffer *output, Table *);
+    Query(const std::list<std::string> &lines, Table *);
     ~Query();
-    void process();
+    void process(OutputBuffer *output);
     bool processDataset(void *);
     bool timelimitReached();
     void addColumn(Column *column);
-
-    OutputFormat getOutputFormat() const;
-    void setOutputFormat(OutputFormat format);
 
     void add(const std::string &str);
     void add(const std::vector<char> &blob);
     size_t size();
     void setResponseHeader(OutputBuffer::ResponseHeader r);
     void setDoKeepalive(bool d);
-    void setError(OutputBuffer::ResponseCode code, const std::string &message);
+
+    // invalidHeader can be called during header parsing
+    void invalidHeader(const std::string &message);
+    void invalidRequest(const std::string &message);
+    void limitExceeded(const std::string &message);
 
     contact *authUser() { return _auth_user; }
     void outputDatasetBegin();

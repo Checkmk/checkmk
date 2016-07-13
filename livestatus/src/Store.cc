@@ -213,7 +213,7 @@ void Store::answerGetRequest(const list<string> &lines, OutputBuffer *output,
     }
 
     auto start = system_clock::now();
-    Query(lines, output, table).process();
+    Query(lines, table).process(output);
     if (g_debug_level > 0) {
         auto elapsed = duration_cast<microseconds>(system_clock::now() - start);
         Informational() << "Time to process request: " << elapsed.count()

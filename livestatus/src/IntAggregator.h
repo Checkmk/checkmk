@@ -30,17 +30,19 @@
 #include "Aggregator.h"
 class IntColumn;
 class Query;
+class Renderer;
 
 class IntAggregator : public Aggregator {
-    IntColumn *_column;
-    int64_t _aggr;
-    double _sumq;
-
 public:
     IntAggregator(IntColumn *c, StatsOperation o)
         : Aggregator(o), _column(c), _aggr(0), _sumq(0) {}
-    void consume(void *data, Query *);
-    void output(Query *);
+    void consume(void *data, Query *) override;
+    void output(Renderer *) override;
+
+private:
+    IntColumn *_column;
+    int64_t _aggr;
+    double _sumq;
 };
 
 #endif  // IntAggregator_h

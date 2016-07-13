@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <utility>
 #include <vector>
-#include "Query.h"
+#include "Renderer.h"
 #include "StringColumn.h"
 #include "strutil.h"
 
@@ -111,7 +111,7 @@ void PerfdataAggregator::consumeVariable(const char *varname, double value) {
     }
 }
 
-void PerfdataAggregator::output(Query *q) {
+void PerfdataAggregator::output(Renderer *r) {
     string perf_data;
     bool first = true;
     for (const auto &entry : _aggr) {
@@ -157,5 +157,5 @@ void PerfdataAggregator::output(Query *q) {
         }
         perf_data += format;
     }
-    q->outputString(perf_data.c_str());
+    r->outputString(perf_data.c_str(), -1);
 }

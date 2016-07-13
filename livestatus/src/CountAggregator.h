@@ -29,15 +29,17 @@
 #include "Aggregator.h"
 class Filter;
 class Query;
+class Renderer;
 
 class CountAggregator : public Aggregator {
-    Filter *_filter;
-
 public:
     explicit CountAggregator(Filter *f)
         : Aggregator(StatsOperation::count), _filter(f) {}
-    void consume(void *data, Query *);
-    void output(Query *);
+    void consume(void *data, Query *) override;
+    void output(Renderer *) override;
+
+private:
+    Filter *_filter;
 };
 
 #endif  // CountAggregator_h

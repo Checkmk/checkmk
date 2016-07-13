@@ -42,7 +42,6 @@
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
-#include "OutputBuffer.h"
 #include "Query.h"
 #include "TableHosts.h"
 #include "TableServices.h"
@@ -382,16 +381,14 @@ void TableStateHistory::answerQuery(Query *query) {
     // to find the optimal entry point into the logfile
     _query->findIntLimits("time", &_since, &_until);
     if (_since == 0) {
-        query->setError(
-            OutputBuffer::ResponseCode::invalid_request,
+        query->invalidRequest(
             "Start of timeframe required. e.g. Filter: time > 1234567890");
         return;
     }
 
     _query_timeframe = _until - _since - 1;
     if (_query_timeframe == 0) {
-        query->setError(OutputBuffer::ResponseCode::invalid_request,
-                        "Query timeframe is 0 seconds");
+        query->invalidRequest("Query timeframe is 0 seconds");
         return;
     }
 

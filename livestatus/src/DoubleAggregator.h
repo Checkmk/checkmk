@@ -29,17 +29,19 @@
 #include "Aggregator.h"
 class DoubleColumn;
 class Query;
+class Renderer;
 
 class DoubleAggregator : public Aggregator {
-    DoubleColumn *_column;
-    double _aggr;
-    double _sumq;
-
 public:
     DoubleAggregator(DoubleColumn *c, StatsOperation o)
         : Aggregator(o), _column(c), _aggr(0), _sumq(0) {}
-    void consume(void *data, Query *);
-    void output(Query *);
+    void consume(void *data, Query *) override;
+    void output(Renderer *) override;
+
+private:
+    DoubleColumn *_column;
+    double _aggr;
+    double _sumq;
 };
 
 #endif  // DoubleAggregator_h

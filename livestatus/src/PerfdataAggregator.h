@@ -30,26 +30,27 @@
 #include <string>
 #include "Aggregator.h"
 class Query;
-class StringColumn;  // lines 32-32
-
-struct perf_aggr {
-    double _aggr;
-    double _count;
-    double _sumq;
-};
+class Renderer;
+class StringColumn;
 
 class PerfdataAggregator : public Aggregator {
+public:
+    PerfdataAggregator(StringColumn *c, StatsOperation o)
+        : Aggregator(o), _column(c) {}
+    void consume(void *data, Query *) override;
+    void output(Renderer *) override;
+
+private:
+    struct perf_aggr {
+        double _aggr;
+        double _count;
+        double _sumq;
+    };
+
     StringColumn *_column;
     typedef std::map<std::string, perf_aggr> _aggr_t;
     _aggr_t _aggr;
 
-public:
-    PerfdataAggregator(StringColumn *c, StatsOperation o)
-        : Aggregator(o), _column(c) {}
-    void consume(void *data, Query *);
-    void output(Query *);
-
-private:
     void consumeVariable(const char *varname, double value);
 };
 

@@ -25,14 +25,14 @@
 #include "DoubleAggregator.h"
 #include <math.h>
 #include "DoubleColumn.h"
-#include "Query.h"
+#include "Renderer.h"
 
 /* SORRY: This file is copy&pasted from IntAggregator.
    I hate copy & paste. But I also dislike complicating
    stuff by using C++ templates and the like.
  */
 
-void DoubleAggregator::consume(void *data, Query * /*unused*/) {
+void DoubleAggregator::consume(void* data, Query* /*unused*/) {
     _count++;
     double value = _column->getValue(data);
     switch (_operation) {
@@ -71,29 +71,29 @@ void DoubleAggregator::consume(void *data, Query * /*unused*/) {
     }
 }
 
-void DoubleAggregator::output(Query *q) {
+void DoubleAggregator::output(Renderer* r) {
     switch (_operation) {
         case StatsOperation::sum:
         case StatsOperation::min:
         case StatsOperation::max:
         case StatsOperation::suminv:
-            q->outputDouble(_aggr);
+            r->outputDouble(_aggr);
             break;
 
         case StatsOperation::avg:
         case StatsOperation::avginv:
             if (_count == 0) {
-                q->outputDouble(0.0);
+                r->outputDouble(0.0);
             } else {
-                q->outputDouble(_aggr / _count);
+                r->outputDouble(_aggr / _count);
             }
             break;
 
         case StatsOperation::std:
             if (_count <= 1) {
-                q->outputDouble(0.0);
+                r->outputDouble(0.0);
             } else {
-                q->outputDouble(
+                r->outputDouble(
                     sqrt((_sumq - (_aggr * _aggr) / _count) / (_count - 1)));
             }
             break;

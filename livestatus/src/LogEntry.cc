@@ -217,13 +217,13 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
            LOGCLASS_NOTIFICATION,
            NONE,
            {Param::ContactName, Param::HostName, Param::StateType,
-            Param::CommandName}},
+            Param::CommandName, Param::CheckOutput}},
     ////////////////
     LogDef{"SERVICE NOTIFICATION: ",
            LOGCLASS_NOTIFICATION,
            NONE,
            {Param::ContactName, Param::HostName, Param::SvcDesc,
-            Param::StateType, Param::CommandName}},
+            Param::StateType, Param::CommandName, Param::CheckOutput}},
     ////////////////
     LogDef{"HOST NOTIFICATION RESULT: ",
            LOGCLASS_NOTIFICATION,

@@ -25,7 +25,7 @@
 #include "IntAggregator.h"
 #include <math.h>
 #include "IntColumn.h"
-#include "Query.h"
+#include "Renderer.h"
 
 void IntAggregator::consume(void *data, Query *query) {
     _count++;
@@ -66,31 +66,31 @@ void IntAggregator::consume(void *data, Query *query) {
     }
 }
 
-void IntAggregator::output(Query *q) {
+void IntAggregator::output(Renderer *r) {
     switch (_operation) {
         case StatsOperation::sum:
         case StatsOperation::min:
         case StatsOperation::max:
-            q->outputInteger64(_aggr);
+            r->outputInteger64(_aggr);
             break;
 
         case StatsOperation::suminv:
-            q->outputInteger64(_sumq);
+            r->outputInteger64(_sumq);
             break;
 
         case StatsOperation::avg:
-            q->outputDouble(double(_aggr) / _count);
+            r->outputDouble(double(_aggr) / _count);
             break;
 
         case StatsOperation::avginv:
-            q->outputInteger64(_sumq / _count);
+            r->outputInteger64(_sumq / _count);
             break;
 
         case StatsOperation::std:
             if (_count <= 1) {
-                q->outputDouble(0.0);
+                r->outputDouble(0.0);
             } else {
-                q->outputDouble(sqrt(
+                r->outputDouble(sqrt(
                     (_sumq -
                      (static_cast<double>(_aggr) * static_cast<double>(_aggr)) /
                          _count) /

@@ -28,19 +28,20 @@
 #include "config.h"  // IWYU pragma: keep
 #include <stdint.h>
 class Query;
+class Renderer;
 
 enum class StatsOperation { count, sum, min, max, avg, std, suminv, avginv };
 
 class Aggregator {
-protected:
-    StatsOperation _operation;
-    uint32_t _count;
-
 public:
     explicit Aggregator(StatsOperation o) : _operation(o), _count(0) {}
-    virtual ~Aggregator() {}
+    virtual ~Aggregator() = default;
     virtual void consume(void *data, Query *) = 0;
-    virtual void output(Query *) = 0;
+    virtual void output(Renderer *) = 0;
+
+protected:
+    const StatsOperation _operation;
+    uint32_t _count;
 };
 
 #endif  // Aggregator_h

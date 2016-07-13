@@ -24,13 +24,13 @@
 
 #include "CountAggregator.h"
 #include "Filter.h"
-#include "Query.h"
+#include "Renderer.h"
 
-void CountAggregator::consume(void *data, Query * /*unused*/) {
+void CountAggregator::consume(void* data, Query* /*unused*/) {
     // _filter is 0 --> no filter, accept all data
     if ((_filter == nullptr) || _filter->accepts(data)) {
         _count++;
     }
 }
 
-void CountAggregator::output(Query *q) { q->outputInteger(_count); }
+void CountAggregator::output(Renderer* r) { r->outputInteger(_count); }

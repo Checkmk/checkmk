@@ -24,7 +24,6 @@
 
 #include "Query.h"
 #include <ctype.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,7 +45,6 @@
 #include "Table.h"
 #include "VariadicFilter.h"
 #include "auth.h"
-#include "data_encoding.h"
 #include "opids.h"
 #include "strutil.h"
 #include "waittriggers.h"
@@ -80,8 +78,10 @@ private:
 };
 }  // namespace
 
-Query::Query(const list<string> &lines, OutputBuffer *output, Table *table)
-    : _output(output)
+Query::Query(const list<string> &lines, Table *table)
+    : _renderer(nullptr)
+    , _response_header(OutputBuffer::ResponseHeader::off)
+    , _do_keepalive(false)
     , _table(table)
     , _filter(this)
     , _auth_user(nullptr)
@@ -196,8 +196,7 @@ Query::Query(const list<string> &lines, OutputBuffer *output, Table *table)
             break;
 
         } else {
-            setError(OutputBuffer::ResponseCode::invalid_header,
-                     "Undefined request header '" + string(buffer) + "'");
+            invalidHeader("Undefined request header '" + string(buffer) + "'");
             break;
         }
     }
@@ -241,26 +240,32 @@ Column *Query::createDummyColumn(const char *name) {
     return col;
 }
 
-OutputFormat Query::getOutputFormat() const { return _output_format; }
-
-void Query::setOutputFormat(OutputFormat format) { _output_format = format; }
-
 void Query::addColumn(Column *column) { _columns.push_back(column); }
 
-size_t Query::size() { return _output->size(); }
+size_t Query::size() { return _renderer->size(); }
 
-void Query::add(const string &str) { _output->add(str); }
+void Query::add(const string &str) { _renderer->add(str); }
 
-void Query::add(const vector<char> &blob) { _output->add(blob); }
+void Query::add(const vector<char> &blob) { _renderer->add(blob); }
 
 void Query::setResponseHeader(OutputBuffer::ResponseHeader r) {
-    _output->setResponseHeader(r);
+    _response_header = r;
 }
 
-void Query::setDoKeepalive(bool d) { _output->setDoKeepalive(d); }
+void Query::setDoKeepalive(bool d) { _do_keepalive = d; }
 
-void Query::setError(OutputBuffer::ResponseCode code, const string &message) {
-    _output->setError(code, message);
+void Query::invalidHeader(const string &message) {
+    if (_invalid_header_message == "") {
+        _invalid_header_message = message;
+    }
+}
+
+void Query::invalidRequest(const string &message) {
+    _renderer->setError(OutputBuffer::ResponseCode::invalid_request, message);
+}
+
+void Query::limitExceeded(const string &message) {
+    _renderer->setError(OutputBuffer::ResponseCode::limit_exceeded, message);
 }
 
 Filter *Query::createFilter(Column *column, RelationalOperator relOp,
@@ -268,9 +273,8 @@ Filter *Query::createFilter(Column *column, RelationalOperator relOp,
     try {
         return column->createFilter(this, relOp, value);
     } catch (const runtime_error &e) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "error creating filter on table" + string(_table->name()) +
-                     ": " + e.what());
+        invalidHeader("error creating filter on table" +
+                      string(_table->name()) + ": " + e.what());
         return nullptr;
     }
 }
@@ -279,17 +283,15 @@ void Query::parseAndOrLine(char *line, LogicalOperator andor,
                            VariadicFilter &filter, string header) {
     char *value = next_field(&line);
     if (value == nullptr) {
-        setError(
-            OutputBuffer::ResponseCode::invalid_header,
-            "Missing value for " + header + ": need positive integer number");
+        invalidHeader("Missing value for " + header +
+                      ": need positive integer number");
         return;
     }
 
     int number = atoi(value);
     if (isdigit(value[0]) == 0 || number <= 0) {
-        setError(
-            OutputBuffer::ResponseCode::invalid_header,
-            "Invalid value for " + header + ": need positive integer number");
+        invalidHeader("Invalid value for " + header +
+                      ": need positive integer number");
         return;
     }
 
@@ -298,15 +300,13 @@ void Query::parseAndOrLine(char *line, LogicalOperator andor,
 
 void Query::parseNegateLine(char *line, VariadicFilter &filter, string header) {
     if (next_field(&line) != nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 header + ": does not take any arguments");
+        invalidHeader(header + ": does not take any arguments");
         return;
     }
 
     Filter *to_negate = filter.stealLastSubfiler();
     if (to_negate == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 header + " nothing to negate");
+        invalidHeader(header + " nothing to negate");
         return;
     }
 
@@ -317,17 +317,15 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
     string kind = andor == LogicalOperator::or_ ? "StatsOr" : "StatsAnd";
     char *value = next_field(&line);
     if (value == nullptr) {
-        setError(
-            OutputBuffer::ResponseCode::invalid_header,
-            "Missing value for " + kind + ": need non-zero integer number");
+        invalidHeader("Missing value for " + kind +
+                      ": need non-zero integer number");
         return;
     }
 
     int number = atoi(value);
     if ((isdigit(value[0]) == 0) || number <= 0) {
-        setError(
-            OutputBuffer::ResponseCode::invalid_header,
-            "Invalid value for " + kind + " : need non-zero integer number");
+        invalidHeader("Invalid value for " + kind +
+                      " : need non-zero integer number");
         return;
     }
 
@@ -335,17 +333,15 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
     auto variadic = VariadicFilter::make(this, andor);
     while (number > 0) {
         if (_stats_columns.empty()) {
-            setError(OutputBuffer::ResponseCode::invalid_header,
-                     "Invalid count for " + kind +
-                         ": too few Stats: headers available");
+            invalidHeader("Invalid count for " + kind +
+                          ": too few Stats: headers available");
             return;
         }
 
         StatsColumn *col = _stats_columns.back();
         if (col->operation() != StatsOperation::count) {
-            setError(
-                OutputBuffer::ResponseCode::invalid_header,
-                "Can use " + kind + " only on Stats: headers of filter type");
+            invalidHeader("Can use " + kind +
+                          " only on Stats: headers of filter type");
             return;
         }
         variadic->addSubfilter(col->stealFilter());
@@ -360,19 +356,17 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
 
 void Query::parseStatsNegateLine(char *line) {
     if (next_field(&line) != nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "StatsNegate: does not take any arguments");
+        invalidHeader("StatsNegate: does not take any arguments");
         return;
     }
     if (_stats_columns.empty()) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "StatsNegate: no Stats: headers available");
+        invalidHeader("StatsNegate: no Stats: headers available");
         return;
     }
     StatsColumn *col = _stats_columns.back();
     if (col->operation() != StatsOperation::count) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "Can use StatsNegate only on Stats: headers of filter type");
+        invalidHeader(
+            "Can use StatsNegate only on Stats: headers of filter type");
         return;
     }
     auto negated = new NegatingFilter(this, col->stealFilter());
@@ -386,8 +380,7 @@ void Query::parseStatsLine(char *line) {
     // first token is either aggregation operator or column name
     char *col_or_op = next_field(&line);
     if (col_or_op == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "empty stats line");
+        invalidHeader("empty stats line");
         return;
     }
 
@@ -415,17 +408,15 @@ void Query::parseStatsLine(char *line) {
         // aggregation operator is followed by column name
         column_name = next_field(&line);
         if (column_name == nullptr) {
-            setError(OutputBuffer::ResponseCode::invalid_header,
-                     "missing column name in stats header");
+            invalidHeader("missing column name in stats header");
             return;
         }
     }
 
     Column *column = _table->column(column_name);
     if (column == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "invalid stats header: table '" + string(_table->name()) +
-                     "' has no column '" + string(column_name) + "'");
+        invalidHeader("invalid stats header: table '" + string(_table->name()) +
+                      "' has no column '" + string(column_name) + "'");
         return;
     }
 
@@ -433,22 +424,21 @@ void Query::parseStatsLine(char *line) {
     if (operation == StatsOperation::count) {
         char *operator_name = next_field(&line);
         if (operator_name == nullptr) {
-            setError(OutputBuffer::ResponseCode::invalid_header,
-                     "invalid stats header: missing operator after table '" +
-                         string(column_name) + "'");
+            invalidHeader(
+                "invalid stats header: missing operator after table '" +
+                string(column_name) + "'");
             return;
         }
         RelationalOperator relOp;
         if (!relationalOperatorForName(operator_name, relOp)) {
-            setError(OutputBuffer::ResponseCode::invalid_header,
-                     "invalid stats operator '" + string(operator_name) + "'");
+            invalidHeader("invalid stats operator '" + string(operator_name) +
+                          "'");
             return;
         }
         char *value = lstrip(line);
         if (value == nullptr) {
-            setError(OutputBuffer::ResponseCode::invalid_header,
-                     "invalid stats: missing value after operator '" +
-                         string(operator_name) + "'");
+            invalidHeader("invalid stats: missing value after operator '" +
+                          string(operator_name) + "'");
             return;
         }
 
@@ -470,37 +460,33 @@ void Query::parseStatsLine(char *line) {
 void Query::parseFilterLine(char *line, VariadicFilter &filter) {
     char *column_name = next_field(&line);
     if (column_name == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "empty filter line");
+        invalidHeader("empty filter line");
         return;
     }
 
     Column *column = _table->column(column_name);
     if (column == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "invalid filter: table '" + string(_table->name()) +
-                     "' has no column '" + string(column_name) + "'");
+        invalidHeader("invalid filter: table '" + string(_table->name()) +
+                      "' has no column '" + string(column_name) + "'");
         return;
     }
 
     char *operator_name = next_field(&line);
     if (operator_name == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "invalid filter header: missing operator after table '" +
-                     string(column_name) + "'");
+        invalidHeader("invalid filter header: missing operator after table '" +
+                      string(column_name) + "'");
         return;
     }
     RelationalOperator relOp;
     if (!relationalOperatorForName(operator_name, relOp)) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "invalid filter operator '" + string(operator_name) + "'");
+        invalidHeader("invalid filter operator '" + string(operator_name) +
+                      "'");
         return;
     }
     char *value = lstrip(line);
     if (value == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "invalid filter: missing value after operator '" +
-                     string(operator_name) + "'");
+        invalidHeader("invalid filter: missing value after operator '" +
+                      string(operator_name) + "'");
         return;
     }
 
@@ -538,7 +524,7 @@ void Query::parseColumnsLine(char *line) {
             // expects new columns,
             // will be able to keep compatibility with older Livestatus
             // versions.
-            // setError(OutputBuffer::ResponseCode::invalid_header,
+            // invalidHeader(
             //       "Table '%s' has no column '%s'", _table->name(),
             //       column_name);
             Column *col = createDummyColumn(column_name);
@@ -576,28 +562,27 @@ void Query::parseSeparatorsLine(char *line) {
 void Query::parseOutputFormatLine(char *line) {
     char *format = next_field(&line);
     if (format == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "Missing output format. Only 'csv' and 'json' are available.");
+        invalidHeader(
+            "Missing output format. Only 'csv' and 'json' are available.");
         return;
     }
 
     if (strcmp(format, "csv") == 0) {
-        setOutputFormat(OutputFormat::csv);
+        _output_format = OutputFormat::csv;
     } else if (strcmp(format, "json") == 0) {
-        setOutputFormat(OutputFormat::json);
+        _output_format = OutputFormat::json;
     } else if (strcmp(format, "python") == 0) {
-        setOutputFormat(OutputFormat::python);
+        _output_format = OutputFormat::python;
     } else {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "Invalid output format. Only 'csv' and 'json' are available.");
+        invalidHeader(
+            "Invalid output format. Only 'csv' and 'json' are available.");
     }
 }
 
 void Query::parseColumnHeadersLine(char *line) {
     char *value = next_field(&line);
     if (value == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "Missing value for ColumnHeaders: must be 'on' or 'off'");
+        invalidHeader("Missing value for ColumnHeaders: must be 'on' or 'off'");
         return;
     }
 
@@ -606,16 +591,14 @@ void Query::parseColumnHeadersLine(char *line) {
     } else if (strcmp(value, "off") == 0) {
         _show_column_headers = false;
     } else {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "Invalid value for ColumnHeaders: must be 'on' or 'off'");
+        invalidHeader("Invalid value for ColumnHeaders: must be 'on' or 'off'");
     }
 }
 
 void Query::parseKeepAliveLine(char *line) {
     char *value = next_field(&line);
     if (value == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "Missing value for KeepAlive: must be 'on' or 'off'");
+        invalidHeader("Missing value for KeepAlive: must be 'on' or 'off'");
         return;
     }
 
@@ -624,16 +607,14 @@ void Query::parseKeepAliveLine(char *line) {
     } else if (strcmp(value, "off") == 0) {
         setDoKeepalive(false);
     } else {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "Invalid value for KeepAlive: must be 'on' or 'off'");
+        invalidHeader("Invalid value for KeepAlive: must be 'on' or 'off'");
     }
 }
 
 void Query::parseResponseHeaderLine(char *line) {
     char *value = next_field(&line);
     if (value == nullptr) {
-        setError(
-            OutputBuffer::ResponseCode::invalid_header,
+        invalidHeader(
             "Missing value for ResponseHeader: must be 'off' or 'fixed16'");
         return;
     }
@@ -643,22 +624,20 @@ void Query::parseResponseHeaderLine(char *line) {
     } else if (strcmp(value, "fixed16") == 0) {
         setResponseHeader(OutputBuffer::ResponseHeader::fixed16);
     } else {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "Invalid value '" + string(value) +
-                     "' for ResponseHeader: must be 'off' or 'fixed16'");
+        invalidHeader("Invalid value '" + string(value) +
+                      "' for ResponseHeader: must be 'off' or 'fixed16'");
     }
 }
 
 void Query::parseLimitLine(char *line) {
     char *value = next_field(&line);
     if (value == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "Header Limit: missing value");
+        invalidHeader("Header Limit: missing value");
     } else {
         int limit = atoi(value);
         if ((isdigit(value[0]) == 0) || limit < 0) {
-            setError(OutputBuffer::ResponseCode::invalid_header,
-                     "Invalid value for Limit: must be non-negative integer");
+            invalidHeader(
+                "Invalid value for Limit: must be non-negative integer");
         } else {
             _limit = limit;
         }
@@ -668,14 +647,13 @@ void Query::parseLimitLine(char *line) {
 void Query::parseTimelimitLine(char *line) {
     char *value = next_field(&line);
     if (value == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "Header Timelimit: missing value");
+        invalidHeader("Header Timelimit: missing value");
     } else {
         int timelimit = atoi(value);
         if ((isdigit(value[0]) == 0) || timelimit < 0) {
-            setError(OutputBuffer::ResponseCode::invalid_header,
-                     "Invalid value for Timelimit: must be "
-                     "non-negative integer (seconds)");
+            invalidHeader(
+                "Invalid value for Timelimit: must be "
+                "non-negative integer (seconds)");
         } else {
             _time_limit = timelimit;
             _time_limit_timeout = time(nullptr) + _time_limit;
@@ -686,13 +664,11 @@ void Query::parseTimelimitLine(char *line) {
 void Query::parseWaitTimeoutLine(char *line) {
     char *value = next_field(&line);
     if (value == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "WaitTimeout: missing value");
+        invalidHeader("WaitTimeout: missing value");
     } else {
         int timeout = atoi(value);
         if ((isdigit(value[0]) == 0) || timeout < 0) {
-            setError(
-                OutputBuffer::ResponseCode::invalid_header,
+            invalidHeader(
                 "Invalid value for WaitTimeout: must be non-negative integer");
         } else {
             _wait_timeout = timeout;
@@ -703,15 +679,13 @@ void Query::parseWaitTimeoutLine(char *line) {
 void Query::parseWaitTriggerLine(char *line) {
     char *value = next_field(&line);
     if (value == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "WaitTrigger: missing keyword");
+        invalidHeader("WaitTrigger: missing keyword");
         return;
     }
     struct trigger *t = trigger_find(value);
     if (t == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "WaitTrigger: invalid trigger '" + string(value) +
-                     "'. Allowed are " + trigger_all_names() + ".");
+        invalidHeader("WaitTrigger: invalid trigger '" + string(value) +
+                      "'. Allowed are " + trigger_all_names() + ".");
         return;
     }
     _wait_trigger = t;
@@ -721,17 +695,15 @@ void Query::parseWaitObjectLine(char *line) {
     char *objectspec = lstrip(line);
     _wait_object = _table->findObject(objectspec);
     if (_wait_object == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "WaitObject: object '" + string(objectspec) +
-                     "' not found or not supported by this table");
+        invalidHeader("WaitObject: object '" + string(objectspec) +
+                      "' not found or not supported by this table");
     }
 }
 
 void Query::parseLocaltimeLine(char *line) {
     char *value = next_field(&line);
     if (value == nullptr) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "Header Localtime: missing value");
+        invalidHeader("Header Localtime: missing value");
         return;
     }
     time_t their_time = atoi(value);
@@ -752,9 +724,9 @@ void Query::parseLocaltimeLine(char *line) {
         full++;
     }
     if (full >= 48 || full <= -48) {
-        setError(OutputBuffer::ResponseCode::invalid_header,
-                 "Invalid Localtime header: timezone difference "
-                 "greater then 24 hours");
+        invalidHeader(
+            "Invalid Localtime header: timezone difference "
+            "greater then 24 hours");
         return;
     }
     _timezone_offset = full * 1800;
@@ -766,7 +738,12 @@ void Query::parseLocaltimeLine(char *line) {
 
 bool Query::doStats() { return !_stats_columns.empty(); }
 
-void Query::process() {
+void Query::process(OutputBuffer *output) {
+    Renderer renderer(output, _response_header, _do_keepalive,
+                      _invalid_header_message, _output_format, _field_separator,
+                      _dataset_separator, _list_separator,
+                      _host_service_separator, _timezone_offset);
+    _renderer = &renderer;
     start();
     _table->answerQuery(this);
     finish();
@@ -777,9 +754,7 @@ void Query::start() {
 
     _need_ds_separator = false;
 
-    if (getOutputFormat() != OutputFormat::csv) {
-        add("[");
-    }
+    _renderer->startOfQuery();
 
     if (doStats()) {
         // if we have no StatsGroupBy: column, we allocate one only row of
@@ -831,9 +806,8 @@ bool Query::timelimitReached() {
     if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
         Informational() << "Maximum query time of " << _time_limit
                         << " seconds exceeded!";
-        setError(OutputBuffer::ResponseCode::limit_exceeded,
-                 "Maximum query time of " + to_string(_time_limit) +
-                     " seconds exceeded!");
+        limitExceeded("Maximum query time of " + to_string(_time_limit) +
+                      " seconds exceeded!");
         return true;
     }
     return false;
@@ -881,8 +855,8 @@ bool Query::processDataset(void *data) {
             // stats.
         } else {
             // output data of current row
-            if (_need_ds_separator && getOutputFormat() != OutputFormat::csv) {
-                add(",\n");
+            if (_need_ds_separator) {
+                _renderer->outputDataSetSeparator();
             } else {
                 _need_ds_separator = true;
             }
@@ -909,8 +883,8 @@ void Query::finish() {
         // output values of all stats groups (output has been post poned until
         // now)
         for (auto &stats_group : _stats_groups) {
-            if (_need_ds_separator && getOutputFormat() != OutputFormat::csv) {
-                add(",\n");
+            if (_need_ds_separator) {
+                _renderer->outputDataSetSeparator();
             } else {
                 _need_ds_separator = true;
             }
@@ -932,7 +906,7 @@ void Query::finish() {
             Aggregator **aggr = stats_group.second;
             for (unsigned i = 0; i < _stats_columns.size(); i++) {
                 outputFieldSeparator();
-                aggr[i]->output(this);
+                aggr[i]->output(_renderer);
                 delete aggr[i];  // not needed any more
             }
             outputDatasetEnd();
@@ -942,8 +916,8 @@ void Query::finish() {
 
     // stats without group column
     else if (doStats()) {
-        if (_need_ds_separator && getOutputFormat() != OutputFormat::csv) {
-            add(",\n");
+        if (_need_ds_separator) {
+            _renderer->outputDataSetSeparator();
         } else {
             _need_ds_separator = true;
         }
@@ -953,7 +927,7 @@ void Query::finish() {
             if (i > 0) {
                 outputFieldSeparator();
             }
-            _stats_aggregators[i]->output(this);
+            _stats_aggregators[i]->output(_renderer);
             delete _stats_aggregators[i];
         }
         outputDatasetEnd();
@@ -961,9 +935,7 @@ void Query::finish() {
     }
 
     // normal query
-    if (getOutputFormat() != OutputFormat::csv) {
-        add("]\n");
-    }
+    _renderer->endOfQuery();
 }
 
 const string *Query::findValueForIndexing(const string &column_name) {
@@ -979,254 +951,67 @@ void Query::optimizeBitmask(const string &column_name, uint32_t *bitmask) {
 }
 
 // output helpers, called from columns
-void Query::outputDatasetBegin() {
-    if (getOutputFormat() != OutputFormat::csv) {
-        add("[");
-    }
+void Query::outputDatasetBegin() { _renderer->outputDatasetBegin(); }
+
+void Query::outputDatasetEnd() { _renderer->outputDatasetEnd(); }
+
+void Query::outputFieldSeparator() { _renderer->outputFieldSeparator(); }
+
+void Query::outputInteger(int32_t value) { _renderer->outputInteger(value); }
+
+void Query::outputInteger64(int64_t value) {
+    _renderer->outputInteger64(value);
 }
 
-void Query::outputDatasetEnd() {
-    if (getOutputFormat() == OutputFormat::csv) {
-        add(_dataset_separator);
-    } else {
-        add("]");
-    }
+void Query::outputTime(int32_t value) { _renderer->outputTime(value); }
+
+void Query::outputUnsignedLong(unsigned long value) {
+    _renderer->outputUnsignedLong(value);
 }
 
-void Query::outputFieldSeparator() {
-    if (getOutputFormat() == OutputFormat::csv) {
-        add(_field_separator);
-    } else {
-        add(",");
-    }
-}
+void Query::outputCounter(counter_t value) { _renderer->outputCounter(value); }
 
-void Query::outputInteger(int32_t value) { add(to_string(value)); }
+void Query::outputDouble(double value) { _renderer->outputDouble(value); }
 
-void Query::outputInteger64(int64_t value) { add(to_string(value)); }
-
-void Query::outputTime(int32_t value) {
-    outputInteger(value + _timezone_offset);
-}
-
-void Query::outputUnsignedLong(unsigned long value) { add(to_string(value)); }
-
-void Query::outputCounter(counter_t value) { add(to_string(value)); }
-
-void Query::outputDouble(double value) {
-    if (isnan(value)) {
-        outputNull();
-    } else {
-        char buf[64];
-        snprintf(buf, sizeof(buf), "%.10e", value);
-        add(buf);
-    }
-}
-
-void Query::outputNull() {
-    if (getOutputFormat() == OutputFormat::csv) {
-        // output empty cell
-    } else if (getOutputFormat() == OutputFormat::python) {
-        add("None");
-    } else {
-        add("null");  // JSON
-    }
-}
+void Query::outputNull() { _renderer->outputNull(); }
 
 void Query::outputAsciiEscape(char value) {
-    char buf[8];
-    snprintf(buf, sizeof(buf), "\\%03o", value);
-    add(buf);
+    _renderer->outputAsciiEscape(value);
 }
 
 void Query::outputUnicodeEscape(unsigned value) {
-    char buf[8];
-    snprintf(buf, sizeof(buf), "\\u%04x", value);
-    add(buf);
+    _renderer->outputUnicodeEscape(value);
 }
 
 void Query::outputBlob(const vector<char> *blob) {
-    if (getOutputFormat() != OutputFormat::csv) {
-        if (blob != nullptr) {
-            outputString(&(*blob)[0], blob->size());
-        } else {
-            outputNull();
-        }
-    } else {
-        if (blob != nullptr) {
-            add(*blob);
-        }
-    }
+    _renderer->outputBlob(blob);
 }
 
-// len = -1 -> use strlen(), len >= 0: consider
-// output as blob, do not handle UTF-8.
 void Query::outputString(const char *value, int len) {
-    if (value == nullptr) {
-        if (getOutputFormat() != OutputFormat::csv) {
-            add("\"\"");
-        }
-        return;
-    }
-
-    if (getOutputFormat() == OutputFormat::csv) {
-        add(value);
-
-    } else  // JSON or PYTHON
-    {
-        if (getOutputFormat() == OutputFormat::python && len < 0) {
-            add("u");  // mark strings as unicode
-        }
-        add("\"");
-        const char *r = value;
-        int chars_left = len >= 0 ? len : strlen(r);
-        while (chars_left != 0) {
-            // Always escape control characters (1..31)
-            if (*r < 32 && *r >= 0) {
-                if (len < 0) {
-                    outputUnicodeEscape(static_cast<unsigned>(*r));
-                } else {
-                    outputAsciiEscape(*r);
-                }
-            }
-
-            // Output ASCII characters unencoded
-            else if (*r >= 32 || len >= 0) {
-                if (*r == '"' || *r == '\\') {
-                    add("\\");
-                }
-                add(string(r, 1));
-            }
-
-            // interprete two-Byte UTF-8 sequences in mode 'utf8' and 'mixed'
-            else if ((g_data_encoding == ENCODING_UTF8 ||
-                      g_data_encoding == ENCODING_MIXED) &&
-                     ((*r & 0xE0) == 0xC0)) {
-                outputUnicodeEscape(((*r & 31) << 6) |
-                                    (*(r + 1) & 0x3F));  // 2 byte encoding
-                r++;
-                chars_left--;
-            }
-
-            // interprete 3/4-Byte UTF-8 sequences only in mode 'utf8'
-            else if (g_data_encoding == ENCODING_UTF8) {
-                // three-byte sequences (avoid buffer overflow!)
-                if ((*r & 0xF0) == 0xE0) {
-                    if (chars_left < 3) {
-                        if (g_debug_level >= 2) {
-                            Informational()
-                                << "Ignoring invalid UTF-8 sequence in string '"
-                                << string(value) << "'";
-                        }
-                        break;  // end of string. No use in continuing
-                    } else {
-                        outputUnicodeEscape(((*r & 0x0F) << 12 |
-                                             (*(r + 1) & 0x3F) << 6 |
-                                             (*(r + 2) & 0x3F)));
-                        r += 2;
-                        chars_left -= 2;
-                    }
-                }
-                // four-byte sequences
-                else if ((*r & 0xF8) == 0xF0) {
-                    if (chars_left < 4) {
-                        if (g_debug_level >= 2) {
-                            Informational()
-                                << "Ignoring invalid UTF-8 sequence in string '"
-                                << string(value) << "'";
-                        }
-                        break;  // end of string. No use in continuing
-                    } else {
-                        outputUnicodeEscape(
-                            ((*r & 0x07) << 18 | (*(r + 1) & 0x3F) << 6 |
-                             (*(r + 2) & 0x3F) << 6 | (*(r + 3) & 0x3F)));
-                        r += 3;
-                        chars_left -= 3;
-                    }
-                } else {
-                    if (g_debug_level >= 2) {
-                        Informational()
-                            << "Ignoring invalid UTF-8 sequence in string '"
-                            << string(value) << "'";
-                    }
-                }
-            }
-
-            // in latin1 and mixed mode interprete all other non-ASCII
-            // characters as latin1
-            else {
-                outputUnicodeEscape(static_cast<unsigned>(
-                    static_cast<int>(*r) + 256));  // assume latin1 encoding
-            }
-
-            r++;
-            chars_left--;
-        }
-        add("\"");
-    }
+    _renderer->outputString(value, len);
 }
 
-void Query::outputBeginList() {
-    if (getOutputFormat() != OutputFormat::csv) {
-        add("[");
-    }
-}
+void Query::outputBeginList() { _renderer->outputBeginList(); }
 
-void Query::outputListSeparator() {
-    if (getOutputFormat() == OutputFormat::csv) {
-        add(_list_separator);
-    } else {
-        add(",");
-    }
-}
+void Query::outputListSeparator() { _renderer->outputListSeparator(); }
 
-void Query::outputEndList() {
-    if (getOutputFormat() != OutputFormat::csv) {
-        add("]");
-    }
-}
+void Query::outputEndList() { _renderer->outputEndList(); }
 
-void Query::outputBeginSublist() {
-    if (getOutputFormat() != OutputFormat::csv) {
-        add("[");
-    }
-}
+void Query::outputBeginSublist() { _renderer->outputBeginSublist(); }
 
-void Query::outputSublistSeparator() {
-    if (getOutputFormat() == OutputFormat::csv) {
-        add(_host_service_separator);
-    } else {
-        add(",");
-    }
-}
+void Query::outputSublistSeparator() { _renderer->outputSublistSeparator(); }
 
-void Query::outputEndSublist() {
-    if (getOutputFormat() != OutputFormat::csv) {
-        add("]");
-    }
-}
+void Query::outputEndSublist() { _renderer->outputEndSublist(); }
 
-void Query::outputBeginDict() {
-    if (getOutputFormat() != OutputFormat::csv) {
-        add("{");
-    }
-}
+void Query::outputBeginDict() { _renderer->outputBeginDict(); }
 
-void Query::outputDictSeparator() { outputListSeparator(); }
+void Query::outputDictSeparator() { _renderer->outputDictSeparator(); }
 
 void Query::outputDictValueSeparator() {
-    if (getOutputFormat() == OutputFormat::csv) {
-        add(_host_service_separator);
-    } else {
-        add(":");
-    }
+    _renderer->outputDictValueSeparator();
 }
 
-void Query::outputEndDict() {
-    if (getOutputFormat() != OutputFormat::csv) {
-        add("}");
-    }
-}
+void Query::outputEndDict() { _renderer->outputEndDict(); }
 
 Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec) {
     auto it = _stats_groups.find(groupspec);

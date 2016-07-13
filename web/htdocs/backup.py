@@ -255,8 +255,9 @@ class MKBackupJob(object):
         p = subprocess.Popen(self._start_command(),
                          shell=False, close_fds=True, stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, stdin=open(os.devnull), env=env)
+        output = p.stdout.read()
         if p.wait() != 0:
-            raise MKGeneralException(_("Failed to start the job: %s") % p.stdout.read())
+            raise MKGeneralException(_("Failed to start the job: %s") % output)
 
 
     def _start_command(self):

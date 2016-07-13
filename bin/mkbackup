@@ -477,6 +477,9 @@ modes = {
             "no-verify": {
                 "description": "Disable verification of the backup files to restore from.",
             },
+            "no-reboot": {
+                "description": "Don't trigger a system reboot after succeeded restore.",
+            }
         },
     },
     "jobs": {
@@ -1147,10 +1150,6 @@ def backup_files_to_tarfile(fobj, base_path, exclude_patterns=None):
 
 
 def complete_backup():
-    if os.path.exists(job_backup_path_complete()):
-        log("Cleaning up previously completed backup")
-        shutil.rmtree(job_backup_path_complete())
-
     info = create_backup_info()
     save_backup_info(info)
 
@@ -1159,6 +1158,13 @@ def complete_backup():
     })
 
     verify_backup_consistency(info)
+
+    # Now we can be sure this new backup is a good one. Remove eventual old
+    # backup and move from "incomplete" to "complete".
+
+    if os.path.exists(job_backup_path_complete()):
+        log("Cleaning up previously completed backup")
+        shutil.rmtree(job_backup_path_complete())
 
     os.rename(job_backup_path_during_backup(),
               job_backup_path_complete())
@@ -1341,6 +1347,13 @@ def do_restore(opts, info):
     else:
         raise MKGeneralException("System backup not supported.")
     complete_restore()
+
+    if "no-reboot" not in opts and is_root():
+        do_system_restart()
+
+
+def do_system_restart():
+    os.system("reboot")
 
 
 def do_site_restore(opts, info, site=None):

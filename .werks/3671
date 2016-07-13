@@ -1,0 +1,9 @@
+Title: mssql_backup: Is now aware of backup types and outputs ages per backup type
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1468414240
+Class: feature
+
+

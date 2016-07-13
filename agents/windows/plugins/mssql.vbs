@@ -277,17 +277,25 @@ For Each instance_id In instances.Keys
 
     ' Loop all databases to get the date of the last backup. Only show databases
     ' which have at least one backup
-    Dim lastBackupDate
+    Dim lastBackupDate, backup_type
     addOutput( "<<<mssql_backup>>>" )
     For Each dbName in dbNames.Keys
-        RS.open "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date " & _
+        RS.open "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date," & _
+                "type " & _
                 "FROM msdb.dbo.backupset " & _
-                "WHERE database_name = '" & dbName & "'", CONN
+                "WHERE database_name = '" & dbName & "'" & _
+                "GROUP BY type", CONN
         Do While Not RS.Eof
             lastBackupDate = Trim(RS("last_backup_date"))
+
+            backup_type = Trim(RS("type"))
+            If backup_type = "" Then
+                backup_type = "-"
+            End If
+
             If lastBackupDate <> "" Then
                 addOutput("MSSQL_" & instance_id & " " & Replace(dbName, " ", "_") & _
-                          " " & lastBackupDate)
+                          " " & lastBackupDate & " " & backup_type)
             End If
             RS.MoveNext
         Loop

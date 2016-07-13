@@ -24,8 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Old agent
 # <<<mssql_backup>>>
 # MSSQL_SQLEXPRESS test123 1331207325
+
+# Newer agent
+# <<<mssql_backup>>>
+# MSSQL_SQL0x master 2016-07-08 20:20:27
+# MSSQL_SQL0x model 2016-07-08 20:20:28
+# MSSQL_SQL0x model 2016-07-12 09:09:42
+# MSSQL_SQL0x model 2016-07-11 20:20:07
+# MSSQL_SQL0x msdb 2016-07-08 20:20:43
+# MSSQL_SQL0x msdb 2016-07-11 20:20:07
+
+# New agent (added backup type)
+# <<<mssql_backup>>>
+# MSSQL_SQL0x master 2016-07-08 20:20:27 D
+# MSSQL_SQL0x model 2016-07-08 20:20:28 D
+# MSSQL_SQL0x model 2016-07-12 09:09:42 L
+# MSSQL_SQL0x model 2016-07-11 20:20:07 I
+# MSSQL_SQL0x msdb 2016-07-08 20:20:43 D
+# MSSQL_SQL0x msdb 2016-07-11 20:20:07 I
 
 # Might be None to have no thresholds or a tuple of two ints
 # (<warn age in seconds>, <crit age in seconds>)
@@ -34,21 +53,40 @@ mssql_backup_default_levels = None
 def inventory_mssql_backup(info):
     return [ (line[0] + ' ' + line[1], 'mssql_backup_default_levels')
              for line in info
-             if len(line) == 4 ]
+             if len(line) in [3, 4, 5] ]
 
 def check_mssql_backup(item, params, info):
+    def backup_type_name(backup_type):
+        return {
+            "D": "database ",
+            "I": "database diff ",
+            "L": "log ",
+            "F": "file or filegroup ",
+            "G": "file diff ",
+            "P": "partial ",
+            "Q": "partial diff ",
+            "-": "unspecific ",
+        }.get(backup_type, "")
+
     for line in info:
-        if len(line) not in [3, 4]:
+        if len(line) not in [3, 4, 5]:
             continue
 
         last_backup_date = False
-        try:
-            inst, tablespace, last_backup_date, last_backup_time = line
-        except ValueError:
+        if len(line) == 3:
             inst, tablespace, last_backup_timestamp = line
+            backup_type = None
+
+        elif len(line) == 4:
+            inst, tablespace, last_backup_date, last_backup_time = line
+            backup_type = None
+
+        elif len(line) == 5:
+            inst, tablespace, last_backup_date, last_backup_time, backup_type = line
 
         if item == inst + ' ' + tablespace:
             if last_backup_date:
+                # TODO: Timezone issue? Agent should always send UTC timestamp.
                 timestamp = time.mktime(time.strptime(last_backup_date + ' ' + last_backup_time,
                                                       '%Y-%m-%d %H:%M:%S'))
             else:
@@ -57,20 +95,26 @@ def check_mssql_backup(item, params, info):
             state = 0
             sec_ago = time.time() - timestamp
 
+            age_warn, age_crit = None, None
             if params is not None:
                 if sec_ago >= params[1]:
                     state = 2
                 elif sec_ago >= params[0]:
                     state = 1
-                perfdata = [('seconds', sec_ago, params[0], params[1])]
+                age_warn, age_crit = params[0], params[1]
+
+            if backup_type == None:
+                perfkey = "seconds"
             else:
-                perfdata = [('seconds', sec_ago)]
+                perfkey = "backup_age_%s" % backup_type_name(backup_type).strip().replace(" ", "_")
 
-            return (state, 'Last backup was at %s (%s ago)' %
-                (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)),
-                 get_age_human_readable(sec_ago)), perfdata)
+            perfdata = [(perfkey, sec_ago, age_warn, age_crit)]
 
-    return (3, 'Tablespace %s could not be found' % item)
+            yield state, 'Last %sbackup was at %s (%s ago)' % \
+                (backup_type_name(backup_type),
+                 time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)),
+                 get_age_human_readable(sec_ago)), perfdata
+
 
 check_info['mssql_backup'] = {
     'check_function':      check_mssql_backup,

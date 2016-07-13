@@ -2472,6 +2472,55 @@ metric_info["job_duration"] = {
     "color" : "33/a",
 }
 
+metric_info["backup_age_database"] = {
+    "title" : _("Age of last database backup"),
+    "unit"  : "s",
+    "color" : "11/a",
+}
+
+metric_info["backup_age_database_diff"] = {
+    "title" : _("Age of last differential database backup"),
+    "unit"  : "s",
+    "color" : "14/a",
+}
+
+metric_info["backup_age_log"] = {
+    "title" : _("Age of last log backup"),
+    "unit"  : "s",
+    "color" : "21/a",
+}
+
+metric_info["backup_age_file_or_filegroup"] = {
+    "title" : _("Age of last file or filegroup backup"),
+    "unit"  : "s",
+    "color" : "24/a",
+}
+
+metric_info["backup_age_file_diff"] = {
+    "title" : _("Age of last differential file backup"),
+    "unit"  : "s",
+    "color" : "31/a",
+}
+
+metric_info["backup_age_partial"] = {
+    "title" : _("Age of last partial backup"),
+    "unit"  : "s",
+    "color" : "34/a",
+}
+
+metric_info["backup_age_differential_partial"] = {
+    "title" : _("Age of last differential partial backup"),
+    "unit"  : "s",
+    "color" : "41/a",
+}
+
+metric_info["backup_age"] = {
+    "title" : _("Time since last backup"),
+    "unit"  : "s",
+    "color" : "34/a",
+}
+
+
 metric_info["checkpoint_age"] = {
     "title" : _("Time since last checkpoint"),
     "unit"  : "s",

@@ -309,8 +309,7 @@ def check_oracle_tablespaces(item, params, parsed):
             autoext_info = None
 
         if autoext_info:
-            yield params.get("autoextend_severity", 2), \
-                  autoext_info + state_markers[autoextend_severity]
+            yield params.get("autoextend_severity", 2), autoext_info
 
     elif num_extensible > 0:
         yield 0, "autoextend"

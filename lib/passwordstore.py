@@ -331,6 +331,8 @@ class ChangeContext(object):
     def __exit__(self, typ, value, tb):
         if typ == None:
             self.__data['keydata'] = self.__backend.key_data()
+            if 'secrets' not in self.__data:
+                self.__data['secrets'] = {}
             with NamedTemporaryFile(dir=os.path.dirname(self.__filename), delete=False) as f:
                 json.dump(self.__data, f)
 

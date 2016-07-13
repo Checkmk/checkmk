@@ -14,6 +14,7 @@
     * 3662 FIX: Fixed creation/editing of dashboards (regression since 1.2.8p5)
     * 3668 FIX: Fixed slow loading of GUI pages when using a localized GUI
     * 3669 FIX: LDAP: Fixed very long running LDAP sync when using group based sync plugins
+    * 3670 FIX: Fixed empty AV PDF report when exporting it from a quicksearch result view
 
     WATO:
     * 3152 FIX: lvm_vgs: fixed exception in host-specific settings if rule for LVM groups is set

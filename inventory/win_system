@@ -46,7 +46,7 @@ def inv_win_system(info):
         if varname == "SerialNumber":
             node["serial"] = value
         elif varname == "Manufacturer":
-            node["vendor"] = value
+            node["manufacturer"] = value
         elif varname == "Name":
             node["product"] = value
         elif varname == "Model":

@@ -49,7 +49,7 @@ unsigned long long string_to_llu(const char *s);
 
 void lowercase(char *s);
 
-int parse_boolean(char *value);
+int parse_boolean(const char *value);
 
 std::string to_utf8(const char *input);
 std::string to_utf8(const wchar_t *input);
@@ -66,21 +66,33 @@ bool globmatch(const wchar_t *pattern, const wchar_t *astring);
 
 std::string replaceAll(const std::string &str, const std::string &from,
                        const std::string &to);
-template <typename T>
-std::basic_string<T> join(const std::vector<std::basic_string<T>> &input,
-                          const T *sep) {
-    std::basic_ostringstream<T> stream;
+
+void stringToIPv6(const char *value, uint16_t *address);
+void stringToIPv4(const char *value, uint32_t &address);
+void netmaskFromPrefixIPv6(int bits, uint16_t *netmask);
+void netmaskFromPrefixIPv4(int bits, uint32_t &netmask);
+
+template <typename InputIt, typename SeparatorT>
+std::basic_string<SeparatorT> join(InputIt begin, InputIt end,
+                                   const SeparatorT *sep) {
+    std::basic_ostringstream<SeparatorT> stream;
     bool first = true;
 
-    for (const std::basic_string<T> &val : input) {
+    for (InputIt iter = begin; iter != end; ++iter) {
         if (!first) {
             stream << sep;
         } else {
             first = false;
         }
-        stream << val;
+        stream << *iter;
     }
     return stream.str();
+}
+
+template <typename ValueT, typename SeparatorT>
+std::basic_string<SeparatorT> join(const std::vector<ValueT> &input,
+                                   const SeparatorT *sep) {
+    return join(input.begin(), input.end(), sep);
 }
 
 #ifdef _WIN32

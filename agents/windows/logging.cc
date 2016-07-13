@@ -31,11 +31,14 @@
 #include <string>
 
 extern bool verbose_mode;
-extern char g_crash_log[256];
-extern char g_connection_log[256];
-extern char g_success_log[256];
-extern bool g_found_crash;
-extern HANDLE g_crashlogMutex;
+bool g_found_crash = false;
+
+// Mutex for crash.log
+HANDLE g_crashlogMutex = CreateMutex(NULL, FALSE, NULL);
+
+char g_crash_log[256];
+char g_connection_log[256];
+char g_success_log[256];
 
 // Pointer to open crash log file, if crash_debug = on
 HANDLE g_connectionlog_file = INVALID_HANDLE_VALUE;

@@ -93,7 +93,6 @@ class EncryptingBufferedSocketProxy : public BufferedSocketProxy {
 public:
     EncryptingBufferedSocketProxy(SOCKET socket, const std::string &passphrase,
                                   size_t buffer_size = DEFAULT_BUFFER_SIZE);
-
     virtual void output(const char *format, ...) override;
     // writeBinary is NOT overridden so calls to it are not encrypted!
     virtual void flush(bool last) override;

@@ -30,23 +30,28 @@
 class Environment {
 public:
     Environment(bool use_cwd);
+    ~Environment();
 
-    const std::string &hostname() const { return _hostname; }
+    // TODO: this is an evil hack, but currently there is at least one global
+    // function that requires access to the env that isn't easily refactored
+    static Environment *instance();
 
-    const std::string &currentDirectory() const { return _current_directory; }
-    const std::string &agentDirectory() const { return _agent_directory; }
+    std::string hostname() const { return _hostname; }
 
-    const std::string &pluginsDirectory() const { return _plugins_directory; }
-    const std::string &configDirectory() const { return _config_directory; }
-    const std::string &localDirectory() const { return _local_directory; }
-    const std::string &spoolDirectory() const { return _spool_directory; }
-    const std::string &stateDirectory() const { return _state_directory; }
-    const std::string &tempDirectory() const { return _temp_directory; }
-    const std::string &logDirectory() const { return _log_directory; }
-    const std::string &binDirectory() const { return _bin_directory; }
+    std::string currentDirectory() const { return _current_directory; }
+    std::string agentDirectory() const { return _agent_directory; }
 
-    const std::string &logwatchStatefile() const { return _logwatch_statefile; }
-    const std::string &eventlogStatefile() const { return _eventlog_statefile; }
+    std::string pluginsDirectory() const { return _plugins_directory; }
+    std::string configDirectory() const { return _config_directory; }
+    std::string localDirectory() const { return _local_directory; }
+    std::string spoolDirectory() const { return _spool_directory; }
+    std::string stateDirectory() const { return _state_directory; }
+    std::string tempDirectory() const { return _temp_directory; }
+    std::string logDirectory() const { return _log_directory; }
+    std::string binDirectory() const { return _bin_directory; }
+
+    std::string logwatchStatefile() const { return _logwatch_statefile; }
+    std::string eventlogStatefile() const { return _eventlog_statefile; }
 
 public:
     static bool isWinNt();
@@ -62,6 +67,8 @@ private:
     std::string assignDirectory(const char *name);
 
 private:
+    static Environment *s_Instance;
+
     std::string _hostname;
 
     std::string _agent_directory;

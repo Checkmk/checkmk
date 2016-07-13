@@ -48,8 +48,8 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     // child process needs to be able to inherit the pipe handles
     security_attributes.bInheritHandle = true;
 
-    HANDLE script_stdout { INVALID_HANDLE_VALUE };
-    HANDLE script_stderr { INVALID_HANDLE_VALUE };
+    HANDLE script_stdout{INVALID_HANDLE_VALUE};
+    HANDLE script_stderr{INVALID_HANDLE_VALUE};
 
     OnScopeExit release_handles([script_stdout, script_stderr]() {
         ::CloseHandle(script_stdout);

@@ -23,19 +23,3 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SettingsCollector.h"
-
-Collector::Collector() { CollectorRegistry::instance().reg(this); }
-
-Collector::~Collector() { CollectorRegistry::instance().unreg(this); }
-
-CollectorRegistry &CollectorRegistry::instance() {
-    static CollectorRegistry instance;
-    return instance;
-}
-
-void CollectorRegistry::startFile() {
-    for (std::set<Collector *>::iterator iter = _collectors.begin();
-         iter != _collectors.end(); ++iter) {
-        (*iter)->startFile();
-    }
-}

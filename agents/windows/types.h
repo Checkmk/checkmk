@@ -74,8 +74,16 @@ static const unsigned int SECTION_WINPERF =
     SECTION_WINPERF_IF | SECTION_WINPERF_CPU | SECTION_WINPERF_PHYDISK |
     SECTION_WINPERF_CONFIG;
 
-static const unsigned int VALID_REALTIME_SECTIONS =
-    SECTION_MEM | SECTION_DF | SECTION_WINPERF_CPU;
+template <typename T>
+T from_string(const std::string &input);
+
+template <>
+bool from_string<bool>(const std::string &value);
+template <>
+int from_string<int>(const std::string &value);
+
+template <>
+std::string from_string<std::string>(const std::string &value);
 
 // Needed for only_from
 struct ipspec {
@@ -93,11 +101,17 @@ struct ipspec {
     bool ipv6;
 };
 
+template <>
+ipspec *from_string<ipspec *>(const std::string &value);
+
 // Configuration for section [winperf]
 struct winperf_counter {
     int id;
-    char *name;
+    std::string name;
 };
+
+template <>
+winperf_counter *from_string<winperf_counter *>(const std::string &value);
 
 // Configuration entries from [logwatch] for individual logfiles
 struct eventlog_config_entry {
@@ -114,14 +128,28 @@ struct eventlog_config_entry {
     bool vista_api;
 };
 
+template <>
+eventlog_config_entry from_string<eventlog_config_entry>(
+    const std::string &value);
+
+std::ostream &operator<<(std::ostream &out, const eventlog_config_entry &val);
+
 // How single scripts are executed
 enum script_execution_mode {
     SYNC,  // inline
     ASYNC  // delayed
 };
 
+template <>
+script_execution_mode from_string<script_execution_mode>(
+    const std::string &value);
+
 // How delayed scripts are executed
 enum script_async_execution { PARALLEL, SEQUENTIAL };
+
+template <>
+script_async_execution from_string<script_async_execution>(
+    const std::string &value);
 
 // States for plugin and local scripts
 enum script_status {
@@ -147,15 +175,12 @@ struct script_container {
         if (worker_thread != INVALID_HANDLE_VALUE) {
             CloseHandle(worker_thread);
         }
-        // allocated with strdup
-        free(path);
-        free(script_path);
         // allocated with HeapAlloc (may be null)
         HeapFree(GetProcessHeap(), 0, buffer);
         HeapFree(GetProcessHeap(), 0, buffer_work);
     }
-    char *path;         // full path with interpreter, cscript, etc.
-    char *script_path;  // path of script
+    std::string path;         // full path with interpreter, cscript, etc.
+    std::string script_path;  // path of script
     int max_age;
     int timeout;
     int max_retries;
@@ -163,7 +188,7 @@ struct script_container {
     time_t buffer_time;
     char *buffer;
     char *buffer_work;
-    char *run_as_user;
+    std::string run_as_user;
     script_type type;
     script_execution_mode execution_mode;
     script_status status;
@@ -238,6 +263,9 @@ struct mrpe_entry {
     char service_description[256];
 };
 
+template <>
+mrpe_entry *from_string<mrpe_entry *>(const std::string &value);
+
 // Our memory of what event logs we know and up to
 // which record entry we have seen its messages so
 // far.
@@ -269,10 +297,7 @@ struct execution_mode_config {
     script_execution_mode mode;
 };
 
-typedef std::vector<winperf_counter *> winperf_counters_t;
 typedef std::vector<ipspec *> only_from_t;
-typedef std::vector<std::string> execute_suffixes_t;
-typedef std::vector<logwatch_textfile *> logwatch_textfiles_t;
 typedef std::vector<globline_container *> logwatch_globlines_t;
 typedef std::vector<eventlog_config_entry> eventlog_config_t;
 typedef std::vector<mrpe_entry *> mrpe_entries_t;

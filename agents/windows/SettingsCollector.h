@@ -64,6 +64,7 @@ private:
 }
 
 namespace AddMode {
+
 /**
  * regular appender. Always adds elements to the end of the list
  */
@@ -79,10 +80,8 @@ public:
 
 /**
  * appender that gives priority to files in the order they appear. This means
- * that
- * within a configuration file, entries are appended but the entries of later
- * files
- * are put before those of earlier files
+ * that within a configuration file, entries are appended but the entries of
+ * later files are put before those of earlier files
  */
 template <typename ContainerT>
 class PriorityAppend {
@@ -90,10 +89,9 @@ public:
     void startFile(ContainerT &list) { _insert_pos = list.begin(); }
     void add(ContainerT &list, const typename ContainerT::value_type &value) {
         // this inserts the value before the iterator which is at the beginning
-        // of
-        // the previous file-block (see startFile). If this is the first file,
-        // this is
-        // the end of the list.
+        // of the previous file-block (see startFile). If this is the first
+        // file,
+        // this is the end of the list.
         _insert_pos = list.insert(_insert_pos, value) + 1;
     }
 
@@ -102,12 +100,23 @@ private:
 };
 
 /**
+ * Adder that works with unsorted containers
+ */
+template <typename ContainerT>
+class SetInserter {
+public:
+    void startFile(ContainerT &) {}
+    void add(ContainerT &set,
+             const typename ContainerT::value_type &value) const {
+        set.insert(value);
+    }
+};
+
+/**
  * appender that can deal with multiline configurations
  * the top-most line of each group is added using the regular "add" function,
- * the rest
- * using addGroup. The functor needs to handle the key-value pair and insert it
- * to the object
- * directly.
+ * the rest using addGroup. The functor needs to handle the key-value pair and
+ * insert it to the object directly.
  */
 template <typename ContainerT>
 class PriorityAppendGrouped {
@@ -134,77 +143,5 @@ private:
     typename ContainerT::iterator _insert_pos;
 };
 }
-
-class Collector {
-public:
-    Collector();
-    virtual ~Collector();
-
-    virtual void startFile() = 0;
-    virtual void startBlock() = 0;
-    virtual void clear() = 0;
-};
-
-template <typename ContainerT, typename BlockModeT = BlockMode::Nop<ContainerT>,
-          typename AddModeT = AddMode::Append<ContainerT> >
-class ListCollector : public Collector {
-    typedef typename ContainerT::value_type DataT;
-
-public:
-    virtual void startFile() {
-        _add_mode.startFile(_values);
-        _block_mode.startFile(_values);
-    }
-
-    virtual void startBlock() { _block_mode.startBlock(_values); }
-
-    void add(const DataT &value) { _add_mode.add(_values, value); }
-
-    virtual void clear() { _values.clear(); }
-
-    ContainerT *operator->() { return &_values; }
-
-    const ContainerT *operator->() const { return &_values; }
-
-    ContainerT &operator*() { return _values; }
-
-    const ContainerT &operator*() const { return _values; }
-
-public:  // only valid with a grouping adder. it's important to understand that
-         // due to how templates in C++ work, these functions are not compiled
-         // for template-instantiations where they aren't used so even though
-         // they wouldn't comple with non-grouping adders, this is not a
-         // problem.
-    void setGroupFunction(typename AddMode::PriorityAppendGrouped<
-                          ContainerT>::GroupFunction function) {
-        _add_mode.setGroupFunction(function);
-    }
-
-    bool addGroup(const char *key, const char *value) {
-        return _add_mode.addGroup(_values, key, value);
-    }
-
-private:
-    ContainerT _values;
-    BlockModeT _block_mode;
-    AddModeT _add_mode;
-};
-
-class CollectorRegistry {
-public:
-    static CollectorRegistry &instance();
-
-    void startFile();
-
-    // register a collector (sorry for the abbreviation but "register" is a
-    // reserved keyword in
-    // C++")
-    void reg(Collector *collector) { _collectors.insert(collector); }
-
-    void unreg(Collector *collector) { _collectors.erase(collector); }
-
-private:
-    std::set<Collector *> _collectors;
-};
 
 #endif  // SETTINGS_COLLECTOR_H

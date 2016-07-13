@@ -1,4 +1,5 @@
 #include "stringutil.h"
+#include <cassert>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -97,7 +98,7 @@ void lowercase(char *s) {
     }
 }
 
-int parse_boolean(char *value) {
+int parse_boolean(const char *value) {
     if (!strcmp(value, "yes"))
         return 1;
     else if (!strcmp(value, "no"))
@@ -150,8 +151,7 @@ wstring to_utf16(const char *input) {
     MultiByteToWideChar(CP_UTF8, 0, input, -1, &result[0], required_size);
 
     // strip away the zero termination. This is necessary, otherwise the stored
-    // string length
-    // in the string is wrong
+    // string length in the string is wrong
     result.resize(required_size - 1);
 
     return result;
@@ -288,4 +288,78 @@ std::string get_win_error_as_string(DWORD error_id) {
 
     return message + " (" + std::to_string(error_id) + ")";
 }
+
+void stringToIPv6(const char *value, uint16_t *address) {
+    const char *pos = value;
+    std::vector<uint16_t> segments;
+    int skip_offset = -1;
+    segments.reserve(8);
+
+    while (pos != NULL) {
+        char *endpos = NULL;
+        unsigned long segment = strtoul(pos, &endpos, 16);
+        if (segment > 0xFFFFu) {
+            fprintf(stderr, "Invalid ipv6 address %s\n", value);
+            exit(1);
+        } else if (endpos == pos) {
+            skip_offset = segments.size();
+        } else {
+            segments.push_back((unsigned short)segment);
+        }
+        if (*endpos != ':') {
+            break;
+        }
+        pos = endpos + 1;
+        ++segment;
+    }
+
+    int idx = 0;
+    for (std::vector<uint16_t>::const_iterator iter = segments.begin();
+         iter != segments.end(); ++iter) {
+        if (idx == skip_offset) {
+            // example with ::42: segments.size() = 1
+            //   this will fill the first 7 fields with 0 and increment idx by 7
+            for (size_t i = 0; i < 8 - segments.size(); ++i) {
+                address[idx + i] = 0;
+            }
+            idx += 8 - segments.size();
+        }
+
+        address[idx++] = htons(*iter);
+        assert(idx <= 8);
+    }
+}
+
+void stringToIPv4(const char *value, uint32_t &address) {
+    unsigned a, b, c, d;
+    if (4 != sscanf(value, "%u.%u.%u.%u", &a, &b, &c, &d)) {
+        fprintf(stderr, "Invalid value %s for only_hosts\n", value);
+        exit(1);
+    }
+
+    address = a + b * 0x100 + c * 0x10000 + d * 0x1000000;
+}
+
+void netmaskFromPrefixIPv6(int bits, uint16_t *netmask) {
+    memset(netmask, 0, sizeof(uint16_t) * 8);
+    for (int i = 0; i < 8; ++i) {
+        if (bits > 0) {
+            int consume_bits = std::min(16, bits);
+            netmask[i] = htons(0xFFFF << (16 - consume_bits));
+            bits -= consume_bits;
+        }
+    }
+}
+
+void netmaskFromPrefixIPv4(int bits, uint32_t &netmask) {
+    uint32_t mask_swapped = 0;
+    for (int bit = 0; bit < bits; bit++) mask_swapped |= 0x80000000 >> bit;
+    unsigned char *s = (unsigned char *)&mask_swapped;
+    unsigned char *t = (unsigned char *)&netmask;
+    t[3] = s[0];
+    t[2] = s[1];
+    t[1] = s[2];
+    t[0] = s[3];
+}
+
 #endif  // WIN32

@@ -26,8 +26,8 @@
 #include "logging.h"
 #include "types.h"
 
-OHMMonitor::OHMMonitor(const Environment &env)
-    : _exe_path(env.binDirectory() + "\\OpenHardwareMonitorCLI.exe") {
+OHMMonitor::OHMMonitor(const std::string &bin_path)
+    : _exe_path(bin_path + "\\OpenHardwareMonitorCLI.exe") {
     _available =
         ::GetFileAttributesA(_exe_path.c_str()) != INVALID_FILE_ATTRIBUTES;
 }

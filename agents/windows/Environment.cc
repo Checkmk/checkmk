@@ -36,6 +36,8 @@ using namespace std;
 // even all apis support more than 260
 static const int MAX_PATH_UNICODE = 32767;
 
+Environment *Environment::s_Instance = nullptr;
+
 Environment::Environment(bool use_cwd) : _hostname() {
     determineDirectories(use_cwd);
 
@@ -43,7 +45,18 @@ Environment::Environment(bool use_cwd) : _hostname() {
     if (gethostname(buffer, sizeof(buffer)) == 0) {
         _hostname = buffer;
     }
+    if (s_Instance == nullptr) {
+        s_Instance = this;
+    }
 }
+
+Environment::~Environment() {
+    if (s_Instance == this) {
+        s_Instance = nullptr;
+    }
+}
+
+Environment *Environment::instance() { return s_Instance; }
 
 void Environment::getAgentDirectory(char *buffer, int size, bool use_cwd) {
     buffer[0] = 0;

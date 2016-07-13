@@ -28,11 +28,17 @@ VERSION       = 1.4.0i1
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i686-w64-mingw32-windres
 GIT_REV       = $(shell git describe --abbrev=4 --dirty --always --tags)
+
+DEPDIR = depend
+DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
+
 COMMON_OPTS   = -Wall -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -gdwarf-2 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO -DVCS_REV=\"$(GIT_REV)\"
-COPTIONS      = -O2 -Wformat=2 -Werror $(COMMON_OPTS)
+COPTIONS      = -O2 -Wformat=2 -Werror $(COMMON_OPTS) $(DEPFLAGS)
 # for debug builds
-#COPTIONS      = -O0 $(COMMON_OPTS)
+#COPTIONS      = -O0 $(COMMON_OPTS) $(DEPFLAGS)
 MKDIR         = mkdir -p
+
+POSTCOMPILE = mv -f -u $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 
 ifeq ($(shell uname),Linux)
   CXX        = i686-w64-mingw32-g++
@@ -85,7 +91,11 @@ check_mk_agent-64.res: check_mk_agent.rc
 
 directories:
 	${MKDIR} obj
+	${MKDIR} obj/sections
 	${MKDIR} obj64
+	${MKDIR} obj64/sections
+	${MKDIR} $(DEPDIR)
+	${MKDIR} $(DEPDIR)/sections
 
 
 # -----------------------------------------------------------------------------
@@ -93,24 +103,28 @@ directories:
 # number. Instead a placeholder is being used as version.a
 # -----------------------------------------------------------------------------
 
-SRCS = check_mk_agent.cc SettingsCollector.cc Configuration.cc Environment.cc stringutil.cc wmiHelper.cc ListenSocket.cc PerfCounter.cc PerfCounterCommon.cc Thread.cc OutputProxy.cc logging.cc Crypto.cc OHMMonitor.cc EventLog.cc ExternalCmd.cc EventLogVista.cc IEventLog.cc crashhandling.cc
+SRCS = check_mk_agent.cc SettingsCollector.cc Configuration.cc Configurable.cc Environment.cc stringutil.cc\
+       types.cc wmiHelper.cc ListenSocket.cc PerfCounter.cc PerfCounterCommon.cc Thread.cc OutputProxy.cc\
+       logging.cc Crypto.cc OHMMonitor.cc EventLog.cc ExternalCmd.cc EventLogVista.cc IEventLog.cc\
+       crashhandling.cc SectionManager.cc Section.cc sections/SectionPS.cc sections/SectionWMI.cc\
+       sections/SectionUptime.cc sections/SectionCheckMK.cc sections/SectionSystemtime.cc\
+       sections/SectionDF.cc sections/SectionServices.cc sections/SectionMem.cc sections/SectionFileinfo.cc\
+       sections/SectionWinperf.cc sections/SectionLogwatch.cc sections/SectionGroup.cc\
+       sections/SectionSkype.cc sections/SectionOHM.cc sections/SectionPerfcounter.cc\
+       sections/SectionEventlog.cc sections/SectionPluginGroup.cc\
+       sections/SectionCrashDebug.cc sections/SectionSpool.cc sections/SectionMRPE.cc
+
 OBJS = $(addprefix obj/,$(SRCS:.cc=.o))
 OBJS64 = $(addprefix obj64/,$(SRCS:.cc=.o))
 
-depend: .depend
 
-.depend: $(SRCS)
-	rm -f ./.depend
-	$(CC) $(COPTIONS) -MM $^ -MF  ./.depend;
-	echo made depend
-
-include .depend
-
-obj/%.o: %.cc
+obj/%.o: %.cc $(DEPDIR)/%.d
 	$(CXX) -c $(COPTIONS) -o $@  $<
+	$(POSTCOMPILE)
 
 obj64/%.o: %.cc
 	$(CXX_64) -c $(COPTIONS) -o $@  $<
+	$(POSTCOMPILE)
 
 check_mk_agent.unstripped.exe: $(OBJS)
 	$(MAKE) inc_build_version
@@ -129,6 +143,10 @@ check_mk_agent.unversioned.exe: check_mk_agent.unstripped.exe
 check_mk_agent-64.unversioned.exe: check_mk_agent-64.unstripped.exe
 	strip -o $@ $^
 
+$(DEPDIR)/%.d: ;
+.PRECIOUS: $(DEPDIR)/%.d
+
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRCS)))
 
 # -----------------------------------------------------------------------------
 # 4. Create final executable files by inserting actual version number. No

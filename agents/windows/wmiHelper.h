@@ -163,6 +163,7 @@ public:
     Helper(LPCWSTR path = L"Root\\Cimv2");
 
     Helper(const Helper &reference) = delete;
+    Helper &operator=(const Helper &reference) = delete;
 
     ~Helper();
 

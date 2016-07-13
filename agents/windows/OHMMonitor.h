@@ -37,8 +37,10 @@ class OHMMonitor {
     HANDLE _current_process{INVALID_HANDLE_VALUE};
 
 public:
-    OHMMonitor(const Environment &env);
+    OHMMonitor(const std::string &bin_path);
     ~OHMMonitor();
 
+    // this call actually starts OHM if necessary and returns
+    // true if it was already running or was successfully started
     bool checkAvailabe();
 };

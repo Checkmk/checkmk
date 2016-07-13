@@ -73,7 +73,7 @@ class MessageResolver {
         DWORD ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, regpath.c_str(), 0,
                                   KEY_READ, &key);
         if (ret != ERROR_SUCCESS) {
-            crash_log("failed to open HKLM:%ls\n", regpath.c_str());
+            crash_log("failed to open HKLM:%ls", regpath.c_str());
             return std::vector<std::wstring>();
         }
 
@@ -91,7 +91,7 @@ class MessageResolver {
                                    &buffer[0], &size);
         }
         if (res != ERROR_SUCCESS) {
-            crash_log("failed to read at EventMessageFile in HKLM:%ls : %s\n",
+            crash_log("failed to read at EventMessageFile in HKLM:%ls : %s",
                       regpath.c_str(), get_win_error_as_string(res).c_str());
             return std::vector<std::wstring>();
         }

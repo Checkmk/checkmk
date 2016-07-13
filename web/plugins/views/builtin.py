@@ -3138,7 +3138,7 @@ multisite_builtin_views.update({
                                               'log_notification_phase',
                                           ],
                           'sorters': [('log_time', True), ('log_lineno', True)],
-                          'title': _('Failed Host- and Service notifications'),
+                          'title': _('Failed notifications'),
                           'topic': _('Other')},
  'svcnotifications': {'browser_reload': 0,
                       'column_headers': 'pergroup',

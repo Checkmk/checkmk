@@ -723,7 +723,8 @@ class MKBackupStream(object):
             path = "%s/etc/check_mk/backup_keys.mk" % os.environ["OMD_ROOT"]
 
         variables = { "keys" : {} }
-        execfile(path, variables, variables)
+        if os.path.exists(path):
+            execfile(path, variables, variables)
         return variables["keys"]
 
 

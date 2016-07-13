@@ -5784,6 +5784,10 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
             self._target = targets.get(target_ident)
 
 
+    def _show_backup_list(self):
+        self._target.show_backup_list("Check_MK")
+
+
 
 class ModeBackupRestoreState(backup.PageBackupRestoreState, WatoMode):
     def targets(self):

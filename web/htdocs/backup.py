@@ -906,12 +906,15 @@ class Target(BackupEntity):
         return self.type_class()(self.type_params())
 
 
-    def show_backup_list(self):
+    def show_backup_list(self, only_type):
         html.write("<h2>%s</h2>" % html.attrencode(_("Backups of target: %s") % self.title()))
 
         table.begin(sortable=False, searchable=False)
 
         for backup_ident, info in sorted(self.backups().items()):
+            if info["type"] != only_type:
+                continue
+
             table.row()
             table.cell(_("Actions"), css="buttons")
 
@@ -1697,7 +1700,11 @@ class PageBackupRestore(object):
         self._select_target_form()
 
         if self._target:
-            self._target.show_backup_list()
+            self._show_backup_list()
+
+
+    def _show_backup_list(self):
+        raise NotImplementedError()
 
 
     def _select_target_form(self):

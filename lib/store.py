@@ -32,6 +32,8 @@ import fcntl
 import os
 import tempfile
 
+# TODO: Please note that this is still experimental.
+
 # TODO: Clean this up one day by using the way recommended by gettext.
 # (See https://docs.python.org/2/library/gettext.html). For this we
 # need the path to the locale files here.
@@ -40,7 +42,8 @@ try:
 except NameError:
     _ = lambda x: x # Fake i18n when not available
 
-# Simple class to offer locked file access
+
+# Simple class to offer locked file access via flock for cross process locking
 class LockedOpen(object):
     def __init__(self, path, *args, **kwargs):
         self._path        = path
@@ -48,7 +51,13 @@ class LockedOpen(object):
         self._open_kwargs = kwargs
         self._file_obj    = None
 
+
     def __enter__(self):
+        # If not existant, create the file that the open can not fail in
+        # read mode and the lock is possible
+        if not os.path.exists(self._path):
+            file(self._path, "a+")
+
         f = file(self._path, *self._open_args, **self._open_kwargs)
 
     	# Handle the case where the file has been renamed while waiting
@@ -63,26 +72,36 @@ class LockedOpen(object):
                 f = fnew
 
         self._file_obj = f
-        return f
+        self._file_obj.__enter__()
+        return self
+
 
     def __exit__(self, _exc_type, _exc_value, _traceback):
-        self._file_obj.close()
+        result = self._file_obj.__exit__(_exc_type, _exc_value, _traceback)
+        return result
+
+
+    def __getattr__(self, name):
+        return self._file_obj.__getattr__(name)
 
 
 # This class offers locked file opening. Read operations are made on the
 # locked file. All write operation go to a temporary file which replaces
 # the locked file while closing the object.
 class LockedOpenWithTempfile(LockedOpen):
-    def __init__(self, *args, **kwargs):
-        super(LockedOpenWithTempfile, self).__init__(*args, **kwargs)
+    def __init__(self, name, mode):
+        super(LockedOpenWithTempfile, self).__init__(name, "r")
         self._new_file_obj = None
+        self._new_file_mode = mode
+
 
     def __enter__(self):
-        f = super(LockedOpenWithTempfile, self).__enter__()
-        self._new_file_obj = tempfile.NamedTemporaryFile('w',
+        super(LockedOpenWithTempfile, self).__enter__()
+        self._new_file_obj = tempfile.NamedTemporaryFile(self._new_file_mode,
                                 dir=os.path.dirname(self._path),
                                 prefix=os.path.basename(self._path)+"_tmp",
                                 delete=False)
+        self._new_file_obj.__enter__()
         return self
 
 
@@ -95,10 +114,9 @@ class LockedOpenWithTempfile(LockedOpen):
 
 
     def __exit__(self, _exc_type, _exc_value, _traceback):
-        self._new_file_obj.close()
+        self._new_file_obj.__exit__(_exc_type, _exc_value, _traceback)
         os.rename(self._new_file_obj.name, self._path)
-
-        super(LockedOpenWithTempfile, self).__exit__(_exc_type, _exc_value, _traceback)
+        return super(LockedOpenWithTempfile, self).__exit__(_exc_type, _exc_value, _traceback)
 
 
 open = LockedOpenWithTempfile

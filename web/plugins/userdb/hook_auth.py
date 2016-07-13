@@ -291,7 +291,7 @@ def save_passwords(users):
             keys_now = set([pw['key'] for pw in user.get('passwords', [])])
 
             for deleted_pw in keys_before - keys_now:
-                tore.remove(deleted_pw, owner)
+                store.remove(deleted_pw, owner)
 
             for pw in user.get('passwords', []):
                 if not pw['secret']:

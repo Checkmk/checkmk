@@ -95,7 +95,7 @@ class FilterHostnameOrAlias(FilterUnicode):
         if current_value:
             if type(current_value) == unicode:
                 current_value = current_value.encode("utf-8")
-            return "Filter: host_name %s%s %s\nFilter: alias %s%s %s\nOr: 2\n" % ((negate, self.op, lqencode(current_value)) * 2)
+            return "Filter: host_name %s%s %s\nFilter: host_alias %s%s %s\nOr: 2\n" % ((negate, self.op, lqencode(current_value)) * 2)
         else:
             return ""
 

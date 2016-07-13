@@ -306,6 +306,7 @@
     * 3666 FIX: ups_*: Fixed discovery for Vision UPS devices
     * 3692 FIX: f5_bigip_conns: fixed empty data handling
     * 3707 FIX: oracle_tablespaces: cleanup...
+    * 3708 FIX: cisco_vpn_tunnel: fixed missing phase 2 data
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

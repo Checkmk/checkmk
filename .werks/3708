@@ -1,0 +1,10 @@
+Title: cisco_vpn_tunnel: fixed missing phase 2 data
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1468415553
+
+

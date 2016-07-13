@@ -1,0 +1,13 @@
+Title: oracle_tablespaces: cleanup
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1468395896
+
+- Fixed invalid data handling
+- If login failed or data missing the check goes stale
+- Uses yield generator
+- More readable status details

@@ -3384,7 +3384,7 @@ class PasswordFromStore(Alternative):
 
         # TODO: we can't limit the view to only the passwords accessible by the user because at
         # this point the user_id has not been set yet
-        with PasswordStore(defaults.var_dir + "/passwords.mk", backend) as store:
+        with PasswordStore(defaults.var_dir + "/passwords.json", backend) as store:
             return store.list(with_details=True)
 
     def matching_alternative(self, value):

@@ -334,7 +334,7 @@ class ChangeContext(object):
             if 'secrets' not in self.__data:
                 self.__data['secrets'] = {}
             with NamedTemporaryFile(dir=os.path.dirname(self.__filename), delete=False) as f:
-                json.dump(self.__data, f)
+                json.dump(self.__data, f, indent=4)
 
             os.rename(f.name, self.__filename)
             fcntl.flock(self.__fd, fcntl.LOCK_UN)

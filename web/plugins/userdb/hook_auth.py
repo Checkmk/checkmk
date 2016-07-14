@@ -66,7 +66,7 @@ import errno
 
 g_auth_base_dir = defaults.var_dir + '/wato/auth'
 g_keys_dir = defaults.var_dir + '/private_keys'
-g_passwords_file = defaults.var_dir + '/passwords.mk'
+g_passwords_file = defaults.var_dir + '/passwords.json'
 
 
 def format_php(data, lvl = 1):

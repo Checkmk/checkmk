@@ -212,7 +212,7 @@ multisite_datasources["log"] = {
 multisite_datasources["log_events"] = {
     "title"       : _("Host and Service Events"),
     "table"       : "log",
-    "add_headers" : "Filter: class = 1\nFilter: class = 3\nOr: 2\n",
+    "add_headers" : "Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\n",
     "infos"       : [ "log", "host", "service" ],
     "keys"        : [],
     "idkeys"      : [ "log_lineno" ],
@@ -222,7 +222,7 @@ multisite_datasources["log_events"] = {
 multisite_datasources["log_host_events"] = {
     "title"       : _("Host Events"),
     "table"       : "log",
-    "add_headers" : "Filter: class = 1\nFilter: class = 3\nOr: 2\nFilter: service_description = \n",
+    "add_headers" : "Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\nFilter: service_description = \n",
     "infos"       : [ "log", "host" ],
     "keys"        : [],
     "idkeys"      : [ "log_lineno" ],

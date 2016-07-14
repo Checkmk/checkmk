@@ -808,13 +808,19 @@ declare_filter(252, FilterTime("log", "logtime", _("Time of log entry"), "log_ti
 # PASSIVECHECK  4 // passive checks
 # COMMAND       5 // external commands
 # STATE         6 // initial or current states
+# ALERT HANDLERS 8
 
 class FilterLogClass(Filter):
     def __init__(self):
         self.log_classes = [
-            (0, _("Informational")), (1, _("Alerts")), (2, _("Program")),
-            (3, _("Notifications")), (4, _("Passive checks")),
-            (5, _("Commands")),      (6, _("States")) ]
+            (0, _("Informational")),
+            (1, _("Alerts")),
+            (2, _("Program")),
+            (3, _("Notifications")),
+            (4, _("Passive checks")),
+            (5, _("Commands")),
+            (6, _("States")),
+            (8, _("Alert Handlers")) ]
 
         Filter.__init__(self, "log_class", _("Logentry class"),
                 "log", [ "logclass%d" % l for l, c in self.log_classes ], [])

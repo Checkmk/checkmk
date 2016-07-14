@@ -2259,6 +2259,8 @@ multisite_painters["log_command"] = {
 def paint_log_icon(row):
     img = None
     log_type = row["log_type"]
+    log_state = row["log_state"]
+
     if log_type == "SERVICE ALERT":
         img = { 0: "ok", 1: "warn", 2:"crit", 3:"unknown" }.get(row["log_state"])
         title = _("Service Alert")
@@ -2266,6 +2268,19 @@ def paint_log_icon(row):
     elif log_type == "HOST ALERT":
         img = { 0: "up", 1: "down", 2:"unreach" }.get(row["log_state"])
         title = _("Host Alert")
+
+    elif log_type.endswith("ALERT HANDLER STARTED"):
+        img = "alert_handler_started"
+        title = _("Alert Handler Started")
+
+    elif log_type.endswith("ALERT HANDLER STOPPED"):
+        if log_state == 0:
+            img = "alert_handler_stopped"
+            title = _("Alert handler Stopped")
+        else:
+            img = "alert_handler_failed"
+            title = _("Alert handler failed")
+
 
     elif "DOWNTIME" in log_type:
         if row["log_state_type"] in [ "END", "STOPPED" ]:
@@ -2381,7 +2396,7 @@ def paint_log_state(row):
 multisite_painters["log_state"] = {
     "title"   : _("Log: state of host/service at log time"),
     "short"   : _("State"),
-    "columns" : ["log_state", "log_service_description"],
+    "columns" : ["log_state", "log_state_type", "log_service_description"],
     "paint"   : paint_log_state,
 }
 

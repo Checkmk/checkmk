@@ -236,96 +236,109 @@ tmpl_foot_html = '''</table>
 # 1. Name
 # 2. "both": always, possible, "host": only for hosts, or "service": only for service notifications
 # 3. True -> always enabled, not configurable, False: optional
-# 4. Title
-# 5. Text template
-# 6. HTML template
+# 4. "normal"-> for normal notifications, "alerthandler" -> for alert handler notifications, "all" -> for all types
+# 5. Title
+# 6. Text template
+# 7. HTML template
 
 body_elements = [
 
-  ( "hostname", "both", True, "Host",
+  ( "hostname", "both", True, "all", "Host",
     "$HOSTNAME$ ($HOSTALIAS$)",
     "$LINKEDHOSTNAME$ ($HOSTALIAS$)" ),
 
-  ( "servicedesc", "service", True, "Service",
+  ( "servicedesc", "service", True, "all", "Service",
     "$SERVICEDESC$",
     "$LINKEDSERVICEDESC$" ),
 
-  ( "event", "both", True, "Event",
+  ( "event", "both", True, "all", "Event",
     "$EVENT_TXT$",
     "$EVENT_HTML$", ),
 
   # Elements for both host and service notifications
-  ( "address",  "both", False, "Address",
+  ( "address",  "both", False, "all", "Address",
     "$HOSTADDRESS$",
     "$HOSTADDRESS$", ),
 
-  ( "abstime", "both", False, "Date / Time",
+  ( "abstime", "both", False, "all", "Date / Time",
     "$LONGDATETIME$",
     "$LONGDATETIME$", ),
 
-  ( "notesurl", "both", False, "Custom Host Notes Url",
+  ( "notesurl", "both", False, "all", "Custom Host Notes URL",
     "$HOSTNOTESURL$",
     "$HOSTNOTESURL$",),
 
   # Elements only for host notifications
-  ( "reltime", "host", False, "Relative Time",
+  ( "reltime", "host", False, "all", "Relative Time",
     "$LASTHOSTSTATECHANGE_REL$",
     "$LASTHOSTSTATECHANGE_REL$",),
 
-  ( "output", "host", True, "Plugin Output",
+  ( "output", "host", True, "normal", "Plugin Output",
     "$HOSTOUTPUT$",
     "$HOSTOUTPUT$",),
 
-  ( "ack_author", "host", False, "Acknowledge Author",
+  ( "ack_author", "host", False, "normal", "Acknowledge Author",
     "$HOSTACKAUTHORNAME$",
     "$HOSTACKAUTHORNAME$",),
 
-  ( "ack_comment", "host", False, "Acknowledge Comment",
+  ( "ack_comment", "host", False, "normal", "Acknowledge Comment",
     "$HOSTACKCOMMENT$",
     "$HOSTACKCOMMENT$",),
 
-  ( "perfdata", "host", False, "Performance Data",
+  ( "perfdata", "host", False, "normal", "Metrics",
     "$HOSTPERFDATA$",
     "$HOSTPERFDATA$",),
 
   # Elements only for service notifications
-  ( "reltime", "service", False, "Relative Time",
+  ( "reltime", "service", False, "all", "Relative Time",
     "$LASTSERVICESTATECHANGE_REL$",
     "$LASTSERVICESTATECHANGE_REL$",),
 
-  ( "output", "service", True, "Plugin Output",
+  ( "output", "service", True, "normal", "Plugin Output",
     "$SERVICEOUTPUT$",
     "$SERVICEOUTPUT$",),
 
-  ( "longoutput", "service", False, "Additional Output",
+  ( "longoutput", "service", False, "normal", "Additional Output",
     "$LONGSERVICEOUTPUT$",
     "$LONGSERVICEOUTPUT$",),
 
-  ( "ack_author", "service", False, "Acknowledge Author",
+  ( "ack_author", "service", False, "normal", "Acknowledge Author",
     "$SERVICEACKAUTHOR$",
     "$SERVICEACKAUTHOR$",),
 
-  ( "ack_comment", "service", False, "Acknowledge Comment",
+  ( "ack_comment", "service", False, "normal", "Acknowledge Comment",
     "$SERVICEACKCOMMENT$",
     "$SERVICEACKCOMMENT$",),
 
-  ( "perfdata", "service", False, "Performance Data",
+  ( "perfdata", "service", False, "normal", "Host Metrics",
     "$HOSTPERFDATA$",
     "$HOSTPERFDATA$",),
 
-  ( "perfdata", "service", False, "Performance Data",
+  ( "perfdata", "service", False, "normal", "Service Metrics",
     "$SERVICEPERFDATA$",
     "$SERVICEPERFDATA$",),
 
-  ( "notesurl", "service", False, "Custom Service Notes Url",
+  ( "notesurl", "service", False, "all", "Custom Service Notes URL",
     "$SERVICENOTESURL$",
     "$SERVICENOTESURL$",),
 
+  # Alert handlers
+  ( "alerthandler_name", "both", True, "alerthandler", "Name of alert handler",
+    "$ALERTHANDLERNAME$",
+    "$ALERTHANDLERNAME$",
+  ),
+
+  ( "alerthandler_output", "both", True, "alerthandler", "Output of alert handler",
+    "$ALERTHANDLEROUTPUT$",
+    "$ALERTHANDLEROUTPUT$",
+  ),
+
   # Debugging
-  ( "context", "both", False, "Complete variable list",
+  ( "context", "both", False, "all", "Complete variable list",
     "$CONTEXT_ASCII$",
     "$CONTEXT_HTML$",
-  )
+  ),
+
 ]
 
 tmpl_host_subject = 'Check_MK: $HOSTNAME$ - $EVENT_TXT$'
@@ -789,7 +802,7 @@ def construct_content(context):
     # Prepare the mail contents
     content_txt, content_html = render_elements(context, elements)
 
-    if "graph" in elements:
+    if "graph" in elements and not "ALERTHANDLEROUTPUT" in context:
         # Add PNP or Check_MK graph
         try:
             attachments, graph_code = render_performance_graphs(context)
@@ -805,15 +818,20 @@ def construct_content(context):
 
 def render_elements(context, elements):
     what = context['WHAT'].lower()
+    is_alert_handler = "ALERTHANDLEROUTPUT" in context
     even = "even"
     tmpl_txt = ""
     tmpl_html = ""
-    for name, whence, forced, title, txt, html in body_elements:
+    for name, whence, forced, nottype, title, txt, html in body_elements:
+        if nottype == "alerthandler" and not is_alert_handler:
+            continue
+        if nottype not in ( "alerthandler", "all" ) and is_alert_handler:
+            continue
         if (whence == "both" or whence == what) and \
-            (forced or name in elements):
+            (forced or (name in elements)):
             tmpl_txt += "%-20s %s\n" % (title + ":", txt)
             tmpl_html += '<tr class="%s0"><td class=left>%s</td><td>%s</td></tr>' % (
-                    even, title, html)
+                   even, title, html)
             even = even == "even" and "odd" or "even"
 
     return substitute_context(tmpl_txt, context), \

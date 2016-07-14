@@ -234,9 +234,5 @@ def verify_pylint_version():
 def register(linter):
     verify_pylint_version()
 
-    sys.path = glob.glob("/omd/versions/default/lib/python/*.egg") \
-               + [ "/omd/versions/default/lib/python" ] \
-               + sys.path
-
     linter.register_reporter(CMKColorizedTextReporter)
     linter.register_reporter(CMKParseableTextReporter)

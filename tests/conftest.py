@@ -1,6 +1,7 @@
 # This file initializes the py.test environment
 import os
 import sys
+import glob
 import pytest
 
 def cmk_path():
@@ -12,10 +13,19 @@ def cmc_path():
 
 
 def add_python_paths():
+    # make python modules needed by Check_MK available. Hope it is sufficient to use
+    # the OMD default version here. Otherwise we would need to get cmk-omd git and
+    # load the modules from there.
+    # Maybe add a check for a default version matching the current branch.
+    sys.path = glob.glob("/omd/versions/default/lib/python/*.egg") \
+               + [ "/omd/versions/default/lib/python" ] \
+               + sys.path
+
     # make the testlib available to the test modules
     sys.path.insert(0, os.path.dirname(__file__))
     # make the repo directory available (cmk lib)
     sys.path.insert(0, cmk_path())
+
     print("Import path: %s" % " ".join(sys.path))
 
 

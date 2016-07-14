@@ -1,0 +1,10 @@
+Title: Web API: get_host/get_all_hosts action now also returns the nodes of cluster host
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p6
+Date: 1468487596
+
+

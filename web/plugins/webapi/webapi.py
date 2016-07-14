@@ -175,7 +175,10 @@ def action_get_host(request):
     else:
         attributes = host.attributes()
 
-    return { "attributes": attributes, "path": host.folder().path(), "hostname": host.name() }
+    response = { "attributes": attributes, "path": host.folder().path(), "hostname": host.name() }
+    if host.is_cluster():
+        response["nodes"] = host.cluster_nodes()
+    return response
 
 api_actions["get_host"] = {
     "handler"         : action_get_host,
@@ -200,6 +203,8 @@ def action_get_all_hosts(request):
         else:
             attributes = host.attributes()
         response[hostname] = { "attributes": attributes, "path": host.folder().path(), "hostname": host.name() }
+        if host.is_cluster():
+            response[hostname]["nodes"] = host.cluster_nodes()
 
     return response
 

@@ -34,7 +34,6 @@
 extern int g_data_encoding;
 extern int g_debug_level;
 
-using std::isnan;
 using std::move;
 using std::size_t;
 using std::string;
@@ -128,7 +127,7 @@ void Renderer::outputUnsignedLong(unsigned long value) {
 void Renderer::outputCounter(counter_t value) { add(to_string(value)); }
 
 void Renderer::outputDouble(double value) {
-    if (isnan(value)) {
+    if (std::isnan(value)) {
         outputNull();
     } else {
         char buf[64];

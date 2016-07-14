@@ -79,19 +79,24 @@ class KeypairStore(object):
 
 
 class PageKeyManagement(object):
-    edit_mode   = "edit_key"
-    upload_mode = "upload_key"
+    edit_mode     = "edit_key"
+    upload_mode   = "upload_key"
+    download_mode = "download_key"
 
     def __init__(self):
         self.keys = self.load()
         super(PageKeyManagement, self).__init__()
 
 
+    def title(self):
+        raise NotImplementedError()
+
+
     def load(self):
         raise NotImplementedError()
 
 
-    def save(self):
+    def save(self, keys):
         raise NotImplementedError()
 
 
@@ -138,7 +143,11 @@ class PageKeyManagement(object):
         raise NotImplementedError()
 
 
-    def _key_in_use(self, key):
+    def _key_in_use(self, key_id, key):
+        raise NotImplementedError()
+
+
+    def _table_title(self):
         raise NotImplementedError()
 
 
@@ -170,7 +179,7 @@ class PageEditKey(object):
         raise NotImplementedError()
 
 
-    def save(self):
+    def save(self, keys):
         raise NotImplementedError()
 
 

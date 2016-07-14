@@ -23,6 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "NullColumn.h"
-#include "Query.h"
+#include "Renderer.h"
 
-void NullColumn::output(void * /*data*/, Query *query) { query->outputNull(); }
+void NullColumn::output(void* /* row */, Renderer* renderer,
+                        contact* /* auth_user */) {
+    renderer->outputNull();
+}

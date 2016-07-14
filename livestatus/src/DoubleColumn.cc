@@ -25,13 +25,14 @@
 #include "DoubleColumn.h"
 #include <stdio.h>
 #include "DoubleFilter.h"
-#include "Query.h"
+#include "Renderer.h"
 #include "opids.h"
 
 using std::string;
 
-void DoubleColumn::output(void *data, Query *query) {
-    query->outputDouble(getValue(data));
+void DoubleColumn::output(void *row, Renderer *renderer,
+                          contact * /* auth_user */) {
+    renderer->outputDouble(getValue(row));
 }
 
 Filter *DoubleColumn::createFilter(Query *query, RelationalOperator relOp,

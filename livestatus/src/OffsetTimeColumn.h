@@ -32,6 +32,13 @@
 #include "opids.h"
 class Filter;
 class Query;
+class Renderer;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 /* We are using IntColumn in order to implement a column of type time. This does
    almost the same as the time column, but applies a timezone offset stored in
@@ -44,7 +51,7 @@ public:
         : OffsetIntColumn(name, description, offset, indirect_offset,
                           extra_offset) {}
     ColumnType type() override { return ColumnType::time; }
-    void output(void *data, Query *query) override;
+    void output(void *row, Renderer *renderer, contact *auth_user) override;
     Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
 };

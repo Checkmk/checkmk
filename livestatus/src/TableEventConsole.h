@@ -39,10 +39,12 @@
 #include "IntColumn.h"
 #include "ListColumn.h"
 #include "OffsetTimeColumn.h"
-#include "Query.h"
+#include "Renderer.h"
 #include "StringColumn.h"
 #include "StringUtils.h"
 #include "Table.h"
+class Query;
+
 #ifdef CMC
 #include "cmc.h"
 class Core;
@@ -158,18 +160,19 @@ protected:
 
         _column_t getValue(void *row) { return _ecc.getValue(row); }
 
-        void output(void *row, Query *query) override {
-            query->outputBeginList();
+        void output(void *row, Renderer *renderer,
+                    contact * /* auth_user */) override {
+            renderer->outputBeginList();
             bool first = true;
             for (const auto &elem : _ecc.getValue(row)) {
                 if (first) {
                     first = false;
                 } else {
-                    query->outputListSeparator();
+                    renderer->outputListSeparator();
                 }
-                query->outputString(elem.c_str());
+                renderer->outputString(elem.c_str());
             }
-            query->outputEndList();
+            renderer->outputEndList();
         }
 
         bool isEmpty(void *row) override { return _ecc.getValue(row).empty(); }

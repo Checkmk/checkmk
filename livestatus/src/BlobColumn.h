@@ -30,7 +30,13 @@
 #include <string>
 #include <vector>
 #include "Column.h"
-class Query;
+class Renderer;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class BlobColumn : public Column {
 public:
@@ -38,7 +44,7 @@ public:
                int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
     virtual std::unique_ptr<std::vector<char>> getBlob(void *data) = 0;
-    void output(void *, Query *) override;
+    void output(void *row, Renderer *renderer, contact *auth_user) override;
     ColumnType type() override { return ColumnType::blob; }
 };
 

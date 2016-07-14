@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <memory>
-#include "Query.h"
+#include "Renderer.h"
 #include "VariadicFilter.h"
 #include "logger.h"
 class Filter;
@@ -70,9 +70,10 @@ string OffsetStringMacroColumn::valueAsString(void *row,
     return result;
 }
 
-void OffsetStringMacroColumn::output(void *data, Query *query) {
-    string s = valueAsString(data, query->authUser());
-    query->outputString(s.c_str());
+void OffsetStringMacroColumn::output(void *row, Renderer *renderer,
+                                     contact *auth_user) {
+    string s = valueAsString(row, auth_user);
+    renderer->outputString(s.c_str());
 }
 
 Filter *OffsetStringMacroColumn::createFilter(Query *query,

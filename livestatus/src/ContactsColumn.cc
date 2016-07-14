@@ -23,14 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ContactsColumn.h"
-#include "Query.h"
-#include "nagios.h"
+#include "Renderer.h"
 
 extern contact *contact_list;
 
-void ContactsColumn::output(void *data, Query *query) {
-    query->outputBeginList();
-    data = shiftPointer(data);
+void ContactsColumn::output(void *row, Renderer *renderer,
+                            contact * /* auth_user */) {
+    renderer->outputBeginList();
+    void *data = shiftPointer(row);
 
     if (data != nullptr) {
         bool first = true;
@@ -39,13 +39,13 @@ void ContactsColumn::output(void *data, Query *query) {
                 if (first) {
                     first = false;
                 } else {
-                    query->outputListSeparator();
+                    renderer->outputListSeparator();
                 }
-                query->outputString(ctc->name);
+                renderer->outputString(ctc->name);
             }
         }
     }
-    query->outputEndList();
+    renderer->outputEndList();
 }
 
 bool ContactsColumn::isEmpty(void *data) {

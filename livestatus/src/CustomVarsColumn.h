@@ -32,6 +32,7 @@
 #include "opids.h"
 class Filter;
 class Query;
+class Renderer;
 
 #define CVT_VARNAMES 0
 #define CVT_VALUES 1
@@ -50,7 +51,7 @@ public:
     ColumnType type() override {
         return _what == CVT_DICT ? ColumnType::dict : ColumnType::list;
     }
-    void output(void *, Query *) override;
+    void output(void *row, Renderer *renderer, contact *auth_user) override;
     Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
     bool contains(void *data, const char *value);

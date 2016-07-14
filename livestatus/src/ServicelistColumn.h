@@ -32,6 +32,7 @@
 #include "opids.h"
 class Filter;
 class Query;
+class Renderer;
 
 class ServicelistColumn : public Column {
     int _offset;
@@ -47,7 +48,7 @@ public:
         , _show_host(show_host)
         , _info_depth(info_depth) {}
     ColumnType type() override { return ColumnType::list; };
-    void output(void *, Query *) override;
+    void output(void *row, Renderer *renderer, contact *auth_user) override;
     Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
     servicesmember *getMembers(void *data);

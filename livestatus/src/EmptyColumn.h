@@ -28,7 +28,13 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
-class Query;
+class Renderer;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class EmptyColumn : public Column {
 public:
@@ -36,7 +42,7 @@ public:
                 int indirect_offset = -1, int extra_offset = -1)
         : Column(name, description, indirect_offset, extra_offset) {}
     ColumnType type() override { return ColumnType::string; }
-    void output(void *data, Query *) override;
+    void output(void *row, Renderer *renderer, contact *auth_user) override;
 };
 
 #endif  // EmptyColumn_h

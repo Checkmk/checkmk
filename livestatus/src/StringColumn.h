@@ -31,6 +31,7 @@
 #include "opids.h"
 class Filter;
 class Query;
+class Renderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -47,7 +48,7 @@ public:
     std::string valueAsString(void *row, contact * /* auth_user */) override {
         return getValue(row);
     }
-    void output(void *, Query *) override;
+    void output(void *row, Renderer *renderer, contact *auth_user) override;
     ColumnType type() override { return ColumnType::string; }
     Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;

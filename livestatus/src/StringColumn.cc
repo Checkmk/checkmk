@@ -23,17 +23,18 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StringColumn.h"
-#include "Query.h"
+#include "Renderer.h"
 #include "StringFilter.h"
 #include "opids.h"
 
 using std::string;
 
-void StringColumn::output(void *data, Query *query) {
-    if (data != nullptr) {
-        query->outputString(getValue(data).c_str());
+void StringColumn::output(void *row, Renderer *renderer,
+                          contact * /* auth_user */) {
+    if (row != nullptr) {
+        renderer->outputString(getValue(row).c_str());
     } else {
-        query->outputString(nullptr);
+        renderer->outputString(nullptr);
     }
 }
 

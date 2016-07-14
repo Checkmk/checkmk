@@ -25,44 +25,45 @@
 #include "CustomVarsColumn.h"
 #include <string.h>
 #include "CustomVarsFilter.h"
-#include "Query.h"
+#include "Renderer.h"
 
 using std::string;
 
-void CustomVarsColumn::output(void *data, Query *query) {
+void CustomVarsColumn::output(void *row, Renderer *renderer,
+                              contact * /* auth_user */) {
     if (_what == CVT_DICT) {
-        query->outputBeginDict();
+        renderer->outputBeginDict();
     } else {
-        query->outputBeginList();
+        renderer->outputBeginList();
     }
 
-    customvariablesmember *cvm = getCVM(data);
+    customvariablesmember *cvm = getCVM(row);
 
     bool first = true;
     while (cvm != nullptr) {
         if (first) {
             first = false;
         } else if (_what == CVT_DICT) {
-            query->outputDictSeparator();
+            renderer->outputDictSeparator();
         } else {
-            query->outputListSeparator();
+            renderer->outputListSeparator();
         }
         if (_what == CVT_VARNAMES) {
-            query->outputString(cvm->variable_name);
+            renderer->outputString(cvm->variable_name);
         } else if (_what == CVT_VALUES) {
-            query->outputString(cvm->variable_value);
+            renderer->outputString(cvm->variable_value);
         } else {
-            query->outputString(cvm->variable_name);
-            query->outputDictValueSeparator();
-            query->outputString(cvm->variable_value);
+            renderer->outputString(cvm->variable_name);
+            renderer->outputDictValueSeparator();
+            renderer->outputString(cvm->variable_value);
         }
         cvm = cvm->next;
     }
 
     if (_what == CVT_DICT) {
-        query->outputEndDict();
+        renderer->outputEndDict();
     } else {
-        query->outputEndList();
+        renderer->outputEndList();
     }
 }
 

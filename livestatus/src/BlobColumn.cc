@@ -23,12 +23,13 @@
 // Boston, MA 02110-1301 USA.
 
 #include "BlobColumn.h"
-#include "Query.h"
+#include "Renderer.h"
 
 using std::unique_ptr;
 using std::vector;
 
-void BlobColumn::output(void *data, Query *query) {
-    unique_ptr<vector<char>> blob = getBlob(data);
-    query->outputBlob(blob.get());
+void BlobColumn::output(void *row, Renderer *renderer,
+                        contact * /* auth_user */) {
+    unique_ptr<vector<char>> blob = getBlob(row);
+    renderer->outputBlob(blob.get());
 }

@@ -32,6 +32,7 @@
 #include "opids.h"
 class Filter;
 class Query;
+class Renderer;
 
 class OffsetStringMacroColumn : public OffsetStringColumn {
 public:
@@ -42,7 +43,7 @@ public:
     // reimplement several functions from StringColumn
 
     std::string valueAsString(void *row, contact *auth_user) override;
-    void output(void *data, Query *) override;
+    void output(void *row, Renderer *renderer, contact *auth_user) override;
     Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
 

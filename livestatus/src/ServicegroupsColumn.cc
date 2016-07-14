@@ -23,8 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServicegroupsColumn.h"
-#include "Query.h"
-#include "nagios.h"
+#include "Renderer.h"
 
 using std::make_unique;
 using std::string;
@@ -41,24 +40,25 @@ objectlist *ServicegroupsColumn::getData(void *data) {
     return nullptr;
 }
 
-void ServicegroupsColumn::output(void *data, Query *query) {
-    query->outputBeginList();
-    objectlist *list = getData(data);
+void ServicegroupsColumn::output(void *row, Renderer *renderer,
+                                 contact * /* auth_user */) {
+    renderer->outputBeginList();
+    objectlist *list = getData(row);
     if (list != nullptr) {
         bool first = true;
         while (list != nullptr) {
             servicegroup *sg =
                 reinterpret_cast<servicegroup *>(list->object_ptr);
             if (!first) {
-                query->outputListSeparator();
+                renderer->outputListSeparator();
             } else {
                 first = false;
             }
-            query->outputString(sg->group_name);
+            renderer->outputString(sg->group_name);
             list = list->next;
         }
     }
-    query->outputEndList();
+    renderer->outputEndList();
 }
 
 unique_ptr<ListColumn::Contains> ServicegroupsColumn::makeContains(

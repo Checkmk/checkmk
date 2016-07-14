@@ -23,18 +23,18 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ContactgroupsColumn.h"
-#include "Query.h"
-#include "nagios.h"
+#include "Renderer.h"
 
 using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void ContactgroupsColumn::output(void *data, Query *query) {
-    query->outputBeginList();
+void ContactgroupsColumn::output(void *row, Renderer *renderer,
+                                 contact * /* auth_user */) {
+    renderer->outputBeginList();
 
-    if (data != nullptr) {
-        data = shiftPointer(data);
+    if (row != nullptr) {
+        void *data = shiftPointer(row);
         if (data != nullptr) {
             contactgroupsmember *cgm =
                 *reinterpret_cast<contactgroupsmember **>(
@@ -43,17 +43,17 @@ void ContactgroupsColumn::output(void *data, Query *query) {
             while (cgm != nullptr) {
                 contactgroup *cg = cgm->group_ptr;
                 if (!first) {
-                    query->outputListSeparator();
+                    renderer->outputListSeparator();
                 } else {
                     first = false;
                 }
-                query->outputString(cg->group_name);
+                renderer->outputString(cg->group_name);
                 cgm = cgm->next;
             }
         }
     }
 
-    query->outputEndList();
+    renderer->outputEndList();
 }
 
 unique_ptr<ListColumn::Contains> ContactgroupsColumn::makeContains(

@@ -24,7 +24,7 @@
 
 #include "ServicelistColumn.h"
 #include <string.h>
-#include "Query.h"
+#include "Renderer.h"
 #include "ServicelistFilter.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
@@ -44,10 +44,10 @@ servicesmember *ServicelistColumn::getMembers(void *data) {
                                                 _offset);
 }
 
-void ServicelistColumn::output(void *data, Query *query) {
-    query->outputBeginList();
-    contact *auth_user = query->authUser();
-    servicesmember *mem = getMembers(data);
+void ServicelistColumn::output(void *row, Renderer *renderer,
+                               contact *auth_user) {
+    renderer->outputBeginList();
+    servicesmember *mem = getMembers(row);
 
     bool first = true;
     while (mem != nullptr) {
@@ -55,51 +55,51 @@ void ServicelistColumn::output(void *data, Query *query) {
         if ((auth_user == nullptr) ||
             is_authorized_for(auth_user, svc->host_ptr, svc)) {
             if (!first) {
-                query->outputListSeparator();
+                renderer->outputListSeparator();
             } else {
                 first = false;
             }
             // show only service name => no sublist
             if (!_show_host && _info_depth == 0) {
-                query->outputString(svc->description);
+                renderer->outputString(svc->description);
             } else {
-                query->outputBeginSublist();
+                renderer->outputBeginSublist();
                 if (_show_host) {
-                    query->outputString(svc->host_name);
-                    query->outputSublistSeparator();
+                    renderer->outputString(svc->host_name);
+                    renderer->outputSublistSeparator();
                 }
-                query->outputString(svc->description);
+                renderer->outputString(svc->description);
                 if (_info_depth >= 1) {
-                    query->outputSublistSeparator();
-                    query->outputInteger(svc->current_state);
-                    query->outputSublistSeparator();
-                    query->outputInteger(svc->has_been_checked);
+                    renderer->outputSublistSeparator();
+                    renderer->outputInteger(svc->current_state);
+                    renderer->outputSublistSeparator();
+                    renderer->outputInteger(svc->has_been_checked);
                 }
                 if (_info_depth >= 2) {
-                    query->outputSublistSeparator();
-                    query->outputString(svc->plugin_output);
+                    renderer->outputSublistSeparator();
+                    renderer->outputString(svc->plugin_output);
                 }
                 if (_info_depth >= 3) {
-                    query->outputSublistSeparator();
-                    query->outputInteger(svc->last_hard_state);
-                    query->outputSublistSeparator();
-                    query->outputInteger(svc->current_attempt);
-                    query->outputSublistSeparator();
-                    query->outputInteger(svc->max_attempts);
-                    query->outputSublistSeparator();
-                    query->outputInteger(svc->scheduled_downtime_depth);
-                    query->outputSublistSeparator();
-                    query->outputInteger(svc->problem_has_been_acknowledged);
-                    query->outputSublistSeparator();
-                    query->outputInteger(
+                    renderer->outputSublistSeparator();
+                    renderer->outputInteger(svc->last_hard_state);
+                    renderer->outputSublistSeparator();
+                    renderer->outputInteger(svc->current_attempt);
+                    renderer->outputSublistSeparator();
+                    renderer->outputInteger(svc->max_attempts);
+                    renderer->outputSublistSeparator();
+                    renderer->outputInteger(svc->scheduled_downtime_depth);
+                    renderer->outputSublistSeparator();
+                    renderer->outputInteger(svc->problem_has_been_acknowledged);
+                    renderer->outputSublistSeparator();
+                    renderer->outputInteger(
                         inCustomTimeperiod(svc, "SERVICE_PERIOD"));
                 }
-                query->outputEndSublist();
+                renderer->outputEndSublist();
             }
         }
         mem = mem->next;
     }
-    query->outputEndList();
+    renderer->outputEndList();
 }
 
 Filter *ServicelistColumn::createFilter(Query *query, RelationalOperator relOp,

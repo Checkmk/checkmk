@@ -24,7 +24,7 @@
 
 #include "HostlistColumn.h"
 #include "HostlistFilter.h"
-#include "Query.h"
+#include "Renderer.h"
 #include "auth.h"
 #include "opids.h"
 
@@ -40,10 +40,9 @@ hostsmember *HostlistColumn::getMembers(void *data) {
                                              _offset);
 }
 
-void HostlistColumn::output(void *data, Query *query) {
-    query->outputBeginList();
-    contact *auth_user = query->authUser();
-    hostsmember *mem = getMembers(data);
+void HostlistColumn::output(void *row, Renderer *renderer, contact *auth_user) {
+    renderer->outputBeginList();
+    hostsmember *mem = getMembers(row);
 
     bool first = true;
     while (mem != nullptr) {
@@ -51,25 +50,25 @@ void HostlistColumn::output(void *data, Query *query) {
         if ((auth_user == nullptr) ||
             is_authorized_for(auth_user, hst, nullptr)) {
             if (!first) {
-                query->outputListSeparator();
+                renderer->outputListSeparator();
             } else {
                 first = false;
             }
             if (!_show_state) {
-                query->outputString(hst->name);
+                renderer->outputString(hst->name);
             } else {
-                query->outputBeginSublist();
-                query->outputString(hst->name);
-                query->outputSublistSeparator();
-                query->outputInteger(hst->current_state);
-                query->outputSublistSeparator();
-                query->outputInteger(hst->has_been_checked);
-                query->outputEndSublist();
+                renderer->outputBeginSublist();
+                renderer->outputString(hst->name);
+                renderer->outputSublistSeparator();
+                renderer->outputInteger(hst->current_state);
+                renderer->outputSublistSeparator();
+                renderer->outputInteger(hst->has_been_checked);
+                renderer->outputEndSublist();
             }
         }
         mem = mem->next;
     }
-    query->outputEndList();
+    renderer->outputEndList();
 }
 
 Filter *HostlistColumn::createFilter(Query *query, RelationalOperator relOp,

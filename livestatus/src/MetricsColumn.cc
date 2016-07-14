@@ -23,14 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "MetricsColumn.h"
-#include "Query.h"
+#include "Renderer.h"
 
-void MetricsColumn::output(void *data, Query *query) {
-    data = shiftPointer(data);
+void MetricsColumn::output(void *row, Renderer *renderer,
+                           contact * /* auth_user */) {
+    void *data = shiftPointer(row);
     if (data == nullptr) {
         return;
     }
 
-    query->outputBeginList();
-    query->outputEndList();
+    renderer->outputBeginList();
+    renderer->outputEndList();
 }

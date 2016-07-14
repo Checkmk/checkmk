@@ -23,14 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TimePointerColumn.h"
-#include "Query.h"
+#include "Renderer.h"
 #include "TimeFilter.h"
 #include "opids.h"
 
 using std::string;
 
-void TimePointerColumn::output(void *data, Query *query) {
-    query->outputTime(getValue(data, query->authUser()));
+void TimePointerColumn::output(void *row, Renderer *renderer,
+                               contact *auth_user) {
+    renderer->outputTime(getValue(row, auth_user));
 }
 
 Filter *TimePointerColumn::createFilter(Query *query, RelationalOperator relOp,

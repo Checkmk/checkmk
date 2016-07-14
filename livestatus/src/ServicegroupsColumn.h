@@ -31,7 +31,7 @@
 #include "Column.h"
 #include "ListColumn.h"
 #include "nagios.h"
-class Query;
+class Renderer;
 
 class ServicegroupsColumn : public ListColumn {
     int _offset;
@@ -42,7 +42,7 @@ public:
         : ListColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset) {}
     ColumnType type() override { return ColumnType::list; }
-    void output(void *, Query *) override;
+    void output(void *row, Renderer *renderer, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
     bool isEmpty(void *data) override;
 

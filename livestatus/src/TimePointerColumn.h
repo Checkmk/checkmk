@@ -32,6 +32,13 @@
 #include "opids.h"
 class Filter;
 class Query;
+class Renderer;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class TimePointerColumn : public IntPointerColumn {
 public:
@@ -39,7 +46,7 @@ public:
                       int indirect_offset = -1, int extra_offset = -1)
         : IntPointerColumn(name, description, number, indirect_offset,
                            extra_offset) {}
-    void output(void *data, Query *query) override;
+    void output(void *row, Renderer *renderer, contact *auth_user) override;
     ColumnType type() override { return ColumnType::time; }
     Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;

@@ -30,6 +30,7 @@
 #include "opids.h"
 class Filter;
 class Query;
+class Renderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -62,7 +63,11 @@ public:
         return "invalid";
     }
     virtual ColumnType type() = 0;
-    virtual void output(void *data, Query *) = 0;
+
+    // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is
+    // fixed, it is just an artifact.
+    virtual void output(void *row, Renderer *renderer, contact *auth_user) = 0;
+
     virtual bool mustDelete() {
         return false;  // true for dynamic Columns to be deleted after Query
     }

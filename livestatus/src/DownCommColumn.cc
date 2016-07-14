@@ -28,16 +28,17 @@
 #include <utility>
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"
-#include "Query.h"
+#include "Renderer.h"
 #include "nagios.h"
 
 using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void DownCommColumn::output(void *data, Query *query) {
-    query->outputBeginList();
-    data = shiftPointer(data);  // points to host or service
+void DownCommColumn::output(void *row, Renderer *renderer,
+                            contact * /* auth_user */) {
+    renderer->outputBeginList();
+    void *data = shiftPointer(row);  // points to host or service
     if (data != nullptr) {
         bool first = true;
         for (const auto &entry : _holder) {
@@ -47,30 +48,30 @@ void DownCommColumn::output(void *data, Query *query) {
                 if (first) {
                     first = false;
                 } else {
-                    query->outputListSeparator();
+                    renderer->outputListSeparator();
                 }
                 if (_with_info) {
-                    query->outputBeginSublist();
-                    query->outputUnsignedLong(id);
-                    query->outputSublistSeparator();
-                    query->outputString(dt->_author_name);
-                    query->outputSublistSeparator();
-                    query->outputString(dt->_comment);
+                    renderer->outputBeginSublist();
+                    renderer->outputUnsignedLong(id);
+                    renderer->outputSublistSeparator();
+                    renderer->outputString(dt->_author_name);
+                    renderer->outputSublistSeparator();
+                    renderer->outputString(dt->_comment);
                     if (_with_extra_info && !_is_downtime) {
-                        query->outputSublistSeparator();
-                        query->outputInteger(
+                        renderer->outputSublistSeparator();
+                        renderer->outputInteger(
                             static_cast<Comment *>(dt)->_entry_type);
-                        query->outputSublistSeparator();
-                        query->outputTime(dt->_entry_time);
+                        renderer->outputSublistSeparator();
+                        renderer->outputTime(dt->_entry_time);
                     }
-                    query->outputEndSublist();
+                    renderer->outputEndSublist();
                 } else {
-                    query->outputUnsignedLong(id);
+                    renderer->outputUnsignedLong(id);
                 }
             }
         }
     }
-    query->outputEndList();
+    renderer->outputEndList();
 }
 
 bool DownCommColumn::match(DowntimeOrComment *dt, void *data) {

@@ -242,12 +242,6 @@ Column *Query::createDummyColumn(const char *name) {
 
 void Query::addColumn(Column *column) { _columns.push_back(column); }
 
-size_t Query::size() { return _renderer->size(); }
-
-void Query::add(const string &str) { _renderer->add(str); }
-
-void Query::add(const vector<char> &blob) { _renderer->add(blob); }
-
 void Query::setResponseHeader(OutputBuffer::ResponseHeader r) {
     _response_header = r;
 }
@@ -262,10 +256,6 @@ void Query::invalidHeader(const string &message) {
 
 void Query::invalidRequest(const string &message) {
     _renderer->setError(OutputBuffer::ResponseCode::invalid_request, message);
-}
-
-void Query::limitExceeded(const string &message) {
-    _renderer->setError(OutputBuffer::ResponseCode::limit_exceeded, message);
 }
 
 Filter *Query::createFilter(Column *column, RelationalOperator relOp,
@@ -770,16 +760,16 @@ void Query::start() {
     }
 
     if (_show_column_headers) {
-        outputDatasetBegin();
+        _renderer->outputDatasetBegin();
         bool first = true;
 
         for (const auto &column : _columns) {
             if (first) {
                 first = false;
             } else {
-                outputFieldSeparator();
+                _renderer->outputFieldSeparator();
             }
-            outputString(column->name());
+            _renderer->outputString(column->name());
         }
 
         // Output dummy headers for stats columns
@@ -789,15 +779,15 @@ void Query::start() {
             if (first) {
                 first = false;
             } else {
-                outputFieldSeparator();
+                _renderer->outputFieldSeparator();
             }
             char colheader[32];
             snprintf(colheader, 32, "stats_%d", col);
-            outputString(colheader);
+            _renderer->outputString(colheader);
             col++;
         }
 
-        outputDatasetEnd();
+        _renderer->outputDatasetEnd();
         _need_ds_separator = true;
     }
 }
@@ -806,15 +796,16 @@ bool Query::timelimitReached() {
     if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
         Informational() << "Maximum query time of " << _time_limit
                         << " seconds exceeded!";
-        limitExceeded("Maximum query time of " + to_string(_time_limit) +
-                      " seconds exceeded!");
+        _renderer->setError(OutputBuffer::ResponseCode::limit_exceeded,
+                            "Maximum query time of " + to_string(_time_limit) +
+                                " seconds exceeded!");
         return true;
     }
     return false;
 }
 
 bool Query::processDataset(void *data) {
-    if (size() > g_max_response_size) {
+    if (_renderer->size() > g_max_response_size) {
         Informational() << "Maximum response size of " << g_max_response_size
                         << " bytes exceeded!";
         // currently we only log an error into the log file and do
@@ -861,17 +852,17 @@ bool Query::processDataset(void *data) {
                 _need_ds_separator = true;
             }
 
-            outputDatasetBegin();
+            _renderer->outputDatasetBegin();
             bool first = true;
             for (auto column : _columns) {
                 if (first) {
                     first = false;
                 } else {
-                    outputFieldSeparator();
+                    _renderer->outputFieldSeparator();
                 }
-                column->output(data, this);
+                column->output(data, _renderer, _auth_user);
             }
-            outputDatasetEnd();
+            _renderer->outputDatasetEnd();
         }
     }
     return true;
@@ -889,27 +880,27 @@ void Query::finish() {
                 _need_ds_separator = true;
             }
 
-            outputDatasetBegin();
+            _renderer->outputDatasetBegin();
 
             // output group columns first
             _stats_group_spec_t groupspec = stats_group.first;
             bool first = true;
             for (auto &iit : groupspec) {
                 if (!first) {
-                    outputFieldSeparator();
+                    _renderer->outputFieldSeparator();
                 } else {
                     first = false;
                 }
-                outputString(iit.c_str());
+                _renderer->outputString(iit.c_str());
             }
 
             Aggregator **aggr = stats_group.second;
             for (unsigned i = 0; i < _stats_columns.size(); i++) {
-                outputFieldSeparator();
+                _renderer->outputFieldSeparator();
                 aggr[i]->output(_renderer);
                 delete aggr[i];  // not needed any more
             }
-            outputDatasetEnd();
+            _renderer->outputDatasetEnd();
             delete[] aggr;
         }
     }
@@ -922,15 +913,15 @@ void Query::finish() {
             _need_ds_separator = true;
         }
 
-        outputDatasetBegin();
+        _renderer->outputDatasetBegin();
         for (unsigned i = 0; i < _stats_columns.size(); i++) {
             if (i > 0) {
-                outputFieldSeparator();
+                _renderer->outputFieldSeparator();
             }
             _stats_aggregators[i]->output(_renderer);
             delete _stats_aggregators[i];
         }
-        outputDatasetEnd();
+        _renderer->outputDatasetEnd();
         delete[] _stats_aggregators;
     }
 
@@ -949,69 +940,6 @@ void Query::findIntLimits(const string &column_name, int *lower, int *upper) {
 void Query::optimizeBitmask(const string &column_name, uint32_t *bitmask) {
     _filter.optimizeBitmask(column_name, bitmask);
 }
-
-// output helpers, called from columns
-void Query::outputDatasetBegin() { _renderer->outputDatasetBegin(); }
-
-void Query::outputDatasetEnd() { _renderer->outputDatasetEnd(); }
-
-void Query::outputFieldSeparator() { _renderer->outputFieldSeparator(); }
-
-void Query::outputInteger(int32_t value) { _renderer->outputInteger(value); }
-
-void Query::outputInteger64(int64_t value) {
-    _renderer->outputInteger64(value);
-}
-
-void Query::outputTime(int32_t value) { _renderer->outputTime(value); }
-
-void Query::outputUnsignedLong(unsigned long value) {
-    _renderer->outputUnsignedLong(value);
-}
-
-void Query::outputCounter(counter_t value) { _renderer->outputCounter(value); }
-
-void Query::outputDouble(double value) { _renderer->outputDouble(value); }
-
-void Query::outputNull() { _renderer->outputNull(); }
-
-void Query::outputAsciiEscape(char value) {
-    _renderer->outputAsciiEscape(value);
-}
-
-void Query::outputUnicodeEscape(unsigned value) {
-    _renderer->outputUnicodeEscape(value);
-}
-
-void Query::outputBlob(const vector<char> *blob) {
-    _renderer->outputBlob(blob);
-}
-
-void Query::outputString(const char *value, int len) {
-    _renderer->outputString(value, len);
-}
-
-void Query::outputBeginList() { _renderer->outputBeginList(); }
-
-void Query::outputListSeparator() { _renderer->outputListSeparator(); }
-
-void Query::outputEndList() { _renderer->outputEndList(); }
-
-void Query::outputBeginSublist() { _renderer->outputBeginSublist(); }
-
-void Query::outputSublistSeparator() { _renderer->outputSublistSeparator(); }
-
-void Query::outputEndSublist() { _renderer->outputEndSublist(); }
-
-void Query::outputBeginDict() { _renderer->outputBeginDict(); }
-
-void Query::outputDictSeparator() { _renderer->outputDictSeparator(); }
-
-void Query::outputDictValueSeparator() {
-    _renderer->outputDictValueSeparator();
-}
-
-void Query::outputEndDict() { _renderer->outputEndDict(); }
 
 Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec) {
     auto it = _stats_groups.find(groupspec);

@@ -25,13 +25,13 @@
 #include "IntColumn.h"
 #include <stdio.h>
 #include "IntFilter.h"
-#include "Query.h"
+#include "Renderer.h"
 #include "opids.h"
 
 using std::string;
 
-void IntColumn::output(void *data, Query *query) {
-    query->outputInteger(getValue(data, query->authUser()));
+void IntColumn::output(void *row, Renderer *renderer, contact *auth_user) {
+    renderer->outputInteger(getValue(row, auth_user));
 }
 
 Filter *IntColumn::createFilter(Query *query, RelationalOperator relOp,

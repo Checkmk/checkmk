@@ -31,6 +31,7 @@
 #include "opids.h"
 class Filter;
 class Query;
+class Renderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -44,7 +45,7 @@ public:
                  int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
     virtual double getValue(void *data) = 0;
-    void output(void *, Query *) override;
+    void output(void *row, Renderer *renderer, contact *auth_user) override;
     ColumnType type() override { return ColumnType::double_; }
     std::string valueAsString(void *row, contact * /* auth_user */) override;
     Filter *createFilter(Query *query, RelationalOperator relOp,

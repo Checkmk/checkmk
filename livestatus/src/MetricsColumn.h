@@ -28,10 +28,14 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
+class Renderer;
+
 #ifdef CMC
+#include "cmc.h"
 class Core;
+#else
+#include "nagios.h"
 #endif
-class Query;
 
 class MetricsColumn : public Column {
 #ifdef CMC
@@ -49,7 +53,7 @@ public:
         : Column(name, description, indirect_offset, extra_offset) {}
 #endif
     ColumnType type() override { return ColumnType::list; }
-    void output(void *, Query *) override;
+    void output(void *row, Renderer *renderer, contact *auth_user) override;
 };
 
 #endif  // MetricsColumn_h

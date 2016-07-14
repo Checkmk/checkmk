@@ -23,13 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 #include "GlobalCountersColumn.h"
-#include "Query.h"
+#include "Renderer.h"
 #include "global_counters.h"
 
-void GlobalCountersColumn::output(void * /*data*/, Query *query) {
+void GlobalCountersColumn::output(void * /* row */, Renderer *renderer,
+                                  contact * /* auth_user */) {
     if (_do_average) {
-        query->outputDouble(g_counter_rate[_counter_index]);
+        renderer->outputDouble(g_counter_rate[_counter_index]);
     } else {
-        query->outputCounter(g_counters[_counter_index]);
+        renderer->outputCounter(g_counters[_counter_index]);
     }
 }

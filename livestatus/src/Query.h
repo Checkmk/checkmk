@@ -37,7 +37,6 @@
 #include "OutputBuffer.h"
 #include "Renderer.h"
 #include "VariadicFilter.h"
-#include "global_counters.h"
 #include "nagios.h"  // IWYU pragma: keep
 #include "opids.h"
 class Aggregator;
@@ -87,6 +86,9 @@ class Query {
 
     std::unordered_set<Column *> _all_columns;
 
+    // invalidHeader can be called during header parsing
+    void invalidHeader(const std::string &message);
+
 public:
     Query(const std::list<std::string> &lines, Table *);
     ~Query();
@@ -95,42 +97,12 @@ public:
     bool timelimitReached();
     void addColumn(Column *column);
 
-    void add(const std::string &str);
-    void add(const std::vector<char> &blob);
-    size_t size();
     void setResponseHeader(OutputBuffer::ResponseHeader r);
     void setDoKeepalive(bool d);
 
-    // invalidHeader can be called during header parsing
-    void invalidHeader(const std::string &message);
     void invalidRequest(const std::string &message);
-    void limitExceeded(const std::string &message);
 
     contact *authUser() { return _auth_user; }
-    void outputDatasetBegin();
-    void outputDatasetEnd();
-    void outputFieldSeparator();
-    void outputInteger(int32_t);
-    void outputInteger64(int64_t);
-    void outputTime(int32_t);
-    void outputUnsignedLong(unsigned long);
-    void outputCounter(counter_t);
-    void outputDouble(double);
-    void outputNull();
-    void outputAsciiEscape(char value);
-    void outputUnicodeEscape(unsigned value);
-    void outputString(const char *, int len = -1);
-    void outputBlob(const std::vector<char> *blob);
-    void outputBeginList();
-    void outputListSeparator();
-    void outputEndList();
-    void outputBeginSublist();
-    void outputSublistSeparator();
-    void outputEndSublist();
-    void outputBeginDict();
-    void outputDictSeparator();
-    void outputDictValueSeparator();
-    void outputEndDict();
     const std::string *findValueForIndexing(const std::string &column_name);
     void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
     void findIntLimits(const std::string &column_name, int *lower, int *upper);

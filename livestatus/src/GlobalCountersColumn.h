@@ -28,7 +28,13 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
-class Query;
+class Renderer;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class GlobalCountersColumn : public Column {
     unsigned _counter_index;
@@ -44,7 +50,7 @@ public:
     ColumnType type() override {
         return _do_average ? ColumnType::double_ : ColumnType::int_;
     }
-    void output(void *, Query *) override;
+    void output(void *row, Renderer *renderer, contact *auth_user) override;
 };
 
 #endif  // GlobalCountersColumn_h

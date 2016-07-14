@@ -23,8 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "EmptyColumn.h"
-#include "Query.h"
+#include "Renderer.h"
 
-void EmptyColumn::output(void * /*data*/, Query *query) {
-    query->outputString("");
+void EmptyColumn::output(void* /* row */, Renderer* renderer,
+                         contact* /* auth_user */) {
+    renderer->outputString("");
 }

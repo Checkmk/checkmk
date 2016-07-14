@@ -29,7 +29,7 @@
 #include <string.h>
 #include <vector>
 #include "AttributelistFilter.h"
-#include "Query.h"
+#include "Renderer.h"
 #include "logger.h"
 #include "opids.h"
 #include "strutil.h"
@@ -72,26 +72,27 @@ int32_t AttributelistColumn::getValue(void *row, contact * /*unused*/) {
     return *reinterpret_cast<int32_t *>(ptr);
 }
 
-void AttributelistColumn::output(void *data, Query *query) {
-    unsigned long mask = static_cast<unsigned long>(getValue(data, nullptr));
+void AttributelistColumn::output(void *row, Renderer *renderer,
+                                 contact * /* auth_user */) {
+    unsigned long mask = static_cast<unsigned long>(getValue(row, nullptr));
     if (_show_list) {
         unsigned i = 0;
         bool first = true;
-        query->outputBeginList();
+        renderer->outputBeginList();
         while (al_entries[i].name != nullptr) {
             if ((mask & al_entries[i].bitvalue) != 0u) {
                 if (!first) {
-                    query->outputListSeparator();
+                    renderer->outputListSeparator();
                 } else {
                     first = false;
                 }
-                query->outputString(al_entries[i].name);
+                renderer->outputString(al_entries[i].name);
             }
             i++;
         }
-        query->outputEndList();
+        renderer->outputEndList();
     } else {
-        query->outputUnsignedLong(mask);
+        renderer->outputUnsignedLong(mask);
     }
 }
 

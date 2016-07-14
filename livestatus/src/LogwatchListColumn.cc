@@ -25,7 +25,7 @@
 #include "LogwatchListColumn.h"
 #include <dirent.h>
 #include <string.h>
-#include "Query.h"
+#include "Renderer.h"
 #include "mk_logwatch.h"
 
 #ifdef CMC
@@ -34,8 +34,9 @@
 #include "nagios.h"
 #endif
 
-void LogwatchListColumn::output(void *data, Query *query) {
-    data = shiftPointer(data);
+void LogwatchListColumn::output(void *row, Renderer *renderer,
+                                contact * /* auth_user */) {
+    void *data = shiftPointer(row);
     if (data == nullptr) {
         return;
     }
@@ -50,7 +51,7 @@ void LogwatchListColumn::output(void *data, Query *query) {
     host_name = hst->name;
 #endif
 
-    query->outputBeginList();
+    renderer->outputBeginList();
     std::string path = mk_logwatch_path_of_host(host_name);
     if (path != "") {
         DIR *dir = opendir(path.c_str());
@@ -73,11 +74,11 @@ void LogwatchListColumn::output(void *data, Query *query) {
                 if (first) {
                     first = false;
                 } else {
-                    query->outputListSeparator();
+                    renderer->outputListSeparator();
                 }
-                query->outputString(dep->d_name);
+                renderer->outputString(dep->d_name);
             }
         }
     }
-    query->outputEndList();
+    renderer->outputEndList();
 }

@@ -308,6 +308,7 @@
     * 3707 FIX: oracle_tablespaces: cleanup...
     * 3708 FIX: cisco_vpn_tunnel: fixed missing phase 2 data
     * 3556 FIX: agent_vsphere.pysphere: The ESX 4.1 compatible agent version no longer validates the ssl certificate
+    * 3709 FIX: cisco_wlc, cisco_wlc_clients: fixed scan function and incomplete listing of interfaces
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

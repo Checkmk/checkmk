@@ -16,6 +16,7 @@ def add_python_paths():
     sys.path.insert(0, os.path.dirname(__file__))
     # make the repo directory available (cmk lib)
     sys.path.insert(0, cmk_path())
+    print("Import path: %s" % " ".join(sys.path))
 
 
 # Some pre-testing to ensure the developer uses the correct branches in all involved repos

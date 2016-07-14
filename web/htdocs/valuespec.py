@@ -2640,6 +2640,8 @@ class Alternative(ValueSpec):
             except:
                 pass
 
+        return None, value
+
     def render_input(self, varprefix, value):
         if self._style == "radio":
             self.render_input_radio(varprefix, value)

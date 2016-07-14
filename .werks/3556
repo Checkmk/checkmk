@@ -1,0 +1,9 @@
+Title: agent_vsphere.pysphere: The ESX 4.1 compatible agent version no longer validates the ssl certificate
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1468485885
+Class: fix
+
+

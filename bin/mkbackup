@@ -300,6 +300,7 @@ def add_site_infos_to_backup_info(info):
 
 def add_system_info_to_backup_info(info):
     import cma
+    cma.load_config()
     info["cma_version"] = cma.version()
 
     if not cma.is_clustered():
@@ -948,7 +949,11 @@ def archive_suffix():
 
 def needed_backup_archive_files(info):
     if is_root():
-        needed_files = [ "system", "system-data" ]
+        needed_files = [ "system" ]
+
+        if not is_inactive_cluster_node():
+            needed_files.append("system-data")
+
         # Sites may have been deleted or new sites added. Site files archives are optional.
         #needed_files += [ "site-%s" % s for s in existing_sites() ]
     else:
@@ -1113,6 +1118,7 @@ def write_to_tarfile_threaded(pipeout_fd, base_path, exclude_patterns):
 # Whether or not the data filesystem is mounted (-> on active cluster nodes)
 def is_inactive_cluster_node():
     import cma
+    cma.load_config()
     return cma.inactive_cluster_node()
 
 

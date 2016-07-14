@@ -1611,6 +1611,18 @@ class PageBackupRestore(object):
 
     def _start_restore(self, backup_ident):
         backup_info = self._target.get_backup(backup_ident)
+
+        if "cma_cluster" in backup_info:
+            cluster = backup_info["cma_cluster"]
+            if cluster["is_inactive"]:
+                html.show_warning(_("This backup has been made from an <i>inactive</i> cluster "
+                    "node. Restoring such a backup will only restore the device "
+                    "configuration and <i>not your monitoring sites</i>.<br>"
+                    "<br>"
+                    "You may want to reconnect the restored host with it's partner "
+                    "node <i>%s</i> to get the monitored sites synchronized on this "
+                    "node."))
+
         if "encrypt" in backup_info["config"]:
             return self._start_encrypted_restore(backup_ident, backup_info)
         else:

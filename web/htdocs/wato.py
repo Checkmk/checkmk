@@ -7464,8 +7464,10 @@ def event_rule_match_conditions(flavour):
             ( 'f', _("Start or end of flapping state")),
             ( 's', _("Start or end of a scheduled downtime")),
             ( 'x', _("Acknowledgement of problem")),
+            ( 'as', _("Alert handler execution, successful")),
+            ( 'af', _("Alert handler execution, failed")),
         ]
-        add_default = [ 'f', 's', 'x' ]
+        add_default = [ 'f', 's', 'x', 'as', 'af' ]
     else:
         add_choices = []
         add_default = []

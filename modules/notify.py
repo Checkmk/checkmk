@@ -649,6 +649,12 @@ def rbn_match_event(context, state, last_state, events, allowed_events):
         event = 's'
     elif notification_type == "ACKNOWLEDGEMENT":
         event = 'x'
+    elif notification_type.startswith("ALERTHANDLER ("):
+        handler_state = notification_type[14:-1]
+        if handler_state == "OK":
+            event = 'as'
+        else:
+            event = 'af'
     else:
         event = events.get(last_state, '?') + events.get(state, '?')
 

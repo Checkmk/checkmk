@@ -46,8 +46,14 @@ def parse_cisco_wlc_clients(info):
     parsed = {}
     sum_clients = 0
     for name, interface, num_clients in info:
-        sum_clients += int(num_clients)
-        parsed[name] = (int(num_clients), interface)
+        sum_clients_name = int(num_clients)
+        sum_clients     += sum_clients_name
+
+        if name in parsed:
+           sum_clients_name += parsed[name][0]
+           interface         = parsed[name][1] + ", " + interface
+
+        parsed[name] = (sum_clients_name, "%s: %s" % (interface, num_clients))
 
     parsed["Summary"] = (sum_clients, "")
     return parsed
@@ -66,6 +72,7 @@ check_info["cisco_wlc_clients"] = {
                                     ".1.3.6.1.4.1.9.1.1631",
                                     ".1.3.6.1.4.1.14179.1.1.4.3",
                                     ".1.3.6.1.4.1.9.1.1279",
+                                    ".1.3.6.1.4.1.9.1.1293",
                               ],
     "snmp_info"             : ( ".1.3.6.1.4.1.14179.2.1.1.1",  [
                                     "2",

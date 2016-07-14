@@ -29,14 +29,17 @@
 #include "IntColumn.h"
 
 class IntPointerColumn : public IntColumn {
-    int *_number;
-
 public:
     IntPointerColumn(std::string name, std::string description, int *number,
                      int indirect_offset = -1, int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _number(number) {}
-    int32_t getValue(void *, Query *) override { return *_number; }
+    int32_t getValue(void * /* row */, contact * /* auth_user */) override {
+        return *_number;
+    }
+
+private:
+    int *_number;
 };
 
 #endif  // IntPointerColumn_h

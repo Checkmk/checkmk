@@ -32,14 +32,20 @@
 class Filter;
 class Query;
 
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
+
 class StringColumn : public Column {
 public:
     StringColumn(std::string name, std::string description, int indirect_offset,
                  int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
     virtual std::string getValue(void *data) const = 0;
-    std::string valueAsString(void *data, Query *) override {
-        return getValue(data);
+    std::string valueAsString(void *row, contact * /* auth_user */) override {
+        return getValue(row);
     }
     void output(void *, Query *) override;
     ColumnType type() override { return ColumnType::string; }

@@ -31,7 +31,6 @@
 #include "IntColumn.h"
 #include "ServicelistStateColumn.h"
 #include "nagios.h"
-class Query;
 
 #define HLSC_NUM_SVC SLSC_NUM
 #define HLSC_NUM_SVC_PENDING SLSC_NUM_PENDING
@@ -64,7 +63,7 @@ public:
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset)
         , _logictype(logictype) {}
-    int32_t getValue(void *data, Query *) override;
+    int32_t getValue(void *row, contact *auth_user) override;
     hostsmember *getMembers(void *data);
 };
 

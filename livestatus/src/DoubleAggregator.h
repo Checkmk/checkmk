@@ -26,20 +26,31 @@
 #define DoubleAggregator_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <cstdint>
 #include "Aggregator.h"
 class DoubleColumn;
-class Query;
 class Renderer;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class DoubleAggregator : public Aggregator {
 public:
-    DoubleAggregator(DoubleColumn *c, StatsOperation o)
-        : Aggregator(o), _column(c), _aggr(0), _sumq(0) {}
-    void consume(void *data, Query *) override;
-    void output(Renderer *) override;
+    DoubleAggregator(StatsOperation operation, DoubleColumn *column)
+        : Aggregator(operation)
+        , _column(column)
+        , _count(0)
+        , _aggr(0)
+        , _sumq(0) {}
+    void consume(void *row, contact *contact) override;
+    void output(Renderer *renderer) override;
 
 private:
-    DoubleColumn *_column;
+    DoubleColumn *const _column;
+    std::uint32_t _count;
     double _aggr;
     double _sumq;
 };

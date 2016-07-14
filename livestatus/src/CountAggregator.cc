@@ -26,11 +26,13 @@
 #include "Filter.h"
 #include "Renderer.h"
 
-void CountAggregator::consume(void* data, Query* /*unused*/) {
-    // _filter is 0 --> no filter, accept all data
-    if ((_filter == nullptr) || _filter->accepts(data)) {
+void CountAggregator::consume(void* row, contact* /* auth_user */) {
+    // _filter is 0 --> no filter, accept all rows
+    if (_filter == nullptr || _filter->accepts(row)) {
         _count++;
     }
 }
 
-void CountAggregator::output(Renderer* r) { r->outputInteger(_count); }
+void CountAggregator::output(Renderer* renderer) {
+    renderer->outputInteger(_count);
+}

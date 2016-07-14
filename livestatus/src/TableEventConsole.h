@@ -76,14 +76,14 @@ protected:
                            std::function<T(std::string)> f)
             : _name(name), _default_value(default_value), _f(f) {}
 
-        std::string getRaw(void *data) const {
-            auto row = static_cast<Row *>(data);
-            return row == nullptr ? "" : row->_map.at(_name);
+        std::string getRaw(void *row) const {
+            auto r = static_cast<Row *>(row);
+            return r == nullptr ? "" : r->_map.at(_name);
         }
 
-        T getValue(void *data) const {
-            auto row = static_cast<Row *>(data);
-            return row == nullptr ? _default_value : _f(row->_map.at(_name));
+        T getValue(void *row) const {
+            auto r = static_cast<Row *>(row);
+            return r == nullptr ? _default_value : _f(r->_map.at(_name));
         }
     };
 
@@ -95,8 +95,8 @@ protected:
             : StringColumn(name, description, -1, -1)
             , _ecc(name, std::string(), [](std::string x) { return x; }) {}
 
-        std::string getValue(void *data) const override {
-            return _ecc.getValue(data);
+        std::string getValue(void *row) const override {
+            return _ecc.getValue(row);
         }
     };
 
@@ -110,8 +110,8 @@ protected:
                 return static_cast<int32_t>(atol(x.c_str()));
             }) {}
 
-        int32_t getValue(void *data, Query *) override {
-            return _ecc.getValue(data);
+        int32_t getValue(void *row, contact * /* auth_user */) override {
+            return _ecc.getValue(row);
         }
     };
 
@@ -123,7 +123,7 @@ protected:
             : DoubleColumn(name, description, -1, -1)
             , _ecc(name, 0, [](std::string x) { return atof(x.c_str()); }) {}
 
-        double getValue(void *data) override { return _ecc.getValue(data); }
+        double getValue(void *row) override { return _ecc.getValue(row); }
     };
 
     class TimeEventConsoleColumn : public OffsetTimeColumn {
@@ -136,8 +136,8 @@ protected:
                 return static_cast<int32_t>(atof(x.c_str()));
             }) {}
 
-        int32_t getValue(void *data, Query *) override {
-            return _ecc.getValue(data);
+        int32_t getValue(void *row, contact * /* auth_user */) override {
+            return _ecc.getValue(row);
         }
     };
 
@@ -154,18 +154,14 @@ protected:
                            : mk::split(x.substr(1), '\001');
             }) {}
 
-        bool isNone(void *data) {
-            return _ecc.getRaw(data) == "\002";
-        }
+        bool isNone(void *row) { return _ecc.getRaw(row) == "\002"; }
 
-        _column_t getValue(void *data) {
-            return _ecc.getValue(data);
-        }
+        _column_t getValue(void *row) { return _ecc.getValue(row); }
 
-        void output(void *data, Query *query) override {
+        void output(void *row, Query *query) override {
             query->outputBeginList();
             bool first = true;
-            for (const auto &elem : _ecc.getValue(data)) {
+            for (const auto &elem : _ecc.getValue(row)) {
                 if (first) {
                     first = false;
                 } else {
@@ -176,9 +172,7 @@ protected:
             query->outputEndList();
         }
 
-        bool isEmpty(void *data) override {
-            return _ecc.getValue(data).empty();
-        }
+        bool isEmpty(void *row) override { return _ecc.getValue(row).empty(); }
 
         std::unique_ptr<Contains> makeContains(
             const std::string &name) override {

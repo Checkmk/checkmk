@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <string>
 #include "IntColumn.h"
-class Query;
+#include "nagios.h"
 
 #define SSIC_PNP_GRAPH_PRESENT 1
 
@@ -42,7 +42,7 @@ public:
                             int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _type(ssic_type) {}
-    int32_t getValue(void *data, Query *) override;
+    int32_t getValue(void *row, contact *auth_user) override;
 };
 
 #endif  // ServiceSpecialIntColumn_h

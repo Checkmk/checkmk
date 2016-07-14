@@ -30,7 +30,6 @@
 #include <string>
 #include "IntColumn.h"
 #include "nagios.h"
-class Query;
 
 class CustomTimeperiodColumn : public IntColumn {
     int _offset;  // within data structure (differs from host/service)
@@ -43,7 +42,7 @@ public:
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset)
         , _varname(varname) {}
-    int32_t getValue(void *data, Query *) override;
+    int32_t getValue(void *row, contact *auth_user) override;
 
 private:
     customvariablesmember *getCVM(void *data);

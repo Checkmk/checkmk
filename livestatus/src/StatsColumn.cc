@@ -46,16 +46,16 @@ Aggregator *StatsColumn::createAggregator() {
     }
     if (_column->type() == ColumnType::int_ ||
         _column->type() == ColumnType::time) {
-        return new IntAggregator(static_cast<IntColumn *>(_column), _operation);
+        return new IntAggregator(_operation, static_cast<IntColumn *>(_column));
     }
     if (_column->type() == ColumnType::double_) {
-        return new DoubleAggregator(static_cast<DoubleColumn *>(_column),
-                                    _operation);
+        return new DoubleAggregator(_operation,
+                                    static_cast<DoubleColumn *>(_column));
     }
     if (_column->type() == ColumnType::string and
         (ends_with(_column->name(), "perf_data") != 0)) {
-        return new PerfdataAggregator(static_cast<StringColumn *>(_column),
-                                      _operation);
+        return new PerfdataAggregator(_operation,
+                                      static_cast<StringColumn *>(_column));
     }  // unaggregateble column
     return new CountAggregator(_filter);
 }

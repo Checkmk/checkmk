@@ -26,21 +26,31 @@
 #define IntAggregator_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <stdint.h>
+#include <cstdint>
 #include "Aggregator.h"
 class IntColumn;
-class Query;
 class Renderer;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class IntAggregator : public Aggregator {
 public:
-    IntAggregator(IntColumn *c, StatsOperation o)
-        : Aggregator(o), _column(c), _aggr(0), _sumq(0) {}
-    void consume(void *data, Query *) override;
-    void output(Renderer *) override;
+    IntAggregator(StatsOperation operation, IntColumn *column)
+        : Aggregator(operation)
+        , _column(column)
+        , _count(0)
+        , _aggr(0)
+        , _sumq(0) {}
+    void consume(void *row, contact *auth_user) override;
+    void output(Renderer *renderer) override;
 
 private:
-    IntColumn *_column;
+    IntColumn *const _column;
+    std::uint32_t _count;
     int64_t _aggr;
     double _sumq;
 };

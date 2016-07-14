@@ -32,10 +32,10 @@
    stuff by using C++ templates and the like.
  */
 
-void DoubleAggregator::consume(void* data, Query* /*unused*/) {
+void DoubleAggregator::consume(void* row, contact* /* auth_user */) {
     _count++;
-    double value = _column->getValue(data);
-    switch (_operation) {
+    double value = _column->getValue(row);
+    switch (getOperation()) {
         case StatsOperation::sum:
         case StatsOperation::avg:
             _aggr += value;
@@ -71,29 +71,29 @@ void DoubleAggregator::consume(void* data, Query* /*unused*/) {
     }
 }
 
-void DoubleAggregator::output(Renderer* r) {
-    switch (_operation) {
+void DoubleAggregator::output(Renderer* renderer) {
+    switch (getOperation()) {
         case StatsOperation::sum:
         case StatsOperation::min:
         case StatsOperation::max:
         case StatsOperation::suminv:
-            r->outputDouble(_aggr);
+            renderer->outputDouble(_aggr);
             break;
 
         case StatsOperation::avg:
         case StatsOperation::avginv:
             if (_count == 0) {
-                r->outputDouble(0.0);
+                renderer->outputDouble(0.0);
             } else {
-                r->outputDouble(_aggr / _count);
+                renderer->outputDouble(_aggr / _count);
             }
             break;
 
         case StatsOperation::std:
             if (_count <= 1) {
-                r->outputDouble(0.0);
+                renderer->outputDouble(0.0);
             } else {
-                r->outputDouble(
+                renderer->outputDouble(
                     sqrt((_sumq - (_aggr * _aggr) / _count) / (_count - 1)));
             }
             break;

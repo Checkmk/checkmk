@@ -39,8 +39,8 @@ Filter *DoubleColumn::createFilter(Query *query, RelationalOperator relOp,
     return new DoubleFilter(query, this, relOp, value);
 }
 
-string DoubleColumn::valueAsString(void *data, Query * /*unused*/) {
+string DoubleColumn::valueAsString(void *row, contact * /* auth_user */) {
     char buf[64];
-    snprintf(buf, sizeof(buf), "%.10e", getValue(data));
+    snprintf(buf, sizeof(buf), "%.10e", getValue(row));
     return buf;
 }

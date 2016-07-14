@@ -26,22 +26,31 @@
 #define Aggregator_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <stdint.h>
 class Query;
 class Renderer;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 enum class StatsOperation { count, sum, min, max, avg, std, suminv, avginv };
 
 class Aggregator {
 public:
-    explicit Aggregator(StatsOperation o) : _operation(o), _count(0) {}
+    explicit Aggregator(StatsOperation operation) : _operation(operation) {}
     virtual ~Aggregator() = default;
-    virtual void consume(void *data, Query *) = 0;
-    virtual void output(Renderer *) = 0;
+    StatsOperation getOperation() const { return _operation; }
 
-protected:
+    // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is
+    // fixed, it is just an artifact.
+    virtual void consume(void *row, contact *auth_user) = 0;
+
+    virtual void output(Renderer *renderer) = 0;
+
+private:
     const StatsOperation _operation;
-    uint32_t _count;
 };
 
 #endif  // Aggregator_h

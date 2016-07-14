@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <string>
 #include "IntColumn.h"
-class Query;
+#include "nagios.h"
 
 #define HSIC_REAL_HARD_STATE 0
 #define HSIC_PNP_GRAPH_PRESENT 1
@@ -44,7 +44,7 @@ public:
                          int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _type(hsic_type) {}
-    int32_t getValue(void *data, Query *) override;
+    int32_t getValue(void *row, contact *auth_user) override;
 };
 
 #endif  // HostSpecialIntColumn_h

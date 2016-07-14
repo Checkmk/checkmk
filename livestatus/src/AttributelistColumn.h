@@ -34,15 +34,18 @@
 class Filter;
 class Query;
 
-/* Since this column can be of type COLTYPE_INT, it must
-   be a subclass of IntColumn, since StatsColumn assumes
-   Columns of the type COLTYPE_INT to be of that type.
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
+
+/* Since this column can be of type COLTYPE_INT, it must be a subclass of
+   IntColumn, since StatsColumn assumes Columns of the type COLTYPE_INT to be of
+   that type.
  */
 
 class AttributelistColumn : public IntColumn {
-    int _offset;
-    bool _show_list;
-
 public:
     AttributelistColumn(std::string name, std::string description, int offset,
                         int indirect_offset, bool show_list,
@@ -56,13 +59,17 @@ public:
     ColumnType type() override {
         return _show_list ? ColumnType::list : ColumnType::int_;
     }
-    std::string valueAsString(void *data, Query *) override;
+    std::string valueAsString(void *row, contact * /* auth_user */) override;
     void output(void *, Query *) override;
     Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
 
     // API of IntColumn
-    int32_t getValue(void *data, Query *) override;
+    int32_t getValue(void *row, contact *auth_user) override;
+
+private:
+    int _offset;
+    bool _show_list;
 };
 
 #endif  // AttributelistColumn_h

@@ -848,7 +848,7 @@ bool Query::processDataset(void *data) {
             }
 
             for (unsigned i = 0; i < _stats_columns.size(); i++) {
-                aggr[i]->consume(data, this);
+                aggr[i]->consume(data, _auth_user);
             }
 
             // No output is done while processing the data, we only collect
@@ -1029,7 +1029,7 @@ Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec) {
 void Query::computeStatsGroupSpec(Query::_stats_group_spec_t &groupspec,
                                   void *data) {
     for (auto column : _columns) {
-        groupspec.push_back(column->valueAsString(data, this));
+        groupspec.push_back(column->valueAsString(data, _auth_user));
     }
 }
 

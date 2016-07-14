@@ -24,9 +24,9 @@
 
 #include "StatusSpecialIntColumn.h"
 #include "mk_inventory.h"
-class Query;
 
-int32_t StatusSpecialIntColumn::getValue(void* /*data*/, Query* /*unused*/) {
+int32_t StatusSpecialIntColumn::getValue(void* /* row */,
+                                         contact* /* auth_user */) {
     switch (_type) {
         case SPIC_MK_INVENTORY_LAST:
             return mk_inventory_last_of_all();

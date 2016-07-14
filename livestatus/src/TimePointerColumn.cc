@@ -30,7 +30,7 @@
 using std::string;
 
 void TimePointerColumn::output(void *data, Query *query) {
-    query->outputTime(getValue(data, query));
+    query->outputTime(getValue(data, query->authUser()));
 }
 
 Filter *TimePointerColumn::createFilter(Query *query, RelationalOperator relOp,

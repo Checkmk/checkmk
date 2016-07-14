@@ -35,10 +35,11 @@ using std::string;
 
 extern char *macro_user[MAX_USER_MACROS];
 
-string OffsetStringMacroColumn::valueAsString(void *data, Query * /*unused*/) {
-    string raw = getValue(data);
-    host *hst = getHost(data);
-    service *svc = getService(data);
+string OffsetStringMacroColumn::valueAsString(void *row,
+                                              contact * /* auth_user */) {
+    string raw = getValue(row);
+    host *hst = getHost(row);
+    service *svc = getService(row);
 
     // search for macro names, beginning with $
     string result = "";
@@ -70,7 +71,7 @@ string OffsetStringMacroColumn::valueAsString(void *data, Query * /*unused*/) {
 }
 
 void OffsetStringMacroColumn::output(void *data, Query *query) {
-    string s = valueAsString(data, query);
+    string s = valueAsString(data, query->authUser());
     query->outputString(s.c_str());
 }
 

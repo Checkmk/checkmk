@@ -30,7 +30,7 @@
 using std::string;
 
 void OffsetTimeColumn::output(void *data, Query *query) {
-    query->outputTime(getValue(data, query));
+    query->outputTime(getValue(data, query->authUser()));
 }
 
 Filter *OffsetTimeColumn::createFilter(Query *query, RelationalOperator relOp,

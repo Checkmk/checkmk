@@ -31,7 +31,7 @@
 using std::string;
 
 void IntColumn::output(void *data, Query *query) {
-    query->outputInteger(getValue(data, query));
+    query->outputInteger(getValue(data, query->authUser()));
 }
 
 Filter *IntColumn::createFilter(Query *query, RelationalOperator relOp,
@@ -39,8 +39,8 @@ Filter *IntColumn::createFilter(Query *query, RelationalOperator relOp,
     return new IntFilter(query, this, relOp, value);
 }
 
-string IntColumn::valueAsString(void *data, Query *query) {
+string IntColumn::valueAsString(void *row, contact *auth_user) {
     char i[16];
-    snprintf(i, sizeof(i), "%d", getValue(data, query));
+    snprintf(i, sizeof(i), "%d", getValue(row, auth_user));
     return i;
 }

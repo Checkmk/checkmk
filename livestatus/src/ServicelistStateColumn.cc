@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServicelistStateColumn.h"
-#include "Query.h"
 #include "auth.h"
 
 // return true if state1 is worse than state2
@@ -54,8 +53,7 @@ servicesmember *ServicelistStateColumn::getMembers(void *data) {
 }
 
 int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem,
-                                         Query *query) {
-    contact *auth_user = query->authUser();
+                                         contact *auth_user) {
     int32_t result = 0;
 
     while (mem != nullptr) {
@@ -100,7 +98,6 @@ int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem,
     return result;
 }
 
-int32_t ServicelistStateColumn::getValue(void *data, Query *query) {
-    servicesmember *mem = getMembers(data);
-    return getValue(_logictype, mem, query);
+int32_t ServicelistStateColumn::getValue(void *row, contact *auth_user) {
+    return getValue(_logictype, getMembers(row), auth_user);
 }

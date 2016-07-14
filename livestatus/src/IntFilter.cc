@@ -28,6 +28,7 @@
 #include <utility>
 #include "IntColumn.h"
 #include "Logger.h"
+#include "Query.h"
 #include "opids.h"
 
 using std::move;
@@ -47,7 +48,7 @@ IntColumn *IntFilter::column() { return _column; }
 int32_t IntFilter::convertRefValue() const { return atoi(_ref_string.c_str()); }
 
 bool IntFilter::accepts(void *data) {
-    int32_t act_value = _column->getValue(data, query());
+    int32_t act_value = _column->getValue(data, query()->authUser());
     int32_t ref_value = convertRefValue();
     switch (_relOp) {
         case RelationalOperator::equal:

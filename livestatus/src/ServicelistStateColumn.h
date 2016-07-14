@@ -30,7 +30,6 @@
 #include <string>
 #include "IntColumn.h"
 #include "nagios.h"
-class Query;
 
 #define SLSC_NUM_OK 0
 #define SLSC_NUM_WARN 1
@@ -58,9 +57,10 @@ public:
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset)
         , _logictype(logictype) {}
-    int32_t getValue(void *data, Query *) override;
+    int32_t getValue(void *row, contact *auth_user) override;
     servicesmember *getMembers(void *data);
-    static int32_t getValue(int logictype, servicesmember *mem, Query *);
+    static int32_t getValue(int logictype, servicesmember *mem,
+                            contact *auth_user);
     static bool svcStateIsWorse(int32_t state1, int32_t state2);
 };
 

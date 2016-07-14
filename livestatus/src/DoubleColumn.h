@@ -32,6 +32,12 @@
 class Filter;
 class Query;
 
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
+
 class DoubleColumn : public Column {
 public:
     DoubleColumn(std::string name, std::string description, int indirect_offset,
@@ -40,7 +46,7 @@ public:
     virtual double getValue(void *data) = 0;
     void output(void *, Query *) override;
     ColumnType type() override { return ColumnType::double_; }
-    std::string valueAsString(void *data, Query *) override;
+    std::string valueAsString(void *row, contact * /* auth_user */) override;
     Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
 };

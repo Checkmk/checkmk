@@ -29,16 +29,21 @@
 #include <map>
 #include <string>
 #include "Aggregator.h"
-class Query;
 class Renderer;
 class StringColumn;
 
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
+
 class PerfdataAggregator : public Aggregator {
 public:
-    PerfdataAggregator(StringColumn *c, StatsOperation o)
-        : Aggregator(o), _column(c) {}
-    void consume(void *data, Query *) override;
-    void output(Renderer *) override;
+    PerfdataAggregator(StatsOperation operation, StringColumn *column)
+        : Aggregator(operation), _column(column) {}
+    void consume(void *row, contact *auth_user) override;
+    void output(Renderer *renderer) override;
 
 private:
     struct perf_aggr {
@@ -47,11 +52,10 @@ private:
         double _sumq;
     };
 
-    StringColumn *_column;
-    typedef std::map<std::string, perf_aggr> _aggr_t;
-    _aggr_t _aggr;
+    StringColumn *const _column;
+    std::map<std::string, perf_aggr> _aggr;
 
-    void consumeVariable(const char *varname, double value);
+    void consumeVariable(const std::string &varname, double value);
 };
 
 #endif  // PerfdataAggregator_h

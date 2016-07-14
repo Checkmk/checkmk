@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostlistStateColumn.h"
-#include "Query.h"
 #include "auth.h"
 
 static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
@@ -52,9 +51,8 @@ hostsmember *HostlistStateColumn::getMembers(void *data) {
                                              _offset);
 }
 
-int32_t HostlistStateColumn::getValue(void *data, Query *query) {
-    contact *auth_user = query->authUser();
-    hostsmember *mem = getMembers(data);
+int32_t HostlistStateColumn::getValue(void *row, contact *auth_user) {
+    hostsmember *mem = getMembers(row);
     int32_t result = 0;
     int state;
 
@@ -70,12 +68,12 @@ int32_t HostlistStateColumn::getValue(void *data, Query *query) {
                 case HLSC_NUM_SVC_UNKNOWN:
                 case HLSC_NUM_SVC:
                     result += ServicelistStateColumn::getValue(
-                        _logictype, hst->services, query);
+                        _logictype, hst->services, auth_user);
                     break;
 
                 case HLSC_WORST_SVC_STATE:
                     state = ServicelistStateColumn::getValue(
-                        _logictype, hst->services, query);
+                        _logictype, hst->services, auth_user);
                     if (ServicelistStateColumn::svcStateIsWorse(state,
                                                                 result)) {
                         result = state;

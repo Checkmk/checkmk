@@ -36,8 +36,8 @@
 using std::string;
 using std::vector;
 
-void PerfdataAggregator::consume(void *data, Query * /*unused*/) {
-    string perf_data = _column->getValue(data);
+void PerfdataAggregator::consume(void *row, contact * /* auth_user */) {
+    string perf_data = _column->getValue(row);
     vector<char> perf_data_vec(perf_data.begin(), perf_data.end());
     perf_data_vec.push_back('\0');
     char *scan = &perf_data_vec[0];
@@ -68,17 +68,17 @@ void PerfdataAggregator::consume(void *data, Query * /*unused*/) {
     }
 }
 
-void PerfdataAggregator::consumeVariable(const char *varname, double value) {
+void PerfdataAggregator::consumeVariable(const string &varname, double value) {
     auto it = _aggr.find(varname);
     if (it == _aggr.end()) {  // first entry
         perf_aggr new_entry;
         new_entry._aggr = value;
         new_entry._count = 1;
         new_entry._sumq = value * value;
-        _aggr.insert(make_pair(string(varname), new_entry));
+        _aggr.emplace(varname, new_entry);
     } else {
         it->second._count++;
-        switch (_operation) {
+        switch (getOperation()) {
             case StatsOperation::sum:
             case StatsOperation::avg:
                 it->second._aggr += value;
@@ -111,12 +111,12 @@ void PerfdataAggregator::consumeVariable(const char *varname, double value) {
     }
 }
 
-void PerfdataAggregator::output(Renderer *r) {
+void PerfdataAggregator::output(Renderer *renderer) {
     string perf_data;
     bool first = true;
     for (const auto &entry : _aggr) {
         double value;
-        switch (_operation) {
+        switch (getOperation()) {
             case StatsOperation::sum:
             case StatsOperation::min:
             case StatsOperation::max:
@@ -157,5 +157,5 @@ void PerfdataAggregator::output(Renderer *r) {
         }
         perf_data += format;
     }
-    r->outputString(perf_data.c_str(), -1);
+    renderer->outputString(perf_data.c_str(), -1);
 }

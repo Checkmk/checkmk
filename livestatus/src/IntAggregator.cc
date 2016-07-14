@@ -27,10 +27,10 @@
 #include "IntColumn.h"
 #include "Renderer.h"
 
-void IntAggregator::consume(void *data, Query *query) {
+void IntAggregator::consume(void *row, contact *auth_user) {
     _count++;
-    int32_t value = _column->getValue(data, query);
-    switch (_operation) {
+    int32_t value = _column->getValue(row, auth_user);
+    switch (getOperation()) {
         case StatsOperation::sum:
         case StatsOperation::avg:
             _aggr += value;
@@ -66,31 +66,31 @@ void IntAggregator::consume(void *data, Query *query) {
     }
 }
 
-void IntAggregator::output(Renderer *r) {
-    switch (_operation) {
+void IntAggregator::output(Renderer *renderer) {
+    switch (getOperation()) {
         case StatsOperation::sum:
         case StatsOperation::min:
         case StatsOperation::max:
-            r->outputInteger64(_aggr);
+            renderer->outputInteger64(_aggr);
             break;
 
         case StatsOperation::suminv:
-            r->outputInteger64(_sumq);
+            renderer->outputInteger64(_sumq);
             break;
 
         case StatsOperation::avg:
-            r->outputDouble(double(_aggr) / _count);
+            renderer->outputDouble(double(_aggr) / _count);
             break;
 
         case StatsOperation::avginv:
-            r->outputInteger64(_sumq / _count);
+            renderer->outputInteger64(_sumq / _count);
             break;
 
         case StatsOperation::std:
             if (_count <= 1) {
-                r->outputDouble(0.0);
+                renderer->outputDouble(0.0);
             } else {
-                r->outputDouble(sqrt(
+                renderer->outputDouble(sqrt(
                     (_sumq -
                      (static_cast<double>(_aggr) * static_cast<double>(_aggr)) /
                          _count) /

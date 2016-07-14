@@ -29,13 +29,18 @@
 #include <sys/types.h>
 #include <string>
 #include "OffsetIntColumn.h"
-class Query;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class OffsetTimeperiodColumn : public OffsetIntColumn {
 public:
     OffsetTimeperiodColumn(std::string, std::string, int,
                            int indirect_offset = -1, int extra_offset = -1);
-    int32_t getValue(void *data, Query *) override;
+    int32_t getValue(void *row, contact *auth_user) override;
 };
 
 #endif  // OffsetTimeperiodColumn_h

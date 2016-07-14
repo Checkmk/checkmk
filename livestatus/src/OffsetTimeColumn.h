@@ -33,9 +33,9 @@
 class Filter;
 class Query;
 
-/* We are using IntColumn in order to implement a column
-   of type time. This does almost the same as the time column,
-   but applies a timezone offset stored in the Query. */
+/* We are using IntColumn in order to implement a column of type time. This does
+   almost the same as the time column, but applies a timezone offset stored in
+   the Query. */
 
 class OffsetTimeColumn : public OffsetIntColumn {
 public:

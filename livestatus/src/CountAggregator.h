@@ -26,20 +26,27 @@
 #define CountAggregator_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <cstdint>
 #include "Aggregator.h"
 class Filter;
-class Query;
 class Renderer;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class CountAggregator : public Aggregator {
 public:
-    explicit CountAggregator(Filter *f)
-        : Aggregator(StatsOperation::count), _filter(f) {}
-    void consume(void *data, Query *) override;
-    void output(Renderer *) override;
+    explicit CountAggregator(Filter *filter)
+        : Aggregator(StatsOperation::count), _filter(filter), _count(0) {}
+    void consume(void *row, contact *contact) override;
+    void output(Renderer *renderer) override;
 
 private:
-    Filter *_filter;
+    Filter *const _filter;
+    std::uint32_t _count;
 };
 
 #endif  // CountAggregator_h

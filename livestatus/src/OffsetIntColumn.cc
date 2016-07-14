@@ -24,8 +24,8 @@
 
 #include "OffsetIntColumn.h"
 
-int32_t OffsetIntColumn::getValue(void *data, Query * /*unused*/) {
-    char *p = reinterpret_cast<char *>(shiftPointer(data));
+int32_t OffsetIntColumn::getValue(void *row, contact * /* auth_user */) {
+    char *p = reinterpret_cast<char *>(shiftPointer(row));
     if (p == nullptr) {
         return 0;
     }

@@ -33,16 +33,27 @@
 class Filter;
 class Query;
 
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
+
 class IntColumn : public Column {
 public:
     IntColumn(std::string name, std::string description, int indirect_offset,
               int extra_offset, int extra_extra_offset = -1)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset) {}
-    virtual int32_t getValue(void *data, Query *) = 0;
+
+    // TODO(sp) Get rid of the contact* parameter, it doesn't really belong here
+    // and is only used in ServicelistStateColumn and HostlistStateColumn for
+    // questionable purposes...
+    virtual int32_t getValue(void *row, contact *auth_user) = 0;
+
     void output(void *, Query *) override;
     ColumnType type() override { return ColumnType::int_; }
-    std::string valueAsString(void *data, Query *) override;
+    std::string valueAsString(void *row, contact *auth_user) override;
     Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;
 };

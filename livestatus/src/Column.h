@@ -31,6 +31,12 @@
 class Filter;
 class Query;
 
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
+
 enum class ColumnType { int_, double_, string, list, time, dict, blob, null };
 
 class Column {
@@ -49,7 +55,12 @@ public:
     const char *description() const { return _description.c_str(); }
     void *shiftPointer(void *data) const;
 
-    virtual std::string valueAsString(void *, Query *) { return "invalid"; }
+    // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is
+    // fixed, it is just an artifact.
+    virtual std::string valueAsString(void * /* row */,
+                                      contact * /* auth_user */) {
+        return "invalid";
+    }
     virtual ColumnType type() = 0;
     virtual void output(void *data, Query *) = 0;
     virtual bool mustDelete() {

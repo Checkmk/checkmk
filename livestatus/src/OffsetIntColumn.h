@@ -29,20 +29,24 @@
 #include <sys/types.h>
 #include <string>
 #include "IntColumn.h"
-class Query;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class OffsetIntColumn : public IntColumn {
-    int _offset;
-
 public:
     OffsetIntColumn(std::string name, std::string description, int offset,
                     int indirect_offset = -1, int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset) {}
-    int32_t getValue(void *data, Query *) override;
+    int32_t getValue(void *row, contact *auth_user) override;
+    int offset() const { return _offset; }
 
-protected:
-    int offset() { return _offset; }
+private:
+    const int _offset;
 };
 
 #endif  // OffsetIntColumn_h

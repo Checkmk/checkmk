@@ -41,7 +41,7 @@ public:
                              extra_offset) {}
     // reimplement several functions from StringColumn
 
-    std::string valueAsString(void *data, Query *) override;
+    std::string valueAsString(void *row, contact *auth_user) override;
     void output(void *data, Query *) override;
     Filter *createFilter(Query *query, RelationalOperator relOp,
                          const std::string &value) override;

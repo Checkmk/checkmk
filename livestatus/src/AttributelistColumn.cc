@@ -31,7 +31,6 @@
 #include "AttributelistFilter.h"
 #include "Query.h"
 #include "logger.h"
-#include "nagios.h"
 #include "opids.h"
 #include "strutil.h"
 class Filter;
@@ -64,8 +63,8 @@ struct al_entry al_entries[] = {
     {"notification_timeperiod", MODATTR_NOTIFICATION_TIMEPERIOD},
     {nullptr, 0}};
 
-int32_t AttributelistColumn::getValue(void *data, Query * /*unused*/) {
-    char *p = reinterpret_cast<char *>(shiftPointer(data));
+int32_t AttributelistColumn::getValue(void *row, contact * /*unused*/) {
+    char *p = reinterpret_cast<char *>(shiftPointer(row));
     if (p == nullptr) {
         return 0;
     }
@@ -96,8 +95,9 @@ void AttributelistColumn::output(void *data, Query *query) {
     }
 }
 
-string AttributelistColumn::valueAsString(void *data, Query * /*unused*/) {
-    unsigned long mask = static_cast<unsigned long>(getValue(data, nullptr));
+string AttributelistColumn::valueAsString(void *row,
+                                          contact * /* auth_user */) {
+    unsigned long mask = static_cast<unsigned long>(getValue(row, nullptr));
     char s[16];
     snprintf(s, 16, "%lu", mask);
     return string(s);

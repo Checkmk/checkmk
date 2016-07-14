@@ -29,7 +29,12 @@
 #include <stdint.h>
 #include <string>
 #include "IntColumn.h"
-class Query;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 #define SPIC_MK_INVENTORY_LAST 0
 
@@ -41,7 +46,7 @@ public:
                            int indirect_offset = -1, int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _type(type) {}
-    int32_t getValue(void *, Query *) override;
+    int32_t getValue(void *row, contact *auth_user) override;
 };
 
 #endif  // StatusSpecialIntColumn_h

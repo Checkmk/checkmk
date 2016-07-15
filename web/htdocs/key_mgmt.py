@@ -102,10 +102,15 @@ class PageKeyManagement(object):
 
     def buttons(self):
         self._back_button()
-        html.context_button(_("Create Key"), html.makeuri_contextless(
-                                      [("mode", self.edit_mode)]), "new")
-        html.context_button(_("Upload Key"), html.makeuri_contextless(
-                                      [("mode", self.upload_mode)]), "new")
+        if self._may_edit_config():
+            html.context_button(_("Create Key"), html.makeuri_contextless(
+                                          [("mode", self.edit_mode)]), "new")
+            html.context_button(_("Upload Key"), html.makeuri_contextless(
+                                          [("mode", self.upload_mode)]), "new")
+
+
+    def _may_edit_config(self):
+        return True
 
 
     def _back_button(self):
@@ -113,7 +118,7 @@ class PageKeyManagement(object):
 
 
     def action(self):
-        if html.has_var("_delete"):
+        if self._may_edit_config() and html.has_var("_delete"):
             key_id = int(html.var("_delete"))
             if key_id not in self.keys:
                 return
@@ -159,8 +164,9 @@ class PageKeyManagement(object):
 
             table.row()
             table.cell(_("Actions"), css="buttons")
-            delete_url = html.makeactionuri([("_delete", key_id)])
-            html.icon_button(delete_url, _("Delete this key"), "delete")
+            if self._may_edit_config():
+                delete_url = html.makeactionuri([("_delete", key_id)])
+                html.icon_button(delete_url, _("Delete this key"), "delete")
             download_url = html.makeuri_contextless([
                                     ("mode", self.download_mode), ("key", key_id)])
             html.icon_button(download_url, _("Download this key"), "download")

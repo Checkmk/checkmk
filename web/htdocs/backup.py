@@ -59,8 +59,13 @@ import cmk.render as render
 #   | specific configuration of the site backup.                           |
 #   '----------------------------------------------------------------------'
 
+
+def is_site():
+    return "OMD_ROOT" in os.environ
+
+
 def mkbackup_path():
-    if "OMD_ROOT" not in os.environ:
+    if not is_site():
         return "/usr/sbin/mkbackup"
     else:
         return "%s/bin/mkbackup" % os.environ["OMD_ROOT"]
@@ -70,13 +75,9 @@ def system_config_path():
     return "/etc/cma/backup.conf"
 
 
-def system_key_path():
-    return "/etc/cma/backup_keys.conf"
-
-
 def site_config_path(site_id=None):
     if site_id == None:
-        if "OMD_SITE" not in os.environ:
+        if not is_site():
             raise Exception(_("Not executed in OMD environment!"))
         site_id = os.environ["OMD_SITE"]
 
@@ -323,7 +324,7 @@ class Job(MKBackupJob, BackupEntity):
 
 
     def state_file_path(self):
-        if "OMD_ROOT" not in os.environ:
+        if not is_site():
             path = "/var/lib/mkbackup"
         else:
             path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
@@ -400,7 +401,7 @@ class Jobs(BackupEntityCollection):
         self._cronjob_path = "%s/cron.d/mkbackup" % etc_path
 
 
-    def show_list(self):
+    def show_list(self, editable=True):
         html.write("<h2>%s</h2>" % _("Jobs"))
         table.begin(sortable=False, searchable=False)
 
@@ -416,7 +417,7 @@ class Jobs(BackupEntityCollection):
 
             state = job.state()
 
-            if not job.is_running():
+            if editable and not job.is_running():
                 html.icon_button(edit_url, _("Edit this backup job"), "edit")
                 html.icon_button(delete_url, _("Delete this backup job"), "delete")
 
@@ -535,8 +536,13 @@ class PageBackup(object):
         self.home_button()
         html.context_button(_("Backup targets"), html.makeuri_contextless([("mode", "backup_targets")]), "backup_targets")
         html.context_button(_("Backup keys"), html.makeuri_contextless([("mode", "backup_keys")]), "backup_key")
-        html.context_button(_("New job"), html.makeuri_contextless([("mode", "edit_backup_job")]), "backup_job_new")
+        if self._may_edit_config():
+            html.context_button(_("New job"), html.makeuri_contextless([("mode", "edit_backup_job")]), "backup_job_new")
         html.context_button(_("Restore"), html.makeuri_contextless([("mode", "backup_restore")]), "backup_restore")
+
+
+    def _may_edit_config(self):
+        return True
 
 
     def action(self):
@@ -556,7 +562,7 @@ class PageBackup(object):
             if not html.check_transaction():
                 return
 
-        if action == "delete":
+        if action == "delete" and self._may_edit_config():
             return self._delete_job(job)
 
         elif action == "start":
@@ -594,7 +600,7 @@ class PageBackup(object):
 
     def page(self):
         show_key_download_warning(self.keys().load())
-        self.jobs().show_list()
+        self.jobs().show_list(editable=self._may_edit_config())
 
 
 
@@ -860,18 +866,6 @@ class PageBackupJobState(object):
         html.write("</table>")
 
 
-
-class SystemBackupJobs(Jobs):
-    def __init__(self):
-        super(SystemBackupJobs, self).__init__(system_config_path())
-
-
-    def _write_cronjob_header(self, f):
-        super(SystemBackupJobs, self)._write_cronjob_header(f)
-        f.write("PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin\n")
-
-
-
 #.
 #   .--Targets-------------------------------------------------------------.
 #   |                  _____                    _                          |
@@ -975,7 +969,7 @@ class Targets(BackupEntityCollection):
     def show_list(self, title=None, editable=True):
         title = title if title else _("Targets")
         html.write("<h2>%s</h2>" % title)
-        if not editable:
+        if not editable and is_site():
             html.write("<p>%s</p>" % _("These backup targets can not be edited here. You need to "
                                        "open the device backup management."))
 
@@ -1031,7 +1025,8 @@ class PageBackupTargets(object):
 
     def buttons(self):
         html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
-        html.context_button(_("New backup target"), html.makeuri_contextless([
+        if self._may_edit_config():
+            html.context_button(_("New backup target"), html.makeuri_contextless([
                                     ("mode", "edit_backup_target")]), "backup_target_edit")
 
 
@@ -1062,7 +1057,11 @@ class PageBackupTargets(object):
 
     def page(self):
         self.targets().show_list()
-        SystemBackupTargets().show_list(editable=False, title=_("System global targets"))
+        SystemBackupTargetsReadOnly().show_list(editable=False, title=_("System global targets"))
+
+
+    def _may_edit_config(self):
+        return True
 
 
 
@@ -1181,14 +1180,15 @@ class PageEditBackupTarget(object):
 
 
 
-class SystemBackupTargets(Targets):
+class SystemBackupTargetsReadOnly(Targets):
     def __init__(self):
-        super(SystemBackupTargets, self).__init__(system_config_path())
+        super(SystemBackupTargetsReadOnly, self).__init__(system_config_path())
 
 
+    # Only show the list on CMA devices
     def show_list(self, *args, **kwargs):
         if is_cma():
-            super(SystemBackupTargets, self).show_list(*args, **kwargs)
+            super(SystemBackupTargetsReadOnly, self).show_list(*args, **kwargs)
 
 
 #.
@@ -1469,12 +1469,6 @@ def show_key_download_warning(keys):
                             "can not be restored.<br>"
                             "The following keys have not been downloaded yet: %s") % ", ".join(to_load))
 
-
-
-class SystemBackupKeypairStore(BackupKeypairStore):
-    def __init__(self):
-        super(SystemBackupKeypairStore, self).__init__(system_key_path(), "keys")
-
 #.
 #   .--Restore-------------------------------------------------------------.
 #   |                  ____           _                                    |
@@ -1499,7 +1493,7 @@ class RestoreJob(MKBackupJob):
 
 
     def state_file_path(self):
-        if "OMD_SITE" not in os.environ:
+        if not is_site():
             return "/var/lib/mkbackup/restore.state"
         else:
             return "/tmp/restore-%s.state" % os.environ["OMD_SITE"]

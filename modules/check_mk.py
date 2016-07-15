@@ -576,6 +576,18 @@ def is_ipv4v6_host(hostname):
     tags = tags_of_host(hostname)
     return "ip-v6" in tags and "ip-v4" in tags
 
+def has_management_board(hostname):
+    return "management_protocol" in host_attributes.get(hostname, {})
+
+def management_address(hostname):
+    if 'management_address' in host_attributes.get(hostname, {}):
+        return host_attributes[hostname]['management_address']
+    else:
+        return ipaddresses.get(hostname)
+
+def management_protocol(hostname):
+    return host_attributes[hostname]['management_protocol']
+
 
 # Returns a list of all host names, regardless if currently
 # disabled or monitored on a remote site. Does not return
@@ -1551,6 +1563,14 @@ def schedule_inventory_check(hostname):
 # the snmp_default_community is returned (wich is preset with
 # "public", but can be overridden in main.mk
 def snmp_credentials_of(hostname):
+    # TODO: this works under the assumption that we can't have the management
+    #  board and the host itself queried through snmp.
+    #  The alternative is a lengthy and errorprone refactoring of the whole check-
+    #  call hierarchy to get the credentials passed around.
+    if has_management_board(hostname)\
+            and management_protocol(hostname) == "snmp":
+        return host_attributes.get(hostname, {}).get("management_snmp_community", "public")
+
     try:
         return explicit_snmp_communities[hostname]
     except KeyError:
@@ -1769,7 +1789,7 @@ def get_single_oid(hostname, ipaddress, oid):
     else:
         try:
             if is_inline_snmp_host(hostname):
-                value = inline_snmp_get_oid(hostname, oid)
+                value = inline_snmp_get_oid(hostname, oid, ipaddress=ipaddress)
             else:
                 value = snmp_get_oid(hostname, ipaddress, oid)
         except:
@@ -1922,7 +1942,8 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
 
         # Skip SNMP checks for non SNMP hosts (might have been discovered before with other
         # agent setting. Remove them without rediscovery). Same for agent based checks.
-        if not is_snmp_host(hostname) and is_snmp_check(checkname):
+        if not is_snmp_host(hostname) and is_snmp_check(checkname) \
+            and (not has_management_board(hostname) or management_protocol(hostname) != "snmp"):
             return
         if not is_tcp_host(hostname) and not has_piggyback_info(hostname) \
            and is_tcp_check(checkname):
@@ -2135,6 +2156,44 @@ g_failed_ip_lookups = []
 g_dns_cache = {}
 g_global_caches.append('g_dns_cache')
 
+def cached_dns_lookup(hostname, family):
+    # Address has already been resolved in prior call to this function?
+    if (hostname, family) in g_dns_cache:
+        return g_dns_cache[(hostname, family)]
+
+    # Prepare file based fall-back DNS cache in case resolution fails
+    init_ip_lookup_cache()
+
+    cached_ip = g_ip_lookup_cache.get((hostname, family))
+    if cached_ip and use_dns_cache:
+        g_dns_cache[(hostname, family)] = cached_ip
+        return cached_ip
+
+    # Now do the actual DNS lookup
+    try:
+        ipa = socket.getaddrinfo(hostname, None, family == 4 and socket.AF_INET or socket.AF_INET6)[0][4][0]
+
+        # Update our cached address if that has changed or was missing
+        if ipa != cached_ip:
+            if opt_verbose:
+                print "Updating IPv%d DNS cache for %s: %s" % (family, hostname, ipa)
+            g_ip_lookup_cache[(hostname, family)] = ipa
+            write_ip_lookup_cache()
+
+        g_dns_cache[(hostname, family)] = ipa # Update in-memory-cache
+        return ipa
+
+    except:
+        # DNS failed. Use cached IP address if present, even if caching
+        # is disabled.
+        if cached_ip:
+            g_dns_cache[(hostname, family)] = cached_ip
+            return cached_ip
+        else:
+            g_dns_cache[(hostname, family)] = None
+            raise
+
+
 def lookup_ipv4_address(hostname):
     return lookup_ip_address(hostname, 4)
 
@@ -2176,41 +2235,8 @@ def lookup_ip_address(hostname, family=None):
     if in_binary_hostlist(hostname, dyndns_hosts):
         return hostname
 
-    # Address has already been resolved in prior call to this function?
-    if (hostname, family) in g_dns_cache:
-        return g_dns_cache[(hostname, family)]
+    return cached_dns_lookup(hostname, family)
 
-    # Prepare file based fall-back DNS cache in case resolution fails
-    init_ip_lookup_cache()
-
-    cached_ip = g_ip_lookup_cache.get((hostname, family))
-    if cached_ip and use_dns_cache:
-        g_dns_cache[(hostname, family)] = cached_ip
-        return cached_ip
-
-    # Now do the actual DNS lookup
-    try:
-        ipa = socket.getaddrinfo(hostname, None, family == 4 and socket.AF_INET or socket.AF_INET6)[0][4][0]
-
-        # Update our cached address if that has changed or was missing
-        if ipa != cached_ip:
-            if opt_verbose:
-                print "Updating IPv%d DNS cache for %s: %s" % (family, hostname, ipa)
-            g_ip_lookup_cache[(hostname, family)] = ipa
-            write_ip_lookup_cache()
-
-        g_dns_cache[(hostname, family)] = ipa # Update in-memory-cache
-        return ipa
-
-    except:
-        # DNS failed. Use cached IP address if present, even if caching
-        # is disabled.
-        if cached_ip:
-            g_dns_cache[(hostname, family)] = cached_ip
-            return cached_ip
-        else:
-            g_dns_cache[(hostname, family)] = None
-            raise
 
 g_global_caches.append('g_ip_lookup_cache')
 def init_ip_lookup_cache():
@@ -2403,7 +2429,6 @@ skipped_config_variable_names = [
     "contacts",
     "host_paths",
     "timeperiods",
-    "host_attributes",
     "all_hosts_untagged",
     "all_clusters_untagged",
     "extra_service_conf",

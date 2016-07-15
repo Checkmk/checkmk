@@ -596,8 +596,23 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
                 if opt_debug:
                     raise
                 info.append(None)
-
     return info
+
+def is_ipaddress(address):
+    try:
+        socket.inet_pton(socket.AF_INET, address)
+        return True
+    except socket.error:
+        # not a ipv4 address
+        pass
+
+    try:
+        socket.inet_pton(socket.AF_INET6, address)
+        return True
+    except socket.error:
+        # no ipv6 address either
+        return False
+
 
 #.
 #   .--Discovery-----------------------------------------------------------.
@@ -611,6 +626,33 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
 #   |  Core code of actual service discovery                               |
 #   '----------------------------------------------------------------------'
 
+
+# gather auto_discovered check_types for this host
+def gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan):
+    check_types = []
+    if is_snmp_host(hostname):
+
+        # May we do an SNMP scan?
+        if do_snmp_scan:
+            try:
+                check_types = snmp_scan(hostname, ipaddress, on_error)
+            except Exception, e:
+                if on_error == "raise":
+                    raise
+                elif on_error == "warn":
+                    sys.stderr.write("SNMP scan failed: %s" % e)
+
+        # Otherwise use all check types that we already have discovered
+        # previously
+        else:
+            for check_type, item, params in read_autochecks_of(hostname):
+                if check_type not in check_types and check_uses_snmp(check_type):
+                    check_types.append(check_type)
+
+    if is_tcp_host(hostname) or has_piggyback_info(hostname):
+        check_types += discoverable_check_types('tcp')
+
+    return check_types
 
 
 # Create a table of autodiscovered services of a host. Do not save
@@ -638,34 +680,38 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
 # "warn"   -> output a warning on stderr
 # "raise"  -> let the exception come through
 def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error, ipaddress=None):
+    services = []
+    if has_management_board(hostname):
+        protocol = management_protocol(hostname)
+        address = management_address(hostname)
+        if not is_ipaddress(address):
+            family = is_ipv6_primary(hostname) and 6 or 4
+            address = cached_dns_lookup(address, family)
+
+        if protocol == "snmp":
+            try:
+                management_check_types = snmp_scan(hostname, address, on_error)
+            except Exception, e:
+                if on_error == "raise":
+                    raise
+                elif on_error == "warn":
+                    sys.stderr.write("SNMP scan failed: %s" % e)
+
+            services = discover_services_impl(hostname, management_check_types, use_caches,
+                                              on_error, address, True)
+
     if ipaddress == None:
         ipaddress = lookup_ip_address(hostname)
 
     # Check types not specified (via --checks=)? Determine automatically
     if not check_types:
-        check_types = []
-        if is_snmp_host(hostname):
+        check_types = gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan)
 
-            # May we do an SNMP scan?
-            if do_snmp_scan:
-                try:
-                    check_types = snmp_scan(hostname, ipaddress, on_error)
-                except Exception, e:
-                    if on_error == "raise":
-                        raise
-                    elif on_error == "warn":
-                        sys.stderr.write("SNMP scan failed: %s" % e)
+    return services + discover_services_impl(hostname, check_types, use_caches, on_error, ipaddress)
 
-            # Otherwise use all check types that we already have discovered
-            # previously
-            else:
-                for check_type, item, params in read_autochecks_of(hostname):
-                    if check_type not in check_types and check_uses_snmp(check_type):
-                        check_types.append(check_type)
 
-        if is_tcp_host(hostname) or has_piggyback_info(hostname):
-            check_types += discoverable_check_types('tcp')
-
+def discover_services_impl(hostname, check_types, use_caches, on_error,
+                           ipaddress, use_snmp=None):
     # Make hostname available as global variable in discovery functions
     # (used e.g. by ps-discovery)
     global g_hostname
@@ -675,7 +721,8 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error,
     try:
         for check_type in check_types:
             try:
-                for item, paramstring in discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
+                for item, paramstring in discover_check_type(hostname, ipaddress, check_type,
+                                                             use_caches, on_error, use_snmp):
                     discovered_services.append((check_type, item, paramstring))
             except (KeyboardInterrupt, MKAgentError, MKSNMPError, MKTimeout):
                 raise
@@ -683,7 +730,6 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error,
                 if opt_debug:
                     raise
                 raise MKGeneralException("Exception in check plugin '%s': %s" % (check_type, e))
-
         return discovered_services
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
@@ -782,13 +828,15 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
     found.sort()
     return found
 
-def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error):
+def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, use_snmp=None):
     # Skip this check type if is ignored for that host
     if service_ignored(hostname, check_type, None):
         return []
 
+    if use_snmp is None:
+        use_snmp = is_snmp_host(hostname)
     # Skip SNMP checks on non-SNMP hosts
-    if check_uses_snmp(check_type) and not is_snmp_host(hostname):
+    if check_uses_snmp(check_type) and not use_snmp:
         return []
 
     try:

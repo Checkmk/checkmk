@@ -1390,7 +1390,6 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
     g_aggregated_service_results = {}
     global g_hostname
     g_hostname = hostname
-    num_success = 0
     error_sections = set([])
     check_table = get_precompiled_check_table(hostname, remove_duplicates=True,
                                     world=opt_keepalive and "active" or "config")
@@ -1398,9 +1397,9 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
 
     parsed_infos = {} # temporary cache for section infos, maybe parsed
 
-    for checkname, item, params, description, aggrname in check_table:
+    def execute_check(checkname, item, params, description, aggrname, ipaddress):
         if only_check_types != None and checkname not in only_check_types:
-            continue
+            return False
 
         # Make a bit of context information globally available, so that functions
         # called by checks now this context
@@ -1413,7 +1412,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
         period = check_period_of(hostname, description)
         if period and not check_timeperiod(period):
             verbose("Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
-            continue
+            return False
 
         elif period:
             vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))
@@ -1427,21 +1426,21 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
                 parsed_infos[infotype] = info
 
         except MKSkipCheck, e:
-            continue
+            return False
 
         except MKSNMPError, e:
             if str(e):
                 problems.append(str(e))
             error_sections.add(infotype)
             g_broken_snmp_hosts.add(hostname)
-            continue
+            return False
 
         except MKAgentError, e:
             if str(e):
                 problems.append(str(e))
             error_sections.add(infotype)
             g_broken_agent_hosts.add(hostname)
-            continue
+            return False
 
         except MKParseFunctionError, e:
             info = e
@@ -1452,10 +1451,9 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
         if info == [] and check_uses_snmp(checkname) \
            and not check_info[checkname]["handle_empty_info"]:
             error_sections.add(infotype)
-            continue
+            return False
 
         if info or info == []:
-            num_success += 1
             try:
                 check_function = check_info[checkname]["check_function"]
             except:
@@ -1500,8 +1498,30 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
 
                 submit_check_result(hostname, description, result, aggrname,
                                     cached_at=oldest_cached_at, cache_interval=largest_interval)
+            return True
         else:
             error_sections.add(infotype)
+            return False
+
+    num_success = 0
+
+    if has_management_board(hostname):
+        # this assumes all snmp checks belong to the management board if there is one with snmp
+        # protocol. If at some point we support having both host and management board queried
+        # through snmp we have to decide which check belongs where at discovery time and change
+        # all data structures, including in the nagios interface...
+        is_management_snmp = management_protocol(hostname) == "snmp"
+        management_addr = management_address(hostname)
+    else:
+        is_management_snmp = False
+
+    for checkname, item, params, description, aggrname in check_table:
+        if is_snmp_check(checkname) and is_management_snmp:
+            res = execute_check(checkname, item, params, description, aggrname, management_addr)
+        else:
+            res = execute_check(checkname, item, params, description, aggrname, ipaddress)
+        if res:
+            num_success += 1
 
     submit_aggregated_results(hostname)
 

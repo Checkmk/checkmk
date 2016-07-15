@@ -31,7 +31,7 @@
 #   and rename to better name
 # - Checkbox -> rename to Boolean
 
-import math, os, time, re, sre_constants, urlparse, forms
+import math, os, time, re, sre_constants, urlparse, forms, tempfile
 from lib import *
 
 def type_name(v):
@@ -3696,7 +3696,6 @@ class TimeofdayRanges(Transform):
         )
 
 
-
 class Color(ValueSpec):
     def __init__(self, **kwargs):
         kwargs["regex"] = "#[0-9]{3,6}"
@@ -3751,3 +3750,75 @@ class Color(ValueSpec):
     def validate_value(self, value, varprefix):
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You need to select a color."))
+
+
+class SSHKeyPair(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+
+
+    def render_input(self, varprefix, value):
+        if value:
+            html.write(_("Fingerprint: %s") % self.value_to_text(value))
+            html.hidden_field(varprefix, self._encode_key_for_url(value))
+        else:
+            html.write(_("Key pair will be generated when you save."))
+
+
+    def value_to_text(self, value):
+        return self._get_key_fingerprint(value)
+
+
+    def from_html_vars(self, varprefix):
+        if html.has_var(varprefix):
+            return self._decode_key_from_url(html.var(varprefix))
+        else:
+            return self._generate_ssh_key(varprefix)
+
+    @staticmethod
+    def _encode_key_for_url(value):
+        return "|".join(value)
+
+
+    @staticmethod
+    def _decode_key_from_url(text):
+        return text.split("|")
+
+
+    @classmethod
+    def _generate_ssh_key(clazz, varprefix):
+        tmp_file_name_base = clazz._tmp_file_name()
+        private_key_file = tmp_file_name_base + ".key"
+        public_key_file = private_key_file + ".pub"
+        f = os.popen("echo | ssh-keygen -t rsa -b 4096 -f %s 2>&1" %
+                     quote_shell_string(private_key_file))
+        output = f.read()
+        status = f.close()
+        os.remove(tmp_file_name_base)
+        if status:
+            os.remove(private_key_file)
+            os.remove(public_key_file)
+            raise MKUserError(varprefix, _("Failed to create SSH key pair: %s" % output))
+        private_key = file(private_key_file).read()
+        public_key = file(public_key_file).read()
+        os.remove(private_key_file)
+        os.remove(public_key_file)
+        return (private_key, public_key)
+
+
+    @classmethod
+    def _get_key_fingerprint(clazz, value):
+        private_key, public_key = value
+        tmp_file_name = clazz._tmp_file_name()
+        file(tmp_file_name + ".pub", "w").write(public_key)
+        line = os.popen("ssh-keygen -lf %s" % quote_shell_string(tmp_file_name)).read()
+        os.remove(tmp_file_name)
+        #   4096 ff:ac:2b:b0:2a:12:84:f5:94:ae:7a:36:9e:73:a4:0f heute@Klappfisch (RSA)
+        return line.split()[1]
+
+
+    @staticmethod
+    def _tmp_file_name():
+        fd, path = tempfile.mkstemp(dir=defaults.tmp_dir)
+        os.close(fd)
+        return path

@@ -4976,6 +4976,7 @@ load_checks()
 opt_nowiki     = False
 opt_split_rrds = False
 opt_delete_rrds = False
+opt_log_to_stdout = False
 
 # Do option parsing and execute main function -
 short_options = 'ASHVLCURODMmd:Ic:nhvpXPNBilf'
@@ -4990,7 +4991,8 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "man", "nowiki", "config-check", "backup=", "restore=",
                  "check-inventory=", "check-discovery=", "discover-marked-hosts", "paths",
                  "checks=", "inventory", "inventory-as-check=", "hw-changes=", "sw-changes=", "sw-missing=",
-                 "inv-fail-status=", "cmc-file=", "browse-man", "list-man", "update-dns-cache", "cap", "real-time-checks" ]
+                 "inv-fail-status=", "cmc-file=", "browse-man", "list-man", "update-dns-cache", "cap", "real-time-checks",
+                 "log-to-stdout"]
 
 non_config_options = ['-L', '--list-checks', '-P', '--package', '-M',
                       '--handle-alerts', '--notify', '--real-time-checks',
@@ -5078,6 +5080,8 @@ for o,a in opts:
         opt_inv_sw_missing = int(a)
     elif o == "--inv-fail-status":
         opt_inv_fail_status = int(a)
+    elif o == "--log-to-stdout":
+        opt_log_to_stdout = True
 
 # Perform actions (major modes)
 try:

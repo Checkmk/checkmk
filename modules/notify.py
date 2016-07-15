@@ -1191,7 +1191,8 @@ def call_notification_script(plugin, plugin_context):
             line = p.stdout.readline()
             if line != '':
                 plugin_log("Output: %s" % line.rstrip().decode('utf-8'))
-                sys.stdout.write(line)
+                if opt_log_to_stdout:
+                    sys.stdout.write(line)
             else:
                 break
         # the stdout is closed but the return code may not be available just yet - wait for the

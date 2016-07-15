@@ -226,119 +226,122 @@ void Renderer::outputBlob(const vector<char> *blob) {
     }
 }
 
-// len = -1 -> use strlen(), len >= 0: consider output as blob, do not handle
-// UTF-8.
-void Renderer::outputString(const char *value, int len) {
-    // TODO(sp) Move stuff here...
-    switch (_format) {
-        case OutputFormat::csv:
-            break;
-        case OutputFormat::json:
-            break;
-        case OutputFormat::python:
-            break;
-    }
-    if (value == nullptr) {
-        if (_format != OutputFormat::csv) {
-            add("\"\"");
+void Renderer::outputChars(const char *value, int len) {
+    add("\"");
+    const char *r = value;
+    int chars_left = len >= 0 ? len : strlen(r);
+    while (chars_left != 0) {
+        // Always escape control characters (1..31)
+        if (*r < 32 && *r >= 0) {
+            if (len < 0) {
+                outputUnicodeEscape(static_cast<unsigned>(*r));
+            } else {
+                outputAsciiEscape(*r);
+            }
         }
-        return;
-    }
 
-    if (_format == OutputFormat::csv) {
-        add(value);
-
-    } else  // JSON or PYTHON
-    {
-        if (_format == OutputFormat::python && len < 0) {
-            add("u");  // mark strings as unicode
+        // Output ASCII characters unencoded
+        else if (*r >= 32 || len >= 0) {
+            if (*r == '"' || *r == '\\') {
+                add("\\");
+            }
+            add(string(r, 1));
         }
-        add("\"");
-        const char *r = value;
-        int chars_left = len >= 0 ? len : strlen(r);
-        while (chars_left != 0) {
-            // Always escape control characters (1..31)
-            if (*r < 32 && *r >= 0) {
-                if (len < 0) {
-                    outputUnicodeEscape(static_cast<unsigned>(*r));
-                } else {
-                    outputAsciiEscape(*r);
-                }
-            }
 
-            // Output ASCII characters unencoded
-            else if (*r >= 32 || len >= 0) {
-                if (*r == '"' || *r == '\\') {
-                    add("\\");
-                }
-                add(string(r, 1));
-            }
+        // interprete two-Byte UTF-8 sequences in mode 'utf8' and 'mixed'
+        else if ((g_data_encoding == ENCODING_UTF8 ||
+                  g_data_encoding == ENCODING_MIXED) &&
+                 ((*r & 0xE0) == 0xC0)) {
+            outputUnicodeEscape(((*r & 31) << 6) |
+                                (*(r + 1) & 0x3F));  // 2 byte encoding
+            r++;
+            chars_left--;
+        }
 
-            // interprete two-Byte UTF-8 sequences in mode 'utf8' and 'mixed'
-            else if ((g_data_encoding == ENCODING_UTF8 ||
-                      g_data_encoding == ENCODING_MIXED) &&
-                     ((*r & 0xE0) == 0xC0)) {
-                outputUnicodeEscape(((*r & 31) << 6) |
-                                    (*(r + 1) & 0x3F));  // 2 byte encoding
-                r++;
-                chars_left--;
-            }
-
-            // interprete 3/4-Byte UTF-8 sequences only in mode 'utf8'
-            else if (g_data_encoding == ENCODING_UTF8) {
-                // three-byte sequences (avoid buffer overflow!)
-                if ((*r & 0xF0) == 0xE0) {
-                    if (chars_left < 3) {
-                        if (g_debug_level >= 2) {
-                            Informational()
-                                << "Ignoring invalid UTF-8 sequence in string '"
-                                << string(value) << "'";
-                        }
-                        break;  // end of string. No use in continuing
-                    } else {
-                        outputUnicodeEscape(((*r & 0x0F) << 12 |
-                                             (*(r + 1) & 0x3F) << 6 |
-                                             (*(r + 2) & 0x3F)));
-                        r += 2;
-                        chars_left -= 2;
-                    }
-                }
-                // four-byte sequences
-                else if ((*r & 0xF8) == 0xF0) {
-                    if (chars_left < 4) {
-                        if (g_debug_level >= 2) {
-                            Informational()
-                                << "Ignoring invalid UTF-8 sequence in string '"
-                                << string(value) << "'";
-                        }
-                        break;  // end of string. No use in continuing
-                    } else {
-                        outputUnicodeEscape(
-                            ((*r & 0x07) << 18 | (*(r + 1) & 0x3F) << 6 |
-                             (*(r + 2) & 0x3F) << 6 | (*(r + 3) & 0x3F)));
-                        r += 3;
-                        chars_left -= 3;
-                    }
-                } else {
+        // interprete 3/4-Byte UTF-8 sequences only in mode 'utf8'
+        else if (g_data_encoding == ENCODING_UTF8) {
+            // three-byte sequences (avoid buffer overflow!)
+            if ((*r & 0xF0) == 0xE0) {
+                if (chars_left < 3) {
                     if (g_debug_level >= 2) {
                         Informational()
                             << "Ignoring invalid UTF-8 sequence in string '"
                             << string(value) << "'";
                     }
+                    break;  // end of string. No use in continuing
+                } else {
+                    outputUnicodeEscape(((*r & 0x0F) << 12 |
+                                         (*(r + 1) & 0x3F) << 6 |
+                                         (*(r + 2) & 0x3F)));
+                    r += 2;
+                    chars_left -= 2;
                 }
             }
-
-            // in latin1 and mixed mode interprete all other non-ASCII
-            // characters as latin1
-            else {
-                outputUnicodeEscape(static_cast<unsigned>(
-                    static_cast<int>(*r) + 256));  // assume latin1 encoding
+            // four-byte sequences
+            else if ((*r & 0xF8) == 0xF0) {
+                if (chars_left < 4) {
+                    if (g_debug_level >= 2) {
+                        Informational()
+                            << "Ignoring invalid UTF-8 sequence in string '"
+                            << string(value) << "'";
+                    }
+                    break;  // end of string. No use in continuing
+                } else {
+                    outputUnicodeEscape(
+                        ((*r & 0x07) << 18 | (*(r + 1) & 0x3F) << 6 |
+                         (*(r + 2) & 0x3F) << 6 | (*(r + 3) & 0x3F)));
+                    r += 3;
+                    chars_left -= 3;
+                }
+            } else {
+                if (g_debug_level >= 2) {
+                    Informational()
+                        << "Ignoring invalid UTF-8 sequence in string '"
+                        << string(value) << "'";
+                }
             }
-
-            r++;
-            chars_left--;
         }
-        add("\"");
+
+        // in latin1 and mixed mode interprete all other non-ASCII
+        // characters as latin1
+        else {
+            outputUnicodeEscape(static_cast<unsigned>(
+                static_cast<int>(*r) + 256));  // assume latin1 encoding
+        }
+
+        r++;
+        chars_left--;
+    }
+    add("\"");
+}
+
+// len = -1 -> use strlen(), len >= 0: consider output as blob, do not handle
+// UTF-8.
+void Renderer::outputString(const char *value, int len) {
+    switch (_format) {
+        case OutputFormat::csv:
+            if (value == nullptr) {
+                return;
+            }
+            add(value);
+            break;
+        case OutputFormat::json:
+            if (value == nullptr) {
+                add("\"\"");
+                return;
+            }
+            outputChars(value, len);
+            break;
+        case OutputFormat::python:
+            if (value == nullptr) {
+                add("\"\"");
+                return;
+            }
+            if (len < 0) {
+                add("u");  // mark strings as unicode
+            }
+            outputChars(value, len);
+            break;
     }
 }
 

@@ -86,6 +86,8 @@ private:
     const std::string _list_separator;
     const std::string _host_service_separator;
     const int _timezone_offset;
+
+    void outputChars(const char *value, int len);
 };
 
 #endif  // Renderer_h

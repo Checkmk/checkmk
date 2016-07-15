@@ -73,42 +73,82 @@ void Renderer::add(const string &str) { _output->add(str); }
 void Renderer::add(const vector<char> &blob) { _output->add(blob); }
 
 void Renderer::startOfQuery() {
-    if (_format != OutputFormat::csv) {
-        add("[");
+    switch (_format) {
+        case OutputFormat::csv:
+            break;
+        case OutputFormat::json:
+            add("[");
+            break;
+        case OutputFormat::python:
+            add("[");
+            break;
     }
 }
 
 void Renderer::outputDataSetSeparator() {
-    if (_format != OutputFormat::csv) {
-        add(",\n");
+    switch (_format) {
+        case OutputFormat::csv:
+            break;
+        case OutputFormat::json:
+            add(",\n");
+            break;
+        case OutputFormat::python:
+            add(",\n");
+            break;
     }
 }
 
 void Renderer::endOfQuery() {
-    if (_format != OutputFormat::csv) {
-        add("]\n");
+    switch (_format) {
+        case OutputFormat::csv:
+            break;
+        case OutputFormat::json:
+            add("]\n");
+            break;
+        case OutputFormat::python:
+            add("]\n");
+            break;
     }
 }
 
 void Renderer::outputDatasetBegin() {
-    if (_format != OutputFormat::csv) {
-        add("[");
+    switch (_format) {
+        case OutputFormat::csv:
+            break;
+        case OutputFormat::json:
+            add("[");
+            break;
+        case OutputFormat::python:
+            add("[");
+            break;
     }
 }
 
 void Renderer::outputDatasetEnd() {
-    if (_format == OutputFormat::csv) {
-        add(_dataset_separator);
-    } else {
-        add("]");
+    switch (_format) {
+        case OutputFormat::csv:
+            add(_dataset_separator);
+            break;
+        case OutputFormat::json:
+            add("]");
+            break;
+        case OutputFormat::python:
+            add("]");
+            break;
     }
 }
 
 void Renderer::outputFieldSeparator() {
-    if (_format == OutputFormat::csv) {
-        add(_field_separator);
-    } else {
-        add(",");
+    switch (_format) {
+        case OutputFormat::csv:
+            add(_field_separator);
+            break;
+        case OutputFormat::json:
+            add(",");
+            break;
+        case OutputFormat::python:
+            add(",");
+            break;
     }
 }
 
@@ -137,12 +177,16 @@ void Renderer::outputDouble(double value) {
 }
 
 void Renderer::outputNull() {
-    if (_format == OutputFormat::csv) {
-        // output empty cell
-    } else if (_format == OutputFormat::python) {
-        add("None");
-    } else {
-        add("null");  // JSON
+    switch (_format) {
+        case OutputFormat::csv:
+            // output empty cell
+            break;
+        case OutputFormat::json:
+            add("null");
+            break;
+        case OutputFormat::python:
+            add("None");
+            break;
     }
 }
 
@@ -159,22 +203,41 @@ void Renderer::outputUnicodeEscape(unsigned value) {
 }
 
 void Renderer::outputBlob(const vector<char> *blob) {
-    if (_format != OutputFormat::csv) {
-        if (blob != nullptr) {
-            outputString(&(*blob)[0], blob->size());
-        } else {
-            outputNull();
-        }
-    } else {
-        if (blob != nullptr) {
-            add(*blob);
-        }
+    switch (_format) {
+        case OutputFormat::csv:
+            if (blob != nullptr) {
+                add(*blob);
+            }
+            break;
+        case OutputFormat::json:
+            if (blob != nullptr) {
+                outputString(&(*blob)[0], blob->size());
+            } else {
+                outputNull();
+            }
+            break;
+        case OutputFormat::python:
+            if (blob != nullptr) {
+                outputString(&(*blob)[0], blob->size());
+            } else {
+                outputNull();
+            }
+            break;
     }
 }
 
-// len = -1 -> use strlen(), len >= 0: consider
-// output as blob, do not handle UTF-8.
+// len = -1 -> use strlen(), len >= 0: consider output as blob, do not handle
+// UTF-8.
 void Renderer::outputString(const char *value, int len) {
+    // TODO(sp) Move stuff here...
+    switch (_format) {
+        case OutputFormat::csv:
+            break;
+        case OutputFormat::json:
+            break;
+        case OutputFormat::python:
+            break;
+    }
     if (value == nullptr) {
         if (_format != OutputFormat::csv) {
             add("\"\"");
@@ -280,63 +343,123 @@ void Renderer::outputString(const char *value, int len) {
 }
 
 void Renderer::outputBeginList() {
-    if (_format != OutputFormat::csv) {
-        add("[");
+    switch (_format) {
+        case OutputFormat::csv:
+            break;
+        case OutputFormat::json:
+            add("[");
+            break;
+        case OutputFormat::python:
+            add("[");
+            break;
     }
 }
 
 void Renderer::outputListSeparator() {
-    if (_format == OutputFormat::csv) {
-        add(_list_separator);
-    } else {
-        add(",");
+    switch (_format) {
+        case OutputFormat::csv:
+            add(_list_separator);
+            break;
+        case OutputFormat::json:
+            add(",");
+            break;
+        case OutputFormat::python:
+            add(",");
+            break;
     }
 }
 
 void Renderer::outputEndList() {
-    if (_format != OutputFormat::csv) {
-        add("]");
+    switch (_format) {
+        case OutputFormat::csv:
+            break;
+        case OutputFormat::json:
+            add("]");
+            break;
+        case OutputFormat::python:
+            add("]");
+            break;
     }
 }
 
 void Renderer::outputBeginSublist() {
-    if (_format != OutputFormat::csv) {
-        add("[");
+    switch (_format) {
+        case OutputFormat::csv:
+            break;
+        case OutputFormat::json:
+            add("[");
+            break;
+        case OutputFormat::python:
+            add("[");
+            break;
     }
 }
 
 void Renderer::outputSublistSeparator() {
-    if (_format == OutputFormat::csv) {
-        add(_host_service_separator);
-    } else {
-        add(",");
+    switch (_format) {
+        case OutputFormat::csv:
+            add(_host_service_separator);
+            break;
+        case OutputFormat::json:
+            add(",");
+            break;
+        case OutputFormat::python:
+            add(",");
+            break;
     }
 }
 
 void Renderer::outputEndSublist() {
-    if (_format != OutputFormat::csv) {
-        add("]");
+    switch (_format) {
+        case OutputFormat::csv:
+            break;
+        case OutputFormat::json:
+            add("]");
+            break;
+        case OutputFormat::python:
+            add("]");
+            break;
     }
 }
 
 void Renderer::outputBeginDict() {
-    if (_format != OutputFormat::csv) {
-        add("{");
+    switch (_format) {
+        case OutputFormat::csv:
+            break;
+        case OutputFormat::json:
+            add("{");
+            break;
+        case OutputFormat::python:
+            add("{");
+            break;
     }
 }
 
 void Renderer::outputDictSeparator() { outputListSeparator(); }
 
 void Renderer::outputDictValueSeparator() {
-    if (_format == OutputFormat::csv) {
-        add(_host_service_separator);
-    } else {
-        add(":");
+    switch (_format) {
+        case OutputFormat::csv:
+            add(_host_service_separator);
+            break;
+        case OutputFormat::json:
+            add(":");
+            break;
+        case OutputFormat::python:
+            add(":");
+            break;
     }
 }
 
 void Renderer::outputEndDict() {
-    if (_format != OutputFormat::csv) {
-        add("}");
+    switch (_format) {
+        case OutputFormat::csv:
+            break;
+        case OutputFormat::json:
+            add("}");
+            break;
+        case OutputFormat::python:
+            add("}");
+            break;
     }
 }

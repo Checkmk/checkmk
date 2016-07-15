@@ -65,16 +65,6 @@ except getopt.GetoptError, err:
     sys.exit(1)
 
 
-if len(args) == 1:
-    hostname = args[0]
-elif not args:
-    sys.stderr.write("ERROR: No host given.\n")
-    sys.exit(1)
-else:
-    sys.stderr.write("ERROR: Please specify exactly one host.\n")
-    sys.exit(1)
-
-
 for o, a in opts:
     if o in [ '--help' ]:
         usage()
@@ -87,6 +77,16 @@ for o, a in opts:
         password = a
     elif o in [ '-l' ]:
         privilege_lvl = a
+
+
+if len(args) == 1:
+    hostname = args[0]
+elif not args:
+    sys.stderr.write("ERROR: No host given.\n")
+    sys.exit(1)
+else:
+    sys.stderr.write("ERROR: Please specify exactly one host.\n")
+    sys.exit(1)
 
 
 if not (username and password and privilege_lvl):

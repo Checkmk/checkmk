@@ -97,7 +97,7 @@ def check_http_arguments(params):
         user, password = settings["auth"]
         if password.startswith("store:"):
             group, password = password[6:].split(":", 1)
-            args += ' -a %s:%s --password-safe %s' %\
+            args += ' -a %s:%s --password-store %s' %\
                 (quote_shell_string(user), quote_shell_string(password),
                  quote_shell_string(group))
         else:

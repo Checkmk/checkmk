@@ -1540,10 +1540,9 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
     else:
         agent_version = None
 
-    error_sections = list(error_sections)
-    error_sections.sort()
+    error_section_list = sorted(list(error_sections))
 
-    return agent_version, num_success, error_sections, ", ".join(problems)
+    return agent_version, num_success, error_section_list, ", ".join(problems)
 
 
 # Create a crash dump with a backtrace and the agent output.

@@ -951,7 +951,7 @@ def needed_backup_archive_files(info):
     if is_root():
         needed_files = [ "system" ]
 
-        if not is_inactive_cluster_node():
+        if not is_inactive_cluster_backup(info):
             needed_files.append("system-data")
 
         # Sites may have been deleted or new sites added. Site files archives are optional.
@@ -1098,7 +1098,7 @@ def do_system_data_backup(opts):
 
         # Write to buffer in dedicated thread
         t = threading.Thread(target=lambda: write_to_tarfile_threaded(
-                                                pipeout_fd, "/opt/omd", ["sites/*"]))
+                                                pipeout_fd, "/omd", ["sites/*"]))
         t.daemon = True
         t.start()
 
@@ -1120,6 +1120,14 @@ def is_inactive_cluster_node():
     import cma
     cma.load_config()
     return cma.inactive_cluster_node()
+
+
+def is_cluster_backup(info):
+    return info.get("cma_cluster", {}).get("clustered", False)
+
+
+def is_inactive_cluster_backup(info):
+    return "cma_cluster" in info and info["cma_cluster"]["is_inactive"]
 
 
 def existing_sites():
@@ -1356,6 +1364,7 @@ def do_restore(opts, info):
     complete_restore()
 
     if "no-reboot" not in opts and is_root():
+        log("--- Rebooting device now ---")
         do_system_restart()
 
 
@@ -1416,6 +1425,7 @@ def do_site_restore(opts, info, site=None):
 def do_system_restore(opts, info):
     verify_cma_version_compatible(info)
     prepare_system_restore()
+    prepare_cluster_environment(info)
 
     # Perform restore of the /rw volume
     log("Performing system restore (system%s)" % archive_suffix())
@@ -1424,14 +1434,19 @@ def do_system_restore(opts, info):
     cleanup_system_rw_files(system_rw_files_before, system_rw_files_restored)
     log("Finished system restore")
 
+    if is_cluster_backup(info):
+        setup_cluster_environment(info)
+
     # In case this backup was taken from an inactive cluster node, the restore is complete
-    if is_inactive_cluster_node():
+    if is_inactive_cluster_backup(info):
         log("Skipping system data restore (inactive cluster node)")
         log("Skipping site restore (inactive cluster node)")
         return
 
+    verify_data_volume_is_mounted()
+
     log("Performing system data restore (system-data%s)" % archive_suffix())
-    cleanup_directory_contents("/opt/omd", excludes=["/opt/omd/lost+found"])
+    cleanup_directory_contents("/omd", excludes=["/omd/lost+found"])
     do_system_data_restore(opts, info)
     log("Finished system data restore")
 
@@ -1448,6 +1463,72 @@ def do_system_restore(opts, info):
         log("Performing site restore: %s" % site_id)
         do_site_restore(opts, info, site=site_id)
     log("Finished site restore")
+
+
+def verify_data_volume_is_mounted():
+    import cma
+
+    count = 0
+    is_mounted = cma.is_mounted("/omd")
+    while count < 10 and not is_mounted:
+        time.sleep(1)
+        count += 1
+        is_mounted = cma.is_mounted("/omd")
+
+    if not is_mounted:
+        raise MKGeneralException("The data volume is not mounted")
+
+
+def prepare_cluster_environment(info):
+    import cma
+    cma.load_config()
+
+    if cma.is_cluster_configured() and not is_cluster_backup(info):
+        # Is it currently set-up as cluster node and backup is not clustered: Erase drbd metadata
+        log("Erasing DRBD metadata (will restore non-cluster backup)")
+        if os.system("yes yes | drbdadm wipe-md omd >/dev/null") >> 8 != 0:
+            raise MKGeneralException("Failed to erase DRBD metadata")
+
+    if is_cluster_backup(info) and cma.is_mounted("/omd"):
+        if not cma.execute("umount -f /omd"):
+            raise MKGeneralException("Failed to free the data volume")
+
+
+def setup_cluster_environment(info):
+    log("Setting up cluster environment")
+
+    import cma
+    cma.load_config()
+
+    # To be able to start the DRBD volume we need to have the IP
+    # addresses configured in the DRBD config active. Simply activate
+    # all IP addresses of the host on eth0. Will be cleaned up by reboot.
+    enable_drbd_ip_addresses()
+
+    cma.initialize_drbd()
+
+    if not is_inactive_cluster_backup(info):
+        cma.drbd_make_primary()
+        cma.execute('mount /dev/drbd/by-res/omd /omd')
+
+
+def enable_drbd_ip_addresses():
+    import cma, cma_net
+    cma.load_config()
+    cma_net.load_config()
+
+    drbd_if = cma.cfg("cluster")['drbd_if']
+    config = cma_net.current_interface_config(drbd_if)
+    if cma_net.is_vlan_config(config):
+        return None
+    elif cma_net.is_vlan_interface(drbd_if):
+        config = config["ip"]
+
+    address, netmask = config["ipaddress"], config["netmask"]
+
+    log("Enabling DRBD network address (%s: %s/%s)" % (drbd_if, address, netmask))
+
+    os.system("ip a a %s/%s dev eth0" % (address, netmask))
 
 
 def verify_cma_version_compatible(info):
@@ -1483,31 +1564,15 @@ def cleanup_system_rw_files(files_before, files_restored):
 
 
 def prepare_system_restore():
+    import cma
+    log("Cleaning up Check_MK processess and temporary filesystems")
+    cma.free_omd_ressources(graceful=False)
+
     log("Cleaning up (eventual running) cluster processess")
-    cleanup_cluster_processes(graceful=False)
-
-    log("Cleaning up Check_MK processess")
-    # don't fail when OMD not installed/working
-    if os.system("if which omd >/dev/null 2>&1; then "
-                 "  omd stop; "
-                 "fi") >> 8 != 0:
-        raise MKGeneralException("Failed to stop Check_MK processes. Skipping restore.")
-
-    log("Cleaning up Check_MK temporary filesystems")
-    # don't fail when OMD not installed/working
-    if os.system("if which omd >/dev/null 2>&1; then "
-                 "  omd umount --kill; "
-                 "fi") >> 8 != 0:
-        raise MKGeneralException("Failed to unmount Check_MK temporary filesystems. "
-                                 "Skipping restore.")
-
+    cma.cleanup_cluster_processes(graceful=False)
 
     log("Cleaning up system processess")
     cleanup_system_processes()
-
-    if is_inactive_cluster_node():
-        log("Skipping system data cleanup (inactive cluster node)")
-        return
 
 
 def cleanup_directory_contents(base_path, excludes=None):
@@ -1519,25 +1584,6 @@ def cleanup_directory_contents(base_path, excludes=None):
                 shutil.rmtree(path)
             else:
                 os.remove(path)
-
-
-# TODO: Duplicate code with webconfd
-def cleanup_cluster_processes(graceful=False):
-    # Stop the cluster resource manager and all resouces etc.
-    if os.system('pgrep corosync >/dev/null 2>&1') == 0:
-        if graceful:
-            os.system('/etc/init.d/corosync stop')
-
-        else:
-            # allowed to do some stupid things
-            os.system('killall -9 corosync')
-            os.system('killall -u hacluster')
-
-    # Normally drbd is stopped by corosync, but we ensure it is not running anymore
-    if os.path.exists('/proc/drbd'):
-        os.system('/etc/init.d/drbd stop')
-    if os.path.exists('/proc/drbd'):
-        os.system('rmmod drbd')
 
 
 def cleanup_system_processes():

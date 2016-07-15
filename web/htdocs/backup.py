@@ -1639,7 +1639,7 @@ class PageBackupRestore(object):
 
                     html.check_transaction() # invalidate transid
                     RestoreJob(self._target_ident, backup_ident).start(passphrase)
-                    return None, _("The restore has been started.")
+                    return "backup_restore_state", _("The restore has been started.")
             except MKUserError, e:
                 html.add_user_error(e.varname, e)
 
@@ -1684,7 +1684,7 @@ class PageBackupRestore(object):
                         add_header=self.title(), method="GET"):
             html.check_transaction() # invalidate transid
             RestoreJob(self._target_ident, backup_ident).start()
-            return None, _("The restore has been started.")
+            return "backup_restore_state", _("The restore has been started.")
 
 
     def _stop_restore(self, backup_ident):

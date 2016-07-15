@@ -31,7 +31,6 @@
 #include <string>
 #include "Filter.h"
 class FilterVisitor;
-class Query;
 
 enum class LogicalOperator { and_, or_ };
 
@@ -39,21 +38,19 @@ class VariadicFilter : public Filter {
 public:
     typedef std::deque<Filter *> _subfilters_t;
 
-    static std::unique_ptr<VariadicFilter> make(Query *query,
-                                                LogicalOperator logicOp);
+    static std::unique_ptr<VariadicFilter> make(LogicalOperator logicOp);
     virtual ~VariadicFilter();
     void accept(FilterVisitor &v) override;
     void addSubfilter(Filter *);
     Filter *stealLastSubfiler();
-    void combineFilters(Query *query, int count, LogicalOperator andor);
+    void combineFilters(int count, LogicalOperator andor);
     bool hasSubFilters() { return !_subfilters.empty(); }
     _subfilters_t::iterator begin() { return _subfilters.begin(); }
     _subfilters_t::iterator end() { return _subfilters.end(); }
     void findIntLimits(const std::string &colum_nname, int *lower,
-                       int *upper) const override;
+                       int *upper, int timezone_offset) const override;
 
 protected:
-    explicit VariadicFilter(Query *query);
     _subfilters_t _subfilters;
 };
 

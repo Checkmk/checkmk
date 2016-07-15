@@ -35,18 +35,15 @@ using std::string;
 using std::unique_ptr;
 
 // static
-unique_ptr<VariadicFilter> VariadicFilter::make(Query *query,
-                                                LogicalOperator logicOp) {
+unique_ptr<VariadicFilter> VariadicFilter::make(LogicalOperator logicOp) {
     switch (logicOp) {
         case LogicalOperator::and_:
-            return make_unique<AndingFilter>(query);
+            return make_unique<AndingFilter>();
         case LogicalOperator::or_:
-            return make_unique<OringFilter>(query);
+            return make_unique<OringFilter>();
     }
     return nullptr;  // unreachable
 }
-
-VariadicFilter::VariadicFilter(Query *query) : Filter(query) {}
 
 VariadicFilter::~VariadicFilter() {
     for (auto &subfilter : _subfilters) {
@@ -68,14 +65,13 @@ Filter *VariadicFilter::stealLastSubfiler() {
 }
 
 void VariadicFilter::findIntLimits(const string &colum_nname, int *lower,
-                                   int *upper) const {
+                                   int *upper, int timezone_offset) const {
     for (auto filter : _subfilters) {
-        filter->findIntLimits(colum_nname, lower, upper);
+        filter->findIntLimits(colum_nname, lower, upper, timezone_offset);
     }
 }
 
-void VariadicFilter::combineFilters(Query *query, int count,
-                                    LogicalOperator andor) {
+void VariadicFilter::combineFilters(int count, LogicalOperator andor) {
     if (count > static_cast<int>(_subfilters.size())) {
         logger(LG_INFO, "Cannot combine %d filters with '%s': only %" PRIuMAX
                         " are on stack",
@@ -84,7 +80,7 @@ void VariadicFilter::combineFilters(Query *query, int count,
         return;
     }
 
-    auto variadic = VariadicFilter::make(query, andor);
+    auto variadic = VariadicFilter::make(andor);
     while ((count--) != 0) {
         variadic->addSubfilter(_subfilters.back());
         _subfilters.pop_back();

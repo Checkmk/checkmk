@@ -36,7 +36,7 @@
 using std::string;
 using std::vector;
 
-void PerfdataAggregator::consume(void *row, contact * /* auth_user */) {
+void PerfdataAggregator::consume(void *row, contact * /* auth_user */, int /* timezone_offset */) {
     string perf_data = _column->getValue(row);
     vector<char> perf_data_vec(perf_data.begin(), perf_data.end());
     perf_data_vec.push_back('\0');

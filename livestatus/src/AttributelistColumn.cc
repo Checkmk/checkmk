@@ -104,8 +104,7 @@ string AttributelistColumn::valueAsString(void *row,
     return string(s);
 }
 
-Filter *AttributelistColumn::createFilter(Query *query,
-                                          RelationalOperator relOp,
+Filter *AttributelistColumn::createFilter(RelationalOperator relOp,
                                           const string &value) {
     unsigned long ref = 0;
     if (isdigit(value[0]) != 0) {
@@ -130,5 +129,5 @@ Filter *AttributelistColumn::createFilter(Query *query,
             }
         }
     }
-    return new AttributelistFilter(query, this, relOp, ref);
+    return new AttributelistFilter(this, relOp, ref);
 }

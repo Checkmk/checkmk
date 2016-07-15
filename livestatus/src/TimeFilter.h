@@ -26,19 +26,19 @@
 #define TimeFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <stdint.h>
 #include <string>
 #include "IntFilter.h"
 #include "opids.h"
 class IntColumn;
-class Query;
 
 class TimeFilter : public IntFilter {
 public:
-    TimeFilter(Query *query, IntColumn *column, RelationalOperator relOp,
+    TimeFilter(IntColumn *column, RelationalOperator relOp,
                const std::string &value)
-        : IntFilter(query, column, relOp, value) {}
-    int32_t convertRefValue() const override;
+        : IntFilter(column, relOp, value) {}
+
+private:
+    bool adjustWithTimezoneOffset() const override;
 };
 
 #endif  // TimeFilter_h

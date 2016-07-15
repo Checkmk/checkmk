@@ -29,7 +29,6 @@
 #include <string>
 #include "opids.h"
 class Filter;
-class Query;
 class Renderer;
 
 #ifdef CMC
@@ -71,8 +70,7 @@ public:
     virtual bool mustDelete() {
         return false;  // true for dynamic Columns to be deleted after Query
     }
-    virtual Filter *createFilter(Query *, RelationalOperator,
-                                 const std::string &);
+    virtual Filter *createFilter(RelationalOperator, const std::string &);
 };
 
 #endif  // Column_h

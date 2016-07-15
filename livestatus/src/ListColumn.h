@@ -31,7 +31,6 @@
 #include "Column.h"
 #include "opids.h"
 class Filter;
-class Query;
 
 class ListColumn : public Column {
 public:
@@ -48,7 +47,7 @@ public:
     ColumnType type() override { return ColumnType::list; }
     virtual std::unique_ptr<Contains> makeContains(const std::string &name) = 0;
     virtual bool isEmpty(void *data) = 0;
-    Filter *createFilter(Query *query, RelationalOperator relOp,
+    Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
 };
 

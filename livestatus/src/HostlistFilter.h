@@ -30,13 +30,18 @@
 #include "ColumnFilter.h"
 #include "HostlistColumn.h"
 #include "opids.h"
-class Query;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class HostlistFilter : public ColumnFilter {
 public:
-    HostlistFilter(Query *query, HostlistColumn *column,
-                   RelationalOperator relOp, std::string value);
-    bool accepts(void *data) override;
+    HostlistFilter(HostlistColumn *column, RelationalOperator relOp,
+                   std::string value);
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
     HostlistColumn *column() override;
 
 private:

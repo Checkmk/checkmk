@@ -27,22 +27,20 @@
 
 using std::string;
 
-AndingFilter::AndingFilter(Query *query) : VariadicFilter(query) {}
-
-bool AndingFilter::accepts(void *data) {
+bool AndingFilter::accepts(void *row, contact *auth_user, int timezone_offset) {
     for (auto filter : _subfilters) {
-        if (!filter->accepts(data)) {
+        if (!filter->accepts(row, auth_user, timezone_offset)) {
             return false;
         }
     }
     return true;
 }
 
-bool AndingFilter::optimizeBitmask(const string &column_name,
-                                   uint32_t *mask) const {
+bool AndingFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
+                                   int timezone_offset) const {
     bool optimized = false;
     for (auto filter : _subfilters) {
-        if (filter->optimizeBitmask(column_name, mask)) {
+        if (filter->optimizeBitmask(column_name, mask, timezone_offset)) {
             optimized = true;
         }
     }

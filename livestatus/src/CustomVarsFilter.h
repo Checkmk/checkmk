@@ -31,14 +31,19 @@
 #include "ColumnFilter.h"
 #include "CustomVarsColumn.h"
 #include "opids.h"
-class Query;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class CustomVarsFilter : public ColumnFilter {
 public:
-    CustomVarsFilter(Query *query, CustomVarsColumn *column,
-                     RelationalOperator relOp, const std::string &value);
+    CustomVarsFilter(CustomVarsColumn *column, RelationalOperator relOp,
+                     const std::string &value);
     virtual ~CustomVarsFilter();
-    bool accepts(void *data) override;
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
     CustomVarsColumn *column() override;
 
 private:

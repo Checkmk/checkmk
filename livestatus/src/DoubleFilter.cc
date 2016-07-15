@@ -31,15 +31,12 @@
 
 using std::string;
 
-DoubleFilter::DoubleFilter(Query *query, DoubleColumn *column,
-                           RelationalOperator relOp, const string &value)
-    : ColumnFilter(query)
-    , _column(column)
-    , _relOp(relOp)
-    , _ref_value(atof(value.c_str())) {}
+DoubleFilter::DoubleFilter(DoubleColumn *column, RelationalOperator relOp,
+                           const string &value)
+    : _column(column), _relOp(relOp), _ref_value(atof(value.c_str())) {}
 
-bool DoubleFilter::accepts(void *data) {
-    double act_value = _column->getValue(data);
+bool DoubleFilter::accepts(void *row, contact * /* auth_user */, int /* timezone_offset */) {
+    double act_value = _column->getValue(row);
     switch (_relOp) {
         case RelationalOperator::equal:
             return act_value == _ref_value;

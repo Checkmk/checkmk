@@ -83,9 +83,7 @@ Query::Query(const list<string> &lines, Table *table)
     , _response_header(OutputBuffer::ResponseHeader::off)
     , _do_keepalive(false)
     , _table(table)
-    , _filter(this)
     , _auth_user(nullptr)
-    , _wait_condition(this)
     , _wait_timeout(0)
     , _wait_trigger(nullptr)
     , _wait_object(nullptr)
@@ -261,7 +259,7 @@ void Query::invalidRequest(const string &message) {
 Filter *Query::createFilter(Column *column, RelationalOperator relOp,
                             const string &value) {
     try {
-        return column->createFilter(this, relOp, value);
+        return column->createFilter(relOp, value);
     } catch (const runtime_error &e) {
         invalidHeader("error creating filter on table" +
                       string(_table->name()) + ": " + e.what());
@@ -285,7 +283,7 @@ void Query::parseAndOrLine(char *line, LogicalOperator andor,
         return;
     }
 
-    filter.combineFilters(this, number, andor);
+    filter.combineFilters(number, andor);
 }
 
 void Query::parseNegateLine(char *line, VariadicFilter &filter, string header) {
@@ -300,7 +298,7 @@ void Query::parseNegateLine(char *line, VariadicFilter &filter, string header) {
         return;
     }
 
-    filter.addSubfilter(new NegatingFilter(this, to_negate));
+    filter.addSubfilter(new NegatingFilter(to_negate));
 }
 
 void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
@@ -320,7 +318,7 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
     }
 
     // The last 'number' StatsColumns must be of type StatsOperation::count
-    auto variadic = VariadicFilter::make(this, andor);
+    auto variadic = VariadicFilter::make(andor);
     while (number > 0) {
         if (_stats_columns.empty()) {
             invalidHeader("Invalid count for " + kind +
@@ -359,7 +357,7 @@ void Query::parseStatsNegateLine(char *line) {
             "Can use StatsNegate only on Stats: headers of filter type");
         return;
     }
-    auto negated = new NegatingFilter(this, col->stealFilter());
+    auto negated = new NegatingFilter(col->stealFilter());
     delete col;
     _stats_columns.pop_back();
     _stats_columns.push_back(
@@ -813,7 +811,7 @@ bool Query::processDataset(void *data) {
         return false;
     }
 
-    if (_filter.accepts(data) &&
+    if (_filter.accepts(data, _auth_user, _timezone_offset) &&
         ((_auth_user == nullptr) || _table->isAuthorized(_auth_user, data))) {
         _current_line++;
         if (_limit >= 0 && static_cast<int>(_current_line) > _limit) {
@@ -839,7 +837,7 @@ bool Query::processDataset(void *data) {
             }
 
             for (unsigned i = 0; i < _stats_columns.size(); i++) {
-                aggr[i]->consume(data, _auth_user);
+                aggr[i]->consume(data, _auth_user, _timezone_offset);
             }
 
             // No output is done while processing the data, we only collect
@@ -934,11 +932,11 @@ const string *Query::findValueForIndexing(const string &column_name) {
 }
 
 void Query::findIntLimits(const string &column_name, int *lower, int *upper) {
-    return _filter.findIntLimits(column_name, lower, upper);
+    return _filter.findIntLimits(column_name, lower, upper, _timezone_offset);
 }
 
 void Query::optimizeBitmask(const string &column_name, uint32_t *bitmask) {
-    _filter.optimizeBitmask(column_name, bitmask);
+    _filter.optimizeBitmask(column_name, bitmask, _timezone_offset);
 }
 
 Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec) {
@@ -971,7 +969,7 @@ void Query::doWait() {
     // If a condition is set, we check the condition. If it
     // is already true, we do not need to way
     if (_wait_condition.hasSubFilters() &&
-        _wait_condition.accepts(_wait_object)) {
+        _wait_condition.accepts(_wait_object, _auth_user, _timezone_offset)) {
         if (g_debug_level >= 2) {
             Informational() << "Wait condition true, no waiting neccessary";
         }
@@ -1004,5 +1002,5 @@ void Query::doWait() {
                 return;  // timeout occurred. do not wait any longer
             }
         }
-    } while (!_wait_condition.accepts(_wait_object));
+    } while (!_wait_condition.accepts(_wait_object, _auth_user, _timezone_offset));
 }

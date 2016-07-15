@@ -31,24 +31,30 @@
 #include "ColumnFilter.h"
 #include "IntColumn.h"
 #include "opids.h"
-class Query;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class IntFilter : public ColumnFilter {
 public:
-    IntFilter(Query *query, IntColumn *column, RelationalOperator relOp,
-              std::string value);
-    virtual int32_t convertRefValue() const;  // see TimeFilter
-    bool accepts(void *data) override;
+    IntFilter(IntColumn *column, RelationalOperator relOp, std::string value);
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
     IntColumn *column() override;
-    void findIntLimits(const std::string &column_name, int *lower,
-                       int *upper) const override;
-    bool optimizeBitmask(const std::string &column_name,
-                         uint32_t *mask) const override;
+    void findIntLimits(const std::string &column_name, int *lower, int *upper,
+                       int timezone_offset) const override;
+    bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
+                         int timezone_offset) const override;
 
 private:
     IntColumn *_column;
     RelationalOperator _relOp;
     std::string _ref_string;
+
+    virtual bool adjustWithTimezoneOffset() const;
+    int32_t convertRefValue(int timezone_offset) const;
 };
 
 #endif  // IntFilter_h

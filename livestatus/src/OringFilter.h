@@ -29,14 +29,18 @@
 #include <stdint.h>
 #include <string>
 #include "VariadicFilter.h"
-class Query;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class OringFilter : public VariadicFilter {
 public:
-    explicit OringFilter(Query *query);
-    bool accepts(void *data) override;
-    bool optimizeBitmask(const std::string &column_name,
-                         uint32_t *mask) const override;
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
+    bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
+                         int timezone_offset) const override;
 };
 
 #endif  // OringFilter_h

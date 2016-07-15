@@ -32,12 +32,13 @@ class NegatingFilter : public Filter {
     Filter *_filter;
 
 public:
-    NegatingFilter(Query *query, Filter *filter)
-        : Filter(query), _filter(filter) {}
+    explicit NegatingFilter(Filter *filter) : _filter(filter) {}
     virtual ~NegatingFilter() { delete _filter; }
     void accept(FilterVisitor &v) override { v.visit(*this); }
     Filter *subfilter() { return _filter; }
-    bool accepts(void *data) override { return !_filter->accepts(data); }
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override {
+        return !_filter->accepts(row, auth_user, timezone_offset);
+    }
 };
 
 #endif  // NegatingFilter_h

@@ -29,24 +29,26 @@
 #include <stdint.h>
 #include <string>
 class FilterVisitor;
-class Query;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class Filter {
 public:
-    explicit Filter(Query *query);
     virtual ~Filter();
     virtual void accept(FilterVisitor &) = 0;
-    Query *query() const { return _query; }
-    virtual bool accepts(void *data) = 0;
+
+    virtual bool accepts(void *row, contact *auth_user,
+                         int timezone_offset) = 0;
     virtual const std::string *valueForIndexing(
         const std::string &column_name) const;
     virtual void findIntLimits(const std::string &column_name, int *lower,
-                               int *upper) const;
-    virtual bool optimizeBitmask(const std::string &column_name,
-                                 uint32_t *mask) const;
-
-private:
-    Query *const _query;
+                               int *upper, int timezone_offset) const;
+    virtual bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
+                                 int timezone_offset) const;
 };
 
 #endif  // Filter_h

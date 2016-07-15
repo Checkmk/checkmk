@@ -31,7 +31,6 @@
 #include "nagios.h"
 #include "opids.h"
 class Filter;
-class Query;
 class Renderer;
 
 class HostlistColumn : public Column {
@@ -46,7 +45,7 @@ public:
         , _show_state(show_state) {}
     ColumnType type() override { return ColumnType::list; }
     void output(void *row, Renderer *renderer, contact *auth_user) override;
-    Filter *createFilter(Query *query, RelationalOperator relOp,
+    Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
     hostsmember *getMembers(void *data);
 };

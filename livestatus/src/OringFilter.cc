@@ -27,26 +27,24 @@
 
 using std::string;
 
-OringFilter::OringFilter(Query *query) : VariadicFilter(query) {}
-
-bool OringFilter::accepts(void *data) {
+bool OringFilter::accepts(void *row, contact *auth_user, int timezone_offset) {
     for (auto filter : _subfilters) {
-        if (filter->accepts(data)) {
+        if (filter->accepts(row, auth_user, timezone_offset)) {
             return true;
         }
     }
     return false;
 }
 
-bool OringFilter::optimizeBitmask(const string &column_name,
-                                  uint32_t *mask) const {
+bool OringFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
+                                  int timezone_offset) const {
     // We can only optimize, if *all* subfilters are filters for the
     // same column.
     uint32_t m = 0;
 
     for (auto filter : _subfilters) {
         uint32_t mm = 0xffffffff;
-        if (!filter->optimizeBitmask(column_name, &mm)) {
+        if (!filter->optimizeBitmask(column_name, &mm, timezone_offset)) {
             return false;  // wrong column
         }
         m |= mm;

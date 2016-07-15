@@ -31,7 +31,6 @@
 #include "nagios.h"
 #include "opids.h"
 class Filter;
-class Query;
 class Renderer;
 
 #define CVT_VARNAMES 0
@@ -52,7 +51,7 @@ public:
         return _what == CVT_DICT ? ColumnType::dict : ColumnType::list;
     }
     void output(void *row, Renderer *renderer, contact *auth_user) override;
-    Filter *createFilter(Query *query, RelationalOperator relOp,
+    Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
     bool contains(void *data, const char *value);
     char *getVariable(void *data, const char *varname);

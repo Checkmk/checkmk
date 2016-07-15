@@ -31,15 +31,20 @@
 #include "ColumnFilter.h"
 #include "ListColumn.h"
 #include "opids.h"
-class Query;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class ListFilter : public ColumnFilter {
 public:
-    ListFilter(Query *query, ListColumn *column, RelationalOperator relOp,
+    ListFilter(ListColumn *column, RelationalOperator relOp,
                std::string element,
                std::unique_ptr<ListColumn::Contains> predicate,
                bool isEmptyValue);
-    bool accepts(void *data) override;
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
     const std::string *valueForIndexing(
         const std::string &column_name) const override;
     ListColumn *column() override;

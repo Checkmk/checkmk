@@ -26,8 +26,6 @@
 
 using std::string;
 
-Filter::Filter(Query *query) : _query(query) {}
-
 Filter::~Filter() = default;
 
 const string *Filter::valueForIndexing(const string & /* column_name */) const {
@@ -35,9 +33,11 @@ const string *Filter::valueForIndexing(const string & /* column_name */) const {
 }
 
 void Filter::findIntLimits(const string & /* column_name */, int * /* lower */,
-                           int * /* upper */) const {}
+                           int * /* upper */, int /* timezone_offset */) const {
+}
 
 bool Filter::optimizeBitmask(const string & /* column_name */,
-                             uint32_t * /* mask */) const {
+                             uint32_t * /* mask */,
+                             int /* timezone_offset */) const {
     return false;
 }

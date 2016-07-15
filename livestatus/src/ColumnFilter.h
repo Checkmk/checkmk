@@ -32,7 +32,6 @@ class Column;
 
 class ColumnFilter : public Filter {
 public:
-    explicit ColumnFilter(Query *query) : Filter(query) {}
     void accept(FilterVisitor &v) override { v.visit(*this); }
     virtual Column *column() = 0;
 };

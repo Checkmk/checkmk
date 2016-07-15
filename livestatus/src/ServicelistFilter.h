@@ -30,13 +30,18 @@
 #include "ColumnFilter.h"
 #include "ServicelistColumn.h"
 #include "opids.h"
-class Query;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class ServicelistFilter : public ColumnFilter {
 public:
-    ServicelistFilter(Query *query, ServicelistColumn *column,
-                      RelationalOperator relOp, const std::string &value);
-    bool accepts(void *data) override;
+    ServicelistFilter(ServicelistColumn *column, RelationalOperator relOp,
+                      const std::string &value);
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
     ServicelistColumn *column() override;
 
 private:

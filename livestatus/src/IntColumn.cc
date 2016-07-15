@@ -34,9 +34,8 @@ void IntColumn::output(void *row, Renderer *renderer, contact *auth_user) {
     renderer->outputInteger(getValue(row, auth_user));
 }
 
-Filter *IntColumn::createFilter(Query *query, RelationalOperator relOp,
-                                const string &value) {
-    return new IntFilter(query, this, relOp, value);
+Filter *IntColumn::createFilter(RelationalOperator relOp, const string &value) {
+    return new IntFilter(this, relOp, value);
 }
 
 string IntColumn::valueAsString(void *row, contact *auth_user) {

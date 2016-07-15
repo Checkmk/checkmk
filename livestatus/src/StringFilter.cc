@@ -31,13 +31,9 @@
 using std::runtime_error;
 using std::string;
 
-StringFilter::StringFilter(Query *query, StringColumn *column,
-                           RelationalOperator relOp, const string &value)
-    : ColumnFilter(query)
-    , _column(column)
-    , _relOp(relOp)
-    , _ref_string(value)
-    , _regex(nullptr) {
+StringFilter::StringFilter(StringColumn *column, RelationalOperator relOp,
+                           const string &value)
+    : _column(column), _relOp(relOp), _ref_string(value), _regex(nullptr) {
     switch (_relOp) {
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
@@ -80,8 +76,8 @@ StringFilter::~StringFilter() {
     }
 }
 
-bool StringFilter::accepts(void *data) {
-    string act_string = _column->getValue(data);
+bool StringFilter::accepts(void *row, contact * /* auth_user */, int /* timezone_offset */) {
+    string act_string = _column->getValue(row);
     switch (_relOp) {
         case RelationalOperator::equal:
             return act_string == _ref_string;

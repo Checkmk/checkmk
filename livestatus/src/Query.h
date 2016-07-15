@@ -46,6 +46,27 @@ class StatsColumn;
 class Table;
 
 class Query {
+public:
+    Query(const std::list<std::string> &lines, Table *);
+    ~Query();
+
+    void process(OutputBuffer *output);
+
+    bool processDataset(void *);
+
+    bool timelimitReached();
+    void invalidRequest(const std::string &message);
+
+    contact *authUser() { return _auth_user; }
+    int timezoneOffset() { return _timezone_offset; }
+
+    const std::string *findValueForIndexing(const std::string &column_name);
+    void findIntLimits(const std::string &column_name, int *lower, int *upper);
+    void optimizeBitmask(const std::string &column_name, uint32_t *bitmask);
+    AndingFilter *filter() { return &_filter; }
+    std::unordered_set<Column *> *allColumns() { return &_all_columns; }
+
+private:
     Renderer *_renderer;
     OutputBuffer::ResponseHeader _response_header;
     bool _do_keepalive;
@@ -76,42 +97,22 @@ class Query {
     _columns_t _dummy_columns;  // dynamically allocated. Must delete them.
 
     // stats queries
-    typedef std::vector<StatsColumn *> _stats_columns_t;
-    _stats_columns_t _stats_columns;  // must also delete
+    std::vector<StatsColumn *> _stats_columns;  // must also delete
     Aggregator **_stats_aggregators;
 
     typedef std::vector<std::string> _stats_group_spec_t;
-    typedef std::map<_stats_group_spec_t, Aggregator **> _stats_groups_t;
-    _stats_groups_t _stats_groups;
+    std::map<_stats_group_spec_t, Aggregator **> _stats_groups;
 
     std::unordered_set<Column *> _all_columns;
 
     // invalidHeader can be called during header parsing
     void invalidHeader(const std::string &message);
 
-public:
-    Query(const std::list<std::string> &lines, Table *);
-    ~Query();
-    void process(OutputBuffer *output);
-    bool processDataset(void *);
-    bool timelimitReached();
     void addColumn(Column *column);
-
+    void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
     void setResponseHeader(OutputBuffer::ResponseHeader r);
     void setDoKeepalive(bool d);
 
-    void invalidRequest(const std::string &message);
-
-    contact *authUser() { return _auth_user; }
-    const std::string *findValueForIndexing(const std::string &column_name);
-    void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
-    void findIntLimits(const std::string &column_name, int *lower, int *upper);
-    void optimizeBitmask(const std::string &column_name, uint32_t *bitmask);
-    int timezoneOffset() { return _timezone_offset; }
-    AndingFilter *filter() { return &_filter; }
-    std::unordered_set<Column *> *allColumns() { return &_all_columns; }
-
-private:
     bool doStats();
     void doWait();
     Aggregator **getStatsGroup(_stats_group_spec_t &groupspec);

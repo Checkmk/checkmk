@@ -30,7 +30,6 @@
 #include "Column.h"
 #include "opids.h"
 class Filter;
-class Query;
 class Renderer;
 
 #ifdef CMC
@@ -48,7 +47,7 @@ public:
     void output(void *row, Renderer *renderer, contact *auth_user) override;
     ColumnType type() override { return ColumnType::double_; }
     std::string valueAsString(void *row, contact * /* auth_user */) override;
-    Filter *createFilter(Query *query, RelationalOperator relOp,
+    Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
 };
 

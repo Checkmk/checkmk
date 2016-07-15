@@ -33,19 +33,18 @@ using std::move;
 using std::string;
 using std::unique_ptr;
 
-ListFilter::ListFilter(Query *query, ListColumn *column,
-                       RelationalOperator relOp, string element,
+ListFilter::ListFilter(ListColumn *column, RelationalOperator relOp,
+                       string element,
                        unique_ptr<ListColumn::Contains> predicate,
                        bool isEmptyValue)
-    : ColumnFilter(query)
-    , _column(column)
+    : _column(column)
     , _relOp(relOp)
     , _element(move(element))
     , _predicate(move(predicate))
     , _empty_ref(isEmptyValue) {}
 
-bool ListFilter::accepts(void *data) {
-    data = _column->shiftPointer(data);
+bool ListFilter::accepts(void *row, contact * /* auth_user */, int /* timezone_offset */) {
+    void *data = _column->shiftPointer(row);
     if (data == nullptr) {
         return false;
     }

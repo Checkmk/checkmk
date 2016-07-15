@@ -29,13 +29,18 @@
 #include "AttributelistColumn.h"
 #include "ColumnFilter.h"
 #include "opids.h"
-class Query;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class AttributelistFilter : public ColumnFilter {
 public:
-    AttributelistFilter(Query *query, AttributelistColumn *column,
-                        RelationalOperator relOp, unsigned long ref);
-    bool accepts(void *data) override;
+    AttributelistFilter(AttributelistColumn *column, RelationalOperator relOp,
+                        unsigned long ref);
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
     AttributelistColumn *column() override;
 
 private:

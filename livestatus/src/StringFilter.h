@@ -31,14 +31,19 @@
 #include "ColumnFilter.h"
 #include "StringColumn.h"
 #include "opids.h"
-class Query;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class StringFilter : public ColumnFilter {
 public:
-    StringFilter(Query *query, StringColumn *column, RelationalOperator relOp,
+    StringFilter(StringColumn *column, RelationalOperator relOp,
                  const std::string &value);
     virtual ~StringFilter();
-    bool accepts(void *data) override;
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
     const std::string *valueForIndexing(
         const std::string &column_name) const override;
     StringColumn *column() override;

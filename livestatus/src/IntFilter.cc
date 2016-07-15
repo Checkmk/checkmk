@@ -28,28 +28,28 @@
 #include <utility>
 #include "IntColumn.h"
 #include "Logger.h"
-#include "Query.h"
 #include "opids.h"
 
 using std::move;
 using std::string;
 
-IntFilter::IntFilter(Query *query, IntColumn *column, RelationalOperator relOp,
-                     string value)
-    : ColumnFilter(query)
-    , _column(column)
-    , _relOp(relOp)
-    , _ref_string(move(value)) {}
+IntFilter::IntFilter(IntColumn *column, RelationalOperator relOp, string value)
+    : _column(column), _relOp(relOp), _ref_string(move(value)) {}
 
 IntColumn *IntFilter::column() { return _column; }
 
 // overridden by TimeFilter in order to apply timezone offset from Localtime:
 // header
-int32_t IntFilter::convertRefValue() const { return atoi(_ref_string.c_str()); }
+bool IntFilter::adjustWithTimezoneOffset() const { return false; }
 
-bool IntFilter::accepts(void *data) {
-    int32_t act_value = _column->getValue(data, query()->authUser());
-    int32_t ref_value = convertRefValue();
+int32_t IntFilter::convertRefValue(int timezone_offset) const {
+    return atoi(_ref_string.c_str()) -
+           (adjustWithTimezoneOffset() ? timezone_offset : 0);
+}
+
+bool IntFilter::accepts(void *row, contact *auth_user, int timezone_offset) {
+    int32_t act_value = _column->getValue(row, auth_user);
+    int32_t ref_value = convertRefValue(timezone_offset);
     switch (_relOp) {
         case RelationalOperator::equal:
             return act_value == ref_value;
@@ -76,8 +76,8 @@ bool IntFilter::accepts(void *data) {
     return false;  // unreachable
 }
 
-void IntFilter::findIntLimits(const string &column_name, int *lower,
-                              int *upper) const {
+void IntFilter::findIntLimits(const string &column_name, int *lower, int *upper,
+                              int timezone_offset) const {
     if (column_name != _column->name()) {
         return;  // wrong column
     }
@@ -85,8 +85,7 @@ void IntFilter::findIntLimits(const string &column_name, int *lower,
         return;  // already empty interval
     }
 
-    // TimeFilter applies timezone offset here
-    int32_t ref_value = convertRefValue();
+    int32_t ref_value = convertRefValue(timezone_offset);
 
     /* [lower, upper[ is some interval. This filter might restrict that interval
        to a smaller interval.
@@ -139,9 +138,9 @@ void IntFilter::findIntLimits(const string &column_name, int *lower,
     }
 }
 
-bool IntFilter::optimizeBitmask(const string &column_name,
-                                uint32_t *mask) const {
-    int32_t ref_value = convertRefValue();
+bool IntFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
+                                int timezone_offset) const {
+    int32_t ref_value = convertRefValue(timezone_offset);
 
     if (column_name != _column->name()) {
         return false;  // wrong column

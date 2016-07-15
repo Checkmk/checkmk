@@ -38,7 +38,7 @@ void StringColumn::output(void *row, Renderer *renderer,
     }
 }
 
-Filter *StringColumn::createFilter(Query *query, RelationalOperator relOp,
+Filter *StringColumn::createFilter(RelationalOperator relOp,
                                    const string &value) {
-    return new StringFilter(query, this, relOp, value);
+    return new StringFilter(this, relOp, value);
 }

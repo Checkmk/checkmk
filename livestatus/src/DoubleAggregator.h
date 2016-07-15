@@ -45,7 +45,7 @@ public:
         , _count(0)
         , _aggr(0)
         , _sumq(0) {}
-    void consume(void *row, contact *contact) override;
+    void consume(void *row, contact *contact, int timezone_offset) override;
     void output(Renderer *renderer) override;
 
 private:

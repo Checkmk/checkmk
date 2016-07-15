@@ -31,7 +31,6 @@
 #include "nagios.h"
 #include "opids.h"
 class Filter;
-class Query;
 class Renderer;
 
 class OffsetStringMacroColumn : public OffsetStringColumn {
@@ -44,7 +43,7 @@ public:
 
     std::string valueAsString(void *row, contact *auth_user) override;
     void output(void *row, Renderer *renderer, contact *auth_user) override;
-    Filter *createFilter(Query *query, RelationalOperator relOp,
+    Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
 
     // overriden by host and service macro columns

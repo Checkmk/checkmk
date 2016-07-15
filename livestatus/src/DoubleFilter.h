@@ -30,13 +30,18 @@
 #include "ColumnFilter.h"
 #include "DoubleColumn.h"
 #include "opids.h"
-class Query;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class DoubleFilter : public ColumnFilter {
 public:
-    DoubleFilter(Query *query, DoubleColumn *column, RelationalOperator relOp,
+    DoubleFilter(DoubleColumn *column, RelationalOperator relOp,
                  const std::string &value);
-    bool accepts(void *data) override;
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
     DoubleColumn *column() override;
 
 private:

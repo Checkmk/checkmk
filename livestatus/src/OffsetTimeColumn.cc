@@ -34,8 +34,8 @@ void OffsetTimeColumn::output(void *row, Renderer *renderer,
     renderer->outputTime(getValue(row, auth_user));
 }
 
-Filter *OffsetTimeColumn::createFilter(Query *query, RelationalOperator relOp,
+Filter *OffsetTimeColumn::createFilter(RelationalOperator relOp,
                                        const string &value) {
     // The TimeFilter applies the timezone offset from the Localtime: header
-    return new TimeFilter(query, this, relOp, value);
+    return new TimeFilter(this, relOp, value);
 }

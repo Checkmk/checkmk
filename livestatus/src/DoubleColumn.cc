@@ -35,9 +35,9 @@ void DoubleColumn::output(void *row, Renderer *renderer,
     renderer->outputDouble(getValue(row));
 }
 
-Filter *DoubleColumn::createFilter(Query *query, RelationalOperator relOp,
+Filter *DoubleColumn::createFilter(RelationalOperator relOp,
                                    const string &value) {
-    return new DoubleFilter(query, this, relOp, value);
+    return new DoubleFilter(this, relOp, value);
 }
 
 string DoubleColumn::valueAsString(void *row, contact * /* auth_user */) {

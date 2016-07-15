@@ -31,7 +31,6 @@
 #include "nagios.h"
 #include "opids.h"
 class Filter;
-class Query;
 class Renderer;
 
 class ServicelistColumn : public Column {
@@ -49,7 +48,7 @@ public:
         , _info_depth(info_depth) {}
     ColumnType type() override { return ColumnType::list; };
     void output(void *row, Renderer *renderer, contact *auth_user) override;
-    Filter *createFilter(Query *query, RelationalOperator relOp,
+    Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
     servicesmember *getMembers(void *data);
 

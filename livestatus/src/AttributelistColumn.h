@@ -32,7 +32,6 @@
 #include "IntColumn.h"
 #include "opids.h"
 class Filter;
-class Query;
 class Renderer;
 
 #ifdef CMC
@@ -62,7 +61,7 @@ public:
     }
     std::string valueAsString(void *row, contact * /* auth_user */) override;
     void output(void *row, Renderer *renderer, contact *auth_user) override;
-    Filter *createFilter(Query *query, RelationalOperator relOp,
+    Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
 
     // API of IntColumn

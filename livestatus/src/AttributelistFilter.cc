@@ -27,11 +27,10 @@
 #include "AttributelistColumn.h"
 #include "Logger.h"
 
-AttributelistFilter::AttributelistFilter(Query *query,
-                                         AttributelistColumn *column,
+AttributelistFilter::AttributelistFilter(AttributelistColumn *column,
                                          RelationalOperator relOp,
                                          unsigned long ref)
-    : ColumnFilter(query), _column(column), _relOp(relOp), _ref(ref) {}
+    : _column(column), _relOp(relOp), _ref(ref) {}
 
 /* The following operators are defined:
 
@@ -55,9 +54,9 @@ AttributelistFilter::AttributelistFilter(Query *query,
 
 AttributelistColumn *AttributelistFilter::column() { return _column; }
 
-bool AttributelistFilter::accepts(void *data) {
+bool AttributelistFilter::accepts(void *row, contact * /* auth_user */, int /* timezone_offset */) {
     unsigned long act_value =
-        static_cast<unsigned long>(_column->getValue(data, nullptr));
+        static_cast<unsigned long>(_column->getValue(row, nullptr));
     switch (_relOp) {
         case RelationalOperator::equal:
             return act_value == _ref;

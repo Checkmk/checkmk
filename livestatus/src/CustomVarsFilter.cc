@@ -34,14 +34,10 @@
 using std::runtime_error;
 using std::string;
 
-CustomVarsFilter::CustomVarsFilter(Query *query, CustomVarsColumn *column,
+CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column,
                                    RelationalOperator relOp,
                                    const string &value)
-    : ColumnFilter(query)
-    , _column(column)
-    , _relOp(relOp)
-    , _ref_text(value)
-    , _regex(nullptr) {
+    : _column(column), _relOp(relOp), _ref_text(value), _regex(nullptr) {
     if (_column->type() != ColumnType::dict) {
         return;
     }
@@ -102,10 +98,10 @@ CustomVarsFilter::~CustomVarsFilter() {
     }
 }
 
-bool CustomVarsFilter::accepts(void *data) {
+bool CustomVarsFilter::accepts(void *row, contact * /* auth_user */, int /* timezone_offset */) {
     if (_column->type() == ColumnType::dict) {
         const char *act_string =
-            _column->getVariable(data, _ref_varname.c_str());
+            _column->getVariable(row, _ref_varname.c_str());
         if (act_string == nullptr) {
             act_string = "";
         }
@@ -136,7 +132,7 @@ bool CustomVarsFilter::accepts(void *data) {
                 return act_string <= _ref_string;
         }
     }
-    bool is_member = _column->contains(data, _ref_text.c_str());
+    bool is_member = _column->contains(row, _ref_text.c_str());
     switch (_relOp) {
         case RelationalOperator::less:
             return !is_member;

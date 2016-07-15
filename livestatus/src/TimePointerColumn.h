@@ -31,7 +31,6 @@
 #include "IntPointerColumn.h"
 #include "opids.h"
 class Filter;
-class Query;
 class Renderer;
 
 #ifdef CMC
@@ -48,7 +47,7 @@ public:
                            extra_offset) {}
     void output(void *row, Renderer *renderer, contact *auth_user) override;
     ColumnType type() override { return ColumnType::time; }
-    Filter *createFilter(Query *query, RelationalOperator relOp,
+    Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
 };
 

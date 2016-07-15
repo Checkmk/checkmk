@@ -33,10 +33,10 @@ using std::string;
 
 #define HOSTSERVICE_SEPARATOR '|'
 
-ServicelistFilter::ServicelistFilter(Query *query, ServicelistColumn *column,
+ServicelistFilter::ServicelistFilter(ServicelistColumn *column,
                                      RelationalOperator relOp,
                                      const string &value)
-    : ColumnFilter(query), _column(column), _relOp(relOp) {
+    : _column(column), _relOp(relOp) {
     if ((_relOp == RelationalOperator::equal ||
          _relOp == RelationalOperator::not_equal) &&
         value.empty()) {
@@ -58,10 +58,11 @@ ServicelistFilter::ServicelistFilter(Query *query, ServicelistColumn *column,
     }
 }
 
-bool ServicelistFilter::accepts(void *data) {
+bool ServicelistFilter::accepts(void *row, contact * /* auth_user */,
+                                int /* timezone_offset */) {
     // data points to a primary data object. We need to extract
     // a pointer to a service list
-    servicesmember *mem = _column->getMembers(data);
+    servicesmember *mem = _column->getMembers(row);
 
     // test for empty list
     if (_ref_host.empty()) {

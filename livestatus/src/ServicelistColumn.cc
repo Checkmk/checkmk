@@ -102,9 +102,9 @@ void ServicelistColumn::output(void *row, Renderer *renderer,
     renderer->outputEndList();
 }
 
-Filter *ServicelistColumn::createFilter(Query *query, RelationalOperator relOp,
+Filter *ServicelistColumn::createFilter(RelationalOperator relOp,
                                         const string &value) {
-    return new ServicelistFilter(query, this, relOp, value);
+    return new ServicelistFilter(this, relOp, value);
 }
 
 int ServicelistColumn::inCustomTimeperiod(service *svc, const char *varname) {

@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 #include "OutputBuffer.h"
@@ -37,57 +38,70 @@ enum class OutputFormat { csv, json, python };
 
 class Renderer {
 public:
-    Renderer(OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
-             bool do_keep_alive, std::string invalid_header_message,
-             OutputFormat format, std::string field_separator,
-             std::string dataset_separator, std::string list_separator,
-             std::string host_service_separator, int timezone_offset);
+    static std::unique_ptr<Renderer> make(
+        OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
+        bool do_keep_alive, std::string invalid_header_message,
+        OutputFormat format, std::string field_separator,
+        std::string dataset_separator, std::string list_separator,
+        std::string host_service_separator, int timezone_offset);
+
+    virtual ~Renderer();
 
     void setError(OutputBuffer::ResponseCode code, const std::string &message);
     std::size_t size() const;
 
-    void add(const std::string &str);
-    void add(const std::vector<char> &blob);
+    virtual void startOfQuery() = 0;
+    virtual void outputDataSetSeparator() = 0;
+    virtual void endOfQuery() = 0;
 
-    void startOfQuery();
-    void outputDataSetSeparator();
-    void endOfQuery();
+    // Output a single row returned by lq.
+    virtual void outputDatasetBegin() = 0;
+    virtual void outputFieldSeparator() = 0;
+    virtual void outputDatasetEnd() = 0;
 
-    void outputDatasetBegin();
-    void outputDatasetEnd();
-    void outputFieldSeparator();
+    // Output a list-valued column.
+    virtual void outputBeginList() = 0;
+    virtual void outputListSeparator() = 0;
+    virtual void outputEndList() = 0;
+
+    // Output a list-valued value within a list-valued column.
+    virtual void outputBeginSublist() = 0;
+    virtual void outputSublistSeparator() = 0;
+    virtual void outputEndSublist() = 0;
+
+    // Output a dictionary, see CustomVarsColumn.
+    virtual void outputBeginDict() = 0;
+    virtual void outputDictSeparator() = 0;
+    virtual void outputDictValueSeparator() = 0;
+    virtual void outputEndDict() = 0;
+
+    virtual void outputNull() = 0;
+    virtual void outputBlob(const std::vector<char> *blob) = 0;
+    // len = -1 -> use strlen(), len >= 0: consider output as blob, do not
+    // handle UTF-8.
+    virtual void outputString(const char *value, int len = -1) = 0;
+
     void outputInteger(int32_t value);
     void outputInteger64(int64_t value);
     void outputTime(int32_t value);
     void outputUnsignedLong(unsigned long value);
     void outputCounter(counter_t value);
     void outputDouble(double value);
-    void outputNull();
     void outputAsciiEscape(char value);
     void outputUnicodeEscape(unsigned value);
-    void outputBlob(const std::vector<char> *blob);
-    void outputString(const char *value, int len = -1);
-    void outputBeginList();
-    void outputListSeparator();
-    void outputEndList();
-    void outputBeginSublist();
-    void outputSublistSeparator();
-    void outputEndSublist();
-    void outputBeginDict();
-    void outputDictSeparator();
-    void outputDictValueSeparator();
-    void outputEndDict();
+
+protected:
+    Renderer(OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
+             bool do_keep_alive, std::string invalid_header_message,
+             int timezone_offset);
+
+    void add(const std::string &str);
+    void add(const std::vector<char> &blob);
+    void outputChars(const char *value, int len);
 
 private:
     OutputBuffer *const _output;
-    const OutputFormat _format;
-    const std::string _field_separator;
-    const std::string _dataset_separator;
-    const std::string _list_separator;
-    const std::string _host_service_separator;
     const int _timezone_offset;
-
-    void outputChars(const char *value, int len);
 };
 
 #endif  // Renderer_h

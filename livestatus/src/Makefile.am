@@ -93,6 +93,10 @@ livestatus_so_SOURCES = \
         OutputBuffer.cc \
         PerfdataAggregator.cc \
         Query.cc \
+        Renderer.cc \
+        RendererCSV.cc \
+        RendererJSON.cc \
+        RendererPython.cc \
         ServiceContactsColumn.cc \
         ServiceSpecialDoubleColumn.cc \
         ServiceSpecialIntColumn.cc \

@@ -30,6 +30,7 @@
 #include <time.h>
 #include <list>
 #include <map>
+#include <memory>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -67,7 +68,7 @@ public:
     std::unordered_set<Column *> *allColumns() { return &_all_columns; }
 
 private:
-    Renderer *_renderer;
+    std::unique_ptr<Renderer> _renderer;
     OutputBuffer::ResponseHeader _response_header;
     bool _do_keepalive;
     std::string _invalid_header_message;

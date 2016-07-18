@@ -727,11 +727,10 @@ void Query::parseLocaltimeLine(char *line) {
 bool Query::doStats() { return !_stats_columns.empty(); }
 
 void Query::process(OutputBuffer *output) {
-    Renderer renderer(output, _response_header, _do_keepalive,
-                      _invalid_header_message, _output_format, _field_separator,
-                      _dataset_separator, _list_separator,
-                      _host_service_separator, _timezone_offset);
-    _renderer = &renderer;
+    _renderer = Renderer::make(
+        output, _response_header, _do_keepalive, _invalid_header_message,
+        _output_format, _field_separator, _dataset_separator, _list_separator,
+        _host_service_separator, _timezone_offset);
     start();
     _table->answerQuery(this);
     finish();
@@ -858,7 +857,7 @@ bool Query::processDataset(void *data) {
                 } else {
                     _renderer->outputFieldSeparator();
                 }
-                column->output(data, _renderer, _auth_user);
+                column->output(data, _renderer.get(), _auth_user);
             }
             _renderer->outputDatasetEnd();
         }
@@ -895,7 +894,7 @@ void Query::finish() {
             Aggregator **aggr = stats_group.second;
             for (unsigned i = 0; i < _stats_columns.size(); i++) {
                 _renderer->outputFieldSeparator();
-                aggr[i]->output(_renderer);
+                aggr[i]->output(_renderer.get());
                 delete aggr[i];  // not needed any more
             }
             _renderer->outputDatasetEnd();
@@ -916,7 +915,7 @@ void Query::finish() {
             if (i > 0) {
                 _renderer->outputFieldSeparator();
             }
-            _stats_aggregators[i]->output(_renderer);
+            _stats_aggregators[i]->output(_renderer.get());
             delete _stats_aggregators[i];
         }
         _renderer->outputDatasetEnd();
@@ -1002,5 +1001,6 @@ void Query::doWait() {
                 return;  // timeout occurred. do not wait any longer
             }
         }
-    } while (!_wait_condition.accepts(_wait_object, _auth_user, _timezone_offset));
+    } while (
+        !_wait_condition.accepts(_wait_object, _auth_user, _timezone_offset));
 }

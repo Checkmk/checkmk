@@ -1,0 +1,10 @@
+Title: check_mail: now able to process mail body with Content-Transfer-Encoding base64
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1468833224
+Class: feature
+
+When forwarding mails to the event console the plugin now
+decodes any base64 content back to human readable lines.

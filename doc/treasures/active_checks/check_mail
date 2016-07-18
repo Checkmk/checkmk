@@ -26,6 +26,7 @@
 
 import sys, getopt, os, time, random, poplib, imaplib, email
 import traceback, socket, re
+import base64
 
 def parse_exception(e):
     e = str(e)
@@ -296,7 +297,8 @@ def forward_to_ec(mails):
     cur_time = syslog_time()
     priority = 5 # OK
     for index, msg in mails.items():
-        subject = msg.get('Subject', 'None')
+        subject  = msg.get('Subject', 'None')
+        encoding = msg.get('Content-Transfer-Encoding', 'None')
         log_line = subject
         # Now add the body to the event
         if msg.is_multipart():
@@ -305,10 +307,17 @@ def forward_to_ec(mails):
                 content_type = part.get_content_type()
                 disposition = str(part.get('Content-Disposition'))
                 if content_type == 'text/plain' and 'attachment' not in disposition:
-                    log_line += '|' + part.get_payload()[:body_limit]
+                    payload = part.get_payload()
+                    if encoding == "base64"
+                        payload = base64.b64decode(payload)
+                    log_line += '|' + payload[:body_limit]
                     break
         else:
-            log_line += '|' + msg.get_payload()[:body_limit]
+            payload = msg.get_payload()
+            if encoding == "base64"
+                payload = base64.b64decode(payload)
+            log_line += '|' + payload[:body_limit]
+
         log_line = log_line.replace('\r\n', '\0')
         log_line = log_line.replace('\n', '\0')
 

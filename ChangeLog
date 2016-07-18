@@ -114,6 +114,7 @@
     * 3554 Inotify: Added configurable levels for movedto, movefrom and move self
     * 3706 hp_proliant_systeminfo, hp_proliant_mem, hp_proliant_da_phydrv: new inventory plugins
     * 3671 mssql_backup: Is now aware of backup types and outputs ages per backup type
+    * 3558 check_mail: now able to process mail body with Content-Transfer-Encoding base64...
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

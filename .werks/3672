@@ -1,0 +1,21 @@
+Title: Agent sections cached by the agent could cause stale services
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p6
+Date: 1468845997
+Class: fix
+
+There are situations, when the agent is caching sections and the check
+interval of a check is configured to a special value, that services will
+become stale even when the agent could still send cached information.
+
+For example the ntp section which is cached for 30 seconds, wen using a
+check interval of 120 seconds, could become stale after 180 seconds when
+the update of the agent cache takes more than 60 seconds. The agent would
+then throw away the cache which is currently updated and return no ntp
+section which results in a stale service then.
+
+The fix is now, that in such a situation the agent is processing the old,
+already cached, section and restarting the cache update immediately
+(instead of the last run as it was before).

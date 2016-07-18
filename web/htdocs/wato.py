@@ -5279,8 +5279,6 @@ def mode_snapshot_detail(phase):
     forms.end()
 
     if snapshot_name != "uploaded_snapshot":
-        delete_url = make_action_link([("mode", "snapshot"), ("_delete_file", snapshot_name)])
-        html.buttonlink(delete_url, _("Delete Snapshot"))
         download_url = make_action_link([("mode", "snapshot"), ("_download_file", snapshot_name)])
         html.buttonlink(download_url, _("Download Snapshot"))
 
@@ -5302,6 +5300,11 @@ def get_snapshots():
 def extract_snapshot(snapshot_file):
     multitar.extract_from_file(snapshot_dir + snapshot_file, backup_domains)
 
+
+def vs_snapshot():
+    return TextUnicode(title = _("Comment"), size=80)
+
+
 def mode_snapshot(phase):
     if phase == "title":
         return _("Config snapshots")
@@ -5316,9 +5319,6 @@ def mode_snapshot(phase):
         os.remove("%s/uploaded_snapshot" % snapshot_dir)
 
     snapshots = get_snapshots()
-
-    # Generate valuespec for snapshot options
-    snapshot_vs = TextUnicode(title = _("Comment"), size=80)
 
     if phase == "action":
         if html.has_var("_download_file"):
@@ -5342,8 +5342,8 @@ def mode_snapshot(phase):
         # create snapshot
         elif html.has_var("_create_snapshot"):
             if html.check_transaction():
-                comment = snapshot_vs.from_html_vars("snapshot_options")
-                snapshot_vs.validate_value(comment, "snapshot_options")
+                comment = vs_snapshot().from_html_vars("snapshot_options")
+                vs_snapshot().validate_value(comment, "snapshot_options")
 
                 name = create_snapshot("manual", comment=comment or None)
 
@@ -5459,26 +5459,7 @@ def mode_snapshot(phase):
     else:
         snapshots = get_snapshots()
 
-        # Render manual snapshot creation form
-        html.begin_form("create_snapshot", method="POST")
-        forms.header(_("Create snapshot"))
-        forms.section(_("Comment"))
-        forms.input(snapshot_vs, "snapshot_options", "")
-        html.write("<br><br>")
-        html.hidden_fields()
-        forms.end()
-        html.button("_create_snapshot", _("Create snapshot"), "submit")
-        html.end_form()
-        html.write("<br>")
-
-        html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
-        html.write(_("Only supports snapshots up to 100MB. If your snapshot is larger than 100MB please copy it into the sites "
-                   "backup directory <tt>%s/wato/snapshots</tt>. It will then show up in the snapshots table.") % defaults.var_dir)
-        html.begin_form("upload_form", method = "POST")
-        html.upload_file("_upload_file")
-        html.button("upload_button", _("Restore from file"), "submit")
-        html.hidden_fields()
-        html.end_form()
+        manual_snapshot_form()
 
         table.begin("snapshots", _("Snapshots"), empty_text=_("There are no snapshots available."))
         for name in snapshots:
@@ -5486,10 +5467,14 @@ def mode_snapshot(phase):
                 continue
             status = get_snapshot_status(name)
             table.row()
-            snapshot_url = html.makeuri_contextless([("mode","snapshot_detail"),("_snapshot_name", name)])
 
-            table.cell("", css="buttons")
+            table.cell(_("Actions"), css="buttons")
+
+            snapshot_url = html.makeuri_contextless([("mode", "snapshot_detail"), ("_snapshot_name", name)])
             html.icon_button(snapshot_url, _("Details and actions of this snapshot"), "edit")
+
+            delete_url = make_action_link([("mode", "snapshot"), ("_delete_file", name)])
+            html.icon_button(delete_url, _("Delete this LDAP connection"), "delete")
 
             # Date
             table.cell(_("From"), status["name"])
@@ -5509,6 +5494,28 @@ def mode_snapshot(phase):
             elif status.get("progress_status"):
                 html.icon( status.get("progress_status"), "timeperiods")
         table.end()
+
+
+def manual_snapshot_form():
+    html.begin_form("create_snapshot", method="POST")
+    forms.header(_("Manually create snapshot"))
+    forms.section(_("Comment"))
+    forms.input(vs_snapshot(), "snapshot_options", "")
+    html.write("<br><br>")
+    html.hidden_fields()
+    forms.end()
+    html.button("_create_snapshot", _("Create snapshot"), "submit")
+    html.end_form()
+    html.write("<br>")
+
+    html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
+    html.write(_("Only supports snapshots up to 100MB. If your snapshot is larger than 100MB please copy it into the sites "
+               "backup directory <tt>%s/wato/snapshots</tt>. It will then show up in the snapshots table.") % defaults.var_dir)
+    html.begin_form("upload_form", method = "POST")
+    html.upload_file("_upload_file")
+    html.button("upload_button", _("Restore from file"), "submit")
+    html.hidden_fields()
+    html.end_form()
 
 
 def get_default_backup_domains():

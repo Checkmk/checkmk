@@ -136,6 +136,11 @@ def site_id():
     return os.environ.get("OMD_SITE")
 
 
+def site_version(site_id):
+    linkpath = os.readlink("/omd/sites/%s/version" % site_id)
+    return linkpath.split("/")[-1]
+
+
 def system_config_path():
     return "/etc/cma/backup.conf"
 
@@ -294,8 +299,9 @@ def create_backup_info():
     return info
 
 
-def add_site_infos_to_backup_info(info):
-    info["site_id"] = site_id()
+def add_site_info_to_backup_info(info):
+    info["site_id"]      = site_id()
+    info["site_version"] = site_version(info["site_id"])
 
 
 def add_system_info_to_backup_info(info):

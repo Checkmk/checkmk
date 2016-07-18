@@ -5665,7 +5665,7 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
 
     def page(self):
         self.targets().show_list()
-        backup.SystemBackupTargets().show_list(editable=False, title=_("System global targets"))
+        backup.SystemBackupTargetsReadOnly().show_list(editable=False, title=_("System global targets"))
 
 
 
@@ -5690,7 +5690,7 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
         # Only add system wide defined targets that don't conflict with
         # the site specific backup targets
         choice_dict = dict(choices)
-        for key, title in backup.SystemBackupTargets().choices():
+        for key, title in backup.SystemBackupTargetsReadOnly().choices():
             if key not in choice_dict:
                 choices.append((key, _("%s (system wide)") % title))
 
@@ -5702,7 +5702,7 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
         try:
             targets.get(value)
         except KeyError:
-            backup.SystemBackupTargets().validate_target(value, varprefix)
+            backup.SystemBackupTargetsReadOnly().validate_target(value, varprefix)
             return
 
         targets.validate_target(value, varprefix)
@@ -5768,7 +5768,7 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
         # Only add system wide defined targets that don't conflict with
         # the site specific backup targets
         choice_dict = dict(choices)
-        for key, title in backup.SystemBackupTargets().choices():
+        for key, title in backup.SystemBackupTargetsReadOnly().choices():
             if key not in choice_dict:
                 choices.append((key, _("%s (system wide)") % title))
 
@@ -5780,7 +5780,7 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
         try:
             super(ModeBackupRestore, self)._get_target(target_ident)
         except KeyError:
-            targets = backup.SystemBackupTargets()
+            targets = backup.SystemBackupTargetsReadOnly()
             self._target = targets.get(target_ident)
 
 

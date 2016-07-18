@@ -932,7 +932,9 @@ class Target(BackupEntity):
 
             from_info = info["hostname"]
             if "site_id" in info:
-                from_info += " (Site: %s)" % info["site_id"]
+                from_info += " (Site: %s, Version: %s)" % (info["site_id"], info["site_version"])
+            else:
+                from_info += " (Version: %s)" % info["cma_version"]
 
             table.cell(_("Backup-ID"), html.attrencode(backup_ident))
             table.cell(_("From"), html.attrencode(from_info))
@@ -943,6 +945,18 @@ class Target(BackupEntity):
                 html.write(info["config"]["encrypt"])
             else:
                 html.write(_("No"))
+
+            if info["type"] == "Appliance":
+                table.cell(_("Clustered"))
+                if "cma_cluster" not in info:
+                    html.write(_("Standalone"))
+                else:
+                    html.write(_("Clustered"))
+                    if not info["cma_cluster"]["is_inactive"]:
+                        html.write(" (%s)" % _("Active node"))
+                    else:
+                        html.write(" (%s)" % _("Standby node"))
+
 
         table.end()
 

@@ -98,13 +98,10 @@ CustomVarsFilter::~CustomVarsFilter() {
     }
 }
 
-bool CustomVarsFilter::accepts(void *row, contact * /* auth_user */, int /* timezone_offset */) {
+bool CustomVarsFilter::accepts(void *row, contact * /* auth_user */,
+                               int /* timezone_offset */) {
     if (_column->type() == ColumnType::dict) {
-        const char *act_string =
-            _column->getVariable(row, _ref_varname.c_str());
-        if (act_string == nullptr) {
-            act_string = "";
-        }
+        string act_string = _column->getVariable(row, _ref_varname);
         switch (_relOp) {
             case RelationalOperator::equal:
                 return act_string == _ref_string;
@@ -113,15 +110,15 @@ bool CustomVarsFilter::accepts(void *row, contact * /* auth_user */, int /* time
             case RelationalOperator::matches:
             case RelationalOperator::matches_icase:
                 return _regex != nullptr &&
-                       regexec(_regex, act_string, 0, nullptr, 0) == 0;
+                       regexec(_regex, act_string.c_str(), 0, nullptr, 0) == 0;
             case RelationalOperator::doesnt_match:
             case RelationalOperator::doesnt_match_icase:
                 return _regex != nullptr &&
-                       regexec(_regex, act_string, 0, nullptr, 0) != 0;
+                       regexec(_regex, act_string.c_str(), 0, nullptr, 0) != 0;
             case RelationalOperator::equal_icase:
-                return strcasecmp(_ref_string.c_str(), act_string) == 0;
+                return strcasecmp(_ref_string.c_str(), act_string.c_str()) == 0;
             case RelationalOperator::not_equal_icase:
-                return strcasecmp(_ref_string.c_str(), act_string) != 0;
+                return strcasecmp(_ref_string.c_str(), act_string.c_str()) != 0;
             case RelationalOperator::less:
                 return act_string < _ref_string;
             case RelationalOperator::greater_or_equal:
@@ -132,7 +129,7 @@ bool CustomVarsFilter::accepts(void *row, contact * /* auth_user */, int /* time
                 return act_string <= _ref_string;
         }
     }
-    bool is_member = _column->contains(row, _ref_text.c_str());
+    bool is_member = _column->contains(row, _ref_text);
     switch (_relOp) {
         case RelationalOperator::less:
             return !is_member;

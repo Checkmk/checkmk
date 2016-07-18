@@ -114,16 +114,16 @@ void TableContacts::addColumns(Table *table, string prefix,
         prefix + "custom_variable_names",
         "A list of all custom variables of the contact",
         reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
-        CVT_VARNAMES));
+        CustomVarsColumn::Type::varnames));
     table->addColumn(new CustomVarsColumn(
         prefix + "custom_variable_values",
         "A list of the values of all custom variables of the contact",
         reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
-        CVT_VALUES));
+        CustomVarsColumn::Type::values));
     table->addColumn(new CustomVarsColumn(
         prefix + "custom_variables", "A dictionary of the custom variables",
         reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
-        CVT_DICT));
+        CustomVarsColumn::Type::dict));
     table->addColumn(new AttributelistColumn(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",

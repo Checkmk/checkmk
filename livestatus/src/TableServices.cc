@@ -451,16 +451,16 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
         prefix + "custom_variable_names",
         "A list of the names of all custom variables of the service",
         reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        CVT_VARNAMES));
+        CustomVarsColumn::Type::varnames));
     table->addColumn(new CustomVarsColumn(
         prefix + "custom_variable_values",
         "A list of the values of all custom variable of the service",
         reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        CVT_VALUES));
+        CustomVarsColumn::Type::values));
     table->addColumn(new CustomVarsColumn(
         prefix + "custom_variables", "A dictionary of the custom variables",
         reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        CVT_DICT));
+        CustomVarsColumn::Type::dict));
 
     table->addColumn(new ServicegroupsColumn(
         prefix + "groups", "A list of all service groups the service is in",

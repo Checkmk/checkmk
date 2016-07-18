@@ -33,31 +33,24 @@
 class Filter;
 class Renderer;
 
-#define CVT_VARNAMES 0
-#define CVT_VALUES 1
-#define CVT_DICT 2
-
 class CustomVarsColumn : public Column {
-    int _offset;  // within data structure (differs from host/service)
-    int _what;
-
 public:
+    enum class Type { varnames, values, dict };
+
     CustomVarsColumn(std::string name, std::string description, int offset,
-                     int indirect_offset, int what, int extra_offset = -1)
-        : Column(name, description, indirect_offset, extra_offset)
-        , _offset(offset)
-        , _what(what) {}
-    ColumnType type() override {
-        return _what == CVT_DICT ? ColumnType::dict : ColumnType::list;
-    }
+                     int indirect_offset, Type what, int extra_offset = -1);
+    ColumnType type() override;
     void output(void *row, Renderer *renderer, contact *auth_user) override;
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
-    bool contains(void *data, const char *value);
-    char *getVariable(void *data, const char *varname);
+    bool contains(void *row, const std::string &value);
+    std::string getVariable(void *row, const std::string &varname);
 
 private:
-    customvariablesmember *getCVM(void *data);
+    const Type _what;
+    int _offset;  // within data structure (differs from host/service)
+
+    customvariablesmember *getCVM(void *row);
 };
 
 #endif  // CustomVarsColumn_h

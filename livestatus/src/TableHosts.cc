@@ -524,16 +524,16 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset,
         prefix + "custom_variable_names",
         "A list of the names of all custom variables",
         reinterpret_cast<char *>(&hst.custom_variables) - ref, indirect_offset,
-        CVT_VARNAMES, extra_offset));
+        CustomVarsColumn::Type::varnames, extra_offset));
     table->addColumn(new CustomVarsColumn(
         prefix + "custom_variable_values",
         "A list of the values of the custom variables",
         reinterpret_cast<char *>(&hst.custom_variables) - ref, indirect_offset,
-        CVT_VALUES, extra_offset));
+        CustomVarsColumn::Type::values, extra_offset));
     table->addColumn(new CustomVarsColumn(
         prefix + "custom_variables", "A dictionary of the custom variables",
         reinterpret_cast<char *>(&hst.custom_variables) - ref, indirect_offset,
-        CVT_DICT, extra_offset));
+        CustomVarsColumn::Type::dict, extra_offset));
 
     // Add direct access to the custom macro _FILENAME. In a future version of
     // Livestatus

@@ -29,41 +29,75 @@
 
 using std::string;
 
+CustomVarsColumn::CustomVarsColumn(string name, string description, int offset,
+                                   int indirect_offset, Type what,
+                                   int extra_offset)
+    : Column(name, description, indirect_offset, extra_offset)
+    , _what(what)
+    , _offset(offset) {}
+
+ColumnType CustomVarsColumn::type() {
+    switch (_what) {
+        case Type::varnames:
+            return ColumnType::list;
+        case Type::values:
+            return ColumnType::list;
+        case Type::dict:
+            return ColumnType::dict;
+    }
+    return ColumnType::list;  // unreachable
+}
+
 void CustomVarsColumn::output(void *row, Renderer *renderer,
                               contact * /* auth_user */) {
-    if (_what == CVT_DICT) {
-        renderer->outputBeginDict();
-    } else {
-        renderer->outputBeginList();
-    }
-
-    customvariablesmember *cvm = getCVM(row);
-
-    bool first = true;
-    while (cvm != nullptr) {
-        if (first) {
-            first = false;
-        } else if (_what == CVT_DICT) {
-            renderer->outputDictSeparator();
-        } else {
-            renderer->outputListSeparator();
+    switch (_what) {
+        case Type::varnames: {
+            renderer->outputBeginList();
+            bool first = true;
+            for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
+                 cvm = cvm->next) {
+                if (first) {
+                    first = false;
+                } else {
+                    renderer->outputListSeparator();
+                }
+                renderer->outputString(cvm->variable_name);
+            }
+            renderer->outputEndList();
+            break;
         }
-        if (_what == CVT_VARNAMES) {
-            renderer->outputString(cvm->variable_name);
-        } else if (_what == CVT_VALUES) {
-            renderer->outputString(cvm->variable_value);
-        } else {
-            renderer->outputString(cvm->variable_name);
-            renderer->outputDictValueSeparator();
-            renderer->outputString(cvm->variable_value);
+        case Type::values: {
+            renderer->outputBeginList();
+            bool first = true;
+            for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
+                 cvm = cvm->next) {
+                if (first) {
+                    first = false;
+                } else {
+                    renderer->outputListSeparator();
+                }
+                renderer->outputString(cvm->variable_value);
+            }
+            renderer->outputEndList();
+            break;
         }
-        cvm = cvm->next;
-    }
-
-    if (_what == CVT_DICT) {
-        renderer->outputEndDict();
-    } else {
-        renderer->outputEndList();
+        case Type::dict: {
+            renderer->outputBeginDict();
+            bool first = true;
+            for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
+                 cvm = cvm->next) {
+                if (first) {
+                    first = false;
+                } else {
+                    renderer->outputDictSeparator();
+                }
+                renderer->outputString(cvm->variable_name);
+                renderer->outputDictValueSeparator();
+                renderer->outputString(cvm->variable_value);
+            }
+            renderer->outputEndDict();
+            break;
+        }
     }
 }
 
@@ -72,11 +106,8 @@ Filter *CustomVarsColumn::createFilter(RelationalOperator relOp,
     return new CustomVarsFilter(this, relOp, value);
 }
 
-customvariablesmember *CustomVarsColumn::getCVM(void *data) {
-    if (data == nullptr) {
-        return nullptr;
-    }
-    data = shiftPointer(data);
+customvariablesmember *CustomVarsColumn::getCVM(void *row) {
+    void *data = shiftPointer(row);
     if (data == nullptr) {
         return nullptr;
     }
@@ -84,26 +115,45 @@ customvariablesmember *CustomVarsColumn::getCVM(void *data) {
         reinterpret_cast<char *>(data) + _offset);
 }
 
-bool CustomVarsColumn::contains(void *data, const char *value) {
-    customvariablesmember *cvm = getCVM(data);
-    while (cvm != nullptr) {
-        char *ref =
-            _what == CVT_VARNAMES ? cvm->variable_name : cvm->variable_value;
-        if (strcmp(ref, value) == 0) {
-            return true;
+bool CustomVarsColumn::contains(void *row, const string &value) {
+    switch (_what) {
+        case Type::varnames: {
+            for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
+                 cvm = cvm->next) {
+                if (value.compare(cvm->variable_name) == 0) {
+                    return true;
+                }
+            }
+            return false;
         }
-        cvm = cvm->next;
+        case Type::values: {
+            for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
+                 cvm = cvm->next) {
+                if (value.compare(cvm->variable_value) == 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        case Type::dict: {
+            for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
+                 cvm = cvm->next) {
+                if (value.compare(cvm->variable_value) == 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
-    return false;
+    return false;  // unreachable
 }
 
-char *CustomVarsColumn::getVariable(void *data, const char *varname) {
-    customvariablesmember *cvm = getCVM(data);
-    while (cvm != nullptr) {
-        if (strcmp(cvm->variable_name, varname) == 0) {
+string CustomVarsColumn::getVariable(void *row, const string &varname) {
+    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
+         cvm = cvm->next) {
+        if (varname.compare(cvm->variable_name) == 0) {
             return cvm->variable_value;
         }
-        cvm = cvm->next;
     }
-    return nullptr;
+    return "";
 }

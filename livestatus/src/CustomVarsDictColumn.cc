@@ -22,38 +22,43 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "CustomVarsColumn.h"
-#include "CustomVarsFilter.h"
+#include "CustomVarsDictColumn.h"
+#include "Renderer.h"
 
 using std::string;
 
-CustomVarsColumn::CustomVarsColumn(string name, string description, int offset,
-                                   int indirect_offset, int extra_offset)
-    : Column(name, description, indirect_offset, extra_offset)
-    , _offset(offset) {}
+CustomVarsDictColumn::CustomVarsDictColumn(string name, string description,
+                                           int offset, int indirect_offset,
+                                           int extra_offset)
+    : CustomVarsColumn(name, description, offset, indirect_offset,
+                       extra_offset) {}
 
-CustomVarsColumn::~CustomVarsColumn() = default;
+ColumnType CustomVarsDictColumn::type() { return ColumnType::dict; }
 
-Filter *CustomVarsColumn::createFilter(RelationalOperator relOp,
-                                       const string &value) {
-    return new CustomVarsFilter(this, relOp, value);
-}
-
-customvariablesmember *CustomVarsColumn::getCVM(void *row) {
-    void *data = shiftPointer(row);
-    if (data == nullptr) {
-        return nullptr;
-    }
-    return *reinterpret_cast<customvariablesmember **>(
-        reinterpret_cast<char *>(data) + _offset);
-}
-
-string CustomVarsColumn::getVariable(void *row, const string &varname) {
+void CustomVarsDictColumn::output(void *row, Renderer *renderer,
+                                  contact * /* auth_user */) {
+    renderer->outputBeginDict();
+    bool first = true;
     for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
          cvm = cvm->next) {
-        if (varname.compare(cvm->variable_name) == 0) {
-            return cvm->variable_value;
+        if (first) {
+            first = false;
+        } else {
+            renderer->outputDictSeparator();
+        }
+        renderer->outputString(cvm->variable_name);
+        renderer->outputDictValueSeparator();
+        renderer->outputString(cvm->variable_value);
+    }
+    renderer->outputEndDict();
+}
+
+bool CustomVarsDictColumn::contains(void *row, const string &value) {
+    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
+         cvm = cvm->next) {
+        if (value.compare(cvm->variable_value) == 0) {
+            return true;
         }
     }
-    return "";
+    return false;
 }

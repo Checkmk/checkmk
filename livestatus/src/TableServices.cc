@@ -26,8 +26,10 @@
 #include "AttributelistColumn.h"
 #include "ContactgroupsColumn.h"
 #include "CustomTimeperiodColumn.h"
-#include "CustomVarsColumn.h"
+#include "CustomVarsDictColumn.h"
 #include "CustomVarsExplicitColumn.h"
+#include "CustomVarsNamesColumn.h"
+#include "CustomVarsValuesColumn.h"
 #include "DownCommColumn.h"
 #include "FixedIntColumn.h"
 #include "MetricsColumn.h"
@@ -447,20 +449,20 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
                                -1, downtimes_holder, comments_holder);
     }
 
-    table->addColumn(new CustomVarsColumn(
+    table->addColumn(new CustomVarsNamesColumn(
         prefix + "custom_variable_names",
         "A list of the names of all custom variables of the service",
-        reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        CustomVarsColumn::Type::varnames));
-    table->addColumn(new CustomVarsColumn(
+        reinterpret_cast<char *>(&svc.custom_variables) - ref,
+        indirect_offset));
+    table->addColumn(new CustomVarsValuesColumn(
         prefix + "custom_variable_values",
         "A list of the values of all custom variable of the service",
-        reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        CustomVarsColumn::Type::values));
-    table->addColumn(new CustomVarsColumn(
+        reinterpret_cast<char *>(&svc.custom_variables) - ref,
+        indirect_offset));
+    table->addColumn(new CustomVarsDictColumn(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        CustomVarsColumn::Type::dict));
+        reinterpret_cast<char *>(&svc.custom_variables) - ref,
+        indirect_offset));
 
     table->addColumn(new ServicegroupsColumn(
         prefix + "groups", "A list of all service groups the service is in",

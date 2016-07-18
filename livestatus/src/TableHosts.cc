@@ -26,8 +26,10 @@
 #include "AttributelistColumn.h"
 #include "ContactgroupsColumn.h"
 #include "CustomTimeperiodColumn.h"
-#include "CustomVarsColumn.h"
+#include "CustomVarsDictColumn.h"
 #include "CustomVarsExplicitColumn.h"
+#include "CustomVarsNamesColumn.h"
+#include "CustomVarsValuesColumn.h"
 #include "DownCommColumn.h"
 #include "DynamicLogwatchFileColumn.h"
 #include "HostContactsColumn.h"
@@ -520,27 +522,25 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset,
                            indirect_offset, comments_holder, false, false, true,
                            true, extra_offset));
 
-    table->addColumn(new CustomVarsColumn(
+    table->addColumn(new CustomVarsNamesColumn(
         prefix + "custom_variable_names",
         "A list of the names of all custom variables",
         reinterpret_cast<char *>(&hst.custom_variables) - ref, indirect_offset,
-        CustomVarsColumn::Type::varnames, extra_offset));
-    table->addColumn(new CustomVarsColumn(
+        extra_offset));
+    table->addColumn(new CustomVarsValuesColumn(
         prefix + "custom_variable_values",
         "A list of the values of the custom variables",
         reinterpret_cast<char *>(&hst.custom_variables) - ref, indirect_offset,
-        CustomVarsColumn::Type::values, extra_offset));
-    table->addColumn(new CustomVarsColumn(
+        extra_offset));
+    table->addColumn(new CustomVarsDictColumn(
         prefix + "custom_variables", "A dictionary of the custom variables",
         reinterpret_cast<char *>(&hst.custom_variables) - ref, indirect_offset,
-        CustomVarsColumn::Type::dict, extra_offset));
+        extra_offset));
 
     // Add direct access to the custom macro _FILENAME. In a future version of
-    // Livestatus
-    // this will probably be configurable so access to further custom variable
-    // can be
-    // added, such that those variables are presented like ordinary Nagios
-    // columns.
+    // Livestatus this will probably be configurable so access to further custom
+    // variable can be added, such that those variables are presented like
+    // ordinary Nagios columns.
     table->addColumn(new CustomVarsExplicitColumn(
         prefix + "filename", "The value of the custom variable FILENAME",
         reinterpret_cast<char *>(&hst.custom_variables) - ref, indirect_offset,

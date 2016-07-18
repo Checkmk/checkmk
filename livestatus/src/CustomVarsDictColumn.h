@@ -22,38 +22,23 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#ifndef CustomVarsDictColumn_h
+#define CustomVarsDictColumn_h
+
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Column.h"
 #include "CustomVarsColumn.h"
-#include "CustomVarsFilter.h"
+#include "nagios.h"
+class Renderer;
 
-using std::string;
+class CustomVarsDictColumn : public CustomVarsColumn {
+public:
+    CustomVarsDictColumn(std::string name, std::string description, int offset,
+                         int indirect_offset, int extra_offset = -1);
+    ColumnType type() override;
+    void output(void *row, Renderer *renderer, contact *auth_user) override;
+    bool contains(void *row, const std::string &value) override;
+};
 
-CustomVarsColumn::CustomVarsColumn(string name, string description, int offset,
-                                   int indirect_offset, int extra_offset)
-    : Column(name, description, indirect_offset, extra_offset)
-    , _offset(offset) {}
-
-CustomVarsColumn::~CustomVarsColumn() = default;
-
-Filter *CustomVarsColumn::createFilter(RelationalOperator relOp,
-                                       const string &value) {
-    return new CustomVarsFilter(this, relOp, value);
-}
-
-customvariablesmember *CustomVarsColumn::getCVM(void *row) {
-    void *data = shiftPointer(row);
-    if (data == nullptr) {
-        return nullptr;
-    }
-    return *reinterpret_cast<customvariablesmember **>(
-        reinterpret_cast<char *>(data) + _offset);
-}
-
-string CustomVarsColumn::getVariable(void *row, const string &varname) {
-    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
-         cvm = cvm->next) {
-        if (varname.compare(cvm->variable_name) == 0) {
-            return cvm->variable_value;
-        }
-    }
-    return "";
-}
+#endif  // CustomVarsDictColumn_h

@@ -25,7 +25,9 @@
 #include "TableContacts.h"
 #include <stdio.h>
 #include "AttributelistColumn.h"
-#include "CustomVarsColumn.h"
+#include "CustomVarsDictColumn.h"
+#include "CustomVarsNamesColumn.h"
+#include "CustomVarsValuesColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetTimeperiodColumn.h"
@@ -110,20 +112,20 @@ void TableContacts::addColumns(Table *table, string prefix,
         reinterpret_cast<char *>(&ctc.service_notification_period_ptr) - ref,
         indirect_offset));
 
-    table->addColumn(new CustomVarsColumn(
+    table->addColumn(new CustomVarsNamesColumn(
         prefix + "custom_variable_names",
         "A list of all custom variables of the contact",
-        reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
-        CustomVarsColumn::Type::varnames));
-    table->addColumn(new CustomVarsColumn(
+        reinterpret_cast<char *>(&ctc.custom_variables) - ref,
+        indirect_offset));
+    table->addColumn(new CustomVarsValuesColumn(
         prefix + "custom_variable_values",
         "A list of the values of all custom variables of the contact",
-        reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
-        CustomVarsColumn::Type::values));
-    table->addColumn(new CustomVarsColumn(
+        reinterpret_cast<char *>(&ctc.custom_variables) - ref,
+        indirect_offset));
+    table->addColumn(new CustomVarsDictColumn(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
-        CustomVarsColumn::Type::dict));
+        reinterpret_cast<char *>(&ctc.custom_variables) - ref,
+        indirect_offset));
     table->addColumn(new AttributelistColumn(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",

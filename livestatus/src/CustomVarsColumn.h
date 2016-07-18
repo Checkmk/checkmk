@@ -31,24 +31,19 @@
 #include "nagios.h"
 #include "opids.h"
 class Filter;
-class Renderer;
 
 class CustomVarsColumn : public Column {
 public:
-    enum class Type { varnames, values, dict };
-
     CustomVarsColumn(std::string name, std::string description, int offset,
-                     int indirect_offset, Type what, int extra_offset = -1);
-    ColumnType type() override;
-    void output(void *row, Renderer *renderer, contact *auth_user) override;
+                     int indirect_offset, int extra_offset = -1);
+    virtual ~CustomVarsColumn();
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
-    bool contains(void *row, const std::string &value);
+    virtual bool contains(void *row, const std::string &value) = 0;
     std::string getVariable(void *row, const std::string &varname);
 
-private:
-    const Type _what;
-    int _offset;  // within data structure (differs from host/service)
+protected:
+    const int _offset;  // within data structure (differs from host/service)
 
     customvariablesmember *getCVM(void *row);
 };

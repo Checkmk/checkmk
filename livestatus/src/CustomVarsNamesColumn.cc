@@ -22,38 +22,41 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "CustomVarsColumn.h"
-#include "CustomVarsFilter.h"
+#include "CustomVarsNamesColumn.h"
+#include "Renderer.h"
 
 using std::string;
 
-CustomVarsColumn::CustomVarsColumn(string name, string description, int offset,
-                                   int indirect_offset, int extra_offset)
-    : Column(name, description, indirect_offset, extra_offset)
-    , _offset(offset) {}
+CustomVarsNamesColumn::CustomVarsNamesColumn(string name, string description,
+                                             int offset, int indirect_offset,
+                                             int extra_offset)
+    : CustomVarsColumn(name, description, offset, indirect_offset,
+                       extra_offset) {}
 
-CustomVarsColumn::~CustomVarsColumn() = default;
+ColumnType CustomVarsNamesColumn::type() { return ColumnType::list; }
 
-Filter *CustomVarsColumn::createFilter(RelationalOperator relOp,
-                                       const string &value) {
-    return new CustomVarsFilter(this, relOp, value);
-}
-
-customvariablesmember *CustomVarsColumn::getCVM(void *row) {
-    void *data = shiftPointer(row);
-    if (data == nullptr) {
-        return nullptr;
-    }
-    return *reinterpret_cast<customvariablesmember **>(
-        reinterpret_cast<char *>(data) + _offset);
-}
-
-string CustomVarsColumn::getVariable(void *row, const string &varname) {
+void CustomVarsNamesColumn::output(void *row, Renderer *renderer,
+                                   contact * /* auth_user */) {
+    renderer->outputBeginList();
+    bool first = true;
     for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
          cvm = cvm->next) {
-        if (varname.compare(cvm->variable_name) == 0) {
-            return cvm->variable_value;
+        if (first) {
+            first = false;
+        } else {
+            renderer->outputListSeparator();
+        }
+        renderer->outputString(cvm->variable_name);
+    }
+    renderer->outputEndList();
+}
+
+bool CustomVarsNamesColumn::contains(void *row, const string &value) {
+    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
+         cvm = cvm->next) {
+        if (value.compare(cvm->variable_name) == 0) {
+            return true;
         }
     }
-    return "";
+    return false;
 }

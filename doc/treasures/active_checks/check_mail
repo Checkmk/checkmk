@@ -312,7 +312,7 @@ def forward_to_ec(mails):
                         payload = base64.b64decode(payload)
                     log_line += '|' + payload[:body_limit]
                     break
-        else:
+        else: 
             payload = msg.get_payload()
             if encoding == "base64":
                 payload = base64.b64decode(payload)

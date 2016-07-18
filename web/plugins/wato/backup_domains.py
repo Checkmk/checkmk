@@ -24,29 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Temporary variable which stores settings during the backup process
-backup_perfdata_enabled = True
-def performancedata_restore(pre_restore = True):
-    global backup_perfdata_enabled
-    site = config.default_site()
-    sites.live().set_only_sites([site])
-
-    if pre_restore:
-        data = sites.live().query("GET status\nColumns: process_performance_data")
-        if data:
-            backup_perfdata_enabled = data[0][0] == 1
-        else:
-            backup_perfdata_enabled = None # Core is offline
-
-    # Return if perfdata is not activated - nothing to do..
-    if not backup_perfdata_enabled: # False or None
-        return []
-
-    command = pre_restore and "DISABLE_PERFORMANCE_DATA" or "ENABLE_PERFORMANCE_DATA"
-    sites.live().command("[%d] %s" % (int(time.time()), command), site)
-    sites.live().set_only_sites()
-    return []
-
 if not defaults.omd_root:
     backup_domains.update( {
     "noomd-config": {
@@ -98,21 +75,6 @@ else:
                           ],
           "default"     : True,
         },
-        "authorization": {
-          # This domain is obsolete
-          # It no longer shows up in the backup screen
-          "deprecated"  : True,
-          "group"       : _("Configuration"),
-          "title"       : _("Local Authentication Data"),
-          "prefix"      : os.path.dirname(defaults.htpasswd_file),
-          "paths"       : [
-                            ("file", "htpasswd"),
-                            ("file", "auth.secret"),
-                            ("file", "auth.serials")
-                          ],
-          "cleanup"     : False,
-          "default"     : True,
-        },
         "authorization_v1": {
           "group"       : _("Configuration"),
           "title"       : _("Local Authentication Data"),
@@ -126,32 +88,6 @@ else:
           "cleanup"     : False,
           "default"     : True
         },
-        "personalsettings": {
-          "title"       : _("Personal User Settings and Custom Views"),
-          "prefix"      :  defaults.var_dir,
-          "paths"       : [ ("dir", "web") ],
-          "exclude"     : [ "*/serial.mk" ],
-          "cleanup"     : False,
-        },
-        "autochecks": {
-          "group"       : _("Configuration"),
-          "title"       : _("Automatically Detected Services"),
-          "prefix"      : defaults.autochecksdir,
-          "paths"       : [ ("dir", "") ],
-        },
-        "snmpwalks": {
-          "title"       : _("Stored SNMP Walks"),
-          "prefix"      : defaults.snmpwalks_dir,
-          "paths"       : [ ("dir", "") ],
-        },
-        "logwatch": {
-          "group"       : _("Historic Data"),
-          "title"       : _("Logwatch Data"),
-          "prefix"      : defaults.var_dir,
-          "paths"       : [
-                            ("dir",  "logwatch"),
-                          ],
-        },
         "mkeventstatus": {
           "group"       : _("Configuration"),
           "title"       : _("Event Console Configuration"),
@@ -161,62 +97,6 @@ else:
                           ],
           "default"     : True
         },
-        "mkeventhistory": {
-          "group"       : _("Historic Data"),
-          "title"       : _("Event Console Archive and Current State"),
-          "prefix"      : defaults.omd_root,
-          "paths"       : [
-                            ("dir",  "var/mkeventd/history"),
-                            ("file", "var/mkeventd/status"),
-                            ("file", "var/mkeventd/messages"),
-                            ("dir",  "var/mkeventd/messages-history"),
-                          ],
-        },
-        "corehistory": {
-          "group"       : _("Historic Data"),
-          "title"       : _("Monitoring History"),
-          "prefix"      : defaults.omd_root,
-          "paths"       : [
-                            ("dir",  "var/nagios/archive"),
-                            ("file", "var/nagios/nagios.log"),
-                            ("dir",  "var/icinga/archive"),
-                            ("file", "var/icinga/icinga.log"),
-                            ("dir",  "var/check_mk/core/archive"),
-                            ("file", "var/check_mk/core/history"),
-                          ],
-        },
-        "performancedata": {
-          "group"        : _("Historic Data"),
-          "title"        : _("Performance Data"),
-          "prefix"       : defaults.omd_root,
-          "paths"        : [
-                             ("dir",  "var/pnp4nagios/perfdata"),
-                             ("dir",  "var/rrdcached"),
-                             ("dir",  "var/check_mk/rrd"),
-                           ],
-          "pre_restore"  : lambda: performancedata_restore(pre_restore = True),
-          "post_restore" : lambda: performancedata_restore(pre_restore = False),
-          "checksum"    : False,
-        },
-        "applicationlogs": {
-          "group"       : _("Historic Data"),
-          "title"       : _("Application Logs"),
-          "prefix"      : defaults.omd_root,
-          "paths"       : [
-                            ("dir",  "var/log"),
-                            ("file", "var/nagios/livestatus.log"),
-                            ("dir",  "var/pnp4nagios/log"),
-                          ],
-          "checksum"    : False,
-        },
-        "snmpmibs": {
-          "group"       : _("Configuration"),
-          "title"       : _("SNMP MIBs"),
-          "prefix"      : defaults.omd_root,
-          "paths"       : [
-                            ("dir",  "local/share/check_mk/mibs"),
-                          ],
-        },
         "extensions" : {
             "title"    : _("Extensions in <tt>~/local/</tt> and MKPs"),
             "prefix"   : defaults.omd_root,
@@ -225,28 +105,5 @@ else:
                             ("dir", "local" ),
                          ],
             "default"  : True,
-        },
-        "dokuwiki": {
-          "title"       : _("Doku Wiki Pages and Settings"),
-          "prefix"      : defaults.omd_root,
-          "paths"       : [
-                            ("dir",  "var/dokuwiki"),
-                          ],
-        },
-        "nagvis": {
-          "title"       : _("NagVis Maps, Configurations and User Files"),
-          "prefix"      : defaults.omd_root,
-          "exclude"     : [
-                            "etc/nagvis/apache.conf",
-                            "etc/nagvis/conf.d/authorisation.ini.php",
-                            "etc/nagvis/conf.d/omd.ini.php",
-                            "etc/nagvis/conf.d/cookie_auth.ini.php",
-                            "etc/nagvis/conf.d/urls.ini.php"
-                          ],
-          "paths"       : [
-                            ("dir",  "local/share/nagvis"),
-                            ("dir",  "etc/nagvis"),
-                            ("dir",  "var/nagvis"),
-                          ],
         },
     })

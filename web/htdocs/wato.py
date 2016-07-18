@@ -86,6 +86,7 @@
 import sys, pprint, socket, re, time, datetime,  \
        shutil, tarfile, cStringIO, math, fcntl, random, glob, \
        base64, csv
+import subprocess
 import i18n
 import config, table, multitar, userdb, weblib, login
 from hashlib import sha256
@@ -4462,7 +4463,7 @@ def mode_changelog(phase):
 
         elif transaction_already_checked or html.check_transaction():
             config.need_permission("wato.activate")
-            create_snapshot({"comment": "Activated changes by %s" % config.user_id}, sync_mode=True)
+            create_snapshot("automatic")
 
             # Do nothing here, but let site status table be shown in a mode
             # were in each site that is not up-to-date an asynchronus AJAX
@@ -5073,13 +5074,6 @@ def get_snapshot_status(snapshot, validate_checksums = False):
                                        'Check_MK Micro Core. If you need to migrate your data, you could consider changing '
                                        'the core, restoring the snapshot and changing the core back again.'))
 
-    def snapshot_secret():
-        path = defaults.default_config_dir + '/snapshot.secret'
-        try:
-            return file(path).read()
-        except IOError:
-            return '' # validation will fail in this case
-
     def check_checksums():
         for f in status["files"].values():
             f['checksum'] = None
@@ -5177,6 +5171,21 @@ def get_snapshot_status(snapshot, validate_checksums = False):
             status["broken"]      = True
     return status
 
+
+def snapshot_secret():
+    path = defaults.default_config_dir + '/snapshot.secret'
+    try:
+        return file(path).read()
+    except IOError:
+        # create a secret during first use
+        try:
+            s = os.urandom(256)
+        except NotImplementedError:
+            s = sha256(time.time())
+        file(path, 'w').write(s)
+        return s
+
+
 def mode_snapshot_detail(phase):
     snapshot_name = html.var("_snapshot_name")
 
@@ -5210,7 +5219,7 @@ def mode_snapshot_detail(phase):
     for entry in [ ("comment", _("Comment")), ("created_by", _("Created by")) ]:
         if status.get(entry[0]):
             forms.section(entry[1])
-            html.write(status.get(entry[0]))
+            html.write(html.attrencode(status.get(entry[0])))
 
     forms.section(_("Content"))
     files = status["files"]
@@ -5309,30 +5318,7 @@ def mode_snapshot(phase):
     snapshots = get_snapshots()
 
     # Generate valuespec for snapshot options
-    # Sort domains by group
-    domains_grouped = {}
-    for domainname, data in backup_domains.items():
-        if not data.get("deprecated"):
-            domains_grouped.setdefault(data.get("group","Other"), {}).update({domainname: data})
-    backup_groups = []
-    for idx, key in enumerate(sorted(domains_grouped.keys())):
-        value = domains_grouped[key]
-        choices = []
-        default_values = []
-        for entry in sorted(value.keys()):
-            choices.append( (entry,value[entry]["title"]) )
-            if value[entry].get("default"):
-                default_values.append(entry)
-        choices.sort(key = lambda x: x[1])
-        backup_groups.append( ("group_%d" % idx, ListChoice(title = key, choices = choices, default_value = default_values) ) )
-
-    # Optional snapshot comment
-    backup_groups.append(("comment", TextUnicode(title = _("Comment"), size=80)))
-    snapshot_vs = Dictionary(
-        elements =  backup_groups,
-        optional_keys = []
-    )
-
+    snapshot_vs = TextUnicode(title = _("Comment"), size=80)
 
     if phase == "action":
         if html.has_var("_download_file"):
@@ -5356,27 +5342,12 @@ def mode_snapshot(phase):
         # create snapshot
         elif html.has_var("_create_snapshot"):
             if html.check_transaction():
-                # create snapshot
-                store_domains = {}
+                comment = snapshot_vs.from_html_vars("snapshot_options")
+                snapshot_vs.validate_value(comment, "snapshot_options")
 
-                snapshot_options = snapshot_vs.from_html_vars("snapshot_options")
-                snapshot_vs.validate_value(snapshot_options, "snapshot_options")
+                name = create_snapshot("manual", comment=comment or None)
 
-                for key, value in snapshot_options.items():
-                    if key.startswith("group_"):
-                        for entry in value:
-                            store_domains[entry] = backup_domains[entry]
-
-                snapshot_data = {}
-                snapshot_name = "wato-snapshot-%s.tar" %  \
-                                time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
-                snapshot_data["comment"]       = snapshot_options.get("comment") \
-                                                 or _("Snapshot created by %s") % config.user_id
-                snapshot_data["type"]          = "manual"
-                snapshot_data["snapshot_name"] = snapshot_name
-                snapshot_data["domains"]       = store_domains
-
-                return None, _("Created snapshot <tt>%s</tt>.") % create_snapshot(snapshot_data)
+                return None, _("Created snapshot <tt>%s</tt>.") % name
 
         # upload snapshot
         elif html.uploads.get("_upload_file"):
@@ -5488,11 +5459,11 @@ def mode_snapshot(phase):
     else:
         snapshots = get_snapshots()
 
-        # Render snapshot domain options
+        # Render manual snapshot creation form
         html.begin_form("create_snapshot", method="POST")
         forms.header(_("Create snapshot"))
-        forms.section(_("Elements to save"))
-        forms.input(snapshot_vs, "snapshot_options", {})
+        forms.section(_("Comment"))
+        forms.input(snapshot_vs, "snapshot_options", "")
         html.write("<br><br>")
         html.hidden_fields()
         forms.end()
@@ -5524,7 +5495,7 @@ def mode_snapshot(phase):
             table.cell(_("From"), status["name"])
 
             # Comment
-            table.cell(_("Comment"), status.get("comment",""))
+            table.cell(_("Comment"), html.attrencode(status.get("comment", "")))
 
             # Age and Size
             st = os.stat(snapshot_dir + name)
@@ -5539,14 +5510,14 @@ def mode_snapshot(phase):
                 html.icon( status.get("progress_status"), "timeperiods")
         table.end()
 
-def get_backup_domains(modes, extra_domains = {}):
+
+def get_default_backup_domains():
     domains = {}
-    for mode in modes:
-        for domain, value in backup_domains.items():
-            if mode in value and not value.get("deprecated"):
-                domains.update({domain: value})
-    domains.update(extra_domains)
+    for domain, value in backup_domains.items():
+        if "default" in value and not value.get("deprecated"):
+            domains.update({domain: value})
     return domains
+
 
 def do_snapshot_maintenance():
     snapshots = []
@@ -5563,37 +5534,116 @@ def do_snapshot_maintenance():
         os.remove(snapshot_dir + snapshots.pop())
 
 
-def create_snapshot(data = {}, sync_mode=False):
-    import copy
-    def remove_functions(snapshot_data):
-        snapshot_data_copy = copy.deepcopy(snapshot_data)
-        for dom_key, dom_values in snapshot_data.items():
-            for key, value in dom_values.items():
-                if hasattr(value, '__call__'):
-                    del snapshot_data_copy[dom_key][key]
-        return snapshot_data_copy
-
+def create_snapshot(ty, comment=None):
     make_nagios_directory(snapshot_dir)
 
-    snapshot_name = data.get("name") or "wato-snapshot-%s.tar" %  \
-                    time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
-    snapshot_data = {}
-    snapshot_data["comment"]       = data.get("comment", _("Snapshot created by %s") % config.user_id)
-    snapshot_data["created_by"]    = data.get("created_by", config.user_id)
-    snapshot_data["type"]          = data.get("type", "automatic")
-    snapshot_data["snapshot_name"] = snapshot_name
-    snapshot_data["domains"]       = remove_functions(data.get("domains", get_backup_domains(["default"])))
+    snapshot_name = "wato-snapshot-%s.tar" % time.strftime("%Y-%m-%d-%H-%M-%S",
+                                                           time.localtime(time.time()))
 
-    if sync_mode:
-        args = [ "sync" ]
-    else:
-        args = []
-    check_mk_local_automation("create-snapshot", args, snapshot_data)
+    if comment == None:
+        if ty == "manual":
+            comment = _("Snapshot created by %s") % config.user_id
+        else:
+            comment = _("Activated changes by %s") % config.user_id
+
+    data = {}
+    data["comment"]       = comment
+    data["created_by"]    = config.user_id
+    data["type"]          = ty
+    data["snapshot_name"] = snapshot_name
+
+    do_create_snapshot(data)
 
     log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
     do_snapshot_maintenance()
 
     return snapshot_name
+
+
+def do_create_snapshot(data):
+    snapshot_name = data["snapshot_name"]
+    snapshot_dir  = defaults.var_dir + "/wato/snapshots"
+    work_dir      = snapshot_dir + "/workdir/%s" % snapshot_name
+
+    try:
+        if not os.path.exists(work_dir):
+            os.makedirs(work_dir)
+
+        # Open / initialize files
+        filename_target = "%s/%s"        % (snapshot_dir, snapshot_name)
+        filename_work   = "%s/%s.work"   % (work_dir, snapshot_name)
+
+        file(filename_target, "w").close()
+
+        def get_basic_tarinfo(name):
+            tarinfo = tarfile.TarInfo(name)
+            tarinfo.mtime = time.time()
+            tarinfo.uid   = 0
+            tarinfo.gid   = 0
+            tarinfo.mode  = 0644
+            tarinfo.type  = tarfile.REGTYPE
+            return tarinfo
+
+        # Initialize the snapshot tar file and populate with initial information
+        tar_in_progress = tarfile.open(filename_work, "w")
+
+        for key in [ "comment", "created_by", "type" ]:
+            tarinfo       = get_basic_tarinfo(key)
+            encoded_value = data[key].encode("utf-8")
+            tarinfo.size  = len(encoded_value)
+            tar_in_progress.addfile(tarinfo, cStringIO.StringIO(encoded_value))
+
+        tar_in_progress.close()
+
+        # Process domains (sorted)
+        subtar_info = {}
+        for name, info in sorted(get_default_backup_domains().items()):
+            prefix          = info.get("prefix","")
+            filename_subtar = "%s.tar.gz" % name
+            path_subtar     = "%s/%s" % (work_dir, filename_subtar)
+
+            paths = map(lambda x: x[1] == "" and "." or x[1], info.get("paths", []))
+            command = "tar czf %s --ignore-failed-read --force-local -C %s %s" % \
+                                    (path_subtar, prefix, " ".join(paths))
+
+            proc = subprocess.Popen(command, shell=True, stdin=None, close_fds=True,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=prefix)
+            stdout, stderr = proc.communicate()
+            exit_code      = proc.wait()
+            # Allow exit codes 0 and 1 (files changed during backup)
+            if exit_code not in [0, 1]:
+                raise MKGeneralException("Error while creating backup of %s (Exit Code %d) - %s.\n%s" %
+							(name, exit_code, stderr, command))
+
+            subtar_size   = os.stat(path_subtar).st_size
+            subtar_hash   = sha256(file(path_subtar).read()).hexdigest()
+            subtar_signed = sha256(subtar_hash + snapshot_secret()).hexdigest()
+            subtar_info[filename_subtar] = (subtar_hash, subtar_signed)
+
+            # Append tar.gz subtar to snapshot
+            command = "tar --append --file=%s %s ; rm %s" % \
+                    (filename_work, filename_subtar, filename_subtar)
+            proc = subprocess.Popen(command, shell=True, cwd = work_dir)
+            proc.communicate()
+            exit_code = proc.wait()
+            if exit_code != 0:
+                raise MKGeneralException("Error on adding backup domain %s to tarfile" % name)
+
+        # Now add the info file which contains hashes and signed hashes for
+        # each of the subtars
+        info = ''.join([ '%s %s %s\n' % (k, v[0], v[1]) for k, v in subtar_info.items() ]) + '\n'
+
+        tar_in_progress = tarfile.open(filename_work, "a")
+        tarinfo      = get_basic_tarinfo("checksums")
+        tarinfo.size = len(info)
+        tar_in_progress.addfile(tarinfo, cStringIO.StringIO(info))
+        tar_in_progress.close()
+
+        shutil.move(filename_work, filename_target)
+
+    finally:
+        shutil.rmtree(work_dir)
+
 
 #.
 #   .--Backups-------------------------------------------------------------.

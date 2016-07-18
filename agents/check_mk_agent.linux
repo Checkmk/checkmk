@@ -145,8 +145,10 @@ function run_cached () {
     if [ ! -d $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache ; fi
     CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
 
-    # Check if the creation of the cache takes suspiciously long and return
-    # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
+    # Check if the creation of the cache takes suspiciously long and kill the
+    # process if the age (access time) of $CACHEFILE.new is twice the MAXAGE.
+    # Output the evantually already cached section anyways and start the cache
+    # update again.
     if [ -e "$CACHEFILE.new" ] ; then
         local CF_ATIME=$(stat -c %X "$CACHEFILE.new")
         if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then
@@ -154,7 +156,6 @@ function run_cached () {
             # it is still running. This avoids overlapping processes!
             fuser -k -9 "$CACHEFILE.new" >/dev/null 2>&1
             rm -f "$CACHEFILE.new"
-            return
         fi
     fi
 

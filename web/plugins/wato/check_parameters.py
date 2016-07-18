@@ -212,6 +212,29 @@ register_check_parameters(
     "first"
 )
 
+register_check_parameters(
+    subgroup_networking,
+    "f5_bigip_cluster_v11",
+    _(u"Configuration Sync Status for F5 BigIP devices"),
+    Dictionary(
+        title = _("Interpretation of Config Sync Status"),
+        elements = [
+            ("0", MonitoringState(title = "Unknown", default_value = 3)),
+            ("1", MonitoringState(title = "Syncing", default_value = 0)),
+            ("2", MonitoringState(title = "Need Manual Sync", default_value = 1)),
+            ("3", MonitoringState(title = "In Sync", default_value = 0)),
+            ("4", MonitoringState(title = "Sync Failed", default_value = 2)),
+            ("5", MonitoringState(title = "Sync Disconnected", default_value = 2)),
+            ("6", MonitoringState(title = "Standalone", default_value = 2)),
+            ("7", MonitoringState(title = "Awaiting Initial Sync", default_value = 1)),
+            ("8", MonitoringState(title = "Incompatible Version", default_value = 2)),
+            ("9", MonitoringState(title = "Partial Sync", default_value = 2)),
+        ]
+    ),
+    None,
+    "dict"
+)
+
 #.
 #   .--Inventory-----------------------------------------------------------.
 #   |            ___                      _                                |

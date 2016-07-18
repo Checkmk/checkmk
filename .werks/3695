@@ -1,0 +1,10 @@
+Title: f5_bigip_cluster_v11: Now WATO configurable
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.4.0i1
+Date: 1468834348
+Class: feature
+
+How the config sync status is to be interpreted is now configurable.
+Rediscovery required.

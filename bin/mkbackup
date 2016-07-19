@@ -34,7 +34,6 @@ import glob
 import grp
 import io
 import os
-import pprint
 import pwd
 import re
 import shutil
@@ -55,6 +54,11 @@ from OpenSSL import crypto
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 import Crypto.Util.number
+
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 import cmk.daemon as daemon
 import cmk.render as render
@@ -277,7 +281,7 @@ def get_site_ids_of_backup(info):
 
 def save_backup_info(info):
     with open(backup_info_path(), "w") as f:
-        f.write(pprint.pformat(info)+"\n")
+        json.dump(info, f, sort_keys=True, indent=4, separators=(',', ': '))
 
 
 def create_backup_info():
@@ -648,7 +652,7 @@ def stop_site(site):
     omd_command("stop", site)
 
     for c in range(5):
-        if os.system("omd status --bare %s" % site) >> 8 == 1:
+        if os.system("omd status --bare %s >/dev/null" % site) >> 8 == 1:
             break
         elif c == 4:
             raise MKGeneralException("Failed to stop site")
@@ -658,7 +662,7 @@ def start_site(site):
     omd_command("start", site)
 
     for c in range(5):
-        if os.system("omd status --bare %s" % site) >> 8 == 0:
+        if os.system("omd status --bare %s >/dev/null" % site) >> 8 == 0:
             break
         elif c == 4:
             raise MKGeneralException("Failed to start site")
@@ -1306,10 +1310,12 @@ def init_new_run():
 
 g_state = None
 
+# The state file is in JSON format because it is 1:1 transfered
+# to the Check_MK server through the Check_MK agent.
 def load_state():
     global g_state
     if g_state == None:
-        g_state = eval(file(state_path()).read())
+        g_state = json.load(file(state_path()))
 
     return g_state
 
@@ -1322,7 +1328,7 @@ def save_state(new_attrs, update=True):
     state.update(new_attrs)
 
     with store.open(state_path(), "w") as f:
-        f.write(pprint.pformat(state)+"\n")
+        json.dump(state, f, sort_keys=True, indent=4, separators=(',', ': '))
 
 
 def state_path():

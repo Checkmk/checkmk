@@ -32,11 +32,15 @@
 
 import glob
 import os
-import pprint
 import shutil
 import signal
 import socket
 import subprocess
+
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 import defaults
 import table
@@ -222,7 +226,7 @@ class MKBackupJob(object):
 
     def state(self):
         try:
-            state = eval(file(self.state_file_path()).read())
+            state = json.load(file(self.state_file_path()))
         except IOError, e:
             if e.errno == 2: # not existant
                 state = {
@@ -1353,7 +1357,7 @@ class BackupTargetLocal(BackupTargetType):
 
     # TODO: Duplicate code with mkbackup
     def _load_backup_info(self, path):
-        info = eval(file(path).read())
+        info = json.load(file(path))
 
         # Load the backup_id from the second right path component. This is the
         # base directory of the mkbackup.info file. The user might have moved

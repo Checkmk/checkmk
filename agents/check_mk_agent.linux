@@ -733,6 +733,39 @@ then
     done
 fi
 
+# Collect states of configured Check_MK site backup jobs
+if ls /omd/sites/*/var/check_mk/backup/*.state >/dev/null 2>&1; then
+    echo "<<<mkbackup>>>"
+    for F in /omd/sites/*/var/check_mk/backup/*.state; do
+        SITE=${F#/*/*/*}
+        SITE=${SITE%%/*}
+
+        JOB_IDENT=${F%.state}
+        JOB_IDENT=${JOB_IDENT##*/}
+
+        if [ "$JOB_IDENT" != "restore" ]; then
+            echo "[[[site:$SITE:$JOB_IDENT]]]"
+            cat $F
+            echo
+        fi
+    done
+fi
+
+# Collect states of configured CMA backup jobs
+if type mkbackup >/dev/null && ls /var/lib/mkbackup/*.state >/dev/null 2>&1; then
+    echo "<<<mkbackup>>>"
+    for F in /var/lib/mkbackup/*.state; do
+        JOB_IDENT=${F%.state}
+        JOB_IDENT=${JOB_IDENT##*/}
+
+        if [ "$JOB_IDENT" != "restore" ]; then
+            echo "[[[system:$JOB_IDENT]]]"
+            cat $F
+            echo
+        fi
+    done
+fi
+
 # Get statistics about monitored jobs. Below the job directory there
 # is a sub directory per user that ran a job. That directory must be
 # owned by the user so that a symlink or hardlink attack for reading

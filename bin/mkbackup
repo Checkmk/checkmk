@@ -527,8 +527,7 @@ def mode_backup(local_job_id, opts):
     verify_target_is_ready(target_ident)
 
     init_new_run()
-
-    save_state({"schedule": g_job_config["schedule"]})
+    save_next_run()
 
     if "background" in opts:
         daemon.daemonize()
@@ -1307,6 +1306,23 @@ def init_new_run():
         "bytes_per_second" : 0,
     }, update=False)
 
+
+def save_next_run():
+    schedule = g_job_config["schedule"]
+    if not schedule:
+        next_schedule = None
+
+    elif schedule["disabled"]:
+        next_schedule = "disabled"
+
+    else:
+        # find the next time of all configured times
+        times = []
+        for timespec in schedule["timeofday"]:
+            times.append(render.next_scheduled_time(schedule["period"], timespec))
+        next_schedule = min(times)
+
+    save_state({"next_schedule": next_schedule})
 
 g_state = None
 

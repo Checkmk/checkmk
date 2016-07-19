@@ -448,9 +448,9 @@ class PageDownloadKey(object):
 
     def page(self):
         html.write("<p>%s</p>" %
-            _("To be able to download the passphrase, you need to unlock the key by entering the "
+            _("To be able to download the key, you need to unlock the key by entering the "
               "passphrase. This is only done to verify that you are allowed to download the key. "
-              "The key will be downloaded encrypted form."))
+              "The key will be downloaded in encrypted form."))
         html.begin_form("key", method="POST")
         html.prevent_password_auto_completion()
         self._vs_key().render_input("key", {})

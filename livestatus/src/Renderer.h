@@ -46,25 +46,31 @@ public:
 
     class Query {
     public:
-        explicit Query(Renderer *renderer) : _renderer(renderer), _first(true) {
-            _renderer->startQuery();
+        explicit Query(Renderer &rend) : _renderer(rend), _first(true) {
+            renderer().startQuery();
         }
 
-        ~Query() { _renderer->endQuery(); }
+        ~Query() { renderer().endQuery(); }
+
+        void setError(OutputBuffer::ResponseCode code,
+                      const std::string &message) {
+            renderer().setError(code, message);
+        }
+        std::size_t size() const { return renderer().size(); }
 
     private:
-        Renderer *const _renderer;
+        Renderer &_renderer;
         bool _first;
 
         void next() {
             if (_first) {
                 _first = false;
             } else {
-                _renderer->separateQueryElements();
+                renderer().separateQueryElements();
             }
         }
 
-        Renderer *renderer() const { return _renderer; }
+        Renderer &renderer() const { return _renderer; }
 
         // for next() and renderer()
         friend class Renderer::Row;
@@ -74,46 +80,46 @@ public:
     public:
         explicit Row(Query &query) : _query(query), _first(true) {
             _query.next();
-            renderer()->startRow();
+            renderer().startRow();
         }
 
-        ~Row() { renderer()->endRow(); }
+        ~Row() { renderer().endRow(); }
 
         void outputNull() {
             next();
-            renderer()->outputNull();
+            renderer().outputNull();
         }
         void outputBlob(const std::vector<char> *blob) {
             next();
-            renderer()->outputBlob(blob);
+            renderer().outputBlob(blob);
         }
         void outputString(const char *value) {
             next();
-            renderer()->outputString(value);
+            renderer().outputString(value);
         }
         void outputInteger(int32_t value) {
             next();
-            renderer()->outputInteger(value);
+            renderer().outputInteger(value);
         }
         void outputInteger64(int64_t value) {
             next();
-            renderer()->outputInteger64(value);
+            renderer().outputInteger64(value);
         }
         void outputTime(int32_t value) {
             next();
-            renderer()->outputTime(value);
+            renderer().outputTime(value);
         }
         void outputUnsignedLong(unsigned long value) {
             next();
-            renderer()->outputUnsignedLong(value);
+            renderer().outputUnsignedLong(value);
         }
         void outputCounter(counter_t value) {
             next();
-            renderer()->outputCounter(value);
+            renderer().outputCounter(value);
         }
         void outputDouble(double value) {
             next();
-            renderer()->outputDouble(value);
+            renderer().outputDouble(value);
         }
 
     private:
@@ -124,11 +130,11 @@ public:
             if (_first) {
                 _first = false;
             } else {
-                renderer()->separateRowElements();
+                renderer().separateRowElements();
             }
         }
 
-        Renderer *renderer() const { return _query.renderer(); }
+        Renderer &renderer() const { return _query.renderer(); }
 
         // for next() and renderer()
         friend class Renderer::List;
@@ -141,26 +147,26 @@ public:
     public:
         explicit List(Row &row) : _row(row), _first(true) {
             _row.next();
-            renderer()->startList();
+            renderer().startList();
         }
 
-        ~List() { renderer()->endList(); }
+        ~List() { renderer().endList(); }
 
         void outputString(const char *value) {
             next();
-            renderer()->outputString(value);
+            renderer().outputString(value);
         }
         void outputUnsignedLong(unsigned long value) {
             next();
-            renderer()->outputUnsignedLong(value);
+            renderer().outputUnsignedLong(value);
         }
         void outputTime(int32_t value) {
             next();
-            renderer()->outputTime(value);
+            renderer().outputTime(value);
         }
         void outputDouble(double value) {
             next();
-            renderer()->outputDouble(value);
+            renderer().outputDouble(value);
         }
 
     private:
@@ -171,11 +177,11 @@ public:
             if (_first) {
                 _first = false;
             } else {
-                renderer()->separateListElements();
+                renderer().separateListElements();
             }
         }
 
-        Renderer *renderer() const { return _row.renderer(); }
+        Renderer &renderer() const { return _row.renderer(); }
 
         // for next() and renderer()
         friend class Renderer::Sublist;
@@ -185,26 +191,26 @@ public:
     public:
         explicit Sublist(List &list) : _list(list), _first(true) {
             _list.next();
-            renderer()->startSublist();
+            renderer().startSublist();
         }
 
-        ~Sublist() { renderer()->endSublist(); }
+        ~Sublist() { renderer().endSublist(); }
 
         void outputInteger(int32_t value) {
             next();
-            renderer()->outputInteger(value);
+            renderer().outputInteger(value);
         }
         void outputTime(int32_t value) {
             next();
-            renderer()->outputTime(value);
+            renderer().outputTime(value);
         }
         void outputUnsignedLong(unsigned long value) {
             next();
-            renderer()->outputUnsignedLong(value);
+            renderer().outputUnsignedLong(value);
         }
         void outputString(const char *value) {
             next();
-            renderer()->outputString(value);
+            renderer().outputString(value);
         }
 
     private:
@@ -215,27 +221,27 @@ public:
             if (_first) {
                 _first = false;
             } else {
-                renderer()->separateSublistElements();
+                renderer().separateSublistElements();
             }
         }
 
-        Renderer *renderer() const { return _list.renderer(); }
+        Renderer &renderer() const { return _list.renderer(); }
     };
 
     class Dict {
     public:
         explicit Dict(Renderer::Row &row) : _row(row), _first(true) {
             _row.next();
-            renderer()->startDict();
+            renderer().startDict();
         }
 
-        ~Dict() { renderer()->endDict(); }
+        ~Dict() { renderer().endDict(); }
 
         void renderKeyValue(std::string key, std::string value) {
             next();
-            renderer()->outputString(key.c_str());
-            renderer()->separateDictKeyValue();
-            renderer()->outputString(value.c_str());
+            renderer().outputString(key.c_str());
+            renderer().separateDictKeyValue();
+            renderer().outputString(value.c_str());
         }
 
     private:
@@ -246,17 +252,17 @@ public:
             if (_first) {
                 _first = false;
             } else {
-                renderer()->separateDictElements();
+                renderer().separateDictElements();
             }
         }
 
-        Renderer *renderer() const { return _row.renderer(); }
+        Renderer &renderer() const { return _row.renderer(); }
     };
 
     static std::unique_ptr<Renderer> make(
-        OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
-        bool do_keep_alive, std::string invalid_header_message,
-        OutputFormat format, std::string field_separator,
+        OutputFormat format, OutputBuffer *output,
+        OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
+        std::string invalid_header_message, std::string field_separator,
         std::string dataset_separator, std::string list_separator,
         std::string host_service_separator, int timezone_offset);
 

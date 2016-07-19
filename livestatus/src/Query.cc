@@ -79,8 +79,7 @@ private:
 }  // namespace
 
 Query::Query(const list<string> &lines, Table *table)
-    : _renderer(nullptr)
-    , _response_header(OutputBuffer::ResponseHeader::off)
+    : _response_header(OutputBuffer::ResponseHeader::off)
     , _do_keepalive(false)
     , _table(table)
     , _auth_user(nullptr)
@@ -92,7 +91,6 @@ Query::Query(const list<string> &lines, Table *table)
     , _list_separator(",")
     , _host_service_separator("|")
     , _show_column_headers(true)
-    , _need_ds_separator(false)
     , _output_format(OutputFormat::csv)
     , _limit(-1)
     , _time_limit(-1)
@@ -253,7 +251,8 @@ void Query::invalidHeader(const string &message) {
 }
 
 void Query::invalidRequest(const string &message) {
-    _renderer->setError(OutputBuffer::ResponseCode::invalid_request, message);
+    _renderer_query->setError(OutputBuffer::ResponseCode::invalid_request,
+                              message);
 }
 
 Filter *Query::createFilter(Column *column, RelationalOperator relOp,
@@ -727,12 +726,12 @@ void Query::parseLocaltimeLine(char *line) {
 bool Query::doStats() { return !_stats_columns.empty(); }
 
 void Query::process(OutputBuffer *output) {
-    _renderer = Renderer::make(
-        output, _response_header, _do_keepalive, _invalid_header_message,
-        _output_format, _field_separator, _dataset_separator, _list_separator,
-        _host_service_separator, _timezone_offset);
+    auto renderer = Renderer::make(
+        _output_format, output, _response_header, _do_keepalive,
+        _invalid_header_message, _field_separator, _dataset_separator,
+        _list_separator, _host_service_separator, _timezone_offset);
     doWait();
-    Renderer::Query q(_renderer.get());
+    Renderer::Query q(*renderer);
     _renderer_query = &q;
     start(q);
     _table->answerQuery(this);
@@ -775,16 +774,17 @@ bool Query::timelimitReached() {
     if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
         Informational() << "Maximum query time of " << _time_limit
                         << " seconds exceeded!";
-        _renderer->setError(OutputBuffer::ResponseCode::limit_exceeded,
-                            "Maximum query time of " + to_string(_time_limit) +
-                                " seconds exceeded!");
+        _renderer_query->setError(OutputBuffer::ResponseCode::limit_exceeded,
+                                  "Maximum query time of " +
+                                      to_string(_time_limit) +
+                                      " seconds exceeded!");
         return true;
     }
     return false;
 }
 
 bool Query::processDataset(void *data) {
-    if (_renderer->size() > g_max_response_size) {
+    if (_renderer_query->size() > g_max_response_size) {
         Informational() << "Maximum response size of " << g_max_response_size
                         << " bytes exceeded!";
         // currently we only log an error into the log file and do

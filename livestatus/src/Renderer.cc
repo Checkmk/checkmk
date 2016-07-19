@@ -60,11 +60,11 @@ Renderer::~Renderer() = default;
 
 // static
 unique_ptr<Renderer> Renderer::make(
-    OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
-    bool do_keep_alive, std::string invalid_header_message, OutputFormat format,
-    std::string field_separator, std::string dataset_separator,
-    std::string list_separator, std::string host_service_separator,
-    int timezone_offset) {
+    OutputFormat format, OutputBuffer *output,
+    OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
+    std::string invalid_header_message, std::string field_separator,
+    std::string dataset_separator, std::string list_separator,
+    std::string host_service_separator, int timezone_offset) {
     switch (format) {
         case OutputFormat::csv:
             return make_unique<RendererCSV>(

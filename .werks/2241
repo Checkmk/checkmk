@@ -1,0 +1,21 @@
+Title: check_mk_agent.openwrt: Added section for local scripts and plugins
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1468929868
+Class: feature
+
+Added missing sections for local script and plugins.
+
+The agent supports the same information, except the following sections:
+<ul>
+  <li>VirtualBox Guests</li>
+  <li>MK's Remote Plugin Executor</li>
+  <li>MK's runas Executor</li>
+</ul>
+
+Addional the Agent is missing following features:
+<ul>
+  <li>Agent based encryption</li>
+</ul>

@@ -1,5 +1,5 @@
 #!/bin/ash
-# Check_MK Agent for Linux
+# Check_MK Agent for OpenWRT
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -119,8 +119,10 @@ run_cached () {
     local NOW=$(date +%s)
     local section=
     local mrpe=0
+    local append_age=0
     if [ "$1" = -s ] ; then local section="echo '<<<$2:cached($NOW,$3)>>>' ; " ; shift ; fi
     if [ "$1" = -m ] ; then local mrpe=1 ; shift ; fi
+    if [ "$1" = -a ] ; then local append_age=1 ; shift ; fi
     local NAME=$1
     local MAXAGE=$2
     shift 2
@@ -145,14 +147,23 @@ run_cached () {
     # Check if cache file exists and is recent enough
     if [ -s "$CACHEFILE" ] ; then
         local MTIME=$(stat -c %Y "$CACHEFILE")
-        if [ $((NOW - MTIME)) -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
+        local AGE=$((NOW - MTIME))
+        if [ $AGE -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
         # Output the file in any case, even if it is
         # outdated. The new file will not yet be available
-        cat "$CACHEFILE"
+        if [ $append_age -eq 1 ] ; then
+            # insert the cached-string before the pipe (first -e)
+            # or, if no pipe found (-e t) append it (third -e),
+            # but only once and on the second line (2!b) (first line is section header,
+            # all further lines are long output)
+            cat "$CACHEFILE" | sed -e "2s/|/ (Cached: ${AGE}\/${MAXAGE}s)|/" -e t -e "2s/$/ (Cached: ${AGE}\/${MAXAGE}s)/"
+        else
+            cat "$CACHEFILE"
+        fi
     fi
 
     # Cache file outdated and new job not yet running? Start it
-    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
+    if [ -z "$USE_CACHEFILE" ] && [ ! -e "$CACHEFILE.new" ] ; then
         # When the command fails, the output is throws away ignored
         if [ $mrpe -eq 1 ] ; then
             echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; run_mrpe $NAME $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash >/dev/null 2>&1 &
@@ -172,6 +183,11 @@ run_real_time_checks()
 
     . $MK_CONFDIR/real_time_checks.cfg
 
+    if [ "$PASSPHRASE" != "" ] ; then
+        # new mechanism to set the passphrase has priority
+        RTC_SECRET=$PASSPHRASE
+    fi
+
     while true; do
         # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
         if [ ! -e $PIDFILE ] || [ $(<$PIDFILE) -ne $$ ] || [ $RTC_TIMEOUT -eq 0 ]; then
@@ -179,13 +195,22 @@ run_real_time_checks()
         fi
 
         for SECTION in $RTC_SECTIONS; do
+            if [ "$ENCRYPTED_RT" != "no" ] ; then
+                PROTOCOL=00
+            else
+                PROTOCOL=99
+            fi
             # Be aware of maximum packet size. Maybe we need to check the size of the section
             # output and do some kind of nicer error handling.
             # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
             # dd is used to concatenate the output of all commands to a single write/block => udp packet
-            { echo -n 00 ;
+            { echo -n $PROTOCOL ;
               date +%s | tr -d '\n' ;
-              export RTC_SECRET=$RTC_SECRET ; section_$SECTION | openssl enc -aes-256-cbc -pass env:RTC_SECRET -nosalt ;
+              if [ "$ENCRYPTED_RT" != "no" ] ; then
+                  export RTC_SECRET=$RTC_SECRET ; section_$SECTION | openssl enc -aes-256-cbc -pass env:RTC_SECRET -nosalt ;
+              else
+                  section_$SECTION ;
+              fi
             } | dd bs=9999 iflag=fullblock 2>/dev/null >/dev/udp/$REMOTE/$RTC_PORT
         done
 
@@ -195,8 +220,8 @@ run_real_time_checks()
 }
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.8b7
-echo AgentOS: linux
+echo Version: 1.4.0i1
+echo AgentOS: openwrt
 echo Hostname: $HOSTNAME
 echo AgentDirectory: $MK_CONFDIR
 echo DataDirectory: $MK_VARDIR
@@ -295,7 +320,6 @@ section_cpu
 echo '<<<uptime>>>'
 cat /proc/uptime
 
-
 # New variant: Information about speed and state in one section
 if type ip > /dev/null
 then
@@ -334,7 +358,6 @@ if type ovs-appctl > /dev/null ; then
     done
 fi
 
-
 # Number of TCP connections in the various states
 echo '<<<tcp_conn_stats>>>'
 cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }'
@@ -368,7 +391,9 @@ cat /proc/vmstat /proc/stat
 # Hardware sensors via IPMI (need ipmitool)
 if type ipmitool > /dev/null
 then
-    run_cached -s ipmi 300 "waitmax 300 ipmitool sensor list | grep -v 'command failed' | sed -e 's/ *| */|/g' -e 's/ /_/g' -e 's/_*"'$'"//' -e 's/|/ /g' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
+    run_cached -s "ipmi:sep(124)" 300 "waitmax 300 ipmitool sensor list | grep -v 'command failed' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
+    # readable discrete sensor states
+    run_cached -s "ipmi_discrete:sep(124)" 300 "waitmax 300 ipmitool sdr elist compact"
 fi
 
 # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
@@ -628,7 +653,6 @@ if type zpool >/dev/null; then
    zpool status -x
 fi
 
-
 # Veritas Cluster Server
 # Software is always installed in /opt/VRTSvcs.
 # Secure mode must be off to allow root to execute commands
@@ -641,7 +665,6 @@ then
     hagrp -display -sys $vcshost -attribute State -localclus
     hares -display -sys $vcshost -attribute State -localclus
 fi
-
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
 if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
@@ -710,6 +733,20 @@ if type trd >/dev/null; then
    trd -s
 fi
 
+# HTTP Accelerator Statistics
+if type varnishstat >/dev/null; then
+   echo "<<<varnish>>>"
+   varnishstat -1
+fi
+
+# Proxmox Cluster
+if type pvecm > /dev/null 2>&1 ; then
+    echo "<<<pvecm_status:sep(58)>>>"
+    pvecm status
+    echo "<<<pvecm_nodes>>>"
+    pvecm nodes
+fi
+
 # Start new liveupdate process in background on each agent execution. Starting
 # a new live update process will terminate the old one automatically after
 # max. 1 sec.
@@ -721,6 +758,41 @@ if [ -e $MK_CONFDIR/real_time_checks.cfg ]; then
     else
         run_real_time_checks >/dev/null &
     fi
+fi
+
+is_valid_plugin () {
+    [[ -f "$1" && -x "$1" ]] && true || false
+}
+
+# Local checks
+echo '<<<local>>>'
+if cd $LOCALDIR ; then
+    for skript in $(ls) ; do
+        if is_valid_plugin "$skript" ; then
+            ./$skript
+        fi
+    done
+    # Call some plugins only every X'th second
+    for skript in [1-9]*/* ; do
+        if is_valid_plugin "$skript" ; then
+            run_cached local_${skript//\//\\} ${skript%/*} "$skript"
+        fi
+    done
+fi
+
+# Plugins
+if cd $PLUGINSDIR ; then
+    for skript in $(ls) ; do
+        if is_valid_plugin "$skript" ; then
+            ./$skript
+        fi
+    done
+    # Call some plugins only every Xth second
+    for skript in [1-9]*/* ; do
+        if is_valid_plugin "$skript" ; then
+            run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"
+        fi
+    done
 fi
 
 # Agent output snippets created by cronjobs, etc.

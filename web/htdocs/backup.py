@@ -493,10 +493,7 @@ class Jobs(BackupEntityCollection):
                 # find the next time of all configured times
                 times = []
                 for timespec in schedule["timeofday"]:
-                    times.append(SchedulePeriod().next_scheduled_time({
-                        "period"    : schedule["period"],
-                        "timeofday" : timespec,
-                    }))
+                    times.append(render.next_scheduled_time(schedule["period"], timespec))
 
                 html.write(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
 

@@ -33,6 +33,7 @@
 
 import math, os, time, re, sre_constants, urlparse, forms, tempfile
 from lib import *
+from cmk.render import next_scheduled_time, last_scheduled_time
 
 def type_name(v):
     try:
@@ -3859,87 +3860,3 @@ class SchedulePeriod(CascadingDropdown):
                   Integer(minvalue=1, maxvalue=28)),
             ] + from_end_choice
         )
-
-
-    # Computes for a scheduling entry the last/next time that this entry
-    # should have run / will be run.
-    def last_scheduled_time(self, entry):
-        return self.scheduled_time(entry, "last")
-
-
-    def next_scheduled_time(self, entry):
-        return self.scheduled_time(entry, "next")
-
-
-    def scheduled_time(self, entry, how):
-        if how == "last":
-            comp = lambda a, b: a > b
-            add = 1
-        else:
-            comp = lambda a, b: a < b
-            add = -1
-
-        timeofday = entry["timeofday"]
-        period = entry["period"]
-        now = time.time()
-
-        year, month, mday, hour, minute, second, wday = range(7)
-
-        # Get the current time according to our timezone
-        brokentime = list(time.localtime(now))
-
-        # Enter the time of the day into the struct
-        brokentime[hour]   = timeofday[0] # hours
-        brokentime[minute] = timeofday[1] # minutes
-        brokentime[second] = 0            # seconds
-
-        if period == "day":
-            ref_time = time.mktime(brokentime)
-            if comp(ref_time, now): # in the future: substract one day
-                ref_time -= 24 * 3600 * add
-
-        elif period[0] == "week":
-            ref_time = time.mktime(brokentime)
-            daydiff = period[1] - brokentime[wday] # wday
-            ref_time += daydiff * 24 * 3600
-            if comp(ref_time, now): # in the future: substract one week
-                ref_time -= 7 * 24 * 3600 * add
-
-        elif period[0] == "month_begin":
-            brokentime[mday] = period[1] # mday
-            ref_time = time.mktime(brokentime)
-            if comp(ref_time, now): # in the future: go back to previous month
-                brokentime[month] -= 1 * add
-                if brokentime[month] == 0:
-                    brokentime[month] = 12
-                    brokentime[year] -= 1
-                elif brokentime[month] == 13:
-                    brokentime[month] = 1
-                    brokentime[year] += 1
-                ref_time = time.mktime(brokentime)
-
-        elif period[0] == "month_end":
-            minus_mday = period[1]
-            # Find last day in this month.
-            brokentime[mday] = 1
-            brokentime[month] += 1
-            if brokentime[month] == 13:
-                brokentime[month] = 1
-                brokentime[year] += 1
-            ref_time = time.mktime(brokentime) - minus_mday * 24 * 3600
-            if comp(ref_time, now): # switch to previous/next month
-                brokentime = list(time.localtime(ref_time))
-                brokentime[mday] = 1
-                if how == "next":
-                    brokentime[month] += 1
-                    if brokentime[month] == 13:
-                        brokentime[year] += 1
-
-                ref_time = time.mktime(brokentime) - minus_mday * 24 * 3600 * add
-
-        # Due to the date shift a change in the timezone could have
-        # happened. Make sure hour is correctly set again
-        brokentime = list(time.localtime(ref_time))
-        brokentime[hour] = timeofday[0]
-        ref_time = time.mktime(brokentime)
-        return ref_time

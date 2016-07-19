@@ -1082,25 +1082,6 @@ def notify_via_email(plugin_context):
 # 2: Cannot send, retry does not make sense
 
 
-# recursively turns a python object (with lists, dictionaries and pods) containing parameters
-#  into a flat contextlist for use as environment variables in plugins
-#
-# this: { "LVL1": [{"VALUE": 42}, {"VALUE": 13}] }
-# would be added as:
-#   PARAMETER_LVL1_1_VALUE = 42
-#   PARAMETER_LVL1_2_VALUE = 13
-def add_to_context(plugin_context, prefix, param):
-    if isinstance(param, list):
-        plugin_context[prefix + "S"] = " ".join(param)
-        for nr, value in enumerate(param):
-            add_to_context(plugin_context, "%s_%d" % (prefix, nr + 1), value)
-    elif isinstance(param, dict):
-        for key, value in param.items():
-            add_to_context(plugin_context, "%s_%s" % (prefix, key.upper()), value)
-    else:
-        plugin_context[prefix] = plugin_param_to_string(param)
-
-
 # Add the plugin parameters to the envinroment. We have two types of parameters:
 # - list, the legacy style. This will lead to PARAMETERS_1, ...
 # - dict, the new style for scripts with WATO rule. This will lead to
@@ -1108,9 +1089,7 @@ def add_to_context(plugin_context, prefix, param):
 def create_plugin_context(raw_context, params):
     plugin_context = {}
     plugin_context.update(raw_context) # Make a real copy
-
-    add_to_context(plugin_context, "PARAMETER", params)
-
+    add_to_event_context(plugin_context, "PARAMETER", params)
     return plugin_context
 
 
@@ -1118,23 +1097,6 @@ def create_bulk_parameter_context(params):
     dict_context = create_plugin_context({}, params)
     return [ "%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1"))
              for (varname, value) in dict_context.items() ]
-
-
-def plugin_param_to_string(value):
-    if type(value) in ( str, unicode ):
-        return value
-    elif type(value) in ( int, float ):
-        return str(value)
-    elif value == None:
-        return ""
-    elif value == True:
-        return "yes"
-    elif value == False:
-        return ""
-    elif type(value) in ( tuple, list ):
-        return "\t".join(value)
-    else:
-        return repr(value) # Should never happen
 
 
 def path_to_notification_script(plugin):

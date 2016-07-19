@@ -13473,6 +13473,7 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
             match = "all",
             deprecated = deprecated)
 
+
 # Registers notification parameters for a certain notification script,
 # e.g. "mail" or "sms". This will create:
 # - A WATO host rule
@@ -13481,21 +13482,28 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
 # The match type will be set to "dict".
 g_notification_parameters = {}
 def register_notification_parameters(scriptname, valuespec):
+    register_user_script_parameters(
+        g_notification_parameters,
+        "notification_parameters",
+        "monconf/" + _("Notifications"),
+        scriptname,
+        valuespec)
 
+
+def register_user_script_parameters(ruleset_dict, ruleset_dict_name, ruleset_group, scriptname, valuespec):
     script_title = notification_script_title(scriptname)
     title = _("Parameters for %s") % script_title
     valuespec._title = _("Call with the following parameters:")
 
     register_rule(
-        "monconf/" + _("Notifications"),
-        "notification_parameters:" + scriptname,
+        ruleset_group,
+        ruleset_dict_name + ":" + scriptname,
         valuespec,
         title,
         itemtype = None,
         match = "dict"
     )
-
-    g_notification_parameters[scriptname] = valuespec
+    ruleset_dict[scriptname] = valuespec
 
 
 

@@ -1837,6 +1837,7 @@ class OptionalDropdownChoice(DropdownChoice):
             input_value = value
         else:
             input_value = self._explicit.default_value()
+        html.help(self._explicit.help())
         self._explicit.render_input(varprefix + "_ex", input_value)
         html.write("</span>")
 

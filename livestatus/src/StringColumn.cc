@@ -29,12 +29,12 @@
 
 using std::string;
 
-void StringColumn::output(void *row, Renderer *renderer,
+void StringColumn::output(void *row, Renderer::Row &r,
                           contact * /* auth_user */) {
     if (row != nullptr) {
-        renderer->outputString(getValue(row).c_str());
+        r.outputString(getValue(row).c_str());
     } else {
-        renderer->outputString(nullptr);
+        r.outputString(nullptr);
     }
 }
 

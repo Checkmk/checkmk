@@ -37,45 +37,45 @@ RendererPython::RendererPython(OutputBuffer *output,
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startOfQuery() { add("["); }
+void RendererPython::startQuery() { add("["); }
 
-void RendererPython::outputDataSetSeparator() { add(",\n"); }
+void RendererPython::separateQueryElements() { add(",\n"); }
 
-void RendererPython::endOfQuery() { add("]\n"); }
-
-// --------------------------------------------------------------------------
-
-void RendererPython::outputDatasetBegin() { add("["); }
-
-void RendererPython::outputFieldSeparator() { add(","); }
-
-void RendererPython::outputDatasetEnd() { add("]"); }
+void RendererPython::endQuery() { add("]\n"); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::outputBeginList() { add("["); }
+void RendererPython::startRow() { add("["); }
 
-void RendererPython::outputListSeparator() { add(","); }
+void RendererPython::separateRowElements() { add(","); }
 
-void RendererPython::outputEndList() { add("]"); }
-
-// --------------------------------------------------------------------------
-
-void RendererPython::outputBeginSublist() { add("["); }
-
-void RendererPython::outputSublistSeparator() { add(","); }
-
-void RendererPython::outputEndSublist() { add("]"); }
+void RendererPython::endRow() { add("]"); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::outputBeginDict() { add("{"); }
+void RendererPython::startList() { add("["); }
 
-void RendererPython::outputDictSeparator() { add(","); }
+void RendererPython::separateListElements() { add(","); }
 
-void RendererPython::outputDictValueSeparator() { add(":"); }
+void RendererPython::endList() { add("]"); }
 
-void RendererPython::outputEndDict() { add("}"); }
+// --------------------------------------------------------------------------
+
+void RendererPython::startSublist() { add("["); }
+
+void RendererPython::separateSublistElements() { add(","); }
+
+void RendererPython::endSublist() { add("]"); }
+
+// --------------------------------------------------------------------------
+
+void RendererPython::startDict() { add("{"); }
+
+void RendererPython::separateDictElements() { add(","); }
+
+void RendererPython::separateDictKeyValue() { add(":"); }
+
+void RendererPython::endDict() { add("}"); }
 
 // --------------------------------------------------------------------------
 

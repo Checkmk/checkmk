@@ -35,20 +35,14 @@ CustomVarsNamesColumn::CustomVarsNamesColumn(string name, string description,
 
 ColumnType CustomVarsNamesColumn::type() { return ColumnType::list; }
 
-void CustomVarsNamesColumn::output(void *row, Renderer *renderer,
+void CustomVarsNamesColumn::output(void *row, Renderer::Row &r,
                                    contact * /* auth_user */) {
-    renderer->outputBeginList();
-    bool first = true;
+    Renderer::List l(r);
     for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
          cvm = cvm->next) {
-        if (first) {
-            first = false;
-        } else {
-            renderer->outputListSeparator();
-        }
+        l.next();
         renderer->outputString(cvm->variable_name);
     }
-    renderer->outputEndList();
 }
 
 bool CustomVarsNamesColumn::contains(void *row, const string &value) {

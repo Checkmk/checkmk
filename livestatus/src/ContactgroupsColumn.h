@@ -29,8 +29,8 @@
 #include <memory>
 #include <string>
 #include "ListColumn.h"
+#include "Renderer.h"
 #include "nagios.h"
-class Renderer;
 
 class ContactgroupsColumn : public ListColumn {
     int _offset;
@@ -40,7 +40,7 @@ public:
                         int indirect_offset, int extra_offset = -1)
         : ListColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset) {}
-    void output(void *row, Renderer *renderer, contact *auth_user) override;
+    void output(void *row, Renderer::Row &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
     bool isEmpty(void *data) override;
 };

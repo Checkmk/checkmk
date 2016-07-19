@@ -43,7 +43,8 @@ ListFilter::ListFilter(ListColumn *column, RelationalOperator relOp,
     , _predicate(move(predicate))
     , _empty_ref(isEmptyValue) {}
 
-bool ListFilter::accepts(void *row, contact * /* auth_user */, int /* timezone_offset */) {
+bool ListFilter::accepts(void *row, contact * /* auth_user */,
+                         int /* timezone_offset */) {
     void *data = _column->shiftPointer(row);
     if (data == nullptr) {
         return false;

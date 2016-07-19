@@ -28,8 +28,8 @@
 using std::unique_ptr;
 using std::vector;
 
-void BlobColumn::output(void *row, Renderer *renderer,
+void BlobColumn::output(void *row, Renderer::Row &r,
                         contact * /* auth_user */) {
     unique_ptr<vector<char>> blob = getBlob(row);
-    renderer->outputBlob(blob.get());
+    r.outputBlob(blob.get());
 }

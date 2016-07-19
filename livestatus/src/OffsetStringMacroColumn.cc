@@ -70,10 +70,10 @@ string OffsetStringMacroColumn::valueAsString(void *row,
     return result;
 }
 
-void OffsetStringMacroColumn::output(void *row, Renderer *renderer,
+void OffsetStringMacroColumn::output(void *row, Renderer::Row &r,
                                      contact *auth_user) {
     string s = valueAsString(row, auth_user);
-    renderer->outputString(s.c_str());
+    r.outputString(s.c_str());
 }
 
 Filter *OffsetStringMacroColumn::createFilter(RelationalOperator /*unused */,

@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
-class Renderer;
+#include "Renderer.h"
 
 #ifdef CMC
 #include "cmc.h"
@@ -53,7 +53,7 @@ public:
         : Column(name, description, indirect_offset, extra_offset) {}
 #endif
     ColumnType type() override { return ColumnType::list; }
-    void output(void *row, Renderer *renderer, contact *auth_user) override;
+    void output(void *row, Renderer::Row &r, contact *auth_user) override;
 };
 
 #endif  // MetricsColumn_h

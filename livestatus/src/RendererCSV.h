@@ -40,40 +40,40 @@ public:
                 std::string list_separator, std::string host_service_separator,
                 int timezone_offset);
 
-    void startOfQuery() override;
-    void outputDataSetSeparator() override;
-    void endOfQuery() override;
-
-    void outputDatasetBegin() override;
-    void outputFieldSeparator() override;
-    void outputDatasetEnd() override;
-
-    void outputBeginList() override;
-    void outputListSeparator() override;
-    void outputEndList() override;
-
-    void outputBeginSublist() override;
-    void outputSublistSeparator() override;
-    void outputEndSublist() override;
-
-    void outputBeginDict() override;
-    void outputDictSeparator() override;
-    void outputDictValueSeparator() override;
-    void outputEndDict() override;
-
     void outputNull() override;
     void outputBlob(const std::vector<char> *blob) override;
     void outputString(const char *value, int len = -1) override;
 
 private:
-    // outputFieldSeparator
+    // separateRowElements
     const std::string _field_separator;
-    // outputDatasetEnd
+    // endRow
     const std::string _dataset_separator;
-    // outputListSeparator, outputDictSeparator
+    // separateListElements, separateDictElements
     const std::string _list_separator;
-    // outputSublistSeparator, outputDictValueSeparator
+    // separateSublistElements, separateDictKeyValue
     const std::string _host_service_separator;
+
+    void startQuery() override;
+    void separateQueryElements() override;
+    void endQuery() override;
+
+    void startRow() override;
+    void separateRowElements() override;
+    void endRow() override;
+
+    void startList() override;
+    void separateListElements() override;
+    void endList() override;
+
+    void startSublist() override;
+    void separateSublistElements() override;
+    void endSublist() override;
+
+    void startDict() override;
+    void separateDictElements() override;
+    void separateDictKeyValue() override;
+    void endDict() override;
 };
 
 #endif  // RendererCSV_h

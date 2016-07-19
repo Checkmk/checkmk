@@ -40,35 +40,29 @@ hostsmember *HostlistColumn::getMembers(void *data) {
                                              _offset);
 }
 
-void HostlistColumn::output(void *row, Renderer *renderer, contact *auth_user) {
-    renderer->outputBeginList();
+void HostlistColumn::output(void *row, Renderer::Row &r, contact *auth_user) {
+    Renderer::List l(r);
     hostsmember *mem = getMembers(row);
 
-    bool first = true;
     while (mem != nullptr) {
         host *hst = mem->host_ptr;
         if ((auth_user == nullptr) ||
             is_authorized_for(auth_user, hst, nullptr)) {
-            if (!first) {
-                renderer->outputListSeparator();
-            } else {
-                first = false;
-            }
             if (!_show_state) {
-                renderer->outputString(hst->name);
+                l.next();
+                l.outputString(hst->name);
             } else {
-                renderer->outputBeginSublist();
-                renderer->outputString(hst->name);
-                renderer->outputSublistSeparator();
-                renderer->outputInteger(hst->current_state);
-                renderer->outputSublistSeparator();
-                renderer->outputInteger(hst->has_been_checked);
-                renderer->outputEndSublist();
+                Renderer::Sublist s(l);
+                s.next();
+                s.outputString(hst->name);
+                s.next();
+                s.outputInteger(hst->current_state);
+                s.next();
+                s.outputInteger(hst->has_been_checked);
             }
         }
         mem = mem->next;
     }
-    renderer->outputEndList();
 }
 
 Filter *HostlistColumn::createFilter(RelationalOperator relOp,

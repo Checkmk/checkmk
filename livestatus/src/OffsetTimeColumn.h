@@ -29,9 +29,9 @@
 #include <string>
 #include "Column.h"
 #include "OffsetIntColumn.h"
+#include "Renderer.h"
 #include "opids.h"
 class Filter;
-class Renderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -50,7 +50,7 @@ public:
         : OffsetIntColumn(name, description, offset, indirect_offset,
                           extra_offset) {}
     ColumnType type() override { return ColumnType::time; }
-    void output(void *row, Renderer *renderer, contact *auth_user) override;
+    void output(void *row, Renderer::Row &r, contact *auth_user) override;
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
 };

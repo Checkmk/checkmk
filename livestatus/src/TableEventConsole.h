@@ -160,19 +160,13 @@ protected:
 
         _column_t getValue(void *row) { return _ecc.getValue(row); }
 
-        void output(void *row, Renderer *renderer,
+        void output(void *row, Renderer::Row &r,
                     contact * /* auth_user */) override {
-            renderer->outputBeginList();
-            bool first = true;
+            Renderer::List l(r);
             for (const auto &elem : _ecc.getValue(row)) {
-                if (first) {
-                    first = false;
-                } else {
-                    renderer->outputListSeparator();
-                }
-                renderer->outputString(elem.c_str());
+                l.next();
+                l.outputString(elem.c_str());
             }
-            renderer->outputEndList();
         }
 
         bool isEmpty(void *row) override { return _ecc.getValue(row).empty(); }

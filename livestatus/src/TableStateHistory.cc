@@ -531,7 +531,8 @@ void TableStateHistory::answerQuery(Query *query) {
                     if (entry->_svc_desc != nullptr) {
                         bool filtered_out = false;
                         for (auto filter : object_filter) {
-                            if (!filter->accepts(state, query->authUser(), query->timezoneOffset())) {
+                            if (!filter->accepts(state, query->authUser(),
+                                                 query->timezoneOffset())) {
                                 filtered_out = true;
                                 break;
                             }

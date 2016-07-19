@@ -35,43 +35,37 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void DownCommColumn::output(void *row, Renderer *renderer,
+void DownCommColumn::output(void *row, Renderer::Row &r,
                             contact * /* auth_user */) {
-    renderer->outputBeginList();
+    Renderer::List l(r);
     void *data = shiftPointer(row);  // points to host or service
     if (data != nullptr) {
-        bool first = true;
         for (const auto &entry : _holder) {
             unsigned long id = entry.first;
             DowntimeOrComment *dt = entry.second.get();
             if (match(dt, data)) {
-                if (first) {
-                    first = false;
-                } else {
-                    renderer->outputListSeparator();
-                }
                 if (_with_info) {
-                    renderer->outputBeginSublist();
-                    renderer->outputUnsignedLong(id);
-                    renderer->outputSublistSeparator();
-                    renderer->outputString(dt->_author_name);
-                    renderer->outputSublistSeparator();
-                    renderer->outputString(dt->_comment);
+                    Renderer::Sublist s(l);
+                    s.next();
+                    s.outputUnsignedLong(id);
+                    s.next();
+                    s.outputString(dt->_author_name);
+                    s.next();
+                    s.outputString(dt->_comment);
                     if (_with_extra_info && !_is_downtime) {
-                        renderer->outputSublistSeparator();
-                        renderer->outputInteger(
+                        s.next();
+                        s.outputInteger(
                             static_cast<Comment *>(dt)->_entry_type);
-                        renderer->outputSublistSeparator();
-                        renderer->outputTime(dt->_entry_time);
+                        s.next();
+                        s.outputTime(dt->_entry_time);
                     }
-                    renderer->outputEndSublist();
                 } else {
-                    renderer->outputUnsignedLong(id);
+                    l.next();
+                    l.outputUnsignedLong(id);
                 }
             }
         }
     }
-    renderer->outputEndList();
 }
 
 bool DownCommColumn::match(DowntimeOrComment *dt, void *data) {

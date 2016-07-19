@@ -25,13 +25,12 @@
 #include "MetricsColumn.h"
 #include "Renderer.h"
 
-void MetricsColumn::output(void *row, Renderer *renderer,
+void MetricsColumn::output(void *row, Renderer::Row &r,
                            contact * /* auth_user */) {
     void *data = shiftPointer(row);
     if (data == nullptr) {
         return;
     }
 
-    renderer->outputBeginList();
-    renderer->outputEndList();
+    Renderer::List l(r);
 }

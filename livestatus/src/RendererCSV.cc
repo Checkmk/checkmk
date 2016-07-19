@@ -44,45 +44,45 @@ RendererCSV::RendererCSV(OutputBuffer *output,
 
 // --------------------------------------------------------------------------
 
-void RendererCSV::startOfQuery() {}
+void RendererCSV::startQuery() {}
 
-void RendererCSV::outputDataSetSeparator() {}
+void RendererCSV::separateQueryElements() {}
 
-void RendererCSV::endOfQuery() {}
-
-// --------------------------------------------------------------------------
-
-void RendererCSV::outputDatasetBegin() {}
-
-void RendererCSV::outputFieldSeparator() { add(_field_separator); }
-
-void RendererCSV::outputDatasetEnd() { add(_dataset_separator); }
+void RendererCSV::endQuery() {}
 
 // --------------------------------------------------------------------------
 
-void RendererCSV::outputBeginList() {}
+void RendererCSV::startRow() {}
 
-void RendererCSV::outputListSeparator() { add(_list_separator); }
+void RendererCSV::separateRowElements() { add(_field_separator); }
 
-void RendererCSV::outputEndList() {}
-
-// --------------------------------------------------------------------------
-
-void RendererCSV::outputBeginSublist() {}
-
-void RendererCSV::outputSublistSeparator() { add(_host_service_separator); }
-
-void RendererCSV::outputEndSublist() {}
+void RendererCSV::endRow() { add(_dataset_separator); }
 
 // --------------------------------------------------------------------------
 
-void RendererCSV::outputBeginDict() {}
+void RendererCSV::startList() {}
 
-void RendererCSV::outputDictSeparator() { add(_list_separator); }
+void RendererCSV::separateListElements() { add(_list_separator); }
 
-void RendererCSV::outputDictValueSeparator() { add(_host_service_separator); }
+void RendererCSV::endList() {}
 
-void RendererCSV::outputEndDict() {}
+// --------------------------------------------------------------------------
+
+void RendererCSV::startSublist() {}
+
+void RendererCSV::separateSublistElements() { add(_host_service_separator); }
+
+void RendererCSV::endSublist() {}
+
+// --------------------------------------------------------------------------
+
+void RendererCSV::startDict() {}
+
+void RendererCSV::separateDictElements() { add(_list_separator); }
+
+void RendererCSV::separateDictKeyValue() { add(_host_service_separator); }
+
+void RendererCSV::endDict() {}
 
 // --------------------------------------------------------------------------
 

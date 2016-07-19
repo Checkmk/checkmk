@@ -29,9 +29,9 @@
 #include <string>
 #include "Column.h"
 #include "IntPointerColumn.h"
+#include "Renderer.h"
 #include "opids.h"
 class Filter;
-class Renderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -45,7 +45,7 @@ public:
                       int indirect_offset = -1, int extra_offset = -1)
         : IntPointerColumn(name, description, number, indirect_offset,
                            extra_offset) {}
-    void output(void *row, Renderer *renderer, contact *auth_user) override;
+    void output(void *row, Renderer::Row &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::time; }
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;

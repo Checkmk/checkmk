@@ -28,10 +28,10 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
+#include "Renderer.h"
 #include "nagios.h"
 #include "opids.h"
 class Filter;
-class Renderer;
 
 class HostlistColumn : public Column {
     int _offset;
@@ -44,7 +44,7 @@ public:
         , _offset(offset)
         , _show_state(show_state) {}
     ColumnType type() override { return ColumnType::list; }
-    void output(void *row, Renderer *renderer, contact *auth_user) override;
+    void output(void *row, Renderer::Row &r, contact *auth_user) override;
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
     hostsmember *getMembers(void *data);

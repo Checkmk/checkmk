@@ -30,9 +30,9 @@
 #include <string>
 #include "Column.h"
 #include "IntColumn.h"
+#include "Renderer.h"
 #include "opids.h"
 class Filter;
-class Renderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -60,7 +60,7 @@ public:
         return _show_list ? ColumnType::list : ColumnType::int_;
     }
     std::string valueAsString(void *row, contact * /* auth_user */) override;
-    void output(void *row, Renderer *renderer, contact *auth_user) override;
+    void output(void *row, Renderer::Row &r, contact *auth_user) override;
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
 

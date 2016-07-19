@@ -76,7 +76,8 @@ StringFilter::~StringFilter() {
     }
 }
 
-bool StringFilter::accepts(void *row, contact * /* auth_user */, int /* timezone_offset */) {
+bool StringFilter::accepts(void *row, contact * /* auth_user */,
+                           int /* timezone_offset */) {
     string act_string = _column->getValue(row);
     switch (_relOp) {
         case RelationalOperator::equal:

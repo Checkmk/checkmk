@@ -37,7 +37,7 @@ public:
     CustomVarsDictColumn(std::string name, std::string description, int offset,
                          int indirect_offset, int extra_offset = -1);
     ColumnType type() override;
-    void output(void *row, Renderer *renderer, contact *auth_user) override;
+    void output(void *row, Renderer::Row &r, contact *auth_user) override;
     bool contains(void *row, const std::string &value) override;
 };
 

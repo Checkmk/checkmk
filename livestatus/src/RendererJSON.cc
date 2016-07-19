@@ -36,45 +36,45 @@ RendererJSON::RendererJSON(OutputBuffer *output,
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::startOfQuery() { add("["); }
+void RendererJSON::startQuery() { add("["); }
 
-void RendererJSON::outputDataSetSeparator() { add(",\n"); }
+void RendererJSON::separateQueryElements() { add(",\n"); }
 
-void RendererJSON::endOfQuery() { add("]\n"); }
-
-// --------------------------------------------------------------------------
-
-void RendererJSON::outputDatasetBegin() { add("["); }
-
-void RendererJSON::outputFieldSeparator() { add(","); }
-
-void RendererJSON::outputDatasetEnd() { add("]"); }
+void RendererJSON::endQuery() { add("]\n"); }
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::outputBeginList() { add("["); }
+void RendererJSON::startRow() { add("["); }
 
-void RendererJSON::outputListSeparator() { add(","); }
+void RendererJSON::separateRowElements() { add(","); }
 
-void RendererJSON::outputEndList() { add("]"); }
-
-// --------------------------------------------------------------------------
-
-void RendererJSON::outputBeginSublist() { add("["); }
-
-void RendererJSON::outputSublistSeparator() { add(","); }
-
-void RendererJSON::outputEndSublist() { add("]"); }
+void RendererJSON::endRow() { add("]"); }
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::outputBeginDict() { add("{"); }
+void RendererJSON::startList() { add("["); }
 
-void RendererJSON::outputDictSeparator() { add(","); }
+void RendererJSON::separateListElements() { add(","); }
 
-void RendererJSON::outputDictValueSeparator() { add(":"); }
+void RendererJSON::endList() { add("]"); }
 
-void RendererJSON::outputEndDict() { add("}"); }
+// --------------------------------------------------------------------------
+
+void RendererJSON::startSublist() { add("["); }
+
+void RendererJSON::separateSublistElements() { add(","); }
+
+void RendererJSON::endSublist() { add("]"); }
+
+// --------------------------------------------------------------------------
+
+void RendererJSON::startDict() { add("{"); }
+
+void RendererJSON::separateDictElements() { add(","); }
+
+void RendererJSON::separateDictKeyValue() { add(":"); }
+
+void RendererJSON::endDict() { add("}"); }
 
 // --------------------------------------------------------------------------
 

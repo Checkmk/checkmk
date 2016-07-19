@@ -38,6 +38,183 @@ enum class OutputFormat { csv, json, python };
 
 class Renderer {
 public:
+    // for friend declarations
+    class Row;
+    class List;
+    class Sublist;
+    class Dict;
+
+    class Query {
+    public:
+        explicit Query(Renderer *renderer) : _renderer(renderer), _first(true) {
+            _renderer->startQuery();
+        }
+
+        ~Query() { _renderer->endQuery(); }
+
+    private:
+        Renderer *const _renderer;
+        bool _first;
+
+        void next() {
+            if (_first) {
+                _first = false;
+            } else {
+                _renderer->separateQueryElements();
+            }
+        }
+
+        Renderer *renderer() const { return _renderer; }
+
+        // for next() and renderer()
+        friend class Renderer::Row;
+    };
+
+    class Row {
+    public:
+        explicit Row(Query &query) : _query(query), _first(true) {
+            _query.next();
+            renderer()->startRow();
+        }
+
+        ~Row() { renderer()->endRow(); }
+
+        void next() {
+            if (_first) {
+                _first = false;
+            } else {
+                renderer()->separateRowElements();
+            }
+        }
+
+        void outputNull() { renderer()->outputNull(); }
+        void outputBlob(const std::vector<char> *blob) {
+            renderer()->outputBlob(blob);
+        }
+        void outputString(const char *value) {
+            renderer()->outputString(value);
+        }
+        void outputInteger(int32_t value) { renderer()->outputInteger(value); }
+        void outputTime(int32_t value) { renderer()->outputTime(value); }
+        void outputUnsignedLong(unsigned long value) {
+            renderer()->outputUnsignedLong(value);
+        }
+        void outputCounter(counter_t value) {
+            renderer()->outputCounter(value);
+        }
+        void outputDouble(double value) { renderer()->outputDouble(value); }
+
+    private:
+        Query &_query;
+        bool _first;
+
+        Renderer *renderer() const { return _query.renderer(); }
+
+        // for renderer()
+        friend class Renderer::List;
+
+        // for renderer()
+        friend class Renderer::Dict;
+    };
+
+    class List {
+    public:
+        explicit List(Row &row) : _row(row), _first(true) {
+            renderer()->startList();
+        }
+
+        ~List() { renderer()->endList(); }
+
+        void next() {
+            if (_first) {
+                _first = false;
+            } else {
+                renderer()->separateListElements();
+            }
+        }
+
+        void outputString(const char *value) {
+            renderer()->outputString(value);
+        }
+        void outputUnsignedLong(unsigned long value) {
+            renderer()->outputUnsignedLong(value);
+        }
+        void outputTime(int32_t value) { renderer()->outputTime(value); }
+        void outputDouble(double value) { renderer()->outputDouble(value); }
+
+    private:
+        Row &_row;
+        bool _first;
+
+        Renderer *renderer() const { return _row.renderer(); }
+
+        // for renderer()
+        friend class Renderer::Sublist;
+    };
+
+    class Sublist {
+    public:
+        explicit Sublist(List &list) : _list(list), _first(true) {
+            _list.next();
+            renderer()->startSublist();
+        }
+
+        ~Sublist() { renderer()->endSublist(); }
+
+        void next() {
+            if (_first) {
+                _first = false;
+            } else {
+                renderer()->separateSublistElements();
+            }
+        }
+
+        void outputInteger(int32_t value) { renderer()->outputInteger(value); }
+        void outputTime(int32_t value) { renderer()->outputTime(value); }
+        void outputUnsignedLong(unsigned long value) {
+            renderer()->outputUnsignedLong(value);
+        }
+        void outputString(const char *value) {
+            renderer()->outputString(value);
+        }
+
+    private:
+        List &_list;
+        bool _first;
+
+        Renderer *renderer() const { return _list.renderer(); }
+    };
+
+    class Dict {
+    public:
+        explicit Dict(Renderer::Row &row) : _row(row), _first(true) {
+            renderer()->startDict();
+        }
+
+        ~Dict() { renderer()->endDict(); }
+
+        void renderKeyValue(std::string key, std::string value) {
+            next();
+            renderer()->outputString(key.c_str());
+            renderer()->separateDictKeyValue();
+            renderer()->outputString(value.c_str());
+        }
+
+    private:
+        Row &_row;
+        bool _first;
+
+        void next() {
+            if (_first) {
+                _first = false;
+            } else {
+                renderer()->separateDictElements();
+            }
+        }
+
+        Renderer *renderer() const { return _row.renderer(); }
+    };
+
     static std::unique_ptr<Renderer> make(
         OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
         bool do_keep_alive, std::string invalid_header_message,
@@ -49,31 +226,6 @@ public:
 
     void setError(OutputBuffer::ResponseCode code, const std::string &message);
     std::size_t size() const;
-
-    virtual void startOfQuery() = 0;
-    virtual void outputDataSetSeparator() = 0;
-    virtual void endOfQuery() = 0;
-
-    // Output a single row returned by lq.
-    virtual void outputDatasetBegin() = 0;
-    virtual void outputFieldSeparator() = 0;
-    virtual void outputDatasetEnd() = 0;
-
-    // Output a list-valued column.
-    virtual void outputBeginList() = 0;
-    virtual void outputListSeparator() = 0;
-    virtual void outputEndList() = 0;
-
-    // Output a list-valued value within a list-valued column.
-    virtual void outputBeginSublist() = 0;
-    virtual void outputSublistSeparator() = 0;
-    virtual void outputEndSublist() = 0;
-
-    // Output a dictionary, see CustomVarsColumn.
-    virtual void outputBeginDict() = 0;
-    virtual void outputDictSeparator() = 0;
-    virtual void outputDictValueSeparator() = 0;
-    virtual void outputEndDict() = 0;
 
     virtual void outputNull() = 0;
     virtual void outputBlob(const std::vector<char> *blob) = 0;
@@ -102,6 +254,32 @@ protected:
 private:
     OutputBuffer *const _output;
     const int _timezone_offset;
+
+    // A whole query.
+    virtual void startQuery() = 0;
+    virtual void separateQueryElements() = 0;
+    virtual void endQuery() = 0;
+
+    // Output a single row returned by lq.
+    virtual void startRow() = 0;
+    virtual void separateRowElements() = 0;
+    virtual void endRow() = 0;
+
+    // Output a list-valued column.
+    virtual void startList() = 0;
+    virtual void separateListElements() = 0;
+    virtual void endList() = 0;
+
+    // Output a list-valued value within a list-valued column.
+    virtual void startSublist() = 0;
+    virtual void separateSublistElements() = 0;
+    virtual void endSublist() = 0;
+
+    // Output a dictionary, see CustomVarsColumn.
+    virtual void startDict() = 0;
+    virtual void separateDictElements() = 0;
+    virtual void separateDictKeyValue() = 0;
+    virtual void endDict() = 0;
 };
 
 #endif  // Renderer_h

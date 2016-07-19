@@ -72,27 +72,21 @@ int32_t AttributelistColumn::getValue(void *row, contact * /*unused*/) {
     return *reinterpret_cast<int32_t *>(ptr);
 }
 
-void AttributelistColumn::output(void *row, Renderer *renderer,
+void AttributelistColumn::output(void *row, Renderer::Row &r,
                                  contact * /* auth_user */) {
     unsigned long mask = static_cast<unsigned long>(getValue(row, nullptr));
     if (_show_list) {
         unsigned i = 0;
-        bool first = true;
-        renderer->outputBeginList();
+        Renderer::List l(r);
         while (al_entries[i].name != nullptr) {
             if ((mask & al_entries[i].bitvalue) != 0u) {
-                if (!first) {
-                    renderer->outputListSeparator();
-                } else {
-                    first = false;
-                }
-                renderer->outputString(al_entries[i].name);
+                l.next();
+                l.outputString(al_entries[i].name);
             }
             i++;
         }
-        renderer->outputEndList();
     } else {
-        renderer->outputUnsignedLong(mask);
+        r.outputUnsignedLong(mask);
     }
 }
 

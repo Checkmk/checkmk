@@ -34,7 +34,7 @@
 #include "nagios.h"
 #endif
 
-void LogwatchListColumn::output(void *row, Renderer *renderer,
+void LogwatchListColumn::output(void *row, Renderer::Row &r,
                                 contact * /* auth_user */) {
     void *data = shiftPointer(row);
     if (data == nullptr) {
@@ -51,14 +51,13 @@ void LogwatchListColumn::output(void *row, Renderer *renderer,
     host_name = hst->name;
 #endif
 
-    renderer->outputBeginList();
+    Renderer::List l(r);
     std::string path = mk_logwatch_path_of_host(host_name);
     if (path != "") {
         DIR *dir = opendir(path.c_str());
         if (dir != nullptr) {
             struct dirent de;
             struct dirent *dep;
-            bool first = true;
 
             while (true) {
                 readdir_r(dir, &de, &dep);
@@ -71,14 +70,9 @@ void LogwatchListColumn::output(void *row, Renderer *renderer,
                     continue;
                 }
 
-                if (first) {
-                    first = false;
-                } else {
-                    renderer->outputListSeparator();
-                }
-                renderer->outputString(dep->d_name);
+                l.next();
+                l.outputString(dep->d_name);
             }
         }
     }
-    renderer->outputEndList();
 }

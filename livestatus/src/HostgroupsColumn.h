@@ -30,8 +30,8 @@
 #include <string>
 #include "Column.h"
 #include "ListColumn.h"
+#include "Renderer.h"
 #include "nagios.h"
-class Renderer;
 
 class HostgroupsColumn : public ListColumn {
     int _offset;
@@ -43,7 +43,7 @@ public:
         , _offset(offset) {}
     ColumnType type() override { return ColumnType::list; }
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    void output(void *row, Renderer *renderer, contact *auth_user) override;
+    void output(void *row, Renderer::Row &r, contact *auth_user) override;
     bool isEmpty(void *data) override;
 
 private:

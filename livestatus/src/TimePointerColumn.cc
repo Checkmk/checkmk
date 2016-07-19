@@ -29,9 +29,9 @@
 
 using std::string;
 
-void TimePointerColumn::output(void *row, Renderer *renderer,
+void TimePointerColumn::output(void *row, Renderer::Row &r,
                                contact *auth_user) {
-    renderer->outputTime(getValue(row, auth_user));
+    r.outputTime(getValue(row, auth_user));
 }
 
 Filter *TimePointerColumn::createFilter(RelationalOperator relOp,

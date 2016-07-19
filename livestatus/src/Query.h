@@ -69,6 +69,7 @@ public:
 
 private:
     std::unique_ptr<Renderer> _renderer;
+    Renderer::Query *_renderer_query;
     OutputBuffer::ResponseHeader _response_header;
     bool _do_keepalive;
     std::string _invalid_header_message;
@@ -142,8 +143,8 @@ private:
     void parseWaitTriggerLine(char *line);
     void parseWaitObjectLine(char *line);
     void parseLocaltimeLine(char *line);
-    void start();
-    void finish();
+    void start(Renderer::Query &q);
+    void finish(Renderer::Query &q);
     Column *createDummyColumn(const char *name);
 };
 

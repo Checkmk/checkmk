@@ -26,7 +26,8 @@
 #include "Filter.h"
 #include "Renderer.h"
 
-void CountAggregator::consume(void* row, contact* auth_user, int timezone_offset) {
+void CountAggregator::consume(void* row, contact* auth_user,
+                              int timezone_offset) {
     // _filter is 0 --> no filter, accept all rows
     if (_filter == nullptr ||
         _filter->accepts(row, auth_user, timezone_offset)) {

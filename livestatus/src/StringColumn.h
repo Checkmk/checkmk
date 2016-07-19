@@ -28,9 +28,9 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
+#include "Renderer.h"
 #include "opids.h"
 class Filter;
-class Renderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -47,7 +47,7 @@ public:
     std::string valueAsString(void *row, contact * /* auth_user */) override {
         return getValue(row);
     }
-    void output(void *row, Renderer *renderer, contact *auth_user) override;
+    void output(void *row, Renderer::Row &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::string; }
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;

@@ -29,9 +29,8 @@
 
 using std::string;
 
-void OffsetTimeColumn::output(void *row, Renderer *renderer,
-                              contact *auth_user) {
-    renderer->outputTime(getValue(row, auth_user));
+void OffsetTimeColumn::output(void *row, Renderer::Row &r, contact *auth_user) {
+    r.outputTime(getValue(row, auth_user));
 }
 
 Filter *OffsetTimeColumn::createFilter(RelationalOperator relOp,

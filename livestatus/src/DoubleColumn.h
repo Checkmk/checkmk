@@ -28,9 +28,9 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
+#include "Renderer.h"
 #include "opids.h"
 class Filter;
-class Renderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -44,7 +44,7 @@ public:
                  int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
     virtual double getValue(void *data) = 0;
-    void output(void *row, Renderer *renderer, contact *auth_user) override;
+    void output(void *row, Renderer::Row &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::double_; }
     std::string valueAsString(void *row, contact * /* auth_user */) override;
     Filter *createFilter(RelationalOperator relOp,

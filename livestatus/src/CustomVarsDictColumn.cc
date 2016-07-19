@@ -35,22 +35,22 @@ CustomVarsDictColumn::CustomVarsDictColumn(string name, string description,
 
 ColumnType CustomVarsDictColumn::type() { return ColumnType::dict; }
 
-void CustomVarsDictColumn::output(void *row, Renderer *renderer,
+void CustomVarsDictColumn::output(void *row, Renderer::Row &r,
                                   contact * /* auth_user */) {
-    renderer->outputBeginDict();
+    renderer->startDict();
     bool first = true;
     for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
          cvm = cvm->next) {
         if (first) {
             first = false;
         } else {
-            renderer->outputDictSeparator();
+            renderer->separateDictElements();
         }
         renderer->outputString(cvm->variable_name);
-        renderer->outputDictValueSeparator();
+        renderer->separateDictKeyValue();
         renderer->outputString(cvm->variable_value);
     }
-    renderer->outputEndDict();
+    renderer->endDict();
 }
 
 bool CustomVarsDictColumn::contains(void *row, const string &value) {

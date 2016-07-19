@@ -44,62 +44,56 @@ servicesmember *ServicelistColumn::getMembers(void *data) {
                                                 _offset);
 }
 
-void ServicelistColumn::output(void *row, Renderer *renderer,
+void ServicelistColumn::output(void *row, Renderer::Row &r,
                                contact *auth_user) {
-    renderer->outputBeginList();
+    Renderer::List l(r);
     servicesmember *mem = getMembers(row);
 
-    bool first = true;
     while (mem != nullptr) {
         service *svc = mem->service_ptr;
         if ((auth_user == nullptr) ||
             is_authorized_for(auth_user, svc->host_ptr, svc)) {
-            if (!first) {
-                renderer->outputListSeparator();
-            } else {
-                first = false;
-            }
             // show only service name => no sublist
             if (!_show_host && _info_depth == 0) {
-                renderer->outputString(svc->description);
+                l.next();
+                l.outputString(svc->description);
             } else {
-                renderer->outputBeginSublist();
+                l.next();
+                Renderer::Sublist s(l);
                 if (_show_host) {
-                    renderer->outputString(svc->host_name);
-                    renderer->outputSublistSeparator();
+                    s.next();
+                    s.outputString(svc->host_name);
                 }
-                renderer->outputString(svc->description);
+                s.next();
+                s.outputString(svc->description);
                 if (_info_depth >= 1) {
-                    renderer->outputSublistSeparator();
-                    renderer->outputInteger(svc->current_state);
-                    renderer->outputSublistSeparator();
-                    renderer->outputInteger(svc->has_been_checked);
+                    s.next();
+                    s.outputInteger(svc->current_state);
+                    s.next();
+                    s.outputInteger(svc->has_been_checked);
                 }
                 if (_info_depth >= 2) {
-                    renderer->outputSublistSeparator();
-                    renderer->outputString(svc->plugin_output);
+                    s.next();
+                    s.outputString(svc->plugin_output);
                 }
                 if (_info_depth >= 3) {
-                    renderer->outputSublistSeparator();
-                    renderer->outputInteger(svc->last_hard_state);
-                    renderer->outputSublistSeparator();
-                    renderer->outputInteger(svc->current_attempt);
-                    renderer->outputSublistSeparator();
-                    renderer->outputInteger(svc->max_attempts);
-                    renderer->outputSublistSeparator();
-                    renderer->outputInteger(svc->scheduled_downtime_depth);
-                    renderer->outputSublistSeparator();
-                    renderer->outputInteger(svc->problem_has_been_acknowledged);
-                    renderer->outputSublistSeparator();
-                    renderer->outputInteger(
-                        inCustomTimeperiod(svc, "SERVICE_PERIOD"));
+                    s.next();
+                    s.outputInteger(svc->last_hard_state);
+                    s.next();
+                    s.outputInteger(svc->current_attempt);
+                    s.next();
+                    s.outputInteger(svc->max_attempts);
+                    s.next();
+                    s.outputInteger(svc->scheduled_downtime_depth);
+                    s.next();
+                    s.outputInteger(svc->problem_has_been_acknowledged);
+                    s.next();
+                    s.outputInteger(inCustomTimeperiod(svc, "SERVICE_PERIOD"));
                 }
-                renderer->outputEndSublist();
             }
         }
         mem = mem->next;
     }
-    renderer->outputEndList();
 }
 
 Filter *ServicelistColumn::createFilter(RelationalOperator relOp,

@@ -29,9 +29,9 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void ContactgroupsColumn::output(void *row, Renderer *renderer,
+void ContactgroupsColumn::output(void *row, Renderer::Row &r,
                                  contact * /* auth_user */) {
-    renderer->outputBeginList();
+    Renderer::List l(r);
 
     if (row != nullptr) {
         void *data = shiftPointer(row);
@@ -39,21 +39,14 @@ void ContactgroupsColumn::output(void *row, Renderer *renderer,
             contactgroupsmember *cgm =
                 *reinterpret_cast<contactgroupsmember **>(
                     reinterpret_cast<char *>(data) + _offset);
-            bool first = true;
             while (cgm != nullptr) {
                 contactgroup *cg = cgm->group_ptr;
-                if (!first) {
-                    renderer->outputListSeparator();
-                } else {
-                    first = false;
-                }
-                renderer->outputString(cg->group_name);
+                l.next();
+                l.outputString(cg->group_name);
                 cgm = cgm->next;
             }
         }
     }
-
-    renderer->outputEndList();
 }
 
 unique_ptr<ListColumn::Contains> ContactgroupsColumn::makeContains(

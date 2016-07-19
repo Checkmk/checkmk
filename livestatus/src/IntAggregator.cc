@@ -27,7 +27,8 @@
 #include "IntColumn.h"
 #include "Renderer.h"
 
-void IntAggregator::consume(void *row, contact *auth_user, int /* timezone_offset */) {
+void IntAggregator::consume(void *row, contact *auth_user,
+                            int /* timezone_offset */) {
     _count++;
     int32_t value = _column->getValue(row, auth_user);
     switch (getOperation()) {

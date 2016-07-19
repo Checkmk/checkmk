@@ -26,11 +26,11 @@
 #include "Renderer.h"
 #include "global_counters.h"
 
-void GlobalCountersColumn::output(void * /* row */, Renderer *renderer,
+void GlobalCountersColumn::output(void * /* row */, Renderer::Row &r,
                                   contact * /* auth_user */) {
     if (_do_average) {
-        renderer->outputDouble(g_counter_rate[_counter_index]);
+        r.outputDouble(g_counter_rate[_counter_index]);
     } else {
-        renderer->outputCounter(g_counters[_counter_index]);
+        r.outputCounter(g_counters[_counter_index]);
     }
 }

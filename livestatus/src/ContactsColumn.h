@@ -30,8 +30,8 @@
 #include <string>
 #include "Column.h"
 #include "ListColumn.h"
+#include "Renderer.h"
 #include "nagios.h"
-class Renderer;
 
 class ContactsColumn : public ListColumn {
 public:
@@ -41,7 +41,7 @@ public:
     ColumnType type() override { return ColumnType::list; }
     virtual std::unique_ptr<Contains> containsContact(contact *ctc) = 0;
     bool isEmpty(void *data) override;
-    void output(void *row, Renderer *renderer, contact *auth_user) override;
+    void output(void *row, Renderer::Row &r, contact *auth_user) override;
 };
 
 #endif  // ContactsColumn_h

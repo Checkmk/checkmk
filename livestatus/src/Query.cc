@@ -731,18 +731,15 @@ void Query::process(OutputBuffer *output) {
         output, _response_header, _do_keepalive, _invalid_header_message,
         _output_format, _field_separator, _dataset_separator, _list_separator,
         _host_service_separator, _timezone_offset);
-    start();
+    doWait();
+    Renderer::Query q(_renderer.get());
+    _renderer_query = &q;
+    start(q);
     _table->answerQuery(this);
-    finish();
+    finish(q);
 }
 
-void Query::start() {
-    doWait();
-
-    _need_ds_separator = false;
-
-    _renderer->startOfQuery();
-
+void Query::start(Renderer::Query &q) {
     if (doStats()) {
         // if we have no StatsGroupBy: column, we allocate one only row of
         // Aggregators,
@@ -757,15 +754,9 @@ void Query::start() {
     }
 
     if (_show_column_headers) {
-        _renderer->outputDatasetBegin();
-        bool first = true;
-
+        Renderer::Row r(q);
         for (const auto &column : _columns) {
-            if (first) {
-                first = false;
-            } else {
-                _renderer->outputFieldSeparator();
-            }
+            r.next();
             _renderer->outputString(column->name());
         }
 
@@ -773,19 +764,12 @@ void Query::start() {
         int col = 1;
         for (const auto &stats_column : _stats_columns) {
             (void)stats_column;
-            if (first) {
-                first = false;
-            } else {
-                _renderer->outputFieldSeparator();
-            }
+            r.next();
             char colheader[32];
             snprintf(colheader, 32, "stats_%d", col);
             _renderer->outputString(colheader);
             col++;
         }
-
-        _renderer->outputDatasetEnd();
-        _need_ds_separator = true;
     }
 }
 
@@ -842,88 +826,50 @@ bool Query::processDataset(void *data) {
             // No output is done while processing the data, we only collect
             // stats.
         } else {
-            // output data of current row
-            if (_need_ds_separator) {
-                _renderer->outputDataSetSeparator();
-            } else {
-                _need_ds_separator = true;
-            }
-
-            _renderer->outputDatasetBegin();
-            bool first = true;
+            Renderer::Row r(*_renderer_query);
             for (auto column : _columns) {
-                if (first) {
-                    first = false;
-                } else {
-                    _renderer->outputFieldSeparator();
-                }
-                column->output(data, _renderer.get(), _auth_user);
+                r.next();
+                column->output(data, r, _auth_user);
             }
-            _renderer->outputDatasetEnd();
         }
     }
     return true;
 }
 
-void Query::finish() {
+void Query::finish(Renderer::Query &q) {
     // grouped stats
     if (doStats() && !_columns.empty()) {
         // output values of all stats groups (output has been post poned until
         // now)
         for (auto &stats_group : _stats_groups) {
-            if (_need_ds_separator) {
-                _renderer->outputDataSetSeparator();
-            } else {
-                _need_ds_separator = true;
-            }
-
-            _renderer->outputDatasetBegin();
-
+            Renderer::Row r(q);
             // output group columns first
             _stats_group_spec_t groupspec = stats_group.first;
-            bool first = true;
             for (auto &iit : groupspec) {
-                if (!first) {
-                    _renderer->outputFieldSeparator();
-                } else {
-                    first = false;
-                }
+                r.next();
                 _renderer->outputString(iit.c_str());
             }
 
             Aggregator **aggr = stats_group.second;
             for (unsigned i = 0; i < _stats_columns.size(); i++) {
-                _renderer->outputFieldSeparator();
+                r.next();
                 aggr[i]->output(_renderer.get());
                 delete aggr[i];  // not needed any more
             }
-            _renderer->outputDatasetEnd();
             delete[] aggr;
         }
     }
 
     // stats without group column
     else if (doStats()) {
-        if (_need_ds_separator) {
-            _renderer->outputDataSetSeparator();
-        } else {
-            _need_ds_separator = true;
-        }
-
-        _renderer->outputDatasetBegin();
+        Renderer::Row r(q);
         for (unsigned i = 0; i < _stats_columns.size(); i++) {
-            if (i > 0) {
-                _renderer->outputFieldSeparator();
-            }
+            r.next();
             _stats_aggregators[i]->output(_renderer.get());
             delete _stats_aggregators[i];
         }
-        _renderer->outputDatasetEnd();
         delete[] _stats_aggregators;
     }
-
-    // normal query
-    _renderer->endOfQuery();
 }
 
 const string *Query::findValueForIndexing(const string &column_name) {

@@ -32,7 +32,8 @@
    stuff by using C++ templates and the like.
  */
 
-void DoubleAggregator::consume(void* row, contact* /* auth_user */, int /* timezone_offset */) {
+void DoubleAggregator::consume(void* row, contact* /* auth_user */,
+                               int /* timezone_offset */) {
     _count++;
     double value = _column->getValue(row);
     switch (getOperation()) {

@@ -30,9 +30,9 @@
 
 using std::string;
 
-void DoubleColumn::output(void *row, Renderer *renderer,
+void DoubleColumn::output(void *row, Renderer::Row &r,
                           contact * /* auth_user */) {
-    renderer->outputDouble(getValue(row));
+    r.outputDouble(getValue(row));
 }
 
 Filter *DoubleColumn::createFilter(RelationalOperator relOp,

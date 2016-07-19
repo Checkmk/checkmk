@@ -27,25 +27,19 @@
 
 extern contact *contact_list;
 
-void ContactsColumn::output(void *row, Renderer *renderer,
+void ContactsColumn::output(void *row, Renderer::Row &r,
                             contact * /* auth_user */) {
-    renderer->outputBeginList();
+    Renderer::List l(r);
     void *data = shiftPointer(row);
 
     if (data != nullptr) {
-        bool first = true;
         for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
             if ((*containsContact(ctc))(data)) {
-                if (first) {
-                    first = false;
-                } else {
-                    renderer->outputListSeparator();
-                }
-                renderer->outputString(ctc->name);
+                l.next();
+                l.outputString(ctc->name);
             }
         }
     }
-    renderer->outputEndList();
 }
 
 bool ContactsColumn::isEmpty(void *data) {

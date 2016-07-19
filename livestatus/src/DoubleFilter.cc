@@ -35,7 +35,8 @@ DoubleFilter::DoubleFilter(DoubleColumn *column, RelationalOperator relOp,
                            const string &value)
     : _column(column), _relOp(relOp), _ref_value(atof(value.c_str())) {}
 
-bool DoubleFilter::accepts(void *row, contact * /* auth_user */, int /* timezone_offset */) {
+bool DoubleFilter::accepts(void *row, contact * /* auth_user */,
+                           int /* timezone_offset */) {
     double act_value = _column->getValue(row);
     switch (_relOp) {
         case RelationalOperator::equal:

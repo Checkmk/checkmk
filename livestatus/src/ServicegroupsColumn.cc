@@ -40,25 +40,19 @@ objectlist *ServicegroupsColumn::getData(void *data) {
     return nullptr;
 }
 
-void ServicegroupsColumn::output(void *row, Renderer *renderer,
+void ServicegroupsColumn::output(void *row, Renderer::Row &r,
                                  contact * /* auth_user */) {
-    renderer->outputBeginList();
+    Renderer::List l(r);
     objectlist *list = getData(row);
     if (list != nullptr) {
-        bool first = true;
         while (list != nullptr) {
             servicegroup *sg =
                 reinterpret_cast<servicegroup *>(list->object_ptr);
-            if (!first) {
-                renderer->outputListSeparator();
-            } else {
-                first = false;
-            }
-            renderer->outputString(sg->group_name);
+            l.next();
+            l.outputString(sg->group_name);
             list = list->next;
         }
     }
-    renderer->outputEndList();
 }
 
 unique_ptr<ListColumn::Contains> ServicegroupsColumn::makeContains(

@@ -54,7 +54,8 @@ AttributelistFilter::AttributelistFilter(AttributelistColumn *column,
 
 AttributelistColumn *AttributelistFilter::column() { return _column; }
 
-bool AttributelistFilter::accepts(void *row, contact * /* auth_user */, int /* timezone_offset */) {
+bool AttributelistFilter::accepts(void *row, contact * /* auth_user */,
+                                  int /* timezone_offset */) {
     unsigned long act_value =
         static_cast<unsigned long>(_column->getValue(row, nullptr));
     switch (_relOp) {

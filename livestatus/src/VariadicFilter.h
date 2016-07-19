@@ -47,8 +47,8 @@ public:
     bool hasSubFilters() { return !_subfilters.empty(); }
     _subfilters_t::iterator begin() { return _subfilters.begin(); }
     _subfilters_t::iterator end() { return _subfilters.end(); }
-    void findIntLimits(const std::string &colum_nname, int *lower,
-                       int *upper, int timezone_offset) const override;
+    void findIntLimits(const std::string &colum_nname, int *lower, int *upper,
+                       int timezone_offset) const override;
 
 protected:
     _subfilters_t _subfilters;

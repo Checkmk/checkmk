@@ -164,7 +164,6 @@ protected:
                     contact * /* auth_user */) override {
             Renderer::List l(r);
             for (const auto &elem : _ecc.getValue(row)) {
-                l.next();
                 l.outputString(elem.c_str());
             }
         }

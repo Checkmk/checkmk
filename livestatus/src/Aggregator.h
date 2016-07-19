@@ -26,8 +26,8 @@
 #define Aggregator_h
 
 #include "config.h"  // IWYU pragma: keep
+#include "Renderer.h"
 class Query;
-class Renderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -48,7 +48,7 @@ public:
     virtual void consume(void *row, contact *auth_user,
                          int timezone_offset) = 0;
 
-    virtual void output(Renderer *renderer) = 0;
+    virtual void output(Renderer::Row &r) = 0;
 
 private:
     const StatsOperation _operation;

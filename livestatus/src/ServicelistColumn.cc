@@ -55,39 +55,26 @@ void ServicelistColumn::output(void *row, Renderer::Row &r,
             is_authorized_for(auth_user, svc->host_ptr, svc)) {
             // show only service name => no sublist
             if (!_show_host && _info_depth == 0) {
-                l.next();
                 l.outputString(svc->description);
             } else {
-                l.next();
                 Renderer::Sublist s(l);
                 if (_show_host) {
-                    s.next();
                     s.outputString(svc->host_name);
                 }
-                s.next();
                 s.outputString(svc->description);
                 if (_info_depth >= 1) {
-                    s.next();
                     s.outputInteger(svc->current_state);
-                    s.next();
                     s.outputInteger(svc->has_been_checked);
                 }
                 if (_info_depth >= 2) {
-                    s.next();
                     s.outputString(svc->plugin_output);
                 }
                 if (_info_depth >= 3) {
-                    s.next();
                     s.outputInteger(svc->last_hard_state);
-                    s.next();
                     s.outputInteger(svc->current_attempt);
-                    s.next();
                     s.outputInteger(svc->max_attempts);
-                    s.next();
                     s.outputInteger(svc->scheduled_downtime_depth);
-                    s.next();
                     s.outputInteger(svc->problem_has_been_acknowledged);
-                    s.next();
                     s.outputInteger(inCustomTimeperiod(svc, "SERVICE_PERIOD"));
                 }
             }

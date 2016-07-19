@@ -48,7 +48,6 @@ void ServicegroupsColumn::output(void *row, Renderer::Row &r,
         while (list != nullptr) {
             servicegroup *sg =
                 reinterpret_cast<servicegroup *>(list->object_ptr);
-            l.next();
             l.outputString(sg->group_name);
             list = list->next;
         }

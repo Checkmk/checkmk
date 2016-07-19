@@ -70,7 +70,6 @@ void LogwatchListColumn::output(void *row, Renderer::Row &r,
                     continue;
                 }
 
-                l.next();
                 l.outputString(dep->d_name);
             }
         }

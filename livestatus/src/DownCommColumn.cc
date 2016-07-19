@@ -46,21 +46,15 @@ void DownCommColumn::output(void *row, Renderer::Row &r,
             if (match(dt, data)) {
                 if (_with_info) {
                     Renderer::Sublist s(l);
-                    s.next();
                     s.outputUnsignedLong(id);
-                    s.next();
                     s.outputString(dt->_author_name);
-                    s.next();
                     s.outputString(dt->_comment);
                     if (_with_extra_info && !_is_downtime) {
-                        s.next();
                         s.outputInteger(
                             static_cast<Comment *>(dt)->_entry_type);
-                        s.next();
                         s.outputTime(dt->_entry_time);
                     }
                 } else {
-                    l.next();
                     l.outputUnsignedLong(id);
                 }
             }

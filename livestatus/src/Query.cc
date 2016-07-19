@@ -756,18 +756,16 @@ void Query::start(Renderer::Query &q) {
     if (_show_column_headers) {
         Renderer::Row r(q);
         for (const auto &column : _columns) {
-            r.next();
-            _renderer->outputString(column->name());
+            r.outputString(column->name());
         }
 
         // Output dummy headers for stats columns
         int col = 1;
         for (const auto &stats_column : _stats_columns) {
             (void)stats_column;
-            r.next();
             char colheader[32];
             snprintf(colheader, 32, "stats_%d", col);
-            _renderer->outputString(colheader);
+            r.outputString(colheader);
             col++;
         }
     }
@@ -828,7 +826,6 @@ bool Query::processDataset(void *data) {
         } else {
             Renderer::Row r(*_renderer_query);
             for (auto column : _columns) {
-                r.next();
                 column->output(data, r, _auth_user);
             }
         }
@@ -846,14 +843,12 @@ void Query::finish(Renderer::Query &q) {
             // output group columns first
             _stats_group_spec_t groupspec = stats_group.first;
             for (auto &iit : groupspec) {
-                r.next();
-                _renderer->outputString(iit.c_str());
+                r.outputString(iit.c_str());
             }
 
             Aggregator **aggr = stats_group.second;
             for (unsigned i = 0; i < _stats_columns.size(); i++) {
-                r.next();
-                aggr[i]->output(_renderer.get());
+                aggr[i]->output(r);
                 delete aggr[i];  // not needed any more
             }
             delete[] aggr;
@@ -864,8 +859,7 @@ void Query::finish(Renderer::Query &q) {
     else if (doStats()) {
         Renderer::Row r(q);
         for (unsigned i = 0; i < _stats_columns.size(); i++) {
-            r.next();
-            _stats_aggregators[i]->output(_renderer.get());
+            _stats_aggregators[i]->output(r);
             delete _stats_aggregators[i];
         }
         delete[] _stats_aggregators;

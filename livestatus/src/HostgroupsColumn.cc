@@ -47,7 +47,6 @@ void HostgroupsColumn::output(void *row, Renderer::Row &r,
     if (list != nullptr) {
         while (list != nullptr) {
             hostgroup *sg = reinterpret_cast<hostgroup *>(list->object_ptr);
-            l.next();
             l.outputString(sg->group_name);
             list = list->next;
         }

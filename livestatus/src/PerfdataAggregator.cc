@@ -112,7 +112,7 @@ void PerfdataAggregator::consumeVariable(const string &varname, double value) {
     }
 }
 
-void PerfdataAggregator::output(Renderer *renderer) {
+void PerfdataAggregator::output(Renderer::Row &r) {
     string perf_data;
     bool first = true;
     for (const auto &entry : _aggr) {
@@ -158,5 +158,5 @@ void PerfdataAggregator::output(Renderer *renderer) {
         }
         perf_data += format;
     }
-    renderer->outputString(perf_data.c_str(), -1);
+    r.outputString(perf_data.c_str());
 }

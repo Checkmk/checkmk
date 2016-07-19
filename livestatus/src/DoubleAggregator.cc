@@ -72,29 +72,29 @@ void DoubleAggregator::consume(void* row, contact* /* auth_user */,
     }
 }
 
-void DoubleAggregator::output(Renderer* renderer) {
+void DoubleAggregator::output(Renderer::Row& r) {
     switch (getOperation()) {
         case StatsOperation::sum:
         case StatsOperation::min:
         case StatsOperation::max:
         case StatsOperation::suminv:
-            renderer->outputDouble(_aggr);
+            r.outputDouble(_aggr);
             break;
 
         case StatsOperation::avg:
         case StatsOperation::avginv:
             if (_count == 0) {
-                renderer->outputDouble(0.0);
+                r.outputDouble(0.0);
             } else {
-                renderer->outputDouble(_aggr / _count);
+                r.outputDouble(_aggr / _count);
             }
             break;
 
         case StatsOperation::std:
             if (_count <= 1) {
-                renderer->outputDouble(0.0);
+                r.outputDouble(0.0);
             } else {
-                renderer->outputDouble(
+                r.outputDouble(
                     sqrt((_sumq - (_aggr * _aggr) / _count) / (_count - 1)));
             }
             break;

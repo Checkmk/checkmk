@@ -67,31 +67,31 @@ void IntAggregator::consume(void *row, contact *auth_user,
     }
 }
 
-void IntAggregator::output(Renderer *renderer) {
+void IntAggregator::output(Renderer::Row &r) {
     switch (getOperation()) {
         case StatsOperation::sum:
         case StatsOperation::min:
         case StatsOperation::max:
-            renderer->outputInteger64(_aggr);
+            r.outputInteger64(_aggr);
             break;
 
         case StatsOperation::suminv:
-            renderer->outputInteger64(_sumq);
+            r.outputInteger64(_sumq);
             break;
 
         case StatsOperation::avg:
-            renderer->outputDouble(double(_aggr) / _count);
+            r.outputDouble(double(_aggr) / _count);
             break;
 
         case StatsOperation::avginv:
-            renderer->outputInteger64(_sumq / _count);
+            r.outputInteger64(_sumq / _count);
             break;
 
         case StatsOperation::std:
             if (_count <= 1) {
-                renderer->outputDouble(0.0);
+                r.outputDouble(0.0);
             } else {
-                renderer->outputDouble(sqrt(
+                r.outputDouble(sqrt(
                     (_sumq -
                      (static_cast<double>(_aggr) * static_cast<double>(_aggr)) /
                          _count) /

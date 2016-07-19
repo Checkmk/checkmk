@@ -35,7 +35,6 @@ void ContactsColumn::output(void *row, Renderer::Row &r,
     if (data != nullptr) {
         for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
             if ((*containsContact(ctc))(data)) {
-                l.next();
                 l.outputString(ctc->name);
             }
         }

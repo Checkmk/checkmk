@@ -79,6 +79,47 @@ public:
 
         ~Row() { renderer()->endRow(); }
 
+        void outputNull() {
+            next();
+            renderer()->outputNull();
+        }
+        void outputBlob(const std::vector<char> *blob) {
+            next();
+            renderer()->outputBlob(blob);
+        }
+        void outputString(const char *value) {
+            next();
+            renderer()->outputString(value);
+        }
+        void outputInteger(int32_t value) {
+            next();
+            renderer()->outputInteger(value);
+        }
+        void outputInteger64(int64_t value) {
+            next();
+            renderer()->outputInteger64(value);
+        }
+        void outputTime(int32_t value) {
+            next();
+            renderer()->outputTime(value);
+        }
+        void outputUnsignedLong(unsigned long value) {
+            next();
+            renderer()->outputUnsignedLong(value);
+        }
+        void outputCounter(counter_t value) {
+            next();
+            renderer()->outputCounter(value);
+        }
+        void outputDouble(double value) {
+            next();
+            renderer()->outputDouble(value);
+        }
+
+    private:
+        Query &_query;
+        bool _first;
+
         void next() {
             if (_first) {
                 _first = false;
@@ -87,43 +128,44 @@ public:
             }
         }
 
-        void outputNull() { renderer()->outputNull(); }
-        void outputBlob(const std::vector<char> *blob) {
-            renderer()->outputBlob(blob);
-        }
-        void outputString(const char *value) {
-            renderer()->outputString(value);
-        }
-        void outputInteger(int32_t value) { renderer()->outputInteger(value); }
-        void outputTime(int32_t value) { renderer()->outputTime(value); }
-        void outputUnsignedLong(unsigned long value) {
-            renderer()->outputUnsignedLong(value);
-        }
-        void outputCounter(counter_t value) {
-            renderer()->outputCounter(value);
-        }
-        void outputDouble(double value) { renderer()->outputDouble(value); }
-
-    private:
-        Query &_query;
-        bool _first;
-
         Renderer *renderer() const { return _query.renderer(); }
 
-        // for renderer()
+        // for next() and renderer()
         friend class Renderer::List;
 
-        // for renderer()
+        // for next() and renderer()
         friend class Renderer::Dict;
     };
 
     class List {
     public:
         explicit List(Row &row) : _row(row), _first(true) {
+            _row.next();
             renderer()->startList();
         }
 
         ~List() { renderer()->endList(); }
+
+        void outputString(const char *value) {
+            next();
+            renderer()->outputString(value);
+        }
+        void outputUnsignedLong(unsigned long value) {
+            next();
+            renderer()->outputUnsignedLong(value);
+        }
+        void outputTime(int32_t value) {
+            next();
+            renderer()->outputTime(value);
+        }
+        void outputDouble(double value) {
+            next();
+            renderer()->outputDouble(value);
+        }
+
+    private:
+        Row &_row;
+        bool _first;
 
         void next() {
             if (_first) {
@@ -133,22 +175,9 @@ public:
             }
         }
 
-        void outputString(const char *value) {
-            renderer()->outputString(value);
-        }
-        void outputUnsignedLong(unsigned long value) {
-            renderer()->outputUnsignedLong(value);
-        }
-        void outputTime(int32_t value) { renderer()->outputTime(value); }
-        void outputDouble(double value) { renderer()->outputDouble(value); }
-
-    private:
-        Row &_row;
-        bool _first;
-
         Renderer *renderer() const { return _row.renderer(); }
 
-        // for renderer()
+        // for next() and renderer()
         friend class Renderer::Sublist;
     };
 
@@ -161,6 +190,27 @@ public:
 
         ~Sublist() { renderer()->endSublist(); }
 
+        void outputInteger(int32_t value) {
+            next();
+            renderer()->outputInteger(value);
+        }
+        void outputTime(int32_t value) {
+            next();
+            renderer()->outputTime(value);
+        }
+        void outputUnsignedLong(unsigned long value) {
+            next();
+            renderer()->outputUnsignedLong(value);
+        }
+        void outputString(const char *value) {
+            next();
+            renderer()->outputString(value);
+        }
+
+    private:
+        List &_list;
+        bool _first;
+
         void next() {
             if (_first) {
                 _first = false;
@@ -169,25 +219,13 @@ public:
             }
         }
 
-        void outputInteger(int32_t value) { renderer()->outputInteger(value); }
-        void outputTime(int32_t value) { renderer()->outputTime(value); }
-        void outputUnsignedLong(unsigned long value) {
-            renderer()->outputUnsignedLong(value);
-        }
-        void outputString(const char *value) {
-            renderer()->outputString(value);
-        }
-
-    private:
-        List &_list;
-        bool _first;
-
         Renderer *renderer() const { return _list.renderer(); }
     };
 
     class Dict {
     public:
         explicit Dict(Renderer::Row &row) : _row(row), _first(true) {
+            _row.next();
             renderer()->startDict();
         }
 

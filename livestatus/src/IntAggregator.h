@@ -28,8 +28,8 @@
 #include "config.h"  // IWYU pragma: keep
 #include <cstdint>
 #include "Aggregator.h"
+#include "Renderer.h"
 class IntColumn;
-class Renderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -46,7 +46,7 @@ public:
         , _aggr(0)
         , _sumq(0) {}
     void consume(void *row, contact *auth_user, int timezone_offset) override;
-    void output(Renderer *renderer) override;
+    void output(Renderer::Row &r) override;
 
 private:
     IntColumn *const _column;

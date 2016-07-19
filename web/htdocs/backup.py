@@ -772,6 +772,9 @@ class PageEditBackupJob(object):
 
 
     def _validate_backup_job_ident(self, value, varprefix):
+        if value == "restore":
+            raise MKUserError(varprefix, _("You need to choose another ID."))
+
         if value in self.jobs().objects:
             raise MKUserError(varprefix, _("This ID is already used by another backup job."))
 

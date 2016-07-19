@@ -42,6 +42,7 @@ import socket
 import signal
 import subprocess
 import sys
+import syslog
 import tempfile
 import textwrap
 import time
@@ -113,6 +114,8 @@ def stop_logging():
 
 def log(s):
     sys.stdout.write("%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), s))
+    if is_cma():
+        syslog.syslog(s)
 
 
 def verbose(s):
@@ -1818,6 +1821,12 @@ def interrupt_handler(signum, frame):
 def register_signal_handlers():
     signal.signal(signal.SIGTERM, interrupt_handler)
 
+
+def init_logging():
+    if is_cma():
+        syslog.openlog("mkbackup")
+
+
 g_config    = {}
 opt_verbose = 0
 opt_debug   = False
@@ -1827,6 +1836,7 @@ def main():
     global opt_debug, opt_verbose, g_config
 
     register_signal_handlers()
+    init_logging()
 
     short_options = "h"
     long_options = [ "help", "version", "verbose", "debug" ]

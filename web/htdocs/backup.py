@@ -135,6 +135,10 @@ class BackupEntity(object):
         return self._ident
 
 
+    def config(self):
+        return self._config
+
+
     def title(self):
         return self._config["title"]
 

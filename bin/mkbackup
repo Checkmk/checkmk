@@ -573,7 +573,7 @@ def do_backup(opts):
     complete_backup()
 
 
-def do_site_backup(opts, site=None):
+def do_site_backup(opts, site=None, try_stop=True):
     cmd = ["omd", "backup"]
 
     if not compress_archives():
@@ -598,6 +598,7 @@ def do_site_backup(opts, site=None):
     # Create missing directories. Ensure group permissions and mode.
     makedirs(os.path.dirname(backup_path), group="omd", mode=0775)
 
+    verbose("Command: %s" % " ".join(cmd))
     p = subprocess.Popen(cmd, shell=False, close_fds=True,
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                          stdin=open(os.devnull))
@@ -616,11 +617,58 @@ def do_site_backup(opts, site=None):
                   "1.2.8p5 or later."
 
         elif "The site needs to be stopped" in err:
-            err = "The Check_MK version of this site does not support online backups. " \
-                  "You can either exclude the sites from this backup job, stop your sites " \
-                  "manually or update your sites to version 1.4.0i1 or later."
+            if try_stop:
+                log("The Check_MK version of this site does not support online backups. The site "
+                    "seems to be at least partially running. Stopping the site during backup and "
+                    "starting it again after completion.")
+
+                log("Stopping site")
+                stop_site(site)
+                try:
+                    log("Start offline site backup")
+                    return do_site_backup(opts, site, try_stop=False)
+                finally:
+                    log("Starting site again")
+                    start_site(site)
+
+            else:
+                raise MKGeneralException("Failed to backup site that only supports "
+                                         "offline backup.")
+
 
         raise MKGeneralException("Site backup failed: %s" % err)
+
+
+def stop_site(site):
+    omd_command("stop", site)
+
+    for c in range(5):
+        if os.system("omd status --bare %s" % site) >> 8 == 1:
+            break
+        elif c == 4:
+            raise MKGeneralException("Failed to stop site")
+
+
+def start_site(site):
+    omd_command("start", site)
+
+    for c in range(5):
+        if os.system("omd status --bare %s" % site) >> 8 == 0:
+            break
+        elif c == 4:
+            raise MKGeneralException("Failed to start site")
+
+
+def omd_command(*args):
+    cmd = ["omd"] + list(args)
+    verbose("Command: %s" % " ".join(cmd))
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                         stdin=open(os.devnull), close_fds=True)
+    stdout = p.communicate()[0]
+    verbose(stdout)
+    if p.returncode != 0:
+        raise MKGeneralException("Failed to run <tt>%s</tt>" %
+            (" ".join(cmd), stdout))
 
 
 # Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA

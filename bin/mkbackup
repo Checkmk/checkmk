@@ -524,6 +524,8 @@ def mode_backup(local_job_id, opts):
 
     init_new_run()
 
+    save_state({"schedule": g_job_config["schedule"]})
+
     if "background" in opts:
         daemon.daemonize()
         save_state({"pid": os.getpid()})

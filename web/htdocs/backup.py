@@ -340,6 +340,10 @@ class Job(MKBackupJob, BackupEntity):
         return [mkbackup_path(), "backup", "--background", self.ident()]
 
 
+    def schedule(self):
+        return self._config["schedule"]
+
+
     def cron_config(self):
         if not self._config["schedule"]:
             return
@@ -473,11 +477,24 @@ class Jobs(BackupEntityCollection):
                             (render.timespan(duration), size_txt,
                              render.bytes(state["bytes_per_second"])))
 
-            # TODO: Render schedule
-            #job_html = SchedulePeriod().value_to_text(job._config["period"]) \
-            #                + _(" at ") \
-            #                + ListOf(Timeofday()).value_to_text(job._config["timeofday"])
-            #table.cell(_("job"), job_html)
+            table.cell(_("Next run"))
+            schedule = job.schedule()
+            if not schedule:
+                html.write(_("Only execute manually"))
+
+            elif schedule["disabled"]:
+                html.write(_("Disabled"))
+
+            else:
+                # find the next time of all configured times
+                times = []
+                for timespec in schedule["timeofday"]:
+                    times.append(SchedulePeriod().next_scheduled_time({
+                        "period"    : schedule["period"],
+                        "timeofday" : timespec,
+                    }))
+
+                html.write(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
 
         table.end()
 

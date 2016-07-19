@@ -27,6 +27,7 @@
 VERSION = "1.4.0i1"
 
 import base64
+import errno
 import fcntl
 import fnmatch
 import getopt
@@ -391,7 +392,7 @@ class MKTarFile(TarFile):
         try:
             super(MKTarFile, self).makefile(tarinfo, targetpath)
         except IOError, e:
-            if e.errno == 21:
+            if e.errno == errno.EISDIR:
                 # Handle "IOError: [Errno 21] Is a directory"
                 # Happens e.g. when a dir is being replaced by a file during restore
                 if os.path.islink(targetpath):
@@ -400,7 +401,7 @@ class MKTarFile(TarFile):
                     shutil.rmtree(targetpath)
                 super(MKTarFile, self).makefile(tarinfo, targetpath)
 
-            elif e.errno == 26:
+            elif e.errno == errno.ETXTBSY:
                 # Fix "IOError: [Errno 26] Text file busy" when replacing a file
                 os.remove(targetpath)
                 super(MKTarFile, self).makefile(tarinfo, targetpath)
@@ -675,7 +676,7 @@ def omd_command(*args):
     stdout = p.communicate()[0]
     verbose(stdout)
     if p.returncode != 0:
-        raise MKGeneralException("Failed to run <tt>%s</tt>" %
+        raise MKGeneralException("Failed to run <tt>%s</tt>: %s" %
             (" ".join(cmd), stdout))
 
 
@@ -747,7 +748,7 @@ class MKBackupStream(object):
         raise NotImplementedError()
 
 
-    def _process_chunk(self):
+    def _process_chunk(self, chunk):
         raise NotImplementedError()
 
 
@@ -1104,7 +1105,7 @@ def do_system_backup(opts):
     try:
         makedirs(os.path.dirname(system_backup_archive_path()), group="omd", mode=0775)
     except OSError, e:
-        if e.errno == 13:
+        if e.errno == errno.EACCES:
             raise MKGeneralException("Failed to create the backup directory: %s" % e)
         else:
             raise
@@ -1214,7 +1215,7 @@ def backup_files_to_tarfile(fobj, base_path, exclude_patterns=None):
     try:
         tar = TarFile.open(fileobj=fobj, mode=tar_mode)
     except IOError, e:
-        if not opt_debug and e.errno == 29:
+        if not opt_debug and e.errno == errno.ESPIPE:
             log("Failed to init backup to tarfile: %s" % e)
             return
         else:
@@ -1261,7 +1262,7 @@ def cleanup_previous_incomplete_backup():
         try:
             shutil.rmtree(job_backup_path_during_backup())
         except OSError, e:
-            if e.errno == 13:
+            if e.errno == errno.EACCES:
                 raise MKGeneralException("Failed to write the backup directory: %s" % e)
             else:
                 raise

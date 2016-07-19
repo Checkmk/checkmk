@@ -1250,14 +1250,14 @@ class BackupTargetType(object):
     @classmethod
     def choices(cls):
         choices = []
-        for type_class in cls.__subclasses__():
+        for type_class in cls.__subclasses__(): # pylint: disable=no-member
             choices.append((type_class.ident, type_class.title(), type_class.valuespec()))
         return sorted(choices, key=lambda x: x[1])
 
 
     @classmethod
     def get_type(cls, type_ident):
-        for type_class in cls.__subclasses__():
+        for type_class in cls.__subclasses__(): # pylint: disable=no-member
             if type_class.ident == type_ident:
                 return type_class
 

@@ -272,7 +272,7 @@ class PageUploadKey(object):
         raise NotImplementedError()
 
 
-    def save(self):
+    def save(self, keys):
         raise NotImplementedError()
 
 
@@ -402,7 +402,7 @@ class PageDownloadKey(object):
         raise NotImplementedError()
 
 
-    def save(self):
+    def save(self, keys):
         raise NotImplementedError()
 
 

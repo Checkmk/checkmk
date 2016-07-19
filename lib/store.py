@@ -82,7 +82,7 @@ class LockedOpen(object):
 
 
     def __getattr__(self, name):
-        return self._file_obj.__getattr__(name)
+        return getattr(self._file_obj, name)
 
 
 # This class offers locked file opening. Read operations are made on the

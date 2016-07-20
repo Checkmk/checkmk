@@ -31,11 +31,7 @@ using std::string;
 
 void StringColumn::output(void *row, Renderer::Row &r,
                           contact * /* auth_user */) {
-    if (row != nullptr) {
-        r.outputString(getValue(row).c_str());
-    } else {
-        r.outputString(nullptr);
-    }
+    r.outputCPPString(row == nullptr ? "" : getValue(row));
 }
 
 Filter *StringColumn::createFilter(RelationalOperator relOp,

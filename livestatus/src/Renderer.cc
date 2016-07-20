@@ -24,7 +24,6 @@
 
 #include "Renderer.h"
 #include <stdio.h>
-#include <string.h>
 #include <cmath>
 #include <ostream>
 #include "Logger.h"
@@ -93,7 +92,11 @@ size_t Renderer::size() const { return _output->size(); }
 
 void Renderer::add(const string &str) { _output->add(str); }
 
-void Renderer::add(const vector<char> &blob) { _output->add(blob); }
+void Renderer::add(const vector<char> &value) { _output->add(value); }
+
+void Renderer::outputCPPString(const string &value) {
+    outputString(value.c_str());
+}
 
 void Renderer::outputInteger(int32_t value) { add(to_string(value)); }
 
@@ -119,103 +122,105 @@ void Renderer::outputDouble(double value) {
     }
 }
 
-void Renderer::outputAsciiEscape(char value) {
-    char buf[8];
-    snprintf(buf, sizeof(buf), "\\%03o", value);
-    add(buf);
-}
-
 void Renderer::outputUnicodeEscape(unsigned value) {
     char buf[8];
     snprintf(buf, sizeof(buf), "\\u%04x", value);
     add(buf);
 }
 
-void Renderer::outputChars(const char *value, int len) {
-    add("\"");
+void Renderer::outputCharsAsBlob(const char *value, std::size_t len) {
+    for (; len != 0; --len, value++) {
+        if (0 <= *value && *value <= 31) {
+            char buf[8];
+            snprintf(buf, sizeof(buf), "\\%03o", *value);
+            add(buf);
+        } else if (*value == '"' || *value == '\\') {
+            add("\\");
+            add(string(value, 1));
+        } else {
+            add(string(value, 1));
+        }
+    }
+}
+
+namespace {
+void invalidUTF8(const string &value) {
+    if (g_debug_level >= 2) {
+        Informational() << "Ignoring invalid UTF-8 sequence in string '"
+                        << value << "'";
+    }
+}
+}  // namespace
+
+void Renderer::outputCharsAsString(const char *value, std::size_t len) {
     const char *r = value;
-    int chars_left = len >= 0 ? len : strlen(r);
-    while (chars_left != 0) {
-        // Always escape control characters (1..31)
-        if (*r < 32 && *r >= 0) {
-            if (len < 0) {
-                outputUnicodeEscape(static_cast<unsigned>(*r));
-            } else {
-                outputAsciiEscape(*r);
-            }
+    while (len != 0) {
+        // Always escape control characters
+        if (0 <= *r && *r <= 31) {
+            outputUnicodeEscape(static_cast<unsigned>(*r));
         }
 
-        // Output ASCII characters unencoded
-        else if (*r >= 32 || len >= 0) {
-            if (*r == '"' || *r == '\\') {
-                add("\\");
-            }
+        else if (*r == '"' || *r == '\\') {
+            add("\\");
             add(string(r, 1));
         }
 
-        // interprete two-Byte UTF-8 sequences in mode 'utf8' and 'mixed'
+        // Output ASCII characters unencoded
+        else if (*r >= 32) {
+            add(string(r, 1));
+        }
+
+        // TODO(sp): We actually assume signed chars here!!!
+        // interpret two-Byte UTF-8 sequences in mode 'utf8' and 'mixed'
         else if ((g_data_encoding == ENCODING_UTF8 ||
                   g_data_encoding == ENCODING_MIXED) &&
                  ((*r & 0xE0) == 0xC0)) {
             outputUnicodeEscape(((*r & 31) << 6) |
                                 (*(r + 1) & 0x3F));  // 2 byte encoding
             r++;
-            chars_left--;
+            len--;
         }
 
-        // interprete 3/4-Byte UTF-8 sequences only in mode 'utf8'
+        // interpret 3/4-Byte UTF-8 sequences only in mode 'utf8'
         else if (g_data_encoding == ENCODING_UTF8) {
             // three-byte sequences (avoid buffer overflow!)
             if ((*r & 0xF0) == 0xE0) {
-                if (chars_left < 3) {
-                    if (g_debug_level >= 2) {
-                        Informational()
-                            << "Ignoring invalid UTF-8 sequence in string '"
-                            << string(value) << "'";
-                    }
+                if (len < 3) {
+                    invalidUTF8(value);
                     break;  // end of string. No use in continuing
                 } else {
                     outputUnicodeEscape(((*r & 0x0F) << 12 |
                                          (*(r + 1) & 0x3F) << 6 |
                                          (*(r + 2) & 0x3F)));
                     r += 2;
-                    chars_left -= 2;
+                    len -= 2;
                 }
             }
             // four-byte sequences
             else if ((*r & 0xF8) == 0xF0) {
-                if (chars_left < 4) {
-                    if (g_debug_level >= 2) {
-                        Informational()
-                            << "Ignoring invalid UTF-8 sequence in string '"
-                            << string(value) << "'";
-                    }
+                if (len < 4) {
+                    invalidUTF8(value);
                     break;  // end of string. No use in continuing
                 } else {
                     outputUnicodeEscape(
                         ((*r & 0x07) << 18 | (*(r + 1) & 0x3F) << 6 |
                          (*(r + 2) & 0x3F) << 6 | (*(r + 3) & 0x3F)));
                     r += 3;
-                    chars_left -= 3;
+                    len -= 3;
                 }
             } else {
-                if (g_debug_level >= 2) {
-                    Informational()
-                        << "Ignoring invalid UTF-8 sequence in string '"
-                        << string(value) << "'";
-                }
+                invalidUTF8(value);
             }
         }
 
-        // in latin1 and mixed mode interprete all other non-ASCII
-        // characters as latin1
+        // in latin1 and mixed mode interpret all other non-ASCII characters as
+        // latin1
         else {
             outputUnicodeEscape(static_cast<unsigned>(
                 static_cast<int>(*r) + 256));  // assume latin1 encoding
         }
 
         r++;
-        chars_left--;
+        len--;
     }
-    add("\"");
 }

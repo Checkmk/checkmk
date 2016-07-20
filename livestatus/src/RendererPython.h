@@ -38,11 +38,11 @@ public:
                    bool do_keep_alive, std::string invalid_header_message,
                    int timezone_offset);
 
-    void outputNull() override;
-    void outputBlob(const std::vector<char> *blob) override;
-    void outputString(const char *value, int len = -1) override;
-
 private:
+    void outputNull() override;
+    void outputBlob(const std::vector<char> *value) override;
+    void outputString(const char *value) override;
+
     void startQuery() override;
     void separateQueryElements() override;
     void endQuery() override;

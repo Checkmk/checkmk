@@ -34,6 +34,8 @@
 #include "nagios.h"
 #endif
 
+using std::string;
+
 void LogwatchListColumn::output(void *row, Renderer::Row &r,
                                 contact * /* auth_user */) {
     void *data = shiftPointer(row);
@@ -41,18 +43,16 @@ void LogwatchListColumn::output(void *row, Renderer::Row &r,
         return;
     }
 
-    const char *host_name;
-
 #ifdef CMC
     Host *host = static_cast<Host *>(data);
-    host_name = host->_name;
+    string host_name = host->_name;
 #else
     host *hst = static_cast<host *>(data);
-    host_name = hst->name;
+    string host_name = hst->name;
 #endif
 
     Renderer::List l(r);
-    std::string path = mk_logwatch_path_of_host(host_name);
+    string path = mk_logwatch_path_of_host(host_name);
     if (path != "") {
         DIR *dir = opendir(path.c_str());
         if (dir != nullptr) {

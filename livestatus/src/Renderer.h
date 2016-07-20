@@ -89,13 +89,17 @@ public:
             next();
             renderer().outputNull();
         }
-        void outputBlob(const std::vector<char> *blob) {
+        void outputBlob(const std::vector<char> *value) {
             next();
-            renderer().outputBlob(blob);
+            renderer().outputBlob(value);
         }
         void outputString(const char *value) {
             next();
             renderer().outputString(value);
+        }
+        void outputCPPString(const std::string &value) {
+            next();
+            renderer().outputCPPString(value);
         }
         void outputInteger(int32_t value) {
             next();
@@ -156,6 +160,10 @@ public:
             next();
             renderer().outputString(value);
         }
+        void outputCPPString(const std::string &value) {
+            next();
+            renderer().outputCPPString(value);
+        }
         void outputUnsignedLong(unsigned long value) {
             next();
             renderer().outputUnsignedLong(value);
@@ -196,6 +204,10 @@ public:
 
         ~Sublist() { renderer().endSublist(); }
 
+        void outputCPPString(const std::string &value) {
+            next();
+            renderer().outputCPPString(value);
+        }
         void outputInteger(int32_t value) {
             next();
             renderer().outputInteger(value);
@@ -239,9 +251,9 @@ public:
 
         void renderKeyValue(std::string key, std::string value) {
             next();
-            renderer().outputString(key.c_str());
+            renderer().outputCPPString(key);
             renderer().separateDictKeyValue();
-            renderer().outputString(value.c_str());
+            renderer().outputCPPString(value);
         }
 
     private:
@@ -268,36 +280,36 @@ public:
 
     virtual ~Renderer();
 
-    void setError(OutputBuffer::ResponseCode code, const std::string &message);
-    std::size_t size() const;
-
-    virtual void outputNull() = 0;
-    virtual void outputBlob(const std::vector<char> *blob) = 0;
-    // len = -1 -> use strlen(), len >= 0: consider output as blob, do not
-    // handle UTF-8.
-    virtual void outputString(const char *value, int len = -1) = 0;
-
-    void outputInteger(int32_t value);
-    void outputInteger64(int64_t value);
-    void outputTime(int32_t value);
-    void outputUnsignedLong(unsigned long value);
-    void outputCounter(counter_t value);
-    void outputDouble(double value);
-    void outputAsciiEscape(char value);
-    void outputUnicodeEscape(unsigned value);
-
 protected:
     Renderer(OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
              bool do_keep_alive, std::string invalid_header_message,
              int timezone_offset);
 
     void add(const std::string &str);
-    void add(const std::vector<char> &blob);
-    void outputChars(const char *value, int len);
+    void add(const std::vector<char> &value);
+
+    void outputCharsAsBlob(const char *value, std::size_t len);
+    void outputCharsAsString(const char *value, std::size_t len);
 
 private:
     OutputBuffer *const _output;
     const int _timezone_offset;
+
+    void setError(OutputBuffer::ResponseCode code, const std::string &message);
+    std::size_t size() const;
+
+    virtual void outputNull() = 0;
+    virtual void outputBlob(const std::vector<char> *value) = 0;
+    virtual void outputString(const char *value) = 0;
+
+    void outputCPPString(const std::string &value);
+    void outputInteger(int32_t value);
+    void outputInteger64(int64_t value);
+    void outputTime(int32_t value);
+    void outputUnsignedLong(unsigned long value);
+    void outputCounter(counter_t value);
+    void outputDouble(double value);
+    void outputUnicodeEscape(unsigned value);
 
     // A whole query.
     virtual void startQuery() = 0;

@@ -30,7 +30,9 @@
 #include "logger.h"
 #include "pnp4nagios.h"
 
-std::string mk_logwatch_path_of_host(const char *host_name) {
+using std::string;
+
+std::string mk_logwatch_path_of_host(const string &host_name) {
     std::string path(MK_LOGWATCH_PATH);
     if (path == "") {
         return "";

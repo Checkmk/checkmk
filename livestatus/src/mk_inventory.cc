@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "mk_inventory.h"
-#include <stdio.h>
 #include <sys/stat.h>
 
 #ifdef CMC
@@ -34,14 +33,13 @@ extern char g_mk_inventory_path[];
 #define MK_INVENTORY_PATH g_mk_inventory_path
 #endif
 
-int mk_inventory_last(const char *host) {
-    char path[4096];
-    snprintf(path, sizeof(path), "%s/%s", MK_INVENTORY_PATH, host);
+using std::string;
+
+int mk_inventory_last(const string &host) {
     struct stat st;
-    if (0 != stat(path, &st)) {
-        return 0;
-    }
-    return st.st_mtime;
+    return stat((string(MK_INVENTORY_PATH) + "/" + host).c_str(), &st) != 0
+               ? 0
+               : st.st_mtime;
 }
 
 int mk_inventory_last_of_all() {

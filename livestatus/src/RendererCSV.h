@@ -40,10 +40,6 @@ public:
                 std::string list_separator, std::string host_service_separator,
                 int timezone_offset);
 
-    void outputNull() override;
-    void outputBlob(const std::vector<char> *blob) override;
-    void outputString(const char *value, int len = -1) override;
-
 private:
     // separateRowElements
     const std::string _field_separator;
@@ -53,6 +49,10 @@ private:
     const std::string _list_separator;
     // separateSublistElements, separateDictKeyValue
     const std::string _host_service_separator;
+
+    void outputNull() override;
+    void outputBlob(const std::vector<char> *value) override;
+    void outputString(const char *value) override;
 
     void startQuery() override;
     void separateQueryElements() override;

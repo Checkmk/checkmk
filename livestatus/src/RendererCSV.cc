@@ -88,15 +88,14 @@ void RendererCSV::endDict() {}
 
 void RendererCSV::outputNull() {}
 
-void RendererCSV::outputBlob(const vector<char> *blob) {
-    if (blob != nullptr) {
-        add(*blob);
+void RendererCSV::outputBlob(const vector<char> *value) {
+    if (value != nullptr) {
+        add(*value);
     }
 }
 
-void RendererCSV::outputString(const char *value, int /* len */) {
-    if (value == nullptr) {
-        return;
+void RendererCSV::outputString(const char *value) {
+    if (value != nullptr) {
+        add(value);
     }
-    add(value);
 }

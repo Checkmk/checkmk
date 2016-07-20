@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "RendererJSON.h"
+#include <string.h>
 
 using std::string;
 using std::vector;
@@ -80,18 +81,20 @@ void RendererJSON::endDict() { add("}"); }
 
 void RendererJSON::outputNull() { add("null"); }
 
-void RendererJSON::outputBlob(const vector<char> *blob) {
-    if (blob != nullptr) {
-        outputString(&(*blob)[0], blob->size());
+void RendererJSON::outputBlob(const vector<char> *value) {
+    if (value != nullptr) {
+        add("\"");
+        outputCharsAsBlob(&(*value)[0], value->size());
+        add("\"");
     } else {
         outputNull();
     }
 }
 
-void RendererJSON::outputString(const char *value, int len) {
-    if (value == nullptr) {
-        add("\"\"");
-        return;
+void RendererJSON::outputString(const char *value) {
+    add("\"\"");
+    if (value != nullptr) {
+        outputCharsAsString(value, strlen(value));
     }
-    outputChars(value, len);
+    add("\"\"");
 }

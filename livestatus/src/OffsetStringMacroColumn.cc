@@ -73,7 +73,7 @@ string OffsetStringMacroColumn::valueAsString(void *row,
 void OffsetStringMacroColumn::output(void *row, Renderer::Row &r,
                                      contact *auth_user) {
     string s = valueAsString(row, auth_user);
-    r.outputString(s.c_str());
+    r.outputCPPString(s);
 }
 
 Filter *OffsetStringMacroColumn::createFilter(RelationalOperator /*unused */,

@@ -58,9 +58,9 @@ unique_ptr<vector<char>> HostFileColumn::getBlob(void *data) {
     }
 
 #ifdef CMC
-    const char *host_name = static_cast<Host *>(data)->_name;
+    string host_name = static_cast<Host *>(data)->_name;
 #else
-    const char *host_name = static_cast<host *>(data)->name;
+    string host_name = static_cast<host *>(data)->name;
 #endif
 
     string path = _base_dir + "/" + host_name + _suffix;

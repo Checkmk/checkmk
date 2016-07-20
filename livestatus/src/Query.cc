@@ -843,7 +843,7 @@ void Query::finish(Renderer::Query &q) {
             // output group columns first
             _stats_group_spec_t groupspec = stats_group.first;
             for (auto &iit : groupspec) {
-                r.outputString(iit.c_str());
+                r.outputCPPString(iit);
             }
 
             Aggregator **aggr = stats_group.second;

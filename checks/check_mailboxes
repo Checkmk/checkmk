@@ -41,8 +41,10 @@ def check_mailboxes_arguments(params):
     if fetch_port is not None:
         args.append('--port=%d' % fetch_port)
 
-    args.append('--username=%s' % quote_shell_string(fetch_params['auth'][0]))
-    args.append('--password=%s' % quote_shell_string(fetch_params['auth'][1]))
+    username, password = fetch_params['auth']
+
+    args.append('--username=%s' % quote_shell_string(username))
+    args.append(passwordstore.get_cmdline("--password=%s", password))
 
     if 'connect_timeout' in params:
         args.append('--connect-timeout=%d' % params['connect_timeout'])

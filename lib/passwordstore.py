@@ -289,6 +289,27 @@ class CryptoBackend(object):
             private_key = self.RSA.importKey(f.read(), pw)
         return private_key.decrypt(b64decode(data))
 
+
+def get_cmdline(arg_template, password):
+    """
+    Helper for checks to add the needed arguments to the command line of the checks. Either
+    adds a macro for the password safe password and --password-safe to the command line or
+    simply the plain password configured by the user.
+    """
+    if password.startswith("store:"):
+        password = "$PASSWORD_SAFE_%s$" % password[6:]
+
+    elif password.startswith("imm:"):
+        password = password[4:]
+
+    arg = arg_template % password
+
+    if password.startswith("store:"):
+        arg += " --password-safe"
+
+    return arg
+
+
 def safe_json_load(fd):
     """
     wrapper for json.load() that will not throw an exception if the input file is empty

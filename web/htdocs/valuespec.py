@@ -1281,6 +1281,7 @@ class DropdownChoice(ValueSpec):
             html.write(self._empty_text)
             return
 
+        # In complain mode: Use the value received from the HTML variable
         if self._invalid_choice == "complain" and self._value_is_invalid(value):
             defval = "invalid"
             options.append((defval, _("(element does not exist anymore)")))
@@ -1336,8 +1337,8 @@ class DropdownChoice(ValueSpec):
             if val == value:
                 return
 
-        raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
-            (value, ", ".join([v for (v,t) in choices])))
+        #raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
+        #    (value, ", ".join([v for (v,t) in choices])))
 
     def _value_is_invalid(self, value):
         for entry in self.choices():
@@ -3378,20 +3379,28 @@ class PasswordSpec(TextAscii):
 class PasswordFromStore(Alternative):
     def __init__(self, **kwargs):
         kwargs["elements"] = [
-            TextAscii(
+            Password(
                 title = _("Immediate"),
-                allow_empty = kwargs.get("allow_empty", True))
+                allow_empty = kwargs.get("allow_empty", True),
+            )
         ]
+
         self.__passwords = self.__stored_passwords()
         if self.__passwords:
             kwargs["elements"].append(
                 DropdownChoice(
-                    title = _("From Store"),
-                    choices = [(pw['key'], pw['key']) for pw in self.__passwords],
-                    sorted = True
+                    title = _("From store"),
+                    choices = self.__password_choices,
+                    sorted = True,
+                    invalid_choice = "complain",
                 )
             )
+
         Alternative.__init__(self, **kwargs)
+
+
+    def __password_choices(self):
+        return [ (pw['key'], pw['key']) for pw in self.__passwords ]
 
 
     def __stored_passwords(self):
@@ -3414,12 +3423,13 @@ class PasswordFromStore(Alternative):
 
 
     def value_to_text(self, value):
-        return value.split(':', 1)[1]
+        mvs, value = self.matching_alternative(value)
+        return mvs.value_to_text(value)
 
 
     def validate_datatype(self, value, varprefix):
         mvs, value = self.matching_alternative(value)
-        return Alternative.validate_datatype(self, value, varprefix)
+        mvs.validate_datatype(value, varprefix)
 
 
     def __get_password_by_key(self, value, varprefix):
@@ -3445,12 +3455,13 @@ class PasswordFromStore(Alternative):
 
 
     def validate_value(self, value, varprefix):
-        prefix, val = value.split(':', 1)
-        if prefix == "store":
+        mvs, value = self.matching_alternative(value)
+
+        if value.startswith("store:"):
             # couldn't check user permission before, but now I can
             self.__may_use_password(val, varprefix)
-        else:
-            return Alternative.validate_value(self, val, varprefix)
+
+        mvs.validate_value(value, varprefix)
 
 
     def from_html_vars(self, varprefix):

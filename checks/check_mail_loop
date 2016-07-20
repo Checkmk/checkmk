@@ -43,7 +43,7 @@ def check_mail_loop_arguments(params):
 
     if 'smtp_auth' in params:
         args += ' --smtp-username=%s' % quote_shell_string(params['smtp_auth'][0])
-        args += ' --smtp-password=%s' % quote_shell_string(params['smtp_auth'][1])
+        args += passwordstore.get_cmdline(" --smtp-password=%s", params['smtp_auth'][1])
 
     fetch_proto, fetch_params = params['fetch']
     args += ' --fetch-protocol=%s' % quote_shell_string(fetch_proto)
@@ -60,7 +60,7 @@ def check_mail_loop_arguments(params):
         args += ' --fetch-port=%d' % fetch_port
 
     args += ' --fetch-username=%s' % quote_shell_string(fetch_params['auth'][0])
-    args += ' --fetch-password=%s' % quote_shell_string(fetch_params['auth'][1])
+    args += passwordstore.get_cmdline(" --fetch-password=%s", fetch_params['auth'][1])
 
     args += ' --mail-from=%s' % quote_shell_string(params['mail_from'])
     args += ' --mail-to=%s' % quote_shell_string(params['mail_to'])

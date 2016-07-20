@@ -88,7 +88,7 @@ declare_user_attribute(
     ListOf(
         Dictionary(
             elements = [
-                ("key", TextAscii(title=_("Key"))),
+                ("key", ID(title=_("Key"))),
                 ("secret", PasswordSpec(title=_("Password"), allow_empty=True, hidden=True)),
                 ("contactgroups", ListChoice(
                     title = _("Share with contact groups"),

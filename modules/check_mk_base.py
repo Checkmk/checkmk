@@ -57,6 +57,7 @@ from cmk.exceptions import MKGeneralException, MKTerminate
 from cmk.regex import regex
 import cmk.tty as tty
 import cmk.render as render
+import cmk.passwordstore as passwordstore
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing

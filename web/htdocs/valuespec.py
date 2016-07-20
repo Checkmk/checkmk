@@ -3459,7 +3459,7 @@ class PasswordFromStore(Alternative):
 
         if value.startswith("store:"):
             # couldn't check user permission before, but now I can
-            self.__may_use_password(val, varprefix)
+            self.__may_use_password(value, varprefix)
 
         mvs.validate_value(value, varprefix)
 

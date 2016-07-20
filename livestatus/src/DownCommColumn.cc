@@ -47,8 +47,8 @@ void DownCommColumn::output(void *row, Renderer::Row &r,
                 if (_with_info) {
                     Renderer::Sublist s(l);
                     s.outputUnsignedLong(id);
-                    s.outputString(dt->_author_name);
-                    s.outputString(dt->_comment);
+                    s.outputCPPString(dt->_author_name);
+                    s.outputCPPString(dt->_comment);
                     if (_with_extra_info && !_is_downtime) {
                         s.outputInteger(
                             static_cast<Comment *>(dt)->_entry_type);

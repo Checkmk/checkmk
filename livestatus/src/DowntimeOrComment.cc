@@ -30,8 +30,8 @@ DowntimeOrComment::DowntimeOrComment(nebstruct_downtime_struct *dt,
                                      unsigned long id)
     : _type(dt->downtime_type)
     , _entry_time(dt->entry_time)
-    , _author_name(strdup(dt->author_name))
-    , _comment(strdup(dt->comment_data))
+    , _author_name(dt->author_name)
+    , _comment(dt->comment_data)
     , _id(id) {
     _host = find_host(dt->host_name);
     if (dt->service_description != nullptr) {
@@ -43,10 +43,7 @@ DowntimeOrComment::DowntimeOrComment(nebstruct_downtime_struct *dt,
     }
 }
 
-DowntimeOrComment::~DowntimeOrComment() {
-    free(_author_name);
-    free(_comment);
-}
+DowntimeOrComment::~DowntimeOrComment() = default;
 
 Downtime::Downtime(nebstruct_downtime_struct *dt)
     : DowntimeOrComment(dt, dt->downtime_id)

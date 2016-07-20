@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <time.h>
+#include <string>
 #include "nagios.h"  // IWYU pragma: keep
 
 /* The structs for downtime and comment are so similar, that
@@ -84,8 +85,8 @@ public:
     host *_host;
     service *_service;
     time_t _entry_time;
-    char *_author_name;
-    char *_comment;
+    std::string _author_name;
+    std::string _comment;
     unsigned long _id;
     int _is_service;
 

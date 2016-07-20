@@ -28,7 +28,7 @@
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"  // IWYU pragma: keep
 #include "OffsetIntColumn.h"
-#include "OffsetStringColumn.h"
+#include "OffsetSStringColumn.h"
 #include "OffsetTimeColumn.h"
 #include "Query.h"
 #include "TableHosts.h"
@@ -43,15 +43,15 @@ TableDownComm::TableDownComm(bool is_downtime,
     : _is_downtime(is_downtime)
     , _holder(is_downtime ? downtimes_holder : comments_holder) {
     DowntimeOrComment *ref = nullptr;
-    addColumn(new OffsetStringColumn(
+    addColumn(new OffsetSStringColumn(
         "author", is_downtime ? "The contact that scheduled the downtime"
                               : "The contact that entered the comment",
         reinterpret_cast<char *>(&(ref->_author_name)) -
             reinterpret_cast<char *>(ref)));
     addColumn(
-        new OffsetStringColumn("comment", "A comment text",
-                               reinterpret_cast<char *>(&(ref->_comment)) -
-                                   reinterpret_cast<char *>(ref)));
+        new OffsetSStringColumn("comment", "A comment text",
+                                reinterpret_cast<char *>(&(ref->_comment)) -
+                                    reinterpret_cast<char *>(ref)));
     addColumn(new OffsetIntColumn(
         "id", is_downtime ? "The id of the downtime" : "The id of the comment",
         reinterpret_cast<char *>(&(ref->_id)) - reinterpret_cast<char *>(ref)));

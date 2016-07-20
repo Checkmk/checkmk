@@ -23,8 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DowntimeOrComment.h"
-#include <stdlib.h>
-#include <string.h>
 
 DowntimeOrComment::DowntimeOrComment(nebstruct_downtime_struct *dt,
                                      unsigned long id)

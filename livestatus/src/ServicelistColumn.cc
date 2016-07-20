@@ -67,7 +67,9 @@ void ServicelistColumn::output(void *row, Renderer::Row &r,
                     s.outputInteger(svc->has_been_checked);
                 }
                 if (_info_depth >= 2) {
-                    s.outputString(svc->plugin_output);
+                    s.outputString(svc->plugin_output == nullptr
+                                          ? ""
+                                          : svc->plugin_output);
                 }
                 if (_info_depth >= 3) {
                     s.outputInteger(svc->last_hard_state);

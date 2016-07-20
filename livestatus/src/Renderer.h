@@ -89,17 +89,13 @@ public:
             next();
             renderer().outputNull();
         }
-        void outputBlob(const std::vector<char> *value) {
+        void outputBlob(const std::vector<char> &value) {
             next();
             renderer().outputBlob(value);
         }
-        void outputString(const char *value) {
+        void outputString(const std::string &value) {
             next();
             renderer().outputString(value);
-        }
-        void outputCPPString(const std::string &value) {
-            next();
-            renderer().outputCPPString(value);
         }
         void outputInteger(int32_t value) {
             next();
@@ -156,13 +152,9 @@ public:
 
         ~List() { renderer().endList(); }
 
-        void outputString(const char *value) {
+        void outputString(const std::string &value) {
             next();
             renderer().outputString(value);
-        }
-        void outputCPPString(const std::string &value) {
-            next();
-            renderer().outputCPPString(value);
         }
         void outputUnsignedLong(unsigned long value) {
             next();
@@ -204,9 +196,9 @@ public:
 
         ~Sublist() { renderer().endSublist(); }
 
-        void outputCPPString(const std::string &value) {
+        void outputString(const std::string &value) {
             next();
-            renderer().outputCPPString(value);
+            renderer().outputString(value);
         }
         void outputInteger(int32_t value) {
             next();
@@ -219,10 +211,6 @@ public:
         void outputUnsignedLong(unsigned long value) {
             next();
             renderer().outputUnsignedLong(value);
-        }
-        void outputString(const char *value) {
-            next();
-            renderer().outputString(value);
         }
 
     private:
@@ -251,9 +239,9 @@ public:
 
         void renderKeyValue(std::string key, std::string value) {
             next();
-            renderer().outputCPPString(key);
+            renderer().outputString(key);
             renderer().separateDictKeyValue();
-            renderer().outputCPPString(value);
+            renderer().outputString(value);
         }
 
     private:
@@ -288,8 +276,8 @@ protected:
     void add(const std::string &str);
     void add(const std::vector<char> &value);
 
-    void outputCharsAsBlob(const char *value, std::size_t len);
-    void outputCharsAsString(const char *value, std::size_t len);
+    void outputCharsAsBlob(const std::vector<char> &value);
+    void outputCharsAsString(const std::string &value);
 
 private:
     OutputBuffer *const _output;
@@ -299,10 +287,9 @@ private:
     std::size_t size() const;
 
     virtual void outputNull() = 0;
-    virtual void outputBlob(const std::vector<char> *value) = 0;
-    virtual void outputString(const char *value) = 0;
+    virtual void outputBlob(const std::vector<char> &value) = 0;
+    virtual void outputString(const std::string &value) = 0;
 
-    void outputCPPString(const std::string &value);
     void outputInteger(int32_t value);
     void outputInteger64(int64_t value);
     void outputTime(int32_t value);

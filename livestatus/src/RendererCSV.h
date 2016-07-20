@@ -51,8 +51,8 @@ private:
     const std::string _host_service_separator;
 
     void outputNull() override;
-    void outputBlob(const std::vector<char> *value) override;
-    void outputString(const char *value) override;
+    void outputBlob(const std::vector<char> &value) override;
+    void outputString(const std::string &value) override;
 
     void startQuery() override;
     void separateQueryElements() override;

@@ -24,7 +24,6 @@
 
 #include "LogwatchListColumn.h"
 #include <dirent.h>
-#include <string.h>
 #include "Renderer.h"
 #include "mk_logwatch.h"
 
@@ -54,23 +53,19 @@ void LogwatchListColumn::output(void *row, Renderer::Row &r,
     Renderer::List l(r);
     string path = mk_logwatch_path_of_host(host_name);
     if (path != "") {
-        DIR *dir = opendir(path.c_str());
-        if (dir != nullptr) {
-            struct dirent de;
-            struct dirent *dep;
-
+        if (DIR *dir = opendir(path.c_str())) {
             while (true) {
+                struct dirent de;
+                struct dirent *dep;
                 readdir_r(dir, &de, &dep);
                 if (dep == nullptr) {
                     closedir(dir);
                     break;
                 }
-                if ((strcmp(dep->d_name, ".") == 0) ||
-                    (strcmp(dep->d_name, "..") == 0)) {
-                    continue;
+                string name = dep->d_name;
+                if (name != "." && name != "..") {
+                    l.outputString(name);
                 }
-
-                l.outputString(dep->d_name);
             }
         }
     }

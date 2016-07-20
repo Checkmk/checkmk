@@ -37,11 +37,10 @@ ColumnType CustomVarsValuesColumn::type() { return ColumnType::list; }
 
 void CustomVarsValuesColumn::output(void *row, Renderer::Row &r,
                                     contact * /* auth_user */) {
-    Renderer::List(renderer);
+    Renderer::List l(r);
     for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
          cvm = cvm->next) {
-        l.next();
-        renderer->outputString(cvm->variable_value);
+        l.outputString(cvm->variable_value);
     }
 }
 

@@ -94,10 +94,6 @@ void Renderer::add(const string &str) { _output->add(str); }
 
 void Renderer::add(const vector<char> &value) { _output->add(value); }
 
-void Renderer::outputCPPString(const string &value) {
-    outputString(value.c_str());
-}
-
 void Renderer::outputInteger(int32_t value) { add(to_string(value)); }
 
 void Renderer::outputInteger64(int64_t value) { add(to_string(value)); }
@@ -128,17 +124,17 @@ void Renderer::outputUnicodeEscape(unsigned value) {
     add(buf);
 }
 
-void Renderer::outputCharsAsBlob(const char *value, std::size_t len) {
-    for (; len != 0; --len, value++) {
-        if (0 <= *value && *value <= 31) {
+void Renderer::outputCharsAsBlob(const vector<char> &value) {
+    for (char ch : value) {
+        if (0 <= ch && ch <= 31) {
             char buf[8];
-            snprintf(buf, sizeof(buf), "\\%03o", *value);
+            snprintf(buf, sizeof(buf), "\\%03o", ch);
             add(buf);
-        } else if (*value == '"' || *value == '\\') {
+        } else if (ch == '"' || ch == '\\') {
             add("\\");
-            add(string(value, 1));
+            add(string(1, ch));
         } else {
-            add(string(value, 1));
+            add(string(1, ch));
         }
     }
 }
@@ -152,8 +148,9 @@ void invalidUTF8(const string &value) {
 }
 }  // namespace
 
-void Renderer::outputCharsAsString(const char *value, std::size_t len) {
-    const char *r = value;
+void Renderer::outputCharsAsString(const string &value) {
+    const char *r = value.c_str();
+    std::size_t len = value.size();
     while (len != 0) {
         // Always escape control characters
         if (0 <= *r && *r <= 31) {

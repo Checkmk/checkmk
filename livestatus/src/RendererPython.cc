@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "RendererPython.h"
-#include <string.h>
 
 using std::string;
 using std::vector;
@@ -82,20 +81,14 @@ void RendererPython::endDict() { add("}"); }
 
 void RendererPython::outputNull() { add("None"); }
 
-void RendererPython::outputBlob(const vector<char> *value) {
-    if (value != nullptr) {
-        add("\"");
-        outputCharsAsBlob(&(*value)[0], value->size());
-        add("\"");
-    } else {
-        outputNull();
-    }
+void RendererPython::outputBlob(const vector<char> &value) {
+    add("\"");
+    outputCharsAsBlob(value);
+    add("\"");
 }
 
-void RendererPython::outputString(const char *value) {
+void RendererPython::outputString(const string &value) {
     add("u\"");  // mark strings as unicode
-    if (value != nullptr) {
-        outputCharsAsString(value, strlen(value));
-    }
+    outputCharsAsString(value);
     add("\"");
 }

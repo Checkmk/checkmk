@@ -37,20 +37,11 @@ ColumnType CustomVarsDictColumn::type() { return ColumnType::dict; }
 
 void CustomVarsDictColumn::output(void *row, Renderer::Row &r,
                                   contact * /* auth_user */) {
-    renderer->startDict();
-    bool first = true;
+    Renderer::Dict d(r);
     for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
          cvm = cvm->next) {
-        if (first) {
-            first = false;
-        } else {
-            renderer->separateDictElements();
-        }
-        renderer->outputString(cvm->variable_name);
-        renderer->separateDictKeyValue();
-        renderer->outputString(cvm->variable_value);
+        d.renderKeyValue(cvm->variable_name, cvm->variable_value);
     }
-    renderer->endDict();
 }
 
 bool CustomVarsDictColumn::contains(void *row, const string &value) {

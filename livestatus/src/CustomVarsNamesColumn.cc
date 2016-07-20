@@ -40,8 +40,7 @@ void CustomVarsNamesColumn::output(void *row, Renderer::Row &r,
     Renderer::List l(r);
     for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
          cvm = cvm->next) {
-        l.next();
-        renderer->outputString(cvm->variable_name);
+        l.outputString(cvm->variable_name);
     }
 }
 

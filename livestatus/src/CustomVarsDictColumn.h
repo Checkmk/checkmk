@@ -29,8 +29,8 @@
 #include <string>
 #include "Column.h"
 #include "CustomVarsColumn.h"
+#include "Renderer.h"
 #include "nagios.h"
-class Renderer;
 
 class CustomVarsDictColumn : public CustomVarsColumn {
 public:

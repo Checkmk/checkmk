@@ -24,7 +24,6 @@
 
 #include "Query.h"
 #include <ctype.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <memory>
@@ -759,13 +758,8 @@ void Query::start(Renderer::Query &q) {
         }
 
         // Output dummy headers for stats columns
-        int col = 1;
-        for (const auto &stats_column : _stats_columns) {
-            (void)stats_column;
-            char colheader[32];
-            snprintf(colheader, 32, "stats_%d", col);
-            r.outputString(colheader);
-            col++;
+        for (size_t col = 1; col <= _stats_columns.size(); ++col) {
+            r.outputString(string("stats_") + to_string(col));
         }
     }
 }
@@ -843,7 +837,7 @@ void Query::finish(Renderer::Query &q) {
             // output group columns first
             _stats_group_spec_t groupspec = stats_group.first;
             for (auto &iit : groupspec) {
-                r.outputCPPString(iit);
+                r.outputString(iit);
             }
 
             Aggregator **aggr = stats_group.second;

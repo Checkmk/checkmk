@@ -44,8 +44,11 @@ livestatus_so_SOURCES = \
         CountAggregator.cc \
         CustomTimeperiodColumn.cc \
         CustomVarsColumn.cc \
+        CustomVarsDictColumn.cc \
         CustomVarsExplicitColumn.cc \
         CustomVarsFilter.cc \
+        CustomVarsNamesColumn.cc \
+        CustomVarsValuesColumn.cc \
         DoubleAggregator.cc \
         DoubleColumn.cc \
         DoubleFilter.cc \

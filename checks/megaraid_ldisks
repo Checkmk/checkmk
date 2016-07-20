@@ -37,62 +37,70 @@ def megaraid_ldisks_is_new_drive(l):
     return l.startswith('Virtual Disk:') or l.startswith('Virtual Drive:') \
            or l.startswith('CacheCade Virtual Drive:')
 
-def inventory_megaraid_ldisks(info):
-    inventory = []
-    adapter = None
-    for line in info:
-        l = ' '.join(line)
-        if line[0] == "Adapter" and not l.endswith('No Virtual Drive Configured.'):
-            adapter = int(line[1])
-        elif megaraid_ldisks_is_new_drive(l):
-            disk = int(l.split(': ')[1].split(' ')[0])
-            inventory.append( ("%d/%d" % (adapter, disk), "", None) )
-    return inventory
 
-def check_megaraid_ldisks(item, _no_params, info):
+def parse_megaraid_ldisks(info):
+    parsed = {}
     adapter = None
-    cache   = None
-    write   = None
-    found   = False
-    result  = 0
-    infotext = ''
+    disk = None
     for line in info:
-        l = ' '.join(line)
+        l = " ".join(line)
         if line[0] == "Adapter" and not l.endswith('No Virtual Drive Configured.'):
             adapter = int(line[1])
         elif megaraid_ldisks_is_new_drive(l):
-            if found:
-                break
             disk = int(l.split(': ')[1].split(' ')[0])
-            found = "%d/%d" % (adapter, disk) == item
-        elif found:
+            item = "%d/%d" % (adapter, disk)
+            parsed[item] = {}
+
+        elif item in parsed.keys():
+
             if line[0].startswith("State"):
-                state = " ".join(line[1:]).replace(': ', '')
-                infotext += "state is %s" % state
-                if state != "Optimal":
-                    result = max(result, 2)
-            elif line[0].startswith("Default") and line[1].startswith("Cache"):
-                cache = " ".join(line[3:]).replace(': ', '')
-            elif line[0].startswith("Current") and line[1].startswith("Cache"):
-                state = " ".join(line[3:]).replace(': ', '')
-                if cache != state:
-                    infotext += ", cache is %s, expected %s" % (state, cache)
-                    result = max(result, 1)
-            elif line[0].startswith("Default") and line[1].startswith("Write"):
-                write = " ".join(line[3:]).replace(': ', '')
-            elif line[0].startswith("Current") and line[1].startswith("Write"):
-                state = " ".join(line[3:]).replace(': ', '')
-                if write != state:
-                    infotext += ", write is %s, expected %s" % (write, cache)
-                    result = max(result, 1)
-    if found:
-        return (result, infotext)
-    return (3, "no such adapter/logical disk found")
+                parsed[item]["state"] = l.split(":")[1].strip()
+            elif line[0].startswith("Default"):
+                if line[1].startswith("Cache"):
+                    parsed[item]["default_cache"] = " ".join(line[3:]).replace(': ', '')
+                elif line[1].startswith("Write"):
+                    parsed[item]["default_write"] = " ".join(line[3:]).replace(': ', '')
+
+            elif line[0].startswith("Current"):
+                if line[1].startswith("Cache"):
+                    parsed[item]["current_cache"] = " ".join(line[3:]).replace(': ', '')
+                elif line[1].startswith("Write"):
+                    parsed[item]["current_write"] = " ".join(line[3:]).replace(': ', '')
+    return parsed
+
+
+def inventory_megaraid_ldisks(parsed):
+    for item in parsed.keys():
+        yield item, None
+
+
+def check_megaraid_ldisks(item, _no_params, parsed):
+    raidstate = parsed[item]["state"]
+    if raidstate == "Optimal":
+        yield 0, "State is %s" % raidstate
+    else:
+        yield 2, "State is %s" % raidstate
+
+    current_cache = parsed[item].get("current_cache")
+    default_cache = parsed[item].get("default_cache")
+    if default_cache:
+        if current_cache == default_cache:
+            yield 0, "Cache is %s" % current_cache
+        else:
+            yield 1, "Cache is %s, expected %s" % (current_cache, default_cache)
+
+    current_write = parsed[item].get("current_write")
+    default_write = parsed[item].get("default_write")
+    if default_write:
+        if current_write == default_write:
+            yield 0, "Write is %s" % current_write
+        else:
+            yield 1, "Write is %s, expected %s" % (current_write, default_write)
 
 
 check_info["megaraid_ldisks"] = {
-    'check_function':          check_megaraid_ldisks,
-    'inventory_function':      inventory_megaraid_ldisks,
-    'service_description':     'RAID Adapter/LDisk %s',
-    'has_perfdata':            True,
+    'parse_function':           parse_megaraid_ldisks,
+    'check_function':           check_megaraid_ldisks,
+    'inventory_function':       inventory_megaraid_ldisks,
+    'service_description':      'RAID Adapter/LDisk %s',
 }

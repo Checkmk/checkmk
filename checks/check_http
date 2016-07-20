@@ -96,16 +96,13 @@ def check_http_arguments(params):
     if "auth" in settings:
         user, password = settings["auth"]
         if password.startswith("store:"):
-            group, password = password[6:].split(":", 1)
-            args += ' -a %s:%s --password-store %s' %\
-                (quote_shell_string(user), quote_shell_string(password),
-                 quote_shell_string(group))
+            args += ' -a %s --password-store' % (quote_shell_string(user + ":" + password[6:]))
         else:
             if password.startswith("imm:"):
                 password = password[4:]
             # else: assume that a password that starts with neither store nor imm is from an old
             #  configuration and has no prefix
-            args += ' -a %s:%s' % (quote_shell_string(user), quote_shell_string(password))
+            args += ' -a %s' % quote_shell_string(user + ":" + password)
 
     if "proxy_auth" in settings:
         auth = settings["proxy_auth"]

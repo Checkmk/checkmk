@@ -87,22 +87,29 @@ declare_user_attribute(
     "passwords",
     ListOf(
         Dictionary(
-            title = _("Password Store"),
             elements = [
                 ("key", TextAscii(title=_("Key"))),
                 ("secret", PasswordSpec(title=_("Password"), allow_empty=True, hidden=True)),
-                ('contactgroups', ListChoice(
-                    title = _('Share with Contact groups'),
-                    help  = _('Specify the contact groups that may access the password.'),
+                ("contactgroups", ListChoice(
+                    title = _("Share with contact groups"),
+                    help  = _("By default you are the only user that can configure checks to use "
+                              "your configured passwords. It is possible to share a password with "
+                              "a group of users to make them able to use a password in checks."),
                     default_value = [],
                     choices = list_contactgroups,
                 ))
             ],
             optional_keys=[]
         ),
-        title = _("Password"),
-        add_label = _("Add Password")
+        title = _("Password Store"),
+        add_label = _("Add Password"),
+        help = _("The password store is used to store multiple passwords per user which can then "
+                 "be used by Check_MK during checking. The passwords are stored in encrypted form, "
+                 "so that they can not be read by other users in clear text. They can be decrypted "
+                 "by Check_MK during monitoring to hand over them to checks for authentification "
+                 "with the monitoringed systems."),
     ),
-    domain = "passwords"
+    domain = "multisite",
+    topic = "password_store",
 )
 

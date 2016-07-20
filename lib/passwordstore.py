@@ -564,7 +564,7 @@ def do_action(store, args):
                 logging.info("key \"%s\" set with owner \"%s\"", args.set[0], args.user)
         elif args.get is not None:
             try:
-                print(store.get(args.get, args.user))
+                sys.stdout.write(store.get(args.get, args.user))
             except NotAuthorizedException:
                 logging.warn("User \"%s\" isn't authorized to retrive \"%s\"",
                                 args.user, args.get)

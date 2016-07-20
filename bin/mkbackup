@@ -264,7 +264,7 @@ def load_config():
 
 # TODO: Duplicate code with htdocs/backup.py
 def load_backup_info(path):
-    info = eval(file(path).read())
+    info = json.load(file(path))
 
     # Load the backup_id from the second right path component. This is the
     # base directory of the mkbackup.info file. The user might have moved

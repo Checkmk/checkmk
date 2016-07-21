@@ -1,0 +1,10 @@
+Title: Fixed 'source' column in 'comments' table.
+Level: 1
+Component: livestatus
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1469116021
+
+

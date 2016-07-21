@@ -558,6 +558,7 @@
     * 3589 FIX: Fixed processing of RFC 5424 syslog messages
 
     Livestatus:
+    * 3644 Fixed 'source' column in 'comments' table.
     * 3233 FIX: Fixed shutdown of Nagios core with Livestatus module...
     * 3235 FIX: Unbreak COMMAND handling...
 

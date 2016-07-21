@@ -63,21 +63,21 @@ void ServicelistColumn::output(void *row, Renderer::Row &r,
                 }
                 s.outputString(svc->description);
                 if (_info_depth >= 1) {
-                    s.outputInteger(svc->current_state);
-                    s.outputInteger(svc->has_been_checked);
+                    s.output(svc->current_state);
+                    s.output(svc->has_been_checked);
                 }
                 if (_info_depth >= 2) {
                     s.outputString(svc->plugin_output == nullptr
-                                          ? ""
-                                          : svc->plugin_output);
+                                       ? ""
+                                       : svc->plugin_output);
                 }
                 if (_info_depth >= 3) {
-                    s.outputInteger(svc->last_hard_state);
-                    s.outputInteger(svc->current_attempt);
-                    s.outputInteger(svc->max_attempts);
-                    s.outputInteger(svc->scheduled_downtime_depth);
-                    s.outputInteger(svc->problem_has_been_acknowledged);
-                    s.outputInteger(inCustomTimeperiod(svc, "SERVICE_PERIOD"));
+                    s.output(svc->last_hard_state);
+                    s.output(svc->current_attempt);
+                    s.output(svc->max_attempts);
+                    s.output(svc->scheduled_downtime_depth);
+                    s.output(svc->problem_has_been_acknowledged);
+                    s.output(inCustomTimeperiod(svc, "SERVICE_PERIOD"));
                 }
             }
         }

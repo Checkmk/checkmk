@@ -26,15 +26,35 @@
 #define Renderer_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
 #include "OutputBuffer.h"
-#include "global_counters.h"
 
 enum class OutputFormat { csv, json, python };
+
+class CSVSeparators {
+public:
+    CSVSeparators(std::string dataset, std::string field, std::string list,
+                  std::string host_service)
+        : _dataset(dataset)
+        , _field(field)
+        , _list(list)
+        , _host_service(host_service) {}
+
+    std::string dataset() const { return _dataset; }
+    std::string field() const { return _field; }
+    std::string list() const { return _list; }
+    std::string hostService() const { return _host_service; }
+
+private:
+    std::string _dataset;
+    std::string _field;
+    std::string _list;
+    std::string _host_service;
+};
 
 class Renderer {
 public:
@@ -97,25 +117,10 @@ public:
             next();
             renderer().outputString(value);
         }
-        void outputInteger(int32_t value) {
+        template <typename T>
+        void output(T value) {
             next();
-            renderer().outputInteger(value);
-        }
-        void outputInteger64(int64_t value) {
-            next();
-            renderer().outputInteger64(value);
-        }
-        void outputTime(int32_t value) {
-            next();
-            renderer().outputTime(value);
-        }
-        void outputUnsignedLong(unsigned long value) {
-            next();
-            renderer().outputUnsignedLong(value);
-        }
-        void outputCounter(counter_t value) {
-            next();
-            renderer().outputCounter(value);
+            renderer().output(value);
         }
         void outputDouble(double value) {
             next();
@@ -156,13 +161,10 @@ public:
             next();
             renderer().outputString(value);
         }
-        void outputUnsignedLong(unsigned long value) {
+        template <typename T>
+        void output(T value) {
             next();
-            renderer().outputUnsignedLong(value);
-        }
-        void outputTime(int32_t value) {
-            next();
-            renderer().outputTime(value);
+            renderer().output(value);
         }
         void outputDouble(double value) {
             next();
@@ -200,17 +202,10 @@ public:
             next();
             renderer().outputString(value);
         }
-        void outputInteger(int32_t value) {
+        template <typename T>
+        void output(T value) {
             next();
-            renderer().outputInteger(value);
-        }
-        void outputTime(int32_t value) {
-            next();
-            renderer().outputTime(value);
-        }
-        void outputUnsignedLong(unsigned long value) {
-            next();
-            renderer().outputUnsignedLong(value);
+            renderer().output(value);
         }
 
     private:
@@ -262,9 +257,8 @@ public:
     static std::unique_ptr<Renderer> make(
         OutputFormat format, OutputBuffer *output,
         OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
-        std::string invalid_header_message, std::string field_separator,
-        std::string dataset_separator, std::string list_separator,
-        std::string host_service_separator, int timezone_offset);
+        std::string invalid_header_message, const CSVSeparators &separators,
+        int timezone_offset);
 
     virtual ~Renderer();
 
@@ -290,11 +284,16 @@ private:
     virtual void outputBlob(const std::vector<char> &value) = 0;
     virtual void outputString(const std::string &value) = 0;
 
-    void outputInteger(int32_t value);
-    void outputInteger64(int64_t value);
-    void outputTime(int32_t value);
-    void outputUnsignedLong(unsigned long value);
-    void outputCounter(counter_t value);
+    template <typename T>
+    void output(T value) {
+        add(std::to_string(value));
+    }
+
+    void output(std::chrono::system_clock::time_point value) {
+        add(std::to_string(std::chrono::system_clock::to_time_t(value) +
+                           _timezone_offset));
+    }
+
     void outputDouble(double value);
     void outputUnicodeEscape(unsigned value);
 

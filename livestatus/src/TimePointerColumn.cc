@@ -23,15 +23,17 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TimePointerColumn.h"
+#include <chrono>
 #include "Renderer.h"
 #include "TimeFilter.h"
 #include "opids.h"
 
+using std::chrono::system_clock;
 using std::string;
 
 void TimePointerColumn::output(void *row, Renderer::Row &r,
                                contact *auth_user) {
-    r.outputTime(getValue(row, auth_user));
+    r.output(system_clock::from_time_t(getValue(row, auth_user)));
 }
 
 Filter *TimePointerColumn::createFilter(RelationalOperator relOp,

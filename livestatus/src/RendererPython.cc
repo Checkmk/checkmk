@@ -38,43 +38,32 @@ RendererPython::RendererPython(OutputBuffer *output,
 // --------------------------------------------------------------------------
 
 void RendererPython::startQuery() { add("["); }
-
 void RendererPython::separateQueryElements() { add(",\n"); }
-
 void RendererPython::endQuery() { add("]\n"); }
 
 // --------------------------------------------------------------------------
 
 void RendererPython::startRow() { add("["); }
-
 void RendererPython::separateRowElements() { add(","); }
-
 void RendererPython::endRow() { add("]"); }
 
 // --------------------------------------------------------------------------
 
 void RendererPython::startList() { add("["); }
-
 void RendererPython::separateListElements() { add(","); }
-
 void RendererPython::endList() { add("]"); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startSublist() { add("["); }
-
-void RendererPython::separateSublistElements() { add(","); }
-
-void RendererPython::endSublist() { add("]"); }
+void RendererPython::startSublist() { startList(); }
+void RendererPython::separateSublistElements() { separateListElements(); }
+void RendererPython::endSublist() { endList(); }
 
 // --------------------------------------------------------------------------
 
 void RendererPython::startDict() { add("{"); }
-
 void RendererPython::separateDictElements() { add(","); }
-
 void RendererPython::separateDictKeyValue() { add(":"); }
-
 void RendererPython::endDict() { add("}"); }
 
 // --------------------------------------------------------------------------
@@ -88,7 +77,7 @@ void RendererPython::outputBlob(const vector<char> &value) {
 }
 
 void RendererPython::outputString(const string &value) {
-    add("u\"");  // mark strings as unicode
+    add("u\"");
     outputCharsAsString(value);
     add("\"");
 }

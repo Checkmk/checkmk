@@ -24,6 +24,7 @@
 
 #include "DownCommColumn.h"
 #include <stdlib.h>
+#include <time.h>
 #include <memory>
 #include <utility>
 #include "DowntimeOrComment.h"
@@ -46,16 +47,15 @@ void DownCommColumn::output(void *row, Renderer::Row &r,
             if (match(dt, data)) {
                 if (_with_info) {
                     Renderer::Sublist s(l);
-                    s.outputUnsignedLong(id);
+                    s.output(id);
                     s.outputString(dt->_author_name);
                     s.outputString(dt->_comment);
                     if (_with_extra_info && !_is_downtime) {
-                        s.outputInteger(
-                            static_cast<Comment *>(dt)->_entry_type);
-                        s.outputTime(dt->_entry_time);
+                        s.output(static_cast<Comment *>(dt)->_entry_type);
+                        s.output(dt->_entry_time);
                     }
                 } else {
-                    l.outputUnsignedLong(id);
+                    l.output(id);
                 }
             }
         }

@@ -237,6 +237,28 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
            {Param::ContactName, Param::HostName, Param::SvcDesc,
             Param::StateType, Param::CommandName, Param::Comment}},
     ////////////////
+    LogDef{"HOST ALERT HANDLER STARTED: ",
+           8,  // LOGCLASS_ALERT_HANDLERS,
+           NONE,
+           {Param::HostName, Param::CommandName}},
+    ////////////////
+    LogDef{"SERVICE ALERT HANDLER STARTED: ",
+           8,  // LOGCLASS_ALERT_HANDLERS,
+           NONE,
+           {Param::HostName, Param::SvcDesc, Param::CommandName}},
+    ////////////////
+    LogDef{"HOST ALERT HANDLER STOPPED: ",
+           8,  // LOGCLASS_ALERT_HANDLERS
+           NONE,
+           {Param::HostName, Param::CommandName, Param::ServiceState,
+            Param::CheckOutput}},
+    ////////////////
+    LogDef{"SERVICE ALERT HANDLER STOPPED: ",
+           8,  // LOGCLASS_ALERT_HANDLERS,
+           NONE,
+           {Param::HostName, Param::SvcDesc, Param::CommandName,
+            Param::ServiceState, Param::CheckOutput}},
+    ////////////////
     LogDef{"PASSIVE SERVICE CHECK: ",
            LOGCLASS_PASSIVECHECK,
            NONE,
@@ -334,7 +356,7 @@ int LogEntry::serviceStateToInt(const char *s) {
         last--;
     }
 
-    // WARN, CRITICAL, OK, UNKNOWN, RECOVERY
+    // WARNING, CRITICAL, OK, UNKNOWN, RECOVERY
     switch (*last) {
         case 'K':
             return 0;
@@ -357,20 +379,31 @@ int LogEntry::hostStateToInt(const char *s) {
     }
 
     const char *last = s + strlen(s) - 1;
-    if (*last == ')') {  // handle CUSTOM (UP) and DOWNTIMESTOPPED (DOWN)
+    if (*last == ')') {  // handle CUSTOM (UP) and DOWNTIMESTOPPED (DOWN) and
+                         // ALERTHANDLER (OK)
         last--;
     }
 
-    // UP, DOWN, UNREACHABLE, RECOVERY
+    // UP, DOWN, UNREACHABLE, RECOVERY, OK, WARN, CRITICAL, UNKNOWN
     switch (*last) {
         case 'P':
             return 0;
         case 'Y':
             return 0;
-        case 'N':
-            return 1;
         case 'E':
             return 2;
+        case 'K':
+            return 0;
+        case 'G':
+            return 1;
+        case 'L':
+            return 2;
+        case 'N':
+            if (*(last - 1) == 'W') {
+                return 3;  // UNKNOWN
+            } else {
+                return 2;  // DOWN
+            }
         default:
             return 3;
     }

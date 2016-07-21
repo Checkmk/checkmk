@@ -35,4 +35,4 @@ void CountAggregator::consume(void* row, contact* auth_user,
     }
 }
 
-void CountAggregator::output(Renderer::Row& r) { r.outputInteger(_count); }
+void CountAggregator::output(Renderer::Row& r) { r.output(_count); }

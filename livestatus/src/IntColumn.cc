@@ -31,7 +31,7 @@
 using std::string;
 
 void IntColumn::output(void *row, Renderer::Row &r, contact *auth_user) {
-    r.outputInteger(getValue(row, auth_user));
+    r.output(getValue(row, auth_user));
 }
 
 Filter *IntColumn::createFilter(RelationalOperator relOp, const string &value) {

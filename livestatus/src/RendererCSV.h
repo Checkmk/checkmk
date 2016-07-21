@@ -36,19 +36,10 @@ public:
     RendererCSV(OutputBuffer *output,
                 OutputBuffer::ResponseHeader response_header,
                 bool do_keep_alive, std::string invalid_header_message,
-                std::string field_separator, std::string dataset_separator,
-                std::string list_separator, std::string host_service_separator,
-                int timezone_offset);
+                CSVSeparators separators, int timezone_offset);
 
 private:
-    // separateRowElements
-    const std::string _field_separator;
-    // endRow
-    const std::string _dataset_separator;
-    // separateListElements, separateDictElements
-    const std::string _list_separator;
-    // separateSublistElements, separateDictKeyValue
-    const std::string _host_service_separator;
+    const CSVSeparators _separators;
 
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;

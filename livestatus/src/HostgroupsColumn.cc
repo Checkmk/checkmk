@@ -43,13 +43,9 @@ objectlist *HostgroupsColumn::getData(void *data) {
 void HostgroupsColumn::output(void *row, Renderer::Row &r,
                               contact * /* auth_user */) {
     Renderer::List l(r);
-    objectlist *list = getData(row);
-    if (list != nullptr) {
-        while (list != nullptr) {
-            hostgroup *sg = reinterpret_cast<hostgroup *>(list->object_ptr);
-            l.outputString(sg->group_name);
-            list = list->next;
-        }
+    for (objectlist *list = getData(row); list != nullptr; list = list->next) {
+        hostgroup *sg = reinterpret_cast<hostgroup *>(list->object_ptr);
+        l.outputString(sg->group_name);
     }
 }
 

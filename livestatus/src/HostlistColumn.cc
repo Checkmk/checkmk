@@ -53,8 +53,8 @@ void HostlistColumn::output(void *row, Renderer::Row &r, contact *auth_user) {
             } else {
                 Renderer::Sublist s(l);
                 s.outputString(hst->name);
-                s.outputInteger(hst->current_state);
-                s.outputInteger(hst->has_been_checked);
+                s.output(hst->current_state);
+                s.output(hst->has_been_checked);
             }
         }
         mem = mem->next;

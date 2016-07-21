@@ -85,10 +85,7 @@ Query::Query(const list<string> &lines, Table *table)
     , _wait_timeout(0)
     , _wait_trigger(nullptr)
     , _wait_object(nullptr)
-    , _field_separator(";")
-    , _dataset_separator("\n")
-    , _list_separator(",")
-    , _host_service_separator("|")
+    , _separators("\n", ";", ",", "|")
     , _show_column_headers(true)
     , _output_format(OutputFormat::csv)
     , _limit(-1)
@@ -521,28 +518,22 @@ void Query::parseColumnsLine(char *line) {
 }
 
 void Query::parseSeparatorsLine(char *line) {
-    char dssep = 0, fieldsep = 0, listsep = 0, hssep = 0;
     char *token = next_field(&line);
-    if (token != nullptr) {
-        dssep = atoi(token);
-    }
+    string dsep =
+        token == nullptr ? _separators.dataset() : string(1, char(atoi(token)));
     token = next_field(&line);
-    if (token != nullptr) {
-        fieldsep = atoi(token);
-    }
-    token = next_field(&line);
-    if (token != nullptr) {
-        listsep = atoi(token);
-    }
-    token = next_field(&line);
-    if (token != nullptr) {
-        hssep = atoi(token);
-    }
+    string fsep =
+        token == nullptr ? _separators.field() : string(1, char(atoi(token)));
 
-    _dataset_separator = string(&dssep, 1);
-    _field_separator = string(&fieldsep, 1);
-    _list_separator = string(&listsep, 1);
-    _host_service_separator = string(&hssep, 1);
+    token = next_field(&line);
+    string lsep =
+        token == nullptr ? _separators.list() : string(1, char(atoi(token)));
+
+    token = next_field(&line);
+    string hsep = token == nullptr ? _separators.hostService()
+                                   : string(1, char(atoi(token)));
+
+    _separators = CSVSeparators(dsep, fsep, lsep, hsep);
 }
 
 void Query::parseOutputFormatLine(char *line) {
@@ -725,10 +716,9 @@ void Query::parseLocaltimeLine(char *line) {
 bool Query::doStats() { return !_stats_columns.empty(); }
 
 void Query::process(OutputBuffer *output) {
-    auto renderer = Renderer::make(
-        _output_format, output, _response_header, _do_keepalive,
-        _invalid_header_message, _field_separator, _dataset_separator,
-        _list_separator, _host_service_separator, _timezone_offset);
+    auto renderer =
+        Renderer::make(_output_format, output, _response_header, _do_keepalive,
+                       _invalid_header_message, _separators, _timezone_offset);
     doWait();
     Renderer::Query q(*renderer);
     _renderer_query = &q;

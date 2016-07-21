@@ -238,6 +238,7 @@ bool TableLog::isAuthorized(contact *ctc, void *data) {
     return !(entry->_logclass == LOGCLASS_ALERT ||
              entry->_logclass == LOGCLASS_NOTIFICATION ||
              entry->_logclass == LOGCLASS_PASSIVECHECK ||
+             entry->_logclass == LOGCLASS_ALERT_HANDLERS ||
              entry->_logclass == LOGCLASS_STATE);
 }
 

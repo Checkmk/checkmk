@@ -85,7 +85,7 @@ void AttributelistColumn::output(void *row, Renderer::Row &r,
             i++;
         }
     } else {
-        r.outputUnsignedLong(mask);
+        r.output(mask);
     }
 }
 

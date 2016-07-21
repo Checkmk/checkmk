@@ -37,43 +37,32 @@ RendererJSON::RendererJSON(OutputBuffer *output,
 // --------------------------------------------------------------------------
 
 void RendererJSON::startQuery() { add("["); }
-
 void RendererJSON::separateQueryElements() { add(",\n"); }
-
 void RendererJSON::endQuery() { add("]\n"); }
 
 // --------------------------------------------------------------------------
 
 void RendererJSON::startRow() { add("["); }
-
 void RendererJSON::separateRowElements() { add(","); }
-
 void RendererJSON::endRow() { add("]"); }
 
 // --------------------------------------------------------------------------
 
 void RendererJSON::startList() { add("["); }
-
 void RendererJSON::separateListElements() { add(","); }
-
 void RendererJSON::endList() { add("]"); }
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::startSublist() { add("["); }
-
-void RendererJSON::separateSublistElements() { add(","); }
-
-void RendererJSON::endSublist() { add("]"); }
+void RendererJSON::startSublist() { startList(); }
+void RendererJSON::separateSublistElements() { separateListElements(); }
+void RendererJSON::endSublist() { endList(); }
 
 // --------------------------------------------------------------------------
 
 void RendererJSON::startDict() { add("{"); }
-
 void RendererJSON::separateDictElements() { add(","); }
-
 void RendererJSON::separateDictKeyValue() { add(":"); }
-
 void RendererJSON::endDict() { add("}"); }
 
 // --------------------------------------------------------------------------
@@ -87,7 +76,7 @@ void RendererJSON::outputBlob(const vector<char> &value) {
 }
 
 void RendererJSON::outputString(const string &value) {
-    add("\"\"");
+    add("\"");
     outputCharsAsString(value);
-    add("\"\"");
+    add("\"");
 }

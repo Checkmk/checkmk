@@ -61,15 +61,13 @@ Renderer::~Renderer() = default;
 unique_ptr<Renderer> Renderer::make(
     OutputFormat format, OutputBuffer *output,
     OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
-    std::string invalid_header_message, std::string field_separator,
-    std::string dataset_separator, std::string list_separator,
-    std::string host_service_separator, int timezone_offset) {
+    std::string invalid_header_message, const CSVSeparators &separators,
+    int timezone_offset) {
     switch (format) {
         case OutputFormat::csv:
             return make_unique<RendererCSV>(
                 output, response_header, do_keep_alive, invalid_header_message,
-                field_separator, dataset_separator, list_separator,
-                host_service_separator, timezone_offset);
+                separators, timezone_offset);
             break;
         case OutputFormat::json:
             return make_unique<RendererJSON>(
@@ -93,20 +91,6 @@ size_t Renderer::size() const { return _output->size(); }
 void Renderer::add(const string &str) { _output->add(str); }
 
 void Renderer::add(const vector<char> &value) { _output->add(value); }
-
-void Renderer::outputInteger(int32_t value) { add(to_string(value)); }
-
-void Renderer::outputInteger64(int64_t value) { add(to_string(value)); }
-
-void Renderer::outputTime(int32_t value) {
-    outputInteger(value + _timezone_offset);
-}
-
-void Renderer::outputUnsignedLong(unsigned long value) {
-    add(to_string(value));
-}
-
-void Renderer::outputCounter(counter_t value) { add(to_string(value)); }
 
 void Renderer::outputDouble(double value) {
     if (std::isnan(value)) {

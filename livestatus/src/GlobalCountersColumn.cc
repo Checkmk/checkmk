@@ -31,6 +31,6 @@ void GlobalCountersColumn::output(void * /* row */, Renderer::Row &r,
     if (_do_average) {
         r.outputDouble(g_counter_rate[_counter_index]);
     } else {
-        r.outputCounter(g_counters[_counter_index]);
+        r.output(g_counters[_counter_index]);
     }
 }

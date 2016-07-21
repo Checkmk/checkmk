@@ -30,9 +30,7 @@ extern contact *contact_list;
 void ContactsColumn::output(void *row, Renderer::Row &r,
                             contact * /* auth_user */) {
     Renderer::List l(r);
-    void *data = shiftPointer(row);
-
-    if (data != nullptr) {
+    if (auto data = shiftPointer(row)) {
         for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
             if ((*containsContact(ctc))(data)) {
                 l.outputString(ctc->name);

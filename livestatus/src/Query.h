@@ -78,10 +78,7 @@ private:
     unsigned _wait_timeout;
     struct trigger *_wait_trigger;
     void *_wait_object;
-    std::string _field_separator;
-    std::string _dataset_separator;
-    std::string _list_separator;
-    std::string _host_service_separator;
+    CSVSeparators _separators;
     bool _show_column_headers;
     OutputFormat _output_format;
     int _limit;

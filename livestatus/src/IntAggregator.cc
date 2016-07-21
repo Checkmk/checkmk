@@ -72,11 +72,11 @@ void IntAggregator::output(Renderer::Row &r) {
         case StatsOperation::sum:
         case StatsOperation::min:
         case StatsOperation::max:
-            r.outputInteger64(_aggr);
+            r.output(_aggr);
             break;
 
         case StatsOperation::suminv:
-            r.outputInteger64(_sumq);
+            r.output(_sumq);
             break;
 
         case StatsOperation::avg:
@@ -84,7 +84,7 @@ void IntAggregator::output(Renderer::Row &r) {
             break;
 
         case StatsOperation::avginv:
-            r.outputInteger64(_sumq / _count);
+            r.output(_sumq / _count);
             break;
 
         case StatsOperation::std:

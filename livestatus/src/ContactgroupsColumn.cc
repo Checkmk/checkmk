@@ -32,18 +32,11 @@ using std::unique_ptr;
 void ContactgroupsColumn::output(void *row, Renderer::Row &r,
                                  contact * /* auth_user */) {
     Renderer::List l(r);
-
-    if (row != nullptr) {
-        void *data = shiftPointer(row);
-        if (data != nullptr) {
-            contactgroupsmember *cgm =
-                *reinterpret_cast<contactgroupsmember **>(
-                    reinterpret_cast<char *>(data) + _offset);
-            while (cgm != nullptr) {
-                contactgroup *cg = cgm->group_ptr;
-                l.outputString(cg->group_name);
-                cgm = cgm->next;
-            }
+    if (auto data = static_cast<char *>(shiftPointer(row))) {
+        for (contactgroupsmember *cgm =
+                 *reinterpret_cast<contactgroupsmember **>(data + _offset);
+             cgm != nullptr; cgm = cgm->next) {
+            l.outputString(cgm->group_ptr->group_name);
         }
     }
 }

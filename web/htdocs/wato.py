@@ -5803,7 +5803,7 @@ class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, Wa
 
 class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey, WatoMode):
     def _file_name(self, key_id, key):
-        return "Check_MK-backup_key-%s.pem" % defaults.omd_site
+        return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), defaults.omd_site, key_id)
 
 
 class ModeBackupRestore(backup.PageBackupRestore, WatoMode):

@@ -862,12 +862,7 @@ def load_mkeventd_rules():
 
     # Convert old plain rules into a list of one rule pack
     if vars["rules"] and not vars["rule_packs"]:
-        vars["rule_packs"] = [{
-            "id"     : "default",
-            "title"    : _("Default rule pack"),
-            "rules"    : vars["rules"],
-            "disabled" : False,
-        }]
+        vars["rule_packs"] = [default_rule_pack(vars["rules"])]
 
     # Add information about rule hits: If we are running on OMD then we know
     # the path to the state retention file of mkeventd and can read the rule
@@ -887,6 +882,15 @@ def load_mkeventd_rules():
     return vars["rules"], vars["rule_packs"]
 
 
+def default_rule_pack(rules):
+    return {
+        "id"       : "default",
+        "title"    : _("Default rule pack"),
+        "rules"    : rules,
+        "disabled" : False,
+    }
+
+
 def save_mkeventd_rules(legacy_rules, rule_packs):
     make_nagios_directory(defaults.default_config_dir + "/mkeventd.d")
     make_nagios_directory(mkeventd_config_dir)
@@ -902,6 +906,10 @@ def save_mkeventd_rules(legacy_rules, rule_packs):
 
     out.write("rules += \\\n%r\n\n" % legacy_rules)
     out.write("rule_packs += \\\n%r\n" % rule_packs)
+
+
+def save_mkeventd_sample_config():
+    save_mkeventd_rules([], [default_rule_pack([])])
 
 
 #.

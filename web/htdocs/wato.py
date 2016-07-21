@@ -14616,6 +14616,8 @@ def create_sample_config():
     import werks
     werks.acknowledge_all_werks()
 
+    save_mkeventd_sample_config()
+
 
 def has_agent_bakery():
     return 'bake_agents' in globals()

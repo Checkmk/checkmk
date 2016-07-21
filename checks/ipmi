@@ -160,8 +160,7 @@ def parse_ipmi(info):
     return parsed
 
 
-def inventory_ipmi(info):
-    parsed = parse_ipmi(info)
+def inventory_ipmi(parsed):
     summarize = True
     rules = host_extra_conf(g_hostname, inventory_ipmi_rules)
     if rules:
@@ -178,8 +177,7 @@ def inventory_ipmi(info):
         yield "Summary", None
 
 
-def check_ipmi(item, params, info):
-    parsed = parse_ipmi(info)
+def check_ipmi(item, params, parsed):
     if item == "Summary":
         return check_ipmi_summarized(parsed, params)
     else:
@@ -296,6 +294,7 @@ check_config_variables.append("ipmi_ignored_sensors")
 
 
 check_info["ipmi"] = {
+    'parse_function'      : parse_ipmi,
     'inventory_function'  : inventory_ipmi,
     'check_function'      : check_ipmi,
     'service_description' : 'IPMI Sensor %s',

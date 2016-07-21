@@ -107,7 +107,7 @@ TableDownComm::TableDownComm(bool is_downtime) {
         addColumn(new OffsetIntColumn(
             "source",
             "The source of the comment (0 is internal and 1 is external)",
-            reinterpret_cast<char *>(&(ref->_persistent)) -
+            reinterpret_cast<char *>(&(ref->_source)) -
                 reinterpret_cast<char *>(ref)));
         addColumn(
             new OffsetIntColumn("entry_type",

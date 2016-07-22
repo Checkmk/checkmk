@@ -181,6 +181,37 @@ def send_event(event):
     return rfc
 
 
+# Only use this for master/slave replication. For status queries use livestatus
+def query_ec_directly(query):
+    try:
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            timeout = config.mkeventd_connect_timeout
+        except:
+            timeout = 10
+
+        sock.settimeout(timeout)
+        sock.connect(socket_path)
+        sock.sendall(query)
+        sock.shutdown(socket.SHUT_WR)
+
+        response_text = ""
+        while True:
+            chunk = sock.recv(8192)
+            response_text += chunk
+            if not chunk:
+                break
+
+        return eval(response_text)
+    except SyntaxError, e:
+        raise MKGeneralException(_("Invalid response from event daemon: "
+                                 "<pre>%s</pre>") % response_text)
+
+    except Exception, e:
+        raise MKGeneralException(_("Cannot connect to event daemon via %s: %s") %
+                                                                (socket_path, e))
+
+
 def execute_command(name, args=None, site=None):
     if args:
         formated_args = ";" + ";".join(args)

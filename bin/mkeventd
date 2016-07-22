@@ -623,15 +623,11 @@ def update_mongodb_history_lifetime():
     except OperationFailure:
         pass # Ignore not existing index
 
-    log(repr(g_config['history_lifetime']))
-
     # Delete messages after x days
     g_mongo_db.ec_archive.ensure_index([('dt', DESCENDING)],
         expireAfterSeconds = g_config['history_lifetime'],
         unique = False
     )
-
-    log(repr(get_mongodb_max_history_age()))
 
 def mongodb_next_id(name, first_id = 0):
     ret = g_mongo_db.counters.find_and_modify(
@@ -2225,7 +2221,6 @@ class EventServer:
         elif type(rule["state"]) == tuple and rule["state"][0] == "text_pattern":
             for key in [ '2', '1', '0', '3' ]:
                 if key in rule["state"][1]:
-                    log(repr(rule["state"][1][key]))
                     match_groups = match(rule["state"][1][key], event["text"], complete = False)
                     if match_groups != False:
                         event["state"] = int(key)
@@ -2711,7 +2706,9 @@ class StatusServer:
                             continue
                     else:
                         allow_commands = True
-                    self.handle_client(client_socket, allow_commands, addr_info and addr_info[0] or "")
+
+                    self.handle_client(client_socket, allow_commands,
+                                       addr_info and addr_info[0] or "")
                     g_perfcounters.count_time("request", time.time() - before)
 
             except Exception, e:
@@ -3794,7 +3791,9 @@ def get_state_from_master():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(repl_settings["connect_timeout"])
         sock.connect(repl_settings["master"])
-        sock.sendall("REPLICATE %d\n" % (g_slave_status["last_sync"] and g_slave_status["last_sync"] or 0))
+        sock.sendall("REPLICATE %d\n" %
+                (g_slave_status["last_sync"] and g_slave_status["last_sync"] or 0))
+        sock.shutdown(socket.SHUT_WR)
 
         response_text = ""
         while True:

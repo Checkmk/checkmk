@@ -1359,14 +1359,12 @@ def mode_mkeventd_rules(phase):
         table.end()
 
 
-# TODO: Make use of ec via livestatus when core is ready
 def copy_rules_from_master():
-    raise MKGeneralException(_("This is not working at the moment. Will fix this soon."))
-    #answer = mkeventd.query("REPLICATE 0")
-    #if "rules" not in answer:
-    #    raise MKGeneralException(_("Cannot get rules from local event daemon."))
-    #rule_packs = answer["rules"]
-    #save_mkeventd_rules([], rule_packs)
+    answer = mkeventd.query_ec_directly("REPLICATE 0")
+    if "rules" not in answer:
+        raise MKGeneralException(_("Cannot get rules from local event daemon."))
+    rule_packs = answer["rules"]
+    save_mkeventd_rules([], rule_packs)
 
 
 def mode_mkeventd_edit_rule_pack(phase):

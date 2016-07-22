@@ -4883,7 +4883,8 @@ def render_audit_log(log, what, with_filename = False, hilite_others=False):
                             _("This change has been made by another user"))
         htmlcode += user + '</td>'
 
-        htmlcode += '</td><td width="100%%">%s</td></tr>\n' % html.attrencode(text)
+        # This must not be attrencoded: The entries are encoded when writing to the log.
+        htmlcode += '</td><td width="100%%">%s</td></tr>\n' % text
     htmlcode += "</table>"
 
     if what == 'audit':
@@ -6815,8 +6816,8 @@ def mode_edit_configvar(phase, what = 'globalvars'):
         else:
             new_value = get_edited_value(valuespec)
             current_settings[varname] = new_value
-            msg = _("Changed global configuration variable %s to %s.") \
-                  % (varname, valuespec.value_to_text(new_value))
+            msg = HTML(_("Changed global configuration variable %s to %s.") \
+                  % (varname, valuespec.value_to_text(new_value)))
 
         if siteid:
             save_sites(configured_sites, activate=False)

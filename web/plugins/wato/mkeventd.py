@@ -1724,8 +1724,15 @@ def mode_mkeventd_status(phase):
 
 
 def mode_mkeventd_config(phase):
+    search = html.get_unicode_input("search")
+    if search != None:
+        search = search.strip().lower()
+
     if phase == 'title':
-        return _('Event Console Configuration')
+        if search:
+            return _("Event Console configuration matching %s") % html.attrencode(search)
+        else:
+            return _('Event Console Configuration')
 
     elif phase == 'buttons':
         home_button()
@@ -1734,7 +1741,7 @@ def mode_mkeventd_config(phase):
         html.context_button(_("Server Status"), html.makeuri_contextless([("mode", "mkeventd_status")]), "status")
         return
 
-    vs = [ (v[1], v[2]) for v in configvar_groups()[_("Event Console")] ]
+    config_variables = ec_config_variables()
     current_settings = load_configuration_settings()
     pending_func = configvar_domains()['mkeventd']['pending']
 
@@ -1775,39 +1782,34 @@ def mode_mkeventd_config(phase):
         else:
             return None
 
-    html.write('<div class=globalvars>')
-    forms.header(_('Event Console Settings'))
-    for (varname, valuespec) in vs:
-        defaultvalue = valuespec.default_value()
-        value = current_settings.get(varname, valuespec.default_value())
+    group_names = ec_config_variable_group_names()
+    default_values = dict([ (varname, vs.default_value()) for (varname, vs) in config_variables ])
 
-        edit_url = html.makeuri_contextless([("mode", "mkeventd_edit_configvar"),
-                              ("varname", varname), ("site", html.var("site", ""))])
-        help_text  = type(valuespec.help())  == unicode and valuespec.help().encode("utf-8")  or valuespec.help() or ''
-        title_text = type(valuespec.title()) == unicode and valuespec.title().encode("utf-8") or valuespec.title()
-        title = '<a href="%s" class=%s title="%s">%s</a>' % \
-                 (edit_url, varname in current_settings and "modified" or "",
-                  html.strip_tags(help_text), title_text)
-
-        to_text = valuespec.value_to_text(value)
-
-        # Is this a simple (single) value or not? change styling in these cases...
-        simple = True
-        if '\n' in to_text or '<td>' in to_text:
-            simple = False
-        forms.section(title, simple=simple)
+    render_global_configuration_variables(group_names, default_values,
+                                          current_settings, search=search,
+                                          edit_mode="mkeventd_edit_configvar")
 
 
-        if isinstance(valuespec, Checkbox):
-            toggle_url = html.makeactionuri([("_action", "toggle"), ("_varname", varname)])
-            toggle_value = current_settings.get(varname, defaultvalue)
-            html.icon_button(toggle_url, _("Immediately toggle this setting"),
-                "snapin_switch_" + (toggle_value and "on" or "off"))
-        else:
-            html.write('<a href="%s">%s</a>' % (edit_url, to_text))
+def ec_config_variable_groups():
+    return [
+        ("ec",      _("Event Console: Generic")),
+        ("ec_log",  _("Event Console: Logging & Diagnose")),
+        ("ec_snmp", _("Event Console: SNMP traps")),
+    ]
 
-    forms.end()
-    html.write('</div>')
+
+def ec_config_variable_group_names():
+    return [ e[1] for e in ec_config_variable_groups() ]
+
+
+def ec_config_variables():
+    config = []
+    for group_title in ec_config_variable_group_names():
+        for entry in configvar_groups()[group_title]:
+            config.append((entry[1], entry[2]))
+
+    return config
+
 
 def mode_mkeventd_mibs(phase):
     if phase == 'title':
@@ -2202,10 +2204,14 @@ if mkeventd_enabled:
 if mkeventd_enabled:
     register_configvar_domain("mkeventd", mkeventd_config_dir,
             pending = lambda msg: log_mkeventd('config-change', msg), in_global_settings = False)
-    group = _("Event Console")
-    configvar_order()[group] = 18
 
-    register_configvar(group,
+    start_order = 18
+    groups = {}
+    for index, (group_id, group_name) in enumerate(ec_config_variable_groups()):
+        register_configvar_group(group_name, order=start_order+index)
+        groups[group_id] = group_name
+
+    register_configvar(groups["ec"],
         "remote_status",
         Optional(
             Tuple(
@@ -2253,7 +2259,7 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
+    register_configvar(groups["ec"],
         "replication",
         Optional(
             Dictionary(
@@ -2352,7 +2358,7 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
+    register_configvar(groups["ec"],
         "retention_interval",
         Age(title = _("State Retention Interval"),
             help = _("In this interval the event daemon will save its state "
@@ -2363,7 +2369,7 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
+    register_configvar(groups["ec"],
         "housekeeping_interval",
         Age(title = _("Housekeeping Interval"),
             help = _("From time to time the eventd checks for messages that are expected to "
@@ -2375,7 +2381,7 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
+    register_configvar(groups["ec"],
         "statistics_interval",
         Age(title = _("Statistics Interval"),
             help = _("The event daemon keeps statistics about the rate of messages, events "
@@ -2387,18 +2393,7 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
-        "debug_rules",
-        Checkbox(title = _("Debug rule execution"),
-                 label = _("enable extensive rule logging"),
-                 help = _("This option turns on logging the execution of rules. For each message received "
-                          "the execution details of each rule are logged. This creates an immense "
-                          "volume of logging and should never be used in productive operation."),
-                default_value = False),
-        domain = "mkeventd",
-    )
-
-    register_configvar(group,
+    register_configvar(groups["ec"],
         "log_messages",
         Checkbox(title = _("Syslog-like message logging"),
                  label = _("Log all messages into syslog-like logfiles"),
@@ -2411,7 +2406,7 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
+    register_configvar(groups["ec"],
         "rule_optimizer",
         Checkbox(title = _("Optimize rule execution"),
                  label = _("enable optimized rule execution"),
@@ -2420,42 +2415,14 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
-        "log_level",
-        DropdownChoice(
-            title = _("Log level"),
-            help = _("You can configure the Event Console to log more details about it's actions. "
-                     "These information are logged into the file <tt>%s</tt>") %
-                                site_neutral_path(defaults.log_dir + "/mkeventd.log"),
-            choices = [
-                (0, _("Normal logging")),
-                (1, _("Verbose logging")),
-            ],
-            default_value = 0,
-        ),
-        domain = "mkeventd",
-    )
-
-    register_configvar(group,
-        "log_rulehits",
-        Checkbox(title = _("Log rule hits"),
-                 label = _("Log hits for rules in log of Event Console"),
-                 help = _("If you enable this option then every time an event matches a rule "
-                          "(by normal hit, cancelling, counting or dropping) a log entry will be written "
-                          "into the log file of the Event Console. Please be aware that this might lead to "
-                          "a large number of log entries. "),
-                default_value = False),
-        domain = "mkeventd",
-    )
-
-    register_configvar(group,
+    register_configvar(groups["ec"],
         "actions",
         vs_mkeventd_actions,
         allow_reset = False,
         domain = "mkeventd",
     )
 
-    register_configvar(group,
+    register_configvar(groups["ec"],
         "archive_orphans",
         Checkbox(title = _("Force message archiving"),
                  label = _("Archive messages that do not match any rule"),
@@ -2467,7 +2434,7 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
+    register_configvar(groups["ec"],
         "hostname_translation",
         HostnameTranslation(
             title = _("Hostname translation for incoming messages"),
@@ -2480,7 +2447,7 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
+    register_configvar(groups["ec"],
         "history_rotation",
         DropdownChoice(
             title = _("Event history logfile rotation"),
@@ -2494,7 +2461,7 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
+    register_configvar(groups["ec"],
         "history_lifetime",
         Integer(
             title = _("Event history lifetime"),
@@ -2507,7 +2474,7 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
+    register_configvar(groups["ec"],
         "socket_queue_len",
         Integer(
             title = _("Max. number of pending connections to the status socket"),
@@ -2524,7 +2491,7 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
+    register_configvar(groups["ec"],
         "eventsocket_queue_len",
         Integer(
             title = _("Max. number of pending connections to the event socket"),
@@ -2541,7 +2508,7 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
+    register_configvar(groups["ec_snmp"],
         "translate_snmptraps",
         Transform(
             CascadingDropdown(
@@ -2570,7 +2537,7 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
-    register_configvar(group,
+    register_configvar(groups["ec_snmp"],
         "snmp_credentials",
         ListOf(
             Dictionary(
@@ -2608,6 +2575,47 @@ if mkeventd_enabled:
         ),
         domain = "mkeventd",
     )
+
+
+    register_configvar(groups["ec_log"],
+        "debug_rules",
+        Checkbox(title = _("Debug rule execution"),
+                 label = _("enable extensive rule logging"),
+                 help = _("This option turns on logging the execution of rules. For each message received "
+                          "the execution details of each rule are logged. This creates an immense "
+                          "volume of logging and should never be used in productive operation."),
+                default_value = False),
+        domain = "mkeventd",
+    )
+
+    register_configvar(groups["ec_log"],
+        "log_level",
+        DropdownChoice(
+            title = _("Log level"),
+            help = _("You can configure the Event Console to log more details about it's actions. "
+                     "These information are logged into the file <tt>%s</tt>") %
+                                site_neutral_path(defaults.log_dir + "/mkeventd.log"),
+            choices = [
+                (0, _("Normal logging")),
+                (1, _("Verbose logging")),
+            ],
+            default_value = 0,
+        ),
+        domain = "mkeventd",
+    )
+
+    register_configvar(groups["ec_log"],
+        "log_rulehits",
+        Checkbox(title = _("Log rule hits"),
+                 label = _("Log hits for rules in log of Event Console"),
+                 help = _("If you enable this option then every time an event matches a rule "
+                          "(by normal hit, cancelling, counting or dropping) a log entry will be written "
+                          "into the log file of the Event Console. Please be aware that this might lead to "
+                          "a large number of log entries. "),
+                default_value = False),
+        domain = "mkeventd",
+    )
+
 
     # A few settings for Multisite and WATO
     register_configvar(_("User Interface"),
@@ -2660,7 +2668,7 @@ if mkeventd_enabled:
 # do not run an own eventd but want to query one or send notifications
 # to one.
 group = _("Notifications")
-register_configvar(group,
+register_configvar(groups["ec"],
     "mkeventd_notify_contactgroup",
     GroupSelection(
         "contact",
@@ -2679,7 +2687,7 @@ register_configvar(group,
     domain = "multisite",
     need_restart = True)
 
-register_configvar(group,
+register_configvar(groups["ec"],
     "mkeventd_notify_remotehost",
     Optional(
         TextAscii(
@@ -2699,7 +2707,7 @@ register_configvar(group,
     domain = "multisite",
     need_restart = True)
 
-register_configvar(group,
+register_configvar(groups["ec"],
     "mkeventd_notify_facility",
     DropdownChoice(
         title = _("Syslog facility for Event Console notifications"),

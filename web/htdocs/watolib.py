@@ -2980,6 +2980,11 @@ def register_configvar(group, varname, valuespec, domain="check_mk",
 
 
 
+def register_configvar_group(title, order=None):
+    if order != None:
+        configvar_order()[title] = 18
+
+
 # The following keys are available:
 # configdir: Directory to store the global.mk in (applies to check_mk, multisite, mkeventd)
 # pending:   Handler function to create the pending log entry

@@ -6663,23 +6663,43 @@ def mode_globalvars(phase):
         else:
             return
 
-    render_global_configuration_variables(default_values, current_settings, search=search)
+    group_names = global_config_variable_groups()
+    render_global_configuration_variables(group_names, default_values, current_settings, search=search)
 
-def render_global_configuration_variables(default_values, current_settings, show_all=False, search=None):
-    groupnames = configvar_groups().keys()
-    groupnames.sort(cmp=lambda a,b: cmp(configvar_order().get(a, 999), configvar_order().get(b, 999)))
+
+def global_config_variable_groups(show_all=False):
+    group_names = []
+
+    for group_name, group_vars in configvar_groups().items():
+        add = False
+        for domain, varname, valuespec in group_vars:
+            if not show_all and (not configvars()[varname][4]
+                                 or not configvar_domains()[domain].get('in_global_settings', True)):
+                continue # do not edit via global settings
+
+            add = True
+            break
+
+        if add:
+            group_names.append(group_name)
+
+    return group_names
+
+
+def render_global_configuration_variables(group_names, default_values, current_settings,
+                                          search=None, edit_mode="edit_configvar"):
+
+    group_names.sort(cmp=lambda a,b: cmp(configvar_order().get(a, 999),
+                                         configvar_order().get(b, 999)))
 
     search_form(_("Search for settings:"))
 
     at_least_one_painted = False
     html.write('<div class=globalvars>')
-    for groupname in groupnames:
+    for group_name in group_names:
         header_is_painted = False # needed for omitting empty groups
 
-        for domain, varname, valuespec in configvar_groups()[groupname]:
-            if not show_all and (not configvars()[varname][4]
-                                 or not configvar_domains()[domain].get('in_global_settings', True)):
-                continue # do not edit via global settings
+        for domain, varname, valuespec in configvar_groups()[group_name]:
             if domain == "check_mk" and varname not in default_values:
                 if config.debug:
                     raise MKGeneralException("The configuration variable <tt>%s</tt> is unknown to "
@@ -6690,7 +6710,7 @@ def render_global_configuration_variables(default_values, current_settings, show
             help_text  = valuespec.help() or ''
             title_text = valuespec.title()
 
-            if search and search not in groupname.lower() \
+            if search and search not in group_name.lower() \
                       and search not in domain.lower() \
                       and search not in varname \
                       and search not in help_text.lower() \
@@ -6700,12 +6720,14 @@ def render_global_configuration_variables(default_values, current_settings, show
 
             if not header_is_painted:
                 # always open headers when searching
-                forms.header(groupname, isopen=search)
+                forms.header(group_name, isopen=search)
                 header_is_painted = True
 
             defaultvalue = default_values.get(varname, valuespec.default_value())
 
-            edit_url = folder_preserving_link([("mode", "edit_configvar"), ("varname", varname), ("site", html.var("site", ""))])
+            edit_url = folder_preserving_link([("mode", edit_mode),
+                                               ("varname", varname),
+                                               ("site", html.var("site", ""))])
             title = '<a href="%s" class=%s title="%s">%s</a>' % \
                     (edit_url, varname in current_settings and '"modified"' or '""',
                      html.strip_tags(help_text), title_text)
@@ -6739,7 +6761,7 @@ def render_global_configuration_variables(default_values, current_settings, show
 
         if header_is_painted:
             forms.end()
-    if not at_least_one_painted:
+    if not at_least_one_painted and search:
         html.message(_('Did not find any global setting matching your search.'))
     html.write('</div>')
 
@@ -9422,12 +9444,17 @@ def mode_edit_site_globals(phase):
     siteid = html.var("site")
     site = configured_sites[siteid]
 
+    search = html.get_unicode_input("search")
+    if search != None:
+        search = search.strip().lower()
+
     if phase == "title":
         return _("Edit site-specific global settings of %s" % siteid)
 
     elif phase == "buttons":
         html.context_button(_("All Sites"), folder_preserving_link([("mode", "sites")]), "back")
-        html.context_button(_("Connection"), folder_preserving_link([("mode", "edit_site"), ("edit", siteid)]), "sites")
+        html.context_button(_("Connection"), folder_preserving_link([("mode", "edit_site"),
+                                                                     ("edit", siteid)]), "sites")
         return
 
     # The site's default values are the current global settings
@@ -9487,10 +9514,13 @@ def mode_edit_site_globals(phase):
                 "is a configuration slave."))
 
     if site.get("replication") != "slave":
-        html.show_error(_("This site is not a replication slave. You cannot configure specific settings for it."))
+        html.show_error(_("This site is not a replication slave. "
+                          "You cannot configure specific settings for it."))
         return
 
-    render_global_configuration_variables(default_values, current_settings, show_all=True)
+    group_names = global_config_variable_groups(show_all=True)
+    render_global_configuration_variables(group_names, default_values,
+                                          current_settings, search=search)
 
 def mode_edit_site(phase):
     configured_sites = load_sites()

@@ -1,0 +1,11 @@
+Title: EC: User without permission to host can view host information
+Component: multisite
+State: open
+Date: 2016-07-22 18:02:26
+Targetversion: 1.2.8
+Class: bug
+
+When viewing an event of a host which the user is not permitted to see
+while the user has "see all events permission", the user sees the
+service states in the last column. The user can also add more columns
+to the view to see all information about the host.

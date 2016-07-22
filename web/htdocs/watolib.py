@@ -213,7 +213,6 @@ def log_audit(linkinfo, what, message, user_id = None):
 #                sites have already been marked for restart. Do nothing here.
 #                In non-distributed mode mark for restart
 def log_pending(status, linkinfo, what, message, user_id = None):
-
     log_audit(linkinfo, what, message, user_id)
     need_sidebar_reload()
 
@@ -221,35 +220,31 @@ def log_pending(status, linkinfo, what, message, user_id = None):
     if 'need_to_bake_agents' in globals():
         need_to_bake_agents()
 
-    # The latter one condition applies to slave sites
-    # Otherwise slave sites would trigger the cmcrushd
-    if not is_distributed() and not is_wato_slave_site():
-        if status != SYNC:
-            log_entry(linkinfo, what, message, "pending.log", user_id)
+    # Only add pending log entries when a restart is needed
+    if has_wato_slave_sites() or status in [ RESTART, SYNCRESTART, LOCALRESTART ]:
+        log_entry(linkinfo, what, message, "pending.log", user_id)
 
     # Currently we add the pending to each site, regardless if
     # the site is really affected. This needs to be optimized
     # in future.
-    else:
-        log_entry(linkinfo, what, message, "pending.log", user_id)
-        for siteid, site in config.sites.items():
+    for siteid, site in config.sites.items():
+        changes = {}
 
-            changes = {}
+        # Local site can never have pending changes to be synced
+        if config.site_is_local(siteid):
+            if status in [ RESTART, SYNCRESTART ]:
+                changes["need_restart"] = True
+        else:
+            if status in [ SYNC, SYNCRESTART ]:
+                changes["need_sync"] = True
 
-            # Local site can never have pending changes to be synced
-            if config.site_is_local(siteid):
-                if status in [ RESTART, SYNCRESTART ]:
-                    changes["need_restart"] = True
-            else:
-                if status in [ SYNC, SYNCRESTART ]:
-                    changes["need_sync"] = True
-                if status in [ RESTART, SYNCRESTART ]:
-                    changes["need_restart"] = True
-            update_replication_status(siteid, changes)
+            if status in [ RESTART, SYNCRESTART ]:
+                changes["need_restart"] = True
+        update_replication_status(siteid, changes)
 
-            # Make sure that a new snapshot for syncing will be created
-            # when times comes to syncing
-            remove_sync_snapshot(siteid)
+        # Make sure that a new snapshot for syncing will be created
+        # when times comes to syncing
+        remove_sync_snapshot(siteid)
 
 
 def log_exists(what):

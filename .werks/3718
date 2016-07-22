@@ -1,0 +1,10 @@
+Title: Changes not needing a core restart are not showing up pending changes anymore
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8p6
+Date: 1469204588
+Class: fix
+
+Those changes where shown by the pending changes log but automatically commited
+when opening the activate changes page.

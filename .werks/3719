@@ -1,0 +1,9 @@
+Title: Fixed possible wrong encoding of audit log messages when editing global settings
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8p6
+Date: 1469205887
+Class: fix
+
+

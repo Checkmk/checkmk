@@ -174,7 +174,11 @@ def foreign_changes():
 # linkinfo identifies the object operated on. It can be a Host or a Folder
 # or a text.
 def log_entry(linkinfo, action, message, logfilename, user_id = None):
-    message = make_utf8(message).strip()
+    # Using attrencode here is against our regular rule to do the escaping
+    # at the last possible time: When rendering. But this here is the last
+    # place where we can distinguish between HTML() encapsulated (already)
+    # escaped / allowed HTML and strings to be escaped.
+    message = make_utf8(html.attrencode(message)).strip()
 
     # linkinfo is either a Folder, or a Host or a hostname or None
     if isinstance(linkinfo, Folder):

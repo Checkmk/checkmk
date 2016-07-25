@@ -397,6 +397,18 @@ vs_mkeventd_rule = Dictionary(
                         ],
                         default_value = "interval")
                   ),
+                  ( "count_duration",
+                    Optional(
+                        Age(
+                            label = _("Count only for"),
+                            help = _("When the event is in the state <i>open</i> for that time span "
+                                     "then no further messages of the same time will be added to the "
+                                     "event. It will stay open, but the count does not increase anymore. "
+                                     "Any further matching message will create a new event."),
+                      ),
+                      label = _("Discontinue counting after time as elapsed"),
+                      none_label = _("Bar"),
+                  )),
                   ( "count_ack",
                     Checkbox(
                         label = _("Continue counting when event is <b>acknowledged</b>"),

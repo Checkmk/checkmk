@@ -3349,6 +3349,10 @@ class EventStatus():
                 if count["separate_match_groups"] and ev["match_groups"] != event["match_groups"]:
                     continue
 
+                if count.get("count_duration") != None and ev["first"] + count["count_duration"] < event["time"]:
+                    # Counting has been discontinued on this event after a certain time
+                    continue
+
                 found = ev
                 self.count_event_up(found, event)
                 break

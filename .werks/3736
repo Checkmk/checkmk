@@ -1,0 +1,17 @@
+Title: New option for discontinuing counting on open event after configured time
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.4.0i1
+Date: 1469449843
+Class: feature
+
+In the {{Counting}} section of a rule the Event Console has now a new option
+{{Discontinue counting after time as elapsed}}. Normally new messages matching
+an existing open event that is configured for counting will simply increase
+the counter and not open a new event.
+
+When you activate the new option you can limit this phase to a certain
+duration, e.g. to 10 minutes. Any messages arriving 10 minutes after the
+first matching message will then open a new event instead of just increasing
+the counter of the existing one.

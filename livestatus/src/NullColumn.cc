@@ -27,5 +27,5 @@
 
 void NullColumn::output(void* /* row */, Renderer::Row& r,
                         contact* /* auth_user */) {
-    r.outputNull();
+    r.output(Null());
 }

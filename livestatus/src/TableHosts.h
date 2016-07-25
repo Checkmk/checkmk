@@ -56,8 +56,8 @@ public:
                            const DowntimesOrComments &comments_holder);
 #endif
 
-    const char *name() const override;
-    const char *namePrefix() const override;
+    std::string name() const override;
+    std::string namePrefix() const override;
     void answerQuery(Query *query) override;
     bool isAuthorized(contact *ctc, void *data) override;
     void *findObject(char *objectspec) override;

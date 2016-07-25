@@ -137,7 +137,7 @@ void TableEventConsole::answerQuery(Query *query) {
     string path = g_mkeventd_socket_path;
 #endif
     // skip "eventconsole" prefix :-P
-    string internal_name = name() + 12;
+    string internal_name = name().substr(12);
 #ifdef CMC
     ECTableConnection(path, internal_name, query, _core)
 #else

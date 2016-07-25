@@ -28,6 +28,8 @@
 #include "Query.h"
 #include "nagios.h"
 
+using std::string;
+
 extern contactgroup *contactgroup_list;
 
 TableContactgroups::TableContactgroups() {
@@ -43,9 +45,9 @@ TableContactgroups::TableContactgroups() {
         "members", "A list of all members of this contactgroup", -1));
 }
 
-const char *TableContactgroups::name() const { return "contactgroups"; }
+string TableContactgroups::name() const { return "contactgroups"; }
 
-const char *TableContactgroups::namePrefix() const { return "contactgroup_"; }
+string TableContactgroups::namePrefix() const { return "contactgroup_"; }
 
 void TableContactgroups::answerQuery(Query *query) {
     contactgroup *cg = contactgroup_list;

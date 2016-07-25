@@ -158,5 +158,5 @@ void PerfdataAggregator::output(Renderer::Row &r) {
         }
         perf_data += format;
     }
-    r.outputString(perf_data);
+    r.output(perf_data);
 }

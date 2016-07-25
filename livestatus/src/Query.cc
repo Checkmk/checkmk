@@ -256,8 +256,8 @@ Filter *Query::createFilter(Column *column, RelationalOperator relOp,
     try {
         return column->createFilter(relOp, value);
     } catch (const runtime_error &e) {
-        invalidHeader("error creating filter on table" +
-                      string(_table->name()) + ": " + e.what());
+        invalidHeader("error creating filter on table" + _table->name() + ": " +
+                      e.what());
         return nullptr;
     }
 }
@@ -398,7 +398,7 @@ void Query::parseStatsLine(char *line) {
 
     Column *column = _table->column(column_name);
     if (column == nullptr) {
-        invalidHeader("invalid stats header: table '" + string(_table->name()) +
+        invalidHeader("invalid stats header: table '" + _table->name() +
                       "' has no column '" + string(column_name) + "'");
         return;
     }
@@ -449,7 +449,7 @@ void Query::parseFilterLine(char *line, VariadicFilter &filter) {
 
     Column *column = _table->column(column_name);
     if (column == nullptr) {
-        invalidHeader("invalid filter: table '" + string(_table->name()) +
+        invalidHeader("invalid filter: table '" + _table->name() +
                       "' has no column '" + string(column_name) + "'");
         return;
     }
@@ -744,12 +744,12 @@ void Query::start(Renderer::Query &q) {
     if (_show_column_headers) {
         Renderer::Row r(q);
         for (const auto &column : _columns) {
-            r.outputString(column->name());
+            r.output(column->name());
         }
 
         // Output dummy headers for stats columns
         for (size_t col = 1; col <= _stats_columns.size(); ++col) {
-            r.outputString(string("stats_") + to_string(col));
+            r.output(string("stats_") + to_string(col));
         }
     }
 }
@@ -827,7 +827,7 @@ void Query::finish(Renderer::Query &q) {
             // output group columns first
             _stats_group_spec_t groupspec = stats_group.first;
             for (auto &iit : groupspec) {
-                r.outputString(iit);
+                r.output(iit);
             }
 
             Aggregator **aggr = stats_group.second;

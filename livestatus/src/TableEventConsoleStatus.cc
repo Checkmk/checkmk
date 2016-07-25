@@ -24,6 +24,8 @@
 
 #include "TableEventConsoleStatus.h"
 
+using std::string;
+
 #ifdef CMC
 TableEventConsoleStatus::TableEventConsoleStatus(Core *core)
     : TableEventConsole(core)
@@ -83,10 +85,8 @@ TableEventConsoleStatus::TableEventConsoleStatus()
                                   "Whether the replication succeeded (0/1)"));
 }
 
-const char *TableEventConsoleStatus::name() const {
-    return "eventconsolestatus";
-}
+string TableEventConsoleStatus::name() const { return "eventconsolestatus"; }
 
-const char *TableEventConsoleStatus::namePrefix() const {
+string TableEventConsoleStatus::namePrefix() const {
     return "eventconsolestatus_";
 }

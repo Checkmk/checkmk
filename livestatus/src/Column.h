@@ -51,8 +51,8 @@ public:
            int extra_offset, int extra_extra_offset = -1);
     virtual ~Column() {}
 
-    const char *name() const { return _name.c_str(); }
-    const char *description() const { return _description.c_str(); }
+    std::string name() const { return _name; }
+    std::string description() const { return _description; }
     void *shiftPointer(void *data) const;
 
     // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is

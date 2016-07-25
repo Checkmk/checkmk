@@ -29,6 +29,8 @@
 #include "WorldNagios.h"
 #include "auth.h"
 
+using std::string;
+
 extern servicegroup *servicegroup_list;
 
 namespace {
@@ -50,9 +52,9 @@ TableServicesByGroup::TableServicesByGroup(
             reinterpret_cast<char *>(&sgref));
 }
 
-const char *TableServicesByGroup::name() const { return "servicesbygroup"; }
+string TableServicesByGroup::name() const { return "servicesbygroup"; }
 
-const char *TableServicesByGroup::namePrefix() const { return "service_"; }
+string TableServicesByGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByGroup::answerQuery(Query *query) {
     // When g_group_authorization is set to AUTH_STRICT we need to pre-check

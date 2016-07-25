@@ -26,6 +26,8 @@
 #include "DynamicEventConsoleReplicationColumn.h"
 #include "Query.h"
 
+using std::string;
+
 TableEventConsoleReplication::TableEventConsoleReplication(
 #ifdef CMC
     Core *core
@@ -40,11 +42,11 @@ TableEventConsoleReplication::TableEventConsoleReplication(
         ));
 }
 
-const char *TableEventConsoleReplication::name() const {
+string TableEventConsoleReplication::name() const {
     return "eventconsolereplication";
 }
 
-const char *TableEventConsoleReplication::namePrefix() const {
+string TableEventConsoleReplication::namePrefix() const {
     return "eventconsolereplication_";
 }
 

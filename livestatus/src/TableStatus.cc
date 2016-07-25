@@ -33,6 +33,8 @@
 #include "global_counters.h"
 #include "nagios.h"
 
+using std::string;
+
 // Nagios status values
 
 extern time_t program_start;
@@ -304,8 +306,8 @@ TableStatus::TableStatus() {
                                          SPIC_MK_INVENTORY_LAST));
 }
 
-const char *TableStatus::name() const { return "status"; }
+string TableStatus::name() const { return "status"; }
 
-const char *TableStatus::namePrefix() const { return "status_"; }
+string TableStatus::namePrefix() const { return "status_"; }
 
 void TableStatus::answerQuery(Query *query) { query->processDataset(this); }

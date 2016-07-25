@@ -28,6 +28,8 @@
 #include "Query.h"
 #include "nagios.h"
 
+using std::string;
+
 extern timeperiod *timeperiod_list;
 
 TableTimeperiods::TableTimeperiods() {
@@ -43,9 +45,9 @@ TableTimeperiods::TableTimeperiods() {
     // TODO(mk): add days and exceptions
 }
 
-const char *TableTimeperiods::name() const { return "timeperiods"; }
+string TableTimeperiods::name() const { return "timeperiods"; }
 
-const char *TableTimeperiods::namePrefix() const { return "timeperiod_"; }
+string TableTimeperiods::namePrefix() const { return "timeperiod_"; }
 
 void TableTimeperiods::answerQuery(Query *query) {
     timeperiod *tp = timeperiod_list;

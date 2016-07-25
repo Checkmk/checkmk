@@ -57,9 +57,9 @@ TableServices::TableServices(const DowntimesOrComments &downtimes_holder,
     addColumns(this, "", -1, true, downtimes_holder, comments_holder);
 }
 
-const char *TableServices::name() const { return "services"; }
+string TableServices::name() const { return "services"; }
 
-const char *TableServices::namePrefix() const { return "service_"; }
+string TableServices::namePrefix() const { return "service_"; }
 
 // static
 void TableServices::addColumns(Table *table, string prefix, int indirect_offset,

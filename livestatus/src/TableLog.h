@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <time.h>
+#include <string>
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
@@ -51,11 +52,11 @@ public:
     TableLog(LogCache *log_cache, const DowntimesOrComments &downtimes_holder,
              const DowntimesOrComments &comments_holder);
 #endif
-    const char *name() const override;
-    const char *namePrefix() const override;
+    std::string name() const override;
+    std::string namePrefix() const override;
     void answerQuery(Query *query) override;
     bool isAuthorized(contact *ctc, void *data) override;
-    Column *column(const char *colname) override;
+    Column *column(std::string colname) override;
 
 private:
 #ifdef CMC

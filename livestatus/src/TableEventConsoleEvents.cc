@@ -123,11 +123,9 @@ void TableEventConsoleEvents::addColumns(
         );
 }
 
-const char *TableEventConsoleEvents::name() const {
-    return "eventconsoleevents";
-}
+string TableEventConsoleEvents::name() const { return "eventconsoleevents"; }
 
-const char *TableEventConsoleEvents::namePrefix() const {
+string TableEventConsoleEvents::namePrefix() const {
     return "eventconsoleevents_";
 }
 

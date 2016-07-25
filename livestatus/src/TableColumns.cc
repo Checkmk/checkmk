@@ -27,6 +27,8 @@
 #include "ColumnsColumn.h"
 #include "Query.h"
 
+using std::string;
+
 TableColumns::TableColumns() {
     addColumn(new ColumnsColumn("table", "The name of the table", COLCOL_TABLE,
                                 this));
@@ -39,9 +41,9 @@ TableColumns::TableColumns() {
         COLCOL_TYPE, this));
 }
 
-const char *TableColumns::name() const { return "columns"; }
+string TableColumns::name() const { return "columns"; }
 
-const char *TableColumns::namePrefix() const { return "column_"; }
+string TableColumns::namePrefix() const { return "column_"; }
 
 void TableColumns::addTable(Table *table) { _tables.push_back(table); }
 
@@ -51,7 +53,7 @@ void TableColumns::answerQuery(Query *query) {
     }
 }
 
-const char *TableColumns::getValue(Column *column, int colcol) {
+string TableColumns::getValue(Column *column, int colcol) const {
     static const char *typenames[8] = {"int",  "float", "string", "list",
                                        "time", "dict",  "blob",   "null"};
 
@@ -68,7 +70,7 @@ const char *TableColumns::getValue(Column *column, int colcol) {
     return "";
 }
 
-const char *TableColumns::tableNameOf(Column *column) {
+string TableColumns::tableNameOf(Column *column) const {
     for (auto table : _tables) {
         if (table->any_column([&](Column *c) { return c == column; })) {
             return table->name();

@@ -36,7 +36,7 @@ void ContactgroupsColumn::output(void *row, Renderer::Row &r,
         for (contactgroupsmember *cgm =
                  *reinterpret_cast<contactgroupsmember **>(data + _offset);
              cgm != nullptr; cgm = cgm->next) {
-            l.outputString(cgm->group_ptr->group_name);
+            l.output(string(cgm->group_ptr->group_name));
         }
     }
 }

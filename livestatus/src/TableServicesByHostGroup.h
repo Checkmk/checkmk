@@ -26,6 +26,7 @@
 #define TableServicesByHostGroup_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
 #ifdef CMC
@@ -48,8 +49,8 @@ public:
                              const DowntimesOrComments &comments_holder);
 #endif
 
-    const char *name() const override;
-    const char *namePrefix() const override;
+    std::string name() const override;
+    std::string namePrefix() const override;
     void answerQuery(Query *) override;
     bool isAuthorized(contact *, void *) override;
     void *findObject(char *objectspec) override;

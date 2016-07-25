@@ -80,7 +80,7 @@ void AttributelistColumn::output(void *row, Renderer::Row &r,
         Renderer::List l(r);
         while (al_entries[i].name != nullptr) {
             if ((mask & al_entries[i].bitvalue) != 0u) {
-                l.outputString(al_entries[i].name);
+                l.output(al_entries[i].name);
             }
             i++;
         }

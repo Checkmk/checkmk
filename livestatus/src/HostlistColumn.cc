@@ -49,10 +49,10 @@ void HostlistColumn::output(void *row, Renderer::Row &r, contact *auth_user) {
         if ((auth_user == nullptr) ||
             is_authorized_for(auth_user, hst, nullptr)) {
             if (!_show_state) {
-                l.outputString(hst->name);
+                l.output(string(hst->name));
             } else {
                 Renderer::Sublist s(l);
-                s.outputString(hst->name);
+                s.output(string(hst->name));
                 s.output(hst->current_state);
                 s.output(hst->has_been_checked);
             }

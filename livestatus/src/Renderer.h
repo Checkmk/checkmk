@@ -35,6 +35,8 @@
 
 enum class OutputFormat { csv, json, python };
 
+struct Null {};
+
 class CSVSeparators {
 public:
     CSVSeparators(std::string dataset, std::string field, std::string list,
@@ -105,26 +107,10 @@ public:
 
         ~Row() { renderer().endRow(); }
 
-        void outputNull() {
-            next();
-            renderer().outputNull();
-        }
-        void outputBlob(const std::vector<char> &value) {
-            next();
-            renderer().outputBlob(value);
-        }
-        void outputString(const std::string &value) {
-            next();
-            renderer().outputString(value);
-        }
         template <typename T>
         void output(T value) {
             next();
             renderer().output(value);
-        }
-        void outputDouble(double value) {
-            next();
-            renderer().outputDouble(value);
         }
 
     private:
@@ -157,18 +143,10 @@ public:
 
         ~List() { renderer().endList(); }
 
-        void outputString(const std::string &value) {
-            next();
-            renderer().outputString(value);
-        }
         template <typename T>
         void output(T value) {
             next();
             renderer().output(value);
-        }
-        void outputDouble(double value) {
-            next();
-            renderer().outputDouble(value);
         }
 
     private:
@@ -198,10 +176,6 @@ public:
 
         ~Sublist() { renderer().endSublist(); }
 
-        void outputString(const std::string &value) {
-            next();
-            renderer().outputString(value);
-        }
         template <typename T>
         void output(T value) {
             next();
@@ -234,9 +208,9 @@ public:
 
         void renderKeyValue(std::string key, std::string value) {
             next();
-            renderer().outputString(key);
+            renderer().output(key);
             renderer().separateDictKeyValue();
-            renderer().outputString(value);
+            renderer().output(value);
         }
 
     private:
@@ -289,12 +263,16 @@ private:
         add(std::to_string(value));
     }
 
+    void output(double value);
+    void output(Null /* unused */) { outputNull(); }
+    void output(const std::vector<char> &value) { outputBlob(value); }
+    void output(const std::string &value) { outputString(value); }
+    void output(const char *value) { outputString(value); }
     void output(std::chrono::system_clock::time_point value) {
         add(std::to_string(std::chrono::system_clock::to_time_t(value) +
                            _timezone_offset));
     }
 
-    void outputDouble(double value);
     void outputUnicodeEscape(unsigned value);
 
     // A whole query.

@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StatsColumn.h"
+#include <string>
 #include "Column.h"
 #include "CountAggregator.h"
 #include "DoubleAggregator.h"
@@ -53,7 +54,7 @@ Aggregator *StatsColumn::createAggregator() {
                                     static_cast<DoubleColumn *>(_column));
     }
     if (_column->type() == ColumnType::string and
-        (ends_with(_column->name(), "perf_data") != 0)) {
+        (ends_with(_column->name().c_str(), "perf_data") != 0)) {
         return new PerfdataAggregator(_operation,
                                       static_cast<StringColumn *>(_column));
     }  // unaggregateble column

@@ -80,7 +80,7 @@ void IntAggregator::output(Renderer::Row &r) {
             break;
 
         case StatsOperation::avg:
-            r.outputDouble(double(_aggr) / _count);
+            r.output(double(_aggr) / _count);
             break;
 
         case StatsOperation::avginv:
@@ -89,9 +89,9 @@ void IntAggregator::output(Renderer::Row &r) {
 
         case StatsOperation::std:
             if (_count <= 1) {
-                r.outputDouble(0.0);
+                r.output(0.0);
             } else {
-                r.outputDouble(sqrt(
+                r.output(sqrt(
                     (_sumq -
                      (static_cast<double>(_aggr) * static_cast<double>(_aggr)) /
                          _count) /

@@ -27,5 +27,5 @@
 
 void EmptyColumn::output(void* /* row */, Renderer::Row& r,
                          contact* /* auth_user */) {
-    r.outputString("");
+    r.output("");
 }

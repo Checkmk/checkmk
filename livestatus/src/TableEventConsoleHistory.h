@@ -26,6 +26,7 @@
 #define TableEventConsoleHistory_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "TableEventConsole.h"
 
 #ifdef CMC
@@ -48,8 +49,8 @@ public:
     TableEventConsoleHistory(const DowntimesOrComments &downtimes_holder,
                              const DowntimesOrComments &comments_holder);
 #endif
-    const char *name() const override;
-    const char *namePrefix() const override;
+    std::string name() const override;
+    std::string namePrefix() const override;
 
     bool isAuthorized(contact *ctc, void *data) override;
 };

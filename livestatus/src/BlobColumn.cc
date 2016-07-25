@@ -31,8 +31,8 @@ using std::vector;
 void BlobColumn::output(void *row, Renderer::Row &r,
                         contact * /* auth_user */) {
     if (unique_ptr<vector<char>> blob = getBlob(row)) {
-        r.outputBlob(*blob);
+        r.output(*blob);
     } else {
-        r.outputNull();
+        r.output(Null());
     }
 }

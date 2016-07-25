@@ -78,23 +78,23 @@ void DoubleAggregator::output(Renderer::Row& r) {
         case StatsOperation::min:
         case StatsOperation::max:
         case StatsOperation::suminv:
-            r.outputDouble(_aggr);
+            r.output(_aggr);
             break;
 
         case StatsOperation::avg:
         case StatsOperation::avginv:
             if (_count == 0) {
-                r.outputDouble(0.0);
+                r.output(0.0);
             } else {
-                r.outputDouble(_aggr / _count);
+                r.output(_aggr / _count);
             }
             break;
 
         case StatsOperation::std:
             if (_count <= 1) {
-                r.outputDouble(0.0);
+                r.output(0.0);
             } else {
-                r.outputDouble(
+                r.output(
                     sqrt((_sumq - (_aggr * _aggr) / _count) / (_count - 1)));
             }
             break;

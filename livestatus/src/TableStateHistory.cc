@@ -43,6 +43,7 @@
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
 #include "Query.h"
+#include "StringUtils.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 class NegatingFilter;
@@ -60,6 +61,7 @@ class VariadicFilter;
 #include "auth.h"
 #endif
 
+using mk::starts_with;
 using std::deque;
 using std::lock_guard;
 using std::make_pair;
@@ -279,9 +281,9 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         );
 }
 
-const char *TableStateHistory::name() const { return "statehist"; }
+string TableStateHistory::name() const { return "statehist"; }
 
-const char *TableStateHistory::namePrefix() const { return "statehist_"; }
+string TableStateHistory::namePrefix() const { return "statehist_"; }
 
 LogEntry *TableStateHistory::getPreviousLogentry() {
     while (_it_entries == _entries->begin()) {
@@ -323,10 +325,10 @@ class IsObjectFilter : public FilterVisitor {
 public:
     void visit(ColumnFilter &f) override {
         if (_value) {
-            const char *column_name = f.column()->name();
-            _value = strncmp(column_name, "current_", 8) == 0 ||
-                     strncmp(column_name, "host_", 5) == 0 ||
-                     strncmp(column_name, "service_", 8) == 0;
+            auto column_name = f.column()->name();
+            _value = starts_with(column_name, string("current_")) ||
+                     starts_with(column_name, string("host_")) ||
+                     starts_with(column_name, string("service_"));
         }
     }
     void visit(NegatingFilter & /*unused*/) override {}
@@ -1024,10 +1026,9 @@ bool TableStateHistory::isAuthorized(contact *ctc, void *data) {
            is_authorized_for(ctc, hst, svc);
 }
 
-Column *TableStateHistory::column(const char *colname) {
+Column *TableStateHistory::column(string colname) {
     // First try to find column in the usual way
-    Column *col = Table::column(colname);
-    if (col != nullptr) {
+    if (Column *col = Table::column(colname)) {
         return col;
     }
 
@@ -1036,6 +1037,5 @@ Column *TableStateHistory::column(const char *colname) {
     // we access current and not historic data and in order
     // to prevent mixing up historic and current fields with
     // the same name.
-    string with_current = string("current_") + colname;
-    return Table::column(with_current.c_str());
+    return Table::column(string("current_") + colname);
 }

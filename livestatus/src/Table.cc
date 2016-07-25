@@ -23,11 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Table.h"
-#include <string.h>
 #include <ostream>
 #include "Column.h"
 #include "DynamicColumn.h"
 #include "Logger.h"
+#include "StringUtils.h"
 
 using std::string;
 
@@ -58,16 +58,15 @@ void Table::addDynamicColumn(DynamicColumn *dyncol) {
     _dynamic_columns.emplace(dyncol->name(), dyncol);
 }
 
-Column *Table::column(const char *colname) {
+Column *Table::column(string colname) {
     // Strip away a sequence of prefixes.
-    int prefix_len = strlen(namePrefix());
-    while (strncmp(colname, namePrefix(), prefix_len) == 0) {
-        colname += prefix_len;
+    while (mk::starts_with(colname, namePrefix())) {
+        colname = colname.substr(namePrefix().size());
     }
 
-    const char *sep_pos = strchr(colname, ':');
-    if (sep_pos != nullptr) {
-        return dynamicColumn(string(colname, sep_pos), string(sep_pos + 1));
+    auto sep = colname.find(':');
+    if (sep != string::npos) {
+        return dynamicColumn(colname.substr(0, sep), colname.substr(sep + 1));
     }
 
     // First try exact match...
@@ -77,7 +76,7 @@ Column *Table::column(const char *colname) {
     }
 
     // ... then try to match with the prefix.
-    it = _columns.find(string(namePrefix()) + colname);
+    it = _columns.find(namePrefix() + colname);
     if (it != _columns.end()) {
         return it->second;
     }

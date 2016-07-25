@@ -28,6 +28,8 @@
 #include "TableHosts.h"
 #include "auth.h"
 
+using std::string;
+
 extern host *host_list;
 extern hostgroup *hostgroup_list;
 extern char g_mk_inventory_path[];
@@ -50,9 +52,9 @@ TableHostsByGroup::TableHostsByGroup(
                                     reinterpret_cast<char *>(&ref));
 }
 
-const char *TableHostsByGroup::name() const { return "hostsbygroup"; }
+string TableHostsByGroup::name() const { return "hostsbygroup"; }
 
-const char *TableHostsByGroup::namePrefix() const { return "host_"; }
+string TableHostsByGroup::namePrefix() const { return "host_"; }
 
 void TableHostsByGroup::answerQuery(Query *query) {
     // When g_group_authorization is set to AUTH_STRICT we need to pre-check if

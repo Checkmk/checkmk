@@ -26,6 +26,7 @@
 #define TableEventConsoleEvents_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "TableEventConsole.h"
 class Table;
 
@@ -41,8 +42,8 @@ class DowntimesOrComments;
 
 class TableEventConsoleEvents : public TableEventConsole {
 public:
-    const char *name() const override;
-    const char *namePrefix() const override;
+    std::string name() const override;
+    std::string namePrefix() const override;
 
 #ifdef CMC
     TableEventConsoleEvents(const Notes &downtimes_holder,

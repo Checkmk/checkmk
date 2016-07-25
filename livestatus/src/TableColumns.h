@@ -26,6 +26,7 @@
 #define TableColumns_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <string>
 #include <vector>
 #include "Table.h"
 class Column;
@@ -37,13 +38,13 @@ class TableColumns : public Table {
 public:
     TableColumns();
 
-    const char *name() const override;
-    const char *namePrefix() const override;
+    std::string name() const override;
+    std::string namePrefix() const override;
     void answerQuery(Query *query) override;
 
     void addTable(Table *);
-    const char *getValue(Column *column, int colcol);
-    const char *tableNameOf(Column *column);
+    std::string getValue(Column *column, int colcol) const;
+    std::string tableNameOf(Column *column) const;
 };
 
 #endif  // TableColumns_h

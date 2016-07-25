@@ -64,7 +64,7 @@ void LogwatchListColumn::output(void *row, Renderer::Row &r,
                 }
                 string name = dep->d_name;
                 if (name != "." && name != "..") {
-                    l.outputString(name);
+                    l.output(name);
                 }
             }
         }

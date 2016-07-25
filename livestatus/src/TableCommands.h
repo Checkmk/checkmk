@@ -35,8 +35,8 @@ class TableCommands : public Table {
 public:
     explicit TableCommands(const CommandsHolder &commands_holder);
 
-    const char *name() const override;
-    const char *namePrefix() const override;
+    std::string name() const override;
+    std::string namePrefix() const override;
     void answerQuery(Query *query) override;
 
     static void addColumns(Table *table, std::string prefix, int offset);

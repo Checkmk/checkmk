@@ -55,21 +55,21 @@ void ServicelistColumn::output(void *row, Renderer::Row &r,
             is_authorized_for(auth_user, svc->host_ptr, svc)) {
             // show only service name => no sublist
             if (!_show_host && _info_depth == 0) {
-                l.outputString(svc->description);
+                l.output(string(svc->description));
             } else {
                 Renderer::Sublist s(l);
                 if (_show_host) {
-                    s.outputString(svc->host_name);
+                    s.output(string(svc->host_name));
                 }
-                s.outputString(svc->description);
+                s.output(string(svc->description));
                 if (_info_depth >= 1) {
                     s.output(svc->current_state);
                     s.output(svc->has_been_checked);
                 }
                 if (_info_depth >= 2) {
-                    s.outputString(svc->plugin_output == nullptr
-                                       ? ""
-                                       : svc->plugin_output);
+                    s.output(svc->plugin_output == nullptr
+                                 ? ""
+                                 : svc->plugin_output);
                 }
                 if (_info_depth >= 3) {
                     s.output(svc->last_hard_state);

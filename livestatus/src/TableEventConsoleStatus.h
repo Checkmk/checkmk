@@ -26,6 +26,7 @@
 #define TableEventConsoleStatus_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "TableEventConsole.h"
 #ifdef CMC
 class Core;
@@ -38,8 +39,8 @@ public:
 #else
     TableEventConsoleStatus();
 #endif
-    const char *name() const override;
-    const char *namePrefix() const override;
+    std::string name() const override;
+    std::string namePrefix() const override;
 };
 
 #endif  // TableEventConsoleStatus_h

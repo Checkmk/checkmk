@@ -163,9 +163,9 @@ TableLog::TableLog(LogCache *log_cache,
                                   reinterpret_cast<char *>(ref));
 }
 
-const char *TableLog::name() const { return "log"; }
+string TableLog::name() const { return "log"; }
 
-const char *TableLog::namePrefix() const { return "log_"; }
+string TableLog::namePrefix() const { return "log_"; }
 
 void TableLog::answerQuery(Query *query) {
     lock_guard<mutex> lg(_log_cache->_lock);
@@ -242,10 +242,9 @@ bool TableLog::isAuthorized(contact *ctc, void *data) {
              entry->_logclass == LOGCLASS_STATE);
 }
 
-Column *TableLog::column(const char *colname) {
+Column *TableLog::column(string colname) {
     // First try to find column in the usual way
-    Column *col = Table::column(colname);
-    if (col != nullptr) {
+    if (Column *col = Table::column(colname)) {
         return col;
     }
 
@@ -254,6 +253,5 @@ Column *TableLog::column(const char *colname) {
     // we access current and not historic data and in order
     // to prevent mixing up historic and current fields with
     // the same name.
-    string with_current = string("current_") + colname;
-    return Table::column(with_current.c_str());
+    return Table::column(string("current_") + colname);
 }

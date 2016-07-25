@@ -70,11 +70,9 @@ TableEventConsoleHistory::TableEventConsoleHistory(
                                         );
 }
 
-const char *TableEventConsoleHistory::name() const {
-    return "eventconsolehistory";
-}
+string TableEventConsoleHistory::name() const { return "eventconsolehistory"; }
 
-const char *TableEventConsoleHistory::namePrefix() const {
+string TableEventConsoleHistory::namePrefix() const {
     return "eventconsolehistory_";
 }
 

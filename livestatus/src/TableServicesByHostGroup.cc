@@ -30,6 +30,8 @@
 #include "auth.h"
 class DowntimesOrComments;
 
+using std::string;
+
 extern hostgroup *hostgroup_list;
 
 namespace {
@@ -50,11 +52,9 @@ TableServicesByHostGroup::TableServicesByHostGroup(
                                     reinterpret_cast<char *>(&hgref));
 }
 
-const char *TableServicesByHostGroup::name() const {
-    return "servicesbyhostgroup";
-}
+string TableServicesByHostGroup::name() const { return "servicesbyhostgroup"; }
 
-const char *TableServicesByHostGroup::namePrefix() const { return "service_"; }
+string TableServicesByHostGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByHostGroup::answerQuery(Query *query) {
     for (hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {

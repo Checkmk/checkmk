@@ -25,6 +25,8 @@
 #include "ContactsColumn.h"
 #include "Renderer.h"
 
+using std::string;
+
 extern contact *contact_list;
 
 void ContactsColumn::output(void *row, Renderer::Row &r,
@@ -33,7 +35,7 @@ void ContactsColumn::output(void *row, Renderer::Row &r,
     if (auto data = shiftPointer(row)) {
         for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
             if ((*containsContact(ctc))(data)) {
-                l.outputString(ctc->name);
+                l.output(string(ctc->name));
             }
         }
     }

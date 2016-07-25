@@ -26,6 +26,7 @@
 #define TableDownComm_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "Table.h"
 #include "nagios.h"
 class DowntimesOrComments;
@@ -39,8 +40,8 @@ public:
     TableDownComm(bool is_downtime, const DowntimesOrComments &downtimes_holder,
                   const DowntimesOrComments &comments_holder);
 
-    const char *name() const override;
-    const char *namePrefix() const override;
+    std::string name() const override;
+    std::string namePrefix() const override;
     void answerQuery(Query *) override;
     bool isAuthorized(contact *ctc, void *data) override;
 };

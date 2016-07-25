@@ -35,9 +35,9 @@ TableCommands::TableCommands(const CommandsHolder &commands_holder)
     addColumns(this, "", 0);
 }
 
-const char *TableCommands::name() const { return "commands"; }
+string TableCommands::name() const { return "commands"; }
 
-const char *TableCommands::namePrefix() const { return "command_"; }
+string TableCommands::namePrefix() const { return "command_"; }
 
 // static
 void TableCommands::addColumns(Table *table, string prefix, int offset) {

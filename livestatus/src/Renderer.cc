@@ -92,9 +92,9 @@ void Renderer::add(const string &str) { _output->add(str); }
 
 void Renderer::add(const vector<char> &value) { _output->add(value); }
 
-void Renderer::outputDouble(double value) {
+void Renderer::output(double value) {
     if (std::isnan(value)) {
-        outputNull();
+        output(Null());
     } else {
         char buf[64];
         snprintf(buf, sizeof(buf), "%.10e", value);

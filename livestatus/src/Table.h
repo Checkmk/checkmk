@@ -54,7 +54,7 @@ public:
     }
 
     /// The name of the table, as used in the GET command.
-    virtual const char *name() const = 0;
+    virtual std::string name() const = 0;
 
     /// \brief An optional prefix for column names.
     ///
@@ -64,7 +64,7 @@ public:
     /// multisite sometimes even seems to use a *sequence* of prefixes, which is
     /// yet another a bug. Instead of fixing it there, it is currently papered
     /// over on the cmc side. :-/
-    virtual const char *namePrefix() const = 0;
+    virtual std::string namePrefix() const = 0;
 
     /// \brief Retrieve a column with a give name.
     ///
@@ -78,7 +78,7 @@ public:
     /// TableLog override it for some dubious reason: They first try the normal
     /// lookup, and if that didn't find a column, the lookup is retried with a
     /// "current_" prefix. This logic should probably not live in cmc at all.
-    virtual Column *column(const char *colname);
+    virtual Column *column(std::string colname);
 
     virtual void answerQuery(Query *query) = 0;
     virtual bool isAuthorized(contact *ctc, void *data);

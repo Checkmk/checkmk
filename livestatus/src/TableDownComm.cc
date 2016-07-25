@@ -35,6 +35,8 @@
 #include "TableServices.h"
 #include "auth.h"
 
+using std::string;
+
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
 TableDownComm::TableDownComm(bool is_downtime,
@@ -134,11 +136,11 @@ TableDownComm::TableDownComm(bool is_downtime,
         false /* no hosts table */, downtimes_holder, comments_holder);
 }
 
-const char *TableDownComm::name() const {
+string TableDownComm::name() const {
     return _is_downtime ? "downtimes" : "comments";
 }
 
-const char *TableDownComm::namePrefix() const {
+string TableDownComm::namePrefix() const {
     return _is_downtime ? "downtime_" : "comment_";
 }
 

@@ -403,6 +403,7 @@
     * 3668 FIX: Fixed slow loading of GUI pages when using a localized GUI
     * 3669 FIX: LDAP: Fixed very long running LDAP sync when using group based sync plugins
     * 3670 FIX: Fixed empty AV PDF report when exporting it from a quicksearch result view
+    * 3622 FIX: Fix labelling of V-Achsis on graphs with very large numbers...
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

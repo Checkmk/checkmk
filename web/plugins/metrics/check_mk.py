@@ -65,7 +65,7 @@ unit_info[""] = {
     "title"  : "",
     "description" : _("Floating point number"),
     "symbol" : "",
-    "render" : lambda v: render_float_with_precision(v, 3),
+    "render" : lambda v: render_scientific(v, 2),
 }
 
 unit_info["count"] = {

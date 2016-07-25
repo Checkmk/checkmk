@@ -225,7 +225,7 @@ def log_pending(status, linkinfo, what, message, user_id = None):
         need_to_bake_agents()
 
     # Only add pending log entries when a restart is needed
-    if has_wato_slave_sites() or status in [ RESTART, SYNCRESTART, LOCALRESTART ]:
+    if has_wato_slave_sites() or status != SYNC:
         log_entry(linkinfo, what, message, "pending.log", user_id)
 
     # Currently we add the pending to each site, regardless if

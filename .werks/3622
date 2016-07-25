@@ -1,0 +1,16 @@
+Title: Fix labelling of V-Achsis on graphs with very large numbers
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p6
+Date: 1469441963
+Class: fix
+
+If you create an own check that outputs very large metrics then the
+labelling of the vertical axis in a graph would try to display numbers
+like 1000000000000, with the problem that the prefix 1000... is not
+visible.
+
+Number larger than 99999 are now being displayed in exponential
+syntax, e.g. 1.0e6 and are thus correctly being displayed.
+

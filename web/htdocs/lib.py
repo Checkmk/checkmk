@@ -522,6 +522,13 @@ def frexp10(x):
     return frexpb(x, 10)
 
 
+def render_scientific(v, precision=3):
+    mantissa, exponent = frexp10(float(v))
+    # Render small numbers without exponent
+    if exponent >= -3 and exponent <= 4:
+        return "%%.%df" % max(0, precision - exponent) % v
+
+    return "%%.%dfe%%d" % precision % (mantissa, exponent)
 
 
 # Render a physical value witha precision of p
@@ -660,6 +667,8 @@ def render_float_with_precision(value, precision):
     else:
         digits = precision - exponent - 1
         return "%%.%df" % digits % value
+
+
 
 
 def number_human_readable(n, precision=1, unit="B"):

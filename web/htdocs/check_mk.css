@@ -369,6 +369,12 @@ table.dictionary td.dictright {
     white-space: nowrap;
     padding: 0px;
     border-style: none;
+    width: 99%;
+}
+
+table.dictionary td.dictleft {
+    width: 1%;
+    white-space: nowrap;
 }
 
 td.dictleft div.dictelement * {

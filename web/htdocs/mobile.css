@@ -26,17 +26,6 @@ Boston, MA 02110-1301 USA.
 */
 
 /* Styles for Check_MK mobile interface */
-/*
-body.mobile {
-    padding: 0px;
-    margin: 0px;
-}
-
-div.ui-content {
-    padding: 0px;
-    background-color: #green;
-}
-*/
 
 body.mobile div.really,
 body.mobile div.success,
@@ -61,12 +50,8 @@ body.mobile div.command_group a {
 }
 
 body.mobile table.data {
-    /* width: 10px;*/ /* 100%; */
     border-collapse: collapse;
     empty-cells: show;
-}
-
-body.mobile table.data tr {
 }
 
 body.mobile table.data td {
@@ -85,12 +70,7 @@ body.mobile table.dataset tr.header {
     color: black;
 }
 
-body.mobile table.dataset tr.header th {
-}
-
-body.mobile table.dataset tr.data td {
-    /* border-radius: 10px; */
-    /* -webkit-border-radius: 10px; */
+body.mobile table.dataset > tbody > tr.data > td {
     border-radius: 5px;
     border: 1px solid #aaa;
     padding: 4px 6px;
@@ -126,8 +106,8 @@ body.mobile table.alertstatefilter td {
 body.mobile table.alertstatefilter .ui-checkbox {
     margin: 0;
 }
-/* Perfometers */
 
+/* Perfometers */
 
 body.mobile td.perfometer {
     height: 14px;

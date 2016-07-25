@@ -359,6 +359,12 @@ def pnp_icon(row, what):
         # to keep the number of single requests low
         hover_content_func = 'fetch_pnp_hover_contents(\'%s\')' % pnp_popup_url(row, what)
     else:
+        # Don't show the icon with Check_MK graphing. The hover makes no sense and there is no
+        # mobile view for graphs, so the graphs on the bottom of the host/service view are enough
+        # for the moment.
+        if html.is_mobile():
+            return
+
         hover_content_func = 'hover_graph(\'%s\', \'%s\', \'%s\')' % \
                                 (row['site'], row['host_name'], row.get('service_description', '_HOST_').replace("\\", "\\\\"))
 

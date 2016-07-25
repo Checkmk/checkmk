@@ -377,6 +377,10 @@ table.dictionary td.dictleft {
     white-space: nowrap;
 }
 
+table.dictionary td.dictleft div.help {
+    white-space: normal;
+}
+
 td.dictleft div.dictelement * {
     font-size: 8pt;
 }

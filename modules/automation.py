@@ -1090,7 +1090,7 @@ def load_resource_file(macros):
 # here. We could read the Nagios resource.cfg file, but we do not
 # know for sure the place of that either.
 def replace_core_macros(hostname, commandline):
-    macros = get_basic_host_macros_from_attributes(hostname, get_host_attributes(hostname))
+    macros = get_host_macros_from_attributes(hostname, get_host_attributes(hostname))
     load_resource_file(macros)
     for varname, value in macros.items():
         commandline = commandline.replace(varname, str(value))

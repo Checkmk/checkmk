@@ -1,0 +1,10 @@
+Title: Host macros are now replaced in datasource program command lines
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.4.0i1
+Date: 1469443786
+Class: feature
+
+You can now use all host macros including custom variables in the command line of 
+datasource programs, just like for active checks.

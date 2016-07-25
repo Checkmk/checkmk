@@ -2142,18 +2142,31 @@ def get_datasource_program(hostname, ipaddress):
                 path = local_special_agents_dir + "/agent_" + agentname
             else:
                 path = special_agents_dir + "/agent_" + agentname
-            return replace_datasource_program_macros(path + " " + cmd_arguments)
+            return replace_datasource_program_macros(hostname, ipaddress,
+                                                     path + " " + cmd_arguments)
 
     programs = host_extra_conf(hostname, datasource_programs)
     if not programs:
         return None
     else:
-        return replace_datasource_program_macros(
-            programs[0].replace("<IP>", ipaddress).replace("<HOST>", hostname))
+        return replace_datasource_program_macros(hostname, ipaddress, programs[0])
 
 
-def replace_datasource_program_macros(cmd):
-    return cmd
+def replace_datasource_program_macros(hostname, ipaddress, cmd):
+    # Make "legacy" translation. The users should use the $...$ macros in future
+    cmd = cmd.replace("<IP>", ipaddress).replace("<HOST>", hostname)
+
+    is_clust = is_cluster(hostname)
+
+    tags = tags_of_host(hostname)
+    attrs = get_host_attributes(hostname, tags)
+    if is_cluster(hostname):
+        parents_list = get_cluster_nodes_for_config(hostname)
+        attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
+        attrs.update(get_cluster_attributes(hostname, parents_list))
+
+    macros = get_host_macros_from_attributes(hostname, attrs)
+    return replace_macros(cmd, macros)
 
 
 # Variables needed during the renaming of hosts (see automation.py)
@@ -3393,7 +3406,7 @@ def get_cluster_nodes_for_config(hostname):
     return nodes
 
 
-def get_basic_host_macros_from_attributes(hostname, attrs):
+def get_host_macros_from_attributes(hostname, attrs):
     macros = {
         "$HOSTNAME$"    : hostname,
         "$HOSTADDRESS$" : attrs['address'],
@@ -3515,6 +3528,25 @@ def fallback_ip_for(hostname, family=None):
         return "0.0.0.0"
     else:
         return "::"
+
+
+def replace_macros(s, macros):
+    for key, value in macros.items():
+        if type(value) in (int, long, float):
+            value = str(value) # e.g. in _EC_SL (service level)
+
+        # TODO: Clean this up
+        try:
+            s = s.replace(key, value)
+        except: # Might have failed due to binary UTF-8 encoding in value
+            try:
+                s = s.replace(key, value.decode("utf-8"))
+            except:
+                # If this does not help, do not replace
+                if opt_debug:
+                    raise
+
+    return s
 
 
 #.

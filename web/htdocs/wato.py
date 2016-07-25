@@ -16511,6 +16511,21 @@ def some_host_hasnt_set(folder, attrname):
     return False
 
 
+def monitoring_macro_help():
+    return " " + _("You can use monitoring macros here. The most important are: "
+                   "<ul>"
+                   "<li><tt>$HOSTADDRESS$</tt>: The IP address of the host</li>"
+                   "<li><tt>$HOSTNAME$</tt>: The name of the host</li>"
+                   "<li><tt>$USER1$</tt>: user macro 1 (usually path to shipped plugins)</li>"
+                   "<li><tt>$USER2$</tt>: user marco 2 (usually path to your own plugins)</li>"
+                   "<li><tt>$_HOSTTAGS$</tt>: List of host tags</li>"
+                   "<li><tt>$_HOSTADDRESS_4$</tt>: The IPv4 address of the host</li>"
+                   "<li><tt>$_HOSTADDRESS_6$</tt>: The IPv6 address of the host</li>"
+                   "<li><tt>$_HOSTADDRESS_FAMILY$</tt>: The primary address family of the host</li>"
+                   "</ul>"
+                   "All custom variables defined for the host are available as <tt>$_HOST[VARNAME]$</tt>.")
+
+
 #.
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |

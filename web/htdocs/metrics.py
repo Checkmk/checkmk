@@ -1277,8 +1277,7 @@ def cmk_graphs_possible(site_id = None):
         render_graph_html # Will throw exception if missing
         return not config.force_pnp_graphing \
            and browser_supports_canvas() \
-           and site_is_running_cmc(site_id) \
-           and not html.is_mobile()
+           and site_is_running_cmc(site_id)
     except:
         return False
 

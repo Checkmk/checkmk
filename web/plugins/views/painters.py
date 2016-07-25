@@ -960,6 +960,14 @@ def paint_time_graph_cmk(row, show_timeranges=False):
     graph_data_range = { "time_range" : get_graph_timerange_from_painter_options() }
     graph_render_options = {}
 
+    if html.is_mobile():
+        graph_render_options.update({
+            "interaction"   : False,
+            "show_controls" : False,
+            # Would be much better to autodetect the possible size (like on dashboard)
+            "size"          : (50, 20), # ex
+        })
+
     if "host_metrics" in row:
         available_metrics = row["host_metrics"]
         perf_data = row["host_perf_data"]

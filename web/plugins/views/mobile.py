@@ -822,8 +822,8 @@ def render_mobile_dataset(rows, view, group_painters, painters, num_columns, sho
                 html.write('</tr>\n')
         html.write('</table>')
         # html.write('</p></div>')
-    html.javascript('$("table.dataset tr.data td").addClass("ui-shadow").not(".state").addClass("nonstatus");\n'
-                    '$("table.dataset tr.data a").attr("data-ajax", "false");\n')
+    html.javascript('$("table.dataset > tbody > tr.data > td").addClass("ui-shadow").not(".state").addClass("nonstatus");\n'
+                    '$("table.dataset > tbody > tr.data a").attr("data-ajax", "false");\n')
 
 
 multisite_layouts["mobiledataset"] = {

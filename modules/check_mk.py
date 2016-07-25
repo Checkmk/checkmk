@@ -2126,9 +2126,8 @@ def get_sorted_check_table(hostname, remove_duplicates=False, world="config"):
 
 
 
-# Determine, which program to call to get data. Should
-# be None in most cases -> to TCP connect on port 6556
-
+# Determine, which program to call to get the agent data. This is an alternative to fetch
+# the agent data via TCP port, mostly used for special agents.
 def get_datasource_program(hostname, ipaddress):
     special_agents_dir = agents_dir + "/special"
 
@@ -2143,13 +2142,19 @@ def get_datasource_program(hostname, ipaddress):
                 path = local_special_agents_dir + "/agent_" + agentname
             else:
                 path = special_agents_dir + "/agent_" + agentname
-            return path + " " + cmd_arguments
+            return replace_datasource_program_macros(path + " " + cmd_arguments)
 
     programs = host_extra_conf(hostname, datasource_programs)
-    if len(programs) == 0:
+    if not programs:
         return None
     else:
-        return programs[0].replace("<IP>", ipaddress).replace("<HOST>", hostname)
+        return replace_datasource_program_macros(
+            programs[0].replace("<IP>", ipaddress).replace("<HOST>", hostname))
+
+
+def replace_datasource_program_macros(cmd):
+    return cmd
+
 
 # Variables needed during the renaming of hosts (see automation.py)
 ignore_ip_lookup_failures = False
@@ -3405,8 +3410,10 @@ def get_basic_host_macros_from_attributes(hostname, attrs):
     return macros
 
 
-def get_host_attributes(hostname):
+def get_host_attributes(hostname, tags):
     attrs = extra_host_attributes(hostname)
+
+    attrs["_TAGS"] = " ".join(tags)
 
     if "alias" not in attrs:
         attrs["alias"] = alias_of(hostname, hostname)
@@ -3429,6 +3436,16 @@ def get_host_attributes(hostname):
     else:
         attrs["address"]        = attrs["_ADDRESS_4"]
         attrs["_ADDRESS_FAMILY"] = "4"
+
+    # Add the optional WATO folder path
+    path = host_paths.get(hostname)
+    if path:
+        attrs["_FILENAME"] = path
+
+    # Add custom user icons and actions
+    actions = icons_and_actions_of("host", hostname)
+    if actions:
+        attrs["_ACTIONS"] = ",".join(actions)
 
     return attrs
 

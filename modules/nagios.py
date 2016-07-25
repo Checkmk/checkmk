@@ -113,7 +113,7 @@ def create_nagios_config_host(outfile, hostname):
     outfile.write("\n# ----------------------------------------------------\n")
     outfile.write("# %s\n" % hostname)
     outfile.write("# ----------------------------------------------------\n")
-    host_attrs = get_host_attributes(hostname)
+    host_attrs = get_host_attributes(hostname, tags_of_host(hostname))
     if generate_hostconf:
         create_nagios_hostdefs(outfile, hostname, host_attrs)
     create_nagios_servicedefs(outfile, hostname, host_attrs)
@@ -139,7 +139,6 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
     outfile.write("  host_name\t\t\t%s\n" % hostname)
     outfile.write("  use\t\t\t\t%s\n" % (is_clust and cluster_template or host_template))
     outfile.write("  address\t\t\t%s\n" % (ip and make_utf8(ip) or fallback_ip_for(hostname)))
-    outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
 
     # Add custom macros
     for key, value in attrs.items():
@@ -151,11 +150,6 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
     command = host_check_command(hostname, ip, is_clust)
     if command:
         outfile.write("  check_command\t\t\t%s\n" % command)
-
-    # WATO folder path
-    path = host_paths.get(hostname)
-    if path:
-        outfile.write("  _FILENAME\t\t\t%s\n" % path)
 
     # Host groups: If the host has no hostgroups it gets the default
     # hostgroup (Nagios requires each host to be member of at least on
@@ -198,11 +192,6 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
     else:
         alias = make_utf8(alias)
 
-    # Add custom user icons and actions
-    actions = icons_and_actions_of('host', hostname)
-    if actions:
-        outfile.write("  _ACTIONS\t\t\t%s\n" % ','.join(actions))
-
     # Custom configuration last -> user may override all other values
     outfile.write(make_utf8(extra_host_conf_of(hostname)))
 
@@ -220,7 +209,6 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
         outfile.write("  use\t\t\t\t%s-summary\n" % (is_clust and cluster_template or host_template))
         outfile.write("  alias\t\t\t\tSummary of %s\n" % alias)
         outfile.write("  address\t\t\t%s\n" % (ip and ip or fallback_ip_for(hostname)))
-        outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
         outfile.write("  __REALNAME\t\t\t%s\n" % hostname)
         outfile.write("  parents\t\t\t%s\n" % hostname)
 
@@ -228,9 +216,6 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
         for key, value in attrs.items():
             if key[0] == '_':
                 outfile.write("  %s\t\t\t%s\n" % (key, value))
-
-        if path:
-            outfile.write("  _FILENAME\t\t\t%s\n" % path)
 
         hgs = summary_hostgroups_of(hostname)
         hostgroups = ",".join(hgs)

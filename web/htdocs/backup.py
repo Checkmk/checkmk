@@ -1578,13 +1578,13 @@ class PageBackupRestore(object):
         self._target_ident = ident
 
         try:
-            self._get_target(self._target_ident)
+            self._target = self._get_target(self._target_ident)
         except KeyError:
             raise MKUserError("target_p_target", _("This backup target does not exist."))
 
 
     def _get_target(self, target_ident):
-        raise NotImplementedError()
+        return self.targets().get(target_ident)
 
 
     def title(self):
@@ -1763,10 +1763,12 @@ class PageBackupRestore(object):
             self._show_backup_list()
 
         else:
+            self._show_target_list()
+
+
+    def _show_target_list(self):
             html.p(_("Please choose a target to perform the restore from."))
             self.targets().show_list()
-            SystemBackupTargetsReadOnly().show_list(editable=False,
-                                                    title=_("System global targets"))
 
 
     def _show_backup_list(self):

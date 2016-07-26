@@ -5474,9 +5474,15 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
 
     def _get_target(self, target_ident):
         try:
-            self._target = self.targets().get(target_ident)
+            return self.targets().get(target_ident)
         except KeyError:
-            self._target = backup.SystemBackupTargetsReadOnly().get(target_ident)
+            return backup.SystemBackupTargetsReadOnly().get(target_ident)
+
+
+    def _show_target_list(self):
+        super(ModeBackupRestore, self)._show_target_list()
+        backup.SystemBackupTargetsReadOnly().show_list(
+                                editable=False, title=_("System global targets"))
 
 
     def _show_backup_list(self):

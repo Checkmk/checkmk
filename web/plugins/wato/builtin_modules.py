@@ -80,6 +80,9 @@ modules += [
       ( "backup", _("Backup"), "backup", "backups",
         _("Make backups of your whole site and restore previous backups.")),
 
+      ( "passwords", _("Passwords"), "passwords", "passwords",
+        _("Store and share passwords for later use in checks.")),
+
       ( "icons", _("Custom Icons"), "icons", "icons",
         _("Upload your own icons that can be used in views or custom actions")),
 ]

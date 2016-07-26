@@ -110,7 +110,7 @@ imap_parameters = Dictionary(
                     allow_empty = False,
                     size = 24
                 ),
-                PasswordFromStore(
+                IndividualOrStoredPassword(
                     title = _('Password'),
                     allow_empty = False,
                     size = 12
@@ -159,7 +159,7 @@ pop3_parameters = Dictionary(
                     allow_empty = False,
                     size = 24
                 ),
-                PasswordFromStore(
+                IndividualOrStoredPassword(
                     title = _('Password'),
                     allow_empty = False,
                     size = 12
@@ -472,7 +472,7 @@ register_rule(group,
                 )
             ),
             ( "password",
-                PasswordFromStore(
+                IndividualOrStoredPassword(
                     title = _("Database Password"),
                     help = _('The password used to connect to the database'),
                     allow_empty = False,
@@ -888,7 +888,7 @@ register_rule(group,
                                             size = 12,
                                             allow_empty = False
                                         ),
-                                        PasswordFromStore(
+                                        IndividualOrStoredPassword(
                                             title = _("Password"),
                                         )
                                     ]
@@ -1831,7 +1831,7 @@ register_rule(group,
                         allow_empty = False,
                         size = 24
                     ),
-                    PasswordFromStore(
+                    IndividualOrStoredPassword(
                         title = _('Password'),
                         allow_empty = False,
                         size = 12

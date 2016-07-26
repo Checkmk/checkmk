@@ -97,6 +97,7 @@ import backup
 import modules as multisite_modules
 from watolib import *
 
+import cmk.store as store
 from cmk.regex import escape_regex_chars, regex
 
 g_html_head_open = False
@@ -15186,6 +15187,247 @@ def mode_icons(phase):
     table.end()
 
 #.
+#   .--Passwords-----------------------------------------------------------.
+#   |           ____                                     _                 |
+#   |          |  _ \ __ _ ___ _____      _____  _ __ __| |___             |
+#   |          | |_) / _` / __/ __\ \ /\ / / _ \| '__/ _` / __|            |
+#   |          |  __/ (_| \__ \__ \\ V  V / (_) | | | (_| \__ \            |
+#   |          |_|   \__,_|___/___/ \_/\_/ \___/|_|  \__,_|___/            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Store and share passwords for use in configured checks               |
+#   '----------------------------------------------------------------------'
+
+
+class PasswordStore(object):
+    def _load(self, lock=False):
+        return store.load_from_mk_file(wato_root_dir + "/passwords.mk", key="passwords", default={}, lock=lock)
+
+
+    def _load_for_modification(self):
+        return self._load(lock=True)
+
+
+    def _owned_passwords(self):
+        user_groups = userdb.contactgroups_of_user(config.user_id)
+        return dict([ (k, v) for k, v in self._load().items() if v["owned_by"] in user_groups ])
+
+
+    def usable_passwords(self):
+        user_groups = userdb.contactgroups_of_user(config.user_id)
+
+        passwords = self._owned_passwords()
+        passwords.update(dict([ (k, v) for k, v in self._load().items()
+                                if v["shared_with"] in user_groups ]))
+        return passwords
+
+
+    def _save(self, value):
+        return store.save_to_mk_file(wato_root_dir + "/passwords.mk", key="passwords", value=value)
+
+
+
+class ModePasswords(WatoMode, PasswordStore):
+    def title(self):
+        return _("Manage passwords")
+
+
+    def buttons(self):
+        global_buttons()
+        html.context_button(_("New password"), html.makeuri_contextless([("mode", "edit_password")]), "new")
+
+
+    def action(self):
+        if not html.transaction_valid():
+            return
+
+        if action == "delete":
+            if wato_confirm(_("Do you really want to delete this password?")):
+                html.check_transaction() # invalidate transid
+
+                passwords = self._load_for_modification()
+
+                ident = html.var("_delete")
+                if ident not in passwords:
+                    raise MKUserError("ident", _("This password does not exist."))
+
+                del passwords[ident]
+                self._save(passwords)
+
+                return None, _("The password has been deleted.")
+
+
+    def page(self):
+        html.p(_("This password management module stores the passwords you use in your checks and "
+                 "special agents in a central place. Please note that this password store is no "
+                 "kind of password safe. Your passwords will not be encrypted."))
+        html.p(_("All the passwords you store in your monitoring configuration, "
+                 "including this password store, are needed in plain text to contact remote systems "
+                 "for monitoring. So all those passwords have to be stored readable by the monitoring."))
+
+        contact_groups = userdb.load_group_information().get("contact", {})
+
+        def contact_group_alias(name):
+            return contact_groups.get(name, {"alias": name})["alias"]
+
+        passwords = self._owned_passwords()
+        table.begin("passwords", _("Passwords"))
+        for ident, password in sorted(passwords.items(), key=lambda e: e[1]["title"]):
+            table.row()
+
+            table.cell(_("Actions"), css="buttons")
+            edit_url = html.makeuri_contextless([("mode", "edit_password"), ("ident", ident)])
+            html.icon_button(edit_url, _("Edit this password"), "edit")
+            delete_url = make_action_link([("mode", "passwords"), ("_delete", ident)])
+            html.icon_button(delete_url, _("Delete this password"), "delete")
+
+            table.cell(_("Title"), html.attrencode(password["title"]))
+            table.cell(_("Owned by"), html.attrencode(contact_group_alias(password["owned_by"])))
+            table.cell(_("Shared with"))
+            if not password["shared_with"]:
+                html.write(_("Not shared"))
+            else:
+                html.write(html.attrencode(", ".join([ contact_group_alias(g) for g in password["shared_with"]])))
+
+        table.end()
+
+
+
+class ModeEditPassword(WatoMode, PasswordStore):
+    def __init__(self):
+        super(ModeEditPassword, self).__init__()
+        ident = html.var("ident")
+
+        if ident != None:
+            try:
+                password = self._owned_passwords()[ident]
+            except KeyError:
+                raise MKUserError("ident", _("This password does not exist."))
+
+            self._new          = False
+            self._ident        = ident
+            self._cfg          = password
+            self._title        = _("Edit password: %s") % password["title"]
+        else:
+            self._new        = True
+            self._ident      = None
+            self._cfg        = {}
+            self._title      = _("New password")
+
+
+    def title(self):
+        return self._title
+
+
+    def buttons(self):
+        html.context_button(_("Back"), html.makeuri_contextless([("mode", "passwords")]), "back")
+
+
+    def valuespec(self):
+        if self._new:
+            ident_attr = [
+                ("ident", ID(
+                    title = _("Unique ID"),
+                    help = _("The ID must be a unique text. It will be used as an internal key "
+                             "when objects refer to this password."),
+                    allow_empty = False,
+                    size = 12,
+                )),
+            ]
+        else:
+            ident_attr = [
+                ("ident", FixedValue(self._ident,
+                    title = _("Unique ID"),
+                )),
+            ]
+
+        return Dictionary(
+            title = _("Password"),
+            elements = ident_attr + [
+                ("title", TextUnicode(
+                    title = _("Title"),
+                    allow_empty = False,
+                )),
+                ("password", PasswordSpec(
+                    title = _("Password"),
+                    allow_empty = False,
+                    hidden = True,
+                )),
+                ("owned_by", DropdownChoice(
+                    title = _("Owned by"),
+                    help  = _("Each password is owned by a group of users which are able to edit, "
+                              "delete and use existing passwords."),
+                    choices = lambda: self.__contact_group_choices(only_own=True),
+                    invalid_choice = "complain",
+                    empty_text = _("You need to be member of at least one contact group to be able to "
+                                   "create a password."),
+                )),
+                ("shared_with", DualListChoice(
+                    title = _("Share with"),
+                    help  = _("By default only the members of the owner contact group are permitted "
+                              "to use a a configured password. It is possible to share a password with "
+                              "other groups of users to make them able to use a password in checks."),
+                    choices = self.__contact_group_choices,
+                    autoheight = False,
+                )),
+            ],
+        optional_keys = ["contact_groups"],
+        render = "form",
+    )
+
+
+    def __contact_group_choices(self, only_own=False):
+        contact_groups = userdb.load_group_information().get("contact", {})
+
+        if only_own:
+            user_groups = userdb.contactgroups_of_user(config.user_id)
+        else:
+            user_groups = []
+
+        entries = [ (c, g['alias']) for c, g in contact_groups.items()
+                    if not only_own or c in user_groups ]
+        return sorted(entries)
+
+
+    def action(self):
+        if html.transaction_valid():
+            vs = self.valuespec()
+
+            config = vs.from_html_vars("_edit")
+            vs.validate_value(config, "_edit")
+
+            if "ident" in config:
+                self._ident = config.pop("ident")
+            self._cfg = config
+
+            passwords = self._load_for_modification()
+
+            if self._new and self._ident in passwords:
+                raise MKUserError(None, _("This ID is already in use. Please choose another one."))
+
+            passwords[self._ident] = self._cfg
+
+            self._save(passwords)
+
+        return "passwords"
+
+
+    def page(self):
+        html.begin_form("edit", method="POST")
+        html.prevent_password_auto_completion()
+
+        vs = self.valuespec()
+
+        vs.render_input("_edit", self._cfg)
+        vs.set_focus("_edit")
+        forms.end()
+
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
+
+
+#.
 #   .--Builtin Agents------------------------------------------------------.
 #   |    ____        _ _ _   _            _                    _           |
 #   |   | __ ) _   _(_) | |_(_)_ __      / \   __ _  ___ _ __ | |_ ___     |
@@ -16265,6 +16507,8 @@ modes = {
    "backup_upload_key"  : (["backups"], ModeBackupUploadKey),
    "backup_download_key": (["backups"], ModeBackupDownloadKey),
    "backup_restore"     : (["backups"], ModeBackupRestore),
+   "passwords"          : (["passwords"], ModePasswords),
+   "edit_password"      : (["passwords"], ModeEditPassword),
 }
 
 builtin_host_attribute_names = []
@@ -16434,6 +16678,11 @@ def load_plugins(force):
          _("Add & remove folders"),
          _("Add new folders and delete existing folders. If a folder to be deleted contains hosts then "
            "the permission to delete hosts is also required."),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.passwords",
+         _("Password management"),
+         _("This permission is needed for the module <i>Passwords</i>."),
          [ "admin", "user" ])
 
     config.declare_permission("wato.see_all_folders",

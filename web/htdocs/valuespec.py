@@ -3357,12 +3357,15 @@ class Password(TextAscii):
         else:
             return '******'
 
+
+
 class PasswordSpec(TextAscii):
     def __init__(self, **kwargs):
         self._hidden = kwargs.get('hidden', False)
         if self._hidden:
             kwargs["type"] = "password"
         TextAscii.__init__(self, **kwargs)
+
 
     def render_input(self, varprefix, value):
         TextAscii.render_input(self, varprefix, value, hidden=self._hidden)
@@ -3375,96 +3378,35 @@ class PasswordSpec(TextAscii):
 
 
 
-class PasswordFromStore(Alternative):
-    def __init__(self, **kwargs):
-        kwargs["elements"] = [
-            Password(
-                title = _("Immediate"),
+class PasswordFromStore(CascadingDropdown):
+    def __init__(self, *args, **kwargs):
+        kwargs["choices"] = [
+            ("password", _("Password"), Password(
                 allow_empty = kwargs.get("allow_empty", True),
-            )
+            )),
+            ("store", _("Stored password"), DropdownChoice(
+                choices = self._password_choices,
+                sorted = True,
+                invalid_choice = "complain",
+            )),
         ]
+        kwargs["orientation"] = "horizontal"
 
-        self.__passwords = self.__stored_passwords()
-        if self.__passwords:
-            kwargs["elements"].append(
-                DropdownChoice(
-                    title = _("From store"),
-                    choices = self.__password_choices,
-                    sorted = True,
-                    invalid_choice = "complain",
-                )
-            )
-
-        Alternative.__init__(self, **kwargs)
+        CascadingDropdown.__init__(self, *args, **kwargs)
 
 
-    def __password_choices(self):
-        return [ (pw['key'], pw['key']) for pw in self.__passwords ]
+    def _password_choices(self):
+        import wato
+        return [ (ident, pw["title"]) for ident, pw
+                 in wato.PasswordStore().usable_passwords().items() ]
 
 
-    def __stored_passwords(self):
-        return [] # TODO
 
-
-    def matching_alternative(self, value):
-        if value.startswith("store:") and len(self._elements) > 1:
-            return self._elements[1], value.split(':', 1)[1]
-        elif value.startswith("imm:"):
-            return self._elements[0], value.split(':', 1)[1]
-        else:
-            return self._elements[0], value
-
-
-    def value_to_text(self, value):
-        mvs, value = self.matching_alternative(value)
-        return mvs.value_to_text(value)
-
-
-    def validate_datatype(self, value, varprefix):
-        mvs, value = self.matching_alternative(value)
-        mvs.validate_datatype(value, varprefix)
-
-
-    def __get_password_by_key(self, value, varprefix):
-        for pw in self.__passwords:
-            if pw['key'] == value:
-                return pw
-        raise MKUserError(varprefix, _("Unknown password key: %s") % value)
-
-
-    def __may_use_password(self, key, varprefix):
-        import config, userdb
-        pw = self.__get_password_by_key(key, varprefix)
-
-        if pw["owner"] == "user:" + config.user_id:
-            return # the users password
-
-        for group in userdb.contactgroups_of_user(config.user_id):
-            if "group:" + group in pw['shared']:
-                return group # is shared with a users group
-
-        raise MKUserError(varprefix, _("You don't have permission to use the password with "
-            "the key \"%s\", shared by user %s.") % (key, pw["owner"][5:]))
-
-
-    def validate_value(self, value, varprefix):
-        mvs, value = self.matching_alternative(value)
-
-        if value.startswith("store:"):
-            # couldn't check user permission before, but now I can
-            self.__may_use_password(value, varprefix)
-
-        mvs.validate_value(value, varprefix)
-
-
-    def from_html_vars(self, varprefix):
-        nr = int(html.var(varprefix + "_use"))
-        if nr == 0:
-            return "imm:" + Alternative.from_html_vars(self, varprefix)
-        else:
-            key = Alternative.from_html_vars(self, varprefix)
-            return ":".join(["store", key])
-
+def IndividualOrStoredPassword(*args, **kwargs):
+    return Transform(
+        PasswordFromStore(*args, **kwargs),
+        forth = lambda v: ("password", v) if type(v) != tuple else v,
+    )
 
 
 class FileUpload(ValueSpec):

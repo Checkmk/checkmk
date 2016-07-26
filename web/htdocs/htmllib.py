@@ -258,12 +258,6 @@ class html(GUITester):
         self.flush()
         self.plugged = False
 
-    def heading(self, text):
-        self.write("<h2>%s</h2>\n" % text)
-
-    def rule(self):
-        self.write("<hr/>")
-
     def age_text(self, timedif):
         timedif = int(timedif)
         if timedif < 120:
@@ -345,22 +339,6 @@ class html(GUITester):
             self.write('<br>'.join(self.user_errors.values()))
             self.write('</div>\n')
 
-
-    def hidden_field(self, *args, **kwargs):
-        self.write(self.render_hidden_field(*args, **kwargs))
-
-
-    def render_hidden_field(self, var, value, id=None, add_var=False):
-        if value == None:
-            return ""
-
-        if add_var:
-            self.add_form_var(var)
-
-        id = id and ' id="%s"' % self.attrencode(id) or ''
-        return "<input type=\"hidden\" name=\"%s\" value=\"%s\"%s />" % \
-                            (self.attrencode(var), self.attrencode(value), id)
-
     # Beware: call this method just before end_form(). It will
     # add all current non-underscored HTML variables as hiddedn
     # field to the form - *if* they are not used in any input
@@ -411,6 +389,43 @@ class html(GUITester):
     def makeactionuri_contextless(self, addvars, filename=None):
         return self.makeuri_contextless(addvars + [("_transid", self.get_transid())], filename=filename)
 
+
+    #
+    # Generic HTML rendering and writing functions
+    #
+
+    def heading(self, text):
+        self.write("<h2>%s</h2>\n" % text)
+
+
+    def rule(self):
+        self.write("<hr/>")
+
+
+    def p(self, content):
+        self.write("<p>%s</p>" % self.attrencode(content))
+
+
+    #
+    # HTML form rendering
+    #
+
+
+    def hidden_field(self, *args, **kwargs):
+        self.write(self.render_hidden_field(*args, **kwargs))
+
+
+    def render_hidden_field(self, var, value, id=None, add_var=False):
+        if value == None:
+            return ""
+
+        if add_var:
+            self.add_form_var(var)
+
+        id = id and ' id="%s"' % self.attrencode(id) or ''
+        return "<input type=\"hidden\" name=\"%s\" value=\"%s\"%s />" % \
+                            (self.attrencode(var), self.attrencode(value), id)
+
     def image_button(self, varname, title, cssclass = '', style=None):
         if not self.mobile:
             self.write('<label for="%s" class="image_button"%s>' %
@@ -418,6 +433,7 @@ class html(GUITester):
         self.raw_button(varname, title, cssclass)
         if not self.mobile:
             self.write('</label>')
+
 
     def button(self, *args, **kwargs):
         self.image_button(*args, **kwargs)

@@ -3848,6 +3848,8 @@ check_metrics["check_mk-mem.linux"] = {
     "inactive"         : { "name" : "mem_lnx_inactive",        "auto_graph" : False },
     "total_used"       : { "name" : "mem_lnx_total_used",      "auto_graph" : False },
     "unevictable"      : { "name" : "mem_lnx_unevictable",     "auto_graph" : False },
+    "cma_free"         : { "auto_graph" : False },
+    "cma_total"        : { "auto_graph" : False },
 }
 
 check_metrics["check_mk-mem.vmalloc"] = {

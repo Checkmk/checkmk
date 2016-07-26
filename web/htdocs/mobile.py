@@ -63,6 +63,12 @@ def mobile_html_head(title, ready_code=""):
     if metrics.cmk_graphs_possible():
         html.write(" <script type='text/javascript' src='js/graphs.js'></script>\n")
 
+    # Never allow the mobile page to be opened in a frameset. Redirect top page to the current content page.
+    # This will result in a full screen mobile interface page.
+    html.javascript('''if(top != self) {
+    window.top.location.href = location;
+}''')
+
     html.write("""<script type='text/javascript'>
       $(document).ready(function() { %s });
       $(document).ready(function() {

@@ -1,0 +1,10 @@
+Title: Mobile GUI: Prevent it from being opened with regular sidebar
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1469514403
+
+

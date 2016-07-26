@@ -523,6 +523,11 @@ def frexp10(x):
 
 
 def render_scientific(v, precision=3):
+    if v == 0:
+        return "0"
+    elif v < 0:
+        return "-" + render_scientific(v, precision)
+
     mantissa, exponent = frexp10(float(v))
     # Render small numbers without exponent
     if exponent >= -3 and exponent <= 4:

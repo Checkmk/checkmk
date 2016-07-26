@@ -607,22 +607,6 @@ def load_users(lock = False):
             if user_id in result:
                 result[user_id]['serial'] = saveint(serial)
 
-    backend = CryptoBackend(g_keys_dir, NonePasswordProvider())
-
-    with PasswordStore(g_passwords_file, backend) as store:
-        passwords = store.list(with_details=True)
-        for pw in passwords:
-            user_id = pw['owner']
-            if user_id.startswith("user:"):
-                user_id = user_id[5:]
-            if user_id in result:
-                result[user_id].setdefault('passwords', []).append({
-                    'key'           : pw['key'],
-                    'contactgroups' : [shared[6:] for shared in pw['shared']
-                                       if shared.startswith("group")],
-                    'secret'        : ""
-                })
-
     # Now read the user specific files
     dir = defaults.var_dir + "/web/"
     for d in os.listdir(dir):
@@ -714,7 +698,6 @@ def save_users(profiles):
     non_contact_keys = [
         "roles",
         "password",
-        "passwords",
         "locked",
         "automation_secret",
         "language",
@@ -862,7 +845,7 @@ def save_cached_profile(user_id, user, multisite_keys, non_contact_keys):
     # infos that are stored in the custom attribute files.
     cache = {}
     for key in user.keys():
-        if (key in multisite_keys or key not in non_contact_keys) and key != 'passwords':
+        if key in multisite_keys or key not in non_contact_keys:
             cache[key] = user[key]
 
     config.save_user_file("cached_profile", cache, user=user_id)

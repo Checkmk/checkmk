@@ -10948,9 +10948,6 @@ def mode_edit_user(phase):
     select_language(user)
     custom_user_attributes('personal')
 
-    forms.header(_("Password Store"), isopen = False)
-    custom_user_attributes("password_store")
-
     # Later we could add custom macros here, which then could be used
     # for notifications. On the other hand, if we implement some check_mk
     # --notify, we could directly access the data in the account with the need

@@ -1373,6 +1373,19 @@ def state_path():
     return "%s/%s.state" % (path, name)
 
 
+def cleanup_backup_job_states():
+    if is_root():
+        path = "/var/lib/mkbackup"
+    else:
+        path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
+
+    for f in glob.glob("%s/*.state" % path):
+        if "/restore.state" in f or "/restore-" in f:
+            continue
+
+        os.unlink(f)
+
+
 def add_output(s):
     state = load_state()
     state["output"] += s
@@ -1740,6 +1753,7 @@ def read_from_tarfile_threaded(s, pipeout_fd):
 
 
 def complete_restore():
+    cleanup_backup_job_states()
     state = load_state()
     duration = time.time() - state["started"]
     log("--- Restore completed (Duration: %s, IO: %s/s) ---" %

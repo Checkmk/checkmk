@@ -30,7 +30,11 @@ manager."""
 
 import fcntl
 import os
+import pprint
 import tempfile
+import time
+
+from .exceptions import MKGeneralException
 
 # TODO: Please note that this is still experimental.
 
@@ -120,3 +124,149 @@ class LockedOpenWithTempfile(LockedOpen):
 
 
 open = LockedOpenWithTempfile
+
+
+#.
+#   .--.mk Configs---------------------------------------------------------.
+#   |                     _       ____             __ _                    |
+#   |           _ __ ___ | | __  / ___|___  _ __  / _(_) __ _ ___          |
+#   |          | '_ ` _ \| |/ / | |   / _ \| '_ \| |_| |/ _` / __|         |
+#   |         _| | | | | |   <  | |__| (_) | | | |  _| | (_| \__ \         |
+#   |        (_)_| |_| |_|_|\_\  \____\___/|_| |_|_| |_|\__, |___/         |
+#   |                                                   |___/              |
+#   +----------------------------------------------------------------------+
+#   | Loading and saving of .mk configuration files                        |
+#   '----------------------------------------------------------------------'
+
+# This function generalizes reading from a .mk configuration file. It is basically meant to
+# generalize the exception handling for all file IO.
+def load_mk_file(path, default=None, lock=False):
+    if default == None:
+        raise MKGeneralException(_("You need to provide a config dictionary to merge with the "
+                                   "read configuration. The dictionary should have all expected "
+                                   "keys and their default values set."))
+
+    if lock:
+        aquire_lock(path)
+
+    try:
+        execfile(path, globals(), default)
+        return default
+    except IOError, e:
+        if e.errno == 2: # IOError: [Errno 2] No such file or directory
+            return default
+        else:
+            raise
+
+    except Exception, e:
+        # TODO: How to handle debug mode or logging?
+        raise MKGeneralException(_("Cannot read configuration file \"%s\": %s") % (path, e))
+
+
+# A simple wrapper for cases where you only have to read a single value from a .mk file.
+def load_from_mk_file(path, key, default, **kwargs):
+    return load_mk_file(path, {key: default}, **kwargs)[key]
+
+
+# Saving assumes a locked destination file (usually done by loading code)
+# Then the new file is written to a temporary file and moved to the target path
+def save_mk_file(path, formated):
+    try:
+        tmp_path = None
+        with tempfile.NamedTemporaryFile("w", dir=os.path.dirname(path),
+                                         prefix=os.path.basename(path)+".new",
+                                         delete=False) as tmp:
+            tmp_path = tmp.name
+
+            os.chmod(tmp_path, 0660)
+            tmp.write("# Written by Check_MK store (%s)\n\n" % time.strftime("%Y-%m-%d %H:%M:%S"))
+            tmp.write(formated)
+            tmp.write("\n")
+
+        os.rename(tmp_path, path)
+
+    except Exception, e:
+        # TODO: How to handle debug mode or logging?
+        raise MKGeneralException(_("Cannot write configuration file \"%s\": %s") % (path, e))
+
+    finally:
+        release_lock(path)
+
+
+# A simple wrapper for cases where you only have to write a single value to a .mk file.
+def save_to_mk_file(path, key, value):
+    if type(value) == dict:
+        formated = "%s.update(%s)" % (key, pprint.pformat(value))
+    else:
+        formated = "%s += %s" % (key, pprint.pformat(value))
+
+    save_mk_file(path, formated)
+
+
+#.
+#   .--File locking--------------------------------------------------------.
+#   |          _____ _ _        _            _    _                        |
+#   |         |  ___(_) | ___  | | ___   ___| | _(_)_ __   __ _            |
+#   |         | |_  | | |/ _ \ | |/ _ \ / __| |/ / | '_ \ / _` |           |
+#   |         |  _| | | |  __/ | | (_) | (__|   <| | | | | (_| |           |
+#   |         |_|   |_|_|\___| |_|\___/ \___|_|\_\_|_| |_|\__, |           |
+#   |                                                     |___/            |
+#   +----------------------------------------------------------------------+
+#   | Helper functions to lock files (between processes) for disk IO       |
+#   | Currently only exclusive locks are implemented and they always will  |
+#   | wait forever.                                                        |
+#   '----------------------------------------------------------------------'
+
+g_aquired_locks = []
+g_locked_paths  = []
+
+def aquire_lock(path):
+    if path in g_locked_paths:
+        return True # No recursive locking
+
+    # Create file (and base dir) for locking if not existant yet
+    if not os.path.exists(os.path.dirname(path)):
+        os.makedirs(os.path.dirname(path), mode=0770)
+
+    fd = os.open(path, os.O_RDONLY | os.O_CREAT, 0660)
+
+    # Handle the case where the file has been renamed in the meantime
+    while True:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        fd_new = os.open(path, os.O_RDONLY | os.O_CREAT, 0660)
+        if os.path.sameopenfile(fd, fd_new):
+            os.close(fd_new)
+            break
+        else:
+            os.close(fd)
+            fd = fd_new
+
+    g_aquired_locks.append((path, fd))
+    g_locked_paths.append(path)
+
+
+def release_lock(path):
+    if path not in g_locked_paths:
+        return # no unlocking needed
+
+    for lock_path, fd in g_aquired_locks:
+        if lock_path == path:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+            os.close(fd)
+            g_aquired_locks.remove((lock_path, fd))
+
+    g_locked_paths.remove(path)
+
+
+def have_lock(path):
+    return path in g_locked_paths
+
+
+def release_all_locks():
+    global g_aquired_locks, g_locked_paths
+
+    for path, fd in g_aquired_locks:
+        os.close(fd)
+
+    g_aquired_locks = []
+    g_locked_paths  = []

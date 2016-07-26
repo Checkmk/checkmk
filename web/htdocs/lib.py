@@ -27,6 +27,7 @@
 import math, grp, pprint, os, errno, marshal, re, fcntl, time
 from cmk.exceptions import MKException, MKGeneralException
 from cmk.regex import regex
+import cmk.store as store
 
 # Workaround when the file is included from outside of Multisite
 try:
@@ -381,53 +382,10 @@ def set_is_disjoint(a, b):
             return False
     return True
 
-# Functions for locking files. All locks must be freed if a request
-# has terminated (in good or in bad manner). Currently only exclusive
-# locks are implemented and they always will wait for ever.
-g_aquired_locks = []
-g_locked_paths = []
-def aquire_lock(path):
-    if path in g_locked_paths:
-        return True # No recursive locking
-
-    # Create file (and base dir) for locking if not existant yet
-    make_nagios_directory(os.path.dirname(path))
-    fd = os.open(path, os.O_RDONLY | os.O_CREAT)
-
-    # Handle the case where the file has been renamed in the meantime
-    while True:
-        fcntl.flock(fd, fcntl.LOCK_EX)
-        fd_new = os.open(path, os.O_RDONLY | os.O_CREAT)
-        if os.path.sameopenfile(fd, fd_new):
-            os.close(fd_new)
-            break
-        else:
-            os.close(fd)
-            fd = fd_new
-
-    g_aquired_locks.append((path, fd))
-    g_locked_paths.append(path)
-
-
-def release_lock(path):
-    if path not in g_locked_paths:
-        return # no unlocking needed
-    for lock_path, fd in g_aquired_locks:
-        if lock_path == path:
-            fcntl.flock(fd, fcntl.LOCK_UN)
-            os.close(fd)
-            g_aquired_locks.remove((lock_path, fd))
-    g_locked_paths.remove(path)
-
-def have_lock(path):
-    return path in g_locked_paths
-
-def release_all_locks():
-    global g_aquired_locks, g_locked_paths
-    for path, fd in g_aquired_locks:
-        os.close(fd)
-    g_aquired_locks = []
-    g_locked_paths = []
+aquire_lock       = store.aquire_lock
+release_lock      = store.release_lock
+have_lock         = store.have_lock
+release_all_locks = store.release_all_locks
 
 # Splits a word into sequences of numbers and non-numbers.
 # Creates a tuple from these where the number are converted

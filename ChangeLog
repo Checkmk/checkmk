@@ -22,6 +22,7 @@
     * 3670 FIX: Fixed empty AV PDF report when exporting it from a quicksearch result view
     * 3622 FIX: Fix labelling of V-Achsis on graphs with very large numbers...
     * 3722 FIX: Mobile GUI: Prevent it from being opened with regular sidebar
+    * 3723 FIX: Mobile GUI: Don't mix classic and mobile GUI when choosing classic on mobile device
 
     WATO:
     * 3152 FIX: lvm_vgs: fixed exception in host-specific settings if rule for LVM groups is set

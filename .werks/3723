@@ -1,0 +1,9 @@
+Title: Mobile GUI: Don't mix classic and mobile GUI when choosing classic on mobile device
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p6
+Date: 1469514754
+Class: fix
+
+

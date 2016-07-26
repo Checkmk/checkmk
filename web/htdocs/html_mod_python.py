@@ -137,6 +137,12 @@ class html_mod_python(htmllib.html):
     def init_mobile(self):
         if self.has_var("mobile"):
             self.mobile = bool(self.var("mobile"))
+            # Persist the explicitly set state in a cookie to have it maintained through further requests
+            self.set_cookie("mobile", str(int(self.mobile)))
+
+        elif self.has_cookie("mobile"):
+            self.mobile = self.cookie("mobile", "0") == "1"
+
         else:
             self.mobile = mobile.is_mobile(self.get_user_agent())
 

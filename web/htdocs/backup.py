@@ -733,6 +733,7 @@ class PageEditBackupJob(object):
                 ("title", TextUnicode(
                     title = _("Title"),
                     allow_empty = False,
+                    size = 64,
                 )),
                 ("target", DropdownChoice(
                     title = _("Target"),
@@ -1165,6 +1166,7 @@ class PageEditBackupTarget(object):
                 ("title", TextUnicode(
                     title = _("Title"),
                     allow_empty = False,
+                    size = 64,
                 )),
                 ("remote", CascadingDropdown(
                     title = _("Destination"),
@@ -1301,9 +1303,11 @@ class BackupTargetLocal(BackupTargetType):
                              "network share on your own."),
                     allow_empty = False,
                     validate = cls.validate_local_directory,
+                    size = 64,
                 )),
                 ("is_mountpoint", Checkbox(
-                    title = _("Is mountpoint"),
+                    title = _("Mountpoint"),
+                    label = _("Is mountpoint"),
                     help = _("When this is checked, the backup ensures that the configured path "
                              "is a mountpoint. If there is no active mount on the path, the backup "
                              "fails with an error message."),

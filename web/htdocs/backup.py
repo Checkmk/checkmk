@@ -48,6 +48,7 @@ import key_mgmt
 from valuespec import *
 from lib import write_settings_file, MKUserError
 import cmk.render as render
+from cmk.schedule import next_scheduled_time
 
 #.
 #   .--Config--------------------------------------------------------------.
@@ -493,7 +494,7 @@ class Jobs(BackupEntityCollection):
                 # find the next time of all configured times
                 times = []
                 for timespec in schedule["timeofday"]:
-                    times.append(render.next_scheduled_time(schedule["period"], timespec))
+                    times.append(next_scheduled_time(schedule["period"], timespec))
 
                 html.write(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
 

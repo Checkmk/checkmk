@@ -33,7 +33,6 @@
 
 import math, os, time, re, sre_constants, urlparse, forms, tempfile
 from lib import *
-from cmk.render import next_scheduled_time, last_scheduled_time
 
 def type_name(v):
     try:

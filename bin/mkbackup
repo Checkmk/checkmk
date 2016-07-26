@@ -63,6 +63,7 @@ except ImportError:
 
 import cmk.daemon as daemon
 import cmk.render as render
+import cmk.schedule as schedule
 import cmk.store as store
 from cmk.exceptions import MKTerminate, MKGeneralException
 
@@ -1309,18 +1310,18 @@ def init_new_run():
 
 
 def save_next_run():
-    schedule = g_job_config["schedule"]
-    if not schedule:
+    schedule_cfg = g_job_config["schedule"]
+    if not schedule_cfg:
         next_schedule = None
 
-    elif schedule["disabled"]:
+    elif schedule_cfg["disabled"]:
         next_schedule = "disabled"
 
     else:
         # find the next time of all configured times
         times = []
-        for timespec in schedule["timeofday"]:
-            times.append(render.next_scheduled_time(schedule["period"], timespec))
+        for timespec in schedule_cfg["timeofday"]:
+            times.append(schedule.next_scheduled_time(schedule_cfg["period"], timespec))
         next_schedule = min(times)
 
     save_state({"next_schedule": next_schedule})

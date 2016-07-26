@@ -1742,7 +1742,7 @@ def read_from_tarfile_threaded(s, pipeout_fd):
 def complete_restore():
     state = load_state()
     duration = time.time() - state["started"]
-    log("--- Restore completed (Duration: %s, IO: %s) ---" %
+    log("--- Restore completed (Duration: %s, IO: %s/s) ---" %
         (render.timespan(duration), render.bytes(state["bytes_per_second"])))
 
 

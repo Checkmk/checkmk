@@ -95,7 +95,7 @@ def check_http_arguments(params):
 
     if "auth" in settings:
         username, password = settings["auth"]
-        args += passwordstore.get_cmdline(" -a %s:%%s" % quote_shell_string(username), password)
+        args += passwordstore_get_cmdline(" -a %s:%%s" % quote_shell_string(username), password)
 
     if "proxy_auth" in settings:
         auth = settings["proxy_auth"]

@@ -3403,13 +3403,7 @@ class PasswordFromStore(Alternative):
 
 
     def __stored_passwords(self):
-        from cmk.passwordstore import CryptoBackend, PasswordStore, NonePasswordProvider
-        backend = CryptoBackend(defaults.var_dir + "/private_keys", NonePasswordProvider())
-
-        # TODO: we can't limit the view to only the passwords accessible by the user because at
-        # this point the user_id has not been set yet
-        with PasswordStore(defaults.var_dir + "/passwords.json", backend) as store:
-            return store.list(with_details=True)
+        return [] # TODO
 
 
     def matching_alternative(self, value):

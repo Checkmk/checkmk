@@ -57,7 +57,6 @@ from cmk.exceptions import MKGeneralException, MKTerminate
 from cmk.regex import regex
 import cmk.tty as tty
 import cmk.render as render
-import cmk.passwordstore as passwordstore
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -2110,6 +2109,10 @@ def ensure_directory(path):
 def utc_mktime(time_struct):
     import calendar
     return calendar.timegm(time_struct)
+
+
+def passwordstore_get_cmdline(fmt, pw):
+    return fmt % quote_shell_string(pw)
 
 #.
 #   .--Check helpers-------------------------------------------------------.

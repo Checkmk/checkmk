@@ -42,7 +42,7 @@ def check_mail_arguments(params):
         args += ' --port=%d' % fetch_port
 
     args += ' --username=%s' % quote_shell_string(fetch_params['auth'][0])
-    args += passwordstore.get_cmdline(" --password=%s", fetch_params['auth'][1])
+    args += passwordstore_get_cmdline(" --password=%s", fetch_params['auth'][1])
 
     if 'connect_timeout' in params:
         args += ' --connect-timeout=%d' % params['connect_timeout']

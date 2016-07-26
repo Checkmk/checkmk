@@ -38,7 +38,7 @@ def check_sql_arguments(params):
     args += " --dbms %s" % quote_shell_string(params["dbms"])
     args += " --name %s" % quote_shell_string(params["name"])
     args += " --user %s" % quote_shell_string(params["user"])
-    args += passwordstore.get_cmdline(" --password=%s", params["password"])
+    args += passwordstore_get_cmdline(" --password=%s", params["password"])
 
     if "port" in params:
         args += " --port %s" % params["port"]

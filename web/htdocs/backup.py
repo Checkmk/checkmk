@@ -252,8 +252,12 @@ class MKBackupJob(object):
         return state
 
 
+    def was_started(self):
+        return os.path.exists(self.state_file_path())
+
+
     def is_running(self):
-        if not os.path.exists(self.state_file_path()):
+        if not self.was_started():
             return False
 
         state = self.state()
@@ -928,8 +932,6 @@ class Target(BackupEntity):
 
 
     def show_backup_list(self, only_type):
-        html.write("<h2>%s</h2>" % html.attrencode(_("Backups of target: %s") % self.title()))
-
         table.begin(sortable=False, searchable=False)
 
         for backup_ident, info in sorted(self.backups().items()):
@@ -944,18 +946,11 @@ class Target(BackupEntity):
                              ("_backup", backup_ident)])
             html.icon_button(delete_url, _("Delete this backup"), "delete")
 
-            if not RestoreJob(self.ident(), backup_ident).is_running():
-                start_url = html.makeactionuri(
-                            [("_action", "start"), ("_backup", backup_ident)])
+            start_url = html.makeactionuri(
+                        [("_action", "start"), ("_backup", backup_ident)])
 
-                html.icon_button(start_url, _("Start restore of this backup"),
-                                 "backup_restore_start")
-            else:
-                stop_url = html.makeactionuri(
-                            [("_action", "stop"), ("_backup", backup_ident)])
-
-                html.icon_button(stop_url, _("Stop restore of this backup"),
-                                 "backup_restore_stop")
+            html.icon_button(start_url, _("Start restore of this backup"),
+                             "backup_restore_start")
 
             from_info = info["hostname"]
             if "site_id" in info:
@@ -1018,8 +1013,12 @@ class Targets(BackupEntityCollection):
 
         for target_ident, target in sorted(self.objects.items()):
             table.row()
+            table.cell(_("Actions"), css="buttons")
+            restore_url = html.makeuri_contextless(
+                            [("mode", "backup_restore"), ("target", target_ident)])
+            html.icon_button(restore_url, _("Restore from this backup target"), "backup_restore")
+
             if editable:
-                table.cell(_("Actions"), css="buttons")
                 delete_url = html.makeactionuri_contextless(
                                 [("mode", "backup_targets"), ("target", target_ident)])
                 edit_url = html.makeuri_contextless(
@@ -1041,9 +1040,6 @@ class Targets(BackupEntityCollection):
         target = self.get(value)
         path = target.type_params()["path"]
         target.type().validate_local_directory(path, varprefix)
-
-
-
 
 
 
@@ -1543,6 +1539,11 @@ class RestoreJob(MKBackupJob):
             return "/tmp/restore-%s.state" % os.environ["OMD_SITE"]
 
 
+    def complete(self):
+        if os.path.exists(self.state_file_path()):
+            os.unlink(self.state_file_path())
+
+
     def _start_command(self):
         return [mkbackup_path(), "restore", "--background", self._target_ident, self._backup_ident]
 
@@ -1568,26 +1569,22 @@ class PageBackupRestore(object):
 
 
     def _load_target(self):
-        if not html.form_submitted():
+        ident = html.var("target")
+        if ident == None:
             self._target_ident = None
-            self._target = None
+            self._target       = None
             return
 
-        spec = self._vs_target().from_html_vars("target")
-        self._vs_target().validate_value(spec, "target")
-
-        self._target_ident = spec["target"]
+        self._target_ident = ident
 
         try:
             self._get_target(self._target_ident)
         except KeyError:
-            if self._target_ident != None:
-                raise MKUserError("target_p_target", _("This backup target does not exist."))
+            raise MKUserError("target_p_target", _("This backup target does not exist."))
 
 
     def _get_target(self, target_ident):
-        targets = self.targets()
-        self._target = targets.get(target_ident)
+        raise NotImplementedError()
 
 
     def title(self):
@@ -1600,10 +1597,13 @@ class PageBackupRestore(object):
 
     def buttons(self):
         html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
-        # TODO: Only show when restore state is available
-        html.context_button(_("Restore state"),html.makeuri([
-                                ("mode", "backup_restore_state")]), "backup_restore_state")
+        if self._restore_is_running():
+            html.context_button(_("Stop"), html.makeactionuri([("_action", "stop")]),
+                                "backup_restore_stop")
 
+        elif self._restore_was_started():
+            html.context_button(_("Complete the restore"), html.makeactionuri([("_action", "complete")]),
+                                "backup_restore_complete")
 
     def action(self):
         action = html.var("_action")
@@ -1618,6 +1618,9 @@ class PageBackupRestore(object):
         if action == "delete":
             return self._delete_backup(backup_ident)
 
+        elif action == "complete":
+            return self._complete_restore(backup_ident)
+
         elif action == "start":
             return self._start_restore(backup_ident)
 
@@ -1629,7 +1632,7 @@ class PageBackupRestore(object):
 
 
     def _delete_backup(self, backup_ident):
-        if self._restore_is_running(backup_ident):
+        if self._restore_is_running():
             raise MKUserError(None, _("A restore is currently running. You can only delete "
                                       "backups while no restore is running."))
 
@@ -1643,8 +1646,12 @@ class PageBackupRestore(object):
             return None, _("The backup has been deleted.")
 
 
-    def _restore_is_running(self, backup_ident):
-        return RestoreJob(self._target_ident, backup_ident).is_running()
+    def _restore_was_started(self):
+        return RestoreJob(self._target_ident, None).was_started()
+
+
+    def _restore_is_running(self):
+        return RestoreJob(self._target_ident, None).is_running()
 
 
     def _start_restore(self, backup_ident):
@@ -1655,6 +1662,10 @@ class PageBackupRestore(object):
             return self._start_unencrypted_restore(backup_ident)
 
 
+    def _complete_restore(self, backup_ident):
+        RestoreJob(self._target_ident, None).complete()
+
+
     def _start_encrypted_restore(self, backup_ident, backup_info):
         key_digest = backup_info["config"]["encrypt"]
 
@@ -1662,7 +1673,7 @@ class PageBackupRestore(object):
             key_id, key = self.keys().get_key_by_digest(key_digest)
         except KeyError:
             raise MKUserError(None, _("The key with the fingerprint %s which is needed to decrypt "
-                                      "the backup is misssing."))
+                                      "the backup is misssing.") % key_digest)
 
 
         if html.form_submitted("key"):
@@ -1677,7 +1688,7 @@ class PageBackupRestore(object):
 
                     html.check_transaction() # invalidate transid
                     RestoreJob(self._target_ident, backup_ident).start(passphrase)
-                    return "backup_restore_state", _("The restore has been started.")
+                    return None, _("The restore has been started.")
             except MKUserError, e:
                 html.add_user_error(e.varname, e)
 
@@ -1718,72 +1729,55 @@ class PageBackupRestore(object):
 
 
     def _start_unencrypted_restore(self, backup_ident):
-        if html.confirm(_("Do you really want to start the restore of this backup?"),
-                        add_header=self.title(), method="GET"):
+        confirm = html.confirm(_("Do you really want to start the restore of this backup?"),
+                        add_header=self.title(), method="GET")
+        if confirm == False:
+            return False
+
+        elif confirm:
             html.check_transaction() # invalidate transid
             RestoreJob(self._target_ident, backup_ident).start()
-            return "backup_restore_state", _("The restore has been started.")
+            return None, _("The restore has been started.")
 
 
     def _stop_restore(self, backup_ident):
-        if html.confirm(_("Do you really want to stopt the restore of this backup? This will "
+        confirm = html.confirm(
+                        _("Do you really want to stop the restore of this backup? This will "
                           "leave your environment in an undefined state."),
-                        add_header=self.title(), method="GET"):
+                        add_header=self.title(), method="GET")
+
+        if confirm == False:
+            return False
+
+        elif confirm:
             html.check_transaction() # invalidate transid
             RestoreJob(self._target_ident, backup_ident).stop()
             return None, _("The restore has been stopped.")
 
 
     def page(self):
-        self._select_target_form()
+        if self._restore_was_started():
+            self._show_restore_progress()
 
-        if self._target:
+        elif self._target:
             self._show_backup_list()
+
+        else:
+            html.p(_("Please choose a target to perform the restore from."))
+            self.targets().show_list()
+            SystemBackupTargetsReadOnly().show_list(editable=False,
+                                                    title=_("System global targets"))
 
 
     def _show_backup_list(self):
         raise NotImplementedError()
 
 
-    def _select_target_form(self):
-        html.begin_form("target", add_transid=False)
-
-        vs = self._vs_target()
-
-        vs.render_input("target", self._target_ident)
-        vs.set_focus("target")
-        forms.end()
-
-        html.button("list", _("List backups"))
-        html.hidden_fields()
-        html.end_form()
-
-
-    def _vs_target(self):
-        return Dictionary(
-            elements = [
-                ("target", DropdownChoice(
-                    title = _("Target"),
-                    choices = self.backup_target_choices,
-                    no_preselect = True,
-                    on_change = "this.form.submit()",
-                )),
-            ],
-            render = "form",
-            optional_keys = [],
-            title = _("Choose backup target to restore from"),
-        )
-
-
-    def backup_target_choices(self):
-        return sorted(self.targets().choices(), key=lambda (x, y): y.title())
+    def _show_restore_progress(self):
+        PageBackupRestoreState().page()
 
 
 
 class PageBackupRestoreState(PageBackupJobState):
     def __init__(self):
         self._job = RestoreJob(None, None) # TODO: target_ident and backup_ident needed?
-
-
-    def buttons(self):
-        html.context_button(_("Back"), html.makeuri([("mode", "backup_restore")]), "back")

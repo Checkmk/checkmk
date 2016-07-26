@@ -5458,7 +5458,10 @@ class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey
 
 class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
     def title(self):
-        return _("Site restore")
+        if not self._target:
+            return _("Site restore")
+        else:
+            return _("Restore from target: %s") % self._target.title()
 
 
     def targets(self):
@@ -5469,37 +5472,15 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
         return SiteBackupKeypairStore()
 
 
-    def backup_target_choices(self):
-        choices = self.targets().choices()
-
-        # Only add system wide defined targets that don't conflict with
-        # the site specific backup targets
-        choice_dict = dict(choices)
-        for key, title in backup.SystemBackupTargetsReadOnly().choices():
-            if key not in choice_dict:
-                choices.append((key, _("%s (system wide)") % title))
-
-        return sorted(choices, key=lambda (x, y): y.title())
-
-
     def _get_target(self, target_ident):
-        targets = self.targets()
         try:
-            super(ModeBackupRestore, self)._get_target(target_ident)
+            self._target = self.targets().get(target_ident)
         except KeyError:
-            targets = backup.SystemBackupTargetsReadOnly()
-            self._target = targets.get(target_ident)
+            self._target = backup.SystemBackupTargetsReadOnly().get(target_ident)
 
 
     def _show_backup_list(self):
         self._target.show_backup_list("Check_MK")
-
-
-
-class ModeBackupRestoreState(backup.PageBackupRestoreState, WatoMode):
-    def targets(self):
-        return SiteBackupTargets()
-
 
 
 #.
@@ -16267,7 +16248,6 @@ modes = {
    "backup_upload_key"  : (["backups"], ModeBackupUploadKey),
    "backup_download_key": (["backups"], ModeBackupDownloadKey),
    "backup_restore"     : (["backups"], ModeBackupRestore),
-   "backup_restore_state" : (["backups"], ModeBackupRestoreState),
 }
 
 builtin_host_attribute_names = []

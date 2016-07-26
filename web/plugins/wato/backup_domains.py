@@ -67,6 +67,7 @@ else:
                             ("file", "final.mk"),
                             ("file", "local.mk"),
                             ("file", "mkeventd.mk"),
+                            ("file", "backup.mk"),
 
                             ("dir", "conf.d"),
                             ("dir", "multisite.d"),
@@ -83,7 +84,8 @@ else:
                             ("file", "etc/htpasswd"),
                             ("file", "etc/auth.secret"),
                             ("file", "etc/auth.serials"),
-                            ("file", "var/check_mk/web/*/serial.mk")
+                            ("file", "var/check_mk/web/*/serial.mk"),
+                            ("file", "var/check_mk/web/*/automation.secret"),
                           ],
           "cleanup"     : False,
           "default"     : True

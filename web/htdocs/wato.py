@@ -4339,13 +4339,6 @@ def mode_changelog(phase):
                 html.context_button(_("Activate Changes!"),
                     html.makeactionuri([("_action", "activate")]),
                                  "apply", True, id="act_changes_button")
-                if get_last_wato_snapshot_file():
-                    html.context_button(_("Discard Changes!"),
-                        html.makeactionuri([("_action", "discard")]),
-                                     "discard", id="discard_changes_button")
-
-        html.context_button(_("Snapshots"), folder_preserving_link([("mode", "snapshot")]),
-                            "snapshot")
 
         if is_distributed():
             html.context_button(_("Site Configuration"), folder_preserving_link([("mode", "sites")]), "sites")
@@ -4385,10 +4378,6 @@ def mode_changelog(phase):
                 title = _("Confirm synchronizing foreign changes")
                 text  = _("There are some changes made by your colleagues that you will "
                           "synchronize if you proceed:")
-            else:
-                title = _("Confirm discarding foreign changes")
-                text  = _("There are some changes made by your colleagues that you will "
-                          "discard if you proceed:")
 
             c = wato_confirm(title,
               HTML('<img class=foreignchanges src="images/icon_foreign_changes.png">' + text + table_html +
@@ -4402,20 +4391,6 @@ def mode_changelog(phase):
         if changes and not config.may("wato.activateforeign"):
             raise MKAuthException(_("Sorry, you are not allowed to activate "
                                     "changes of other users."))
-
-        if action == "discard":
-            # Now remove all currently pending changes by simply restoring the last automatically
-            # taken snapshot. Then activate the configuration. This should revert all pending changes.
-            file_to_restore = get_last_wato_snapshot_file()
-            if not file_to_restore:
-                raise MKUserError(None, _('There is no WATO snapshot to be restored.'))
-            log_pending(LOCALRESTART, None, "changes-discarded",
-                 _("Discarded pending changes (Restored %s)") % html.attrencode(file_to_restore))
-            extract_snapshot(file_to_restore)
-            activate_changes()
-            log_commit_pending()
-            return None, HTML(_("Successfully discarded all pending changes.") \
-                            + html.render_javascript("hide_changes_buttons();"))
 
         # Give hooks chance to do some pre-activation things (and maybe stop
         # the activation)
@@ -4711,12 +4686,6 @@ def ajax_activation():
     except Exception, e:
         html.show_error(str(e))
 
-
-def get_last_wato_snapshot_file():
-    for snapshot_file in get_snapshots():
-        status = get_snapshot_status(snapshot_file)
-        if status['type'] == 'automatic' and not status['broken']:
-            return snapshot_file
 
 
 def clear_audit_log_after_confirm():
@@ -5187,106 +5156,6 @@ def snapshot_secret():
         return s
 
 
-def mode_snapshot_detail(phase):
-    snapshot_name = html.var("_snapshot_name")
-
-    if ".." in snapshot_name or "/" in snapshot_name:
-        raise MKUserError("_snapshot_name", _("Invalid snapshot requested"))
-    if not os.path.exists(snapshot_dir + '/' + snapshot_name):
-        raise MKUserError("_snapshot_name", _("The requested snapshot does not exist"))
-
-    if phase not in ["buttons", "action"]:
-        status = get_snapshot_status(snapshot_name, validate_checksums = True)
-
-    if phase == "title":
-        return _("Snapshot details of %s") % html.attrencode(status["name"])
-    elif phase == "buttons":
-        home_button()
-        html.context_button(_("Back"), folder_preserving_link([("mode", "snapshot")]), "back")
-        return
-    elif phase == "action":
-        return
-
-    other_content = []
-
-    if status.get("broken"):
-        html.add_user_error('broken', _  ('This snapshot is broken!'))
-        html.add_user_error('broken_text', status.get("broken_text"))
-        html.show_user_errors()
-
-    html.begin_form("snapshot_details", method="POST")
-    forms.header(_("Snapshot %s") % html.attrencode(snapshot_name))
-
-    for entry in [ ("comment", _("Comment")), ("created_by", _("Created by")) ]:
-        if status.get(entry[0]):
-            forms.section(entry[1])
-            html.write(html.attrencode(status.get(entry[0])))
-
-    forms.section(_("Content"))
-    files = status["files"]
-    if not files:
-        html.write(_("Snapshot is empty!"))
-    else:
-        html.write("<table>")
-        html.write("<tr><th align='left'>%s</th>"
-                   "<th align='right'>%s</th>"
-                   "<th>%s</th></tr>" % (_("Description"), _("Size"), _("Trusted")))
-
-        domains        = []
-        other_content  = []
-        for filename, values in files.items():
-            if filename in ["comment", "type", "created_by", "checksums"]:
-                continue
-            domain_key = filename[:-7]
-            if domain_key in backup_domains.keys():
-                verify_checksum = backup_domains.get('checksum', True) # is checksum check enabled here?
-                domains.append((backup_domains[domain_key]["title"], verify_checksum, filename, values))
-            else:
-                other_content.append((_("Other"), filename, values))
-        domains.sort()
-
-        for (title, verify_checksum, filename, values) in domains:
-            extra_info = ""
-            if values.get("text"):
-                extra_info = "%s - " % values["text"]
-            html.write("<tr><td>%s%s</td>"  % (extra_info, title))
-            html.write("<td align='right'>%s</td>" % fmt_bytes(values["size"]))
-
-            html.write("<td>")
-            if verify_checksum:
-                if values.get('checksum') == True:
-                    checksum_title = _('Checksum valid and signed')
-                    checksum_icon  = ''
-                elif values.get('checksum') == False:
-                    checksum_title = _('Checksum invalid and not signed')
-                    checksum_icon  = 'p'
-                else:
-                    checksum_title = _('Checksum not available')
-                    checksum_icon  = 'n'
-                html.icon(checksum_title, 'snapshot_%schecksum' % checksum_icon)
-            html.write("</td>")
-
-            html.write("</tr>")
-
-        if other_content:
-            html.write("<tr><td colspan=\"3\"><i>%s</i></td></tr>" % _("Other content"))
-            for (title, filename, values) in other_content:
-                html.write("<tr><td>%s</td>"  % html.attrencode(filename))
-                html.write("<td align='right'>%s</td>" % fmt_bytes(values["size"]))
-                html.write("<td></td>")
-                html.write("</tr>")
-        html.write("</table>")
-
-    forms.end()
-
-    if snapshot_name != "uploaded_snapshot":
-        download_url = make_action_link([("mode", "snapshot"), ("_download_file", snapshot_name)])
-        html.buttonlink(download_url, _("Download Snapshot"))
-
-    if not status.get("progress_status") and not status.get("broken"):
-        restore_url = make_action_link([("mode", "snapshot"), ("_restore_snapshot", snapshot_name)])
-        html.buttonlink(restore_url, _("Restore Snapshot"))
-
 def get_snapshots():
     snapshots = []
     try:
@@ -5297,226 +5166,6 @@ def get_snapshots():
     except OSError:
         pass
     return snapshots
-
-def extract_snapshot(snapshot_file):
-    multitar.extract_from_file(snapshot_dir + snapshot_file, backup_domains)
-
-
-def vs_snapshot():
-    return TextUnicode(title = _("Comment"), size=80)
-
-
-def mode_snapshot(phase):
-    if phase == "title":
-        return _("Config snapshots")
-    elif phase == "buttons":
-        home_button()
-        changelog_button()
-        return
-
-    # Cleanup incompletely processed snapshot upload
-    if os.path.exists(snapshot_dir) and not html.var("_restore_snapshot") \
-       and os.path.exists("%s/uploaded_snapshot" % snapshot_dir):
-        os.remove("%s/uploaded_snapshot" % snapshot_dir)
-
-    snapshots = get_snapshots()
-
-    if phase == "action":
-        if html.has_var("_download_file"):
-            download_file = html.var("_download_file")
-
-            # Find the latest snapshot file
-            if download_file == 'latest':
-                if not snapshots:
-                    return False
-                download_file = snapshots[-1]
-            elif download_file not in snapshots:
-                raise MKUserError(None, _("Invalid download file specified."))
-
-            download_path = os.path.join(snapshot_dir, download_file)
-            if os.path.exists(download_path):
-                html.req.headers_out['Content-Disposition'] = 'Attachment; filename=' + download_file
-                html.req.headers_out['content_type'] = 'application/x-tar'
-                html.write(open(download_path).read())
-                return False
-
-        # create snapshot
-        elif html.has_var("_create_snapshot"):
-            if html.check_transaction():
-                comment = vs_snapshot().from_html_vars("snapshot_options")
-                vs_snapshot().validate_value(comment, "snapshot_options")
-
-                name = create_snapshot("manual", comment=comment or None)
-
-                return None, _("Created snapshot <tt>%s</tt>.") % name
-
-        # upload snapshot
-        elif html.uploads.get("_upload_file"):
-            uploaded_file = html.uploaded_file("_upload_file")
-            filename      = uploaded_file[0]
-
-            if ".." in filename or "/" in filename:
-                raise MKUserError("_upload_file", _("Invalid filename"))
-            filename = os.path.basename(filename)
-
-            if uploaded_file[0] == "":
-                raise MKUserError(None, _("Please select a file for upload."))
-
-            if html.check_transaction():
-                file_stream = cStringIO.StringIO(uploaded_file[2])
-                status = get_snapshot_status((filename, file_stream), validate_checksums = True)
-
-                if status.get("broken"):
-                    raise MKUserError("_upload_file", _("This is not a Check_MK snapshot!<br>%s") % \
-                                                                            status.get("broken_text"))
-                elif not status.get("checksums") and not config.wato_upload_insecure_snapshots:
-                    if status["type"] == "legacy":
-                        raise MKUserError("_upload_file", _('The integrity of this snapshot could not be verified. '
-                                          'You are restoring a legacy snapshot which can not be verified. The snapshot contains '
-                                          'files which contain code that will be executed during runtime of the monitoring. '
-                                          'The upload of insecure snapshots is currently disabled in WATO. If you want to allow '
-                                          'the upload of insecure snapshots you can activate it in the Global Settings under '
-                                          '<i>Configuration GUI (WATO) -> Allow upload of insecure WATO snapshots</i>'))
-                    else:
-                       raise MKUserError("_upload_file", _('The integrity of this snapshot could not be verified.<br><br>'
-                                          'If you restore a snapshot on the same site as where it was created, the checksum should '
-                                          'always be OK. If not, it is likely that something has been modified in the snapshot.<br>'
-                                          'When you restore the snapshot on a different site, the checksum check will always fail. '
-                                          'The snapshot contains files which contain code that will be executed during runtime '
-                                          'of the monitoring.<br><br>'
-                                          'The upload of insecure snapshots is currently disabled in WATO. If you want to allow '
-                                          'the upload of insecure snapshots you can activate it in the Global Settings under<br>'
-                                          '<tt>Configuration GUI (WATO) -> Allow upload of insecure WATO snapshots</tt>'))
-                else:
-                    file(snapshot_dir + filename, "w").write(uploaded_file[2])
-                    html.set_var("_snapshot_name", filename)
-                    return "snapshot_detail"
-
-        # delete file
-        elif html.has_var("_delete_file"):
-            delete_file = html.var("_delete_file")
-
-            if delete_file not in snapshots:
-                raise MKUserError(None, _("Invalid file specified."))
-
-            c = wato_confirm(_("Confirm deletion of snapshot"),
-                             _("Are you sure you want to delete the snapshot <br><br>%s?") %
-                                html.attrencode(delete_file)
-                            )
-            if c:
-                os.remove(os.path.join(snapshot_dir, delete_file))
-                # Remove any files in workdir
-                for ext in [ ".pid", ".status", ".subtar", ".work" ]:
-                    tmp_name = "%s/workdir/%s%s" % (snapshot_dir, os.path.basename(delete_file), ext)
-                    if os.path.exists(tmp_name):
-                        os.remove(tmp_name)
-                return None, _("Snapshot deleted.")
-            elif c == False: # not yet confirmed
-                return ""
-
-        # restore snapshot
-        elif html.has_var("_restore_snapshot"):
-            snapshot_file = html.var("_restore_snapshot")
-
-            if snapshot_file not in snapshots:
-                raise MKUserError(None, _("Invalid file specified."))
-
-            status = get_snapshot_status(snapshot_file, validate_checksums = True)
-
-            if status['checksums'] == True:
-                q = _("Are you sure you want to restore the snapshot %s?") % \
-                                                html.attrencode(snapshot_file)
-
-            elif status["type"] == "legacy" and status['checksums'] == None:
-                q = _('The integrity of this snapshot could not be verified.<br><br>'
-                      'You are restoring a legacy snapshot which can not be verified. The snapshot contains '
-                      'files which contain code that will be executed during runtime of the monitoring. Please '
-                      'ensure that the snapshot is a legit, not manipulated file.<br><br>'
-                      'Do you want to continue restoring the snapshot?')
-
-            else:
-                q = _('The integrity of this snapshot could not be verified.<br><br>'
-                      'If you restore a snapshot on the same site as where it was created, the checksum should '
-                      'always be OK. If not, it is likely that something has been modified in the snapshot.<br>'
-                      'When you restore the snapshot on a different site, the checksum check will always fail.<br><br>'
-                      'The snapshot contains files which contain code that will be executed during runtime '
-                      'of the monitoring. Please ensure that the snapshot is a legit, not manipulated file.<br><br>'
-                      'Do you want to <i>ignore</i> the failed integrity check and restore the snapshot?')
-
-            c = wato_confirm(_("Confirm restore snapshot"), q)
-            if c:
-                if status["type"] == "legacy":
-                    multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
-                else:
-                    extract_snapshot(snapshot_file)
-                log_pending(SYNCRESTART, None, "snapshot-restored",
-                     _("Restored snapshot %s") % html.attrencode(snapshot_file))
-                return None, _("Successfully restored snapshot.")
-            elif c == False: # not yet confirmed
-                return ""
-
-        return None
-
-    else:
-        snapshots = get_snapshots()
-
-        manual_snapshot_form()
-
-        table.begin("snapshots", _("Snapshots"), empty_text=_("There are no snapshots available."))
-        for name in snapshots:
-            if name == "uploaded_snapshot":
-                continue
-            status = get_snapshot_status(name)
-            table.row()
-
-            table.cell(_("Actions"), css="buttons")
-
-            snapshot_url = html.makeuri_contextless([("mode", "snapshot_detail"), ("_snapshot_name", name)])
-            html.icon_button(snapshot_url, _("Details and actions of this snapshot"), "edit")
-
-            delete_url = make_action_link([("mode", "snapshot"), ("_delete_file", name)])
-            html.icon_button(delete_url, _("Delete this LDAP connection"), "delete")
-
-            # Date
-            table.cell(_("From"), status["name"])
-
-            # Comment
-            table.cell(_("Comment"), html.attrencode(status.get("comment", "")))
-
-            # Age and Size
-            st = os.stat(snapshot_dir + name)
-            age = time.time() - st.st_mtime
-            table.cell(_("Size"), fmt_bytes(st.st_size), css="number"),
-
-            # Status icons
-            table.cell(_("Status"))
-            if status.get("broken"):
-                html.icon(status.get("broken_text",_("This snapshot is broken")), "validation_error")
-            elif status.get("progress_status"):
-                html.icon( status.get("progress_status"), "timeperiods")
-        table.end()
-
-
-def manual_snapshot_form():
-    html.begin_form("create_snapshot", method="POST")
-    forms.header(_("Manually create snapshot"))
-    forms.section(_("Comment"))
-    forms.input(vs_snapshot(), "snapshot_options", "")
-    html.write("<br><br>")
-    html.hidden_fields()
-    forms.end()
-    html.button("_create_snapshot", _("Create snapshot"), "submit")
-    html.end_form()
-    html.write("<br>")
-
-    html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
-    html.write(_("Only supports snapshots up to 100MB. If your snapshot is larger than 100MB please copy it into the sites "
-               "backup directory <tt>%s/wato/snapshots</tt>. It will then show up in the snapshots table.") % defaults.var_dir)
-    html.begin_form("upload_form", method = "POST")
-    html.upload_file("_upload_file")
-    html.button("upload_button", _("Restore from file"), "submit")
-    html.hidden_fields()
-    html.end_form()
 
 
 def get_default_backup_domains():
@@ -16565,9 +16214,7 @@ modes = {
    "random_hosts"       : (["hosts", "random_hosts"], mode_random_hosts),
    "changelog"          : ([], mode_changelog),
    "auditlog"           : (["auditlog"], mode_auditlog),
-   "snapshot"           : (["snapshots"], mode_snapshot),
    "globalvars"         : (["global"], mode_globalvars),
-   "snapshot_detail"    : (["snapshots"], mode_snapshot_detail),
    "edit_configvar"     : (["global"], mode_edit_configvar),
    "ldap_config"        : (["global"], mode_ldap_config),
    "edit_ldap_connection": (["global"], mode_edit_ldap_connection),

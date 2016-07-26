@@ -203,6 +203,8 @@ def log_entry(linkinfo, action, message, logfilename, user_id = None):
 
 def log_audit(linkinfo, what, message, user_id = None):
     if config.wato_use_git:
+        if isinstance(message, HTML):
+            message = html.strip_tags(message.value)
         g_git_messages.append(message)
     log_entry(linkinfo, what, message, "audit.log", user_id)
 

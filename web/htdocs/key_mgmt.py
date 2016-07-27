@@ -253,6 +253,7 @@ class PageEditKey(object):
                       title = _("Passphrase"),
                       help = self._passphrase_help(),
                       allow_empty = False,
+                      is_stored_plain = False,
                 )),
             ],
             optional_keys = False,
@@ -376,6 +377,7 @@ class PageUploadKey(object):
                       title = _("Passphrase"),
                       help = self._passphrase_help(),
                       allow_empty = False,
+                      is_stored_plain = False,
                 )),
                 ("key_file", CascadingDropdown(
                     title = _("Key"),
@@ -468,6 +470,7 @@ class PageDownloadKey(object):
                   Password(
                       title = _("Passphrase"),
                       allow_empty = False,
+                      is_stored_plain = False,
                 )),
             ],
             optional_keys = False,

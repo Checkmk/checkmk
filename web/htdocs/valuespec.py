@@ -3346,6 +3346,19 @@ class LDAPDistinguishedName(TextUnicode):
 
 class Password(TextAscii):
     def __init__(self, **kwargs):
+        self._is_stored_plain = kwargs.get("is_stored_plain", True)
+
+        if self._is_stored_plain:
+            plain_help = _("The password entered here is stored in plain text within the "
+                           "monitoring site. This usually needed because the monitoring "
+                           "process needs to have access to the unencrypted password "
+                           "because it needs to submit it to authenticate with remote systems. ")
+
+            if "help" in kwargs:
+                kwargs["help"] += "<br><br>" + plain_help
+            else:
+                kwargs["help"] = plain_help
+
         TextAscii.__init__(self, attrencode = True, **kwargs)
 
     def render_input(self, varprefix, value):
@@ -3356,6 +3369,10 @@ class Password(TextAscii):
             html.write(self._label)
             html.write("&nbsp;")
         html.password_input(varprefix, str(value), size = self._size)
+        if self._is_stored_plain:
+            html.write("<span>%s</span>" % _("Please note that this password is stored in plain "
+                                             "text."))
+
 
     def value_to_text(self, value):
         if value == None:
@@ -3365,12 +3382,12 @@ class Password(TextAscii):
 
 
 
-class PasswordSpec(TextAscii):
+class PasswordSpec(Password):
     def __init__(self, **kwargs):
         self._hidden = kwargs.get('hidden', False)
         if self._hidden:
             kwargs["type"] = "password"
-        TextAscii.__init__(self, **kwargs)
+        Password.__init__(self, **kwargs)
 
 
     def render_input(self, varprefix, value):
@@ -3381,6 +3398,9 @@ class PasswordSpec(TextAscii):
         if self._hidden:
             html.icon_button("#", _(u"Show/Hide password"), "showhide",
                              onclick="vs_toggle_hidden(this);")
+        if self._is_stored_plain:
+            html.write("<span>%s</span>" % _("Please note that this password is stored in plain "
+                                             "text."))
 
 
 

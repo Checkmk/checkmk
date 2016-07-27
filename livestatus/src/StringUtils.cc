@@ -57,6 +57,7 @@ string rstrip(const string &str, const string &chars) {
     return pos == string::npos ? "" : str.substr(0, pos + 1);
 }
 
+// cppcheck-suppress unusedFunction
 string strip(const string &str, const string &chars) {
     return rstrip(lstrip(str, chars), chars);
 }

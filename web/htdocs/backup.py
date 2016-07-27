@@ -1090,8 +1090,13 @@ class PageBackupTargets(object):
 
             self._verify_not_used(target)
 
-            if html.confirm(_("Do you really want to delete this target?"),
-                            add_header=self.title()):
+            confirm = html.confirm(_("Do you really want to delete this target?"),
+                                   add_header=self.title())
+
+            if confirm == False:
+                return False
+
+            elif confirm:
                 targets.remove(target)
                 targets.save()
                 return None, _("The target has been deleted.")
@@ -1651,8 +1656,13 @@ class PageBackupRestore(object):
         if backup_ident not in self._target.backups():
             raise MKUserError(None, _("This backup does not exist."))
 
-        if html.confirm(_("Do you really want to delete this backup?"),
-                        add_header=self.title(), method="GET"):
+        confirm = html.confirm(_("Do you really want to delete this backup?"),
+                        add_header=self.title(), method="GET")
+
+        if confirm == False:
+            return False
+
+        elif confirm:
             html.check_transaction() # invalidate transid
             self._target.remove_backup(backup_ident)
             return None, _("The backup has been deleted.")

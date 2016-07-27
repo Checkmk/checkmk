@@ -839,6 +839,11 @@ metric_info["mem_esx_private"] = {
     "unit" : "bytes",
 }
 
+metric_info["pagefile_total"] = {
+    "title" : _("Pagefile installed"),
+    "color": "#e0e0e0",
+    "unit" : "bytes",
+}
 
 metric_info["load1"] = {
     "title" : _("CPU load average of last minute"),
@@ -3779,8 +3784,10 @@ check_metrics["check_mk-aix_memory"] = {
 }
 
 check_metrics["check_mk-mem.win"] = {
-    "memory" : { "name" : "mem_used", "scale" : MB },
-    "pagefile" : { "name" : "pagefile_used", "scale" : MB }
+    "memory"         : { "name" : "mem_used", "scale" : MB },
+    "pagefile"       : { "name" : "pagefile_used", "scale" : MB },
+    "mem_total"      : { "auto_graph" : False },
+    "pagefile_total" : { "auto_graph" : False },
 }
 
 check_metrics["check_mk-brocade_mlx.module_mem"] = {

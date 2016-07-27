@@ -465,6 +465,11 @@ def check_mem_windows(item, params, info):
         else:
             perfdata = [(paramname, used_kb / 1024.0, None, None, 0, total_kb / 1024.0)]
 
+        if what == "Mem":
+            perfdata.append(("mem_total", total_kb / 1024.0))
+        elif what == "Page":
+            perfdata.append(("pagefile_total", total_kb / 1024.0))
+
         # Do averaging, if configured, just for matching the levels
         if "average" in params:
             average_min = params["average"]

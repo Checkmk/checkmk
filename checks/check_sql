@@ -34,21 +34,22 @@
 
 
 def check_sql_arguments(params):
-    args  = " --hostname '$HOSTADDRESS$'"
-    args += " --dbms %s" % quote_shell_string(params["dbms"])
-    args += " --name %s" % quote_shell_string(params["name"])
-    args += " --user %s" % quote_shell_string(params["user"])
-    args += passwordstore_get_cmdline(" --password=%s", params["password"])
+    args = []
+
+    args += [ "--hostname='$HOSTADDRESS$'" ]
+    args += [ "--dbms=%s" % params["dbms"] ]
+    args += [ "--name=%s" % params["name"] ]
+    args += [ "--user=%s" % params["user"] ]
+    args += [ passwordstore_get_cmdline("--password=%s", params["password"]) ]
 
     if "port" in params:
-        args += " --port %s" % params["port"]
+        args += [ "--port=%s" % params["port"] ]
 
     if "procedure" in params:
         if "procedure" in params and "useprocs" in params["procedure"]:
-            args += " --procedure"
+            args += [ "--procedure" ]
             if "input" in params["procedure"]:
-                args += " --inputvars %s" \
-                    % quote_shell_string(params["procedure"]["input"])
+                args += [ "--inputvars=%s" % params["procedure"]["input"] ]
 
     if "levels" in params:
         upper = params["levels"]
@@ -61,15 +62,15 @@ def check_sql_arguments(params):
         lower = "", ""
 
     if "levels" in params or "levels_low" in params:
-        args += " -w %s:%s" % (lower[0], upper[0])
-        args += " -c %s:%s" % (lower[1], upper[1])
+        args += [ "-w", "%s:%s" % (lower[0], upper[0]) ]
+        args += [ "-c", "%s:%s" % (lower[1], upper[1]) ]
 
     if type(params["sql"]) == tuple:
         sql_tmp = params["sql"][-1]
     else:
         sql_tmp = params["sql"]
 
-    args += " %s" % quote_shell_string(sql_tmp.replace("\n", r"\n").replace(";", "\;"))
+    args += [ "%s" % sql_tmp.replace("\n", r"\n").replace(";", "\;") ]
 
     return args
 

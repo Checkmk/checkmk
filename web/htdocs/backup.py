@@ -313,7 +313,7 @@ class Job(MKBackupJob, BackupEntity):
 
 
     def key_ident(self):
-        return self._config.get("encrypt")
+        return self._config["encrypt"]
 
 
     # TODO: Duplicated code with mkbackup (globalize_job_id())
@@ -746,23 +746,33 @@ class PageEditBackupJob(object):
                     invalid_choice = "complain",
                 )),
                 ("schedule", self.vs_backup_schedule()),
-                ("compress", FixedValue(True,
+                ("compress", Checkbox(
                     title = _("Compression"),
                     help = _("Enable gzip compression of the backed up files. The tar archives "
                              "created by the backup are gzipped during backup."),
-                    totext = _("Compress the backed up files"),
+                    label = _("Compress the backed up files"),
                 )),
-                ("encrypt", DropdownChoice(
-                    title = _("Encrypt"),
+                ("encrypt", Alternative(
+                    title = _("Encryption"),
                     help = _("Enable encryption of the backed up files. The tar archives "
                              "created by the backup are encrypted using the specified key "
-                             "during backup. You will need the private key and the passphrase "
-                             "to decrypt the backup."),
-                    choices = self.backup_key_choices,
-                    invalid_choice = "complain",
+                             "during backup. You will need the private key and the "
+                             "passphrase to decrypt the backup."),
+                    style = "dropdown",
+                    elements = [
+                        FixedValue(None,
+                            title = _("Do not encrypt the backup"),
+                            totext = "",
+                        ),
+                        DropdownChoice(
+                            title = _("Encrypt the backup using the key:"),
+                            choices = self.backup_key_choices,
+                            invalid_choice = "complain",
+                        ),
+                    ],
                 )),
             ] + self.custom_job_attributes(),
-        optional_keys = ["compress", "encrypt"],
+        optional_keys = [],
         render = "form",
     )
 
@@ -861,7 +871,7 @@ class PageBackupJobState(object):
 
     def page(self):
         html.write("<div id=\"job_details\">")
-        self._show_job_details()
+        self.show_job_details()
         html.write("</div>")
         html.javascript("refresh_job_details('%s', '%s', %s)" %
              (self._update_url(), self._ident, "true" if is_site() else "false"))
@@ -871,7 +881,7 @@ class PageBackupJobState(object):
         return "ajax_backup_job_state.py?job=%s" % self._ident
 
 
-    def _show_job_details(self):
+    def show_job_details(self):
         job   = self._job
         state = job.state()
 
@@ -975,7 +985,7 @@ class Target(BackupEntity):
             table.cell(_("Finished"), render.date_and_time(info["finished"]))
             table.cell(_("Size"), render.bytes(info["size"]))
             table.cell(_("Encrypted"))
-            if "encrypt" in info["config"]:
+            if info["config"]["encrypt"] != None:
                 html.write(info["config"]["encrypt"])
             else:
                 html.write(_("No"))
@@ -1678,7 +1688,7 @@ class PageBackupRestore(object):
 
     def _start_restore(self, backup_ident):
         backup_info = self._target.get_backup(backup_ident)
-        if "encrypt" in backup_info["config"]:
+        if backup_info["config"]["encrypt"] != None:
             return self._start_encrypted_restore(backup_ident, backup_info)
         else:
             return self._start_unencrypted_restore(backup_ident)
@@ -1808,3 +1818,4 @@ class PageBackupRestore(object):
 class PageBackupRestoreState(PageBackupJobState):
     def __init__(self):
         self._job = RestoreJob(None, None) # TODO: target_ident and backup_ident needed?
+        self._ident = "restore"

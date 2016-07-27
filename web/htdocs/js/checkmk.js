@@ -3184,10 +3184,22 @@ function do_job_detail_refresh(url, ident, is_site)
 
 function handle_job_detail_response(handler_data, response_body)
 {
+    // when a message was shown and now not anymore, assume the job has finished
+    if (document.getElementById("job_detail_msg"))
+        had_message = true;
+    else
+        had_message = false;
+
     var container = document.getElementById("job_details");
     container.innerHTML = response_body;
 
-    refresh_job_details(handler_data["url"], handler_data["ident"], handler_data["is_site"]);
+    if (!had_message) {
+        refresh_job_details(handler_data["url"], handler_data["ident"], handler_data["is_site"]);
+    }
+    else {
+        reload_sidebar();
+        window.location.reload();
+    }   
 }
 
 function handle_job_detail_error(handler_data, status_code, error_msg)

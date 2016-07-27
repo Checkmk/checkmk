@@ -615,7 +615,7 @@ def do_site_backup(opts, site=None, try_stop=True):
 
     with open(backup_path, "w") as backup_file:
         s = BackupStream(stream=p.stdout, is_alive=lambda: p.poll() is None,
-                         key_ident=g_job_config.get("encrypt"))
+                         key_ident=g_job_config["encrypt"])
         for chunk in s.process():
             backup_file.write(chunk)
 
@@ -1029,11 +1029,11 @@ def needed_backup_archive_files(info):
 
 
 def compress_archives():
-    return "compress" in g_job_config
+    return g_job_config["compress"]
 
 
 def encrypt_archives():
-    return "encrypt" in g_job_config
+    return g_job_config["encrypt"] != None
 
 
 def target_cfg(target_ident):
@@ -1150,7 +1150,7 @@ def do_system_rw_backup(opts):
 
         # Process backup stream and write to destination file
         s = BackupStream(stream=pipein, is_alive=lambda: t.is_alive(),
-                         key_ident=g_job_config.get("encrypt"))
+                         key_ident=g_job_config["encrypt"])
         for chunk in s.process():
             backup_file.write(chunk)
 
@@ -1168,7 +1168,7 @@ def do_system_data_backup(opts):
 
         # Process backup stream and write to destination file
         s = BackupStream(stream=pipein, is_alive=lambda: t.is_alive(),
-                         key_ident=g_job_config.get("encrypt"))
+                         key_ident=g_job_config["encrypt"])
         for chunk in s.process():
             backup_file.write(chunk)
 
@@ -1380,10 +1380,9 @@ def cleanup_backup_job_states():
         path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
 
     for f in glob.glob("%s/*.state" % path):
-        if "/restore.state" in f or "/restore-" in f:
-            continue
-
-        os.unlink(f)
+        if os.path.basename(f) != "restore.state" \
+           and not os.path.basename(f).startswith("restore-"):
+            os.unlink(f)
 
 
 def add_output(s):
@@ -1500,7 +1499,7 @@ def do_site_restore(opts, info, site=None):
 
     with open(backup_path, "r") as backup_file:
         s = RestoreStream(stream=backup_file, is_alive=lambda: False,
-                          key_ident=g_job_config.get("encrypt"))
+                          key_ident=g_job_config["encrypt"])
         try:
             archive_started = False
             for chunk in s.process():
@@ -1719,7 +1718,7 @@ def do_system_data_restore(opts, info):
 def restore_system_backup(backup_path):
     with open(backup_path, "r") as backup_file:
         s = RestoreStream(stream=backup_file, is_alive=lambda: False,
-                          key_ident=g_job_config.get("encrypt"))
+                          key_ident=g_job_config["encrypt"])
 
         pipein_fd, pipeout_fd = os.pipe()
         pipein = os.fdopen(pipein_fd)
@@ -1781,7 +1780,7 @@ def mode_list(target_id, opts):
         sys.stdout.write(fmt_detail % ("From:", from_info))
         sys.stdout.write(fmt_detail % ("Finished:", render.date_and_time(info["finished"])))
         sys.stdout.write(fmt_detail % ("Size:", render.bytes(info["size"])))
-        if "encrypt" in info["config"]:
+        if info["config"]["encrypt"] != None:
             sys.stdout.write(fmt_detail % ("Encrypted:", info["config"]["encrypt"]))
         else:
             sys.stdout.write(fmt_detail % ("Encrypted:", "No"))

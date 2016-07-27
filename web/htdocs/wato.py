@@ -5426,10 +5426,14 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
 
 
 
-class ModeAjaxBackupJobState(ModeBackupJobState):
+class ModeAjaxBackupJobState(WatoMode):
     def page(self):
         config.need_permission("wato.backups")
-        self._show_job_details()
+        if html.var("job") == "restore":
+            page = backup.PageBackupRestoreState()
+        else:
+            page = ModeBackupJobState()
+        page.show_job_details()
 
 
 

@@ -40,4 +40,5 @@ pagehandlers.update({
     "wato_ajax_execute_check"   : wato.ajax_execute_check,
     "download_agent_output"     : wato.page_download_agent_output,
     "ajax_popup_move_to_folder" : wato.ajax_popup_move_to_folder,
+    "ajax_backup_job_state"     : lambda: wato.ModeAjaxBackupJobState().page(),
 })

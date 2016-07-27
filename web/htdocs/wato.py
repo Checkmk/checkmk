@@ -5426,6 +5426,13 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
 
 
 
+class ModeAjaxBackupJobState(ModeBackupJobState):
+    def page(self):
+        config.need_permission("wato.backups")
+        self._show_job_details()
+
+
+
 class SiteBackupKeypairStore(backup.BackupKeypairStore):
     def __init__(self):
         super(SiteBackupKeypairStore, self).__init__(

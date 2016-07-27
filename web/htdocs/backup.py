@@ -860,6 +860,18 @@ class PageBackupJobState(object):
 
 
     def page(self):
+        html.write("<div id=\"job_details\">")
+        self._show_job_details()
+        html.write("</div>")
+        html.javascript("refresh_job_details('%s', '%s', %s)" %
+             (self._update_url(), self._ident, "true" if is_site() else "false"))
+
+
+    def _update_url(self):
+        return "ajax_backup_job_state.py?job=%s" % self._ident
+
+
+    def _show_job_details(self):
         job   = self._job
         state = job.state()
 

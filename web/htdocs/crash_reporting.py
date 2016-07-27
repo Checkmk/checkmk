@@ -404,10 +404,10 @@ def get_local_vars_of_last_exception():
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
-    return base64.b64encode(pprint.pformat(local_vars))
+    return base64.b64encode(format_var_for_export(pprint.pformat(local_vars), maxsize=5*1024*1024))
 
 
-def format_var_for_export(val, maxdepth=4):
+def format_var_for_export(val, maxdepth=4, maxsize=1024*1024):
     if maxdepth == 0:
         return "Max recursion depth reached"
 
@@ -427,10 +427,9 @@ def format_var_for_export(val, maxdepth=4):
 
     # Check and limit size
     if type(val) in (str, unicode):
-        size_limit = 1024*1024
         size = len(val)
-        if size > size_limit:
-            val = val[:size_limit] + "... (%d bytes stripped)" % (size - size_limit)
+        if size > maxsize:
+            val = val[:maxsize] + "... (%d bytes stripped)" % (size - maxsize)
 
     return val
 

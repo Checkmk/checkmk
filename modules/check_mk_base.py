@@ -1564,27 +1564,29 @@ def is_manual_check(hostname, check_type, item):
     return (check_type, item) in manual_checks
 
 
-def format_var_for_export(val):
+def format_var_for_export(val, maxdepth=4, maxsize=1024*1024):
+    if maxdepth == 0:
+        return "Max recursion depth reached"
+
     if isinstance(val, dict):
         for item_key, item_val in val.items():
-            val[item_key] = format_var_for_export(item_val)
+            val[item_key] = format_var_for_export(item_val, maxdepth-1)
 
     elif isinstance(val, list):
         for index, item in enumerate(val):
-            val[index] = format_var_for_export(item)
+            val[index] = format_var_for_export(item, maxdepth-1)
 
     elif isinstance(val, tuple):
         new_val = ()
         for item in val:
-            new_val += (format_var_for_export(item),)
+            new_val += (format_var_for_export(item, maxdepth-1),)
         val = new_val
 
     # Check and limit size
     if type(val) in (str, unicode):
-        size_limit = 1024*1024
         size = len(val)
-        if size > size_limit:
-            val = val[:size_limit] + "... (%d bytes stripped)" % (size - size_limit)
+        if size > maxsize:
+            val = val[:maxsize] + "... (%d bytes stripped)" % (size - maxsize)
 
     return val
 
@@ -1597,7 +1599,7 @@ def get_local_vars_of_last_exception():
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
-    return base64.b64encode(pprint.pformat(local_vars))
+    return base64.b64encode(format_var_for_export(pprint.pformat(local_vars), maxsize=5*1024*1024))
 
 
 def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text):

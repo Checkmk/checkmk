@@ -57,6 +57,7 @@ from cmk.exceptions import MKGeneralException, MKTerminate
 from cmk.regex import regex
 import cmk.tty as tty
 import cmk.render as render
+import cmk.crash_reporting as crash_reporting
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -1581,110 +1582,20 @@ def is_manual_check(hostname, check_type, item):
     return (check_type, item) in manual_checks
 
 
-def format_var_for_export(val, maxdepth=4, maxsize=1024*1024):
-    if maxdepth == 0:
-        return "Max recursion depth reached"
-
-    if isinstance(val, dict):
-        for item_key, item_val in val.items():
-            val[item_key] = format_var_for_export(item_val, maxdepth-1)
-
-    elif isinstance(val, list):
-        for index, item in enumerate(val):
-            val[index] = format_var_for_export(item, maxdepth-1)
-
-    elif isinstance(val, tuple):
-        new_val = ()
-        for item in val:
-            new_val += (format_var_for_export(item, maxdepth-1),)
-        val = new_val
-
-    # Check and limit size
-    if type(val) in (str, unicode):
-        size = len(val)
-        if size > maxsize:
-            val = val[:maxsize] + "... (%d bytes stripped)" % (size - maxsize)
-
-    return val
-
-
-def get_local_vars_of_last_exception():
-    local_vars = {}
-    import inspect, base64, pprint
-    for key, val in inspect.trace()[-1][0].f_locals.items():
-        local_vars[key] = format_var_for_export(val)
-
-    # This needs to be encoded as the local vars might contain binary data which can not be
-    # transported using JSON.
-    return base64.b64encode(format_var_for_export(pprint.pformat(local_vars), maxsize=5*1024*1024))
-
-
 def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text):
-    exc_type, exc_value, exc_traceback = sys.exc_info()
-
-    crash_info = {
-        "crash_type"    : "check",
-        "time"          : time.time(),
-        "os"            : get_os_info(),
-        "version"       : check_mk_version,
-        "python_version": sys.version,
-        "python_paths"  : sys.path,
-        "exc_type"      : exc_type.__name__,
-        "exc_value"     : "%s" % exc_value,
-        "exc_traceback" : traceback.extract_tb(exc_traceback),
-        "local_vars"    : get_local_vars_of_last_exception(),
-        "details"    : {
-            "check_output"  : text,
-            "host"          : hostname,
-            "is_cluster"    : is_cluster(hostname),
-            "description"   : description,
-            "check_type"    : check_type,
-            "item"          : item,
-            "params"        : params,
-            "uses_snmp"     : check_uses_snmp(check_type),
-            "inline_snmp"   : is_inline_snmp_host(hostname),
-            "manual_check"  : is_manual_check(hostname, check_type, item),
-        },
-    }
-
-    try:
-        import simplejson as json
-    except ImportError:
-        import json
-
-
-    # The default JSON encoder raises an exception when detecting unknown types. For the crash
-    # reporting it is totally ok to have some string representations of the objects.
-    class RobustJSONEncoder(json.JSONEncoder):
-        # Are there cases where no __str__ is available? if so, we should do something like %r
-        # pylint: disable=method-hidden
-        def default(self, o):
-            return "%s" % o
-
-    file(crash_dir+"/crash.info", "w").write(json.dumps(crash_info, cls=RobustJSONEncoder)+"\n")
-
-
-def get_os_info():
-    if omd_root:
-        return file(omd_root+"/share/omd/distro.info").readline().split("=", 1)[1].strip()
-    elif os.path.exists("/etc/redhat-release"):
-        return file("/etc/redhat-release").readline().strip()
-    elif os.path.exists("/etc/SuSE-release"):
-        return file("/etc/SuSE-release").readline().strip()
-    else:
-        info = {}
-        for f in [ "/etc/os-release", "/etc/lsb-release" ]:
-            if os.path.exists(f):
-                for line in file(f).readlines():
-                    if "=" in line:
-                        k, v = line.split("=", 1)
-                        info[k.strip()] = v.strip()
-                break
-
-        if info:
-            return info
-        else:
-            return "UNKNOWN"
+    crash_info = crash_reporting.create_crash_info("check", details={
+        "check_output"  : text,
+        "host"          : hostname,
+        "is_cluster"    : is_cluster(hostname),
+        "description"   : description,
+        "check_type"    : check_type,
+        "item"          : item,
+        "params"        : params,
+        "uses_snmp"     : check_uses_snmp(check_type),
+        "inline_snmp"   : is_inline_snmp_host(hostname),
+        "manual_check"  : is_manual_check(hostname, check_type, item),
+    })
+    file(crash_dir+"/crash.info", "w").write(crash_info_to_string(crash_info)+"\n")
 
 
 def write_crash_dump_snmp_info(crash_dir, hostname, check_type):
@@ -1710,6 +1621,7 @@ def pack_crash_dump(crash_dir):
 
 def check_unimplemented(checkname, params, info):
     return (3, 'UNKNOWN - Check not implemented')
+
 
 # FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to
 # use the legacy variables which are not set by newer checks.

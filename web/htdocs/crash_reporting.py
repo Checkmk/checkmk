@@ -26,10 +26,10 @@
 
 import subprocess, base64, time, pprint, traceback, tarfile, cStringIO, sys
 import sites
-import inspect
 from lib import *
 from valuespec import *
 import table, defaults, config, userdb, forms
+import cmk.crash_reporting
 
 try:
     import simplejson as json
@@ -392,87 +392,22 @@ def show_agent_output(tardata):
         output_box(_("Agent output"), agent_output)
 
 
-def get_local_vars_of_last_exception():
-    local_vars = {}
-    try:
-        for key, val in inspect.trace()[-1][0].f_locals.items():
-            local_vars[key] = format_var_for_export(val)
-    except IndexError:
-        # please don't crash in the attempt to report a crash.
-        # Don't know why inspect.trace() causes an IndexError but it does happen
-        pass
-
-    # This needs to be encoded as the local vars might contain binary data which can not be
-    # transported using JSON.
-    return base64.b64encode(format_var_for_export(pprint.pformat(local_vars), maxsize=5*1024*1024))
-
-
-def format_var_for_export(val, maxdepth=4, maxsize=1024*1024):
-    if maxdepth == 0:
-        return "Max recursion depth reached"
-
-    if isinstance(val, dict):
-        for item_key, item_val in val.items():
-            val[item_key] = format_var_for_export(item_val, maxdepth-1)
-
-    elif isinstance(val, list):
-        for index, item in enumerate(val):
-            val[index] = format_var_for_export(item, maxdepth-1)
-
-    elif isinstance(val, tuple):
-        new_val = ()
-        for item in val:
-            new_val += (format_var_for_export(item, maxdepth-1),)
-        val = new_val
-
-    # Check and limit size
-    if type(val) in (str, unicode):
-        size = len(val)
-        if size > maxsize:
-            val = val[:maxsize] + "... (%d bytes stripped)" % (size - maxsize)
-
-    return val
-
-
-# The default JSON encoder raises an exception when detecting unknown types. For the crash
-# reporting it is totally ok to have some string representations of the objects.
-class RobustJSONEncoder(json.JSONEncoder):
-    # Are there cases where no __str__ is available? if so, we should do something like %r
-    # pylint: disable=method-hidden
-    def default(self, o):
-        return "%s" % o
-
-
 # Slightly duplicate code with modules/check_mk_base.py. Maybe create some kind of central library?
 def create_crash_dump_info_file(tar):
-    exc_type, exc_value, exc_traceback = sys.exc_info()
-
-    crash_info = {
-        "crash_type"    : "gui",
-        "time"          : time.time(),
-        "os"            : get_os_info(),
-        "version"       : defaults.check_mk_version,
-        "python_version": sys.version,
-        "python_paths"  : sys.path,
-        "exc_type"      : exc_type.__name__,
-        "exc_value"     : "%s" % exc_value,
-        "exc_traceback" : traceback.extract_tb(exc_traceback),
-        "local_vars"    : get_local_vars_of_last_exception(),
-        "details"    : {
-            "page"           : html.myfile+".py",
-            "vars"           : html.vars,
-            "username"       : html.user,
-            "user_agent"     : html.get_user_agent(),
-            "referer"        : html.get_referer(),
-            "is_mobile"      : html.is_mobile(),
-            "is_ssl_request" : html.is_ssl_request(),
-            "language"       : config.get_language(),
-            "request_method" : html.request_method(),
-        },
-    }
+    crash_info = cmk.crash_reporting.create_crash_info("gui", details={
+        "page"           : html.myfile+".py",
+        "vars"           : html.vars,
+        "username"       : html.user,
+        "user_agent"     : html.get_user_agent(),
+        "referer"        : html.get_referer(),
+        "is_mobile"      : html.is_mobile(),
+        "is_ssl_request" : html.is_ssl_request(),
+        "language"       : config.get_language(),
+        "request_method" : html.request_method(),
+    })
 
     content = cStringIO.StringIO()
-    content.write(json.dumps(crash_info, cls=RobustJSONEncoder))
+    content.write(cmk.crash_reporting.crash_info_to_string(crash_info))
     content.seek(0)
 
     tarinfo = tarfile.TarInfo(name="crash.info")
@@ -480,29 +415,6 @@ def create_crash_dump_info_file(tar):
     tarinfo.size = content.tell()
     content.seek(0)
     tar.addfile(tarinfo=tarinfo, fileobj=content)
-
-
-def get_os_info():
-    if defaults.omd_root:
-        return file(defaults.omd_root+"/share/omd/distro.info").readline().split("=", 1)[1].strip()
-    elif os.path.exists("/etc/redhat-release"):
-        return file("/etc/redhat-release").readline().strip()
-    elif os.path.exists("/etc/SuSE-release"):
-        return file("/etc/SuSE-release").readline().strip()
-    else:
-        info = {}
-        for f in [ "/etc/os-release", "/etc/lsb-release" ]:
-            if os.path.exists(f):
-                for line in file(f).readlines():
-                    if "=" in line:
-                        k, v = line.split("=", 1)
-                        info[k.strip()] = v.strip()
-                break
-
-        if info:
-            return info
-        else:
-            return "UNKNOWN"
 
 
 def create_gui_crash_report():

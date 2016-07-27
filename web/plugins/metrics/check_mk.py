@@ -3554,13 +3554,13 @@ metric_info["dns_failures"] = {
 }
 
 metric_info["dns_nxrrset"] = {
-    "title" : _("DNS query received for non-existent record"),
+    "title" : _("DNS queries received for non-existent record"),
     "unit"  : "count",
     "color" : "31/a",
 }
 
 metric_info["dns_nxdomain"] = {
-    "title" : _("DNS query received for non-existent domain"),
+    "title" : _("DNS queries received for non-existent domain"),
     "unit"  : "count",
     "color" : "34/a",
 }

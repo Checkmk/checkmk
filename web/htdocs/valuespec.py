@@ -3394,6 +3394,10 @@ class PasswordFromStore(CascadingDropdown):
                 choices = self._password_choices,
                 sorted = True,
                 invalid_choice = "complain",
+                invalid_choice_title = _("Password does not exist or using not permitted"),
+                invalid_choice_error = _("The configured password has either be removed or you "
+                                         "are not permitted to use this password. Please choose "
+                                         "another one."),
             )),
         ]
         kwargs["orientation"] = "horizontal"

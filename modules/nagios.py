@@ -479,7 +479,8 @@ define service {
                 continue
 
             # compute argument, and quote ! and \ for Nagios
-            args = act_info["argument_function"](params).replace("\\", "\\\\").replace("!", "\\!")
+            args = active_check_arguments(hostname, description,
+                                          act_info["argument_function"](params)).replace("\\", "\\\\").replace("!", "\\!")
 
             if description in used_descriptions:
                 cn, it = used_descriptions[description]

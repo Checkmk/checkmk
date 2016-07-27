@@ -26,22 +26,22 @@
 
 def check_http_arguments(params):
     description, settings = params
-    args = ''
+    args = []
 
     if "vhost" in settings:
-        args += ' -H %s' % quote_shell_string(settings["vhost"])
+        args += [ "-H", settings["vhost"] ]
 
     if "virthost" in settings:
         vhost, omit_ip = settings["virthost"]
-        args += ' -H %s' % quote_shell_string(vhost)
+        args += [ "-H", vhost ]
     else:
         omit_ip = False
 
     if "uri" in settings:
-        args += ' -u %s' % quote_shell_string(settings["uri"])
+        args += [ '-u', settings["uri"] ]
 
     if "port" in settings:
-        args += ' -p %d' % settings["port"]
+        args += [ '-p', settings["port"] ]
 
     # Use the address family of the monitored host by default
     address_family = settings.get("address_family")
@@ -49,115 +49,114 @@ def check_http_arguments(params):
         address_family = is_ipv6_primary(g_hostname) and "ipv6" or "ipv4"
 
     if address_family == "ipv6":
-        args += " -6"
+        args.append("-6")
         address = "$_HOSTADDRESS_6$"
     else:
         address = "$_HOSTADDRESS_4$"
 
     ssl = settings.get("ssl")
     if ssl in [ True, "auto" ]:
-        args += ' --ssl'
+        args.append('--ssl')
     elif ssl:
-        args += ' --ssl=%s' % quote_shell_string(ssl)
+        args.append('--ssl=%s' % ssl)
 
     if "cert_host" in settings:
         omit_ip = True
         if settings.get("sni"):
-            args += ' -H %s' % quote_shell_string(settings['cert_host'])
+            args += [ '-H', settings['cert_host'] ]
         else:
-            args += ' -H ' + address
-            args += ' -I %s' % quote_shell_string(settings['cert_host'])
+            args += [ '-H', address ]
+            args += [ '-I', settings['cert_host'] ]
 
     if "cert_days" in settings:
         # legacy behavior
         if type(settings["cert_days"]) == int:
-            args += ' -C %d' % settings["cert_days"]
+            args += [ '-C', settings["cert_days"] ]
         else:
             warn, crit = settings["cert_days"]
-            args += ' -C %d,%d' % (warn, crit)
+            args += [ '-C', '%d,%d' % (warn, crit) ]
 
     if settings.get("sni"):
-        args += ' --sni'
+        args.append('--sni')
 
     if "response_time" in settings:
-        args += ' -w %f -c %f' % (
-            settings["response_time"][0]/1000.0,
-            settings["response_time"][1]/1000.0)
+        args += [ '-w', '%f' % settings["response_time"][0]/1000.0,
+                  '-c', '%f' % settings["response_time"][1]/1000.0 ]
 
     if "timeout" in settings:
-        args += ' -t %d' % settings["timeout"]
+        args += [ '-t', settings["timeout"] ]
 
     if "user_agent" in settings:
-        args += ' -A %s' % quote_shell_string(settings["user_agent"])
+        args += [ '-A', settings["user_agent"] ]
 
     for header in settings.get("add_headers", []):
-        args += ' -k %s' % quote_shell_string(header)
+        args += [ '-k', header ]
 
     if "auth" in settings:
         username, password = settings["auth"]
-        args += passwordstore_get_cmdline(" -a %s:%%s" % quote_shell_string(username), password)
+        args += [ "-a", passwordstore_get_cmdline("%s:%%s" % username, password) ]
 
     if "proxy_auth" in settings:
         auth = settings["proxy_auth"]
-        args += ' -b %s:%s' % (quote_shell_string(auth[0]), quote_shell_string(auth[1]))
+        args += [ '-b', ":".join(auth) ]
 
     if "onredirect" in settings:
-        args += ' --onredirect=%s' % settings["onredirect"]
+        args += [ '--onredirect=%s' % settings["onredirect"] ]
 
     if "expect_response" in settings:
-        args += ' -e %s' % quote_shell_string(",".join(settings["expect_response"]))
+        args += [ '-e', ",".join(settings["expect_response"]) ]
 
     if "expect_string" in settings:
-        args += ' -s %s' % quote_shell_string(settings["expect_string"])
+        args += [ '-s', settings["expect_string"] ]
 
     if "expect_response_header" in settings:
-        args += ' -d %s' % quote_shell_string(settings["expect_response_header"])
+        args += [ '-d', settings["expect_response_header"] ]
 
     if "expect_regex" in settings:
         if len(settings['expect_regex']) >= 4 and settings['expect_regex'][3]:
-            args += ' -l '
+            args += [ '-l' ]
         if settings['expect_regex'][1]:
-            args += ' -R'
+            args += [ '-R' ]
         else:
-            args += ' -r'
-        args += ' %s' % quote_shell_string(settings['expect_regex'][0])
+            args += [ '-r' ]
+        args += [ settings['expect_regex'][0] ]
         if settings['expect_regex'][2]:
-            args += ' --invert-regex'
+            args += [ '--invert-regex' ]
 
     if settings.get("extended_perfdata"):
-        args += ' --extended-perfdata'
+        args += [ '--extended-perfdata' ]
 
     if "post_data" in settings:
         data, content_type = settings["post_data"]
-        args += ' -P %s -T %s' % \
-                (quote_shell_string(data),
-                 quote_shell_string(content_type))
+        args += [ '-P', data, '-T', content_type ]
 
     if "method" in settings:
-        args += ' -j %s' % settings["method"]
+        args += [ '-j', settings["method"] ]
 
     if settings.get("no_body"):
-        args += ' --no-body'
+        args += [ '--no-body' ]
 
     if "page_size" in settings:
-        args += ' -m %d:%d' % settings["page_size"]
+        args += [ '-m', '%d:%d' % settings["page_size"] ]
 
     if "max_age" in settings:
-        args += ' -M %d' % settings["max_age"]
+        args += [ '-M', settings["max_age"] ]
 
     if settings.get("urlize"):
-        args += ' -L'
+        args += [ '-L' ]
 
     if not omit_ip:
-        args = " -I " + address + args
+        args = [ "-I", address ] + args
+
     return args
+
 
 def check_http_desc(params):
     if params[0].startswith("^"):
         return params[0][1:]
-    #if params[1].get("ssl"):
-    #    return "HTTPS %s" % params[0]
+
     return "HTTP %s" % params[0]
+
 
 active_check_info['http'] = {
     "command_line"        : '$USER1$/check_http $ARG1$',

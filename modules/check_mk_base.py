@@ -2112,7 +2112,13 @@ def utc_mktime(time_struct):
 
 
 def passwordstore_get_cmdline(fmt, pw):
-    return fmt % quote_shell_string(pw)
+    if type(pw) != tuple:
+        pw = ("password", pw)
+
+    if pw[0] == "password":
+        return fmt % pw[1]
+    else:
+        return ("store", pw[1], fmt)
 
 #.
 #   .--Check helpers-------------------------------------------------------.

@@ -15201,7 +15201,8 @@ def mode_icons(phase):
 
 class PasswordStore(object):
     def _load(self, lock=False):
-        return store.load_from_mk_file(wato_root_dir + "/passwords.mk", key="passwords", default={}, lock=lock)
+        return store.load_from_mk_file(wato_root_dir + "/passwords.mk",
+                                       key="stored_passwords", default={}, lock=lock)
 
 
     def _load_for_modification(self):
@@ -15223,7 +15224,8 @@ class PasswordStore(object):
 
 
     def _save(self, value):
-        return store.save_to_mk_file(wato_root_dir + "/passwords.mk", key="passwords", value=value)
+        return store.save_to_mk_file(wato_root_dir + "/passwords.mk",
+                                     key="stored_passwords", value=value)
 
 
 

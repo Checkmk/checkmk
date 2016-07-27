@@ -531,6 +531,47 @@ def active_check_service_description(act_info, params):
     return sanitize_service_description(act_info["service_description"](params).replace('$HOSTNAME$', g_hostname))
 
 
+def active_check_arguments(hostname, description, args):
+    if type(args) in [ str, unicode ]:
+        return args
+
+    elif type(args) == list:
+        passwords, formated = [], []
+        for arg in args:
+            arg_type = type(arg)
+
+            if arg_type in [ int, float ]:
+                formated.append("%s" % arg)
+
+            elif arg_type in [ str, unicode ]:
+                formated.append(quote_shell_string(arg))
+
+            elif arg_type == tuple and len(arg) == 3:
+                ty, pw_ident, preformated_arg = arg
+                try:
+                    password = stored_passwords[pw_ident]["password"]
+                except KeyError:
+                    configuration_warning("The stored password \"%s\" used by service \"%s\" on host "
+                                          "\"%s\" does not exist (anymore)." %
+                                            (pw_ident, description, hostname))
+                    password = "%%%"
+
+                formated.append(quote_shell_string(preformated_arg % ("*" * len(password))))
+                passwords.append((str(len(formated)), pw_ident))
+
+            else:
+                raise MKGeneralException("Invalid argument for command line: %s" % arg)
+
+        if passwords:
+            formated = [ "--pwstore=%s" % ",".join([ "@".join(p) for p in passwords ]) ] + formated
+
+        return " ".join(formated)
+
+    else:
+        raise MKGeneralException("The check argument function needs to return either a list of arguments or a "
+                                 "string of the concatenated arguments (Host: %s, Service: %s)." % (hostname, description))
+
+
 def is_snmp_check(check_name):
     return check_name.split(".")[0] in snmp_info
 

@@ -1426,7 +1426,14 @@ def PluginCommandLine(addhelp = ""):
                    "or <tt>~/lib/nagios/plugins</tt> within your site directory, you can strip the path name and "
                    "just configure the plugin file name as command <tt>check_foobar</tt>.") + monitoring_macro_help(),
           size = "max",
+          validate = validate_custom_check_command_line,
        )
+
+
+def validate_custom_check_command_line(value, varprefix):
+    if "--pwstore=" in value:
+        raise MKUserError(varprefix, _("You are not allowed to use passwords from the password store here."))
+
 
 register_rule(group,
     "custom_checks",
@@ -1449,7 +1456,8 @@ register_rule(group,
             ( "command_line",
               PluginCommandLine(addhelp = _("<br><br>"
                    "<b>Passive checks</b>: Do no specify a command line if you want "
-                   "to define passive checks.")),
+                   "to define passive checks."),
+              ),
             ),
             ( "command_name",
               TextAscii(

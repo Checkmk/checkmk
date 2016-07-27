@@ -48,6 +48,7 @@ import inspect
 from cmk.regex import regex, is_regex
 from cmk.exceptions import MKGeneralException, MKTerminate
 import cmk.tty as tty
+import cmk.store as store
 
 # These variable will be substituted at 'make dist' time
 check_mk_version  = '(inofficial)'
@@ -3382,6 +3383,8 @@ def create_core_config():
         out = file(nagios_objects_file, "w")
         create_nagios_config(out)
 
+    write_stored_passwords()
+
     num_warnings = len(g_configuration_warnings)
     if num_warnings > 10:
         g_configuration_warnings = g_configuration_warnings[:10] + \
@@ -3433,6 +3436,14 @@ def verify_cluster_address_family(hostname):
     if mixed:
         configuration_warning("Cluster '%s' has different primary address families: %s" %
                                                          (hostname, ", ".join(address_families)))
+
+
+def write_stored_passwords():
+    formated = ""
+    for ident, pw in stored_passwords.items():
+        formated += "%s:%s\n" % (ident, pw["password"])
+
+    store.save_mk_file(var_dir + "/stored_passwords.mk", formated)
 
 
 def get_cluster_nodes_for_config(hostname):

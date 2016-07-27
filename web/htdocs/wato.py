@@ -15243,20 +15243,26 @@ class ModePasswords(WatoMode, PasswordStore):
         if not html.transaction_valid():
             return
 
-        if action == "delete":
-            if wato_confirm(_("Do you really want to delete this password?")):
-                html.check_transaction() # invalidate transid
+        confirm = wato_confirm(_("Confirm deletion of password"),
+                        _("The password may be used in checks. If you delete the password, the "
+                          "checks won't be able to authenticate with this password anymore."
+                          "<br><br>Do you really want to delete this password?"))
+        if confirm == False:
+            return False
 
-                passwords = self._load_for_modification()
+        elif confirm:
+            html.check_transaction() # invalidate transid
 
-                ident = html.var("_delete")
-                if ident not in passwords:
-                    raise MKUserError("ident", _("This password does not exist."))
+            passwords = self._load_for_modification()
 
-                del passwords[ident]
-                self._save(passwords)
+            ident = html.var("_delete")
+            if ident not in passwords:
+                raise MKUserError("ident", _("This password does not exist."))
 
-                return None, _("The password has been deleted.")
+            del passwords[ident]
+            self._save(passwords)
+
+            return None, _("The password has been deleted.")
 
 
     def page(self):

@@ -1238,6 +1238,9 @@ class DropdownChoice(ValueSpec):
         self._sorted             = kwargs.get("sorted", False)
         self._empty_text         = kwargs.get("empty_text", _("There are no elements defined for this selection yet."))
         self._invalid_choice     = kwargs.get("invalid_choice", "replace") # also possible: "complain"
+        self._invalid_choice_title = kwargs.get("invalid_choice_title", _("Element does not exist anymore"))
+        self._invalid_choice_error = kwargs.get("invalid_choice_error",
+            _("The selected element is not longer available. Please select something else."))
         self._no_preselect       = kwargs.get("no_preselect", False)
         self._no_preselect_value = kwargs.get("no_preselect_value", None)
         self._no_preselect_title = kwargs.get("no_preselect_title", "") # if not preselected
@@ -1276,14 +1279,14 @@ class DropdownChoice(ValueSpec):
             if entry[0] == value:
                 defval = str(n)
 
+        # In complain mode: Use the value received from the HTML variable
+        if self._invalid_choice == "complain" and value != None and self._value_is_invalid(value):
+            defval = value
+            options.append((value, "%s (%s)" % (value, self._invalid_choice_title)))
+
         if value == None and not options:
             html.write(self._empty_text)
             return
-
-        # In complain mode: Use the value received from the HTML variable
-        if self._invalid_choice == "complain" and self._value_is_invalid(value):
-            defval = "invalid"
-            options.append((defval, _("(element does not exist anymore)")))
 
         if len(options) == 0:
             html.write(self._empty_text)
@@ -1316,14 +1319,17 @@ class DropdownChoice(ValueSpec):
         if self._invalid_choice == "replace":
             return self.default_value() # garbled URL or len(choices) == 0
         else:
-            if choices:
-                raise MKUserError(varprefix, _("The selected element is not longer available. Please select something else."))
-            else:
-                raise MKUserError(varprefix, _("There is no element available to choose from."))
+            return sel
 
     def validate_value(self, value, varprefix):
         if self._no_preselect and value == self._no_preselect_value:
             raise MKUserError(varprefix, self._no_preselect_error)
+
+        if self._invalid_choice == "complain" and self._value_is_invalid(value):
+            if value != None:
+                raise MKUserError(varprefix, self._invalid_choice_error)
+            else:
+                raise MKUserError(varprefix, _("There is no element available to choose from."))
 
         ValueSpec.custom_validate(self, value, varprefix)
 

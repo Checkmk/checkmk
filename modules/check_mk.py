@@ -557,8 +557,9 @@ def active_check_arguments(hostname, description, args):
                                             (pw_ident, description, hostname))
                     password = "%%%"
 
+                pw_start_index = str(preformated_arg.index("%s"))
                 formated.append(quote_shell_string(preformated_arg % ("*" * len(password))))
-                passwords.append((str(len(formated)), pw_ident))
+                passwords.append((str(len(formated)), pw_start_index, pw_ident))
 
             else:
                 raise MKGeneralException("Invalid argument for command line: %s" % arg)

@@ -30,6 +30,7 @@ developers for analyzing the crashes."""
 
 import base64
 import inspect
+import os
 import pprint
 import sys
 import time
@@ -40,6 +41,7 @@ try:
 except ImportError:
     import json
 
+from . import __version__
 
 # The default JSON encoder raises an exception when detecting unknown types. For the crash
 # reporting it is totally ok to have some string representations of the objects.
@@ -61,12 +63,11 @@ def create_crash_info(crash_type, details = None):
 
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
-    import defaults # TODO: defaults in lib? Clean this up!
     return {
         "crash_type"    : crash_type,
         "time"          : time.time(),
         "os"            : get_os_info(),
-        "version"       : defaults.check_mk_version,
+        "version"       : __version__,
         "python_version": sys.version,
         "python_paths"  : sys.path,
         "exc_type"      : exc_type.__name__,
@@ -78,9 +79,8 @@ def create_crash_info(crash_type, details = None):
 
 
 def get_os_info():
-    import defaults # TODO: defaults in lib? Clean this up!
-    if defaults.omd_root:
-        return file(defaults.omd_root+"/share/omd/distro.info").readline().split("=", 1)[1].strip()
+    if "OMD_ROOT" in os.environ:
+        return file(os.environ["OMD_ROOT"]+"/share/omd/distro.info").readline().split("=", 1)[1].strip()
     elif os.path.exists("/etc/redhat-release"):
         return file("/etc/redhat-release").readline().strip()
     elif os.path.exists("/etc/SuSE-release"):

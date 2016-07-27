@@ -200,6 +200,7 @@ version:
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 14.04" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.04" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.10" \
+          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 16.04" \
           -o "$$(head -c 20 /etc/issue)" = "Debian GNU/Linux 6.0" ] \
           || { echo 'You are not on the reference system!' ; exit 1; }
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
@@ -209,6 +210,7 @@ setversion:
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' bin/mkeventd bin/mkbackup ; \
+	sed -i 's/^__version__ = ".*"$/__version__ = "$(NEW_VERSION)"/' lib/__init__.py ; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion

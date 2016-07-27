@@ -1595,7 +1595,7 @@ def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, d
         "inline_snmp"   : is_inline_snmp_host(hostname),
         "manual_check"  : is_manual_check(hostname, check_type, item),
     })
-    file(crash_dir+"/crash.info", "w").write(crash_info_to_string(crash_info)+"\n")
+    file(crash_dir+"/crash.info", "w").write(crash_reporting.crash_info_to_string(crash_info)+"\n")
 
 
 def write_crash_dump_snmp_info(crash_dir, hostname, check_type):

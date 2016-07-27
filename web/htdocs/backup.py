@@ -1692,10 +1692,13 @@ class PageBackupRestore(object):
             except MKUserError, e:
                 html.add_user_error(e.varname, e)
 
-        html.header(_("Insert passphrase"))
-        html.begin_context_buttons()
-        html.context_button(_("Back"), html.makeuri([("mode", "backup_restore")]), "back")
-        html.end_context_buttons()
+        # Special handling for Check_MK / CMA differences
+        if is_site():
+            html.header(_("Insert passphrase"))
+            html.begin_context_buttons()
+            html.context_button(_("Back"), html.makeuri([("mode", "backup_restore")]), "back")
+            html.end_context_buttons()
+
         html.show_user_errors()
         html.write("<p>%s</p>" %
             _("To be able to decrypt and restore the encrypted backup, you need to enter the "

@@ -30,7 +30,7 @@
 
 using std::string;
 
-void DoubleColumn::output(void *row, Renderer::Row &r,
+void DoubleColumn::output(void *row, RowRenderer &r,
                           contact * /* auth_user */) {
     r.output(getValue(row));
 }

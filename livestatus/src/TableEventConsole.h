@@ -160,9 +160,9 @@ protected:
 
         _column_t getValue(void *row) { return _ecc.getValue(row); }
 
-        void output(void *row, Renderer::Row &r,
+        void output(void *row, RowRenderer &r,
                     contact * /* auth_user */) override {
-            Renderer::List l(r);
+            ListRenderer l(r);
             for (const auto &elem : _ecc.getValue(row)) {
                 l.output(elem);
             }

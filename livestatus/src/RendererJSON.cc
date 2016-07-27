@@ -71,7 +71,10 @@ void RendererJSON::outputNull() { add("null"); }
 
 void RendererJSON::outputBlob(const vector<char> &value) {
     add("\"");
-    outputCharsAsBlob(value);
+    for (unsigned char ch : value) {
+        add(ch < 32 || ch > 127 || ch == '"' || ch == '\\' ? unicodeEscape(ch)
+                                                           : string(1, ch));
+    }
     add("\"");
 }
 

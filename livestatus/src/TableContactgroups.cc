@@ -59,6 +59,6 @@ void TableContactgroups::answerQuery(Query *query) {
     }
 }
 
-void *TableContactgroups::findObject(char *objectspec) {
-    return find_contactgroup(objectspec);
+void *TableContactgroups::findObject(const string &objectspec) {
+    return find_contactgroup(const_cast<char *>(objectspec.c_str()));
 }

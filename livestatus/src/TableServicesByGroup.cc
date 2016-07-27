@@ -91,6 +91,6 @@ bool TableServicesByGroup::isAuthorized(contact *ctc, void *data) {
     return is_authorized_for(ctc, svc->host_ptr, svc);
 }
 
-void *TableServicesByGroup::findObject(char *objectspec) {
+void *TableServicesByGroup::findObject(const string &objectspec) {
     return getServiceBySpec(objectspec);
 }

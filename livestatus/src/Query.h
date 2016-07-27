@@ -67,7 +67,7 @@ public:
     std::unordered_set<Column *> *allColumns() { return &_all_columns; }
 
 private:
-    Renderer::Query *_renderer_query;
+    QueryRenderer *_renderer_query;
     OutputBuffer::ResponseHeader _response_header;
     bool _do_keepalive;
     std::string _invalid_header_message;
@@ -137,8 +137,8 @@ private:
     void parseWaitTriggerLine(char *line);
     void parseWaitObjectLine(char *line);
     void parseLocaltimeLine(char *line);
-    void start(Renderer::Query &q);
-    void finish(Renderer::Query &q);
+    void start(QueryRenderer &q);
+    void finish(QueryRenderer &q);
     Column *createDummyColumn(const char *name);
 };
 

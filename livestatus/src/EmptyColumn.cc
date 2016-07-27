@@ -25,7 +25,7 @@
 #include "EmptyColumn.h"
 #include "Renderer.h"
 
-void EmptyColumn::output(void* /* row */, Renderer::Row& r,
+void EmptyColumn::output(void* /* row */, RowRenderer& r,
                          contact* /* auth_user */) {
     r.output("");
 }

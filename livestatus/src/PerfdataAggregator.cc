@@ -112,7 +112,7 @@ void PerfdataAggregator::consumeVariable(const string &varname, double value) {
     }
 }
 
-void PerfdataAggregator::output(Renderer::Row &r) {
+void PerfdataAggregator::output(RowRenderer &r) {
     string perf_data;
     bool first = true;
     for (const auto &entry : _aggr) {

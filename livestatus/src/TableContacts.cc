@@ -148,6 +148,6 @@ void TableContacts::answerQuery(Query *query) {
     }
 }
 
-void *TableContacts::findObject(char *objectspec) {
-    return find_contact(objectspec);
+void *TableContacts::findObject(const string &objectspec) {
+    return find_contact(const_cast<char *>(objectspec.c_str()));
 }

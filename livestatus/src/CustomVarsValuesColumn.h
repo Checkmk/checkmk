@@ -29,8 +29,8 @@
 #include <string>
 #include "Column.h"
 #include "CustomVarsColumn.h"
-#include "Renderer.h"
 #include "nagios.h"
+class RowRenderer;
 
 class CustomVarsValuesColumn : public CustomVarsColumn {
 public:
@@ -38,7 +38,7 @@ public:
                            int offset, int indirect_offset,
                            int extra_offset = -1);
     ColumnType type() override;
-    void output(void *row, Renderer::Row &r, contact *auth_user) override;
+    void output(void *row, RowRenderer &r, contact *auth_user) override;
     bool contains(void *row, const std::string &value) override;
 };
 

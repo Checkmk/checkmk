@@ -35,9 +35,9 @@ CustomVarsDictColumn::CustomVarsDictColumn(string name, string description,
 
 ColumnType CustomVarsDictColumn::type() { return ColumnType::dict; }
 
-void CustomVarsDictColumn::output(void *row, Renderer::Row &r,
+void CustomVarsDictColumn::output(void *row, RowRenderer &r,
                                   contact * /* auth_user */) {
-    Renderer::Dict d(r);
+    DictRenderer d(r);
     for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
          cvm = cvm->next) {
         d.renderKeyValue(cvm->variable_name, cvm->variable_value);

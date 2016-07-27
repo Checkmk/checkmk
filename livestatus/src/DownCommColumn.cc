@@ -36,9 +36,9 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void DownCommColumn::output(void *row, Renderer::Row &r,
+void DownCommColumn::output(void *row, RowRenderer &r,
                             contact * /* auth_user */) {
-    Renderer::List l(r);
+    ListRenderer l(r);
     void *data = shiftPointer(row);  // points to host or service
     if (data != nullptr) {
         for (const auto &entry : _holder) {
@@ -46,7 +46,7 @@ void DownCommColumn::output(void *row, Renderer::Row &r,
             DowntimeOrComment *dt = entry.second.get();
             if (match(dt, data)) {
                 if (_with_info) {
-                    Renderer::Sublist s(l);
+                    SublistRenderer s(l);
                     s.output(id);
                     s.output(dt->_author_name);
                     s.output(dt->_comment);

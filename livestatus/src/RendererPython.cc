@@ -71,8 +71,11 @@ void RendererPython::endDict() { add("}"); }
 void RendererPython::outputNull() { add("None"); }
 
 void RendererPython::outputBlob(const vector<char> &value) {
-    add("\"");
-    outputCharsAsBlob(value);
+    add("b\"");
+    for (unsigned char ch : value) {
+        add(ch < 32 || ch > 127 || ch == '"' || ch == '\\' ? unicodeEscape(ch)
+                                                           : string(1, ch));
+    }
     add("\"");
 }
 

@@ -35,9 +35,9 @@ CustomVarsNamesColumn::CustomVarsNamesColumn(string name, string description,
 
 ColumnType CustomVarsNamesColumn::type() { return ColumnType::list; }
 
-void CustomVarsNamesColumn::output(void *row, Renderer::Row &r,
+void CustomVarsNamesColumn::output(void *row, RowRenderer &r,
                                    contact * /* auth_user */) {
-    Renderer::List l(r);
+    ListRenderer l(r);
     for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
          cvm = cvm->next) {
         l.output(string(cvm->variable_name));

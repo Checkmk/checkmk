@@ -28,10 +28,10 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "OffsetStringColumn.h"
-#include "Renderer.h"
 #include "nagios.h"
 #include "opids.h"
 class Filter;
+class RowRenderer;
 
 class OffsetStringMacroColumn : public OffsetStringColumn {
 public:
@@ -42,7 +42,7 @@ public:
     // reimplement several functions from StringColumn
 
     std::string valueAsString(void *row, contact *auth_user) override;
-    void output(void *row, Renderer::Row &r, contact *auth_user) override;
+    void output(void *row, RowRenderer &r, contact *auth_user) override;
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
 

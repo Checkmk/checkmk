@@ -44,9 +44,8 @@ servicesmember *ServicelistColumn::getMembers(void *data) {
                                                 _offset);
 }
 
-void ServicelistColumn::output(void *row, Renderer::Row &r,
-                               contact *auth_user) {
-    Renderer::List l(r);
+void ServicelistColumn::output(void *row, RowRenderer &r, contact *auth_user) {
+    ListRenderer l(r);
     servicesmember *mem = getMembers(row);
 
     while (mem != nullptr) {
@@ -57,7 +56,7 @@ void ServicelistColumn::output(void *row, Renderer::Row &r,
             if (!_show_host && _info_depth == 0) {
                 l.output(string(svc->description));
             } else {
-                Renderer::Sublist s(l);
+                SublistRenderer s(l);
                 if (_show_host) {
                     s.output(string(svc->host_name));
                 }

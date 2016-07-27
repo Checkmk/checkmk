@@ -111,4 +111,4 @@ bool Table::isAuthorized(contact * /*unused*/, void * /*unused*/) {
     return true;
 }
 
-void *Table::findObject(char * /*unused*/) { return nullptr; }
+void *Table::findObject(const string & /*unused*/) { return nullptr; }

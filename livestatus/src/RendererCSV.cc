@@ -72,6 +72,12 @@ void RendererCSV::endDict() {}
 
 void RendererCSV::outputNull() {}
 
-void RendererCSV::outputBlob(const vector<char> &value) { add(value); }
+void RendererCSV::outputBlob(const vector<char> &value) {
+    add("\"");
+    for (unsigned char ch : value) {
+        add(ch == '"' ? "\"\"" : string(1, ch));
+    }
+    add("\"");
+}
 
 void RendererCSV::outputString(const string &value) { add(value); }

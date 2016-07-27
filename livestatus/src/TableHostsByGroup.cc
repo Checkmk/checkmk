@@ -89,6 +89,6 @@ bool TableHostsByGroup::isAuthorized(contact *ctc, void *data) {
     return is_authorized_for(ctc, static_cast<host *>(data), nullptr);
 }
 
-void *TableHostsByGroup::findObject(char *objectspec) {
-    return find_host(objectspec);
+void *TableHostsByGroup::findObject(const string &objectspec) {
+    return find_host(const_cast<char *>(objectspec.c_str()));
 }

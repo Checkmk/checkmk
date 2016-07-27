@@ -29,7 +29,7 @@
 #include <map>
 #include <string>
 #include "Aggregator.h"
-#include "Renderer.h"
+class RowRenderer;
 class StringColumn;
 
 #ifdef CMC
@@ -43,7 +43,7 @@ public:
     PerfdataAggregator(StatsOperation operation, StringColumn *column)
         : Aggregator(operation), _column(column) {}
     void consume(void *row, contact *auth_user, int timezone_offset) override;
-    void output(Renderer::Row &r) override;
+    void output(RowRenderer &r) override;
 
 private:
     struct perf_aggr {

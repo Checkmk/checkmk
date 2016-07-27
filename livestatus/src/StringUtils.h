@@ -28,18 +28,32 @@
 #include "config.h"   // IWYU pragma: keep
 #include <algorithm>  // IWYU pragma: keep
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace mk {
-std::string unsafe_tolower(const std::string& str);
+std::string unsafe_tolower(const std::string &str);
 
 template <class T>
-bool starts_with(const T& input, const T& test) {
+bool starts_with(const T &input, const T &test) {
     return input.size() >= test.size() &&
            std::equal(test.begin(), test.end(), input.begin());
 }
 
 std::vector<std::string> split(std::string str, char delimiter);
+
+std::string lstrip(const std::string &str,
+                   const std::string &chars = " \t\n\v\f\r");
+
+std::string rstrip(const std::string &str,
+                   const std::string &chars = " \t\n\v\f\r");
+
+std::string strip(const std::string &str,
+                  const std::string &chars = " \t\n\v\f\r");
+
+std::pair<std::string, std::string> nextField(
+    const std::string &str, const std::string &chars = " \t\n\v\f\r");
+
 }  // namespace
 
 #endif  // StringUtils_h

@@ -137,8 +137,8 @@ void TableServicegroups::answerQuery(Query *query) {
     }
 }
 
-void *TableServicegroups::findObject(char *objectspec) {
-    return find_servicegroup(objectspec);
+void *TableServicegroups::findObject(const string &objectspec) {
+    return find_servicegroup(const_cast<char *>(objectspec.c_str()));
 }
 
 bool TableServicegroups::isAuthorized(contact *ctc, void *data) {

@@ -31,7 +31,7 @@
 using std::chrono::system_clock;
 using std::string;
 
-void OffsetTimeColumn::output(void *row, Renderer::Row &r, contact *auth_user) {
+void OffsetTimeColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     r.output(system_clock::from_time_t(getValue(row, auth_user)));
 }
 

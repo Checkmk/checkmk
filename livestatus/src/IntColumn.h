@@ -29,9 +29,9 @@
 #include <stdint.h>
 #include <string>
 #include "Column.h"
-#include "Renderer.h"
 #include "opids.h"
 class Filter;
+class RowRenderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -51,7 +51,7 @@ public:
     // questionable purposes...
     virtual int32_t getValue(void *row, contact *auth_user) = 0;
 
-    void output(void *row, Renderer::Row &r, contact *auth_user) override;
+    void output(void *row, RowRenderer &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::int_; }
     std::string valueAsString(void *row, contact *auth_user) override;
     Filter *createFilter(RelationalOperator relOp,

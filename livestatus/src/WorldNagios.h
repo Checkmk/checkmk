@@ -26,8 +26,9 @@
 #define WorldNagios_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <string>
 #include "nagios.h"
 
-service *getServiceBySpec(char *spec);
+service *getServiceBySpec(const std::string &spec);
 
 #endif  // WorldNagios_h

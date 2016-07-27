@@ -40,8 +40,8 @@ hostsmember *HostlistColumn::getMembers(void *data) {
                                              _offset);
 }
 
-void HostlistColumn::output(void *row, Renderer::Row &r, contact *auth_user) {
-    Renderer::List l(r);
+void HostlistColumn::output(void *row, RowRenderer &r, contact *auth_user) {
+    ListRenderer l(r);
     hostsmember *mem = getMembers(row);
 
     while (mem != nullptr) {
@@ -51,7 +51,7 @@ void HostlistColumn::output(void *row, Renderer::Row &r, contact *auth_user) {
             if (!_show_state) {
                 l.output(string(hst->name));
             } else {
-                Renderer::Sublist s(l);
+                SublistRenderer s(l);
                 s.output(string(hst->name));
                 s.output(hst->current_state);
                 s.output(hst->has_been_checked);

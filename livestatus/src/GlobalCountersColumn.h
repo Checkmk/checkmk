@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
-#include "Renderer.h"
+class RowRenderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -50,7 +50,7 @@ public:
     ColumnType type() override {
         return _do_average ? ColumnType::double_ : ColumnType::int_;
     }
-    void output(void *row, Renderer::Row &r, contact *auth_user) override;
+    void output(void *row, RowRenderer &r, contact *auth_user) override;
 };
 
 #endif  // GlobalCountersColumn_h

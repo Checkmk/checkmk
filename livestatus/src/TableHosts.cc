@@ -718,4 +718,6 @@ bool TableHosts::isAuthorized(contact *ctc, void *data) {
     return is_authorized_for(ctc, static_cast<host *>(data), nullptr);
 }
 
-void *TableHosts::findObject(char *objectspec) { return find_host(objectspec); }
+void *TableHosts::findObject(const string &objectspec) {
+    return find_host(const_cast<char *>(objectspec.c_str()));
+}

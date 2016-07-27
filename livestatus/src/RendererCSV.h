@@ -31,15 +31,14 @@
 #include "OutputBuffer.h"
 #include "Renderer.h"
 
+// Note: The CSV format is a bit underspecified, but the most "authorative"
+// reference seems to be https://tools.ietf.org/html/rfc4180.
 class RendererCSV : public Renderer {
 public:
     RendererCSV(OutputBuffer *output,
                 OutputBuffer::ResponseHeader response_header,
                 bool do_keep_alive, std::string invalid_header_message,
                 CSVSeparators separators, int timezone_offset);
-
-private:
-    const CSVSeparators _separators;
 
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;
@@ -65,6 +64,9 @@ private:
     void separateDictElements() override;
     void separateDictKeyValue() override;
     void endDict() override;
+
+private:
+    const CSVSeparators _separators;
 };
 
 #endif  // RendererCSV_h

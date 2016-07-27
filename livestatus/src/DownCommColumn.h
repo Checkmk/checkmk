@@ -30,10 +30,10 @@
 #include <string>
 #include "Column.h"
 #include "ListColumn.h"
-#include "Renderer.h"
 #include "nagios.h"
 class DowntimeOrComment;
 class DowntimesOrComments;
+class RowRenderer;
 
 class DownCommColumn : public ListColumn {
     const DowntimesOrComments &_holder;
@@ -57,7 +57,7 @@ public:
         , _with_extra_info(with_extra_info) {}
     ColumnType type() override { return ColumnType::list; }
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    void output(void *row, Renderer::Row &r, contact *auth_user) override;
+    void output(void *row, RowRenderer &r, contact *auth_user) override;
     bool isEmpty(void *data) override;
 };
 

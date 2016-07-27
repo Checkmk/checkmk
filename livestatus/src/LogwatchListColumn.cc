@@ -35,7 +35,7 @@
 
 using std::string;
 
-void LogwatchListColumn::output(void *row, Renderer::Row &r,
+void LogwatchListColumn::output(void *row, RowRenderer &r,
                                 contact * /* auth_user */) {
     void *data = shiftPointer(row);
     if (data == nullptr) {
@@ -50,7 +50,7 @@ void LogwatchListColumn::output(void *row, Renderer::Row &r,
     string host_name = hst->name;
 #endif
 
-    Renderer::List l(r);
+    ListRenderer l(r);
     string path = mk_logwatch_path_of_host(host_name);
     if (path != "") {
         if (DIR *dir = opendir(path.c_str())) {

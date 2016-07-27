@@ -187,8 +187,8 @@ void TableHostgroups::answerQuery(Query *query) {
     }
 }
 
-void *TableHostgroups::findObject(char *objectspec) {
-    return find_hostgroup(objectspec);
+void *TableHostgroups::findObject(const string &objectspec) {
+    return find_hostgroup(const_cast<char *>(objectspec.c_str()));
 }
 
 bool TableHostgroups::isAuthorized(contact *ctc, void *data) {

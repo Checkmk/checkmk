@@ -29,9 +29,9 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void ContactgroupsColumn::output(void *row, Renderer::Row &r,
+void ContactgroupsColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
-    Renderer::List l(r);
+    ListRenderer l(r);
     if (auto data = static_cast<char *>(shiftPointer(row))) {
         for (contactgroupsmember *cgm =
                  *reinterpret_cast<contactgroupsmember **>(data + _offset);

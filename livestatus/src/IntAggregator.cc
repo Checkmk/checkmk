@@ -67,7 +67,7 @@ void IntAggregator::consume(void *row, contact *auth_user,
     }
 }
 
-void IntAggregator::output(Renderer::Row &r) {
+void IntAggregator::output(RowRenderer &r) {
     switch (getOperation()) {
         case StatsOperation::sum:
         case StatsOperation::min:

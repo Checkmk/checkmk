@@ -30,7 +30,7 @@
 
 using std::string;
 
-void IntColumn::output(void *row, Renderer::Row &r, contact *auth_user) {
+void IntColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     r.output(getValue(row, auth_user));
 }
 

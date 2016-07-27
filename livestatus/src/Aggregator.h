@@ -48,7 +48,7 @@ public:
     virtual void consume(void *row, contact *auth_user,
                          int timezone_offset) = 0;
 
-    virtual void output(Renderer::Row &r) = 0;
+    virtual void output(RowRenderer &r) = 0;
 
 private:
     const StatsOperation _operation;

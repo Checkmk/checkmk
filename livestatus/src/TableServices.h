@@ -60,7 +60,7 @@ public:
     std::string namePrefix() const override;
     void answerQuery(Query *) override;
     bool isAuthorized(contact *, void *) override;
-    void *findObject(char *objectspec) override;
+    void *findObject(const std::string &objectspec) override;
 };
 
 #endif  // TableServices_h

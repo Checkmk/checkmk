@@ -22,6 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// IWYU pragma: no_include <type_traits>
 #include "StringUtils.h"
 #include <cctype>
 #include <sstream>
@@ -30,7 +31,7 @@ using std::string;
 
 namespace mk {
 
-string unsafe_tolower(const string& str) {
+string unsafe_tolower(const string &str) {
     string result = str;
     std::transform(str.begin(), str.end(), result.begin(), ::tolower);
     return result;
@@ -44,6 +45,27 @@ std::vector<string> split(string str, char delimiter) {
         result.push_back(field);
     }
     return result;
+}
+
+string lstrip(const string &str, const string &chars) {
+    auto pos = str.find_first_not_of(chars);
+    return pos == string::npos ? "" : str.substr(pos);
+}
+
+string rstrip(const string &str, const string &chars) {
+    auto pos = str.find_last_not_of(chars);
+    return pos == string::npos ? "" : str.substr(0, pos + 1);
+}
+
+string strip(const string &str, const string &chars) {
+    return rstrip(lstrip(str, chars), chars);
+}
+
+std::pair<string, string> nextField(const string &str, const string &chars) {
+    auto s = lstrip(str);
+    auto pos = s.find_first_of(chars);
+    return pos == string::npos ? make_pair(s, "")
+                               : make_pair(s.substr(0, pos), s.substr(pos + 1));
 }
 
 }  // namespace mk

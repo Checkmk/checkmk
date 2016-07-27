@@ -40,9 +40,9 @@ objectlist *ServicegroupsColumn::getData(void *data) {
     return nullptr;
 }
 
-void ServicegroupsColumn::output(void *row, Renderer::Row &r,
+void ServicegroupsColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
-    Renderer::List l(r);
+    ListRenderer l(r);
     for (objectlist *list = getData(row); list != nullptr; list = list->next) {
         servicegroup *sg = reinterpret_cast<servicegroup *>(list->object_ptr);
         l.output(string(sg->group_name));

@@ -23,25 +23,22 @@
 // Boston, MA 02110-1301 USA.
 
 #include "WorldNagios.h"
-#include <string.h>
-#include "strutil.h"
+#include <utility>
+#include "StringUtils.h"
 
-service *getServiceBySpec(char *spec) {
-    char *host_name;
-    char *description;
+using std::string;
 
-    // The protocol proposes spaces as a separator between
-    // the host name and the service description. That introduces
-    // the problem that host name containing spaces will not work.
-    // For that reason we alternatively allow a semicolon as a separator.
-    char *semicolon = strchr(spec, ';');
-    if (semicolon != nullptr) {
-        *semicolon = 0;
-        host_name = rstrip(spec);
-        description = rstrip(semicolon + 1);
-    } else {
-        host_name = next_field(&spec);
-        description = spec;
-    }
-    return find_service(host_name, description);
+service *getServiceBySpec(const string &spec) {
+    // The protocol proposes spaces as a separator between the host name and the
+    // service description. That introduces the problem that host name
+    // containing spaces will not work.  For that reason we alternatively allow
+    // a semicolon as a separator.
+    auto semicolon = spec.find(';');
+    auto host_and_desc =
+        semicolon == string::npos
+            ? mk::nextField(spec)
+            : make_pair(mk::rstrip(spec.substr(0, semicolon)),
+                        mk::rstrip(spec.substr(semicolon + 1)));
+    return find_service(const_cast<char *>(host_and_desc.first.c_str()),
+                        const_cast<char *>(host_and_desc.second.c_str()));
 }

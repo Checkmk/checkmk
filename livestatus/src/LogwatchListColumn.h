@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
-#include "Renderer.h"
+class RowRenderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -42,7 +42,7 @@ public:
                        int indirect_offset, int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
     ColumnType type() override { return ColumnType::list; }
-    void output(void *row, Renderer::Row &r, contact *auth_user) override;
+    void output(void *row, RowRenderer &r, contact *auth_user) override;
 };
 
 #endif  // LogwatchListColumn_h

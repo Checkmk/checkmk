@@ -37,7 +37,7 @@ public:
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
-    void *findObject(char *objectspec) override;
+    void *findObject(const std::string &objectspec) override;
 };
 
 #endif  // TableContactgroups_h

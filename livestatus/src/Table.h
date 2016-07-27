@@ -82,7 +82,7 @@ public:
 
     virtual void answerQuery(Query *query) = 0;
     virtual bool isAuthorized(contact *ctc, void *data);
-    virtual void *findObject(char *objectspec);
+    virtual void *findObject(const std::string &objectspec);
 
 private:
     Column *dynamicColumn(const std::string &name, const std::string &rest);

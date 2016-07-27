@@ -72,12 +72,12 @@ int32_t AttributelistColumn::getValue(void *row, contact * /*unused*/) {
     return *reinterpret_cast<int32_t *>(ptr);
 }
 
-void AttributelistColumn::output(void *row, Renderer::Row &r,
+void AttributelistColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
     unsigned long mask = static_cast<unsigned long>(getValue(row, nullptr));
     if (_show_list) {
         unsigned i = 0;
-        Renderer::List l(r);
+        ListRenderer l(r);
         while (al_entries[i].name != nullptr) {
             if ((mask & al_entries[i].bitvalue) != 0u) {
                 l.output(al_entries[i].name);

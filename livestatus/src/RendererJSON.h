@@ -38,7 +38,6 @@ public:
                  bool do_keep_alive, std::string invalid_header_message,
                  int timezone_offset);
 
-private:
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;
     void outputString(const std::string &value) override;

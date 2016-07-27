@@ -29,7 +29,7 @@
 
 using std::string;
 
-void StringColumn::output(void *row, Renderer::Row &r,
+void StringColumn::output(void *row, RowRenderer &r,
                           contact * /* auth_user */) {
     r.output(row == nullptr ? "" : getValue(row));
 }

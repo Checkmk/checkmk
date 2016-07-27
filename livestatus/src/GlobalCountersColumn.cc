@@ -26,7 +26,7 @@
 #include "Renderer.h"
 #include "global_counters.h"
 
-void GlobalCountersColumn::output(void * /* row */, Renderer::Row &r,
+void GlobalCountersColumn::output(void * /* row */, RowRenderer &r,
                                   contact * /* auth_user */) {
     if (_do_average) {
         r.output(g_counter_rate[_counter_index]);

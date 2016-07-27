@@ -85,7 +85,7 @@ Query::Query(const list<string> &lines, Table *table)
     , _wait_timeout(0)
     , _wait_trigger(nullptr)
     , _wait_object(nullptr)
-    , _separators("\n", ";", ",", "|")
+    , _separators("\n", ";", ",", "|")  // TODO(sp) Make this RFC4180-compliant
     , _show_column_headers(true)
     , _output_format(OutputFormat::csv)
     , _limit(-1)
@@ -720,14 +720,14 @@ void Query::process(OutputBuffer *output) {
         Renderer::make(_output_format, output, _response_header, _do_keepalive,
                        _invalid_header_message, _separators, _timezone_offset);
     doWait();
-    Renderer::Query q(*renderer);
+    QueryRenderer q(*renderer);
     _renderer_query = &q;
     start(q);
     _table->answerQuery(this);
     finish(q);
 }
 
-void Query::start(Renderer::Query &q) {
+void Query::start(QueryRenderer &q) {
     if (doStats()) {
         // if we have no StatsGroupBy: column, we allocate one only row of
         // Aggregators,
@@ -742,7 +742,7 @@ void Query::start(Renderer::Query &q) {
     }
 
     if (_show_column_headers) {
-        Renderer::Row r(q);
+        RowRenderer r(q);
         for (const auto &column : _columns) {
             r.output(column->name());
         }
@@ -808,7 +808,7 @@ bool Query::processDataset(void *data) {
             // No output is done while processing the data, we only collect
             // stats.
         } else {
-            Renderer::Row r(*_renderer_query);
+            RowRenderer r(*_renderer_query);
             for (auto column : _columns) {
                 column->output(data, r, _auth_user);
             }
@@ -817,13 +817,13 @@ bool Query::processDataset(void *data) {
     return true;
 }
 
-void Query::finish(Renderer::Query &q) {
+void Query::finish(QueryRenderer &q) {
     // grouped stats
     if (doStats() && !_columns.empty()) {
         // output values of all stats groups (output has been post poned until
         // now)
         for (auto &stats_group : _stats_groups) {
-            Renderer::Row r(q);
+            RowRenderer r(q);
             // output group columns first
             _stats_group_spec_t groupspec = stats_group.first;
             for (auto &iit : groupspec) {
@@ -841,7 +841,7 @@ void Query::finish(Renderer::Query &q) {
 
     // stats without group column
     else if (doStats()) {
-        Renderer::Row r(q);
+        RowRenderer r(q);
         for (unsigned i = 0; i < _stats_columns.size(); i++) {
             _stats_aggregators[i]->output(r);
             delete _stats_aggregators[i];

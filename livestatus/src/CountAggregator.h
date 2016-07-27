@@ -28,8 +28,8 @@
 #include "config.h"  // IWYU pragma: keep
 #include <cstdint>
 #include "Aggregator.h"
-#include "Renderer.h"
 class Filter;
+class RowRenderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -42,7 +42,7 @@ public:
     explicit CountAggregator(Filter *filter)
         : Aggregator(StatsOperation::count), _filter(filter), _count(0) {}
     void consume(void *row, contact *auth_user, int timezone_offset) override;
-    void output(Renderer::Row &r) override;
+    void output(RowRenderer &r) override;
 
 private:
     Filter *const _filter;

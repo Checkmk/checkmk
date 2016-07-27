@@ -30,7 +30,7 @@
 #include <string>
 #include <vector>
 #include "Column.h"
-#include "Renderer.h"
+class RowRenderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -44,7 +44,7 @@ public:
                int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
     virtual std::unique_ptr<std::vector<char>> getBlob(void *data) = 0;
-    void output(void *row, Renderer::Row &r, contact *auth_user) override;
+    void output(void *row, RowRenderer &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::blob; }
 };
 

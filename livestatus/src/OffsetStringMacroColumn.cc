@@ -70,7 +70,7 @@ string OffsetStringMacroColumn::valueAsString(void *row,
     return result;
 }
 
-void OffsetStringMacroColumn::output(void *row, Renderer::Row &r,
+void OffsetStringMacroColumn::output(void *row, RowRenderer &r,
                                      contact *auth_user) {
     string s = valueAsString(row, auth_user);
     r.output(s);

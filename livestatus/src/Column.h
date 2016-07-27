@@ -27,9 +27,9 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
-#include "Renderer.h"
 #include "opids.h"
 class Filter;
+class RowRenderer;
 
 #ifdef CMC
 #include "cmc.h"
@@ -65,7 +65,7 @@ public:
 
     // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is
     // fixed, it is just an artifact.
-    virtual void output(void *row, Renderer::Row &r, contact *auth_user) = 0;
+    virtual void output(void *row, RowRenderer &r, contact *auth_user) = 0;
 
     virtual bool mustDelete() {
         return false;  // true for dynamic Columns to be deleted after Query

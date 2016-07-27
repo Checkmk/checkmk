@@ -30,7 +30,7 @@ def check_mailboxes_arguments(params):
     fetch_params = params['imap_parameters']
 
     if 'server' in fetch_params:
-        args.append('--server=%s' % quote_shell_string(fetch_params['server']))
+        args.append('--server=%s' % fetch_params['server'])
     else:
         args.append('--server=$HOSTADDRESS$')
 
@@ -43,7 +43,7 @@ def check_mailboxes_arguments(params):
 
     username, password = fetch_params['auth']
 
-    args.append('--username=%s' % quote_shell_string(username))
+    args.append('--username=%s' % username)
     args.append(passwordstore_get_cmdline("--password=%s", password))
 
     if 'connect_timeout' in params:
@@ -68,7 +68,7 @@ def check_mailboxes_arguments(params):
         for mb in params['mailboxes']:
             args.append('--mailbox=%s' % mb)
 
-    return " ".join(args)
+    return args
 
 
 active_check_info['mailboxes'] = {

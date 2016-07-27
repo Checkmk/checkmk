@@ -15210,11 +15210,17 @@ class PasswordStore(object):
 
 
     def _owned_passwords(self):
+        if config.may("wato.edit_all_passwords"):
+            return self._load()
+
         user_groups = userdb.contactgroups_of_user(config.user_id)
         return dict([ (k, v) for k, v in self._load().items() if v["owned_by"] in user_groups ])
 
 
     def usable_passwords(self):
+        if config.may("wato.edit_all_passwords"):
+            return self._load()
+
         user_groups = userdb.contactgroups_of_user(config.user_id)
 
         passwords = self._owned_passwords()
@@ -15290,7 +15296,12 @@ class ModePasswords(WatoMode, PasswordStore):
             html.icon_button(delete_url, _("Delete this password"), "delete")
 
             table.cell(_("Title"), html.attrencode(password["title"]))
-            table.cell(_("Owned by"), html.attrencode(contact_group_alias(password["owned_by"])))
+            table.cell(_("Editable by"))
+            if password["owned_by"] == None:
+                html.write(_("Administrators (having the permission "
+                             "\"Write access to all passwords\")"))
+            else:
+                html.write(html.attrencode(contact_group_alias(password["owned_by"])))
             table.cell(_("Shared with"))
             if not password["shared_with"]:
                 html.write(_("Not shared"))
@@ -15349,6 +15360,17 @@ class ModeEditPassword(WatoMode, PasswordStore):
                 )),
             ]
 
+        if config.may("wato.edit_all_passwords"):
+            admin_element = [
+                FixedValue(None,
+                    title = _("Administrators"),
+                    totext = _("Administrators (having the permission "
+                               "\"Write access to all passwords\")"),
+                )
+            ]
+        else:
+            admin_element = []
+
         return Dictionary(
             title = _("Password"),
             elements = ident_attr + [
@@ -15362,14 +15384,24 @@ class ModeEditPassword(WatoMode, PasswordStore):
                     allow_empty = False,
                     hidden = True,
                 )),
-                ("owned_by", DropdownChoice(
-                    title = _("Owned by"),
+                ("owned_by", Alternative(
+                    title = _("Editable by"),
                     help  = _("Each password is owned by a group of users which are able to edit, "
                               "delete and use existing passwords."),
-                    choices = lambda: self.__contact_group_choices(only_own=True),
-                    invalid_choice = "complain",
-                    empty_text = _("You need to be member of at least one contact group to be able to "
-                                   "create a password."),
+                    style = "dropdown",
+                    elements = admin_element + [
+                        DropdownChoice(
+                            title = _("Members of the contact group:"),
+                            choices = lambda: self.__contact_group_choices(only_own=True),
+                            invalid_choice = "complain",
+                            empty_text = _("You need to be member of at least one contact group to be able to "
+                                           "create a password."),
+                            invalid_choice_title = _("Group not existant or not member"),
+                            invalid_choice_error = _("The choosen group is either not existant "
+                                                     "anymore or you are not a member of this "
+                                                     "group. Please choose another one."),
+                        ),
+                    ]
                 )),
                 ("shared_with", DualListChoice(
                     title = _("Share with"),
@@ -16694,15 +16726,21 @@ def load_plugins(force):
          _("This permission is needed for the module <i>Passwords</i>."),
          [ "admin", "user" ])
 
+    config.declare_permission("wato.edit_all_passwords",
+         _("Write access to all passwords"),
+         _("Without this permission, users can only edit passwords which are shared with a contact "
+           "group they are member of. This permission grants full access to all passwords."),
+         [ "admin" ])
+
     config.declare_permission("wato.see_all_folders",
          _("Read access to all hosts and folders"),
-         _("Users without this permissions can only see folders with a contact group they are in. "),
+         _("Users without this permissions can only see folders with a contact group they are in."),
          [ "admin" ])
 
     config.declare_permission("wato.all_folders",
          _("Write access to all hosts and folders"),
          _("Without this permission, operations on folders can only be done by users that are members of "
-           "one of the folders contact groups. This permission grants full access to all folders and hosts. "),
+           "one of the folders contact groups. This permission grants full access to all folders and hosts."),
          [ "admin" ])
 
     config.declare_permission("wato.hosttags",

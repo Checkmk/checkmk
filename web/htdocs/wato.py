@@ -15231,7 +15231,7 @@ class PasswordStore(object):
 
 class ModePasswords(WatoMode, PasswordStore):
     def title(self):
-        return _("Manage passwords")
+        return _("Passwords")
 
 
     def buttons(self):
@@ -15355,6 +15355,7 @@ class ModeEditPassword(WatoMode, PasswordStore):
                 ("title", TextUnicode(
                     title = _("Title"),
                     allow_empty = False,
+                    size = 64,
                 )),
                 ("password", PasswordSpec(
                     title = _("Password"),

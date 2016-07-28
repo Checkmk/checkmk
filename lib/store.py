@@ -168,20 +168,25 @@ def load_from_mk_file(path, key, default, **kwargs):
     return load_mk_file(path, {key: default}, **kwargs)[key]
 
 
+def save_mk_file(path, mk_content):
+    content = "# Written by Check_MK store (%s)\n\n" % \
+              time.strftime("%Y-%m-%d %H:%M:%S")
+    content += mk_content
+    content += "\n"
+    save_file(path, content)
+
+
 # Saving assumes a locked destination file (usually done by loading code)
 # Then the new file is written to a temporary file and moved to the target path
-def save_mk_file(path, formated):
+def save_file(path, content, mode=0660):
     try:
         tmp_path = None
         with tempfile.NamedTemporaryFile("w", dir=os.path.dirname(path),
                                          prefix=os.path.basename(path)+".new",
                                          delete=False) as tmp:
             tmp_path = tmp.name
-
-            os.chmod(tmp_path, 0660)
-            tmp.write("# Written by Check_MK store (%s)\n\n" % time.strftime("%Y-%m-%d %H:%M:%S"))
-            tmp.write(formated)
-            tmp.write("\n")
+            os.chmod(tmp_path, mode)
+            tmp.write(content)
 
         os.rename(tmp_path, path)
 

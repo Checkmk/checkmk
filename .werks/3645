@@ -1,0 +1,9 @@
+Title: Fixed filesystem growth/shrinkage graph by splitting it up into 2 graphs.
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p6
+Date: 1469713221
+Class: fix
+
+

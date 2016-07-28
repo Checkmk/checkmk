@@ -3440,11 +3440,11 @@ def verify_cluster_address_family(hostname):
 
 
 def write_stored_passwords():
-    formated = ""
+    content = ""
     for ident, pw in stored_passwords.items():
-        formated += "%s:%s\n" % (ident, pw["password"])
+        content += "%s:%s\n" % (ident, pw["password"])
 
-    store.save_mk_file(var_dir + "/stored_passwords.mk", formated)
+    store.save_file(var_dir + "/stored_passwords", content)
 
 
 def get_cluster_nodes_for_config(hostname):

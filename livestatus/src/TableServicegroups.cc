@@ -128,12 +128,10 @@ void TableServicegroups::addColumns(Table *table, string prefix,
 }
 
 void TableServicegroups::answerQuery(Query *query) {
-    servicegroup *sg = servicegroup_list;
-    while (sg != nullptr) {
+    for (servicegroup *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
         if (!query->processDataset(sg)) {
             break;
         }
-        sg = sg->next;
     }
 }
 

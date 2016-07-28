@@ -489,25 +489,25 @@ void TableServices::answerQuery(Query *query) {
     // do we know the host?
     if (const string *value = query->findValueForIndexing("host_name")) {
         // Older Nagios headers are not const-correct... :-P
-        host *host = find_host(const_cast<char *>(value->c_str()));
-        if (host == nullptr) {
+        if (host *host = find_host(const_cast<char *>(value->c_str()))) {
+            for (servicesmember *m = host->services; m != nullptr;
+                 m = m->next) {
+                if (!query->processDataset(m->service_ptr)) {
+                    break;
+                }
+            }
             return;
         }
-        for (servicesmember *m = host->services; m != nullptr; m = m->next) {
-            if (!query->processDataset(m->service_ptr)) {
-                break;
-            }
-        }
-        return;
     }
 
     // do we know the service group?
     if (const string *name = query->findValueForIndexing("groups")) {
-        servicegroup *sgroup =
-            find_servicegroup(const_cast<char *>(name->c_str()));
-        for (servicesmember *m = sgroup->members; m != nullptr; m = m->next) {
-            if (!query->processDataset(m->service_ptr)) {
-                break;
+        if (servicegroup *sg =
+                find_servicegroup(const_cast<char *>(name->c_str()))) {
+            for (servicesmember *m = sg->members; m != nullptr; m = m->next) {
+                if (!query->processDataset(m->service_ptr)) {
+                    break;
+                }
             }
         }
         return;
@@ -515,12 +515,13 @@ void TableServices::answerQuery(Query *query) {
 
     // do we know the host group?
     if (const string *name = query->findValueForIndexing("host_groups")) {
-        hostgroup *hgroup = find_hostgroup(const_cast<char *>(name->c_str()));
-        for (hostsmember *m = hgroup->members; m != nullptr; m = m->next) {
-            for (servicesmember *smem = m->host_ptr->services; smem != nullptr;
-                 smem = smem->next) {
-                if (!query->processDataset(smem->service_ptr)) {
-                    break;
+        if (hostgroup *hg = find_hostgroup(const_cast<char *>(name->c_str()))) {
+            for (hostsmember *m = hg->members; m != nullptr; m = m->next) {
+                for (servicesmember *smem = m->host_ptr->services;
+                     smem != nullptr; smem = smem->next) {
+                    if (!query->processDataset(smem->service_ptr)) {
+                        break;
+                    }
                 }
             }
         }

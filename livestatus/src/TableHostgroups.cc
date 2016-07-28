@@ -178,12 +178,10 @@ void TableHostgroups::addColumns(Table *table, string prefix,
 }
 
 void TableHostgroups::answerQuery(Query *query) {
-    hostgroup *hg = hostgroup_list;
-    while (hg != nullptr) {
+    for (hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
         if (!query->processDataset(hg)) {
             break;
         }
-        hg = hg->next;
     }
 }
 

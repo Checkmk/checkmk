@@ -63,7 +63,7 @@ string strip(const string &str, const string &chars) {
 }
 
 std::pair<string, string> nextField(const string &str, const string &chars) {
-    auto s = lstrip(str);
+    auto s = lstrip(str, chars);
     auto pos = s.find_first_of(chars);
     return pos == string::npos ? make_pair(s, "")
                                : make_pair(s.substr(0, pos), s.substr(pos + 1));

@@ -697,11 +697,13 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset,
 void TableHosts::answerQuery(Query *query) {
     // do we know the host group?
     if (const string *value = query->findValueForIndexing("groups")) {
-        hostgroup *hgroup = find_hostgroup(const_cast<char *>(value->c_str()));
-        for (hostsmember *mem = hgroup->members; mem != nullptr;
-             mem = mem->next) {
-            if (!query->processDataset(mem->host_ptr)) {
-                break;
+        if (hostgroup *hg =
+                find_hostgroup(const_cast<char *>(value->c_str()))) {
+            for (hostsmember *mem = hg->members; mem != nullptr;
+                 mem = mem->next) {
+                if (!query->processDataset(mem->host_ptr)) {
+                    break;
+                }
             }
         }
         return;

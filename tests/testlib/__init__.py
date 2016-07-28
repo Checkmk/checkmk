@@ -202,10 +202,13 @@ def site(request):
         return site_id
 
     def site_version():
-        version = os.environ.get("VERSION", CMKVersion.DEFAULT)
-        return version
+        return os.environ.get("VERSION", CMKVersion.DEFAULT)
 
-    site = Site(site_id=site_id(), version=site_version())
+    def site_edition():
+        return os.environ.get("EDITION", CMKVersion.CEE)
+
+    site = Site(site_id=site_id(), version=site_version(),
+                edition=site_edition())
     site.cleanup_if_wrong_version()
     site.create()
     site.start()

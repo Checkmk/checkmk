@@ -47,6 +47,9 @@ class CMKVersion(object):
 
     def __init__(self, version, edition):
         self.set_version(version)
+
+        if len(edition) != 3:
+            raise Exception("Invalid edition: %s. Must be short notation (cee, cre, ...)")
         self.edition_short = edition
 
         self._credentials = ("d-vonheute", "lOBFsgAH")
@@ -68,6 +71,8 @@ class CMKVersion(object):
             self.version = self.get_default_version()
 
         else:
+            if ".cee" in version or ".cre" in version:
+                raise Exception("Invalid version. Remove the edition suffix!")
             self.version = version
 
 

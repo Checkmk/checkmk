@@ -44,8 +44,10 @@
 #    the last few CPU cycles before outputting. Conversion from
 #    input to str or unicode must happen as early as possible,
 #    directly when reading from file or URL.
+#
+# - indentify internal helper methods and prefix them with "_"
 
-import time, os, pwd, urllib, random, re, __builtin__
+import time, os, urllib, random, re, __builtin__
 from guitester import GUITester
 
 try:
@@ -86,7 +88,6 @@ class html(GUITester):
         self.user = None
         self.user_errors = {}
         self.focus_object = None
-        self.global_vars = []
         self.render_headfoot = True
         self.browser_reload = 0
         self.browser_redirect = ''
@@ -137,36 +138,50 @@ class html(GUITester):
     def is_mobile(self):
         return self.mobile
 
+
     def is_api_call(self):
         return self.output_format != "html"
 
+
     def get_user_agent(self):
-        raise MKGeneralException("get_user_agent not implemented")
+        raise NotImplementedError()
+
 
     def get_referer(self):
-        raise MKGeneralException("get_referer not implemented")
+        raise NotImplementedError()
+
 
     def request_timeout(self):
-        raise MKGeneralException("request_timeout not implemented")
+        raise NotImplementedError()
+
 
     def is_ssl_request(self):
-        raise MKGeneralException("is_ssl_request not implemented")
+        raise NotImplementedError()
+
 
     def request_method(self):
-        raise MKGeneralException("request_method not implemented")
+        raise NotImplementedError()
+
 
     def set_page_context(self, c):
         self.page_context = c
 
+
     def set_buffering(self, b):
         self.buffering = b
 
+
+    # TODO: Can this be dropped?
     def push_transformation(self, tf):
         self.transformations.append(tf)
 
+
+    # TODO: Can this be dropped?
     def pop_transformation(self):
         del self.transformations[-1]
 
+
+    # TODO: Can this please be dropped?
     def some_id(self):
         self.auto_id += 1
         return "id_%d" % self.auto_id
@@ -203,8 +218,397 @@ class html(GUITester):
         self.set_content_type(content_type)
 
 
+    def set_content_type(self, ty):
+        raise NotImplementedError()
+
+
     def set_link_target(self, framename):
         self.link_target = framename
+
+
+    def set_focus(self, varname):
+        self.focus_object = (self.form_name, varname)
+
+
+    def set_render_headfoot(self, render):
+        self.render_headfoot = render
+
+
+    def set_browser_reload(self, secs):
+        self.browser_reload = secs
+
+
+    def set_browser_redirect(self, secs, url):
+        self.browser_reload   = secs
+        self.browser_redirect = url
+
+
+    def immediate_browser_redirect(self, secs, url):
+        self.javascript("set_reload(%s, '%s');" % (secs, url))
+
+
+    def add_body_css_class(self, cls):
+        self.body_classes.append(cls)
+
+
+    def add_status_icon(self, img, tooltip, url = None):
+        if url:
+            self.status_icons[img] = tooltip, url
+        else:
+            self.status_icons[img] = tooltip
+
+
+    def final_javascript(self, code):
+        self.final_javascript_code += code + "\n"
+
+
+    def reload_sidebar(self):
+        if not self.has_var("_ajaxid"):
+            self.javascript("reload_sidebar()")
+
+
+    def http_redirect(self, url):
+        raise MKGeneralException("http_redirect not implemented")
+
+
+    #
+    # Request processing
+    #
+
+    def get_unicode_input(self, varname, deflt = None):
+        try:
+            return self.var_utf8(varname, deflt)
+        except UnicodeDecodeError:
+            raise MKUserError(varname, _("The given text is wrong encoded. "
+                                         "You need to provide a UTF-8 encoded text."))
+
+
+    def var(self, varname, deflt = None):
+        return self.vars.get(varname, deflt)
+
+
+    def has_var(self, varname):
+        return varname in self.vars
+
+
+    # Checks if a variable with a given prefix is present
+    def has_var_prefix(self, prefix):
+        for varname in self.vars:
+            if varname.startswith(prefix):
+                return True
+        return False
+
+
+    def var_utf8(self, varname, deflt = None):
+        val = self.vars.get(varname, deflt)
+        if val != None and type(val) != unicode:
+            return val.decode("utf-8")
+        else:
+            return val
+
+
+    def all_vars(self):
+        return self.vars
+
+
+    def all_varnames_with_prefix(self, prefix):
+        for varname, value in self.vars.items():
+            if varname.startswith(prefix):
+                yield varname
+
+
+    # Return all values of a variable that possible occurs more
+    # than once in the URL. note: self.listvars does contain those
+    # variable only, if the really occur more than once.
+    def list_var(self, varname):
+        if varname in self.listvars:
+            return self.listvars[varname]
+        elif varname in self.vars:
+            return [self.vars[varname]]
+        else:
+            return []
+
+
+    # Adds a variable to listvars and also set it
+    def add_var(self, varname, value):
+        self.listvars.setdefault(varname, [])
+        self.listvars[varname].append(value)
+        self.vars[varname] = value
+
+
+    def set_var(self, varname, value):
+        if value == None:
+            self.del_var(varname)
+        else:
+            self.vars[varname] = value
+
+
+    def del_var(self, varname):
+        if varname in self.vars:
+            del self.vars[varname]
+        if varname in self.listvars:
+            del self.listvars[varname]
+
+
+    def del_all_vars(self, prefix = None):
+        if not prefix:
+            self.vars = {}
+            self.listvars = {}
+        else:
+            self.vars = dict([(k,v) for (k,v) in self.vars.iteritems()
+                                            if not k.startswith(prefix)])
+            self.listvars = dict([(k,v) for (k,v) in self.listvars.iteritems()
+                                            if not k.startswith(prefix)])
+
+
+    def stash_vars(self):
+        self.var_stash.append(self.vars.copy())
+
+
+    def unstash_vars(self):
+        self.vars = self.var_stash.pop()
+
+
+    def uploaded_file(self, varname, default = None):
+        return self.uploads.get(varname, default)
+
+
+    # Returns a dictionary containing all parameters the user handed over to this request.
+    # The concept is that the user can either provide the data in a single "request" variable,
+    # which contains the request data encoded as JSON, or provide multiple GET/POST vars which
+    # are then used as top level entries in the request object.
+    def get_request(self):
+        request = json.loads(self.var("request", "{}"))
+
+        for key, val in self.all_vars().items():
+            if key not in [ "request", "output_format" ]:
+                request[key] = val
+
+        return request
+
+
+    def parse_field_storage(self, fields, handle_uploads_as_file_obj = False):
+        self.vars     = {}
+        self.listvars = {} # for variables with more than one occurrance
+        self.uploads  = {}
+
+        for field in fields.list:
+            varname = field.name
+
+            # To prevent variours injections, we only allow a defined set
+            # of characters to be used in variables
+            if not varname_regex.match(varname):
+                continue
+
+            # put uploaded file infos into separate storage
+            if field.filename is not None:
+                if handle_uploads_as_file_obj:
+                    value = field.file
+                else:
+                    value = field.value
+                self.uploads[varname] = (field.filename, field.type, value)
+
+            else: # normal variable
+                # Multiple occurrance of a variable? Store in extra list dict
+                if varname in self.vars:
+                    if varname in self.listvars:
+                        self.listvars[varname].append(field.value)
+                    else:
+                        self.listvars[varname] = [ self.vars[varname], field.value ]
+                # In the single-value-store the last occurrance of a variable
+                # has precedence. That makes appending variables to the current
+                # URL simpler.
+                self.vars[varname] = field.value
+
+
+
+    #
+    # Cookie handling
+    #
+
+    def has_cookie(self, varname):
+        return varname in self.cookies
+
+
+    def get_cookie_names(self):
+        return self.cookies.keys()
+
+
+    def cookie(self, varname, deflt):
+        try:
+            return self.cookies[varname].value
+        except:
+            return deflt
+
+
+    #
+    # URL building
+    #
+
+    # [('varname1', value1), ('varname2', value2) ]
+    def makeuri(self, addvars, remove_prefix=None, filename=None, delvars=None):
+        new_vars = [ nv[0] for nv in addvars ]
+        vars = [ (v, self.var(v))
+                 for v in self.vars
+                 if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars) ]
+        if remove_prefix != None:
+            vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
+        vars = vars + addvars
+        if filename == None:
+            filename = self.urlencode(self.myfile) + ".py"
+        if vars:
+            return filename + "?" + self.urlencode_vars(vars)
+        else:
+            return filename
+
+
+    def makeuri_contextless(self, vars, filename=None):
+        if not filename:
+            filename = self.myfile + ".py"
+        if vars:
+            return filename + "?" + self.urlencode_vars(vars)
+        else:
+            return filename
+
+
+    def makeactionuri(self, addvars, filename=None):
+        return self.makeuri(addvars + [("_transid", self.get_transid())], filename=filename)
+
+
+    def makeactionuri_contextless(self, addvars, filename=None):
+        return self.makeuri_contextless(addvars + [("_transid", self.get_transid())], filename=filename)
+
+
+    #
+    # Encoding and escaping
+    #
+
+    # Only strip off some tags. We allow some simple tags like
+    # <b>, <tt>, <i> to be part of the string. This is useful
+    # for messages where we still want to have formating options.
+    def permissive_attrencode(self, obj):
+        msg = self.attrencode(obj)
+        msg = re.sub(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;', r'<\1\2>', msg)
+        # Also repair link definitions
+        return re.sub(r'&lt;a href=&quot;(.*?)&quot;&gt;', r'<a href="\1">', msg)
+
+
+    # Encode HTML attributes: replace " with &quot;, also replace
+    # < and >. This code is slow. Works on str and unicode without
+    # changing the type. Also works on things that can be converted
+    # with %s.
+    def attrencode(self, value):
+        ty = type(value)
+        if ty == int:
+            return str(value)
+        elif isinstance(value, HTML):
+            return value.value # This is HTML code which must not be escaped
+        elif ty not in [str, unicode]: # also possible: type Exception!
+            value = "%s" % value # Note: this allows Unicode. value might not have type str now
+
+        return value.replace("&", "&amp;")\
+                    .replace('"', "&quot;")\
+                    .replace("<", "&lt;")\
+                    .replace(">", "&gt;")
+
+
+    # This function returns a str object, never unicode!
+    # Beware: this code is crucial for the performance of Multisite!
+    # Changing from the self coded urlencode to urllib.quote
+    # is saving more then 90% of the total HTML generating time
+    # on more complex pages!
+    def urlencode_vars(self, vars):
+        output = []
+        for varname, value in sorted(vars):
+            if type(value) == int:
+                value = str(value)
+            elif type(value) == unicode:
+                value = value.encode("utf-8")
+
+            try:
+                # urllib is not able to encode non-Ascii characters. Yurks
+                output.append(varname + '=' + urllib.quote(value))
+            except:
+                output.append(varname + '=' + self.urlencode(value)) # slow but working
+
+        return '&'.join(output)
+
+
+    def urlencode(self, value):
+        if type(value) == unicode:
+            value = value.encode("utf-8")
+        elif value == None:
+            return ""
+        ret = ""
+        for c in value:
+            if c == " ":
+                c = "+"
+            elif ord(c) <= 32 or ord(c) > 127 or c in [ '#', '+', '"', "'", "=", "&", ":", "%" ]:
+                c = "%%%02x" % ord(c)
+            ret += c
+        return ret
+
+
+    # Escape a variable name so that it only uses allowed charachters for URL variables
+    def varencode(self, varname):
+        if varname == None:
+            return "None"
+        if type(varname) == int:
+            return varname
+
+        ret = ""
+        for c in varname:
+            if not c.isdigit() and not c.isalnum() and c != "_":
+                ret += "%%%02x" % ord(c)
+            else:
+                ret += c
+        return ret
+
+
+    def u8(self, c):
+        if ord(c) > 127:
+            return "&#%d;" % ord(c)
+        else:
+            return c
+
+
+    def utf8_to_entities(self, text):
+        if type(text) != unicode:
+            return text
+        else:
+            return text.encode("utf-8")
+
+
+    # remove all HTML-tags
+    def strip_tags(self, ht):
+        if type(ht) not in [str, unicode]:
+            return ht
+        while True:
+            x = ht.find('<')
+            if x == -1:
+                break
+            y = ht.find('>', x)
+            if y == -1:
+                break
+            ht = ht[0:x] + ht[y+1:]
+        return ht.replace("&nbsp;", " ")
+
+
+    def strip_scripts(self, ht):
+        while True:
+            x = ht.find('<script')
+            if x == -1:
+                break
+            y = ht.find('</script>')
+            if y == -1:
+                break
+            ht = ht[0:x] + ht[y+9:]
+        return ht
+
+
+    #
+    # Response handling
+    #
 
     def write(self, text):
         for tf in self.transformations:
@@ -220,6 +624,10 @@ class html(GUITester):
 	        text = text.encode("utf-8")
 
             self.lowlevel_write(text)
+
+
+    def lowlevel_write(self, text):
+        raise NotImplementedError()
 
 
     def plug(self):
@@ -258,24 +666,57 @@ class html(GUITester):
         self.flush()
         self.plugged = False
 
-    def age_text(self, timedif):
-        timedif = int(timedif)
-        if timedif < 120:
-            return "%d sec" % timedif
 
-        minutes = timedif / 60
-        if minutes < 120:
-            return "%d min" % minutes
+    #
+    # Debugging, diagnose and logging
+    #
 
-        hours = minutes / 60
-        if hours < 48:
-            return "%d hrs" % hours
+    def debug(self, *x):
+        import pprint
+        for element in x:
+            try:
+                formatted = pprint.pformat(element)
+            except UnicodeDecodeError:
+                formatted = repr(element)
+            self.lowlevel_write("<pre>%s</pre>\n" % self.attrencode(formatted))
 
-        days = hours / 24
-        return "%d days" % days
 
-    def in_form(self):
-        return self.form_name != None
+    def log(self, *args):
+        raise NotImplementedError()
+
+
+    #
+    # HTML low level rendering and writing functions. Only put most basic function in
+    # this section which are really creating only some simple tags.
+    #
+
+    def heading(self, text):
+        self.write("<h2>%s</h2>\n" % text)
+
+
+    def rule(self):
+        self.write("<hr/>")
+
+
+    def p(self, content):
+        self.write("<p>%s</p>" % self.attrencode(content))
+
+
+    def render_javascript(self, code):
+        return "<script language=\"javascript\">\n%s\n</script>\n" % code
+
+
+    def javascript(self, code):
+        self.write(self.render_javascript(code))
+
+
+    def javascript_file(self, name):
+        self.write('<script type="text/javascript" src="js/%s.js"></script>\n' % name)
+
+
+    #
+    # HTML form rendering
+    #
 
     def begin_form(self, name, action = None, method = "GET",
                    onsubmit = None, add_transid = True):
@@ -298,12 +739,17 @@ class html(GUITester):
         self.hidden_field("filled_in", name, add_var=True)
         if add_transid:
             self.hidden_field("_transid", str(self.get_transid()))
-        self.hidden_fields(self.global_vars)
         self.form_name = name
+
 
     def end_form(self):
         self.write("</form>\n")
         self.form_name = None
+
+
+    def in_form(self):
+        return self.form_name != None
+
 
     def prevent_password_auto_completion(self):
         # These fields are not really used by the form. They are used to prevent the browsers
@@ -312,32 +758,12 @@ class html(GUITester):
         self.write("<input type=\"text\" style=\"display:none;\">")
         self.write("<input style=\"display:none\" type=\"password\">")
 
-    def form_submitted(self, form_name=None):
-        if form_name:
-            return self.var("filled_in") == form_name
-        else:
-            return self.has_var("filled_in")
 
-    def add_user_error(self, varname, msg_or_exc):
-        if isinstance(msg_or_exc, Exception):
-            message = "%s" % msg_or_exc
-        else:
-            message = msg_or_exc
+    # Needed if input elements are put into forms without the helper
+    # functions of us. TODO: Should really be removed and cleaned up!
+    def add_form_var(self, varname):
+        self.form_vars.append(varname)
 
-        if type(varname) == list:
-            for v in varname:
-                self.add_user_error(v, message)
-        else:
-            self.user_errors[varname] = message
-
-    def has_user_errors(self):
-        return len(self.user_errors) > 0
-
-    def show_user_errors(self):
-        if self.has_user_errors():
-            self.write('<div class=error>\n')
-            self.write('<br>'.join(self.user_errors.values()))
-            self.write('</div>\n')
 
     # Beware: call this method just before end_form(). It will
     # add all current non-underscored HTML variables as hiddedn
@@ -356,60 +782,6 @@ class html(GUITester):
                     (var[0] != "_" or add_action_vars): # and var != "filled_in":
                     self.hidden_field(var, value)
 
-    def add_global_vars(self, varnames):
-        self.global_vars += varnames
-
-    # [('varname1', value1), ('varname2', value2) ]
-    def makeuri(self, addvars, remove_prefix=None, filename=None, delvars=None):
-        new_vars = [ nv[0] for nv in addvars ]
-        vars = [ (v, self.var(v))
-                 for v in self.vars
-                 if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars) ]
-        if remove_prefix != None:
-            vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
-        vars = vars + addvars
-        if filename == None:
-            filename = self.urlencode(self.myfile) + ".py"
-        if vars:
-            return filename + "?" + self.urlencode_vars(vars)
-        else:
-            return filename
-
-    def makeuri_contextless(self, vars, filename=None):
-        if not filename:
-            filename = self.myfile + ".py"
-        if vars:
-            return filename + "?" + self.urlencode_vars(vars)
-        else:
-            return filename
-
-    def makeactionuri(self, addvars, filename=None):
-        return self.makeuri(addvars + [("_transid", self.get_transid())], filename=filename)
-
-    def makeactionuri_contextless(self, addvars, filename=None):
-        return self.makeuri_contextless(addvars + [("_transid", self.get_transid())], filename=filename)
-
-
-    #
-    # Generic HTML rendering and writing functions
-    #
-
-    def heading(self, text):
-        self.write("<h2>%s</h2>\n" % text)
-
-
-    def rule(self):
-        self.write("<hr/>")
-
-
-    def p(self, content):
-        self.write("<p>%s</p>" % self.attrencode(content))
-
-
-    #
-    # HTML form rendering
-    #
-
 
     def hidden_field(self, *args, **kwargs):
         self.write(self.render_hidden_field(*args, **kwargs))
@@ -425,6 +797,7 @@ class html(GUITester):
         id = id and ' id="%s"' % self.attrencode(id) or ''
         return "<input type=\"hidden\" name=\"%s\" value=\"%s\"%s />" % \
                             (self.attrencode(var), self.attrencode(value), id)
+
 
     def image_button(self, varname, title, cssclass = '', style=None):
         if not self.mobile:
@@ -486,8 +859,14 @@ class html(GUITester):
         else:
             return "images/icons/%s.png" % icon_name
 
+
     def icon(self, help, icon, **kwargs):
         self.write(self.render_icon(icon, help, **kwargs))
+
+
+    def empty_icon(self):
+        self.write('<img class=icon src="images/trans.png" />')
+
 
     def render_icon(self, icon_name, help="", middle=True, id=None, cssclass=None):
         align = middle and ' align=absmiddle' or ''
@@ -497,9 +876,6 @@ class html(GUITester):
 
         return '<img src="%s" class="icon%s"%s%s%s />' % \
             (self.detect_icon_path(icon_name), cssclass, align, title, id)
-
-    def empty_icon(self):
-        self.write('<img class=icon src="images/trans.png" />')
 
 
     def render_icon_button(self, url, help, icon, id="", onclick="",
@@ -540,8 +916,10 @@ class html(GUITester):
     def empty_icon_button(self):
         self.write('<img class="iconbutton trans" src="images/trans.png">')
 
+
     def disabled_icon_button(self, icon):
         self.write('<img class="iconbutton" align=absmiddle src="images/icon_%s.png">' % icon)
+
 
     def jsbutton(self, varname, text, onclick, style=''):
         if style:
@@ -549,76 +927,12 @@ class html(GUITester):
         self.write("<input type=button name=%s id=%s onclick=\"%s\" "
                    "class=button%s value=\"%s\" />" % (varname, varname, onclick, style, text))
 
-    def begin_context_buttons(self):
-        if not self.context_buttons_open:
-            self.context_button_hidden = False
-            self.write("<table class=contextlinks><tr><td>\n")
-            self.context_buttons_open = True
-
-    def end_context_buttons(self):
-        if self.context_buttons_open:
-            if self.context_button_hidden:
-                self.write('<div title="%s" id=toggle class="contextlink short" '
-                      % _("Show all buttons"))
-                self.context_button_hover_code("_short")
-                self.write("><a onclick='unhide_context_buttons(this);' href='#'>...</a></div>")
-            self.write("</td></tr></table>\n")
-        self.context_buttons_open = False
-
-    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title='', fkey=None):
-        self.guitest_record_output("context_button", (title, url, icon))
-        title = self.attrencode(title)
-        display = "block"
-        if bestof:
-            counts = self.get_button_counts()
-            weights = counts.items()
-            weights.sort(cmp = lambda a,b: cmp(a[1],  b[1]))
-            best = dict(weights[-bestof:])
-            if id not in best:
-                display="none"
-                self.context_button_hidden = True
-
-        if not self.context_buttons_open:
-            self.begin_context_buttons()
-
-        if icon:
-            title = '<img src="%s">%s' % \
-                        (self.attrencode(self.detect_icon_path(icon)),
-                         self.attrencode(title))
-
-        if id:
-            idtext = " id='%s'" % self.attrencode(id)
-        else:
-            idtext = ""
-        self.write('<div%s style="display:%s" class="contextlink%s%s" ' %
-            (idtext, display, hot and " hot" or "", (fkey and self.keybindings_enabled) and " button" or ""))
-        self.context_button_hover_code(hot and "_hot" or "")
-        self.write('>')
-        self.write('<a href="%s"' % self.attrencode(url))
-        if hover_title:
-            self.write(' title="%s"' % self.attrencode(hover_title))
-        if bestof:
-            self.write(' onclick="count_context_button(this); " ')
-        if fkey and self.keybindings_enabled:
-            title += '<div class=keysym>F%d</div>' % fkey
-            self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % self.attrencode(url))
-        self.write('>%s</a></div>\n' % title)
-
-    def context_button_hover_code(self, what):
-        self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % what)
-        self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % what)
-
 
     def number_input(self, varname, deflt = "", size=8, style="", submit=None):
         if deflt != None:
             deflt = str(deflt)
         self.text_input(varname, deflt, "number", size=size, style=style, submit=submit)
 
-
-    # Needed if input elements are put into forms without the helper
-    # functions of us.
-    def add_form_var(self, varname):
-        self.form_vars.append(varname)
 
     def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None,
                    submit = None, attrs = {}, **args):
@@ -676,8 +990,10 @@ class html(GUITester):
         self.write(html)
         self.form_vars.append(varname)
 
+
     def password_input(self, varname, default_value = "", size=12, **args):
         self.text_input(varname, default_value, type="password", size = size, **args)
+
 
     def text_area(self, varname, deflt="", rows=4, cols=30, attrs = {}):
         value = self.var(varname, deflt)
@@ -693,11 +1009,13 @@ class html(GUITester):
             self.set_focus(varname)
         self.form_vars.append(varname)
 
+
     def sorted_select(self, varname, choices, deflt="", onchange=None, attrs = {}):
         # Sort according to display texts, not keys
         sorted = choices[:]
         sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
         self.select(varname, sorted, deflt, onchange, attrs)
+
 
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
@@ -724,6 +1042,7 @@ class html(GUITester):
         if varname:
             self.form_vars.append(varname)
 
+
     def icon_select(self, varname, options, deflt=""):
         current = self.var(varname, deflt)
         self.write("<select class=icon name=\"%s\" id=\"%s\" size=\"1\">\n" %
@@ -738,6 +1057,7 @@ class html(GUITester):
         if varname:
             self.form_vars.append(varname)
 
+
     def begin_radio_group(self, horizontal=False):
         if self.mobile:
             if horizontal:
@@ -746,9 +1066,11 @@ class html(GUITester):
                 add = ''
             self.write('<fieldset %s data-role="controlgroup">' % add)
 
+
     def end_radio_group(self):
         if self.mobile:
             self.write('</fieldset>')
+
 
     def radiobutton(self, varname, value, checked, label):
         if self.has_var(varname):
@@ -765,8 +1087,10 @@ class html(GUITester):
             self.write('<label for="%s">%s</label>\n' % (id, label))
         self.form_vars.append(varname)
 
+
     def begin_checkbox_group(self, horizonal=False):
         self.begin_radio_group(horizonal)
+
 
     def end_checkbox_group(self):
         self.end_radio_group()
@@ -818,6 +1142,62 @@ class html(GUITester):
         return code
 
 
+    def upload_file(self, varname):
+        error = self.user_errors.get(varname)
+        if error:
+            self.write("<x class=inputerror>")
+        self.write('<input type="file" name="%s">' % varname)
+        if error:
+            self.write("</x>")
+        self.form_vars.append(varname)
+
+
+    def show_user_errors(self):
+        if self.has_user_errors():
+            self.write('<div class=error>\n')
+            self.write('<br>'.join(self.user_errors.values()))
+            self.write('</div>\n')
+
+
+    # The confirm dialog is normally not a dialog which need to be protected
+    # by a transid itselfs. It is only a intermediate step to the real action
+    # But there are use cases where the confirm dialog is used during rendering
+    # a normal page, for example when deleting a dashlet from a dashboard. In
+    # such cases, the transid must be added by the confirm dialog.
+    # add_header: A title can be given to make the confirm method render the HTML
+    #             header when showing the confirm message.
+    def confirm(self, msg, method="POST", action=None, add_transid=False, add_header=False):
+        if self.var("_do_actions") == _("No"):
+            # User has pressed "No", now invalidate the unused transid
+            self.check_transaction()
+            return # None --> "No"
+
+        if not self.has_var("_do_confirm"):
+            if add_header != False:
+                self.header(add_header)
+
+            if self.mobile:
+                self.write('<center>')
+            self.write("<div class=really>%s" % self.permissive_attrencode(msg))
+            # FIXME: When this confirms another form, use the form name from self.vars()
+            self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
+            self.hidden_fields(add_action_vars = True)
+            self.button("_do_confirm", _("Yes!"), "really")
+            self.button("_do_actions", _("No"), "")
+            self.end_form()
+            self.write("</div>")
+            if self.mobile:
+                self.write('</center>')
+
+            return False # False --> "Dialog shown, no answer yet"
+        else:
+            # Now check the transaction
+            return self.check_transaction() and True or None # True: "Yes", None --> Browser reload of "yes" page
+
+    #
+    # Form submission and variable handling
+    #
+
     # Check if the current form is currently filled in (i.e. we display
     # the form a second time while showing value typed in at the first
     # time and complaining about invalid user input)
@@ -828,6 +1208,34 @@ class html(GUITester):
         return self.has_var("filled_in") and (
             form_name == None or \
             form_name in self.list_var("filled_in"))
+
+
+    def do_actions(self):
+        return self.var("_do_actions") not in [ "", None, _("No") ]
+
+
+    def form_submitted(self, form_name=None):
+        if form_name:
+            return self.var("filled_in") == form_name
+        else:
+            return self.has_var("filled_in")
+
+
+    def add_user_error(self, varname, msg_or_exc):
+        if isinstance(msg_or_exc, Exception):
+            message = "%s" % msg_or_exc
+        else:
+            message = msg_or_exc
+
+        if type(varname) == list:
+            for v in varname:
+                self.add_user_error(v, message)
+        else:
+            self.user_errors[varname] = message
+
+
+    def has_user_errors(self):
+        return len(self.user_errors) > 0
 
 
     # Get value of checkbox. Return True, False or None. None means
@@ -844,14 +1252,7 @@ class html(GUITester):
             return False
 
 
-    def get_unicode_input(self, varname, deflt = None):
-        try:
-            return self.var_utf8(varname, deflt)
-        except UnicodeDecodeError:
-            raise MKUserError(varname, _("The given text is wrong encoded. "
-                                         "You need to provide a UTF-8 encoded text."))
-
-
+    # TODO: Remove this specific legacy function. Change code using this to valuespecs
     def datetime_input(self, varname, default_value, submit=None):
         try:
             t = self.get_datetime_input(varname)
@@ -870,14 +1271,20 @@ class html(GUITester):
         self.form_vars.append(varname + "_date")
         self.form_vars.append(varname + "_time")
 
+
+    # TODO: Remove this specific legacy function. Change code using this to valuespecs
     def time_input(self, varname, hours, mins, submit=None):
         self.text_input(varname, "%02d:%02d" % (hours, mins), cssclass="time", size=5,
                         submit=submit, omit_css_width = True)
 
+
+    # TODO: Remove this specific legacy function. Change code using this to valuespecs
     def date_input(self, varname, year, month, day, submit=None):
         self.text_input(varname, "%04d-%02d-%02d" % (year, month, day),
                         cssclass="date", size=10, submit=submit, omit_css_width = True)
 
+
+    # TODO: Remove this specific legacy function. Change code using this to valuespecs
     def get_datetime_input(self, varname):
         t = self.var(varname + "_time")
         d = self.var(varname + "_date")
@@ -892,6 +1299,8 @@ class html(GUITester):
                               _("Please enter the date/time in the format YYYY-MM-DD HH:MM."))
         return int(time.mktime(br))
 
+
+    # TODO: Remove this specific legacy function. Change code using this to valuespecs
     def get_time_input(self, varname, what):
         t = self.var(varname)
         if not t:
@@ -907,20 +1316,66 @@ class html(GUITester):
             raise MKUserError(varname, _("Please enter the time in the format HH:MM."))
         return m * 60 + h * 3600
 
-    def upload_file(self, varname):
-        error = self.user_errors.get(varname)
-        if error:
-            self.write("<x class=inputerror>")
-        self.write('<input type="file" name="%s">' % varname)
-        if error:
-            self.write("</x>")
-        self.form_vars.append(varname)
+
+    #
+    # HTML - All the common and more complex HTML rendering methods
+    #
+
+    def show_info(self, msg):
+        self.message(msg, 'message')
 
 
-    def default_html_headers(self):
-        self.write('<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n')
-        self.write('<meta http-equiv="X-UA-Compatible" content="IE=edge" />\n')
-        self.write('<link rel="shortcut icon" href="images/favicon.ico" type="image/ico">\n')
+    def show_error(self, msg):
+        self.message(msg, 'error')
+
+
+    def show_warning(self, msg):
+        self.message(msg, 'warning')
+
+
+    # obj might be either a string (str or unicode) or an exception object
+    def message(self, obj, what='message'):
+        if what == 'message':
+            cls    = 'success'
+            prefix = _('MESSAGE')
+        elif what == 'warning':
+            cls    = 'warning'
+            prefix = _('WARNING')
+        else:
+            cls    = 'error'
+            prefix = _('ERROR')
+
+        msg = self.permissive_attrencode(obj)
+
+        if self.output_format == "html":
+            if self.mobile:
+                self.write('<center>')
+            self.write("<div class=%s>%s</div>\n" % (cls, msg))
+            if self.mobile:
+                self.write('</center>')
+        else:
+            self.write('%s: %s\n' % (prefix, self.strip_tags(msg)))
+
+        self.guitest_record_output("message", (what, msg))
+
+
+    def show_localization_hint(self):
+        url = "wato.py?mode=edit_configvar&varname=user_localizations"
+        self.message(HTML("<sup>*</sup>" +
+            _("These texts may be localized depending on the users' "
+              "language. You can configure the localizations "
+              "<a href=\"%s\">in the global settings</a>.") % url))
+
+
+    # Embed help box, whose visibility is controlled by a global
+    # button in the page.
+    def help(self, text):
+        if text and text.strip():
+            self.have_help = True
+            self.write('<div class=help style="display: %s">' % (
+                        not self.help_visible and "none" or "block"))
+            self.write(text.strip())
+            self.write('</div>')
 
 
     def html_head(self, title, javascripts = [], stylesheets = ["pages"], force=False):
@@ -974,6 +1429,17 @@ class html(GUITester):
             self.header_sent = True
 
 
+    def default_html_headers(self):
+        self.write('<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n')
+        self.write('<meta http-equiv="X-UA-Compatible" content="IE=edge" />\n')
+        self.write('<link rel="shortcut icon" href="images/favicon.ico" type="image/ico">\n')
+
+
+    # TODO: Rename. Also rename in CMA!
+    def add_custom_style_sheet(self):
+        raise NotImplementedError()
+
+
     # Make the browser load specified javascript files. We have some special handling here:
     # a) files which can not be found shal not be loaded
     # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
@@ -1001,34 +1467,6 @@ class html(GUITester):
     def html_foot(self):
         self.write("</html>\n")
 
-    def set_render_headfoot(self, render):
-        self.render_headfoot = render
-
-    def set_browser_reload(self, secs):
-        self.browser_reload = secs
-
-    def http_redirect(self, url):
-        raise MKGeneralException("http_redirect not implemented")
-
-    def set_browser_redirect(self, secs, url):
-        self.browser_reload   = secs
-        self.browser_redirect = url
-
-    def immediate_browser_redirect(self, secs, url):
-        self.javascript("set_reload(%s, '%s');" % (secs, url))
-
-    def add_body_css_class(self, cls):
-        self.body_classes.append(cls)
-
-    def get_body_css_classes(self):
-        body_classes = self.body_classes
-        if self.screenshotmode:
-            body_classes.append("screenshotmode")
-        return " ".join(body_classes)
-
-    def body_start(self, title='', **args):
-        self.html_head(title, **args)
-        self.write('<body class="%s">' % self.get_body_css_classes())
 
     def header(self, title='', **args):
         if self.output_format == "html":
@@ -1038,11 +1476,29 @@ class html(GUITester):
                 if self.render_headfoot:
                     self.top_heading(title)
 
+
+    def body_start(self, title='', **args):
+        self.html_head(title, **args)
+        self.write('<body class="%s">' % self._get_body_css_classes())
+
+
+    def _get_body_css_classes(self):
+        body_classes = self.body_classes
+        if self.screenshotmode:
+            body_classes.append("screenshotmode")
+        return " ".join(body_classes)
+
+
+    def top_heading(self, title):
+        raise NotImplementedError()
+
+
     def top_heading_left(self, title):
         self.write('<table class=header><tr><td width="*" class=heading>')
         self.write('<a href="#" onfocus="if (this.blur) this.blur();" '
                    'onclick="this.innerHTML=\'%s\'; document.location.reload();">%s</a></td>' %
                    (_("Reloading..."), self.attrencode(title)))
+
 
     def top_heading_right(self):
         cssclass = self.help_visible and "active" or "passive"
@@ -1054,12 +1510,38 @@ class html(GUITester):
                      "<img src=\"images/logo_cmk_small.png\"/></a>"))
         self.write("<hr class=header>\n")
         if self.enable_debug:
-            self.dump_get_vars()
+            self._dump_get_vars()
 
-    def dump_get_vars(self):
+
+    def _dump_get_vars(self):
         self.begin_foldable_container("html", "debug_vars", True, _("GET/POST variables of this page"))
         self.debug_vars(hide_with_mouse = False)
         self.end_foldable_container()
+
+
+    def footer(self):
+        if self.output_format == "html":
+            self.bottom_footer()
+            self.body_end()
+
+
+    def bottom_footer(self):
+        if self.header_sent:
+            self.bottom_focuscode()
+            if self.render_headfoot:
+                self.write("<table class=footer><tr>")
+
+                self.write("<td class=left>")
+                self._write_status_icons()
+                self.write("</td>")
+
+                self.write("<td class=middle></td>"
+                           "<td class=right>")
+                self.write("<div style=\"display:%s\" id=foot_refresh>%s</div>" % (
+                        (self.browser_reload and "inline-block" or "none",
+                     _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload)))
+                self.write("</td></tr></table>")
+
 
     def bottom_focuscode(self):
         if self.focus_object:
@@ -1074,22 +1556,6 @@ class html(GUITester):
                            "// -->\n"
                            "</script>\n" % (obj, obj, obj))
 
-    def bottom_footer(self):
-        if self.header_sent:
-            self.bottom_focuscode()
-            if self.render_headfoot:
-                self.write("<table class=footer><tr>")
-
-                self.write("<td class=left>")
-                self.write_status_icons()
-                self.write("</td>")
-
-                self.write("<td class=middle></td>"
-                           "<td class=right>")
-                self.write("<div style=\"display:%s\" id=foot_refresh>%s</div>" % (
-                        (self.browser_reload and "inline-block" or "none",
-                     _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload)))
-                self.write("</td></tr></table>")
 
     def body_end(self):
         if self.have_help:
@@ -1106,16 +1572,10 @@ class html(GUITester):
         # Hopefully this is the correct place to performe some "finalization" tasks.
         self.store_new_transids()
 
-    def footer(self):
-        if self.output_format == "html":
-            self.bottom_footer()
-            self.body_end()
 
-    def add_status_icon(self, img, tooltip, url = None):
-        if url:
-            self.status_icons[img] = tooltip, url
-        else:
-            self.status_icons[img] = tooltip
+    def popup_trigger(self, *args, **kwargs):
+        self.write(self.render_popup_trigger(*args, **kwargs))
+
 
     def render_popup_trigger(self, content, ident, what=None, data=None, url_vars=None, style=None, menu_content=None, cssclass=None, onclose=None):
         style = style and (' style="%s"' % style) or ""
@@ -1132,10 +1592,8 @@ class html(GUITester):
         src += '</div>\n'
         return src
 
-    def popup_trigger(self, *args, **kwargs):
-        self.write(self.render_popup_trigger(*args, **kwargs))
 
-    def write_status_icons(self):
+    def _write_status_icons(self):
         self.icon_button(self.makeuri([]), _("URL to this frame"),
                          "frameurl", target="_top", cssclass="statusicon")
         self.icon_button("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]),
@@ -1180,62 +1638,6 @@ class html(GUITester):
                 self.write("<div>%s: %.1fms</div>" % (name, duration * 1000))
             self.write('</div>')
 
-    def show_info(self, msg):
-        self.message(msg, 'message')
-
-    def show_error(self, msg):
-        self.message(msg, 'error')
-
-    def show_warning(self, msg):
-        self.message(msg, 'warning')
-
-    # obj might be either a string (str or unicode) or an exception object
-    def message(self, obj, what='message'):
-        if what == 'message':
-            cls    = 'success'
-            prefix = _('MESSAGE')
-        elif what == 'warning':
-            cls    = 'warning'
-            prefix = _('WARNING')
-        else:
-            cls    = 'error'
-            prefix = _('ERROR')
-
-        msg = self.permissive_attrencode(obj)
-
-        if self.output_format == "html":
-            if self.mobile:
-                self.write('<center>')
-            self.write("<div class=%s>%s</div>\n" % (cls, msg))
-            if self.mobile:
-                self.write('</center>')
-        else:
-            self.write('%s: %s\n' % (prefix, self.strip_tags(msg)))
-
-        self.guitest_record_output("message", (what, msg))
-
-    def show_localization_hint(self):
-        url = "wato.py?mode=edit_configvar&varname=user_localizations"
-        self.message(HTML("<sup>*</sup>" +
-            _("These texts may be localized depending on the users' "
-              "language. You can configure the localizations "
-              "<a href=\"%s\">in the global settings</a>.") % url))
-
-    # Embed help box, whose visibility is controlled by a global
-    # button in the page.
-    def help(self, text):
-        if text and text.strip():
-            self.have_help = True
-            self.write('<div class=help style="display: %s">' % (
-                        not self.help_visible and "none" or "block"))
-            self.write(text.strip())
-            self.write('</div>')
-
-    def do_actions(self):
-        return self.var("_do_actions") not in [ "", None, _("No") ]
-
-    def set_focus(self, varname):
-        self.focus_object = (self.form_name, varname)
 
     def debug_vars(self, prefix=None, hide_with_mouse=True, vars=None):
         if not vars:
@@ -1256,407 +1658,73 @@ class html(GUITester):
                     (self.attrencode(name), self.attrencode(value)))
         self.write("</table>")
 
-    def var(self, varname, deflt = None):
-        return self.vars.get(varname, deflt)
 
-    def has_var(self, varname):
-        return varname in self.vars
+    def begin_context_buttons(self):
+        if not self.context_buttons_open:
+            self.context_button_hidden = False
+            self.write("<table class=contextlinks><tr><td>\n")
+            self.context_buttons_open = True
 
-    # Checks if a variable with a given prefix is present
-    def has_var_prefix(self, prefix):
-        for varname in self.vars:
-            if varname.startswith(prefix):
-                return True
-        return False
 
-    def var_utf8(self, varname, deflt = None):
-        val = self.vars.get(varname, deflt)
-        if val != None and type(val) != unicode:
-            return val.decode("utf-8")
+    def end_context_buttons(self):
+        if self.context_buttons_open:
+            if self.context_button_hidden:
+                self.write('<div title="%s" id=toggle class="contextlink short" '
+                      % _("Show all buttons"))
+                self._context_button_hover_code("_short")
+                self.write("><a onclick='unhide_context_buttons(this);' href='#'>...</a></div>")
+            self.write("</td></tr></table>\n")
+        self.context_buttons_open = False
+
+
+    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title='', fkey=None):
+        self.guitest_record_output("context_button", (title, url, icon))
+        title = self.attrencode(title)
+        display = "block"
+        if bestof:
+            counts = self.get_button_counts()
+            weights = counts.items()
+            weights.sort(cmp = lambda a,b: cmp(a[1],  b[1]))
+            best = dict(weights[-bestof:])
+            if id not in best:
+                display="none"
+                self.context_button_hidden = True
+
+        if not self.context_buttons_open:
+            self.begin_context_buttons()
+
+        if icon:
+            title = '<img src="%s">%s' % \
+                        (self.attrencode(self.detect_icon_path(icon)),
+                         self.attrencode(title))
+
+        if id:
+            idtext = " id='%s'" % self.attrencode(id)
         else:
-            return val
+            idtext = ""
+        self.write('<div%s style="display:%s" class="contextlink%s%s" ' %
+            (idtext, display, hot and " hot" or "", (fkey and self.keybindings_enabled) and " button" or ""))
+        self._context_button_hover_code(hot and "_hot" or "")
+        self.write('>')
+        self.write('<a href="%s"' % self.attrencode(url))
+        if hover_title:
+            self.write(' title="%s"' % self.attrencode(hover_title))
+        if bestof:
+            self.write(' onclick="count_context_button(this); " ')
+        if fkey and self.keybindings_enabled:
+            title += '<div class=keysym>F%d</div>' % fkey
+            self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % self.attrencode(url))
+        self.write('>%s</a></div>\n' % title)
+
+
+    def get_button_counts(self):
+        raise NotImplementedError()
+
+
+    def _context_button_hover_code(self, what):
+        self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % what)
+        self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % what)
 
-
-    def all_vars(self):
-        return self.vars
-
-
-    def all_varnames_with_prefix(self, prefix):
-        for varname, value in self.vars.items():
-            if varname.startswith(prefix):
-                yield varname
-
-
-    # Return all values of a variable that possible occurs more
-    # than once in the URL. note: self.listvars does contain those
-    # variable only, if the really occur more than once.
-    def list_var(self, varname):
-        if varname in self.listvars:
-            return self.listvars[varname]
-        elif varname in self.vars:
-            return [self.vars[varname]]
-        else:
-            return []
-
-    # Adds a variable to listvars and also set it
-    def add_var(self, varname, value):
-        self.listvars.setdefault(varname, [])
-        self.listvars[varname].append(value)
-        self.vars[varname] = value
-
-    def set_var(self, varname, value):
-        if value == None:
-            self.del_var(varname)
-        else:
-            self.vars[varname] = value
-
-    def del_var(self, varname):
-        if varname in self.vars:
-            del self.vars[varname]
-        if varname in self.listvars:
-            del self.listvars[varname]
-
-    def del_all_vars(self, prefix = None):
-        if not prefix:
-            self.vars = {}
-            self.listvars = {}
-        else:
-            self.vars = dict([(k,v) for (k,v) in self.vars.iteritems() if not k.startswith(prefix)])
-            self.listvars = dict([(k,v) for (k,v) in self.listvars.iteritems() if not k.startswith(prefix)])
-
-    def stash_vars(self):
-        self.var_stash.append(self.vars.copy())
-
-    def unstash_vars(self):
-        self.vars = self.var_stash.pop()
-
-
-    # Returns a dictionary containing all parameters the user handed over to this request.
-    # The concept is that the user can either provide the data in a single "request" variable,
-    # which contains the request data encoded as JSON, or provide multiple GET/POST vars which
-    # are then used as top level entries in the request object.
-    def get_request(self):
-        request = json.loads(self.var("request", "{}"))
-
-        for key, val in self.all_vars().items():
-            if key not in [ "request", "output_format" ]:
-                request[key] = val
-
-        return request
-
-
-    def render_javascript(self, code):
-        return "<script language=\"javascript\">\n%s\n</script>\n" % code
-
-    def javascript(self, code):
-        self.write(self.render_javascript(code))
-
-    def final_javascript(self, code):
-        self.final_javascript_code += code + "\n"
-
-    def javascript_file(self, name):
-        self.write('<script type="text/javascript" src="js/%s.js"></script>\n' % name)
-
-    def reload_sidebar(self):
-        if not self.has_var("_ajaxid"):
-            self.javascript("reload_sidebar()")
-
-    def set_ignore_transids(self):
-        self.ignore_transids = True
-
-    # Compute a (hopefully) unique transaction id. This is generated during rendering
-    # of a form or an action link, stored in a user specific file for later validation,
-    # sent to the users browser via HTML code, then submitted by the user together
-    # with the action (link / form) and then validated if it is a known transid. When
-    # it is a known transid, it will be used and invalidated. If the id is not known,
-    # the action will not be processed.
-    def fresh_transid(self):
-        transid = "%d/%d" % (int(time.time()), random.getrandbits(32))
-        self.new_transids.append(transid)
-        return transid
-
-    def get_transid(self):
-        if not self.current_transid:
-            self.current_transid = self.fresh_transid()
-        return self.current_transid
-
-    # Marks a transaction ID as used. This is done by saving
-    # it in a user specific settings file "transids.mk". At this
-    # time we remove all entries from that list that are older
-    # than one week.
-    def store_new_transids(self):
-        if self.new_transids:
-            valid_ids = self.load_transids(lock = True)
-            cleared_ids = []
-            now = time.time()
-            for valid_id in valid_ids:
-                timestamp, rand = valid_id.split("/")
-                if now - int(timestamp) < 86400: # one day
-                    cleared_ids.append(valid_id)
-            self.save_transids(cleared_ids + self.new_transids, unlock = True)
-
-    # Remove the used transid from the list of valid ones
-    def invalidate_transid(self, used_id):
-        valid_ids = self.load_transids(lock = True)
-        try:
-            valid_ids.remove(used_id)
-        except ValueError:
-            return
-        self.save_transids(valid_ids, unlock = True)
-
-    # Checks, if the current transaction is valid, i.e. in case of
-    # browser reload a browser reload, the form submit should not
-    # be handled  a second time.. The HTML variable _transid must be present.
-    #
-    # In case of automation users (authed by _secret in URL): If it is empty
-    # or -1, then it's always valid (this is used for webservice calls).
-    # This was also possible for normal users, but has been removed to preven
-    # security related issues.
-    def transaction_valid(self):
-        if not self.has_var("_transid"):
-            return False
-
-        id = self.var("_transid")
-        if self.ignore_transids and (not id or id == '-1'):
-            return True # automation
-
-        if '/' not in id:
-            return False
-
-        # Normal user/password auth user handling
-        timestamp, rand = id.split("/", 1)
-
-        # If age is too old (one week), it is always
-        # invalid:
-        now = time.time()
-        if now - int(timestamp) >= 604800: # 7 * 24 hours
-            return False
-
-        # Now check, if this id is a valid one
-        if id in self.load_transids():
-            self.guitest_set_transid_valid()
-            return True
-        else:
-            return False
-
-    # Checks, if the current page is a transation, i.e. something
-    # that is secured by a transid (such as a submitted form)
-    def is_transaction(self):
-        return self.has_var("_transid")
-
-    # called by page functions in order to check, if this was
-    # a reload or the original form submission. Increases the
-    # transid of the user, if the latter was the case.
-    # There are three return codes:
-    # True:  -> positive confirmation by the user
-    # False: -> not yet confirmed, question is being shown
-    # None:  -> a browser reload or a negative confirmation
-    def check_transaction(self):
-        if self.transaction_valid():
-            id = self.var("_transid")
-            if id and id != "-1":
-                self.invalidate_transid(id)
-            return True
-        else:
-            return False
-
-    # The confirm dialog is normally not a dialog which need to be protected
-    # by a transid itselfs. It is only a intermediate step to the real action
-    # But there are use cases where the confirm dialog is used during rendering
-    # a normal page, for example when deleting a dashlet from a dashboard. In
-    # such cases, the transid must be added by the confirm dialog.
-    # add_header: A title can be given to make the confirm method render the HTML
-    #             header when showing the confirm message.
-    def confirm(self, msg, method="POST", action=None, add_transid=False, add_header=False):
-        if self.var("_do_actions") == _("No"):
-            # User has pressed "No", now invalidate the unused transid
-            self.check_transaction()
-            return # None --> "No"
-
-        if not self.has_var("_do_confirm"):
-            if add_header != False:
-                self.header(add_header)
-
-            if self.mobile:
-                self.write('<center>')
-            self.write("<div class=really>%s" % self.permissive_attrencode(msg))
-            # FIXME: When this confirms another form, use the form name from self.vars()
-            self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
-            self.hidden_fields(add_action_vars = True)
-            self.button("_do_confirm", _("Yes!"), "really")
-            self.button("_do_actions", _("No"), "")
-            self.end_form()
-            self.write("</div>")
-            if self.mobile:
-                self.write('</center>')
-
-            return False # False --> "Dialog shown, no answer yet"
-        else:
-            # Now check the transaction
-            return self.check_transaction() and True or None # True: "Yes", None --> Browser reload of "yes" page
-
-    def register_event(self, name):
-        self.events.add(name)
-
-    def has_event(self, name):
-        return name in self.events
-
-    def play_sound(self, url):
-        self.write('<object type="audio/x-wav" data="%s" height="0" width="0">\n'
-                  '<param name="filename" value="%s">\n'
-                  '<param name="src" value="%s">\n'
-                  '<param name="autostart" value="true">\n'
-                  '<param name="playcount" value="1">\n'
-                  '</object>\n' % (url, url, url))
-        if self.enable_debug:
-            self.write("(playing sound %s)" % url)
-
-    def apache_user(self):
-        return pwd.getpwuid( os.getuid() )[ 0 ]
-
-
-    def debug(self, *x):
-        import pprint
-        for element in x:
-            try:
-                formatted = pprint.pformat(element)
-            except UnicodeDecodeError:
-                formatted = repr(element)
-            self.lowlevel_write("<pre>%s</pre>\n" % self.attrencode(formatted))
-
-
-    def has_cookie(self, varname):
-        return varname in self.cookies
-
-    def get_cookie_names(self):
-        return self.cookies.keys()
-
-    def cookie(self, varname, deflt):
-        try:
-            return self.cookies[varname].value
-        except:
-            return deflt
-
-    # Keyboard control
-    def add_keybinding(self, keylist, jscode):
-        self.keybindings.append([keylist, jscode])
-
-    def add_keybindings(self, bindings):
-        self.keybindings += bindings
-
-    def disable_keybindings(self):
-        self.keybindings_enabled = False
-
-    # Only strip off some tags. We allow some simple tags like
-    # <b>, <tt>, <i> to be part of the string. This is useful
-    # for messages where we still want to have formating options.
-    def permissive_attrencode(self, obj):
-        msg = self.attrencode(obj)
-        msg = re.sub(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;', r'<\1\2>', msg)
-        # Also repair link definitions
-        return re.sub(r'&lt;a href=&quot;(.*?)&quot;&gt;', r'<a href="\1">', msg)
-
-    # Encode HTML attributes: replace " with &quot;, also replace
-    # < and >. This code is slow. Works on str and unicode without
-    # changing the type. Also works on things that can be converted
-    # with %s.
-    def attrencode(self, value):
-        ty = type(value)
-        if ty == int:
-            return str(value)
-        elif isinstance(value, HTML):
-            return value.value # This is HTML code which must not be escaped
-        elif ty not in [str, unicode]: # also possible: type Exception!
-            value = "%s" % value # Note: this allows Unicode. value might not have type str now
-
-        return value.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
-
-    # This function returns a str object, never unicode!
-    # Beware: this code is crucial for the performance of Multisite!
-    # Changing from the self coded urlencode to urllib.quote
-    # is saving more then 90% of the total HTML generating time
-    # on more complex pages!
-    def urlencode_vars(self, vars):
-        output = []
-        for varname, value in sorted(vars):
-            if type(value) == int:
-                value = str(value)
-            elif type(value) == unicode:
-                value = value.encode("utf-8")
-
-            try:
-                # urllib is not able to encode non-Ascii characters. Yurks
-                output.append(varname + '=' + urllib.quote(value))
-            except:
-                output.append(varname + '=' + self.urlencode(value)) # slow but working
-
-        return '&'.join(output)
-
-    def urlencode(self, value):
-        if type(value) == unicode:
-            value = value.encode("utf-8")
-        elif value == None:
-            return ""
-        ret = ""
-        for c in value:
-            if c == " ":
-                c = "+"
-            elif ord(c) <= 32 or ord(c) > 127 or c in [ '#', '+', '"', "'", "=", "&", ":", "%" ]:
-                c = "%%%02x" % ord(c)
-            ret += c
-        return ret
-
-    # Escape a variable name so that it only uses allowed charachters for URL variables
-    def varencode(self, varname):
-        if varname == None:
-            return "None"
-        if type(varname) == int:
-            return varname
-
-        ret = ""
-        for c in varname:
-            if not c.isdigit() and not c.isalnum() and c != "_":
-                ret += "%%%02x" % ord(c)
-            else:
-                ret += c
-        return ret
-
-    def u8(self, c):
-        if ord(c) > 127:
-            return "&#%d;" % ord(c)
-        else:
-            return c
-
-    def utf8_to_entities(self, text):
-        if type(text) != unicode:
-            return text
-        else:
-            return text.encode("utf-8")
-
-    # remove all HTML-tags
-    def strip_tags(self, ht):
-        if type(ht) not in [str, unicode]:
-            return ht
-        while True:
-            x = ht.find('<')
-            if x == -1:
-                break
-            y = ht.find('>', x)
-            if y == -1:
-                break
-            ht = ht[0:x] + ht[y+1:]
-        return ht.replace("&nbsp;", " ")
-
-    def strip_scripts(self, ht):
-        while True:
-            x = ht.find('<script')
-            if x == -1:
-                break
-            y = ht.find('</script>')
-            if y == -1:
-                break
-            ht = ht[0:x] + ht[y+9:]
-        return ht
 
     def begin_foldable_container(self, treename, id, isopen, title, indent=True,
                                  first=False, icon=None, fetch_url=None, title_url=None,
@@ -1709,6 +1777,12 @@ class html(GUITester):
         # give caller information about current toggling state (needed for nform)
         return isopen
 
+
+    def end_foldable_container(self):
+        if self.folding_indent != "nform":
+            self.write("</ul>")
+
+
     def foldable_container_is_open(self, treename, id, isopen):
         # try to get persisted state of tree
         tree_state = self.get_tree_states(treename)
@@ -1717,13 +1791,15 @@ class html(GUITester):
             isopen = tree_state[id] == "on"
         return isopen
 
-    def end_foldable_container(self):
-        if self.folding_indent != "nform":
-            self.write("</ul>")
+
+    #
+    # Tree states
+    #
 
     def get_tree_states(self, tree):
         self.load_tree_states()
         return self.treestates.get(tree, {})
+
 
     def set_tree_state(self, tree, key, val):
         self.load_tree_states()
@@ -1733,99 +1809,128 @@ class html(GUITester):
 
         self.treestates[tree][key] = val
 
+
     def set_tree_states(self, tree, val):
         self.load_tree_states()
         self.treestates[tree] = val
 
-    def parse_field_storage(self, fields, handle_uploads_as_file_obj = False):
-        self.vars     = {}
-        self.listvars = {} # for variables with more than one occurrance
-        self.uploads  = {}
 
-        for field in fields.list:
-            varname = field.name
+    def load_tree_states(self):
+        raise NotImplementedError()
 
-            # To prevent variours injections, we only allow a defined set
-            # of characters to be used in variables
-            if not varname_regex.match(varname):
-                continue
 
-            # put uploaded file infos into separate storage
-            if field.filename is not None:
-                if handle_uploads_as_file_obj:
-                    value = field.file
-                else:
-                    value = field.value
-                self.uploads[varname] = (field.filename, field.type, value)
+    def save_tree_states(self):
+        raise NotImplementedError()
 
-            else: # normal variable
-                # Multiple occurrance of a variable? Store in extra list dict
-                if varname in self.vars:
-                    if varname in self.listvars:
-                        self.listvars[varname].append(field.value)
-                    else:
-                        self.listvars[varname] = [ self.vars[varname], field.value ]
-                # In the single-value-store the last occurrance of a variable
-                # has precedence. That makes appending variables to the current
-                # URL simpler.
-                self.vars[varname] = field.value
-
-    def uploaded_file(self, varname, default = None):
-        return self.uploads.get(varname, default)
 
     #
-    # Per request caching
+    # Transaction IDs
     #
-    def set_cache(self, name, value):
-        self.caches[name] = value
-        return value
 
-    def set_cache_default(self, name, value):
-        if self.is_cached(name):
-            return self.get_cached(name)
-        else:
-            return self.set_cache(name, value)
+    def set_ignore_transids(self):
+        self.ignore_transids = True
 
-    def is_cached(self, name):
-        return name in self.caches
 
-    def get_cached(self, name):
-        return self.caches.get(name)
+    # Compute a (hopefully) unique transaction id. This is generated during rendering
+    # of a form or an action link, stored in a user specific file for later validation,
+    # sent to the users browser via HTML code, then submitted by the user together
+    # with the action (link / form) and then validated if it is a known transid. When
+    # it is a known transid, it will be used and invalidated. If the id is not known,
+    # the action will not be processed.
+    def fresh_transid(self):
+        transid = "%d/%d" % (int(time.time()), random.getrandbits(32))
+        self.new_transids.append(transid)
+        return transid
 
-    def del_cache(self, name):
-        if name in self.caches:
-            del self.caches[name]
 
-    def measure_time(self, name):
-        self.times.setdefault(name, 0.0)
+    def get_transid(self):
+        if not self.current_transid:
+            self.current_transid = self.fresh_transid()
+        return self.current_transid
+
+
+    # Marks a transaction ID as used. This is done by saving
+    # it in a user specific settings file "transids.mk". At this
+    # time we remove all entries from that list that are older
+    # than one week.
+    def store_new_transids(self):
+        if self.new_transids:
+            valid_ids = self.load_transids(lock = True)
+            cleared_ids = []
+            now = time.time()
+            for valid_id in valid_ids:
+                timestamp, rand = valid_id.split("/")
+                if now - int(timestamp) < 86400: # one day
+                    cleared_ids.append(valid_id)
+            self.save_transids(cleared_ids + self.new_transids, unlock = True)
+
+
+    # Remove the used transid from the list of valid ones
+    def invalidate_transid(self, used_id):
+        valid_ids = self.load_transids(lock = True)
+        try:
+            valid_ids.remove(used_id)
+        except ValueError:
+            return
+        self.save_transids(valid_ids, unlock = True)
+
+
+    # Checks, if the current transaction is valid, i.e. in case of
+    # browser reload a browser reload, the form submit should not
+    # be handled  a second time.. The HTML variable _transid must be present.
+    #
+    # In case of automation users (authed by _secret in URL): If it is empty
+    # or -1, then it's always valid (this is used for webservice calls).
+    # This was also possible for normal users, but has been removed to preven
+    # security related issues.
+    def transaction_valid(self):
+        if not self.has_var("_transid"):
+            return False
+
+        id = self.var("_transid")
+        if self.ignore_transids and (not id or id == '-1'):
+            return True # automation
+
+        if '/' not in id:
+            return False
+
+        # Normal user/password auth user handling
+        timestamp, rand = id.split("/", 1)
+
+        # If age is too old (one week), it is always
+        # invalid:
         now = time.time()
-        elapsed = now - self.last_measurement
-        self.times[name] += elapsed
-        self.last_measurement = now
+        if now - int(timestamp) >= 604800: # 7 * 24 hours
+            return False
+
+        # Now check, if this id is a valid one
+        if id in self.load_transids():
+            self.guitest_set_transid_valid()
+            return True
+        else:
+            return False
+
+    # Checks, if the current page is a transation, i.e. something
+    # that is secured by a transid (such as a submitted form)
+    def is_transaction(self):
+        return self.has_var("_transid")
 
 
-    #
-    # To be overridden by subclasses
-    #
-
-    def set_content_type(self, ty):
-        raise NotImplementedError()
-
-
-    def lowlevel_write(self, text):
-        raise NotImplementedError()
-
-
-    def get_button_counts(self):
-        raise NotImplementedError()
-
-
-    def add_custom_style_sheet(self):
-        raise NotImplementedError()
-
-
-    def top_heading(self, title):
-        raise NotImplementedError()
+    # called by page functions in order to check, if this was
+    # a reload or the original form submission. Increases the
+    # transid of the user, if the latter was the case.
+    # There are three return codes:
+    # True:  -> positive confirmation by the user
+    # False: -> not yet confirmed, question is being shown
+    # None:  -> a browser reload or a negative confirmation
+    def check_transaction(self):
+        if self.transaction_valid():
+            id = self.var("_transid")
+            if id and id != "-1":
+                self.invalidate_transid(id)
+            return True
+        else:
+            return False
 
 
     def load_transids(self, lock=False):
@@ -1836,5 +1941,79 @@ class html(GUITester):
         raise NotImplementedError()
 
 
-    def load_tree_states(self):
-        raise NotImplementedError()
+    #
+    # Sounds
+    # TODO: Move to views. Only used there.
+    #
+
+    def register_event(self, name):
+        self.events.add(name)
+
+
+    def has_event(self, name):
+        return name in self.events
+
+
+    def play_sound(self, url):
+        self.write('<object type="audio/x-wav" data="%s" height="0" width="0">\n'
+                  '<param name="filename" value="%s">\n'
+                  '<param name="src" value="%s">\n'
+                  '<param name="autostart" value="true">\n'
+                  '<param name="playcount" value="1">\n'
+                  '</object>\n' % (url, url, url))
+        if self.enable_debug:
+            self.write("(playing sound %s)" % url)
+
+
+    #
+    # Keyboard control
+    # TODO: Can we move this specific feature to AQ?
+    #
+
+    def add_keybinding(self, keylist, jscode):
+        self.keybindings.append([keylist, jscode])
+
+
+    def add_keybindings(self, bindings):
+        self.keybindings += bindings
+
+
+    def disable_keybindings(self):
+        self.keybindings_enabled = False
+
+
+    #
+    # Per request caching
+    #
+
+    def set_cache(self, name, value):
+        self.caches[name] = value
+        return value
+
+
+    def set_cache_default(self, name, value):
+        if self.is_cached(name):
+            return self.get_cached(name)
+        else:
+            return self.set_cache(name, value)
+
+
+    def is_cached(self, name):
+        return name in self.caches
+
+
+    def get_cached(self, name):
+        return self.caches.get(name)
+
+
+    def del_cache(self, name):
+        if name in self.caches:
+            del self.caches[name]
+
+
+    def measure_time(self, name):
+        self.times.setdefault(name, 0.0)
+        now = time.time()
+        elapsed = now - self.last_measurement
+        self.times[name] += elapsed
+        self.last_measurement = now

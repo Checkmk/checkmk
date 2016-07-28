@@ -66,6 +66,7 @@ import bi # Needed for BI Icon. For arkane reasons (ask htdocs/module.py) this
           # cannot be imported in views.py directly.
 
 from cmk.regex import regex
+from lib import *
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
@@ -203,7 +204,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
     else:
         age_class = "age"
 
-    return age_class, prefix + (output_format % html.age_text(age)) + warn_txt
+    return age_class, prefix + (output_format % age_human_readable(age)) + warn_txt
 
 
 def paint_future_time(timestamp):

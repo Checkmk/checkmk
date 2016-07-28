@@ -42,11 +42,12 @@
 #   |  Doing this that must be done when the module WATO is loaded.        |
 #   '----------------------------------------------------------------------'
 
-import os, shutil, subprocess, base64, pickle
+import os, shutil, subprocess, base64, pickle, pwd
 import defaults, config, hooks, userdb, multitar
 import sites
 from lib import *
 from valuespec import *
+
 
 replication_paths = []
 backup_paths = []
@@ -4227,10 +4228,10 @@ def check_mk_local_automation(command, args=[], indata="", stdin_data=None, time
     if commandargs[0] == 'sudo':
         if commandargs[1] == '-u': # skip -u USER in /etc/sudoers
             sudoline = "%s ALL = (%s) NOPASSWD: %s *" % \
-                        (html.apache_user(), commandargs[2], " ".join(commandargs[3:]))
+                        (apache_user(), commandargs[2], " ".join(commandargs[3:]))
         else:
             sudoline = "%s ALL = (root) NOPASSWD: %s *" % \
-                        (html.apache_user(), " ".join(commandargs[1:]))
+                        (apache_user(), " ".join(commandargs[1:]))
 
         sudo_msg = ("<p>The webserver is running as user which has no rights on the "
                     "needed Check_MK/Nagios files.<br>Please ensure you have set-up "
@@ -4242,7 +4243,7 @@ def check_mk_local_automation(command, args=[], indata="", stdin_data=None, time
                     "%s\n"
                     "</pre></li>\n"
                     "<li>Retry this operation</li></ol>\n" %
-                    (html.apache_user(), sudoline))
+                    (apache_user(), sudoline))
 
     if command in [ 'restart', 'reload' ]:
         try:
@@ -4289,6 +4290,11 @@ def check_mk_local_automation(command, args=[], indata="", stdin_data=None, time
     except Exception, e:
         raise MKGeneralException("Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
                       (" ".join(cmd), e, outdata))
+
+
+# TODO: Remove this once non OMD environments are not supported anymore
+def apache_user():
+    return pwd.getpwuid(os.getuid())[0]
 
 
 def hilite_errors(outdata):

@@ -97,7 +97,9 @@ def check_mssql_counters_perc(item, params, info, perc_w_base = True):
             base = float(line[-1])
 
     if value is None or (perc_w_base and base is None):
-        return (3, 'Counter %s could not be found in agent output' % (item))
+        # Assume general connection problem to the database, which is reported
+        # by the "X Instance" service and skip this check.
+        raise MKCounterWrapped("Failed to connect to database")
 
     if perc_w_base:
         if base == 0:
@@ -174,7 +176,9 @@ def check_mssql_counters_transactions(item, params, info):
     if output:
         return (0, '%s' % ', '.join(output), perfdata)
     else:
-        return (3, 'Counters %s could not be found in agent output' % (item))
+        # Assume general connection problem to the database, which is reported
+        # by the "X Instance" service and skip this check.
+        raise MKCounterWrapped("Failed to connect to database")
 
 check_info['mssql_counters.transactions'] = {
     'check_function':      check_mssql_counters_transactions,
@@ -227,7 +231,9 @@ def check_mssql_counters_locks(item, params, info):
     if output:
         return (state, ', '.join(output), perfdata)
     else:
-        return (3, 'Counters %s could not be found in agent output' % (item))
+        # Assume general connection problem to the database, which is reported
+        # by the "X Instance" service and skip this check.
+        raise MKCounterWrapped("Failed to connect to database")
 
 check_info['mssql_counters.locks'] = {
     'check_function':      check_mssql_counters_locks,
@@ -263,6 +269,10 @@ def check_mssql_counters_sqlstats(item, params, info):
                 perfdata = [ (counter_type, rate) ]
 
             return status, infotext, perfdata
+
+    # Assume general connection problem to the database, which is reported
+    # by the "X Instance" service and skip this check.
+    raise MKCounterWrapped("Failed to connect to database")
 
 
 check_info["mssql_counters.sqlstats"] = {
@@ -315,6 +325,10 @@ def check_mssql_counters_pageactivity(item, params, info):
 
 
                 yield state, infotext, perfdata
+
+    # Assume general connection problem to the database, which is reported
+    # by the "X Instance" service and skip this check.
+    raise MKCounterWrapped("Failed to connect to database")
 
 
 check_info['mssql_counters.pageactivity'] = {
@@ -376,6 +390,11 @@ def check_mssql_counters_locks_per_batch(item, params, info):
     if now is None:
         now = time.time()
 
+    # Assume general connection problem to the database, which is reported
+    # by the "X Instance" service and skip this check.
+    if item not in parsed:
+        raise MKCounterWrapped("Failed to connect to database")
+
     locks = float(parsed[item]["Locks"]["_Total"]["lock_requests/sec"])
     batches = float(parsed[item]["SQL_Statistics"]["None"]["batch_requests/sec"])
 
@@ -427,6 +446,11 @@ def check_mssql_file_sizes(item, params, info):
                 values['log_files'] = int(line[-1]) * 1024
             elif line[1] == 'log_file(s)_used_size_(kb)':
                 values['log_files_used'] = int(line[-1]) * 1024
+
+    # Assume general connection problem to the database, which is reported
+    # by the "X Instance" service and skip this check.
+    if not values:
+        raise MKCounterWrapped("Failed to connect to database")
 
     if len(values.keys()) == 3:
         for what, name in [ ("data_files", "Data Files"),

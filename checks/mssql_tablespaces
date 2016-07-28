@@ -101,7 +101,9 @@ def check_mssql_tablespaces(item, params, info):
 
         return state, '%s' % ', '.join(output), perfdata
 
-    return (3, 'Tablespace %s could not be found' % item)
+    # Assume general connection problem to the database, which is reported
+    # by the "X Instance" service and skip this check.
+    raise MKCounterWrapped("Failed to connect to database")
 
 check_info['mssql_tablespaces'] = {
     'check_function':      check_mssql_tablespaces,

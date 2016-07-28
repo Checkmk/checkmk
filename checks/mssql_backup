@@ -68,6 +68,7 @@ def check_mssql_backup(item, params, info):
             "-": "unspecific ",
         }.get(backup_type, "")
 
+    found_instance = False
     for line in info:
         if len(line) not in [3, 4, 5]:
             continue
@@ -85,6 +86,7 @@ def check_mssql_backup(item, params, info):
             inst, tablespace, last_backup_date, last_backup_time, backup_type = line
 
         if item == inst + ' ' + tablespace:
+            found_instance = True
             if last_backup_date:
                 # TODO: Timezone issue? Agent should always send UTC timestamp.
                 timestamp = time.mktime(time.strptime(last_backup_date + ' ' + last_backup_time,
@@ -114,6 +116,11 @@ def check_mssql_backup(item, params, info):
                 (backup_type_name(backup_type),
                  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)),
                  get_age_human_readable(sec_ago)), perfdata
+
+    if not found_instance:
+        # Assume general connection problem to the database, which is reported
+        # by the "X Instance" service and skip this check.
+        raise MKCounterWrapped("Failed to connect to database")
 
 
 check_info['mssql_backup'] = {

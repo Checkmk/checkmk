@@ -121,6 +121,7 @@ def check_mssql_datafiles(item, params, info):
     max_size_sum = allocated_size_sum = used_size_sum = 0
     unlimited_sum = False
 
+    found = False
     for row in info:
         if len(row) == 8:
             inst, database, file_name, physical_name, max_size, allocated_size, used_size, unlimited = row
@@ -130,8 +131,9 @@ def check_mssql_datafiles(item, params, info):
             inst = None
             unlimited = False
 
-        if format_item_mssql_datafiles(inst, database, file_name) == item or\
+        if format_item_mssql_datafiles(inst, database, file_name) == item or \
                 format_item_mssql_datafiles(inst, database, None) == item:
+            found = True
 
             max_size, allocated_size, used_size = map(lambda x: float(x) * 1024 * 1024,
                                                       (max_size, allocated_size, used_size))
@@ -139,6 +141,11 @@ def check_mssql_datafiles(item, params, info):
             allocated_size_sum += allocated_size
             used_size_sum      += used_size
             unlimited_sum = unlimited_sum or unlimited
+
+    if not found:
+        # Assume general connection problem to the database, which is reported
+        # by the "X Instance" service and skip this check.
+        raise MKCounterWrapped("Failed to connect to database")
 
     return mssql_datafiles_process_sizes(params, used_size_sum, allocated_size_sum,
                                             max_size_sum, unlimited_sum)

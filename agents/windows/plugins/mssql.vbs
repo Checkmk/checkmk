@@ -92,6 +92,30 @@ If Not IsArray(value_names) Then
     wscript.quit(1)
 End If
 
+' Make sure that always all sections are present, even in case of an error. 
+' Note: the section <<<mssql_instance>>> section shows the general state 
+' of a database instance. If that section fails for an instance then all 
+' other sections do not contain valid data anyway.
+'
+' Don't move this to another place. We need the steps above to decide whether or
+' not this is a MSSQL server.
+Dim sections, section_id
+Set sections = CreateObject("Scripting.Dictionary")
+sections.add "instance", "<<<mssql_instance:sep(124)>>>"
+sections.add "counters", "<<<mssql_counters>>>"
+sections.add "tablespaces", "<<<mssql_tablespaces>>>"
+sections.add "blocked_sessions", "<<<mssql_blocked_sessions>>>"
+sections.add "backup", "<<<mssql_backup>>>"
+sections.add "transactionlogs", "<<<mssql_transactionlogs>>>"
+sections.add "datafiles", "<<<mssql_datafiles>>>"
+sections.add "clusters", "<<<mssql_clusters>>>"
+' Has been deprecated with 1.4.0i1. Keep this for nicer transition for some versions.
+sections.add "versions", "<<<mssql_versions:sep(124)>>>"
+
+For Each section_id In sections.Keys
+    addOutput(sections(section_id))
+Next
+
 For i = LBound(value_names) To UBound(value_names)
     instance_id = value_names(i)
 
@@ -131,10 +155,10 @@ For i = LBound(value_names) To UBound(value_names)
         End If
     End If
 
-    addOutput("<<<mssql_versions:sep(124)>>>")
-    addOutput("MSSQL_" & instance_id & "|" & version & "|" & edition & "|" & cluster_name)
+    addOutput(sections("instance"))
+    addOutput("MSSQL_" & instance_id & "|config|" & version & "|" & edition & "|" & cluster_name)
 
-    ' Only collect results for currently running instances
+    ' Only collect results for instances which services are currently running
     Set service = WMI.ExecQuery("SELECT State FROM Win32_Service " & _
                           "WHERE Name = 'MSSQL$" & instance_id & "' AND State = 'Running'")
     If Not IsNull(service) Then
@@ -146,17 +170,19 @@ Set service  = Nothing
 Set WMI      = Nothing
 Set registry = Nothing
 
-
 Dim CONN, RS, CFG, AUTH
 
 ' Initialize database connection objects
 Set CONN      = CreateObject("ADODB.Connection")
 Set RS        = CreateObject("ADODB.Recordset")
 CONN.Provider = "sqloledb"
+' It's a local connection. 2 seconds should be enough!
+CONN.ConnectionTimeout = 2
 
 ' Loop all found server instances and connect to them
 ' In my tests only the connect using the "named instance" string worked
-For Each instance_id In instances.Keys
+For Each instance_id In instances.Keys: Do ' Continue trick
+
     ' Use either an instance specific config file named mssql_<instance-id>.ini
     ' or the default mysql.ini file.
     cfg_file = cfg_dir & "\mssql_" & instance & ".ini"
@@ -183,10 +209,37 @@ For Each instance_id In instances.Keys
     End If
 
     CONN.Properties("Data Source").Value = sources(instance_id)
+
+    ' Try to connect to the instance and catch the error when not able to connect
+    ' Then add the instance to the agent output and skip over to the next instance
+    ' in case the connection could not be established.
+    On Error Resume Next
     CONN.Open
+    On Error GoTo 0
+
+    ' Collect eventual error messages of errors occured during connecting. Hopefully
+    ' there is only on error in the list of errors.
+    Dim error_msg
+    If CONN.Errors.Count > 0 Then
+        error_msg = CONN.Errors(0).Description
+    End If
+    Err.Clear
+
+    addOutput(sections("instance"))
+    ' 0 - closed
+    ' 1 - open
+    ' 2 - connecting
+    ' 4 - executing a command
+    ' 8 - rows are being fetched
+    addOutput("MSSQL_" & instance_id & "|state|" & CONN.State & "|" & error_msg)
+
+    ' adStateClosed = 0
+    If CONN.State = 0 Then
+        Exit Do
+    End If
 
     ' Get counter data for the whole instance
-    addOutput( "<<<mssql_counters>>>" )
+    addOutput(sections("counters"))
     RS.Open "SELECT GETUTCDATE() as utc_date", CONN
     addOutput( "None utc_time None " & RS("utc_date") )
     RS.Close
@@ -212,7 +265,7 @@ For Each instance_id In instances.Keys
     RS.Open "SELECT session_id, wait_duration_ms, wait_type, blocking_session_id " & _
             "FROM sys.dm_os_waiting_tasks " & _
             "WHERE blocking_session_id <> 0 ", CONN
-    addOutput( "<<<mssql_blocked_sessions>>>" )
+    addOutput(sections("blocked_sessions"))
     Dim session_id, wait_duration_ms, wait_type, blocking_session_id
     Do While NOT RS.Eof
         session_id = Trim(RS("session_id"))
@@ -236,7 +289,7 @@ For Each instance_id In instances.Keys
     RS.Close
 
     ' Now gather the db size and unallocated space
-    addOutput( "<<<mssql_tablespaces>>>" )
+    addOutput(sections("tablespaces"))
     Dim dbSize, unallocated, reserved, data, indexSize, unused
     For Each dbName in dbNames.Keys
         ' Switch to other database and then ask for stats
@@ -278,7 +331,7 @@ For Each instance_id In instances.Keys
     ' Loop all databases to get the date of the last backup. Only show databases
     ' which have at least one backup
     Dim lastBackupDate, backup_type
-    addOutput( "<<<mssql_backup>>>" )
+    addOutput(sections("backup"))
     For Each dbName in dbNames.Keys
         RS.open "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date," & _
                 "type " & _
@@ -302,9 +355,8 @@ For Each instance_id In instances.Keys
         RS.Close
     Next
 
-    'Loop all databases to get the size of the transaction log
-    addOutput( "<<<mssql_transactionlogs>>>" )
-
+    ' Loop all databases to get the size of the transaction log
+    addOutput(sections("transactionlogs"))
     For Each dbName in dbNames.Keys
        RS.Open "USE [" & dbName & "];", CONN
        RS.Open "SELECT name, physical_name," &_
@@ -323,8 +375,8 @@ For Each instance_id In instances.Keys
         RS.Close
     Next
 
-    'Loop all databases to get the size of the transaction log
-    addOutput( "<<<mssql_datafiles>>>" )
+    ' Loop all databases to get the size of the transaction log
+    addOutput(sections("datafiles"))
     For Each dbName in dbNames.Keys
         RS.Open "USE [" & dbName & "];", CONN
         RS.Open "SELECT name, physical_name," &_
@@ -343,16 +395,16 @@ For Each instance_id In instances.Keys
         RS.Close
     Next
     
-    addOutput("<<<mssql_clusters>>>")
+    addOutput(sections("clusters"))
     Dim active_node, nodes
-    For Each dbName in dbNames.Keys
+    For Each dbName in dbNames.Keys : Do
         RS.Open "USE [" & dbName & "];", CONN
     
         ' Skip non cluster instances
         RS.Open "SELECT SERVERPROPERTY('IsClustered') AS is_clustered", CONN
         If RS("is_clustered") = 0 Then
             RS.Close
-            Continue
+            Exit Do
         End If
         RS.Close
         
@@ -376,13 +428,15 @@ For Each instance_id In instances.Keys
         RS.Close
         
         addOutput(instance_id & " " & Replace(dbName, " ", "_") & " " & active_node & " " & nodes)
-    Next
+    Loop While False: Next
 
     CONN.Close
-Next
+
+Loop While False: Next
 
 Set sources = nothing
 Set instances = nothing
+Set sections = nothing
 Set RS = nothing
 Set CONN = nothing
 Set FSO = nothing

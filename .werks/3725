@@ -1,0 +1,20 @@
+Title: mssql_instance: Changed MSSQL monitoring to report connection issues with only one service
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1469709917
+Class: feature
+
+The MSSQL monitoring has been reworked to have one single service per database instance that
+reports connection issues like a stopped database. This is done by the <tt>mssql_instance</tt>
+check.
+
+All other MSSQL checks have been reworked to become <i>stale</i> in case there is a connection
+issue and no data is present.
+
+As a result you will only receive one notification and see only the relevant issue in the GUI
+in case an instance goes down.
+
+To make this work you will have to update the <tt>mssql.vbs</tt> agent plugin on all your
+database servers.

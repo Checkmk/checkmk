@@ -32,6 +32,10 @@
 # <<<mssql_versions:sep(124)>>>
 # MSSQL_MSSQLSERVER|10.50.1600.1|Enterprise Edition|ZMUCSQLCTX
 
+# TODO: This is a legacy check. It has been replaced by the mssql_instance
+# check in version 1.4.0i1. The check here is kept for compatibility with
+# older agents that output the mssql_versions section.
+
 def inventory_mssql_versions(info):
     inventory = []
     for line in info:
@@ -51,7 +55,13 @@ def check_mssql_versions(item, _unused, info):
                 if line[3] != "":
                     yield 0, "clustered as %s" % line[3]
 
+            yield 1, "This check is deprecated. Please update the agent plugin on the " \
+                     "monitored system and rediscover the services of this host"
+
             return
+
+    yield 1, "This check is deprecated. Please update the agent plugin on the " \
+             "monitored system and rediscover the services of this host"
 
 
 check_info["mssql_versions"] = {

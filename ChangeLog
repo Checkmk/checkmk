@@ -409,6 +409,7 @@
     * 3622 FIX: Fix labelling of V-Achsis on graphs with very large numbers...
     * 3722 FIX: Mobile GUI: Prevent it from being opened with regular sidebar
     * 3723 FIX: Mobile GUI: Don't mix classic and mobile GUI when choosing classic on mobile device
+    * 3645 FIX: Fixed filesystem growth/shrinkage graph by splitting it up into 2 graphs.
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

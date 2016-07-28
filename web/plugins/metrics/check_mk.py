@@ -5851,9 +5851,16 @@ graph_info.append({
 })
 
 graph_info.append({
-    "title" : _("Growing / Shrinking"),
+    "title" : _("Growing"),
     "metrics" : [
        ( "fs_growth.max,0,MAX",             "area",  _("Growth"), ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Shrinking"),
+    "consolidation_function": "min",
+    "metrics" : [
        ( "fs_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage") ),
     ],
 })

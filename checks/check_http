@@ -97,8 +97,8 @@ def check_http_arguments(params):
         args += [ "-a", passwordstore_get_cmdline("%s:%%s" % username, password) ]
 
     if "proxy_auth" in settings:
-        auth = settings["proxy_auth"]
-        args += [ '-b', ":".join(auth) ]
+        username, password = settings["auth"]
+        args += [ "-b", passwordstore_get_cmdline("%s:%%s" % username, password) ]
 
     if "onredirect" in settings:
         args += [ '--onredirect=%s' % settings["onredirect"] ]

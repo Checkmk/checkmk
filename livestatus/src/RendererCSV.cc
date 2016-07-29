@@ -23,19 +23,16 @@
 // Boston, MA 02110-1301 USA.
 
 #include "RendererCSV.h"
-#include <algorithm>
 
-using std::move;
 using std::string;
 using std::vector;
 
 RendererCSV::RendererCSV(OutputBuffer *output,
                          OutputBuffer::ResponseHeader response_header,
                          bool do_keep_alive, string invalid_header_message,
-                         CSVSeparators separators, int timezone_offset)
+                         int timezone_offset)
     : Renderer(output, response_header, do_keep_alive, invalid_header_message,
-               timezone_offset)
-    , _separators(move(separators)) {}
+               timezone_offset) {}
 
 // --------------------------------------------------------------------------
 
@@ -46,26 +43,26 @@ void RendererCSV::endQuery() {}
 // --------------------------------------------------------------------------
 
 void RendererCSV::startRow() {}
-void RendererCSV::separateRowElements() { add(_separators.field()); }
-void RendererCSV::endRow() { add(_separators.dataset()); }
+void RendererCSV::separateRowElements() { add(","); }
+void RendererCSV::endRow() { add("\r\n"); }
 
 // --------------------------------------------------------------------------
 
 void RendererCSV::startList() {}
-void RendererCSV::separateListElements() { add(_separators.list()); }
+void RendererCSV::separateListElements() { add(","); }
 void RendererCSV::endList() {}
 
 // --------------------------------------------------------------------------
 
 void RendererCSV::startSublist() {}
-void RendererCSV::separateSublistElements() { add(_separators.hostService()); }
+void RendererCSV::separateSublistElements() { add("|"); }
 void RendererCSV::endSublist() {}
 
 // --------------------------------------------------------------------------
 
 void RendererCSV::startDict() {}
-void RendererCSV::separateDictElements() { add(_separators.list()); }
-void RendererCSV::separateDictKeyValue() { add(_separators.hostService()); }
+void RendererCSV::separateDictElements() { add(","); }
+void RendererCSV::separateDictKeyValue() { add("|"); }
 void RendererCSV::endDict() {}
 
 // --------------------------------------------------------------------------

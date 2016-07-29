@@ -36,6 +36,7 @@
 #include "AndingFilter.h"
 #include "OutputBuffer.h"
 #include "Renderer.h"
+#include "RendererBrokenCSV.h"
 #include "VariadicFilter.h"
 #include "nagios.h"  // IWYU pragma: keep
 #include "opids.h"

@@ -22,56 +22,56 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "RendererPython.h"
+#include "RendererPython3.h"
 
 using std::string;
 using std::vector;
 
-RendererPython::RendererPython(OutputBuffer *output,
-                               OutputBuffer::ResponseHeader response_header,
-                               bool do_keep_alive,
-                               string invalid_header_message,
-                               int timezone_offset)
+RendererPython3::RendererPython3(OutputBuffer *output,
+                                 OutputBuffer::ResponseHeader response_header,
+                                 bool do_keep_alive,
+                                 string invalid_header_message,
+                                 int timezone_offset)
     : Renderer(output, response_header, do_keep_alive, invalid_header_message,
                timezone_offset) {}
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startQuery() { add("["); }
-void RendererPython::separateQueryElements() { add(",\n"); }
-void RendererPython::endQuery() { add("]\n"); }
+void RendererPython3::startQuery() { add("["); }
+void RendererPython3::separateQueryElements() { add(",\n"); }
+void RendererPython3::endQuery() { add("]\n"); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startRow() { add("["); }
-void RendererPython::separateRowElements() { add(","); }
-void RendererPython::endRow() { add("]"); }
+void RendererPython3::startRow() { add("["); }
+void RendererPython3::separateRowElements() { add(","); }
+void RendererPython3::endRow() { add("]"); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startList() { add("["); }
-void RendererPython::separateListElements() { add(","); }
-void RendererPython::endList() { add("]"); }
+void RendererPython3::startList() { add("["); }
+void RendererPython3::separateListElements() { add(","); }
+void RendererPython3::endList() { add("]"); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startSublist() { startList(); }
-void RendererPython::separateSublistElements() { separateListElements(); }
-void RendererPython::endSublist() { endList(); }
+void RendererPython3::startSublist() { startList(); }
+void RendererPython3::separateSublistElements() { separateListElements(); }
+void RendererPython3::endSublist() { endList(); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startDict() { add("{"); }
-void RendererPython::separateDictElements() { add(","); }
-void RendererPython::separateDictKeyValue() { add(":"); }
-void RendererPython::endDict() { add("}"); }
+void RendererPython3::startDict() { add("{"); }
+void RendererPython3::separateDictElements() { add(","); }
+void RendererPython3::separateDictKeyValue() { add(":"); }
+void RendererPython3::endDict() { add("}"); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::outputNull() { add("None"); }
+void RendererPython3::outputNull() { add("None"); }
 
-void RendererPython::outputBlob(const vector<char> &value) {
-    add("\"");
+void RendererPython3::outputBlob(const vector<char> &value) {
+    add("b\"");
     for (unsigned char ch : value) {
         add(ch < 32 || ch > 127 || ch == '"' || ch == '\\' ? unicodeEscape(ch)
                                                            : string(1, ch));
@@ -79,8 +79,8 @@ void RendererPython::outputBlob(const vector<char> &value) {
     add("\"");
 }
 
-void RendererPython::outputString(const string &value) {
-    add("u\"");
+void RendererPython3::outputString(const string &value) {
+    add("\"");
     outputCharsAsString(value);
     add("\"");
 }

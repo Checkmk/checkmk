@@ -22,65 +22,60 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "RendererPython.h"
+#include "RendererBrokenCSV.h"
+#include <algorithm>
 
+using std::move;
 using std::string;
 using std::vector;
 
-RendererPython::RendererPython(OutputBuffer *output,
-                               OutputBuffer::ResponseHeader response_header,
-                               bool do_keep_alive,
-                               string invalid_header_message,
-                               int timezone_offset)
+RendererBrokenCSV::RendererBrokenCSV(
+    OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
+    bool do_keep_alive, string invalid_header_message, CSVSeparators separators,
+    int timezone_offset)
     : Renderer(output, response_header, do_keep_alive, invalid_header_message,
-               timezone_offset) {}
+               timezone_offset)
+    , _separators(move(separators)) {}
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startQuery() { add("["); }
-void RendererPython::separateQueryElements() { add(",\n"); }
-void RendererPython::endQuery() { add("]\n"); }
+void RendererBrokenCSV::startQuery() {}
+void RendererBrokenCSV::separateQueryElements() {}
+void RendererBrokenCSV::endQuery() {}
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startRow() { add("["); }
-void RendererPython::separateRowElements() { add(","); }
-void RendererPython::endRow() { add("]"); }
+void RendererBrokenCSV::startRow() {}
+void RendererBrokenCSV::separateRowElements() { add(_separators.field()); }
+void RendererBrokenCSV::endRow() { add(_separators.dataset()); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startList() { add("["); }
-void RendererPython::separateListElements() { add(","); }
-void RendererPython::endList() { add("]"); }
+void RendererBrokenCSV::startList() {}
+void RendererBrokenCSV::separateListElements() { add(_separators.list()); }
+void RendererBrokenCSV::endList() {}
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startSublist() { startList(); }
-void RendererPython::separateSublistElements() { separateListElements(); }
-void RendererPython::endSublist() { endList(); }
-
-// --------------------------------------------------------------------------
-
-void RendererPython::startDict() { add("{"); }
-void RendererPython::separateDictElements() { add(","); }
-void RendererPython::separateDictKeyValue() { add(":"); }
-void RendererPython::endDict() { add("}"); }
-
-// --------------------------------------------------------------------------
-
-void RendererPython::outputNull() { add("None"); }
-
-void RendererPython::outputBlob(const vector<char> &value) {
-    add("\"");
-    for (unsigned char ch : value) {
-        add(ch < 32 || ch > 127 || ch == '"' || ch == '\\' ? unicodeEscape(ch)
-                                                           : string(1, ch));
-    }
-    add("\"");
+void RendererBrokenCSV::startSublist() {}
+void RendererBrokenCSV::separateSublistElements() {
+    add(_separators.hostService());
 }
+void RendererBrokenCSV::endSublist() {}
 
-void RendererPython::outputString(const string &value) {
-    add("u\"");
-    outputCharsAsString(value);
-    add("\"");
+// --------------------------------------------------------------------------
+
+void RendererBrokenCSV::startDict() {}
+void RendererBrokenCSV::separateDictElements() { add(_separators.list()); }
+void RendererBrokenCSV::separateDictKeyValue() {
+    add(_separators.hostService());
 }
+void RendererBrokenCSV::endDict() {}
+
+// --------------------------------------------------------------------------
+
+void RendererBrokenCSV::outputNull() {}
+
+void RendererBrokenCSV::outputBlob(const vector<char> &value) { add(value); }
+
+void RendererBrokenCSV::outputString(const string &value) { add(value); }

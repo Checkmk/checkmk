@@ -41,6 +41,7 @@
 #include "NullColumn.h"
 #include "OutputBuffer.h"
 #include "StatsColumn.h"
+#include "StringUtils.h"
 #include "Table.h"
 #include "VariadicFilter.h"
 #include "auth.h"
@@ -85,9 +86,9 @@ Query::Query(const list<string> &lines, Table *table)
     , _wait_timeout(0)
     , _wait_trigger(nullptr)
     , _wait_object(nullptr)
-    , _separators("\n", ";", ",", "|")  // TODO(sp) Make this RFC4180-compliant
+    , _separators("\n", ";", ",", "|")
     , _show_column_headers(true)
-    , _output_format(OutputFormat::csv)
+    , _output_format(OutputFormat::broken_csv)
     , _limit(-1)
     , _time_limit(-1)
     , _time_limit_timeout(0)
@@ -536,24 +537,30 @@ void Query::parseSeparatorsLine(char *line) {
     _separators = CSVSeparators(dsep, fsep, lsep, hsep);
 }
 
+namespace {
+std::map<string, OutputFormat> formats{{"CSV", OutputFormat::csv},
+                                       {"csv", OutputFormat::broken_csv},
+                                       {"json", OutputFormat::json},
+                                       {"python", OutputFormat::python},
+                                       {"python3", OutputFormat::python3}};
+}  // namespace
+
 void Query::parseOutputFormatLine(char *line) {
-    char *format = next_field(&line);
-    if (format == nullptr) {
-        invalidHeader(
-            "Missing output format. Only 'csv' and 'json' are available.");
+    auto format_and_rest = mk::nextField(line);
+    auto it = formats.find(format_and_rest.first);
+    if (it == formats.end()) {
+        string msg;
+        for (const auto &entry : formats) {
+            msg += string(msg.empty() ? "" : ", ") + "'" + entry.first + "'";
+        }
+        invalidHeader("Missing/invalid output format, use one of " + msg + ".");
         return;
     }
-
-    if (strcmp(format, "csv") == 0) {
-        _output_format = OutputFormat::csv;
-    } else if (strcmp(format, "json") == 0) {
-        _output_format = OutputFormat::json;
-    } else if (strcmp(format, "python") == 0) {
-        _output_format = OutputFormat::python;
-    } else {
-        invalidHeader(
-            "Invalid output format. Only 'csv' and 'json' are available.");
+    if (!mk::strip(format_and_rest.second).empty()) {
+        invalidHeader("OutputFormat: expects only 1 argument");
+        return;
     }
+    _output_format = it->second;
 }
 
 void Query::parseColumnHeadersLine(char *line) {

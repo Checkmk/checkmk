@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef RendererCSV_h
-#define RendererCSV_h
+#ifndef RendererBrokenCSV_h
+#define RendererBrokenCSV_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
@@ -31,14 +31,35 @@
 #include "OutputBuffer.h"
 #include "Renderer.h"
 
-// Note: The CSV format is a bit underspecified, but the most "authorative"
-// reference seems to be https://tools.ietf.org/html/rfc4180.
-class RendererCSV : public Renderer {
+class CSVSeparators {
 public:
-    RendererCSV(OutputBuffer *output,
-                OutputBuffer::ResponseHeader response_header,
-                bool do_keep_alive, std::string invalid_header_message,
-                int timezone_offset);
+    CSVSeparators(std::string dataset, std::string field, std::string list,
+                  std::string host_service)
+        : _dataset(dataset)
+        , _field(field)
+        , _list(list)
+        , _host_service(host_service) {}
+
+    std::string dataset() const { return _dataset; }
+    std::string field() const { return _field; }
+    std::string list() const { return _list; }
+    std::string hostService() const { return _host_service; }
+
+private:
+    std::string _dataset;
+    std::string _field;
+    std::string _list;
+    std::string _host_service;
+};
+
+// A broken CSV renderer, just for backwards compatibility with old Livestatus
+// versions.
+class RendererBrokenCSV : public Renderer {
+public:
+    RendererBrokenCSV(OutputBuffer *output,
+                      OutputBuffer::ResponseHeader response_header,
+                      bool do_keep_alive, std::string invalid_header_message,
+                      CSVSeparators separators, int timezone_offset);
 
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;
@@ -64,6 +85,9 @@ public:
     void separateDictElements() override;
     void separateDictKeyValue() override;
     void endDict() override;
+
+private:
+    const CSVSeparators _separators;
 };
 
-#endif  // RendererCSV_h
+#endif  // RendererBrokenCSV_h

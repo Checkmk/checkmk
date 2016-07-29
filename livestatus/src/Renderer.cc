@@ -28,9 +28,11 @@
 #include <iomanip>
 #include <ostream>
 #include "Logger.h"
+#include "RendererBrokenCSV.h"
 #include "RendererCSV.h"
 #include "RendererJSON.h"
 #include "RendererPython.h"
+#include "RendererPython3.h"
 #include "data_encoding.h"
 
 extern int g_data_encoding;
@@ -72,14 +74,21 @@ unique_ptr<Renderer> Renderer::make(
         case OutputFormat::csv:
             return make_unique<RendererCSV>(
                 output, response_header, do_keep_alive, invalid_header_message,
+                timezone_offset);
+        case OutputFormat::broken_csv:
+            return make_unique<RendererBrokenCSV>(
+                output, response_header, do_keep_alive, invalid_header_message,
                 separators, timezone_offset);
-            break;
         case OutputFormat::json:
             return make_unique<RendererJSON>(
                 output, response_header, do_keep_alive, invalid_header_message,
                 timezone_offset);
         case OutputFormat::python:
             return make_unique<RendererPython>(
+                output, response_header, do_keep_alive, invalid_header_message,
+                timezone_offset);
+        case OutputFormat::python3:
+            return make_unique<RendererPython3>(
                 output, response_header, do_keep_alive, invalid_header_message,
                 timezone_offset);
     }

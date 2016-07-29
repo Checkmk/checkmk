@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef RendererCSV_h
-#define RendererCSV_h
+#ifndef RendererPython3_h
+#define RendererPython3_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
@@ -31,14 +31,12 @@
 #include "OutputBuffer.h"
 #include "Renderer.h"
 
-// Note: The CSV format is a bit underspecified, but the most "authorative"
-// reference seems to be https://tools.ietf.org/html/rfc4180.
-class RendererCSV : public Renderer {
+class RendererPython3 : public Renderer {
 public:
-    RendererCSV(OutputBuffer *output,
-                OutputBuffer::ResponseHeader response_header,
-                bool do_keep_alive, std::string invalid_header_message,
-                int timezone_offset);
+    RendererPython3(OutputBuffer *output,
+                    OutputBuffer::ResponseHeader response_header,
+                    bool do_keep_alive, std::string invalid_header_message,
+                    int timezone_offset);
 
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;
@@ -66,4 +64,4 @@ public:
     void endDict() override;
 };
 
-#endif  // RendererCSV_h
+#endif  // RendererPython3_h

@@ -33,31 +33,11 @@
 #include <string>
 #include <vector>
 #include "OutputBuffer.h"
+class CSVSeparators;
 
-enum class OutputFormat { csv, json, python };
+enum class OutputFormat { csv, broken_csv, json, python, python3 };
 
 struct Null {};
-
-class CSVSeparators {
-public:
-    CSVSeparators(std::string dataset, std::string field, std::string list,
-                  std::string host_service)
-        : _dataset(dataset)
-        , _field(field)
-        , _list(list)
-        , _host_service(host_service) {}
-
-    std::string dataset() const { return _dataset; }
-    std::string field() const { return _field; }
-    std::string list() const { return _list; }
-    std::string hostService() const { return _host_service; }
-
-private:
-    std::string _dataset;
-    std::string _field;
-    std::string _list;
-    std::string _host_service;
-};
 
 class Renderer {
 public:

@@ -97,9 +97,11 @@ livestatus_so_SOURCES = \
         PerfdataAggregator.cc \
         Query.cc \
         Renderer.cc \
+        RendererBrokenCSV.cc \
         RendererCSV.cc \
         RendererJSON.cc \
         RendererPython.cc \
+        RendererPython3.cc \
         ServiceContactsColumn.cc \
         ServiceSpecialDoubleColumn.cc \
         ServiceSpecialIntColumn.cc \

@@ -146,7 +146,7 @@ class Site(object):
 
     @property
     def live(self):
-        return livestatus.SingleSiteConnection("tcp:127.0.0.1:9123")
+        return livestatus.SingleSiteConnection("unix:%s/tmp/run/live" % self.root)
 
 
     def execute(self, cmd, *args, **kwargs):
@@ -197,7 +197,7 @@ class Site(object):
     def start(self):
         if not self.is_running():
             assert omd(["start", self.id]) == 0
-            assert self.is_running()
+            assert self.is_running() == True
 
 
     def exists(self):
@@ -232,15 +232,11 @@ def site(request):
     site = Site(site_id=site_id(), version=site_version(),
                 edition=site_edition())
     site.cleanup_if_wrong_version()
-
-    existed = site.exists()
     site.create()
-
-    if not existed:
-        site.set_config("LIVESTATUS_TCP", "on")
-        site.set_config("LIVESTATUS_TCP_PORT", "9123") # Need multiple? Make it configurable!
-
     site.start()
+
+    # Hack: Make livestatus port read/writable for all to make tests possible without TCP ports
+    site.execute(["chmod", "0666", "%s/tmp/run/live" % site.root ])
 
     def fin():
         site.rm_if_not_reusing()

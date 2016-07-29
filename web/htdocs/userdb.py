@@ -836,7 +836,26 @@ def save_users(profiles):
 
 
 def rewrite_users():
-    users = load_users(lock = True)
+    users = load_users(lock=True)
+    save_users(users)
+
+
+def create_cmk_automation_user():
+    secret = gen_id()
+
+    users = load_users(lock=True)
+    users["cmkautomation"] = {
+        'alias'                 : u'Check_MK internal - Used for site local authentication',
+        'contactgroups'         : [],
+        'automation_secret'     : secret,
+        'password'              : encrypt_password(secret),
+        'roles'                 : ['admin'],
+        'locked'                : False,
+        'serial'                : 0,
+        'email'                 : '',
+        'pager'                 : '',
+        'notifications_enabled' : False,
+    }
     save_users(users)
 
 

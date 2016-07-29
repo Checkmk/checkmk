@@ -14293,6 +14293,8 @@ def create_sample_config():
 
     save_mkeventd_sample_config()
 
+    userdb.create_cmk_automation_user()
+
 
 def has_agent_bakery():
     return 'bake_agents' in globals()

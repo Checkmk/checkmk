@@ -1,0 +1,22 @@
+Title: Automatically creating automation user for Check_MK internal use with WATO default config
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i1
+Date: 1469780006
+Class: feature
+
+We are adding now a default automation user named <i>cmkautomation</i> to Check_MK with the
+WATO default configuration. This user will currently only be added to new sites, but may be
+added to existing sites in future, too.
+
+The user has the administrative role to be able to access all hosts and do all actions. The
+authentication secret is randomly created for each site. In distributed setups the authentication
+secret will be synchronized from the central site.
+
+The idea of this user is, that components of Check_MK can automatically authenticate with
+the Web GUI using an always existing user. This is currently not used, but may be used for
+the internal cron job, fetching of graphs and performing checks against the GUI.
+
+If you don't like this user, you are free to disable or delete it. But this may lead to issues
+in future when we start using the user for internal things.

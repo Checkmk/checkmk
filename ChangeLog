@@ -14,6 +14,7 @@
     * 3556 FIX: agent_vsphere.pysphere: The ESX 4.1 compatible agent version no longer validates the ssl certificate
     * 3709 FIX: cisco_wlc, cisco_wlc_clients: fixed scan function and incomplete listing of interfaces
     * 3672 FIX: Agent sections cached by the agent could cause stale services...
+    * 3727 FIX: fc_port: Fixed broken interpretation of counter values leading to wrong measurements
 
     Multisite:
     * 3662 FIX: Fixed creation/editing of dashboards (regression since 1.2.8p5)

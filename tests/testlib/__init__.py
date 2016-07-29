@@ -364,9 +364,8 @@ class WebSession(requests.Session):
     #
 
     def _automation_credentials(self):
-        p = self.site.execute(["cat", "%s/var/check_mk/web/cmkautomation/automation.secret" %
-                                                                            self.site.root ],
-                                stdout=subprocess.PIPE)
+        secret_path = "%s/var/check_mk/web/cmkautomation/automation.secret" % self.site.root
+        p = self.site.execute(["cat", secret_path], stdout=subprocess.PIPE)
         secret = p.communicate()[0].rstrip()
 
         return {

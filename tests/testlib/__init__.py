@@ -10,6 +10,10 @@ import requests
 import pipes
 import subprocess
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 def repo_path():
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -338,6 +342,30 @@ class WebSession(requests.Session):
         r = self.get(self.url + "logout.py")
         assert "action=\"login.py\"" in r.text
 
+
+    #
+    # Web-API for managing hosts, services etc.
+    #
+
+    def _api_request(self, url, data):
+        req = self.post(url, data)
+        response = json.loads(req.text)
+
+        assert response["result_code"] == 0, \
+               "An error occured: %s" % response["result"]
+
+        return response["result"]
+
+
+    def add_host(self, hostname, folder="/", attributes=None):
+        result = self._api_request(self.url + "webapi.py?action=add_host", {
+            "request": json.dumps({
+                "hostname"   : hostname,
+                "attributes" : attributes or {},
+            }),
+        })
+
+        assert result["result"] == None
 
 
 @pytest.fixture(scope="module")

@@ -62,8 +62,10 @@ def page_api():
         # The API uses JSON format by default and python as optional alternative
         output_format = html.var("output_format", "json")
         if output_format not in [ "json", "python" ]:
-            html.set_output_format("json")
             raise MKUserError(None, "Only \"json\" and \"python\" are supported as output formats")
+        else:
+            html.set_output_format(output_format)
+
         if not config.user.get("automation_secret"):
             raise MKAuthException("The WATO API is only available for automation users")
 
@@ -104,5 +106,4 @@ def page_api():
     if html.output_format == "json":
         html.write(json.dumps(response))
     else:
-        html.set_output_format("python")
         html.write(repr(response))

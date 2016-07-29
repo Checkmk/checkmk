@@ -65,23 +65,25 @@ public:
     void outputBlob(const std::vector<char> &value) override;
     void outputString(const std::string &value) override;
 
-    void startQuery() override;
+    void beginQuery() override;
     void separateQueryElements() override;
     void endQuery() override;
 
-    void startRow() override;
+    void beginRow() override;
+    void beginRowElement() override;
+    void endRowElement() override;
     void separateRowElements() override;
     void endRow() override;
 
-    void startList() override;
+    void beginList() override;
     void separateListElements() override;
     void endList() override;
 
-    void startSublist() override;
+    void beginSublist() override;
     void separateSublistElements() override;
     void endSublist() override;
 
-    void startDict() override;
+    void beginDict() override;
     void separateDictElements() override;
     void separateDictKeyValue() override;
     void endDict() override;

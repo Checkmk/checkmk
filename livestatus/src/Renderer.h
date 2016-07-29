@@ -28,7 +28,6 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -58,50 +57,48 @@ public:
     }
 
     void output(double value);
-    void output(Null /* unused */) { outputNull(); }
-    void output(const std::vector<char> &value) { outputBlob(value); }
-    void output(const std::string &value) { outputString(value); }
-    void output(const char *value) { outputString(value); }
-    void output(std::chrono::system_clock::time_point value) {
-        add(std::to_string(std::chrono::system_clock::to_time_t(value) +
-                           _timezone_offset));
-    }
+    void output(char16_t value);
+    void output(Null value);
+    void output(const std::vector<char> &value);
+    void output(const std::string &value);
+    void output(const char *value);
+    void output(std::chrono::system_clock::time_point value);
 
     // A whole query.
-    virtual void startQuery() = 0;
+    virtual void beginQuery() = 0;
     virtual void separateQueryElements() = 0;
     virtual void endQuery() = 0;
 
     // Output a single row returned by lq.
-    virtual void startRow() = 0;
+    virtual void beginRow() = 0;
+    virtual void beginRowElement() = 0;
+    virtual void endRowElement() = 0;
     virtual void separateRowElements() = 0;
     virtual void endRow() = 0;
 
     // Output a list-valued column.
-    virtual void startList() = 0;
+    virtual void beginList() = 0;
     virtual void separateListElements() = 0;
     virtual void endList() = 0;
 
     // Output a list-valued value within a list-valued column.
-    virtual void startSublist() = 0;
+    virtual void beginSublist() = 0;
     virtual void separateSublistElements() = 0;
     virtual void endSublist() = 0;
 
     // Output a dictionary, see CustomVarsColumn.
-    virtual void startDict() = 0;
+    virtual void beginDict() = 0;
     virtual void separateDictElements() = 0;
     virtual void separateDictKeyValue() = 0;
     virtual void endDict() = 0;
 
-protected:
+    // protected:
     Renderer(OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
              bool do_keep_alive, std::string invalid_header_message,
              int timezone_offset);
 
     void add(const std::string &str);
     void add(const std::vector<char> &value);
-
-    static std::string unicodeEscape(std::uint16_t ch);
 
     void outputCharsAsString(const std::string &value);
 
@@ -116,143 +113,179 @@ private:
 
 class QueryRenderer {
 public:
+    class BeginEnd {
+    public:
+        explicit BeginEnd(QueryRenderer &query) : _query(query) {
+            if (_query._first) {
+                _query._first = false;
+            } else {
+                _query.renderer().separateQueryElements();
+            }
+        }
+
+    private:
+        QueryRenderer &_query;
+    };
+
     explicit QueryRenderer(Renderer &rend) : _renderer(rend), _first(true) {
-        renderer().startQuery();
+        renderer().beginQuery();
     }
 
     ~QueryRenderer() { renderer().endQuery(); }
 
+    Renderer &renderer() const { return _renderer; }
+
     void setError(OutputBuffer::ResponseCode code, const std::string &message) {
         renderer().setError(code, message);
     }
+
     std::size_t size() const { return renderer().size(); }
 
 private:
     Renderer &_renderer;
     bool _first;
-
-    void next() {
-        if (_first) {
-            _first = false;
-        } else {
-            renderer().separateQueryElements();
-        }
-    }
-
-    Renderer &renderer() const { return _renderer; }
-
-    // for next() and renderer()
-    friend class RowRenderer;
 };
 
 class RowRenderer {
 public:
-    explicit RowRenderer(QueryRenderer &query) : _query(query), _first(true) {
-        _query.next();
-        renderer().startRow();
+    class BeginEnd {
+    public:
+        explicit BeginEnd(RowRenderer &row) : _row(row) {
+            if (_row._first) {
+                _row._first = false;
+            } else {
+                _row.renderer().separateRowElements();
+            }
+            _row.renderer().beginRowElement();
+        }
+        ~BeginEnd() { _row.renderer().endRowElement(); }
+
+    private:
+        RowRenderer &_row;
+    };
+
+    explicit RowRenderer(QueryRenderer &query)
+        : _query(query), _be(query), _first(true) {
+        renderer().beginRow();
     }
 
     ~RowRenderer() { renderer().endRow(); }
 
+    Renderer &renderer() const { return _query.renderer(); }
+
     template <typename T>
     void output(T value) {
-        next();
+        BeginEnd be(*this);
         renderer().output(value);
     }
 
 private:
     QueryRenderer &_query;
+    QueryRenderer::BeginEnd _be;
     bool _first;
-
-    void next() {
-        if (_first) {
-            _first = false;
-        } else {
-            renderer().separateRowElements();
-        }
-    }
-
-    Renderer &renderer() const { return _query.renderer(); }
-
-    // for next() and renderer()
-    friend class ListRenderer;
-    friend class DictRenderer;
 };
 
 class ListRenderer {
 public:
-    explicit ListRenderer(RowRenderer &row) : _row(row), _first(true) {
-        _row.next();
-        renderer().startList();
+    class BeginEnd {
+    public:
+        explicit BeginEnd(ListRenderer &list) : _list(list) {
+            if (_list._first) {
+                _list._first = false;
+            } else {
+                _list.renderer().separateListElements();
+            }
+        }
+
+    private:
+        ListRenderer &_list;
+    };
+
+    explicit ListRenderer(RowRenderer &row)
+        : _row(row), _be(row), _first(true) {
+        renderer().beginList();
     }
 
     ~ListRenderer() { renderer().endList(); }
 
+    Renderer &renderer() const { return _row.renderer(); }
+
     template <typename T>
     void output(T value) {
-        next();
+        BeginEnd be(*this);
         renderer().output(value);
     }
 
 private:
     RowRenderer &_row;
+    RowRenderer::BeginEnd _be;
     bool _first;
-
-    void next() {
-        if (_first) {
-            _first = false;
-        } else {
-            renderer().separateListElements();
-        }
-    }
-
-    Renderer &renderer() const { return _row.renderer(); }
-
-    // for next() and renderer()
-    friend class SublistRenderer;
 };
 
 class SublistRenderer {
 public:
-    explicit SublistRenderer(ListRenderer &list) : _list(list), _first(true) {
-        _list.next();
-        renderer().startSublist();
+    class BeginEnd {
+    public:
+        explicit BeginEnd(SublistRenderer &sublist) : _sublist(sublist) {
+            if (_sublist._first) {
+                _sublist._first = false;
+            } else {
+                _sublist.renderer().separateSublistElements();
+            }
+        }
+
+    private:
+        SublistRenderer &_sublist;
+    };
+
+    explicit SublistRenderer(ListRenderer &list)
+        : _list(list), _be(list), _first(true) {
+        renderer().beginSublist();
     }
 
     ~SublistRenderer() { renderer().endSublist(); }
 
+    Renderer &renderer() const { return _list.renderer(); }
+
     template <typename T>
     void output(T value) {
-        next();
+        BeginEnd be(*this);
         renderer().output(value);
     }
 
 private:
     ListRenderer &_list;
+    ListRenderer::BeginEnd _be;
     bool _first;
-
-    void next() {
-        if (_first) {
-            _first = false;
-        } else {
-            renderer().separateSublistElements();
-        }
-    }
-
-    Renderer &renderer() const { return _list.renderer(); }
 };
 
 class DictRenderer {
 public:
-    explicit DictRenderer(RowRenderer &row) : _row(row), _first(true) {
-        _row.next();
-        renderer().startDict();
+    class BeginEnd {
+    public:
+        explicit BeginEnd(DictRenderer &dict) : _dict(dict) {
+            if (_dict._first) {
+                _dict._first = false;
+            } else {
+                _dict.renderer().separateDictElements();
+            }
+        }
+
+    private:
+        DictRenderer &_dict;
+    };
+
+    explicit DictRenderer(RowRenderer &row)
+        : _row(row), _be(row), _first(true) {
+        renderer().beginDict();
     }
 
     ~DictRenderer() { renderer().endDict(); }
 
-    void renderKeyValue(std::string key, std::string value) {
-        next();
+    Renderer &renderer() const { return _row.renderer(); }
+
+    void output(std::string key, std::string value) {
+        BeginEnd be(*this);
         renderer().output(key);
         renderer().separateDictKeyValue();
         renderer().output(value);
@@ -260,17 +293,8 @@ public:
 
 private:
     RowRenderer &_row;
+    RowRenderer::BeginEnd _be;
     bool _first;
-
-    void next() {
-        if (_first) {
-            _first = false;
-        } else {
-            renderer().separateDictElements();
-        }
-    }
-
-    Renderer &renderer() const { return _row.renderer(); }
 };
 
 #endif  // Renderer_h

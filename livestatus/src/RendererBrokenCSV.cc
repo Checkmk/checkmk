@@ -39,25 +39,27 @@ RendererBrokenCSV::RendererBrokenCSV(
 
 // --------------------------------------------------------------------------
 
-void RendererBrokenCSV::startQuery() {}
+void RendererBrokenCSV::beginQuery() {}
 void RendererBrokenCSV::separateQueryElements() {}
 void RendererBrokenCSV::endQuery() {}
 
 // --------------------------------------------------------------------------
 
-void RendererBrokenCSV::startRow() {}
+void RendererBrokenCSV::beginRow() {}
+void RendererBrokenCSV::beginRowElement() {}
+void RendererBrokenCSV::endRowElement() {}
 void RendererBrokenCSV::separateRowElements() { add(_separators.field()); }
 void RendererBrokenCSV::endRow() { add(_separators.dataset()); }
 
 // --------------------------------------------------------------------------
 
-void RendererBrokenCSV::startList() {}
+void RendererBrokenCSV::beginList() {}
 void RendererBrokenCSV::separateListElements() { add(_separators.list()); }
 void RendererBrokenCSV::endList() {}
 
 // --------------------------------------------------------------------------
 
-void RendererBrokenCSV::startSublist() {}
+void RendererBrokenCSV::beginSublist() {}
 void RendererBrokenCSV::separateSublistElements() {
     add(_separators.hostService());
 }
@@ -65,7 +67,7 @@ void RendererBrokenCSV::endSublist() {}
 
 // --------------------------------------------------------------------------
 
-void RendererBrokenCSV::startDict() {}
+void RendererBrokenCSV::beginDict() {}
 void RendererBrokenCSV::separateDictElements() { add(_separators.list()); }
 void RendererBrokenCSV::separateDictKeyValue() {
     add(_separators.hostService());

@@ -37,31 +37,33 @@ RendererPython::RendererPython(OutputBuffer *output,
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startQuery() { add("["); }
+void RendererPython::beginQuery() { add("["); }
 void RendererPython::separateQueryElements() { add(",\n"); }
 void RendererPython::endQuery() { add("]\n"); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startRow() { add("["); }
+void RendererPython::beginRow() { add("["); }
+void RendererPython::beginRowElement() {}
+void RendererPython::endRowElement() {}
 void RendererPython::separateRowElements() { add(","); }
 void RendererPython::endRow() { add("]"); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startList() { add("["); }
+void RendererPython::beginList() { add("["); }
 void RendererPython::separateListElements() { add(","); }
 void RendererPython::endList() { add("]"); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startSublist() { startList(); }
+void RendererPython::beginSublist() { beginList(); }
 void RendererPython::separateSublistElements() { separateListElements(); }
 void RendererPython::endSublist() { endList(); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::startDict() { add("{"); }
+void RendererPython::beginDict() { add("{"); }
 void RendererPython::separateDictElements() { add(","); }
 void RendererPython::separateDictKeyValue() { add(":"); }
 void RendererPython::endDict() { add("}"); }
@@ -73,8 +75,11 @@ void RendererPython::outputNull() { add("None"); }
 void RendererPython::outputBlob(const vector<char> &value) {
     add("\"");
     for (unsigned char ch : value) {
-        add(ch < 32 || ch > 127 || ch == '"' || ch == '\\' ? unicodeEscape(ch)
-                                                           : string(1, ch));
+        if (ch < 32 || ch > 127 || ch == '"' || ch == '\\') {
+            output(static_cast<char16_t>(ch));
+        } else {
+            add(string(1, ch));
+        }
     }
     add("\"");
 }

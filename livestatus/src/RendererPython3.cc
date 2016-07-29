@@ -37,31 +37,33 @@ RendererPython3::RendererPython3(OutputBuffer *output,
 
 // --------------------------------------------------------------------------
 
-void RendererPython3::startQuery() { add("["); }
+void RendererPython3::beginQuery() { add("["); }
 void RendererPython3::separateQueryElements() { add(",\n"); }
 void RendererPython3::endQuery() { add("]\n"); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython3::startRow() { add("["); }
+void RendererPython3::beginRow() { add("["); }
+void RendererPython3::beginRowElement() {}
+void RendererPython3::endRowElement() {}
 void RendererPython3::separateRowElements() { add(","); }
 void RendererPython3::endRow() { add("]"); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython3::startList() { add("["); }
+void RendererPython3::beginList() { add("["); }
 void RendererPython3::separateListElements() { add(","); }
 void RendererPython3::endList() { add("]"); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython3::startSublist() { startList(); }
+void RendererPython3::beginSublist() { beginList(); }
 void RendererPython3::separateSublistElements() { separateListElements(); }
 void RendererPython3::endSublist() { endList(); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython3::startDict() { add("{"); }
+void RendererPython3::beginDict() { add("{"); }
 void RendererPython3::separateDictElements() { add(","); }
 void RendererPython3::separateDictKeyValue() { add(":"); }
 void RendererPython3::endDict() { add("}"); }
@@ -73,8 +75,11 @@ void RendererPython3::outputNull() { add("None"); }
 void RendererPython3::outputBlob(const vector<char> &value) {
     add("b\"");
     for (unsigned char ch : value) {
-        add(ch < 32 || ch > 127 || ch == '"' || ch == '\\' ? unicodeEscape(ch)
-                                                           : string(1, ch));
+        if (ch < 32 || ch > 127 || ch == '"' || ch == '\\') {
+            output(static_cast<char16_t>(ch));
+        } else {
+            add(string(1, ch));
+        }
     }
     add("\"");
 }

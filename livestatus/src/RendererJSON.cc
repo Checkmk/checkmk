@@ -36,31 +36,33 @@ RendererJSON::RendererJSON(OutputBuffer *output,
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::startQuery() { add("["); }
+void RendererJSON::beginQuery() { add("["); }
 void RendererJSON::separateQueryElements() { add(",\n"); }
 void RendererJSON::endQuery() { add("]\n"); }
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::startRow() { add("["); }
+void RendererJSON::beginRow() { add("["); }
+void RendererJSON::beginRowElement() {}
+void RendererJSON::endRowElement() {}
 void RendererJSON::separateRowElements() { add(","); }
 void RendererJSON::endRow() { add("]"); }
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::startList() { add("["); }
+void RendererJSON::beginList() { add("["); }
 void RendererJSON::separateListElements() { add(","); }
 void RendererJSON::endList() { add("]"); }
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::startSublist() { startList(); }
+void RendererJSON::beginSublist() { beginList(); }
 void RendererJSON::separateSublistElements() { separateListElements(); }
 void RendererJSON::endSublist() { endList(); }
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::startDict() { add("{"); }
+void RendererJSON::beginDict() { add("{"); }
 void RendererJSON::separateDictElements() { add(","); }
 void RendererJSON::separateDictKeyValue() { add(":"); }
 void RendererJSON::endDict() { add("}"); }
@@ -72,8 +74,11 @@ void RendererJSON::outputNull() { add("null"); }
 void RendererJSON::outputBlob(const vector<char> &value) {
     add("\"");
     for (unsigned char ch : value) {
-        add(ch < 32 || ch > 127 || ch == '"' || ch == '\\' ? unicodeEscape(ch)
-                                                           : string(1, ch));
+        if (ch < 32 || ch > 127 || ch == '"' || ch == '\\') {
+            output(static_cast<char16_t>(ch));
+        } else {
+            add(string(1, ch));
+        }
     }
     add("\"");
 }

@@ -36,31 +36,33 @@ RendererCSV::RendererCSV(OutputBuffer *output,
 
 // --------------------------------------------------------------------------
 
-void RendererCSV::startQuery() {}
+void RendererCSV::beginQuery() {}
 void RendererCSV::separateQueryElements() {}
 void RendererCSV::endQuery() {}
 
 // --------------------------------------------------------------------------
 
-void RendererCSV::startRow() {}
+void RendererCSV::beginRow() {}
+void RendererCSV::beginRowElement() { add("\""); }
+void RendererCSV::endRowElement() { add("\""); }
 void RendererCSV::separateRowElements() { add(","); }
 void RendererCSV::endRow() { add("\r\n"); }
 
 // --------------------------------------------------------------------------
 
-void RendererCSV::startList() {}
+void RendererCSV::beginList() {}
 void RendererCSV::separateListElements() { add(","); }
 void RendererCSV::endList() {}
 
 // --------------------------------------------------------------------------
 
-void RendererCSV::startSublist() {}
+void RendererCSV::beginSublist() {}
 void RendererCSV::separateSublistElements() { add("|"); }
 void RendererCSV::endSublist() {}
 
 // --------------------------------------------------------------------------
 
-void RendererCSV::startDict() {}
+void RendererCSV::beginDict() {}
 void RendererCSV::separateDictElements() { add(","); }
 void RendererCSV::separateDictKeyValue() { add("|"); }
 void RendererCSV::endDict() {}
@@ -70,11 +72,10 @@ void RendererCSV::endDict() {}
 void RendererCSV::outputNull() {}
 
 void RendererCSV::outputBlob(const vector<char> &value) {
-    add("\"");
     for (unsigned char ch : value) {
         add(ch == '"' ? "\"\"" : string(1, ch));
     }
-    add("\"");
 }
 
+// TODO(sp) Decode and Double all double quotes
 void RendererCSV::outputString(const string &value) { add(value); }

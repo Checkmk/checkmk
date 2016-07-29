@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Renderer.h"
-#include <stdio.h>
 #include <cmath>
 #include <iomanip>
 #include <ostream>
@@ -110,17 +109,28 @@ void Renderer::output(double value) {
     if (std::isnan(value)) {
         output(Null());
     } else {
-        char buf[64];
-        snprintf(buf, sizeof(buf), "%.10e", value);
-        add(buf);
+        ostringstream os;
+        os << value;
+        add(os.str());
     }
 }
 
-// static
-string Renderer::unicodeEscape(std::uint16_t ch) {
+void Renderer::output(char16_t value) {
     ostringstream os;
-    os << "\\u" << hex << setw(4) << setfill('0') << ch;
-    return os.str();
+    os << "\\u" << hex << setw(4) << setfill('0') << value;
+    add(os.str());
+}
+
+void Renderer::output(Null /* unused */) { outputNull(); }
+
+void Renderer::output(const std::vector<char> &value) { outputBlob(value); }
+
+void Renderer::output(const std::string &value) { outputString(value); }
+
+void Renderer::output(const char *value) { outputString(value); }
+
+void Renderer::output(std::chrono::system_clock::time_point value) {
+    output(std::chrono::system_clock::to_time_t(value) + _timezone_offset);
 }
 
 namespace {
@@ -138,7 +148,7 @@ void Renderer::outputCharsAsString(const string &value) {
     while (len != 0) {
         // Always escape control characters
         if (0 <= *r && *r <= 31) {
-            add(unicodeEscape(static_cast<std::uint16_t>(*r)));
+            output(static_cast<char16_t>(*r));
         }
 
         else if (*r == '"' || *r == '\\') {
@@ -156,8 +166,8 @@ void Renderer::outputCharsAsString(const string &value) {
         else if ((g_data_encoding == ENCODING_UTF8 ||
                   g_data_encoding == ENCODING_MIXED) &&
                  ((*r & 0xE0) == 0xC0)) {
-            add(unicodeEscape(((*r & 31) << 6) |
-                              (*(r + 1) & 0x3F)));  // 2 byte encoding
+            output(static_cast<char16_t>(
+                ((*r & 31) << 6) | (*(r + 1) & 0x3F)));  // 2 byte encoding
             r++;
             len--;
         }
@@ -170,9 +180,9 @@ void Renderer::outputCharsAsString(const string &value) {
                     invalidUTF8(value);
                     break;  // end of string. No use in continuing
                 } else {
-                    add(unicodeEscape(((*r & 0x0F) << 12 |
-                                       (*(r + 1) & 0x3F) << 6 |
-                                       (*(r + 2) & 0x3F))));
+                    output(static_cast<char16_t>(((*r & 0x0F) << 12 |
+                                                  (*(r + 1) & 0x3F) << 6 |
+                                                  (*(r + 2) & 0x3F))));
                     r += 2;
                     len -= 2;
                 }
@@ -183,9 +193,9 @@ void Renderer::outputCharsAsString(const string &value) {
                     invalidUTF8(value);
                     break;  // end of string. No use in continuing
                 } else {
-                    add(unicodeEscape(
-                        ((*r & 0x07) << 18 | (*(r + 1) & 0x3F) << 6 |
-                         (*(r + 2) & 0x3F) << 6 | (*(r + 3) & 0x3F))));
+                    output(static_cast<char16_t>(
+                        (*r & 0x07) << 18 | (*(r + 1) & 0x3F) << 6 |
+                        (*(r + 2) & 0x3F) << 6 | (*(r + 3) & 0x3F)));
                     r += 3;
                     len -= 3;
                 }
@@ -197,8 +207,8 @@ void Renderer::outputCharsAsString(const string &value) {
         // in latin1 and mixed mode interpret all other non-ASCII characters as
         // latin1
         else {
-            add(unicodeEscape(static_cast<std::uint16_t>(
-                static_cast<int>(*r) + 256)));  // assume latin1 encoding
+            // assume latin1 encoding
+            output(static_cast<char16_t>(static_cast<int>(*r) + 256));
         }
 
         r++;

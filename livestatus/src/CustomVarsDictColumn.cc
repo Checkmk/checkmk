@@ -40,7 +40,7 @@ void CustomVarsDictColumn::output(void *row, RowRenderer &r,
     DictRenderer d(r);
     for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
          cvm = cvm->next) {
-        d.renderKeyValue(cvm->variable_name, cvm->variable_value);
+        d.output(cvm->variable_name, cvm->variable_value);
     }
 }
 

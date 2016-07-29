@@ -9,6 +9,7 @@ import re
 import requests
 import pipes
 import subprocess
+import livestatus
 
 try:
     import simplejson as json
@@ -143,7 +144,14 @@ class Site(object):
         self.url     = "http://127.0.0.1/%s/check_mk/" % self.id
 
 
+    @property
+    def live(self):
+        return livestatus.SingleSiteConnection("tcp:127.0.0.1:9123")
+
+
     def execute(self, cmd, *args, **kwargs):
+        assert type(cmd) == list, "The command must be given as list"
+
         cmd = [ "sudo", "su", "-l", self.id,
                 "-c", pipes.quote(" ".join([ pipes.quote(p) for p in cmd ])) ]
         cmd_txt = " ".join(cmd)
@@ -200,6 +208,11 @@ class Site(object):
         return omd(["status", "--bare", self.id]) == 0
 
 
+    def set_config(self, key, val):
+        assert omd(["config", self.id, "set", key, val]) == 0
+
+
+
 
 @pytest.fixture(scope="session")
 def site(request):
@@ -219,7 +232,14 @@ def site(request):
     site = Site(site_id=site_id(), version=site_version(),
                 edition=site_edition())
     site.cleanup_if_wrong_version()
+
+    existed = site.exists()
     site.create()
+
+    if not existed:
+        site.set_config("LIVESTATUS_TCP", "on")
+        site.set_config("LIVESTATUS_TCP_PORT", "9123") # Need multiple? Make it configurable!
+
     site.start()
 
     def fin():
@@ -347,7 +367,21 @@ class WebSession(requests.Session):
     # Web-API for managing hosts, services etc.
     #
 
+    def _automation_credentials(self):
+        p = self.site.execute(["cat", "%s/var/check_mk/web/cmkautomation/automation.secret" %
+                                                                            self.site.root ],
+                                stdout=subprocess.PIPE)
+        secret = p.communicate()[0].rstrip()
+
+        return {
+            "_username" : "cmkautomation",
+            "_secret"   : secret,
+        }
+
+
     def _api_request(self, url, data):
+        data.update(self._automation_credentials())
+
         req = self.post(url, data)
         response = json.loads(req.text)
 
@@ -361,11 +395,90 @@ class WebSession(requests.Session):
         result = self._api_request(self.url + "webapi.py?action=add_host", {
             "request": json.dumps({
                 "hostname"   : hostname,
+                "folder"     : folder,
                 "attributes" : attributes or {},
             }),
         })
 
-        assert result["result"] == None
+        assert result == None
+
+        host = self.get_host(hostname)
+
+        assert host["hostname"] == hostname
+        assert host["path"] == ""
+        assert host["attributes"] == attributes
+
+
+    def get_host(self, hostname):
+        result = self._api_request(self.url + "webapi.py?action=get_host", {
+            "request": json.dumps({
+                "hostname"   : hostname,
+            }),
+        })
+
+        assert type(result) == dict
+        assert "hostname" in result
+        assert "path" in result
+        assert "attributes" in result
+
+        return result
+
+
+    def get_all_hosts(self, effective_attributes=0):
+        result = self._api_request(self.url + "webapi.py?action=get_all_hosts", {
+            "request": json.dumps({
+                "effective_attributes": effective_attributes,
+            }),
+        })
+
+        assert type(result) == dict
+        return result
+
+
+    def delete_host(self, hostname):
+        result = self._api_request(self.url + "webapi.py?action=delete_host", {
+            "request": json.dumps({
+                "hostname"   : hostname,
+            }),
+        })
+
+        assert result == None
+
+        hosts = self.get_all_hosts(hostname)
+        assert hostname not in hosts
+
+
+    def discover_services(self, hostname, mode=None):
+        request = {
+            "hostname"   : hostname,
+        }
+
+        if mode != None:
+            request["mode"] = mode
+
+        result = self._api_request(self.url + "webapi.py?action=discover_services", {
+            "request": json.dumps(request),
+        })
+
+        assert type(result) == unicode
+        assert result.startswith("Service discovery successful")
+
+
+    def activate_changes(self, mode=None, foreign_changes=None):
+        request = {}
+
+        if mode != None:
+            request["mode"] = mode
+
+        if foreign_changes != None:
+            request["foreign_changes"] = foreign_changes
+
+        result = self._api_request(self.url + "webapi.py?action=activate_changes", {
+            "request": json.dumps(request),
+        })
+
+        assert result == None
+
 
 
 @pytest.fixture(scope="module")

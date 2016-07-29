@@ -83,11 +83,11 @@ def page_api():
         # Most of the time the request is given as json
         # However, the plugin may have an own mechanism to interpret the request
         request_object = {}
-        if html.var("request"):
-            if api_actions[action].get("dont_eval_request"):
+        if api_actions[action].get("dont_eval_request"):
+            if html.var("request"):
                 request_object = html.var("request")
-            else:
-                request_object = html.get_request()
+        else:
+            request_object = html.get_request(exclude_vars=["action"])
 
         if api_actions[action].get("locking", True):
             lock_exclusive() # unlock is done automatically

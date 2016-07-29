@@ -59,12 +59,16 @@ def load_plugins(force):
 
 def page_api():
     try:
+        # The API uses JSON format by default and python as optional alternative
+        output_format = html.var("output_format", "json")
+        if output_format not in [ "json", "python" ]:
+            html.set_output_format("json")
+            raise MKUserError(None, "Only \"json\" and \"python\" are supported as output formats")
         if not config.user.get("automation_secret"):
             raise MKAuthException("The WATO API is only available for automation users")
 
         config.need_permission("wato.use")
         config.need_permission("wato.api_allowed")
-
 
         action = html.var('action')
         if action not in api_actions:

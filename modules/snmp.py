@@ -412,7 +412,7 @@ def check_snmp_fixed(item, targetvalue, info):
 
 
 def is_snmpwalk_cachable(column):
-    return type(column) == tuple
+    return type(column) == tuple and column[0] == "cached"
 
 
 def get_cached_snmpwalk(hostname, fetchoid):

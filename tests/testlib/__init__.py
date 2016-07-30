@@ -2,11 +2,13 @@
 # encoding: utf-8
 
 import os
+import pwd
 import time
 import pytest
 import platform
 import re
 import requests
+import socket
 import pipes
 import subprocess
 import livestatus
@@ -143,10 +145,22 @@ class Site(object):
         self.reuse   = reuse
         self.url     = "http://127.0.0.1/%s/check_mk/" % self.id
 
+        self._gather_livestatus_port()
+
+
+    @property
+    def livestatus_port(self):
+        if self._livestatus_port == None:
+            raise Exception("Livestatus TCP not opened yet")
+        return self._livestatus_port
+
 
     @property
     def live(self):
-        return livestatus.SingleSiteConnection("unix:%s/tmp/run/live" % self.root)
+        live = livestatus.SingleSiteConnection("tcp:127.0.0.1:%d" %
+                                                     self.livestatus_port)
+        live.set_timeout(2)
+        return live
 
 
     def execute(self, cmd, *args, **kwargs):
@@ -197,7 +211,8 @@ class Site(object):
     def start(self):
         if not self.is_running():
             assert omd(["start", self.id]) == 0
-            assert self.is_running() == True
+            if not self.is_running():
+                raise Exception("The site %s is not running completely after starting" % self.id)
 
 
     def exists(self):
@@ -211,6 +226,52 @@ class Site(object):
     def set_config(self, key, val):
         assert omd(["config", self.id, "set", key, val]) == 0
 
+
+    def get_config(self, key):
+        p = self.execute(["omd", "config", "show", key], stdout=subprocess.PIPE)
+        return p.communicate()[0].strip()
+
+
+    def prepare_for_tests(self):
+        self.init_wato()
+
+
+    def init_wato(self):
+        web = WebSession(self)
+        web.login()
+        web.get(self.url + "wato.py")
+        assert os.path.exists(self.root + "/etc/check_mk/conf.d/wato/rules.mk"), \
+            "Failed to initialize WATO data structures"
+
+
+    # This opens a currently free TCP port and remembers it in the object for later use
+    # Not free of races, but should be sufficient.
+    def open_livestatus_tcp(self):
+        if self.is_running():
+            return
+
+        self.set_config("LIVESTATUS_TCP", "on")
+        self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
+
+
+    def _gather_livestatus_port(self):
+        if self.reuse and self.exists():
+            port = int(self.get_config("LIVESTATUS_TCP_PORT"))
+        else:
+            port = 9123
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            while sock.connect_ex(('127.0.0.1', port)) == 0:
+                port += 1
+
+        self._livestatus_port = port
+
+
+    # Problem: The group change only affects new sessions of the test_user
+    #def add_test_user_to_site_group(self):
+    #    test_user = pwd.getpwuid(os.getuid())[0]
+
+    #    if os.system("sudo usermod -a -G %s %s" % (self.id, test_user)) >> 8 != 0:
+    #        raise Exception("Failed to add test user \"%s\" to site group")
 
 
 
@@ -233,10 +294,9 @@ def site(request):
                 edition=site_edition())
     site.cleanup_if_wrong_version()
     site.create()
+    site.open_livestatus_tcp()
     site.start()
-
-    # Hack: Make livestatus port read/writable for all to make tests possible without TCP ports
-    site.execute(["chmod", "0666", "%s/tmp/run/live" % site.root ])
+    site.prepare_for_tests()
 
     def fin():
         site.rm_if_not_reusing()
@@ -367,6 +427,8 @@ class WebSession(requests.Session):
         secret_path = "%s/var/check_mk/web/cmkautomation/automation.secret" % self.site.root
         p = self.site.execute(["cat", secret_path], stdout=subprocess.PIPE)
         secret = p.communicate()[0].rstrip()
+        if secret == "":
+            raise Exception("Failed to read secret from %s" % secret_path)
 
         return {
             "_username" : "cmkautomation",

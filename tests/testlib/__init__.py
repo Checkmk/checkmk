@@ -290,8 +290,11 @@ def site(request):
     def site_edition():
         return os.environ.get("EDITION", CMKVersion.CEE)
 
+    def reuse_site():
+        return os.environ.get("REUSE", "1") == "1"
+
     site = Site(site_id=site_id(), version=site_version(),
-                edition=site_edition())
+                edition=site_edition(), reuse=reuse_site())
     site.cleanup_if_wrong_version()
     site.create()
     site.open_livestatus_tcp()

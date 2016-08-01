@@ -29,6 +29,7 @@ from lib import *
 from html_mod_python import FinalizeRequest
 import os, time
 import traceback
+import i18n
 
 try:
     from hashlib import md5
@@ -112,6 +113,7 @@ def invalidate_auth_session():
         userdb.invalidate_session(config.user_id)
 
     del_auth_cookie()
+    i18n.del_language_cookie()
 
 
 def renew_auth_session(username):

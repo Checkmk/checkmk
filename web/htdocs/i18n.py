@@ -115,6 +115,8 @@ def unlocalize():
 
 
 def localize(lang, **kwargs):
+    set_language_cookie(lang)
+
     if lang:
         # FIXME: Clean this up. Make the other code access the current language through a
         # function of this module.
@@ -132,6 +134,20 @@ def localize(lang, **kwargs):
 def initialize():
     __builtin__._u = _u
     unlocalize()
+
+
+def del_language_cookie():
+    html.del_cookie("language")
+
+
+def set_language_cookie(lang):
+    cookie_lang = html.cookie("language", None)
+    if cookie_lang != lang:
+        if lang != None:
+            html.set_cookie("language", lang)
+        else:
+            del_language_cookie()
+
 
 #.
 #   .--User i18n-----------------------------------------------------------.

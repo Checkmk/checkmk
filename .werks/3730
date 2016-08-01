@@ -1,0 +1,22 @@
+Title: Improved GUI performance in case of different languages used by users
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i1
+Date: 1470052655
+Class: fix
+
+In case there are users using different languages in the GUI, the interface could load
+slower since the GUI needs to re-initialize different code parts (multisite plugins) each
+time a user with a different language accesses the GUI.
+
+In technical detail: Each apache process has one Python interpreter which serves the
+Check_MK GUI. Once a request arrives, the whole GUI code is loaded in the language
+of the user. This loaded GUI is cached until a user with another language requests
+a page from this apache process. The cache needs to be renewed then. This takes a
+lot longer than simply using the cache.
+
+We have now improved the situation by routing the requests to language dependent,
+so called, sub interpreters. Each apache process can now have a default language 
+(english) interpreter and an e.g. German language sub interpreter which each have
+caches on their own and thus never need to reinitialze their cached GUI now.

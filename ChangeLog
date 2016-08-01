@@ -412,6 +412,7 @@
     * 3723 FIX: Mobile GUI: Don't mix classic and mobile GUI when choosing classic on mobile device
     * 3645 FIX: Fixed filesystem growth/shrinkage graph by splitting it up into 2 graphs.
     * 3729 FIX: Disabling password field completion for most forms, even in current Chrome
+    * 3730 FIX: Improved GUI performance in case of different languages used by users...
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

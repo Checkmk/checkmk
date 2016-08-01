@@ -13892,6 +13892,7 @@ def page_user_profile(change_pw=False):
                         # Set custom language
                         users[config.user_id]['language'] = language
                         config.user['language'] = language
+                        i18n.set_language_cookie(language)
 
                     else:
                         # Remove the customized language

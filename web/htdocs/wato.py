@@ -15266,6 +15266,8 @@ class ModePasswords(WatoMode, PasswordStore):
             if ident not in passwords:
                 raise MKUserError("ident", _("This password does not exist."))
 
+            log_pending(SYNCRESTART, ident, "delete-password",
+                        _("Removed the password '%s'") % ident)
             del passwords[ident]
             self._save(passwords)
 
@@ -15448,6 +15450,13 @@ class ModeEditPassword(WatoMode, PasswordStore):
                 raise MKUserError(None, _("This ID is already in use. Please choose another one."))
 
             passwords[self._ident] = self._cfg
+
+            if self._new:
+                log_pending(SYNCRESTART, self._ident, "add-host",
+                            _("Added the password '%s'") % self._ident)
+            else:
+                log_pending(SYNCRESTART, self._ident, "edit-password",
+                            _("Edited the password '%s'") % self._ident)
 
             self._save(passwords)
 

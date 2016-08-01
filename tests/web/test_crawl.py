@@ -13,7 +13,7 @@ import traceback
 from urlparse import urlsplit, parse_qsl, urlunsplit, urljoin
 from urllib import urlencode
 from bs4 import BeautifulSoup
-from testlib import site, web, var_dir, WebSession
+from testlib import web, var_dir, WebSession
 
 
 class Url(object):

@@ -3,6 +3,8 @@ import os
 import sys
 import glob
 import pytest
+import testlib
+
 
 def cmk_path():
     return os.path.dirname(os.path.dirname(__file__))
@@ -67,3 +69,40 @@ def pytest_runtest_setup(item):
 
 add_python_paths()
 ensure_equal_branches()
+
+import testlib
+
+# Session fixtures must be in conftest.py to work properly
+@pytest.fixture(scope="session")
+def site(request):
+    def site_id():
+        site_id = os.environ.get("SITE")
+        if site_id == None:
+            site_id = file(testlib.repo_path() + "/.site").read().strip()
+
+        return site_id
+
+    def site_version():
+        return os.environ.get("VERSION", testlib.CMKVersion.DEFAULT)
+
+    def site_edition():
+        return os.environ.get("EDITION", testlib.CMKVersion.CEE)
+
+    def reuse_site():
+        return os.environ.get("REUSE", "1") == "1"
+
+    site = testlib.Site(site_id=site_id(), version=site_version(),
+                        edition=site_edition(), reuse=reuse_site())
+    site.cleanup_if_wrong_version()
+    site.create()
+    site.open_livestatus_tcp()
+    site.start()
+    site.prepare_for_tests()
+
+    def fin():
+        site.rm_if_not_reusing()
+    request.addfinalizer(fin)
+
+    return site
+
+

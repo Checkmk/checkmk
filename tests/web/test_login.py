@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import pytest
-from testlib import site, WebSession
+from testlib import WebSession
 
 def test_01_login_and_logout(site):
     web = WebSession(site)

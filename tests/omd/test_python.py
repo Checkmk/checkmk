@@ -5,8 +5,6 @@ import os
 import sys
 import subprocess
 
-from testlib import site
-
 def test_01_python_interpreter_exists(site):
     assert os.path.exists(site.root + "/bin/python")
 

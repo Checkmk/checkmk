@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import pytest
-from testlib import site, web
+from testlib import web
 
 def test_global_settings(site, web):
     r = web.get(site.url + "wato.py")

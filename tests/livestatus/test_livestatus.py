@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import pytest
-from testlib import site, web
+from testlib import web
 
 @pytest.fixture(scope="module")
 def default_cfg(web):

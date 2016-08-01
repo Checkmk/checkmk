@@ -11,7 +11,6 @@ import requests
 import socket
 import pipes
 import subprocess
-import livestatus
 
 try:
     import simplejson as json
@@ -157,6 +156,7 @@ class Site(object):
 
     @property
     def live(self):
+        import livestatus
         live = livestatus.SingleSiteConnection("tcp:127.0.0.1:%d" %
                                                      self.livestatus_port)
         live.set_timeout(2)
@@ -273,39 +273,6 @@ class Site(object):
     #    if os.system("sudo usermod -a -G %s %s" % (self.id, test_user)) >> 8 != 0:
     #        raise Exception("Failed to add test user \"%s\" to site group")
 
-
-
-@pytest.fixture(scope="session")
-def site(request):
-    def site_id():
-        site_id = os.environ.get("SITE")
-        if site_id == None:
-            site_id = file(repo_path() + "/.site").read().strip()
-
-        return site_id
-
-    def site_version():
-        return os.environ.get("VERSION", CMKVersion.DEFAULT)
-
-    def site_edition():
-        return os.environ.get("EDITION", CMKVersion.CEE)
-
-    def reuse_site():
-        return os.environ.get("REUSE", "1") == "1"
-
-    site = Site(site_id=site_id(), version=site_version(),
-                edition=site_edition(), reuse=reuse_site())
-    site.cleanup_if_wrong_version()
-    site.create()
-    site.open_livestatus_tcp()
-    site.start()
-    site.prepare_for_tests()
-
-    def fin():
-        site.rm_if_not_reusing()
-    request.addfinalizer(fin)
-
-    return site
 
 
 class WebSession(requests.Session):

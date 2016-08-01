@@ -1,4 +1,7 @@
 1.2.8p8:
+    Checks & Agents:
+    * 3742 FIX: ps: Fixed broken averaging...
+
 
 1.2.8p7:
     HW/SW-Inventory:

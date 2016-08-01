@@ -214,7 +214,7 @@ def inv_dmidecode_parse_physical_mem_array(lines):
              array["maximum_capacity"] = dmidecode_parse_size(line[1])
 
 def inv_dmidecode_parse_mem_device(lines):
-    node   = inv_tree_list("hardware.memory.arrays:")
+    node   = inv_tree("hardware.memory.arrays:")
     device = {}
 
     inv_dmidecode_parse_generic(device, lines, {

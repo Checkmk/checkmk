@@ -1,4 +1,7 @@
 1.2.8p7:
+    HW/SW-Inventory:
+    * 3710 FIX: dmidecode: fixed undefinded inv_tree_list function
+
 
 1.2.8p6:
     Checks & Agents:

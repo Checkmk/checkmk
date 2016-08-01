@@ -1,4 +1,4 @@
-Title: dmidecode: fixed undefinded inv_tree_list function
+Title: dmidecode: fixed undefined inv_tree_list function
 Level: 1
 Component: inv
 Compatible: compat

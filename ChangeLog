@@ -319,6 +319,7 @@
     * 3709 FIX: cisco_wlc, cisco_wlc_clients: fixed scan function and incomplete listing of interfaces
     * 3672 FIX: Agent sections cached by the agent could cause stale services...
     * 3727 FIX: fc_port: Fixed broken interpretation of counter values leading to wrong measurements
+    * 3731 FIX: sap.value-groups: Replaced this check with sap.value_groups...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

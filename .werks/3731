@@ -1,0 +1,12 @@
+Title: sap.value-groups: Replaced this check with sap.value_groups
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1470057200
+Class: fix
+
+The old check name was not allowed because it contained a dash. The
+check has now been renamed. You will get a warning message when the
+old check is executed and only need to rediscover the services of
+the affected hosts. You don't need to migrate anything here.

@@ -15981,12 +15981,18 @@ def home_button():
 
 def changelog_button():
     pending = parse_audit_log("pending")
-    if len(pending) > 0:
-        buttontext = "%d " % len(pending) + _("Changes")
+    num_pending = len(pending)
+    if num_pending >= 1:
         hot = True
         icon = "wato_changes"
+
+        if num_pending == 1:
+            buttontext = _("1 change")
+        else:
+            buttontext = _("%d changes") % num_pending
+
     else:
-        buttontext = _("No Changes")
+        buttontext = _("No changes")
         hot = False
         icon = "wato_nochanges"
     html.context_button(buttontext, folder_preserving_link([("mode", "changelog")]), icon, hot)

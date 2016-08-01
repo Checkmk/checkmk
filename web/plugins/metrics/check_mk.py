@@ -4129,7 +4129,13 @@ check_metrics["check_mk-ibm_svc_systemstats.cache"] = {
 }
 
 check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage"] = {
-    "usage" : { "name" : "mem_used" }
+    "usage"     : { "name" : "mem_used" },
+    "mem_total" : { "auto_graph" : False },
+}
+
+check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage_cluster"] = {
+    "usage"     : { "name" : "mem_used" },
+    "mem_total" : { "auto_graph" : False },
 }
 
 check_metrics["check_mk-ibm_svc_host"] = {

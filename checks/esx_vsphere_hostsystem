@@ -137,7 +137,8 @@ def check_esx_vsphere_hostsystem_mem_cluster(item, params, info):
                 label = " (Levels at %d%%/%d%%)" % (warn, crit)
             break
 
-    perf = [("usage", total_memory_usage, warn_perf, crit_perf, 0, total_memory_size)]
+    perf = [("usage", total_memory_usage, warn_perf, crit_perf, 0, total_memory_size),
+            ("mem_total", total_memory_size)]
     yield state, "%d%%%s used - %s/%s" % \
             (level, label, get_bytes_human_readable(total_memory_usage),
              get_bytes_human_readable(total_memory_size)), perf
@@ -264,7 +265,8 @@ def check_esx_vsphere_hostsystem_mem(item, params, info):
 
     message = "%d%%%s used - %s/%s" % \
     (level, label, get_bytes_human_readable(memory_usage), get_bytes_human_readable(memory_size))
-    perf = [("usage", memory_usage, warn * memory_size / 100, crit * memory_size / 100, 0, memory_size)]
+    perf = [("usage", memory_usage, warn * memory_size / 100, crit * memory_size / 100, 0, memory_size),
+            ("mem_total", memory_size)]
     return(state, message, perf)
 
 

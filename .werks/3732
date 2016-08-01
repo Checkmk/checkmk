@@ -1,0 +1,9 @@
+Title: esx_vsphere_hostsystem.mem_usage esx_vsphere_hostsystem.mem_usage_cluster: Providing mem_total as dedicated metric
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1470058271
+Class: feature
+
+

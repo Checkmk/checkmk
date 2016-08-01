@@ -10417,9 +10417,9 @@ def mode_edit_user(phase):
                      _("Normal user login with password"))
     html.write("<ul><table><tr><td>%s</td><td>" % _("password:"))
     if not is_locked('password'):
-        html.password_input("password_" + pw_suffix, autocomplete="off")
+        html.password_input("password_" + pw_suffix, autocomplete="new-password")
         html.write("</td></tr><tr><td>%s</td><td>" % _("repeat:"))
-        html.password_input("password2_" + pw_suffix, autocomplete="off")
+        html.password_input("password2_" + pw_suffix, autocomplete="new-password")
         html.write(" (%s)" % _("optional"))
         html.write("</td></tr><tr><td>%s:</td><td>" % _("Enforce change"))
         # Only make password enforcement selection possible when user is allowed to change the PW
@@ -14038,13 +14038,13 @@ def page_user_profile(change_pw=False):
 
     if config.may('general.change_password') and not is_locked('password'):
         forms.section(_("Current Password"))
-        html.password_input('cur_password', autocomplete = "off")
+        html.password_input('cur_password', autocomplete="new-password")
 
         forms.section(_("New Password"))
-        html.password_input('password', autocomplete = "off")
+        html.password_input('password', autocomplete="new-password")
 
         forms.section(_("New Password Confirmation"))
-        html.password_input('password2', autocomplete = "off")
+        html.password_input('password2', autocomplete="new-password")
 
     if not change_pw and config.may('general.edit_profile'):
         select_language(user)

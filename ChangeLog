@@ -1,3 +1,5 @@
+1.2.8p8:
+
 1.2.8p7:
     HW/SW-Inventory:
     * 3710 FIX: dmidecode: fixed undefinded inv_tree_list function

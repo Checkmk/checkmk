@@ -1,0 +1,10 @@
+Title: esx_vsphere_hostsystem.cpu_usage esx_vsphere_hostsystem.mem_usage esx_vsphere_hostsystem.maintenance: Fixed exception when needed data is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p8
+Date: 1470149835
+
+

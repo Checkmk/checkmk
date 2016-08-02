@@ -59,6 +59,10 @@ def inventory_esx_vsphere_hostsystem_cpu(info):
 
 def check_esx_vsphere_hostsystem_cpu(item, params, info):
     data = esx_vsphere_hostsystem_convert(info)
+
+    if "summary.quickStats.overallCpuUsage" not in data:
+        return
+
     num_sockets = int(data['hardware.cpuInfo.numCpuPackages'][0])
     num_cores = int(data['hardware.cpuInfo.numCpuCores'][0])
     num_threads = int(data['hardware.cpuInfo.numCpuThreads'][0])
@@ -248,6 +252,10 @@ def inventory_esx_vsphere_hostsystem_mem(info):
 
 def check_esx_vsphere_hostsystem_mem(item, params, info):
     data = esx_vsphere_hostsystem_convert(info)
+
+    if "summary.quickStats.overallMemoryUsage" not in data:
+        return
+
     memory_usage = savefloat(data['summary.quickStats.overallMemoryUsage'][0]) * 1024 * 1024
     memory_size  = savefloat(data['hardware.memorySize'][0])
     level = memory_usage / memory_size * 100
@@ -339,6 +347,10 @@ def inventory_esx_vsphere_hostsystem_maintenance(info):
 def check_esx_vsphere_hostsystem_maintenance(_no_item, params, info):
     data = esx_vsphere_hostsystem_convert(info)
     target_state = params['target_state']
+
+    if "runtime.inMaintenanceMode" not in data:
+        return
+
     current_state = str(data['runtime.inMaintenanceMode'][0]).lower()
     state = 0
     if target_state != current_state:

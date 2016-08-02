@@ -16467,7 +16467,8 @@ def monitoring_macro_help():
                    "<li><tt>$_HOSTADDRESS_6$</tt>: The IPv6 address of the host</li>"
                    "<li><tt>$_HOSTADDRESS_FAMILY$</tt>: The primary address family of the host</li>"
                    "</ul>"
-                   "All custom variables defined for the host are available as <tt>$_HOST[VARNAME]$</tt>.")
+                   "All custom variables defined for the host are available as <tt>$_HOST[VARNAME]$</tt>. "
+                   "Replace <tt>[VARNAME]</tt> with the <i>upper case</i> name of your variable.")
 
 
 #.

@@ -524,9 +524,6 @@ div.listofstrings.horizontal > div {
     float: left;
     margin-right: 2px;
 }
-div.listofstrings.horizontal > div:last-child {
-    float: none;
-}
 
 table.listchoice {
     border-collapse: collapse;

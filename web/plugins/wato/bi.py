@@ -439,7 +439,7 @@ class ModeBI(WatoMode):
                 ),
                 ListOfStrings(
                     orientation = "horizontal",
-                    size = 12,
+                    size = 24,
                     title = _("Arguments:"),
                 ),
             ],
@@ -959,7 +959,7 @@ class ModeBIEditPack(ModeBI):
                 title = _("BI pack ID"),
                 help = _("A unique ID of this BI pack."),
                 allow_empty = False,
-                size = 12,
+                size = 24,
             )
         return Dictionary(
             title = _("BI Pack Properties"),
@@ -1426,7 +1426,7 @@ class ModeBIEditRule(ModeBI):
                            "(enclosed in dollar signs)."),
                   orientation = "horizontal",
                   valuespec = TextAscii(
-                    size = 12,
+                    size = 24,
                     regex = '[A-Za-z_][A-Za-z0-9_]*',
                     regex_error = _("Parameters must contain only A-Z, a-z, 0-9 and _ "
                                     "and must not begin with a digit."),
@@ -1461,7 +1461,7 @@ class ModeBIEditRule(ModeBI):
                            "when rules refer to each other. The rule IDs will not be visible in the status "
                            "GUI. They are just used within the configuration."),
                   allow_empty = False,
-                  size = 12,
+                  size = 24,
               ),
             )] + elements
 

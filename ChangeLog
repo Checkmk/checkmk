@@ -324,6 +324,7 @@
     * 3731 FIX: sap.value-groups: Replaced this check with sap.value_groups...
     * 3742 FIX: ps: Fixed broken averaging...
     * 3711 FIX: ipmi: fixed wrong status handling if sensor status is ok but failures detected
+    * 3734 FIX: esx_vsphere_hostsystem.cpu_usage esx_vsphere_hostsystem.mem_usage esx_vsphere_hostsystem.maintenance: Fixed exception when needed data is missing
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

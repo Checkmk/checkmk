@@ -427,7 +427,7 @@ if (!("nextElementSibling" in document.documentElement)) {
 
 function call_ajax(url, optional_args)
 {
-    args = merge_args({
+    var args = merge_args({
         add_ajax_id      : true,
         plain_error      : false,
         response_handler : null,

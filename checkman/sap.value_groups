@@ -1,0 +1,20 @@
+title: SAP Single Value Monitoring Groups
+agents: linux
+catalog: app/sap
+license: GPL
+distribution: check_mk
+description:
+ Please refer to  {sap.value} for details.
+ This check is only a subchecks who enables you to create Groups of values.
+
+ The rule "SAP R/3 Single Value Inventory" is not necessary for that, you
+ only need the rule "SAP Value Grouping Patterns" to define a name and an include
+ nor and exclusion list.
+ After the service detection, the check will display the total number of OK and Critical values,
+ in case of Critical values also these.
+
+item:
+  The Name of the Group
+
+inventory:
+ The check does not inventory all available values by default.

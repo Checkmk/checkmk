@@ -1,0 +1,9 @@
+Title: ipmi: fixed wrong status handling if sensor status is ok but failures detected
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p8
+Date: 1470126829
+Class: fix
+
+

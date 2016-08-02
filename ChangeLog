@@ -1,6 +1,7 @@
 1.2.8p8:
     Checks & Agents:
     * 3742 FIX: ps: Fixed broken averaging...
+    * 3711 FIX: ipmi: fixed wrong status handling if sensor status is ok but failures detected
 
 
 1.2.8p7:

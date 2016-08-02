@@ -104,11 +104,13 @@
 # Fan 2            | 8557.000   | RPM        | ok    | na        | 1720.000  | 1978.000  | na        | na        | na
 # Fan 3            | 7611.000   | RPM        | ok    | na        | 1720.000  | 1978.000  | na        | na        | na
 # <<<ipmi_discrete:sep(124)>>>
-# PS3 Status | C8h | ok | 10.1 | Presence detected
-# PS4 Status | C9h | ok | 10.2 | Presence detected
-# Pwr Unit Stat    | 01h | ok  | 21.1 |
-# Power Redundancy | 02h | ok  | 21.1 | Fully Redundant
-# BMC Watchdog     | 03h | ok  |  7.1 |
+# PS3 Status       | C8h | ok | 10.1 | Presence detected
+# PS4 Status       | C9h | ok | 10.2 | Presence detected
+# Pwr Unit Stat    | 01h | ok | 21.1 |
+# Power Redundancy | 02h | ok | 21.1 | Fully Redundant
+# BMC Watchdog     | 03h | ok |  7.1 |
+# PS1 Status       | C8h | ok | 10.1 | Presence detected, Failure detected     <= NOT OK !!
+# PS2 Status       | C9h | ok | 10.2 | Presence detected
 
 
 ipmi_summarize = True
@@ -209,7 +211,7 @@ def check_ipmi_detailed(item, parsed):
             else:
                 perfdata = []
 
-            if status.startswith('ok'):
+            if status.startswith('ok') and not "failure detected" in status.lower():
                 state = 0
             elif status.startswith('nc'):
                 state = 1
@@ -250,7 +252,7 @@ def check_ipmi_summarized(parsed, params):
         elif status.startswith('nr') and ipmi_ignore_nr:
             pass
 
-        elif not status.startswith('ok'):
+        elif not status.startswith('ok') or "failure detected" in status.lower():
             worst_status = 2
             crit_texts.append(infotext)
 

@@ -121,7 +121,7 @@ class SNMPCredentials(Alternative):
                             ),
                         ]
                     ),
-                    forth = lambda x: len(x) == 2 and x or (x[0], "")
+                    forth = lambda x: (x and len(x) == 2) and x or ("noAuthNoPriv", "")
                 ),
                 Tuple(
                     title = _("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),

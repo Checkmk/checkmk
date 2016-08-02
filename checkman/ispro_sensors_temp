@@ -1,0 +1,21 @@
+title: Interseptor Pro devices: Temperature sensors
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors the temperature sensors of Interseptor Pro
+ devices which support the ISPRO-MIB.
+
+ The device sends its status itself. The check is OK, if the status
+ is normal. It is WARN if the device status is disabled, below low warning
+ or above high warning and CRIT if the state is below low critical or
+ above high critical. Otherwise UNKNOWN.
+
+ Moreover upper and lower levels are configurable. No default levels are set.
+
+item:
+ The sensor name.
+
+inventory:
+ One service per sensor is created.

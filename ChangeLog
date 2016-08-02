@@ -122,6 +122,7 @@
     * 3697 sym_brightmail_queues: added support for newer symantec brightmail version
     * 3725 mssql_instance: Changed MSSQL monitoring to report connection issues with only one service...
     * 3732 esx_vsphere_hostsystem.mem_usage esx_vsphere_hostsystem.mem_usage_cluster: Providing mem_total as dedicated metric
+    * 3712 ispro_sensors_temp, ispro_sensors_humid, ispro_sensors_digital: new checks which monitor Interseptro Pro devices which support the ISPRO-MIB
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

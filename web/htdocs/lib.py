@@ -526,7 +526,7 @@ def render_scientific(v, precision=3):
     if v == 0:
         return "0"
     elif v < 0:
-        return "-" + render_scientific(v, precision)
+        return "-" + render_scientific(v*-1, precision)
 
     mantissa, exponent = frexp10(float(v))
     # Render small numbers without exponent

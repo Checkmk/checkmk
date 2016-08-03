@@ -419,6 +419,7 @@
     * 3645 FIX: Fixed filesystem growth/shrinkage graph by splitting it up into 2 graphs.
     * 3729 FIX: Disabling password field completion for most forms, even in current Chrome
     * 3730 FIX: Improved GUI performance in case of different languages used by users...
+    * 3753 FIX: Fixed graph hover popup of services having special characters in their names
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

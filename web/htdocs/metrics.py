@@ -1373,7 +1373,7 @@ def get_graph_template_by_source(graph_templates, source):
 def page_host_service_graph_popup():
     site_id = html.var('site')
     host_name = html.var('host_name')
-    service_description = html.var('service')
+    service_description = html.var_utf8('service')
 
     if cmk_graphs_possible(site_id):
         host_service_graph_popup_cmk(site_id, host_name, service_description)

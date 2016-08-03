@@ -3138,7 +3138,8 @@ def delete_distributed_wato_file():
 
 
 def has_distributed_wato_file():
-    return os.path.exists(defaults.check_mk_configdir + "/distributed_wato.mk")
+    return os.path.exists(defaults.check_mk_configdir + "/distributed_wato.mk") \
+        and os.stat(defaults.check_mk_configdir + "/distributed_wato.mk").st_size != 0
 
 
 # Makes sure, that in distributed mode we monitor only

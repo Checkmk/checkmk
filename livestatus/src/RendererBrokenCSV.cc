@@ -32,9 +32,9 @@ using std::vector;
 RendererBrokenCSV::RendererBrokenCSV(
     OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
     bool do_keep_alive, string invalid_header_message, CSVSeparators separators,
-    int timezone_offset)
+    int timezone_offset, int data_encoding, int debug_level)
     : Renderer(output, response_header, do_keep_alive, invalid_header_message,
-               timezone_offset)
+               timezone_offset, data_encoding, debug_level)
     , _separators(move(separators)) {}
 
 // --------------------------------------------------------------------------

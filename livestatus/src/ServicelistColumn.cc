@@ -68,7 +68,7 @@ void ServicelistColumn::output(void *row, RowRenderer &r, contact *auth_user) {
                 if (_info_depth >= 2) {
                     s.output(svc->plugin_output == nullptr
                                  ? ""
-                                 : svc->plugin_output);
+                                 : string(svc->plugin_output));
                 }
                 if (_info_depth >= 3) {
                     s.output(svc->last_hard_state);

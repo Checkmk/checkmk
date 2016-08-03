@@ -49,9 +49,7 @@
 #include "strutil.h"
 #include "waittriggers.h"
 
-extern int g_debug_level;
 extern unsigned long g_max_response_size;
-extern int g_data_encoding;
 
 using std::list;
 using std::runtime_error;
@@ -78,8 +76,11 @@ private:
 };
 }  // namespace
 
-Query::Query(const list<string> &lines, Table *table)
-    : _response_header(OutputBuffer::ResponseHeader::off)
+Query::Query(const list<string> &lines, Table *table, int data_encoding,
+             int debug_level)
+    : _data_encoding(data_encoding)
+    , _debug_level(debug_level)
+    , _response_header(OutputBuffer::ResponseHeader::off)
     , _do_keepalive(false)
     , _table(table)
     , _auth_user(nullptr)
@@ -99,7 +100,7 @@ Query::Query(const list<string> &lines, Table *table)
         line_copy.push_back('\0');
         char *buffer = &line_copy[0];
         rstrip(buffer);
-        if (g_debug_level > 0) {
+        if (_debug_level > 0) {
             Informational() << "Query: " << buffer;
         }
         if (strncmp(buffer, "Filter:", 7) == 0) {
@@ -714,7 +715,7 @@ void Query::parseLocaltimeLine(char *line) {
         return;
     }
     _timezone_offset = full * 1800;
-    if (g_debug_level >= 2) {
+    if (_debug_level >= 2) {
         Informational() << "Timezone difference is "
                         << (_timezone_offset / 3600.0) << " hours";
     }
@@ -725,7 +726,8 @@ bool Query::doStats() { return !_stats_columns.empty(); }
 void Query::process(OutputBuffer *output) {
     auto renderer =
         Renderer::make(_output_format, output, _response_header, _do_keepalive,
-                       _invalid_header_message, _separators, _timezone_offset);
+                       _invalid_header_message, _separators, _timezone_offset,
+                       _data_encoding, _debug_level);
     doWait();
     QueryRenderer q(*renderer);
     _renderer_query = &q;
@@ -900,7 +902,7 @@ void Query::doWait() {
     // is already true, we do not need to way
     if (_wait_condition.hasSubFilters() &&
         _wait_condition.accepts(_wait_object, _auth_user, _timezone_offset)) {
-        if (g_debug_level >= 2) {
+        if (_debug_level >= 2) {
             Informational() << "Wait condition true, no waiting neccessary";
         }
         return;
@@ -914,18 +916,18 @@ void Query::doWait() {
 
     do {
         if (_wait_timeout == 0) {
-            if (g_debug_level >= 2) {
+            if (_debug_level >= 2) {
                 Informational()
                     << "Waiting unlimited until condition becomes true";
             }
             trigger_wait(_wait_trigger);
         } else {
-            if (g_debug_level >= 2) {
+            if (_debug_level >= 2) {
                 Informational() << "Waiting " << _wait_timeout
                                 << "ms or until condition becomes true";
             }
             if (trigger_wait_for(_wait_trigger, _wait_timeout) == 0) {
-                if (g_debug_level >= 2) {
+                if (_debug_level >= 2) {
                     Informational() << "WaitTimeout after " << _wait_timeout
                                     << "ms";
                 }

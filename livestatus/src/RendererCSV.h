@@ -38,7 +38,7 @@ public:
     RendererCSV(OutputBuffer *output,
                 OutputBuffer::ResponseHeader response_header,
                 bool do_keep_alive, std::string invalid_header_message,
-                int timezone_offset);
+                int timezone_offset, int data_encoding, int debug_level);
 
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;
@@ -66,6 +66,9 @@ public:
     void separateDictElements() override;
     void separateDictKeyValue() override;
     void endDict() override;
+
+private:
+    void outputEscaped(char ch);
 };
 
 #endif  // RendererCSV_h

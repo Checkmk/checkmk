@@ -24,9 +24,9 @@
 
 #include "AttributelistColumn.h"
 #include <ctype.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <map>
+#include <utility>
 #include <vector>
 #include "AttributelistFilter.h"
 #include "Renderer.h"
@@ -35,15 +35,13 @@
 #include "strutil.h"
 class Filter;
 
+using std::map;
 using std::string;
+using std::to_string;
 using std::vector;
 
-struct al_entry {
-    const char *name;
-    unsigned long bitvalue;
-};
-
-struct al_entry al_entries[] = {
+namespace {
+map<string, unsigned long> known_attributes = {
     {"notifications_enabled", MODATTR_NOTIFICATIONS_ENABLED},
     {"active_checks_enabled", MODATTR_ACTIVE_CHECKS_ENABLED},
     {"passive_checks_enabled", MODATTR_PASSIVE_CHECKS_ENABLED},
@@ -60,8 +58,8 @@ struct al_entry al_entries[] = {
     {"freshness_checks_enabled", MODATTR_FRESHNESS_CHECKS_ENABLED},
     {"check_timeperiod", MODATTR_CHECK_TIMEPERIOD},
     {"custom_variable", MODATTR_CUSTOM_VARIABLE},
-    {"notification_timeperiod", MODATTR_NOTIFICATION_TIMEPERIOD},
-    {nullptr, 0}};
+    {"notification_timeperiod", MODATTR_NOTIFICATION_TIMEPERIOD}};
+}  // namespace
 
 int32_t AttributelistColumn::getValue(void *row, contact * /*unused*/) {
     char *p = reinterpret_cast<char *>(shiftPointer(row));
@@ -76,13 +74,11 @@ void AttributelistColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
     unsigned long mask = static_cast<unsigned long>(getValue(row, nullptr));
     if (_show_list) {
-        unsigned i = 0;
         ListRenderer l(r);
-        while (al_entries[i].name != nullptr) {
-            if ((mask & al_entries[i].bitvalue) != 0u) {
-                l.output(al_entries[i].name);
+        for (const auto &entry : known_attributes) {
+            if ((mask & entry.second) != 0u) {
+                l.output(entry.first);
             }
-            i++;
         }
     } else {
         r.output(mask);
@@ -91,10 +87,7 @@ void AttributelistColumn::output(void *row, RowRenderer &r,
 
 string AttributelistColumn::valueAsString(void *row,
                                           contact * /* auth_user */) {
-    unsigned long mask = static_cast<unsigned long>(getValue(row, nullptr));
-    char s[16];
-    snprintf(s, 16, "%lu", mask);
-    return string(s);
+    return to_string(static_cast<unsigned long>(getValue(row, nullptr)));
 }
 
 Filter *AttributelistColumn::createFilter(RelationalOperator relOp,
@@ -106,20 +99,14 @@ Filter *AttributelistColumn::createFilter(RelationalOperator relOp,
         vector<char> value_vec(value.begin(), value.end());
         value_vec.push_back('\0');
         char *scan = &value_vec[0];
-        char *t;
-        while ((t = next_token(&scan, ',')) != nullptr) {
-            unsigned i = 0;
-            while (al_entries[i].name != nullptr) {
-                if (strcmp(t, al_entries[i].name) == 0) {
-                    ref |= al_entries[i].bitvalue;
-                    break;
-                }
-                i++;
-            }
-            if (al_entries[i].name == nullptr) {
+        for (const char *t; (t = next_token(&scan, ',')) != nullptr;) {
+            auto it = known_attributes.find(t);
+            if (it == known_attributes.end()) {
                 logger(LG_INFO,
                        "Ignoring invalid value '%s' for attribute list", t);
+                continue;
             }
+            ref |= it->second;
         }
     }
     return new AttributelistFilter(this, relOp, ref);

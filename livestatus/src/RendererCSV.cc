@@ -30,9 +30,10 @@ using std::vector;
 RendererCSV::RendererCSV(OutputBuffer *output,
                          OutputBuffer::ResponseHeader response_header,
                          bool do_keep_alive, string invalid_header_message,
-                         int timezone_offset)
+                         int timezone_offset, int data_encoding,
+                         int debug_level)
     : Renderer(output, response_header, do_keep_alive, invalid_header_message,
-               timezone_offset) {}
+               timezone_offset, data_encoding, debug_level) {}
 
 // --------------------------------------------------------------------------
 
@@ -71,11 +72,18 @@ void RendererCSV::endDict() {}
 
 void RendererCSV::outputNull() {}
 
+void RendererCSV::outputEscaped(char ch) {
+    add(ch == '"' ? "\"\"" : string(1, ch));
+}
+
 void RendererCSV::outputBlob(const vector<char> &value) {
-    for (unsigned char ch : value) {
-        add(ch == '"' ? "\"\"" : string(1, ch));
+    for (auto ch : value) {
+        outputEscaped(ch);
     }
 }
 
-// TODO(sp) Decode and Double all double quotes
-void RendererCSV::outputString(const string &value) { add(value); }
+void RendererCSV::outputString(const string &value) {
+    for (auto ch : value) {
+        outputEscaped(ch);
+    }
+}

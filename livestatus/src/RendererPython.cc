@@ -31,9 +31,10 @@ RendererPython::RendererPython(OutputBuffer *output,
                                OutputBuffer::ResponseHeader response_header,
                                bool do_keep_alive,
                                string invalid_header_message,
-                               int timezone_offset)
+                               int timezone_offset, int data_encoding,
+                               int debug_level)
     : Renderer(output, response_header, do_keep_alive, invalid_header_message,
-               timezone_offset) {}
+               timezone_offset, data_encoding, debug_level) {}
 
 // --------------------------------------------------------------------------
 
@@ -73,19 +74,9 @@ void RendererPython::endDict() { add("}"); }
 void RendererPython::outputNull() { add("None"); }
 
 void RendererPython::outputBlob(const vector<char> &value) {
-    add("\"");
-    for (unsigned char ch : value) {
-        if (ch < 32 || ch > 127 || ch == '"' || ch == '\\') {
-            output(static_cast<char16_t>(ch));
-        } else {
-            add(string(1, ch));
-        }
-    }
-    add("\"");
+    outputDecodedLatin1("", &value[0], &value[value.size()]);
 }
 
 void RendererPython::outputString(const string &value) {
-    add("u\"");
-    outputCharsAsString(value);
-    add("\"");
+    outputDecoded("u", &value[0], &value[value.size()]);
 }

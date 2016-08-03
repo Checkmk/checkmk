@@ -59,7 +59,8 @@ public:
     RendererBrokenCSV(OutputBuffer *output,
                       OutputBuffer::ResponseHeader response_header,
                       bool do_keep_alive, std::string invalid_header_message,
-                      CSVSeparators separators, int timezone_offset);
+                      CSVSeparators separators, int timezone_offset,
+                      int data_encoding, int debug_level);
 
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;

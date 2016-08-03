@@ -34,9 +34,7 @@
 #include "RendererPython3.h"
 #include "data_encoding.h"
 
-extern int g_data_encoding;
-extern int g_debug_level;
-
+using std::chrono::system_clock;
 using std::hex;
 using std::make_unique;
 using std::ostringstream;
@@ -51,8 +49,11 @@ using std::vector;
 Renderer::Renderer(OutputBuffer *output,
                    OutputBuffer::ResponseHeader response_header,
                    bool do_keep_alive, string invalid_header_message,
-                   int timezone_offset)
-    : _output(output), _timezone_offset(timezone_offset) {
+                   int timezone_offset, int data_encoding, int debug_level)
+    : _output(output)
+    , _timezone_offset(timezone_offset)
+    , _data_encoding(data_encoding)
+    , _debug_level(debug_level) {
     _output->setResponseHeader(response_header);
     _output->setDoKeepalive(do_keep_alive);
     if (invalid_header_message != "") {
@@ -68,28 +69,28 @@ unique_ptr<Renderer> Renderer::make(
     OutputFormat format, OutputBuffer *output,
     OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
     string invalid_header_message, const CSVSeparators &separators,
-    int timezone_offset) {
+    int timezone_offset, int data_encoding, int debug_level) {
     switch (format) {
         case OutputFormat::csv:
             return make_unique<RendererCSV>(
                 output, response_header, do_keep_alive, invalid_header_message,
-                timezone_offset);
+                timezone_offset, data_encoding, debug_level);
         case OutputFormat::broken_csv:
             return make_unique<RendererBrokenCSV>(
                 output, response_header, do_keep_alive, invalid_header_message,
-                separators, timezone_offset);
+                separators, timezone_offset, data_encoding, debug_level);
         case OutputFormat::json:
             return make_unique<RendererJSON>(
                 output, response_header, do_keep_alive, invalid_header_message,
-                timezone_offset);
+                timezone_offset, data_encoding, debug_level);
         case OutputFormat::python:
             return make_unique<RendererPython>(
                 output, response_header, do_keep_alive, invalid_header_message,
-                timezone_offset);
+                timezone_offset, data_encoding, debug_level);
         case OutputFormat::python3:
             return make_unique<RendererPython3>(
                 output, response_header, do_keep_alive, invalid_header_message,
-                timezone_offset);
+                timezone_offset, data_encoding, debug_level);
     }
     return nullptr;  // unreachable
 }
@@ -121,97 +122,177 @@ void Renderer::output(char16_t value) {
     add(os.str());
 }
 
+void Renderer::output(char32_t value) {
+    if (value < 0x10000) {
+        output(char16_t(value));
+    } else {
+        // we need a surrogate pair
+        char32_t offs = value - 0x10000;
+        output(char16_t(((offs >> 10) & 0x3FF) + 0xD800));
+        output(char16_t((offs & 0x3FF) + 0xDC00));
+    }
+}
+
 void Renderer::output(Null /* unused */) { outputNull(); }
 
-void Renderer::output(const std::vector<char> &value) { outputBlob(value); }
+void Renderer::output(const vector<char> &value) { outputBlob(value); }
 
-void Renderer::output(const std::string &value) { outputString(value); }
+void Renderer::output(const string &value) { outputString(value); }
 
-void Renderer::output(const char *value) { outputString(value); }
-
-void Renderer::output(std::chrono::system_clock::time_point value) {
-    output(std::chrono::system_clock::to_time_t(value) + _timezone_offset);
+void Renderer::output(system_clock::time_point value) {
+    output(system_clock::to_time_t(value) + _timezone_offset);
 }
 
 namespace {
-void invalidUTF8(const string &value) {
-    if (g_debug_level >= 2) {
-        Informational() << "Ignoring invalid UTF-8 sequence in string '"
-                        << value << "'";
-    }
+bool isBoringChar(unsigned char ch) {
+    return 32 <= ch && ch <= 127 && ch != '"' && ch != '\\';
 }
+
 }  // namespace
 
-void Renderer::outputCharsAsString(const string &value) {
-    const char *r = value.c_str();
-    std::size_t len = value.size();
-    while (len != 0) {
-        // Always escape control characters
-        if (0 <= *r && *r <= 31) {
-            output(static_cast<char16_t>(*r));
-        }
+void Renderer::truncatedUTF8() {
+    if (_debug_level >= 2) {
+        Informational() << "UTF-8 sequence too short";
+    }
+}
 
-        else if (*r == '"' || *r == '\\') {
-            add("\\");
-            add(string(r, 1));
-        }
+void Renderer::invalidUTF8(unsigned char ch) {
+    if (_debug_level >= 2) {
+        Informational() << "invalid byte " << int(ch) << "in UTF-8 sequence";
+    }
+}
 
-        // Output ASCII characters unencoded
-        else if (*r >= 32) {
-            add(string(r, 1));
-        }
+void Renderer::outputDecoded(const string &prefix, const char *start,
+                             const char *end) {
+    outputDecoded(prefix, start, end, _data_encoding);
+}
 
-        // TODO(sp): We actually assume signed chars here!!!
-        // interpret two-Byte UTF-8 sequences in mode 'utf8' and 'mixed'
-        else if ((g_data_encoding == ENCODING_UTF8 ||
-                  g_data_encoding == ENCODING_MIXED) &&
-                 ((*r & 0xE0) == 0xC0)) {
-            output(static_cast<char16_t>(
-                ((*r & 31) << 6) | (*(r + 1) & 0x3F)));  // 2 byte encoding
-            r++;
-            len--;
-        }
+void Renderer::outputDecodedLatin1(const string &prefix, const char *start,
+                                   const char *end) {
+    outputDecoded(prefix, start, end, ENCODING_LATIN1);
+}
 
-        // interpret 3/4-Byte UTF-8 sequences only in mode 'utf8'
-        else if (g_data_encoding == ENCODING_UTF8) {
-            // three-byte sequences (avoid buffer overflow!)
-            if ((*r & 0xF0) == 0xE0) {
-                if (len < 3) {
-                    invalidUTF8(value);
-                    break;  // end of string. No use in continuing
-                } else {
-                    output(static_cast<char16_t>(((*r & 0x0F) << 12 |
-                                                  (*(r + 1) & 0x3F) << 6 |
-                                                  (*(r + 2) & 0x3F))));
-                    r += 2;
-                    len -= 2;
-                }
+void Renderer::outputDecoded(const string &prefix, const char *start,
+                             const char *end, int data_encoding) {
+    add(prefix);
+    add("\"");
+    // TODO(sp) Use polymorphism instead of switch.
+    // TODO(sp) Use codecvt framework instead of homemade stuff.
+    switch (data_encoding) {
+        case ENCODING_UTF8:
+            outputDecodedUTF8(start, end);
+            break;
+        case ENCODING_LATIN1:
+            outputDecodedLatin1(start, end);
+            break;
+        case ENCODING_MIXED:
+            outputDecodedMixed(start, end);
+            break;
+        default:
+            Emergency() << "Invalid data encoding " << data_encoding;
+            break;
+    }
+    add("\"");
+}
+
+void Renderer::outputDecodedUTF8(const char *start, const char *end) {
+    for (const char *p = start; p != end; ++p) {
+        unsigned char ch0 = *p;
+        if (isBoringChar(ch0)) {
+            add(string(1, *p));
+        } else if ((ch0 & 0xE0) == 0xC0) {
+            // 2 byte encoding
+            if (ch0 == 0xC0 || ch0 == 0xC1) {
+                // overlong encoding
+                return invalidUTF8(ch0);
             }
-            // four-byte sequences
-            else if ((*r & 0xF8) == 0xF0) {
-                if (len < 4) {
-                    invalidUTF8(value);
-                    break;  // end of string. No use in continuing
-                } else {
-                    output(static_cast<char16_t>(
-                        (*r & 0x07) << 18 | (*(r + 1) & 0x3F) << 6 |
-                        (*(r + 2) & 0x3F) << 6 | (*(r + 3) & 0x3F)));
-                    r += 3;
-                    len -= 3;
-                }
-            } else {
-                invalidUTF8(value);
+            if (end <= &p[1]) {
+                return truncatedUTF8();
             }
+            unsigned char ch1 = *++p;
+            if ((ch1 & 0xC0) != 0x80) {
+                return invalidUTF8(ch1);
+            }
+            output(char32_t(((ch0 & 0x1F) << 6) |  //
+                            ((ch1 & 0x3F) << 0)));
+        } else if ((ch0 & 0xF0) == 0xE0) {
+            // 3 byte encoding
+            if (end <= &p[2]) {
+                return truncatedUTF8();
+            }
+            unsigned char ch1 = *++p;
+            if ((ch1 & 0xC0) != 0x80) {
+                return invalidUTF8(ch1);
+            }
+            unsigned char ch2 = *++p;
+            if ((ch2 & 0xC0) != 0x80) {
+                return invalidUTF8(ch2);
+            }
+            output(char32_t(((ch0 & 0x0F) << 12) |  //
+                            ((ch1 & 0x3F) << 6) |   //
+                            ((ch2 & 0x3F) << 0)));
+        } else if ((ch0 & 0xF8) == 0xF0) {
+            // 4 byte encoding
+            if (ch0 == 0xF5 || ch0 == 0xF6 || ch0 == 0xF7) {
+                // result would be larger than 0x10FFFF
+                return invalidUTF8(ch0);
+            }
+            if (end <= &p[3]) {
+                return truncatedUTF8();
+            }
+            unsigned char ch1 = *++p;
+            if ((ch1 & 0xC0) != 0x80) {
+                return invalidUTF8(ch1);
+            }
+            unsigned char ch2 = *++p;
+            if ((ch2 & 0xC0) != 0x80) {
+                return invalidUTF8(ch2);
+            }
+            unsigned char ch3 = *++p;
+            if ((ch2 & 0xC0) != 0x80) {
+                return invalidUTF8(ch3);
+            }
+            output(char32_t(((ch0 & 0x07) << 18) |  //
+                            ((ch1 & 0x3F) << 12) |  //
+                            ((ch2 & 0x3f) << 6) |   //
+                            ((ch3 & 0x3f) << 0)));
+        } else {
+            return invalidUTF8(ch0);
         }
+    }
+}
 
-        // in latin1 and mixed mode interpret all other non-ASCII characters as
-        // latin1
-        else {
-            // assume latin1 encoding
-            output(static_cast<char16_t>(static_cast<int>(*r) + 256));
+void Renderer::outputDecodedLatin1(const char *start, const char *end) {
+    for (const char *p = start; p != end; ++p) {
+        unsigned char ch = *p;
+        if (isBoringChar(ch)) {
+            add(string(1, *p));
+        } else {
+            output(char32_t{ch});
         }
+    }
+}
 
-        r++;
-        len--;
+void Renderer::outputDecodedMixed(const char *start, const char *end) {
+    for (const char *p = start; p != end; ++p) {
+        unsigned char ch0 = *p;
+        if (isBoringChar(ch0)) {
+            add(string(1, *p));
+        } else if ((ch0 & 0xE0) == 0xC0) {
+            // Possible 2 byte encoding? => Assume UTF-8, ignore overlong
+            // encodings
+            if (end <= &p[1]) {
+                return truncatedUTF8();
+            }
+            unsigned char ch1 = *++p;
+            if ((ch1 & 0xC0) != 0x80) {
+                return invalidUTF8(ch1);
+            }
+            output(char32_t(((ch0 & 0x1F) << 6) |  //
+                            ((ch1 & 0x3F) << 0)));
+        } else {
+            // Assume Latin1.
+            output(char32_t{ch0});
+        }
     }
 }

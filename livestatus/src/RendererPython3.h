@@ -36,7 +36,7 @@ public:
     RendererPython3(OutputBuffer *output,
                     OutputBuffer::ResponseHeader response_header,
                     bool do_keep_alive, std::string invalid_header_message,
-                    int timezone_offset);
+                    int timezone_offset, int data_encoding, int debug_level);
 
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;

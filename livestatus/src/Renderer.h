@@ -44,7 +44,7 @@ public:
         OutputFormat format, OutputBuffer *output,
         OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
         std::string invalid_header_message, const CSVSeparators &separators,
-        int timezone_offset);
+        int timezone_offset, int data_encoding, int debug_level);
 
     virtual ~Renderer();
 
@@ -58,10 +58,10 @@ public:
 
     void output(double value);
     void output(char16_t value);
+    void output(char32_t value);
     void output(Null value);
     void output(const std::vector<char> &value);
     void output(const std::string &value);
-    void output(const char *value);
     void output(std::chrono::system_clock::time_point value);
 
     // A whole query.
@@ -92,19 +92,32 @@ public:
     virtual void separateDictKeyValue() = 0;
     virtual void endDict() = 0;
 
-    // protected:
+protected:
     Renderer(OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
              bool do_keep_alive, std::string invalid_header_message,
-             int timezone_offset);
+             int timezone_offset, int data_encoding, int debug_level);
 
     void add(const std::string &str);
     void add(const std::vector<char> &value);
 
-    void outputCharsAsString(const std::string &value);
+    void outputDecoded(const std::string &prefix, const char *start,
+                       const char *end);
+    void outputDecodedLatin1(const std::string &prefix, const char *start,
+                             const char *end);
 
 private:
     OutputBuffer *const _output;
     const int _timezone_offset;
+    const int _data_encoding;
+    const int _debug_level;
+
+    void outputDecoded(const std::string &prefix, const char *start,
+                       const char *end, int data_encoding);
+    void outputDecodedUTF8(const char *start, const char *end);
+    void outputDecodedLatin1(const char *start, const char *end);
+    void outputDecodedMixed(const char *start, const char *end);
+    void truncatedUTF8();
+    void invalidUTF8(unsigned char ch);
 
     virtual void outputNull() = 0;
     virtual void outputBlob(const std::vector<char> &value) = 0;

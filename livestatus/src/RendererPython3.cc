@@ -31,9 +31,10 @@ RendererPython3::RendererPython3(OutputBuffer *output,
                                  OutputBuffer::ResponseHeader response_header,
                                  bool do_keep_alive,
                                  string invalid_header_message,
-                                 int timezone_offset)
+                                 int timezone_offset, int data_encoding,
+                                 int debug_level)
     : Renderer(output, response_header, do_keep_alive, invalid_header_message,
-               timezone_offset) {}
+               timezone_offset, data_encoding, debug_level) {}
 
 // --------------------------------------------------------------------------
 
@@ -73,19 +74,9 @@ void RendererPython3::endDict() { add("}"); }
 void RendererPython3::outputNull() { add("None"); }
 
 void RendererPython3::outputBlob(const vector<char> &value) {
-    add("b\"");
-    for (unsigned char ch : value) {
-        if (ch < 32 || ch > 127 || ch == '"' || ch == '\\') {
-            output(static_cast<char16_t>(ch));
-        } else {
-            add(string(1, ch));
-        }
-    }
-    add("\"");
+    outputDecodedLatin1("b", &value[0], &value[value.size()]);
 }
 
 void RendererPython3::outputString(const string &value) {
-    add("\"");
-    outputCharsAsString(value);
-    add("\"");
+    outputDecoded("", &value[0], &value[value.size()]);
 }

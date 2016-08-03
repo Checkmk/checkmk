@@ -36,6 +36,7 @@
 #include "mk_logwatch.h"
 #include "strutil.h"
 
+extern int g_data_encoding;
 extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
 
@@ -213,7 +214,7 @@ void Store::answerGetRequest(const list<string> &lines, OutputBuffer *output,
     }
 
     auto start = system_clock::now();
-    Query(lines, table).process(output);
+    Query(lines, table, g_data_encoding, g_debug_level).process(output);
     if (g_debug_level > 0) {
         auto elapsed = duration_cast<microseconds>(system_clock::now() - start);
         Informational() << "Time to process request: " << elapsed.count()

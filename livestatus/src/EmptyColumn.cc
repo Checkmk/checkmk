@@ -25,7 +25,9 @@
 #include "EmptyColumn.h"
 #include "Renderer.h"
 
+using std::string;
+
 void EmptyColumn::output(void* /* row */, RowRenderer& r,
                          contact* /* auth_user */) {
-    r.output("");
+    r.output(string());
 }

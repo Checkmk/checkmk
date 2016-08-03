@@ -48,7 +48,8 @@ class Table;
 
 class Query {
 public:
-    Query(const std::list<std::string> &lines, Table *);
+    Query(const std::list<std::string> &lines, Table *, int data_encoding,
+          int debug_level);
     ~Query();
 
     void process(OutputBuffer *output);
@@ -68,6 +69,8 @@ public:
     std::unordered_set<Column *> *allColumns() { return &_all_columns; }
 
 private:
+    const int _data_encoding;
+    const int _debug_level;
     QueryRenderer *_renderer_query;
     OutputBuffer::ResponseHeader _response_header;
     bool _do_keepalive;

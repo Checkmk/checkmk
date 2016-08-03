@@ -1582,6 +1582,16 @@ def is_manual_check(hostname, check_type, item):
     return (check_type, item) in manual_checks
 
 
+def is_snmp_check(check_name):
+    return check_name.split(".")[0] in snmp_info
+
+
+def is_tcp_check(check_name):
+    return check_name in check_info \
+       and check_name.split(".")[0] not in snmp_info # snmp check basename
+
+
+
 def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text):
     crash_info = crash_reporting.create_crash_info("check", details={
         "check_output"  : text,

@@ -574,15 +574,6 @@ def active_check_arguments(hostname, description, args):
                                  "string of the concatenated arguments (Host: %s, Service: %s)." % (hostname, description))
 
 
-def is_snmp_check(check_name):
-    return check_name.split(".")[0] in snmp_info
-
-
-def is_tcp_check(check_name):
-    return check_name in check_info \
-       and check_name.split(".")[0] not in snmp_info # snmp check basename
-
-
 #.
 #   .--Hosts---------------------------------------------------------------.
 #   |                       _   _           _                              |

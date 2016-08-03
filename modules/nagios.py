@@ -1114,6 +1114,12 @@ no_discovery_possible = None
 
     output.write("def clusters_of(hostname):\n    return %r\n\n" % clusters_of(hostname))
 
+    has_board = has_management_board(hostname)
+    output.write("def has_management_board(hostname):\n    return %r\n\n" % has_board)
+    if has_board:
+        output.write("def management_address(hostname):\n    return %r\n\n" % management_address(hostname))
+        output.write("def management_protocol(hostname):\n    return %r\n\n" % management_protocol(hostname))
+
     # snmp hosts
     output.write("def is_snmp_host(hostname):\n   return    % r\n\n" % is_snmp_host(hostname))
     output.write("def is_snmpv3_host(hostname):\n   return  % r\n\n" % is_snmpv3_host(hostname))

@@ -1,4 +1,10 @@
 1.2.8p9:
+    Multisite:
+    * 3753 FIX: Fixed graph hover popup of services having special characters in their names
+
+    WATO:
+    * 3752 FIX: Fixed loosing site configuration when editing hosts in WATO slave sites...
+
 
 1.2.8p8:
     Checks & Agents:

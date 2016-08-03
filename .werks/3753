@@ -1,0 +1,9 @@
+Title: Fixed graph hover popup of services having special characters in their names
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p9
+Date: 1470215289
+Class: fix
+
+

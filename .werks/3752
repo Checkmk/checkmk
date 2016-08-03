@@ -1,0 +1,16 @@
+Title: Fixed loosing site configuration when editing hosts in WATO slave sites
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.8p9
+Date: 1470213362
+Class: fix
+
+When having a distributed setup where WATO is enabled on slaves and hosts were
+editied, the hosts in the folder of that host were resetting the site attribute
+so that they are being monitored by the remote site, even when they were configured
+to be monitored on another site.
+
+The slave sites are now checking for the configured unknown sites and warning you
+about that fact. To override the configured site attributes, you have to explicitly
+change the value of the site attribute.

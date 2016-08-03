@@ -1183,7 +1183,7 @@ class Folder(BaseFolder):
         elif self.has_parent():
             return self.parent().site_id()
         else:
-            return config.default_site()
+            return default_site()
 
 
     def all_site_ids(self):
@@ -3311,6 +3311,20 @@ def is_distributed(sites = None):
     return False
 
 
+# Returns the ID of the default site. This is the site the main folder has
+# configured by default. It inherits to all folders and hosts which don't have
+# a site set on their own.
+# In standalone and master sites this defaults to the local site. In distributed
+# slave sites, we don't know the site ID of the master site. We set this explicit
+# to false to configure that this host is monitored by another site (that we don't
+# know about).
+def default_site():
+    if is_wato_slave_site():
+        return False
+    else:
+        return config.default_site()
+
+
 def is_wato_slave_site():
     return has_distributed_wato_file() and not has_wato_slave_sites()
 
@@ -3325,38 +3339,41 @@ def wato_slave_sites():
 
 def declare_site_attribute():
     undeclare_host_attribute("site")
-    if is_distributed():
-        declare_host_attribute(SiteAttribute(), show_in_table = True, show_in_folder = True)
+    declare_host_attribute(SiteAttribute(), show_in_table = True, show_in_folder = True)
 
 
-class SiteAttribute(Attribute):
+class SiteAttribute(ValueSpecAttribute):
     def __init__(self):
         # Default is is the local one, if one exists or
         # no one if there is no local site
-        self._choices = []
+        choices = []
         for id, site in config.sites.items():
             title = id
             if site.get("alias"):
                 title += " - " + site["alias"]
-            self._choices.append((id, title))
+            choices.append((id, title))
 
-        self._choices.sort(cmp=lambda a,b: cmp(a[1], b[1]))
-        self._choices_dict = dict(self._choices)
-        Attribute.__init__(self, "site", _("Monitored on site"),
-                    _("Specify the site that should monitor this host."),
-                    default_value = config.default_site())
+        choices.sort(cmp=lambda a,b: cmp(a[1], b[1]))
 
-    def paint(self, value, hostname):
-        return "", self._choices_dict.get(value, value)
-
-    def render_input(self, varprefix, value):
-        html.select(varprefix + "site", self._choices, value)
-
-    def from_html_vars(self, varprefix):
-        return html.var(varprefix + "site")
+        ValueSpecAttribute.__init__(self, "site", DropdownChoice(
+            title=_("Monitored on site"),
+            help=_("Specify the site that should monitor this host."),
+            default_value = default_site(),
+            choices = choices,
+            invalid_choice = "complain",
+            invalid_choice_title = _("Unknown site (%s)"),
+            invalid_choice_error = _("The configured site is not known to this site. In case you "
+                                     "are configuring in a distributed slave, this may be a host "
+                                     "monitored by another site. If you want to modify this "
+                                     "host, you will have to change the site attribute to the "
+                                     "local site. But this may make the host be monitored from "
+                                     "multiple sites.")
+        ))
 
     def get_tag_list(self, value):
-        if value != None:
+        if value == False:
+            return [ "site:" ]
+        elif value != None:
             return [ "site:" + value ]
         else:
             return []

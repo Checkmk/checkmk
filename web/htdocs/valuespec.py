@@ -1232,6 +1232,9 @@ class DropdownChoice(ValueSpec):
         self._sorted             = kwargs.get("sorted", False)
         self._empty_text         = kwargs.get("empty_text", _("There are no elements defined for this selection yet."))
         self._invalid_choice     = kwargs.get("invalid_choice", "replace") # also possible: "complain"
+        self._invalid_choice_title = kwargs.get("invalid_choice_title", _("Element does not exist anymore"))
+        self._invalid_choice_error = kwargs.get("invalid_choice_error",
+            _("The selected element is not longer available. Please select something else."))
         self._no_preselect       = kwargs.get("no_preselect", False)
         self._no_preselect_value = kwargs.get("no_preselect_value", None)
         self._no_preselect_title = kwargs.get("no_preselect_title", "") # if not preselected
@@ -1272,7 +1275,7 @@ class DropdownChoice(ValueSpec):
 
         if self._invalid_choice == "complain" and self._value_is_invalid(value):
             defval = "invalid"
-            options.append((defval, _("(element does not exist anymore)")))
+            options.append((defval, self._get_invalid_choice_title(value)))
 
         if len(options) == 0:
             html.write(self._empty_text)
@@ -1284,6 +1287,14 @@ class DropdownChoice(ValueSpec):
             else:
                 html.sorted_select(varprefix, options, defval, onchange=self._on_change)
 
+
+    def _get_invalid_choice_title(self, value):
+        if "%s" in self._invalid_choice_title:
+            return self._invalid_choice_title % value
+        else:
+            return self._invalid_choice_title
+
+
     def value_to_text(self, value):
         for entry in self.choices():
             val, title = entry[:2]
@@ -1292,7 +1303,8 @@ class DropdownChoice(ValueSpec):
                     return title.split(self._help_separator, 1)[0].strip()
                 else:
                     return title
-        return _("(other: %s)" % html.attrencode(value))
+        return html.attrencode(self._get_invalid_choice_title(value))
+
 
     def from_html_vars(self, varprefix):
         sel = html.var(varprefix)
@@ -1303,7 +1315,7 @@ class DropdownChoice(ValueSpec):
         if self._invalid_choice == "replace":
             return self.default_value() # garbled URL or len(choices) == 0
         else:
-            raise MKUserError(varprefix, _("The selected element is not longer available. Please select something else."))
+            raise MKUserError(varprefix, self._invalid_choice_error)
 
     def validate_value(self, value, varprefix):
         if self._no_preselect and value == self._no_preselect_value:

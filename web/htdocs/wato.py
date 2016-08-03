@@ -14691,10 +14691,19 @@ def mode_edit_custom_attr(phase, what):
                   label = _("Show the setting of the attribute in the list table"))
 
     forms.section(_('Add as custom macro'))
-    html.help(_('The attribute can be added to the contact definiton in order  '
-                'to use it for notifications.'))
+    if what == "user":
+        html.help(_('The attribute can be added to the contact definiton in order '
+                    'to use it for notifications.'))
+        label = _("Make this variable available in notifications")
+    else:
+        html.help(_("The attribute can be added to the host definition in order to "
+                    "use it as monitoring macro in different places, for example "
+                    "as macro in check commands or notifications."))
+        label = _("Make this variable available as monitoring macro, "
+                  "e.g. in check commands or in notifications.")
+
     html.checkbox('add_custom_macro', attr.get('add_custom_macro', False),
-              label = _("Make this variable available in notifications"))
+                  label=label)
 
     forms.end()
     html.show_localization_hint()

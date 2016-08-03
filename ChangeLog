@@ -4,6 +4,7 @@
 
     WATO:
     * 3752 FIX: Fixed loosing site configuration when editing hosts in WATO slave sites...
+    * 3754 FIX: Cluster nodes are now correctly validated for invalid characters
 
 
 1.2.8p8:

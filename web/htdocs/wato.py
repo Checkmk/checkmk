@@ -1299,9 +1299,8 @@ def mode_edit_host(phase, new, is_cluster):
 
     # Cluster: nodes
     if is_cluster:
-        vs = ListOfStrings(valuespec = TextAscii(size = 19), orientation="horizontal")
         forms.section(_("Nodes"))
-        vs.render_input("nodes", host and host.cluster_nodes() or [])
+        vs_cluster_nodes().render_input("nodes", host and host.cluster_nodes() or [])
         html.help(_('Enter the host names of the cluster nodes. These '
                    'hosts must be present in WATO. '))
 
@@ -1319,13 +1318,20 @@ def mode_edit_host(phase, new, is_cluster):
     html.end_form()
 
 
+def vs_cluster_nodes():
+    return ListOfStrings(
+        valuespec = TextAscii(size = 19),
+        orientation = "horizontal",
+    )
+
 
 # Called by mode_edit_host() for new/clone/edit
 def action_edit_host(mode, hostname, is_cluster):
     attributes = collect_attributes("host")
 
     if is_cluster:
-        cluster_nodes = ListOfStrings().from_html_vars("nodes")
+        cluster_nodes = vs_cluster_nodes().from_html_vars("nodes")
+        vs_cluster_nodes().validate_value(cluster_nodes, "nodes")
         if len(cluster_nodes) < 1:
             raise MKUserError("nodes_0", _("The cluster must have at least one node"))
         for nr, cluster_node in enumerate(cluster_nodes):

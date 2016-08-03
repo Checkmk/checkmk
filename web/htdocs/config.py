@@ -578,6 +578,7 @@ def default_site():
     return None
 
 
+
 def is_multisite():
     # TODO: Remove all calls of this function
     return True

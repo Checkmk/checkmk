@@ -1282,7 +1282,7 @@ class DropdownChoice(ValueSpec):
         # In complain mode: Use the value received from the HTML variable
         if self._invalid_choice == "complain" and value != None and self._value_is_invalid(value):
             defval = value
-            options.append((value, "%s (%s)" % (value, self._invalid_choice_title)))
+            options.append((defval, self._get_invalid_choice_title(value)))
 
         if value == None and not options:
             html.write(self._empty_text)
@@ -1298,6 +1298,14 @@ class DropdownChoice(ValueSpec):
             else:
                 html.sorted_select(varprefix, options, defval, onchange=self._on_change)
 
+
+    def _get_invalid_choice_title(self, value):
+        if "%s" in self._invalid_choice_title:
+            return self._invalid_choice_title % value
+        else:
+            return self._invalid_choice_title
+
+
     def value_to_text(self, value):
         for entry in self.choices():
             val, title = entry[:2]
@@ -1306,7 +1314,8 @@ class DropdownChoice(ValueSpec):
                     return title.split(self._help_separator, 1)[0].strip()
                 else:
                     return title
-        return _("(other: %s)" % html.attrencode(value))
+        return html.attrencode(self._get_invalid_choice_title(value))
+
 
     def from_html_vars(self, varprefix):
         sel = html.var(varprefix)

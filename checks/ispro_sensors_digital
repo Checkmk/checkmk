@@ -26,11 +26,8 @@
 
 
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.3.1.2.1 "Water Sensor-R" --> ISPRO-MIB::isDeviceMonitorDigitalInName
-# .1.3.6.1.4.1.19011.1.3.2.1.3.1.3.1.3.1 2 --> ISPRO-MIB::isDeviceMonitorDigitalIn
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.3.1.4.1 1 --> ISPRO-MIB::isDeviceMonitorDigitalInAlarm
 # .1.3.6.1.4.1.19011.1.3.2.1.3.2.4.1.3.1 2 --> ISPRO-MIB::isDeviceConfigDigitalInState
-# .1.3.6.1.4.1.19011.1.3.2.1.3.2.4.1.4.1 10 --> ISPRO-MIB::isDeviceConfigDigitalInHysteresis
-# .1.3.6.1.4.1.19011.1.3.2.1.3.2.4.1.5.1 1 --> ISPRO-MIB::isDeviceConfigDigitalInEventDO
 
 
 def inventory_ispro_sensors_digital(info):
@@ -45,8 +42,8 @@ def check_ispro_sensors_digital(item, params, info):
             "3" : "normal close",
         },
         "alarm" :{
-            "1" : (2, "active"),
-            "2" : (0, "inactive"),
+            "1" : (0, "active"),
+            "2" : (2, "inactive"),
         }
     }
 

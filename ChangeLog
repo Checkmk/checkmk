@@ -6,6 +6,9 @@
     * 3711 FIX: ipmi: fixed wrong status handling if sensor status is ok but failures detected
     * 3734 FIX: esx_vsphere_hostsystem.cpu_usage esx_vsphere_hostsystem.mem_usage esx_vsphere_hostsystem.maintenance: Fixed exception when needed data is missing
 
+    WATO:
+    * 3735 FIX: Fixed wrong host search link in case of deleting site with hosts assigned
+
 
 1.2.8p7:
     HW/SW-Inventory:

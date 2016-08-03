@@ -8898,7 +8898,7 @@ def mode_sites(phase):
                 # Make sure that site is not being used by hosts and folders
                 if delid in Folder.root_folder().all_site_ids():
                     search_url = html.makeactionuri([
-                        ("_change_site",     "1"),
+                        ("host_search_change_site", "on"),
                         ("host_search_site", delid),
                         ("host_search",      "1"),
                         ("folder",           ""),

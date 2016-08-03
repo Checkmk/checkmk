@@ -523,6 +523,7 @@
     * 3726 FIX: Web API: Fixed default output format - using JSON as intended...
     * 3733 FIX: BI rule editor: Increased size of argument/parameter/id input fields
     * 3735 FIX: Fixed wrong host search link in case of deleting site with hosts assigned
+    * 3754 FIX: Cluster nodes are now correctly validated for invalid characters
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

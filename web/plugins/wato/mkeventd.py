@@ -2680,7 +2680,7 @@ if mkeventd_enabled:
 # do not run an own eventd but want to query one or send notifications
 # to one.
 group = _("Notifications")
-register_configvar(groups["ec"],
+register_configvar(group,
     "mkeventd_notify_contactgroup",
     GroupSelection(
         "contact",
@@ -2699,7 +2699,7 @@ register_configvar(groups["ec"],
     domain = "multisite",
     need_restart = True)
 
-register_configvar(groups["ec"],
+register_configvar(group,
     "mkeventd_notify_remotehost",
     Optional(
         TextAscii(
@@ -2719,7 +2719,7 @@ register_configvar(groups["ec"],
     domain = "multisite",
     need_restart = True)
 
-register_configvar(groups["ec"],
+register_configvar(group,
     "mkeventd_notify_facility",
     DropdownChoice(
         title = _("Syslog facility for Event Console notifications"),

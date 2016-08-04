@@ -1,0 +1,9 @@
+Title: Bulk import: Ensuring non ASCII characters are not imported into regular attributes
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8p9
+Date: 1470297437
+Class: fix
+
+

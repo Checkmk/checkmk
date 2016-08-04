@@ -1,0 +1,9 @@
+Title: Preventing to insert non ASCII characters in host addresses now
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i1
+Date: 1470296371
+Class: fix
+
+

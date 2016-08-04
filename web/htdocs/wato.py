@@ -3074,7 +3074,7 @@ class ModeBulkImport(WatoMode):
 
         file_id = "%s-%d" % (config.user_id, int(time.time()))
         f = create_user_file(self._file_path(), "w")
-        f.write(content)
+        f.write(content.encode("utf-8"))
         f.close()
 
         # make selections available to next page
@@ -3185,15 +3185,15 @@ class ModeBulkImport(WatoMode):
         for col_num, value in enumerate(row):
             attribute = html.var("attribute_%d" % col_num)
             if attribute == "host_name":
-                if not re.match('^[a-zA-Z0-9-_.]+$', value):
-                    raise MKUserError(None, _("Invalid host name: %r. Only the characters a-z, A-Z, "
-                                              "0-9, _, . and - are allowed.") % value)
+                Hostname().validate_value(value, "host")
                 host_name = value
+
             elif attribute and attribute != "-":
                 if attribute in attributes:
                     raise MKUserError(None, _("The attribute \"%s\" is assigned to multiple columns. "
                                               "You can not populate one attribute from multiple columns. "
                                               "The column to attribute associations need to be unique.") % attribute)
+
                 # FIXME: Couldn't we decode all attributes?
                 if attribute == "alias":
                     attributes[attribute] = value.decode("utf-8")

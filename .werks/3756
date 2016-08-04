@@ -1,0 +1,10 @@
+Title: Bulk import: Fixed exception when host name contained special characters
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1470297185
+
+

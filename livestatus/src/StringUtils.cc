@@ -37,6 +37,7 @@ string unsafe_tolower(const string &str) {
     return result;
 }
 
+// cppcheck-suppress unusedFunction
 string unsafe_toupper(const string &str) {
     string result = str;
     std::transform(str.begin(), str.end(), result.begin(), ::toupper);

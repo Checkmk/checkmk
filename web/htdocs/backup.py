@@ -1756,6 +1756,7 @@ class PageBackupRestore(object):
                   Password(
                       title = _("Passphrase"),
                       allow_empty = False,
+                      is_stored_plain = False,
                 )),
             ],
             optional_keys = False,

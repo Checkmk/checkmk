@@ -1,0 +1,9 @@
+Title: Fixed wrong sorting of events in main dashboard in distributed environments
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p9
+Date: 1470310838
+Class: fix
+
+

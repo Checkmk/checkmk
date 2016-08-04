@@ -1279,7 +1279,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
         save_snmp_stats()
 
     if opt_keepalive:
-        add_keepalive_result_line(output)
+        add_keepalive_active_check_result(hostname, output)
         verbose(output)
     else:
         sys.stdout.write(core_state_names[status] + " - " + output.encode('utf-8'))
@@ -1973,7 +1973,7 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
 def submit_to_core(host, service, state, output, cached_at = None, cache_interval = None):
     if opt_keepalive:
         # Regular case for the CMC - check helpers are running in keepalive mode
-        add_keepalive_check_result(service, state, output, cached_at, cache_interval)
+        add_keepalive_check_result(host, service, state, output, cached_at, cache_interval)
 
     elif check_submission == "pipe" or monitoring_core == "cmc":
         # In case of CMC this is used when running "cmk" manually

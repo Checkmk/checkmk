@@ -345,7 +345,7 @@ def check_discovery(hostname, ipaddress=None):
         status = spec.get(what, 3)
 
     if opt_keepalive:
-        add_keepalive_result_line(output)
+        add_keepalive_active_check_result(hostname, output)
         return status
     else:
         sys.stdout.write(core_state_names[status] + " - " + output)

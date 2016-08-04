@@ -523,7 +523,37 @@ class FilterHostState(Filter):
 
 declare_filter(115, FilterHostState())
 
+class FilterHostsHavingServiceProblems(Filter):
+    def __init__(self):
+        Filter.__init__(self, "hosts_having_service_problems",
+            _("Hosts having certain service problems"), "host",
+            ["hosts_having_services_warn", "hosts_having_services_crit",
+             "hosts_having_services_pending", "hosts_having_services_unknown"], [])
 
+    def display(self):
+        html.begin_checkbox_group()
+        for var, text in [
+            ("warn",    _("WARN")),
+            ("crit",    _("CRIT")),
+            ("pending", _("PEND")),
+            ("unknown", _("UNKNOWN")), ]:
+            html.checkbox("hosts_having_services_%s" % var, True, label=text)
+        html.end_checkbox_group()
+
+    def filter(self, infoname):
+        headers = []
+        for var in [ "warn", "crit", "pending", "unknown" ]:
+            if html.get_checkbox("hosts_having_services_%s" % var) == True:
+                headers.append("Filter: num_services_%s > 0\n" % var)
+
+        len_headers = len(headers)
+        if len_headers > 0:
+            headers.append("Or: %d\n" % len_headers)
+            return "".join(headers)
+        else:
+            return ""
+
+declare_filter(120, FilterHostsHavingServiceProblems())
 
 class FilterTristate(Filter):
     def __init__(self, name, title, info, column, deflt = -1):

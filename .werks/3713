@@ -1,0 +1,9 @@
+Title: new filter: hosts with certain service problems
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i1
+Date: 1470302026
+Class: feature
+
+

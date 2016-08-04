@@ -346,6 +346,7 @@
     * 3592 Views: Added sorter for host names (without site)
     * 3141 added user interfaces and permissions to view and acknowledge failed notifications
     * 3640 new filter option for status details: can now be negated
+    * 3713 new filter: hosts with certain service problems
     * 3059 FIX: Fixed highlighting of availability timeline time slices
     * 3175 FIX: Fix timeranges of graphs that are embedded in a dashboard...
     * 3076 FIX: fixed broken views in check_mk raw edition

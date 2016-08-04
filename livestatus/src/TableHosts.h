@@ -43,15 +43,16 @@ public:
 #ifdef CMC
     TableHosts(const Notes &downtimes_holder, const Notes &comments_holder,
                std::recursive_mutex &holder_lock, Core *core);
-    static void addColumns(Table *, std::string prefix, int indirect_offset,
-                           int extra_offset, const Notes &downtimes_holder,
+    static void addColumns(Table *, const std::string &prefix,
+                           int indirect_offset, int extra_offset,
+                           const Notes &downtimes_holder,
                            const Notes &comments_holder,
                            std::recursive_mutex &holder_lock, Core *core);
 #else
     TableHosts(const DowntimesOrComments &downtimes_holder,
                const DowntimesOrComments &comments_holder);
-    static void addColumns(Table *, std::string prefix, int indirect_offset,
-                           int extra_offset,
+    static void addColumns(Table *, const std::string &prefix,
+                           int indirect_offset, int extra_offset,
                            const DowntimesOrComments &downtimes_holder,
                            const DowntimesOrComments &comments_holder);
 #endif

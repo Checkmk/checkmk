@@ -37,7 +37,18 @@ string unsafe_tolower(const string &str) {
     return result;
 }
 
-std::vector<string> split(string str, char delimiter) {
+string unsafe_toupper(const string &str) {
+    string result = str;
+    std::transform(str.begin(), str.end(), result.begin(), ::toupper);
+    return result;
+}
+
+bool starts_with(const std::string &input, const std::string &test) {
+    return input.size() >= test.size() &&
+           std::equal(test.begin(), test.end(), input.begin());
+}
+
+std::vector<string> split(const string &str, char delimiter) {
     std::istringstream iss(str);
     std::vector<string> result;
     string field;

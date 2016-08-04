@@ -33,14 +33,11 @@
 
 namespace mk {
 std::string unsafe_tolower(const std::string &str);
+std::string unsafe_toupper(const std::string &str);
 
-template <class T>
-bool starts_with(const T &input, const T &test) {
-    return input.size() >= test.size() &&
-           std::equal(test.begin(), test.end(), input.begin());
-}
+bool starts_with(const std::string &input, const std::string &test);
 
-std::vector<std::string> split(std::string str, char delimiter);
+std::vector<std::string> split(const std::string &str, char delimiter);
 
 std::string lstrip(const std::string &str,
                    const std::string &chars = " \t\n\v\f\r");

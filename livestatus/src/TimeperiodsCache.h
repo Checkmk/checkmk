@@ -26,7 +26,7 @@
 #define TimeperiodsCache_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <time.h>
+#include <ctime>
 #include <map>
 #include <mutex>
 #include "nagios.h"

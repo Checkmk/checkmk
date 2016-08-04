@@ -23,9 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Query.h"
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
@@ -265,7 +265,7 @@ Filter *Query::createFilter(Column *column, RelationalOperator relOp,
 }
 
 void Query::parseAndOrLine(char *line, LogicalOperator andor,
-                           VariadicFilter &filter, string header) {
+                           VariadicFilter &filter, const string &header) {
     char *value = next_field(&line);
     if (value == nullptr) {
         invalidHeader("Missing value for " + header +
@@ -283,7 +283,8 @@ void Query::parseAndOrLine(char *line, LogicalOperator andor,
     filter.combineFilters(number, andor);
 }
 
-void Query::parseNegateLine(char *line, VariadicFilter &filter, string header) {
+void Query::parseNegateLine(char *line, VariadicFilter &filter,
+                            const string &header) {
     if (next_field(&line) != nullptr) {
         invalidHeader(header + ": does not take any arguments");
         return;

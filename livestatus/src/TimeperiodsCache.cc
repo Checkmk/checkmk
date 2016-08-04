@@ -23,10 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TimeperiodsCache.h"
-#include <stdio.h>
-#include <string.h>
 #include <syslog.h>
-#include <time.h>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
 #include <utility>
 #include "logger.h"
 

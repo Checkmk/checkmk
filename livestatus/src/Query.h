@@ -26,8 +26,8 @@
 #define Query_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <stdint.h>
-#include <time.h>
+#include <cstdint>
+#include <ctime>
 #include <list>
 #include <map>
 #include <string>
@@ -123,9 +123,9 @@ private:
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
     void parseAndOrLine(char *line, LogicalOperator andor,
-                        VariadicFilter &filter, std::string header);
+                        VariadicFilter &filter, const std::string &header);
     void parseNegateLine(char *line, VariadicFilter &filter,
-                         std::string header);
+                         const std::string &header);
     void parseStatsAndOrLine(char *line, LogicalOperator andor);
     void parseStatsNegateLine(char *line);
     void parseColumnsLine(char *line);

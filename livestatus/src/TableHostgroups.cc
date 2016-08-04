@@ -43,7 +43,7 @@ string TableHostgroups::name() const { return "hostgroups"; }
 string TableHostgroups::namePrefix() const { return "hostgroup_"; }
 
 // static
-void TableHostgroups::addColumns(Table *table, string prefix,
+void TableHostgroups::addColumns(Table *table, const string &prefix,
                                  int indirect_offset) {
     hostgroup hgr;
     char *ref = reinterpret_cast<char *>(&hgr);

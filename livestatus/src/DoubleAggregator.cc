@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DoubleAggregator.h"
-#include <math.h>
+#include <cmath>
 #include "DoubleColumn.h"
 #include "Renderer.h"
 

@@ -39,7 +39,7 @@ public:
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
 
-    static void addColumns(Table *table, std::string prefix, int offset);
+    static void addColumns(Table *table, const std::string &prefix, int offset);
 
 private:
     const CommandsHolder &_commands_holder;

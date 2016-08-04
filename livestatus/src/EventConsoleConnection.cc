@@ -24,11 +24,11 @@
 
 // IWYU pragma: no_include <bits/socket_type.h>
 #include "EventConsoleConnection.h"
-#include <errno.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <cerrno>
+#include <cstring>
 #include <sstream>
 #include <utility>
 #include "Logger.h"

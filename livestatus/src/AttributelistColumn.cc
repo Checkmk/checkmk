@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AttributelistColumn.h"
-#include <ctype.h>
-#include <stdlib.h>
+#include <cctype>
+#include <cstdlib>
 #include <map>
 #include <utility>
 #include <vector>

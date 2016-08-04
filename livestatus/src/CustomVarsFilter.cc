@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsFilter.h"
-#include <ctype.h>
-#include <string.h>
+#include <cctype>
+#include <cstring>
 #include <ostream>
 #include <stdexcept>
 #include "Column.h"

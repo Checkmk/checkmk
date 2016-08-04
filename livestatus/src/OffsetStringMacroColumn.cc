@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetStringMacroColumn.h"
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 #include <memory>
 #include "Renderer.h"
 #include "VariadicFilter.h"

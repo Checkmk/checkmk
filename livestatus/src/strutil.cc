@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "strutil.h"
-#include <ctype.h>
-#include <string.h>
+#include <cctype>
+#include <cstring>
 
 char *rstrip(char *c) {
     char *w = c + strlen(c) - 1;
@@ -102,17 +102,4 @@ int ends_with(const char *a, const char *b) {
     size_t len_b = strlen(b);
     return static_cast<int>(len_a >= len_b &&
                             strcmp(a + len_a - len_b, b) == 0);
-}
-
-bool starts_with(const char *lhs, const char *rhs) {
-    while (*lhs == *rhs) {
-        ++rhs;
-        if (*rhs == '\0') {
-            // end of prefix found without a difference
-            return true;
-        }
-        ++lhs;
-    }
-    // difference found before end of prefix
-    return false;
 }

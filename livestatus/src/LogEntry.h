@@ -26,7 +26,7 @@
 #define LogEntry_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <time.h>
+#include <ctime>
 #include <vector>
 #include "CommandsHolder.h"
 #include "nagios.h"

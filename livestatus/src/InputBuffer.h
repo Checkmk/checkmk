@@ -26,7 +26,7 @@
 #define InputBuffer_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <stddef.h>
+#include <cstddef>
 #include <list>
 #include <string>
 #include <vector>

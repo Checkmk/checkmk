@@ -23,19 +23,18 @@
 // Boston, MA 02110-1301 USA.
 
 #include "InputBuffer.h"
-#include <ctype.h>
-#include <stdint.h>
-#include <string.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <cctype>
 #include <chrono>
+#include <cstdint>
+#include <cstring>
 #include <ratio>
 #include "ChronoUtils.h"
 #include "logger.h"
 
 using std::chrono::milliseconds;
-using std::list;
 using std::string;
 
 extern int g_query_timeout_msec;

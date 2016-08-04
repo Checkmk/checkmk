@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServicelistColumn.h"
-#include <string.h>
+#include <cstring>
 #include "Renderer.h"
 #include "ServicelistFilter.h"
 #include "TimeperiodsCache.h"

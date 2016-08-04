@@ -23,9 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableStateHistory.h"
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #include <deque>
 #include <mutex>
 #include <ostream>
@@ -341,8 +341,7 @@ public:
 void TableStateHistory::answerQuery(Query *query) {
     // Create a partial filter, that contains only such filters that
     // check attributes of current hosts and services
-    typedef deque<Filter *> object_filter_t;
-    object_filter_t object_filter;
+    deque<Filter *> object_filter;
 
     if (g_disable_statehist_filtering == 0) {
         for (auto filter : *query->filter()) {
@@ -365,12 +364,10 @@ void TableStateHistory::answerQuery(Query *query) {
     _abort_query = false;
 
     // Keep track of the historic state of services/hosts here
-    typedef map<HostServiceKey, HostServiceState *> state_info_t;
-    state_info_t state_info;
+    map<HostServiceKey, HostServiceState *> state_info;
 
     // Store hosts/services that we have filtered out here
-    typedef set<HostServiceKey> object_blacklist_t;
-    object_blacklist_t object_blacklist;
+    set<HostServiceKey> object_blacklist;
 
     _query = query;
     _since = 0;

@@ -23,10 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostFileColumn.h"
-#include <errno.h>
 #include <fcntl.h>
-#include <string.h>
 #include <unistd.h>
+#include <cerrno>
+#include <cstring>
 #include "logger.h"
 
 #ifdef CMC

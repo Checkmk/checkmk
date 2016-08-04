@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableStatus.h"
-#include <time.h>
+#include <ctime>
 #include "GlobalCountersColumn.h"
 #include "IntPointerColumn.h"
 #include "Query.h"

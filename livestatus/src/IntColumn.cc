@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "IntColumn.h"
-#include <stdio.h>
+#include <cstdio>
 #include "IntFilter.h"
 #include "Renderer.h"
 #include "opids.h"

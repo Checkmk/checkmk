@@ -26,8 +26,8 @@
 #define HostServiceState_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <string.h>
-#include <time.h>
+#include <cstring>
+#include <ctime>
 #include <vector>
 #include "nagios.h"  // IWYU pragma: keep
 class HostServiceState;

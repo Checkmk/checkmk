@@ -26,10 +26,10 @@
 #define ChronoUtils_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <stdlib.h>
 #include <sys/time.h>
-#include <time.h>
 #include <chrono>
+#include <cstdlib>
+#include <ctime>
 #include <string>
 
 inline double elapsed_ms_since(std::chrono::system_clock::time_point then) {

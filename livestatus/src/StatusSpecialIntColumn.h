@@ -26,7 +26,7 @@
 #define StatusSpecialIntColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include "IntColumn.h"
 

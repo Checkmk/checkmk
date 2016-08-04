@@ -23,10 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "LogEntry.h"
-#include <stdlib.h>
-#include <string.h>
 #include <algorithm>
+#include <cstdlib>
+#include <cstring>
+#include <string>
+#include "StringUtils.h"
 #include "strutil.h"
+
+using mk::starts_with;
+using std::string;
 
 LogEntry::LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
                    char *line)
@@ -273,7 +278,7 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
 
 bool LogEntry::classifyLogMessage() {
     for (const auto &def : log_definitions) {
-        if (starts_with(_text, def.prefix)) {
+        if (starts_with(string(_text), string(def.prefix))) {
             _logclass = def.log_class;
             _type = def.log_type;
             char *scan = _text;

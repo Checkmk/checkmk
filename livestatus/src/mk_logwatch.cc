@@ -23,10 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "mk_logwatch.h"
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
 #include <syslog.h>
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
 #include "logger.h"
 #include "pnp4nagios.h"
 

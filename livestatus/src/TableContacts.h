@@ -39,7 +39,8 @@ public:
     void answerQuery(Query *query) override;
     void *findObject(const std::string &objectspec) override;
 
-    static void addColumns(Table *, std::string prefix, int indirect_offset);
+    static void addColumns(Table *, const std::string &prefix,
+                           int indirect_offset);
 };
 
 #endif  // TableContacts_h

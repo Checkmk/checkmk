@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServicelistFilter.h"
-#include <string.h>
+#include <cstring>
 #include <ostream>
 #include "Logger.h"
 #include "ServicelistColumn.h"

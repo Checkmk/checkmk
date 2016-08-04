@@ -24,13 +24,13 @@
 
 #include "LogCache.h"
 #include <dirent.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <syslog.h>
-#include <time.h>
 #include <unistd.h>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
 #include <utility>
 #include "Logfile.h"
 #include "logger.h"

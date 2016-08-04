@@ -24,9 +24,9 @@
 
 #include "Logfile.h"
 #include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
+#include <cstdlib>
+#include <cstring>
 #include <utility>
 #include "LogCache.h"
 #include "LogEntry.h"
@@ -34,8 +34,8 @@
 #include "logger.h"
 
 #ifdef CMC
-#include <errno.h>
 #include <syslog.h>
+#include <cerrno>
 #include <cinttypes>
 #include "cmc.h"
 #endif
@@ -292,7 +292,7 @@ void Logfile::updateReferences() {
 // to a malloced buffer, that the caller must free (or 0, in case of
 // an error). The buffer is 2 bytes larger then the file. One byte
 // at the beginning and at the end of the buffer are '\0'.
-char *Logfile::readIntoBuffer(int *size) {
+char *Logfile::readIntoBuffer(size_t *size) {
     int fd = open(_path, O_RDONLY);
     if (fd < 0) {
         logger(LOG_WARNING, "Cannot open %s for reading: %s", _path,
@@ -311,8 +311,8 @@ char *Logfile::readIntoBuffer(int *size) {
     *size = o;
     lseek(fd, 0, SEEK_SET);
 
-    char *buffer = static_cast<char *>(
-        malloc(*size + 2));  // add space for binary 0 at beginning and end
+    // add space for binary 0 at beginning and end
+    char *buffer = static_cast<char *>(malloc(*size + 2));
     if (buffer == nullptr) {
         logger(LOG_WARNING, "Cannot malloc buffer for reading %s: %s", _path,
                strerror(errno));
@@ -322,15 +322,16 @@ char *Logfile::readIntoBuffer(int *size) {
 
     ssize_t r = read(fd, buffer + 1, *size);
     if (r < 0) {
-        logger(LOG_WARNING, "Cannot read %d bytes from %s: %s", *size, _path,
-               strerror(errno));
+        logger(LOG_WARNING, "Cannot read %lu bytes from %s: %s",
+               static_cast<unsigned long>(*size), _path, strerror(errno));
         free(buffer);
         close(fd);
         return nullptr;
     }
-    if (r != *size) {
-        logger(LOG_WARNING, "Read only %" PRIdMAX " out of %d bytes from %s",
-               static_cast<intmax_t>(r), *size, _path);
+    if (static_cast<size_t>(r) != *size) {
+        logger(LOG_WARNING, "Read only %" PRIdMAX " out of %lu bytes from %s",
+               static_cast<intmax_t>(r), static_cast<unsigned long>(*size),
+               _path);
         free(buffer);
         close(fd);
         return nullptr;

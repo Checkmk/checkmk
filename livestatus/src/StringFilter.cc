@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StringFilter.h"
-#include <string.h>
+#include <cstring>
 #include <stdexcept>
 #include "StringColumn.h"
 #include "opids.h"

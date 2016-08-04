@@ -26,7 +26,7 @@
 #define DowntimeOrComment_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <time.h>
+#include <ctime>
 #include <string>
 #include "nagios.h"  // IWYU pragma: keep
 

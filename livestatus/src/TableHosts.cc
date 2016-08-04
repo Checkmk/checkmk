@@ -66,8 +66,8 @@ string TableHosts::name() const { return "hosts"; }
 string TableHosts::namePrefix() const { return "host_"; }
 
 // static
-void TableHosts::addColumns(Table *table, string prefix, int indirect_offset,
-                            int extra_offset,
+void TableHosts::addColumns(Table *table, const string &prefix,
+                            int indirect_offset, int extra_offset,
                             const DowntimesOrComments &downtimes_holder,
                             const DowntimesOrComments &comments_holder) {
     host hst;

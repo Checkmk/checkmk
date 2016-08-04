@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DownCommColumn.h"
-#include <stdlib.h>
-#include <time.h>
+#include <cstdlib>
+#include <ctime>
 #include <memory>
 #include <utility>
 #include "DowntimeOrComment.h"

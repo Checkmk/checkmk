@@ -44,8 +44,8 @@ void RendererCSV::endQuery() {}
 // --------------------------------------------------------------------------
 
 void RendererCSV::beginRow() {}
-void RendererCSV::beginRowElement() { add("\""); }
-void RendererCSV::endRowElement() { add("\""); }
+void RendererCSV::beginRowElement() { add(R"(")"); }
+void RendererCSV::endRowElement() { add(R"(")"); }
 void RendererCSV::separateRowElements() { add(","); }
 void RendererCSV::endRow() { add("\r\n"); }
 
@@ -73,7 +73,7 @@ void RendererCSV::endDict() {}
 void RendererCSV::outputNull() {}
 
 void RendererCSV::outputEscaped(char ch) {
-    add(ch == '"' ? "\"\"" : string(1, ch));
+    add(ch == '"' ? R"("")" : string(1, ch));
 }
 
 void RendererCSV::outputBlob(const vector<char> &value) {

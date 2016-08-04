@@ -43,7 +43,7 @@ string TableServicegroups::name() const { return "servicegroups"; }
 string TableServicegroups::namePrefix() const { return "servicegroup_"; }
 
 // static
-void TableServicegroups::addColumns(Table *table, string prefix,
+void TableServicegroups::addColumns(Table *table, const string &prefix,
                                     int indirect_offset) {
     servicegroup sgr;
     char *ref = reinterpret_cast<char *>(&sgr);

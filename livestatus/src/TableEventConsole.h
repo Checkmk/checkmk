@@ -26,10 +26,10 @@
 #define TableEventConsole_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <stdlib.h>
 #include <sys/types.h>
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 #include <functional>
 #include <map>
 #include <memory>

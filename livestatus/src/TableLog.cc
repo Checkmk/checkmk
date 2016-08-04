@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableLog.h"
-#include <stdint.h>
-#include <time.h>
+#include <cstdint>
+#include <ctime>
 #include <map>
 #include <mutex>
 #include <string>

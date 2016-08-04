@@ -23,10 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "PerfdataAggregator.h"
-#include <ctype.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cctype>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <utility>
 #include <vector>
 #include "Renderer.h"

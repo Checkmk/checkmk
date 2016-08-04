@@ -23,9 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Store.h"
-#include <string.h>
-#include <time.h>
 #include <chrono>
+#include <cstring>
+#include <ctime>
 #include <ostream>
 #include <utility>
 #include "InputBuffer.h"

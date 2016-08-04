@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableCommands.h"
-#include <stddef.h>
+#include <cstddef>
 #include "CommandsHolder.h"
 #include "OffsetSStringColumn.h"
 #include "Query.h"
@@ -40,7 +40,7 @@ string TableCommands::name() const { return "commands"; }
 string TableCommands::namePrefix() const { return "command_"; }
 
 // static
-void TableCommands::addColumns(Table *table, string prefix, int offset) {
+void TableCommands::addColumns(Table *table, const string &prefix, int offset) {
     table->addColumn(new OffsetSStringColumn(
         prefix + "name", "The name of the command",
         offset + offsetof(CommandsHolder::Command, _name)));

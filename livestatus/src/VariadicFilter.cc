@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "VariadicFilter.h"
-#include <stdint.h>
 #include <cinttypes>
+#include <cstdint>
 #include "AndingFilter.h"
 #include "FilterVisitor.h"
 #include "OringFilter.h"

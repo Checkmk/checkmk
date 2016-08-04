@@ -23,9 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "waittriggers.h"
-#include <string.h>
 #include <chrono>
 #include <condition_variable>
+#include <cstring>
 #include <mutex>
 #include <ratio>
 

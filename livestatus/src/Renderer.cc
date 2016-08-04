@@ -42,7 +42,6 @@ using std::setfill;
 using std::setw;
 using std::size_t;
 using std::string;
-using std::to_string;
 using std::unique_ptr;
 using std::vector;
 
@@ -118,7 +117,7 @@ void Renderer::output(double value) {
 
 void Renderer::output(char16_t value) {
     ostringstream os;
-    os << "\\u" << hex << setw(4) << setfill('0') << value;
+    os << R"(\u)" << hex << setw(4) << setfill('0') << value;
     add(os.str());
 }
 
@@ -175,7 +174,7 @@ void Renderer::outputDecodedLatin1(const string &prefix, const char *start,
 void Renderer::outputDecoded(const string &prefix, const char *start,
                              const char *end, int data_encoding) {
     add(prefix);
-    add("\"");
+    add(R"(")");
     // TODO(sp) Use polymorphism instead of switch.
     // TODO(sp) Use codecvt framework instead of homemade stuff.
     switch (data_encoding) {
@@ -192,7 +191,7 @@ void Renderer::outputDecoded(const string &prefix, const char *start,
             Emergency() << "Invalid data encoding " << data_encoding;
             break;
     }
-    add("\"");
+    add(R"(")");
 }
 
 void Renderer::outputDecodedUTF8(const char *start, const char *end) {

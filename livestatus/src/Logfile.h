@@ -26,9 +26,9 @@
 #define Logfile_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <stdint.h>
-#include <stdio.h>
-#include <time.h>
+#include <cstdint>
+#include <cstdio>
+#include <ctime>
 #include <map>
 class CommandsHolder;
 class LogCache;
@@ -66,7 +66,7 @@ public:
 
     char *path() { return _path; }
 #ifdef CMC
-    char *readIntoBuffer(int *size);
+    char *readIntoBuffer(size_t *size);
 #endif
     void load(LogCache *logcache, time_t since, time_t until,
               unsigned logclasses);

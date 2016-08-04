@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DoubleColumn.h"
-#include <stdio.h>
+#include <cstdio>
 #include "DoubleFilter.h"
 #include "Renderer.h"
 #include "opids.h"

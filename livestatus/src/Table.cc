@@ -29,6 +29,7 @@
 #include "Logger.h"
 #include "StringUtils.h"
 
+using mk::starts_with;
 using std::string;
 
 Table::Table() {}
@@ -60,7 +61,7 @@ void Table::addDynamicColumn(DynamicColumn *dyncol) {
 
 Column *Table::column(string colname) {
     // Strip away a sequence of prefixes.
-    while (mk::starts_with(colname, namePrefix())) {
+    while (starts_with(colname, namePrefix())) {
         colname = colname.substr(namePrefix().size());
     }
 

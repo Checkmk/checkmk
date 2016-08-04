@@ -26,7 +26,7 @@
 #define TableLog_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <time.h>
+#include <ctime>
 #include <string>
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep

@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostServiceState.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 HostServiceState::~HostServiceState() {
     if (_log_output != nullptr) {

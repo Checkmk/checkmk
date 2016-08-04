@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableContacts.h"
-#include <stdio.h>
+#include <cstdio>
 #include "AttributelistColumn.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsNamesColumn.h"
@@ -45,7 +45,7 @@ string TableContacts::name() const { return "contacts"; }
 string TableContacts::namePrefix() const { return "contact_"; }
 
 // static
-void TableContacts::addColumns(Table *table, string prefix,
+void TableContacts::addColumns(Table *table, const string &prefix,
                                int indirect_offset) {
     contact ctc;
     char *ref = reinterpret_cast<char *>(&ctc);

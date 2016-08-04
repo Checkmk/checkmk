@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "pnp4nagios.h"
-#include <stddef.h>
+#include <cstddef>
 #ifdef CMC
 #include <sys/stat.h>
 #endif
@@ -51,7 +51,7 @@ string replace_all(const string& str, const string& chars, char replacement) {
 }  // namespace
 
 string pnp_cleanup(const string& name) {
-    return replace_all(name, " /\\:", '_');
+    return replace_all(name, R"( /\:)", '_');
 }
 
 #ifndef CMC

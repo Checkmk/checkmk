@@ -3198,6 +3198,11 @@ class ModeBulkImport(WatoMode):
                 if attribute == "alias":
                     attributes[attribute] = value.decode("utf-8")
                 else:
+                    try:
+                        unicode(value)
+                    except:
+                        raise MKUserError(None, _("Non-ASCII characters are not allowed in the "
+                                                  "attribute \"%s\".") % attribute)
                     attributes[attribute] = value
 
         if host_name == None:

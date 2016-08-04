@@ -544,7 +544,7 @@ class FilterHostsHavingServiceProblems(Filter):
         headers = []
         for var in [ "warn", "crit", "pending", "unknown" ]:
             if html.get_checkbox("hosts_having_services_%s" % var) == True:
-                headers.append("Filter: num_services_%s > 0\n" % var)
+                headers.append("Filter: host_num_services_%s > 0\n" % var)
 
         len_headers = len(headers)
         if len_headers > 0:

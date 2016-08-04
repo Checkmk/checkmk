@@ -188,7 +188,9 @@ builtin_dashboards["main"] = {
 
             'play_sounds': False,
             'public': True,
-            'sorters': [],
+            'sorters': [
+                ('log_time', True)
+            ],
         },
     ]
 }

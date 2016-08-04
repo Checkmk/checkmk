@@ -421,6 +421,7 @@
     * 3729 FIX: Disabling password field completion for most forms, even in current Chrome
     * 3730 FIX: Improved GUI performance in case of different languages used by users...
     * 3753 FIX: Fixed graph hover popup of services having special characters in their names
+    * 3758 FIX: Fixed wrong sorting of events in main dashboard in distributed environments
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

@@ -25,10 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 import subprocess, base64, time, pprint, traceback, tarfile, cStringIO, sys
+import i18n
 import sites
 from lib import *
 from valuespec import *
-import table, defaults, config, userdb, forms
+import table, defaults, config, forms
 import cmk.crash_reporting
 
 try:
@@ -44,7 +45,7 @@ def page_crashed(what):
 
         tardata = get_crash_report_archive_as_string(site, host, service)
     else:
-        tardata = create_gui_crash_report()
+        tardata = create_gui_crash_report(what)
 
     info = get_crash_info(tardata)
 
@@ -58,7 +59,7 @@ def page_crashed(what):
     show_context_buttons(what)
 
     if html.has_var("_report") and html.check_transaction():
-        details = handle_report_form(tardata)
+        details = handle_report_form(tardata, what)
     else:
         details = {}
 
@@ -71,16 +72,16 @@ def page_crashed(what):
 
     if info:
         warn_about_local_files(info)
-        show_report_form(details)
+        show_report_form(what, details)
         show_crash_report(info)
         show_crash_report_details(info)
     else:
         report_url = mailto_url = html.makeuri([
-            ("subject", "Check_MK Crash Report - " + defaults.check_mk_version),
-        ], filename="mailto:" + config.crash_report_target)
+            ("subject", "Check_MK Crash Report - " + get_version(what)),
+        ], filename="mailto:" + get_crash_report_target(what))
         html.message(_("This crash report is in a legacy format and can not be submitted "
                        "automatically. Please download it manually and send it to <a href=\"%s\">%s</a>")
-                                % (report_url , config.crash_report_target))
+                                % (report_url , get_crash_report_target(what)))
         show_old_dump_trace(tardata)
 
     show_agent_output(tardata)
@@ -178,7 +179,7 @@ def vs_crash_report():
     )
 
 
-def handle_report_form(tardata):
+def handle_report_form(tardata, what):
     details = {}
     try:
         vs = vs_crash_report()
@@ -213,10 +214,10 @@ def handle_report_form(tardata):
         html.write("</div>")
         html.write("<div id=\"fail_msg\" style=\"display:none\">")
         report_url = mailto_url = html.makeuri([
-            ("subject", "Check_MK Crash Report - " + defaults.check_mk_version),
-        ], filename="mailto:" + config.crash_report_target)
+            ("subject", "Check_MK Crash Report - " + get_version(what)),
+        ], filename="mailto:" + get_crash_report_target(what))
         html.show_error(_("Failed to send the crash report. Please download it manually and send it "
-                          "to <a href=\"%s\">%s</a>") % (report_url , config.crash_report_target))
+                          "to <a href=\"%s\">%s</a>") % (report_url , get_crash_report_target(what)))
         html.write("</div>")
         html.javascript("submit_crash_report('https://mathias-kettner.de/crash_report.php', " \
                                             "'%s');" % url_encoded_params)
@@ -225,6 +226,23 @@ def handle_report_form(tardata):
         html.add_user_error(e.varname, action_message)
 
     return details
+
+
+# TODO: Would be cleaner to override if we used OOP
+def get_crash_report_target(what):
+    if what == "cma":
+        return "feedback@check-mk.org"
+    else:
+        return config.crash_report_target
+
+
+# TODO: Would be cleaner to override if we used OOP
+def get_version(what):
+    if what == "cma":
+        import cma
+        return cma.version()
+    else:
+        return defaults.check_mk_version
 
 
 def warn_about_local_files(info):
@@ -244,11 +262,9 @@ def warn_about_local_files(info):
                   "this should be working.")))
 
 
-def show_report_form(details):
-    users = userdb.load_users()
-    user = users.get(config.user_id, {})
-    details.setdefault("name", user.get("alias"))
-    details.setdefault("mail", user.get("mail"))
+def show_report_form(what, details):
+    if what == "gui":
+        add_gui_user_infos_to_details(details)
 
     html.begin_form("report", method = "GET")
     html.show_user_errors()
@@ -261,6 +277,14 @@ def show_report_form(details):
     html.end_form()
 
 
+def add_gui_user_infos_to_details(details):
+    import userdb
+    users = userdb.load_users()
+    user = users.get(config.user_id, {})
+    details.setdefault("name", user.get("alias"))
+    details.setdefault("mail", user.get("mail"))
+
+
 def show_crash_report(info):
     html.write("<h2>%s</h2>" % _("Crash Report"))
     html.write("<table class=\"data\">")
@@ -270,7 +294,13 @@ def show_crash_report(info):
     html.write("<td>%s</td></tr>" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["time"])))
     html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Operating System"))
     html.write("<td>%s</td></tr>" % html.attrencode(info["os"]))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Check_MK Version"))
+
+    if info["crash_type"] == "cma":
+        version_title = _("CMA Version")
+    else:
+        version_title = _("Check_MK Version")
+
+    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % version_title)
     html.write("<td>%s</td></tr>" % html.attrencode(info["version"]))
     html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Python Version"))
     html.write("<td>%s</td></tr>" % html.attrencode(info.get("python_version", _("Unknown"))))
@@ -392,9 +422,8 @@ def show_agent_output(tardata):
         output_box(_("Agent output"), agent_output)
 
 
-# Slightly duplicate code with modules/check_mk_base.py. Maybe create some kind of central library?
-def create_crash_dump_info_file(tar):
-    crash_info = cmk.crash_reporting.create_crash_info("gui", details={
+def create_crash_dump_info_file(tar, what):
+    crash_info = cmk.crash_reporting.create_crash_info(what, details={
         "page"           : html.myfile+".py",
         "vars"           : html.vars,
         "username"       : html.user,
@@ -402,9 +431,9 @@ def create_crash_dump_info_file(tar):
         "referer"        : html.get_referer(),
         "is_mobile"      : html.is_mobile(),
         "is_ssl_request" : html.is_ssl_request(),
-        "language"       : config.get_language(),
+        "language"       : i18n.get_current_language(),
         "request_method" : html.request_method(),
-    })
+    }, version=get_version(what))
 
     content = cStringIO.StringIO()
     content.write(cmk.crash_reporting.crash_info_to_string(crash_info))
@@ -417,11 +446,11 @@ def create_crash_dump_info_file(tar):
     tar.addfile(tarinfo=tarinfo, fileobj=content)
 
 
-def create_gui_crash_report():
+def create_gui_crash_report(what):
     c = cStringIO.StringIO()
     tar = tarfile.open(mode="w:gz", fileobj=c)
 
-    create_crash_dump_info_file(tar)
+    create_crash_dump_info_file(tar, what)
 
     tar.close()
     s = c.getvalue()

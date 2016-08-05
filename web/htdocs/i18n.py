@@ -43,6 +43,9 @@ import defaults
 # indexed by the internal language id
 translations = {}
 
+def get_current_language():
+    return current_language
+
 def get_language_dirs():
     dirs = [ defaults.locale_dir ]
     if defaults.omd_root:
@@ -116,7 +119,10 @@ def unlocalize():
 
 def localize(lang, **kwargs):
     set_language_cookie(lang)
+    localize(lang, **kwargs)
 
+
+def do_localize(lang, **kwargs):
     if lang:
         # FIXME: Clean this up. Make the other code access the current language through a
         # function of this module.

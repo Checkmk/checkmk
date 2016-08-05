@@ -57,9 +57,12 @@ def crash_info_to_string(crash_info):
 
 
 # The top level keys of the crash info dict are standardized
-def create_crash_info(crash_type, details = None):
+def create_crash_info(crash_type, details=None, version=None):
     if details == None:
         details = {}
+
+    if version == None:
+        version = __version__
 
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
@@ -67,7 +70,7 @@ def create_crash_info(crash_type, details = None):
         "crash_type"    : crash_type,
         "time"          : time.time(),
         "os"            : get_os_info(),
-        "version"       : __version__,
+        "version"       : version,
         "python_version": sys.version,
         "python_paths"  : sys.path,
         "exc_type"      : exc_type.__name__,
@@ -92,10 +95,12 @@ def get_os_info():
                 for line in file(f).readlines():
                     if "=" in line:
                         k, v = line.split("=", 1)
-                        info[k.strip()] = v.strip()
+                        info[k.strip()] = v.strip().strip("\"")
                 break
 
-        if info:
+        if "PRETTY_NAME" in info:
+            return info["PRETTY_NAME"]
+        elif info:
             return info
         else:
             return "UNKNOWN"

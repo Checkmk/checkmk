@@ -37,12 +37,13 @@ string unsafe_tolower(const string &str) {
     return result;
 }
 
-// cppcheck-suppress unusedFunction
+#ifdef CMC
 string unsafe_toupper(const string &str) {
     string result = str;
     std::transform(str.begin(), str.end(), result.begin(), ::toupper);
     return result;
 }
+#endif
 
 bool starts_with(const std::string &input, const std::string &test) {
     return input.size() >= test.size() &&

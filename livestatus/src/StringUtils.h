@@ -33,7 +33,9 @@
 
 namespace mk {
 std::string unsafe_tolower(const std::string &str);
+#ifdef CMC
 std::string unsafe_toupper(const std::string &str);
+#endif
 
 bool starts_with(const std::string &input, const std::string &test);
 

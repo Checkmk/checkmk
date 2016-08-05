@@ -28,6 +28,7 @@
 # State    Type    Rebal  Sector  Block       AU  Total_MB  Free_MB  Req_mir_free_MB  Usable_file_MB  Offline_disks  Voting_files  Name
 # MOUNTED  NORMAL  N         512   4096  1048576    512000    92888                0           46444              0             N  DATA/
 # MOUNTED  NORMAL  N         512   4096  1048576      3072     2146              309             918              0             Y  OCR_VOTE/
+# DISMOUNTED  N 0 0 0 0 0 0 0 0 N DB_DG1/
 # The agent section <<<oracle_asm_diskgroup>>> does not output the header line
 
 factory_settings["asm_diskgroup_default_levels"] = {
@@ -62,7 +63,8 @@ def check_oracle_asm_diskgroup(item, params, info):
 
         if dg_name == item:
 
-            if state == "DISMOUNTED":
+            # Indices are wrong: TYPE missing, only critical if block==0 (T.Bruhns)
+            if state == "DISMOUNTED" and line[3] == "0":
                 return 2, "Disk dismounted"
 
             add_text = ""

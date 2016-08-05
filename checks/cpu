@@ -46,6 +46,9 @@ def inventory_cpu_load(info):
 
 
 def check_cpu_load(item, params, info):
+    if not info:
+        return
+
     if len(info[0]) >= 6:
         # There have been broken AIX agents for a long time which produced data like follows.
         # Newer agents deal with this, but to be nice to old agents: deal with it.

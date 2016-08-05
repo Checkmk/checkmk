@@ -325,6 +325,7 @@
     * 3742 FIX: ps: Fixed broken averaging...
     * 3711 FIX: ipmi: fixed wrong status handling if sensor status is ok but failures detected
     * 3734 FIX: esx_vsphere_hostsystem.cpu_usage esx_vsphere_hostsystem.mem_usage esx_vsphere_hostsystem.maintenance: Fixed exception when needed data is missing
+    * 3759 FIX: cpu.loads: Fixed possible crash on missing data
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

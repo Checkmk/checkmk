@@ -36,24 +36,23 @@ def inventory_ispro_sensors_digital(info):
 
 def check_ispro_sensors_digital(item, params, info):
     map_states = {
-        "state" : {
-            "1" : "disabled",
-            "2" : "normal open",
-            "3" : "normal close",
+        "state" : { "1" : "disabled",
+                    "2" : "normal open",
+                    "3" : "normal close",
         },
-        "alarm" :{
-            "1" : (0, "active"),
-            "2" : (2, "inactive"),
+        "alarm" : { "1" : (0, "normal", "active"),
+                    "2" : (2, "alarm",  "inactive"),
         }
     }
 
     for name, alarm, state in info:
         if item == name:
-            alarm_state, alarm_state_readable = \
-                map_states["alarm"].get(alarm, (3, "unexpected(%s)" % alarm))
-            return alarm_state, 'Status: %s, Alarm: %s' % \
+            # more readable, avoiding confusion
+            alarm_state, alarm_state_readable, alarm_device_state_readable = \
+                map_states["alarm"].get(alarm, (3, "unknown", "unexpected(%s)" % alarm))
+            return alarm_state, 'Status: %s, Alarm status: %s (device: %s)' % \
                    (map_states["state"].get(state, "unexpected(%s)" % state),
-                    alarm_state_readable)
+                    alarm_state_readable, alarm_device_state_readable )
 
 
 check_info['ispro_sensors_digital'] = {

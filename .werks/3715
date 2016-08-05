@@ -1,0 +1,9 @@
+Title: agent_ipmi_sensors: fixed error handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p9
+Date: 1470383002
+Class: fix
+
+

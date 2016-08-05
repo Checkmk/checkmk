@@ -104,6 +104,7 @@ for sub_path in [ "sbin", "bin", "local/sbin", "local/bin" ]:
         sensor_data, err = p.communicate()
         break
     except Exception, e:
+        err = e
         if opt_debug:
             sys.stdout.write("ERROR: '%s': %s\n" % (base_cmd, e))
         continue

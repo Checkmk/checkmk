@@ -1,0 +1,9 @@
+Title: cpu.loads: Fixed possible crash on missing data
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p9
+Date: 1470381652
+Class: fix
+
+

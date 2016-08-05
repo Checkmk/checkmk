@@ -119,7 +119,7 @@ def unlocalize():
 
 def localize(lang, **kwargs):
     set_language_cookie(lang)
-    localize(lang, **kwargs)
+    do_localize(lang, **kwargs)
 
 
 def do_localize(lang, **kwargs):

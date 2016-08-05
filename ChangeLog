@@ -530,6 +530,7 @@
     * 3755 FIX: Preventing to insert non ASCII characters in host addresses now
     * 3756 FIX: Bulk import: Fixed exception when host name contained special characters
     * 3757 FIX: Bulk import: Ensuring non ASCII characters are not imported into regular attributes
+    * 3760 FIX: Cluster nodes can not be nodes of their own anymore
 
     Notifications:
     * 3263 Notifications: allow users to restrict by their contact groups...

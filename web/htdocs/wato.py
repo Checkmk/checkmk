@@ -1341,6 +1341,9 @@ def action_edit_host(mode, hostname, is_cluster):
         if len(cluster_nodes) < 1:
             raise MKUserError("nodes_0", _("The cluster must have at least one node"))
         for nr, cluster_node in enumerate(cluster_nodes):
+            if cluster_node == hostname:
+                raise MKUserError("nodes_%d" % nr, _("The cluster can not be a node of it's own"))
+
             if not Host.host_exists(cluster_node):
                 raise MKUserError("nodes_%d" % nr, _("The node <b>%s</b> does not exist "
                                   " (must be a host that is configured with WATO)") % cluster_node)

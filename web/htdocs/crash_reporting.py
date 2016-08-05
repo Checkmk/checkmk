@@ -49,10 +49,10 @@ def page_crashed(what):
 
     info = get_crash_info(tardata)
 
-    if what == "gui":
-        title = _("Internal error")
-    else:
+    if what == "check":
         title = _("Crashed Check Reporting")
+    else:
+        title = _("Internal error")
 
     html.header(title, stylesheets=["status", "pages"])
 

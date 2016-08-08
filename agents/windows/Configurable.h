@@ -105,8 +105,9 @@ public:  // only valid with a grouping adder. it's important to understand that
          // for template-instantiations where they aren't used so even though
          // they wouldn't compile with non-grouping adders, this is not a
          // problem. (google SFINAE)
-    void setGroupFunction(typename AddMode::PriorityAppendGrouped<
-                          ContainerT>::GroupFunction function) {
+    void setGroupFunction(
+        typename AddMode::PriorityAppendGrouped<ContainerT>::GroupFunction
+            function) {
         _add_mode.setGroupFunction(function);
     }
 

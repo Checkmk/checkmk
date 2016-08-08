@@ -27,22 +27,22 @@
 
 // IWYU pragma: no_include <bits/socket_type.h>
 #include "config.h"
-#include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>  // IWYU pragma: keep
 #include <sys/un.h>
-#include <time.h>
 #include <unistd.h>
+#include <cerrno>
+#include <cstddef>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #include "auth.h"
 #include "data_encoding.h"
 #include "global_counters.h"

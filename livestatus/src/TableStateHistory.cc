@@ -67,7 +67,6 @@ using std::lock_guard;
 using std::make_pair;
 using std::map;
 using std::mutex;
-using std::recursive_mutex;
 using std::set;
 using std::string;
 

@@ -51,8 +51,8 @@ public:
 #else
     TableServices(const DowntimesOrComments &downtimes_holder,
                   const DowntimesOrComments &comments_holder);
-    static void addColumns(Table *, std::string prefix, int indirect_offset,
-                           bool add_hosts,
+    static void addColumns(Table *, const std::string &prefix,
+                           int indirect_offset, bool add_hosts,
                            const DowntimesOrComments &downtimes_holder,
                            const DowntimesOrComments &comments_holder);
 #endif

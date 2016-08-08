@@ -62,8 +62,8 @@ string TableServices::name() const { return "services"; }
 string TableServices::namePrefix() const { return "service_"; }
 
 // static
-void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
-                               bool add_hosts,
+void TableServices::addColumns(Table *table, const string &prefix,
+                               int indirect_offset, bool add_hosts,
                                const DowntimesOrComments &downtimes_holder,
                                const DowntimesOrComments &comments_holder) {
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger

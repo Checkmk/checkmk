@@ -45,11 +45,8 @@ using std::chrono::microseconds;
 using std::chrono::system_clock;
 using std::list;
 using std::lock_guard;
-using std::make_pair;
 using std::mutex;
-using std::pair;
 using std::string;
-using std::to_string;
 
 Store::Store()
     : _log_cache(_commands_holder, g_max_cached_messages)
@@ -93,7 +90,7 @@ void Store::addTable(Table *table) {
     _table_columns.addTable(table);
 }
 
-Table *Store::findTable(string name) {
+Table *Store::findTable(const string &name) {
     auto it = _tables.find(name);
     if (it == _tables.end()) {
         return nullptr;

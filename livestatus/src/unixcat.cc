@@ -23,13 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 // IWYU pragma: no_include <bits/socket_type.h>
-#include <errno.h>
 #include <pthread.h>
-#include <signal.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -37,7 +31,13 @@
 #include <sys/types.h>  // IWYU pragma: keep
 #include <sys/un.h>
 #include <unistd.h>
+#include <cerrno>
 #include <cinttypes>
+#include <csignal>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 int copy_data(int from, int to);
 void *voidp;

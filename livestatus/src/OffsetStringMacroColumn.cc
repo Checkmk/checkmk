@@ -42,7 +42,7 @@ string OffsetStringMacroColumn::valueAsString(void *row,
     service *svc = getService(row);
 
     // search for macro names, beginning with $
-    string result = "";
+    string result;
     const char *scan = raw.c_str();
 
     while (*scan != 0) {

@@ -98,7 +98,7 @@ private:
     std::mutex _command_mutex;
 
     void addTable(Table *table);
-    Table *findTable(std::string name);
+    Table *findTable(const std::string &name);
     void answerGetRequest(const std::list<std::string> &lines, OutputBuffer *,
                           const char *);
     void answerCommandRequest(const char *);

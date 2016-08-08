@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "GlobalCountersColumn.h"
+#include <cstdint>
 #include "Renderer.h"
 #include "global_counters.h"
 

@@ -42,6 +42,7 @@
 #include <sys/un.h>
 #include <time.h>
 #include <unistd.h>
+#include <cstdint>
 #include "auth.h"
 #include "data_encoding.h"
 #include "global_counters.h"

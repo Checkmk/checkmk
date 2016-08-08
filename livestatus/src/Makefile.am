@@ -147,7 +147,7 @@ livestatus_so_SOURCES = \
         logger.c \
         mk_inventory.cc \
         mk_logwatch.cc \
-        module.c \
+        module.cc \
         opids.cc \
         pnp4nagios.cc \
         store_c.cc \

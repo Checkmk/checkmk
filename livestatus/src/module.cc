@@ -101,8 +101,8 @@ int g_group_authorization = AUTH_STRICT;
 int g_data_encoding = ENCODING_UTF8;
 
 /* simple statistics data for TableStatus */
-extern struct host *host_list;
-extern struct service *service_list;
+extern host *host_list;
+extern service *service_list;
 extern scheduled_downtime *scheduled_downtime_list;
 extern int log_initial_states;
 
@@ -429,7 +429,7 @@ int broker_program(int event_type __attribute__((__unused__)),
     return 0;
 }
 
-char *get_downtime_comment(char *host_name, char *svc_desc) {
+const char *get_downtime_comment(char *host_name, char *svc_desc) {
     char *comment;
     int matches = 0;
     scheduled_downtime *dt_list = scheduled_downtime_list;
@@ -491,8 +491,10 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
         if (g_thread_running == 1) {
             livestatus_log_initial_states();
         } else if (log_initial_states == 1) {
-            write_to_all_logs("logging initial states",
-                              LG_INFO);  // initial info during startup
+            // initial info during startup
+            // TODO(sp) The Nagios headers are (once again) not const-correct...
+            write_to_all_logs(const_cast<char *>("logging initial states"),
+                              LG_INFO);
         }
     }
     update_timeperiods_cache(ts->timestamp.tv_sec);
@@ -853,8 +855,8 @@ void omd_advertize() {
 
 /* this function gets called when the module is loaded by the event broker */
 /* cppcheck-suppress unusedFunction */
-int nebmodule_init(int flags __attribute__((__unused__)), char *args,
-                   void *handle) {
+extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
+                              void *handle) {
     g_nagios_handle = handle;
     livestatus_parse_arguments(args);
     open_logfile();
@@ -902,8 +904,8 @@ int nebmodule_init(int flags __attribute__((__unused__)), char *args,
 }
 
 /* cppcheck-suppress unusedFunction */
-int nebmodule_deinit(int flags __attribute__((__unused__)),
-                     int reason __attribute__((__unused__))) {
+extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
+                                int reason __attribute__((__unused__))) {
     logger(LG_INFO, "deinitializing");
     terminate_threads();
     close_unix_socket();

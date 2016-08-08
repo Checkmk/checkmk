@@ -26,18 +26,7 @@
 #define global_counters_h
 
 #include "config.h"  // IWYU pragma: keep
-
-#include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifndef EXTERN
-#define EXTERN extern
-#endif
-
-typedef uint64_t counter_t;
+#include <cstdint>
 
 #define COUNTER_NEB_CALLBACKS 0
 #define COUNTER_REQUESTS 1
@@ -52,14 +41,10 @@ typedef uint64_t counter_t;
 #define COUNTER_OVERFLOWS 10
 #define NUM_COUNTERS 11
 
-EXTERN counter_t g_counters[NUM_COUNTERS];
-EXTERN counter_t g_last_counter[NUM_COUNTERS];
-EXTERN double g_counter_rate[NUM_COUNTERS];
+extern uint64_t g_counters[NUM_COUNTERS];
+extern uint64_t g_last_counter[NUM_COUNTERS];
+extern double g_counter_rate[NUM_COUNTERS];
 
 void do_statistics();
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* global_counters_h */
+#endif  // global_counters_h

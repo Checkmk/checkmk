@@ -22,9 +22,12 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#define EXTERN /* */
 #include "global_counters.h"
-#include <time.h>
+#include <ctime>
+
+uint64_t g_counters[NUM_COUNTERS];
+uint64_t g_last_counter[NUM_COUNTERS];
+double g_counter_rate[NUM_COUNTERS];
 
 time_t last_statistics_update = 0;
 #define STATISTICS_INTERVAL 5
@@ -33,8 +36,7 @@ time_t last_statistics_update = 0;
 void do_statistics() {
     if (last_statistics_update == 0) {
         last_statistics_update = time(0);
-        unsigned i;
-        for (i = 0; i < NUM_COUNTERS; i++) {
+        for (unsigned i = 0; i < NUM_COUNTERS; i++) {
             g_counters[i] = 0;
             g_last_counter[i] = 0;
             g_counter_rate[i] = 0.0;
@@ -45,9 +47,8 @@ void do_statistics() {
     time_t delta_time = now - last_statistics_update;
     if (delta_time >= STATISTICS_INTERVAL) {
         last_statistics_update = now;
-        unsigned i;
-        for (i = 0; i < NUM_COUNTERS; i++) {
-            counter_t delta_value = g_counters[i] - g_last_counter[i];
+        for (unsigned i = 0; i < NUM_COUNTERS; i++) {
+            auto delta_value = g_counters[i] - g_last_counter[i];
             double new_rate = (double)delta_value / (double)delta_time;
             double old_rate = g_counter_rate[i];
             double avg_rate;

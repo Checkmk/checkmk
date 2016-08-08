@@ -143,7 +143,7 @@ livestatus_so_SOURCES = \
         VariadicFilter.cc \
         WorldNagios.cc \
         auth.cc \
-        global_counters.c \
+        global_counters.cc \
         logger.c \
         mk_inventory.cc \
         mk_logwatch.cc \

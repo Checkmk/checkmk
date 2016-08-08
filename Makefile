@@ -47,12 +47,12 @@ BEAR               := bear
 LIVESTATUS_SOURCES := configure aclocal.m4 config.guess config.h.in config.sub \
                       configure.ac ltmain.sh Makefile.{in,am} missing ar-lib \
                       nagios/README nagios/*.h nagios4/README m4/* nagios4/*.h \
-                      src/*.{h,c,cc} src/Makefile.{in,am} \
+                      src/*.{h,cc} src/Makefile.{in,am} \
                       depcomp install-sh api/python/{*.py,README} api/perl/*
 
 # Files that are checked for trailing spaces
 HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* \
-                      $$(find -name Makefile) livestatus/src/*.{cc,c,h} \
+                      $$(find -name Makefile) livestatus/src/*.{cc,h} \
                       agents/windows/*.cc \
                       web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
                       doc/helpers/* scripts/setup.sh scripts/autodetect.py \
@@ -66,8 +66,8 @@ HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* 
 
 FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix agents/windows/,*.cc *.c *.h)) \
-                      $(wildcard $(addprefix livestatus/api/c++/,*.cc *.c *.h)) \
-                      $(wildcard $(addprefix livestatus/src/,*.cc *.c *.h)) \
+                      $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
+                      $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h))
 
 .PHONY: all analyze check check-binaries check-permissions check-spaces \

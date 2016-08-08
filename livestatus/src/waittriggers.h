@@ -27,36 +27,25 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-struct timespec;
-
 // This is basically a C++ class for triggers done the "C way" via an opaque
 // struct, explicit passing of 'this' and using a prefix for names.
-
 struct trigger;
 
-struct trigger *trigger_all();
-struct trigger *trigger_check();
-struct trigger *trigger_state();
-struct trigger *trigger_log();
-struct trigger *trigger_downtime();
-struct trigger *trigger_comment();
-struct trigger *trigger_command();
-struct trigger *trigger_program();
+trigger *trigger_all();
+trigger *trigger_check();
+trigger *trigger_state();
+trigger *trigger_log();
+trigger *trigger_downtime();
+trigger *trigger_comment();
+trigger *trigger_command();
+trigger *trigger_program();
 
-struct trigger *trigger_find(const char *name);
+trigger *trigger_find(const char *name);
 const char *trigger_all_names();
 
 void trigger_notify_all(struct trigger *which);
 
 void trigger_wait(struct trigger *which);
 int trigger_wait_for(struct trigger *which, unsigned ms);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif  // waittriggers_h

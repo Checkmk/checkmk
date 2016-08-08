@@ -29,10 +29,6 @@
 #include <time.h>
 #include "nagios.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void store_init();
 void store_deinit();
 void store_register_comment(nebstruct_comment_data *);
@@ -50,8 +46,4 @@ void update_timeperiods_cache(time_t);
 void log_timeperiods_cache();
 host *getHostByDesignation(const char *designation);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* store_c_h */
+#endif  // store_c_h

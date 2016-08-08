@@ -88,7 +88,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
 #ifdef CMC
                                      const Notes &downtimes_holder,
                                      const Notes &comments_holder,
-                                     recursive_mutex &holder_lock, Core *core
+                                     std::recursive_mutex &holder_lock, Core *core
 #else
                                      const DowntimesOrComments
                                          &downtimes_holder,

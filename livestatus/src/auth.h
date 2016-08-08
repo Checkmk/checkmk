@@ -37,8 +37,6 @@
 extern int g_service_authorization;
 extern int g_group_authorization;
 
-#ifdef __cplusplus
 bool is_authorized_for(contact *ctc, host *hst, service *svc);
-#endif
 
 #endif  // auth_h

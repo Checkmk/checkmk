@@ -36,22 +36,22 @@
 
 extern char g_logfile_path[];
 pthread_t g_mainthread_id;
-FILE *g_logfile = 0;
+FILE *g_logfile = nullptr;
 
 void open_logfile() {
     g_logfile = fopen(g_logfile_path, "a");
     // needed to determine main thread later
     g_mainthread_id = pthread_self();
-    if (!g_logfile) {
+    if (g_logfile == nullptr) {
         logger(LG_WARN, "Cannot open logfile %s: %s", g_logfile_path,
                strerror(errno));
     }
 }
 
 void close_logfile() {
-    if (g_logfile) {
+    if (g_logfile != nullptr) {
         fclose(g_logfile);
-        g_logfile = 0;
+        g_logfile = nullptr;
     }
 }
 
@@ -60,15 +60,15 @@ void logger(int priority, const char *loginfo, ...) {
     va_start(ap, loginfo);
 
     // Only the main process may use the Nagios log methods
-    if (!g_logfile || g_mainthread_id == pthread_self()) {
+    if ((g_logfile == nullptr) || g_mainthread_id == pthread_self()) {
         char buffer[8192];
         snprintf(buffer, 20, "livestatus: ");
         vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer),
                   loginfo, ap);
         write_to_all_logs(buffer, priority);
-    } else if (g_logfile) {
+    } else if (g_logfile != nullptr) {
         char timestring[64];
-        time_t now_t = time(0);
+        time_t now_t = time(nullptr);
         struct tm now;
         localtime_r(&now_t, &now);
         strftime(timestring, 64, "%F %T ", &now);

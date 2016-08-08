@@ -112,8 +112,8 @@ int g_num_services;
 
 void count_hosts() {
     g_num_hosts = 0;
-    host *h = (host *)host_list;
-    while (h) {
+    host *h = host_list;
+    while (h != nullptr) {
         g_num_hosts++;
         h = h->next;
     }
@@ -121,8 +121,8 @@ void count_hosts() {
 
 void count_services() {
     g_num_services = 0;
-    service *s = (service *)service_list;
-    while (s) {
+    service *s = service_list;
+    while (s != nullptr) {
         g_num_services++;
         s = s->next;
     }
@@ -161,7 +161,7 @@ void livestatus_cleanup_after_fork() {
 
 void *main_thread(void *data __attribute__((__unused__))) {
     g_thread_pid = getpid();
-    while (!g_should_terminate) {
+    while (g_should_terminate == 0) {
         do_statistics();
         if (g_thread_pid != getpid()) {
             logger(LG_INFO, "I'm not the main process but %d!", getpid());
@@ -174,9 +174,9 @@ void *main_thread(void *data __attribute__((__unused__))) {
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(g_unix_socket, &fds);
-        int retval = select(g_unix_socket + 1, &fds, NULL, NULL, &tv);
+        int retval = select(g_unix_socket + 1, &fds, nullptr, nullptr, &tv);
         if (retval > 0 && FD_ISSET(g_unix_socket, &fds)) {
-            int cc = accept(g_unix_socket, NULL, NULL);
+            int cc = accept(g_unix_socket, nullptr, nullptr);
             if (cc > g_max_fd_ever) {
                 g_max_fd_ever = cc;
             }
@@ -196,7 +196,7 @@ void *main_thread(void *data __attribute__((__unused__))) {
 void *client_thread(void *data __attribute__((__unused__))) {
     void *output_buffer = create_outputbuffer();
 
-    while (!g_should_terminate) {
+    while (g_should_terminate == 0) {
         int cc = queue_pop_connection();
         g_num_queued_connections--;
         g_num_active_connections++;
@@ -207,7 +207,7 @@ void *client_thread(void *data __attribute__((__unused__))) {
             void *input_buffer = create_inputbuffer(cc, &g_should_terminate);
             int keepalive = 1;
             unsigned requestnr = 1;
-            while (keepalive) {
+            while (keepalive != 0) {
                 if (g_debug_level >= 2 && requestnr > 1) {
                     logger(LG_INFO, "Handling request %d on same connection",
                            requestnr);
@@ -230,18 +230,18 @@ void start_threads() {
     count_hosts();
     count_services();
 
-    if (!g_thread_running) {
+    if (g_thread_running == 0) {
         /* start thread that listens on socket */
-        pthread_atfork(livestatus_count_fork, NULL,
+        pthread_atfork(livestatus_count_fork, nullptr,
                        livestatus_cleanup_after_fork);
-        pthread_create(&g_mainthread_id, 0, main_thread, (void *)0);
+        pthread_create(&g_mainthread_id, nullptr, main_thread, nullptr);
         if (g_debug_level > 0) {
             logger(LG_INFO, "Starting %d client threads", g_num_clientthreads);
         }
 
         int t;
-        g_clientthread_id =
-            (pthread_t *)malloc(sizeof(pthread_t) * g_num_clientthreads);
+        g_clientthread_id = reinterpret_cast<pthread_t *>(
+            malloc(sizeof(pthread_t) * g_num_clientthreads));
         pthread_attr_t attr;
         pthread_attr_init(&attr);
         size_t defsize;
@@ -260,7 +260,7 @@ void start_threads() {
         }
         for (t = 0; t < g_num_clientthreads; t++) {
             pthread_create(&g_clientthread_id[t], &attr, client_thread,
-                           (void *)0);
+                           nullptr);
         }
 
         g_thread_running = 1;
@@ -269,15 +269,15 @@ void start_threads() {
 }
 
 void terminate_threads() {
-    if (g_thread_running) {
+    if (g_thread_running != 0) {
         g_should_terminate = true;
         logger(LG_INFO, "Waiting for main to terminate...");
-        pthread_join(g_mainthread_id, NULL);
+        pthread_join(g_mainthread_id, nullptr);
         logger(LG_INFO, "Waiting for client threads to terminate...");
         queue_terminate();
         int t;
         for (t = 0; t < g_num_clientthreads; t++) {
-            if (0 != pthread_join(g_clientthread_id[t], NULL)) {
+            if (0 != pthread_join(g_clientthread_id[t], nullptr)) {
                 logger(LG_INFO, "Warning: could not join thread no. %d", t);
             }
         }
@@ -320,8 +320,8 @@ int open_unix_socket() {
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_UNIX;
     strncpy(sockaddr.sun_path, g_socket_path, sizeof(sockaddr.sun_path));
-    if (bind(g_unix_socket, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) <
-        0) {
+    if (bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
+             sizeof(sockaddr)) < 0) {
         logger(LG_ERR, "Unable to bind adress %s to UNIX socket: %s",
                g_socket_path, strerror(errno));
         close(g_unix_socket);
@@ -367,12 +367,14 @@ int broker_host(int event_type __attribute__((__unused__)),
 int broker_check(int event_type, void *data) {
     int result = NEB_OK;
     if (event_type == NEBCALLBACK_SERVICE_CHECK_DATA) {
-        nebstruct_service_check_data *c = (nebstruct_service_check_data *)data;
+        nebstruct_service_check_data *c =
+            reinterpret_cast<nebstruct_service_check_data *>(data);
         if (c->type == NEBTYPE_SERVICECHECK_PROCESSED) {
             g_counters[COUNTER_SERVICE_CHECKS]++;
         }
     } else if (event_type == NEBCALLBACK_HOST_CHECK_DATA) {
-        nebstruct_host_check_data *c = (nebstruct_host_check_data *)data;
+        nebstruct_host_check_data *c =
+            reinterpret_cast<nebstruct_host_check_data *>(data);
         if (c->type == NEBTYPE_HOSTCHECK_PROCESSED) {
             g_counters[COUNTER_HOST_CHECKS]++;
         }
@@ -382,7 +384,8 @@ int broker_check(int event_type, void *data) {
 }
 
 int broker_comment(int event_type __attribute__((__unused__)), void *data) {
-    nebstruct_comment_data *co = (nebstruct_comment_data *)data;
+    nebstruct_comment_data *co =
+        reinterpret_cast<nebstruct_comment_data *>(data);
     store_register_comment(co);
     g_counters[COUNTER_NEB_CALLBACKS]++;
     trigger_notify_all(trigger_comment());
@@ -390,7 +393,8 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
 }
 
 int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
-    nebstruct_downtime_data *dt = (nebstruct_downtime_data *)data;
+    nebstruct_downtime_data *dt =
+        reinterpret_cast<nebstruct_downtime_data *>(data);
     store_register_downtime(dt);
     g_counters[COUNTER_NEB_CALLBACKS]++;
     trigger_notify_all(trigger_downtime());
@@ -407,7 +411,7 @@ int broker_log(int event_type __attribute__((__unused__)),
 
 int broker_command(int event_type __attribute__((__unused__)), void *data) {
     nebstruct_external_command_data *sc =
-        (nebstruct_external_command_data *)data;
+        reinterpret_cast<nebstruct_external_command_data *>(data);
     if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) {
         g_counters[COUNTER_COMMANDS]++;
     }
@@ -434,14 +438,14 @@ const char *get_downtime_comment(char *host_name, char *svc_desc) {
     char *comment;
     int matches = 0;
     scheduled_downtime *dt_list = scheduled_downtime_list;
-    while (dt_list != NULL) {
+    while (dt_list != nullptr) {
         if (dt_list->type == HOST_DOWNTIME) {
             if (strcmp(dt_list->host_name, host_name) == 0) {
                 matches++;
                 comment = dt_list->comment;
             }
         }
-        if (svc_desc != NULL && dt_list->type == SERVICE_DOWNTIME) {
+        if (svc_desc != nullptr && dt_list->type == SERVICE_DOWNTIME) {
             if (strcmp(dt_list->host_name, host_name) == 0 &&
                 strcmp(dt_list->service_description, svc_desc) == 0) {
                 matches++;
@@ -456,21 +460,21 @@ const char *get_downtime_comment(char *host_name, char *svc_desc) {
 
 void livestatus_log_initial_states() {
     // Log DOWNTIME hosts
-    host *h = (host *)host_list;
+    host *h = host_list;
     char buffer[8192];
 
-    while (h) {
+    while (h != nullptr) {
         if (h->scheduled_downtime_depth > 0) {
             snprintf(buffer, sizeof(buffer),
                      "HOST DOWNTIME ALERT: %s;STARTED;%s", h->name,
-                     get_downtime_comment(h->name, NULL));
+                     get_downtime_comment(h->name, nullptr));
             write_to_all_logs(buffer, LG_INFO);
         }
         h = h->next;
     }
     // Log DOWNTIME services
-    service *s = (service *)service_list;
-    while (s) {
+    service *s = service_list;
+    while (s != nullptr) {
         if (s->scheduled_downtime_depth > 0) {
             snprintf(buffer, sizeof(buffer),
                      "SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name,
@@ -487,7 +491,7 @@ void livestatus_log_initial_states() {
 int broker_event(int event_type __attribute__((__unused__)), void *data) {
     g_counters[COUNTER_NEB_CALLBACKS]++;
     struct nebstruct_timed_event_struct *ts =
-        (struct nebstruct_timed_event_struct *)data;
+        reinterpret_cast<struct nebstruct_timed_event_struct *>(data);
     if (ts->event_type == EVENT_LOG_ROTATION) {
         if (g_thread_running == 1) {
             livestatus_log_initial_states();
@@ -504,13 +508,13 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
 
 int broker_process(int event_type __attribute__((__unused__)), void *data) {
     struct nebstruct_process_struct *ps =
-        (struct nebstruct_process_struct *)data;
+        reinterpret_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
         case NEBTYPE_PROCESS_START:
             store_init();
             break;
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
-            update_timeperiods_cache(time(0));
+            update_timeperiods_cache(time(nullptr));
             start_threads();
             break;
         default:
@@ -521,77 +525,77 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
 
 int verify_event_broker_options() {
     int errors = 0;
-    if (!(event_broker_options & BROKER_PROGRAM_STATE)) {
+    if ((event_broker_options & BROKER_PROGRAM_STATE) == 0) {
         logger(LG_CRIT,
                "need BROKER_PROGRAM_STATE (%i) event_broker_option enabled to "
                "work.",
                BROKER_PROGRAM_STATE);
         errors++;
     }
-    if (!(event_broker_options & BROKER_TIMED_EVENTS)) {
+    if ((event_broker_options & BROKER_TIMED_EVENTS) == 0) {
         logger(LG_CRIT,
                "need BROKER_TIMED_EVENTS (%i) event_broker_option enabled to "
                "work.",
                BROKER_TIMED_EVENTS);
         errors++;
     }
-    if (!(event_broker_options & BROKER_SERVICE_CHECKS)) {
+    if ((event_broker_options & BROKER_SERVICE_CHECKS) == 0) {
         logger(LG_CRIT,
                "need BROKER_SERVICE_CHECKS (%i) event_broker_option enabled to "
                "work.",
                BROKER_SERVICE_CHECKS);
         errors++;
     }
-    if (!(event_broker_options & BROKER_HOST_CHECKS)) {
+    if ((event_broker_options & BROKER_HOST_CHECKS) == 0) {
         logger(
             LG_CRIT,
             "need BROKER_HOST_CHECKS (%i) event_broker_option enabled to work.",
             BROKER_HOST_CHECKS);
         errors++;
     }
-    if (!(event_broker_options & BROKER_LOGGED_DATA)) {
+    if ((event_broker_options & BROKER_LOGGED_DATA) == 0) {
         logger(
             LG_CRIT,
             "need BROKER_LOGGED_DATA (%i) event_broker_option enabled to work.",
             BROKER_LOGGED_DATA);
         errors++;
     }
-    if (!(event_broker_options & BROKER_COMMENT_DATA)) {
+    if ((event_broker_options & BROKER_COMMENT_DATA) == 0) {
         logger(LG_CRIT,
                "need BROKER_COMMENT_DATA (%i) event_broker_option enabled to "
                "work.",
                BROKER_COMMENT_DATA);
         errors++;
     }
-    if (!(event_broker_options & BROKER_DOWNTIME_DATA)) {
+    if ((event_broker_options & BROKER_DOWNTIME_DATA) == 0) {
         logger(LG_CRIT,
                "need BROKER_DOWNTIME_DATA (%i) event_broker_option enabled to "
                "work.",
                BROKER_DOWNTIME_DATA);
         errors++;
     }
-    if (!(event_broker_options & BROKER_STATUS_DATA)) {
+    if ((event_broker_options & BROKER_STATUS_DATA) == 0) {
         logger(
             LG_CRIT,
             "need BROKER_STATUS_DATA (%i) event_broker_option enabled to work.",
             BROKER_STATUS_DATA);
         errors++;
     }
-    if (!(event_broker_options & BROKER_ADAPTIVE_DATA)) {
+    if ((event_broker_options & BROKER_ADAPTIVE_DATA) == 0) {
         logger(LG_CRIT,
                "need BROKER_ADAPTIVE_DATA (%i) event_broker_option enabled to "
                "work.",
                BROKER_ADAPTIVE_DATA);
         errors++;
     }
-    if (!(event_broker_options & BROKER_EXTERNALCOMMAND_DATA)) {
+    if ((event_broker_options & BROKER_EXTERNALCOMMAND_DATA) == 0) {
         logger(LG_CRIT,
                "need BROKER_EXTERNALCOMMAND_DATA (%i) event_broker_option "
                "enabled to work.",
                BROKER_EXTERNALCOMMAND_DATA);
         errors++;
     }
-    if (!(event_broker_options & BROKER_STATECHANGE_DATA)) {
+    if ((event_broker_options & BROKER_STATECHANGE_DATA) == 0) {
         logger(LG_CRIT,
                "need BROKER_STATECHANGE_DATA (%i) event_broker_option enabled "
                "to work.",
@@ -599,7 +603,7 @@ int verify_event_broker_options() {
         errors++;
     }
 
-    return errors == 0;
+    return static_cast<int>(errors == 0);
 }
 
 void register_callbacks() {
@@ -663,7 +667,7 @@ void livestatus_parse_arguments(const char *args_orig) {
     strncpy(g_logfile_path, log_file,
             sizeof(g_logfile_path) - 16 /* len of "livestatus.log" */);
     char *slash = strrchr(g_logfile_path, '/');
-    if (!slash) {
+    if (slash == nullptr) {
         strncpy(g_logfile_path, "/tmp/livestatus.log", 20);
     } else {
         strncpy(slash + 1, "livestatus.log", 15);
@@ -674,48 +678,48 @@ void livestatus_parse_arguments(const char *args_orig) {
     /* there is no default PNP path */
     g_pnp_path[0] = 0;
 
-    if (!args_orig) {
+    if (args_orig == nullptr) {
         return;  // no arguments, use default options
     }
 
     char *args = strdup(args_orig);
     char *token;
-    while (0 != (token = next_field(&args))) {
+    while (nullptr != (token = next_field(&args))) {
         /* find = */
         char *part = token;
         char *left = next_token(&part, '=');
         char *right = next_token(&part, 0);
-        if (!right) {
+        if (right == nullptr) {
             strncpy(g_socket_path, left, sizeof(g_socket_path));
         } else {
-            if (!strcmp(left, "debug")) {
+            if (strcmp(left, "debug") == 0) {
                 g_debug_level = atoi(right);
                 logger(LG_INFO, "Setting debug level to %d", g_debug_level);
-            } else if (!strcmp(left, "log_file")) {
+            } else if (strcmp(left, "log_file") == 0) {
                 strncpy(g_logfile_path, right, sizeof(g_logfile_path));
-            } else if (!strcmp(left, "mkeventd_socket_path")) {
+            } else if (strcmp(left, "mkeventd_socket_path") == 0) {
                 strncpy(g_mkeventd_socket_path, right,
                         sizeof(g_mkeventd_socket_path));
-            } else if (!strcmp(left, "max_cached_messages")) {
-                g_max_cached_messages = strtoul(right, 0, 10);
+            } else if (strcmp(left, "max_cached_messages") == 0) {
+                g_max_cached_messages = strtoul(right, nullptr, 10);
                 logger(LG_INFO,
                        "Setting max number of cached log messages to %lu",
                        g_max_cached_messages);
-            } else if (!strcmp(left, "max_lines_per_logfile")) {
-                g_max_lines_per_logfile = strtoul(right, 0, 10);
+            } else if (strcmp(left, "max_lines_per_logfile") == 0) {
+                g_max_lines_per_logfile = strtoul(right, nullptr, 10);
                 logger(LG_INFO, "Setting max number lines per logfile to %lu",
                        g_max_lines_per_logfile);
-            } else if (!strcmp(left, "thread_stack_size")) {
-                g_thread_stack_size = strtoul(right, 0, 10);
+            } else if (strcmp(left, "thread_stack_size") == 0) {
+                g_thread_stack_size = strtoul(right, nullptr, 10);
                 logger(LG_INFO, "Setting size of thread stacks to %lu",
                        g_thread_stack_size);
-            } else if (!strcmp(left, "max_response_size")) {
-                g_max_response_size = strtoul(right, 0, 10);
+            } else if (strcmp(left, "max_response_size") == 0) {
+                g_max_response_size = strtoul(right, nullptr, 10);
                 logger(LG_INFO,
                        "Setting maximum response size to %lu bytes (%.1f MB)",
                        g_max_response_size,
                        g_max_response_size / (1024.0 * 1024.0));
-            } else if (!strcmp(left, "num_client_threads")) {
+            } else if (strcmp(left, "num_client_threads") == 0) {
                 int c = atoi(right);
                 if (c <= 0 || c > 1000) {
                     logger(LG_INFO,
@@ -727,7 +731,7 @@ void livestatus_parse_arguments(const char *args_orig) {
                            c);
                     g_num_clientthreads = c;
                 }
-            } else if (!strcmp(left, "query_timeout")) {
+            } else if (strcmp(left, "query_timeout") == 0) {
                 int c = atoi(right);
                 if (c < 0) {
                     logger(LG_INFO, "Error: query_timeout must be >= 0");
@@ -741,7 +745,7 @@ void livestatus_parse_arguments(const char *args_orig) {
                                c);
                     }
                 }
-            } else if (!strcmp(left, "idle_timeout")) {
+            } else if (strcmp(left, "idle_timeout") == 0) {
                 int c = atoi(right);
                 if (c < 0) {
                     logger(LG_INFO, "Error: idle_timeout must be >= 0");
@@ -753,27 +757,27 @@ void livestatus_parse_arguments(const char *args_orig) {
                         logger(LG_INFO, "Setting idle timeout to %d ms", c);
                     }
                 }
-            } else if (!strcmp(left, "service_authorization")) {
-                if (!strcmp(right, "strict")) {
+            } else if (strcmp(left, "service_authorization") == 0) {
+                if (strcmp(right, "strict") == 0) {
                     g_service_authorization = AUTH_STRICT;
-                } else if (!strcmp(right, "loose")) {
+                } else if (strcmp(right, "loose") == 0) {
                     g_service_authorization = AUTH_LOOSE;
                 } else {
                     logger(LG_INFO,
                            "Invalid service authorization mode. Allowed are "
                            "strict and loose.");
                 }
-            } else if (!strcmp(left, "group_authorization")) {
-                if (!strcmp(right, "strict")) {
+            } else if (strcmp(left, "group_authorization") == 0) {
+                if (strcmp(right, "strict") == 0) {
                     g_group_authorization = AUTH_STRICT;
-                } else if (!strcmp(right, "loose")) {
+                } else if (strcmp(right, "loose") == 0) {
                     g_group_authorization = AUTH_LOOSE;
                 } else {
                     logger(LG_INFO,
                            "Invalid group authorization mode. Allowed are "
                            "strict and loose.");
                 }
-            } else if (!strcmp(left, "pnp_path")) {
+            } else if (strcmp(left, "pnp_path") == 0) {
                 strncpy(g_pnp_path, right, sizeof(pnp_path_storage) - 1);
                 // make sure, that trailing slash is always there
                 if (right[strlen(right) - 1] != '/') {
@@ -781,7 +785,7 @@ void livestatus_parse_arguments(const char *args_orig) {
                             sizeof(pnp_path_storage) - strlen(g_pnp_path) - 1);
                 }
                 check_path("PNP perfdata directory", g_pnp_path);
-            } else if (!strcmp(left, "mk_inventory_path")) {
+            } else if (strcmp(left, "mk_inventory_path") == 0) {
                 strncpy(g_mk_inventory_path, right,
                         sizeof(g_mk_inventory_path) - 1);
                 if (right[strlen(right) - 1] != '/') {
@@ -791,7 +795,7 @@ void livestatus_parse_arguments(const char *args_orig) {
                                 1);  // make sure, that trailing slash is there
                 }
                 check_path("Check_MK Inventory directory", g_mk_inventory_path);
-            } else if (!strcmp(left, "mk_logwatch_path")) {
+            } else if (strcmp(left, "mk_logwatch_path") == 0) {
                 strncpy(g_mk_logwatch_path, right,
                         sizeof(g_mk_logwatch_path) - 1);
                 if (right[strlen(right) - 1] != '/') {
@@ -801,12 +805,12 @@ void livestatus_parse_arguments(const char *args_orig) {
                                 1);  // make sure, that trailing slash is there
                 }
                 check_path("Check_MK logwatch directory", g_mk_logwatch_path);
-            } else if (!strcmp(left, "data_encoding")) {
-                if (!strcmp(right, "utf8")) {
+            } else if (strcmp(left, "data_encoding") == 0) {
+                if (strcmp(right, "utf8") == 0) {
                     g_data_encoding = ENCODING_UTF8;
-                } else if (!strcmp(right, "latin1")) {
+                } else if (strcmp(right, "latin1") == 0) {
                     g_data_encoding = ENCODING_LATIN1;
-                } else if (!strcmp(right, "mixed")) {
+                } else if (strcmp(right, "mixed") == 0) {
                     g_data_encoding = ENCODING_MIXED;
                 } else {
                     logger(LG_INFO,
@@ -814,10 +818,10 @@ void livestatus_parse_arguments(const char *args_orig) {
                            "and mixed.",
                            right);
                 }
-            } else if (!strcmp(left, "livecheck")) {
+            } else if (strcmp(left, "livecheck") == 0) {
                 logger(LG_INFO,
                        "Livecheck has been removed from Livestatus. Sorry.");
-            } else if (!strcmp(left, "disable_statehist_filtering")) {
+            } else if (strcmp(left, "disable_statehist_filtering") == 0) {
                 g_disable_statehist_filtering = atoi(right);
             } else {
                 logger(LG_INFO, "Ignoring invalid option %s=%s", left, right);
@@ -829,7 +833,7 @@ void livestatus_parse_arguments(const char *args_orig) {
         strncpy(g_mkeventd_socket_path, g_socket_path,
                 sizeof(g_mkeventd_socket_path));
         char *slash = strrchr(g_mkeventd_socket_path, '/');
-        char *pos = slash == NULL ? g_mkeventd_socket_path : (slash + 1);
+        char *pos = slash == nullptr ? g_mkeventd_socket_path : (slash + 1);
         strncpy(
             pos, "mkeventd/status",
             &g_mkeventd_socket_path[sizeof(g_mkeventd_socket_path)] - slash);
@@ -843,7 +847,7 @@ void livestatus_parse_arguments(const char *args_orig) {
 
 void omd_advertize() {
     char *omd_site = getenv("OMD_SITE");
-    if (omd_site) {
+    if (omd_site != nullptr) {
         if (g_debug_level > 0) {
             logger(LG_INFO, "Running on OMD site %s. Cool.", omd_site);
         }
@@ -868,11 +872,11 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
 
     omd_advertize();
 
-    if (!open_unix_socket()) {
+    if (open_unix_socket() == 0) {
         return 1;
     }
 
-    if (!verify_event_broker_options()) {
+    if (verify_event_broker_options() == 0) {
         logger(LG_CRIT, "Fatal: bailing out. Please fix event_broker_options.");
         logger(LG_CRIT,
                "Hint: your event_broker_options are set to %d. Try setting it "

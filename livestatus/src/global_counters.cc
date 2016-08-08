@@ -35,7 +35,7 @@ time_t last_statistics_update = 0;
 
 void do_statistics() {
     if (last_statistics_update == 0) {
-        last_statistics_update = time(0);
+        last_statistics_update = time(nullptr);
         for (unsigned i = 0; i < NUM_COUNTERS; i++) {
             g_counters[i] = 0;
             g_last_counter[i] = 0;
@@ -43,13 +43,14 @@ void do_statistics() {
         }
         return;
     }
-    time_t now = time(0);
+    time_t now = time(nullptr);
     time_t delta_time = now - last_statistics_update;
     if (delta_time >= STATISTICS_INTERVAL) {
         last_statistics_update = now;
         for (unsigned i = 0; i < NUM_COUNTERS; i++) {
             auto delta_value = g_counters[i] - g_last_counter[i];
-            double new_rate = (double)delta_value / (double)delta_time;
+            double new_rate = static_cast<double>(delta_value) /
+                              static_cast<double>(delta_time);
             double old_rate = g_counter_rate[i];
             double avg_rate;
             if (old_rate == 0) {

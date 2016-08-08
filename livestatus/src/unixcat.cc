@@ -24,7 +24,6 @@
 
 // IWYU pragma: no_include <bits/socket_type.h>
 #include <errno.h>
-#include <inttypes.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
@@ -38,6 +37,7 @@
 #include <sys/types.h>  // IWYU pragma: keep
 #include <sys/un.h>
 #include <unistd.h>
+#include <cinttypes>
 
 int copy_data(int from, int to);
 void *voidp;
@@ -56,7 +56,7 @@ ssize_t read_with_timeout(int from, char *buffer, int size, int us) {
     struct timeval tv;
     tv.tv_sec = us / 1000000;
     tv.tv_usec = us % 1000000;
-    int retval = select(from + 1, &fds, 0, 0, &tv);
+    int retval = select(from + 1, &fds, nullptr, nullptr, &tv);
     if (retval > 0) {
         return read(from, buffer, size);
     }
@@ -66,12 +66,12 @@ ssize_t read_with_timeout(int from, char *buffer, int size, int us) {
 void *copy_thread(void *info) {
     signal(SIGWINCH, SIG_IGN);
 
-    struct thread_info *ti = (struct thread_info *)info;
+    struct thread_info *ti = reinterpret_cast<struct thread_info *>(info);
     int from = ti->from;
     int to = ti->to;
 
     char read_buffer[65536];
-    while (1) {
+    while (true) {
         ssize_t r =
             read_with_timeout(from, read_buffer, sizeof(read_buffer), 1000000);
         if (r == -1) {
@@ -79,10 +79,10 @@ void *copy_thread(void *info) {
                     strerror(errno));
             break;
         } else if (r == 0) {
-            if (ti->should_shutdown) {
+            if (ti->should_shutdown != 0) {
                 shutdown(to, SHUT_WR);
             }
-            if (ti->terminate_on_read_eof) {
+            if (ti->terminate_on_read_eof != 0) {
                 exit(0);
                 return voidp;
             }
@@ -135,7 +135,8 @@ int main(int argc, char **argv) {
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_UNIX;
     strncpy(sockaddr.sun_path, unixpath, sizeof(sockaddr.sun_path));
-    if (connect(sock, (struct sockaddr *)&sockaddr, sizeof(sockaddr))) {
+    if (connect(sock, reinterpret_cast<struct sockaddr *>(&sockaddr),
+                sizeof(sockaddr)) != 0) {
         fprintf(stderr, "Couldn't connect to UNIX-socket at %s: %s.\n",
                 unixpath, strerror(errno));
         close(sock);
@@ -145,16 +146,16 @@ int main(int argc, char **argv) {
     struct thread_info toleft_info = {sock, 1, 0, 1};
     struct thread_info toright_info = {0, sock, 1, 0};
     pthread_t toright_thread, toleft_thread;
-    if (pthread_create(&toright_thread, 0, copy_thread,
-                       (void *)&toright_info) != 0 ||
-        pthread_create(&toleft_thread, 0, copy_thread, (void *)&toleft_info) !=
+    if (pthread_create(&toright_thread, nullptr, copy_thread, &toright_info) !=
+            0 ||
+        pthread_create(&toleft_thread, nullptr, copy_thread, &toleft_info) !=
             0) {
         fprintf(stderr, "Couldn't create threads: %s.\n", strerror(errno));
         close(sock);
         exit(5);
     }
-    if (pthread_join(toleft_thread, NULL) != 0 ||
-        pthread_join(toright_thread, NULL) != 0) {
+    if (pthread_join(toleft_thread, nullptr) != 0 ||
+        pthread_join(toright_thread, nullptr) != 0) {
         fprintf(stderr, "Couldn't join threads: %s.\n", strerror(errno));
         close(sock);
         exit(6);

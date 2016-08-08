@@ -144,7 +144,7 @@ livestatus_so_SOURCES = \
         WorldNagios.cc \
         auth.cc \
         global_counters.cc \
-        logger.c \
+        logger.cc \
         mk_inventory.cc \
         mk_logwatch.cc \
         module.cc \

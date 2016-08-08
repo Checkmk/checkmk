@@ -88,7 +88,7 @@ char g_logfile_path[4096];
 char g_mkeventd_socket_path[4096];
 int g_debug_level = 0;
 int g_should_terminate = false;
-pthread_t g_mainthread_id;
+extern pthread_t g_mainthread_id;
 pthread_t *g_clientthread_id;
 unsigned long g_max_cached_messages = 500000;
 unsigned long g_max_lines_per_logfile =

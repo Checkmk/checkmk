@@ -1,7 +1,6 @@
 #!/bin/bash
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-C_CXX_FLAGS="-g -O3 -Wall -Wextra"
 
 set -e
 
@@ -15,7 +14,7 @@ done
 # See AC_CONFIG_HEADER and AC_CONFIG_FILES in configure.ac
 for i in config.h Makefile src/Makefile; do
     if test ! -f $i; then
-	./configure CFLAGS="$C_CXX_FLAGS" CXXFLAGS="$C_CXX_FLAGS"
+	./configure CXXFLAGS="-g -O3 -Wall -Wextra"
 	break
     fi
 done

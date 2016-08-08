@@ -24,8 +24,9 @@
 
 bin_PROGRAMS = unixcat
 
-unixcat_SOURCES = unixcat.c
+unixcat_SOURCES = unixcat.cc
 unixcat_LDADD = -lpthread
+unixcat_LDFLAGS = -static-libstdc++
 
 pkglib_LIBRARIES = livestatus.so
 

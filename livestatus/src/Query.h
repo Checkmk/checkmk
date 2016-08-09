@@ -39,7 +39,7 @@
 #include "RendererBrokenCSV.h"
 #include "VariadicFilter.h"
 #include "data_encoding.h"
-#include "nagios.h"         // IWYU pragma: keep
+#include "nagios.h"  // IWYU pragma: keep
 #include "opids.h"
 class Aggregator;
 class Column;

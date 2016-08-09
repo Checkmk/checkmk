@@ -112,19 +112,15 @@ int g_num_services;
 
 void count_hosts() {
     g_num_hosts = 0;
-    host *h = host_list;
-    while (h != nullptr) {
+    for (host *h = host_list; h != nullptr; h = h->next) {
         g_num_hosts++;
-        h = h->next;
     }
 }
 
 void count_services() {
     g_num_services = 0;
-    service *s = service_list;
-    while (s != nullptr) {
+    for (service *s = service_list; s != nullptr; s = s->next) {
         g_num_services++;
-        s = s->next;
     }
 }
 
@@ -437,8 +433,8 @@ int broker_program(int event_type __attribute__((__unused__)),
 const char *get_downtime_comment(char *host_name, char *svc_desc) {
     char *comment;
     int matches = 0;
-    scheduled_downtime *dt_list = scheduled_downtime_list;
-    while (dt_list != nullptr) {
+    for (scheduled_downtime *dt_list = scheduled_downtime_list;
+         dt_list != nullptr; dt_list = dt_list->next) {
         if (dt_list->type == HOST_DOWNTIME) {
             if (strcmp(dt_list->host_name, host_name) == 0) {
                 matches++;
@@ -452,7 +448,6 @@ const char *get_downtime_comment(char *host_name, char *svc_desc) {
                 comment = dt_list->comment;
             }
         }
-        dt_list = dt_list->next;
     }
     return matches == 0 ? "No comment"
                         : matches > 1 ? "Multiple Downtime Comments" : comment;
@@ -460,29 +455,25 @@ const char *get_downtime_comment(char *host_name, char *svc_desc) {
 
 void livestatus_log_initial_states() {
     // Log DOWNTIME hosts
-    host *h = host_list;
-    char buffer[8192];
-
-    while (h != nullptr) {
+    for (host *h = host_list; h != nullptr; h = h->next) {
         if (h->scheduled_downtime_depth > 0) {
+            char buffer[8192];
             snprintf(buffer, sizeof(buffer),
                      "HOST DOWNTIME ALERT: %s;STARTED;%s", h->name,
                      get_downtime_comment(h->name, nullptr));
             write_to_all_logs(buffer, LG_INFO);
         }
-        h = h->next;
     }
     // Log DOWNTIME services
-    service *s = service_list;
-    while (s != nullptr) {
+    for (service *s = service_list; s != nullptr; s = s->next) {
         if (s->scheduled_downtime_depth > 0) {
+            char buffer[8192];
             snprintf(buffer, sizeof(buffer),
                      "SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name,
                      s->description,
                      get_downtime_comment(s->host_name, s->description));
             write_to_all_logs(buffer, LG_INFO);
         }
-        s = s->next;
     }
     // Log TIMERPERIODS
     log_timeperiods_cache();
@@ -683,8 +674,7 @@ void livestatus_parse_arguments(const char *args_orig) {
     }
 
     char *args = strdup(args_orig);
-    char *token;
-    while (nullptr != (token = next_field(&args))) {
+    while (char *token = next_field(&args)) {
         /* find = */
         char *part = token;
         char *left = next_token(&part, '=');

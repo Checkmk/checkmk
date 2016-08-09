@@ -119,7 +119,7 @@ void OutputBuffer::flush(int fd, int *termination_flag) {
 
 void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
                              size_t bytes_to_write) {
-    while ((*termination_flag == 0) && bytes_to_write > 0) {
+    while (*termination_flag == 0 && bytes_to_write > 0) {
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(fd, &fds);

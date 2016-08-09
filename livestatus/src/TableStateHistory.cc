@@ -74,11 +74,10 @@ int g_disable_statehist_filtering = 0;
 
 #ifndef CMC
 const char *getCustomVariable(customvariablesmember *cvm, const char *name) {
-    while (cvm != nullptr) {
+    for (; cvm != nullptr; cvm = cvm->next) {
         if (strcmp(cvm->variable_name, name) == 0) {
             return cvm->variable_value;
         }
-        cvm = cvm->next;
     }
     return "";
 }

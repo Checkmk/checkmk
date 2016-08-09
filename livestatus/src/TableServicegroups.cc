@@ -145,8 +145,7 @@ bool TableServicegroups::isAuthorized(contact *ctc, void *data) {
     }
 
     servicegroup *sg = reinterpret_cast<servicegroup *>(data);
-    servicesmember *mem = sg->members;
-    while (mem != nullptr) {
+    for (servicesmember *mem = sg->members; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
         bool is = is_authorized_for(ctc, svc->host_ptr, svc);
         if (is && g_group_authorization == AUTH_LOOSE) {
@@ -155,7 +154,6 @@ bool TableServicegroups::isAuthorized(contact *ctc, void *data) {
         if (!is && g_group_authorization == AUTH_STRICT) {
             return false;
         }
-        mem = mem->next;
     }
     return true;
 }

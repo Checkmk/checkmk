@@ -309,7 +309,7 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
     }
 
     int number = atoi(value);
-    if ((isdigit(value[0]) == 0) || number <= 0) {
+    if (isdigit(value[0]) == 0 || number <= 0) {
         invalidHeader("Invalid value for " + kind +
                       " : need non-zero integer number");
         return;
@@ -317,7 +317,7 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
 
     // The last 'number' StatsColumns must be of type StatsOperation::count
     auto variadic = VariadicFilter::make(andor);
-    while (number > 0) {
+    for (; number > 0; --number) {
         if (_stats_columns.empty()) {
             invalidHeader("Invalid count for " + kind +
                           ": too few Stats: headers available");
@@ -333,7 +333,6 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
         variadic->addSubfilter(col->stealFilter());
         delete col;
         _stats_columns.pop_back();
-        number--;
     }
     // TODO(sp) Use unique_ptr in StatsColumn.
     _stats_columns.push_back(
@@ -497,8 +496,7 @@ void Query::parseStatsGroupLine(char *line) {
 }
 
 void Query::parseColumnsLine(char *line) {
-    char *column_name;
-    while (nullptr != (column_name = next_field(&line))) {
+    while (char *column_name = next_field(&line)) {
         Column *column = _table->column(column_name);
         if (column != nullptr) {
             _columns.push_back(column);

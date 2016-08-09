@@ -67,7 +67,7 @@ LogEntry::LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
 
     // pointer to options (everything after ':')
     _options = _complete;
-    while ((*_options != 0) && *_options != ':') {
+    while (*_options != 0 && *_options != ':') {
         _options++;
     }
     if (*_options != 0)  // line contains colon

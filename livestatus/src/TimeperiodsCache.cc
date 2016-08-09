@@ -48,8 +48,7 @@ void TimeperiodsCache::logCurrentTimeperiods() {
     // are known (yet!). This might be the case when a timed
     // event broker message arrives *before* the start of the
     // event loop.
-    timeperiod *tp = timeperiod_list;
-    while (tp != nullptr) {
+    for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
         bool is_in = 0 == check_time_against_period(now, tp);
         // check previous state and log transition if state has changed
         auto it = _cache.find(tp);
@@ -58,7 +57,6 @@ void TimeperiodsCache::logCurrentTimeperiods() {
             _cache.insert(make_pair(tp, is_in));
         }
         logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
-        tp = tp->next;
     }
 }
 
@@ -78,9 +76,8 @@ void TimeperiodsCache::update(time_t now) {
     // are known (yet!). This might be the case when a timed
     // event broker message arrives *before* the start of the
     // event loop.
-    timeperiod *tp = timeperiod_list;
     int num_periods = 0;
-    while (tp != nullptr) {
+    for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
         bool is_in = 0 == check_time_against_period(now, tp);
 
         // check previous state and log transition if state has changed
@@ -93,7 +90,6 @@ void TimeperiodsCache::update(time_t now) {
             it->second = is_in;
         }
 
-        tp = tp->next;
         num_periods++;
     }
     if (num_periods > 0) {
@@ -105,12 +101,10 @@ void TimeperiodsCache::update(time_t now) {
 }
 
 bool TimeperiodsCache::inTimeperiod(const char *tpname) {
-    timeperiod *tp = timeperiod_list;
-    while (tp != nullptr) {
+    for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
         if (strcmp(tpname, tp->name) == 0) {
             return inTimeperiod(tp);
         }
-        tp = tp->next;
     }
     return true;  // unknown timeperiod is assumed to be 7X24
 }

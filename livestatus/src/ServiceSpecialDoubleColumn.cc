@@ -50,8 +50,8 @@ double ServiceSpecialDoubleColumn::getValue(void *data) {
                 strncmp(svc->check_command_ptr->name, "check_mk-", 9) == 0;
             if (is_cmk_passive) {
                 host *host = svc->host_ptr;
-                servicesmember *svc_member = host->services;
-                while (svc_member != nullptr) {
+                for (servicesmember *svc_member = host->services;
+                     svc_member != nullptr; svc_member = svc_member->next) {
                     service *tmp_svc = svc_member->service_ptr;
                     if (strncmp(tmp_svc->check_command_ptr->name, "check-mk",
                                 9) == 0) {
@@ -61,7 +61,6 @@ double ServiceSpecialDoubleColumn::getValue(void *data) {
                                      : tmp_svc->check_interval) *
                                 interval_length);
                     }
-                    svc_member = svc_member->next;
                 }
                 return 1;  // Shouldnt happen! We always expect a check-mk
                            // service

@@ -30,13 +30,12 @@ extern TimeperiodsCache *g_timeperiods_cache;
 // Get the name of a timeperiod from a custom variable and lookup the current
 // state of that period
 int32_t CustomTimeperiodColumn::getValue(void *row, contact * /* auth_user */) {
-    customvariablesmember *cvm = getCVM(row);
-    while (cvm != nullptr) {
+    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
+         cvm = cvm->next) {
         if (cvm->variable_name == _varname) {
             return static_cast<int32_t>(
                 g_timeperiods_cache->inTimeperiod(cvm->variable_value));
         }
-        cvm = cvm->next;
     }
     return 1;  // assume 7X24
 }

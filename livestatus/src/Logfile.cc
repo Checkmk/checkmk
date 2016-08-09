@@ -226,21 +226,17 @@ logfile_entries_t *Logfile::getEntriesFromQuery(Query * /*unused*/,
 
 bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since,
                           time_t until, unsigned logclasses) {
-    updateReferences();  // Make sure existing references to objects point to
-                         // correct world
-    load(logcache, since, until,
-         logclasses);  // make sure all messages are present
+    // Make sure existing references to objects point to correct world
+    updateReferences();
+    // make sure all messages are present
+    load(logcache, since, until, logclasses);
     uint64_t sincekey = makeKey(since, 0);
-    auto it = _entries.lower_bound(sincekey);
-    while (it != _entries.end()) {
+    for (auto it = _entries.lower_bound(sincekey); it != _entries.end(); ++it) {
         LogEntry *entry = it->second;
-        if (entry->_time >= until) {
-            return false;  // end found
-        }
-        if (!query->processDataset(entry)) {
+        // end found or limit exceeded?
+        if (entry->_time >= until || !query->processDataset(entry)) {
             return false;  // limit exceeded
         }
-        ++it;
     }
     return true;
 }

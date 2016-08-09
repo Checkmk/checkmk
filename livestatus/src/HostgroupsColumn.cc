@@ -63,14 +63,12 @@ unique_ptr<ListColumn::Contains> HostgroupsColumn::makeContains(
 
             // row is already shifted (_indirect_offset is taken into account),
             // but _offset needs still to be accounted for
-            objectlist *list = *reinterpret_cast<objectlist **>(
-                reinterpret_cast<char *>(row) + _offset);
-
-            while (list != nullptr) {
+            for (objectlist *list = *reinterpret_cast<objectlist **>(
+                     reinterpret_cast<char *>(row) + _offset);
+                 list != nullptr; list = list->next) {
                 if (list->object_ptr == _element) {
                     return true;
                 }
-                list = list->next;
             }
             return false;
         }

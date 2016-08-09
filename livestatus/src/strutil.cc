@@ -54,7 +54,7 @@ char *next_field(char **c) {
     }
 
     char *end = begin;  // copy pointer, search end of field
-    while ((*end != 0) && (isspace(*end) == 0)) {
+    while (*end != 0 && isspace(*end) == 0) {
         end++;  // search for \0 or white space
     }
     if (*end != 0) {  // string continues -> terminate field with '\0'
@@ -75,7 +75,7 @@ char *next_token(char **c, char delim) {
     }
 
     char *end = begin;
-    while ((*end != 0) && *end != delim) {
+    while (*end != 0 && *end != delim) {
         end++;
     }
     if (*end != 0) {

@@ -42,11 +42,9 @@ hostsmember *HostlistColumn::getMembers(void *data) {
 
 void HostlistColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     ListRenderer l(r);
-    hostsmember *mem = getMembers(row);
-
-    while (mem != nullptr) {
+    for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
-        if ((auth_user == nullptr) ||
+        if (auth_user == nullptr ||
             is_authorized_for(auth_user, hst, nullptr)) {
             if (!_show_state) {
                 l.output(string(hst->name));
@@ -57,7 +55,6 @@ void HostlistColumn::output(void *row, RowRenderer &r, contact *auth_user) {
                 s.output(hst->has_been_checked);
             }
         }
-        mem = mem->next;
     }
 }
 

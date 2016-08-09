@@ -55,15 +55,13 @@ unique_ptr<ListColumn::Contains> ContactgroupsColumn::makeContains(
 
             // row is already shifted (_indirect_offset is taken into account),
             // but _offset needs still to be accounted for
-            contactgroupsmember *cgm =
-                *reinterpret_cast<contactgroupsmember **>(
-                    reinterpret_cast<char *>(row) + _offset);
-
-            while (cgm != nullptr) {
+            for (contactgroupsmember *cgm =
+                     *reinterpret_cast<contactgroupsmember **>(
+                         reinterpret_cast<char *>(row) + _offset);
+                 cgm != nullptr; cgm = cgm->next) {
                 if (cgm->group_ptr == _element) {
                     return true;
                 }
-                cgm = cgm->next;
             }
             return false;
         }

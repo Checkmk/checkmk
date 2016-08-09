@@ -56,9 +56,9 @@ int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem,
                                          contact *auth_user) {
     int32_t result = 0;
 
-    while (mem != nullptr) {
+    for (; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
-        if ((auth_user == nullptr) ||
+        if (auth_user == nullptr ||
             is_authorized_for(auth_user, svc->host_ptr, svc)) {
             int lt = logictype;
             int state;
@@ -93,7 +93,6 @@ int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem,
                     break;
             }
         }
-        mem = mem->next;
     }
     return result;
 }

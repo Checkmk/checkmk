@@ -43,8 +43,7 @@ void PerfdataAggregator::consume(void *row, contact * /* auth_user */,
     perf_data_vec.push_back('\0');
     char *scan = &perf_data_vec[0];
 
-    char *entry;
-    while (nullptr != (entry = next_field(&scan))) {
+    while (char *entry = next_field(&scan)) {
         char *start_of_varname = entry;
         char *place_of_equal = entry;
         while ((*place_of_equal != 0) && *place_of_equal != '=') {

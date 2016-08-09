@@ -139,12 +139,10 @@ void TableContacts::addColumns(Table *table, const string &prefix,
 }
 
 void TableContacts::answerQuery(Query *query) {
-    contact *ct = contact_list;
-    while (ct != nullptr) {
+    for (contact *ct = contact_list; ct != nullptr; ct = ct->next) {
         if (!query->processDataset(ct)) {
             break;
         }
-        ct = ct->next;
     }
 }
 

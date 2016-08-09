@@ -50,12 +50,10 @@ string TableContactgroups::name() const { return "contactgroups"; }
 string TableContactgroups::namePrefix() const { return "contactgroup_"; }
 
 void TableContactgroups::answerQuery(Query *query) {
-    contactgroup *cg = contactgroup_list;
-    while (cg != nullptr) {
+    for (contactgroup *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
         if (!query->processDataset(cg)) {
             break;
         }
-        cg = cg->next;
     }
 }
 

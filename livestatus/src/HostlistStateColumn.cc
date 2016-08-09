@@ -52,13 +52,10 @@ hostsmember *HostlistStateColumn::getMembers(void *data) {
 }
 
 int32_t HostlistStateColumn::getValue(void *row, contact *auth_user) {
-    hostsmember *mem = getMembers(row);
     int32_t result = 0;
-    int state;
-
-    while (mem != nullptr) {
+    for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
-        if ((auth_user == nullptr) ||
+        if (auth_user == nullptr ||
             is_authorized_for(auth_user, hst, nullptr)) {
             switch (_logictype) {
                 case HLSC_NUM_SVC_PENDING:
@@ -71,19 +68,20 @@ int32_t HostlistStateColumn::getValue(void *row, contact *auth_user) {
                         _logictype, hst->services, auth_user);
                     break;
 
-                case HLSC_WORST_SVC_STATE:
-                    state = ServicelistStateColumn::getValue(
+                case HLSC_WORST_SVC_STATE: {
+                    int state = ServicelistStateColumn::getValue(
                         _logictype, hst->services, auth_user);
                     if (ServicelistStateColumn::svcStateIsWorse(state,
                                                                 result)) {
                         result = state;
                     }
                     break;
+                }
 
                 case HLSC_NUM_HST_UP:
                 case HLSC_NUM_HST_DOWN:
                 case HLSC_NUM_HST_UNREACH:
-                    if ((hst->has_been_checked != 0) &&
+                    if (hst->has_been_checked != 0 &&
                         hst->current_state == _logictype - HLSC_NUM_HST_UP) {
                         result++;
                     }
@@ -106,7 +104,6 @@ int32_t HostlistStateColumn::getValue(void *row, contact *auth_user) {
                     break;
             }
         }
-        mem = mem->next;
     }
     return result;
 }

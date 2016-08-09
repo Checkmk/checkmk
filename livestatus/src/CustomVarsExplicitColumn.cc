@@ -27,12 +27,11 @@
 using std::string;
 
 string CustomVarsExplicitColumn::getValue(void *data) const {
-    customvariablesmember *cvm = getCVM(data);
-    while (cvm != nullptr) {
+    for (customvariablesmember *cvm = getCVM(data); cvm != nullptr;
+         cvm = cvm->next) {
         if (cvm->variable_name == _varname) {
             return cvm->variable_value;
         }
-        cvm = cvm->next;
     }
     return "";
 }

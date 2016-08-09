@@ -46,9 +46,8 @@ servicesmember *ServicelistColumn::getMembers(void *data) {
 
 void ServicelistColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     ListRenderer l(r);
-    servicesmember *mem = getMembers(row);
-
-    while (mem != nullptr) {
+    for (servicesmember *mem = getMembers(row); mem != nullptr;
+         mem = mem->next) {
         service *svc = mem->service_ptr;
         if ((auth_user == nullptr) ||
             is_authorized_for(auth_user, svc->host_ptr, svc)) {
@@ -80,7 +79,6 @@ void ServicelistColumn::output(void *row, RowRenderer &r, contact *auth_user) {
                 }
             }
         }
-        mem = mem->next;
     }
 }
 
@@ -90,13 +88,12 @@ Filter *ServicelistColumn::createFilter(RelationalOperator relOp,
 }
 
 int ServicelistColumn::inCustomTimeperiod(service *svc, const char *varname) {
-    customvariablesmember *cvm = svc->custom_variables;
-    while (cvm != nullptr) {
-        if ((strcmp(cvm->variable_name, varname)) == 0) {
+    for (customvariablesmember *cvm = svc->custom_variables; cvm != nullptr;
+         cvm = cvm->next) {
+        if (strcmp(cvm->variable_name, varname) == 0) {
             return static_cast<int>(
                 g_timeperiods_cache->inTimeperiod(cvm->variable_value));
         }
-        cvm = cvm->next;
     }
     return 1;  // assume 7X24
 }

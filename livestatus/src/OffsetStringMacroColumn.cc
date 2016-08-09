@@ -161,11 +161,10 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
 
 const char *OffsetStringMacroColumn::expandCustomVariables(
     const char *varname, customvariablesmember *custvars) {
-    while (custvars != nullptr) {
+    for (; custvars != nullptr; custvars = custvars->next) {
         if (strcasecmp(varname, custvars->variable_name) == 0) {
             return custvars->variable_value;
         }
-        custvars = custvars->next;
     }
     return nullptr;
 }

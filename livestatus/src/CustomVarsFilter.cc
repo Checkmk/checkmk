@@ -46,11 +46,11 @@ CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column,
     // The variable name is part of the value and separated with spaces
     const char *cstr = _ref_text.c_str();
     const char *search_space = cstr;
-    while ((*search_space != 0) && (isspace(*search_space) == 0)) {
+    while (*search_space != 0 && isspace(*search_space) == 0) {
         search_space++;
     }
     _ref_varname = string(cstr, search_space - cstr);
-    while ((*search_space != 0) && (isspace(*search_space) != 0)) {
+    while (*search_space != 0 && isspace(*search_space) != 0) {
         search_space++;
     }
     _ref_string = search_space;

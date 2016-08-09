@@ -195,8 +195,7 @@ bool TableHostgroups::isAuthorized(contact *ctc, void *data) {
     }
 
     hostgroup *hg = reinterpret_cast<hostgroup *>(data);
-    hostsmember *mem = hg->members;
-    while (mem != nullptr) {
+    for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
         bool is = is_authorized_for(ctc, hst, nullptr);
         if (is && g_group_authorization == AUTH_LOOSE) {
@@ -205,7 +204,6 @@ bool TableHostgroups::isAuthorized(contact *ctc, void *data) {
         if (!is && g_group_authorization == AUTH_STRICT) {
             return false;
         }
-        mem = mem->next;
     }
     return true;
 }

@@ -50,11 +50,9 @@ string TableTimeperiods::name() const { return "timeperiods"; }
 string TableTimeperiods::namePrefix() const { return "timeperiod_"; }
 
 void TableTimeperiods::answerQuery(Query *query) {
-    timeperiod *tp = timeperiod_list;
-    while (tp != nullptr) {
+    for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
         if (!query->processDataset(tp)) {
             break;
         }
-        tp = tp->next;
     }
 }

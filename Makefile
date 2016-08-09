@@ -164,9 +164,6 @@ mk-livestatus: $(addprefix livestatus/,$(LIVESTATUS_AUTO))
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
 	cd livestatus ; tar cf - $(LIVESTATUS_SOURCES) | tar xf - -C ../mk-livestatus-$(VERSION)
-	if [ -f livestatus/compile ]; then \
-	    cp -p livestatus/compile mk-livestatus-$(VERSION)/ ; \
-	fi
 	mkdir -p mk-livestatus-$(VERSION)/nagios
 	cp livestatus/nagios/*.h mk-livestatus-$(VERSION)/nagios/
 	mkdir -p mk-livestatus-$(VERSION)/nagios4

@@ -33,6 +33,9 @@ AM_INIT_AUTOMAKE([-Wall foreign])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
+AC_REQUIRE_AUX_FILE([compile])
+AC_REQUIRE_AUX_FILE([config.guess])
+AC_REQUIRE_AUX_FILE([config.sub])
 
 # Checks for programs.
 AC_PROG_CC([gcc-6 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang])

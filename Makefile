@@ -32,7 +32,7 @@ LIBDIR             := $(PREFIX)/lib/$(NAME)
 DISTNAME           := $(NAME)-$(VERSION)
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12
-C_CXX_FLAGS        := -g -O3 -Wall -Wextra
+CXX_FLAGS          := -g -O3 -Wall -Wextra
 
 CLANG_VERSION      := 3.9
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
@@ -44,11 +44,12 @@ IWYU_TOOL          := iwyu_tool.py
 BEAR               := bear
 
 # File to pack into livestatus-$(VERSION).tar.gz
-LIVESTATUS_SOURCES := configure aclocal.m4 config.guess config.h.in config.sub \
-                      configure.ac ltmain.sh Makefile.{in,am} missing ar-lib \
-                      nagios/README nagios/*.h nagios4/README m4/* nagios4/*.h \
-                      src/*.{h,cc} src/Makefile.{in,am} \
-                      depcomp install-sh api/python/{*.py,README} api/perl/*
+LIVESTATUS_AUTO    := aclocal.m4 ar-lib compile config.h.in configure depcomp \
+                      install-sh Makefile.in missing src/Makefile.in
+LIVESTATUS_SOURCES := $(LIVESTATUS_AUTO) config.guess config.sub configure.ac \
+                      ltmain.sh Makefile.am nagios/README nagios/*.h \
+                      nagios4/README m4/* nagios4/*.h src/*.{h,cc} \
+                      src/Makefile.am api/python/{*.py,README} api/perl/*
 
 # Files that are checked for trailing spaces
 HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* \
@@ -116,9 +117,6 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs plugins
 
 	tar cf $(DISTNAME)/livestatus.tar $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
-	if [ -f livestatus/compile ]; then \
-	    tar rf $(DISTNAME)/livestatus.tar $(TAROPTS) -C livestatus compile ; \
-	fi
 	gzip $(DISTNAME)/livestatus.tar
 
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
@@ -162,14 +160,7 @@ dist: mk-livestatus
 packages:
 	$(MAKE) -C agents packages
 
-mk-livestatus:
-	cd livestatus ; \
-	for i in aclocal.m4 ar-lib compile config.h.in configure depcomp install-sh Makefile.in missing; do \
-	    if test ! -f $$i; then \
-		autoreconf --install --include=m4; \
-		break ; \
-	    fi \
-	done
+mk-livestatus: $(addprefix livestatus/,$(LIVESTATUS_AUTO))
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
 	cd livestatus ; tar cf - $(LIVESTATUS_SOURCES) | tar xf - -C ../mk-livestatus-$(VERSION)
@@ -265,7 +256,8 @@ clean:
 	rm -rf api clang-analyzer compile_commands.json dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
-	       precompiled cache web/htdocs/js/*_min.js
+	       precompiled cache web/htdocs/js/*_min.js \
+               $(addprefix livestatus/,$(LIVESTATUS_AUTO))
 	find -name "*~" | xargs rm -f
 
 mrproper:
@@ -274,11 +266,11 @@ mrproper:
 setup:
 	sudo apt-get install figlet pngcrush slimit bear dietlibc-dev
 
-livestatus/config.h.in: livestatus/configure.ac livestatus/m4/*
+$(addprefix %/,$(LIVESTATUS_AUTO)): $(addprefix %/,configure.ac m4/* Makefile.am src/Makefile.am)
 	cd livestatus && autoreconf --install --include=m4
 
 livestatus/config.h: livestatus/config.h.in
-	cd livestatus && ./configure CFLAGS="$(C_CXX_FLAGS)" CXXFLAGS="$(C_CXX_FLAGS)"
+	cd livestatus && ./configure CXXFLAGS="$(CXX_FLAGS)"
 
 GTAGS: livestatus/config.h
 	$(MAKE) -C livestatus distclean-tags

@@ -3,22 +3,7 @@ SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 
 set -e
-
-for i in aclocal.m4 ar-lib compile config.h.in configure depcomp install-sh Makefile.in missing; do
-    if test ! -f $i; then
-	autoreconf --install --include=m4
-	break
-    fi
-done
-
-# See AC_CONFIG_HEADER and AC_CONFIG_FILES in configure.ac
-for i in config.h Makefile src/Makefile; do
-    if test ! -f $i; then
-	./configure CXXFLAGS="-g -O3 -Wall -Wextra"
-	break
-    fi
-done
-
+make -C .. livestatus/config.h
 make -j8
 sudo install src/livestatus.o /omd/sites/$SITE/lib/mk-livestatus/livestatus.o
 echo "Restarting site $SITE"

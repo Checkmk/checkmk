@@ -1,4 +1,7 @@
 1.2.8p10:
+    Checks & Agents:
+    * 3772 FIX: ipmi_sensors: fixed missing states
+
     WATO:
     * 3559 WATO API: now able to bake agents with the new action "bake_agents"
 

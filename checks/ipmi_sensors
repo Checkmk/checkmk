@@ -76,7 +76,6 @@
 # 875 Power_Supply_PS_Status NA_NA_(NA/NA) [Presence_detected]
 
 
-
 def inventory_freeipmi(info):
     return [ (line[1], "", None) for line in info
              if not ( line[-1] in ['[Unknown]', '[NA]'] or
@@ -131,14 +130,15 @@ def check_freeipmi(item, _no_params, info):
                         perfdata = []
 
                     infotext = "Current value %.1f%s%s" % (current, unit, levelstext)
-            if status == "OK" \
-                    or status == "Entity_Present" \
-                    or status.endswith("is_connected") \
-                    or status.endswith("Presence_detected") \
-                    or status == "battery_presence_detected" \
-                    or status == "Drive_Presence" \
-                    or status.startswith("Fully_Redundant"):
+
+            if status in [ "OK", "Entity_Present", "battery_presence_detected",
+                           "Drive_Presence", "transition_to_Running", "Device_Enabled" ] or \
+               status.startswith("Fully_Redundant") or \
+               status.endswith("is_connected") or \
+               status.endswith("Presence_detected") or \
+               status.endswith("Device_Present"):
                 return (0, infotext, perfdata)
+
             else:
                 return (2, infotext, perfdata)
 

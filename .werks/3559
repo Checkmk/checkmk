@@ -1,0 +1,10 @@
+Title: WATO API: now able to bake agents with the new action "bake_agents"
+Level: 1
+Component: wato
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.8p10
+Date: 1470731511
+
+

@@ -1,4 +1,7 @@
 1.2.8p10:
+    WATO:
+    * 3559 WATO API: now able to bake agents with the new action "bake_agents"
+
 
 1.2.8p9:
     Checks & Agents:

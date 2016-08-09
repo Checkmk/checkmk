@@ -1,4 +1,5 @@
 aclocal.m4
+ar-lib
 autom4te.cache/
 compile
 config.h
@@ -9,13 +10,16 @@ configure
 .cproject
 cscope.files
 Debug
+depcomp
 GPATH
 GRTAGS
 GSYMS
 GTAGS
 ID
+install-sh
 Makefile
 Makefile.in
+missing
 .project
 stamp-h1
 tags

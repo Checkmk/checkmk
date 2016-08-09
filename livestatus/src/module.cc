@@ -99,7 +99,7 @@ int g_thread_running = 0;
 int g_thread_pid = 0;
 int g_service_authorization = AUTH_LOOSE;
 int g_group_authorization = AUTH_STRICT;
-int g_data_encoding = ENCODING_UTF8;
+Encoding g_data_encoding = Encoding::utf8;
 
 /* simple statistics data for TableStatus */
 extern host *host_list;
@@ -797,11 +797,11 @@ void livestatus_parse_arguments(const char *args_orig) {
                 check_path("Check_MK logwatch directory", g_mk_logwatch_path);
             } else if (strcmp(left, "data_encoding") == 0) {
                 if (strcmp(right, "utf8") == 0) {
-                    g_data_encoding = ENCODING_UTF8;
+                    g_data_encoding = Encoding::utf8;
                 } else if (strcmp(right, "latin1") == 0) {
-                    g_data_encoding = ENCODING_LATIN1;
+                    g_data_encoding = Encoding::latin1;
                 } else if (strcmp(right, "mixed") == 0) {
-                    g_data_encoding = ENCODING_MIXED;
+                    g_data_encoding = Encoding::mixed;
                 } else {
                     logger(LG_INFO,
                            "Invalid data_encoding %s. Allowed are utf8, latin1 "

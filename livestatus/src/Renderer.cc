@@ -48,7 +48,7 @@ using std::vector;
 Renderer::Renderer(OutputBuffer *output,
                    OutputBuffer::ResponseHeader response_header,
                    bool do_keep_alive, string invalid_header_message,
-                   int timezone_offset, int data_encoding, int debug_level)
+                   int timezone_offset, Encoding data_encoding, int debug_level)
     : _output(output)
     , _timezone_offset(timezone_offset)
     , _data_encoding(data_encoding)
@@ -68,7 +68,7 @@ unique_ptr<Renderer> Renderer::make(
     OutputFormat format, OutputBuffer *output,
     OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
     string invalid_header_message, const CSVSeparators &separators,
-    int timezone_offset, int data_encoding, int debug_level) {
+    int timezone_offset, Encoding data_encoding, int debug_level) {
     switch (format) {
         case OutputFormat::csv:
             return make_unique<RendererCSV>(
@@ -168,30 +168,27 @@ void Renderer::outputDecoded(const string &prefix, const char *start,
 
 void Renderer::outputDecodedLatin1(const string &prefix, const char *start,
                                    const char *end) {
-    outputDecoded(prefix, start, end, ENCODING_LATIN1);
+    outputDecoded(prefix, start, end, Encoding::latin1);
 }
 
 void Renderer::outputDecoded(const string &prefix, const char *start,
-                             const char *end, int data_encoding) {
+                             const char *end, Encoding data_encoding) {
     add(prefix);
-    add(R"(")");
+    add(R"(")");  // "
     // TODO(sp) Use polymorphism instead of switch.
     // TODO(sp) Use codecvt framework instead of homemade stuff.
     switch (data_encoding) {
-        case ENCODING_UTF8:
+        case Encoding::utf8:
             outputDecodedUTF8(start, end);
             break;
-        case ENCODING_LATIN1:
+        case Encoding::latin1:
             outputDecodedLatin1(start, end);
             break;
-        case ENCODING_MIXED:
+        case Encoding::mixed:
             outputDecodedMixed(start, end);
             break;
-        default:
-            Emergency() << "Invalid data encoding " << data_encoding;
-            break;
     }
-    add(R"(")");
+    add(R"(")");  // "
 }
 
 void Renderer::outputDecodedUTF8(const char *start, const char *end) {

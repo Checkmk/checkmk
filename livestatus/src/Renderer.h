@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 #include "OutputBuffer.h"
+#include "data_encoding.h"
 class CSVSeparators;
 
 enum class OutputFormat { csv, broken_csv, json, python, python3 };
@@ -44,7 +45,7 @@ public:
         OutputFormat format, OutputBuffer *output,
         OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
         std::string invalid_header_message, const CSVSeparators &separators,
-        int timezone_offset, int data_encoding, int debug_level);
+        int timezone_offset, Encoding data_encoding, int debug_level);
 
     virtual ~Renderer();
 
@@ -95,7 +96,7 @@ public:
 protected:
     Renderer(OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
              bool do_keep_alive, std::string invalid_header_message,
-             int timezone_offset, int data_encoding, int debug_level);
+             int timezone_offset, Encoding data_encoding, int debug_level);
 
     void add(const std::string &str);
     void add(const std::vector<char> &value);
@@ -108,11 +109,11 @@ protected:
 private:
     OutputBuffer *const _output;
     const int _timezone_offset;
-    const int _data_encoding;
+    const Encoding _data_encoding;
     const int _debug_level;
 
     void outputDecoded(const std::string &prefix, const char *start,
-                       const char *end, int data_encoding);
+                       const char *end, Encoding data_encoding);
     void outputDecodedUTF8(const char *start, const char *end);
     void outputDecodedLatin1(const char *start, const char *end);
     void outputDecodedMixed(const char *start, const char *end);

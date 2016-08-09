@@ -30,7 +30,7 @@ using std::vector;
 RendererCSV::RendererCSV(OutputBuffer *output,
                          OutputBuffer::ResponseHeader response_header,
                          bool do_keep_alive, string invalid_header_message,
-                         int timezone_offset, int data_encoding,
+                         int timezone_offset, Encoding data_encoding,
                          int debug_level)
     : Renderer(output, response_header, do_keep_alive, invalid_header_message,
                timezone_offset, data_encoding, debug_level) {}

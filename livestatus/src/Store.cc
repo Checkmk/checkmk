@@ -33,10 +33,11 @@
 #include "OutputBuffer.h"
 #include "Query.h"
 #include "Table.h"
+#include "data_encoding.h"
 #include "mk_logwatch.h"
 #include "strutil.h"
 
-extern int g_data_encoding;
+extern Encoding g_data_encoding;
 extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
 

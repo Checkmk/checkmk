@@ -27,8 +27,6 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#define ENCODING_UTF8 0
-#define ENCODING_LATIN1 1
-#define ENCODING_MIXED 2
+enum class Encoding { utf8, latin1, mixed };
 
 #endif  // data_encoding_h

@@ -38,7 +38,8 @@
 #include "Renderer.h"
 #include "RendererBrokenCSV.h"
 #include "VariadicFilter.h"
-#include "nagios.h"  // IWYU pragma: keep
+#include "data_encoding.h"
+#include "nagios.h"         // IWYU pragma: keep
 #include "opids.h"
 class Aggregator;
 class Column;
@@ -48,7 +49,7 @@ class Table;
 
 class Query {
 public:
-    Query(const std::list<std::string> &lines, Table *, int data_encoding,
+    Query(const std::list<std::string> &lines, Table *, Encoding data_encoding,
           int debug_level);
     ~Query();
 
@@ -69,7 +70,7 @@ public:
     std::unordered_set<Column *> *allColumns() { return &_all_columns; }
 
 private:
-    const int _data_encoding;
+    const Encoding _data_encoding;
     const int _debug_level;
     QueryRenderer *_renderer_query;
     OutputBuffer::ResponseHeader _response_header;

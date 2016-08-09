@@ -76,7 +76,7 @@ private:
 };
 }  // namespace
 
-Query::Query(const list<string> &lines, Table *table, int data_encoding,
+Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
              int debug_level)
     : _data_encoding(data_encoding)
     , _debug_level(debug_level)

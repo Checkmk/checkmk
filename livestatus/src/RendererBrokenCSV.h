@@ -30,6 +30,7 @@
 #include <vector>
 #include "OutputBuffer.h"
 #include "Renderer.h"
+#include "data_encoding.h"
 
 class CSVSeparators {
 public:
@@ -60,7 +61,7 @@ public:
                       OutputBuffer::ResponseHeader response_header,
                       bool do_keep_alive, std::string invalid_header_message,
                       CSVSeparators separators, int timezone_offset,
-                      int data_encoding, int debug_level);
+                      Encoding data_encoding, int debug_level);
 
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;

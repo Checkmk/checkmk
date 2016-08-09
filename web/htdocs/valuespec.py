@@ -1400,6 +1400,9 @@ class CascadingDropdown(ValueSpec):
         else:
             self._encoding_type = tuple
 
+        self._no_elements_text = kwargs.get("no_elements_text",
+                _("There are no elements defined for this selection"))
+
 
     def normalize_choices(self, choices):
         new_choices = []
@@ -1417,6 +1420,9 @@ class CascadingDropdown(ValueSpec):
 
     def canonical_value(self):
         choices = self.choices()
+        if not choices:
+            return None
+
         if choices[0][2]:
             return self._encoding_type((choices[0][0], choices[0][2].canonical_value()))
         else:
@@ -1427,6 +1433,9 @@ class CascadingDropdown(ValueSpec):
             return self._default_value
         except:
             choices = self.choices()
+            if not choices:
+                return None
+
             if choices[0][2]:
                 return self._encoding_type((choices[0][0], choices[0][2].default_value()))
             else:
@@ -1436,6 +1445,10 @@ class CascadingDropdown(ValueSpec):
         def_val = '0'
         options = []
         choices = self.choices()
+        if not choices:
+            html.write(self._no_elements_text)
+            return
+
         for nr, (val, title, vs) in enumerate(choices):
             options.append((str(nr), title))
             # Determine the default value for the select, so the

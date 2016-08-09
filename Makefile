@@ -269,7 +269,7 @@ setup:
 $(addprefix %/,$(LIVESTATUS_AUTO)): $(addprefix %/,configure.ac m4/* Makefile.am src/Makefile.am)
 	cd livestatus && autoreconf --install --include=m4
 
-livestatus/config.h: livestatus/config.h.in
+livestatus/config.h: livestatus/configure livestatus/config.h.in
 	cd livestatus && ./configure CXXFLAGS="$(CXX_FLAGS)"
 
 GTAGS: livestatus/config.h

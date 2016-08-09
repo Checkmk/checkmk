@@ -1531,17 +1531,18 @@ register_rule(group,
         elements = [
             TextAscii(
                 title = _("Base URL (OMD Site)"),
-                help = _("The base URL to the monitoring instance. For example <tt>http://mycheckmk01/mysite</tt>. You can use "
-                         "macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this URL to make them be replaced by "
-                         "the hosts values."),
+                help = _("The base URL to the monitoring instance. For example <tt>http://mycheckmk01/mysite</tt>. "
+                         "You can use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this URL to "
+                         "make them be replaced by the hosts values."),
                 size = 60,
                 allow_empty = False
             ),
             TextAscii(
                 title = _("Aggregation Name"),
-                help = _("The name of the aggregation to fetch. It will be added to the service description. You can use "
-                         "macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this parameter to make them be replaced by "
-                         "the hosts values."),
+                help = _("The name of the aggregation to fetch. It will be added to the service description. You can "
+		         "use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this parameter to "
+                         "make them be replaced by the hosts values. The aggregation name is the title in the "
+			 "top-level-rule of your BI pack."),
                 allow_empty = False
             ),
             TextAscii(
@@ -1554,7 +1555,7 @@ register_rule(group,
             Password(
                 title = _("Password / Secret"),
                 help = _("Valid automation secret or password for the user, depending on the chosen "
-                         "authentication mode."),
+                         "authentication mode. Be aware that this mode has to be enabled on the monitoring instance. " 			       "Otherwise authentication will fail."),
                 allow_empty = False
             ),
             Dictionary(

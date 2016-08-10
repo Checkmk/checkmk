@@ -226,8 +226,11 @@ try:
         sys.stderr.flush()
 
     # Disable ssl certificate validation
-    import ssl
-    ssl._create_default_https_context = ssl._create_unverified_context
+    try: # quick fix
+        import ssl
+        ssl._create_default_https_context = ssl._create_unverified_context
+    except:
+        pass
     host.connect(host_address+port, user, secret, sock_timeout=opt_timeout)
     if opt_debug:
         sys.stderr.write("Connected.\n")

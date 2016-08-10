@@ -1,6 +1,7 @@
 1.2.8p10:
     Checks & Agents:
     * 3772 FIX: ipmi_sensors: fixed missing states
+    * 3562 FIX: agent_vsphere.pysphere: fixed problems related to ssl certificate validation on older distributions/python versions
 
     Multisite:
     * 3561 FIX: Removing a comment now also removes any linked acknowledgements...

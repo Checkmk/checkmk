@@ -37,10 +37,8 @@
 #include "Core.h"
 #include "World.h"
 #else
-#include "store_c.h"
-extern "C" {
+host *getHostByDesignation(const char *designation);
 extern char g_mkeventd_socket_path[4096];
-}
 #endif
 
 using std::ostream;

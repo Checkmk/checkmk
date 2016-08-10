@@ -43,15 +43,27 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include "ClientQueue.h"
+#include "InputBuffer.h"
+#include "OutputBuffer.h"
+#include "Store.h"
+#include "StringUtils.h"
+#include "TimeperiodsCache.h"
 #include "auth.h"
 #include "data_encoding.h"
 #include "global_counters.h"
 #include "livestatus.h"
 #include "logger.h"
 #include "nagios.h"
-#include "store_c.h"
 #include "strutil.h"
 #include "waittriggers.h"
+
+using mk::unsafe_tolower;
+using std::string;
+using std::unordered_map;
 
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 #ifndef NAGIOS4
@@ -101,6 +113,13 @@ int g_service_authorization = AUTH_LOOSE;
 int g_group_authorization = AUTH_STRICT;
 Encoding g_data_encoding = Encoding::utf8;
 
+// Map to speed up access via name/alias/address
+unordered_map<string, host *> fl_hosts_by_designation;
+
+static Store *fl_store = nullptr;
+static ClientQueue *fl_client_queue = nullptr;
+TimeperiodsCache *g_timeperiods_cache = nullptr;
+
 /* simple statistics data for TableStatus */
 extern host *host_list;
 extern service *service_list;
@@ -122,6 +141,11 @@ void count_services() {
     for (service *s = service_list; s != nullptr; s = s->next) {
         g_num_services++;
     }
+}
+
+host *getHostByDesignation(const char *designation) {
+    auto it = fl_hosts_by_designation.find(unsafe_tolower(designation));
+    return it == fl_hosts_by_designation.end() ? nullptr : it->second;
 }
 
 void *voidp;
@@ -180,7 +204,7 @@ void *main_thread(void *data __attribute__((__unused__))) {
                 logger(LG_INFO, "Cannot set FD_CLOEXEC on client socket: %s",
                        strerror(errno));
             }
-            queue_add_connection(cc);  // closes fd
+            fl_client_queue->addConnection(cc);  // closes fd
             g_num_queued_connections++;
             g_counters[COUNTER_CONNECTIONS]++;
         }
@@ -190,35 +214,33 @@ void *main_thread(void *data __attribute__((__unused__))) {
 }
 
 void *client_thread(void *data __attribute__((__unused__))) {
-    void *output_buffer = create_outputbuffer();
-
+    OutputBuffer output_buffer;
     while (g_should_terminate == 0) {
-        int cc = queue_pop_connection();
+        int cc = fl_client_queue->popConnection();
         g_num_queued_connections--;
         g_num_active_connections++;
         if (cc >= 0) {
             if (g_debug_level >= 2) {
                 logger(LG_INFO, "Accepted client connection on fd %d", cc);
             }
-            void *input_buffer = create_inputbuffer(cc, &g_should_terminate);
-            int keepalive = 1;
+            InputBuffer input_buffer(cc, &g_should_terminate);
+            bool keepalive = true;
             unsigned requestnr = 1;
-            while (keepalive != 0) {
+            while (keepalive) {
                 if (g_debug_level >= 2 && requestnr > 1) {
                     logger(LG_INFO, "Handling request %d on same connection",
                            requestnr);
                 }
-                keepalive = store_answer_request(input_buffer, output_buffer);
-                flush_output_buffer(output_buffer, cc, &g_should_terminate);
+                keepalive =
+                    fl_store->answerRequest(&input_buffer, &output_buffer);
+                output_buffer.flush(cc, &g_should_terminate);
                 g_counters[COUNTER_REQUESTS]++;
                 requestnr++;
             }
-            delete_inputbuffer(input_buffer);
             close(cc);
         }
         g_num_active_connections--;
     }
-    delete_outputbuffer(output_buffer);
     return voidp;
 }
 
@@ -270,7 +292,7 @@ void terminate_threads() {
         logger(LG_INFO, "Waiting for main to terminate...");
         pthread_join(g_mainthread_id, nullptr);
         logger(LG_INFO, "Waiting for client threads to terminate...");
-        queue_terminate();
+        fl_client_queue->terminate();
         int t;
         for (t = 0; t < g_num_clientthreads; t++) {
             if (0 != pthread_join(g_clientthread_id[t], nullptr)) {
@@ -382,7 +404,7 @@ int broker_check(int event_type, void *data) {
 int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     nebstruct_comment_data *co =
         reinterpret_cast<nebstruct_comment_data *>(data);
-    store_register_comment(co);
+    fl_store->registerComment(co);
     g_counters[COUNTER_NEB_CALLBACKS]++;
     trigger_notify_all(trigger_comment());
     return 0;
@@ -391,7 +413,7 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
 int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     nebstruct_downtime_data *dt =
         reinterpret_cast<nebstruct_downtime_data *>(data);
-    store_register_downtime(dt);
+    fl_store->registerDowntime(dt);
     g_counters[COUNTER_NEB_CALLBACKS]++;
     trigger_notify_all(trigger_downtime());
     return 0;
@@ -476,7 +498,7 @@ void livestatus_log_initial_states() {
         }
     }
     // Log TIMERPERIODS
-    log_timeperiods_cache();
+    g_timeperiods_cache->logCurrentTimeperiods();
 }
 
 int broker_event(int event_type __attribute__((__unused__)), void *data) {
@@ -493,7 +515,7 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
                               LG_INFO);
         }
     }
-    update_timeperiods_cache(ts->timestamp.tv_sec);
+    g_timeperiods_cache->update(ts->timestamp.tv_sec);
     return 0;
 }
 
@@ -502,10 +524,21 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
         reinterpret_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
         case NEBTYPE_PROCESS_START:
-            store_init();
+            for (host *hst = host_list; hst != nullptr; hst = hst->next) {
+                if (const char *address = hst->address) {
+                    fl_hosts_by_designation[unsafe_tolower(address)] = hst;
+                }
+                if (const char *alias = hst->alias) {
+                    fl_hosts_by_designation[unsafe_tolower(alias)] = hst;
+                }
+                fl_hosts_by_designation[unsafe_tolower(hst->name)] = hst;
+            }
+            fl_store = new Store();
+            fl_client_queue = new ClientQueue();
+            g_timeperiods_cache = new TimeperiodsCache();
             break;
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
-            update_timeperiods_cache(time(nullptr));
+            g_timeperiods_cache->update(time(nullptr));
             start_threads();
             break;
         default:
@@ -904,7 +937,12 @@ extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
     logger(LG_INFO, "deinitializing");
     terminate_threads();
     close_unix_socket();
-    store_deinit();
+    delete fl_store;
+    fl_store = nullptr;
+    delete fl_client_queue;
+    fl_client_queue = nullptr;
+    delete g_timeperiods_cache;
+    g_timeperiods_cache = nullptr;
     deregister_callbacks();
     close_logfile();
     return 0;

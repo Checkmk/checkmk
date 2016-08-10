@@ -34,9 +34,7 @@
 #include "Core.h"
 #include "World.h"
 #else
-extern "C" {
 extern char g_mkeventd_socket_path[4096];
-}
 #endif
 
 using std::make_unique;

@@ -151,7 +151,6 @@ livestatus_so_SOURCES = \
         module.cc \
         opids.cc \
         pnp4nagios.cc \
-        store_c.cc \
         strutil.cc \
         waittriggers.cc
 

@@ -1,0 +1,10 @@
+Title: agent_vsphere.pysphere: fixed problems related to ssl certificate validation on older distributions/python versions
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1470835398
+
+

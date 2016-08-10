@@ -329,6 +329,7 @@
     * 3759 FIX: cpu.loads: Fixed possible crash on missing data
     * 3715 FIX: agent_ipmi_sensors: fixed error handling
     * 3772 FIX: ipmi_sensors: fixed missing states
+    * 3562 FIX: agent_vsphere.pysphere: fixed problems related to ssl certificate validation on older distributions/python versions
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

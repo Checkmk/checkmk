@@ -1,0 +1,13 @@
+Title: Removing a comment now also removes any linked acknowledgements
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p10
+Date: 1470834520
+
+Deleting a comment which is linked to an acknowledgment now
+also removes the corresponding acknowledgement.
+
+Previously there could be acknowledgements without any comments.

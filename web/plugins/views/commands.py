@@ -764,13 +764,26 @@ multisite_commands.append({
 })
 
 # REMOVE COMMENTS (table comments)
+
+def remove_comments(cmdtag, spec, row):
+    if html.has_var("_remove_comments"):
+        commands = [("DEL_%s_COMMENT;%d" % (cmdtag, spec))]
+        if row.get("comment_entry_type") == 4:
+            if row.get("service_description"):
+                commands.append(("REMOVE_%s_ACKNOWLEDGEMENT;%s;%s" %\
+                                (cmdtag, row["host_name"], row["service_description"])))
+            else:
+                commands.append(("REMOVE_%s_ACKNOWLEDGEMENT;%s" %\
+                                (cmdtag, row["host_name"])))
+
+        return commands, _("remove")
+
 multisite_commands.append({
     "tables"      : [ "comment" ],
     "permission"  : "action.addcomment",
     "title"       : _("Remove comments"),
     "render"      : lambda: html.button("_remove_comments", _("Remove")),
-    "action"      : lambda cmdtag, spec, row: html.has_var("_remove_comments") and \
-                            ( "DEL_%s_COMMENT;%d" % (cmdtag, spec), _("remove"))
+    "action"      : remove_comments
 })
 
 #.

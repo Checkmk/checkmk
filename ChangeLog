@@ -2,6 +2,9 @@
     Checks & Agents:
     * 3772 FIX: ipmi_sensors: fixed missing states
 
+    Multisite:
+    * 3561 FIX: Removing a comment now also removes any linked acknowledgements...
+
     WATO:
     * 3559 WATO API: now able to bake agents with the new action "bake_agents"
 

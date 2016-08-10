@@ -1,0 +1,9 @@
+Title: emcvnx_disks: now able to configure states for hard read/write errors and when enclosure rebuilds
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1470817777
+Class: feature
+
+

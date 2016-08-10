@@ -2310,6 +2310,37 @@ register_check_parameters(
     match_type = "dict"
 )
 
+register_check_parameters(
+    subgroup_storage,
+    "emcvnx_disks",
+    _("EMC VNX Enclosures"),
+    Dictionary(
+        elements = [
+            ("state_read_error",
+                MonitoringState(
+                    default_value = 2,
+                    title = _("State on hard read error")
+                )
+            ),
+            ("state_write_error",
+                MonitoringState(
+                    default_value = 2,
+                    title = _("State on hard write error")
+                )
+            ),
+            ("state_rebuilding",
+                MonitoringState(
+                    default_value = 1,
+                    title = _("State when rebuildung enclosure")
+                )
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Enclosure ID"),
+        allow_empty = True),
+    match_type = "dict",
+)
 
 
 #.
@@ -12131,4 +12162,3 @@ register_check_parameters(
     TextAscii( title = _("Node ID")),
     "first"
 )
-

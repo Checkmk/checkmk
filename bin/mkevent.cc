@@ -22,14 +22,25 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// IWYU pragma: no_include <bits/socket_type.h>
+#include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <sys/types.h>
+#include <unistd.h>
+#include <cctype>
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <iostream>
+#include <string>
+
+using std::cerr;
+using std::endl;
+using std::string;
 
 /* Methods for specified the path to the pipe of
    mkeventd:
@@ -47,13 +58,13 @@
 
 */
 
-int file_exists(char *path) {
+int file_exists(const string &path) {
     struct stat st;
-    return (0 == stat(path, &st));
+    return static_cast<int>(stat(path.c_str(), &st) == 0);
 }
 
-char *append_str(char *str, char *dest) {
-    int len = strlen(str);
+char *append_str(const char *str, char *dest) {
+    size_t len = strlen(str);
     memcpy(dest, str, len);
     return dest + len;
 }
@@ -71,38 +82,34 @@ char *append_int(long n, char *dest) {
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        write(2, "Usage: mkevent [-P PIPE] 'Text of the messsage'\n", 48);
+        cerr << "Usage: mkevent [-P PIPE] 'Text of the messsage'" << endl;
         exit(1);
     }
 
-    char path_to_pipe[256];
-    path_to_pipe[0] = 0;
+    string path_to_pipe;
 
     /* Path to pipe can be specified with -P */
-    if (argc > 2 && !strcmp(argv[1], "-P")) {
-        strncpy(path_to_pipe, argv[2], sizeof(path_to_pipe));
+    if (argc > 2 && (strcmp(argv[1], "-P") == 0)) {
+        path_to_pipe = argv[2];
         argc -= 2;
         argv += 2;
     }
 
-    if (!path_to_pipe[0]) {
-        const char *omd_root = getenv("OMD_ROOT");
-        if (omd_root) {
-            strncpy(path_to_pipe, omd_root, 128);
-            strcat(path_to_pipe, "/tmp/run/mkeventd/events");
-        } else if (!strncmp(argv[0], "/omd/sites/", 11)) {
-            bzero(path_to_pipe, sizeof(path_to_pipe));
-            strncpy(path_to_pipe, argv[0],
-                    strlen(argv[0]) - 11); /* cut off bin/mkevent */
-            strcat(path_to_pipe, "tmp/run/mkeventd/events");
+    if (path_to_pipe.empty()) {
+        if (const char *omd_root = getenv("OMD_ROOT")) {
+            path_to_pipe = string(omd_root) + "/tmp/run/mkeventd/events";
+        } else if (strncmp(argv[0], "/omd/sites/", 11) == 0) {
+            // cut off /bin/mkevent
+            path_to_pipe = string(argv[0], strlen(argv[0]) - 12) +
+                           "/tmp/run/mkeventd/events";
         }
     }
 
     /* Nagios notification mode is triggered with option -n */
     char message[8192];
-    char *remote = "";
+    const char *remote = "";
 
-    if (argc > 9 && !strcmp(argv[1], "-n")) {
+    if (argc > 9 && (strcmp(argv[1], "-n") == 0)) {
         /* Arguments: -n FACILITY REMOTE STATE HOST SERVICE MESSAGE */
         /* SERVICE is empty for host notification */
         int facility = atoi(argv[2]);
@@ -112,36 +119,44 @@ int main(int argc, char **argv) {
         char *service = argv[6];
         char *text = argv[7];
         char *sl_text = argv[8];
-        char *contact = argv[9];
+        const char *contact = argv[9];
 
         /* If this is a service and sl/contact is unset then we use
            the values of the host that are coming as arg 10 and 11 */
-        if (sl_text[0] == '$' && argc > 11) sl_text = argv[10];
-        if (contact[0] == '$' && argc > 11) contact = argv[11];
+        if (sl_text[0] == '$' && argc > 11) {
+            sl_text = argv[10];
+        }
+        if (contact[0] == '$' && argc > 11) {
+            contact = argv[11];
+        }
 
         int sl = atoi(sl_text);
-        if (contact[0] == '$') contact = "";
+        if (contact[0] == '$') {
+            contact = "";
+        }
 
         int priority;
-        if (state == 0)
+        if (state == 0) {
             priority = 5;
-        else {
-            if (!service[0])
+        } else {
+            if (service[0] == 0) {
                 state += 1;  // shift host states in order to map service states
-            if (state == 1)
+            }
+            if (state == 1) {
                 priority = 4;  // warn
-            else if (state == 3)
+            } else if (state == 3) {
                 priority = 3;  // map UNKNOWN/UNREAD to err
-            else
+            } else {
                 priority = 2;  // CRIT/DOWN goes to crit
+            }
         }
 
         char *w = message;
         *w++ = '<';
-        w = append_int((facility << 3) + priority, w);
+        w = append_int((static_cast<long>(facility) << 3) + priority, w);
         *w++ = '>';
         *w++ = '@';
-        w = append_int(time(0), w);
+        w = append_int(time(nullptr), w);
         *w++ = ';';
         w = append_int(sl, w);
         *w++ = ';';
@@ -150,7 +165,7 @@ int main(int argc, char **argv) {
         *w++ = ' ';
         w = append_str(hostname, w);
         *w++ = ' ';
-        w = append_str(service[0] ? service : "HOST", w);
+        w = append_str(service[0] != 0 ? service : "HOST", w);
         *w++ = ':';
         *w++ = ' ';
         w = append_str(text, w);
@@ -162,14 +177,11 @@ int main(int argc, char **argv) {
     /* If we have a remote host and there is no local event Console running,
        then we will send the message via syslog to the remote host. */
     int fd;
-    if (!file_exists(path_to_pipe) && remote[0]) {
-        if (!isdigit(remote[0])) {
-            write(
-                1,
-                "ERROR: Please specify the remote host as IPv4 address, not '",
-                60);
-            write(1, remote, strlen(remote));
-            write(1, "'\n", 2);
+    if (file_exists(path_to_pipe) == 0 && remote[0] != 0) {
+        if (isdigit(remote[0]) == 0) {
+            cerr << "ERROR: Please specify the remote host as IPv4 "
+                    "address, not '"
+                 << remote << "'" << endl;
             exit(1);
         }
         fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -178,18 +190,20 @@ int main(int argc, char **argv) {
         servaddr.sin_family = AF_INET;
         servaddr.sin_addr.s_addr = inet_addr(remote);
         servaddr.sin_port = htons(514);
-        sendto(fd, message, strlen(message), 0, (struct sockaddr *)&servaddr,
+        sendto(fd, message, strlen(message), 0,
+               reinterpret_cast<struct sockaddr *>(&servaddr),
                sizeof(servaddr));
     } else {
-        fd = open(path_to_pipe, O_WRONLY);
+        fd = open(path_to_pipe.c_str(), O_WRONLY);
         if (fd < 0) {
-            strcpy(message, "Cannot open event pipe ");
-            strcat(message, path_to_pipe);
-            perror(message);
+            int errno_saved = errno;
+            cerr << "Cannot open event pipe '" << path_to_pipe
+                 << "': " << strerror(errno_saved) << endl;
             exit(1);
         }
-        write(fd, message, strlen(message));
-        write(fd, "\n", 1);
+        // TODO(sp) Handle errors and partial writes.
+        if (write(fd, message, strlen(message)) < 0 || write(fd, "\n", 1) < 0) {
+        }
     }
     close(fd);
     return 0;

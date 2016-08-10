@@ -22,14 +22,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-all: mkevent mkeventd_open514
+CXXFLAGS    := -std=c++11 -g -O3 -Wall -Wextra
+EXECUTABLES := mkevent mkeventd_open514
 
-mkevent: mkevent.c
-	diet gcc -O2 -s -o mkevent mkevent.c || \
-	gcc -O2 -o mkevent mkevent.c
+.PHONY: all clean
 
-mkeventd_open514: mkeventd_open514.c
-	gcc -O2 -o $@ $<
+all: $(EXECUTABLES)
 
 clean:
-	rm -f mkevent mkeventd_open514
+	$(RM) $(EXECUTABLES)

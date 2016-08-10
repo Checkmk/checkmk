@@ -188,7 +188,7 @@ multisite_datasources["comments"] = {
     "title"    : _("Host- and Servicecomments"),
     "table"    : "comments",
     "infos"    : [ "comment", "host", "service" ],
-    "keys"     : [ "comment_id", "comment_type" ],
+    "keys"     : [ "comment_id", "comment_type", "host_name", "service_description" ],
     "idkeys"   : [ "comment_id" ],
 }
 

@@ -22,6 +22,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO(sp) We should really use autotools here...
+CXX         := g++-5
 CXXFLAGS    := -std=c++11 -g -O3 -Wall -Wextra
 EXECUTABLES := mkevent mkeventd_open514
 

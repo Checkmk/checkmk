@@ -38,7 +38,7 @@ class RowRenderer;
 
 class LogwatchListColumn : public Column {
 public:
-    LogwatchListColumn(std::string name, std::string description,
+    LogwatchListColumn(const std::string &name, const std::string &description,
                        int indirect_offset, int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
     ColumnType type() override { return ColumnType::list; }

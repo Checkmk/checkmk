@@ -38,8 +38,9 @@ class HostlistColumn : public Column {
     bool _show_state;
 
 public:
-    HostlistColumn(std::string name, std::string description, int offset,
-                   int indirect_offset, bool show_state, int extra_offset = -1)
+    HostlistColumn(const std::string &name, const std::string &description,
+                   int offset, int indirect_offset, bool show_state,
+                   int extra_offset = -1)
         : Column(name, description, indirect_offset, extra_offset)
         , _offset(offset)
         , _show_state(show_state) {}

@@ -38,7 +38,7 @@ class RowRenderer;
 
 class EmptyColumn : public Column {
 public:
-    EmptyColumn(std::string name, std::string description,
+    EmptyColumn(const std::string &name, const std::string &description,
                 int indirect_offset = -1, int extra_offset = -1)
         : Column(name, description, indirect_offset, extra_offset) {}
     ColumnType type() override { return ColumnType::string; }

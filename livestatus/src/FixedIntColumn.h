@@ -30,8 +30,8 @@
 
 class FixedIntColumn : public IntColumn {
 public:
-    FixedIntColumn(std::string name, std::string description, int value,
-                   int indirect_offset = -1, int extra_offset = -1)
+    FixedIntColumn(const std::string& name, const std::string& description,
+                   int value, int indirect_offset = -1, int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _value(value) {}
     int32_t getValue(void* /* row */, contact* /* auth_user */) override {

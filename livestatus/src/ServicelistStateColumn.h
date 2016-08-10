@@ -51,8 +51,9 @@ class ServicelistStateColumn : public IntColumn {
     int _logictype;
 
 public:
-    ServicelistStateColumn(std::string name, std::string description,
-                           int logictype, int offset, int indirect_offset,
+    ServicelistStateColumn(const std::string &name,
+                           const std::string &description, int logictype,
+                           int offset, int indirect_offset,
                            int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset)

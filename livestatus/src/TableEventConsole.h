@@ -93,7 +93,8 @@ protected:
         EventConsoleColumn<std::string> _ecc;
 
     public:
-        StringEventConsoleColumn(std::string name, std::string description)
+        StringEventConsoleColumn(const std::string &name,
+                                 const std::string &description)
             : StringColumn(name, description, -1, -1)
             , _ecc(name, std::string(), [](std::string x) { return x; }) {}
 
@@ -106,7 +107,8 @@ protected:
         EventConsoleColumn<int32_t> _ecc;
 
     public:
-        IntEventConsoleColumn(std::string name, std::string description)
+        IntEventConsoleColumn(const std::string &name,
+                              const std::string &description)
             : IntColumn(name, description, -1, -1)
             , _ecc(name, 0, [](std::string x) {
                 return static_cast<int32_t>(atol(x.c_str()));
@@ -121,7 +123,8 @@ protected:
         EventConsoleColumn<double> _ecc;
 
     public:
-        DoubleEventConsoleColumn(std::string name, std::string description)
+        DoubleEventConsoleColumn(const std::string &name,
+                                 const std::string &description)
             : DoubleColumn(name, description, -1, -1)
             , _ecc(name, 0, [](std::string x) { return atof(x.c_str()); }) {}
 
@@ -132,7 +135,8 @@ protected:
         EventConsoleColumn<int32_t> _ecc;
 
     public:
-        TimeEventConsoleColumn(std::string name, std::string description)
+        TimeEventConsoleColumn(const std::string &name,
+                               const std::string &description)
             : OffsetTimeColumn(name, description, -1, -1)
             , _ecc(name, 0, [](std::string x) {
                 return static_cast<int32_t>(atof(x.c_str()));
@@ -148,7 +152,8 @@ protected:
         EventConsoleColumn<_column_t> _ecc;
 
     public:
-        ListEventConsoleColumn(std::string name, std::string description)
+        ListEventConsoleColumn(const std::string &name,
+                               const std::string &description)
             : ListColumn(name, description, -1, -1)
             , _ecc(name, _column_t(), [](std::string x) {
                 return x.empty() || x == "\002"

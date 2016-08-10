@@ -39,12 +39,12 @@ class HostSpecialIntColumn : public IntColumn {
     int _type;
 
 public:
-    HostSpecialIntColumn(std::string name, std::string description,
-                         int hsic_type, int indirect_offset,
-                         int extra_offset = -1)
+    HostSpecialIntColumn(const std::string& name,
+                         const std::string& description, int hsic_type,
+                         int indirect_offset, int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _type(hsic_type) {}
-    int32_t getValue(void *row, contact *auth_user) override;
+    int32_t getValue(void* row, contact* auth_user) override;
 };
 
 #endif  // HostSpecialIntColumn_h

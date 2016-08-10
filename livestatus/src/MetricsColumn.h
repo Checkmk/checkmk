@@ -43,12 +43,12 @@ class MetricsColumn : public Column {
 #endif
 public:
 #ifdef CMC
-    MetricsColumn(std::string name, std::string description,
+    MetricsColumn(const std::string &name, const std::string &description,
                   int indirect_offset, int extra_offset, Core *core)
         : Column(name, description, indirect_offset, extra_offset)
         , _core(core) {}
 #else
-    MetricsColumn(std::string name, std::string description,
+    MetricsColumn(const std::string &name, const std::string &description,
                   int indirect_offset, int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
 #endif

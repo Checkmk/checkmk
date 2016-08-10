@@ -75,8 +75,8 @@ private:
 }  // namespace
 
 DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
-    std::string name, std::string description, int indirect_offset,
-    int extra_offset
+    const std::string &name, const std::string &description,
+    int indirect_offset, int extra_offset
 #ifdef CMC
     ,
     Core *core

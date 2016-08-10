@@ -35,8 +35,9 @@ class RowRenderer;
 
 class OffsetStringMacroColumn : public OffsetStringColumn {
 public:
-    OffsetStringMacroColumn(std::string name, std::string description,
-                            int offset, int indirect_offset, int extra_offset)
+    OffsetStringMacroColumn(const std::string &name,
+                            const std::string &description, int offset,
+                            int indirect_offset, int extra_offset)
         : OffsetStringColumn(name, description, offset, indirect_offset,
                              extra_offset) {}
     // reimplement several functions from StringColumn

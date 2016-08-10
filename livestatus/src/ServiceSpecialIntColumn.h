@@ -37,12 +37,12 @@ class ServiceSpecialIntColumn : public IntColumn {
     int _type;
 
 public:
-    ServiceSpecialIntColumn(std::string name, std::string description,
-                            int ssic_type, int indirect_offset,
-                            int extra_offset = -1)
+    ServiceSpecialIntColumn(const std::string& name,
+                            const std::string& description, int ssic_type,
+                            int indirect_offset, int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _type(ssic_type) {}
-    int32_t getValue(void *row, contact *auth_user) override;
+    int32_t getValue(void* row, contact* auth_user) override;
 };
 
 #endif  // ServiceSpecialIntColumn_h

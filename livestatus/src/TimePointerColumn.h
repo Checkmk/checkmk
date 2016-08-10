@@ -41,8 +41,9 @@ class RowRenderer;
 
 class TimePointerColumn : public IntPointerColumn {
 public:
-    TimePointerColumn(std::string name, std::string description, int *number,
-                      int indirect_offset = -1, int extra_offset = -1)
+    TimePointerColumn(const std::string &name, const std::string &description,
+                      int *number, int indirect_offset = -1,
+                      int extra_offset = -1)
         : IntPointerColumn(name, description, number, indirect_offset,
                            extra_offset) {}
     void output(void *row, RowRenderer &r, contact *auth_user) override;

@@ -33,11 +33,12 @@ class OffsetSStringColumn : public StringColumn {
     int _offset;
 
 public:
-    OffsetSStringColumn(std::string name, std::string description, int offset,
-                        int indirect_offset = -1, int extra_offset = -1)
+    OffsetSStringColumn(const std::string& name, const std::string& description,
+                        int offset, int indirect_offset = -1,
+                        int extra_offset = -1)
         : StringColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset) {}
-    std::string getValue(void *data) const override;
+    std::string getValue(void* data) const override;
 };
 
 #endif  // OffsetSStringColumn_h

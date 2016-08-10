@@ -39,9 +39,9 @@ class ServicelistColumn : public Column {
     int _info_depth;
 
 public:
-    ServicelistColumn(std::string name, std::string description, int offset,
-                      int indirect_offset, bool show_host, int info_depth,
-                      int extra_offset = -1)
+    ServicelistColumn(const std::string &name, const std::string &description,
+                      int offset, int indirect_offset, bool show_host,
+                      int info_depth, int extra_offset = -1)
         : Column(name, description, indirect_offset, extra_offset)
         , _offset(offset)
         , _show_host(show_host)

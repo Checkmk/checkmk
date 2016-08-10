@@ -35,7 +35,7 @@ class RowRenderer;
 
 class ContactsColumn : public ListColumn {
 public:
-    ContactsColumn(std::string name, std::string description,
+    ContactsColumn(const std::string &name, const std::string &description,
                    int indirect_offset, int extra_offset)
         : ListColumn(name, description, indirect_offset, extra_offset) {}
     ColumnType type() override { return ColumnType::list; }

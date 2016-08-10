@@ -42,11 +42,12 @@ class StatusSpecialIntColumn : public IntColumn {
     int _type;
 
 public:
-    StatusSpecialIntColumn(std::string name, std::string description, int type,
+    StatusSpecialIntColumn(const std::string& name,
+                           const std::string& description, int type,
                            int indirect_offset = -1, int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _type(type) {}
-    int32_t getValue(void *row, contact *auth_user) override;
+    int32_t getValue(void* row, contact* auth_user) override;
 };
 
 #endif  // StatusSpecialIntColumn_h

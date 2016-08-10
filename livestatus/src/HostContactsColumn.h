@@ -34,13 +34,13 @@
 
 class HostContactsColumn : public ContactsColumn {
 public:
-    HostContactsColumn(std::string name, std::string description,
+    HostContactsColumn(const std::string& name, const std::string& description,
                        int indirect_offset, int extra_offset = -1)
         : ContactsColumn(name, description, indirect_offset,
                          extra_offset = -1) {}
     ColumnType type() override { return ColumnType::list; }
-    std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    std::unique_ptr<Contains> containsContact(contact *ctc) override;
+    std::unique_ptr<Contains> makeContains(const std::string& name) override;
+    std::unique_ptr<Contains> containsContact(contact* ctc) override;
 };
 
 #endif  // HostContactsColumn_h

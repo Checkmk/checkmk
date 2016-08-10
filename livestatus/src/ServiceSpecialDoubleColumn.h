@@ -35,12 +35,12 @@ class ServiceSpecialDoubleColumn : public DoubleColumn {
     int _type;
 
 public:
-    ServiceSpecialDoubleColumn(std::string name, std::string description,
-                               int ssdc_type, int indirect,
-                               int extra_offset = -1)
+    ServiceSpecialDoubleColumn(const std::string& name,
+                               const std::string& description, int ssdc_type,
+                               int indirect, int extra_offset = -1)
         : DoubleColumn(name, description, indirect, extra_offset)
         , _type(ssdc_type) {}
-    double getValue(void *data);
+    double getValue(void* data);
 };
 
 #endif  // ServiceSpecialDoubleColumn_h

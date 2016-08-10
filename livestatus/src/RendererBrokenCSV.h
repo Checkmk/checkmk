@@ -34,8 +34,8 @@
 
 class CSVSeparators {
 public:
-    CSVSeparators(std::string dataset, std::string field, std::string list,
-                  std::string host_service)
+    CSVSeparators(const std::string& dataset, const std::string& field,
+                  const std::string& list, const std::string& host_service)
         : _dataset(dataset)
         , _field(field)
         , _list(list)
@@ -57,15 +57,15 @@ private:
 // versions.
 class RendererBrokenCSV : public Renderer {
 public:
-    RendererBrokenCSV(OutputBuffer *output,
+    RendererBrokenCSV(OutputBuffer* output,
                       OutputBuffer::ResponseHeader response_header,
                       bool do_keep_alive, std::string invalid_header_message,
                       CSVSeparators separators, int timezone_offset,
                       Encoding data_encoding, int debug_level);
 
     void outputNull() override;
-    void outputBlob(const std::vector<char> &value) override;
-    void outputString(const std::string &value) override;
+    void outputBlob(const std::vector<char>& value) override;
+    void outputString(const std::string& value) override;
 
     void beginQuery() override;
     void separateQueryElements() override;

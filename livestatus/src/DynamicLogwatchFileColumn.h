@@ -32,7 +32,8 @@ class Column;
 
 class DynamicLogwatchFileColumn : public DynamicColumn {
 public:
-    DynamicLogwatchFileColumn(std::string name, std::string description,
+    DynamicLogwatchFileColumn(const std::string &name,
+                              const std::string &description,
                               int indirect_offset, int extra_offset = -1)
         : DynamicColumn(name, description, indirect_offset, extra_offset) {}
     virtual ~DynamicLogwatchFileColumn() {}

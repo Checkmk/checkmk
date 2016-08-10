@@ -30,16 +30,17 @@
 
 class IntPointerColumn : public IntColumn {
 public:
-    IntPointerColumn(std::string name, std::string description, int *number,
-                     int indirect_offset = -1, int extra_offset = -1)
+    IntPointerColumn(const std::string& name, const std::string& description,
+                     int* number, int indirect_offset = -1,
+                     int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _number(number) {}
-    int32_t getValue(void * /* row */, contact * /* auth_user */) override {
+    int32_t getValue(void* /* row */, contact* /* auth_user */) override {
         return *_number;
     }
 
 private:
-    int *_number;
+    int* _number;
 };
 
 #endif  // IntPointerColumn_h

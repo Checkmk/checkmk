@@ -41,8 +41,8 @@ public:
         virtual bool operator()(void *row) = 0;
     };
 
-    ListColumn(std::string name, std::string description, int indirect_offset,
-               int extra_offset)
+    ListColumn(const std::string &name, const std::string &description,
+               int indirect_offset, int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
     ColumnType type() override { return ColumnType::list; }
     virtual std::unique_ptr<Contains> makeContains(const std::string &name) = 0;

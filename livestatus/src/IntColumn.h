@@ -41,8 +41,9 @@ class RowRenderer;
 
 class IntColumn : public Column {
 public:
-    IntColumn(std::string name, std::string description, int indirect_offset,
-              int extra_offset, int extra_extra_offset = -1)
+    IntColumn(const std::string &name, const std::string &description,
+              int indirect_offset, int extra_offset,
+              int extra_extra_offset = -1)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset) {}
 

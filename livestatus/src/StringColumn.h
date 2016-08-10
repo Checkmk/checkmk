@@ -40,8 +40,8 @@ class RowRenderer;
 
 class StringColumn : public Column {
 public:
-    StringColumn(std::string name, std::string description, int indirect_offset,
-                 int extra_offset)
+    StringColumn(const std::string &name, const std::string &description,
+                 int indirect_offset, int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
     virtual std::string getValue(void *data) const = 0;
     std::string valueAsString(void *row, contact * /* auth_user */) override {

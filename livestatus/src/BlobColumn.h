@@ -40,8 +40,8 @@ class RowRenderer;
 
 class BlobColumn : public Column {
 public:
-    BlobColumn(std::string name, std::string description, int indirect_offset,
-               int extra_offset)
+    BlobColumn(const std::string &name, const std::string &description,
+               int indirect_offset, int extra_offset)
         : Column(name, description, indirect_offset, extra_offset) {}
     virtual std::unique_ptr<std::vector<char>> getBlob(void *data) = 0;
     void output(void *row, RowRenderer &r, contact *auth_user) override;

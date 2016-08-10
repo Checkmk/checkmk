@@ -37,8 +37,8 @@ class HostgroupsColumn : public ListColumn {
     int _offset;
 
 public:
-    HostgroupsColumn(std::string name, std::string description, int offset,
-                     int indirect_offset, int extra_offset = -1)
+    HostgroupsColumn(const std::string &name, const std::string &description,
+                     int offset, int indirect_offset, int extra_offset = -1)
         : ListColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset) {}
     ColumnType type() override { return ColumnType::list; }

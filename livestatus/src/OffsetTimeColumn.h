@@ -45,8 +45,9 @@ class RowRenderer;
 
 class OffsetTimeColumn : public OffsetIntColumn {
 public:
-    OffsetTimeColumn(std::string name, std::string description, int offset,
-                     int indirect_offset = -1, int extra_offset = -1)
+    OffsetTimeColumn(const std::string &name, const std::string &description,
+                     int offset, int indirect_offset = -1,
+                     int extra_offset = -1)
         : OffsetIntColumn(name, description, offset, indirect_offset,
                           extra_offset) {}
     ColumnType type() override { return ColumnType::time; }

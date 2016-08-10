@@ -41,9 +41,10 @@ class GlobalCountersColumn : public Column {
     bool _do_average;
 
 public:
-    GlobalCountersColumn(std::string name, std::string description,
-                         unsigned counter_index, bool do_average,
-                         int indirect_offset = -1, int extra_offset = -1)
+    GlobalCountersColumn(const std::string &name,
+                         const std::string &description, unsigned counter_index,
+                         bool do_average, int indirect_offset = -1,
+                         int extra_offset = -1)
         : Column(name, description, indirect_offset, extra_offset)
         , _counter_index(counter_index)
         , _do_average(do_average) {}

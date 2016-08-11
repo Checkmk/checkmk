@@ -52,7 +52,7 @@ def render_wato(mini):
         if not permission or config.may(permission) or config.may("wato.seeall"):
             url = "wato.py?mode=%s" % mode
             if mini:
-                html.icon_button(url, title, icon, target="main")
+                html.icon_button(url, title, icon, target="main", ty="icon")
             else:
                 iconlink(title, url, icon)
 

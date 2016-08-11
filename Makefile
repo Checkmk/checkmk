@@ -296,13 +296,13 @@ analyze: livestatus/config.h
 cppcheck: compile_commands.json
 	@./compiled_sources | \
 	sed 's/^"\(.*\)"$$/\1/' | \
-	$(CPPCHECK) --max-configs=16 -UCMC --enable=all --inline-suppr -I livestatus/src -I livestatus --file-list=- --quiet --template=gcc
+	$(CPPCHECK) --max-configs=16 -UCMC --enable=all --suppress=missingIncludeSystem --inline-suppr -I livestatus/src -I livestatus --file-list=- --quiet --template=gcc
 
 # XML output into file intended for machine processing.
 cppcheck-xml: compile_commands.json
 	@./compiled_sources | \
 	sed 's/^"\(.*\)"$$/\1/' | \
-	$(CPPCHECK) --max-configs=16 -UCMC --enable=all --inline-suppr -I livestatus/src -I livestatus --file-list=- --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml
+	$(CPPCHECK) --max-configs=16 -UCMC --enable=all --suppress=missingIncludeSystem --inline-suppr -I livestatus/src -I livestatus --file-list=- --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only

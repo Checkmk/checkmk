@@ -248,7 +248,7 @@ def format_config(instances, prefix, config_key, config_report = "all",
                 if value and (extra_info_report == "all" or key in extra_info_report):
                     line.append("%s %s" % (key, value))
 
-        result.append(("%s" % delimeter).join(line))
+        result.append(("%s" % delimeter).join(map(lambda x: x.encode("utf-8"), line)))
     return "\n".join(result)
 
 # Format instance without subnodes as key/value lines

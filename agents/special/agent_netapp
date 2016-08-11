@@ -778,7 +778,7 @@ else:
 
     # VFiler
     vfiler_info  = query("vfiler-list-info")
-    vfiler_names = []
+    vfiler_names = [""] # default is no vfiler
     if vfiler_info:
         print "<<<netapp_api_vf_status:sep(9)>>>"
         for vfiler in vfiler_info.children_get():
@@ -788,20 +788,20 @@ else:
             print "%s\t%s" % (name, response.child_get_string("status"))
 
     # Snapvaults
-    if vfiler_names:
-        print "<<<netapp_api_snapvault:sep(9)>>>"
-        for vfiler in vfiler_names:
-            server.set_vfiler(vfiler)
-            response = server.invoke("snapvault-secondary-relationship-status-list-iter-start")
-            records  = response.child_get_string("records")
-            if not records or records == "0":
-                continue
-            tag = response.child_get_string("tag")
-            response = server.invoke("snapvault-secondary-relationship-status-list-iter-next", "maximum", records, "tag", tag)
-            print format_config(response.child_get("status-list"), "snapvault", "source-path",
-                                    config_report = ["lag-time", "state", "status", "source-system", "destination-system"])
-            server.invoke("snapvault-secondary-relationship-status-list-iter-end","tag", tag)
-        server.set_vfiler("")
+    print "<<<netapp_api_snapvault:sep(9)>>>"
+    for vfiler in vfiler_names:
+        server.set_vfiler(vfiler)
+        response = server.invoke("snapvault-secondary-relationship-status-list-iter-start")
+        records  = response.child_get_string("records")
+        if not records or records == "0":
+            continue
+        tag = response.child_get_string("tag")
+        response = server.invoke("snapvault-secondary-relationship-status-list-iter-next", "maximum", records, "tag", tag)
+        print format_config(response.child_get("status-list"), "snapvault", "source-path",
+                                config_report = ["lag-time", "state", "status", "source-system", "destination-system"])
+        server.invoke("snapvault-secondary-relationship-status-list-iter-end","tag", tag)
+    server.set_vfiler("") # revert back to default (no) vfiler
+
 
     # VFiler Counters
     vfiler_counters = query_counters("vfiler")

@@ -1,0 +1,10 @@
+Title: agent_netapp: fixed exception with values containing umlauts
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p10
+Date: 1470922034
+
+

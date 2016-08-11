@@ -318,10 +318,10 @@ def query_nodes(what, node_attribute = "node-name"):
 
 section_errors = []
 def query(what, return_toplevel_node = False):
-    # HACK: if "what" endswith get-iter, add max_records = 5000
+    # HACK: if "what" endswith "iter", add max_records = 5000
     # This approach is way easier than reading the tag, invoke another
     # command and merge all answers together
-    if what.endswith("get-iter"):
+    if what.endswith("iter"):
         response = server.invoke(what, "max-records", 5000)
     else:
         response = server.invoke(what)
@@ -665,6 +665,15 @@ if netapp_mode == "clustermode":
             if node in ha_partners:
                 processed_nodes.append(ha_partners[node])
 
+    # Qtree quota usage (# UNTESTED! #)
+    quota_info = query("quota-report-iter")
+    if quota_info:
+        print "<<<netapp_api_qtree_quota:sep(9)>>>"
+        print format_config(quota_info, "quota", "tree",
+                            config_report = ["volume", "tree", "disk-limit", "disk-used",
+                                             "quota-type", "quota-users.quota-user.quota-user-name"],
+                            config_rename = {"quota-users.quota-user.quota-user-name": "quota-users"})
+
 
 #.
 #   .--7Mode Settings------------------------------------------------------.
@@ -835,6 +844,16 @@ else:
     licensev2_info = query("license-v2-list-info")
     if licensev2_info:
         print format_config(licensev2_info, "license", "package")
+
+    # Qtree quota usage
+    quota_info = query("quota-report")
+    if quota_info:
+        print "<<<netapp_api_qtree_quota:sep(9)>>>"
+        print format_config(quota_info, "quota", "tree",
+                            config_report = ["volume", "tree", "disk-limit", "disk-used",
+                                             "quota-type", "quota-users.quota-user.quota-user-name"],
+                            config_rename = {"quota-users.quota-user.quota-user-name": "quota-users"})
+
 
 #
 #print "<<<netapp_errors>>>"

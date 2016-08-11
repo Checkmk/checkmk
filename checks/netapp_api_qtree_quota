@@ -1,0 +1,66 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<netapp_api_qtree_quota:sep(9)>>>
+# quota user01    quota-type user disk-limit 12288000 quota-users AD\aolov  volume vol_silber2_group_cifs   disk-used 0
+# quota user01    quota-type user disk-limit 12288000 quota-users AD\bva    volume vol_silber2_group_cifs   disk-used 0
+# quota user01    quota-type user disk-limit 12288000 quota-users AD\cclze    volume vol_silber2_group_cifs   disk-used 0
+# quota fdo01   quota-type tree disk-limit 4294967296   volume vol_bronze1_fdo1 disk-used 3544121572
+# quota fdo03   quota-type tree disk-limit 2684354560   volume vol_bronze1_fdo2 disk-used 788905236
+
+def inventory_netapp_api_qtree_quota(parsed):
+    for qtree, attrs in parsed.items():
+        if attrs.get("quota-type") == "tree":
+            yield qtree, {}
+
+def check_netapp_api_qtree_quota(item, params, parsed):
+    qtree = parsed.get(item)
+
+    if not qtree:
+        return 3, "Qtree not found in agent output"
+
+    size_total = int(qtree.get("disk-limit")) / 1024.0
+    size_avail = size_total - int(qtree.get("disk-used")) / 1024.0
+    if qtree.get("files-used", "").isdigit() and qtree.get("file-limit", "").isdigit():
+        inodes_total = int(qtree.get("file-limit"))
+        inodes_avail = inodes_total - int(qtree.get("files-used"))
+    else:
+        inodes_total = None
+        inodes_avail = None
+
+    return df_check_filesystem_single(g_hostname, item, size_total, size_avail, 0,
+                                      inodes_total, inodes_avail, params)
+
+check_info["netapp_api_qtree_quota"] = {
+    'check_function'          : check_netapp_api_qtree_quota,
+    'inventory_function'      : inventory_netapp_api_qtree_quota,
+    'parse_function'          : lambda info: netapp_api_parse_lines(info, custom_keys = ["quota", "quota-users"]),
+    'service_description'     : 'Qtree %s',
+    'has_perfdata'            : True,
+    'group'                   : "filesystem",
+    'includes'                : [ "df.include", "netapp_api.include" ],
+    "default_levels_variable" : "filesystem_default_levels",
+}

@@ -39,8 +39,6 @@ struct LogEntry;
 class World;
 #endif
 
-#define MAX_LOGLINE 65536
-
 typedef std::map<uint64_t, LogEntry *>
     logfile_entries_t;  // key is time_t . lineno
 
@@ -54,7 +52,6 @@ private:
     uint32_t _lineno;  // read until this line
 
     logfile_entries_t _entries;
-    char _linebuffer[MAX_LOGLINE];
 #ifdef CMC
     World *_world;  // CMC: world our references point into
 #endif
@@ -90,7 +87,7 @@ public:
 private:
     void loadRange(FILE *file, unsigned missing_types, LogCache *, time_t since,
                    time_t until, unsigned logclasses);
-    bool processLogLine(uint32_t, unsigned);
+    bool processLogLine(uint32_t, const char *linebuffer, unsigned);
     uint64_t makeKey(time_t, unsigned);
 };
 

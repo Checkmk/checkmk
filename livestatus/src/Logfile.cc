@@ -27,7 +27,9 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 #include <utility>
+#include <vector>
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "Query.h"
@@ -40,7 +42,8 @@
 #include "cmc.h"
 #endif
 
-using std::make_pair;
+using std::make_unique;
+using std::vector;
 
 extern unsigned long g_max_lines_per_logfile;
 
@@ -152,14 +155,15 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
 
 void Logfile::loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
                         time_t since, time_t until, unsigned logclasses) {
-    while (fgets(_linebuffer, MAX_LOGLINE, file) != nullptr) {
+    vector<char> linebuffer(65536);
+    while (fgets(&linebuffer[0], linebuffer.size(), file) != nullptr) {
         if (_lineno >= g_max_lines_per_logfile) {
             logger(LG_ERR, "More than %lu lines in %s. Ignoring the rest!",
                    g_max_lines_per_logfile, this->_path);
             return;
         }
         _lineno++;
-        if (processLogLine(_lineno, missing_types)) {
+        if (processLogLine(_lineno, &linebuffer[0], missing_types)) {
             logcache->handleNewMessage(this, since, until,
                                        logclasses);  // memory management
         }
@@ -186,26 +190,24 @@ long Logfile::freeMessages(unsigned logclasses) {
     return freed;
 }
 
-bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses) {
-    auto entry = new LogEntry(_commands_holder, lineno, _linebuffer);
+bool Logfile::processLogLine(uint32_t lineno, const char *linebuffer,
+                             unsigned logclasses) {
+    auto entry = make_unique<LogEntry>(_commands_holder, lineno, linebuffer);
     // ignored invalid lines
     if (entry->_logclass == LOGCLASS_INVALID) {
-        delete entry;
         return false;
     }
-    if (((1 << entry->_logclass) & logclasses) != 0u) {
-        uint64_t key = makeKey(entry->_time, lineno);
-        if (_entries.find(key) == _entries.end()) {
-            _entries.insert(make_pair(key, entry));
-        } else {  // this should never happen. The lineno must be unique!
-            logger(LG_ERR, "Strange: duplicate logfile line %s", _linebuffer);
-            delete entry;
-            return false;
-        }
-        return true;
+    if (((1 << entry->_logclass) & logclasses) == 0u) {
+        return false;
     }
-    delete entry;
-    return false;
+    uint64_t key = makeKey(entry->_time, entry->_lineno);
+    if (_entries.find(key) != _entries.end()) {
+        // this should never happen. The lineno must be unique!
+        logger(LG_ERR, "Strange: duplicate logfile line %s", entry->_complete);
+        return false;
+    }
+    _entries.emplace(key, entry.release());
+    return true;
 }
 
 logfile_entries_t *Logfile::getEntriesFromQuery(Query * /*unused*/,

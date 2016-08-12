@@ -53,6 +53,7 @@ Logfile::Logfile(const CommandsHolder &commands_holder, const char *path,
     , _path(strdup(path))
     , _since(0)
     , _watch(watch)
+    , _read_pos{}
     , _lineno(0)
 #ifdef CMC
     , _world(nullptr)

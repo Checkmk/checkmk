@@ -91,7 +91,7 @@ struct LogEntry {
     CommandsHolder::Command _command;
 
     LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
-             char *line);
+             const char *line);
     ~LogEntry();
     unsigned updateReferences(const CommandsHolder &commands_holder);
     static int serviceStateToInt(const char *s);

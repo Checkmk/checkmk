@@ -34,7 +34,7 @@ using mk::starts_with;
 using std::string;
 
 LogEntry::LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
-                   char *line)
+                   const char *line)
     : _type(NONE) {
     // TODO(sp) Fix all handleFooEntry() member functions below to always set
     // all fields and remove this set-me-to-zero-to-be-sure-block.

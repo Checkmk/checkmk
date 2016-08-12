@@ -192,8 +192,8 @@ InputBuffer::Result InputBuffer::readRequest() {
                 length--;
             }
             if (length > 0) {
-                _request_lines.push_back(
-                    string(&_readahead_buffer[_read_index], length));
+                _request_lines.emplace_back(&_readahead_buffer[_read_index],
+                                            length);
             } else {
                 logger(LG_INFO,
                        "Warning ignoring line containing only whitespace");

@@ -22,7 +22,6 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// IWYU pragma: no_include <bits/socket_type.h>
 #include "EventConsoleConnection.h"
 #include <sys/socket.h>
 #include <sys/un.h>

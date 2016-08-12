@@ -25,7 +25,6 @@
 // Needed for strdup and S_ISSOCK
 #define _XOPEN_SOURCE 500
 
-// IWYU pragma: no_include <bits/socket_type.h>
 #include "config.h"
 #include <fcntl.h>
 #include <pthread.h>

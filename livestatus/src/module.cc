@@ -882,7 +882,6 @@ void omd_advertize() {
 }
 
 /* this function gets called when the module is loaded by the event broker */
-/* cppcheck-suppress unusedFunction */
 extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
                               void *handle) {
     g_nagios_handle = handle;
@@ -931,7 +930,6 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
     return 0;
 }
 
-/* cppcheck-suppress unusedFunction */
 extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
                                 int reason __attribute__((__unused__))) {
     logger(LG_INFO, "deinitializing");

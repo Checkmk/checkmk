@@ -117,7 +117,7 @@ void Renderer::output(double value) {
 
 void Renderer::output(char16_t value) {
     ostringstream os;
-    os << "\\u" << hex << setw(4) << setfill('0') << value;  // NOLINT
+    os << R"(\u)" << hex << setw(4) << setfill('0') << value;
     add(os.str());
 }
 
@@ -174,7 +174,7 @@ void Renderer::outputDecodedLatin1(const string &prefix, const char *start,
 void Renderer::outputDecoded(const string &prefix, const char *start,
                              const char *end, Encoding data_encoding) {
     add(prefix);
-    add("\"");  // NOLINT
+    add(R"(")");  // "
     // TODO(sp) Use polymorphism instead of switch.
     // TODO(sp) Use codecvt framework instead of homemade stuff.
     switch (data_encoding) {
@@ -188,7 +188,7 @@ void Renderer::outputDecoded(const string &prefix, const char *start,
             outputDecodedMixed(start, end);
             break;
     }
-    add("\"");  // NOLINT
+    add(R"(")");  // "
 }
 
 void Renderer::outputDecodedUTF8(const char *start, const char *end) {

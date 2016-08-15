@@ -461,7 +461,6 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
                         else:
                             crit_min, warn_min, warn_max, crit_max = limits
 
-                        extra_info = ""
                         count = state_values[1]
                         if count < crit_min:
                             state = max(state, 2)

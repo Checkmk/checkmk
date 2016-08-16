@@ -334,6 +334,7 @@
     * 3562 FIX: agent_vsphere.pysphere: fixed problems related to ssl certificate validation on older distributions/python versions
     * 3773 FIX: check_http: fixed proxy authentication
     * 3782 FIX: agent_netapp: fixed exception with values containing umlauts
+    * 3774 FIX: apc_symmetra: fixed wrong status and values handling
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

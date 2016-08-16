@@ -80,8 +80,8 @@ def check_http_arguments(params):
         args.append('--sni')
 
     if "response_time" in settings:
-        args += [ '-w', '%f' % settings["response_time"][0]/1000.0,
-                  '-c', '%f' % settings["response_time"][1]/1000.0 ]
+        args += [ '-w', '%f' % (settings["response_time"][0]/1000.0),
+                  '-c', '%f' % (settings["response_time"][1]/1000.0) ]
 
     if "timeout" in settings:
         args += [ '-t', settings["timeout"] ]

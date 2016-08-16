@@ -24,10 +24,13 @@
 
 #include "HostFileColumn.h"
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <cerrno>
 #include <cstring>
-#include "logger.h"
+#include <ostream>
+#include <utility>
+#include "Logger.h"
 
 #ifdef CMC
 #include "Host.h"
@@ -41,14 +44,14 @@ using std::unique_ptr;
 using std::vector;
 
 HostFileColumn::HostFileColumn(string name, string description,
-                               const char *base_dir, const char *suffix,
+                               std::string base_dir, std::string suffix,
                                int indirect_offset, int extra_offset)
     : BlobColumn(name, description, indirect_offset, extra_offset)
-    , _base_dir(base_dir)
-    , _suffix(suffix) {}
+    , _base_dir(move(base_dir))
+    , _suffix(move(suffix)) {}
 
 unique_ptr<vector<char>> HostFileColumn::getBlob(void *data) {
-    if (_base_dir[0] == 0) {
+    if (_base_dir.empty()) {
         return nullptr;  // Path is not configured
     }
 
@@ -65,32 +68,46 @@ unique_ptr<vector<char>> HostFileColumn::getBlob(void *data) {
 
     string path = _base_dir + "/" + host_name + _suffix;
     int fd = open(path.c_str(), O_RDONLY);
-    if (fd < 0) {
+    if (fd == -1) {
         // It is OK when inventory/logwatch files do not exist.
         if (errno != ENOENT) {
-            logger(LG_WARN, "Cannot open %s: %s", path.c_str(),
-                   strerror(errno));
+            Warning() << "Cannot open " << path << ":" << strerror(errno);
         }
         return nullptr;
     }
 
-    off_t size = lseek(fd, 0, SEEK_END);
-    if (size < 0) {
-        close(fd);
-        logger(LG_WARN, "Cannot seek to end of %s: %s", path.c_str(),
-               strerror(errno));
+    struct stat st;
+    if (fstat(fd, &st) == -1) {
+        Warning() << "Cannot stat " << path << ": " << strerror(errno);
+        return nullptr;
+    }
+    if (!S_ISREG(st.st_mode)) {
+        Warning() << path << " is not a regular file";
         return nullptr;
     }
 
-    lseek(fd, 0, SEEK_SET);
-    unique_ptr<vector<char>> result = make_unique<vector<char>>(size);
-    ssize_t read_bytes = read(fd, &(*result)[0], size);
+    size_t bytes_to_read = st.st_size;
+    unique_ptr<vector<char>> result = make_unique<vector<char>>(bytes_to_read);
+    char *buffer = &(*result)[0];
+    while (bytes_to_read > 0) {
+        ssize_t bytes_read = read(fd, buffer, bytes_to_read);
+        if (bytes_read == -1) {
+            if (errno != EINTR) {
+                Warning() << "Could not read " << path << ": "
+                          << strerror(errno);
+                close(fd);
+                return nullptr;
+            }
+        } else if (bytes_read == 0) {
+            Warning() << "Premature EOF reading " << path;
+            close(fd);
+            return nullptr;
+        } else {
+            bytes_to_read -= bytes_read;
+            buffer += bytes_read;
+        }
+    }
+
     close(fd);
-    if (read_bytes != size) {
-        logger(LG_WARN, "Cannot read %ld bytes from %s: %s", long(size),
-               path.c_str(), strerror(errno));
-        return nullptr;
-    }
-
     return result;
 }

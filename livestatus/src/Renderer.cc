@@ -49,9 +49,9 @@ Renderer::Renderer(OutputBuffer *output,
                    OutputBuffer::ResponseHeader response_header,
                    bool do_keep_alive, string invalid_header_message,
                    int timezone_offset, Encoding data_encoding, int debug_level)
-    : _output(output)
+    : _data_encoding(data_encoding)
+    , _output(output)
     , _timezone_offset(timezone_offset)
-    , _data_encoding(data_encoding)
     , _debug_level(debug_level) {
     _output->setResponseHeader(response_header);
     _output->setDoKeepalive(do_keep_alive);
@@ -161,37 +161,44 @@ void Renderer::invalidUTF8(unsigned char ch) {
     }
 }
 
-void Renderer::outputDecoded(const string &prefix, const char *start,
-                             const char *end) {
-    outputDecoded(prefix, start, end, _data_encoding);
+void Renderer::outputByteString(const string &prefix,
+                                const vector<char> &value) {
+    add(prefix);
+    add(R"(")");  // "
+    for (auto ch : value) {
+        if (isBoringChar(ch)) {
+            add(string(1, ch));
+        } else {
+            ostringstream os;
+            os << R"(\x)" << hex << setw(2) << setfill('0')
+               << static_cast<unsigned>(ch);
+            add(os.str());
+        }
+    }
+    add(R"(")");  // "
 }
 
-void Renderer::outputDecodedLatin1(const string &prefix, const char *start,
-                                   const char *end) {
-    outputDecoded(prefix, start, end, Encoding::latin1);
-}
-
-void Renderer::outputDecoded(const string &prefix, const char *start,
-                             const char *end, Encoding data_encoding) {
+void Renderer::outputUnicodeString(const string &prefix, const char *start,
+                                   const char *end, Encoding data_encoding) {
     add(prefix);
     add(R"(")");  // "
     // TODO(sp) Use polymorphism instead of switch.
     // TODO(sp) Use codecvt framework instead of homemade stuff.
     switch (data_encoding) {
         case Encoding::utf8:
-            outputDecodedUTF8(start, end);
+            outputUTF8(start, end);
             break;
         case Encoding::latin1:
-            outputDecodedLatin1(start, end);
+            outputLatin1(start, end);
             break;
         case Encoding::mixed:
-            outputDecodedMixed(start, end);
+            outputMixed(start, end);
             break;
     }
     add(R"(")");  // "
 }
 
-void Renderer::outputDecodedUTF8(const char *start, const char *end) {
+void Renderer::outputUTF8(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
         unsigned char ch0 = *p;
         if (isBoringChar(ch0)) {
@@ -258,7 +265,7 @@ void Renderer::outputDecodedUTF8(const char *start, const char *end) {
     }
 }
 
-void Renderer::outputDecodedLatin1(const char *start, const char *end) {
+void Renderer::outputLatin1(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
         unsigned char ch = *p;
         if (isBoringChar(ch)) {
@@ -269,7 +276,7 @@ void Renderer::outputDecodedLatin1(const char *start, const char *end) {
     }
 }
 
-void Renderer::outputDecodedMixed(const char *start, const char *end) {
+void Renderer::outputMixed(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
         unsigned char ch0 = *p;
         if (isBoringChar(ch0)) {

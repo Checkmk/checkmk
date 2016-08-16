@@ -73,9 +73,9 @@ void RendererJSON::endDict() { add("}"); }
 void RendererJSON::outputNull() { add("null"); }
 
 void RendererJSON::outputBlob(const vector<char> &value) {
-    outputDecodedLatin1("", &value[0], &value[value.size()]);
+    outputUnicodeString("", &value[0], &value[value.size()], Encoding::latin1);
 }
 
 void RendererJSON::outputString(const string &value) {
-    outputDecoded("", &value[0], &value[value.size()]);
+    outputUnicodeString("", &value[0], &value[value.size()], _data_encoding);
 }

@@ -101,22 +101,21 @@ protected:
     void add(const std::string &str);
     void add(const std::vector<char> &value);
 
-    void outputDecoded(const std::string &prefix, const char *start,
-                       const char *end);
-    void outputDecodedLatin1(const std::string &prefix, const char *start,
-                             const char *end);
+    void outputByteString(const std::string &prefix,
+                          const std::vector<char> &value);
+    void outputUnicodeString(const std::string &prefix, const char *start,
+                             const char *end, Encoding data_encoding);
+
+    const Encoding _data_encoding;
 
 private:
     OutputBuffer *const _output;
     const int _timezone_offset;
-    const Encoding _data_encoding;
     const int _debug_level;
 
-    void outputDecoded(const std::string &prefix, const char *start,
-                       const char *end, Encoding data_encoding);
-    void outputDecodedUTF8(const char *start, const char *end);
-    void outputDecodedLatin1(const char *start, const char *end);
-    void outputDecodedMixed(const char *start, const char *end);
+    void outputUTF8(const char *start, const char *end);
+    void outputLatin1(const char *start, const char *end);
+    void outputMixed(const char *start, const char *end);
     void truncatedUTF8();
     void invalidUTF8(unsigned char ch);
 

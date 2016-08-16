@@ -74,9 +74,9 @@ void RendererPython3::endDict() { add("}"); }
 void RendererPython3::outputNull() { add("None"); }
 
 void RendererPython3::outputBlob(const vector<char> &value) {
-    outputDecodedLatin1("b", &value[0], &value[value.size()]);
+    outputByteString("b", value);
 }
 
 void RendererPython3::outputString(const string &value) {
-    outputDecoded("", &value[0], &value[value.size()]);
+    outputUnicodeString("", &value[0], &value[value.size()], _data_encoding);
 }

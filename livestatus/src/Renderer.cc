@@ -106,7 +106,8 @@ void Renderer::add(const string &str) { _output->add(str); }
 void Renderer::add(const vector<char> &value) { _output->add(value); }
 
 void Renderer::output(double value) {
-    if (std::isnan(value)) {
+    // Funny cast for older non-C++11 headers
+    if (static_cast<bool>(std::isnan(value))) {
         output(Null());
     } else {
         ostringstream os;

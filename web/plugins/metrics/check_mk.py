@@ -3786,8 +3786,8 @@ check_metrics["check_mk-aix_memory"] = {
 check_metrics["check_mk-mem.win"] = {
     "memory"         : { "name" : "mem_used", "scale" : MB },
     "pagefile"       : { "name" : "pagefile_used", "scale" : MB },
-    "mem_total"      : { "auto_graph" : False },
-    "pagefile_total" : { "auto_graph" : False },
+    "mem_total"      : { "auto_graph" : False, "scale" : MB },
+    "pagefile_total" : { "auto_graph" : False, "scale" : MB},
 }
 
 check_metrics["check_mk-brocade_mlx.module_mem"] = {

@@ -126,6 +126,7 @@
     * 3560 emcvnx_disks: now able to configure states for hard read/write errors and when enclosure rebuilds
     * 3783 netapp_api_qtree_quota: new check to monitor disk usage of qtrees
     * 3784 agent_netapp / 7mode: now also reports snapsvaults for the default filer...
+    * 3832 diskstat: added new device bcache
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

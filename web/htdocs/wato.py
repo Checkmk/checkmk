@@ -14802,7 +14802,8 @@ def save_changed_custom_attrs(all_attrs, what):
 def declare_custom_host_attrs():
     # First remove all previously registered custom host attributes
     for attr_name in g_host_attribute.keys():
-        if attr_name not in builtin_host_attribute_names:
+        if attr_name not in builtin_host_attribute_names and not\
+           attr_name.startswith("tag_"):
             undeclare_host_attribute(attr_name)
 
     # now declare the custom attributes

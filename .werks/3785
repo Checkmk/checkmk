@@ -1,0 +1,10 @@
+Title: WATO rulesets: now able to set a negate option for services and items
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.4.0i1
+Date: 1471432220
+Class: feature
+
+You can now set a <i>negate</i> checkbox for services, just like the negate host checkbox.
+

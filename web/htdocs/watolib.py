@@ -115,6 +115,8 @@ ALL_HOSTS    = [ '@all' ]
 ALL_SERVICES = [ "" ]
 NEGATE       = '@negate'
 NO_ITEM      = {} # Just an arbitrary unique thing
+ENTRY_NEGATE_CHAR = "!"
+
 
 # Actions for log_pending
 RESTART      = 1

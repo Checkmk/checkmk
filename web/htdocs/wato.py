@@ -12842,28 +12842,51 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
             else:
                 condition = _("Host name is ") + ", ".join(tt_list[:-1])
                 condition += _(" or ") + tt_list[-1]
-        elif host_list[0][0] == '!':
+        elif host_list[0][0] == ENTRY_NEGATE_CHAR:
             hosts = [ h[1:] for h in host_list[:-1] ]
-            condition = _("Host is <b>not</b> one of ") + ", ".join(hosts)
+            if len(hosts) == 1:
+                condition = _("Host is <b>not</b> ") + hosts[0]
+            else:
+                condition = _("Host is <b>not</b> one of ") + ", ".join(hosts)
         # other cases should not occur, e.g. list of explicit hosts
         # plus ALL_HOSTS.
         if condition:
             html.write('<li class="condition">%s</li>' % condition)
 
+    def boldify(what):
+        return "<b>%s</b>" % what
+
     # Item list
     if ruleset["itemtype"] and item_list != ALL_SERVICES:
-        tt_list = []
-        for t in item_list:
-            if t.endswith("$"):
-                tt_list.append("%s <tt><b>%s</b></tt>" % (_("is"), t[:-1]))
-            else:
-                tt_list.append("%s <tt><b>%s</b></tt>" % (_("begins with"), t))
-
         if ruleset["itemtype"] == "service":
-            condition = _("Service name ") + " or ".join(tt_list)
+            condition_prefix = _("Service name ")
         elif ruleset["itemtype"] == "item":
-            condition = ruleset["itemname"] + " " + " or ".join(tt_list)
-        html.write('<li class="condition">%s</li>' % condition)
+            condition_prefix = ruleset["itemname"] + " "
+
+        negated = item_list[-1] == ALL_SERVICES[0]
+        if negated:
+            item_list = item_list[:-1]
+            cleaned_item_list = [ i.lstrip(ENTRY_NEGATE_CHAR) for i in negated and item_list ]
+        else:
+            cleaned_item_list = item_list
+
+        explicit_items = [ i[:-1] for i in cleaned_item_list if i[-1] == "$" ]
+        prefix_items   = [ i for i in cleaned_item_list if i[-1] != "$" ]
+
+        explicit_text = negated and _("is <b>not</b> ") or _("is ")
+        prefix_text   = negated and _("begins <b>not</b> with ") or _("begins with ")
+
+        condition_texts = []
+        for what, text in [ (explicit_items, explicit_text),
+                            (prefix_items,   prefix_text) ]:
+            if not what:
+                continue
+            condition_text = text + " or ".join(map(boldify, what))
+            condition_texts.append(condition_prefix + condition_text)
+
+        html.write('<li class="condition">%s</li>' %\
+                    (negated and _(" and<br>") or _(" or<br>")).join(condition_texts))
+
 
     html.write("</ul>")
 
@@ -12881,9 +12904,9 @@ def get_rule_conditions(ruleset):
         host_list = vs.from_html_vars("hostlist")
         vs.validate_value(host_list, "hostlist")
         if negate:
-            host_list = [ "!" + h for h in host_list ]
+            host_list = [ ENTRY_NEGATE_CHAR + h for h in host_list ]
         # append ALL_HOSTS to negated host lists
-        if len(host_list) > 0 and host_list[0][0] == '!':
+        if len(host_list) > 0 and host_list[0][0] == ENTRY_NEGATE_CHAR:
             host_list += ALL_HOSTS
         elif len(host_list) == 0 and negate:
             host_list = ALL_HOSTS # equivalent
@@ -12893,9 +12916,11 @@ def get_rule_conditions(ruleset):
     if itemtype:
         explicit = html.get_checkbox("explicit_services")
         if not explicit:
-            item_list = [ "" ]
+            item_list = ALL_SERVICES
         else:
             itemenum = ruleset["itemenum"]
+            negate = html.get_checkbox("negate_entries")
+
             if itemenum:
                 itemspec = ListChoice(choices = itemenum, columns = 3)
                 item_list = [ x+"$" for x in itemspec.from_html_vars("item") ]
@@ -12903,6 +12928,14 @@ def get_rule_conditions(ruleset):
                 vs = ListOfStrings(valuespec = RegExpUnicode())
                 item_list = vs.from_html_vars("itemlist")
                 vs.validate_value(item_list, "itemlist")
+
+            if negate:
+                item_list = [ ENTRY_NEGATE_CHAR + i for i in item_list]
+
+            if len(item_list) > 0 and item_list[0][0] == ENTRY_NEGATE_CHAR:
+                item_list += ALL_SERVICES
+            elif len(item_list) == 0 and negate:
+                item_list = ALL_SERVICES # equivalent
 
             if len(item_list) == 0:
                 raise MKUserError("item_0", _("Please specify at least one %s or "
@@ -13097,6 +13130,7 @@ def mode_edit_rule(phase, new = False):
         orientation = "horizontal",
         valuespec = TextAscii(size = 30)).render_input("hostlist", explicit_hosts)
 
+    html.write("<br><br>")
     html.checkbox("negate_hosts", negate_hosts, label =
                  _("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"))
     html.write("</div>")
@@ -13145,22 +13179,33 @@ def mode_edit_rule(phase, new = False):
             html.write('<div id="%s" style="display: %s; padding: 0px;">' % (
                 div_id, not checked and "none" or ""))
             itemenum = rulespec["itemenum"]
+
+            negate_entries = len(item_list) > 0 and item_list[0].startswith(ENTRY_NEGATE_CHAR)
+            if negate_entries:
+                cleaned_item_list = [ i.lstrip(ENTRY_NEGATE_CHAR) for i in item_list[:-1] ] # strip last entry (ALL_SERVICES)
+            else:
+                cleaned_item_list = item_list
+
             if itemenum:
-                value = [ x.rstrip("$") for x in item_list ]
+                value = [ x.rstrip("$") for x in cleaned_item_list ]
                 itemspec = ListChoice(choices = itemenum, columns = 3)
                 itemspec.render_input("item", value)
             else:
                 ListOfStrings(
                     orientation = "horizontal",
-                    valuespec = RegExpUnicode(size = 30)).render_input("itemlist", item_list)
-
+                    valuespec = RegExpUnicode(size = 30)).render_input("itemlist", cleaned_item_list)
                 html.write("<br><br>")
+
+            html.checkbox("negate_entries", negate_entries, label =
+                         _("<b>Negate:</b> make rule apply for <b>all but</b> the above entries"))
+
+            if not itemenum:
                 html.help(_("The entries here are regular expressions to match the beginning. "
                              "Add a <tt>$</tt> for an exact match. An arbitrary substring is matched "
                              "with <tt>.*</tt><br>Please note that on windows systems any backslashes need to be escaped."
                              "For example C:\\\\tmp\\\\message.log"))
-                html.write("</div>")
 
+            html.write("</div>")
 
     forms.end()
     html.button("save", _("Save"))
@@ -13197,6 +13242,7 @@ def save_rulesets(folder, rulesets):
 def save_rule(out, folder, rulespec, rule):
     out.write("  ( ")
     value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
+
     if rulespec["valuespec"]:
         out.write(repr(value) + ", ")
     elif not value:
@@ -13223,7 +13269,11 @@ def save_rule(out, folder, rulespec, rule):
         if item_list == ALL_SERVICES:
             out.write("ALL_SERVICES")
         else:
-            out.write(repr(item_list))
+            if item_list[-1] == ALL_SERVICES[0]:
+                out.write(repr(item_list[:-1]))
+                out.write(" + ALL_SERVICES")
+            else:
+                out.write(repr(item_list))
 
     if rule_options:
         out.write(", %r" % rule_options)
@@ -13318,6 +13368,7 @@ def register_rule(group, varname, valuespec = None, title = None,
                   deprecated = False):
     if not itemname and itemtype == "service":
         itemname = _("Service")
+
 
     ruleset = {
         "group"           : group,

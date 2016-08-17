@@ -1,0 +1,10 @@
+Title: Input field of hostname is not a regex input field in configuration rules
+Component: wato
+State: open
+Date: 2016-08-17 19:23:41
+Targetversion: 1.2.8
+Class: bug
+
+If you create a new rule in WATO for configuration and want to use regex to match hostnames you have to add
+the ~(tilde) in front of the hostname to get regex matching.
+This inout field should be a regex input field as default.

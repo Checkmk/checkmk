@@ -115,6 +115,15 @@ void Renderer::output(double value) {
     }
 }
 
+void Renderer::output(PlainChar value) { add(string(1, value._ch)); }
+
+void Renderer::output(HexEscape value) {
+    ostringstream os;
+    os << R"(\x)" << hex << setw(2) << setfill('0')
+       << static_cast<unsigned>(static_cast<unsigned char>(value._ch));
+    add(os.str());
+}
+
 void Renderer::output(char16_t value) {
     ostringstream os;
     os << R"(\u)" << hex << setw(4) << setfill('0') << value;
@@ -157,7 +166,7 @@ void Renderer::truncatedUTF8() {
 
 void Renderer::invalidUTF8(unsigned char ch) {
     if (_debug_level >= 2) {
-        Informational() << "invalid byte " << int(ch) << "in UTF-8 sequence";
+        Informational() << "invalid byte " << int(ch) << " in UTF-8 sequence";
     }
 }
 
@@ -167,12 +176,9 @@ void Renderer::outputByteString(const string &prefix,
     add(R"(")");  // "
     for (auto ch : value) {
         if (isBoringChar(ch)) {
-            add(string(1, ch));
+            output(PlainChar{ch});
         } else {
-            ostringstream os;
-            os << R"(\x)" << hex << setw(2) << setfill('0')
-               << static_cast<unsigned>(ch);
-            add(os.str());
+            output(HexEscape{ch});
         }
     }
     add(R"(")");  // "
@@ -201,8 +207,12 @@ void Renderer::outputUnicodeString(const string &prefix, const char *start,
 void Renderer::outputUTF8(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
         unsigned char ch0 = *p;
-        if (isBoringChar(ch0)) {
-            add(string(1, *p));
+        if ((ch0 & 0x80) == 0x00) {
+            if (isBoringChar(ch0)) {
+                output(PlainChar{*p});
+            } else {
+                output(char32_t{ch0});
+            }
         } else if ((ch0 & 0xE0) == 0xC0) {
             // 2 byte encoding
             if (ch0 == 0xC0 || ch0 == 0xC1) {
@@ -269,7 +279,7 @@ void Renderer::outputLatin1(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
         unsigned char ch = *p;
         if (isBoringChar(ch)) {
-            add(string(1, *p));
+            output(PlainChar{*p});
         } else {
             output(char32_t{ch});
         }
@@ -280,7 +290,7 @@ void Renderer::outputMixed(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
         unsigned char ch0 = *p;
         if (isBoringChar(ch0)) {
-            add(string(1, *p));
+            output(PlainChar{*p});
         } else if ((ch0 & 0xE0) == 0xC0) {
             // Possible 2 byte encoding? => Assume UTF-8, ignore overlong
             // encodings

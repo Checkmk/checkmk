@@ -77,6 +77,9 @@ def check_mail_loop_arguments(params):
         args += [ '--warning=%d' % params['duration'][0] ]
         args += [ '--critical=%d' % params['duration'][1] ]
 
+    if 'subject' in params:
+        args += ' --subject=%s' % quote_shell_string(params['subject'])
+
     return args
 
 
@@ -86,4 +89,3 @@ active_check_info['mail_loop'] = {
     "service_description" : lambda params: "Mail Loop %s" % params['item'],
     "has_perfdata"        : True,
 }
-

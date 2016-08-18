@@ -84,6 +84,8 @@ OPTIONS:
                           check plugin. This is disabled by default, which
                           might make your mailbox grow when you not clean it up
                           manually.
+  --subject SUBJECT       You can specify the subject text. If choosen the subject
+                          'Check_MK-Mail-Loop' will be replace by the stated text.
 
   -d, --debug             Enable debug mode
   -h, --help              Show this help message and exit
@@ -129,7 +131,7 @@ conn_timeout    = 10
 delete_messages = False
 status_dir      = None
 status_suffix   = None
-
+subject         = 'Check_MK-Mail-Loop'
 for o,a in opts:
     if o in [ '-h', '--help' ]:
         usage()
@@ -175,6 +177,8 @@ for o,a in opts:
         status_dir = a
     elif o == '--status-suffix':
         status_suffix = a
+    elif o == '--subject':
+        subject = a
 
 param_names = dict(opts).keys()
 for p in required_params:
@@ -287,7 +291,7 @@ def fetch_mails():
                         raise Exception('Failed to fetch mail %s (%s). Available messages: %r' % (num, parse_exception(e), messages))
 
         # Now filter out the messages for this check
-        pattern = re.compile('(?:Re: |WG: )?Check_MK-Mail-Loop ([^\s]+) ([^\s]+)')
+        pattern = re.compile('(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % subject)
         for index, msg in mails.items():
             matches = pattern.match(msg.get('Subject', ''))
             if matches:
@@ -324,7 +328,7 @@ def send_mail():
     mail = email.mime.text.MIMEText("")
     mail['From']    = mail_from
     mail['To']      = mail_from
-    mail['Subject'] = 'Check_MK-Mail-Loop %d %d' % (now, key)
+    mail['Subject'] = '%s %d %d' % (subject, now, key)
 
     try:
         S = smtplib.SMTP(smtp_server, smtp_port)

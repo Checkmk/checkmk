@@ -128,6 +128,7 @@
     * 3784 agent_netapp / 7mode: now also reports snapsvaults for the default filer...
     * 3832 diskstat: added new device bcache
     * 3775 fjdarye500_pfm: new check which monitors health status and lifetime of PCIe flash modules of Eternus DX500 storage systems
+    * 3776 check_mail_loop: now you can specify the subject text instead of default 'Check_MK-Mail-Loop'
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

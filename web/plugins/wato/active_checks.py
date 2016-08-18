@@ -1803,12 +1803,18 @@ register_rule(group,
                  'the SMTP protocol and then tries to receive these mails back by querying the '
                  'inbox of a IMAP or POP3 mailbox. With this check you can verify that your whole '
                  'mail delivery progress is working.'),
-        optional_keys = ['smtp_server', 'smtp_tls', 'smtp_port', 'smtp_auth', 'imap_tls', 'connect_timeout', 'delete_messages', 'duration'],
+        optional_keys = ['subject', 'smtp_server', 'smtp_tls', 'smtp_port', 'smtp_auth', 'imap_tls', 'connect_timeout', 'delete_messages', 'duration'],
         elements = [
             ('item', TextUnicode(
                 title = _('Name'),
                 help = _('The service description will be <b>Mail Loop</b> plus this name'),
                 allow_empty = False
+            )),
+            ('subject', TextAscii(
+                title = _('Subject'),
+                allow_empty = False,
+                help = _('Here you can specify the subject text '
+                         'instead of default text \'Check_MK-Mail-Loop\'.'),
             )),
             ('smtp_server', TextAscii(
                 title = _('SMTP Server'),

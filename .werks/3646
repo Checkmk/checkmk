@@ -1,0 +1,21 @@
+Title: Fixed Livestatus output formats
+Level: 2
+Component: livestatus
+Compatible: compat
+Version: 1.4.0i1
+Date: 1471512556
+Class: fix
+
+All Livestatus output formats handle special characters correctly now, including
+non-ASCII characters, quotes, and backslashes.
+
+There is one exception: To avoid compatibility problems, the default
+<tt>csv</tt> format has been left unchanged and is still broken. A new format
+<tt>CSV</tt> (note the uppercase) has been added which is fully functional and
+therefore ignores the <tt>Separators:</tt> header/hack.
+
+Furthermore, a new <tt>python3</tt> format has been added to handle the changed
+default string type in Python 3, where bytestrings and Unicode strings have
+basically swapped their roles.
+
+

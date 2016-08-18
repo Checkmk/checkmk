@@ -325,3 +325,17 @@ api_actions["activate_changes"] = {
     "locking"         : True,
 }
 
+def action_bake_agents(request):
+    try:
+        check_mk_local_automation('bake-agents')
+        last_bake_file = var_dir + "last_bake.mk"
+        file(last_bake_file, 'w').write('%s\n' % defaults.check_mk_version)
+        return _("Successfully baked agents")
+    except Exception, e:
+        raise e
+
+api_actions["bake_agents"] = {
+    "handler"         : action_bake_agents,
+    "locking"         : True,
+}
+

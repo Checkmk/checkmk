@@ -7,5 +7,8 @@ description:
  Check CPU utilizationin percent on Juniper devices.
  This check replaces the older and broken juniper_cpu check.
 
+item:
+ The name of the routing engine.
+
 inventory:
  One service for each Routing Engine will be creted

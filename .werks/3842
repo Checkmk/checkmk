@@ -1,4 +1,4 @@
-Title: juniper_cpu_util: Allow configuratioh of level for routing engine
+Title: juniper_cpu_util: Allow configuration of levels for routing engine
 Level: 1
 Component: checks
 Compatible: compat

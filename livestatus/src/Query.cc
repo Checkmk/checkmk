@@ -877,7 +877,7 @@ Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec) {
         for (unsigned i = 0; i < _stats_columns.size(); i++) {
             aggr[i] = _stats_columns[i]->createAggregator();
         }
-        _stats_groups.insert(make_pair(groupspec, aggr));
+        _stats_groups.emplace(groupspec, aggr);
         return aggr;
     }
     return it->second;

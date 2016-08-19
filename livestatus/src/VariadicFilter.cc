@@ -81,7 +81,7 @@ void VariadicFilter::combineFilters(int count, LogicalOperator andor) {
     }
 
     auto variadic = VariadicFilter::make(andor);
-    while (count-- != 0) {
+    for (auto i = 0; i < count; ++i) {
         variadic->addSubfilter(_subfilters.back());
         _subfilters.pop_back();
     }

@@ -31,7 +31,6 @@
 #include "logger.h"
 
 using std::lock_guard;
-using std::make_pair;
 using std::mutex;
 
 extern timeperiod *timeperiod_list;
@@ -54,7 +53,7 @@ void TimeperiodsCache::logCurrentTimeperiods() {
         auto it = _cache.find(tp);
         if (it == _cache.end()) {  // first entry
             logTransition(tp->name, -1, is_in ? 1 : 0);
-            _cache.insert(make_pair(tp, is_in));
+            _cache.emplace(tp, is_in);
         }
         logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
     }
@@ -84,7 +83,7 @@ void TimeperiodsCache::update(time_t now) {
         auto it = _cache.find(tp);
         if (it == _cache.end()) {  // first entry
             logTransition(tp->name, -1, is_in ? 1 : 0);
-            _cache.insert(make_pair(tp, is_in));
+            _cache.emplace(tp, is_in);
         } else if (it->second != is_in) {
             logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
             it->second = is_in;

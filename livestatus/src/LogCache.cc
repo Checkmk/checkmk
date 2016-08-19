@@ -43,8 +43,6 @@ using std::chrono::system_clock;
 extern time_t last_log_rotation;
 #endif  // CMC
 
-using std::make_pair;
-
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
 // watch nagios' logfile rotation
@@ -166,7 +164,7 @@ void LogCache::scanLogfile(char *path, bool watch) {
         // under normal circumstances this never happens. But the
         // user might have copied files around.
         if (_logfiles.find(since) == _logfiles.end()) {
-            _logfiles.insert(make_pair(since, logfile));
+            _logfiles.emplace(since, logfile);
         } else {
             logger(LG_WARN, "Ignoring duplicate logfile %s", path);
             delete logfile;

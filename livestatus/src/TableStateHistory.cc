@@ -64,7 +64,6 @@ class VariadicFilter;
 using mk::starts_with;
 using std::deque;
 using std::lock_guard;
-using std::make_pair;
 using std::map;
 using std::mutex;
 using std::set;
@@ -559,7 +558,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     }
 
                     // Store this state object for tracking state transitions
-                    state_info.insert(make_pair(key, state));
+                    state_info.emplace(key, state);
                     state->_from = _since;
 
                     // Get notification period of host/service

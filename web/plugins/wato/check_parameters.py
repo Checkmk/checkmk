@@ -1928,7 +1928,8 @@ register_check_parameters(
                     orientation = "horizontal",
                 )
             ),
-        ]
+        ],
+        ignored_keys = [ "ignored_sensors" ],
     ),
     TextAscii(title = _("The sensor name.")),
     "dict",

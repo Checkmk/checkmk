@@ -253,8 +253,8 @@ register_rule(group + '/' + subgroup_inventory,
         elements = [
             ( "ignored_sensors",
                 ListOfStrings(
-                    title = _("Ignore the following IPMI Sensors"),
-                    help  = _("Names of IPMI Sensors that should be ignored during inventory "
+                    title = _("Ignore the following IPMI sensors"),
+                    help  = _("Names of IPMI sensors that should be ignored during inventory "
                               "and when summarizing."
                               "The pattern specified here must match exactly the beginning of "
                               "the actual sensor name (case sensitive)."),
@@ -1909,6 +1909,30 @@ register_check_parameters(
     match_type = "dict",
 )
 
+register_check_parameters(
+    subgroup_environment,
+    "ipmi",
+    _("IPMI sensors"),
+    Dictionary(
+        elements = [
+            ("sensor_states",
+                ListOf(
+                    Tuple(
+                        elements = [
+                            TextAscii(), MonitoringState()
+                        ]
+                    ),
+                    title = _("Set states of IPMI sensor status texts"),
+                    help  = _("The pattern specified here must match exactly the beginning of "
+                              "the sensor state (case sensitive)."),
+                    orientation = "horizontal",
+                )
+            ),
+        ]
+    ),
+    TextAscii(title = _("The sensor name.")),
+    "dict",
+)
 
 register_check_parameters(
     subgroup_environment,

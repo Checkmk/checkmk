@@ -187,7 +187,7 @@ def check_ipmi(item, params, info):
     if item == "Summary":
         return check_ipmi_summarized(parsed, params)
     else:
-        return check_ipmi_detailed(item, parsed)
+        return check_ipmi_detailed(item, params, parsed)
 
 
 def ipmi_format_message(status, val, unit):
@@ -203,8 +203,8 @@ def ipmi_format_message(status, val, unit):
     return infotext
 
 
-def check_ipmi_detailed(item, parsed):
-    for name, val, unit, status, unrec_low, crit_low, \
+def check_ipmi_detailed(item, params, parsed):
+    for name, val, unit, status_txt, unrec_low, crit_low, \
         warn_low, warn_high, crit_high, unrec_high in parsed:
 
         if name == item:
@@ -213,18 +213,23 @@ def check_ipmi_detailed(item, parsed):
             else:
                 perfdata = []
 
-            if status.startswith('ok') and not "failure detected" in status.lower():
+            if status_txt.startswith('ok') and not "failure detected" in status_txt.lower():
                 state = 0
-            elif status.startswith('nc'):
+            elif status_txt.startswith('nc'):
                 state = 1
             else:
                 state = 2
 
-            return state, "Status: %s" % ipmi_format_message(status, val, unit), perfdata
+            for wato_status_txt, wato_status in params.get("sensor_states", []):
+                if status_txt.startswith(wato_status_txt):
+                    state = wato_status
+                    break
+
+            return state, "Status: %s" % ipmi_format_message(status_txt, val, unit), perfdata
 
 
 def check_ipmi_summarized(parsed, params):
-    worst_status  = 0
+    worst_state   = 0
     warn_texts    = []
     crit_texts    = []
     count         = 0
@@ -234,29 +239,40 @@ def check_ipmi_summarized(parsed, params):
     if 'ignored_sensors' not in params:
         params['ignored_sensors'] = ipmi_get_ignored_sensors(g_hostname)
 
-    for name, val, unit, status, unrec_low, crit_low, \
+    for name, val, unit, status_txt, unrec_low, crit_low, \
         warn_low, warn_high, crit_high, unrec_high in parsed:
 
         # Skip datasets which have no valid data (zero value, no unit and state nc)
-        if val == '0.000' and unit == 'unspecified' and status.startswith('nc'):
+        if val == '0.000' and unit == 'unspecified' and status_txt.startswith('nc'):
             continue
 
-        if ipmi_ignore_entry(name, status, params['ignored_sensors']):
+        if ipmi_ignore_entry(name, status_txt, params['ignored_sensors']):
             continue
 
-        count += 1
-        infotext = "%s (%s)" % (name, ipmi_format_message(status, val, unit))
+        count    += 1
+        infotext  = "%s (%s)" % (name, ipmi_format_message(status_txt, val, unit))
+        tmp_state = 0
 
-        if status.startswith('nc'):
-            worst_status = max(worst_status, 1)
-            warn_texts.append(infotext)
+        if status_txt.startswith('nc'):
+            tmp_state = 1
 
-        elif status.startswith('nr') and ipmi_ignore_nr:
+        elif status_txt.startswith('nr') and ipmi_ignore_nr:
             pass
 
-        elif not status.startswith('ok') or "failure detected" in status.lower():
-            worst_status = 2
+        elif not status_txt.startswith('ok') or "failure detected" in status_txt.lower():
+            tmp_state = 2
+
+        for wato_status_txt, wato_status in params.get("sensor_states", []):
+            if status_txt.startswith(wato_status_txt):
+                tmp_state = wato_status
+                break
+
+        if tmp_state == 1:
+            warn_texts.append(infotext)
+        elif tmp_state == 2:
             crit_texts.append(infotext)
+
+        worst_state = max(worst_state, tmp_state)
 
         if "amb" in name or "Ambient" in name:
             try:
@@ -270,7 +286,7 @@ def check_ipmi_summarized(parsed, params):
     else:
         perfdata = []
 
-    if worst_status == 0:
+    if worst_state == 0:
         infotexts = [ "%d sensors OK" % count ]
 
     else:
@@ -280,7 +296,7 @@ def check_ipmi_summarized(parsed, params):
         if len(warn_texts) > 0:
             infotexts.append("WARN are: %s" % ", ".join(warn_texts))
 
-    return worst_status, ' - '.join(infotexts), perfdata
+    return worst_state, ' - '.join(infotexts), perfdata
 
 
 def ipmi_precompile(hostname, item, params):
@@ -305,6 +321,7 @@ check_info["ipmi"] = {
     'service_description' : 'IPMI Sensor %s',
     'has_perfdata'        : True,
     'extra_sections'      : [ "ipmi_discrete" ],
+    'group'               : 'ipmi'
 }
 
 

@@ -1,0 +1,9 @@
+Title: juniper_cpu_util: Allow configuratioh of level for routing engine
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1471566068
+Class: feature
+
+

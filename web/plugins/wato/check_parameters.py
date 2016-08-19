@@ -5443,6 +5443,34 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "juniper_cpu_util",
+    _("Juniper Processor Utilization of Routing Engine"),
+    Transform(
+        Dictionary(
+            help = _("CPU utilization of routing engine."),
+            optional_keys = [],
+            elements = [
+                ("levels",
+                    Tuple(
+                        title = _("Specify levels in percentage of processor routing engine usage"),
+                        elements = [
+                            Percentage(title = _("Warning at"), default_value = 80.0),
+                            Percentage(title = _("Critical at"), default_value = 90.0),
+                        ],
+                    ),
+                ),
+            ]
+        ),
+        forth = lambda old: not old and { 'levels': (80.0, 90.0) } or old,
+    ),
+    TextAscii(
+        title = _("Routing Engine"),
+    ),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_os,
     "netscaler_mem",
     _("Netscaler Memory Usage"),
     Tuple(

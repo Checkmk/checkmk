@@ -205,8 +205,8 @@ register_check_parameters(
     Tuple(
         title = _(u"Levels for active sessions"),
         elements = [
-            Integer( title = _(u"Warning at"), default_value = 100000 ),
-            Integer( title = _(u"Critical at"), default_value = 150000 ),
+            Integer( title = _(u"Warning at"), default_value = 100000, size = 10 ),
+            Integer( title = _(u"Critical at"), default_value = 150000, size = 10 ),
         ]),
     None,
     "first"

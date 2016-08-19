@@ -1,0 +1,9 @@
+Title: fortigate_sessions, fortigate_sessions_base: Allow configuration of levels for sessions
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1471565420
+Class: feature
+
+

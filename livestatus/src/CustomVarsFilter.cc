@@ -23,37 +23,34 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsFilter.h"
-#include <cctype>
+#include <algorithm>
 #include <cstring>
-#include <ostream>
-#include <stdexcept>
+#include <sstream>
+#include <tuple>
 #include "Column.h"
 #include "CustomVarsColumn.h"
 #include "Logger.h"
+#include "StringUtils.h"
 
-using std::runtime_error;
+using mk::lstrip;
+using mk::nextField;
+using std::move;
+using std::regex;
+using std::regex_search;
 using std::string;
+using std::tie;
 
 CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column,
-                                   RelationalOperator relOp,
-                                   const string &value)
-    : _column(column), _relOp(relOp), _ref_text(value), _regex(nullptr) {
+                                   RelationalOperator relOp, string value)
+    : _column(column), _relOp(relOp), _ref_text(move(value)) {
     if (_column->type() != ColumnType::dict) {
         return;
     }
     // Filter for custom_variables:
     //    Filter: custom_variables = PATH /hirni.mk
     // The variable name is part of the value and separated with spaces
-    const char *cstr = _ref_text.c_str();
-    const char *search_space = cstr;
-    while (*search_space != 0 && isspace(*search_space) == 0) {
-        search_space++;
-    }
-    _ref_varname = string(cstr, search_space - cstr);
-    while (*search_space != 0 && isspace(*search_space) != 0) {
-        search_space++;
-    }
-    _ref_string = search_space;
+    tie(_ref_varname, _ref_string) = nextField(_ref_text);
+    _ref_string = lstrip(_ref_string);
 
     // Prepare regular expression
     switch (_relOp) {
@@ -61,23 +58,11 @@ CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column,
         case RelationalOperator::doesnt_match:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            if (strchr(search_space, '{') != nullptr ||
-                strchr(search_space, '}') != nullptr) {
-                throw runtime_error("disallowed regular expression '" + value +
-                                    "': must not contain { or }");
-            } else {
-                _regex = new regex_t();
-                bool ignore_case =
-                    _relOp == RelationalOperator::matches_icase ||
-                    _relOp == RelationalOperator::doesnt_match_icase;
-                if (regcomp(_regex, search_space,
-                            REG_EXTENDED | REG_NOSUB |
-                                (ignore_case ? REG_ICASE : 0)) != 0) {
-                    delete _regex;
-                    throw runtime_error("invalid regular expression '" + value +
-                                        "'");
-                }
-            }
+            _regex.assign(_ref_string,
+                          (_relOp == RelationalOperator::matches_icase ||
+                           _relOp == RelationalOperator::doesnt_match_icase)
+                              ? regex::extended | regex::icase
+                              : regex::extended);
             break;
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
@@ -88,13 +73,6 @@ CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column,
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
             break;
-    }
-}
-
-CustomVarsFilter::~CustomVarsFilter() {
-    if (_regex != nullptr) {
-        regfree(_regex);
-        delete _regex;
     }
 }
 
@@ -109,12 +87,10 @@ bool CustomVarsFilter::accepts(void *row, contact * /* auth_user */,
                 return act_string != _ref_string;
             case RelationalOperator::matches:
             case RelationalOperator::matches_icase:
-                return _regex != nullptr &&
-                       regexec(_regex, act_string.c_str(), 0, nullptr, 0) == 0;
+                return regex_search(act_string, _regex);
             case RelationalOperator::doesnt_match:
             case RelationalOperator::doesnt_match_icase:
-                return _regex != nullptr &&
-                       regexec(_regex, act_string.c_str(), 0, nullptr, 0) != 0;
+                return !regex_search(act_string, _regex);
             case RelationalOperator::equal_icase:
                 return strcasecmp(_ref_string.c_str(), act_string.c_str()) == 0;
             case RelationalOperator::not_equal_icase:

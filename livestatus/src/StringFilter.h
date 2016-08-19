@@ -26,7 +26,7 @@
 #define StringFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <regex.h>
+#include <regex>
 #include <string>
 #include "ColumnFilter.h"
 #include "StringColumn.h"
@@ -41,8 +41,7 @@
 class StringFilter : public ColumnFilter {
 public:
     StringFilter(StringColumn *column, RelationalOperator relOp,
-                 const std::string &value);
-    virtual ~StringFilter();
+                 std::string value);
     bool accepts(void *row, contact *auth_user, int timezone_offset) override;
     const std::string *valueForIndexing(
         const std::string &column_name) const override;
@@ -52,7 +51,7 @@ private:
     StringColumn *_column;
     RelationalOperator _relOp;
     std::string _ref_string;
-    regex_t *_regex;
+    std::regex _regex;
 };
 
 #endif  // StringFilter_h

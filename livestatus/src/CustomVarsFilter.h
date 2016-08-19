@@ -26,7 +26,7 @@
 #define CustomVarsFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <regex.h>
+#include <regex>
 #include <string>
 #include "ColumnFilter.h"
 #include "CustomVarsColumn.h"
@@ -41,8 +41,7 @@
 class CustomVarsFilter : public ColumnFilter {
 public:
     CustomVarsFilter(CustomVarsColumn *column, RelationalOperator relOp,
-                     const std::string &value);
-    virtual ~CustomVarsFilter();
+                     std::string value);
     bool accepts(void *row, contact *auth_user, int timezone_offset) override;
     CustomVarsColumn *column() override;
 
@@ -50,7 +49,7 @@ private:
     CustomVarsColumn *_column;
     RelationalOperator _relOp;
     std::string _ref_text;
-    regex_t *_regex;
+    std::regex _regex;
     // needed in case of COLTYPE_DICT
     std::string _ref_string;
     std::string _ref_varname;

@@ -23,39 +23,30 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StringFilter.h"
+#include <algorithm>
 #include <cstring>
-#include <stdexcept>
+#include <sstream>
 #include "StringColumn.h"
 #include "opids.h"
 
-using std::runtime_error;
+using std::move;
+using std::regex;
+using std::regex_search;
 using std::string;
 
 StringFilter::StringFilter(StringColumn *column, RelationalOperator relOp,
-                           const string &value)
-    : _column(column), _relOp(relOp), _ref_string(value), _regex(nullptr) {
+                           string value)
+    : _column(column), _relOp(relOp), _ref_string(move(value)) {
     switch (_relOp) {
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            if (strchr(value.c_str(), '{') != nullptr ||
-                strchr(value.c_str(), '}') != nullptr) {
-                throw runtime_error("disallowed regular expression '" + value +
-                                    "': must not contain { or }");
-            } else {
-                _regex = new regex_t();
-                bool ignore_case =
-                    _relOp == RelationalOperator::matches_icase ||
-                    _relOp == RelationalOperator::doesnt_match_icase;
-                if (regcomp(_regex, value.c_str(),
-                            REG_EXTENDED | REG_NOSUB |
-                                (ignore_case ? REG_ICASE : 0)) != 0) {
-                    delete _regex;
-                    throw runtime_error("invalid regular expression '" + value +
-                                        "'");
-                }
-            }
+            _regex.assign(_ref_string,
+                          (_relOp == RelationalOperator::matches_icase ||
+                           _relOp == RelationalOperator::doesnt_match_icase)
+                              ? regex::extended | regex::icase
+                              : regex::extended);
             break;
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
@@ -69,13 +60,6 @@ StringFilter::StringFilter(StringColumn *column, RelationalOperator relOp,
     }
 }
 
-StringFilter::~StringFilter() {
-    if (_regex != nullptr) {
-        regfree(_regex);
-        delete _regex;
-    }
-}
-
 bool StringFilter::accepts(void *row, contact * /* auth_user */,
                            int /* timezone_offset */) {
     string act_string = _column->getValue(row);
@@ -86,12 +70,10 @@ bool StringFilter::accepts(void *row, contact * /* auth_user */,
             return act_string != _ref_string;
         case RelationalOperator::matches:
         case RelationalOperator::matches_icase:
-            return _regex != nullptr &&
-                   regexec(_regex, act_string.c_str(), 0, nullptr, 0) == 0;
+            return regex_search(act_string, _regex);
         case RelationalOperator::doesnt_match:
         case RelationalOperator::doesnt_match_icase:
-            return _regex != nullptr &&
-                   regexec(_regex, act_string.c_str(), 0, nullptr, 0) != 0;
+            return !regex_search(act_string, _regex);
         case RelationalOperator::equal_icase:
             return strcasecmp(_ref_string.c_str(), act_string.c_str()) == 0;
         case RelationalOperator::not_equal_icase:

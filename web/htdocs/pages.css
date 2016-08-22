@@ -592,6 +592,22 @@ img.iconbutton:hover {
     filter: alpha(opacity=50); /* For IE8 and earlier */
 }
 
+/* reschedule check icon */
+img.iconbutton.reloading,
+img.icon.reloading {
+    -webkit-animation:spin 1s linear infinite;
+    -moz-animation:spin 1s linear infinite;
+    animation:spin 1s linear infinite;
+}
+@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+
+img.iconbutton.reload_failed {
+    -webkit-filter: sepia(100%);
+    filter: sepia(100%);
+}
+
 /* Table with captions on the left side. Used e.g. for man pages and werks */
 
 table.data.headerleft th {

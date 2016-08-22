@@ -916,9 +916,11 @@ function fetch_pnp_hover_contents(url)
 // Everything else:
 // <undefined> - Unknown format. Simply echo.
 
-function actionResponseHandler(oImg, code) {
+function reschedule_check_response_handler(img, code) {
     var validResponse = true;
     var response = null;
+
+    remove_class(img, "reloading");
 
     try {
         response = eval(code);
@@ -927,41 +929,35 @@ function actionResponseHandler(oImg, code) {
     }
 
     if(validResponse && response[0] === 'OK') {
-        oImg.src   = 'images/icon_reload.png';
         window.location.reload();
     } else if(validResponse && response[0] === 'TIMEOUT') {
-        oImg.src   = 'images/icon_reload_failed.gif';
-        oImg.title = 'Timeout while performing action: ' + response[1];
+        add_class(img, "reload_failed");
+        img.title = 'Timeout while performing action: ' + response[1];
     } else if(validResponse) {
-        oImg.src   = 'images/icon_reload_failed.gif';
-        oImg.title = 'Problem while processing - Response: ' + response.join(' ');
+        add_class(img, "reload_failed");
+        img.title = 'Problem while processing - Response: ' + response.join(' ');
     } else {
-        oImg.src   = 'images/icon_reload_failed.gif';
-        oImg.title = 'Invalid response: ' + response;
+        add_class(img, "reload_failed");
+        img.title = 'Invalid response: ' + response;
     }
 
     response = null;
     validResponse = null;
-    oImg = null;
+    img = null;
 }
 
-function performAction(oLink, action, site, host, service, wait_svc) {
-    var oImg = oLink.childNodes[0];
+function reschedule_check(oLink, site, host, service, wait_svc) {
+    var img = oLink.childNodes[0];
+    remove_class(img, "reload_failed");
+    add_class(img, "reloading");
 
-    if(wait_svc != service)
-        oImg.src = 'images/icon_reloading_cmk.gif';
-    else
-        oImg.src = 'images/icon_reloading.gif';
-
-    // Chrome and IE are not animating the gif during sync ajax request
-    // So better use the async request here
-    get_url('nagios_action.py?action=' + action +
-            '&site='     + encodeURIComponent(site) +
+    get_url('ajax_reschedule.py' +
+            '?site='     + encodeURIComponent(site) +
             '&host='     + encodeURIComponent(host) +
             '&service='  + service + // Already URL-encoded!
             '&wait_svc=' + wait_svc,
-            actionResponseHandler, oImg);
-    oImg = null;
+            reschedule_check_response_handler, img);
+    img = null;
 }
 
 //#.

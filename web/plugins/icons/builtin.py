@@ -158,7 +158,7 @@ def paint_reschedule(what, row, tags, host_custom_vars):
                 icon        = 'reload_cmk'
                 txt         = _('Reschedule \'Check_MK\' service')
 
-        url = 'onclick:performAction(this, \'reschedule\', \'%s\', \'%s\', \'%s\', \'%s\');' % \
+        url = 'onclick:reschedule_check(this, \'%s\', \'%s\', \'%s\', \'%s\');' % \
                 (row["site"], row["host_name"], html.urlencode(servicedesc), html.urlencode(wait_svc))
         return icon, txt, url
 

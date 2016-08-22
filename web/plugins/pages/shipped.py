@@ -31,7 +31,6 @@ import logwatch
 import views
 import prediction
 import sidebar
-import actions
 import weblib
 import dashboard
 import login
@@ -63,6 +62,7 @@ pagehandlers.update({
     "ajax_set_viewoption"           : views.ajax_set_viewoption,
     "view"                          : views.page_view,
     "ajax_inv_render_tree"          : views.ajax_inv_render_tree,
+    "ajax_reschedule"               : views.ajax_reschedule,
     "host_inv_api"                  : inventory.page_host_inv_api,
     "host_service_graph_popup"      : metrics.page_host_service_graph_popup,
     "graph_dashlet"                 : metrics.page_graph_dashlet,
@@ -86,7 +86,6 @@ pagehandlers.update({
     "switch_site"                   : sidebar.ajax_switch_site,
     "add_bookmark"                  : lambda: sidebar.ajax_add_bookmark(),
     "tree_openclose"                : weblib.ajax_tree_openclose,
-    "nagios_action"                 : actions.ajax_action,
 
     "dashboard"                     : dashboard.page_dashboard,
     "dashboard_dashlet"             : dashboard.ajax_dashlet,

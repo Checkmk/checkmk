@@ -2871,7 +2871,8 @@ def show_service_table(host, firsttime):
 
             if defaults.omd_root and check_source in ( "custom", "active" ):
                 divid += 1
-                html.write("<div id='activecheck%d'><img class=icon title='%s' src='images/icon_reloading.gif'></div>" % (divid, hostname))
+                html.write("<div id='activecheck%d'>%s</div>" %
+                    (divid, html.render_icon("reload", cssclass="reloading")))
                 html.final_javascript("execute_active_check('%s', '%s', '%s', '%s', 'activecheck%d');" % (
                      host.site_id() or '', hostname, ct, item.replace("'", "\'"), divid))
             else:

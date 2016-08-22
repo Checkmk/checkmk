@@ -594,6 +594,11 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
     else:
         nucast_warn, nucast_crit = None, None
 
+    if "discards" in params:
+        disc_warn, disc_crit = params["discards"]
+    else:
+        disc_warn, disc_crit = None, None
+
     # Convert the traffic related levels to a common format
     general_traffic_levels = if_get_traffic_levels(params)
 
@@ -741,13 +746,13 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                 ( "in",        ifInOctets, traffic_levels[('in', 'upper', 'warn')], traffic_levels[('in', 'upper', 'crit')], 0, speed_b_in),
                 ( "inucast",   inucast, None, None, None, None),
                 ( "innucast",  saveint(inmcast) + saveint(inbcast), nucast_warn, nucast_crit, None, None),
-                ( "indisc",    ifInDiscards, None, None, None, None),
+                ( "indisc",    ifInDiscards, disc_warn, disc_crit, None, None),
                 ( "inerr",     ifInErrors, err_warn, err_crit, None, None),
 
                 ( "out",       ifOutOctets, traffic_levels[('out', 'upper', 'warn')], traffic_levels[('out', 'upper', 'crit')], 0, speed_b_out),
                 ( "outucast",  outucast, None, None, None, None),
                 ( "outnucast", saveint(outmcast) + saveint(outbcast), nucast_warn, nucast_crit, None, None),
-                ( "outdisc",   ifOutDiscards, None, None, None, None),
+                ( "outdisc",   ifOutDiscards, disc_warn, disc_crit, None, None),
                 ( "outerr",    ifOutErrors, err_warn, err_crit, None, None) ]:
 
                 try:
@@ -781,9 +786,9 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                         return "%s/s" % get_bytes_human_readable(value)
 
                 # loop over incoming and outgoing traffic
-                for what, errorrate, urate, nurate, traffic, speed in \
-                   [ ("in",  rates[4], rates[1], rates[2], rates[0], speed_b_in),
-                     ("out", rates[9], rates[6], rates[7], rates[5], speed_b_out) ]:
+                for what, traffic, urate, nurate, discrate, errorrate, speed in \
+                   [ ("in",  rates[0], rates[1], rates[2], rates[3], rates[4], speed_b_in),
+                     ("out", rates[5], rates[6], rates[7], rates[8], rates[9], speed_b_out) ]:
 
                     infotext += ", %s: %s" % (what, format_value(traffic))
 
@@ -842,17 +847,20 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                                     state = max(state, 1)
                                     infotext += ", %s-errors packets: %d (!!) >= %s" % (what, errorrate, err_warn)
 
+                    # check rate of non-unicast packets and discards
+                    for _txt, _rate, _warn, _crit in [
+                        ("non-unicast packets", nurate,   nucast_warn, nucast_crit),
+                        ("discards",            discrate, disc_warn,   disc_crit)]:
 
-                    # check rate of non-unicast packets
-                    if nucast_crit or nucast_warn:
-                        infotext += ", %s non-unicast packets %.2f/s" % (what, nurate)
+                        if _crit is not None and _warn is not None:
+                            infotext += ", %s %s %.2f/s" % (what, _txt, _rate)
 
-                        if nucast_crit and nurate >= nucast_crit:
-                            state = 2
-                            infotext += "(!!) >= " + str(nucast_crit)
-                        elif nucast_warn and nurate >= nucast_warn:
-                            state = max(state,1)
-                            infotext += "(!) >= " + str(nucast_warn)
+                            if _rate >= _crit:
+                                state = 2
+                                infotext += "(!!) >= " + str(_crit)
+                            elif _rate >= _warn:
+                                state = max(state,1)
+                                infotext += "(!) >= " + str(_warn)
 
             if node:
                 cluster_items[node] = ( state, infotext, perfdata )

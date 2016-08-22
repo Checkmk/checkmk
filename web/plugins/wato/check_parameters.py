@@ -5162,7 +5162,15 @@ register_check_parameters(
                        ]
                    ),
              ),
-
+             ( "discards",
+               Tuple(
+                   title = _("Absolute levels for discards rates"),
+                   elements = [
+                       Integer(title = _("Warning at"), unit= _("discards") ),
+                       Integer(title = _("Critical at"), unit = _("discards") )
+                   ]
+               )
+             ),
              ( "average",
                  Integer(
                      title = _("Average values"),

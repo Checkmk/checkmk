@@ -677,9 +677,10 @@ h2.formcaption {
   margin-bottom: 0px;
 }
 
+/* TODO: lm: Is this table.form used anywhere? If not, remove it! */
+
 table.form {
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    background-color: rgba(255, 255, 255, 0.2);
     border-collapse: collapse;
     empty-cells: show;
     border-spacing: 0px;
@@ -696,16 +697,9 @@ table.form.nomargin {
     margin: 0;
     border-bottom-style: none;
 }
-/* table.form.nomargin td.legend,
-table.form.nomargin td.content,
-table.form.nomargin td.checkbox,
-table.form.nomargin td.buttons {
-    border-top-style: none;
-}*/
 
 table.form.nomargin td.title {
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 table.form > tbody > tr > td {
@@ -743,21 +737,18 @@ table.form td.legend.border {
 /*    border-right-style: solid; */
 }
 table.form td.hilite {
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    background-color: rgba(255, 255, 255, 0.2);
     margin: 10px;
 }
 
 table.form td.lgend.button {
     text-align: right;
-/*    border-right: 1px solid #fff; */
 }
 
 td.content hr {
     height: 1px;
     border-style: none;
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 td.legend {
@@ -803,7 +794,6 @@ span.checkbox {
 /* Next-Generation forms */
 table.nform {
     border-spacing: 0px;
-    /* border-collapse: collapse; */
     margin: 0;
     padding: 0;
     empty-cells: show;
@@ -812,8 +802,7 @@ table.nform {
     border-radius: 5px;
     box-shadow: 0px 0px 2px #000;
     margin-bottom: 10px;
-    background-image: url("images/nform_background.png");
-    background-repeat: repeat;
+    background-color: rgba(160, 181, 190, 0.6);
     border-color: #86A9B8 #22404D #22414D #86A9B8;
     border-width: 1px;
     border-style: solid;

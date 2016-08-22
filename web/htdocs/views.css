@@ -62,8 +62,7 @@ div.floatfilter {
     border-style: solid;
     border-color: #acc #22404d #22414d #8ab;
     box-shadow: 0.5px 0.5px 1px #444;
-    background-image: url("images/nform_background.png");
-    background-repeat: repeat;
+    background-color: rgba(160, 181, 190, 0.6);
     border-radius: 5px;
     color: black;
 }
@@ -90,8 +89,7 @@ div.floatfilter .legend {
     margin-bottom: 1px;
     width: 300px;
     height: 17px;
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    background-color: rgba(255, 255, 255, 0.2);
     padding: 3px 5px 0px 5px;
     border-radius: 5px 5px 0px 0px;
 }

@@ -509,8 +509,7 @@ table.validationerror img {
     width: 500px;
     height: 140px;
     border: 1px solid white;
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    background-color: rgba(255, 255, 255, 0.3);
     margin-top: 10px;
     border-radius: 4px;
     position: relative;
@@ -926,8 +925,7 @@ div.varname {
 '-------------------------------------------------------------------------*/
 
 .wato table.progress {
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    background-color: rgba(255, 255, 255, 0.3);
     width: 50%;
     border: 1px solid #000;
     color: black;
@@ -940,8 +938,7 @@ div.varname {
 
 /* Log window */
 .wato table.progress td.log > div {
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    background-color: rgba(255, 255, 255, 0.3);
     border: 1px solid #fff;
     padding: 5px;
     height: 250px;
@@ -1034,8 +1031,7 @@ div.varname {
 }
 
 .wato table.progress td.stats td {
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
+    background-color: rgba(255, 255, 255, 0.3);
     text-align: right;
     width: 4em;
     padding-right: 6px;

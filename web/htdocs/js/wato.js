@@ -739,6 +739,7 @@ function handle_host_diag_result(ident, response_text) {
     var img   = document.getElementById(ident + '_img');
     var log   = document.getElementById(ident + '_log');
     var retry = document.getElementById(ident + '_retry');
+    remove_class(img, "reloading");
 
     if (response_text[0] == "0") {
         img.src = "images/icon_success.png";
@@ -751,7 +752,7 @@ function handle_host_diag_result(ident, response_text) {
 
     log.innerHTML = response_text.substr(1).replace(/\n/g, "<br>\n");
 
-    retry.src = "images/icon_retry.gif";
+    retry.src = "images/icon_reload.png";
     retry.style.display = 'inline';
 }
 
@@ -794,7 +795,9 @@ function start_host_diag_test(ident, hostname) {
     vars += '&snmp_retries=' + encodeURIComponent(document.getElementsByName('vs_rules_p_snmp_retries')[0].value);
     vars += '&datasource_program=' + encodeURIComponent(document.getElementsByName('vs_rules_p_datasource_program')[0].value);
 
-    img.src = "images/icon_loading.gif";
+    img.src = "images/icon_reload.png";
+    add_class(img, "reloading");
+
     log.innerHTML = "...";
     get_url("wato_ajax_diag_host.py?host=" + encodeURIComponent(hostname)
             + "&_test=" + encodeURIComponent(ident) + vars,

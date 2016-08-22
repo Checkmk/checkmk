@@ -2687,7 +2687,7 @@ function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_cont
     if (what) {
         popup_data = data;
 
-        menu.innerHTML = '<img src="images/icon_loading.gif" class=icon>';
+        menu.innerHTML = '<img src="images/icon_reload.png" class="icon reloading">';
 
         // populate the menu using a webservice, because the list of dashboards
         // is not known in the javascript code. But it might have been cached

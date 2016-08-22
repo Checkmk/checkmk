@@ -370,7 +370,7 @@ def render_snapin(name, state):
             html.write('<script>get_url("%s", updateContents, "snapin_%s")</script>' % (refresh_url, name))
     except Exception, e:
         snapin_exception(e)
-    html.write('</div><div class="foot"%s></div>\n' % style)
+    html.write('</div>\n')
     html.write('</div>')
     return refresh_url
 

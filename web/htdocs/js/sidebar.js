@@ -659,8 +659,6 @@ function toggle_sidebar_snapin(oH2, url) {
             var oContent = child;
         else if (child.tagName == 'DIV' && (child.className == 'head open' || child.className == "head closed"))
             var oHead = child;
-        else if (child.tagName == 'DIV' && child.className == 'foot')
-            var oFoot = child;
     }
     var oImgMini = oHead.childNodes[0].childNodes[0].childNodes[0];
 
@@ -668,13 +666,11 @@ function toggle_sidebar_snapin(oH2, url) {
     var closed = oContent.style.display == "none";
     if (closed) {
         oContent.style.display = "block";
-        oFoot.style.display = "block";
         oHead.className = "head open";
         oImgMini.src = "images/button_minisnapin.png";
     }
     else {
         oContent.style.display = "none";
-        oFoot.style.display = "none";
         oHead.className = "head closed";
         oImgMini.src = "images/button_maxisnapin.png";
     }
@@ -682,7 +678,6 @@ function toggle_sidebar_snapin(oH2, url) {
     get_url(url + (closed ? "open" : "closed"));
     oContent = null;
     oHead = null;
-    oFoot = null;
     childs = null;
 }
 

@@ -56,10 +56,16 @@ body.side.screenshotmode {
     position: relative;
     top: 0px;
     left: 0px;
-    width: 100%;
-    height: 55px;
+    width: 274px;
+    height: 49px;
     z-index: 10;
-    background-repeat: no-repeat;
+
+    border: 1px solid #264755;
+    border-top: 0;
+    border-left: 0;
+    border-bottom-right-radius: 5px;
+    box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.50);
+    background: #498aa6;
 }
 
 #side_bg {
@@ -86,18 +92,19 @@ body.side.screenshotmode {
     width: 10px;
     height: 55px;
     z-index: 15;
+    cursor: pointer;
 }
+
 #side_fold:hover {
     background-repeat: no-repeat;
     background-position: -3px 7px;
     background-image: url("images/side_fold.png");
 }
 
-
 #side_version {
     position: absolute;
     top: 12px;
-    right: 20px;
+    right: 10px;
     z-index: 54;
     color: #fff;
     text-align: right;
@@ -146,16 +153,22 @@ body.side.screenshotmode {
     position: absolute;
     bottom: 0;
     left: 0;
-    height: 44px;
-    width: 100%;
+    height: 38px;
+    width: 274px;
     z-index: 10;
-    background-repeat: no-repeat;
-    background-image: url("images/sidebar_bottom.png");
+    margin: 0;
+
+    border-color: #86b1c4 #264755;
+    border-width: 1px 1px 0 0;
+    border-style: solid;
+    border-top-right-radius: 5px;
+    box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.50);
+    background: #498aa6;
 }
 
 #side_footer img.iconbutton {
     position: relative;
-    top: 10px;
+    top: 4px;
     left: 9px;
     margin-right: 3px;
     width: 33px;
@@ -164,10 +177,9 @@ body.side.screenshotmode {
 
 #side_footer div.copyright {
     color: #fff;
-    position: relative;
-    left: 141px;
-    top: -5px;
-    width: 122px;
+    position: absolute;
+    right: 10px;
+    bottom: 5px;
     text-align: right;
 }
 
@@ -181,10 +193,16 @@ body.side.screenshotmode {
 
 /* General layout of snapins */
 div.snapin {
-    width: 1555px;
-    margin: 0 0 0 5px;
     padding: 0;
     overflow: hidden;
+    border-color: #8ab1c0 #294753 #294753 #8ab1c0;
+    border-width: 1px;
+    border-style: solid;
+    width: 248px;
+    margin: 5px 10px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.50);
+    background: #508aa1;
 }
 
 div.snapin:last-child {
@@ -193,35 +211,26 @@ div.snapin:last-child {
 
 /* Header of the snapin */
 div.snapin div.head {
-    width: 260px;
+    background-color: #6da1b8;
     text-align: center;
     color: #fff;
-    height: 26px;
-    line-height: 29px;
+    height: 20px;
+    line-height: 20px;
 }
 
 div.snapin div.head b {
     font-weight: normal;
 }
 
-
-div.snapin div.head.open {
-    background-image: url("images/snapin_header.png");
-}
-
-div.snapin div.head.closed {
-    background-image: url("images/snapin_closed.png");
-}
-
 /* close button on header */
 div.snapin div.closesnapin {
     float: right;
-    margin-right: 12px;
-    margin-top:   11px;
+    margin-right: 6px;
+    margin-top: 6px;
     line-height: 0px;
     height: 8px;
-    width:8px;
-    padding:0;
+    width: 8px;
+    padding: 0;
 }
 
 div.snapin div.closesnapin img {
@@ -231,8 +240,8 @@ div.snapin div.closesnapin img {
 
 div.snapin div.minisnapin {
     float: left;
-    margin-left: 13px;
-    margin-top:  11px;
+    margin-left: 6px;
+    margin-top: 6px;
     line-height: 0px;
     height: 8px;
 }
@@ -242,24 +251,9 @@ div.snapin div.minisnapin img {
     height: 8px;
 }
 
-
 div.snapin div.content {
-    background-image: url("images/snapin_background.png");
-    background-repeat: repeat-y;
-    background-position: left;
-
-    /* It's important for the left/right padding to be substracted
-     * from the width defined below. The regular width would be 260px. */
-    padding: 10px 15px 5px;
-    width: 230px;
-}
-
-div.snapin div.foot {
-    background-image: url("images/snapin_footer.png");
-    background-repeat: no-repeat;
-    width: 260px;
-    height: 5px;
-    line-height: 5px;
+    padding: 10px;
+    width: 228px;
 }
 
 /*

@@ -833,15 +833,11 @@ table.nform tr.heading td {
 }
 table.nform tr.heading > td {
     border-radius: 5px 5px 0px 0px;
-    background-image: url("images/white_20percent.png");
-    background-repeat: repeat;
+    background-color: rgba(255, 255, 255, 0.2);
     height: 20px;
     vertical-align: middle;
     padding-left: 10px;
     cursor: pointer;
-}
-table.nform tr.heading > td:hover {
-    background-image: url("images/white_20percent.png");
 }
 
 table.nform > tbody > tr td {

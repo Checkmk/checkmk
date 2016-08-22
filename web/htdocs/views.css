@@ -666,8 +666,7 @@ table.data.timewarp {
 }
 
 div.avlegend {
-    background-image: url("images/white_20percent.png");
-    background-repeat: repeat;
+    background-color: rgba(255, 255, 255, 0.2);
     padding: 5px 15px;
     border-radius: 5px;
     margin-top: 10px;

@@ -116,7 +116,12 @@ def check_local(item, params, info):
 
             statechar = line[0]
             perftxt = line[2]
+
             output = " ".join(line[3:])
+            # convert eventually escaped newline chars to real newlines
+            # (will be converted back later individually for the different cores)
+            output = output.replace("\\n", "\n")
+
             perfdata = []
             if perftxt != "-":
                 # new: allow multiple perfdata by using | as separator

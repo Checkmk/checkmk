@@ -133,6 +133,7 @@
     * 3842 juniper_cpu_util: Allow configuration of levels for routing engine
     * 3777 ipmi: IPMI sensor states are configurable
     * 3778 if: now levels for discards rate are configurable
+    * 3788 f5_big_pool: check is now cluster ready
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

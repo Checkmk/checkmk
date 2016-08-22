@@ -31,25 +31,42 @@
 # F5-BIGIP-LOCAL-MIB::ltmPoolMemberCnt.         8.80.111.111.108.95.78.77.65 = 2
 # F5-BIGIP-LOCAL-MIB::ltmPoolActiveMemberCnt.   8.80.111.111.108.95.78.77.65 = 0
 
-
 # warn, crit numbers of pool members
 f5_bigip_pool_default_levels = (2, 1)
 
+def parse_f5_bigip_pool(info):
+    parsed = {}
+    processed_member_info = False
+    for block in info:
+        # Member information
+        if len(block[0]) == 3 and processed_member_info:
+            break
 
-def inventory_f5_bigip_pool(checkname,info):
+        if len(block[0]) == 3:
+            for line in block:
+                parsed.setdefault(line[0], {"act_members": 0, "def_members": 0, "down_info": []})
+                parsed[line[0]]["act_members"] += int(line[1])
+                parsed[line[0]]["def_members"] += int(line[2])
+            processed_member_info = True
+
+        # Status information
+        elif len(block[0]) == 6:
+            for key in parsed.keys():
+                for line in block:
+                    if key == line[0]:
+                         parsed[key]["down_info"].append(line)
+    return parsed
+
+def inventory_f5_bigip_pool(parsed):
 # inventorize all pools and their member count
-    inventory = []
-    for line in info[0]:
-        if line[0] != "":
-            inventory.append((line[0],"f5_bigip_pool_default_levels"))
-    return inventory
+    for item in parsed.keys():
+        if item != "":
+            yield item, "f5_bigip_pool_default_levels"
 
-def f5_bigip_pool_get_down_members(info, item):
+def f5_bigip_pool_get_down_members(down_info):
     downs = []
-    if len(info) < 2: # no data for pool members
-        return
-    for line in info[1]:
-        if line[0] == item and (line[2] != '4' or line[3] != '4' or line[4] in ('2', '3', '4', '5' )):
+    for line in down_info:
+        if (line[2] != '4' or line[3] != '4' or line[4] in ('2', '3', '4', '5' )):
             if re.match("\/\S*\/\S*", line[5]):
                 host = line[5].split("/")[2]
             else:
@@ -57,31 +74,34 @@ def f5_bigip_pool_get_down_members(info, item):
             downs.append(host+":"+line[1])
     return downs
 
-def check_f5_bigip_pool(item, params, info):
-    for line in info[0]:
-        if line[0] == item:
-            warn, crit = params
-            pool_act_members = int(line[1])
-            pool_def_members = int(line[2])
-            message = "%d of %d members are up" % ( pool_act_members, pool_def_members )
-            state = 0
-            if pool_act_members == pool_def_members or pool_act_members >= warn:
-                state = 0
-            elif pool_act_members < crit:
-                state = 2
-                message += " (warn/crit: %s/%s)" % ( warn, crit )
-            elif pool_act_members < warn:
-                state = 1
-                message += " (warn/crit: %s/%s)" % ( warn, crit )
+def check_f5_bigip_pool(item, params, parsed):
+    warn, crit       = params
 
-            if pool_act_members < pool_def_members:
-                downs = f5_bigip_pool_get_down_members(info, item)
-                message += ", down/disabled nodes: %s" % ", ".join(downs)
+    pool_info = parsed.get(item)
+    if not pool_info:
+        return
 
-            return state, message
-    return 3, "unexpected Output from SNMP Agent"
+    pool_act_members = pool_info["act_members"]
+    pool_def_members = pool_info["def_members"]
+    message = "%d of %d members are up" % ( pool_act_members, pool_def_members )
+    state = 0
+    if pool_act_members == pool_def_members or pool_act_members >= warn:
+        state = 0
+    elif pool_act_members < crit:
+        state = 2
+        message += " (warn/crit: %s/%s)" % ( warn, crit )
+    elif pool_act_members < warn:
+        state = 1
+        message += " (warn/crit: %s/%s)" % ( warn, crit )
+
+    if pool_act_members < pool_def_members:
+        downs = f5_bigip_pool_get_down_members(pool_info["down_info"])
+        if downs:
+            message += ", down/disabled nodes: %s" % ", ".join(downs)
+    return state, message
 
 check_info["f5_bigip_pool"] = {
+    'parse_function'        : parse_f5_bigip_pool,
     'check_function'        : check_f5_bigip_pool,
     'group'                 : 'f5_pools',
     'inventory_function'    : inventory_f5_bigip_pool,

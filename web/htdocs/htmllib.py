@@ -1741,8 +1741,6 @@ class html(GUITester):
 
         onclick = ' onclick="toggle_foldable_container(\'%s\', \'%s\', \'%s\')"' % (
                treename, id, fetch_url and fetch_url or '');
-        onclick += ' onmouseover="this.style.cursor=\'pointer\';" '
-        onclick += ' onmouseout="this.style.cursor=\'auto\';" '
 
         if indent == "nform":
             self.write('<tr class=heading><td id="nform.%s.%s" %s colspan=2>' % (treename, id, onclick))

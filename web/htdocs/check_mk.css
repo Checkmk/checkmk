@@ -255,6 +255,7 @@ img.treeangle {
     height: 12px;
     margin-right: 3px;
     margin-top: 0px;
+    cursor: pointer;
 
     -webkit-transition: -webkit-transform .2s ease-in-out;
     -moz-transition: -moz-transform .2s ease-in-out;

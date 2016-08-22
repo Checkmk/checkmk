@@ -838,6 +838,7 @@ table.nform tr.heading > td {
     height: 20px;
     vertical-align: middle;
     padding-left: 10px;
+    cursor: pointer;
 }
 table.nform tr.heading > td:hover {
     background-image: url("images/white_20percent.png");

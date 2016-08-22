@@ -38,10 +38,10 @@ nagvis_base_url = '/nagvis'
 
 # Links for everyone
 custom_links['guest'] = [
-  ( "Classical Nagios GUI", "../nagios/", "link_home.gif" ),
+  ( "Classical Nagios GUI", "../nagios/", "icon_home.png" ),
   ( "Addons", True, [
-        ( "PNP4Nagios", "../pnp4nagios/",       "link_reporting.gif" ),
-        ( "NagVis",     "../nagvis/",           "link_map.gif" ),
+        ( "PNP4Nagios", "../pnp4nagios/",       "icon_pnp.png" ),
+        ( "NagVis",     "../nagvis/",           "icon_nagvis.png" ),
   ]),
 ]
 

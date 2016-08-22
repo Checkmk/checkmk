@@ -1427,10 +1427,20 @@ def render_custom_links():
                     html.end_foldable_container()
                 elif type(entry[1]) == str:
                     frame = len(entry) > 3 and entry[3] or "main"
+
                     if len(entry) > 2 and entry[2]:
-                        html.write('<img src="images/%s">' % entry[2])
+                        icon_file = entry[2]
+
+                        # Old configs used files named "link_<name>.gif". Those .gif files have
+                        # been removed from Check_MK. Replacing such images with the default icon
+                        if icon_file.endswith(".gif"):
+                            icon_file = "icon_link.png"
                     else:
-                        html.write('<img src="images/link_link.gif">')
+                        icon_file = "icon_link.png"
+
+                    # TODO: Recode to use html.icon / html.render_icon
+                    html.write('<img class="icon" align="absmiddle" src="images/%s">' % icon_file)
+
                     simplelink(entry[0], entry[1], frame)
                 else:
                     html.write(_("Second part of tuple must be list or string, not %s\n") % str(entry[1]))
@@ -1452,6 +1462,10 @@ sidebar_snapins["custom_links"] = {
 }
 #snapin_custom_links img {
     margin-right: 5px;
+}
+#snapin_custom_links img.icon {
+    width: 16px;
+    height: 16px;
 }
 """
 }

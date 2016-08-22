@@ -1739,7 +1739,6 @@ class html(GUITester):
         if self.user:
             isopen = self.foldable_container_is_open(treename, id, isopen)
 
-        img_num = isopen and "90" or "00"
         onclick = ' onclick="toggle_foldable_container(\'%s\', \'%s\', \'%s\')"' % (
                treename, id, fetch_url and fetch_url or '');
         onclick += ' onmouseover="this.style.cursor=\'pointer\';" '
@@ -1750,14 +1749,14 @@ class html(GUITester):
             if icon:
                 self.write('<img class="treeangle title" src="images/icon_%s.png">' % self.attrencode(icon))
             else:
-                self.write('<img align=absbottom class="treeangle nform" src="images/%s_%s.png">' %
-                                                (tree_img, isopen and "90" or "00"))
+                self.write('<img align=absbottom class="treeangle nform %s" src="images/%s_closed.png">' %
+                                                ("open" if isopen else "closed", tree_img))
             self.write('%s</td></tr>' % self.attrencode(title))
         else:
             if not icon:
-                self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
-                           'src="images/%s_%s.png" %s>' %
-                        (treename, id, tree_img, img_num, onclick))
+                self.write('<img align=absbottom class="treeangle %s" id="treeimg.%s.%s" '
+                           'src="images/%s_closed.png" %s>' %
+                        ("open" if isopen else "closed", treename, id, tree_img, onclick))
             if isinstance(title, HTML): # custom HTML code
                 self.write(self.attrencode(title))
                 if indent != "form":

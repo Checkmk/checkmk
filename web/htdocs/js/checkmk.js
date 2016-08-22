@@ -1260,43 +1260,12 @@ function draw_reload_pause_overlay(seconds)
 //#   |                                                                    |
 //#   '--------------------------------------------------------------------'
 
-var fold_steps = [ 0, 10, 10, 15, 20, 30, 40, 55, 80 ];
-
-function toggle_folding(oImg, state) {
-    // state
-    // 0: is currently opened and should be closed now
-    // 1: is currently closed and should be opened now
-    setTimeout(function() { folding_step(oImg, state); }, 0);
-}
-
-function folding_step(oImg, state, step) {
-    // Initialize unset step
-    if (typeof step === 'undefined')
-        if (state == 1)
-            step = 1;
-        else
-            step = 8;
-
-    // Relace XX.png at the end of the image with the
-    // current rotating angle
-    oImg.src = oImg.src.substr(0, oImg.src.length - 6) + step + "0.png";
-
-    if (state == 1) {
-        if (step == 9) {
-            oImg = null;
-            return;
-        }
-        step += 1;
+function toggle_folding(img, to_be_opened) {
+    if (to_be_opened) {
+        change_class(img, "closed", "open");
+    } else {
+        change_class(img, "open", "closed");
     }
-    else {
-        if (step == 0) {
-            oImg = null;
-            return;
-        }
-        step -= 1;
-    }
-
-    setTimeout(function() { folding_step(oImg, state, step); }, fold_steps[step]);
 }
 
 function toggle_tree_state(tree, name, oContainer, fetch_url) {
@@ -1337,9 +1306,9 @@ function toggle_foldable_container(treename, id, fetch_url) {
     var oNform = document.getElementById('nform.' + treename + '.' + id);
     if (oNform) {
         var oImg = oNform.childNodes[0];
-        toggle_folding(oImg, oImg.src[oImg.src.length - 6] == '0');
         var oTr = oNform.parentNode.nextSibling;
         toggle_tree_state(treename, id, oTr, fetch_url);
+        toggle_folding(oImg, !has_class(oTr, "closed"));
     }
     else {
         var oImg = document.getElementById('treeimg.' + treename + '.' + id);
@@ -1359,13 +1328,13 @@ function toggle_grouped_rows(tree, id, cell, num_rows)
     if (has_class(group_title_row, "closed")) {
         remove_class(group_title_row, "closed");
         var display = "";
-        var toggle_img_open = 1;
+        var toggle_img_open = true;
         var state = "on";
     }
     else {
         add_class(group_title_row, "closed");
         var display = "none";
-        var toggle_img_open = 0;
+        var toggle_img_open = false;
         var state = "off";
     }
 
@@ -2939,13 +2908,13 @@ function bi_toggle_subtree(oImg, lazy)
     if (oSubtree.style.display == "none") {
         oSubtree.style.display = "";
         url += "&state=open";
-        toggle_folding(oImg, 1);
+        toggle_folding(oImg, true);
         do_open = true;
     }
     else {
         oSubtree.style.display = "none";
         url += "&state=closed";
-        toggle_folding(oImg, 0);
+        toggle_folding(oImg, false);
         do_open = false;
     }
     oSubtree = null;

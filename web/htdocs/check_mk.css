@@ -255,7 +255,18 @@ img.treeangle {
     height: 12px;
     margin-right: 3px;
     margin-top: 0px;
+
+    -webkit-transition: -webkit-transform .2s ease-in-out;
+    -moz-transition: -moz-transform .2s ease-in-out;
+    transition: transform .2s ease-in-out;
 }
+
+img.treeangle.open {
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    transform: rotate(90deg);
+}
+
 img.treeangle.nform {
     margin-left: -5px;
 }

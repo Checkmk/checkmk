@@ -278,8 +278,8 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_painters):
     html.write("<td colspan=\"%d\" onclick=\"toggle_grouped_rows("
                "'grouped_rows', '%s', this, %d)\">" %
                 (num_painters, index, num_rows))
-    html.write('<img align=absbottom class="treeangle nform" src="images/%s_%s.png">' %
-                                    ("tree_black", is_open and "90" or "00"))
+    html.write('<img align=absbottom class="treeangle nform %s" src="images/tree_black_closed.png">' %
+                                    ("open" if is_open else "closed"))
     html.write("%s (%d)</td>" % (html.attrencode(group_spec["title"]), num_rows))
     html.write("</tr>")
 

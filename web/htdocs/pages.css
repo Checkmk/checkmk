@@ -849,7 +849,6 @@ table.nform > tbody > tr td {
 
 table.nform > tbody > tr > td {
     vertical-align: middle;
-    /* height: 15px; */
 }
 
 table.nform > tbody > tr > td.simple {
@@ -859,7 +858,6 @@ table.nform > tbody > tr > td.simple {
 
 table.nform td.legend {
     text-align: left;
-    /* font-weight: bold; */
     width: 240px;
     padding-right: 8px;
     vertical-align: top;

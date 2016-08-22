@@ -90,8 +90,11 @@ def get_size():
         lines, columns, x, y = struct.unpack("HHHH", ws)
         if lines > 0 and columns > 0:
             return lines, columns
-    except:
-        raise
-        pass
+    except IOError, e:
+        if e.errno == 25:
+            # Inappropriate ioctl for device: Occurs when redirecting output
+            pass
+        else:
+            raise
 
     return (24, 80)

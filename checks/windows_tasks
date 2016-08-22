@@ -71,7 +71,7 @@ def windows_tasks_convert(info):
 
 def inventory_windows_tasks(info):
     info = windows_tasks_convert(info)
-    return [ (n, None) for n, v in info.items() if v['Scheduled Task State'] == "Enabled"]
+    return [ (n, None) for n, v in info.items() if v.get('Scheduled Task State') == "Enabled"]
 
 def check_windows_tasks(item, _no_params, info):
     info = windows_tasks_convert(info)

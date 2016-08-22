@@ -184,12 +184,6 @@ body.main table.footer td.middle { text-align: center; }
 body.main table.footer td.right  { text-align: right; }
 body.main table.footer a { color: #246; }
 
-body.main table.footer img.statusicon,
-body.main table.footer a.statusicon img {
-    width: 16px;
-    height: 16px;
-}
-
 div#foot_refresh, div#foot_refresh_time {
     display: inline-block;
 }

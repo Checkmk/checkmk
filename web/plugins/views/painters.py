@@ -2338,7 +2338,7 @@ def paint_log_icon(row):
             title = _("Stopped acknowledgement")
 
     if img:
-        return "icon", '<img class=icon src="images/alert_%s.png" title="%s">' % (img, title)
+        return "icon", html.render_icon("alert_"+img, help=title)
     else:
         return "icon", ""
 

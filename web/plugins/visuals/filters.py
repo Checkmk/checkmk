@@ -1118,10 +1118,13 @@ declare_filter(302, FilterHostTags())
 class FilterStarred(FilterTristate):
     def __init__(self, what):
         self.what = what
-        icon = '<img class="icon inline" src="images/icon_starred.png"> '
+
+        title = html.render_icon("starred", cssclass="inline") \
+                + (what == "host" and _("Favorite Hosts") or _("Favorite Services"))
+
         FilterTristate.__init__(self,
             name   = what + "_favorites",
-            title  = HTML(icon  + (what == "host" and _("Favorite Hosts") or _("Favorite Services"))),
+            title  = HTML(title),
             info   = what,
             column = what + "_favorite", # Column, not used
             deflt  = -1,

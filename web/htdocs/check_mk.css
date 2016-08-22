@@ -215,6 +215,7 @@ img.icon {
    height: 20px;
 }
 
+a.inline img.icon,
 img.icon.inline {
    vertical-align: middle;
    width: 16px;

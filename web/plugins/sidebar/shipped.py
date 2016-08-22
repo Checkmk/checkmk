@@ -1307,11 +1307,7 @@ function add_bookmark() {
             if not icon:
                 icon = "kdict"
 
-            # FIXME: Use standard rendering functions
-            linktext = '<img class=iconlink src="images/icons/%s.png">%s' % \
-                 (html.attrencode(icon), html.attrencode(bookmark["title"]))
-            html.write('<a target=main class="iconlink link" href="%s">%s</a><br>' % \
-                    (html.attrencode(bookmark["url"]), linktext))
+            iconlink(bookmark["title"], bookmark["url"], icon)
 
         html.end_foldable_container()
 
@@ -1438,10 +1434,9 @@ def render_custom_links():
                     else:
                         icon_file = "icon_link.png"
 
-                    # TODO: Recode to use html.icon / html.render_icon
-                    html.write('<img class="icon" align="absmiddle" src="images/%s">' % icon_file)
+                    linktext = HTML(html.render_icon("images/%s" % icon_file) + " " + entry[0])
 
-                    simplelink(entry[0], entry[1], frame)
+                    simplelink(linktext, entry[1], frame)
                 else:
                     html.write(_("Second part of tuple must be list or string, not %s\n") % str(entry[1]))
             except Exception, e:

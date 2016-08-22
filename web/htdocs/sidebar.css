@@ -158,6 +158,8 @@ body.side.screenshotmode {
     top: 10px;
     left: 9px;
     margin-right: 3px;
+    width: 33px;
+    height: 31px;
 }
 
 #side_footer div.copyright {
@@ -309,11 +311,8 @@ div.snapin li.sidebar {
     margin-left: 0;
 }
 
-div.snapin img.iconlink {
-    width: 16px;
-    height: 16px;
+div.snapin a.iconlink img {
     margin-right: 8px;
-    vertical-align: middle;
 }
 
 div.snapin div.footnote {

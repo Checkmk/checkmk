@@ -868,7 +868,7 @@ class html(GUITester):
 
 
     def empty_icon(self):
-        self.write('<img class=icon src="images/trans.png" />')
+        self.write(self.render_icon("images/trans.png"))
 
 
     def render_icon(self, icon_name, help="", middle=True, id=None, cssclass=None):
@@ -877,8 +877,12 @@ class html(GUITester):
         id = id and ' id="%s"' % id or ''
         cssclass = cssclass and (" " + cssclass) or ""
 
-        return '<img src="%s" class="icon%s"%s%s%s />' % \
-            (self.detect_icon_path(icon_name), cssclass, align, title, id)
+        if "/" in icon_name:
+            icon_path = icon_name
+        else:
+            icon_path = self.detect_icon_path(icon_name)
+
+        return '<img src="%s" class="icon%s"%s%s%s />' % (icon_path, cssclass, align, title, id)
 
 
     def render_icon_button(self, url, help, icon, id="", onclick="",
@@ -901,15 +905,13 @@ class html(GUITester):
         if cssclass:
             cssclass = 'class="%s" ' % cssclass
 
-        if ty == "icon":
-            icon = self.detect_icon_path(icon)
-        else:
+        # TODO: Can we clean this up and move all button_*.png to internal_icons/*.png?
+        if ty == "button":
             icon = "images/button_" + icon + ".png"
 
-        return '<a %s%s%s%s%sonfocus="if (this.blur) this.blur();" href="%s">' \
-                   '<img align=absmiddle class=iconbutton title="%s" ' \
-                   'src="%s"></a>' % (id, onclick, style, target, cssclass,
-                             url, self.attrencode(help), icon)
+        return '<a %s%s%s%s%sonfocus="if (this.blur) this.blur();" href="%s" title="%s">%s</a>' % \
+                 (id, onclick, style, target, cssclass, url, self.attrencode(help),
+                  self.render_icon(icon, cssclass="iconbutton"))
 
 
     def icon_button(self, *args, **kwargs):
@@ -917,11 +919,11 @@ class html(GUITester):
 
 
     def empty_icon_button(self):
-        self.write('<img class="iconbutton trans" src="images/trans.png">')
+        self.write(self.render_icon("images/trans.png", cssclass="iconbutton trans"))
 
 
     def disabled_icon_button(self, icon):
-        self.write('<img class="iconbutton" align=absmiddle src="images/icon_%s.png">' % icon)
+        self.write(self.render_icon(icon, cssclass="iconbutton"))
 
 
     def jsbutton(self, varname, text, onclick, style=''):
@@ -1580,7 +1582,8 @@ class html(GUITester):
         self.write(self.render_popup_trigger(*args, **kwargs))
 
 
-    def render_popup_trigger(self, content, ident, what=None, data=None, url_vars=None, style=None, menu_content=None, cssclass=None, onclose=None):
+    def render_popup_trigger(self, content, ident, what=None, data=None, url_vars=None,
+                             style=None, menu_content=None, cssclass=None, onclose=None):
         style = style and (' style="%s"' % style) or ""
         src = '<div class="popup_trigger%s" id="popup_trigger_%s"%s>\n' % (cssclass and (" " + cssclass) or "", ident, style)
         onclick = 'toggle_popup(event, this, \'%s\', %s, %s, %s, %s, %s)' % \
@@ -1598,16 +1601,16 @@ class html(GUITester):
 
     def _write_status_icons(self):
         self.icon_button(self.makeuri([]), _("URL to this frame"),
-                         "frameurl", target="_top", cssclass="statusicon")
+                         "frameurl", target="_top", cssclass="inline")
         self.icon_button("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]),
                          _("URL to this page including sidebar"),
-                         "pageurl", target="_top", cssclass="statusicon")
+                         "pageurl", target="_top", cssclass="inline")
 
         # TODO: Move this away from here. Make a context button. The view should handle this
         if self.myfile == "view" and self.var('mode') != 'availability':
             self.icon_button(self.makeuri([("output_format", "csv_export")]),
                              _("Export as CSV"),
-                             "download_csv", target="_top", cssclass="statusicon")
+                             "download_csv", target="_top", cssclass="inline")
 
         if self.myfile == "view":
             mode_name = self.var('mode') == "availability" and "availability" or "view"
@@ -1621,16 +1624,16 @@ class html(GUITester):
                 encoded_vars[k] = v
 
             self.popup_trigger(
-                self.render_icon("menu", _("Add this view to..."), cssclass="statusicon iconbutton"),
+                self.render_icon("menu", _("Add this view to..."), cssclass="iconbutton inline"),
                 'add_visual', 'add_visual', data=[mode_name, encoded_vars, {'name': self.var('view_name')}],
                 url_vars=[("add_type", "view")])
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:
                 tooltip, url = tooltip
-                self.icon_button(url, tooltip, img)
+                self.icon_button(url, tooltip, img, cssclass="inline")
             else:
-                self.icon(tooltip, img, cssclass="statusicon")
+                self.icon(tooltip, img, cssclass="inline")
 
         if self.times:
             self.measure_time('body')
@@ -1696,10 +1699,9 @@ class html(GUITester):
         if not self.context_buttons_open:
             self.begin_context_buttons()
 
+        title = "<span>%s</span>" % self.attrencode(title)
         if icon:
-            title = '<img src="%s">%s' % \
-                        (self.attrencode(self.detect_icon_path(icon)),
-                         self.attrencode(title))
+            title = '%s%s' % (self.render_icon(icon, cssclass="inline", middle=False), title)
 
         if id:
             idtext = " id='%s'" % self.attrencode(id)

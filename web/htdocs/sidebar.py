@@ -90,8 +90,8 @@ def bulletlink(text, url, target="main", onclick = None):
     html.write("<li class=sidebar>" + link(text, url, target, onclick) + "</li>\n")
 
 def iconlink(text, url, icon):
-    linktext = '<img class=iconlink src="images/icon_%s.png">%s' % \
-         (html.attrencode(icon), html.attrencode(text))
+    linktext = html.render_icon(icon, cssclass="inline") \
+               + html.attrencode(text)
     html.write('<a target=main class="iconlink link" href="%s">%s</a><br>' % \
             (html.attrencode(url), linktext))
 

@@ -1,0 +1,10 @@
+Title: local: Fixed long output handling with Microcore
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p10
+Date: 1471873450
+
+Escaped \n characters will now be interpreted correctly when using the Microcore.

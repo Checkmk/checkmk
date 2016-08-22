@@ -5,6 +5,7 @@
     * 3782 FIX: agent_netapp: fixed exception with values containing umlauts
     * 3774 FIX: apc_symmetra: fixed wrong status and values handling
     * 3761 FIX: windows_tasks: Fixed possible exception in discovery in case of unexpected agent data
+    * 3762 FIX: local: Fixed long output handling with Microcore...
 
     Multisite:
     * 3561 FIX: Removing a comment now also removes any linked acknowledgements...

@@ -37,10 +37,14 @@ def find_newest_source_file():
 
     for dirpath, dirnames, filenames in os.walk("%s/agents/windows" % cmk_path()):
         for filename in filenames:
+            path = "%s/%s" % (dirpath, filename)
+
             if not filename.endswith(".cc") and not filename.endswith(".h"):
                 continue
 
-            path = "%s/%s" % (dirpath, filename)
+            if "/msibuild/" in path:
+                continue
+
             commit_time = last_commit_time(path)
             if commit_time > newest_commit_time:
                 newest_path, newest_commit_time = path, commit_time

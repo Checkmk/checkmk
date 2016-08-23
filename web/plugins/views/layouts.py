@@ -290,7 +290,7 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_painters):
 # and a tuple of the group_spec and the number of rows in this group is the value
 def calculate_grouping_of_services(rows):
     if not config.service_view_grouping:
-        return {}
+        return {}, rows
 
     # First create dictionaries for each found group containing the
     # group spec and the row indizes of the grouped rows

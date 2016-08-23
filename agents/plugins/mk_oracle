@@ -755,7 +755,7 @@ function set_oraenv () {
         ORACLE_HOME=$(cat ${ORATAB} | grep "^"${ORACLE_SID}":" | cut -d":" -f2)
         if [ -z $ORACLE_HOME ] ; then
             # cut last number from SID for Oracle RAC to find entry in oratab
-            ORACLE_SID_SHORT=$(echo $ORACLE_SID | sed "s/_[0-9]$//")
+            ORACLE_SID_SHORT=$(echo $ORACLE_SID | sed "s/[0-9]$//")
             ORACLE_HOME=$(cat ${ORATAB} | grep "^"${ORACLE_SID_SHORT}":" | cut -d":" -f2)
         fi
     fi

@@ -1489,9 +1489,7 @@ def play_alarm_sounds():
     if not url.endswith("/"):
         url += "/"
 
-    html.debug(g_alarm_sound_states)
     for state_name, wav in config.sounds:
-        html.debug(state_name)
         if not state_name or state_name in g_alarm_sound_states:
             html.play_sound(url + wav)
             break # only one sound at one time

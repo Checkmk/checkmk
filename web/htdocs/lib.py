@@ -376,12 +376,6 @@ def isint(i):
         return False
 
 
-def set_is_disjoint(a, b):
-    for elem in a:
-        if elem in b:
-            return False
-    return True
-
 aquire_lock       = store.aquire_lock
 release_lock      = store.release_lock
 have_lock         = store.have_lock

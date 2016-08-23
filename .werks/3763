@@ -1,0 +1,12 @@
+Title: Fixed playing sounds in views when using current Firefox
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i1
+Date: 1471939240
+Class: fix
+
+Changed the way the sounds are played in HTML code from "object" tag to
+HTML5 "audio" tag. This should work in most modern browsers.
+
+Also did some refactoring along the way.

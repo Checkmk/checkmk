@@ -41,6 +41,7 @@ def load_plugins(force):
         # always reload the hosttag painters, because new hosttags might have been
         # added during runtime
         load_host_tag_painters()
+        clear_alarm_sound_states()
         return
 
     global multisite_datasources     ; multisite_datasources      = {}
@@ -57,6 +58,7 @@ def load_plugins(force):
 
     load_web_plugins("views", globals())
     load_host_tag_painters()
+    clear_alarm_sound_states()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -1457,17 +1459,43 @@ def do_table_join(master_ds, master_rows, master_filters, join_painters, join_co
         row["JOIN"] = joininfo
 
 
+g_alarm_sound_states = set([])
+
+
+def clear_alarm_sound_states():
+    g_alarm_sound_states.clear()
+
+
+def save_state_for_playing_alarm_sounds(row):
+    if not config.enable_sounds or not config.sounds:
+        return
+
+    # TODO: Move this to a generic place. What about -1?
+    host_state_map = { 0: "up", 1: "down", 2: "unreachable"}
+    service_state_map = { 0: "up", 1: "warning", 2: "critical", 3: "unknown"}
+
+    for state_map, state in [
+            (host_state_map, row.get("host_hard_state", row.get("host_state"))),
+            (service_state_map, row.get("service_last_hard_state", row.get("service_state"))) ]:
+        if state != None:
+            g_alarm_sound_states.add(state_map[int(state)])
+
+
 def play_alarm_sounds():
-    if not config.enable_sounds:
+    if not config.enable_sounds or not config.sounds:
         return
 
     url = config.sound_url
     if not url.endswith("/"):
         url += "/"
-    for event, wav in config.sounds:
-        if not event or html.has_event(event):
+
+    html.debug(g_alarm_sound_states)
+    for state_name, wav in config.sounds:
+        html.debug(state_name)
+        if not state_name or state_name in g_alarm_sound_states:
             html.play_sound(url + wav)
             break # only one sound at one time
+
 
 # How many data rows may the user query?
 def get_limit():
@@ -2422,15 +2450,6 @@ def paint_header(view, p, is_last_column_header=False):
     html.write("<th%s%s%s>%s</th>" % (thclass, onclick, title, t))
     html.guitest_record_output("view", ("header", title))
 
-
-def register_events(row):
-    if config.sounds != []:
-        host_state = row.get("host_hard_state", row.get("host_state"))
-        if host_state != None:
-            html.register_event({0:"up", 1:"down", 2:"unreachable"}[saveint(host_state)])
-        svc_state = row.get("service_last_hard_state", row.get("service_state"))
-        if svc_state != None:
-            html.register_event({0:"up", 1:"warning", 2:"critical", 3:"unknown"}[saveint(svc_state)])
 
 # The Group-value of a row is used for deciding wether
 # two rows are in the same group or not

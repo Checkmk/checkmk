@@ -717,6 +717,10 @@ class html(GUITester):
         self.write('<script type="text/javascript" src="js/%s.js"></script>\n' % name)
 
 
+    def play_sound(self, url):
+        self.write("<audio src=\"%s\" autoplay>\n" % self.attrencode(url))
+
+
     #
     # HTML form rendering
     #
@@ -1940,30 +1944,6 @@ class html(GUITester):
 
     def save_transids(self, used_ids, unlock=False):
         raise NotImplementedError()
-
-
-    #
-    # Sounds
-    # TODO: Move to views. Only used there.
-    #
-
-    def register_event(self, name):
-        self.events.add(name)
-
-
-    def has_event(self, name):
-        return name in self.events
-
-
-    def play_sound(self, url):
-        self.write('<object type="audio/x-wav" data="%s" height="0" width="0">\n'
-                  '<param name="filename" value="%s">\n'
-                  '<param name="src" value="%s">\n'
-                  '<param name="autostart" value="true">\n'
-                  '<param name="playcount" value="1">\n'
-                  '</object>\n' % (url, url, url))
-        if self.enable_debug:
-            self.write("(playing sound %s)" % url)
 
 
     #

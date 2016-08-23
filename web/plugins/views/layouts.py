@@ -69,7 +69,7 @@ def render_group_checkbox_th():
 #   '----------------------------------------------------------------------'
 def render_single_dataset(rows, view, group_painters, painters, num_columns, _ignore_show_checkboxes):
     for row in rows:
-        register_events(row) # needed for playing sounds
+        save_state_for_playing_alarm_sounds(row)
 
     html.write('<table class="data single">\n')
     rownum = 0
@@ -130,7 +130,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
     groups = []
     last_group = None
     for row in rows:
-        register_events(row) # needed for playing sounds
+        save_state_for_playing_alarm_sounds(row)
         this_group = group_value(row, group_painters)
         if this_group != last_group:
             last_group = this_group
@@ -209,7 +209,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
                     show_header_line()
             visible_row_number += 1
 
-            register_events(row) # needed for playing sounds
+            save_state_for_playing_alarm_sounds(row)
 
             odd = odd == "odd" and "even" or "odd"
 
@@ -536,7 +536,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
     visible_row_number = 0
     group_hidden, num_grouped_rows = None, 0
     for index, row in rows_with_ids:
-        register_events(row) # needed for playing sounds
+        save_state_for_playing_alarm_sounds(row)
         # Show group header, if a new group begins. But only if grouping
         # is activated
         if len(group_painters) > 0:
@@ -848,7 +848,7 @@ def create_matrices(rows, group_painters, painters, num_columns):
     col_num = 0
 
     for row in rows:
-        register_events(row) # needed for playing sounds
+        save_state_for_playing_alarm_sounds(row)
         group_id = group_value(row, group_painters)
         if group_id != last_group_id:
             col_num += 1

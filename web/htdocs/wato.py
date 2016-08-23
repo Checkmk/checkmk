@@ -87,6 +87,7 @@ import sys, pprint, socket, re, time, datetime,  \
        shutil, tarfile, cStringIO, math, fcntl, random, glob, \
        base64, csv
 import subprocess
+import traceback
 import i18n
 import config, table, multitar, userdb, weblib, login
 from hashlib import sha256
@@ -265,7 +266,6 @@ def page_handler():
 
     except Exception, e:
         html.unplug()
-        import traceback
         html.show_error(traceback.format_exc().replace('\n', '<br />'))
 
     html.write("</div>\n")
@@ -2648,7 +2648,6 @@ def ajax_diag_host():
         # Second is treated as text output
         html.write("%s %s" % (result[0], html.attrencode(result[1])))
     except Exception, e:
-        import traceback
         html.write("1 %s" % _("Exception: %s") % html.attrencode(traceback.format_exc()))
 
 #.
@@ -2895,7 +2894,6 @@ def show_service_table(host, firsttime):
                         paramtext = rulespec["valuespec"].value_to_text(params)
                     except Exception, e:
                         if config.debug:
-                            import traceback
                             err = traceback.format_exc()
                         else:
                             err = e
@@ -3490,7 +3488,7 @@ def mode_bulk_discovery(phase):
                 else:
                     msg = _("Error during inventory of %s<div class=exc>%s</div>") % (", ".join(hostnames), e)
                 if config.debug:
-                    msg += "<br><pre>%s</pre><br>" % html.attrencode(format_exception().replace("\n", "<br>"))
+                    msg += "<br><pre>%s</pre><br>" % html.attrencode(traceback.format_exc().replace("\n", "<br>"))
                 result += msg
             html.write(result)
             return ""
@@ -3909,7 +3907,7 @@ def mode_parentscan(phase):
                 else:
                     msg = _("Error during parent scan of %s: %s") % (host_name, e)
                 if config.debug:
-                    msg += "<br><pre>%s</pre>" % html.attrencode(format_exception().replace("\n", "<br>"))
+                    msg += "<br><pre>%s</pre>" % html.attrencode(traceback.format_exc().replace("\n", "<br>"))
                 result += msg + "\n<br>"
             html.write(result)
             return ""
@@ -5147,7 +5145,6 @@ def get_snapshot_status(snapshot, validate_checksums = False):
 
     except Exception, e:
         if config.debug:
-            import traceback
             status["broken_text"] = traceback.format_exc()
             status["broken"]      = True
         else:
@@ -9721,7 +9718,7 @@ def automation_push_profile():
         return True
     except Exception, e:
         if config.debug:
-            return _("Internal automation error: %s\n%s") % (str(e), format_exception())
+            return _("Internal automation error: %s\n%s") % (e, traceback.format_exc())
         else:
             return _("Internal automation error: %s") % e
 
@@ -9941,7 +9938,6 @@ def mode_users(phase):
                     return None, _('The user synchronization completed successfully.')
             except Exception, e:
                 if config.debug:
-                    import traceback
                     raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
                 else:
                     raise MKUserError(None, "%s" % e)
@@ -15758,7 +15754,6 @@ def execute_network_scan_job():
             "state"  : False,
             "output" : _("An exception occured: %s") % e,
         })
-        import traceback
         logger(LOG_ERR, "Exception in network scan:\n%s" % (traceback.format_exc()))
 
     result["end"] = time.time()

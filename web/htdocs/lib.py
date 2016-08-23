@@ -145,6 +145,8 @@ def remove_user_file(path):
         os.remove(path)
 
 
+# TODO: Remove this helper function. Replace with explicit checks and covnersion
+# in using code.
 def savefloat(f):
     try:
         return float(f)
@@ -259,8 +261,9 @@ def pnp_cleanup(s):
         .replace('\\', '_')
 
 # Quote string for use as arguments on the shell
+# TODO: Move to Check_MK library
 def quote_shell_string(s):
-        return "'" + s.replace("'", "'\"'\"'") + "'"
+    return "'" + s.replace("'", "'\"'\"'") + "'"
 
 ok_marker      = '<b class="stmark state0">OK</b>'
 warn_marker    = '<b class="stmark state1">WARN</b>'
@@ -310,10 +313,6 @@ def format_plugin_output(output, row = None):
 
     return output
 
-def format_exception():
-    import traceback
-    return traceback.format_exc()
-
 
 # Debug logging directly to the dedicated web GUI log. The log format is
 # equal to the cmc.log format. The format is:
@@ -354,6 +353,8 @@ def lqencode(s):
     return s.replace('\n', '')
 
 
+# TODO: Remove this helper function. Replace with explicit checks and covnersion
+# in using code.
 def saveint(x):
     try:
         return int(x)
@@ -366,14 +367,6 @@ def tryint(x):
         return int(x)
     except:
         return x
-
-
-def isint(i):
-    try:
-        int(i)
-        return True
-    except:
-        return False
 
 
 aquire_lock       = store.aquire_lock

@@ -45,6 +45,7 @@
 import os, shutil, subprocess, base64, pickle, pwd
 import defaults, config, hooks, userdb, multitar
 import sites
+import traceback
 from lib import *
 from valuespec import *
 
@@ -158,7 +159,6 @@ def activate_changes():
         update_replication_status(None, {}, { 'act': duration })
     except Exception:
         if config.debug:
-            import traceback
             raise MKUserError(None, "Error executing hooks: %s" %
                               traceback.format_exc().replace('\n', '<br />'))
         else:
@@ -285,7 +285,7 @@ def parse_audit_log(what):
         for line in file(path):
             line = line.rstrip().decode("utf-8")
             splitted = line.split(None, 4)
-            if len(splitted) == 5 and isint(splitted[0]):
+            if len(splitted) == 5 and splitted[0].isdigit():
                 splitted[0] = int(splitted[0])
                 entries.append(splitted)
         entries.reverse()
@@ -3723,7 +3723,7 @@ def automation_push_snapshot():
         return configuration_warnings
     except Exception, e:
         if config.debug:
-            return _("Internal automation error: %s\n%s") % (str(e), format_exception())
+            return _("Internal automation error: %s\n%s") % (e, traceback.format_exc())
         else:
             return _("Internal automation error: %s") % e
 

@@ -28,6 +28,7 @@
 # of multi-tier tar files (tar files containing tar files)
 
 import os, tarfile, time, shutil, cStringIO, defaults, grp
+import traceback
 from lib import *
 
 class fake_file:
@@ -247,7 +248,7 @@ def extract_domains(tar, domains):
                     errors.extend(dom_errors or [])
                 except Exception, e:
                     # This should NEVER happen
-                    err_info = "Restore-Phase: %s, Domain: %s\nError: %s" % (what, name, format_exception())
+                    err_info = "Restore-Phase: %s, Domain: %s\nError: %s" % (what, name, traceback.format_exc())
                     errors.append(err_info)
                     logger(LOG_CRIT, err_info)
                     if abort_on_error == False:
@@ -301,7 +302,6 @@ def extract(tar, components):
             subtar = tarfile.open(fileobj = subtarstream)
             subtar.extractall(target_dir)
         except Exception, e:
-            import traceback
             raise MKGeneralException('Failed to extract subtar %s: %s' % (name, traceback.format_exc()))
 
 # Try to cleanup everything starting from the root_path

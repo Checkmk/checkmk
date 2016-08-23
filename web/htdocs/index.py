@@ -26,6 +26,8 @@
 
 from mod_python import apache
 import sys, os, pprint, __builtin__
+import traceback
+
 import i18n
 import sites
 import livestatus
@@ -66,7 +68,7 @@ def handler(req, fields = None, is_profiling = False):
                 except Exception, e:
                     html.write(str(e))
                     if config.debug:
-                        html.write(html.attrencode(format_exception()))
+                        html.write(html.attrencode(traceback.format_exc()))
                 raise FinalizeRequest()
 
         # Is the user set by the webserver? otherwise use the cookie based auth
@@ -179,7 +181,6 @@ def handler(req, fields = None, is_profiling = False):
 
     except Exception, e:
         html.unplug()
-        import traceback
         msg = "%s %s: %s" % (html.request_uri(), _('Internal error'), traceback.format_exc())
         if type(msg) == unicode:
             msg = msg.encode('utf-8')

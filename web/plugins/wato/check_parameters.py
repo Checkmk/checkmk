@@ -235,6 +235,31 @@ register_check_parameters(
     "dict"
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "cluster_status",
+    _("Cluster status"),
+    Dictionary(
+        elements = [
+            ("type",
+             DropdownChoice(
+                title = _("Cluster type"),
+                help = _("Expected cluster type."),
+                choices = [
+                        ( "active_standby" , _("active / standby") ),
+                        ( "active_active" , _("active / active") ),
+                ],
+                default_value = "active_standby"
+             )
+            ),
+        ],
+        required_keys = ["type"]
+    ),
+    None,
+    "dict"
+)
+
+
 #.
 #   .--Inventory-----------------------------------------------------------.
 #   |            ___                      _                                |

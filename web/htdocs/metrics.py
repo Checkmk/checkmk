@@ -37,6 +37,7 @@
 import math, time, colorsys, shlex, operator, random
 import config, defaults, pagetypes, table
 import sites
+import traceback
 from lib import *
 from valuespec import *
 from livestatus import MKLivestatusNotFoundError
@@ -1070,7 +1071,6 @@ def page_pnp_template():
         html.write(output)
 
     except Exception, e:
-        import traceback
         html.write("An error occured:\n%s\n" % traceback.format_exc())
 
 

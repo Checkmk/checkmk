@@ -199,7 +199,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
         if column_headers != "off":
             show_header_line()
 
-        groups = calculate_grouping_of_services(rows_with_ids)
+        groups, rows_with_ids = calculate_grouping_of_services(rows_with_ids)
 
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
@@ -297,17 +297,29 @@ def calculate_grouping_of_services(rows):
     groups = {}
     current_group = None
     group_id = None
-    for index, row in rows:
+    for index, (row_id, row) in enumerate(rows[:]):
         group_spec = try_to_match_group(row)
         if group_spec:
             if current_group == None:
-                group_id = index
+                group_id = row_id
+
             elif current_group != group_spec:
-                group_id = index
+                group_id = row_id
+
+            # When the service is not OK and should not be grouped, move it's row
+            # in front of the group.
+            if row.get("service_state", -1) != 0 or is_stale(row):
+                if current_group == None or current_group != group_spec:
+                    continue # skip grouping first row
+
+                elif current_group == group_spec:
+                    row = rows.pop(index)
+                    rows.insert(index - len(groups[group_id][1]), row)
+                    continue
 
             current_group = group_spec
             groups.setdefault(group_id, (group_spec, []))
-            groups[group_id][1].append(index)
+            groups[group_id][1].append(row_id)
         else:
             current_group = None
 
@@ -317,13 +329,12 @@ def calculate_grouping_of_services(rows):
         if len(row_indizes) >= group_spec.get("min_items", 2):
             groupings[row_indizes[0]] = group_spec, len(row_indizes)
 
-    return groupings
+    return groupings, rows
 
 
 def try_to_match_group(row):
     for group_spec in config.service_view_grouping:
         if row.get('service_description', '') != '' \
-           and row.get("service_state", -1) == 0 and not is_stale(row) \
            and re.match(group_spec["pattern"], row["service_description"]):
             return group_spec
 
@@ -520,7 +531,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
         return members
 
     rows_with_ids = [ (row_id(view, row), row) for row in rows ]
-    groups = calculate_grouping_of_services(rows_with_ids)
+    groups, rows_with_ids = calculate_grouping_of_services(rows_with_ids)
 
     visible_row_number = 0
     group_hidden, num_grouped_rows = None, 0

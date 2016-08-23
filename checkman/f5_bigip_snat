@@ -1,0 +1,16 @@
+title: F5 Big-IP: Source NAT
+agents: snmp
+catalog: hw/network/f5
+license: GPL
+distribution: check_mk
+description:
+ The check queries the MIB tables of F5 BIG-IP load balancers (local traffic
+ managers) and collects statistical information about the source NAT.
+ It shows the number if incoming and outgoing bytes and packets, the connection rate
+ and the current connections.
+
+perfdata:
+ Incoming/Outgoing bytes and packet. The connection rate and the current connections.
+
+inventory:
+ One check is generated per source NAT.

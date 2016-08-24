@@ -2923,6 +2923,9 @@ class StatusServer:
                     output_format = argument
                 elif header == "Limit":
                     limit = int(argument)
+                elif header == "Columns":
+                    # TODO(sp) Actually filter columns
+                    pass
                 else:
                     log("Ignoring not-implemented header %s" % header)
 

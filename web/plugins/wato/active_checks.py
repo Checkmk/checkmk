@@ -990,6 +990,7 @@ register_rule(group,
                                         ( "DELETE", "DELETE" ),
                                         ( "HEAD", "HEAD" ),
                                         ( "CONNECT", "CONNECT" ),
+                                        ( "PROPFIND", "PROPFIND" ),
                                     ]
                                 )
                             ),

@@ -1,0 +1,19 @@
+Title: f5_bigip_vserver: now reports lots of additional performance data
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.4.0i1
+Date: 1472026584
+Class: feature
+
+This check now reports the following performance data
+<ul>
+<li>The min, max and mean connection duration</li>
+<li>The total connections and connections rate</li>
+<li>Incoming and outgoing bytes packets</li>
+<li>Packet velocity asic rate</li>
+</ul>
+
+This werk is marked as incompatible because of a small logic change.
+If the vserver is not available and all of its children pool members
+are down the check remains {OK} instead of {CRIT}.

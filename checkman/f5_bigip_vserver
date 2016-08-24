@@ -9,13 +9,15 @@ description:
  devices running the 9.0 and above releases of the F5 OS. It's tested against
  9.3 devices.
 
- Also the number of current client connections and the current connection
- rate are being displayed:
+ There is one special handling in the check. If the vserver is not available
+ and all its children pool members are down the check reports {OK}.
 
 perfdata:
-  two values: the current number of connections and the current connection rate.
+ min/max and mean connection duration, total connections, connection rate
+ incoming and outgoing bytes and packets and the packet velocity asic rate
 
 inventory:
- Any virtual server that is found online will be added during inventoryy
+ Any virtual server that is found online will be added during inventory
  and checked for it's status. Virtual servers in the various "Warning"
- states will not be inventorized.
+ states will not be inventorized. Vserver of state green and blue will be
+ inventorized.

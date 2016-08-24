@@ -1289,6 +1289,30 @@ metric_info["connections_rate"] = {
     "color" : "#a080b0",
 }
 
+metric_info["connections_duration_min"] = {
+    "title" : _("Connections duration min"),
+    "unit"  : "s",
+    "color" : "24/a"
+}
+
+metric_info["connections_duration_max"] = {
+    "title" : _("Connections duration max"),
+    "unit"  : "s",
+    "color" : "25/a"
+}
+
+metric_info["connections_duration_mean"] = {
+    "title" : _("Connections duration max"),
+    "unit"  : "s",
+    "color" : "25/a"
+}
+
+metric_info["packet_velocity_asic"] = {
+    "title" : _("Packet velocity asic"),
+    "unit"  : "1/s",
+    "color" : "26/a"
+}
+
 metric_info["requests_per_second"] = {
     "title" : _("Requests per second"),
     "unit"  : "1/s",
@@ -7134,5 +7158,14 @@ graph_info.append({
         ( "dns_failures",  "stack" ),
         ( "dns_nxrrset",   "stack" ),
         ( "dns_nxdomain",  "stack" ),
+    ]
+})
+
+graph_info.append({
+    "title" : _("Connection durations"),
+    "metrics" : [
+        ( "connections_duration_min", "line" ),
+        ( "connections_duration_max", "line" ),
+        ( "connections_duration_mean", "line" ),
     ]
 })

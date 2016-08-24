@@ -119,9 +119,10 @@ livestatus_so_SOURCES = \
         Table.cc \
         TableColumns.cc \
         TableCommands.cc \
+        TableComments.cc \
         TableContactgroups.cc \
         TableContacts.cc \
-        TableDownComm.cc \
+        TableDowntimes.cc \
         TableEventConsole.cc \
         TableEventConsoleEvents.cc \
         TableEventConsoleHistory.cc \

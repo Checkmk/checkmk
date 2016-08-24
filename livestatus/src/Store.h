@@ -35,9 +35,10 @@
 #include "LogCache.h"
 #include "TableColumns.h"
 #include "TableCommands.h"
+#include "TableComments.h"
 #include "TableContactgroups.h"
 #include "TableContacts.h"
-#include "TableDownComm.h"
+#include "TableDowntimes.h"
 #include "TableEventConsoleEvents.h"
 #include "TableEventConsoleHistory.h"
 #include "TableEventConsoleReplication.h"
@@ -82,8 +83,8 @@ private:
     TableServicesByHostGroup _table_servicesbyhostgroup;
     TableTimeperiods _table_timeperiods;
     TableContactgroups _table_contactgroups;
-    TableDownComm _table_downtimes;
-    TableDownComm _table_comments;
+    TableDowntimes _table_downtimes;
+    TableComments _table_comments;
     TableStatus _table_status;
     TableLog _table_log;
     TableStateHistory _table_statehistory;

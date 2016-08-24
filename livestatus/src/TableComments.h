@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableDownComm_h
-#define TableDownComm_h
+#ifndef TableComments_h
+#define TableComments_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
@@ -32,18 +32,18 @@
 class DowntimesOrComments;
 class Query;
 
-class TableDownComm : public Table {
-    bool _is_downtime;
-    const DowntimesOrComments &_holder;
-
+class TableComments : public Table {
 public:
-    TableDownComm(bool is_downtime, const DowntimesOrComments &downtimes_holder,
+    TableComments(const DowntimesOrComments &downtimes_holder,
                   const DowntimesOrComments &comments_holder);
 
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *) override;
     bool isAuthorized(contact *ctc, void *data) override;
+
+private:
+    const DowntimesOrComments &_holder;
 };
 
-#endif  // TableDownComm_h
+#endif  // TableComments_h

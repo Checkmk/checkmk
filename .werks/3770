@@ -1,0 +1,9 @@
+Title: win_dhcp_pools: Fixed crash in case of empty DHCP pools
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p10
+Date: 1472129993
+Class: fix
+
+

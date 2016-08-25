@@ -13,6 +13,7 @@
     * 3766 FIX: palo_alto_sessions: Fixed possible division by zero error
     * 3768 FIX: quantum_libsmall_door: Fixed possible exception in scan function
     * 3769 FIX: cisco_temperature: Fixed exception in case of empty SNMP data received from device
+    * 3770 FIX: win_dhcp_pools: Fixed crash in case of empty DHCP pools
 
     Multisite:
     * 3561 FIX: Removing a comment now also removes any linked acknowledgements...

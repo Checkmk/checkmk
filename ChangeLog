@@ -12,6 +12,7 @@
     * 3765 FIX: oracle_asm_diskgroup: Made check more robust against invalid data received from agent...
     * 3766 FIX: palo_alto_sessions: Fixed possible division by zero error
     * 3768 FIX: quantum_libsmall_door: Fixed possible exception in scan function
+    * 3769 FIX: cisco_temperature: Fixed exception in case of empty SNMP data received from device
 
     Multisite:
     * 3561 FIX: Removing a comment now also removes any linked acknowledgements...

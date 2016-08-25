@@ -98,7 +98,7 @@ def parse_cisco_temperature(info):
                 entity_parsed[descr] = (3, "Data from sensor currently not available")
             elif sensorstate == '3':
                 entity_parsed[descr] = (3, "Sensor is broken")
-            else:
+            elif sensorstate == '1':
                 entity_parsed[descr] = {}
                 scale = 10**int(magnitude)
 

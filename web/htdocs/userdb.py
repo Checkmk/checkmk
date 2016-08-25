@@ -229,7 +229,8 @@ def _user_exists_according_to_profile(username):
 
 def _user_exists_htpasswd(username):
     for line in open(defaults.htpasswd_file):
-        if line.startswith("%s:" % username):
+        l = line.decode("utf-8")
+        if l.startswith("%s:" % username):
             return True
     return False
 

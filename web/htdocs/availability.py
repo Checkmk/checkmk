@@ -495,6 +495,7 @@ def get_avoption_entries(what):
         help  = _("Limit the fetched rows of logfile in order to avoid "
                   "a hanging system. A value of zero means no limit."),
         default_value = 5000,
+        minvalue = 0,
     ),
    ),
 ]

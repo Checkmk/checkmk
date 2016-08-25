@@ -34,7 +34,10 @@ except ImportError:
     try:
         import json
     except ImportError:
-        json = None
+        sys.stdout.write("<<<jolokia_info>>>\n")
+        sys.stdout.write("Error: Missing JSON library for Agent Plugin mk_jolokia\n")
+        exit()
+
 
 # assigned in parse_arguments
 opt_verbose = False
@@ -155,21 +158,15 @@ def fetch_var(protocol, server, port, path, suburi, cert_path, itemspec):
         return []
 
     try:
-        true = True
-        false = False
-        null = None
-        if json:
-            obj = json.loads(data)
-        else:
-            obj = eval(data)
+        obj = json.loads(json_data)
     except Exception, e:
         sys.stderr.write('ERROR: Invalid json code (%s)\n' % e)
-        sys.stderr.write('       Response %s\n' % data)
+        sys.stderr.write('       Response %s\n' % json_data)
         return []
 
     if obj.get('status', 200) != 200:
         sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % url)
-        sys.stderr.write('       Response: %s\n' % data)
+        sys.stderr.write('       Response: %s\n' % json_data)
         return []
 
     # Only take the value of the object. If the value is an object

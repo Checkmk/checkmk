@@ -23,6 +23,9 @@
     WATO:
     * 3559 WATO API: now able to bake agents with the new action "bake_agents"
 
+    Event Console:
+    * 3771 FIX: Fixed exception on edit rule page in case of special URLs
+
 
 1.2.8p9:
     Checks & Agents:

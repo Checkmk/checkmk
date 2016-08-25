@@ -1,0 +1,9 @@
+Title: Fixed exception on edit rule page in case of special URLs
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.8p10
+Date: 1472130399
+Class: fix
+
+

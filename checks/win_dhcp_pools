@@ -135,6 +135,7 @@ def check_win_dhcp_pools(item, params, info):
         # Catch unused pools
         if size == 0:
             yield 3, "DHCP Pool contains no IP addresses / is deactivated"
+            return
 
         for check_result in check_dhcp_pools_levels(free, used, pending, size, params):
             yield check_result

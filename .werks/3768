@@ -1,0 +1,9 @@
+Title: quantum_libsmall_door: Fixed possible exception in scan function
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p10
+Date: 1472126255
+Class: fix
+
+

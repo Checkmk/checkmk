@@ -1,0 +1,9 @@
+Title: Fixed possible UnicodeDecodeError when having users with umlauts in the user ID
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p10
+Date: 1472126075
+Class: fix
+
+

@@ -336,7 +336,7 @@ def roles_of_user(user):
         return [ "guest" ]
     elif users != None and user in users:
         return [ "user" ]
-    elif os.path.exists(config_dir + "/" + user + "/automation.secret"):
+    elif os.path.exists(config_dir + "/" + user.encode("utf-8") + "/automation.secret"):
         return [ "guest" ] # unknown user with automation account
     elif 'roles' in default_user_profile:
         return existing_role_ids(default_user_profile['roles'])

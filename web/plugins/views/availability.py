@@ -560,7 +560,9 @@ def render_bi_availability(title, aggr_rows):
                                htmlcode + \
                                '</td></tr></table>'
 
-        av_rawdata = availability.spans_by_object(spans)
+        # FIXME non implemented log row limit
+        av_rawdata, has_reached_logrow_limit = availability.spans_by_object(spans, None)
+
         av_data = availability.compute_availability("bi", av_rawdata, avoptions)
 
         if html.output_format == "csv_export":

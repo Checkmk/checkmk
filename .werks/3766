@@ -1,0 +1,9 @@
+Title: palo_alto_sessions: Fixed possible division by zero error
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p10
+Date: 1472125205
+Class: fix
+
+

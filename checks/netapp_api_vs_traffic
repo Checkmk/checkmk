@@ -83,7 +83,11 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
         data = parsed.get("%s.%s" % (protocol, item))
         if not data:
             continue
+
         for what, perfname, perftext, scale, format_func in values:
+            if what not in data:
+                continue
+
             rate = get_rate(what, now, int(data[what]) * scale)
             yield 0, "%s %s: %s" % (protoname, perftext, format_func(rate)), [(perfname, rate)]
 

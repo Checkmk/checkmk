@@ -33,7 +33,9 @@ except ImportError:
     try:
         import json
     except ImportError:
-        json = None
+        sys.stdout.write("<<<jolokia_info>>>\n")
+        sys.stdout.write("Error: Missing JSON library for Agent Plugin mk_jolokia\n")
+        exit()
 
 opt_verbose = '--verbose' in sys.argv
 opt_debug   = '--debug' in sys.argv
@@ -151,13 +153,7 @@ def fetch_var(protocol, server, port, path, suburi, itemspec, service_url, servi
         json_data = fetch_url_get(base_url, path, function)
 
     try:
-        true = True
-        false = False
-        null = None
-        if json:
-            obj = json.loads(json_data)
-        else:
-            obj = eval(json_data)
+        obj = json.loads(json_data)
     except Exception, e:
         sys.stderr.write('ERROR: Invalid json code (%s)\n' % e)
         sys.stderr.write('       Response %s\n' % json_data)

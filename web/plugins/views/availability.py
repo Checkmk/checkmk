@@ -136,6 +136,7 @@ def render_availability_options(what):
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
 def render_availability_page(view, datasource, filterheaders, only_sites, limit):
+
     if handle_edit_annotations():
         return
 
@@ -187,8 +188,9 @@ def render_availability_page(view, datasource, filterheaders, only_sites, limit)
 
     # Now compute all data, we need this also for CSV export
     if not html.has_user_errors():
-        av_rawdata = availability.get_availability_rawdata(what, filterheaders, only_sites,
-                                                           av_object, av_mode == "timeline", avoptions)
+        av_rawdata, has_reached_logrow_limit = \
+            availability.get_availability_rawdata(what, filterheaders, only_sites,
+                                                  av_object, av_mode == "timeline", avoptions)
         av_data = availability.compute_availability(what, av_rawdata, avoptions)
 
     # Do CSV ouput
@@ -205,7 +207,6 @@ def render_availability_page(view, datasource, filterheaders, only_sites, limit)
         html.top_heading(title)
 
     html.write(confirmation_html_code)
-
 
     # Remove variables for editing annotations, otherwise they will make it into the uris
     html.del_all_vars("editanno_")
@@ -237,6 +238,16 @@ def render_availability_page(view, datasource, filterheaders, only_sites, limit)
     avoptions = render_availability_options(what)
 
     if not html.has_user_errors():
+        # If we abolish the limit we have to fetch the data again
+        # with changed logrow_limit = 0, which means no limit
+        if has_reached_logrow_limit:
+            text  = _("Your query matched more than %d log entries. "
+                      "<b>Note:</b> The number of shown rows does not necessarily reflect the "
+                      "matched entries and the result might be incomplete. ") % avoptions["logrow_limit"]
+            text += '<a href="%s">%s</a>' % \
+                    (html.makeuri([("avo_logrow_limit", 0)]), _('Repeat query without limit.'))
+            html.show_warning(text)
+
         do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)
 
     if DisplayOptions.enabled(DisplayOptions.Z):

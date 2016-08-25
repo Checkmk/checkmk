@@ -475,7 +475,6 @@ def get_avoption_entries(what):
         label = _("Show timeline of each object directly in table")),
   ),
 
-  # Timelimit
   ( "timelimit",
     "single",
     False,
@@ -486,7 +485,18 @@ def get_avoption_entries(what):
         unit = _("sec"),
         default_value = 30,
     ),
-   )
+   ),
+
+  ( "logrow_limit",
+    "single",
+    True,
+    Integer(
+        title = _("Log row limit"),
+        help  = _("Limit the fetched rows of logfile in order to avoid "
+                  "a hanging system. A value of zero means no limit."),
+        default_value = 5000,
+    ),
+   ),
 ]
 
 def get_default_avoptions():
@@ -508,6 +518,7 @@ def get_default_avoptions():
         "summary"             : "sum",
         "show_timeline"       : False,
         "timelimit"           : 30,
+        "logrow_limit"        : 5000,
 
         "downtimes" : {
             "include" : "honor",
@@ -581,8 +592,11 @@ def get_availability_rawdata(what, filterheaders, only_sites, av_object, include
     else:
         av_filter += "Filter: service_description =\n"
 
-    query = "GET statehist\n" + av_filter
+    query  = "GET statehist\n" + av_filter
     query += "Timelimit: %d\n" % avoptions["timelimit"]
+    logrow_limit = avoptions["logrow_limit"]
+    if logrow_limit:
+        query += "Limit: %d\n" % (logrow_limit + 1)
 
     # Add Columns needed for object identification
     columns = [ "host_name", "service_description" ]
@@ -612,11 +626,20 @@ def get_availability_rawdata(what, filterheaders, only_sites, av_object, include
     sites.live().set_prepend_site(False)
     columns = ["site"] + columns
     spans = [ dict(zip(columns, span)) for span in data ]
-    return spans_by_object(spans)
+
+    # Now we find out if the log row limit was exceeded or
+    # if the log's length is the limit by accident.
+    # If this limit was exceeded then we cut off the last element
+    # in spans_by_object because it might be incomplete.
+    logrow_limit_reached_entry = None
+    if logrow_limit and len(data) >= logrow_limit + 1:
+        logrow_limit_reached_entry = dict(zip(columns, data[-1]))
+
+    return spans_by_object(spans, logrow_limit_reached_entry)
 
 # Sort the raw spans into a tree of dicts, so that we
 # have easy access to the timeline of each object
-def spans_by_object(spans):
+def spans_by_object(spans, logrow_limit_reached_entry):
     # Sort by site/host and service, while keeping native order
     av_rawdata = {}
     for span in spans:
@@ -624,7 +647,16 @@ def spans_by_object(spans):
         service = span["service_description"]
         av_rawdata.setdefault(site_host, {})
         av_rawdata[site_host].setdefault(service, []).append(span)
-    return av_rawdata
+
+    if logrow_limit_reached_entry:
+        site_host = (logrow_limit_reached_entry["site"], logrow_limit_reached_entry["host_name"])
+        if logrow_limit_reached_entry["service_description"]:
+            del av_rawdata[site_host][logrow_limit_reached_entry["service_description"]]
+        else:
+            del av_rawdata[site_host]
+
+    # We have to remember if rawdata was modified
+    return av_rawdata, logrow_limit_reached_entry != None
 
 
 # Compute an availability table. what is one of "bi", "host", "service".

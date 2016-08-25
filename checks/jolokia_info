@@ -28,6 +28,11 @@ def inventory_jolokia_info(info):
     return [ (line[0], None) for line in info if line[1] != 'ERROR' ]
 
 def check_jolokia_info(item, _no_params, info):
+
+    # Inform user of non-working agent plugin, eg. missing json library
+    if info[0][0] == "Error:":
+        return 3, " ".join(info[0])
+
     for line in info:
         if line[0] == item:
             if line[1] == 'ERROR' or len(line) < 4:

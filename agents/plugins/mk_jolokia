@@ -26,6 +26,16 @@
 
 import urllib2, sys, os, socket, pprint, base64
 
+try:
+    from simplejson import json
+except ImportError:
+    try:
+        import json
+    except ImportError:
+        sys.stdout.write("<<<jolokia_info>>>\n")
+        sys.stdout.write("Error: Missing JSON library for Agent Plugin mk_jolokia\n")
+        exit()
+
 opt_verbose = '--verbose' in sys.argv
 opt_debug   = '--debug' in sys.argv
 
@@ -53,9 +63,9 @@ def fetch_var(protocol, server, port, path, suburi, itemspec):
     if opt_verbose:
         sys.stderr.write("DEBUG: Fetching: %s\n" % url)
     try:
-        json = urllib2.urlopen(url).read()
+        json_data = urllib2.urlopen(url).read()
         if opt_verbose:
-            sys.stderr.write("DEBUG: Result: %s\n\n" % json)
+            sys.stderr.write("DEBUG: Result: %s\n\n" % json_data)
     except Exception, e:
         if opt_debug:
             raise
@@ -64,18 +74,15 @@ def fetch_var(protocol, server, port, path, suburi, itemspec):
 
 
     try:
-        true = True
-        false = False
-        null = None
-        obj = eval(json)
+        obj = json.loads(json_data)
     except Exception, e:
         sys.stderr.write('ERROR: Invalid json code (%s)\n' % e)
-        sys.stderr.write('       Response %s\n' % json)
+        sys.stderr.write('       Response %s\n' % json_data)
         return []
 
     if obj.get('status', 200) != 200:
         sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % url)
-        sys.stderr.write('       Response: %s\n' % json)
+        sys.stderr.write('       Response: %s\n' % json_data)
         return []
 
     # Only take the value of the object. If the value is an object

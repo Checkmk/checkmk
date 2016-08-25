@@ -1,5 +1,7 @@
 1.2.8p10:
     Checks & Agents:
+    * 3743 SEC: mk_jolokia: Use JSON library to parse JSON output in lieu of eval()...
+            NOTE: Please refer to the migration notes!
     * 3772 FIX: ipmi_sensors: fixed missing states
     * 3562 FIX: agent_vsphere.pysphere: fixed problems related to ssl certificate validation on older distributions/python versions
     * 3782 FIX: agent_netapp: fixed exception with values containing umlauts

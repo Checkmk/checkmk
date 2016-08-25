@@ -247,11 +247,16 @@ class MKAgentError(Exception):
         return self.reason
 
 class MKParseFunctionError(Exception):
-    def __init__(self, orig_exception, backtrace):
-        self.orig_exception = orig_exception
+    def __init__(self, exception_type, exception, backtrace):
+        self.exception_type = exception_type
+        self.exception = exception
         self.backtrace = backtrace
+
+    def exc_info(self):
+        return self.exception_type, self.exception, self.backtrace
+
     def __str__(self):
-        return str(str(self.orig_exception) + "\n" + self.backtrace)
+        return "%s\n%s" % (self.exception, self.backtrace)
 
 class MKSNMPError(Exception):
     def __init__(self, reason):
@@ -303,9 +308,11 @@ def apply_parse_function(info, section_name):
             except Exception, e:
                 if opt_debug:
                     raise
+
                 # In case of a failed parse function return the exception instead of
                 # an empty result.
-                raise MKParseFunctionError(e, traceback.format_exc())
+                raise MKParseFunctionError(*sys.exc_info())
+
     return info
 
 def get_info_for_check(hostname, ipaddress, section_name, max_cachefile_age=None, ignore_check_interval=False):
@@ -1463,7 +1470,8 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
                 reset_wrapped_counters()
 
                 if isinstance(info, MKParseFunctionError):
-                    raise Exception(str(info))
+                    x = info.exc_info()
+                    raise x[0], x[1], x[2] # re-raise the original exception to not destory the trace
 
                 result = sanitize_check_result(check_function(item, params, info), check_uses_snmp(checkname))
                 if last_counter_wrap():

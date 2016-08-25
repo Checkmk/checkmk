@@ -1,0 +1,12 @@
+Title: oracle_asm_diskgroup: Made check more robust against invalid data received from agent
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p10
+Date: 1472124723
+Class: fix
+
+It may happen, at least with older version of the agent plugin, that the help text of SQLPlus
+is sent in the agent sections. This could lead to ~50 services being created by accident. The
+changed check now ignores these unexpected lines from the agent and only processes lines which
+match the known format.

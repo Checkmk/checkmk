@@ -41,10 +41,10 @@ factory_settings["asm_diskgroup_default_levels"] = {
 }
 
 def inventory_oracle_asm_diskgroup(info):
-    return [ (line[-1].rstrip("/"), {}) for line in info ]
+    return [ (line[-1].rstrip("/"), {}) for line in info
+             if len(line) in [ 12, 13 ] and line[0] in [ "MOUNTED", "DISMOUNTED" ] ]
 
 def check_oracle_asm_diskgroup(item, params, info):
-
     for line in info:
         voting_files = 'N'
 
@@ -57,7 +57,10 @@ def check_oracle_asm_diskgroup(item, params, info):
                 free_mb, req_mir_free_mb, usable_file_mb, offline_disks, \
                 name = line
         else:
-            name = ""
+            continue # Invalid data, skip this line
+
+        if state not in [ "MOUNTED", "DISMOUNTED" ]:
+            continue # Invalid data, skip this line
 
         dg_name = name.rstrip('/')
 

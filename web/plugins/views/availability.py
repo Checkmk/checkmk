@@ -76,6 +76,7 @@ def render_availability_options(what):
         for name, height, show_in_reporting, vs in avoption_entries:
             try:
                 avoptions[name] = vs.from_html_vars("avo_" + name)
+                vs.validate_value(avoptions[name], "avo_" + name)
             except MKUserError, e:
                 html.add_user_error(e.varname, e)
                 is_open = True

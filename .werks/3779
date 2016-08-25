@@ -1,0 +1,9 @@
+Title: availability: added validation of availability options
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p10
+Date: 1472110040
+Class: fix
+
+

@@ -9,6 +9,7 @@
 
     Multisite:
     * 3561 FIX: Removing a comment now also removes any linked acknowledgements...
+    * 3779 FIX: availability: added validation of availability options
 
     WATO:
     * 3559 WATO API: now able to bake agents with the new action "bake_agents"

@@ -1463,10 +1463,14 @@ def mode_mkeventd_edit_rule(phase):
     if html.has_var("rule_pack"):
         rule_pack_nr, rule_pack = rule_pack_with_id(rule_packs, html.var("rule_pack"))
 
-    # In links from multisite views the rule pack is not known.
-    # We just know the rule id and need to find the pack ourselves.
     else:
+        # In links from multisite views the rule pack is not known.
+        # We just know the rule id and need to find the pack ourselves.
         rule_id = html.var("rule_id")
+        if rule_id == None:
+            raise MKUserError("rule_id", _("The rule you are trying to edit does not exist."))
+
+        rule_pack = None
         for nr, pack in enumerate(rule_packs):
             for rnr, rule in enumerate(pack["rules"]):
                 if rule_id == rule["id"]:
@@ -1475,6 +1479,9 @@ def mode_mkeventd_edit_rule(phase):
                     html.set_var("edit", str(rnr))
                     html.set_var("rule_pack", pack["id"])
                     break
+
+        if not rule_pack:
+            raise MKUserError("rule_id", _("The rule you are trying to edit does not exist."))
 
     rules = rule_pack["rules"]
 

@@ -632,6 +632,7 @@
     * 3566 FIX: Fixed exception on SNMP MIB management page when MIB directory is missing
     * 3568 FIX: Fixed broken link in "Access to event status via TCP" help text
     * 3589 FIX: Fixed processing of RFC 5424 syslog messages
+    * 3771 FIX: Fixed exception on edit rule page in case of special URLs
 
     Livestatus:
     * 3644 Fixed 'source' column in 'comments' table.

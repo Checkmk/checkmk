@@ -1,0 +1,9 @@
+Title: netapp_api_vs_traffic: Fixed exception when no NFSv4 infos available
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p10
+Date: 1472123889
+Class: fix
+
+

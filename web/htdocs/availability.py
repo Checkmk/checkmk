@@ -1536,13 +1536,16 @@ def get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_ou
     raise Exception("Not implemented yet. Sorry.")
 
 
-def get_bi_spans(tree, aggr_group, avoptions, timewarp):
+def get_bi_spans(tree, aggr_group, avoptions, countdown_logrow_limit, timewarp):
     time_range, range_title = avoptions["range"]
-    phases_list = get_bi_leaf_history(tree, aggr_group, time_range)
-    return compute_bi_timeline(tree, aggr_group, time_range, timewarp, phases_list)
+
+    phases_list, countdown_logrow_limit = \
+        get_bi_leaf_history(tree, aggr_group, time_range, countdown_logrow_limit)
+
+    return compute_bi_timeline(tree, aggr_group, time_range, timewarp, phases_list), countdown_logrow_limit
 
 
-def get_bi_leaf_history(tree, aggr_group, time_range):
+def get_bi_leaf_history(tree, aggr_group, time_range, countdown_logrow_limit):
     # Get state history of all hosts and services contained in the tree.
     # In order to simplify the query, we always fetch the information for
     # all hosts of the aggregates.
@@ -1586,6 +1589,12 @@ def get_bi_leaf_history(tree, aggr_group, time_range):
     columns = ["site"] + columns
     rows = [ dict(zip(columns, row)) for row in data ]
 
+    # Now we find out if the log row limit was exceeded or
+    # if the log's length is the limit by accident.
+    # If this limit was exceeded then we cut off the last element
+    # in spans_by_object because it might be incomplete.
+    countdown_logrow_limit = countdown_logrow_limit - len(data)
+
     # Reclassify base data due to annotations
     rows = reclassify_bi_rows(rows)
 
@@ -1608,7 +1617,7 @@ def get_bi_leaf_history(tree, aggr_group, time_range):
     for from_time in sorted_times:
         phases_list.append((from_time, phases[from_time]))
 
-    return phases_list
+    return phases_list, countdown_logrow_limit
 
 
 def compute_bi_timeline(tree, aggr_group, time_range, timewarp, phases_list):

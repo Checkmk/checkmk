@@ -81,6 +81,10 @@ def render_availability_options(what):
                 html.add_user_error(e.varname, e)
                 is_open = True
 
+    if html.var("_unset_logrow_limit") == "1":
+        html.set_var("avo_logrow_limit", 0)
+        avoptions["logrow_limit"] = 0
+
     range_vs = None
     for name, height, show_in_reporting, vs in avoption_entries:
         if name == 'rangespec':
@@ -245,7 +249,7 @@ def render_availability_page(view, datasource, filterheaders, only_sites, limit)
                       "<b>Note:</b> The number of shown rows does not necessarily reflect the "
                       "matched entries and the result might be incomplete. ") % avoptions["logrow_limit"]
             text += '<a href="%s">%s</a>' % \
-                    (html.makeuri([("avo_logrow_limit", 0)]), _('Repeat query without limit.'))
+                    (html.makeuri([("_unset_logrow_limit", "1")]), _('Repeat query without limit.'))
             html.show_warning(text)
 
         do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)
@@ -504,6 +508,8 @@ def render_bi_availability(title, aggr_rows):
 
     timewarpcode = ""
     if not html.has_user_errors():
+        countdown_logrow_limit   = avoptions["logrow_limit"]
+        has_reached_logrow_limit = False
         spans = []
         for aggr_row in aggr_rows:
             tree = aggr_row["aggr_tree"]
@@ -512,7 +518,16 @@ def render_bi_availability(title, aggr_rows):
                 timewarp = int(html.var("timewarp"))
             except:
                 timewarp = None
-            these_spans, timewarp_tree_state = availability.get_bi_spans(tree, aggr_row["aggr_group"], avoptions, timewarp)
+
+            (these_spans, timewarp_tree_state), countdown_logrow_limit = \
+                availability.get_bi_spans(tree, aggr_row["aggr_group"], avoptions, countdown_logrow_limit, timewarp)
+
+            # We take only complete aggregations i.d. if we have
+            # undershot the log row limit then we ignore the rest
+            if avoptions["logrow_limit"] and countdown_logrow_limit < 0:
+                has_reached_logrow_limit = True
+                break
+
             spans += these_spans
             if timewarp and timewarp_tree_state:
                 state, assumed_state, node, subtrees = timewarp_tree_state
@@ -560,10 +575,21 @@ def render_bi_availability(title, aggr_rows):
                                htmlcode + \
                                '</td></tr></table>'
 
-        # FIXME non implemented log row limit
-        av_rawdata, has_reached_logrow_limit = availability.spans_by_object(spans, None)
-
+        # Note: '__has_reached_logrow_limit' is used for all other
+        # availability views but not for BI. There we have to take
+        # only complete aggregations
+        av_rawdata, __has_reached_logrow_limit = availability.spans_by_object(spans, None)
         av_data = availability.compute_availability("bi", av_rawdata, avoptions)
+
+        # If we abolish the limit we have to fetch the data again
+        # with changed logrow_limit = 0, which means no limit
+        if has_reached_logrow_limit:
+            text  = _("Your query matched more than %d log entries. "
+                      "<b>Note:</b> The number of shown rows does not necessarily reflect the "
+                      "matched entries and the result might be incomplete. ") % avoptions["logrow_limit"]
+            text += '<a href="%s">%s</a>' % \
+                    (html.makeuri([("_unset_logrow_limit", "1")]), _('Repeat query without limit.'))
+            html.show_warning(text)
 
         if html.output_format == "csv_export":
             output_availability_csv("bi", av_data, avoptions)

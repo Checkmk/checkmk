@@ -6,21 +6,28 @@ from testlib import web
 
 @pytest.fixture(scope="module")
 def default_cfg(web):
-    try:
-        web.add_host("livestatus-test-host", attributes={
-            "ipaddress": "127.0.0.1",
-        })
+    web.add_host("livestatus-test-host", attributes={
+        "ipaddress": "127.0.0.1",
+    })
 
-        web.discover_services("livestatus-test-host")
+    web.discover_services("livestatus-test-host")
 
-        web.activate_changes()
-    finally:
-        web.delete_host("livestatus-test-host")
+    web.activate_changes()
+    yield None
+
+    #
+    # Cleanup code
+    #
+
+    web.delete_host("livestatus-test-host")
 
 
 # Simply detects all tables by querying the columns table and then
 # queries each of those tables without any columns and filters
-def test_tables(default_cfg, site):
+@pytest.mark.parametrize(("core"), [ "nagios", "cmc" ])
+def test_tables(default_cfg, site, core):
+    site.set_config("CORE", core, with_restart=True)
+
     existing_tables = set([])
 
     for row in site.live.query_table_assoc("GET columns\n"):
@@ -29,17 +36,26 @@ def test_tables(default_cfg, site):
     assert len(existing_tables) > 5
 
     for table in existing_tables:
+        if core == "nagios" and table == "statehist":
+            continue # the statehist table in nagios can not be fetched without time filter
+
         result = site.live.query("GET %s\n" % table)
         assert type(result) == list
 
 
-def test_host_table(default_cfg, site):
+@pytest.mark.parametrize(("core"), [ "nagios", "cmc" ])
+def test_host_table(default_cfg, site, core):
+    site.set_config("CORE", core, with_restart=True)
+
     rows = site.live.query("GET hosts")
     assert type(rows) == list
     assert len(rows) >= 2 # header + min 1 host
 
 
-def test_service_table(default_cfg, site):
+@pytest.mark.parametrize(("core"), [ "nagios", "cmc" ])
+def test_service_table(default_cfg, site, core):
+    site.set_config("CORE", core, with_restart=True)
+
     rows = site.live.query("GET services\nFilter: host_name = livestatus-test-host\n"
                            "Columns: description\n")
     assert type(rows) == list

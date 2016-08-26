@@ -82,7 +82,6 @@ def render_availability_options(what):
                 is_open = True
 
     if html.var("_unset_logrow_limit") == "1":
-        html.set_var("avo_logrow_limit", 0)
         avoptions["logrow_limit"] = 0
 
     range_vs = None
@@ -575,10 +574,10 @@ def render_bi_availability(title, aggr_rows):
                                htmlcode + \
                                '</td></tr></table>'
 
-        # Note: '__has_reached_logrow_limit' is used for all other
-        # availability views but not for BI. There we have to take
+        # Note: 'spans_by_object' returns two arguments which are used by
+        # all availability views but not by BI. There we have to take
         # only complete aggregations
-        av_rawdata, __has_reached_logrow_limit = availability.spans_by_object(spans, None)
+        av_rawdata = availability.spans_by_object(spans, None)[0]
         av_data = availability.compute_availability("bi", av_rawdata, avoptions)
 
         # If we abolish the limit we have to fetch the data again

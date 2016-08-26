@@ -5,7 +5,7 @@ import pytest
 from testlib import web
 
 def test_global_settings(site, web):
-    r = web.get(site.url + "wato.py")
+    r = web.get("wato.py")
     assert "Global Settings" in r.text
 
 

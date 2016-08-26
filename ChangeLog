@@ -14,6 +14,7 @@
     * 3768 FIX: quantum_libsmall_door: Fixed possible exception in scan function
     * 3769 FIX: cisco_temperature: Fixed exception in case of empty SNMP data received from device
     * 3770 FIX: win_dhcp_pools: Fixed crash in case of empty DHCP pools
+    * 3781 FIX: ipmi: made check more robust against incomplete datasets
 
     Multisite:
     * 3561 FIX: Removing a comment now also removes any linked acknowledgements...

@@ -112,6 +112,32 @@
 # PS1 Status       | C8h | ok | 10.1 | Presence detected, Failure detected     <= NOT OK !!
 # PS2 Status       | C9h | ok | 10.2 | Presence detected
 
+# broken
+# <<<ipmi:cached(1472175405,300)>>>
+# 01-Inlet_Ambient 18.000 degrees_C ok na na na na 42.000 46.000
+# 02-CPU_1 40.000 degrees_C ok na na na na 70.000 na
+# 03-CPU_2 40.000 degrees_C ok na na na na 70.000 na
+# 04-DIMM_P1_1-3 32.000 degrees_C ok na na na na 87.000 na
+# 05-DIMM_P1_4-6 32.000 degrees_C ok na na na na 87.000 na
+# 06-DIMM_P2_1-3 27.000 degrees_C ok na na na na 87.000 na
+# 07-DIMM_P2_4-6 26.000 degrees_C ok na na na na 87.000 na
+# 09-Chipset 47.000 degrees_C ok na na na na 105.000 na
+# 10-VR_P1 32.000 degrees_C ok na na na na 115.000 120.000
+# 11-VR_P2 27.000 degrees_C ok na na na na 115.000 120.000
+# 12-VR_P1_Zone 27.000 degrees_C ok na na na na 80.000 85.000
+# 13-VR_P2_Zone 25.000 degrees_C ok na na na na 80.000 85.000
+# 14-VR_P1_Mem 33.000 degrees_C ok na na na na 115.000 120.000
+# 15-VR_P2_Mem 23.000 degrees_C ok na na na na 115.000 120.000
+# 16-VR_P1Mem_Zone 32.000 degrees_C ok na na na na 80.000 85.000
+# 17-VR_P2Mem_Zone 22.000 degrees_C ok na na na na 80.000 85.000
+# 18-HD_Controller 57.000 degrees_C ok na na na na 90.000 na
+# 19-Supercap 32.000 degrees_C ok na na na na 65.000 na
+# 21-PCI_Zone 30.000 degrees_C ok na na na na 80.000 85.000
+# 23-I/O_1_Zone 28.000 degrees_C ok na na na na 80.000 85.000
+# 26-I/O_LOM 40.000 degrees_C ok na na na na 100.000 na
+# 27-Sys_Exhaust 31.000 degrees_C ok na na na na 80.000 85.000
+# PS3_Inpu
+
 
 ipmi_summarize = True
 ipmi_ignore_nr = False # set to True in order to ignore entries with state 'nr'
@@ -146,18 +172,20 @@ def parse_ipmi(info):
     for section in [ ipmi_info, ipmi_discrete_info ]:
         if section:
             for line in section:
-                # Compatible with older check versions
-                name = line[0].strip().replace(" ", "_")
-                line = [ name ] + map(lambda x: x.strip(), line[1:])
+                if len(line) >= 2:
+                    # Compatible with older check versions
+                    name = line[0].strip().replace(" ", "_")
+                    line = [ name ] + map(lambda x: x.strip(), line[1:])
 
-                # Discrete sensors have no values
-                if len(line) <= 5:
-                    state = line[2]
-                    if line[4]:
-                        state += " (%s)" % line[4]
-                    line = [line[0], None, None, state, None, None, None, None, None, None]
+                    # Discrete sensors have no values
+                    if len(line) == 5:
+                        state = line[2]
+                        if line[4]:
+                            state += " (%s)" % line[4]
+                        line = [line[0], None, None, state, None, None, None, None, None, None]
 
-                parsed.append(line)
+                if len(line) == 10:
+                    parsed.append(line)
 
     return parsed
 

@@ -1566,6 +1566,10 @@ def prepare_crash_dump_directory(crash_dir):
 
 
 def is_manual_check(hostname, check_type, item):
+    # In case of nagios we don't have this information available (in precompiled mode)
+    if not "get_check_table" in globals():
+        return None
+
     manual_checks = get_check_table(hostname, remove_duplicates=True,
                                     world=opt_keepalive and "active" or "config",
                                     skip_autochecks=True)

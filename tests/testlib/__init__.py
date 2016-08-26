@@ -282,10 +282,8 @@ class Site(object):
 
 
 class WebSession(requests.Session):
-    transids = {}
-
-    def __init__(self, ident):
-        self.ident = ident
+    def __init__(self):
+        self.transids = []
         super(WebSession, self).__init__()
 
 
@@ -297,33 +295,38 @@ class WebSession(requests.Session):
             assert response.headers['Location'] == expected_target
 
 
-    def get(self, path, proto="http", expected_code=200, allow_errors=False, **kwargs):
+    def get(self, path, proto="http", expected_code=200, allow_errors=False, add_transid=False, **kwargs):
         url = self.url(proto, path)
+
+	if add_transid:
+            url = self._add_transid(url)
 
         response = super(WebSession, self).get(url, **kwargs)
         self._handle_http_response(response, expected_code, allow_errors)
         return response
 
 
-    def post(self, path, proto="http", expected_code=200, allow_errors=False, **kwargs):
+    def post(self, path, proto="http", expected_code=200, allow_errors=False, add_transid=False, **kwargs):
         url = self.url(proto, path)
 
-	if kwargs.get("add_transid"):
-            del kwargs["add_transid"]
-
-            transids = WebSession.transids.get(self.ident, [])
-            if not transids:
-                raise Exception('Tried to add a transid, but none available at the moment')
-
-            if "?" in url:
-                url += "&"
-            else:
-                url += "?"
-            url += "_transid=" + transids.pop()
+	if add_transid:
+            url = self._add_transid(url)
 
         response = super(WebSession, self).post(url, **kwargs)
         self._handle_http_response(response, expected_code, allow_errors)
         return response
+
+
+    def _add_transid(self, url):
+        if not self.transids:
+            raise Exception('Tried to add a transid, but none available at the moment')
+
+        if "?" in url:
+            url += "&"
+        else:
+            url += "?"
+        url += "_transid=" + self.transids.pop()
+        return url
 
 
     def _handle_http_response(self, response, expected_code, allow_errors):
@@ -362,8 +365,7 @@ class WebSession(requests.Session):
         matches = re.findall('name="_transid" value="([^"]+)"', body)
         matches += re.findall('_transid=([0-9/]+)', body)
         for match in matches:
-            transids = WebSession.transids.setdefault(self.ident, [])
-            transids.append(match)
+            self.transids.append(match)
 
 
     def _find_errors(self, body, allow_errors):
@@ -441,10 +443,9 @@ class WebSession(requests.Session):
 
 
 class CMKWebSession(WebSession):
-
     def __init__(self, site):
         self.site = site
-        super(CMKWebSession, self).__init__(site.id)
+        super(CMKWebSession, self).__init__()
 
 
     # Computes a full URL inkl. http://... from a URL starting with the path.

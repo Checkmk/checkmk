@@ -1,0 +1,9 @@
+Title: Fixed reporting of crashes when using Nagios core
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.8p10
+Date: 1472212981
+Class: fix
+
+

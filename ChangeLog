@@ -1,4 +1,7 @@
 1.2.8p10:
+    Core & Setup:
+    * 3843 FIX: Fixed reporting of crashes when using Nagios core
+
     Checks & Agents:
     * 3743 SEC: mk_jolokia: Use JSON library to parse JSON output in lieu of eval()...
             NOTE: Please refer to the migration notes!

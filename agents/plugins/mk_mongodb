@@ -30,6 +30,7 @@ port   = None
 try:
     con = pymongo.MongoClient(host, port)
     try:
+        # pylint: disable=no-member
         con = pymongo.database_names()
     except:
         con = pymongo.MongoClient(None, None,  read_preference=pymongo.ReadPreference.SECONDARY)

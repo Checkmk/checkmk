@@ -356,6 +356,7 @@
     * 3766 FIX: palo_alto_sessions: Fixed possible division by zero error
     * 3769 FIX: cisco_temperature: Fixed exception in case of empty SNMP data received from device
     * 3770 FIX: win_dhcp_pools: Fixed crash in case of empty DHCP pools
+    * 3781 FIX: ipmi: made check more robust against incomplete datasets
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

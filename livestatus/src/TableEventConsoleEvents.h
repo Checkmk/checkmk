@@ -32,9 +32,9 @@ class Table;
 
 #ifdef CMC
 #include <mutex>
+#include "Notes.h"
 #include "cmc.h"
 class Core;
-class Notes;
 #else
 #include "nagios.h"
 class DowntimesOrComments;
@@ -46,12 +46,12 @@ public:
     std::string namePrefix() const override;
 
 #ifdef CMC
-    TableEventConsoleEvents(const Notes &downtimes_holder,
-                            const Notes &comments_holder,
+    TableEventConsoleEvents(const Downtimes &downtimes_holder,
+                            const Comments &comments_holder,
                             std::recursive_mutex &holder_lock, Core *core);
 
-    static void addColumns(Table *table, const Notes &downtimes_holder,
-                           const Notes &comments_holder,
+    static void addColumns(Table *table, const Downtimes &downtimes_holder,
+                           const Comments &comments_holder,
                            std::recursive_mutex &holder_lock, Core *core);
 #else
     TableEventConsoleEvents(const DowntimesOrComments &downtimes_holder,

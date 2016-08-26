@@ -35,8 +35,8 @@
 class Column;
 #ifdef CMC
 #include <mutex>
+#include "Notes.h"
 class Core;
-class Notes;
 #else
 class DowntimesOrComments;
 #endif
@@ -71,8 +71,8 @@ protected:
 
 public:
 #ifdef CMC
-    TableStateHistory(LogCache *log_cache, const Notes &downtimes_holder,
-                      const Notes &comments_holder,
+    TableStateHistory(LogCache *log_cache, const Downtimes &downtimes_holder,
+                      const Comments &comments_holder,
                       std::recursive_mutex &holder_lock, Core *core);
 #else
     TableStateHistory(LogCache *log_cache,

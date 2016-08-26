@@ -39,7 +39,7 @@ using std::string;
 
 #ifdef CMC
 TableEventConsoleEvents::TableEventConsoleEvents(
-    const Notes &downtimes_holder, const Notes &comments_holder,
+    const Downtimes &downtimes_holder, const Comments &comments_holder,
     std::recursive_mutex &holder_lock, Core *core)
     : TableEventConsole(core) {
     addColumns(this, downtimes_holder, comments_holder, holder_lock, core);
@@ -55,8 +55,8 @@ TableEventConsoleEvents::TableEventConsoleEvents(
 // static
 #ifdef CMC
 void TableEventConsoleEvents::addColumns(Table *table,
-                                         const Notes &downtimes_holder,
-                                         const Notes &comments_holder,
+                                         const Downtimes &downtimes_holder,
+                                         const Comments &comments_holder,
                                          std::recursive_mutex &holder_lock,
                                          Core *core)
 #else

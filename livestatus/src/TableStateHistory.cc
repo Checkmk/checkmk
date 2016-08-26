@@ -84,8 +84,8 @@ const char *getCustomVariable(customvariablesmember *cvm, const char *name) {
 
 TableStateHistory::TableStateHistory(LogCache *log_cache,
 #ifdef CMC
-                                     const Notes &downtimes_holder,
-                                     const Notes &comments_holder,
+                                     const Downtimes &downtimes_holder,
+                                     const Comments &comments_holder,
                                      std::recursive_mutex &holder_lock,
                                      Core *core
 #else

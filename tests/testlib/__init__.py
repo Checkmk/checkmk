@@ -221,6 +221,13 @@ class Site(object):
                 raise Exception("The site %s is not running completely after starting" % self.id)
 
 
+    def stop(self):
+        if self.is_running():
+            assert omd(["stop", self.id]) == 0
+            if self.is_running():
+                raise Exception("The site %s is not completely stopped after stopping" % self.id)
+
+
     def exists(self):
         return os.path.exists("/omd/sites/%s" % self.id)
 
@@ -229,8 +236,14 @@ class Site(object):
         return omd(["status", "--bare", self.id]) == 0
 
 
-    def set_config(self, key, val):
+    def set_config(self, key, val, with_restart=False):
+        if with_restart:
+            self.stop()
+
         assert omd(["config", self.id, "set", key, val]) == 0
+
+        if with_restart:
+            self.start()
 
 
     def get_config(self, key):
@@ -295,25 +308,26 @@ class WebSession(requests.Session):
             assert response.headers['Location'] == expected_target
 
 
-    def get(self, path, proto="http", expected_code=200, allow_errors=False, add_transid=False, **kwargs):
+    def get(self, *args, **kwargs):
+        return self._request("get", *args, **kwargs)
+
+
+    def post(self, *args, **kwargs):
+        return self._request("post", *args, **kwargs)
+
+
+    def _request(self, method, path, proto="http", expected_code=200, expect_redirect=None, allow_errors=False, add_transid=False, **kwargs):
         url = self.url(proto, path)
 
 	if add_transid:
             url = self._add_transid(url)
 
-        response = super(WebSession, self).get(url, **kwargs)
-        self._handle_http_response(response, expected_code, allow_errors)
-        return response
+        if method == "post":
+            response = super(WebSession, self).post(url, **kwargs)
+        else:
+            response = super(WebSession, self).get(url, **kwargs)
 
-
-    def post(self, path, proto="http", expected_code=200, allow_errors=False, add_transid=False, **kwargs):
-        url = self.url(proto, path)
-
-	if add_transid:
-            url = self._add_transid(url)
-
-        response = super(WebSession, self).post(url, **kwargs)
-        self._handle_http_response(response, expected_code, allow_errors)
+        self._handle_http_response(response, expected_code, allow_errors, expect_redirect)
         return response
 
 
@@ -329,7 +343,7 @@ class WebSession(requests.Session):
         return url
 
 
-    def _handle_http_response(self, response, expected_code, allow_errors):
+    def _handle_http_response(self, response, expected_code, allow_errors, expect_redirect):
         assert "Content-Type" in response.headers
 
         # TODO: Copied from CMA tests. Needed?
@@ -339,6 +353,11 @@ class WebSession(requests.Session):
         #    assert r.encoding == "UTF-8", "Got invalid encoding (%s) for URL %s" % (r.encoding, r.url))
 
         mime_type = self._get_mime_type(response)
+
+
+        if expect_redirect:
+            expected_code, redirect_target = expect_redirect
+            assert response.headers["Location"] == redirect_target
 
         assert response.status_code == expected_code, \
             "Got invalid status code (%d != %d) for URL %s (Location: %s)" % \
@@ -379,7 +398,9 @@ class WebSession(requests.Session):
     def _check_html_page_resources(self, response):
         soup = BeautifulSoup(response.text)
 
-        base_url = urlparse(response.url).path
+        parsed_url = urlparse(response.url)
+
+        base_url = parsed_url.path
         if ".py" in base_url:
             base_url = os.path.dirname(base_url)
 
@@ -387,28 +408,28 @@ class WebSession(requests.Session):
 
         for img_url in self._find_resource_urls("img", "src", soup):
             assert not img_url.startswith("/")
-            req = self.get(base_url + "/" + img_url)
+            req = self.get(base_url + "/" + img_url, proto=parsed_url.scheme, verify=False)
 
             mime_type = self._get_mime_type(req)
             assert mime_type in [ "image/png" ]
 
         for script_url in self._find_resource_urls("script", "src", soup):
             assert not script_url.startswith("/")
-            req = self.get(base_url + "/" + script_url)
+            req = self.get(base_url + "/" + script_url, proto=parsed_url.scheme, verify=False)
 
             mime_type = self._get_mime_type(req)
             assert mime_type in [ "application/javascript" ]
 
         for css_url in self._find_resource_urls("link", "href", soup, filters=[("rel", "stylesheet")]):
             assert not css_url.startswith("/")
-            req = self.get(base_url + "/" + css_url)
+            req = self.get(base_url + "/" + css_url, proto=parsed_url.scheme, verify=False)
 
             mime_type = self._get_mime_type(req)
             assert mime_type in [ "text/css" ]
 
         for url in self._find_resource_urls("link", "href", soup, filters=[("rel", "shortcut icon")]):
             assert not url.startswith("/")
-            req = self.get(base_url + "/" + url)
+            req = self.get(base_url + "/" + url, proto=parsed_url.scheme, verify=False)
 
             mime_type = self._get_mime_type(req)
             assert mime_type in [ "image/vnd.microsoft.icon" ]

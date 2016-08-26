@@ -12,6 +12,9 @@ import socket
 import pipes
 import subprocess
 
+from urlparse import urlparse
+from BeautifulSoup import BeautifulSoup
+
 try:
     import simplejson as json
 except ImportError:
@@ -142,7 +145,10 @@ class Site(object):
         self.version = CMKVersion(version, edition)
 
         self.reuse   = reuse
-        self.url     = "http://127.0.0.1/%s/check_mk/" % self.id
+
+        self.http_proto   = "http"
+        self.http_address = "127.0.0.1"
+        self.url          = "%s://%s/%s/check_mk/" % (self.http_proto, self.http_address, self.id)
 
         self._gather_livestatus_port()
 
@@ -237,9 +243,9 @@ class Site(object):
 
 
     def init_wato(self):
-        web = WebSession(self)
+        web = CMKWebSession(self)
         web.login()
-        web.get(self.url + "wato.py")
+        web.get("wato.py")
         assert os.path.exists(self.root + "/etc/check_mk/conf.d/wato/rules.mk"), \
             "Failed to initialize WATO data structures"
 
@@ -278,24 +284,34 @@ class Site(object):
 class WebSession(requests.Session):
     transids = {}
 
-    def __init__(self, site):
-        self.site = site
-        self.url  = site.url
-
+    def __init__(self, ident):
+        self.ident = ident
         super(WebSession, self).__init__()
 
 
-    def get(self, *args, **kwargs):
-        response = super(WebSession, self).get(*args, **kwargs)
-        self._handle_http_response(response)
+    def check_redirect(self, path, proto="http", expected_code=302, expected_target=None):
+        url = self.url(proto, path)
+
+        response = self.get(path, expected_code=expected_code, allow_redirects=False)
+        if expected_target:
+            assert response.headers['Location'] == expected_target
+
+
+    def get(self, path, proto="http", expected_code=200, allow_errors=False, **kwargs):
+        url = self.url(proto, path)
+
+        response = super(WebSession, self).get(url, **kwargs)
+        self._handle_http_response(response, expected_code, allow_errors)
         return response
 
 
-    def post(self, url, *args, **kwargs):
+    def post(self, path, proto="http", expected_code=200, allow_errors=False, **kwargs):
+        url = self.url(proto, path)
+
 	if kwargs.get("add_transid"):
             del kwargs["add_transid"]
 
-            transids = WebSession.transids.get(self.site.id, [])
+            transids = WebSession.transids.get(self.ident, [])
             if not transids:
                 raise Exception('Tried to add a transid, but none available at the moment')
 
@@ -305,29 +321,39 @@ class WebSession(requests.Session):
                 url += "?"
             url += "_transid=" + transids.pop()
 
-        response = super(WebSession, self).post(url, *args, **kwargs)
-        self._handle_http_response(response)
+        response = super(WebSession, self).post(url, **kwargs)
+        self._handle_http_response(response, expected_code, allow_errors)
         return response
 
 
-    def _handle_http_response(self, response):
+    def _handle_http_response(self, response, expected_code, allow_errors):
         assert "Content-Type" in response.headers
 
-        def get_mime_type(response):
-            return response.headers["Content-Type"].split(";", 1)[0]
+        # TODO: Copied from CMA tests. Needed?
+        # Apache error responses are sent as ISO-8859-1. Ignore these pages.
+        #if r.status_code == 200 \
+        #   and (not self._allow_wrong_encoding and not mime_type.startswith("image/")):
+        #    assert r.encoding == "UTF-8", "Got invalid encoding (%s) for URL %s" % (r.encoding, r.url))
 
-        mime_type = get_mime_type(response)
+        mime_type = self._get_mime_type(response)
 
-        assert response.status_code == 200
+        assert response.status_code == expected_code, \
+            "Got invalid status code (%d != %d) for URL %s (Location: %s)" % \
+                  (response.status_code, expected_code,
+                   response.url, response.headers.get('Location', "None"))
 
         if mime_type == "text/html":
-            self._check_html_page(response)
+            self._check_html_page(response, allow_errors)
 
 
-    def _check_html_page(self, response):
+    def _get_mime_type(self, response):
+        return response.headers["Content-Type"].split(";", 1)[0]
+
+
+    def _check_html_page(self, response, allow_errors):
         self._extract_transids(response.text)
-        self._find_errors(response.text)
-        # TODO: Check resources (css, js, images)
+        self._find_errors(response.text, allow_errors)
+        self._check_html_page_resources(response)
 
 
     def _extract_transids(self, body):
@@ -336,28 +362,114 @@ class WebSession(requests.Session):
         matches = re.findall('name="_transid" value="([^"]+)"', body)
         matches += re.findall('_transid=([0-9/]+)', body)
         for match in matches:
-            transids = WebSession.transids.setdefault(self.site.id, [])
+            transids = WebSession.transids.setdefault(self.ident, [])
             transids.append(match)
 
 
-    def _find_errors(self, body):
+    def _find_errors(self, body, allow_errors):
         matches = re.search('<div class=error>(.*?)</div>', body, re.M | re.DOTALL)
-        assert not matches, "Found error message: %s" % matches.groups()
+        if allow_errors and matches:
+            print "Found error message, but it's allowed: %s" % matches.groups()
+        else:
+            assert not matches, "Found error message: %s" % matches.groups()
+
+
+    def _check_html_page_resources(self, response):
+        soup = BeautifulSoup(response.text)
+
+        base_url = urlparse(response.url).path
+        if ".py" in base_url:
+            base_url = os.path.dirname(base_url)
+
+        # There might be other resources like iframe, audio, ... but we don't care about them
+
+        for img_url in self._find_resource_urls("img", "src", soup):
+            assert not img_url.startswith("/")
+            req = self.get(base_url + "/" + img_url)
+
+            mime_type = self._get_mime_type(req)
+            assert mime_type in [ "image/png" ]
+
+        for script_url in self._find_resource_urls("script", "src", soup):
+            assert not script_url.startswith("/")
+            req = self.get(base_url + "/" + script_url)
+
+            mime_type = self._get_mime_type(req)
+            assert mime_type in [ "application/javascript" ]
+
+        for css_url in self._find_resource_urls("link", "href", soup, filters=[("rel", "stylesheet")]):
+            assert not css_url.startswith("/")
+            req = self.get(base_url + "/" + css_url)
+
+            mime_type = self._get_mime_type(req)
+            assert mime_type in [ "text/css" ]
+
+        for url in self._find_resource_urls("link", "href", soup, filters=[("rel", "shortcut icon")]):
+            assert not url.startswith("/")
+            req = self.get(base_url + "/" + url)
+
+            mime_type = self._get_mime_type(req)
+            assert mime_type in [ "image/vnd.microsoft.icon" ]
+
+
+    def _find_resource_urls(self, tag, attribute, soup, filters=[]):
+        urls = []
+
+        for element in soup.findAll(tag):
+            try:
+                skip = False
+                for attr, val in filters:
+                    if element[attr] != val:
+                        skip = True
+                        break
+
+                if not skip:
+                    urls.append(element[attribute])
+            except KeyError:
+                pass
+
+        return urls
+
+
+    def login(self, username=None, password=None):
+        raise NotImplementedError()
+
+
+    def logout(self):
+        raise NotImplementedError()
+
+
+
+class CMKWebSession(WebSession):
+
+    def __init__(self, site):
+        self.site = site
+        super(CMKWebSession, self).__init__(site.id)
+
+
+    # Computes a full URL inkl. http://... from a URL starting with the path.
+    def url(self, proto, path):
+        # In case no path component is in URL, add the path to the "/[site]/check_mk"
+        if "/" not in urlparse(path).path:
+            path = "/%s/check_mk/%s" % (self.site.id, path)
+
+        return '%s://%s%s' % (self.site.http_proto, self.site.http_address, path)
 
 
     def login(self, username="omdadmin", password="omd"):
-        login_page = self.get(self.url).text
+        login_page = self.get("").text
         assert "_username" in login_page, "_username not found on login page - page broken?"
         assert "_password" in login_page
         assert "_login" in login_page
 
-        r = self.post(self.url + "login.py", {
+        r = self.post("login.py", data={
             "filled_in" : "login",
             "_username" : username,
             "_password" : password,
             "_login"    : "Login",
         })
         auth_cookie = r.cookies.get("auth_%s" % self.site.id)
+        assert auth_cookie
         assert auth_cookie.startswith("%s:" % username)
 
         assert "side.py" in r.text
@@ -367,11 +479,11 @@ class WebSession(requests.Session):
     def set_language(self, lang):
         lang = "" if lang == "en" else lang
 
-        profile_page = self.get(self.url + "user_profile.py").text
+        profile_page = self.get("user_profile.py").text
         assert "name=\"language\"" in profile_page
         assert "value=\""+lang+"\"" in profile_page
 
-        r = self.post(self.url + "user_profile.py", {
+        r = self.post("user_profile.py", data={
             "filled_in" : "profile",
             "_set_lang" : "on",
             "language"  : lang,
@@ -385,7 +497,7 @@ class WebSession(requests.Session):
 
 
     def logout(self):
-        r = self.get(self.url + "logout.py")
+        r = self.get("logout.py")
         assert "action=\"login.py\"" in r.text
 
 
@@ -409,7 +521,7 @@ class WebSession(requests.Session):
     def _api_request(self, url, data):
         data.update(self._automation_credentials())
 
-        req = self.post(url, data)
+        req = self.post(url, data=data)
         response = json.loads(req.text)
 
         assert response["result_code"] == 0, \
@@ -419,7 +531,7 @@ class WebSession(requests.Session):
 
 
     def add_host(self, hostname, folder="/", attributes=None):
-        result = self._api_request(self.url + "webapi.py?action=add_host", {
+        result = self._api_request("webapi.py?action=add_host", {
             "request": json.dumps({
                 "hostname"   : hostname,
                 "folder"     : folder,
@@ -437,7 +549,7 @@ class WebSession(requests.Session):
 
 
     def get_host(self, hostname):
-        result = self._api_request(self.url + "webapi.py?action=get_host", {
+        result = self._api_request("webapi.py?action=get_host", {
             "request": json.dumps({
                 "hostname"   : hostname,
             }),
@@ -452,7 +564,7 @@ class WebSession(requests.Session):
 
 
     def get_all_hosts(self, effective_attributes=0):
-        result = self._api_request(self.url + "webapi.py?action=get_all_hosts", {
+        result = self._api_request("webapi.py?action=get_all_hosts", {
             "request": json.dumps({
                 "effective_attributes": effective_attributes,
             }),
@@ -463,7 +575,7 @@ class WebSession(requests.Session):
 
 
     def delete_host(self, hostname):
-        result = self._api_request(self.url + "webapi.py?action=delete_host", {
+        result = self._api_request("webapi.py?action=delete_host", {
             "request": json.dumps({
                 "hostname"   : hostname,
             }),
@@ -483,7 +595,7 @@ class WebSession(requests.Session):
         if mode != None:
             request["mode"] = mode
 
-        result = self._api_request(self.url + "webapi.py?action=discover_services", {
+        result = self._api_request("webapi.py?action=discover_services", {
             "request": json.dumps(request),
         })
 
@@ -500,17 +612,16 @@ class WebSession(requests.Session):
         if foreign_changes != None:
             request["foreign_changes"] = foreign_changes
 
-        result = self._api_request(self.url + "webapi.py?action=activate_changes", {
+        result = self._api_request("webapi.py?action=activate_changes", {
             "request": json.dumps(request),
         })
 
         assert result == None
 
 
-
 @pytest.fixture(scope="module")
 def web(site):
-    web = WebSession(site)
+    web = CMKWebSession(site)
     web.login()
     web.set_language("en")
     return web

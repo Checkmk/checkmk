@@ -15,6 +15,10 @@ import subprocess
 from urlparse import urlparse
 from BeautifulSoup import BeautifulSoup
 
+# Disable insecure requests warning message during SSL testing
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 try:
     import simplejson as json
 except ImportError:

@@ -23,11 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "mk_logwatch.h"
-#include <syslog.h>
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
-#include "logger.h"
+#include <ostream>
+#include "Logger.h"
 #include "pnp4nagios.h"
 
 using std::string;
@@ -44,9 +44,8 @@ std::string mk_logwatch_path_of_host(const string &host_name) {
 void mk_logwatch_acknowledge(const std::string &host_name,
                              const std::string &file_name) {
     if (file_name.find('/') != std::string::npos) {
-        logger(LOG_WARNING,
-               "Invalid character / in mk_logfile filename '%s' of host '%s'",
-               file_name.c_str(), host_name.c_str());
+        Warning() << "Invalid character / in mk_logfile filename '" << file_name
+                  << "' of host '" << host_name << "'";
         return;
     }
 
@@ -60,8 +59,7 @@ void mk_logwatch_acknowledge(const std::string &host_name,
 
     int r = remove(path.c_str());
     if (r != 0) {
-        logger(LOG_WARNING,
-               "Cannot acknowledge mk_logfile file '%s' of host '%s': %s",
-               file_name.c_str(), host_name.c_str(), strerror(errno));
+        Warning() << "Cannot acknowledge mk_logfile file '" << file_name
+                  << "' of host '" << host_name << "': " << strerror(errno);
     }
 }

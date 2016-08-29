@@ -27,8 +27,9 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <ostream>
 #include <utility>
-#include "logger.h"
+#include "Logger.h"
 
 using std::lock_guard;
 using std::mutex;
@@ -94,8 +95,8 @@ void TimeperiodsCache::update(time_t now) {
     if (num_periods > 0) {
         _cache_time = minutes;
     } else {
-        logger(LG_INFO,
-               "Timeperiod cache not updated, there are no timeperiods (yet)");
+        Informational()
+            << "Timeperiod cache not updated, there are no timeperiods (yet)";
     }
 }
 
@@ -115,10 +116,8 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp) {
     if (it != _cache.end()) {
         is_in = it->second;
     } else {
-        logger(LG_INFO,
-               "No timeperiod information available for %s. Assuming out of "
-               "period.",
-               tp->name);
+        Informational() << "No timeperiod information available for "
+                        << tp->name << ". Assuming out of period.";
         is_in = false;
         // Problem: The method check_time_against_period is to a high
         // degree not thread safe. In the current situation Icinga is

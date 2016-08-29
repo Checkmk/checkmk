@@ -23,9 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DowntimesOrComments.h"
+#include <iosfwd>
 #include <utility>
 #include "DowntimeOrComment.h"
-#include "logger.h"
+#include "Logger.h"
 
 using std::make_unique;
 
@@ -38,7 +39,7 @@ void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
             break;
         case NEBTYPE_DOWNTIME_DELETE:
             if (_entries.erase(id) == 0) {
-                logger(LG_INFO, "Cannot delete non-existing downtime %lu", id);
+                Informational() << "Cannot delete non-existing downtime " << id;
             }
             break;
         default:
@@ -55,7 +56,7 @@ void DowntimesOrComments::registerComment(nebstruct_comment_data *data) {
             break;
         case NEBTYPE_COMMENT_DELETE:
             if (_entries.erase(id) == 0) {
-                logger(LG_INFO, "Cannot delete non-existing comment %lu", id);
+                Informational() << "Cannot delete non-existing comment " << id;
             }
             break;
         default:

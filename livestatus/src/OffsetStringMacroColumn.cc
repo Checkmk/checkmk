@@ -26,9 +26,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include "Logger.h"
 #include "Renderer.h"
 #include "VariadicFilter.h"
-#include "logger.h"
 class Filter;
 
 using std::string;
@@ -78,7 +78,7 @@ void OffsetStringMacroColumn::output(void *row, RowRenderer &r,
 
 Filter *OffsetStringMacroColumn::createFilter(RelationalOperator /*unused */,
                                               const string & /*unused*/) {
-    logger(LG_INFO, "Sorry. No filtering on macro columns implemented yet");
+    Informational() << "Sorry. No filtering on macro columns implemented yet";
     // TODO(sp) Use unique_ptr
     return VariadicFilter::make(LogicalOperator::and_)
         .release();  // always true

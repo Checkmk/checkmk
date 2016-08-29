@@ -28,23 +28,6 @@
 #include "config.h"  // IWYU pragma: keep
 #include <syslog.h>
 
-#ifdef CMC
-#define LG_DEBUG LOG_INFO
-#define LG_INFO LOG_NOTICE
-#define LG_WARN LOG_WARNING
-#define LG_ERR LOG_ERR
-#define LG_CRIT LOG_CRIT
-#define LG_ALERT LOG_ALERT
-#else
-// TODO: Really use log levels
-#define LG_INFO 262144
-#define LG_WARN LOG_INFO
-#define LG_ERR LOG_INFO
-#define LG_CRIT LOG_INFO
-#define LG_DEBUG LOG_INFO
-#define LG_ALERT LOG_INFO
-#endif
-
 void logger(int priority, const char *loginfo, ...)
     __attribute__((format(printf, 2, 3)));
 void open_logfile();

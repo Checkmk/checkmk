@@ -43,7 +43,7 @@ void open_logfile() {
     // needed to determine main thread later
     g_mainthread_id = pthread_self();
     if (g_logfile == nullptr) {
-        logger(LG_WARN, "Cannot open logfile %s: %s", g_logfile_path,
+        logger(LOG_WARNING, "Cannot open logfile %s: %s", g_logfile_path,
                strerror(errno));
     }
 }
@@ -55,17 +55,17 @@ void close_logfile() {
     }
 }
 
-void logger(int priority, const char *loginfo, ...) {
+void logger(int /*priority*/, const char *loginfo, ...) {
     va_list ap;
     va_start(ap, loginfo);
 
     // Only the main process may use the Nagios log methods
-    if ((g_logfile == nullptr) || g_mainthread_id == pthread_self()) {
+    if (g_logfile == nullptr || g_mainthread_id == pthread_self()) {
         char buffer[8192];
         snprintf(buffer, 20, "livestatus: ");
         vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer),
                   loginfo, ap);
-        write_to_all_logs(buffer, priority);
+        write_to_all_logs(buffer, NSLOG_INFO_MESSAGE);
     } else if (g_logfile != nullptr) {
         char timestring[64];
         time_t now_t = time(nullptr);

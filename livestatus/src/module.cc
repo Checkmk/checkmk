@@ -57,7 +57,6 @@
 #include "data_encoding.h"
 #include "global_counters.h"
 #include "livestatus.h"
-#include "logger.h"
 #include "nagios.h"
 #include "strutil.h"
 #include "waittriggers.h"
@@ -486,7 +485,7 @@ void livestatus_log_initial_states() {
             snprintf(buffer, sizeof(buffer),
                      "HOST DOWNTIME ALERT: %s;STARTED;%s", h->name,
                      get_downtime_comment(h->name, nullptr));
-            write_to_all_logs(buffer, LG_INFO);
+            write_to_all_logs(buffer, NSLOG_INFO_MESSAGE);
         }
     }
     // Log DOWNTIME services
@@ -497,7 +496,7 @@ void livestatus_log_initial_states() {
                      "SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name,
                      s->description,
                      get_downtime_comment(s->host_name, s->description));
-            write_to_all_logs(buffer, LG_INFO);
+            write_to_all_logs(buffer, NSLOG_INFO_MESSAGE);
         }
     }
     // Log TIMERPERIODS
@@ -515,7 +514,7 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
             // initial info during startup
             // TODO(sp) The Nagios headers are (once again) not const-correct...
             write_to_all_logs(const_cast<char *>("logging initial states"),
-                              LG_INFO);
+                              NSLOG_INFO_MESSAGE);
         }
     }
     g_timeperiods_cache->update(ts->timestamp.tv_sec);

@@ -27,10 +27,11 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <syslog.h>
+#include <string>
 
 void logger(int priority, const char *loginfo, ...)
     __attribute__((format(printf, 2, 3)));
-void open_logfile();
+void open_logfile(const std::string &path);
 void close_logfile();
 
 #endif  // logger_h

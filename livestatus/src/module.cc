@@ -97,7 +97,7 @@ char pnp_path_storage[4096];
 char *g_pnp_path = pnp_path_storage;
 char g_mk_inventory_path[4096];  // base path of Check_MK inventory files
 char g_mk_logwatch_path[4096];   // base path of Check_MK logwatch files
-char g_logfile_path[4096];
+static char fl_logfile_path[4096];
 char g_mkeventd_socket_path[4096];
 int g_debug_level = 0;
 int g_should_terminate = false;
@@ -670,11 +670,11 @@ void livestatus_parse_arguments(const char *args_orig) {
     strncpy(g_socket_path, DEFAULT_SOCKET_PATH, sizeof(g_socket_path));
 
     /* set default path to our logfile to be in the same path as nagios.log */
-    strncpy(g_logfile_path, log_file,
-            sizeof(g_logfile_path) - 16 /* len of "livestatus.log" */);
-    char *slash = strrchr(g_logfile_path, '/');
+    strncpy(fl_logfile_path, log_file,
+            sizeof(fl_logfile_path) - 16 /* len of "livestatus.log" */);
+    char *slash = strrchr(fl_logfile_path, '/');
     if (slash == nullptr) {
-        strncpy(g_logfile_path, "/tmp/livestatus.log", 20);
+        strncpy(fl_logfile_path, "/tmp/livestatus.log", 20);
     } else {
         strncpy(slash + 1, "livestatus.log", 15);
     }
@@ -701,7 +701,7 @@ void livestatus_parse_arguments(const char *args_orig) {
                 g_debug_level = atoi(right);
                 Informational() << "Setting debug level to " << g_debug_level;
             } else if (strcmp(left, "log_file") == 0) {
-                strncpy(g_logfile_path, right, sizeof(g_logfile_path));
+                strncpy(fl_logfile_path, right, sizeof(fl_logfile_path));
             } else if (strcmp(left, "mkeventd_socket_path") == 0) {
                 strncpy(g_mkeventd_socket_path, right,
                         sizeof(g_mkeventd_socket_path));
@@ -866,7 +866,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
                               void *handle) {
     g_nagios_handle = handle;
     livestatus_parse_arguments(args);
-    open_logfile();
+    open_logfile(fl_logfile_path);
 
     Informational() << "Livestatus " << VERSION
                     << " by Mathias Kettner. Socket: '" << g_socket_path << "'";
@@ -903,7 +903,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
        that happens, we haven't got any data anyway... */
 
     Informational() << "Finished initialization. Further log messages go to "
-                    << g_logfile_path;
+                    << fl_logfile_path;
     return 0;
 }
 

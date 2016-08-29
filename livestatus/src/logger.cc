@@ -34,16 +34,17 @@
 #include <ctime>
 #include "nagios.h"
 
-extern char g_logfile_path[];
+using std::string;
+
 pthread_t g_mainthread_id;
 FILE *g_logfile = nullptr;
 
-void open_logfile() {
-    g_logfile = fopen(g_logfile_path, "a");
+void open_logfile(const string &path) {
+    g_logfile = fopen(path.c_str(), "a");
     // needed to determine main thread later
     g_mainthread_id = pthread_self();
     if (g_logfile == nullptr) {
-        logger(LOG_WARNING, "Cannot open logfile %s: %s", g_logfile_path,
+        logger(LOG_WARNING, "Cannot open logfile %s: %s", path.c_str(),
                strerror(errno));
     }
 }

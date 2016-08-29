@@ -32,6 +32,7 @@
 # - Checkbox -> rename to Boolean
 
 import math, os, time, re, sre_constants, urlparse, forms, tempfile
+import socket
 from lib import *
 
 def type_name(v):
@@ -620,6 +621,91 @@ class Hostname(TextAscii):
                               "Only letters, digits, dash, underscore and dot are allowed.")
         if "allow_empty" not in kwargs:
             self._allow_empty = False
+
+
+
+# Use this for all host / ip address input fields!
+class HostAddress(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+        self._allow_host_name    = kwargs.get("allow_host_name",    True)
+        self._allow_ipv4_address = kwargs.get("allow_ipv4_address", True)
+        self._allow_ipv6_address = kwargs.get("allow_ipv6_address", True)
+
+
+    def validate_value(self, value, varprefix):
+        if self._allow_host_name and self._is_valid_host_name(value):
+            pass
+        elif self._allow_ipv4_address and self._is_valid_ipv4_address(value):
+            pass
+        elif self._allow_ipv6_address and self._is_valid_ipv6_address(value):
+            pass
+        else:
+            raise MKUserError(varprefix, _("Invalid host address. You need to specify the address "
+                                           "either as %s." % ", ".join(self._allowed_type_names())))
+
+        ValueSpec.custom_validate(self, value, varprefix)
+
+
+    def _is_valid_host_name(self, hostname):
+        # http://stackoverflow.com/questions/2532053/validate-a-hostname-string/2532344#2532344
+        if len(hostname) > 255:
+            return False
+
+        if hostname[-1] == ".":
+            hostname = hostname[:-1] # strip exactly one dot from the right, if present
+
+        # must be not all-numeric, so that it can't be confused with an IPv4 address.
+        # Host names may start with numbers (RFC 1123 section 2.1) but never the final part,
+        # since TLDs are alphabetic.
+        if re.match(r"[\d.]+$", hostname):
+            return False
+
+        allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+        return all(allowed.match(x) for x in hostname.split("."))
+
+
+    def _is_valid_ipv4_address(self, address):
+        # http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python/4017219#4017219
+        try:
+            socket.inet_pton(socket.AF_INET, address)
+        except AttributeError: # no inet_pton here, sorry
+            try:
+                socket.inet_aton(address)
+            except socket.error:
+                return False
+
+            return address.count('.') == 3
+
+        except socket.error: # not a valid address
+            return False
+
+        return True
+
+
+    def _is_valid_ipv6_address(self, address):
+        # http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python/4017219#4017219
+        try:
+            socket.inet_pton(socket.AF_INET6, address)
+        except socket.error: # not a valid address
+            return False
+        return True
+
+
+    def _allowed_type_names(self):
+        allowed = []
+        if self._allow_host_name:
+            allowed.append(_("Host- or DNS name"))
+
+        if self._allow_ipv4_address:
+            allowed.append(_("IPv4 address"))
+
+        if self._allow_ipv6_address:
+            allowed.append(_("IPv6 address"))
+
+        return allowed
+
+
 
 class AbsoluteDirname(TextAscii):
     def __init__(self, **kwargs):

@@ -1,0 +1,11 @@
+Title: Fixed validation of host IPv4, IPv6 and management host address attributes
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.4.0i1
+Date: 1472458101
+Class: fix
+
+The values inserted in the WATO host address fields were not validated strictly enough.
+This has now been changed so that the IPv4 address field allows IPv4 addresses and host-
+or DNS names and the IPv6 address field allos IPv6 address and host- or DNS names.

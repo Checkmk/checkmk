@@ -35,7 +35,7 @@ declare_host_attribute(NagiosTextAttribute("alias", "alias", _("Alias"),
                        show_in_folder = False)
 
 declare_host_attribute(ValueSpecAttribute("ipaddress",
-    TextAscii(
+    HostAddress(
         title = _("IPv4 Address"),
         help = _("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
                  "or DNS by your monitoring server, you can specify an explicit IP "
@@ -50,6 +50,7 @@ declare_host_attribute(ValueSpecAttribute("ipaddress",
                  "each time the host is checked. Check_MKs DNS cache will NOT be queried. "
                  "Use this only for hosts with dynamic IP addresses."),
         allow_empty = False,
+        allow_ipv6_address = False,
     )),
     show_in_table = True,
     show_in_folder = False,
@@ -57,7 +58,7 @@ declare_host_attribute(ValueSpecAttribute("ipaddress",
 )
 
 declare_host_attribute(ValueSpecAttribute("ipv6address",
-    TextAscii(
+    HostAddress(
         title = _("IPv6 Address"),
         help = _("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
                  "or DNS by your monitoring server, you can specify an explicit IPv6 "
@@ -72,6 +73,7 @@ declare_host_attribute(ValueSpecAttribute("ipv6address",
                  "each time the host is checked. Check_MKs DNS cache will NOT be queried. "
                  "Use this only for hosts with dynamic IP addresses."),
         allow_empty = False,
+        allow_ipv4_address = False,
     )),
     show_in_table = True,
     show_in_folder = False,
@@ -447,23 +449,24 @@ declare_host_attribute(ManagementTypeAttribute("management_protocol"),
                        topic = _("Management Board")
                        )
 
-declare_host_attribute(TextAttribute("management_address", _("Address"),
-                                     _("Address (IPv4 or IPv6) or dns name under which the "
-                                       "management board can be reached. If this is not set, "
-                                       "the same address as that of the Host will be used."),
-                                     allow_empty = False),
-                       show_in_table = False,
-                       show_in_folder = False,
-                       topic = _("Management Board")
-                       )
+declare_host_attribute(ValueSpecAttribute("management_address",
+    HostAddress(
+        title = _("Address"),
+        help = _("Address (IPv4 or IPv6) or dns name under which the "
+                 "management board can be reached. If this is not set, "
+                 "the same address as that of the Host will be used."),
+        allow_empty = False
+    )),
+    show_in_table = False,
+    show_in_folder = False,
+    topic = _("Management Board")
+)
 
 declare_host_attribute(ValueSpecAttribute("management_snmp_community",
-                                          SNMPCredentials(
-                                              default_value = None,
-                                          )
-                                          ),
-                       show_in_table = False,
-                       show_in_folder = False,
-                       topic = _("Management Board")
-                       )
-
+    SNMPCredentials(
+        default_value = None,
+    )),
+    show_in_table = False,
+    show_in_folder = False,
+    topic = _("Management Board")
+)

@@ -24,16 +24,16 @@
 
 #include "LogCache.h"
 #include <dirent.h>
-#include <syslog.h>
 #include <unistd.h>
 #include <cstdarg>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <ostream>
 #include <utility>
 #include "Logfile.h"
-#include "logger.h"
+#include "Logger.h"
 
 #ifdef CMC
 #include <chrono>
@@ -82,7 +82,7 @@ LogCache::LogCache(const CommandsHolder &commands_holder,
 #ifdef CMC
 void LogCache::setMaxCachedMessages(unsigned long m) {
     if (m != _max_cached_messages) {
-        logger(LOG_NOTICE, "Logfile cache: Changing max messages to %ld", m);
+        Notice() << "Logfile cache: Changing max messages to " << m;
         _max_cached_messages = m;
     }
 }
@@ -98,7 +98,7 @@ bool LogCache::logCachePreChecks(
     // Do we have any logfiles (should always be the case, but we don't want to
     // crash...
     if (_logfiles.empty()) {
-        logger(LOG_INFO, "Warning: no logfile found, not even %s", log_file);
+        Informational() << "Warning: no logfile found, not even " << log_file;
         return false;
     }
 // Has Nagios rotated logfiles? => Update our file index. And delete all
@@ -109,7 +109,8 @@ bool LogCache::logCachePreChecks(
 #else
     if (last_log_rotation > _last_index_update) {
 #endif
-        logger(LG_INFO, "Core has rotated logfiles. Rebuilding logfile index");
+        Informational()
+            << "Core has rotated logfiles. Rebuilding logfile index";
         forgetLogfiles();
         updateLogfileIndex();
     }
@@ -117,7 +118,7 @@ bool LogCache::logCachePreChecks(
 }
 
 void LogCache::forgetLogfiles() {
-    logger(LOG_INFO, "Logfile cache: flushing complete cache.");
+    Informational() << "Logfile cache: flushing complete cache.";
     for (auto &logfile : _logfiles) {
         delete logfile.second;
     }
@@ -152,7 +153,8 @@ void LogCache::updateLogfileIndex() {
         free(ent);
         closedir(dir);
     } else {
-        logger(LG_INFO, "Cannot open log archive '%s'", log_archive_path);
+        Informational() << "Cannot open log archive '" << log_archive_path
+                        << "'";
     }
 }
 
@@ -166,7 +168,7 @@ void LogCache::scanLogfile(char *path, bool watch) {
         if (_logfiles.find(since) == _logfiles.end()) {
             _logfiles.emplace(since, logfile);
         } else {
-            logger(LG_WARN, "Ignoring duplicate logfile %s", path);
+            Warning() << "Ignoring duplicate logfile " << path;
             delete logfile;
         }
     } else {

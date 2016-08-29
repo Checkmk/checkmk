@@ -23,12 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "VariadicFilter.h"
-#include <cinttypes>
-#include <cstdint>
+#include <ostream>
 #include "AndingFilter.h"
 #include "FilterVisitor.h"
+#include "Logger.h"
 #include "OringFilter.h"
-#include "logger.h"
 
 using std::make_unique;
 using std::string;
@@ -73,10 +72,9 @@ void VariadicFilter::findIntLimits(const string &colum_nname, int *lower,
 
 void VariadicFilter::combineFilters(int count, LogicalOperator andor) {
     if (count > static_cast<int>(_subfilters.size())) {
-        logger(LG_INFO, "Cannot combine %d filters with '%s': only %" PRIuMAX
-                        " are on stack",
-               count, andor == LogicalOperator::and_ ? "AND" : "OR",
-               static_cast<uintmax_t>(_subfilters.size()));
+        Informational() << "Cannot combine " << count << " filters with '"
+                        << (andor == LogicalOperator::and_ ? "AND" : "OR")
+                        << "': only " << _subfilters.size() << " are on stack";
         return;
     }
 

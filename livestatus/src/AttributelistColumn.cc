@@ -26,11 +26,12 @@
 #include <cctype>
 #include <cstdlib>
 #include <map>
+#include <ostream>
 #include <utility>
 #include <vector>
 #include "AttributelistFilter.h"
+#include "Logger.h"
 #include "Renderer.h"
-#include "logger.h"
 #include "opids.h"
 #include "strutil.h"
 class Filter;
@@ -102,8 +103,8 @@ Filter *AttributelistColumn::createFilter(RelationalOperator relOp,
         for (const char *t; (t = next_token(&scan, ',')) != nullptr;) {
             auto it = known_attributes.find(t);
             if (it == known_attributes.end()) {
-                logger(LG_INFO,
-                       "Ignoring invalid value '%s' for attribute list", t);
+                Informational() << "Ignoring invalid value '" << t
+                                << "' for attribute list";
                 continue;
             }
             ref |= it->second;

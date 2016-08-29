@@ -634,13 +634,13 @@ class HostAddress(TextAscii):
 
 
     def validate_value(self, value, varprefix):
-        if self._allow_host_name and self._is_valid_host_name(value):
+        if value and self._allow_host_name and self._is_valid_host_name(value):
             pass
-        elif self._allow_ipv4_address and self._is_valid_ipv4_address(value):
+        elif value and self._allow_ipv4_address and self._is_valid_ipv4_address(value):
             pass
-        elif self._allow_ipv6_address and self._is_valid_ipv6_address(value):
+        elif value and self._allow_ipv6_address and self._is_valid_ipv6_address(value):
             pass
-        else:
+        elif not self._allow_empty:
             raise MKUserError(varprefix, _("Invalid host address. You need to specify the address "
                                            "either as %s." % ", ".join(self._allowed_type_names())))
 

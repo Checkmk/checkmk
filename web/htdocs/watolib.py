@@ -2408,8 +2408,9 @@ class Attribute:
 
     # Check if the value entered by the user is valid.
     # This method may raise MKUserError in case of invalid user input.
-    def validate_input(self, varprefix):
+    def validate_input(self, value, varprefix):
         pass
+
 
     # If this attribute should be present in Nagios as
     # a host custom macro, then the value of that macro
@@ -2417,14 +2418,17 @@ class Attribute:
     def to_nagios(self, value):
         return None
 
+
     # Checks if the give value matches the search attributes
     # that are represented by the current HTML variables.
     def filter_matches(self, crit, value, hostname):
         return crit == value
 
+
     # Host tags to set for this host
     def get_tag_list(self, value):
         return []
+
 
 
 # A simple text attribute. It is stored in
@@ -2457,8 +2461,7 @@ class TextAttribute(Attribute):
             value = ""
         return value.strip()
 
-    def validate_input(self, varprefix):
-        value = self.from_html_vars(varprefix)
+    def validate_input(self, value, varprefix):
         if self._mandatory and not value:
             raise MKUserError(varprefix + "attr_" + self.name(),
                   _("Please specify a value for %s") % self.title())
@@ -2654,8 +2657,7 @@ class ValueSpecAttribute(Attribute):
     def from_html_vars(self, varprefix):
         return self._valuespec.from_html_vars(varprefix + self._name)
 
-    def validate_input(self, varprefix):
-        value = self.from_html_vars(varprefix)
+    def validate_input(self, value, varprefix):
         self._valuespec.validate_value(value, varprefix + self._name)
 
 
@@ -2922,10 +2924,12 @@ def collect_attributes(for_what, do_validate = True, varprefix=""):
         if not html.var(for_what + "_change_%s" % attrname, False):
             continue
 
-        if do_validate and attr.needs_validation(for_what):
-            attr.validate_input(varprefix)
+        value = attr.from_html_vars(varprefix)
 
-        host[attrname] = attr.from_html_vars(varprefix)
+        if do_validate and attr.needs_validation(for_what):
+            attr.validate_input(value, varprefix)
+
+        host[attrname] = value
     return host
 
 #.

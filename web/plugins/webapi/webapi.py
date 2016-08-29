@@ -31,16 +31,29 @@ def validate_request_keys(request, valid_keys):
         if key not in valid_keys:
             raise MKUserError(None, _("Invalid key: %s") % key)
 
+
 # Check if the given attribute name exists, no type check
 def validate_general_host_attributes(host_attributes):
-    # inventory_failed and site are no "real" host_attributes
+    # inventory_failed and site are no "real" host_attributes (TODO: Clean this up!)
     all_host_attribute_names = map(lambda (x, y): x.name(), all_host_attributes()) + ["inventory_failed", "site"]
     for name, value in host_attributes.items():
         if name not in all_host_attribute_names:
             raise MKUserError(None, _("Unknown attribute: %s") % html.attrencode(name))
+
+        # For real host attributes validate the values
+        try:
+            attr = host_attribute(name)
+        except KeyError:
+            attr = None
+
+        if attr != None:
+            if attr.needs_validation("host"):
+                attr.validate_input(value, "")
+
         # The site attribute gets an extra check
         if name == "site" and value not in config.allsites().keys():
             raise MKUserError(None, _("Unknown site %s") % html.attrencode(value))
+
 
 # Check if the tag group exists and the tag value is valid
 def validate_host_tags(host_tags):
@@ -55,6 +68,7 @@ def validate_host_tags(host_tags):
                 break
         else:
             raise MKUserError(None, _("Unknown host tag group %s") % html.attrencode(key))
+
 
 def validate_host_attributes(attributes):
     validate_general_host_attributes(dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")))

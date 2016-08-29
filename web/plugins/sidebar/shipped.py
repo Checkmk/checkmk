@@ -547,6 +547,8 @@ table.sitestate td.state {
 #   '----------------------------------------------------------------------'
 
 def get_tactical_overview_data(extra_filter_headers):
+    configured_staleness_threshold = config.staleness_threshold
+
     host_query = \
         "GET hosts\n" \
         "Stats: state >= 0\n" \
@@ -557,6 +559,7 @@ def get_tactical_overview_data(extra_filter_headers):
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: acknowledged = 0\n" \
         "StatsAnd: 3\n" \
+        "Stats: host_staleness >= %s\n" % configured_staleness_threshold + \
         "Filter: custom_variable_names < _REALNAME\n" + \
         extra_filter_headers
 
@@ -574,6 +577,7 @@ def get_tactical_overview_data(extra_filter_headers):
         "Stats: acknowledged = 0\n" \
         "Stats: host_state = 0\n" \
         "StatsAnd: 5\n" \
+        "Stats: service_staleness >= %s\n" % configured_staleness_threshold + \
         "Filter: host_custom_variable_names < _REALNAME\n" + \
         extra_filter_headers
 
@@ -584,6 +588,7 @@ def get_tactical_overview_data(extra_filter_headers):
                                                           stat_only=True)
         if notdata is None:
             notdata = [0]
+
     except livestatus.MKLivestatusNotFoundError:
         return None, None, None
 
@@ -600,22 +605,29 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
         return
 
     html.write("<table class=\"content_center tacticaloverview\" cellspacing=2 cellpadding=0 border=0>\n")
-    for title, data, view, what in [
-            (_("Hosts"),    hstdata, 'hostproblems', 'host'),
-            (_("Services"), svcdata, 'svcproblems',  'service')]:
-        html.write("<tr><th>%s</th><th>%s</th><th>%s</th></tr>\n" % (title, _('Problems'), _('Unhandled')))
+    for title, data, view, stale_view, what in [
+            (_("Hosts"),    hstdata, 'hostproblems', 'stale_hosts',  'host'),
+            (_("Services"), svcdata, 'svcproblems',  'uncheckedsvc', 'service')]:
+
+        amount, problems, unhandled_problems, stales = data
+        html.write("<tr><th>%s</th><th>%s</th><th>%s</th>"
+                   "<th>%s</th></tr>\n" % (title, _('Problems'), _('Unhandled'), _("Stale")))
         html.write("<tr>")
 
         url = html.makeuri_contextless([("view_name", "all" + what + "s")] + extra_url_variables, filename="view.py")
-        html.write('<td class=total><a target="main" href="%s">%d</a></td>' % (url, data[0]))
-        unhandled = False
-        for value in data[1:]:
+        html.write('<td class=total><a target="main" href="%s">%d</a></td>' % (url, amount))
+
+        for value, unhandled in [ (problems, False), (unhandled_problems, True) ]:
             url = html.makeuri_contextless([("view_name", view)] + extra_url_variables, filename="view.py")
             if unhandled:
                 url += "&is_%s_acknowledged=0" % what
             text = link(str(value), url)
             html.write('<td class="%s">%s</td>' % (value == 0 and " " or "states prob", text))
-            unhandled = True
+
+        url = html.makeuri_contextless([("view_name", stale_view)] + extra_url_variables, filename="view.py")
+        text = link(str(stales), url)
+        html.write('<td class="%s">%s</td>' % (stales == 0 and " " or "states prob", text))
+
         html.write("</tr>\n")
     html.write("</table>\n")
 
@@ -656,7 +668,7 @@ table.tacticaloverview th {
     vertical-align: bottom;
 }
 table.tacticaloverview td {
-    width: 33.3%%;
+    width: 25%%;
     text-align: right;
     /* border: 1px solid #123a4a; */
     background-color: #6da1b8;

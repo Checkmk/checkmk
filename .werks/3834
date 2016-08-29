@@ -1,0 +1,9 @@
+Title: hitachi_hus_dku, hitachi_hus_dkc: now recognises Hitachi G800/HM800 devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1472475250
+Class: feature
+
+

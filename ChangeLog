@@ -143,6 +143,7 @@
             NOTE: Please refer to the migration notes!
     * 3863 didactum_sensors_analog, didactum_sensors_analog.voltage, didactum_sensors_discrete: new checks which monitor the temperature, voltage and discrete sensors of Didactum devices which support the DIDACTUM-SYSTEM-MIB
     * 3793 f5_bigip_vserver: traffic and packet levels are now configurable
+    * 3794 f5_bigip_snat: now able to configure levels
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

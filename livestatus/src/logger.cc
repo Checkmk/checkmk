@@ -28,7 +28,6 @@
 #include "logger.h"
 #include <pthread.h>
 #include <cerrno>
-#include <cstdarg>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -45,8 +44,8 @@ void open_logfile(const string &path) {
 
     fl_logfile = fopen(path.c_str(), "a");
     if (fl_logfile == nullptr) {
-        logger(LOG_WARNING, "Cannot open logfile %s: %s", path.c_str(),
-               strerror(errno));
+        logger(LOG_WARNING,
+               "Cannot open logfile " + path + ": " + strerror(errno));
     }
 }
 
@@ -57,28 +56,20 @@ void close_logfile() {
     }
 }
 
-void logger(int /*priority*/, const char *loginfo, ...) {
-    va_list ap;
-    va_start(ap, loginfo);
-
+void logger(int /*priority*/, const string &message) {
     // Only the main process may use the Nagios log methods
     if (fl_logfile == nullptr || g_mainthread_id == pthread_self()) {
-        char buffer[8192];
-        snprintf(buffer, 20, "livestatus: ");
-        vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer),
-                  loginfo, ap);
-        write_to_all_logs(buffer, NSLOG_INFO_MESSAGE);
+        // TODO(sp) The Nagios headers are (once again) not const-correct...
+        write_to_all_logs(
+            const_cast<char *>(("livestatus: " + message).c_str()),
+            NSLOG_INFO_MESSAGE);
     } else if (fl_logfile != nullptr) {
         char timestring[64];
         time_t now_t = time(nullptr);
         struct tm now;
         localtime_r(&now_t, &now);
         strftime(timestring, 64, "%F %T ", &now);
-        fputs(timestring, fl_logfile);
-
-        vfprintf(fl_logfile, loginfo, ap);
-        fputc('\n', fl_logfile);
+        fputs((timestring + message + "\n").c_str(), fl_logfile);
         fflush(fl_logfile);
     }
-    va_end(ap);
 }

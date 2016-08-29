@@ -32,7 +32,7 @@
 class Logger {
 public:
     explicit Logger(int priority) : _priority(priority) {}
-    virtual ~Logger() { logger(_priority, "%s", _os.str().c_str()); }
+    virtual ~Logger() { logger(_priority, _os.str()); }
 
     template <typename T>
     std::ostream &operator<<(const T &t) {

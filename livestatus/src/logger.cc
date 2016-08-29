@@ -37,22 +37,23 @@
 using std::string;
 
 pthread_t g_mainthread_id;
-FILE *g_logfile = nullptr;
+static FILE *fl_logfile = nullptr;
 
 void open_logfile(const string &path) {
-    g_logfile = fopen(path.c_str(), "a");
     // needed to determine main thread later
     g_mainthread_id = pthread_self();
-    if (g_logfile == nullptr) {
+
+    fl_logfile = fopen(path.c_str(), "a");
+    if (fl_logfile == nullptr) {
         logger(LOG_WARNING, "Cannot open logfile %s: %s", path.c_str(),
                strerror(errno));
     }
 }
 
 void close_logfile() {
-    if (g_logfile != nullptr) {
-        fclose(g_logfile);
-        g_logfile = nullptr;
+    if (fl_logfile != nullptr) {
+        fclose(fl_logfile);
+        fl_logfile = nullptr;
     }
 }
 
@@ -61,23 +62,23 @@ void logger(int /*priority*/, const char *loginfo, ...) {
     va_start(ap, loginfo);
 
     // Only the main process may use the Nagios log methods
-    if (g_logfile == nullptr || g_mainthread_id == pthread_self()) {
+    if (fl_logfile == nullptr || g_mainthread_id == pthread_self()) {
         char buffer[8192];
         snprintf(buffer, 20, "livestatus: ");
         vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer),
                   loginfo, ap);
         write_to_all_logs(buffer, NSLOG_INFO_MESSAGE);
-    } else if (g_logfile != nullptr) {
+    } else if (fl_logfile != nullptr) {
         char timestring[64];
         time_t now_t = time(nullptr);
         struct tm now;
         localtime_r(&now_t, &now);
         strftime(timestring, 64, "%F %T ", &now);
-        fputs(timestring, g_logfile);
+        fputs(timestring, fl_logfile);
 
-        vfprintf(g_logfile, loginfo, ap);
-        fputc('\n', g_logfile);
-        fflush(g_logfile);
+        vfprintf(fl_logfile, loginfo, ap);
+        fputc('\n', fl_logfile);
+        fflush(fl_logfile);
     }
     va_end(ap);
 }

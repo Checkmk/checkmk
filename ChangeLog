@@ -141,6 +141,7 @@
             NOTE: Please refer to the migration notes!
     * 3743 SEC: mk_jolokia: Use JSON library to parse JSON output in lieu of eval()...
             NOTE: Please refer to the migration notes!
+    * 3863 didactum_sensors_analog, didactum_sensors_analog.voltage, didactum_sensors_discrete: new checks which monitor the temperature, voltage and discrete sensors of Didactum devices which support the DIDACTUM-SYSTEM-MIB
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

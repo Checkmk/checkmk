@@ -1,0 +1,9 @@
+Title: didactum_sensors_analog, didactum_sensors_analog.voltage, didactum_sensors_discrete: new checks which monitor the temperature, voltage and discrete sensors of Didactum devices which support the DIDACTUM-SYSTEM-MIB
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1472460168
+Class: feature
+
+

@@ -1,0 +1,125 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# .1.3.6.1.4.1.46501.5.2.1.5.201001 Onboard Temperature --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogName.201001
+# .1.3.6.1.4.1.46501.5.2.1.5.201002 Analog-1 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogName.201002
+# .1.3.6.1.4.1.46501.5.2.1.5.201003 Analog-2 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogName.201003
+# .1.3.6.1.4.1.46501.5.2.1.5.203001 Onboard Voltage DC --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogName.203001
+# .1.3.6.1.4.1.46501.5.2.1.6.201001 normal --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogState.201001
+# .1.3.6.1.4.1.46501.5.2.1.6.201002 normal --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogState.201002
+# .1.3.6.1.4.1.46501.5.2.1.6.201003 normal --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogState.201003
+# .1.3.6.1.4.1.46501.5.2.1.6.203001 normal --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogState.203001
+# .1.3.6.1.4.1.46501.5.2.1.7.201001 28.9 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogValue.201001
+# .1.3.6.1.4.1.46501.5.2.1.7.201002 22.8 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogValue.201002
+# .1.3.6.1.4.1.46501.5.2.1.7.201003 21.1 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogValue.201003
+# .1.3.6.1.4.1.46501.5.2.1.7.203001 12.4 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogValue.203001
+# .1.3.6.1.4.1.46501.5.2.1.10.201001 0.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogLowAlarm.201001
+# .1.3.6.1.4.1.46501.5.2.1.10.201002 13.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogLowAlarm.201002
+# .1.3.6.1.4.1.46501.5.2.1.10.201003 13.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogLowAlarm.201003
+# .1.3.6.1.4.1.46501.5.2.1.10.203001 9.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogLowAlarm.203001
+# .1.3.6.1.4.1.46501.5.2.1.11.201001 5.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogLowWarning.201001
+# .1.3.6.1.4.1.46501.5.2.1.11.201002 15.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogLowWarning.201002
+# .1.3.6.1.4.1.46501.5.2.1.11.201003 15.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogLowWarning.201003
+# .1.3.6.1.4.1.46501.5.2.1.11.203001 11.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogLowWarning.203001
+# .1.3.6.1.4.1.46501.5.2.1.12.201001 45.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogHighWarning.201001
+# .1.3.6.1.4.1.46501.5.2.1.12.201002 27.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogHighWarning.201002
+# .1.3.6.1.4.1.46501.5.2.1.12.201003 27.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogHighWarning.201003
+# .1.3.6.1.4.1.46501.5.2.1.12.203001 13.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogHighWarning.203001
+# .1.3.6.1.4.1.46501.5.2.1.13.201001 50.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogHighAlarm.201001
+# .1.3.6.1.4.1.46501.5.2.1.13.201002 29.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogHighAlarm.201002
+# .1.3.6.1.4.1.46501.5.2.1.13.201003 29.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogHighAlarm.201003
+# .1.3.6.1.4.1.46501.5.2.1.13.203001 14.0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogHighAlarm.203001
+
+
+#   .--temperature---------------------------------------------------------.
+#   |      _                                      _                        |
+#   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
+#   |     | __/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
+#   |     | ||  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
+#   |      \__\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
+#   |                       |_|                                            |
+#   +----------------------------------------------------------------------+
+#   |                              main check                              |
+#   '----------------------------------------------------------------------'
+
+
+def check_didactum_sensors_analog_temp(item, params, parsed):
+    if item in parsed["temperature"]:
+        data = parsed["temperature"][item]
+        return check_temperature(data["value"], params, "didactum_sensors_analog_temp.%s" % item,
+                    dev_levels = data["levels"], dev_levels_lower = data["levels_lower"],
+                    dev_status = data["state"], dev_status_name = data["state_readable"])
+
+
+check_info['didactum_sensors_analog'] = {
+    'parse_function'        : parse_didactum_sensors,
+    'inventory_function'    : lambda parsed: inventory_didactum_sensors(parsed, "temperature"),
+    'check_function'        : check_didactum_sensors_analog_temp,
+    'service_description'   : 'Temperature %s',
+    'snmp_info'             : ('.1.3.6.1.4.1.46501.5.2.1', [
+                                    "4",    # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogType
+                                    "5",    # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogName
+                                    "6",    # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogState
+                                    "7",    # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogValue
+                                    "10",   # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogLowAlarm
+                                    "11",   # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogLowWarning
+                                    "12",   # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogHighWarning
+                                    "13",   # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogHighAlarm
+                              ]),
+    'snmp_scan_function'    : scan_didactum,
+    'has_perfdata'          : True,
+    'group'                 : 'temperature',
+    'includes'              : [ 'temperature.include', 'didactum.include' ],
+}
+
+
+#.
+#   .--voltage-------------------------------------------------------------.
+#   |                             _ _                                      |
+#   |                 __   _____ | | |_ __ _  __ _  ___                    |
+#   |                 \ \ / / _ \| | __/ _` |/ _` |/ _ \                   |
+#   |                  \ V / (_) | | || (_| | (_| |  __/                   |
+#   |                   \_/ \___/|_|\__\__,_|\__, |\___|                   |
+#   |                                        |___/                         |
+#   '----------------------------------------------------------------------'
+
+
+def check_didactum_sensors_analog_volt(item, params, parsed):
+    if item in parsed["voltage"]:
+        data = parsed["voltage"][item]
+        return check_elphase(item, params, {
+            item : { "voltage" : (data["value"], (data["state"], data["state_readable"])) }})
+
+
+check_info['didactum_sensors_analog.voltage'] = {
+    'inventory_function'    : lambda parsed: inventory_didactum_sensors(parsed, "voltage"),
+    'check_function'        : check_didactum_sensors_analog_volt,
+    'service_description'   : 'Phase %s',
+    'has_perfdata'          : True,
+    'group'                 : 'el_inphase',
+    'includes'              : [ 'elphase.include', 'didactum.include' ],
+}

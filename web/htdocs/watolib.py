@@ -1926,7 +1926,7 @@ class SearchFolder(BaseFolder):
 
         found = {}
         for host_name, host in in_folder.hosts().items():
-            if self._criteria[".name"] and self._criteria[".name"].lower() not in host_name.lower():
+            if self._criteria[".name"] and not host_attribute_matches(self._criteria[".name"], host_name):
                 continue
 
             # Compute inheritance
@@ -2474,12 +2474,18 @@ class TextAttribute(Attribute):
         if value == None:  # Host does not have this attribute
             value = ""
 
-        if crit[0] == "~":
-            # insensitive infix regex match
-            return re.search(crit[1:], value, re.IGNORECASE) != None
-        else:
-            # insensitive infix search
-            return crit.lower() in value.lower()
+        return host_attribute_matches(crit, value)
+
+
+
+def host_attribute_matches(crit, value):
+    if crit[0] == "~":
+        # insensitive infix regex match
+        return re.search(crit[1:], value, re.IGNORECASE) != None
+    else:
+        # insensitive infix search
+        return crit.lower() in value.lower()
+
 
 # A simple text attribute that is not editable by the user.
 # It can be used to store context information from other

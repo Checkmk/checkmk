@@ -342,7 +342,7 @@ register_check_parameters(
 		]
 	),
 	TextAscii(
-		title = _("Source NAT name"),
+		title = _("Source NAT Name"),
 		allow_empty = False
 	),
 	'dict'

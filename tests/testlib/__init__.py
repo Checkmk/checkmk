@@ -320,11 +320,15 @@ class WebSession(requests.Session):
         return self._request("post", *args, **kwargs)
 
 
-    def _request(self, method, path, proto="http", expected_code=200, expect_redirect=None, allow_errors=False, add_transid=False, **kwargs):
+    def _request(self, method, path, proto="http", expected_code=200, expect_redirect=None,
+                 allow_errors=False, add_transid=False, **kwargs):
         url = self.url(proto, path)
 
 	if add_transid:
             url = self._add_transid(url)
+
+        if expect_redirect:
+            kwargs["allow_redirects"] = False
 
         if method == "post":
             response = super(WebSession, self).post(url, **kwargs)
@@ -358,10 +362,12 @@ class WebSession(requests.Session):
 
         mime_type = self._get_mime_type(response)
 
-
         if expect_redirect:
             expected_code, redirect_target = expect_redirect
-            assert response.headers["Location"] == redirect_target
+            assert response.headers["Location"] == redirect_target, \
+                "Expected %d redirect to %s but got this location: %s" % \
+                    (expected_code, redirect_target,
+                     response.headers.get('Location', "None"))
 
         assert response.status_code == expected_code, \
             "Got invalid status code (%d != %d) for URL %s (Location: %s)" % \

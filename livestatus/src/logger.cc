@@ -25,12 +25,14 @@
 // Needed for localtime_r
 #define _XOPEN_SOURCE 500
 
-#include "logger.h"
 #include <pthread.h>
-#include <cerrno>
 #include <cstdio>
+#include <syslog.h>
+#include <cerrno>
 #include <cstring>
 #include <ctime>
+#include <string>
+#include "Logger.h"  // IWYU pragma: keep
 #include "nagios.h"
 
 using std::string;

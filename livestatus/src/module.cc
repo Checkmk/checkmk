@@ -57,7 +57,6 @@
 #include "data_encoding.h"
 #include "global_counters.h"
 #include "livestatus.h"
-#include "logger.h"
 #include "nagios.h"
 #include "strutil.h"
 #include "waittriggers.h"

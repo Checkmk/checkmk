@@ -26,13 +26,29 @@
 #define Logger_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <syslog.h>
+#include <cstdio>
 #include <sstream>
-#include "logger.h"
+#include <string>
+
+void open_logfile(const std::string &path);
+void close_logfile();
+void logger(int priority, const std::string &message);
+
+#ifdef CMC
+void set_log_config(int log_level, bool log_microtime);
+void reopen_logfile(const std::string &path);
+bool should_log(int priority);
+FILE *get_logfile();
+#endif
 
 class Logger {
 public:
     explicit Logger(int priority) : _priority(priority) {}
     virtual ~Logger() { logger(_priority, _os.str()); }
+#ifdef CMC
+    bool isEnabled() const { return should_log(_priority); }
+#endif
 
     template <typename T>
     std::ostream &operator<<(const T &t) {

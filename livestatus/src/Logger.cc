@@ -26,7 +26,6 @@
 #define _XOPEN_SOURCE 500
 
 #include "Logger.h"
-#include <syslog.h>
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
@@ -41,7 +40,7 @@ FILE *fl_logfile = nullptr;
 void open_logfile(const string &path) {
     fl_logfile = fopen(path.c_str(), "a");
     if (fl_logfile == nullptr) {
-        logger(LOG_WARNING,
+        logger(LogLevel::warning,
                "Cannot open logfile " + path + ": " + strerror(errno));
     }
 }
@@ -64,7 +63,7 @@ using std::mutex;
 
 namespace {
 std::mutex fl_logfile_mutex;
-int fl_log_level = 5;
+LogLevel fl_log_level = LogLevel::notice;
 bool fl_log_microtime = false;
 }  // namespace
 
@@ -74,20 +73,21 @@ void reopen_logfile(const string &path) {
     if (fl_logfile != nullptr) {
         close_logfile();
         open_logfile(path);
-        logger(LOG_NOTICE, "Reopened logfile.");
+        logger(LogLevel::notice, "Reopened logfile.");
     }
 }
 
-void set_log_config(int log_level, bool log_microtime) {
+void set_log_config(LogLevel log_level, bool log_microtime) {
     fl_log_level = log_level;
     fl_log_microtime = log_microtime;
 }
 
-bool should_log(int priority) { return priority <= fl_log_level; }
+bool should_log(LogLevel log_level) { return log_level <= fl_log_level; }
 
 FILE *get_logfile() { return fl_logfile != nullptr ? fl_logfile : stdout; }
-void logger(int priority, const string &message) {
-    if (!should_log(priority)) {
+
+void logger(LogLevel log_level, const string &message) {
+    if (!should_log(log_level)) {
         return;  // msg not important enough
     }
 
@@ -107,7 +107,7 @@ void logger(int priority, const string &message) {
     if (fl_log_microtime) {
         fprintf(logfile, "%03ld.%03ld ", tv.tv_usec / 1000, tv.tv_usec % 1000);
     }
-    fprintf(logfile, "[%d] ", priority);
+    fprintf(logfile, "[%d] ", log_level);
     fputs(message.c_str(), logfile);
     fputc('\n', logfile);
     fflush(logfile);
@@ -117,7 +117,7 @@ void logger(int priority, const string &message) {
 
 #include <ctime>
 
-void logger(int /*priority*/, const string &message) {
+void logger(LogLevel /*log_level*/, const string &message) {
     extern bool runningInLivestatusMainThread();
     extern void writeToAllLogs(const string &message);
     // Only the main process may use the Nagios log methods

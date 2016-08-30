@@ -26,30 +26,41 @@
 #define Logger_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <syslog.h>
 #ifdef CMC
 #include <cstdio>
 #endif
 #include <sstream>
 #include <string>
 
+// values must be in sync with config
+enum class LogLevel {
+    emergency = 0,
+    alert = 1,
+    critical = 2,
+    error = 3,
+    warning = 4,
+    notice = 5,
+    informational = 6,
+    debug = 7
+};
+
 void open_logfile(const std::string &path);
 void close_logfile();
-void logger(int priority, const std::string &message);
+void logger(LogLevel log_level, const std::string &message);
 
 #ifdef CMC
-void set_log_config(int log_level, bool log_microtime);
+void set_log_config(LogLevel log_level, bool log_microtime);
 void reopen_logfile(const std::string &path);
-bool should_log(int priority);
+bool should_log(LogLevel log_level);
 FILE *get_logfile();
 #endif
 
 class Logger {
 public:
-    explicit Logger(int priority) : _priority(priority) {}
-    virtual ~Logger() { logger(_priority, _os.str()); }
+    explicit Logger(LogLevel log_level) : _log_level(log_level) {}
+    virtual ~Logger() { logger(_log_level, _os.str()); }
 #ifdef CMC
-    bool isEnabled() const { return should_log(_priority); }
+    bool isEnabled() const { return should_log(_log_level); }
 #endif
 
     template <typename T>
@@ -58,40 +69,40 @@ public:
     }
 
 private:
-    int _priority;
+    LogLevel _log_level;
     std::ostringstream _os;
 };
 
 struct Emergency : public Logger {
-    Emergency() : Logger(LOG_EMERG) {}
+    Emergency() : Logger(LogLevel::emergency) {}
 };
 
 struct Alert : public Logger {
-    Alert() : Logger(LOG_ALERT) {}
+    Alert() : Logger(LogLevel::alert) {}
 };
 
 struct Critical : public Logger {
-    Critical() : Logger(LOG_CRIT) {}
+    Critical() : Logger(LogLevel::critical) {}
 };
 
 struct Error : public Logger {
-    Error() : Logger(LOG_ERR) {}
+    Error() : Logger(LogLevel::error) {}
 };
 
 struct Warning : public Logger {
-    Warning() : Logger(LOG_WARNING) {}
+    Warning() : Logger(LogLevel::warning) {}
 };
 
 struct Notice : public Logger {
-    Notice() : Logger(LOG_NOTICE) {}
+    Notice() : Logger(LogLevel::notice) {}
 };
 
 struct Informational : public Logger {
-    Informational() : Logger(LOG_INFO) {}
+    Informational() : Logger(LogLevel::informational) {}
 };
 
 struct Debug : public Logger {
-    Debug() : Logger(LOG_DEBUG) {}
+    Debug() : Logger(LogLevel::debug) {}
 };
 
 #endif  // Logger_h

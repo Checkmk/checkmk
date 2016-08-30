@@ -605,7 +605,7 @@ def view_editor_specs(ds_name, general_properties=True):
                     title = _('Tooltip'),
                     choices = [(None, "")] + collist,
                 ),
-            ]
+            ],
         )
 
         joined = allowed_for_joined_datasource(multisite_painters, ds_name)
@@ -618,6 +618,9 @@ def view_editor_specs(ds_name, general_properties=True):
 
                     Tuple(
                         title = _('Joined column'),
+                        help = _("A joined column can display information about specific services for "
+                                 "host objects in a view showing host objects. You need to specify the "
+                                 "service description of the service you like to show the data for."),
                         elements = [
                             DropdownChoice(
                                 title = _('Column'),
@@ -688,7 +691,7 @@ def view_editor_specs(ds_name, general_properties=True):
                         orientation = 'horizontal',
                     ),
                     title = _('Sorting'),
-                    add_label = _('Add column'),
+                    add_label = _('Add sorter'),
                 )),
             ],
         )),

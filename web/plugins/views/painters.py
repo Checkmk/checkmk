@@ -959,7 +959,7 @@ def paint_time_graph_cmk(row, show_timeranges=False):
             "service_description" : row.get("service_description", "_HOST_"),
     })
     graph_data_range = { "time_range" : get_graph_timerange_from_painter_options() }
-    graph_render_options = {}
+    graph_render_options = get_graph_render_options_from_painter_options()
 
     if html.is_mobile():
         graph_render_options.update({
@@ -987,10 +987,14 @@ def paint_time_graph_cmk(row, show_timeranges=False):
             show_timeranges)
 
 
+def get_graph_render_options_from_painter_options():
+    return get_painter_option("graph_render_options")
+
+
 def get_graph_timerange_from_painter_options():
-    timerange_spec = get_painter_option("pnp_timerange")
-    vs = multisite_painter_options["pnp_timerange"]['valuespec']
-    return map(int, vs.compute_range(timerange_spec)[0])
+    value = get_painter_option("pnp_timerange")
+    vs = get_painter_option_valuespec(multisite_painter_options["pnp_timerange"])
+    return map(int, vs.compute_range(value)[0])
 
 
 def paint_time_graph_pnp(row):
@@ -1025,7 +1029,7 @@ def paint_time_graph_pnp(row):
 multisite_painters["svc_pnpgraph" ] = {
     "title"   : _("Service Graphs"),
     "columns" : [ "host_name", "service_description", "service_perf_data", "service_metrics", "service_check_command" ],
-    "options" : [ 'pnp_timerange' ],
+    "options" : [ "pnp_timerange", "graph_render_options", ],
     "paint"   : paint_time_graph,
     "printable" : "time_graph",
 }

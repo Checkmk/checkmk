@@ -880,10 +880,10 @@ def show_painter_options(painter_options):
     html.write('<div class="view_form" id="painteroptions" style="display: none">')
     html.begin_form("painteroptions")
     forms.header(_("Display Options"))
-    for on in painter_options:
-        vs = multisite_painter_options[on]['valuespec']
+    for name in painter_options:
+        vs = get_painter_option_valuespec(multisite_painter_options[name])
         forms.section(vs.title())
-        vs.render_input('po_' + on, get_painter_option(on))
+        vs.render_input('po_' + name, get_painter_option(name))
     forms.end()
 
     html.button("painter_options", _("Submit"), "submit")
@@ -1396,10 +1396,14 @@ def view_options(viewname):
             if html.has_var_prefix(var_prefix):
 
                 # Get new value for the option from the value spec
-                vs = opt['valuespec']
+                vs = get_painter_option_valuespec(opt)
                 value = vs.from_html_vars(var_prefix)
 
                 v[option_name] = value
+                # TODO: This is nasty. The multisite_painter_options should really not
+                # be modified during user requests! They should be handled as static
+                # configured data structures and the user specific things should be
+                # kept separated.
                 opt['value'] = value # make globally present for painters
 
                 if not have_old_value or v[option_name] != old_value:
@@ -2474,14 +2478,25 @@ def create_dict_key(value):
     else:
         return value
 
+
 def get_painter_option(name):
     opt = multisite_painter_options[name]
     if "forced_value" in opt:
         return opt["forced_value"]
+
     elif not config.may("general.painter_options"):
-        return opt['valuespec'].default_value()
+        return get_painter_option_valuespec(opt).default_value()
+
     else:
-        return opt.get("value", opt['valuespec'].default_value())
+        return opt.get("value", get_painter_option_valuespec(opt).default_value())
+
+
+def get_painter_option_valuespec(opt):
+    if type(lambda: None) == type(opt["valuespec"]):
+        return opt["valuespec"]()
+    else:
+        return opt["valuespec"]
+
 
 def get_host_tags(row):
     if type(row.get("host_custom_variables")) == dict:

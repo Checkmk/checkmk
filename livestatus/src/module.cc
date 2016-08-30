@@ -101,7 +101,7 @@ static char fl_logfile_path[4096];
 char g_mkeventd_socket_path[4096];
 int g_debug_level = 0;
 int g_should_terminate = false;
-extern pthread_t g_mainthread_id;
+pthread_t g_mainthread_id;
 pthread_t *g_clientthread_id;
 unsigned long g_max_cached_messages = 500000;
 unsigned long g_max_lines_per_logfile =
@@ -179,7 +179,12 @@ void livestatus_cleanup_after_fork() {
     }
 }
 
+bool runningInLivestatusMainThread() {
+    return g_mainthread_id == pthread_self();
+}
+
 void *main_thread(void *data __attribute__((__unused__))) {
+    g_mainthread_id = pthread_self();
     g_thread_pid = getpid();
     while (g_should_terminate == 0) {
         do_statistics();

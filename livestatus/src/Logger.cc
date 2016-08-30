@@ -40,8 +40,7 @@ FILE *fl_logfile = nullptr;
 void open_logfile(const string &path) {
     fl_logfile = fopen(path.c_str(), "a");
     if (fl_logfile == nullptr) {
-        logger(LogLevel::warning,
-               "Cannot open logfile " + path + ": " + strerror(errno));
+        Warning() << "Cannot open logfile " << path << ": " << strerror(errno);
     }
 }
 
@@ -63,7 +62,7 @@ using std::mutex;
 
 namespace {
 std::mutex fl_logfile_mutex;
-LogLevel fl_log_level = LogLevel::notice;
+LogLevel fl_level = LogLevel::notice;
 bool fl_log_microtime = false;
 }  // namespace
 
@@ -73,21 +72,21 @@ void reopen_logfile(const string &path) {
     if (fl_logfile != nullptr) {
         close_logfile();
         open_logfile(path);
-        logger(LogLevel::notice, "Reopened logfile.");
+        Notice() << "Reopened logfile.";
     }
 }
 
-void set_log_config(LogLevel log_level, bool log_microtime) {
-    fl_log_level = log_level;
+void set_log_config(LogLevel level, bool log_microtime) {
+    fl_level = level;
     fl_log_microtime = log_microtime;
 }
 
-bool should_log(LogLevel log_level) { return log_level <= fl_log_level; }
+bool isLoggable(LogLevel level) { return level <= fl_level; }
 
 FILE *get_logfile() { return fl_logfile != nullptr ? fl_logfile : stdout; }
 
-void logger(LogLevel log_level, const string &message) {
-    if (!should_log(log_level)) {
+void logger(const LogRecord &record) {
+    if (!isLoggable(record.getLevel())) {
         return;  // msg not important enough
     }
 
@@ -107,9 +106,9 @@ void logger(LogLevel log_level, const string &message) {
     if (fl_log_microtime) {
         fprintf(logfile, "%03ld.%03ld ", tv.tv_usec / 1000, tv.tv_usec % 1000);
     }
-    fprintf(logfile, "[%d] ", log_level);
-    fputs(message.c_str(), logfile);
-    fputc('\n', logfile);
+    fprintf(logfile, "[%d] ", static_cast<int>(record.getLevel()));
+    fputs(record.getMessage().c_str(), logfile);
+    fputs("\n", logfile);
     fflush(logfile);
 }
 
@@ -117,19 +116,21 @@ void logger(LogLevel log_level, const string &message) {
 
 #include <ctime>
 
-void logger(LogLevel /*log_level*/, const string &message) {
+void logger(const LogRecord &record) {
     extern bool runningInLivestatusMainThread();
     extern void writeToAllLogs(const string &message);
     // Only the main process may use the Nagios log methods
     if (fl_logfile == nullptr || runningInLivestatusMainThread()) {
-        writeToAllLogs("livestatus: " + message);
+        writeToAllLogs("livestatus: " + record.getMessage());
     } else if (fl_logfile != nullptr) {
         char timestring[64];
         time_t now_t = time(nullptr);
         struct tm now;
         localtime_r(&now_t, &now);
         strftime(timestring, 64, "%F %T ", &now);
-        fputs((timestring + message + "\n").c_str(), fl_logfile);
+        fputs(timestring, fl_logfile);
+        fputs(record.getMessage().c_str(), fl_logfile);
+        fputs("\n", fl_logfile);
         fflush(fl_logfile);
     }
 }

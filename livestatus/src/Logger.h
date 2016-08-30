@@ -32,6 +32,8 @@
 #include <sstream>
 #include <string>
 
+class LogRecord;
+
 // values must be in sync with config
 enum class LogLevel {
     emergency = 0,
@@ -46,21 +48,25 @@ enum class LogLevel {
 
 void open_logfile(const std::string &path);
 void close_logfile();
-void logger(LogLevel log_level, const std::string &message);
+void logger(const LogRecord &record);
 
 #ifdef CMC
-void set_log_config(LogLevel log_level, bool log_microtime);
+void set_log_config(LogLevel level, bool log_microtime);
 void reopen_logfile(const std::string &path);
-bool should_log(LogLevel log_level);
+bool isLoggable(LogLevel level);
 FILE *get_logfile();
 #endif
 
 class LogRecord {
 public:
-    explicit LogRecord(LogLevel log_level) : _log_level(log_level) {}
-    virtual ~LogRecord() { logger(_log_level, _os.str()); }
+    explicit LogRecord(LogLevel level) : _level(level) {}
+    virtual ~LogRecord() { logger(*this); }
+
+    LogLevel getLevel() const { return _level; }
+    std::string getMessage() const { return _os.str(); }
+
 #ifdef CMC
-    bool isEnabled() const { return should_log(_log_level); }
+    bool isLoggable() const { return ::isLoggable(getLevel()); }
 #endif
 
     template <typename T>
@@ -69,7 +75,7 @@ public:
     }
 
 private:
-    LogLevel _log_level;
+    LogLevel _level;
     std::ostringstream _os;
 };
 

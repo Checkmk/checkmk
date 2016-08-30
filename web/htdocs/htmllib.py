@@ -102,7 +102,6 @@ class html(GUITester):
         self.context_buttons_open = False
         self.mobile = False
         self.buffering = True
-        self.transformations = []
         self.final_javascript_code = ""
         self.auto_id = 0
         self.have_help = False
@@ -169,16 +168,6 @@ class html(GUITester):
 
     def set_buffering(self, b):
         self.buffering = b
-
-
-    # TODO: Can this be dropped?
-    def push_transformation(self, tf):
-        self.transformations.append(tf)
-
-
-    # TODO: Can this be dropped?
-    def pop_transformation(self):
-        del self.transformations[-1]
 
 
     # TODO: Can this please be dropped?
@@ -614,9 +603,6 @@ class html(GUITester):
     #
 
     def write(self, text):
-        for tf in self.transformations:
-            text = tf(text)
-
         if self.plugged:
             self.plugged_text += text
         else:

@@ -1030,19 +1030,16 @@ class ListOf(ValueSpec):
         # Actual table of currently existing entries
         html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
 
-        # FIXME: Use plug/unplug mechanism instead of transform / then remove transform
         for nr, v in enumerate(value):
-            html.push_transformation(lambda x: x.replace(self._magic, str(nr+1)))
             html.write('<tr><td class=vlof_buttons>')
             html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "", add_var=True) # reconstruct order after moving stuff
             self.del_button(varprefix, nr+1)
             if self._movable:
-                self.move_button(varprefix, self._magic, "up") # visibility fixed by javascript
-                self.move_button(varprefix, self._magic, "down")
+                self.move_button(varprefix, nr+1, "up") # visibility fixed by javascript
+                self.move_button(varprefix, nr+1, "down")
             html.write("</td><td class=vlof_content>")
             self._valuespec.render_input(varprefix + "_%d" % (nr+1), v)
             html.write("</td></tr>")
-            html.pop_transformation()
         html.write("</table>")
         html.write("<br>")
         html.jsbutton(varprefix + "_add", self._add_label,

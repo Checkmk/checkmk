@@ -429,6 +429,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
                 table = None
         else:
             table = get_snmp_table(hostname, ipaddress, check_type, oid_info, use_snmpwalk_cache)
+
         store_cached_checkinfo(hostname, check_type, table)
         # only write cache file in non interactive mode. Otherwise it would
         # prevent the regular checking from getting status updates during
@@ -1520,9 +1521,11 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
 
     for checkname, item, params, description, aggrname in check_table:
         if is_snmp_check(checkname) and is_management_snmp:
-            res = execute_check(checkname, item, params, description, aggrname, management_addr)
+            address = management_address
         else:
-            res = execute_check(checkname, item, params, description, aggrname, ipaddress)
+            address = ipaddress
+
+        res = execute_check(checkname, item, params, description, aggrname, address)
         if res:
             num_success += 1
 

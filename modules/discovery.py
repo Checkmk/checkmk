@@ -575,10 +575,12 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
     max_cachefile_age = use_caches and inventory_max_cachefile_age or 0
     rh_info = get_realhost_info(hostname, ipaddress, section_name, max_cachefile_age,
                                 ignore_check_interval=True, use_snmpwalk_cache=False)
+
     if rh_info != None:
         info = apply_parse_function(add_nodeinfo(rh_info, section_name), section_name)
     else:
         info = None
+
     if info != None and section_name in check_info and check_info[section_name]["extra_sections"]:
         info = [ info ]
         for es in check_info[section_name]["extra_sections"]:
@@ -596,6 +598,7 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
                 if opt_debug:
                     raise
                 info.append(None)
+
     return info
 
 def is_ipaddress(address):
@@ -835,6 +838,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, u
 
     if use_snmp is None:
         use_snmp = is_snmp_host(hostname)
+
     # Skip SNMP checks on non-SNMP hosts
     if check_uses_snmp(check_type) and not use_snmp:
         return []

@@ -243,7 +243,8 @@ def perform_snmpwalk(hostname, ip, check_type, base_oid, fetchoid):
     for context_name in snmp_contexts:
         if is_inline_snmp_host(hostname):
             rows = inline_snmpwalk_on_suboid(hostname, check_type, fetchoid, base_oid,
-                                                                  context_name=context_name)
+                                                                  context_name=context_name,
+                                                                  ipaddress=ip)
         else:
             rows = snmpwalk_on_suboid(hostname, ip, fetchoid, context_name=context_name)
 

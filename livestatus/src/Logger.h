@@ -31,6 +31,7 @@
 #endif
 #include <sstream>
 #include <string>
+#include <utility>
 
 class LogRecord;
 
@@ -59,56 +60,70 @@ FILE *get_logfile();
 
 class LogRecord {
 public:
-    explicit LogRecord(LogLevel level) : _level(level) {}
-    virtual ~LogRecord() { logger(*this); }
+    LogRecord(LogLevel level, std::string message)
+        : _level(level), _message(std::move(message)) {}
+    virtual ~LogRecord() {}
 
     LogLevel getLevel() const { return _level; }
-    std::string getMessage() const { return _os.str(); }
+    std::string getMessage() const { return _message; }
+    void setMessage(const std::string &message) { _message = message; }
 
-#ifdef CMC
-    bool isLoggable() const { return ::isLoggable(getLevel()); }
-#endif
+private:
+    LogLevel _level;
+    std::string _message;
+};
+
+class LogRecordStream : public LogRecord {
+public:
+    explicit LogRecordStream(LogLevel level) : LogRecord(level, "") {}
+    virtual ~LogRecordStream() {
+        setMessage(_os.str());
+        logger(*this);
+    }
 
     template <typename T>
     std::ostream &operator<<(const T &t) {
         return _os << t;
     }
 
+#ifdef CMC
+    bool isLoggable() const { return ::isLoggable(getLevel()); }
+#endif
+
 private:
-    LogLevel _level;
     std::ostringstream _os;
 };
 
-struct Emergency : public LogRecord {
-    Emergency() : LogRecord(LogLevel::emergency) {}
+struct Emergency : public LogRecordStream {
+    Emergency() : LogRecordStream(LogLevel::emergency) {}
 };
 
-struct Alert : public LogRecord {
-    Alert() : LogRecord(LogLevel::alert) {}
+struct Alert : public LogRecordStream {
+    Alert() : LogRecordStream(LogLevel::alert) {}
 };
 
-struct Critical : public LogRecord {
-    Critical() : LogRecord(LogLevel::critical) {}
+struct Critical : public LogRecordStream {
+    Critical() : LogRecordStream(LogLevel::critical) {}
 };
 
-struct Error : public LogRecord {
-    Error() : LogRecord(LogLevel::error) {}
+struct Error : public LogRecordStream {
+    Error() : LogRecordStream(LogLevel::error) {}
 };
 
-struct Warning : public LogRecord {
-    Warning() : LogRecord(LogLevel::warning) {}
+struct Warning : public LogRecordStream {
+    Warning() : LogRecordStream(LogLevel::warning) {}
 };
 
-struct Notice : public LogRecord {
-    Notice() : LogRecord(LogLevel::notice) {}
+struct Notice : public LogRecordStream {
+    Notice() : LogRecordStream(LogLevel::notice) {}
 };
 
-struct Informational : public LogRecord {
-    Informational() : LogRecord(LogLevel::informational) {}
+struct Informational : public LogRecordStream {
+    Informational() : LogRecordStream(LogLevel::informational) {}
 };
 
-struct Debug : public LogRecord {
-    Debug() : LogRecord(LogLevel::debug) {}
+struct Debug : public LogRecordStream {
+    Debug() : LogRecordStream(LogLevel::debug) {}
 };
 
 #endif  // Logger_h

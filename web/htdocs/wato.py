@@ -12822,6 +12822,9 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
         html.write('</li>')
 
     # Explicit list of hosts
+    def boldify(what):
+        return "<b>%s</b>" % what
+
     if host_list != ALL_HOSTS:
         condition = None
         if host_list == []:
@@ -12830,28 +12833,31 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
             tt_list = []
             for host_spec in host_list:
                 host = Host.host(host_spec)
+                is_regex = False
                 if host:
                     host_spec = '<a href="%s">%s</a>' % (html.attrencode(host.edit_url()), host_spec)
-                tt_list.append("<tt><b>%s</b></tt>" % host_spec)
+                elif host_spec[0] == "~":
+                    is_regex = True
+                    host_spec = host_spec[1:]
+                tt_list.append("%s<tt>%s</tt>" % (is_regex and "matches regex " or "is ", boldify(host_spec)))
 
             if len(host_list) == 1:
-                condition = _("Host name is %s") % tt_list[0]
+                condition = _("Host name %s") % tt_list[0]
             else:
-                condition = _("Host name is ") + ", ".join(tt_list[:-1])
+                condition = _("Host name ") + ", ".join(tt_list[:-1])
                 condition += _(" or ") + tt_list[-1]
         elif host_list[0][0] == ENTRY_NEGATE_CHAR:
             hosts = [ h[1:] for h in host_list[:-1] ]
-            if len(hosts) == 1:
-                condition = _("Host is <b>not</b> ") + hosts[0]
+            host_texts = map(lambda x: x[0] == "~" and "regex " + x[1:] or x, hosts)
+            if len(host_texts) == 1:
+                condition = _("Host is <b>not</b> ") + host_texts[0]
             else:
-                condition = _("Host is <b>not</b> one of ") + ", ".join(hosts)
+                condition = _("Host is <b>not</b> one of ") + ", ".join(host_texts)
         # other cases should not occur, e.g. list of explicit hosts
         # plus ALL_HOSTS.
         if condition:
             html.write('<li class="condition">%s</li>' % condition)
 
-    def boldify(what):
-        return "<b>%s</b>" % what
 
     # Item list
     if ruleset["itemtype"] and item_list != ALL_SERVICES:
@@ -12867,22 +12873,15 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
         else:
             cleaned_item_list = item_list
 
-        explicit_items = [ i[:-1] for i in cleaned_item_list if i[-1] == "$" ]
-        prefix_items   = [ i for i in cleaned_item_list if i[-1] != "$" ]
 
-        explicit_text = negated and _("is <b>not</b> ") or _("is ")
-        prefix_text   = negated and _("begins <b>not</b> with ") or _("begins with ")
+        svc_texts = []
+        for item in cleaned_item_list:
+            if item[-1] == "$":
+                svc_texts.append("<b>is %s%s</b>" % (negated and "not " or "", boldify(item[:-1])))
+            else:
+                svc_texts.append("<b>begins %s with %s</b>" % (negated and "not " or "", boldify(item)))
 
-        condition_texts = []
-        for what, text in [ (explicit_items, explicit_text),
-                            (prefix_items,   prefix_text) ]:
-            if not what:
-                continue
-            condition_text = text + " or ".join(map(boldify, what))
-            condition_texts.append(condition_prefix + condition_text)
-
-        html.write('<li class="condition">%s</li>' %\
-                    (negated and _(" and<br>") or _(" or<br>")).join(condition_texts))
+        html.write('<li class="condition">%s %s</li>' % (condition_prefix, (negated and _(" and ") or _(" or ")).join(svc_texts)))
 
 
     html.write("</ul>")

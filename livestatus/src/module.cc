@@ -38,7 +38,6 @@
 #include <cerrno>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
@@ -141,6 +140,11 @@ void count_services() {
     for (service *s = service_list; s != nullptr; s = s->next) {
         g_num_services++;
     }
+}
+
+void writeToAllLogs(const string &message) {
+    // TODO(sp) The Nagios headers are (once again) not const-correct...
+    write_to_all_logs(const_cast<char *>(message.c_str()), NSLOG_INFO_MESSAGE);
 }
 
 host *getHostByDesignation(const char *designation) {
@@ -486,22 +490,17 @@ void livestatus_log_initial_states() {
     // Log DOWNTIME hosts
     for (host *h = host_list; h != nullptr; h = h->next) {
         if (h->scheduled_downtime_depth > 0) {
-            char buffer[8192];
-            snprintf(buffer, sizeof(buffer),
-                     "HOST DOWNTIME ALERT: %s;STARTED;%s", h->name,
-                     get_downtime_comment(h->name, nullptr));
-            write_to_all_logs(buffer, NSLOG_INFO_MESSAGE);
+            writeToAllLogs(string("HOST DOWNTIME ALERT: ") + h->name +
+                           ";STARTED;" +
+                           get_downtime_comment(h->name, nullptr));
         }
     }
     // Log DOWNTIME services
     for (service *s = service_list; s != nullptr; s = s->next) {
         if (s->scheduled_downtime_depth > 0) {
-            char buffer[8192];
-            snprintf(buffer, sizeof(buffer),
-                     "SERVICE DOWNTIME ALERT: %s;%s;STARTED;%s", s->host_name,
-                     s->description,
-                     get_downtime_comment(s->host_name, s->description));
-            write_to_all_logs(buffer, NSLOG_INFO_MESSAGE);
+            writeToAllLogs(string("SERVICE DOWNTIME ALERT: ") + s->host_name +
+                           ";" + s->description + ";STARTED;" +
+                           get_downtime_comment(s->host_name, s->description));
         }
     }
     // Log TIMERPERIODS
@@ -517,9 +516,7 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
             livestatus_log_initial_states();
         } else if (log_initial_states == 1) {
             // initial info during startup
-            // TODO(sp) The Nagios headers are (once again) not const-correct...
-            write_to_all_logs(const_cast<char *>("logging initial states"),
-                              NSLOG_INFO_MESSAGE);
+            writeToAllLogs("logging initial states");
         }
     }
     g_timeperiods_cache->update(ts->timestamp.tv_sec);

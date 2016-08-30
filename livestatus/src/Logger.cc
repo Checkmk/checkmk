@@ -36,8 +36,6 @@ using std::string;
 
 namespace {
 FILE *fl_logfile = nullptr;
-int fl_log_level = 5;
-bool fl_log_microtime = false;
 }  // namespace
 
 void open_logfile(const string &path) {
@@ -56,6 +54,20 @@ void close_logfile() {
 }
 
 #ifdef CMC
+
+#include <sys/time.h>
+#include <ctime>
+#include <mutex>
+
+using std::lock_guard;
+using std::mutex;
+
+namespace {
+std::mutex fl_logfile_mutex;
+int fl_log_level = 5;
+bool fl_log_microtime = false;
+}  // namespace
+
 // Called during a logfile rotation, triggered by an external command.
 // This should only do somehting in case the logfile is really open.
 void reopen_logfile(const string &path) {
@@ -74,21 +86,6 @@ void set_log_config(int log_level, bool log_microtime) {
 bool should_log(int priority) { return priority <= fl_log_level; }
 
 FILE *get_logfile() { return fl_logfile != nullptr ? fl_logfile : stdout; }
-#endif
-
-#ifdef CMC
-
-#include <sys/time.h>
-#include <ctime>
-#include <mutex>
-
-using std::lock_guard;
-using std::mutex;
-
-namespace {
-std::mutex fl_logfile_mutex;
-}  // namespace
-
 void logger(int priority, const string &message) {
     if (!should_log(priority)) {
         return;  // msg not important enough
@@ -119,16 +116,13 @@ void logger(int priority, const string &message) {
 #else
 
 #include <ctime>
-#include "nagios.h"
 
 void logger(int /*priority*/, const string &message) {
     extern bool runningInLivestatusMainThread();
+    extern void writeToAllLogs(const string &message);
     // Only the main process may use the Nagios log methods
     if (fl_logfile == nullptr || runningInLivestatusMainThread()) {
-        // TODO(sp) The Nagios headers are (once again) not const-correct...
-        write_to_all_logs(
-            const_cast<char *>(("livestatus: " + message).c_str()),
-            NSLOG_INFO_MESSAGE);
+        writeToAllLogs("livestatus: " + message);
     } else if (fl_logfile != nullptr) {
         char timestring[64];
         time_t now_t = time(nullptr);

@@ -23,16 +23,17 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TimeperiodsCache.h"
-#include <syslog.h>
-#include <cstdio>
 #include <cstring>
 #include <ctime>
 #include <ostream>
+#include <string>
 #include <utility>
 #include "Logger.h"
 
 using std::lock_guard;
 using std::mutex;
+using std::string;
+using std::to_string;
 
 extern timeperiod *timeperiod_list;
 
@@ -129,8 +130,7 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp) {
 }
 
 void TimeperiodsCache::logTransition(char *name, int from, int to) {
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), "TIMEPERIOD TRANSITION: %s;%d;%d", name,
-             from, to);
-    write_to_all_logs(buffer, LOG_INFO);
+    extern void writeToAllLogs(const string &message);
+    writeToAllLogs(string("TIMEPERIOD TRANSITION: ") + name + ";" +
+                   to_string(from) + ";" + to_string(to));
 }

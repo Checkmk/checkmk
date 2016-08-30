@@ -27,7 +27,9 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <syslog.h>
+#ifdef CMC
 #include <cstdio>
+#endif
 #include <sstream>
 #include <string>
 

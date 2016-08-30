@@ -81,6 +81,7 @@ livestatus_so_SOURCES = \
         LogCache.cc \
         LogEntry.cc \
         Logfile.cc \
+        Logger.cc \
         LogwatchListColumn.cc \
         MetricsColumn.cc \
         NullColumn.cc \
@@ -146,7 +147,6 @@ livestatus_so_SOURCES = \
         WorldNagios.cc \
         auth.cc \
         global_counters.cc \
-        logger.cc \
         mk_inventory.cc \
         mk_logwatch.cc \
         module.cc \

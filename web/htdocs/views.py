@@ -575,11 +575,8 @@ def view_editor_specs(ds_name, general_properties=True):
             ))
         )
 
-    allowed = allowed_for_datasource(multisite_sorters, ds_name)
-
     def column_spec(ident, title, ds_name):
-        allowed = allowed_for_datasource(multisite_painters, ds_name)
-        collist = collist_of_collection(allowed)
+        painter_choices = choices_of_collection(painters_of_datasource(ds_name))
 
         allow_empty = True
         empty_text = None
@@ -592,8 +589,7 @@ def view_editor_specs(ds_name, general_properties=True):
             elements = [
                 DropdownChoice(
                     title = _('Column'),
-                    choices = collist,
-                    sorted = True,
+                    choices = painter_choices,
                     no_preselect = True,
                 ),
                 DropdownChoice(
@@ -603,14 +599,14 @@ def view_editor_specs(ds_name, general_properties=True):
                 ),
                 DropdownChoice(
                     title = _('Tooltip'),
-                    choices = [(None, "")] + collist,
+                    choices = [(None, "")] + painter_choices,
                 ),
             ],
         )
 
-        joined = allowed_for_joined_datasource(multisite_painters, ds_name)
-        if ident == 'columns' and joined:
-            joined_cols = collist_of_collection(joined, collist)
+        join_painters = join_painters_of_datasource(ds_name)
+        if ident == 'columns' and join_painters:
+            join_painter_choices = choices_of_collection(join_painters, painter_choices)
 
             vs_column = Alternative(
                 elements = [
@@ -624,8 +620,7 @@ def view_editor_specs(ds_name, general_properties=True):
                         elements = [
                             DropdownChoice(
                                 title = _('Column'),
-                                choices = joined_cols,
-                                sorted = True,
+                                choices = join_painter_choices,
                                 no_preselect = True,
                             ),
                             TextUnicode(
@@ -639,7 +634,7 @@ def view_editor_specs(ds_name, general_properties=True):
                             ),
                             DropdownChoice(
                                 title = _('Tooltip'),
-                                choices = [(None, "")] + joined_cols,
+                                choices = [(None, "")] + join_painter_choices,
                             ),
                             TextUnicode(
                                 title = _('Title'),
@@ -678,7 +673,8 @@ def view_editor_specs(ds_name, general_properties=True):
                         elements = [
                             DropdownChoice(
                                 title = _('Column'),
-                                choices = [ (name, p["title"]) for name, p in allowed.items() ],
+                                choices = [ (name, p["title"]) for name, p
+                                            in sorters_of_datasource(ds_name).items() ],
                                 sorted = True,
                                 no_preselect = True,
                             ),
@@ -700,6 +696,7 @@ def view_editor_specs(ds_name, general_properties=True):
     specs.append(column_spec('grouping', _('Grouping'), ds_name))
 
     return specs
+
 
 def render_view_config(view, general_properties=True):
     ds_name = view.get("datasource", html.var("datasource"))
@@ -1869,6 +1866,23 @@ def sort_data(data, sorters):
 
     data.sort(multisort)
 
+
+def sorters_of_datasource(ds_name):
+    return allowed_for_datasource(multisite_sorters, ds_name)
+
+
+def painters_of_datasource(ds_name):
+    return allowed_for_datasource(multisite_painters, ds_name)
+
+
+def join_painters_of_datasource(ds_name):
+    ds = multisite_datasources[ds_name]
+    if "join" not in ds:
+        return {} # no joining with this datasource
+
+    return allowed_for_datasource(multisite_painters, ds['join'][0])
+
+
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source
 def allowed_for_datasource(collection, datasourcename):
@@ -1884,22 +1898,12 @@ def allowed_for_datasource(collection, datasourcename):
             allowed[name] = item
     return allowed
 
-def allowed_for_joined_datasource(collection, datasourcename):
-    if 'join' not in multisite_datasources[datasourcename]:
-        return {}
-    return allowed_for_datasource(collection, multisite_datasources[datasourcename]['join'][0])
 
-def collist_of_collection(collection, join_target = []):
-    def sort_list(l):
-        # Sort the lists but don't mix them up
-        swapped = [ (disp, key) for key, disp in l ]
-        swapped.sort()
-        return [ (key, disp) for disp, key in swapped ]
+def choices_of_collection(collection, join_target=None):
+    l = [ (name, p["title"]) for name, p in collection.items()
+          if not join_target or (name, p["title"]) not in join_target ]
 
-    if not join_target:
-        return sort_list([ (name, p["title"]) for name, p in collection.items() ])
-    else:
-        return sort_list([ (name, p["title"]) for name, p in collection.items() if (name, p["title"]) not in join_target ])
+    return sorted(l, key=lambda x: x[1])
 
 #.
 #   .--Commands------------------------------------------------------------.

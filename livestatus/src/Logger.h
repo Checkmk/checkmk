@@ -55,10 +55,10 @@ bool should_log(LogLevel log_level);
 FILE *get_logfile();
 #endif
 
-class Logger {
+class LogRecord {
 public:
-    explicit Logger(LogLevel log_level) : _log_level(log_level) {}
-    virtual ~Logger() { logger(_log_level, _os.str()); }
+    explicit LogRecord(LogLevel log_level) : _log_level(log_level) {}
+    virtual ~LogRecord() { logger(_log_level, _os.str()); }
 #ifdef CMC
     bool isEnabled() const { return should_log(_log_level); }
 #endif
@@ -73,36 +73,36 @@ private:
     std::ostringstream _os;
 };
 
-struct Emergency : public Logger {
-    Emergency() : Logger(LogLevel::emergency) {}
+struct Emergency : public LogRecord {
+    Emergency() : LogRecord(LogLevel::emergency) {}
 };
 
-struct Alert : public Logger {
-    Alert() : Logger(LogLevel::alert) {}
+struct Alert : public LogRecord {
+    Alert() : LogRecord(LogLevel::alert) {}
 };
 
-struct Critical : public Logger {
-    Critical() : Logger(LogLevel::critical) {}
+struct Critical : public LogRecord {
+    Critical() : LogRecord(LogLevel::critical) {}
 };
 
-struct Error : public Logger {
-    Error() : Logger(LogLevel::error) {}
+struct Error : public LogRecord {
+    Error() : LogRecord(LogLevel::error) {}
 };
 
-struct Warning : public Logger {
-    Warning() : Logger(LogLevel::warning) {}
+struct Warning : public LogRecord {
+    Warning() : LogRecord(LogLevel::warning) {}
 };
 
-struct Notice : public Logger {
-    Notice() : Logger(LogLevel::notice) {}
+struct Notice : public LogRecord {
+    Notice() : LogRecord(LogLevel::notice) {}
 };
 
-struct Informational : public Logger {
-    Informational() : Logger(LogLevel::informational) {}
+struct Informational : public LogRecord {
+    Informational() : LogRecord(LogLevel::informational) {}
 };
 
-struct Debug : public Logger {
-    Debug() : Logger(LogLevel::debug) {}
+struct Debug : public LogRecord {
+    Debug() : LogRecord(LogLevel::debug) {}
 };
 
 #endif  // Logger_h

@@ -1070,7 +1070,6 @@ multisite_builtin_views.update({
                     ('host_perf_data',             None),
                     ('host_in_downtime',           None),
                     ('host_in_notifper',           None),
-                    ('host_discovery',             None),
 
                     # 2b. Serivce statistics
                     ('num_services',               None),

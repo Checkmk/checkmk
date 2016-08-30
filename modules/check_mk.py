@@ -2419,10 +2419,51 @@ def pack_config():
     out.write("#!/usr/bin/python\n"
               "# encoding: utf-8\n"
               "# Created by Check_MK. Dump of the currently active configuration\n\n")
+
+
+
+
+    # These functions purpose is to filter out hosts which are monitored on different sites
+    active_hosts    = all_active_hosts()
+    active_clusters = all_active_clusters()
+    def filter_all_hosts(all_hosts):
+        all_hosts_red = []
+        for host_entry in all_hosts:
+            hostname = host_entry.split("|", 1)[0]
+            if hostname in active_hosts:
+                all_hosts_red.append(host_entry)
+        return all_hosts_red
+
+    def filter_clusters(clusters):
+        clusters_red = {}
+        for cluster_entry, cluster_nodes in clusters.items():
+            clustername = cluster_entry.split("|", 1)[0]
+            if clustername in active_clusters:
+                clusters_red[cluster_entry] = cluster_nodes
+        return clusters_red
+
+    def filter_hostname_in_dict(values):
+        values_red = {}
+        for hostname, attributes in values.items():
+            if hostname in active_hosts:
+                values_red[hostname] = attributes
+        return values_red
+
+    filter_var_functions = {
+        "all_hosts"                : filter_all_hosts,
+        "clusters"                 : filter_clusters,
+        "host_attributes"          : filter_hostname_in_dict,
+        "ipaddresses"              : filter_hostname_in_dict,
+        "explicit_snmp_communities": filter_hostname_in_dict,
+        "hosttags"                 : filter_hostname_in_dict
+    }
+
     for varname in list(config_variable_names) + derived_config_variable_names:
         if varname not in skipped_config_variable_names:
             val = globals()[varname]
             if packable(varname, val):
+                if varname in filter_var_functions:
+                    val = filter_var_functions[varname](val)
                 out.write("\n%s = %r\n" % (varname, val))
 
     for varname, factory_setting in factory_settings.items():

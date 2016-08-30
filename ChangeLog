@@ -147,6 +147,7 @@
     * 3795 cisco_cpu_multiitem: monitors the cpu utilization of each cpu
     * 3834 hitachi_hus_dku, hitachi_hus_dkc: now recognises Hitachi G800/HM800 devices
     * 3796 agent_vsphere: new option allows monitoring of ESX hostsystem and windows agent
+    * 3797 Check_MK Check helpers: Decreased memory consumption in distributed setups...
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

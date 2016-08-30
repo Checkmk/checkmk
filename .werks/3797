@@ -1,0 +1,11 @@
+Title: Check_MK Check helpers: Decreased memory consumption in distributed setups
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.8p11
+Date: 1472556738
+
+Hosts which are not monitored in a specific site are no longer put into
+the respective Check_MK Helpers configuration, thus reducing their size.

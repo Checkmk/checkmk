@@ -1486,6 +1486,11 @@ class CascadingDropdown(ValueSpec):
         self._no_elements_text = kwargs.get("no_elements_text",
                 _("There are no elements defined for this selection"))
 
+        self._no_preselect       = kwargs.get("no_preselect", False)
+        self._no_preselect_value = kwargs.get("no_preselect_value", None)
+        self._no_preselect_title = kwargs.get("no_preselect_title", "") # if not preselected
+        self._no_preselect_error = kwargs.get("no_preselect_error", _("Please make a selection"))
+
 
     def normalize_choices(self, choices):
         new_choices = []
@@ -1495,11 +1500,19 @@ class CascadingDropdown(ValueSpec):
             new_choices.append(entry)
         return new_choices
 
+
     def choices(self):
         if type(self._choices) == list:
-            return self._choices
+            result = self._choices
         else:
-            return self.normalize_choices(self._choices())
+            result = self.normalize_choices(self._choices())
+
+        if self._no_preselect:
+            result = [(self._no_preselect_value, self._no_preselect_title, None)] \
+                     + result
+
+        return result
+
 
     def canonical_value(self):
         choices = self.choices()
@@ -1623,6 +1636,9 @@ class CascadingDropdown(ValueSpec):
         raise MKUserError(varprefix, _("Value %r is not allowed here.") % value)
 
     def validate_value(self, value, varprefix):
+        if self._no_preselect and value == self._no_preselect_value:
+            raise MKUserError(varprefix, self._no_preselect_error)
+
         choices = self.choices()
         for nr, (val, title, vs) in enumerate(choices):
             if value == val or (

@@ -2846,6 +2846,36 @@ metric_info["http_bandwidth"] = {
     "color" : "53/b",
 }
 
+metric_info["time_connect"] = {
+    "title" : _("Time to connect"),
+    "unit"  : "s",
+    "color" : "11/a",
+}
+
+metric_info["time_ssl"] = {
+    "title" : _("Time to negotiate SSL"),
+    "unit"  : "s",
+    "color" : "13/a",
+}
+
+metric_info["time_headers"] = {
+    "title" : _("Time to send request"),
+    "unit"  : "s",
+    "color" : "15/a",
+}
+
+metric_info["time_firstbyte"] = {
+    "title" : _("Time to receive start of response"),
+    "unit"  : "s",
+    "color" : "26/a",
+}
+
+metric_info["time_transfer"] = {
+    "title" : _("Time to receive full response"),
+    "unit"  : "s",
+    "color" : "41/a",
+}
+
 for volume_info in [ "NFS", "NFSv4", "CIFS", "SAN", "FCP", "ISCSI" ]:
     for what, unit in [ ("data", "bytes"), ("latency", "s"), ("ios", "1/s") ]:
 
@@ -7168,4 +7198,17 @@ graph_info.append({
         ( "connections_duration_max", "line" ),
         ( "connections_duration_mean", "line" ),
     ]
+})
+
+graph_info.append({
+    "title"   : _("HTTP Timings"),
+    "metrics" : [
+        ( "time_connect", "area", _("Connect") ),
+        ( "time_ssl", "stack", _("Negotiate SSL") ),
+        ( "time_headers", "stack", _("Send request") ),
+        ( "time_transfer", "stack", _("Receive full response") ),
+        ( "time_firstbyte", "line", _("Receive start of response") ),
+        ( "response_time", "line", _("Roundtrip") ),
+    ],
+    "optional_metrics" : [ "time_ssl" ],
 })

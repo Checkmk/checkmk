@@ -236,24 +236,6 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
-    "f5_bigip_cluster_failover_state",
-    _("Failover cluster state for F5 BigIP devices"),
-    Dictionary(
-        title = _("Interpretation of failover cluster state"),
-        elements = [
-            ("0", MonitoringState(title = "Unknown", default_value = 3)),
-            ("1", MonitoringState(title = "Offline", default_value = 2)),
-            ("2", MonitoringState(title = "Forced offline", default_value = 2)),
-            ("3", MonitoringState(title = "Standby", default_value = 0)),
-            ("4", MonitoringState(title = "Active", default_value = 0)),
-        ]
-    ),
-    None,
-    "dict"
-)
-
-register_check_parameters(
     subgroup_applications,
     "f5_bigip_snat",
     _("F5 Loadbalancer Source NAT"),

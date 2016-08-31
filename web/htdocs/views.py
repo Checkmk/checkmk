@@ -1173,6 +1173,16 @@ class Cell(object):
     # Same as self.render() for HTML output: Gets a painter and a data
     # row and creates the text for being painted.
     def render_for_pdf(self, row, time_range):
+        # TODO: Move this somewhere else!
+        def find_htdocs_image_path(filename):
+            dirs = [
+                defaults.omd_root + "/local/share/check_mk/web/htdocs/",
+                defaults.omd_root + "/share/check_mk/web/htdocs/",
+            ]
+            for d in dirs:
+                if os.path.exists(d + filename):
+                    return d + filename
+
         try:
             row = join_row(row, self)
             css_classes, txt = self.render_content(row)

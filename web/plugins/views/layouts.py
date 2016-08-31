@@ -67,7 +67,7 @@ def render_group_checkbox_th():
 #   |  headers left and the values on the right. It is able to handle      |
 #   |  more than on dataset however.
 #   '----------------------------------------------------------------------'
-def render_single_dataset(rows, view, group_painters, painters, num_columns, _ignore_show_checkboxes):
+def render_single_dataset(rows, view, group_cells, cells, num_columns, _ignore_show_checkboxes):
     for row in rows:
         save_state_for_playing_alarm_sounds(row)
 
@@ -78,21 +78,15 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns, _ig
         if rownum > 0:
             html.write("<tr class=gap><td class=gap colspan=%d></td></tr>\n" % (1 + num_columns))
         thispart = rows[rownum:rownum + num_columns]
-        for p in painters:
-            painter, link = p[0:2]
-            if len(p) >= 5 and p[4]:
-                title = p[4] # Use custom title
-            elif len(p) == 4 and p[3]:
-                title = p[3] # Use the join index (service name) as title
-            else:
-                title = painter["title"]
-
+        for cell in cells:
             odd = odd == "odd" and "even" or "odd"
             html.write('<tr class="data %s0">' % odd)
             if view.get("column_headers") != "off":
-                html.write("<td class=left>%s</td>" % title)
+                html.write("<td class=left>%s</td>" % cell.title())
+
             for row in thispart:
-                paint(p, row)
+                cell.paint(row)
+
             if len(thispart) < num_columns:
                 html.write("<td class=gap style=\"border-style: none;\" colspan=%d></td>" % (1 + num_columns - len(thispart)))
             html.write("</tr>\n")
@@ -122,7 +116,7 @@ multisite_layouts["dataset"] = {
 #   |  The boxed layout is useful in views with a width > 1, boxes are     |
 #   |  stacked in columns and can have different sizes.                    |
 #   '----------------------------------------------------------------------'
-def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show_checkboxes, css_class=None):
+def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_checkboxes, css_class=None):
 
     repeat_heading_every = 20 # in case column_headers is "repeat"
 
@@ -131,7 +125,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
     last_group = None
     for row in rows:
         save_state_for_playing_alarm_sounds(row)
-        this_group = group_value(row, group_painters)
+        this_group = group_value(row, group_cells)
         if this_group != last_group:
             last_group = this_group
             current_group = []
@@ -177,10 +171,10 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
     def render_group(header, rows_with_ids):
         html.write("<table class=groupheader cellspacing=0 cellpadding=0 border=0><tr class=groupheader>")
         painted = False
-        for p in group_painters:
+        for cell in group_cells:
             if painted:
                 html.write("<td>,</td>")
-            painted = paint(p, rows_with_ids[0][1])
+            painted = cell.paint(rows_with_ids[0][1])
         html.write("</tr></table>\n")
 
         html.write("<table class=data>")
@@ -190,8 +184,8 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
             html.write("<tr>")
             if show_checkboxes:
                 render_group_checkbox_th()
-            for p in painters:
-                paint_header(view, p)
+            for cell in cells:
+                cell.paint_as_header()
                 html.write("\n")
             html.write("</tr>\n")
 
@@ -220,11 +214,11 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
                 if state > 0:
                     state +=1 # 1 is critical for hosts
 
-            num_painters = len(painters)
+            num_cells = len(cells)
 
             if index in groups:
                 group_spec, num_grouped_rows = groups[index]
-                group_hidden = grouped_row_title(index, group_spec, num_grouped_rows, odd, num_painters)
+                group_hidden = grouped_row_title(index, group_spec, num_grouped_rows, odd, num_cells)
                 odd = odd == "odd" and "even" or "odd"
 
 
@@ -249,10 +243,10 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
             html.write('<tr class="data %s"%s>' % (" ".join(css_classes), hide))
 
             if show_checkboxes:
-                render_checkbox_td(view, row, num_painters)
+                render_checkbox_td(view, row, num_cells)
 
-            for p in painters:
-                paint(p, row)
+            for cell in cells:
+                cell.paint(row)
 
             html.write("</tr>\n")
 
@@ -269,7 +263,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
     html.write("</tr></table>\n")
 
 
-def grouped_row_title(index, group_spec, num_rows, trclass, num_painters):
+def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
     is_open = html.foldable_container_is_open("grouped_rows", index, False)
     closed_class = not is_open and " closed" or ""
 
@@ -277,7 +271,7 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_painters):
                                             (closed_class, trclass))
     html.write("<td colspan=\"%d\" onclick=\"toggle_grouped_rows("
                "'grouped_rows', '%s', this, %d)\">" %
-                (num_painters, index, num_rows))
+                (num_cells, index, num_rows))
     html.write('<img align=absbottom class="treeangle nform %s" src="images/tree_black_closed.png">' %
                                     ("open" if is_open else "closed"))
     html.write("%s (%d)</td>" % (html.attrencode(group_spec["title"]), num_rows))
@@ -385,15 +379,15 @@ multisite_layouts["boxed_graph"] = {
 #   |  The tiled layout puts each dataset into one box with a fixed size.  |
 #   '----------------------------------------------------------------------'
 
-def render_tiled(rows, view, group_painters, painters, _ignore_num_columns, show_checkboxes):
+def render_tiled(rows, view, group_cells, cells, _ignore_num_columns, show_checkboxes):
     html.write("<table class=\"data tiled\">\n")
 
     last_group = None
     group_open = False
     for row in rows:
         # Show group header
-        if len(group_painters) > 0:
-            this_group = group_value(row, group_painters)
+        if group_cells:
+            this_group = group_value(row, group_cells)
             if this_group != last_group:
 
                 # paint group header
@@ -401,10 +395,10 @@ def render_tiled(rows, view, group_painters, painters, _ignore_num_columns, show
                     html.write("</td></tr>\n")
                 html.write("<tr><td><table class=groupheader><tr class=groupheader>")
                 painted = False
-                for p in group_painters:
+                for cell in group_cells:
                     if painted:
                         html.write("<td>,</td>")
-                    painted = paint(p, row)
+                    painted = cell.paint(row)
 
                 html.write('</tr></table></td></tr>'
                            '<tr><td class=tiles>\n')
@@ -433,27 +427,28 @@ def render_tiled(rows, view, group_painters, painters, _ignore_num_columns, show
             group_open = True
         html.write('<div class="tile %s"><table>' % sclass)
 
-        # We need at least five painters.
-        empty_painter = { "paint" : (lambda row: ("", "")) }
+        # We need at least five cells
+        if len(cells) < 5:
+            cells = cells + ([ EmptyCell(view) ] * (5 - len(cells)))
 
-        if len(painters) < 5:
-            painters = painters + ([ (empty_painter, None) ] * (5 - len(painters)))
-
-        rendered = [ prepare_paint(p, row) for p in painters ]
+        rendered = [ cell.render(row) for cell in cells ]
 
         html.write("<tr><td class=\"tl %s\">" % (rendered[1][0],))
         if show_checkboxes:
-            render_checkbox(view, row, len(painters)-1)
+            render_checkbox(view, row, len(cells)-1)
         html.write("%s</td><td class=\"tr %s\">%s</td></tr>\n" % \
                     (rendered[1][1], rendered[2][0], rendered[2][1]))
         html.write("<tr><td colspan=2 class=\"center %s\">%s</td></tr>\n" % \
                     (rendered[0][0], rendered[0][1]))
+
         for css, cont in rendered[5:]:
             html.write("<tr><td colspan=2 class=\"cont %s\">%s</td></tr>\n" % \
                         (css, cont))
+
         html.write("<tr><td class=\"bl %s\">%s</td><td class=\"br %s\">%s</td></tr>\n" % \
                     (rendered[3][0], rendered[3][1], rendered[4][0], rendered[4][1]))
         html.write("</table></div>\n")
+
     if group_open:
         html.write("</td></tr>\n")
     html.write("</table>\n")
@@ -482,7 +477,7 @@ multisite_layouts["tiled"] = {
 #   |  width of the columns.                                               |
 #   '----------------------------------------------------------------------'
 
-def render_grouped_list(rows, view, group_painters, painters, num_columns, show_checkboxes):
+def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkboxes):
 
     repeat_heading_every = 20 # in case column_headers is "repeat"
 
@@ -491,9 +486,9 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
     odd = "even"
     column = 1
     group_open = False
-    num_painters = len(painters)
+    num_cells = len(cells)
     if show_checkboxes:
-        num_painters += 1
+        num_cells += 1
 
     def show_header_line():
         html.write("<tr>")
@@ -504,26 +499,25 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
                 else:
                     html.write('<th></th>')
 
-            last_painter = painters[-1]
-            for painter in painters:
-                is_last_column_header = painter == last_painter
-                paint_header(view, painter, is_last_column_header)
+            last_cell = cells[-1]
+            for cell in cells:
+                cell.paint_as_header(is_last_column_header=cell == last_cell)
 
             if n < num_columns:
                 html.write('<td class=gap></td>')
 
         html.write("</tr>\n")
 
-    if len(group_painters) == 0 and view.get("column_headers") != "off":
+    if not group_cells and view.get("column_headers") != "off":
         show_header_line()
 
     # Helper function that counts the number of entries in
     # the current group
     def count_group_members(row, rows):
-        this_group = group_value(row, group_painters)
+        this_group = group_value(row, group_cells)
         members = 1
         for row in rows[1:]:
-            that_group = group_value(row, group_painters)
+            that_group = group_value(row, group_cells)
             if that_group == this_group:
                 members += 1
             else:
@@ -539,13 +533,13 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
         save_state_for_playing_alarm_sounds(row)
         # Show group header, if a new group begins. But only if grouping
         # is activated
-        if len(group_painters) > 0:
-            this_group = group_value(row, group_painters)
+        if group_cells:
+            this_group = group_value(row, group_cells)
             if this_group != last_group:
                 if column != 1: # not a the beginning of a new line
                     for i in range(column-1, num_columns):
                         html.write('<td class=gap></td>')
-                        html.write("<td class=fillup colspan=%d></td>" % num_painters)
+                        html.write("<td class=fillup colspan=%d></td>" % num_cells)
                     html.write("</tr>\n")
                     column = 1
 
@@ -554,8 +548,8 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
 
                 # paint group header, but only if it is non-empty
                 header_is_empty = True
-                for p in group_painters:
-                    tdclass, content = prepare_paint(p, row)
+                for cell in group_cells:
+                    tdclass, content = cell.render(row)
                     if content:
                         header_is_empty = False
                         break
@@ -563,12 +557,12 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
                 if not header_is_empty:
                     html.write("<tr class=groupheader>")
                     html.write("<td class=groupheader colspan=%d><table class=groupheader cellspacing=0 cellpadding=0 border=0><tr>" %
-                         (num_painters * (num_columns + 2) + (num_columns - 1)))
+                         (num_cells * (num_columns + 2) + (num_columns - 1)))
                     painted = False
-                    for p in group_painters:
+                    for cell in group_cells:
                         if painted:
                             html.write("<td>,</td>")
-                        painted = paint(p, row)
+                        painted = cell.paint(row)
 
                     html.write("</tr></table></td></tr>\n")
 
@@ -604,7 +598,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
 
             if index in groups:
                 group_spec, num_grouped_rows = groups[index]
-                group_hidden = grouped_row_title(index, group_spec, num_grouped_rows, odd, num_painters)
+                group_hidden = grouped_row_title(index, group_spec, num_grouped_rows, odd, num_cells)
                 odd = odd == "odd" and "even" or "odd"
 
             css_classes = []
@@ -635,18 +629,18 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
 
 
         if show_checkboxes:
-            render_checkbox_td(view, row, num_painters)
+            render_checkbox_td(view, row, num_cells)
 
-        last_painter = painters[-1]
-        for painter in painters:
-            paint(painter, row, is_last_painter=last_painter==painter)
+        last_cell = cells[-1]
+        for cell in cells:
+            cell.paint(row, is_last_cell=last_cell==cell)
 
         column += 1
 
     if group_open:
         for i in range(column-1, num_columns):
             html.write('<td class=gap></td>')
-            html.write("<td class=fillup colspan=%d></td>" % num_painters)
+            html.write("<td class=fillup colspan=%d></td>" % num_cells)
         html.write("</tr>\n")
     html.write("</table>\n")
     init_rowselect(view)
@@ -674,26 +668,26 @@ multisite_layouts["table"] = {
 #   |  The columns are hosts and the rows are services.                    |
 #   '----------------------------------------------------------------------'
 
-def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_show_checkboxes):
+def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_checkboxes):
 
-    header_majorities = matrix_find_majorities_for_header(rows, group_painters)
-    value_counts, row_majorities = matrix_find_majorities(rows, painters)
+    header_majorities = matrix_find_majorities_for_header(rows, group_cells)
+    value_counts, row_majorities = matrix_find_majorities(rows, cells)
 
     for groups, unique_row_ids, matrix_cells in \
-             create_matrices(rows, group_painters, painters, num_columns):
+             create_matrices(rows, group_cells, cells, num_columns):
 
         # Paint the matrix. Begin with the group headers
         html.write('<table class="data matrix">')
         odd = "odd"
-        for painter_nr, painter in enumerate(group_painters):
+        for cell_nr, cell in enumerate(group_cells):
             odd = odd == "odd" and "even" or "odd"
             html.write('<tr class="data %s0">' % odd)
-            html.write('<td class=matrixhead>%s</td>' % painter[0]["title"])
+            html.write('<td class=matrixhead>%s</td>' % cell.title())
             for group, group_row in groups:
-                tdclass, content = prepare_paint(painter, group_row)
-                if painter_nr > 0:
-                    gv = group_value(group_row, [painter])
-                    majority_value = header_majorities.get(painter_nr-1, None)
+                tdclass, content = cell.render(group_row)
+                if cell_nr > 0:
+                    gv = group_value(group_row, [cell])
+                    majority_value = header_majorities.get(cell_nr-1, None)
                     if majority_value != None and majority_value != gv:
                         tdclass += " minority"
                 html.write('<td class="left %s">%s</td>' % (tdclass, content))
@@ -713,7 +707,7 @@ def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_sho
 
             odd = odd == "odd" and "even" or "odd"
             html.write('<tr class="data %s0">' % odd)
-            tdclass, content = prepare_paint(painters[0], matrix_cells[row_id].values()[0])
+            tdclass, content = cells[0].render(matrix_cells[row_id].values()[0])
             html.write('<td class="left %s">%s</td>' % (tdclass, content))
 
             # Now go through the groups and paint the rest of the
@@ -723,38 +717,42 @@ def render_matrix(rows, view, group_painters, painters, num_columns, _ignore_sho
                 if cell_row == None:
                     html.write("<td></td>")
                 else:
-                    if len(painters) > 2:
+                    if len(cells) > 2:
                         html.write("<td class=cell><table>")
-                    for painter_nr, p in enumerate(painters[1:]):
-                        tdclass, content = prepare_paint(p, cell_row)
-                        gv = group_value(cell_row, [p])
-                        majority_value =  row_majorities[row_id].get(painter_nr, None)
+
+                    for cell_nr, cell in enumerate(cells[1:]):
+                        tdclass, content = cell.render(cell_row)
+
+                        gv = group_value(cell_row, [cell])
+                        majority_value =  row_majorities[row_id].get(cell_nr, None)
                         if majority_value != None and majority_value != gv:
                             tdclass += " minority"
-                        if len(painters) > 2:
+
+                        if len(cells) > 2:
                             html.write("<tr>")
                         html.write('<td class="%s">%s</td>' % (tdclass, content))
-                        if len(painters) > 2:
+                        if len(cells) > 2:
                             html.write("</tr>")
-                    if len(painters) > 2:
+
+                    if len(cells) > 2:
                         html.write("</table></td>")
             html.write('</tr>')
 
         html.write("</table>")
 
 
-def csv_export_matrix(rows, view, group_painters, painters):
+def csv_export_matrix(rows, view, group_cells, cells):
     output_csv_headers(view)
 
-    groups, unique_row_ids, matrix_cells = list(create_matrices(rows, group_painters, painters, num_columns=None))[0]
-    value_counts, row_majorities = matrix_find_majorities(rows, painters)
+    groups, unique_row_ids, matrix_cells = list(create_matrices(rows, group_cells, cells, num_columns=None))[0]
+    value_counts, row_majorities = matrix_find_majorities(rows, cells)
 
     table.begin(output_format="csv")
-    for painter_nr, painter in enumerate(group_painters):
+    for cell_nr, cell in enumerate(group_cells):
         table.row()
-        table.cell("", painter[0]["title"])
+        table.cell("", cell.title())
         for group, group_row in groups:
-            tdclass, content = prepare_paint(painter, group_row)
+            tdclass, content = cell.render(group_row)
             table.cell("", content)
 
     for row_id in unique_row_ids:
@@ -769,53 +767,53 @@ def csv_export_matrix(rows, view, group_painters, painters):
                 continue
 
         table.row()
-        tdclass, content = prepare_paint(painters[0], matrix_cells[row_id].values()[0])
+        tdclass, content = cells[0].render(matrix_cells[row_id].values()[0])
         table.cell("", content)
 
         for group_id, group_row in groups:
             table.cell("")
             cell_row = matrix_cells[row_id].get(group_id)
             if cell_row != None:
-                for painter_nr, p in enumerate(painters[1:]):
-                    tdclass, content = prepare_paint(p, cell_row)
-                    if painter_nr:
+                for cell_nr, cell in enumerate(cells[1:]):
+                    tdclass, content = cell.render(cell_row)
+                    if cell_nr:
                         html.write(",")
                     html.write(content)
 
     table.end()
 
 
-def matrix_find_majorities_for_header(rows, painters):
-    counts, majorities = matrix_find_majorities(rows, painters, for_header=True)
+def matrix_find_majorities_for_header(rows, group_cells):
+    counts, majorities = matrix_find_majorities(rows, group_cells, for_header=True)
     return majorities.get(None, {})
 
 
-def matrix_find_majorities(rows, painters, for_header=False):
-    counts = {} # dict row_id -> painter_nr -> value -> count
+def matrix_find_majorities(rows, cells, for_header=False):
+    counts = {} # dict row_id -> cell_nr -> value -> count
 
     for row in rows:
         if for_header:
             row_id = None
         else:
-            row_id = tuple(group_value(row, [ painters[0] ]))
+            row_id = tuple(group_value(row, [ cells[0] ]))
 
-        for painter_nr, painter in enumerate(painters[1:]):
-            value = group_value(row, [painter])
+        for cell_nr, cell in enumerate(cells[1:]):
+            value = group_value(row, [cell])
             row_entry = counts.setdefault(row_id, {})
-            painter_entry = row_entry.setdefault(painter_nr, {})
-            painter_entry.setdefault(value, 0)
-            painter_entry[value] += 1
+            cell_entry = row_entry.setdefault(cell_nr, {})
+            cell_entry.setdefault(value, 0)
+            cell_entry[value] += 1
 
 
     # Now find majorities for each row
-    majorities = {} # row_id -> painter_nr -> majority value
+    majorities = {} # row_id -> cell_nr -> majority value
     for row_id, row_entry in counts.items():
         maj_entry = majorities.setdefault(row_id, {})
-        for painter_nr, painter_entry in row_entry.items():
+        for cell_nr, cell_entry in row_entry.items():
             maj_value = None
             max_count = 0  # Absolute maximum count
             max_non_unique = 0 # maximum count, but maybe non unique
-            for value, count in painter_entry.items():
+            for value, count in cell_entry.items():
                 if count > max_non_unique and count >= 2:
                     maj_value = value
                     max_non_unique = count
@@ -823,19 +821,18 @@ def matrix_find_majorities(rows, painters, for_header=False):
                 elif count == max_non_unique:
                     maj_value = None
                     max_count = None
-            maj_entry[painter_nr] = maj_value
-
+            maj_entry[cell_nr] = maj_value
 
     return counts, majorities
 
 
 # Create list of matrices to render
-def create_matrices(rows, group_painters, painters, num_columns):
+def create_matrices(rows, group_cells, cells, num_columns):
 
-    if len(painters) < 2:
+    if len(cells) < 2:
         raise MKGeneralException(_("Cannot display this view in matrix layout. You need at least two columns!"))
 
-    if not group_painters:
+    if not group_cells:
         raise MKGeneralException(_("Cannot display this view in matrix layout. You need at least one group column!"))
 
     # First find the groups - all rows that have the same values for
@@ -849,7 +846,7 @@ def create_matrices(rows, group_painters, painters, num_columns):
 
     for row in rows:
         save_state_for_playing_alarm_sounds(row)
-        group_id = group_value(row, group_painters)
+        group_id = group_value(row, group_cells)
         if group_id != last_group_id:
             col_num += 1
             if num_columns != None and col_num > num_columns:
@@ -862,10 +859,10 @@ def create_matrices(rows, group_painters, painters, num_columns):
             last_group_id = group_id
             groups.append((group_id, row))
 
-        # Now the rule is that the *first* column painter (usually the service
+        # Now the rule is that the *first* cell (usually the service
         # description) will define the left legend of the matrix. It defines
         # the set of possible rows.
-        row_id = group_value(row, [ painters[0] ])
+        row_id = group_value(row, [ cells[0] ])
         if row_id not in matrix_cells:
             unique_row_ids.append(row_id)
             matrix_cells[row_id] = {}

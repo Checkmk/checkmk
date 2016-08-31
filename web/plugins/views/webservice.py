@@ -29,7 +29,7 @@ try:
 except ImportError:
     import json
 
-def render_python_raw(data, view, group_painters, painters, num_columns, show_checkboxes):
+def render_python_raw(data, view, group_cells, cells, num_columns, show_checkboxes):
     html.write(repr(data))
 
 multisite_layouts["python-raw"] = {
@@ -39,15 +39,15 @@ multisite_layouts["python-raw"] = {
     "hide"   : True,
 }
 
-def render_python(rows, view, group_painters, painters, num_columns, show_checkboxes):
+def render_python(rows, view, group_cells, cells, num_columns, show_checkboxes):
     html.write("[\n")
-    html.write(repr([p[0]["name"] for p in painters]))
+    html.write(repr([cell.painter_name() for cell in cells]))
     html.write(",\n")
     for row in rows:
         html.write("[")
-        for p in painters:
-            joined_row = join_row(row, p)
-            tdclass, content = paint_painter(p[0], joined_row)
+        for cell in cells:
+            joined_row = join_row(row, cell)
+            tdclass, content = cell.render_content(joined_row)
             html.write(repr(html.strip_tags(content)))
             html.write(",")
         html.write("],")
@@ -60,7 +60,7 @@ multisite_layouts["python"] = {
     "hide"   : True,
 }
 
-def render_json(rows, view, group_painters, painters, num_columns, show_checkboxes, export=False):
+def render_json(rows, view, group_cells, cells, num_columns, show_checkboxes, export=False):
     if export:
         filename = '%s-%s.json' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
         if type(filename) == unicode:
@@ -70,15 +70,15 @@ def render_json(rows, view, group_painters, painters, num_columns, show_checkbox
     painted_rows = []
 
     header_row = []
-    for p in painters:
-        header_row.append(html.strip_tags(p[0]["name"]))
+    for cell in cells:
+        header_row.append(html.strip_tags(cell.painter_name()))
     painted_rows.append(header_row)
 
     for row in rows:
         painted_row = []
-        for p in painters:
-            joined_row = join_row(row, p)
-            content = paint_painter(p[0], joined_row)[1]
+        for cell in cells:
+            joined_row = join_row(row, cell)
+            content = cell.render_content(joined_row)[1]
             if type(content) in [ list, dict ]:
                 # Allow painters to return lists and dicts, then json encode them
                 # as such data structures without wrapping them into strings
@@ -112,9 +112,9 @@ multisite_layouts["json"] = {
     "hide"   : True,
 }
 
-def render_jsonp(rows, view, group_painters, painters, num_columns, show_checkboxes):
+def render_jsonp(rows, view, group_cells, cells, num_columns, show_checkboxes):
     html.write("%s(\n" % html.var('jsonp', 'myfunction'));
-    render_json(rows, view, group_painters, painters, num_columns, show_checkboxes)
+    render_json(rows, view, group_cells, cells, num_columns, show_checkboxes)
     html.write(");\n");
 
 multisite_layouts["jsonp"] = {
@@ -124,18 +124,18 @@ multisite_layouts["jsonp"] = {
     "hide"   : True,
 }
 
-def render_csv(rows, view, group_painters, painters, num_columns, show_checkboxes, export = False):
+def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, export = False):
     if export:
         output_csv_headers(view)
 
     csv_separator = html.var("csv_separator", ";")
     first = True
-    for p in painters:
+    for cell in cells:
         if first:
             first = False
         else:
             html.write(csv_separator)
-        content = p[0]["name"]
+        content = cell.painter_name()
         content = type(content) in [ int, float ] and str(content) or content
         stripped = html.strip_tags(content).replace('\n', '').replace('"', '""')
         html.write('"%s"' % stripped.encode("utf-8"))
@@ -143,13 +143,13 @@ def render_csv(rows, view, group_painters, painters, num_columns, show_checkboxe
     for row in rows:
         html.write("\n")
         first = True
-        for p in painters:
+        for cell in cells:
             if first:
                 first = False
             else:
                 html.write(csv_separator)
-            joined_row = join_row(row, p)
-            tdclass, content = paint_painter(p[0], joined_row)
+            joined_row = join_row(row, cell)
+            tdclass, content = cell.render_content(joined_row)
             content = type(content) in [ int, float ] and str(content) or content
             stripped = html.strip_tags(content).replace('\n', '').replace('"', '""')
             html.write('"%s"' % stripped.encode("utf-8"))

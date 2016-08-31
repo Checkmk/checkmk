@@ -718,7 +718,7 @@ multisite_builtin_views.update({
 #   | one for a list of items, one for a single dataset.                   |
 #   '----------------------------------------------------------------------'
 
-def render_mobile_table(rows, view, group_painters, painters, num_columns, show_checkboxes):
+def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes):
     if not html.mobile:
         html.show_error(_("This view can only be used in mobile mode."))
         return
@@ -733,22 +733,22 @@ def render_mobile_table(rows, view, group_painters, painters, num_columns, show_
     if view.get("column_headers") != "off":
         html.write("<tr>")
         n = 0
-        for p in painters:
-            paint_header(view, p)
+        for cell in cells:
+            cell.paint_as_header()
         html.write("</tr>\n")
 
     # Paint data rows
     for row in rows:
         odd = odd == "odd" and "even" or "odd"
         html.write('<tr class="%s0">' % odd)
-        for n, p in enumerate(painters):
+        for n, cell in enumerate(cells):
             if n > 0 and n % num_columns == 0:
                 html.write('</tr><tr class="%s0">' % odd)
-            if n == len(painters) - 1 and n % num_columns != (num_columns - 1):
+            if n == len(cells) - 1 and n % num_columns != (num_columns - 1):
                 tdattrs = 'colspan="%d"' % (num_columns - (n % num_columns))
             else:
                 tdattrs = ""
-            paint(p, row, tdattrs)
+            cell.paint(row, tdattrs=tdattrs)
         html.write('</row>')
     html.write('</table>')
     html.javascript('$("table.mobile a").attr("data-ajax", "false");')
@@ -760,7 +760,7 @@ multisite_layouts["mobiletable"] = {
     "checkboxes" : False,
 }
 
-def render_mobile_list(rows, view, group_painters, painters, num_columns, show_checkboxes):
+def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes):
     if not html.mobile:
         html.show_error(_("This view can only be used in mobile mode."))
         return
@@ -774,16 +774,18 @@ def render_mobile_list(rows, view, group_painters, painters, num_columns, show_c
     # Paint data rows
     for row in rows:
         html.write('<li>')
-        cells = [ prepare_paint(p, row) for p in painters ]
-        if len(cells) > 0: # First cell (assumedly state) is left
-            html.write('<p class="ui-li-aside ui-li-desc %s">%s</p>' % cells[0])
-            if len(cells) > 1:
-                content = " &middot; ".join([ cell[1] for cell in cells[1:num_columns+1]])
+        rendered_cells = [ cell.render(row) for cell in cells ]
+        if rendered_cells: # First cell (assumedly state) is left
+            html.write('<p class="ui-li-aside ui-li-desc %s">%s</p>' % rendered_cells[0])
+            if len(rendered_cells) > 1:
+                content = " &middot; ".join([ rendered_cell[1] for rendered_cell
+                                              in rendered_cells[1:num_columns+1]])
                 html.write('<h3>%s</h3>' % content)
-                for cell, p in zip(cells[num_columns+1:], painters[num_columns+1:]):
+                for rendered_cell, cell in zip(rendered_cells[num_columns+1:],
+                                               cells[num_columns+1:]):
                     html.write('<p class="ui-li-desc">')
-                    paint_header(view, p)
-                    html.write(': <span class="%s">%s</span></p>\n' % cell)
+                    cell.paint_as_header()
+                    html.write(': <span class="%s">%s</span></p>\n' % rendered_cell)
         html.write('</li>\n')
     html.write('</ul>')
     html.javascript('$("ul.mobilelist a").attr("data-ajax", "false");')
@@ -795,7 +797,7 @@ multisite_layouts["mobilelist"] = {
     "checkboxes" : False,
 }
 
-def render_mobile_dataset(rows, view, group_painters, painters, num_columns, show_checkboxes):
+def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes):
     if not html.mobile:
         html.show_error(_("This view can only be used in mobile mode."))
         return
@@ -803,25 +805,19 @@ def render_mobile_dataset(rows, view, group_painters, painters, num_columns, sho
     multisite_painter_options["ts_format"]["value"] = "both"
 
     for row in rows:
-        # html.write('<div data-role="collapsible" data-content-theme="d">')
-        # html.write('<h3>Header</h3><p>')
         html.write('<table class=dataset>')
-        for p in painters:
-            tdclass, content = prepare_paint(p, row)
-            # Omit empty cells
-            if content:
-                painter, link = p[0:2]
-                if len(p) >= 5 and p[4]:
-                    title = p[4] # Use custom title
-                else:
-                    title = painter["title"]
-                html.write('<tr class=header>')
-                html.write('<th>%s</th></tr>\n' % title)
-                html.write('<tr class=data>')
-                paint(p, row)
-                html.write('</tr>\n')
+        for cell in cells:
+            tdclass, content = cell.render(row)
+            if not content:
+                continue # Omit empty cells
+
+            html.write('<tr class=header>')
+            html.write('<th>%s</th></tr>\n' % cell.title())
+            html.write('<tr class=data>')
+            cell.paint(row)
+            html.write('</tr>\n')
+
         html.write('</table>')
-        # html.write('</p></div>')
     html.javascript('$("table.dataset > tbody > tr.data > td").addClass("ui-shadow").not(".state").addClass("nonstatus");\n'
                     '$("table.dataset > tbody > tr.data a").attr("data-ajax", "false");\n')
 

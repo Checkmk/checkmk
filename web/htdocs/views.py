@@ -76,9 +76,6 @@ def load_plugins(force):
     # Make sure that custom views also have permissions
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('views'))
 
-    # Add painter names to painter objects (e.g. for JSON web service)
-    for n, p in multisite_painters.items():
-        p["name"] = n
 
 # Load all views - users or builtins
 def load_views():
@@ -576,7 +573,7 @@ def view_editor_specs(ds_name, general_properties=True):
         )
 
     def column_spec(ident, title, ds_name):
-        painter_choices = choices_of_collection(painters_of_datasource(ds_name))
+        painters = painters_of_datasource(ds_name)
 
         allow_empty = True
         empty_text = None
@@ -587,9 +584,9 @@ def view_editor_specs(ds_name, general_properties=True):
         vs_column = Tuple(
             title = _('Column'),
             elements = [
-                DropdownChoice(
+                CascadingDropdown(
                     title = _('Column'),
-                    choices = painter_choices,
+                    choices = painter_choices_with_params(painters),
                     no_preselect = True,
                 ),
                 DropdownChoice(
@@ -599,14 +596,14 @@ def view_editor_specs(ds_name, general_properties=True):
                 ),
                 DropdownChoice(
                     title = _('Tooltip'),
-                    choices = [(None, "")] + painter_choices,
+                    choices = [(None, "")] + painter_choices(painters),
                 ),
             ],
         )
 
         join_painters = join_painters_of_datasource(ds_name)
         if ident == 'columns' and join_painters:
-            join_painter_choices = choices_of_collection(join_painters, painter_choices)
+            join_painters = join_painters_of_datasource(ds_name)
 
             vs_column = Alternative(
                 elements = [
@@ -618,9 +615,9 @@ def view_editor_specs(ds_name, general_properties=True):
                                  "host objects in a view showing host objects. You need to specify the "
                                  "service description of the service you like to show the data for."),
                         elements = [
-                            DropdownChoice(
+                            CascadingDropdown(
                                 title = _('Column'),
-                                choices = join_painter_choices,
+                                choices = painter_choices_with_params(join_painters),
                                 no_preselect = True,
                             ),
                             TextUnicode(
@@ -634,7 +631,7 @@ def view_editor_specs(ds_name, general_properties=True):
                             ),
                             DropdownChoice(
                                 title = _('Tooltip'),
-                                choices = [(None, "")] + join_painter_choices,
+                                choices = [(None, "")] + painter_choices(join_painters),
                             ),
                             TextUnicode(
                                 title = _('Title'),
@@ -914,40 +911,367 @@ def page_view():
     show_view(view, True, True, True)
 
 
-# Get a list of columns we need to fetch in order to
-# render a given list of painters. If join_columns is True,
-# then we only return the list needed by "Join" columns, i.e.
-# columns that need to fetch information from another table
-# (e.g. from the services table while we are in a hosts view)
-# If join_columns is False, we only return the "normal" columns.
-def get_needed_columns(view, painters):
-    # Make sure that the information about the available views is present. If
-    # called via the reporting, than this might not be the case
-    views = permitted_views()
-    columns = []
-    for entry in painters:
-        painter = entry[0]
-        linkview_name = entry[1]
-
-        columns += get_painter_columns(painter)
-
-        if linkview_name:
-            linkview = views.get(linkview_name)
-            if linkview:
-                for filt in [ visuals.get_filter(fn) for fn in visuals.get_single_info_keys(linkview) ]:
-                    columns += filt.link_columns
-
-        if len(entry) > 2 and entry[2]:
-            tt = entry[2]
-            columns += get_painter_columns(multisite_painters[tt])
-    return columns
-
-
 def get_painter_columns(painter):
     if type(lambda: None) == type(painter["columns"]):
         return painter["columns"]()
     else:
         return painter["columns"]
+
+
+# A cell is an instance of a painter in a view (-> a cell or a grouping cell)
+class Cell(object):
+    # Wanted to have the "parse painter spec logic" in one place (The Cell() class)
+    # but this should be cleaned up more. TODO: Move this to another place
+    @staticmethod
+    def painter_exists(painter_spec):
+        if type(painter_spec[0]) == tuple:
+            painter_name = painter_spec[0][0]
+        else:
+            painter_name = painter_spec[0]
+
+        return painter_name in multisite_painters
+
+
+    # Wanted to have the "parse painter spec logic" in one place (The Cell() class)
+    # but this should be cleaned up more. TODO: Move this to another place
+    @staticmethod
+    def is_join_cell(painter_spec):
+        return len(painter_spec) >= 4
+
+
+    def __init__(self, view, painter_spec=None):
+        self._view               = view
+        self._painter_name       = None
+        self._painter_params     = None
+        self._link_view_name     = None
+        self._tooltip_painter_name = None
+
+        if painter_spec:
+            self._from_view(painter_spec)
+
+    # In views the painters are saved as tuples of the following formats:
+    #
+    # Painter name, Link view name
+    # ('service_discovery_service', None),
+    #
+    # Painter name,  Link view name, Hover painter name
+    # ('host_plugin_output', None, None),
+    #
+    # Join column: Painter name, Link view name, hover painter name, Join service description
+    # ('service_description', None, None, u'CPU load')
+    #
+    # Join column: Painter name, Link view name, hover painter name, Join service description, custom title
+    # ('service_description', None, None, u'CPU load')
+    #
+    # Parameterized painters:
+    # Same as above but instead of the "Painter name" a two element tuple with the painter name as
+    # first element and a dictionary of parameters as second element is set.
+    def _from_view(self, painter_spec):
+        if type(painter_spec[0]) == tuple:
+            self._painter_name, self._painter_params = painter_spec[0]
+        else:
+            self._painter_name = painter_spec[0]
+
+        if painter_spec[1] != None:
+            self._link_view_name = painter_spec[1]
+
+        # Clean this call to Cell.painter_exists() up!
+        if len(painter_spec) >= 3 and Cell.painter_exists((painter_spec[2], None)):
+            self._tooltip_painter_name = painter_spec[2]
+
+
+    # Get a list of columns we need to fetch in order to render this cell
+    def needed_columns(self):
+        columns = set(get_painter_columns(self.painter()))
+
+        if self._link_view_name:
+            # Make sure that the information about the available views is present. If
+            # called via the reporting, then this might not be the case
+            # TODO: Move this to some better place.
+            views = permitted_views()
+
+            if self._has_link():
+                link_view = self._link_view()
+                # TODO: Clean this up here
+                for filt in [ visuals.get_filter(fn) for fn in visuals.get_single_info_keys(link_view) ]:
+                    columns.update(filt.link_columns)
+
+        if self.has_tooltip():
+            columns.update(get_painter_columns(self.tooltip_painter()))
+
+        return columns
+
+
+    def is_joined(self):
+        return False
+
+
+    def _has_link(self):
+        return self._link_view_name != None
+
+
+    def _link_view(self):
+        return get_view_by_name(self._link_view_name)
+
+
+    def painter(self):
+        return multisite_painters[self._painter_name]
+
+
+    def painter_name(self):
+        return self._painter_name
+
+
+    def painter_options(self):
+        return self.painter().get("options", [])
+
+
+    def title(self, use_short=True):
+        painter = self.painter()
+        if use_short:
+            return painter.get("short", painter["title"])
+        else:
+            return painter["title"]
+
+
+    # Can either be:
+    # True       : Is printable in PDF
+    # False      : Is not printable at all
+    # "<string>" : ID of a painter_printer (Reporting module)
+    def printable(self):
+        return self.painter().get("printable", True)
+
+
+    def has_tooltip(self):
+        return self._tooltip_painter_name != None
+
+
+    def tooltip_painter_name(self):
+        return self._tooltip_painter_name
+
+
+    def tooltip_painter(self):
+        return multisite_painters[self._tooltip_painter_name]
+
+
+    def paint_as_header(self, is_last_column_header=False):
+        # Optional: Sort link in title cell
+        # Use explicit defined sorter or implicit the sorter with the painter name
+        # Important for links:
+        # - Add the display options (Keeping the same display options as current)
+        # - Link to _self (Always link to the current frame)
+        classes = []
+        onclick = ''
+        title = ''
+        if DisplayOptions.enabled(DisplayOptions.L) \
+           and self._view.get('user_sortable', False) \
+           and get_sorter_name_of_painter(self.painter_name()) is not None:
+            params = [
+                ('sort', self._sort_url()),
+            ]
+            if DisplayOptions.title_options:
+                params.append(('display_options', DisplayOptions.title_options))
+
+            classes += [ "sort", get_primary_sorter_order(self._view, self.painter_name()) ]
+            onclick = ' onclick="location.href=\'%s\'"' % html.makeuri(params, 'sort')
+            title   = ' title="%s"' % (_('Sort by %s') % self.title())
+
+        if is_last_column_header:
+            classes.append("last_col")
+
+        thclass = classes and (" class=\"%s\"" % " ".join(classes)) or ""
+
+        html.write("<th%s%s%s>%s</th>" % (thclass, onclick, title, self.title()))
+        html.guitest_record_output("view", ("header", title))
+
+
+    def _sort_url(self):
+        """
+        The following sorters need to be handled in this order:
+
+        1. group by sorter (needed in grouped views)
+        2. user defined sorters (url sorter)
+        3. configured view sorters
+        """
+        sorter = []
+
+        group_sort, user_sort, view_sort = get_separated_sorters(self._view)
+
+        sorter = group_sort + user_sort + view_sort
+
+        # Now apply the sorter of the current column:
+        # - Negate/Disable when at first position
+        # - Move to the first position when already in sorters
+        # - Add in the front of the user sorters when not set
+        sorter_name = get_sorter_name_of_painter(self.painter_name())
+        if self.is_joined():
+            this_asc_sorter  = (sorter_name, False, self.join_service())
+            this_desc_sorter = (sorter_name, True, self.join_service())
+        else:
+            this_asc_sorter  = (sorter_name, False)
+            this_desc_sorter = (sorter_name, True)
+
+        if user_sort and this_asc_sorter == user_sort[0]:
+            # Second click: Change from asc to desc order
+            sorter[sorter.index(this_asc_sorter)] = this_desc_sorter
+        elif user_sort and this_desc_sorter == user_sort[0]:
+            # Third click: Remove this sorter
+            sorter.remove(this_desc_sorter)
+        else:
+            # First click: add this sorter as primary user sorter
+            # Maybe the sorter is already in the user sorters or view sorters, remove it
+            for s in [ user_sort, view_sort ]:
+                if this_asc_sorter in s:
+                    s.remove(this_asc_sorter)
+                if this_desc_sorter in s:
+                    s.remove(this_desc_sorter)
+            # Now add the sorter as primary user sorter
+            sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
+
+        p = []
+        for s in sorter:
+            if len(s) == 2:
+                p.append((s[1] and '-' or '') + s[0])
+            else:
+                p.append((s[1] and '-' or '') + s[0] + '~' + s[2])
+
+        return ','.join(p)
+
+
+
+    def render(self, row):
+        row = join_row(row, self)
+        tdclass, content = self.render_content(row)
+        if tdclass == "" and content == "":
+            return "", ""
+
+        # Removed this here. Belive this is the wrong place for such an action
+        #content = html.utf8_to_entities(content)
+
+        # Add the optional link to another view
+        if content and self._has_link():
+            content = link_to_view(content, row, self._link_view_name)
+
+        # Add the optional mouseover tooltip
+        if content and self.has_tooltip():
+            tooltip_cell = Cell(self._view, (self.tooltip_painter_name(), None))
+            tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
+            tooltip_text = html.strip_tags(tooltip_content)
+            #tooltiptext = html.utf8_to_entities(html.strip_tags(txt))
+            content = '<span title="%s">%s</span>' % (tooltip_text, content)
+
+        return tdclass, content
+
+
+    # Same as self.render() for HTML output: Gets a painter and a data
+    # row and creates the text for being painted.
+    def render_for_pdf(self, row, time_range):
+        try:
+            row = join_row(row, self)
+            css_classes, txt = self.render_content(row)
+            txt = txt.strip()
+
+            # Handle <img...>. Our PDF writer cannot draw arbitrary
+            # images, but all that we need for showing simple icons.
+            # Current limitation: *one* image
+            if txt.lower().startswith("<img"):
+                img_filename = re.sub('.*src=["\']([^\'"]*)["\'].*', "\\1", txt)
+                img_path = find_htdocs_image_path(img_filename)
+                if img_path:
+                    txt = ("icon", img_path)
+                else:
+                    txt = img_filename
+
+            txt = html.strip_tags(txt)
+
+            return css_classes, txt
+        except Exception:
+            raise MKGeneralException('Failed to paint "%s": %s' %
+                                    (self.painter_name(), traceback.format_exc()))
+
+
+
+    def render_content(self, row):
+        if not row:
+            return "", "" # nothing to paint
+
+        painter = self.painter()
+        if "args" in painter:
+            return painter["paint"](row, *painter["args"])
+        else:
+            return painter["paint"](row)
+
+
+    def paint(self, row, tdattrs="", is_last_cell=False):
+        tdclass, content = self.render(row)
+        has_content = content != ""
+
+        if is_last_cell:
+            if tdclass == None:
+                tdclass = "last_col"
+            else:
+                tdclass += " last_col"
+
+        if tdclass:
+            html.write("<td %s class=\"%s\">%s</td>\n" % (tdattrs, tdclass, content))
+        else:
+            html.write("<td %s>%s</td>" % (tdattrs, content))
+        html.guitest_record_output("view", ("cell", content))
+
+        return has_content
+
+
+
+class JoinCell(Cell):
+    def __init__(self, view, painter_spec):
+        self._join_service_descr = None
+        self._custom_title       = None
+        super(JoinCell, self).__init__(view, painter_spec)
+
+
+    def _from_view(self, painter_spec):
+        super(JoinCell, self)._from_view(painter_spec)
+
+        if len(painter_spec) >= 4:
+            self._join_service_descr = painter_spec[3]
+
+        if len(painter_spec) == 5:
+            self._custom_title = painter_spec[4]
+
+
+    def is_joined(self):
+        return True
+
+
+    def join_service(self):
+        return self._join_service_descr
+
+
+    def livestatus_filter(self, join_column_name):
+        return "Filter: %s = %s" % \
+            (lqencode(join_column_name), lqencode(self._join_service_descr))
+
+
+    def title(self, use_short=True):
+        if self._custom_title:
+            return self._custom_title
+        else:
+            return self._join_service_descr
+
+
+
+class EmptyCell(Cell):
+    def __init__(self, view):
+        super(EmptyCell, self).__init__(view)
+
+
+    def render(self, row):
+        return "", ""
+
+
+    def paint(self, row):
+        return False
+
 
 
 # Display view with real data. This is *the* function everying
@@ -1052,13 +1376,14 @@ def show_view(view, show_heading = False, show_buttons = True,
     else:
         sorters = []
 
-    # Prepare grouping information
-    group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"]
-                        if e[0] in multisite_painters ]
-
-    # Prepare columns to paint
-    painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["painters"]
-                    if e[0] in multisite_painters ]
+    # Prepare cells of the view
+    # Group cells:   Are displayed as titles of grouped rows
+    # Regular cells: Are displaying information about the rows of the type the view is about
+    # Join cells:    Are displaying information of a joined source (e.g.service data on host views)
+    group_cells   = get_group_cells(view)
+    cells         = get_cells(view)
+    regular_cells = get_regular_cells(cells)
+    join_cells    = get_join_cells(cells)
 
     # Now compute the list of all columns we need to query via Livestatus.
     # Those are: (1) columns used by the sorters in use, (2) columns use by
@@ -1066,60 +1391,15 @@ def show_view(view, show_heading = False, show_buttons = True,
     # satisfy external references (filters) of views we link to. The last bit
     # is the trickiest. Also compute this list of view options use by the
     # painters
+    columns      = get_needed_regular_columns(group_cells + cells, sorters, datasource)
+    join_columns = get_needed_join_columns(join_cells, sorters, datasource)
 
-    all_painters = group_painters + painters
-    join_painters = [ p for p in all_painters if len(p) >= 4 ]
-    master_painters = [ p for p in all_painters if len(p) < 4 ]
-    columns      = get_needed_columns(view, master_painters)
-    join_columns = get_needed_columns(view, join_painters)
-
-    # Inventory data needed in any of the tool tips
-    for painter in master_painters:
-        if len(painter) > 2:
-            tooltip_painter_name = painter[2]
-            if tooltip_painter_name and tooltip_painter_name.startswith("inv_"):
-                    need_inventory_data = True
-
-    # Columns needed for sorters
-    for s in sorters:
-        if len(s) == 2:
-            columns += s[0]["columns"]
-        else:
-            join_columns += s[0]["columns"]
-        if s[0].get("load_inv"):
-            need_inventory_data = True
-
-    # Add key columns, needed for executing commands
-    columns += datasource["keys"]
-
-    # Add idkey columns, needed for identifying the row
-    columns += datasource["idkeys"]
-
-    # BI availability needs aggr_tree
-    if html.var("mode") == "availability" and "aggr" in datasource["infos"]:
-        columns = [ "aggr_tree", "aggr_name", "aggr_group" ]
-
-    # Make column list unique and remove (implicit) site column
-    colset = set(columns)
-    if "site" in colset:
-        colset.remove("site")
-    columns = list(colset)
+    # Inventory data needed to render the view?
+    need_inventory_data = is_inventory_data_needed(group_cells, cells, sorters)
 
     # Get list of painter options we need to display (such as PNP time range
     # or the format being used for timestamp display)
-    painter_options = []
-    for entry in all_painters:
-        p = entry[0]
-        painter_options += p.get("options", [])
-        if p.get("load_inv"):
-            need_inventory_data = True
-
-    # Also layouts can register painter options
-    if "layout" in view:
-        painter_options += multisite_layouts[view["layout"]].get("options", [])
-
-    painter_options = list(set(painter_options))
-    painter_options.sort()
+    painter_options = get_painter_options_of_view(group_cells, cells, view.get("layout"))
 
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.get("mustsearch")) or html.var("filled_in") in ["filter", 'actions', 'confirm']):
@@ -1141,8 +1421,8 @@ def show_view(view, show_heading = False, show_buttons = True,
             rows = query_data(datasource, columns, add_columns, query, only_sites, limit)
 
         # Now add join information, if there are join columns
-        if len(join_painters) > 0:
-            do_table_join(datasource, rows, filterheaders, join_painters, join_columns, only_sites)
+        if join_cells:
+            do_table_join(datasource, rows, filterheaders, join_cells, join_columns, only_sites)
 
         # Add inventory data if one of the painters or filters needs it
         if need_inventory_data:
@@ -1184,8 +1464,9 @@ def show_view(view, show_heading = False, show_buttons = True,
             layout = None
     else:
         if "layout" in view and "csv_export" in multisite_layouts[view["layout"]]:
-            multisite_layouts[view["layout"]]["csv_export"](rows, view, group_painters, painters)
+            multisite_layouts[view["layout"]]["csv_export"](rows, view, group_cells, cells)
             return
+
         else:
             # Generic layout of export
             layout = multisite_layouts.get(html.output_format)
@@ -1202,10 +1483,116 @@ def show_view(view, show_heading = False, show_buttons = True,
     if not render_function:
         render_function = render_view
 
-    render_function(view, rows, datasource, group_painters, painters,
+    render_function(view, rows, datasource, group_cells, cells,
                 painter_options, show_heading, show_buttons,
                 show_checkboxes, layout, num_columns, show_filters, show_footer,
                 browser_reload)
+
+
+def get_group_cells(view):
+    return [ Cell(view, e) for e in view["group_painters"]
+             if Cell.painter_exists(e) ]
+
+
+def get_cells(view):
+    cells = []
+    for e in view["painters"]:
+        if not Cell.painter_exists(e):
+            continue
+
+        if Cell.is_join_cell(e):
+            cells.append(JoinCell(view, e))
+
+        else:
+            cells.append(Cell(view, e))
+
+    return cells
+
+
+def get_join_cells(cell_list):
+    return filter(lambda x: type(x) == JoinCell, cell_list)
+
+
+def get_regular_cells(cell_list):
+    return filter(lambda x: type(x) == Cell, cell_list)
+
+
+def get_needed_regular_columns(cells, sorters, datasource):
+    # BI availability needs aggr_tree
+    # TODO: wtf? a full reset of the list? Move this far away to a special place!
+    if html.var("mode") == "availability" and "aggr" in datasource["infos"]:
+        return [ "aggr_tree", "aggr_name", "aggr_group" ], []
+
+    columns = columns_of_cells(cells)
+
+    # Columns needed for sorters
+    # TODO: Move sorter parsing and logic to something like Cells()
+    for s in sorters:
+        if len(s) == 2:
+            columns.update(s[0]["columns"])
+
+    # Add key columns, needed for executing commands
+    columns.update(datasource["keys"])
+
+    # Add idkey columns, needed for identifying the row
+    columns.update(datasource["idkeys"])
+
+    # Remove (implicit) site column
+    try:
+        columns.remove("site")
+    except KeyError:
+        pass
+
+    return list(columns)
+
+
+def get_needed_join_columns(join_cells, sorters, datasource):
+    join_columns = columns_of_cells(join_cells)
+
+    # Columns needed for sorters
+    # TODO: Move sorter parsing and logic to something like Cells()
+    for s in sorters:
+        if len(s) != 2:
+            join_columns.update(s[0]["columns"])
+
+    return list(join_columns)
+
+
+def is_inventory_data_needed(group_cells, cells, sorters):
+    for cell in cells:
+        if cell.has_tooltip():
+            if cell.tooltip_painter_name().startswith("inv_"):
+                return True
+
+    for s in sorters:
+        if s[0].get("load_inv"):
+            return True
+
+    for cell in group_cells + cells:
+        if cell.painter().get("load_inv"):
+            return True
+
+    return False
+
+
+def columns_of_cells(cells):
+    columns = set([])
+    for cell in cells:
+        columns.update(cell.needed_columns())
+    return columns
+
+
+def get_painter_options_of_view(group_cells, cells, layout_name):
+    options = set([])
+
+    for cell in group_cells + cells:
+        options.update(cell.painter_options())
+
+    # Also layouts can register painter options
+    if layout_name != None:
+        options.update(multisite_layouts[layout_name].get("options", []))
+
+    return sorted(options)
 
 
 # Output HTML code of a view. If you add or remove paramters here,
@@ -1432,18 +1819,18 @@ def view_options(viewname):
     return v
 
 
-def do_table_join(master_ds, master_rows, master_filters, join_painters, join_columns, only_sites):
+def do_table_join(master_ds, master_rows, master_filters, join_cells, join_columns, only_sites):
     join_table, join_master_column = master_ds["join"]
     slave_ds = multisite_datasources[join_table]
     join_slave_column = slave_ds["joinkey"]
 
     # Create additional filters
-    join_filter = ""
-    for entry in join_painters:
-        paintfunc, linkview, title, join_key = entry[:4]
-        join_filter += "Filter: %s = %s\n" % (join_slave_column, join_key )
-    join_filter += "Or: %d\n" % len(join_painters)
-    query = master_filters + join_filter
+    join_filters = []
+    for cell in join_cells:
+        join_filters.append(cell.livestatus_filter(join_slave_column))
+
+    join_filters.append("Or: %d" % len(join_filters))
+    query = "%s%s\n" % (master_filters, "\n".join(join_filters))
     rows = query_data(slave_ds, [join_master_column, join_slave_column] + join_columns, [], query, only_sites, None)
     per_master_entry = {}
     current_key = None
@@ -1880,7 +2267,17 @@ def join_painters_of_datasource(ds_name):
     if "join" not in ds:
         return {} # no joining with this datasource
 
-    return allowed_for_datasource(multisite_painters, ds['join'][0])
+    # Get the painters allowed for the join "source" and "target"
+    painters = painters_of_datasource(ds_name)
+    join_painters_unfiltered = allowed_for_datasource(multisite_painters, ds['join'][0])
+
+    # Filter out painters associated with the "join source" datasource
+    join_painters = {}
+    for key, val in join_painters_unfiltered.items():
+        if key not in painters:
+            join_painters[key] = val
+
+    return join_painters
 
 
 # Filters a list of sorters or painters and decides which of
@@ -1899,11 +2296,26 @@ def allowed_for_datasource(collection, datasourcename):
     return allowed
 
 
-def choices_of_collection(collection, join_target=None):
-    l = [ (name, p["title"]) for name, p in collection.items()
-          if not join_target or (name, p["title"]) not in join_target ]
+def painter_choices(painters, add_params=False):
+    choices = []
 
-    return sorted(l, key=lambda x: x[1])
+    for name, painter in painters.items():
+        # Add the optional valuespec for painter parameters
+        if add_params and "params" in painter:
+            if type(lambda: None) == type(painter["params"]):
+                vs_params = painter["params"]()
+            else:
+                vs_params = painter["params"]
+
+            choices.append((name, painter["title"], vs_params))
+        else:
+            choices.append((name, painter["title"]))
+
+    return sorted(choices, key=lambda x: x[1])
+
+
+def painter_choices_with_params(painters):
+    return painter_choices(painters, add_params=True)
 
 #.
 #   .--Commands------------------------------------------------------------.
@@ -2180,60 +2592,11 @@ def execute_hooks(hook):
             else:
                 pass
 
-def paint(p, row, tdattrs="", is_last_painter=False):
-    tdclass, content = prepare_paint(p, row)
-
-    if is_last_painter:
-        if tdclass == None:
-            tdclass = "last_col"
-        else:
-            tdclass += " last_col"
-
-    if tdclass:
-        html.write("<td %s class=\"%s\">%s</td>\n" % (tdattrs, tdclass, content))
-    else:
-        html.write("<td %s>%s</td>" % (tdattrs, content))
-    html.guitest_record_output("view", ("cell", content))
-    return content != ""
-
-def paint_painter(painter, row):
-    if not row:
-        return "", ""  # no join information available for that column
-
-    if "args" in painter:
-        return painter["paint"](row, *painter["args"])
-    else:
-        return painter["paint"](row)
-
-def join_row(row, p):
-    join_key = len(p) >= 4 and p[3] or None
-    if join_key != None:
-        return row.get("JOIN", {}).get(join_key)
+def join_row(row, cell):
+    if type(cell) == JoinCell:
+        return row.get("JOIN", {}).get(cell.join_service())
     else:
         return row
-
-def prepare_paint(p, row):
-    painter = p[0]
-    linkview = p[1]
-    tooltip = len(p) > 2 and p[2] or None
-
-    row = join_row(row, p)
-    tdclass, content = paint_painter(painter, row)
-    if tdclass == "" and content == "":
-        return tdclass, content
-
-    content = html.utf8_to_entities(content)
-
-    # Create contextlink to other view
-    if content and linkview:
-        content = link_to_view(content, row, linkview)
-
-    # Tooltip
-    if content != '' and tooltip:
-        cla, txt = multisite_painters[tooltip]["paint"](row)
-        tooltiptext = html.utf8_to_entities(html.strip_tags(txt))
-        content = '<span title="%s">%s</span>' % (tooltiptext, content)
-    return tdclass, content
 
 def url_to_view(row, view_name):
     if DisplayOptions.disabled(DisplayOptions.I):
@@ -2326,14 +2689,18 @@ def parse_url_sorters(sort):
             sorters.append((sorter.replace('-', ''), sorter.startswith('-'), join_index))
     return sorters
 
-def get_sorter_name_of_painter(painter):
+
+def get_sorter_name_of_painter(painter_name):
+    painter = multisite_painters[painter_name]
     if 'sorter' in painter:
         return painter['sorter']
-    elif painter['name'] in multisite_sorters:
-        return painter['name']
 
-def get_primary_sorter_order(view, painter):
-    sorter_name = get_sorter_name_of_painter(painter)
+    elif painter_name in multisite_sorters:
+        return painter_name
+
+
+def get_primary_sorter_order(view, painter_name):
+    sorter_name = get_sorter_name_of_painter(painter_name)
     this_asc_sorter  = (sorter_name, False)
     this_desc_sorter = (sorter_name, True)
     group_sort, user_sort, view_sort = get_separated_sorters(view)
@@ -2345,10 +2712,10 @@ def get_primary_sorter_order(view, painter):
         return ''
 
 def get_separated_sorters(view):
-    group_sort = [ (get_sorter_name_of_painter(multisite_painters[p[0]]), False)
+    group_sort = [ (get_sorter_name_of_painter(p[0]), False)
                    for p in view['group_painters']
                    if p[0] in multisite_painters
-                      and get_sorter_name_of_painter(multisite_painters[p[0]]) is not None ]
+                      and get_sorter_name_of_painter(p[0]) is not None ]
     view_sort  = [ s for s in view['sorters'] if not s[0] in group_sort ]
 
     # Get current url individual sorters. Parse the "sort" url parameter,
@@ -2362,120 +2729,27 @@ def get_separated_sorters(view):
 
     return group_sort, user_sort, view_sort
 
-def sort_url(view, painter, join_index):
-    """
-    The following sorters need to be handled in this order:
-
-    1. group by sorter (needed in grouped views)
-    2. user defined sorters (url sorter)
-    3. configured view sorters
-    """
-    sorter = []
-
-    group_sort, user_sort, view_sort = get_separated_sorters(view)
-
-    sorter = group_sort + user_sort + view_sort
-
-    # Now apply the sorter of the current column:
-    # - Negate/Disable when at first position
-    # - Move to the first position when already in sorters
-    # - Add in the front of the user sorters when not set
-    sorter_name = get_sorter_name_of_painter(painter)
-    if join_index:
-        this_asc_sorter  = (sorter_name, False, join_index)
-        this_desc_sorter = (sorter_name, True, join_index)
-    else:
-        this_asc_sorter  = (sorter_name, False)
-        this_desc_sorter = (sorter_name, True)
-
-    if user_sort and this_asc_sorter == user_sort[0]:
-        # Second click: Change from asc to desc order
-        sorter[sorter.index(this_asc_sorter)] = this_desc_sorter
-    elif user_sort and this_desc_sorter == user_sort[0]:
-        # Third click: Remove this sorter
-        sorter.remove(this_desc_sorter)
-    else:
-        # First click: add this sorter as primary user sorter
-        # Maybe the sorter is already in the user sorters or view sorters, remove it
-        for s in [ user_sort, view_sort ]:
-            if this_asc_sorter in s:
-                s.remove(this_asc_sorter)
-            if this_desc_sorter in s:
-                s.remove(this_desc_sorter)
-        # Now add the sorter as primary user sorter
-        sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
-
-    p = []
-    for s in sorter:
-        if len(s) == 2:
-            p.append((s[1] and '-' or '') + s[0])
-        else:
-            p.append((s[1] and '-' or '') + s[0] + '~' + s[2])
-
-    return ','.join(p)
-
-def paint_header(view, p, is_last_column_header=False):
-    # The variable p is a tuple with the following components:
-    # p[0] --> painter object, from multisite_painters[]
-    # p[1] --> view name to link to or None (not needed here)
-    # p[2] --> tooltip (title) to display (not needed here)
-    # p[3] --> optional: join key (e.g. service description)
-    # p[4] --> optional: column title to use instead default
-    painter = p[0]
-    join_index = None
-    t = painter.get("short", painter["title"])
-    if len(p) >= 4: # join column
-        join_index = p[3]
-        t = p[3] # use join index (service name) as title
-    if len(p) >= 5 and p[4]:
-        t = p[4] # use custom defined title
-
-    # Optional: Sort link in title cell
-    # Use explicit defined sorter or implicit the sorter with the painter name
-    # Important for links:
-    # - Add the display options (Keeping the same display options as current)
-    # - Link to _self (Always link to the current frame)
-    classes = []
-    onclick = ''
-    title = ''
-    if DisplayOptions.enabled(DisplayOptions.L) \
-       and view.get('user_sortable', False) \
-       and get_sorter_name_of_painter(painter) is not None:
-        params = [
-            ('sort', sort_url(view, painter, join_index)),
-        ]
-        if DisplayOptions.title_options:
-            params.append(('display_options', DisplayOptions.title_options))
-
-        classes += [ "sort", get_primary_sorter_order(view, painter) ]
-        onclick = ' onclick="location.href=\'%s\'"' % html.makeuri(params, 'sort')
-        title   = ' title="%s"' % (_('Sort by %s') % t)
-
-    if is_last_column_header:
-        classes.append("last_col")
-
-    thclass = classes and (" class=\"%s\"" % " ".join(classes)) or ""
-
-    html.write("<th%s%s%s>%s</th>" % (thclass, onclick, title, t))
-    html.guitest_record_output("view", ("header", title))
-
-
 # The Group-value of a row is used for deciding wether
 # two rows are in the same group or not
-def group_value(row, group_painters):
+def group_value(row, group_cells):
     group = []
-    for p in group_painters:
-        groupvalfunc = p[0].get("groupby")
+    for cell in group_cells:
+        painter = cell.painter()
+
+        groupvalfunc = painter.get("groupby")
         if groupvalfunc:
-            if "args" in p[0]:
-                group.append(groupvalfunc(row, *p[0]["args"]))
+            if "args" in painter:
+                group.append(groupvalfunc(row, *painter["args"]))
             else:
                 group.append(groupvalfunc(row))
+
         else:
-            for c in get_painter_columns(p[0]):
+            for c in get_painter_columns(painter):
                 if c in row:
                     group.append(row[c])
+
     return create_dict_key(group)
+
 
 def create_dict_key(value):
     if type(value) in (list, tuple):

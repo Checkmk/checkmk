@@ -951,6 +951,11 @@ def paint_time_graph(row):
         return paint_time_graph_pnp(row)
 
 
+def time_graph_params():
+    # TODO: for PNP graphs return None
+    return metrics.vs_graph_render_options()
+
+
 def paint_time_graph_cmk(row, show_timeranges=False):
     graph_specification = (
         "template", {
@@ -1032,6 +1037,7 @@ multisite_painters["svc_pnpgraph" ] = {
     "options" : [ "pnp_timerange", "graph_render_options", ],
     "paint"   : paint_time_graph,
     "printable" : "time_graph",
+    "params"  : time_graph_params,
 }
 
 
@@ -1381,12 +1387,13 @@ multisite_painters["host_notifications_enabled"] = {
 }
 
 multisite_painters["host_pnpgraph" ] = {
-    "title"   : _("PNP host graph"),
-    "short"   : _("PNP graph"),
+    "title"   : _("Host graph"),
+    "short"   : _("Graph"),
     "columns" : [ "host_name", "host_perf_data", "host_metrics", "host_check_command" ],
     "options" : [ 'pnp_timerange' ],
     "paint"   : paint_time_graph,
     "printable" : "time_graph",
+    "params"  : time_graph_params,
 }
 
 def paint_host_black(row):

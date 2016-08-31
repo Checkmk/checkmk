@@ -432,7 +432,7 @@ declare_filter(101, FilterText("hostgroupnameregex",    _("Hostgroup (Regex)"), 
 declare_filter(102, FilterHostgroupVisibility("hostgroupvisibility", _("Empty Hostgroup Visibilitiy")),
                                _("You can enable this checkbox to show empty hostgroups"))
 
-declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup (Regex)"),   "servicegroup", "servicegroup_name",   "servicegroup_regex", "~~"),
+declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup (Regex)"),   "servicegroup", "servicegroup_name",   "servicegroup_regex", "~~", negateable=True),
                           _("Search field allowing regular expression and partial matches"))
 
 declare_filter(101, FilterText("servicegroupname", _("Servicegroup (enforced)"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "="),

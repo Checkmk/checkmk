@@ -529,12 +529,14 @@ sql_instance()
 
 sql_sessions()
 {
-    echo 'prompt <<<oracle_sessions>>>'
+    echo 'prompt <<<oracle_sessions:sep(124)>>>'
     echo "select upper(i.instance_name)
-                  || ' ' || CURRENT_UTILIZATION
-           from v\$resource_limit, v\$instance i
-           where RESOURCE_NAME = 'sessions';
-         "
+                 || '|' || CURRENT_UTILIZATION
+                 || '|' || ltrim(LIMIT_VALUE)
+                 || '|' || MAX_UTILIZATION
+          from v\$resource_limit, v\$instance i
+          where RESOURCE_NAME = 'sessions';"
+
 }
 
 sql_processes()

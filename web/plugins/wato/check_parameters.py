@@ -8128,18 +8128,37 @@ register_check_parameters(
     subgroup_applications,
     "oracle_sessions",
     _("Oracle Sessions"),
-    Tuple(
-         title = _("Number of active sessions"),
-         help = _("This check monitors the current number of active sessions on Oracle"),
-         elements = [
-             Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100),
-             Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
-          ],
-     ),
+    Transform(
+        Dictionary(
+            elements = [
+                ("sessions_abs",
+                    Tuple(
+                         title = _("Number of active sessions"),
+                         help =  _("This check monitors the current number of active sessions on Oracle"),
+                         elements = [
+                             Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100),
+                             Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
+                          ],
+                    ),
+                ),
+                ("sessions_perc",
+                    Tuple(
+                         title = _("Relative levels of active sessions."),
+                         help =  _("Set upper levels of active sessions relative to max. number of sessions."),
+                         elements = [
+                             Percentage(title = _("Warning at")),
+                             Percentage(title = _("Critical at")),
+                          ],
+                    ),
+                ),
+            ]
+        ),
+        forth = lambda p: type(p) == tuple and { "sessions_abs" : p } or p,
+    ),
     TextAscii(
         title = _("Database name"),
         allow_empty = False),
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(

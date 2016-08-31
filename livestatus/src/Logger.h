@@ -31,7 +31,6 @@
 #endif
 #include <sstream>
 #include <string>
-#include <utility>
 
 class LogRecord;
 
@@ -60,8 +59,8 @@ FILE *get_logfile();
 
 class LogRecord {
 public:
-    LogRecord(LogLevel level, std::string message)
-        : _level(level), _message(std::move(message)) {}
+    LogRecord(LogLevel level, const std::string &message)
+        : _level(level), _message(message) {}
     virtual ~LogRecord() {}
 
     LogLevel getLevel() const { return _level; }

@@ -1521,7 +1521,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
 
     for checkname, item, params, description, aggrname in check_table:
         if is_snmp_check(checkname) and is_management_snmp:
-            address = management_address
+            address = management_addr
         else:
             address = ipaddress
 

@@ -1006,6 +1006,10 @@ class Cell(object):
         return False
 
 
+    def join_service(self):
+        return None
+
+
     def _has_link(self):
         return self._link_view_name != None
 
@@ -1105,6 +1109,7 @@ class Cell(object):
         # - Add in the front of the user sorters when not set
         sorter_name = get_sorter_name_of_painter(self.painter_name())
         if self.is_joined():
+            # TODO: Clean this up and then remove Cell.join_service()
             this_asc_sorter  = (sorter_name, False, self.join_service())
             this_desc_sorter = (sorter_name, True, self.join_service())
         else:
@@ -1114,9 +1119,11 @@ class Cell(object):
         if user_sort and this_asc_sorter == user_sort[0]:
             # Second click: Change from asc to desc order
             sorter[sorter.index(this_asc_sorter)] = this_desc_sorter
+
         elif user_sort and this_desc_sorter == user_sort[0]:
             # Third click: Remove this sorter
             sorter.remove(this_desc_sorter)
+
         else:
             # First click: add this sorter as primary user sorter
             # Maybe the sorter is already in the user sorters or view sorters, remove it

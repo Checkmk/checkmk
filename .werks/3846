@@ -1,0 +1,9 @@
+Title: Nagios: define_contactgroups = False is handled correctly again
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.8p10
+Date: 1472729184
+Class: fix
+
+

@@ -394,6 +394,7 @@
     * 3713 new filter: hosts with certain service problems
     * 3780 availability: now limit of fetched logfile rows is configurable.
     * 3864 tactical overview now shows the number of stale hosts and services
+    * 3847 Painter options can now be reset to defaults...
     * 3059 FIX: Fixed highlighting of availability timeline time slices
     * 3175 FIX: Fix timeranges of graphs that are embedded in a dashboard...
     * 3076 FIX: fixed broken views in check_mk raw edition

@@ -1,0 +1,12 @@
+Title: Painter options can now be reset to defaults
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i1
+Date: 1472757856
+Class: feature
+
+In previous versions the user was not able to reset the once set
+painter options to the defaults. It was only possible to change the
+settings again to match with the defaults. It was not clear which
+was the original setting.

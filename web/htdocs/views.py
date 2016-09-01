@@ -28,6 +28,7 @@ import config, defaults, time, os, re, pprint
 import weblib, traceback, forms, valuespec, inventory, visuals, metrics
 import sites
 import bi
+import inspect
 from lib import *
 
 # Datastructures and functions needed before plugins can be loaded
@@ -1030,6 +1031,20 @@ class Cell(object):
         return self.painter().get("options", [])
 
 
+    # The parameters configured in the view for this painter. In case the
+    # painter has params, it defaults to the valuespec default value and
+    # in case the painter has no params, it returns None.
+    def painter_parameters(self):
+        vs_painter_params = get_painter_params_valuespec(self.painter())
+        if not vs_painter_params:
+            return
+
+        if vs_painter_params and self._painter_params == None:
+            return vs_painter_params.default_value()
+        else:
+            return self._painter_params
+
+
     def title(self, use_short=True):
         painter = self.painter()
         if use_short:
@@ -1212,11 +1227,25 @@ class Cell(object):
         if not row:
             return "", "" # nothing to paint
 
+
         painter = self.painter()
+        paint_func = painter["paint"]
+
+        # Painters can request to get the cell object handed over.
+        # Detect that and give the painter this argument.
+        arg_names = inspect.getargspec(paint_func)[0]
+        painter_args = []
+        for arg_name in arg_names:
+            if arg_name == "row":
+                painter_args.append(row)
+            elif arg_name == "cell":
+                painter_args.append(self)
+
+        # Add optional painter arguments from painter specification
         if "args" in painter:
-            return painter["paint"](row, *painter["args"])
-        else:
-            return painter["paint"](row)
+            painter_args += painter["args"]
+
+        return painter["paint"](*painter_args)
 
 
     def paint(self, row, tdattrs="", is_last_cell=False):
@@ -2313,17 +2342,24 @@ def allowed_for_datasource(collection, datasourcename):
     return allowed
 
 
+# Returns either the valuespec of the painter parameters or None
+def get_painter_params_valuespec(painter):
+    if "params" not in painter:
+        return
+
+    if type(lambda: None) == type(painter["params"]):
+        return painter["params"]()
+    else:
+        return painter["params"]
+
+
 def painter_choices(painters, add_params=False):
     choices = []
 
     for name, painter in painters.items():
         # Add the optional valuespec for painter parameters
         if add_params and "params" in painter:
-            if type(lambda: None) == type(painter["params"]):
-                vs_params = painter["params"]()
-            else:
-                vs_params = painter["params"]
-
+            vs_params = get_painter_params_valuespec(painter)
             choices.append((name, painter["title"], vs_params))
         else:
             choices.append((name, painter["title"]))
@@ -2777,16 +2813,22 @@ def create_dict_key(value):
         return value
 
 
-def get_painter_option(name):
+def get_painter_option(name, fallback_to_default=True):
     opt = multisite_painter_options[name]
+
+    if fallback_to_default:
+        default = get_painter_option_valuespec(opt).default_value()
+    else:
+        default = None
+
     if "forced_value" in opt:
         return opt["forced_value"]
 
     elif not config.may("general.painter_options"):
-        return get_painter_option_valuespec(opt).default_value()
+        return default
 
     else:
-        return opt.get("value", get_painter_option_valuespec(opt).default_value())
+        return opt.get("value", default)
 
 
 def get_painter_option_valuespec(opt):

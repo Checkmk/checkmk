@@ -944,9 +944,9 @@ multisite_painters["svc_group_memberlist"] = {
     "paint"   : paint_service_group_memberlist,
 }
 
-def paint_time_graph(row):
+def paint_time_graph(row, cell):
     if metrics.cmk_graphs_possible(row["site"]):
-        return paint_time_graph_cmk(row)
+        return paint_time_graph_cmk(row, cell)
     else:
         return paint_time_graph_pnp(row)
 
@@ -956,7 +956,7 @@ def time_graph_params():
     return metrics.vs_graph_render_options()
 
 
-def paint_time_graph_cmk(row, show_timeranges=False):
+def paint_time_graph_cmk(row, cell, show_timeranges=False):
     graph_specification = (
         "template", {
             "site"                : row["site"],
@@ -964,7 +964,14 @@ def paint_time_graph_cmk(row, show_timeranges=False):
             "service_description" : row.get("service_description", "_HOST_"),
     })
     graph_data_range = { "time_range" : get_graph_timerange_from_painter_options() }
-    graph_render_options = get_graph_render_options_from_painter_options()
+
+    # Load the graph render options from
+    # a) the painter parameters configured in the view
+    # b) the painter options set per user and view
+    graph_render_options = cell.painter_parameters().copy()
+    painter_options = get_graph_render_options_from_painter_options()
+    if painter_options != None:
+        graph_render_options.update(painter_options)
 
     if html.is_mobile():
         graph_render_options.update({
@@ -993,7 +1000,7 @@ def paint_time_graph_cmk(row, show_timeranges=False):
 
 
 def get_graph_render_options_from_painter_options():
-    return get_painter_option("graph_render_options")
+    return get_painter_option("graph_render_options", fallback_to_default=False)
 
 
 def get_graph_timerange_from_painter_options():

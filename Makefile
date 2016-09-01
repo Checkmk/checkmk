@@ -72,8 +72,8 @@ FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h))
 
 .PHONY: all analyze check check-binaries check-permissions check-spaces \
-        check-version clean cppcheck dist documentation format GTAGS headers \
-        healspaces help iwyu minify-js mk-livestatus mrproper \
+        check-version clean cppcheck dist documentation format git-clean \
+        GTAGS headers healspaces help iwyu minify-js mk-livestatus mrproper \
         optimize-images packages setup setversion tidy version
 
 all: dist packages
@@ -249,6 +249,11 @@ minify-js:
 	    echo "Missing slimit, not minifying javascript files! (run \"make setup\" to fix this)" ; \
 	fi
 
+# TODO(sp) The target below is not correct, we should not e.g. remove any stuff
+# which is needed to run configure, this should live in a separate target. In
+# fact, we should really clean up all this cleaning-chaos and finally follow the
+# GNU standards here (see "Standard Targets for Users",
+# https://www.gnu.org/prep/standards/html_node/Standard-Targets.html).
 clean:
 	rm -rf api clang-analyzer compile_commands.json dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       mk-livestatus-*.tar.gz \
@@ -258,7 +263,11 @@ clean:
 	find -name "*~" | xargs rm -f
 
 mrproper:
-	git clean -xfd -e .bugs 2>/dev/null || git clean -xfd
+	git clean -d --force -x \
+            --exclude='\.bugs/.last' \
+            --exclude='\.bugs/.my_ids' \
+            --exclude='\.werks/.last' \
+            --exclude='\.werks/.my_ids'
 
 setup:
 	sudo apt-get install figlet pngcrush slimit bear dietlibc-dev

@@ -724,7 +724,7 @@ def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkb
         return
 
     # Force relative timestamp always. This saves space.
-    multisite_painter_options["ts_format"]["value"] = "rel"
+    painter_options.set("ts_format", "rel")
 
     odd = "odd"
     html.write('<table class="mobile data">')
@@ -766,7 +766,7 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
         return
 
     # Force relative timestamp always. This saves space.
-    multisite_painter_options["ts_format"]["value"] = "rel"
+    painter_options.set("ts_format", "rel")
 
     odd = "odd"
     html.write('<ul class="mobilelist" data-role="listview">\n')
@@ -802,7 +802,7 @@ def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_chec
         html.show_error(_("This view can only be used in mobile mode."))
         return
 
-    multisite_painter_options["ts_format"]["value"] = "both"
+    painter_options.set("ts_format", "both")
 
     for row in rows:
         html.write('<table class=dataset>')

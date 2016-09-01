@@ -271,6 +271,7 @@ def save_views(us):
 #   | An upper-case char means enabled, lower-case means disabled.         |
 #   '----------------------------------------------------------------------'
 
+# TODO: Recode this to be a single instance of this class - not a static class.
 class DisplayOptions(object):
     H = "H" # The HTML header and body-tag (containing the tags <HTML> and <BODY>)
     T = "T" # The title line showing the header and the logged in user
@@ -372,6 +373,216 @@ def prepare_display_options():
     if 'M' not in DisplayOptions.options:
         html.set_link_target("main")
         html.del_var("display_options")
+
+
+#.
+#   .--PainterOptions------------------------------------------------------.
+#   |  ____       _       _             ___        _   _                   |
+#   | |  _ \ __ _(_)_ __ | |_ ___ _ __ / _ \ _ __ | |_(_) ___  _ __  ___   |
+#   | | |_) / _` | | '_ \| __/ _ \ '__| | | | '_ \| __| |/ _ \| '_ \/ __|  |
+#   | |  __/ (_| | | | | | ||  __/ |  | |_| | |_) | |_| | (_) | | | \__ \  |
+#   | |_|   \__,_|_|_| |_|\__\___|_|   \___/| .__/ \__|_|\___/|_| |_|___/  |
+#   |                                       |_|                            |
+#   +----------------------------------------------------------------------+
+#   | Painter options are settings that can be changed per user per view.  |
+#   | These options are controlled throught the painter options form which |
+#   | is accessible through the small monitor icon on the top left of the  |
+#   | views.								   |
+#   '----------------------------------------------------------------------'
+
+# TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
+# painters, but some which affect generic behaviour of the views, so DisplayOptions might
+# be better.
+class PainterOptions(object):
+    def __init__(self, view_name=None):
+        self._view_name         = view_name
+        # The names of the painter options used by the current view
+        self._used_option_names = None
+        # The effective options for this view
+        self._options           = {}
+
+
+    def load(self):
+        self._load_from_config()
+
+
+    # Load the options to be used for this view
+    def _load_used_options(self, view):
+        if self._used_option_names != None:
+            return # only load once per request
+
+        options = set([])
+
+        for cell in get_group_cells(view) + get_cells(view):
+            options.update(cell.painter_options())
+
+        # Also layouts can register painter options
+        layout_name = view.get("layout")
+        if layout_name != None:
+            options.update(multisite_layouts[layout_name].get("options", []))
+
+        # TODO: Improve sorting. Add a sort index?
+        self._used_option_names = sorted(options)
+
+
+    def _load_from_config(self):
+        if self._is_anonymous_view():
+            return # never has options
+
+        if not self.painter_options_permitted():
+            return
+
+        # Options are stored per view. Get all options for all views
+        vo = config.load_user_file("viewoptions", {})
+        self._options = vo.get(self._view_name, {})
+
+
+    def save_to_config(self):
+        vo = config.load_user_file("viewoptions", {}, lock=True)
+        vo[self._view_name] = self._options
+        config.save_user_file("viewoptions", vo, unlock=True)
+
+
+    def update_from_url(self, view):
+        self._load_used_options(view)
+
+        if not self.painter_option_form_enabled():
+            return
+
+        if html.has_var("_reset_painter_options"):
+            self._clear_painter_options()
+            return
+
+        elif html.has_var("_update_painter_options"):
+            self._set_from_submitted_form()
+
+
+    def _set_from_submitted_form(self):
+        # TODO: Remove all keys that are in multisite_painter_options
+        # but not in self._used_option_names
+
+        modified = False
+        for option_name in self._used_option_names:
+            # Get new value for the option from the value spec
+            vs = self.get_valuespec_of(option_name)
+            value = vs.from_html_vars("po_%s" % option_name)
+
+            if not self._is_set(option_name) or self.get(option_name) != value:
+                modified = True
+
+            self.set(option_name, value)
+
+        if modified:
+            self.save_to_config()
+
+
+    def _clear_painter_options(self):
+        # TODO: This never removes options that are not existant anymore
+        modified = False
+        for name in multisite_painter_options.keys():
+            try:
+                del self._options[name]
+                modified = True
+            except KeyError:
+                pass
+
+        if modified:
+            self.save_to_config()
+
+        # Also remove the options from current html vars. Otherwise the
+        # painter option form will display the just removed options as
+        # defaults of the painter option form.
+        for varname in html.all_varnames_with_prefix("po_"):
+            html.del_var(varname)
+
+
+    def get_valuespec_of(self, name):
+        opt = multisite_painter_options[name]
+        if type(lambda: None) == type(opt["valuespec"]):
+            return opt["valuespec"]()
+        else:
+            return opt["valuespec"]
+
+
+    def _is_set(self, name):
+        return name in self._options
+
+
+    # Sets a painter option value (only for this request). Is not persisted!
+    def set(self, name, value):
+        self._options[name] = value
+
+
+    # Returns either the set value, the provided default value or if none
+    # provided, it returns the default value of the valuespec.
+    def get(self, name, dflt=None):
+        if dflt == None:
+            try:
+                dflt = self.get_valuespec_of(name).default_value()
+            except KeyError:
+                # Some view options (that are not declared as display options)
+                # like "refresh" don't have a valuespec. So they need to default
+                # to None.
+                # TODO: Find all occurences and simply declare them as "invisible"
+                # painter options.
+                pass
+        return self._options.get(name, dflt)
+
+
+    # Not falling back to a default value, simply returning None in case
+    # the option is not set.
+    def get_without_default(self, name):
+        return self._options.get(name)
+
+
+    def get_all(self):
+        return self._options
+
+
+    def _is_anonymous_view(self):
+        return self._view_name == None
+
+
+    def painter_options_permitted(self):
+        return config.may("general.painter_options")
+
+
+    def painter_option_form_enabled(self):
+        return self._used_option_names and self.painter_options_permitted()
+
+
+    def show_form(self, view):
+        self._load_used_options(view)
+
+        if not DisplayOptions.enabled(DisplayOptions.D) or not self.painter_option_form_enabled():
+            return
+
+        html.write('<div class="view_form" id="painteroptions" style="display: none">')
+        html.begin_form("painteroptions")
+        forms.header(_("Display Options"))
+        for name in self._used_option_names:
+            vs = self.get_valuespec_of(name)
+            forms.section(vs.title())
+            # TODO: Possible improvement for vars which default is specified
+            # by the view: Don't just default to the valuespecs default. Better
+            # use the view default value here to get the user the current view
+            # settings reflected.
+            vs.render_input("po_%s" % name, self.get(name))
+        forms.end()
+
+        html.button("_update_painter_options", _("Submit"), "submit")
+        html.button("_reset_painter_options", _("Reset"), "submit")
+
+        html.hidden_fields()
+        html.end_form()
+        html.write('</div>')
+
+
+
+def prepare_painter_options(view_name=None):
+    global painter_options
+    painter_options = PainterOptions(view_name)
+    painter_options.load()
 
 
 
@@ -874,23 +1085,6 @@ def show_filter_form(is_open, filters):
     html.write("</div>")
 
 
-def show_painter_options(painter_options):
-    html.write('<div class="view_form" id="painteroptions" style="display: none">')
-    html.begin_form("painteroptions")
-    forms.header(_("Display Options"))
-    for name in painter_options:
-        vs = get_painter_option_valuespec(multisite_painter_options[name])
-        forms.section(vs.title())
-        vs.render_input('po_' + name, get_painter_option(name))
-    forms.end()
-
-    html.button("painter_options", _("Submit"), "submit")
-
-    html.hidden_fields()
-    html.end_form()
-    html.write('</div>')
-
-
 def page_view():
     bi.reset_cache_status() # needed for status icon
 
@@ -908,6 +1102,9 @@ def page_view():
     context = visuals.get_context_from_uri_vars(datasource['infos'])
     context.update(visuals.get_singlecontext_html_vars(view))
     html.set_page_context(context)
+
+    prepare_painter_options(view_name)
+    painter_options.update_from_url(view)
 
     show_view(view, True, True, True)
 
@@ -1328,16 +1525,9 @@ def show_view(view, show_heading = False, show_buttons = True,
 
     prepare_display_options()
 
-    # User can override the layout settings via HTML variables (buttons)
-    # which are safed persistently. This is known as "view options". Note: a few
-    # can be anonymous (e.g. when embedded into a report). In that case there
-    # are no display options.
-    if "name" in view:
-        vo = view_options(view["name"])
-    else:
-        vo = {}
-    num_columns     = vo.get("num_columns",     view.get("num_columns",    1))
-    browser_reload  = vo.get("refresh",         view.get("browser_reload", None))
+    # Load from hard painter options > view > hard coded default
+    num_columns     = painter_options.get("num_columns",     view.get("num_columns",    1))
+    browser_reload  = painter_options.get("refresh",         view.get("browser_reload", None))
 
     force_checkboxes = view.get("force_checkboxes", False)
     show_checkboxes = force_checkboxes or html.var('show_checkboxes', '0') == '1'
@@ -1443,10 +1633,6 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Inventory data needed to render the view?
     need_inventory_data = is_inventory_data_needed(group_cells, cells, sorters)
 
-    # Get list of painter options we need to display (such as PNP time range
-    # or the format being used for timestamp display)
-    painter_options = get_painter_options_of_view(group_cells, cells, view.get("layout"))
-
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.get("mustsearch")) or html.var("filled_in") in ["filter", 'actions', 'confirm']):
         # names for additional columns (through Stats: headers)
@@ -1530,7 +1716,7 @@ def show_view(view, show_heading = False, show_buttons = True,
         render_function = render_view
 
     render_function(view, rows, datasource, group_cells, cells,
-                painter_options, show_heading, show_buttons,
+                show_heading, show_buttons,
                 show_checkboxes, layout, num_columns, show_filters, show_footer,
                 browser_reload)
 
@@ -1628,23 +1814,10 @@ def columns_of_cells(cells):
     return columns
 
 
-def get_painter_options_of_view(group_cells, cells, layout_name):
-    options = set([])
-
-    for cell in group_cells + cells:
-        options.update(cell.painter_options())
-
-    # Also layouts can register painter options
-    if layout_name != None:
-        options.update(multisite_layouts[layout_name].get("options", []))
-
-    return sorted(options)
-
-
 # Output HTML code of a view. If you add or remove paramters here,
 # then please also do this in htdocs/mobile.py!
 def render_view(view, rows, datasource, group_painters, painters,
-                painter_options, show_heading, show_buttons,
+                show_heading, show_buttons,
                 show_checkboxes, layout, num_columns, show_filters, show_footer,
                 browser_reload):
 
@@ -1676,7 +1849,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     can_display_checkboxes = layout.get('checkboxes', False)
 
     if show_buttons:
-        show_context_links(view, show_filters, painter_options,
+        show_context_links(view, show_filters,
                        # Take into account: permissions, display_options
                        row_count > 0 and command_form,
                        # Take into account: layout capabilities
@@ -1733,8 +1906,7 @@ def render_view(view, rows, datasource, group_painters, painters,
         except:
             pass # currently no feed back on webservice
 
-    if DisplayOptions.enabled(DisplayOptions.O) and len(painter_options) > 0 and config.may("general.painter_options"):
-        show_painter_options(painter_options)
+    painter_options.show_form(view)
 
     # The refreshing content container
     if DisplayOptions.enabled(DisplayOptions.R):
@@ -1803,66 +1975,6 @@ def render_view(view, rows, datasource, group_painters, painters,
 
         if DisplayOptions.enabled(DisplayOptions.H):
             html.body_end()
-
-
-# We should rename this into "painter_options". Also the saved file.
-def view_options(viewname):
-    # Options are stored per view. Get all options for all views
-    vo = config.load_user_file("viewoptions", {})
-
-    # Now get options for the view in question
-    v = vo.get(viewname, {})
-    must_save = False
-
-    # Now override the loaded options with new option settings that are
-    # provided by the URL. Our problem: we do not know the URL variables
-    # that a valuespec expects. But we know the common prefix of all
-    # variables for each option.
-    if config.may("general.painter_options"):
-        for option_name, opt in multisite_painter_options.items():
-            have_old_value = option_name in v
-            if have_old_value:
-                old_value = v.get(option_name)
-
-            # Are there settings for this painter option present?
-            var_prefix = 'po_' + option_name
-            if html.has_var_prefix(var_prefix):
-
-                # Get new value for the option from the value spec
-                vs = get_painter_option_valuespec(opt)
-                value = vs.from_html_vars(var_prefix)
-
-                v[option_name] = value
-                # TODO: This is nasty. The multisite_painter_options should really not
-                # be modified during user requests! They should be handled as static
-                # configured data structures and the user specific things should be
-                # kept separated.
-                opt['value'] = value # make globally present for painters
-
-                if not have_old_value or v[option_name] != old_value:
-                    must_save = True
-
-            elif have_old_value:
-                opt['value'] = old_value # make globally present for painters
-            elif 'value' in opt:
-                del opt['value']
-
-    # If the user has no permission for changing painter options
-    # (or has *lost* his permission) then we need to remove all
-    # of the options. But we do not save.
-    else:
-        for on, opt in multisite_painter_options.items():
-            if on in v:
-                del v[on]
-                must_save = True
-            if 'value' in opt:
-                del opt['value']
-
-    if must_save:
-        vo[viewname] = v
-        config.save_user_file("viewoptions", vo)
-
-    return v
 
 
 def do_table_join(master_ds, master_rows, master_filters, join_cells, join_columns, only_sites):
@@ -1946,14 +2058,17 @@ def view_title(view):
     return visuals.visual_title('view', view)
 
 def view_optiondial(view, option, choices, help):
-    vo = view_options(view["name"])
     # Darn: The option "refresh" has the name "browser_reload" in the
     # view definition
     if option == "refresh":
-        von = "browser_reload"
+        name = "browser_reload"
     else:
-        von = option
-    value = vo.get(option, view.get(von, choices[0][0]))
+        name = option
+
+    # Take either the first option of the choices, the view value or the
+    # configured painter option.
+    value = painter_options.get(option, dflt=view.get(name, choices[0][0]))
+
     title = dict(choices).get(value, value)
     html.begin_context_buttons() # just to be sure
     # Remove unicode strings
@@ -1989,10 +2104,11 @@ def ajax_set_viewoption():
         except:
             pass
 
-    vo = config.load_user_file("viewoptions", {})
-    vo.setdefault(view_name, {})
-    vo[view_name][option] = value
-    config.save_user_file("viewoptions", vo)
+    po = PainterOptions(view_name)
+    po.load()
+    po.set(option, value)
+    po.save_to_config()
+
 
 # FIXME: Consolidate toggle rendering functions
 def togglebutton_off(id, icon, hidden = False):
@@ -2000,6 +2116,7 @@ def togglebutton_off(id, icon, hidden = False):
     hide = hidden and ' style="display:none"' or ''
     html.write('<div id="%s_off" class="togglebutton off %s"%s>'
                '<img src="images/icon_%s.png"></div>' % (id, icon, hide, icon))
+
 
 # FIXME: Consolidate toggle rendering functions
 def togglebutton(id, isopen, icon, help, hidden = False):
@@ -2013,8 +2130,9 @@ def togglebutton(id, isopen, icon, help, hidden = False):
                'onclick="view_toggle_form(this, \'%s\');"%s>'
                '<img src="images/icon_%s.png"></div>' % (id, icon, cssclass, help, id, hide, icon))
 
+
 def show_context_links(thisview, show_filters,
-                       painter_options, enable_commands, enable_checkboxes, show_checkboxes,
+                       enable_commands, enable_checkboxes, show_checkboxes,
                        show_availability):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
@@ -2035,7 +2153,7 @@ def show_context_links(thisview, show_filters,
             togglebutton_off("filters", "filters")
 
     if DisplayOptions.enabled(DisplayOptions.D):
-        if len(painter_options) > 0 and config.may("general.painter_options"):
+        if painter_options.painter_option_form_enabled():
             togglebutton("painteroptions", False, "painteroptions", _("Modify display options"))
         else:
             togglebutton_off("painteroptions", "painteroptions")
@@ -2811,31 +2929,6 @@ def create_dict_key(value):
         return tuple([ (k, create_dict_key(v)) for (k, v) in sorted(value.items()) ])
     else:
         return value
-
-
-def get_painter_option(name, fallback_to_default=True):
-    opt = multisite_painter_options[name]
-
-    if fallback_to_default:
-        default = get_painter_option_valuespec(opt).default_value()
-    else:
-        default = None
-
-    if "forced_value" in opt:
-        return opt["forced_value"]
-
-    elif not config.may("general.painter_options"):
-        return default
-
-    else:
-        return opt.get("value", default)
-
-
-def get_painter_option_valuespec(opt):
-    if type(lambda: None) == type(opt["valuespec"]):
-        return opt["valuespec"]()
-    else:
-        return opt["valuespec"]
 
 
 def get_host_tags(row):

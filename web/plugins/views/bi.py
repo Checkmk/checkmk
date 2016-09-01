@@ -247,7 +247,7 @@ multisite_painter_options["aggr_wrap"] = {
 }
 
 def paint_aggr_tree_ltr(row, mirror):
-    wrap = get_painter_option("aggr_wrap")
+    wrap = painter_options.get("aggr_wrap")
 
     if wrap == "wrap":
         td = '<td'
@@ -274,7 +274,7 @@ def paint_aggr_tree_ltr(row, mirror):
         return leaves
 
     tree = row["aggr_treestate"]
-    if get_painter_option("aggr_onlyproblems") == "1":
+    if painter_options.get("aggr_onlyproblems") == "1":
         tree = bi.filter_tree_only_problems(tree)
     depth = bi.status_tree_depth(tree)
     leaves = gen_table(tree, depth, row["aggr_hosts"] > 1)
@@ -304,9 +304,9 @@ def paint_aggregated_tree_state(row):
     if html.is_api_call():
         return bi.render_tree_json(row)
 
-    treetype        = get_painter_option("aggr_treetype")
-    expansion_level = int(get_painter_option("aggr_expand"))
-    only_problems   = get_painter_option("aggr_onlyproblems") == "1"
+    treetype        = painter_options.get("aggr_treetype")
+    expansion_level = int(painter_options.get("aggr_expand"))
+    only_problems   = painter_options.get("aggr_onlyproblems") == "1"
 
     if treetype == "foldable":
         return bi.render_tree_foldable(row,  False,  False, expansion_level, only_problems, lazy=True)

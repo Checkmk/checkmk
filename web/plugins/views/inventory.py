@@ -937,7 +937,7 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
     # Declare two views: one for searching globally. And one
     # for the items of one host.
 
-    view_options = {
+    view_spec = {
         'datasource'                   : infoname,
         'topic'                        : _('Inventory'),
         'public'                       : True,
@@ -980,7 +980,7 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         'hard_filters' : [],
         'hard_filtervars' : [],
     }
-    multisite_builtin_views[infoname + "_search"].update(view_options)
+    multisite_builtin_views[infoname + "_search"].update(view_spec)
 
     # View for the items of one host
     multisite_builtin_views[infoname + "_of_host"] = {
@@ -999,7 +999,7 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         'hard_filtervars' : [],
         'hide_filters' : [ "host" ],
     }
-    multisite_builtin_views[infoname + "_of_host"].update(view_options)
+    multisite_builtin_views[infoname + "_of_host"].update(view_spec)
 
 # Now declare Multisite views for a couple of embedded tables
 declare_invtable_view("invswpac",      ".software.packages:",       _("Software Package"),   _("Software Packages"))

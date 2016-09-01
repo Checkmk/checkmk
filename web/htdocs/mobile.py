@@ -203,6 +203,7 @@ def page_index():
             url = "mobile_view.py?view_name=%s" % view_name
             count = ""
             if not view.get("mustsearch"):
+                views.prepare_painter_options(view_name)
 	        count = views.show_view(view, only_count = True)
                 count = '<span class="ui-li-count">%d</span>' % count
             items.append((view.get("topic"), url, '%s %s' % (view.get("linktitle", view["title"]), count)))
@@ -232,6 +233,8 @@ def page_view():
     title = views.view_title(view)
     mobile_html_head(title)
 
+    views.prepare_painter_options(view_name)
+
     try:
 	views.show_view(view, show_heading = False, show_buttons = False,
 			show_footer = False, render_function = render_view)
@@ -244,7 +247,7 @@ def page_view():
     mobile_html_foot()
 
 def render_view(view, rows, datasource, group_painters, painters,
-                painter_options, show_heading, show_buttons,
+                show_heading, show_buttons,
                 show_checkboxes, layout, num_columns, show_filters, show_footer,
                 browser_reload):
 

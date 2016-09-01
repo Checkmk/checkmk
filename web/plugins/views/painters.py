@@ -167,7 +167,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
         return "age", "-"
 
     if mode == None:
-        mode = get_painter_option("ts_format")
+        mode = painter_options.get("ts_format")
 
     if mode == "epoch":
         return "", str(int(timestamp))
@@ -177,7 +177,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
         css, h2 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "rel", what=what)
         return css, "%s - %s" % (h1, h2)
 
-    dateformat = get_painter_option("ts_date")
+    dateformat = painter_options.get("ts_date")
     age = time.time() - timestamp
     if mode == "abs" or \
         (mode == "mixed" and age >= 48 * 3600 or age < -48 * 3600):
@@ -969,9 +969,9 @@ def paint_time_graph_cmk(row, cell, show_timeranges=False):
     # a) the painter parameters configured in the view
     # b) the painter options set per user and view
     graph_render_options = cell.painter_parameters().copy()
-    painter_options = get_graph_render_options_from_painter_options()
-    if painter_options != None:
-        graph_render_options.update(painter_options)
+    options = painter_options.get_without_default("graph_render_options")
+    if options != None:
+        graph_render_options.update(options)
 
     if html.is_mobile():
         graph_render_options.update({
@@ -999,13 +999,9 @@ def paint_time_graph_cmk(row, cell, show_timeranges=False):
             show_timeranges)
 
 
-def get_graph_render_options_from_painter_options():
-    return get_painter_option("graph_render_options", fallback_to_default=False)
-
-
 def get_graph_timerange_from_painter_options():
-    value = get_painter_option("pnp_timerange")
-    vs = get_painter_option_valuespec(multisite_painter_options["pnp_timerange"])
+    value = painter_options.get("pnp_timerange")
+    vs = painter_options.get_valuespec_of("pnp_timerange")
     return map(int, vs.compute_range(value)[0])
 
 
@@ -1022,7 +1018,7 @@ def paint_time_graph_pnp(row):
     else:
         with_link = 'false'
 
-    pnp_timerange = get_painter_option("pnp_timerange")
+    pnp_timerange = painter_options.get("pnp_timerange")
 
     pnpview = '1'
     from_ts, to_ts = 'null', 'null'

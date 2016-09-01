@@ -659,6 +659,7 @@ def dashlet_view(nr, dashlet):
 
     import views # FIXME: HACK, clean this up somehow
     views.load_views()
+    views.prepare_painter_options()
     views.show_view(dashlet, True, True, True)
 
 def dashlet_view_add_url():

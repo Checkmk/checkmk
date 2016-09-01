@@ -709,24 +709,31 @@ define servicegroup {
 """ % (make_utf8(sg), make_utf8(alias)))
 
 def create_nagios_config_contactgroups(outfile):
+    if define_contactgroups == False:
+        return
+
     cgs = list(contactgroups_to_define)
-    cgs.sort()
-    if cgs:
-        outfile.write("\n# ------------------------------------------------------------\n")
-        outfile.write("# Contact groups (controlled by define_contactgroups)\n")
-        outfile.write("# ------------------------------------------------------------\n\n")
-        for name in cgs:
-            if type(define_contactgroups) == dict:
-                alias = define_contactgroups.get(name, name)
-            else:
-                alias = name
-            outfile.write("\ndefine contactgroup {\n"
-                    "  contactgroup_name\t\t%s\n"
-                    "  alias\t\t\t\t%s\n" % (make_utf8(name), make_utf8(alias)))
-            members = contactgroup_members.get(name)
-            if members:
-                outfile.write("  members\t\t\t%s\n" % ",".join(members))
-            outfile.write("}\n")
+    if not cgs:
+        return
+
+    outfile.write("\n# ------------------------------------------------------------\n")
+    outfile.write("# Contact groups (controlled by define_contactgroups)\n")
+    outfile.write("# ------------------------------------------------------------\n\n")
+    for name in sorted(cgs):
+        if type(define_contactgroups) == dict:
+            alias = define_contactgroups.get(name, name)
+        else:
+            alias = name
+
+        outfile.write("\ndefine contactgroup {\n"
+                "  contactgroup_name\t\t%s\n"
+                "  alias\t\t\t\t%s\n" % (make_utf8(name), make_utf8(alias)))
+
+        members = contactgroup_members.get(name)
+        if members:
+            outfile.write("  members\t\t\t%s\n" % ",".join(members))
+
+        outfile.write("}\n")
 
 
 def create_nagios_config_commands(outfile):

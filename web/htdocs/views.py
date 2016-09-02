@@ -710,7 +710,6 @@ def page_edit_view():
         load_handler = transform_view_to_valuespec_value,
         create_handler = create_view_from_valuespec,
         info_handler = get_view_infos,
-        try_handler = lambda view: show_view(view, False, False)
     )
 
 def view_choices(only_with_hidden = False):
@@ -2511,8 +2510,6 @@ def should_show_command_form(datasource, ignore_display_option=False):
     if not ignore_display_option and DisplayOptions.disabled(DisplayOptions.C):
         return False
     if not config.may("general.act"):
-        return False
-    if html.has_var("try"):
         return False
 
     # What commands are available depends on the Livestatus table we

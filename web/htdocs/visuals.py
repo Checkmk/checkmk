@@ -559,7 +559,7 @@ def render_context_specs(visual, context_specs):
         spec.render_input(ident, value)
 
 def page_edit_visual(what, all_visuals, custom_field_handler = None,
-                     create_handler = None, try_handler = None,
+                     create_handler = None,
                      load_handler = None, info_handler = None,
                      sub_pages = []):
     visual_type = visual_types[what]
@@ -717,7 +717,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
         if html.var("save%d" % nr):
             save_and_go = pagename
 
-    if save_and_go or html.var("save") or html.var("try") or html.var("search"):
+    if save_and_go or html.var("save") or html.var("search"):
         try:
             general_properties = vs_general.from_html_vars('general')
             vs_general.validate_value(general_properties, 'general')
@@ -805,25 +805,12 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     html.show_localization_hint()
 
     html.button("save", _("Save"))
+
     for nr, (title, pagename, icon) in enumerate(sub_pages):
         html.button("save%d" % nr, _("Save and go to ") + title)
+
     html.hidden_fields()
-
-    if try_handler:
-        html.write(" ")
-        html.button("try", _("Try out"))
-        html.end_form()
-
-        if (html.has_var("try") or html.has_var("search")) and not html.has_user_errors():
-            html.set_var("search", "on")
-            if visual:
-                import bi
-                bi.reset_cache_status()
-                try_handler(visual)
-            return # avoid second html footer
-    else:
-        html.end_form()
-
+    html.end_form()
     html.footer()
 
 #.

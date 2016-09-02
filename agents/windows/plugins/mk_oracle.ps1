@@ -54,7 +54,7 @@
 #   |                    \____\___/|_| |_|_| |_|\__, |                     |
 #   |                                           |___/                      |
 #   +----------------------------------------------------------------------+
-#   | The user can override and set variables in mk_oracle_cfg.ps1             |
+#   | The user can override and set variables in mk_oracle_cfg.ps1         |
 #   '----------------------------------------------------------------------'
 
 

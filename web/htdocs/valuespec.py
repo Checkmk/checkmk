@@ -1613,6 +1613,13 @@ class CascadingDropdown(ValueSpec):
 
     def from_html_vars(self, varprefix):
         choices = self.choices()
+
+        # No choices and "no elements text" is shown: The html var is
+        # not present and no choice can be made. So fallback to default
+        # value and let the validation methods lead to an error message.
+        if not choices:
+            return self.default_value()
+
         try:
             sel = int(html.var(varprefix + "_sel"))
         except:

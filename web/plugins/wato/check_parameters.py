@@ -515,17 +515,20 @@ register_rule(group + '/' + subgroup_inventory,
                     )
                 ),
             ( "summarize",
-                Checkbox(
-                    title = _("Display only a summary of all sensors"),
-                    label = _("Summarize"),
+                DropdownChoice(
+                    title = _("Display single sensors or a summary of all sensors"),
                     help  = _("If active, only a single summary item is displayed. The summary "
                               "will explicitly mention sensors in warn/crit state but the "
                               "sensors that are ok are aggregated."),
-                    default_value = True
-                    )
-                )
-            ]
-        ),
+                    choices = [
+                        (False, _("Single sensors")),
+                        (True,  _("Summarize")),
+                    ],
+                    default_value = True,
+                ),
+            ),
+        ]
+    ),
     match = 'first'
 )
 

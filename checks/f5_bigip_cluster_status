@@ -24,39 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 #SNMPv2-SMI::enterprises.3375.2.1.1.1.1.19.0 = INTEGER: 0  #Version < 11.2
 #SNMPv2-SMI::enterprises.3375.2.1.14.3.1.0 = INTEGER: 3    #Version >= 11.2
+
 
 factory_settings["f5_bigip_cluster_default_levels"] = {
     "type" : "active_standby",
 }
 
-def parse_f5_bigip_cluster_status(info):
-    cluster_status = {}
-    for status in info:
-        cluster_status[status[0]] = int(status[1])
-    return cluster_status
-
-def inventory_f5_bigip_cluster_status(parsed):
-    if parsed:
-        return [ ( None, None ) ]
-
-def check_f5_bigip_cluster_status(_no_item, params, parsed, is_v11_2 = False):
-    if is_v11_2:
-        node_state = ["unknown", "offline", "forcedOffline", "standby", "active"]
-        active_value = 4
-    else:
-        node_state = ["standby", "active 1", "active 2", "active"]
-        active_value = 3
-
-    if params["type"] == "active_standby" and parsed.values().count(active_value) > 1:
-        yield 2, "More than 1 node is active: "
-    elif active_value not in parsed.values() and len(parsed) > 1: # Only applies if this check runs on a cluster
-        yield 2, "No active node found: "
-
-    for node in sorted(parsed):
-        node_name = node and "[%s] " % node or ""
-        yield 0, "Node %sis %s" % (node_name, node_state[parsed[node]])
 
 def scan_f5_bigip_cluster_status(oid, is_v11_2 = False):
     if not (".1.3.6.1.4.1.3375.2" in oid(".1.3.6.1.2.1.1.2.0") and\
@@ -72,6 +48,43 @@ def scan_f5_bigip_cluster_status(oid, is_v11_2 = False):
     return (version_float >= expected_version) == is_v11_2
 
 
+def parse_f5_bigip_cluster_status(info):
+    parsed = {}
+    for node, status in info:
+        parsed[node] = status
+    return parsed
+
+
+def inventory_f5_bigip_cluster_status(parsed):
+    if parsed:
+        return [ ( None, None ) ]
+
+
+def check_f5_bigip_cluster_status(_no_item, params, parsed, is_v11_2 = False):
+    if is_v11_2:
+        node_states  = ["unknown", "offline", "forced offline", "standby", "active"]
+        active_value = 4
+    else:
+        node_states  = ["standby", "active 1", "active 2", "active"]
+        active_value = 3
+
+    if params["type"] == "active_standby" and parsed.values().count(active_value) > 1:
+        yield 2, "More than 1 node is active: "
+    elif active_value not in parsed.values() and len(parsed) > 1: # Only applies if this check runs on a cluster
+        yield 2, "No active node found: "
+
+    for node in sorted(parsed):
+        node_name  = node and "[%s] " % node or ""
+        node_state = parsed[node]
+        state      = 0
+        if is_v11_2:
+            if node_state in params.get("v11_2_states", []):
+                state = params["v11_2_states"][node_state]
+            else:
+                state = { "0" : 3, "1" : 2, "2" : 2,  "3" : 0,  "4" : 0, }[node_state]
+        yield state, "Node %sis %s" % (node_name, node_states[int(node_state)])
+
+
 check_info["f5_bigip_cluster_status"] = {
     "parse_function"          : parse_f5_bigip_cluster_status,
     "check_function"          : lambda x,y,z: check_f5_bigip_cluster_status(x,y,z, is_v11_2 = False),
@@ -84,6 +97,7 @@ check_info["f5_bigip_cluster_status"] = {
     "snmp_scan_function"      : lambda oid: scan_f5_bigip_cluster_status(oid, is_v11_2 = False)
 }
 
+
 check_info["f5_bigip_cluster_status_v11_2"] = {
     "parse_function"          : parse_f5_bigip_cluster_status,
     "check_function"          : lambda x,y,z: check_f5_bigip_cluster_status(x,y,z, is_v11_2 = True),
@@ -95,5 +109,3 @@ check_info["f5_bigip_cluster_status_v11_2"] = {
     "snmp_info"               : (".1.3.6.1.4.1.3375.2.1.14.3.1", ["0"]), # sysCmFailoverStatusId
     "snmp_scan_function"      : lambda oid: scan_f5_bigip_cluster_status(oid, is_v11_2 = True)
 }
-
-

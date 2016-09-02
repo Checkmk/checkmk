@@ -1,0 +1,9 @@
+Title: f5_bigip_cluster_status: node states are configurable for F5 BigIP devices since version 11.2
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1472807033
+Class: feature
+
+

@@ -1660,18 +1660,18 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
             h += '<span class=title>'
             is_empty = len(tree[3]) == 0
             if is_empty:
-                style = ''
                 mc = ''
-            elif is_open:
-                style = ''
-                mc = mousecode + 'src="images/tree_black_90.png" '
             else:
-                style = 'style="display: none" '
-                mc = mousecode + 'src="images/tree_black_00.png" '
+                mc = mousecode
 
-            h += aggr_render_node(tree, tree[2]["title"], mc, show_host)
+            css_class = "open" if is_open else "closed"
+
+            h += aggr_render_node(tree, tree[2]["title"], show_host,
+                                  mousecode=mc, img_class=css_class)
             if not is_empty:
-                h += '<ul id="%d:%s" %sclass="subtree">' % (expansion_level or 0, path_id, style)
+                h += '<ul id="%d:%s" class="subtree %s">' % \
+                        (expansion_level or 0, path_id, css_class)
+
                 if not omit_content:
                     for node in tree[3]:
                         if not node[2].get("hidden"):
@@ -1701,7 +1701,7 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
                '</div>'
     return "aggrtree" + (boxes and "_box" or ""), htmlcode
 
-def aggr_render_node(tree, title, mousecode, show_host):
+def aggr_render_node(tree, title, show_host, mousecode=None, img_class=None):
     # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
     if tree[1] and tree[0] != tree[1]:
         addclass = " " + _("assumed")
@@ -1729,7 +1729,9 @@ def aggr_render_node(tree, title, mousecode, show_host):
     h = '<span class="content state state%d%s">%s</span>\n' \
          % (effective_state["state"], addclass, render_bi_state(effective_state["state"]))
     if mousecode:
-        h += '<img class=opentree %s>' % mousecode
+        if img_class:
+            h += '<img src="images/tree_black_closed.png" class="treeangle %s"%s>' % \
+                                                                   (img_class, mousecode)
         h += '<span class="content name" %s>%s</span>' % (mousecode, title)
     else:
         h += title
@@ -1792,7 +1794,7 @@ def aggr_render_leaf(tree, show_host, bare = False):
     if bare:
         return content
     else:
-        return aggr_render_node(tree, content, None, show_host)
+        return aggr_render_node(tree, content, show_host)
 
 def render_bi_state(state):
     return { PENDING: _("PD"),

@@ -268,7 +268,8 @@ def paint_aggr_tree_ltr(row, mirror):
         for node in tree[3]:
             if not node[2].get("hidden"):
                 leaves += gen_table(node, height - 1, show_host)
-        h = '<div class="aggr tree">' + bi.aggr_render_node(tree, tree[2]["title"], '', show_host) + "</div>"
+        h = '<div class="aggr tree">' \
+            + bi.aggr_render_node(tree, tree[2]["title"], show_host) + "</div>"
         if leaves:
             leaves[0][2].append((len(leaves), h))
         return leaves

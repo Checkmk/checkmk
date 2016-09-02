@@ -2903,21 +2903,22 @@ function bi_toggle_subtree(oImg, lazy)
     }
     var oSubtree = oImg.parentNode.childNodes[6];
     var url = "bi_save_treestate.py?path=" + encodeURIComponent(oSubtree.id);
-    var do_open;
 
-    if (oSubtree.style.display == "none") {
-        oSubtree.style.display = "";
-        url += "&state=open";
+    if (has_class(oImg, "closed")) {
+        change_class(oSubtree, "closed", "open");
         toggle_folding(oImg, true);
+
+        url += "&state=open";
         do_open = true;
     }
     else {
-        oSubtree.style.display = "none";
-        url += "&state=closed";
+        change_class(oSubtree, "open", "closed");
         toggle_folding(oImg, false);
+
+        url += "&state=closed";
         do_open = false;
     }
-    oSubtree = null;
+
     if (lazy && do_open)
         get_url(url, bi_update_tree, oImg);
     else

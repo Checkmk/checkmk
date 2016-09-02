@@ -107,18 +107,13 @@ b.bullet {
     background-repeat: repeat;
 }
 
-.aggrtree img.opentree {
+.aggrtree img.treeangle {
     width: 15px;
     height: 15px;
     margin-right: 2px;
     margin-left: 0px;
     vertical-align:middle;
 }
-
-.aggrtree img.opentree:hover {
-    cursor: pointer;
-}
-
 
 table.aggrtree {
     border-collapse: collapse;

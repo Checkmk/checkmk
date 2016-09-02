@@ -30,6 +30,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
+#include <iomanip>
 #include <string>
 
 inline double elapsed_ms_since(std::chrono::system_clock::time_point then) {
@@ -57,8 +58,31 @@ inline timeval to_timeval(std::chrono::duration<Rep, Period> dur) {
 }
 
 inline std::chrono::system_clock::time_point parse_time_t(
-    const std::string& str) {
+    const std::string &str) {
     return std::chrono::system_clock::from_time_t(atoi(str.c_str()));
 }
+
+template <typename Dur>
+typename Dur::rep time_point_part(std::chrono::system_clock::time_point &tp) {
+    return std::chrono::duration_cast<Dur>(tp.time_since_epoch() % Dur(1000))
+        .count();
+}
+
+class FormattedTimePoint {
+public:
+    FormattedTimePoint(std::chrono::system_clock::time_point tp,
+                       const std::string &format)
+        : _tp(tp), _format(format) {}
+
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const FormattedTimePoint &f) {
+        tm local = to_tm(f._tp);
+        return os << std::put_time(&local, f._format.c_str());
+    }
+
+private:
+    std::chrono::system_clock::time_point _tp;
+    std::string _format;
+};
 
 #endif  // ChronoUtils_h

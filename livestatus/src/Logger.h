@@ -26,13 +26,14 @@
 #define Logger_h
 
 #include "config.h"  // IWYU pragma: keep
-#ifdef CMC
-#include <cstdio>
-#endif
-#include <sstream>
+#include <cerrno>
+#include <chrono>
+#include <fstream>  // IWYU pragma: keep
+#include <memory>
+#include <mutex>
+#include <sstream>  // IWYU pragma: keep
 #include <string>
-
-class LogRecord;
+#include <system_error>
 
 // values must be in sync with config
 enum class LogLevel {
@@ -46,38 +47,111 @@ enum class LogLevel {
     debug = 7
 };
 
-void open_logfile(const std::string &path);
-void close_logfile();
-void logger(const LogRecord &record);
-
-#ifdef CMC
-void set_log_config(LogLevel level, bool log_microtime);
-void reopen_logfile(const std::string &path);
-bool isLoggable(LogLevel level);
-FILE *get_logfile();
-#endif
+std::ostream &operator<<(std::ostream &os, const LogLevel &c);
 
 class LogRecord {
 public:
     LogRecord(LogLevel level, const std::string &message)
-        : _level(level), _message(message) {}
+        : _level(level)
+        , _message(message)
+        , _time_point(std::chrono::system_clock::now()) {}
     virtual ~LogRecord() {}
 
     LogLevel getLevel() const { return _level; }
+    void setLevel(LogLevel level) { _level = level; }
+
     std::string getMessage() const { return _message; }
     void setMessage(const std::string &message) { _message = message; }
+
+    std::chrono::system_clock::time_point getTimePoint() const {
+        return _time_point;
+    }
+    void setTimePoint(std::chrono::system_clock::time_point time_point) {
+        _time_point = time_point;
+    }
 
 private:
     LogLevel _level;
     std::string _message;
+    std::chrono::system_clock::time_point _time_point;
 };
 
-class LogRecordStream : public LogRecord {
+class Formatter {
 public:
-    explicit LogRecordStream(LogLevel level) : LogRecord(level, "") {}
-    virtual ~LogRecordStream() {
-        setMessage(_os.str());
-        logger(*this);
+    virtual ~Formatter() = default;
+    virtual std::string format(const LogRecord &record) const = 0;
+};
+
+class SimpleFormatter : public Formatter {
+    friend class Handler;
+    std::string format(const LogRecord &record) const override;
+};
+
+class Handler {
+public:
+    virtual ~Handler() = default;
+    virtual void publish(const LogRecord &record) = 0;
+
+    Formatter *getFormatter();
+    void setFormatter(std::unique_ptr<Formatter> formatter);
+
+protected:
+    Handler();
+
+private:
+    std::mutex _mutex;
+    std::unique_ptr<Formatter> _formatter;
+};
+
+class StreamHandler : public Handler {
+public:
+    explicit StreamHandler(std::ostream &os);
+
+private:
+    std::mutex _mutex;
+    std::ostream &_os;
+
+    void publish(const LogRecord &record) override;
+};
+
+class FileHandler : public StreamHandler {
+public:
+    explicit FileHandler(const std::string &filename);
+
+private:
+    std::ofstream _os;
+};
+
+class Logger {
+public:
+    static Logger *getLogger() { return &_global_logger; }
+
+    LogLevel getLevel();
+    void setLevel(LogLevel level);
+
+    Handler *getHandler();
+    void setHandler(std::unique_ptr<Handler> handler);
+
+    bool isLoggable(LogLevel level);
+    void log(const LogRecord &record);
+
+private:
+    static Logger _global_logger;
+
+    std::mutex _mutex;
+    LogLevel _level;
+    std::unique_ptr<Handler> _handler;
+
+    Logger();
+};
+
+// -----------------------------------------------------------------------------
+
+class LogStream {
+public:
+    explicit LogStream(LogLevel level) : _level(level) {}
+    virtual ~LogStream() {
+        Logger::getLogger()->log(LogRecord(_level, _os.str()));
     }
 
     template <typename T>
@@ -85,44 +159,52 @@ public:
         return _os << t;
     }
 
-#ifdef CMC
-    bool isLoggable() const { return ::isLoggable(getLevel()); }
-#endif
-
 private:
+    LogLevel _level;
     std::ostringstream _os;
 };
 
-struct Emergency : public LogRecordStream {
-    Emergency() : LogRecordStream(LogLevel::emergency) {}
+struct Emergency : public LogStream {
+    Emergency() : LogStream(LogLevel::emergency) {}
 };
 
-struct Alert : public LogRecordStream {
-    Alert() : LogRecordStream(LogLevel::alert) {}
+struct Alert : public LogStream {
+    Alert() : LogStream(LogLevel::alert) {}
 };
 
-struct Critical : public LogRecordStream {
-    Critical() : LogRecordStream(LogLevel::critical) {}
+struct Critical : public LogStream {
+    Critical() : LogStream(LogLevel::critical) {}
 };
 
-struct Error : public LogRecordStream {
-    Error() : LogRecordStream(LogLevel::error) {}
+struct Error : public LogStream {
+    Error() : LogStream(LogLevel::error) {}
 };
 
-struct Warning : public LogRecordStream {
-    Warning() : LogRecordStream(LogLevel::warning) {}
+struct Warning : public LogStream {
+    Warning() : LogStream(LogLevel::warning) {}
 };
 
-struct Notice : public LogRecordStream {
-    Notice() : LogRecordStream(LogLevel::notice) {}
+struct Notice : public LogStream {
+    Notice() : LogStream(LogLevel::notice) {}
 };
 
-struct Informational : public LogRecordStream {
-    Informational() : LogRecordStream(LogLevel::informational) {}
+struct Informational : public LogStream {
+    Informational() : LogStream(LogLevel::informational) {}
 };
 
-struct Debug : public LogRecordStream {
-    Debug() : LogRecordStream(LogLevel::debug) {}
+struct Debug : public LogStream {
+    Debug() : LogStream(LogLevel::debug) {}
+};
+
+class generic_error : public std::system_error {
+public:
+    generic_error() : std::system_error(errno, std::generic_category()) {}
+
+    explicit generic_error(const char *what_arg)
+        : std::system_error(errno, std::generic_category(), what_arg) {}
+
+    explicit generic_error(const std::string &what_arg)
+        : std::system_error(errno, std::generic_category(), what_arg) {}
 };
 
 #endif  // Logger_h

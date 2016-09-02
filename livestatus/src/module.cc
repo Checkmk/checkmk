@@ -41,10 +41,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include "ChronoUtils.h"
 #include "ClientQueue.h"
 #include "InputBuffer.h"
 #include "Logger.h"
@@ -61,7 +63,10 @@
 #include "waittriggers.h"
 
 using mk::unsafe_tolower;
+using std::make_unique;
+using std::ostringstream;
 using std::string;
+using std::unique_ptr;
 using std::unordered_map;
 
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
@@ -254,6 +259,60 @@ void *client_thread(void *data __attribute__((__unused__))) {
     return voidp;
 }
 
+namespace {
+class NagiosHandler : public Handler {
+public:
+    NagiosHandler() { setFormatter(make_unique<NagiosFormatter>()); }
+
+private:
+    class NagiosFormatter : public Formatter {
+        string format(const LogRecord &record) const override {
+            return "livestatus: " + record.getMessage();
+        }
+    };
+
+    void publish(const LogRecord &record) override {
+        writeToAllLogs(getFormatter()->format(record));
+    }
+};
+
+class LivestatusHandler : public FileHandler {
+public:
+    explicit LivestatusHandler(const string &filename) : FileHandler(filename) {
+        setFormatter(make_unique<LivestatusFormatter>());
+    }
+
+private:
+    class LivestatusFormatter : public Formatter {
+        string format(const LogRecord &record) const override {
+            ostringstream os;
+            os << FormattedTimePoint(record.getTimePoint(), "%F %T ")
+               << record.getMessage();
+            return os.str();
+        }
+    } _formatter;
+};
+
+class SwitchHandler : public Handler {
+public:
+    explicit SwitchHandler(const string &filename)
+        : _livestatus_handler(make_unique<LivestatusHandler>(filename)) {}
+
+private:
+    unique_ptr<Handler> _main_thread_handler{make_unique<NagiosHandler>()};
+    unique_ptr<Handler> _livestatus_handler;
+
+    void publish(const LogRecord &record) override {
+        if (runningInLivestatusMainThread()) {
+            _main_thread_handler->publish(record);
+        } else {
+            _livestatus_handler->publish(record);
+        }
+    }
+};
+
+}  // namespace
+
 void start_threads() {
     count_hosts();
     count_services();
@@ -263,6 +322,15 @@ void start_threads() {
         pthread_atfork(livestatus_count_fork, nullptr,
                        livestatus_cleanup_after_fork);
         pthread_create(&g_mainthread_id, nullptr, main_thread, nullptr);
+
+        Logger::getLogger()->setHandler(make_unique<NagiosHandler>());
+        try {
+            Logger::getLogger()->setHandler(
+                make_unique<SwitchHandler>(fl_logfile_path));
+        } catch (const generic_error &ex) {
+            Warning() << ex.what();
+        }
+
         if (g_debug_level > 0) {
             Informational() << "Starting " << g_num_clientthreads
                             << " client threads";
@@ -866,9 +934,10 @@ void omd_advertize() {
 // cppcheck-suppress unusedFunction
 extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
                               void *handle) {
+    Logger::getLogger()->setHandler(make_unique<NagiosHandler>());
+
     g_nagios_handle = handle;
     livestatus_parse_arguments(args);
-    open_logfile(fl_logfile_path);
 
     Informational() << "Livestatus " << VERSION
                     << " by Mathias Kettner. Socket: '" << g_socket_path << "'";
@@ -923,6 +992,6 @@ extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
     delete g_timeperiods_cache;
     g_timeperiods_cache = nullptr;
     deregister_callbacks();
-    close_logfile();
+    Logger::getLogger()->setHandler(nullptr);
     return 0;
 }

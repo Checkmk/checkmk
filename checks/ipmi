@@ -161,6 +161,7 @@
 
 
 ipmi_summarize            = True
+ipmi_ignore_nr            = False
 ipmi_ignored_sensors      = [] # example: [ "Power_Meter", "Virtual_Fan" ]
 ipmi_ignored_sensorstates = [] # example: [ "nr", "ns" ]
 inventory_ipmi_rules      = []
@@ -175,13 +176,6 @@ def ipmi_get_ignored_sensors(hostname):
     if rules:
         ignored_sensors_combined      += rules[0].get("ignored_sensors", [])
         ignored_sensorstates_combined += rules[0].get("ignored_sensorstates", [])
-
-    # Stay compatible to set old style variable 'ipmi_ignore_nr == True'
-    try:
-        if ipmi_ignore_nr and 'nr' not in ignored_sensorstates_combined:
-            ignored_sensorstates_combined.append('nr')
-    except:
-        pass
 
     return ignored_sensors_combined, ignored_sensorstates_combined
 

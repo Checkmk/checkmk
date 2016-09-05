@@ -694,8 +694,10 @@ def render_performance_graphs(context):
 def construct_content(context):
     # A list of optional information is configurable via the parameter "elements"
     # (new configuration style)
-    if "PARAMETER_ELEMENTS" in context:
-        elements = context["PARAMETER_ELEMENTS"].split()
+    # Note: The value PARAMETER_ELEMENTSS is NO TYPO.
+    #       Have a look at the function events.py:add_to_event_context(..)
+    if "PARAMETER_ELEMENTSS" in context:
+        elements = context["PARAMETER_ELEMENTSS"].split()
     else:
         elements = [ "perfdata", "graph", "abstime", "address", "longoutput" ]
 

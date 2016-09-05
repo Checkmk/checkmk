@@ -200,7 +200,7 @@ check_info['apc_netbotz_sensors.dewpoint'] = {
     'has_perfdata'              : True,
     'default_levels_variable'   : "apc_netbotz_sensors_dewpoint_default_levels",
     'group'                     : "temperature",
-    'includes'                  : [ 'temperaure.include' ],
+    'includes'                  : [ 'temperature.include' ],
 }
 
 

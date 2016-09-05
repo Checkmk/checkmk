@@ -1818,16 +1818,18 @@ ldap_attribute_plugins['groups_to_roles'] = {
 def synchronize_profile_to_sites(connection, user_id, profile):
     import sites
     import wato # FIXME: Cleanup!
-    sites = [(site_id, config.site(site_id))
-              for site_id in config.sitenames()
-              if not config.site_is_local(site_id) ]
 
-    connection.log('Credentials changed: %s. Trying to sync to %d sites' % (user_id, len(sites)))
+    remote_sites = [(site_id, config.site(site_id))
+                    for site_id in config.sitenames()
+                    if not config.site_is_local(site_id) ]
+
+    connection.log('Credentials changed: %s. Trying to sync to %d sites' %
+                                                    (user_id, len(sites)))
 
     num_disabled  = 0
     num_succeeded = 0
     num_failed    = 0
-    for site_id, site in sites:
+    for site_id, site in remote_sites:
         if not site.get("replication"):
             num_disabled += 1
             continue

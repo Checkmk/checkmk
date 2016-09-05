@@ -6788,7 +6788,8 @@ register_check_parameters(
                       help = _("A single thread fully utilizing a single core (potentially due to a bug) "
                                "may go unnoticed when only monitoring the total utilization of the CPU. "
                                "With this configuration, check_mk will alert if a single core is "
-                               "exceeding a utilization threshold over an extended period of time.")
+                               "exceeding a utilization threshold over an extended period of time. "
+                               "ATTENTION: This configuration cannot be used for check <i>lparstat_aix.cpu_util</i>!")
                     )
                 ),
                 ( "core_util_graph",
@@ -6798,7 +6799,8 @@ register_check_parameters(
                       help  = _("This adds another graph to the performance CPU utilization "
                                 "details page, showing utilization of individual cores. "
                                 "Please note that this graph may be impractical on "
-                                "device with very many cores.")
+                                "device with very many cores. "
+                                "ATTENTION: This configuration cannot be used for check <i>lparstat_aix.cpu_util</i>!")
                   ),
                 ),
             ]

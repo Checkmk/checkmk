@@ -114,22 +114,37 @@ def check_lparstat_aix_cpu(_no_item, params, info):
           ( "system", "%.3f" % system ),
           ( "wait",   "%.3f" % wait ) ]
 
+    util = user + system + wait
+
     infotext = "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user, system, wait)
 
     # You may set a warning/critical level on the io wait
     # percentage. This can be done by setting params to
     # a pair of (warn, crit)
     result = 0
-    try:
+
+    if type(params) == tuple: # old config only levels io wait
         warn, crit = params
         if wait >= crit:
-            result = 2
+            result = max(result, 2)
             infotext += "(!!)"
         elif wait >= warn:
-            result = 1
+            result = max(result, 1)
             infotext += "(!)"
-    except:
-        pass
+
+    elif type(params) == dict:
+        if 'util' in params:
+            warn, crit = params['util']
+            if util >= crit:
+                result = max(result, 2)
+            elif util >= warn:
+                result = max(result, 1)
+        if 'iowait' in params:
+            warn, crit = params['iowait']
+            if wait >= crit:
+                result = max(result, 2)
+            elif wait >= warn:
+                result = max(result, 1)
 
     return (result, infotext, perfdata)
 

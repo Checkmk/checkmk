@@ -1,0 +1,11 @@
+Title: FIX lparstat_aix.cpu_util usage of checkgroup parameters
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1473074686
+
+The check lparstat_aix.cpu_util now supports new dictionary parameters of checkgroup, including overall cpu utilization thresholds.
+

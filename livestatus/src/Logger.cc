@@ -81,31 +81,26 @@ LogLevel Logger::getLevel() {
     return _level;
 }
 
-#ifndef CMC
-// cppcheck-suppress unusedFunction
-#endif
+#ifdef CMC
 void Logger::setLevel(LogLevel level) {
     lock_guard<mutex> lg(_mutex);
     _level = level;
 }
 
-#ifndef CMC
-// cppcheck-suppress unusedFunction
-#endif
 Handler *Logger::getHandler() {
     lock_guard<mutex> lg(_mutex);
     return _handler.get();
 }
+#endif
 
 void Logger::setHandler(std::unique_ptr<Handler> handler) {
     lock_guard<mutex> lg(_mutex);
     _handler = std::move(handler);
 }
 
-#ifndef CMC
-// cppcheck-suppress unusedFunction
-#endif
+#ifdef CMC
 bool Logger::isLoggable(LogLevel level) { return level <= getLevel(); }
+#endif
 
 void Logger::log(const LogRecord &record) {
     lock_guard<mutex> lg(_mutex);

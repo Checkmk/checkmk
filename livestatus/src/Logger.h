@@ -127,12 +127,16 @@ public:
     static Logger *getLogger() { return &_global_logger; }
 
     LogLevel getLevel();
+#ifdef CMC
     void setLevel(LogLevel level);
 
     Handler *getHandler();
+#endif
     void setHandler(std::unique_ptr<Handler> handler);
 
+#ifdef CMC
     bool isLoggable(LogLevel level);
+#endif
     void log(const LogRecord &record);
 
 private:

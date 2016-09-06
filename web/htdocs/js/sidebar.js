@@ -618,29 +618,44 @@ sidebar_restart_time = null;
 // Configures the number of seconds to reload all snapins which request it
 sidebar_update_interval = null;
 
+// Removes the snapin from the current sidebar and informs the server for persistance
+function remove_sidebar_snapin(oLink, url)
+{
+    var container = oLink.parentNode.parentNode.parentNode;
+    var id = container.id.replace("snapin_container_", "");
+
+    call_ajax(url, {
+        handler_data     : "snapin_" + id,
+        response_handler : function (id, _unused) {
+            remove_snapin(id);   
+        },
+        method           : "GET"
+    });
+}
+
+
 // Removes a snapin from the sidebar without reloading anything
-function removeSnapin(id, code) {
-  var container = document.getElementById(id).parentNode;
-  var myparent = container.parentNode;
-  myparent.removeChild(container);
+function remove_snapin(id)
+{
+    var container = document.getElementById(id).parentNode;
+    var myparent = container.parentNode;
+    myparent.removeChild(container);
 
-  // remove this snapin from the refresh list, if it is contained
-  for (var i in refresh_snapins) {
-      var name    = refresh_snapins[i][0];
-      if (id == "snapin_" + name) {
-          refresh_snapins.splice(i, 1);
-          break;
-      }
-  }
+    // remove this snapin from the refresh list, if it is contained
+    for (var i in refresh_snapins) {
+        var name    = refresh_snapins[i][0];
+        if (id == "snapin_" + name) {
+            refresh_snapins.splice(i, 1);
+            break;
+        }
+    }
 
-  // reload main frame if it is just displaying the "add snapin" page
-  var href = encodeURIComponent(parent.frames[1].location);
-  if (href.indexOf("sidebar_add_snapin.py") > -1)
-      parent.frames[1].location.reload();
-
-  href = null;
-  container = null;
-  myparent = null;
+    // reload main frame if it is currently displaying the "add snapin" page
+    if (parent.frames[1]) {
+        var href = encodeURIComponent(parent.frames[1].location);
+        if (href.indexOf("sidebar_add_snapin.py") > -1)
+            parent.frames[1].location.reload();
+    }
 }
 
 

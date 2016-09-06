@@ -107,21 +107,6 @@ def footnotelinks(links):
         html.write(link(text, target))
     end_footnote_links()
 
-def iconbutton(what, url, target="side", handler="", name="", css_class = ""):
-    if target == "side":
-        onclick = "onclick=\"get_url('%s', %s, '%s')\"" % \
-                   (url, handler, name)
-        href = "#"
-        tg = ""
-    else:
-        onclick = ""
-        href = "%scheck_mk/%s" % (defaults.url_prefix, url)
-        tg = "target=%s" % target
-    css_class = css_class and " " + css_class or ""
-    html.write("<a href=\"%s\" %s %s><img class=\"iconbutton%s\" "
-               "align=absmiddle src=\"%scheck_mk/images/button_%s.png\"></a>\n " %
-                  (href, onclick, tg, css_class, defaults.url_prefix, what))
-
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%snagios/cgi-bin/%s\">%s</a></li>" % \
             (defaults.url_prefix, target, html.attrencode(text)))
@@ -337,14 +322,15 @@ def render_snapin(name, state):
     if config.may("general.configure_sidebar"):
         # Icon for mini/maximizing
         html.write('<div class="minisnapin">')
-        iconbutton(minimaxi + "snapin", None,
-                   "side", "toggle_sidebar_snapin(this, '%s')" % toggle_url, 'snapin_'+name)
+        html.icon_button(url=None, help=_("Toggle this snapin"), icon="%ssnapin" % minimaxi,
+                         onclick="toggle_sidebar_snapin(this, '%s')" % toggle_url)
         html.write('</div>')
 
         # Button for closing (removing) a snapin
         html.write('<div class="closesnapin">')
-        iconbutton("closesnapin", "sidebar_openclose.py?name=%s&state=off" % name,
-                   "side", "removeSnapin", 'snapin_'+name)
+        close_url = "sidebar_openclose.py?name=%s&state=off" % name
+        html.icon_button(url=None, help=_("Remove this snapin"), icon="closesnapin",
+                         onclick="remove_sidebar_snapin(this, '%s')" % close_url)
         html.write('</div>')
 
     # The heading. A click on the heading mini/maximizes the snapin

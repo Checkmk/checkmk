@@ -15950,7 +15950,10 @@ def string_from_ip_int(ip_int):
 
 
 def ping(address):
-    return os.system('ping -c2 -w2 %s >/dev/null 2>&1' % address) == 0
+    return subprocess.Popen(['ping', '-c2', '-w2', address],
+                            stdout=open(os.devnull, "a"),
+                            stderr=subprocess.STDOUT,
+                            close_fds=True).wait() == 0
 
 
 def ping_worker(addresses, hosts):

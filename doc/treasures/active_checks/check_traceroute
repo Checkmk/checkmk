@@ -110,7 +110,7 @@ def bail_out(reason):
     sys.exit(3)
 
 def usage():
-    print """check_traceroute -{c|w|C|W} ROUTE  [-{o|c|w|O|C|W} ROUTE...] TARGET
+    sys.stdout.write("""check_traceroute -{c|w|C|W} ROUTE  [-{o|c|w|O|C|W} ROUTE...] TARGET
 
 Check by which routes TARGET is being reached. Each possible route is being
 prefixed with a state option:
@@ -128,7 +128,7 @@ Other options:
  -I             Use ICMP ECHO for probes
  -T             Use TCP SYN for probes
 
-"""
+""")
 
 os.unsetenv("LANG")
 

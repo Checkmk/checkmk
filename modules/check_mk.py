@@ -520,10 +520,10 @@ def output_check_info():
             else:
                 title = "(no man page present)"
 
-            print (tty.bold + "%-44s" + tty.normal
+            sys.stdout.write((tty.bold + "%-44s" + tty.normal
                    + ty_color + " %-6s " + tty.normal
-                   + "%s") % \
-                  (check_type, what, title)
+                   + "%s\n") % \
+                  (check_type, what, title))
         except Exception, e:
             sys.stderr.write("ERROR in check_type %s: %s\n" % (check_type, e))
 
@@ -2228,8 +2228,7 @@ def cached_dns_lookup(hostname, family):
 
         # Update our cached address if that has changed or was missing
         if ipa != cached_ip:
-            if opt_verbose:
-                print "Updating IPv%d DNS cache for %s: %s" % (family, hostname, ipa)
+            verbose("Updating IPv%d DNS cache for %s: %s\n" % (family, hostname, ipa))
             g_ip_lookup_cache[(hostname, family)] = ipa
             write_ip_lookup_cache()
 
@@ -2891,34 +2890,34 @@ def show_check_manual(checkname):
         output = sys.stdout
 
     if opt_nowiki:
-        print "TI:Check manual page of %s" % checkname
-        print "DT:%s" % (time.strftime("%Y-%m-%d"))
-        print "SA:checks"
+        sys.stdout.write("TI:Check manual page of %s\n" % checkname)
+        sys.stdout.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
+        sys.stdout.write("SA:checks\n")
 
         def markup(line, ignored=None):
             # preserve the inner { and } in double braces and then replace the braces left
             return line.replace('{{', '{&#123;').replace('}}', '&#125;}').replace("{", "<b>").replace("}", "</b>")
 
         def print_sectionheader(line, title):
-            print "H1:" + title
+            sys.stdout.write("H1:%s\n" % title)
 
         def print_subheader(line):
-            print "H2:" + line
+            sys.stdout.write("H2:%s\n" % line)
 
         def print_line(line, attr=None, no_markup = False):
             if no_markup:
-                print line
+                sys.stdout.write("%s\n" % line)
             else:
-                print markup(line)
+                sys.stdout.write("%s\n" % markup(line))
 
         def print_splitline(attr1, left, attr2, right):
-            print "<b style=\"width: 300px;\">%s</b> %s\n" % (left, right)
+            sys.stdout.write("<b style=\"width: 300px;\">%s</b> %s\n\n" % (left, right))
 
         def empty_line():
-            print
+            sys.stdout.write("\n")
 
         def print_textbody(text):
-            print markup(text)
+            sys.stdout.write("%s\n" % markup(text))
 
         def print_splitwrap(attr1, left, attr2, text):
             if '(' in left:
@@ -2928,7 +2927,8 @@ def show_check_manual(checkname):
             else:
                 name = left
                 typ = ""
-            print "<tr><td class=tt>%s</td><td>%s</td><td>%s</td></tr>" % (name, typ, markup(text))
+            sys.stdout.write("<tr><td class=tt>%s</td><td>%s</td><td>%s</td></tr>\n" %
+                                                                (name, typ, markup(text)))
 
     else:
         def markup(line, attr):
@@ -3081,7 +3081,7 @@ def show_check_manual(checkname):
         print_subheader("Check parameters")
         if sections.has_key('parameters'):
             if opt_nowiki:
-                print "<table><th>Parameter</th><th>Type</th><th>Description</th></tr>"
+                sys.stdout.write("<table><th>Parameter</th><th>Type</th><th>Description</th></tr>\n")
             first = True
             for name, text in sections['parameters']:
                 if not first:
@@ -3089,7 +3089,7 @@ def show_check_manual(checkname):
                 first = False
                 print_splitwrap(parameters_color, name + ": ", normal_color, text)
             if opt_nowiki:
-                print "</table>"
+                sys.stdout.write("</table>\n")
         else:
             print_line("None.")
 
@@ -3108,7 +3108,7 @@ def show_check_manual(checkname):
         print_subheader("Configuration variables")
         if sections.has_key('configuration'):
             if opt_nowiki:
-                print "<table><th>Variable</th><th>Type</th><th>Description</th></tr>"
+                sys.stdout.write("<table><th>Variable</th><th>Type</th><th>Description</th></tr>\n")
             first = True
             for name, text in sections['configuration']:
                 if not first:
@@ -3117,7 +3117,7 @@ def show_check_manual(checkname):
                 print_splitwrap(tty.colorset(2, 4, 1), name + ": ",
                                 tty.normal + tty.colorset(7, 4), text)
             if opt_nowiki:
-                print "</table>"
+                sys.stdout.write("</table>\n")
         else:
             print_line("None.")
 
@@ -3125,14 +3125,14 @@ def show_check_manual(checkname):
             print_subheader("Examples")
             lines = header['examples'].split('\n')
             if opt_nowiki:
-                print "F+:main.mk"
+                sys.stdout.write("F+:main.mk\n")
             for line in lines:
                 if line.lstrip().startswith('#'):
                     print_line(line)
                 elif line != "<br>":
                     print_line(line, examples_color, True) # nomarkup
             if opt_nowiki:
-                print "F-:"
+                sys.stdout.write("F-:\n")
 
         empty_line()
         output.flush()
@@ -3727,7 +3727,7 @@ def do_snmptranslate(args):
                 result_lines.append((line.strip(), lines[idx].strip()))
 
         except Exception, e:
-            print e
+            sys.stdout.write("%s\n" % e)
 
         return result_lines
 
@@ -3886,13 +3886,14 @@ def show_paths():
 
     def show_paths(title, t):
         if t != inst:
-            print
-        print(tty.bold + title + tty.normal)
+            sys.stdout.write("\n")
+        sys.stdout.write(tty.bold + title + tty.normal + "\n")
         for path, filedir, typp, descr in paths:
             if typp == t:
                 if filedir == dir:
                     path += "/"
-                print("  %-47s: %s%s%s" % (descr, tty.bold + tty.blue, path, tty.normal))
+                sys.stdout.write("  %-47s: %s%s%s\n" %
+                    (descr, tty.bold + tty.blue, path, tty.normal))
 
     for title, t in [
         ( "Files copied or created during installation", inst ),
@@ -3925,14 +3926,15 @@ def ip_address_for_dump_host(hostname, family=None):
 
 
 def dump_host(hostname):
-    print
+    sys.stdout.write("\n")
     if is_cluster(hostname):
         color = tty.bgmagenta
         add_txt = " (cluster of " + (", ".join(nodes_of(hostname))) + ")"
     else:
         color = tty.bgblue
         add_txt = ""
-    print "%s%s%s%-78s %s" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal)
+    sys.stdout.write("%s%s%s%-78s %s\n" %
+        (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ipaddress = ip_address_for_dump_host(hostname)
 
@@ -3955,18 +3957,18 @@ def dump_host(hostname):
         else:
             addresses += " (Primary: IPv4)"
 
-    print tty.yellow + "Addresses:              " + tty.normal + addresses
+    sys.stdout.write(tty.yellow + "Addresses:              " + tty.normal + addresses + "\n")
 
     tags = tags_of_host(hostname)
-    print tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags)
+    sys.stdout.write(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
     if is_cluster(hostname):
         parents_list = nodes_of(hostname)
     else:
         parents_list = parents_of(hostname)
     if len(parents_list) > 0:
-        print tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list)
-    print tty.yellow + "Host groups:            " + tty.normal + make_utf8(", ".join(hostgroups_of(hostname)))
-    print tty.yellow + "Contact groups:         " + tty.normal + make_utf8(", ".join(host_contactgroups_of([hostname])))
+        sys.stdout.write(tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) + "\n")
+    sys.stdout.write(tty.yellow + "Host groups:            " + tty.normal + make_utf8(", ".join(hostgroups_of(hostname))) + "\n")
+    sys.stdout.write(tty.yellow + "Contact groups:         " + tty.normal + make_utf8(", ".join(host_contactgroups_of([hostname]))) + "\n")
 
     agenttypes = []
     if is_tcp_host(hostname):
@@ -4006,22 +4008,22 @@ def dump_host(hostname):
     if is_ping_host(hostname):
         agenttypes.append('PING only')
 
-    print tty.yellow + "Type of agent:          " + tty.normal + '\n                        '.join(agenttypes)
+    sys.stdout.write(tty.yellow + "Type of agent:          " + tty.normal + '\n                        '.join(agenttypes) + "\n")
     is_aggregated = host_is_aggregated(hostname)
     if is_aggregated:
-        print tty.yellow + "Is aggregated:          " + tty.normal + "yes"
+        sys.stdout.write(tty.yellow + "Is aggregated:          " + tty.normal + "yes\n")
         shn = summary_hostname(hostname)
-        print tty.yellow + "Summary host:           " + tty.normal + shn
-        print tty.yellow + "Summary host groups:    " + tty.normal + ", ".join(summary_hostgroups_of(hostname))
-        print tty.yellow + "Summary contact groups: " + tty.normal + ", ".join(host_contactgroups_of([shn]))
+        sys.stdout.write(tty.yellow + "Summary host:           " + tty.normal + shn + "\n")
+        sys.stdout.write(tty.yellow + "Summary host groups:    " + tty.normal + ", ".join(summary_hostgroups_of(hostname)) + "\n")
+        sys.stdout.write(tty.yellow + "Summary contact groups: " + tty.normal + ", ".join(host_contactgroups_of([shn])) + "\n")
         notperiod = (host_extra_conf(hostname, summary_host_notification_periods) + [""])[0]
-        print tty.yellow + "Summary notification:   " + tty.normal + notperiod
+        sys.stdout.write(tty.yellow + "Summary notification:   " + tty.normal + notperiod + "\n")
     else:
-        print tty.yellow + "Is aggregated:          " + tty.normal + "no"
+        sys.stdout.write(tty.yellow + "Is aggregated:          " + tty.normal + "no\n")
 
 
     format_string = " %-15s %s%-10s %s%-17s %s%-14s%s %s%-16s%s"
-    print tty.yellow + "Services:" + tty.normal
+    sys.stdout.write(tty.yellow + "Services:" + tty.normal + "\n")
     check_items = get_sorted_check_table(hostname)
 
     headers = ["checktype", "item",    "params", "description", "groups", "summarized to", "groups"]
@@ -4060,14 +4062,15 @@ def print_table(headers, colors, rows, indent = ""):
         sep = " "
 
     first = True
+    format += "\n"
     for row in [ headers ] + rows:
-        print format % tuple(row[:len(headers)])
+        sys.stdout.write(format % tuple(row[:len(headers)]))
         if first:
             first = False
-            print format % tuple([ "-" * l for l in lengths ])
+            sys.stdout.write(format % tuple([ "-" * l for l in lengths ]))
 
 def print_version():
-    print """This is check_mk version %s
+    sys.stdout.write("""This is Check_MK version %s
 Copyright (C) 2009 Mathias Kettner
 
     This program is free software; you can redistribute it and/or modify
@@ -4084,10 +4087,11 @@ Copyright (C) 2009 Mathias Kettner
     along with this program; see the file COPYING.  If not, write to
     the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
     Boston, MA 02111-1307, USA.
-""" % check_mk_version
+
+""" % check_mk_version)
 
 def usage():
-    print """WAYS TO CALL:
+    sys.stdout.write("""WAYS TO CALL:
  cmk [-n] [-v] [-p] HOST [IPADDRESS]  check all services on HOST
  cmk -I [HOST ..]                     inventory - find new services
  cmk -II ...                          renew inventory, drop old services
@@ -4278,7 +4282,7 @@ NOTES:
        snmpwalks_dir,
        snmpwalks_dir,
        local_mibs_dir and ("\n  You can add further MIBs to %s" % local_mibs_dir) or "",
-       )
+       ))
 
 
 def do_create_config(with_agents=True):
@@ -4471,8 +4475,7 @@ def do_donation():
         sys.stderr.write("No hosts specified. You need to set donation_hosts in main.mk.\n")
         sys.exit(1)
 
-    if opt_verbose:
-        print "Donating files %s" % " ".join(cache_files)
+    verbose("Donating files %s\n" % " ".join(cache_files))
     import base64
     indata = base64.b64encode(os.popen("tar czf - -C %s %s" % (tcp_cache_dir, " ".join(donate))).read())
     output = os.popen(donation_command, "w")
@@ -5162,7 +5165,7 @@ non_config_options = ['-L', '--list-checks', '-P', '--package', '-M',
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 except getopt.GetoptError, err:
-    print str(err)
+    sys.stdout.write("%s\n" % err)
     sys.exit(1)
 
 # Read the configuration files (main.mk, autochecks, etc.), but not for
@@ -5326,7 +5329,7 @@ try:
             done = True
         elif o in [ '--list-man' ]:
             read_manpage_catalog()
-            print pprint.pformat(g_manpage_catalog)
+            pprint.pprint(g_manpage_catalog)
             done = True
         elif o in [ '-m', '--browse-man' ]:
             manpage_browser()
@@ -5457,7 +5460,7 @@ try:
                     try:
                         ipaddress = lookup_ip_address(hostname)
                     except:
-                        print "Cannot resolve hostname '%s'." % hostname
+                        sys.stdout.write("Cannot resolve hostname '%s'.\n" % hostname)
                         sys.exit(2)
 
             exit_status = do_check(hostname, ipaddress, check_types)

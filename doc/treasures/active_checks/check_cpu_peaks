@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, os, time, pprint, getopt
+import sys, os, time, getopt
 
 class MKGeneralException(Exception):
     def __init__(self, reason):
@@ -142,8 +142,7 @@ try:
 	    sys.stdout.write("idx: %d " % idx)
 	    sys.stdout.write("%s\t" % int(datasets[0][idx] or -1))
 	    sys.stdout.write("%s\t" % int(datasets[1][idx] or -1))
-	    sys.stdout.write("%s" %   int(datasets[2][idx] or -1))
-	    print ""
+	    sys.stdout.write("%s\n" %   int(datasets[2][idx] or -1))
 
     if is_windows:
 	info = [ "CPU utilization from %s until %s" %\
@@ -163,19 +162,19 @@ try:
 	    elif warn_level and cpu_peak <= warn_level:
 		info.append("less than %d (!)" % warn_level)
 		state = 1
-	    print ", ".join(info)
+	    sys.stdout.write("%s\n" % ", ".join(info))
 	    sys.exit(state)
     else:
 	    info.append("No data available in time period")
 	    state = 0
-	    print ": ".join(info)
+	    sys.stdout.write("%s\n" % ": ".join(info))
             sys.exit(state)
-	
+
 
 except MKGeneralException, e:
     if opt_debug:
         raise
-    print "OK - " + str(e)
+    sys.stdout.write("OK - %s\n" % e)
     sys.exit(0)
 
 except Exception, e:
@@ -183,6 +182,6 @@ except Exception, e:
         raise
     # TODO: Exception handling could be improved.
     # Right now no handling of MKGeneralException, etc. is implemented
-    print "UNKNOWN - " + str(e)
+    sys.stdout.write("UNKNOWN - %s\n" % e)
     sys.exit(3)
 

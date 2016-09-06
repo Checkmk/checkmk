@@ -37,13 +37,13 @@ try:
         CITY        = sys.argv[7]
         REGEX       = sys.argv[8]
 except:
-    print " Usage: client_uniserv.py HOSTNAME PORT SERVICE (VERSION|ADDRESS STREET NR CITY SEARCH_REGEX) "
+    sys.stdout.write(" Usage: check_uniserv HOSTNAME PORT SERVICE (VERSION|ADDRESS STREET NR CITY SEARCH_REGEX)\n")
     sys.exit(3)
 
 def parse_response(data):
     info = dict([ x.split('=') for x in data.split(";") ][:-1])
     if info['type'] == '1':
-        print "Invalid response: " % str(info)
+        sys.stdout.write("Invalid response: %s\n" % info)
         sys.exit(3)
     return info
 
@@ -55,7 +55,7 @@ s.send(sendstring)
 
 data = parse_response(s.recv(BUFFER_SIZE))
 if not data.get('session'):
-    print "Error getting SID. Response was: " + str(data)
+    sys.stdout.write("Error getting SID. Response was: %s\n" % data)
     sys.exit(3)
 sid = data.get('session')
 
@@ -70,12 +70,12 @@ elif JOB == "ADDRESS":
     sendstring = "exec:session=%s;request_type=check_address;in_str=%s;in_hno=%s;in_city=%s\n" % \
     ( sid, STREET, STREET_NR, CITY )
     s.send(sendstring)
-    data = parse_response(s.recv(BUFFER_SIZE))	
-	
+    data = parse_response(s.recv(BUFFER_SIZE))
+
     sendstring = "fetch:session="+sid+";out_zip=?;out_city=?\n"
     s.send(sendstring)
     data = parse_response(s.recv(BUFFER_SIZE))
-	
+
     state = 0
     infotext = "Address is %s %s" % ( data['out_zip'], data['out_city'])
     if not re.match( REGEX, data['out_city']):
@@ -88,5 +88,5 @@ else:
 s.send("close:session="+sid+"\n")
 s.close()
 
-print infotext
+sys.stdout.write("%s\n" % infotext)
 sys.exit(state)

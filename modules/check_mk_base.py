@@ -2429,8 +2429,8 @@ def submit_aggregated_results(hostname):
     if not host_is_aggregated(hostname):
         return
 
-    if opt_verbose:
-        print "\n%s%sAggregates Services:%s" % (tty.bold, tty.blue, tty.normal)
+    verbose("\n%s%sAggregates Services:%s\n" % (tty.bold, tty.blue, tty.normal))
+
     global g_aggregated_service_results
     items = g_aggregated_service_results.items()
     items.sort()
@@ -2457,11 +2457,11 @@ def submit_aggregated_results(hostname):
         if opt_verbose:
             color = tty.states[status]
             lines = text.split('\\n')
-            print "%-20s %s%s%-70s%s" % (servicedesc, tty.bold, color, lines[0], tty.normal)
+            verbose("%-20s %s%s%-70s%s\n" % (servicedesc, tty.bold, color, lines[0], tty.normal))
             if len(lines) > 1:
                 for line in lines[1:]:
-                    print "  %s" % line
-                print "-------------------------------------------------------------------------------"
+                    verbose("  %s\n" % line)
+                verbose("-------------------------------------------------------------------------------\n")
 
 
 def submit_check_mk_aggregation(hostname, status, output):
@@ -2471,9 +2471,7 @@ def submit_check_mk_aggregation(hostname, status, output):
     if not opt_dont_submit:
         submit_to_core(summary_hostname(hostname), "Check_MK", status, output)
 
-    if opt_verbose:
-        color = tty.states[status]
-        print "%-20s %s%s%-70s%s" % ("Check_MK", tty.bold, color, output, tty.normal)
+    verbose("%-20s %s%s%-70s%s\n" % ("Check_MK", tty.bold, tty.states[status], output, tty.normal))
 
 
 #.

@@ -25,7 +25,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import urllib2, urllib, json, os, re
+import urllib2, urllib, json, os, re, sys
 
 api_url = "https://api.pushover.net/1/messages.json"
 
@@ -136,12 +136,12 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
     if response["status"] == 1:
         return True
     else:
-        print "Failed to send notification. Response: %s" % response
+        sys.stdout.write("Failed to send notification. Response: %s\n" % response)
         return False
     #status_code = result.getcode()
     #if status_code != 200:
-    #    print "Status Code: %d" % status_code
-    #    print "Response: %s" %  result.read()
+    #    sys.stdout.write("Status Code: %d\n") % status_code
+    #    sys.stdout.write("Response: %s\n") %  result.read()
 
 
 main()

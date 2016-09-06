@@ -194,7 +194,7 @@ def read_bulk_contexts():
                 key, value = line.split("=", 1)
                 value = value.replace("\1", "\n")
             except:
-                print "Invalid line '%s' in bulked notification context" % line
+                sys.stderr.write("Invalid line '%s' in bulked notification context\n" % line)
                 continue
 
             if in_params:

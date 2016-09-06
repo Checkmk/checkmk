@@ -110,3 +110,7 @@ void Logger::log(const LogRecord &record) {
 }
 
 Logger Logger::_global_logger;
+
+ostream &operator<<(ostream &os, const generic_error &ge) {
+    return os << ge.what();
+}

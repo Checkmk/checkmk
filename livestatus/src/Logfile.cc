@@ -26,7 +26,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstdlib>
-#include <cstring>
 #include <memory>
 #include <ostream>
 #include <utility>
@@ -37,19 +36,19 @@
 #include "Query.h"
 
 #ifdef CMC
-#include <cerrno>
 #include "cmc.h"
+using std::to_string;
 #endif
 
 using std::make_unique;
+using std::string;
 using std::vector;
 
 extern unsigned long g_max_lines_per_logfile;
 
-Logfile::Logfile(const CommandsHolder &commands_holder, const char *path,
-                 bool watch)
+Logfile::Logfile(const CommandsHolder &commands_holder, string path, bool watch)
     : _commands_holder(commands_holder)
-    , _path(strdup(path))
+    , _path(move(path))
     , _since(0)
     , _watch(watch)
     , _read_pos{}
@@ -58,9 +57,9 @@ Logfile::Logfile(const CommandsHolder &commands_holder, const char *path,
     , _world(nullptr)
 #endif
     , _logclasses_read(0) {
-    int fd = open(path, O_RDONLY);
+    int fd = open(_path.c_str(), O_RDONLY);
     if (fd < 0) {
-        Informational() << "Cannot open logfile '" << path << "'";
+        Informational() << generic_error("cannot open logfile " + _path);
         return;
     }
 
@@ -71,8 +70,8 @@ Logfile::Logfile(const CommandsHolder &commands_holder, const char *path,
     }
 
     if (line[0] != '[' || line[11] != ']') {
-        Informational() << "Ignoring logfile '" << path
-                        << "':does not begin with '[123456789] '";
+        Informational() << "ignoring logfile '" << _path
+                        << "': does not begin with '[123456789] '";
         close(fd);
         return;
     }
@@ -82,10 +81,7 @@ Logfile::Logfile(const CommandsHolder &commands_holder, const char *path,
     close(fd);
 }
 
-Logfile::~Logfile() {
-    flush();
-    free(_path);
-}
+Logfile::~Logfile() { flush(); }
 
 void Logfile::flush() {
     for (auto &entry : _entries) {
@@ -107,9 +103,9 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
     // load the rest of the file, even if no logclasses
     // are missing.
     if (_watch) {
-        file = fopen(_path, "r");
+        file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
-            Informational() << "Cannot open logfile '" << _path << "'";
+            Informational() << "cannot open logfile '" << _path << "'";
             return;
         }
         // If we read this file for the first time, we initialize
@@ -139,9 +135,9 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
             return;
         }
 
-        file = fopen(_path, "r");
+        file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
-            Informational() << "Cannot open logfile '" << _path << "'";
+            Informational() << generic_error("cannot open logfile " + _path);
             return;
         }
 
@@ -157,8 +153,8 @@ void Logfile::loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
     vector<char> linebuffer(65536);
     while (fgets(&linebuffer[0], linebuffer.size(), file) != nullptr) {
         if (_lineno >= g_max_lines_per_logfile) {
-            Error() << "More than " << g_max_lines_per_logfile << " lines in "
-                    << this->_path << ". Ignoring the rest!";
+            Error() << "more than " << g_max_lines_per_logfile << " lines in "
+                    << this->_path << ", ignoring the rest!";
             return;
         }
         _lineno++;
@@ -202,7 +198,7 @@ bool Logfile::processLogLine(uint32_t lineno, const char *linebuffer,
     uint64_t key = makeKey(entry->_time, entry->_lineno);
     if (_entries.find(key) != _entries.end()) {
         // this should never happen. The lineno must be unique!
-        Error() << "Strange: duplicate logfile line " << entry->_complete;
+        Error() << "strange duplicate logfile line " << entry->_complete;
         return false;
     }
     _entries.emplace(key, entry.release());
@@ -271,7 +267,7 @@ void Logfile::updateReferences() {
         for (auto &entry : _entries) {
             num += entry.second->updateReferences(_commands_holder);
         }
-        Notice() << "Updated " << num << " log cache references of " << _path
+        Notice() << "updated " << num << " log cache references of " << _path
                  << " to new world.";
         _world = g_live_world;
     }
@@ -284,17 +280,15 @@ void Logfile::updateReferences() {
 // an error). The buffer is 2 bytes larger then the file. One byte
 // at the beginning and at the end of the buffer are '\0'.
 char *Logfile::readIntoBuffer(size_t *size) {
-    int fd = open(_path, O_RDONLY);
+    int fd = open(_path.c_str(), O_RDONLY);
     if (fd < 0) {
-        Warning() << "Cannot open " << _path
-                  << " for reading: " << strerror(errno);
+        Warning() << generic_error("cannot open " + _path + " for reading");
         return nullptr;
     }
 
     off_t o = lseek(fd, 0, SEEK_END);
     if (o == -1) {
-        Warning() << "Cannot seek to end of " << _path << ": "
-                  << strerror(errno);
+        Warning() << generic_error("cannot seek to end of " + _path);
         close(fd);
         return nullptr;
     }
@@ -305,22 +299,21 @@ char *Logfile::readIntoBuffer(size_t *size) {
     // add space for binary 0 at beginning and end
     char *buffer = static_cast<char *>(malloc(*size + 2));
     if (buffer == nullptr) {
-        Warning() << "Cannot malloc buffer for reading " << _path << ": "
-                  << strerror(errno);
+        Warning() << generic_error("cannot malloc buffer for reading " + _path);
         close(fd);
         return nullptr;
     }
 
     ssize_t r = read(fd, buffer + 1, *size);
     if (r < 0) {
-        Warning() << "Cannot read " << *size << " bytes from " << _path << ": "
-                  << strerror(errno);
+        Warning() << generic_error("cannot read " + to_string(*size) +
+                                   " bytes from " + _path);
         free(buffer);
         close(fd);
         return nullptr;
     }
     if (static_cast<size_t>(r) != *size) {
-        Warning() << "Read only " << r << " out of " << *size << " bytes from "
+        Warning() << "read only " << r << " out of " << *size << " bytes from "
                   << _path;
         free(buffer);
         close(fd);

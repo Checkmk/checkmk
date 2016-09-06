@@ -26,7 +26,6 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <cerrno>
 #include <cstring>
 #include <sstream>
 #include <utility>
@@ -37,25 +36,14 @@ using std::ostream;
 using std::ostringstream;
 using std::string;
 
-namespace {
-struct MkEventD {
-    explicit MkEventD(string path) : _msg(move(path)) {}
-    MkEventD(const string &path, int errc)
-        : _msg(path + ": " + strerror(errc)) {}
-    const string _msg;
-    friend ostream &operator<<(ostream &os, const MkEventD &m) {
-        return os << "mkeventd at " << m._msg;
-    }
-};
-}  // namespace
-
 EventConsoleConnection::EventConsoleConnection(string path)
     : _path(move(path)), _socket(-1) {}
 
 void EventConsoleConnection::run() {
     _socket = socket(PF_UNIX, SOCK_STREAM, 0);
     if (_socket == -1) {
-        Alert() << "Cannot create socket for " << MkEventD(_path, errno);
+        generic_error ge("cannot create socket");
+        Alert() << *this << ": " << ge;
         return;
     }
 
@@ -64,19 +52,22 @@ void EventConsoleConnection::run() {
     strncpy(sa.sun_path, _path.c_str(), sizeof(sa.sun_path));
     if (connect(_socket, reinterpret_cast<const struct sockaddr *>(&sa),
                 sizeof(sockaddr_un)) == -1) {
-        Alert() << "Cannot connect to " << MkEventD(_path, errno);
+        generic_error ge("cannot connect");
+        Alert() << *this << ": " << ge;
         close(_socket);
         return;
     }
-    Notice() << "Successfully connected to " << MkEventD(_path);
+    Notice() << *this << ": successfully connected";
 
     if (!writeRequest()) {
-        Alert() << "Cannot write to " << MkEventD(_path, errno);
+        generic_error ge("cannot write");
+        Alert() << *this << ": " << ge;
     } else if (!receiveReply()) {
-        Alert() << "Cannot read from " << MkEventD(_path, errno);
+        generic_error ge("cannot read");
+        Alert() << *this << ": " << ge;
     }
 
-    Notice() << "Closing connection to " << MkEventD(_path);
+    Notice() << *this << ": closing connection";
     close(_socket);
 }
 
@@ -121,4 +112,8 @@ bool EventConsoleConnection::writeRequest() {
     }
 
     return shutdown(_socket, SHUT_WR) == 0;
+}
+
+ostream &operator<<(ostream &os, const EventConsoleConnection &ecc) {
+    return os << "mkeventd at " << ecc.getPath();
 }

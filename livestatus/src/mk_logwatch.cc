@@ -23,17 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "mk_logwatch.h"
-#include <cerrno>
 #include <cstdio>
-#include <cstring>
 #include <ostream>
 #include "Logger.h"
 #include "pnp4nagios.h"
 
 using std::string;
 
-std::string mk_logwatch_path_of_host(const string &host_name) {
-    std::string path(MK_LOGWATCH_PATH);
+string mk_logwatch_path_of_host(const string &host_name) {
+    string path(MK_LOGWATCH_PATH);
     if (path == "") {
         return "";
     }
@@ -41,25 +39,22 @@ std::string mk_logwatch_path_of_host(const string &host_name) {
     return path;
 }
 
-void mk_logwatch_acknowledge(const std::string &host_name,
-                             const std::string &file_name) {
-    if (file_name.find('/') != std::string::npos) {
+void mk_logwatch_acknowledge(const string &host_name, const string &file_name) {
+    if (file_name.find('/') != string::npos) {
         Warning() << "Invalid character / in mk_logfile filename '" << file_name
                   << "' of host '" << host_name << "'";
         return;
     }
 
-    std::string path(MK_LOGWATCH_PATH);
+    string path(MK_LOGWATCH_PATH);
     if (path == "") {
         return;
     }
-    path += pnp_cleanup(host_name);
-    path += "/";
-    path += file_name;
+    path += pnp_cleanup(host_name) + "/" + file_name;
 
     int r = remove(path.c_str());
     if (r != 0) {
-        Warning() << "Cannot acknowledge mk_logfile file '" << file_name
-                  << "' of host '" << host_name << "': " << strerror(errno);
+        Warning() << generic_error("Cannot acknowledge mk_logfile file '" +
+                                   file_name + "' of host '" + host_name + "'");
     }
 }

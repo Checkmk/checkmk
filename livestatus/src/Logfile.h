@@ -30,6 +30,7 @@
 #include <cstdio>
 #include <ctime>
 #include <map>
+#include <string>
 class CommandsHolder;
 class LogCache;
 class Query;
@@ -45,7 +46,7 @@ typedef std::map<uint64_t, LogEntry *>
 class Logfile {
 private:
     const CommandsHolder &_commands_holder;
-    char *_path;
+    std::string _path;
     time_t _since;     // time of first entry
     bool _watch;       // true only for current logfile
     fpos_t _read_pos;  // read until this position
@@ -57,11 +58,11 @@ private:
 #endif
 
 public:
-    Logfile(const CommandsHolder &commands_holder, const char *path,
+    Logfile(const CommandsHolder &commands_holder, std::string path,
             bool watch);
     ~Logfile();
 
-    char *path() { return _path; }
+    std::string path() { return _path; }
 #ifdef CMC
     char *readIntoBuffer(size_t *size);
 #endif

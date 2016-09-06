@@ -35,7 +35,6 @@
 #include <sys/types.h>  // IWYU pragma: keep
 #include <sys/un.h>
 #include <unistd.h>
-#include <cerrno>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -216,15 +215,15 @@ void *main_thread(void *data __attribute__((__unused__))) {
                 g_max_fd_ever = cc;
             }
             if (fcntl(cc, F_SETFD, FD_CLOEXEC) < 0) {
-                Informational() << "Cannot set FD_CLOEXEC on client socket: "
-                                << strerror(errno);
+                Informational() << generic_error(
+                    "cannot set close-on-exec bit on client socket");
             }
             fl_client_queue->addConnection(cc);  // closes fd
             g_num_queued_connections++;
             g_counters[COUNTER_CONNECTIONS]++;
         }
     }
-    Informational() << "Socket thread has terminated";
+    Informational() << "socket thread has terminated";
     return voidp;
 }
 
@@ -236,14 +235,14 @@ void *client_thread(void *data __attribute__((__unused__))) {
         g_num_active_connections++;
         if (cc >= 0) {
             if (g_debug_level >= 2) {
-                Informational() << "Accepted client connection on fd " << cc;
+                Informational() << "accepted client connection on fd " << cc;
             }
             InputBuffer input_buffer(cc, &g_should_terminate);
             bool keepalive = true;
             unsigned requestnr = 1;
             while (keepalive) {
                 if (g_debug_level >= 2 && requestnr > 1) {
-                    Informational() << "Handling request " << requestnr
+                    Informational() << "handling request " << requestnr
                                     << " on same connection";
                 }
                 keepalive =
@@ -328,11 +327,11 @@ void start_threads() {
             Logger::getLogger()->setHandler(
                 make_unique<SwitchHandler>(fl_logfile_path));
         } catch (const generic_error &ex) {
-            Warning() << ex.what();
+            Warning() << ex;
         }
 
         if (g_debug_level > 0) {
-            Informational() << "Starting " << g_num_clientthreads
+            Informational() << "starting " << g_num_clientthreads
                             << " client threads";
         }
 
@@ -344,14 +343,14 @@ void start_threads() {
         size_t defsize;
         if (g_debug_level >= 2 &&
             0 == pthread_attr_getstacksize(&attr, &defsize)) {
-            Informational() << "Default stack size is " << defsize;
+            Informational() << "default stack size is " << defsize;
         }
         if (0 != pthread_attr_setstacksize(&attr, g_thread_stack_size)) {
-            Informational() << "Error: Cannot set thread stack size to "
+            Informational() << "cannot set thread stack size to "
                             << g_thread_stack_size;
         } else {
             if (g_debug_level >= 2) {
-                Informational() << "Setting thread stack size to "
+                Informational() << "setting thread stack size to "
                                 << g_thread_stack_size;
             }
         }
@@ -368,18 +367,18 @@ void start_threads() {
 void terminate_threads() {
     if (g_thread_running != 0) {
         g_should_terminate = true;
-        Informational() << "Waiting for main to terminate...";
+        Informational() << "waiting for main to terminate...";
         pthread_join(g_mainthread_id, nullptr);
-        Informational() << "Waiting for client threads to terminate...";
+        Informational() << "waiting for client threads to terminate...";
         fl_client_queue->terminate();
         int t;
         for (t = 0; t < g_num_clientthreads; t++) {
             if (0 != pthread_join(g_clientthread_id[t], nullptr)) {
-                Informational() << "Warning: could not join thread no. " << t;
+                Informational() << "could not join thread no. " << t;
             }
         }
         if (g_debug_level > 0) {
-            Informational() << "Main thread + " << g_num_clientthreads
+            Informational() << "main thread + " << g_num_clientthreads
                             << " client threads have finished";
         }
         g_thread_running = 0;
@@ -392,10 +391,10 @@ int open_unix_socket() {
     struct stat st;
     if (0 == stat(g_socket_path, &st)) {
         if (0 == unlink(g_socket_path)) {
-            Debug() << "Removed old left over socket file " << g_socket_path;
+            Debug() << "removed old socket file " << g_socket_path;
         } else {
-            Alert() << "Cannot remove in the way file " << g_socket_path << ": "
-                    << strerror(errno);
+            Alert() << generic_error("cannot remove old socket file " +
+                                     string(g_socket_path));
             return false;
         }
     }
@@ -403,14 +402,14 @@ int open_unix_socket() {
     g_unix_socket = socket(PF_UNIX, SOCK_STREAM, 0);
     g_max_fd_ever = g_unix_socket;
     if (g_unix_socket < 0) {
-        Critical() << "Unable to create UNIX socket: " << strerror(errno);
+        Critical() << generic_error("cannot create UNIX socket");
         return false;
     }
 
     // Imortant: close on exec -> check plugins must not inherit it!
     if (fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) < 0) {
-        Informational() << "Cannot set FD_CLOEXEC on socket: "
-                        << strerror(errno);
+        Informational() << generic_error(
+            "cannot set close-on-exec bit on socket");
     }
 
     // Bind it to its address. This creates the file with the name g_socket_path
@@ -419,8 +418,8 @@ int open_unix_socket() {
     strncpy(sockaddr.sun_path, g_socket_path, sizeof(sockaddr.sun_path));
     if (bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
              sizeof(sockaddr)) < 0) {
-        Error() << "Unable to bind adress " << g_socket_path
-                << " to UNIX socket: " << strerror(errno);
+        Error() << generic_error("cannot bind UNIX socket to adress " +
+                                 string(g_socket_path));
         close(g_unix_socket);
         return false;
     }
@@ -428,21 +427,22 @@ int open_unix_socket() {
     // Make writable group members (fchmod didn't do nothing for me. Don't know
     // why!)
     if (0 != chmod(g_socket_path, 0660)) {
-        Error() << "Cannot chown unix socket at " << g_socket_path
-                << " to 0660: " << strerror(errno);
+        Error() << generic_error(
+            "cannot change file permissions for UNIX socket at " +
+            string(g_socket_path) + " to 0660");
         close(g_unix_socket);
         return false;
     }
 
     if (0 != listen(g_unix_socket, 3 /* backlog */)) {
-        Error() << "Cannot listen to unix socket at " << g_socket_path << ": "
-                << strerror(errno);
+        Error() << generic_error("cannot listen to UNIX socket at " +
+                                 string(g_socket_path));
         close(g_unix_socket);
         return false;
     }
 
     if (g_debug_level > 0) {
-        Informational() << "Opened UNIX socket " << g_socket_path;
+        Informational() << "opened UNIX socket at " << g_socket_path;
     }
     return true;
 }
@@ -726,7 +726,7 @@ void check_path(const char *name, char *path) {
     if (0 == stat(path, &st)) {
         if (0 != access(path, R_OK)) {
             Error() << name << " '" << path
-                    << "' not readable. Please fix permissions.";
+                    << "' not readable, please fix permissions.";
             path[0] = 0;  // disable
         }
     } else {
@@ -769,7 +769,7 @@ void livestatus_parse_arguments(const char *args_orig) {
         } else {
             if (strcmp(left, "debug") == 0) {
                 g_debug_level = atoi(right);
-                Informational() << "Setting debug level to " << g_debug_level;
+                Informational() << "setting debug level to " << g_debug_level;
             } else if (strcmp(left, "log_file") == 0) {
                 strncpy(fl_logfile_path, right, sizeof(fl_logfile_path));
             } else if (strcmp(left, "mkeventd_socket_path") == 0) {
@@ -778,41 +778,40 @@ void livestatus_parse_arguments(const char *args_orig) {
             } else if (strcmp(left, "max_cached_messages") == 0) {
                 g_max_cached_messages = strtoul(right, nullptr, 10);
                 Informational()
-                    << "Setting max number of cached log messages to "
+                    << "setting max number of cached log messages to "
                     << g_max_cached_messages;
             } else if (strcmp(left, "max_lines_per_logfile") == 0) {
                 g_max_lines_per_logfile = strtoul(right, nullptr, 10);
-                Informational() << "Setting max number lines per logfile to "
+                Informational() << "setting max number lines per logfile to "
                                 << g_max_lines_per_logfile;
             } else if (strcmp(left, "thread_stack_size") == 0) {
                 g_thread_stack_size = strtoul(right, nullptr, 10);
-                Informational() << "Setting size of thread stacks to "
+                Informational() << "setting size of thread stacks to "
                                 << g_thread_stack_size;
             } else if (strcmp(left, "max_response_size") == 0) {
                 g_max_response_size = strtoul(right, nullptr, 10);
-                Informational() << "Setting maximum response size to "
+                Informational() << "setting maximum response size to "
                                 << g_max_response_size << " bytes ("
                                 << (g_max_response_size / (1024.0 * 1024.0))
                                 << " MB)";
             } else if (strcmp(left, "num_client_threads") == 0) {
                 int c = atoi(right);
                 if (c <= 0 || c > 1000) {
-                    Informational()
-                        << "Error: Cannot set num_client_threads to " << c
-                        << ". Must be > 0 and <= 1000";
+                    Informational() << "cannot set num_client_threads to " << c
+                                    << ", must be > 0 and <= 1000";
                 } else {
-                    Informational() << "Setting number of client threads to "
+                    Informational() << "setting number of client threads to "
                                     << c;
                     g_num_clientthreads = c;
                 }
             } else if (strcmp(left, "query_timeout") == 0) {
                 int c = atoi(right);
                 if (c < 0) {
-                    Informational() << "Error: query_timeout must be >= 0";
+                    Informational() << "query_timeout must be >= 0";
                 } else {
                     g_query_timeout_msec = c;
                     if (c == 0) {
-                        Informational() << "Disabled query timeout!";
+                        Informational() << "disabled query timeout!";
                     } else {
                         Informational()
                             << "Setting timeout for reading a query to " << c
@@ -822,13 +821,13 @@ void livestatus_parse_arguments(const char *args_orig) {
             } else if (strcmp(left, "idle_timeout") == 0) {
                 int c = atoi(right);
                 if (c < 0) {
-                    Informational() << "Error: idle_timeout must be >= 0";
+                    Informational() << "idle_timeout must be >= 0";
                 } else {
                     g_idle_timeout_msec = c;
                     if (c == 0) {
-                        Informational() << "Disabled idle timeout!";
+                        Informational() << "disabled idle timeout!";
                     } else {
-                        Informational() << "Setting idle timeout to " << c
+                        Informational() << "setting idle timeout to " << c
                                         << " ms";
                     }
                 }
@@ -838,8 +837,8 @@ void livestatus_parse_arguments(const char *args_orig) {
                 } else if (strcmp(right, "loose") == 0) {
                     g_service_authorization = AUTH_LOOSE;
                 } else {
-                    Informational() << "Invalid service authorization mode. "
-                                       "Allowed are strict and loose.";
+                    Informational() << "invalid service authorization mode, "
+                                       "allowed are strict and loose";
                 }
             } else if (strcmp(left, "group_authorization") == 0) {
                 if (strcmp(right, "strict") == 0) {
@@ -847,8 +846,8 @@ void livestatus_parse_arguments(const char *args_orig) {
                 } else if (strcmp(right, "loose") == 0) {
                     g_group_authorization = AUTH_LOOSE;
                 } else {
-                    Informational() << "Invalid group authorization mode. "
-                                       "Allowed are strict and loose.";
+                    Informational() << "invalid group authorization mode, "
+                                       "allowed are strict and loose";
                 }
             } else if (strcmp(left, "pnp_path") == 0) {
                 strncpy(g_pnp_path, right, sizeof(pnp_path_storage) - 1);
@@ -886,16 +885,16 @@ void livestatus_parse_arguments(const char *args_orig) {
                 } else if (strcmp(right, "mixed") == 0) {
                     g_data_encoding = Encoding::mixed;
                 } else {
-                    Informational() << "Invalid data_encoding " << right
-                                    << ". Allowed are utf8, latin1 and mixed.";
+                    Informational() << "invalid data_encoding " << right
+                                    << ", allowed are utf8, latin1 and mixed";
                 }
             } else if (strcmp(left, "livecheck") == 0) {
                 Informational()
-                    << "Livecheck has been removed from Livestatus. Sorry.";
+                    << "livecheck has been removed from Livestatus, sorry.";
             } else if (strcmp(left, "disable_statehist_filtering") == 0) {
                 g_disable_statehist_filtering = atoi(right);
             } else {
-                Informational() << "Ignoring invalid option " << left << "="
+                Informational() << "ignoring invalid option " << left << "="
                                 << right;
             }
         }
@@ -921,11 +920,11 @@ void omd_advertize() {
     char *omd_site = getenv("OMD_SITE");
     if (omd_site != nullptr) {
         if (g_debug_level > 0) {
-            Informational() << "Running on OMD site " << omd_site << ". Cool.";
+            Informational() << "running on OMD site " << omd_site << ", cool.";
         }
     } else {
         Informational()
-            << "Hint: please try out OMD - the Open Monitoring Distribution";
+            << "Hint: Please try out OMD - the Open Monitoring Distribution";
         Informational() << "Please visit OMD at http://omdistro.org";
     }
 }
@@ -950,19 +949,19 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
     }
 
     if (verify_event_broker_options() == 0) {
-        Critical() << "Fatal: bailing out. Please fix event_broker_options.";
-        Critical() << "Hint: your event_broker_options are set to "
-                   << event_broker_options << ". Try setting it to -1.";
+        Critical() << "bailing out, please fix event_broker_options.";
+        Critical() << "hint: your event_broker_options are set to "
+                   << event_broker_options << ", try setting it to -1.";
         return 1;
     }
     if (g_debug_level > 0) {
         Informational()
-            << "Your event_broker_options are sufficient for livestatus..";
+            << "your event_broker_options are sufficient for livestatus..";
     }
 
     if (enable_environment_macros == 1) {
-        Informational() << "Warning: environment_macros are enabled. This "
-                           "might decrease the overall nagios performance";
+        Informational() << "environment_macros are enabled, this might "
+                           "decrease the overall nagios performance";
     }
 
     register_callbacks();
@@ -973,7 +972,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
        thread the first time one of our callbacks is called. Before
        that happens, we haven't got any data anyway... */
 
-    Informational() << "Finished initialization. Further log messages go to "
+    Informational() << "finished initialization, further log messages go to "
                     << fl_logfile_path;
     return 0;
 }

@@ -31,6 +31,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <ostream>
+#include <string>
 #include <utility>
 #include "Logfile.h"
 #include "Logger.h"
@@ -237,7 +238,7 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
         if (log->numEntries() > 0 && (log->classesRead() & ~logclasses) != 0) {
             if (g_debug_level > 2) {
                 debug("Freeing classes 0x%02x of file %s", ~logclasses,
-                      log->path());
+                      log->path().c_str());
             }
             long freed = log->freeMessages(~logclasses);  // flush only messages
                                                           // not needed for

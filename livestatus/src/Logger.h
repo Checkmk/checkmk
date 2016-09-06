@@ -211,4 +211,6 @@ public:
         : std::system_error(errno, std::generic_category(), what_arg) {}
 };
 
+std::ostream &operator<<(std::ostream &os, const generic_error &ge);
+
 #endif  // Logger_h

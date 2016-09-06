@@ -26,7 +26,6 @@
 #include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <cerrno>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -38,6 +37,7 @@
 
 using std::chrono::milliseconds;
 using std::string;
+using std::to_string;
 using std::vector;
 
 OutputBuffer::OutputBuffer() : _max_size(1) {
@@ -129,9 +129,9 @@ void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
         if (retval > 0 && FD_ISSET(fd, &fds)) {
             ssize_t bytes_written = write(fd, buffer, bytes_to_write);
             if (bytes_written == -1) {
-                Informational()
-                    << "Couldn't write " << bytes_to_write
-                    << " bytes to client socket: " << strerror(errno);
+                Informational() << generic_error("could not write " +
+                                                 to_string(bytes_to_write) +
+                                                 " bytes to client socket");
                 break;
             }
             buffer += bytes_written;

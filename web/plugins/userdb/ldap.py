@@ -290,7 +290,7 @@ class LDAPUserConnector(UserConnector):
         except ldap.LDAPError, e:
             self.log('  FAILED (%s)' % e)
             if catch:
-                raise MKLDAPException(_('Unable to authenticate with LDAP (%s)' % e))
+                raise MKLDAPException(_('Unable to authenticate with LDAP (%s)') % e)
             else:
                 raise
 
@@ -345,9 +345,9 @@ class LDAPUserConnector(UserConnector):
                and LDAPUserConnector.connection_suffixes[suffix] != self.id():
                 raise MKUserError(None, _("Found duplicate LDAP connection suffix. "
                                           "The LDAP connections %s and %s both use "
-                                          "the suffix %s which is not allowed." %
+                                          "the suffix %s which is not allowed.") %
                                           (LDAPUserConnector.connection_suffixes[suffix],
-                                           self.id(), suffix)))
+                                           self.id(), suffix))
             else:
                 LDAPUserConnector.connection_suffixes[suffix] = self.id()
 

@@ -157,7 +157,8 @@ class FixedValue(ValueSpec):
 
     def validate_datatype(self, value, varprefix):
         if not self._value == value:
-            raise MKUserError(varprefix, _("Invalid value, must be '%r' but is '%r'" % (self._value, value)))
+            raise MKUserError(varprefix, _("Invalid value, must be '%r' but is '%r'") %
+                                                                    (self._value, value))
 
     def validate_value(self, value, varprefix):
         self.validate_datatype(value, varprefix)
@@ -237,8 +238,8 @@ class Age(ValueSpec):
 
     def validate_value(self, value, varprefix):
         if self._minvalue != None and value < self._minvalue:
-            raise MKUserError(varprefix, _("%s is too low. The minimum allowed value is %s." % (
-                                     value, self._minvalue)))
+            raise MKUserError(varprefix, _("%s is too low. The minimum allowed value is %s.") % (
+                                     value, self._minvalue))
 
 # Editor for a single integer
 class Integer(ValueSpec):
@@ -284,7 +285,7 @@ class Integer(ValueSpec):
             return int(html.var(varprefix))
         except:
             raise MKUserError(varprefix,
-                  _("The text <b><tt>%s</tt></b> is not a valid integer number." % html.var(varprefix)))
+                  _("The text <b><tt>%s</tt></b> is not a valid integer number.") % html.var(varprefix))
 
     def value_to_text(self, value):
         text = self._display_format % value
@@ -308,11 +309,11 @@ class Integer(ValueSpec):
 
     def validate_value(self, value, varprefix):
         if self._minvalue != None and value < self._minvalue:
-            raise MKUserError(varprefix, _("%s is too low. The minimum allowed value is %s." % (
-                                     value, self._minvalue)))
+            raise MKUserError(varprefix, _("%s is too low. The minimum allowed value is %s.") % (
+                                     value, self._minvalue))
         if self._maxvalue != None and value > self._maxvalue:
-            raise MKUserError(varprefix, _("%s is too high. The maximum allowed value is %s." % (
-                                     value, self._maxvalue)))
+            raise MKUserError(varprefix, _("%s is too high. The maximum allowed value is %s.") % (
+                                     value, self._maxvalue))
         ValueSpec.custom_validate(self, value, varprefix)
 
 # Filesize in Byte,Kbyte,Mbyte,Gigatbyte, Terrabyte
@@ -642,7 +643,7 @@ class HostAddress(TextAscii):
             pass
         elif not self._allow_empty:
             raise MKUserError(varprefix, _("Invalid host address. You need to specify the address "
-                                           "either as %s." % ", ".join(self._allowed_type_names())))
+                                           "either as %s.") % ", ".join(self._allowed_type_names()))
 
         ValueSpec.custom_validate(self, value, varprefix)
 
@@ -849,7 +850,7 @@ class Filename(TextAscii):
 
         dir = value.rsplit("/", 1)[0]
         if not os.path.isdir(dir):
-            raise MKUserError(varprefix, _("The directory %s does not exist or is not a directory." % dir))
+            raise MKUserError(varprefix, _("The directory %s does not exist or is not a directory.") % dir)
 
         # Write permissions to the file cannot be checked here since we run with Apache
         # permissions and the file might be created with Nagios permissions (on OMD this
@@ -919,8 +920,8 @@ class ListOfStrings(ValueSpec):
 
     def validate_datatype(self, value, vp):
         if type(value) != list:
-            raise MKUserError(vp, _("Expected data type is list, but your type is %s." %
-                                                                        type_name(value)))
+            raise MKUserError(vp, _("Expected data type is list, but your type is %s.") %
+                                                                        type_name(value))
         for nr, s in enumerate(value):
             self._valuespec.validate_datatype(s, vp + "_%d" % nr)
 
@@ -1235,7 +1236,7 @@ class Float(Integer):
             return float(html.var(varprefix))
         except:
             raise MKUserError(varprefix,
-            _("The text <b><tt>%s</tt></b> is not a valid floating point number." % html.var(varprefix)))
+            _("The text <b><tt>%s</tt></b> is not a valid floating point number.") % html.var(varprefix))
 
     def validate_datatype(self, value, varprefix):
         if type(value) == float:
@@ -2194,17 +2195,19 @@ class AbsoluteDate(ValueSpec):
     def from_html_vars(self, varprefix):
         parts = []
         entries = [
-            ("year", 1970, 2038),
-            ("month",   1,   12),
-            ("day",     1,   31)]
+            ("year",  _("year"),  1970, 2038),
+            ("month", _("month"),    1,   12),
+            ("day",   _("day"),      1,   31)
+        ]
+
         if self._include_time:
             entries += [
-              ("hour", 0, 23),
-              ("min",  0, 59),
-              ("sec",  0, 59),
+                ("hour", _("hour"), 0, 23),
+                ("min",  _("min"),  0, 59),
+                ("sec",  _("sec"),  0, 59),
             ]
 
-        for what, mmin, mmax in entries:
+        for what, title, mmin, mmax in entries:
             try:
                 varname = varprefix + "_" + what
                 part = int(html.var(varname))
@@ -2214,7 +2217,8 @@ class AbsoluteDate(ValueSpec):
                 else:
                     raise MKUserError(varname, _("Please enter a valid number"))
             if part < mmin or part > mmax:
-                raise MKUserError(varname, _("The value for %s must be between %d and %d" % (_(what), mmin, mmax)))
+                raise MKUserError(varname, _("The value for %s must be between %d and %d") %
+                                                                        (title, mmin, mmax))
             parts.append(part)
 
         # Construct broken time from input fields. Assume no-dst
@@ -2290,14 +2294,14 @@ class Timeofday(ValueSpec):
             return
 
         if type(value) != tuple:
-            raise MKUserError(varprefix, _("The datatype must be tuple, but ist %s" % type_name(value)))
+            raise MKUserError(varprefix, _("The datatype must be tuple, but ist %s") % type_name(value))
 
         if len(value) != 2:
-            raise MKUserError(varprefix, _("The tuple must contain two elements, but you have %d" % len(value)))
+            raise MKUserError(varprefix, _("The tuple must contain two elements, but you have %d") % len(value))
 
         for x in value:
             if type(x) != int:
-                raise MKUserError(varprefix, _("All elements of the tuple must be of type int, you have %s" % type_name(x)))
+                raise MKUserError(varprefix, _("All elements of the tuple must be of type int, you have %s") % type_name(x))
 
     def validate_value(self, value, varprefix):
         if not self._allow_empty and value == None:
@@ -2307,7 +2311,7 @@ class Timeofday(ValueSpec):
         else:
             max_value = (23, 59)
         if value > max_value:
-            raise MKUserError(varprefix, _("The time must not be greater than %02d:%02d." % max_value))
+            raise MKUserError(varprefix, _("The time must not be greater than %02d:%02d.") % max_value)
         elif value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
             raise MKUserError(varprefix, _("Hours/Minutes out of range"))
         ValueSpec.custom_validate(self, value, varprefix)
@@ -2360,10 +2364,10 @@ class TimeofdayRange(ValueSpec):
             return
 
         if type(value) != tuple:
-            raise MKUserError(varprefix, _("The datatype must be tuple, but ist %s" % type_name(value)))
+            raise MKUserError(varprefix, _("The datatype must be tuple, but ist %s") % type_name(value))
 
         if len(value) != 2:
-            raise MKUserError(varprefix, _("The tuple must contain two elements, but you have %d" % len(value)))
+            raise MKUserError(varprefix, _("The tuple must contain two elements, but you have %d") % len(value))
 
         self._bounds[0].validate_datatype(value[0], varprefix + "_from")
         self._bounds[1].validate_datatype(value[1], varprefix + "_until")
@@ -2382,6 +2386,7 @@ class TimeofdayRange(ValueSpec):
             raise MKUserError(varprefix + "_until", _("The <i>from</i> time must not be later then the <i>until</i> time."))
         ValueSpec.custom_validate(self, value, varprefix)
 
+# TODO: Move to cmklib
 month_names = [
   _("January"),   _("February"), _("March"),    _("April"),
   _("May"),       _("June"),     _("July"),     _("August"),
@@ -2634,7 +2639,7 @@ class Optional(ValueSpec):
         if self._label is not None:
             label = self._label
         elif self.title():
-            label = _(self.title())
+            label = self.title()
         elif self._negate:
             label = _(" Ignore this option")
         else:
@@ -2711,7 +2716,7 @@ class OptionalEdit(Optional):
         if self._label is not None:
             label = self._label
         elif self.title():
-            label = _(self.title())
+            label = self.title()
         elif self._negate:
             label = _(" Ignore this option")
         else:
@@ -3944,7 +3949,7 @@ class SSHKeyPair(ValueSpec):
         if status:
             os.remove(private_key_file)
             os.remove(public_key_file)
-            raise MKUserError(varprefix, _("Failed to create SSH key pair: %s" % output))
+            raise MKUserError(varprefix, _("Failed to create SSH key pair: %s") % output)
         private_key = file(private_key_file).read()
         public_key = file(public_key_file).read()
         os.remove(private_key_file)

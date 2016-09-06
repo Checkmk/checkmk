@@ -179,8 +179,8 @@ def transform_builtin_dashboards():
 
             else:
                 raise MKGeneralException(_('Unable to transform dashlet %d of dashboard %s. '
-                                           'You will need to migrate it on your own. Definition: %r' %
-                                                            (nr, name, html.attrencode(dashlet))))
+                                           'You will need to migrate it on your own. Definition: %r') %
+                                                            (nr, name, html.attrencode(dashlet)))
 
             dashlet.setdefault('context', {})
             dashlet.setdefault('single_infos', [])
@@ -224,7 +224,7 @@ def load_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
         if not view:
             raise MKGeneralException(_("Failed to convert a builtin dashboard which is referencing "
                                        "the view \"%s\". You will have to migrate it to the new "
-                                       "dashboard format on your own to work properly." % view_name))
+                                       "dashboard format on your own to work properly.") % view_name)
     else:
         view = permitted_views[view_name]
 

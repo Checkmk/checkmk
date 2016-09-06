@@ -148,8 +148,8 @@ class ModeBI(WatoMode):
             if config.debug:
                 raise
 
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                              (filename, e)))
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                              (filename, e))
 
 
     def save_config(self):
@@ -852,8 +852,8 @@ class ModeBIPacks(ModeBI):
             if pack["rules"]:
                 raise MKUserError(None, _("You cannot delete this pack. It contains <b>%d</b> rules.") % len(pack["rules"]))
             c = wato_confirm(_("Confirm BI pack deletion"),
-                             _("Do you really want to delete the BI pack <b>%s</b> <i>%s</i> with <b>%d</b> rules and <b>%d</b> aggregations?" %
-                               (pack_id, pack["title"], len(pack["rules"]), len(pack["aggregations"]))))
+                             _("Do you really want to delete the BI pack <b>%s</b> <i>%s</i> with <b>%d</b> rules and <b>%d</b> aggregations?") %
+                               (pack_id, pack["title"], len(pack["rules"]), len(pack["aggregations"])))
             if c:
                 log_mkeventd("delete-bi-pack", _("Deleted BI pack %s") % pack_id)
                 del self._packs[pack_id]
@@ -1351,8 +1351,8 @@ class ModeBIEditRule(ModeBI):
                 pack = self.pack_containing_rule(self._ruleid)
                 raise MKUserError('rule_p_id',
                     _("There is already a rule with the id <b>%s</b>. "
-                      "It is in the pack <b>%s</b> and as the title <b>%s</b>" % (
-                            self._ruleid, pack["title"], existing_rule["title"])))
+                      "It is in the pack <b>%s</b> and as the title <b>%s</b>") % (
+                            self._ruleid, pack["title"], existing_rule["title"]))
             if not new_rule["nodes"]:
                 raise MKUserError(None,
                     _("Please add at least one child node. Empty rules are useless."))

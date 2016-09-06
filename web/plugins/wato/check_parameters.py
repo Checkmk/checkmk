@@ -2430,7 +2430,7 @@ register_check_parameters(
     Dictionary(
         elements = [
             ("%s_assert_rate" % what, Tuple(
-                                title = _("%s rate" % what.title()),
+                                title = _("%s rate") % what.title(),
                                 elements = [
                                     Float(title = _("Warning at"), unit = _("Asserts / s"),  default_value = 1.0),
                                     Float(title = _("Critical at"), unit = _("Asserts / s"), default_value = 2.0),
@@ -2520,7 +2520,7 @@ register_check_parameters(
     Dictionary(
         elements = [
             ("%s_locks" % what, Tuple(
-                title = _("%s Locks" % what.title().replace("_", " ")),
+                title = _("%s Locks") % what.title().replace("_", " "),
                 elements = [
                     Integer(title = _("Warning at"),  minvalue = 0),
                     Integer(title = _("Critical at"), minvalue = 0),
@@ -4848,7 +4848,7 @@ def get_free_used_dynamic_valuespec(what, name, default_value = (80.0, 90.0)):
     def validate_dynamic_levels(value, varprefix):
         if not [ v for v in value if v[0] == 0 ]:
             raise MKUserError(varprefix, _("You need to specify levels for "
-                                           "%ss larger than 0 bytes." % name))
+                                           "%ss larger than 0 bytes.") % name)
 
     return Alternative(
         title = _("Levels for %s %s") % (name, title),

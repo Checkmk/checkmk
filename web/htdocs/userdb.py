@@ -512,8 +512,8 @@ def load_users(lock = False):
         contacts = {} # a not existing file is ok, start with empty data
     except Exception, e:
         if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                          (filename, e))
         else:
             logger(LOG_ERR, 'load_users: Problem while loading contacts (%s - %s). '
                      'Initializing structure...' % (filename, e))
@@ -529,8 +529,8 @@ def load_users(lock = False):
         users = {} # not existing is ok -> empty structure
     except Exception, e:
         if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                          (filename, e))
         else:
             logger(LOG_ERR, 'load_users: Problem while loading users (%s - %s). '
                      'Initializing structure...' % (filename, e))
@@ -934,8 +934,8 @@ def load_roles():
         return roles # Use empty structure, not existing file is ok!
     except Exception, e:
         if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                          (filename, e))
         else:
             logger(LOG_ERR, 'load_roles: Problem while loading roles (%s - %s). '
                      'Initializing structure...' % (filename, e))
@@ -991,8 +991,8 @@ def load_group_information():
 
     except Exception, e:
         if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                          (filename, e))
         else:
             logger(LOG_ERR, 'load_group_information: Problem while loading groups (%s - %s). '
                      'Initializing structure...' % (filename, e))
@@ -1045,8 +1045,8 @@ def load_custom_attrs():
     except Exception, e:
         if config.debug:
             raise
-        raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                      (filename, e)))
+        raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                      (filename, e))
 
 
 def declare_custom_user_attrs():
@@ -1091,8 +1091,8 @@ def load_connection_config():
 
     except Exception, e:
         if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                          (filename, e))
         return user_connections
 
 

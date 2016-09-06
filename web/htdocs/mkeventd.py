@@ -281,7 +281,7 @@ def event_rule_matches_non_inverted(rule, event):
     try:
         match_groups = match(rule.get("match"), event["text"], complete = False)
     except Exception, e:
-        return _("Invalid regular expression: %s" % e)
+        return _("Invalid regular expression: %s") % e
     if match_groups == False:
         return _("The message text does not match the required pattern.")
 
@@ -302,7 +302,7 @@ def event_rule_matches_non_inverted(rule, event):
             return _("No service level is set in event")
 
         if p < sl_from or p > sl_to:
-            return _("Wrong service level %d (need %d..%d)" % (p, sl_from, sl_to))
+            return _("Wrong service level %d (need %d..%d)") % (p, sl_from, sl_to)
 
     if "match_timeperiod" in rule:
         reason = check_timeperiod(rule["match_timeperiod"])
@@ -323,9 +323,9 @@ def check_timeperiod(tpname):
         if answer == "":
             return _("The timeperiod %s is not known to the local monitoring core") % tpname
         elif int(answer) == 0:
-            return _("The timeperiod %s is currently not active" % tpname)
+            return _("The timeperiod %s is currently not active") % tpname
     except Exception, e:
-        return _("Cannot update timeperiod information for %s: %s" % (tpname, e))
+        return _("Cannot update timeperiod information for %s: %s") % (tpname, e)
         if config.debug:
             raise
 

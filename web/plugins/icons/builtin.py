@@ -783,10 +783,13 @@ def paint_stars(what, row, tags, host_custom_vars):
 
     if what == "host":
         starred = row["host_name"] in stars
+        title   = _("host")
     else:
         starred = (row["host_name"] + ";" + row["service_description"]) in stars
+        title   = _("service")
+
     if starred:
-        return 'starred', _("This %s is one of your favorites") % _(what)
+        return 'starred', _("This %s is one of your favorites") % title
 
 multisite_icons_and_actions['stars'] = {
     'columns': [],
@@ -874,7 +877,7 @@ def paint_icon_check_period(what, row, tags, host_custom_vars):
     if what == "service":
         if row['%s_in_passive_check_period' % what] == 0\
                 or row['%s_in_check_period' % what] == 0:
-            return 'pause', _("This %s is currently not being checked") % _(what)
+            return 'pause', _("This service is currently not being checked")
 
 
 multisite_icons_and_actions['check_period'] = {

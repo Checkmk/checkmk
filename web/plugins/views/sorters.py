@@ -179,52 +179,52 @@ def cmp_perfdata_nth_value(r1, r2, n):
     return cmp(savefloat(get_perfdata_nth_value(r1, n, True)), savefloat(get_perfdata_nth_value(r2, n, True)))
 
 multisite_sorters['svc_perf_val01'] = {
-    "title"   : _("Service performance data - value number %02d" % 1),
+    "title"   : _("Service performance data - value number %02d") % 1,
     "columns" : [ 'service_perf_data' ],
     "cmp"     : lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 0),
 }
 multisite_sorters['svc_perf_val02'] = {
-    "title"   : _("Service performance data - value number %02d" % 2),
+    "title"   : _("Service performance data - value number %02d") % 2,
     "columns" : [ 'service_perf_data' ],
     "cmp"     : lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 1),
 }
 multisite_sorters['svc_perf_val03'] = {
-    "title"   : _("Service performance data - value number %02d" % 3),
+    "title"   : _("Service performance data - value number %02d") % 3,
     "columns" : [ 'service_perf_data' ],
     "cmp"     : lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 2),
 }
 multisite_sorters['svc_perf_val04'] = {
-    "title"   : _("Service performance data - value number %02d" % 4),
+    "title"   : _("Service performance data - value number %02d") % 4,
     "columns" : [ 'service_perf_data' ],
     "cmp"     : lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 3),
 }
 multisite_sorters['svc_perf_val05'] = {
-    "title"   : _("Service performance data - value number %02d" % 5),
+    "title"   : _("Service performance data - value number %02d") % 5,
     "columns" : [ 'service_perf_data' ],
     "cmp"     : lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 4),
 }
 multisite_sorters['svc_perf_val06'] = {
-    "title"   : _("Service performance data - value number %02d" % 6),
+    "title"   : _("Service performance data - value number %02d") % 6,
     "columns" : [ 'service_perf_data' ],
     "cmp"     : lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 5),
 }
 multisite_sorters['svc_perf_val07'] = {
-    "title"   : _("Service performance data - value number %02d" % 7),
+    "title"   : _("Service performance data - value number %02d") % 7,
     "columns" : [ 'service_perf_data' ],
     "cmp"     : lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 6),
 }
 multisite_sorters['svc_perf_val08'] = {
-    "title"   : _("Service performance data - value number %02d" % 8),
+    "title"   : _("Service performance data - value number %02d") % 8,
     "columns" : [ 'service_perf_data' ],
     "cmp"     : lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 7),
 }
 multisite_sorters['svc_perf_val09'] = {
-    "title"   : _("Service performance data - value number %02d" % 9),
+    "title"   : _("Service performance data - value number %02d") % 9,
     "columns" : [ 'service_perf_data' ],
     "cmp"     : lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 8),
 }
 multisite_sorters['svc_perf_val10'] = {
-    "title"   : _("Service performance data - value number %02d" % 10),
+    "title"   : _("Service performance data - value number %02d") % 10,
     "columns" : [ 'service_perf_data' ],
     "cmp"     : lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 9),
 }

@@ -308,7 +308,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 		  layout["render"](rows, view, group_painters, painters, num_columns,
 				  show_checkboxes and not html.do_actions())
 	      except Exception, e:
-		  html.write(_("Error showing view: %s" % e))
+		  html.write(_("Error showing view: %s") % e)
 	  html.write("</div>")
 	  jqm_page_navfooter(navbar, 'data', page_id)
 
@@ -375,8 +375,9 @@ def show_command_form(view, datasource, rows):
 def do_commands(view, what, rows):
     command = None
     title, executor = views.core_command(what, rows[0], 0, len(rows))[1:3] # just get the title
-    r = html.confirm(_("Do you really want to %(title)s the %(count)d %(what)ss?") %
-            { "title" : title, "count" : len(rows), "what" : _(what + "s"), })
+    title_what = _("hosts") if what == "host" else _("services")
+    r = html.confirm(_("Do you really want to %(title)s the %(count)d %(what)s?") %
+            { "title" : title, "count" : len(rows), "what" : title_what, })
     if r != True:
         return r == None # Show commands on negative answer
 

@@ -572,12 +572,12 @@ def command_downtime(cmdtag, spec, row):
             raise MKUserError("_down_minutes", _("Please enter a positive number of minutes."))
 
         down_to = time.time() + minutes * 60
-        title = _("<b>%s for the next %d minutes</b> on" % (title_start, minutes))
+        title = _("<b>%s for the next %d minutes</b> on") % (title_start, minutes)
 
     elif html.var("_down_adhoc"):
         minutes = config.adhoc_downtime.get("duration",0)
         down_to = time.time() + minutes * 60
-        title = _("<b>%s for the next %d minutes</b> on" % (title_start, minutes))
+        title = _("<b>%s for the next %d minutes</b> on") % (title_start, minutes)
 
     elif html.var("_down_custom"):
         down_from = html.get_datetime_input("_down_from")

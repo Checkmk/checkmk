@@ -542,15 +542,15 @@ def ajax_speedometer():
 
         percentage = 100.0 * current_rate / scheduled_rate;
         title = _("Scheduled service check rate: %.1f/s, current rate: %.1f/s, that is "
-                  "%.0f%% of the scheduled rate" %
-                  (scheduled_rate, current_rate, percentage))
+                  "%.0f%% of the scheduled rate") % \
+                  (scheduled_rate, current_rate, percentage)
 
     except Exception, e:
         scheduled_rate = 0
         program_start = 0
         percentage = 0
         last_perc = 0
-        title = _("No performance data: ") + str(e)
+        title = _("No performance data: %s") % e
 
     html.write(repr([scheduled_rate, program_start, percentage, last_perc, str(title)]))
 

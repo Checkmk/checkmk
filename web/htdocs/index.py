@@ -124,7 +124,7 @@ def handler(req, fields = None, is_profiling = False):
             reason = _("You are not authorized to use Check_MK Multisite. Sorry. "
                        "You are logged in as <b>%s</b>.") % config.user_id
             if len(config.user_role_ids):
-                reason += _("Your roles are <b>%s</b>. " % ", ".join(config.user_role_ids))
+                reason += _("Your roles are <b>%s</b>. ") % ", ".join(config.user_role_ids)
             else:
                 reason += _("<b>You do not have any roles.</b> ")
             reason += _("If you think this is an error, "

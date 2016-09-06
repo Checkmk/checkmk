@@ -264,14 +264,14 @@ def extract_domains(tar, domains):
                 errors = list(set(errors))
                 errors.append(_("<br>If there are permission problems, please ensure the group is set to '%s' and has write permissions.") % defaults.www_group)
             if abort_on_error:
-                raise MKGeneralException(_("%s - Unable to restore snapshot:<br>%s" % (what, "<br>".join(errors))))
+                raise MKGeneralException(_("%s - Unable to restore snapshot:<br>%s") % (what, "<br>".join(errors)))
             total_errors.extend(errors)
 
     # Cleanup
     wipe_directory(restore_dir)
 
     if total_errors:
-        raise MKGeneralException(_("Errors on restoring snapshot:<br>%s" % "<br>".join(total_errors)))
+        raise MKGeneralException(_("Errors on restoring snapshot:<br>%s") % "<br>".join(total_errors))
 
 
 # Extract a tarball

@@ -238,8 +238,8 @@ class MKBackupJob(object):
             else:
                 raise
         except Exception, e:
-            raise MKGeneralException(_("Failed to parse state file \"%s\": %s" %
-                                        (self.state_file_path(), e)))
+            raise MKGeneralException(_("Failed to parse state file \"%s\": %s") %
+                                        (self.state_file_path(), e))
 
         # Fix data structure when the process has been killed
         if state["state"] == "running" and not os.path.exists("/proc/%d" % state["pid"]):

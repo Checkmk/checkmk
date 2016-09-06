@@ -388,7 +388,7 @@ def normal_login_page(called_directly = True):
     html.write('<div id="foot">Version: %s - &copy; '
                '<a href="http://mathias-kettner.de">Mathias Kettner</a><br /><br />' % defaults.check_mk_version)
     html.write(_('You can use, modify and distribute Check_MK under the terms of the <a href="%s">'
-                 'GNU GPL Version 2</a>.' % "http://mathias-kettner.de/gpl.html"))
+                 'GNU GPL Version 2</a>.') % "http://mathias-kettner.de/gpl.html")
     html.write("</div>\n")
 
     html.set_focus('_username')

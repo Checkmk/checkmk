@@ -927,7 +927,8 @@ class FilterLogState(Filter):
         html.begin_checkbox_group()
         for varsuffix, what, state, text in self._items:
             if state == 0:
-                html.write("<u>%s:</u></td><td>" % (_(what.title())))
+                title = _("Host") if what == "host" else _("Service")
+                html.write("<u>%s:</u></td><td>" % title)
             html.write("&nbsp; ")
             html.checkbox("logst_" + varsuffix, True, label=text)
             if not html.mobile:

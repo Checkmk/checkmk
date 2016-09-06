@@ -966,8 +966,8 @@ def mode_mkeventd_rule_packs(phase):
             nr = int(html.var("_delete"))
             rule_pack = rule_packs[nr]
             c = wato_confirm(_("Confirm rule pack deletion"),
-                             _("Do you really want to delete the rule pack <b>%s</b> <i>%s</i> with <b>%s</b> rules?" %
-                               (rule_pack["id"], rule_pack["title"], len(rule_pack["rules"]))))
+                             _("Do you really want to delete the rule pack <b>%s</b> <i>%s</i> with <b>%s</b> rules?") %
+                               (rule_pack["id"], rule_pack["title"], len(rule_pack["rules"])))
             if c:
                 log_mkeventd("delete-rule-pack", _("Deleted rule pack %s") % rule_pack["id"])
                 del rule_packs[nr]
@@ -1205,8 +1205,8 @@ def mode_mkeventd_rules(phase):
             nr = int(html.var("_delete"))
             rule = rules[nr]
             c = wato_confirm(_("Confirm rule deletion"),
-                             _("Do you really want to delete the rule <b>%s</b> <i>%s</i>?" %
-                               (rule["id"], rule.get("description",""))))
+                             _("Do you really want to delete the rule <b>%s</b> <i>%s</i>?") %
+                               (rule["id"], rule.get("description","")))
             if c:
                 log_mkeventd("delete-rule", _("Deleted rule %s") % rules[nr]["id"])
                 del rules[nr]
@@ -1392,7 +1392,7 @@ def mode_mkeventd_edit_rule_pack(phase):
             return _("Create new rule pack")
         else:
             try:
-                return _("Edit rule pack %s" % rule_packs[edit_nr]["id"])
+                return _("Edit rule pack %s") % rule_packs[edit_nr]["id"]
             except IndexError:
                 raise MKUserError("edit", _("The rule pack you are trying to "
                                             "edit does not exist."))
@@ -1443,9 +1443,9 @@ def mode_mkeventd_edit_rule_pack(phase):
         save_mkeventd_rules(legacy_rules, rule_packs)
 
         if new:
-            log_mkeventd("new-rule-pack", _("Created new rule pack with id %s" % rule_pack["id"]))
+            log_mkeventd("new-rule-pack", _("Created new rule pack with id %s") % rule_pack["id"])
         else:
-            log_mkeventd("edit-rule-pack", _("Modified rule pack %s" % rule_pack["id"]))
+            log_mkeventd("edit-rule-pack", _("Modified rule pack %s") % rule_pack["id"])
         return "mkeventd_rule_packs"
 
 
@@ -1495,7 +1495,7 @@ def mode_mkeventd_edit_rule(phase):
             return _("Create new rule")
         else:
             try:
-                return _("Edit rule %s" % rules[edit_nr]["id"])
+                return _("Edit rule %s") % rules[edit_nr]["id"]
             except IndexError:
                 raise MKUserError("edit", _("The rule you are trying to edit does not exist."))
 
@@ -1561,8 +1561,8 @@ def mode_mkeventd_edit_rule(phase):
                     if repl in value:
                         raise MKUserError("rule_p_" + name,
                             _("You are using the replacment reference <tt>\%d</tt>, "
-                              "but your match text has only %d subgroups." % (
-                                num_repl, num_groups)))
+                              "but your match text has only %d subgroups.") % (
+                                num_repl, num_groups))
             num_repl -= 1
 
 
@@ -1575,9 +1575,9 @@ def mode_mkeventd_edit_rule(phase):
 
         save_mkeventd_rules(legacy_rules, rule_packs)
         if new:
-            log_mkeventd("new-rule", _("Created new event correlation rule with id %s" % rule["id"]))
+            log_mkeventd("new-rule", _("Created new event correlation rule with id %s") % rule["id"])
         else:
-            log_mkeventd("edit-rule", _("Modified event correlation rule %s" % rule["id"]))
+            log_mkeventd("edit-rule", _("Modified event correlation rule %s") % rule["id"])
             # Reset hit counters of this rule
             mkeventd.execute_command("RESETCOUNTERS", [rule["id"]], defaults.omd_site)
         return "mkeventd_rules"
@@ -1691,11 +1691,11 @@ def mode_mkeventd_status(phase):
             else:
                 new_mode = "takeover"
             c = wato_confirm(_("Confirm switching replication mode"),
-                    _("Do you really want to switch the event daemon to %s mode?" %
-                        new_mode))
+                    _("Do you really want to switch the event daemon to %s mode?") %
+                        new_mode)
             if c:
                 mkeventd.execute_command("SWITCHMODE", [new_mode], defaults.omd_site)
-                log_audit(None, "mkeventd-switchmode", _("Switched replication slave mode to %s" % new_mode))
+                log_audit(None, "mkeventd-switchmode", _("Switched replication slave mode to %s") % new_mode)
                 return None, _("Switched to %s mode") % new_mode
             elif c == False:
                 return ""
@@ -1788,8 +1788,8 @@ def mode_mkeventd_config(phase):
                 current_settings[varname] = not current_settings[varname]
             else:
                 current_settings[varname] = not def_value
-            msg = _("Changed Configuration variable %s to %s." % (varname,
-                current_settings[varname] and "on" or "off"))
+            msg = _("Changed Configuration variable %s to %s.") % (varname,
+                current_settings[varname] and _("on") or _("off"))
             save_configuration_settings(current_settings)
             pending_func(msg)
             if action == "_reset":
@@ -1848,7 +1848,7 @@ def mode_mkeventd_mibs(phase):
             mibs = load_snmp_mibs(mkeventd.mib_upload_dir)
             if filename in mibs:
                 c = wato_confirm(_("Confirm MIB deletion"),
-                                 _("Do you really want to delete the MIB file <b>%s</b>?" % filename))
+                                 _("Do you really want to delete the MIB file <b>%s</b>?") % filename)
                 if c:
                     delete_mib(filename, mibs[filename]["name"])
                 elif c == False:
@@ -2896,8 +2896,8 @@ sl_help = _("A service level is a number that describes the business impact of a
             "inherited to all services that do <b>not</b> have explicitely assigned a service "
             "with the ruleset <i>Service Level of services</i>. Assigning no service level "
             "is equal to defining a level of 0.<br><br>The list of available service "
-            "levels is configured via a <a href='%s'>global option.</a>" %
-            "wato.py?varname=mkeventd_service_levels&mode=edit_configvar")
+            "levels is configured via a <a href='%s'>global option.</a>") % \
+            "wato.py?varname=mkeventd_service_levels&mode=edit_configvar"
 
 register_rule(
     "grouping",

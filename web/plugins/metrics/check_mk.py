@@ -2882,13 +2882,13 @@ for volume_info in [ "NFS", "NFSv4", "CIFS", "SAN", "FCP", "ISCSI" ]:
         volume = volume_info.lower()
 
         metric_info["%s_read_%s" % (volume, what)] = {
-            "title" : _( "%s read %s" % (volume_info, what) ),
+            "title" : _( "%s read %s") % (volume_info, what),
             "unit"  : unit,
             "color" : "31/a",
         }
 
         metric_info["%s_write_%s" % (volume, what)] = {
-            "title" : _( "%s write %s" % (volume_info, what) ),
+            "title" : _( "%s write %s") % (volume_info, what),
             "unit"  : unit,
             "color" : "44/a",
         }
@@ -3117,7 +3117,7 @@ for what, descr, color in [
     ]:
     metric_info_key = "varnish_backend_%s_rate" % what
     metric_info[metric_info_key] = {
-        "title" : _("Backend Conn. %s" % descr),
+        "title" : _("Backend Conn. %s") % descr,
         "unit"  : "1/s",
         "color" : color,
     }
@@ -3129,69 +3129,69 @@ for what, descr, color in [
     ]:
     metric_info_key = "varnish_cache_%s_rate" % what
     metric_info[metric_info_key] = {
-        "title" : _("Cache %s" % descr),
+        "title" : _("Cache %s") % descr,
         "unit"  : "1/s",
         "color" : color,
     }
 
 for what, descr, color in [
-        ("drop",      "Connections dropped",         "12/a"),
-        ("req",       "Client requests received",    "22/a"),
-        ("conn",      "Client connections accepted", "32/a"),
-        ("drop_late", "Connection dropped late",     "42/a"),
+        ("drop",      _("Connections dropped"),         "12/a"),
+        ("req",       _("Client requests received"),    "22/a"),
+        ("conn",      _("Client connections accepted"), "32/a"),
+        ("drop_late", _("Connection dropped late"),     "42/a"),
     ]:
     metric_info_key = "varnish_client_%s_rate" % what
     metric_info[metric_info_key] = {
-        "title" : _(descr),
+        "title" : descr,
         "unit"  : "1/s",
         "color" : color,
     }
 
 for what, descr, color in [
-        ("oldhttp", "pre HTTP/1.1 closed", "11/a"),
-        ("head",    "head",                "13/a"),
-        ("eof",     "EOF",                 "15/a"),
-        ("zero",    "zero length",         "21/a"),
-        ("304",     "no body (304)",       "23/a"),
-        ("1xx",     "no body (1xx)",       "25/a"),
-        ("204",     "no body (204)",       "31/a"),
-        ("length",  "with length",         "33/a"),
-        ("failed",  "failed",              "35/a"),
-        ("bad",     "had bad headers",     "41/a"),
-        ("close",   "wanted close",        "43/a"),
-        ("chunked", "chunked",             "45/a"),
+        ("oldhttp", _("Fetch pre HTTP/1.1 closed"), "11/a"),
+        ("head",    _("Fetch head"),                "13/a"),
+        ("eof",     _("Fetch EOF"),                 "15/a"),
+        ("zero",    _("Fetch zero length"),         "21/a"),
+        ("304",     _("Fetch no body (304)"),       "23/a"),
+        ("1xx",     _("Fetch no body (1xx)"),       "25/a"),
+        ("204",     _("Fetch no body (204)"),       "31/a"),
+        ("length",  _("Fetch with length"),         "33/a"),
+        ("failed",  _("Fetch failed"),              "35/a"),
+        ("bad",     _("Fetch had bad headers"),     "41/a"),
+        ("close",   _("Fetch wanted close"),        "43/a"),
+        ("chunked", _("Fetch chunked"),             "45/a"),
     ]:
     metric_info_key = "varnish_fetch_%s_rate" % what
     metric_info[metric_info_key] = {
-        "title" : _("Fetch %s" % descr),
+        "title" : descr,
         "unit"  : "1/s",
         "color" : color,
     }
 
 for what, descr, color in [
-        ("expired",   "Expired objects",   "21/a"),
-        ("lru_nuked", "LRU nuked objects", "31/a"),
-        ("lru_moved", "LRU moved objects", "41/a"),
+        ("expired",   _("Expired objects"),   "21/a"),
+        ("lru_nuked", _("LRU nuked objects"), "31/a"),
+        ("lru_moved", _("LRU moved objects"), "41/a"),
     ]:
     metric_info_key = "varnish_objects_%s_rate" % what
     metric_info[metric_info_key] = {
-        "title" : _(descr),
+        "title" : descr,
         "unit"  : "1/s",
         "color" : color,
     }
 
 for what, descr, color in [
-        ("",        "Worker threads",             "11/a"),
-        ("_lqueue", "Work request queue length",  "13/a"),
-        ("_create", "Worker threads created",     "15/a"),
-        ("_drop",   "Dropped work requests",      "21/a"),
-        ("_failed", "Worker threads not created", "23/a"),
-        ("_queued", "Queued work requests",       "25/a"),
-        ("_max",    "Worker threads limited",     "31/a"),
+        ("",        _("Worker threads"),             "11/a"),
+        ("_lqueue", _("Work request queue length"),  "13/a"),
+        ("_create", _("Worker threads created"),     "15/a"),
+        ("_drop",   _("Dropped work requests"),      "21/a"),
+        ("_failed", _("Worker threads not created"), "23/a"),
+        ("_queued", _("Queued work requests"),       "25/a"),
+        ("_max",    _("Worker threads limited"),     "31/a"),
     ]:
     metric_info_key = "varnish_worker%s_rate" % what
     metric_info[metric_info_key] = {
-        "title" : _(descr),
+        "title" : descr,
         "unit"  : "1/s",
         "color" : color,
     }

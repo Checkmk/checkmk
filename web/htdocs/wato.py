@@ -2019,7 +2019,7 @@ def render_renaming_actions(action_counts):
             text = action_titles.get(what, what)
 
         if count > 1:
-            text += _(" (%d times)" % count)
+            text += _(" (%d times)") % count
         texts.append(text)
 
     return texts
@@ -3153,7 +3153,7 @@ class ModeBulkImport(WatoMode):
                 selected.append('_c_%s' % host_name)
                 num_succeeded += 1
             except Exception, e:
-                fail_messages.append(_("Failed to create a host from line %d: %s" % (self._csv_reader.line_num, e)))
+                fail_messages.append(_("Failed to create a host from line %d: %s") % (self._csv_reader.line_num, e))
                 num_failed += 1
 
         self._delete_csv_file()
@@ -5635,8 +5635,8 @@ def mode_ldap_config(phase):
             nr = int(html.var("_delete"))
             connection = connections[nr]
             c = wato_confirm(_("Confirm deletion of LDAP connection"),
-                             _("Do you really want to delete the LDAP connection <b>%s</b>?" %
-                               (connection["id"])))
+                             _("Do you really want to delete the LDAP connection <b>%s</b>?") %
+                               (connection["id"]))
             if c:
                 log_pending(SYNC, None, "delete-ldap-connection", _("Deleted LDAP connection %s") % (connection["id"]))
                 del connections[nr]
@@ -6304,8 +6304,8 @@ def mode_globalvars(phase):
                     current_settings[varname] = not current_settings[varname]
                 else:
                     current_settings[varname] = not def_value
-                msg = _("Changed Configuration variable %s to %s." % (varname,
-                    current_settings[varname] and "on" or "off"))
+                msg = _("Changed Configuration variable %s to %s.") % (varname,
+                    current_settings[varname] and "on" or "off")
                 save_configuration_settings(current_settings)
                 pending_func  = configvar_domains()[domain].get("pending")
                 if pending_func:
@@ -6436,7 +6436,7 @@ def mode_edit_configvar(phase, what = 'globalvars'):
         if what == 'mkeventd':
             return _("Event Console Configuration")
         elif siteid:
-            return _("Site-specific global configuration for %s" % siteid)
+            return _("Site-specific global configuration for %s") % siteid
         else:
             return _("Global configuration settings for Check_MK")
 
@@ -6522,8 +6522,8 @@ def mode_edit_configvar(phase, what = 'globalvars'):
     html.begin_form("value_editor", method="POST")
     forms.header(valuespec.title())
     if not config.wato_hide_varnames:
-        forms.section(_("Variable for <tt>%s.mk</tt>" %
-            { "check_mk" : "main" }.get(domain, domain)))
+        forms.section(_("Variable for <tt>%s.mk</tt>") %
+            { "check_mk" : "main" }.get(domain, domain))
         html.write("<tt>%s</tt>" % varname)
 
     forms.section(_("Current setting"))
@@ -6688,13 +6688,13 @@ def mode_groups(phase, what):
 
             confirm_txt = _('Do you really want to delete the %s group "%s"?') % (what, delname)
 
-            c = wato_confirm(_("Confirm deletion of group \"%s\"" % delname), confirm_txt)
+            c = wato_confirm(_("Confirm deletion of group \"%s\"") % delname, confirm_txt)
             if c:
                 del groups[delname]
                 save_group_information(all_groups)
                 if what == 'contact':
                     call_hook_contactsgroups_saved(all_groups)
-                log_pending(SYNCRESTART, None, "edit-%sgroups", _("Deleted %s group %s" % (what, delname)))
+                log_pending(SYNCRESTART, None, "edit-%sgroups", _("Deleted %s group %s") % (what, delname))
             elif c == False:
                 return ""
 
@@ -6969,8 +6969,8 @@ def load_notification_rules():
         return notification_rules
     except Exception, e:
         if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                          (filename, e))
         return []
 
 def save_notification_rules(rules):
@@ -7744,8 +7744,8 @@ def generic_rule_list_actions(rules, what, what_title, save_rules):
         nr = int(html.var("_delete"))
         rule = rules[nr]
         c = wato_confirm(_("Confirm deletion of %s"),
-                         _("Do you really want to delete the %s <b>%d</b> <i>%s</i>?" %
-                           (what_title, nr, rule.get("description",""))))
+                         _("Do you really want to delete the %s <b>%d</b> <i>%s</i>?") %
+                           (what_title, nr, rule.get("description","")))
         if c:
             log_pending(SYNC, None, what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
             del rules[nr]
@@ -7884,7 +7884,7 @@ def mode_notifications(phase):
 
                 analyse_url = html.makeuri([("analyse", str(nr))])
                 tooltip = "".join(("%s: %s\n" % e) for e in sorted(context.items()))
-                html.icon_button(analyse_url, _("Analyze ruleset with this notification:\n%s" % tooltip), "analyze")
+                html.icon_button(analyse_url, _("Analyze ruleset with this notification:\n%s") % tooltip, "analyze")
                 replay_url = html.makeactionuri([("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
                 if html.var("analyse") and nr == int(html.var("analyse")):
@@ -7905,11 +7905,11 @@ def mode_notifications(phase):
 
                 if nottype in [ "PROBLEM", "RECOVERY" ]:
                     if context.get("SERVICESTATE"):
-                        statename = _(context["SERVICESTATE"][:4])
+                        statename = context["SERVICESTATE"][:4]
                         state = context["SERVICESTATEID"]
                         css = "state svcstate state%s" % state
                     else:
-                        statename = _(context.get("HOSTSTATE")[:4])
+                        statename = context.get("HOSTSTATE")[:4]
                         state = context["HOSTSTATEID"]
                         css = "state hstate state%s" % state
                     table.cell(_("State"), statename, css=css)
@@ -8037,8 +8037,8 @@ def mode_user_notifications(phase, profilemode):
             nr = int(html.var("_delete"))
             rule = rules[nr]
             c = wato_confirm(_("Confirm notification rule deletion"),
-                             _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?" %
-                               (nr, rule.get("description",""))))
+                             _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?") %
+                               (nr, rule.get("description","")))
             if c:
                 del rules[nr]
                 userdb.save_users(users)
@@ -8314,8 +8314,8 @@ def load_timeperiods():
 
     except Exception, e:
         if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                          (filename, e))
         return {}
 
 
@@ -8335,7 +8335,7 @@ class ExceptionName(TextAscii):
     def validate_value(self, value, varprefix):
         if value in [ "monday", "tuesday", "wednesday", "thursday",
                        "friday", "saturday", "sunday" ]:
-            raise MKUserError(varprefix, _("You cannot use weekday names (%s) in exceptions" % value))
+            raise MKUserError(varprefix, _("You cannot use weekday names (%s) in exceptions") % value)
         if value in [ "name", "alias", "timeperiod_name", "register", "use", "exclude" ]:
             raise MKUserError(varprefix, _("<tt>%s</tt> is a reserved keyword."))
         TextAscii.validate_value(self, value, varprefix)
@@ -8744,9 +8744,9 @@ def mode_edit_timeperiod(phase):
                 if name == "24X7":
                     raise MKUserError("name", _("The time period name 24X7 cannot be used. It is always autmatically defined."))
                 timeperiods[name] = timeperiod
-                log_pending(SYNCRESTART, None, "edit-timeperiods", _("Created new time period %s" % name))
+                log_pending(SYNCRESTART, None, "edit-timeperiods", _("Created new time period %s") % name)
             else:
-                log_pending(SYNCRESTART, None, "edit-timeperiods", _("Modified time period %s" % name))
+                log_pending(SYNCRESTART, None, "edit-timeperiods", _("Modified time period %s") % name)
             timeperiod["alias"] = alias
             save_timeperiods(timeperiods)
             return "timeperiods"
@@ -8922,8 +8922,8 @@ def mode_sites(phase):
                           "assigned to it. You can use the <a href=\"%s\">host "
                           "search</a> to get a list of the hosts.") % search_url)
 
-            c = wato_confirm(_("Confirm deletion of site %s" % delid),
-                             _("Do you really want to delete the connection to the site %s?" % delid))
+            c = wato_confirm(_("Confirm deletion of site %s") % delid,
+                             _("Do you really want to delete the connection to the site %s?") % delid)
             if c:
                 del configured_sites[delid]
                 save_sites(configured_sites)
@@ -8933,7 +8933,7 @@ def mode_sites(phase):
                 if is_distributed() and global_replication_state() == "clean":
                     log_commit_pending()
 
-                log_pending(SYNCRESTART, None, "edit-sites", _("Deleted site %s" % (delid)))
+                log_pending(SYNCRESTART, None, "edit-sites", _("Deleted site %s") % (delid))
                 return None
             elif c == False:
                 return ""
@@ -8973,7 +8973,7 @@ def mode_sites(phase):
                     site["secret"] = secret
                     save_sites(configured_sites)
                     log_audit(None, "edit-site", _("Successfully logged into remote site '%s'") % site["alias"])
-                    return None, _("Successfully logged into remote site '%s'!" % site["alias"])
+                    return None, _("Successfully logged into remote site '%s'!") % site["alias"]
                 except MKAutomationException, e:
                     error = _("Cannot connect to remote site: %s") % e
                 except MKUserError, e:
@@ -9109,7 +9109,7 @@ def mode_edit_site_globals(phase):
         search = search.strip().lower()
 
     if phase == "title":
-        return _("Edit site-specific global settings of %s" % siteid)
+        return _("Edit site-specific global settings of %s") % siteid
 
     elif phase == "buttons":
         html.context_button(_("All Sites"), folder_preserving_link([("mode", "sites")]), "back")
@@ -9147,8 +9147,8 @@ def mode_edit_site_globals(phase):
                     current_settings[varname] = not current_settings[varname]
                 else:
                     current_settings[varname] = not def_value
-                msg = _("Changed site-specific configuration variable %s to %s." % (varname,
-                    current_settings[varname] and "on" or "off"))
+                msg = _("Changed site-specific configuration variable %s to %s.") % (varname,
+                    current_settings[varname] and _("on") or _("off"))
                 site.setdefault("globals", {})[varname] = current_settings[varname]
                 save_sites(configured_sites, activate=False)
 
@@ -9201,7 +9201,7 @@ def mode_edit_site(phase):
         if new:
             return _("Create new site connection")
         else:
-            return _("Edit site connection %s" % siteid)
+            return _("Edit site connection %s") % siteid
 
     elif phase == "buttons":
         html.context_button(_("All Sites"), folder_preserving_link([("mode", "sites")]), "back")
@@ -9439,9 +9439,9 @@ def mode_edit_site(phase):
         if new:
             if not config.site_is_local(id):
                 update_replication_status(id, { "need_sync" : True, "need_restart" : True })
-            log_pending(AFFECTED, None, "edit-sites", _("Created new connection to site %s" % id))
+            log_pending(AFFECTED, None, "edit-sites", _("Created new connection to site %s") % id)
         else:
-            log_pending(AFFECTED, None, "edit-sites", _("Modified site connection %s" % id))
+            log_pending(AFFECTED, None, "edit-sites", _("Modified site connection %s") % id)
             # Replication mode has switched on/off => handle replication state
             repstatus = load_replication_status()
             if repl:              # Repl is on
@@ -9925,8 +9925,8 @@ def mode_users(phase):
             if delid not in users:
                 return None # The account does not exist (anymore), no deletion needed
 
-            c = wato_confirm(_("Confirm deletion of user %s" % delid),
-                             _("Do you really want to delete the user %s?" % delid))
+            c = wato_confirm(_("Confirm deletion of user %s") % delid,
+                             _("Do you really want to delete the user %s?") % delid)
             if c:
                 delete_user(delid, users)
                 userdb.save_users(users)
@@ -10105,8 +10105,8 @@ def bulk_delete_users_after_confirm(users):
                 selected_users.append(user)
 
     if selected_users:
-        c = wato_confirm(_("Confirm deletion of %d users" % len(selected_users)),
-                         _("Do you really want to delete %d users?" % len(selected_users)))
+        c = wato_confirm(_("Confirm deletion of %d users") % len(selected_users),
+                         _("Do you really want to delete %d users?") % len(selected_users))
         if c:
             for user in selected_users:
                 delete_user(user, users)
@@ -10119,7 +10119,7 @@ def bulk_delete_users_after_confirm(users):
 
 def delete_user(delid, users):
     del users[delid]
-    log_pending(SYNCRESTART, None, "edit-users", _("Deleted user %s" % (delid)))
+    log_pending(SYNCRESTART, None, "edit-users", _("Deleted user %s") % (delid))
 
 
 def mode_edit_user(phase):
@@ -10134,7 +10134,7 @@ def mode_edit_user(phase):
         if new:
             return _("Create new user")
         else:
-            return _("Edit user %s" % userid)
+            return _("Edit user %s") % userid
 
     elif phase == "buttons":
         html.context_button(_("All Users"), folder_preserving_link([("mode", "users")]), "back")
@@ -10373,9 +10373,9 @@ def mode_edit_user(phase):
         # Saving
         userdb.save_users(users)
         if new:
-            log_pending(SYNCRESTART, None, "edit-users", _("Create new user %s" % id))
+            log_pending(SYNCRESTART, None, "edit-users", _("Create new user %s") % id)
         else:
-            log_pending(SYNCRESTART, None, "edit-users", _("Modified user %s" % id))
+            log_pending(SYNCRESTART, None, "edit-users", _("Modified user %s") % id)
         return "users"
 
     # Let exceptions from loading notification scripts happen now
@@ -10699,14 +10699,14 @@ def mode_roles(phase):
             if html.transaction_valid() and roles[delid].get('builtin'):
                 raise MKUserError(None, _("You cannot delete the builtin roles!"))
 
-            c = wato_confirm(_("Confirm deletion of role %s" % delid),
-                             _("Do you really want to delete the role %s?" % delid))
+            c = wato_confirm(_("Confirm deletion of role %s") % delid,
+                             _("Do you really want to delete the role %s?") % delid)
             if c:
                 rename_user_role(delid, None) # Remove from existing users
                 del roles[delid]
                 save_roles(roles)
                 update_login_sites_replication_status()
-                log_pending(AFFECTED, None, "edit-roles", _("Deleted role '%s'" % delid))
+                log_pending(AFFECTED, None, "edit-roles", _("Deleted role '%s'") % delid)
             elif c == False:
                 return ""
         elif html.var("_clone"):
@@ -10724,7 +10724,7 @@ def mode_roles(phase):
                 roles[newid] = new_role
                 save_roles(roles)
                 update_login_sites_replication_status()
-                log_pending(AFFECTED, None, "edit-roles", _("Created new role '%s'" % newid))
+                log_pending(AFFECTED, None, "edit-roles", _("Created new role '%s'") % newid)
         return
 
     table.begin("roles")
@@ -10835,7 +10835,7 @@ def mode_edit_role(phase):
 
         save_roles(roles)
         update_login_sites_replication_status()
-        log_pending(AFFECTED, None, "edit-roles", _("Modified user role '%s'" % new_id))
+        log_pending(AFFECTED, None, "edit-roles", _("Modified user role '%s'") % new_id)
         return "roles"
 
     html.begin_form("role", method="POST")
@@ -11594,8 +11594,8 @@ def rename_host_tags_after_confirmation(tag_id, operations):
             undeclare_host_tag_attribute(tag_id)
         affected_folders, affected_hosts, affected_rulespecs = \
         change_host_tags_in_folders(tag_id, operations, mode, Folder.root_folder())
-        return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d" %
-            (len(affected_folders), len(affected_hosts), len(affected_rulespecs)))
+        return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % \
+            (len(affected_folders), len(affected_hosts), len(affected_rulespecs))
 
     message = ""
     affected_folders, affected_hosts, affected_rulespecs = \
@@ -12242,7 +12242,7 @@ def create_new_rule_form(rulespec, hostname = None, item = None, varname = None)
 
     html.write('<table>')
     if hostname:
-        label = _("Host %s" % hostname)
+        label = _("Host %s") % hostname
         ty = _('Host')
         if item != NO_ITEM and rulespec["itemtype"]:
             label += _(" and %s '%s'") % (rulespec["itemname"], item)
@@ -12727,9 +12727,9 @@ def rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list,
 
     for tag in tag_specs:
         if tag[0] != '/' and tag[0] != '!' and tag not in host.tags():
-            reasons.append(_("The host is missing the tag %s" % tag))
+            reasons.append(_("The host is missing the tag %s") % tag)
         elif tag[0] == '!' and tag[1:] in host.tags():
-            reasons.append(_("The host has the tag %s" % tag))
+            reasons.append(_("The host has the tag %s") % tag)
 
     if not rule_folder.is_transitive_parent_of(host_folder):
         reasons.append(_("The rule does not apply to the folder of the host."))
@@ -13303,8 +13303,8 @@ def load_rulesets(folder):
         pass # Non existant files are ok...
     except Exception, e:
         if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                                                                       (path, e)))
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                                                                       (path, e))
         else:
             logger(LOG_ERR, 'load_rulesets: Problem while loading rulesets (%s - %s). '
                      'Continue with partly loaded rules...' % (path, e))
@@ -14802,13 +14802,13 @@ def mode_custom_attrs(phase, what):
 
             confirm_txt = _('Do you really want to delete the custom attribute "%s"?') % (delname)
 
-            c = wato_confirm(_("Confirm deletion of attribute \"%s\"" % delname), confirm_txt)
+            c = wato_confirm(_("Confirm deletion of attribute \"%s\"") % delname, confirm_txt)
             if c:
                 for index, attr in enumerate(attrs):
                     if attr['name'] == delname:
                         attrs.pop(index)
                 save_changed_custom_attrs(all_attrs, what)
-                log_pending(SYNCRESTART, None, "edit-%sattrs" % what, _("Deleted attribute %s" % (delname)))
+                log_pending(SYNCRESTART, None, "edit-%sattrs" % what, _("Deleted attribute %s") % (delname))
             elif c == False:
                 return ""
 
@@ -15216,7 +15216,7 @@ def mode_icons(phase):
             icon_name = html.var("_delete")
             if icon_name in load_custom_icons():
                 c = wato_confirm(_("Confirm Icon deletion"),
-                                 _("Do you really want to delete the icon <b>%s</b>?" % icon_name))
+                                 _("Do you really want to delete the icon <b>%s</b>?") % icon_name)
                 if c:
                     os.remove("%s/local/share/check_mk/web/htdocs/images/icons/%s.png" %
                                                         (defaults.omd_root, icon_name))

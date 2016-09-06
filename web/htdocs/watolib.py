@@ -2564,14 +2564,14 @@ class HostTagAttribute(Attribute):
         if len(self._taglist) == 1:
             title = self._taglist[0][1]
             if title:
-                title = _(title)
+                title = _u(title)
             if value:
                 return "", title
             else:
                 return "", "%s %s" % (_("not"), title)
         for entry in self._taglist:
             if value == entry[0]:
-                return "", entry[1] and _(entry[1]) or ''
+                return "", entry[1] and _u(entry[1]) or ''
         return "", "" # Should never happen, at least one entry should match
                       # But case could occur if tags definitions have been changed.
 
@@ -2591,7 +2591,7 @@ class HostTagAttribute(Attribute):
                 secondary_tags = e[2]
             else:
                 secondary_tags = []
-            choices.append(("|".join([ tagvalue ] + secondary_tags), e[1] and _u(_(e[1])) or ''))
+            choices.append(("|".join([ tagvalue ] + secondary_tags), e[1] and _u(e[1]) or ''))
             if value != "" and value == tagvalue and secondary_tags:
                 value = value + "|" + "|".join(secondary_tags)
 
@@ -3050,8 +3050,8 @@ def load_configuration_vars(filename, settings):
         return settings
     except Exception, e:
         if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                          (filename, e))
         return {}
 
 
@@ -3145,8 +3145,8 @@ def load_sites():
 
     except Exception, e:
         if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (sites_mk, e)))
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                          (sites_mk, e))
         return {}
 
 
@@ -3196,7 +3196,7 @@ def save_liveproxyd_config(sites):
         pid = int(file(pidfile).read().strip())
         os.kill(pid, 10)
     except Exception, e:
-        html.show_error(_("Warning: cannot reload Livestatus Proxy-Daemon: %s" % e))
+        html.show_error(_("Warning: cannot reload Livestatus Proxy-Daemon: %s") % e)
 
 
 def create_nagvis_backends(sites):
@@ -4107,8 +4107,8 @@ def load_hosttags():
 
     except Exception, e:
         if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                          (filename, e))
         return [], []
 
 
@@ -4591,8 +4591,7 @@ def user_script_choices(what):
     scripts = load_user_scripts(what)
     choices = [ (name, info["title"]) for (name, info) in scripts.items() ]
     choices.sort(cmp = lambda a,b: cmp(a[1], b[1]))
-    # Make choices localizable
-    choices = [ (k, _(v)) for k, v in choices ]
+    choices = [ (k, _u(v)) for k, v in choices ]
     return choices
 
 

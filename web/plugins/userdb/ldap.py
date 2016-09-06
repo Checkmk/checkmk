@@ -1824,7 +1824,7 @@ def synchronize_profile_to_sites(connection, user_id, profile):
                     if not config.site_is_local(site_id) ]
 
     connection.log('Credentials changed: %s. Trying to sync to %d sites' %
-                                                    (user_id, len(sites)))
+                                                    (user_id, len(remote_sites)))
 
     num_disabled  = 0
     num_succeeded = 0

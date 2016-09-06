@@ -82,7 +82,7 @@ def render_single_dataset(rows, view, group_cells, cells, num_columns, _ignore_s
             odd = odd == "odd" and "even" or "odd"
             html.write('<tr class="data %s0">' % odd)
             if view.get("column_headers") != "off":
-                html.write("<td class=left>%s</td>" % cell.title())
+                html.write("<td class=left>%s</td>" % cell.title(use_short=False))
 
             for row in thispart:
                 cell.paint(row)
@@ -682,7 +682,7 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
         for cell_nr, cell in enumerate(group_cells):
             odd = odd == "odd" and "even" or "odd"
             html.write('<tr class="data %s0">' % odd)
-            html.write('<td class=matrixhead>%s</td>' % cell.title())
+            html.write('<td class=matrixhead>%s</td>' % cell.title(use_short=False))
             for group, group_row in groups:
                 tdclass, content = cell.render(group_row)
                 if cell_nr > 0:
@@ -750,7 +750,7 @@ def csv_export_matrix(rows, view, group_cells, cells):
     table.begin(output_format="csv")
     for cell_nr, cell in enumerate(group_cells):
         table.row()
-        table.cell("", cell.title())
+        table.cell("", cell.title(use_short=False))
         for group, group_row in groups:
             tdclass, content = cell.render(group_row)
             table.cell("", content)

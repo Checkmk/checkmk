@@ -1,0 +1,10 @@
+Title: megaraid_pdisks: Handle "rebuild" state as WARNING instead of UNKNOWN
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1473169581
+
+

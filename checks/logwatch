@@ -378,32 +378,14 @@ def logwatch_username():
 
 
 def check_logwatch_generic(item, params, loglines, found, groups=False):
+    logdir = logwatch_dir + "/" + g_hostname
+
     # Create directories, if neccessary
     try:
-        logdir = logwatch_dir + "/" + g_hostname
-        if not os.path.exists(logwatch_dir):
-            os.mkdir(logwatch_dir)
-        if not os.path.exists(logdir):
-            os.mkdir(logdir)
-            if www_group != None:
-                try:
-                    if i_am_root():
-                        to_user = nagios_user
-                    else:
-                        to_user = "" # keep user unchanged
-                    os.system("chown %s:%s %s" % (to_user, www_group, quote_shell_string(logdir)))
-                    os.chmod(logdir, 0775)
-                except Exception, e:
-                    os.rmdir(logdir)
-                    raise MKGeneralException(("User %s cannot chown directory to group id %d: %s. Please make sure "+
-                                             "that %s is a member of that group.") %
-                                             (logwatch_username(), www_group, e, logwatch_username()))
-
-    except MKGeneralException:
-        raise
-    except Exception, e:
-        raise MKGeneralException("User %s cannot create logwatch directory: %s" % \
-                                 (logwatch_username(), e))
+        os.makedirs(logdir)
+    except OSError, e:
+        if e.errno == 17:
+            pass # Exists
 
     logfile = logdir + "/" + item.replace("/", "\\")
 

@@ -417,7 +417,7 @@ class WebSession(requests.Session):
         # There might be other resources like iframe, audio, ... but we don't care about them
 
         for img_url in self._find_resource_urls("img", "src", soup):
-            assert not img_url.startswith("/")
+            assert not img_url.startswith("/"), "%s starts with /" % img_url
             req = self.get(base_url + "/" + img_url, proto=parsed_url.scheme, verify=False)
 
             mime_type = self._get_mime_type(req)
@@ -481,6 +481,9 @@ class CMKWebSession(WebSession):
 
     # Computes a full URL inkl. http://... from a URL starting with the path.
     def url(self, proto, path):
+        assert not path.startswith("http")
+        assert "://" not in path
+
         # In case no path component is in URL, add the path to the "/[site]/check_mk"
         if "/" not in urlparse(path).path:
             path = "/%s/check_mk/%s" % (self.site.id, path)

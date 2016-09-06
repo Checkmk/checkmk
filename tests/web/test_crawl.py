@@ -32,6 +32,14 @@ class Url(object):
         return "check_mk/" + self.url.split("/check_mk/", 1)[1]
 
 
+    # Strip proto and host
+    def url_without_host(self):
+        parsed = list(urlsplit(self.url))
+        parsed[0] = None
+        parsed[1] = None
+        return urlunsplit(parsed)
+
+
 
 class Worker(threading.Thread):
     def __init__(self, num, crawler):
@@ -74,7 +82,8 @@ class Worker(threading.Thread):
 
         started = time.time()
         try:
-            response = self.crawler.client.get(url.url)
+            #print url.url_without_host()
+            response = self.crawler.client.get(url.url_without_host())
         except AssertionError, e:
             if "This view can only be used in mobile mode" in "%s" % e:
                 return
@@ -274,7 +283,7 @@ class TestCrawler(object):
 
         self.load_stats()
 
-        self.todo.put(Url(site.url))
+        self.todo.put(Url("/%s/check_mk/" % site.id))
 
         self.crawl()
 

@@ -34,7 +34,7 @@ dpu =  1
 url = "http://localhost/recoveryconsole/bpl/syncstatus.php?type=replicate&arguments=start:%s,end:%s&sid=%s&auth=1:" % ( start, end, dpu )
 xml = urllib.urlopen(url)
 
-print "<<<unitrends_replication:sep(124)>>>"
+sys.stdout.write("<<<unitrends_replication:sep(124)>>>\n")
 dom = minidom.parse(xml)
 for item in dom.getElementsByTagName('SecureSyncStatus'):
     application = item.getElementsByTagName('Application')
@@ -46,4 +46,5 @@ for item in dom.getElementsByTagName('SecureSyncStatus'):
     completed = item.getElementsByTagName('Complete')[0].firstChild.data
     targetname = item.getElementsByTagName('TargetName')[0].firstChild.data
     instancename = item.getElementsByTagName('InstanceName')[0].firstChild.data
-    print "%s|%s|%s|%s|%s" % (application, result, completed, targetname, instancename)
+    sys.stdout.write("%s|%s|%s|%s|%s\n" %
+        (application, result, completed, targetname, instancename))

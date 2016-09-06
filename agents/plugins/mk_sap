@@ -199,8 +199,8 @@ def query(what, params, debug = False):
     fd = conn.discover(what)
 
     if debug:
-        print "Name: %s Params: %s" % (fd.name, fd.handle.parameters)
-        print "Given-Params: %s" % params
+        sys.stdout.write("Name: %s Params: %s\n" % (fd.name, fd.handle.parameters))
+        sys.stdout.write("Given-Params: %s\n" % params)
 
     f = fd.create_function_call()
     for key, val in params.items():
@@ -220,7 +220,7 @@ def login():
         'INTERFACE':  'XAL',
         'VERSION':    '1.0',
     })
-    #print f.RETURN
+    #sys.stdout.write("%s\n" % f.RETURN)
     return f.SESSIONID.value
 
 def logout():
@@ -384,7 +384,7 @@ def check(cfg):
         for node in tree:
             if not to_be_monitored(node['PATH']):
                 continue
-            #print node["PATH"]
+            #sys.stdout.write("%s\n" % node["PATH"])
 
             status_details = ''
             perfvalue      = '-'
@@ -397,7 +397,7 @@ def check(cfg):
             }
 
             if state['VALUE'] not in STATE_VALUE_MAP:
-                print 'UNHANDLED STATE VALUE'
+                sys.stdout.write('UNHANDLED STATE VALUE\n')
                 sys.exit(1)
 
             #
@@ -446,7 +446,7 @@ def check(cfg):
     for host, host_sap in sap_data.items():
         sys.stdout.write('<<<<%s>>>>\n' % host)
         sys.stdout.write('<<<sap:sep(9)>>>\n')
-        print '\n'.join(host_sap)
+        sys.stdout.write('%s\n' % '\n'.join(host_sap))
     sys.stdout.write('<<<<>>>>\n')
 
     for host, host_logs in logs.items():

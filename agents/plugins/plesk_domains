@@ -46,6 +46,6 @@ except MySQLdb.Error, e: # pylint: disable=no-member
 
 cursor = db.cursor()
 cursor.execute('SELECT name FROM domains')
-print '<<<plesk_domains>>>'
-print '\n'.join([ d[0] for d in cursor.fetchall() ])
+sys.stdout.write('<<<plesk_domains>>>\n')
+sys.stdout.write("%s\n" % '\n'.join([ d[0] for d in cursor.fetchall() ]))
 cursor.close()

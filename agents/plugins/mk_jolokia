@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import urllib2, sys, os, socket, pprint, base64, ssl
+import urllib2, sys, os, socket, base64, ssl
 from httplib import HTTPConnection, HTTPSConnection
 
 try:
@@ -243,7 +243,7 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
 
     for subinstance, value in values:
         if not subinstance and not title:
-            print "INTERNAL ERROR: %s" % value
+            sys.stdout.write("INTERNAL ERROR: %s\n" % value)
             continue
 
         if "threadStatus" in subinstance or "threadParam" in subinstance:

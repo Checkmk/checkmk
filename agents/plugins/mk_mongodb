@@ -44,48 +44,48 @@ try:
 
     server_status = con.admin.command("serverStatus")
 except:
-    print "<<<mongodb_instance:sep(9)>>>"
-    print "error\tInstance is down"
+    sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
+    sys.stdout.write("error\tInstance is down\n")
     sys.exit(0)
 
 server_version = tuple(con.server_info()['version'].split('.'))
 
 repl_info = server_status.get("repl")
 
-print "<<<mongodb_instance:sep(9)>>>"
+sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
 if not repl_info:
-    print "mode\tSingle Instance"
+    sys.stdout.write("mode\tSingle Instance\n")
 else:
     if repl_info.get("ismaster"):
-        print "mode\tPrimary"
+        sys.stdout.write("mode\tPrimary\n")
     elif repl_info.get("secondary"):
-        print "mode\tSecondary"
+        sys.stdout.write("mode\tSecondary\n")
     else:
-        print "mode\tArbiter"
-    print "address\t%s" % repl_info["me"]
+        sys.stdout.write("mode\tArbiter\n")
+    sys.stdout.write("address\t%s\n" % repl_info["me"])
 
-print "version\t%s" % server_status["version"]
-print "pid\t%s" % server_status["pid"]
+sys.stdout.write("version\t%s\n" % server_status["version"])
+sys.stdout.write("pid\t%s\n" % server_status["pid"])
 
 if repl_info:
     if not repl_info.get("ismaster"):
         sys.exit(0)
-    print "<<<<%s>>>>" % repl_info["setName"]
-    print "<<<mongodb_replica:sep(9)>>>"
-    print "primary\t%s" % repl_info.get("primary")
-    print "hosts\t%s" % " ".join(repl_info.get("hosts"))
-    print "arbiters\t%s" % " ".join(repl_info.get("arbiters"))
+    sys.stdout.write("<<<<%s>>>>\n" % repl_info["setName"])
+    sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
+    sys.stdout.write("primary\t%s\n" % repl_info.get("primary"))
+    sys.stdout.write("hosts\t%s\n" % " ".join(repl_info.get("hosts")))
+    sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
 
-    print "<<<mongodb_replstatus>>>"
+    sys.stdout.write("<<<mongodb_replstatus>>>\n")
     pprint.pprint(con.admin.command("replSetGetStatus"))
 
-print "<<<mongodb_asserts>>>"
+sys.stdout.write("<<<mongodb_asserts>>>\n")
 for key, value in server_status.get("asserts", {}).items():
-    print "%s %s" % (key, value)
+    sys.stdout.write("%s %s\n" % (key, value))
 
 
-print "<<<mongodb_connections>>>"
-print "\n".join(map(lambda x: "%s %s" % x, server_status["connections"].items()))
+sys.stdout.write("<<<mongodb_connections>>>\n")
+sys.stdout.write("%s\n" % "\n".join(map(lambda x: "%s %s" % x, server_status["connections"].items())))
 
 databases = dict(map(lambda x: (x, {}), con.database_names()))
 
@@ -97,29 +97,29 @@ for name in databases.keys():
         databases[name]["collstats"][collection] = con[name].command("collstats", collection)
 
 
-print "<<<mongodb_chunks>>>"
+sys.stdout.write("<<<mongodb_chunks>>>\n")
 col = con.config.chunks
 for db_name, db_data in databases.items():
     shards = col.distinct("shard")
-    print "shardcount", len(shards)
+    sys.stdout.write("shardcount %d\n" % len(shards))
     for collection in db_data.get("collections"):
         nsfilter = "%s.%s" % (db_name, collection)
-        print "nscount %s %s" % (nsfilter, col.find({"ns": nsfilter}).count())
+        sys.stdout.write("nscount %s %s\n" % (nsfilter, col.find({"ns": nsfilter}).count()))
         for shard in shards:
-            print "shardmatches %s#%s %s" % (nsfilter, shard, col.find({"ns": nsfilter, "shard": shard}).count())
+            sys.stdout.write("shardmatches %s#%s %s\n" % (nsfilter, shard, col.find({"ns": nsfilter, "shard": shard}).count()))
 
-print "<<<mongodb_locks>>>"
+sys.stdout.write("<<<mongodb_locks>>>\n")
 global_lock_info = server_status.get("globalLock")
 if global_lock_info:
     for what in [ "activeClients", "currentQueue" ]:
         if what in global_lock_info:
             for key, value in global_lock_info[what].items():
-                print "%s %s %s" % (what, key, value)
+                sys.stdout.write("%s %s %s\n" % (what, key, value))
 
-print "<<<mongodb_flushing>>>"
-print "average_ms %s" % server_status["backgroundFlushing"]["average_ms"]
-print "last_ms %s"  %   server_status["backgroundFlushing"]["last_ms"]
-print "flushed %s"  %   server_status["backgroundFlushing"]["flushes"]
+sys.stdout.write("<<<mongodb_flushing>>>\n")
+sys.stdout.write("average_ms %s\n" % server_status["backgroundFlushing"]["average_ms"])
+sys.stdout.write("last_ms %s\n" %    server_status["backgroundFlushing"]["last_ms"])
+sys.stdout.write("flushed %s\n" %    server_status["backgroundFlushing"]["flushes"])
 
 # Unused
 #try:
@@ -133,25 +133,25 @@ print "flushed %s"  %   server_status["backgroundFlushing"]["flushes"]
 #except:
 #    pass
 
-print "<<<mongodb_mem>>>"
+sys.stdout.write("<<<mongodb_mem>>>\n")
 for key, value in server_status["mem"].items():
-    print "%s %s" % (key, value)
+    sys.stdout.write("%s %s\n" % (key, value))
 for key, value in server_status["extra_info"].items():
-    print "%s %s" % (key, value)
+    sys.stdout.write("%s %s\n" % (key, value))
 
-print "<<<mongodb_counters>>>"
+sys.stdout.write("<<<mongodb_counters>>>\n")
 for what in ["opcounters", "opcountersRepl"]:
     for key, value in server_status.get(what, {}).items():
-        print "%s %s %s" % (what, key, value)
+        sys.stdout.write("%s %s %s\n" % (what, key, value))
 
-print "<<<mongodb_collections:sep(9)>>>"
+sys.stdout.write("<<<mongodb_collections:sep(9)>>>\n")
 for dbname, dbdata in databases.items():
     for collname, colldata in dbdata.get("collstats", {}).items():
         for what, value in colldata.items():
-            print "%s\t%s\t%s\t%s" % (dbname, collname, what, value)
+            sys.stdout.write("%s\t%s\t%s\t%s\n" % (dbname, collname, what, value))
 
-print "<<<logwatch>>>"
-print "[[[MongoDB startupWarnings]]]"
+sys.stdout.write("<<<logwatch>>>\n")
+sys.stdout.write("[[[MongoDB startupWarnings]]]\n")
 startup_warnings = con.admin.command({"getLog": "startupWarnings"})
 
 var_dir = os.environ.get("MK_VARDIR")
@@ -196,11 +196,11 @@ if var_dir:
             state = "W"
 
         if output_all or get_timestamp(line.split(".")[0]) > last_timestamp:
-            print "%s %s" % (state, line)
+            sys.stdout.write("%s %s\n" % (state, line))
 
     # update state file
     if startup_warnings["log"]:
         file(state_file, "w").write("%d" % get_timestamp(startup_warnings["log"][-1].split(".")[0]))
 
-print "<<<<>>>>"
+sys.stdout.write("<<<<>>>>\n")
 

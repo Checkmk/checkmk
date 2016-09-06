@@ -37,8 +37,8 @@ except:
     sys.exit(1)
 
 def usage():
-    print "Usage: mk_inotify [-g]"
-    print "         -g: run in foreground"
+    sys.stdout.write("Usage: mk_inotify [-g]\n")
+    sys.stdout.write("         -g: run in foreground\n\n")
 
 # Available options:
 # -g: run in foreground
@@ -162,8 +162,8 @@ def wakeup_handler(signum, frame):
     global output
     if output:
         if opt_foreground:
-            print "\n".join(output)
-            print "\n".join(get_watched_files())
+            sys.stdout.write("%s\n" % "\n".join(output))
+            sys.stdout.write("%s\n" % "\n".join(get_watched_files()))
         else:
             filename = "mk_inotify.stats.%d" % time.time()
             file("%s/%s" % (mk_vardir, filename), "w").write("\n".join(output)+"\n")
@@ -213,7 +213,7 @@ def do_output(what, event):
                 pass
         output.append(line)
         if opt_foreground:
-            print line
+            sys.stdout.write("%s\n" % line)
 
 
 map_events = {

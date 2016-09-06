@@ -147,4 +147,4 @@ for domain, p in domains.iteritems():
         output.append('%s 2 %s' % (domain, e))
 
 # Write cache and output
-print '\n'.join(output)
+sys.stdout.write('%s\n' % '\n'.join(output))

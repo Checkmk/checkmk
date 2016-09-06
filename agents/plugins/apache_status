@@ -117,7 +117,7 @@ if servers is None:
 if not servers:
     sys.exit(0)
 
-print '<<<apache_status>>>'
+sys.stdout.write('<<<apache_status>>>\n')
 for server in servers:
     if isinstance(server, tuple):
         proto, address, port = server
@@ -151,7 +151,7 @@ for server in servers:
             if line.lstrip()[0] == '<':
                 # seems to be html output. Skip this server.
                 break
-            print address, port, line
+            sys.stdout.write("%s %s %s\n" % (address, port, line))
     except urllib2.HTTPError, e:
         sys.stderr.write('HTTP-Error (%s%s): %s %s\n' % (address, portspec, e.code, e))
 

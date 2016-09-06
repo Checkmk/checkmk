@@ -57,7 +57,7 @@ else:
     mk_vardir = os.getenv("MK_VARDIR") or "."
 
 
-print "<<<logwatch>>>"
+sys.stdout.write("<<<logwatch>>>\n")
 
 config_filename = mk_confdir + "/logwatch.cfg"
 config_dir      = mk_confdir + "/logwatch.d/*.cfg"
@@ -214,10 +214,10 @@ def process_logfile(logfile, patterns):
     except:
         if debug:
             raise
-        print "[[[%s:cannotopen]]]" % logfile
+        sys.stdout.write("[[[%s:cannotopen]]]\n" % logfile)
         return
 
-    print "[[[%s]]]" % logfile
+    sys.stdout.write("[[[%s]]]\n" % logfile)
 
     # Seek to the current end in order to determine file size
     current_end = os.lseek(file_desc, 0, 2) # os.SEEK_END not available in Python 2.4
@@ -352,7 +352,7 @@ try:
 except Exception, e:
     if debug:
         raise
-    print "CANNOT READ CONFIG FILE: %s" % e
+    sys.stdout.write("CANNOT READ CONFIG FILE: %s\n" % e)
     sys.exit(1)
 
 # Simply ignore errors in the status file.  In case of a corrupted status file we simply begin
@@ -403,7 +403,7 @@ for filenames, patterns in config:
     except Exception, e:
         if debug:
             raise
-        print "INVALID CONFIGURATION: %s" % e
+        sys.stdout.write("INVALID CONFIGURATION: %s\n" % e)
         sys.exit(1)
 
 
@@ -414,7 +414,7 @@ for filenames, patterns in config:
         if opt_regex:
             logfiles = [ f for f in logfiles if opt_regex.search(f) ]
         if len(logfiles) == 0:
-            print '[[[%s:missing]]]' % glob_pattern
+            sys.stdout.write('[[[%s:missing]]]\n' % glob_pattern)
         else:
             for logfile in logfiles:
                 logfile_patterns[logfile] = logfile_patterns.get(logfile, []) + patterns

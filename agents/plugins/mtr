@@ -56,7 +56,7 @@ else:
 mtr_prog = distutils.spawn.find_executable('mtr')
 if mtr_prog == None:
     if debug:
-        print "Could not find mtr binary"
+        sys.stdout.write("Could not find mtr binary\n")
     sys.exit(0)
 
 def read_config():
@@ -75,7 +75,7 @@ def read_config():
     }
     if not os.path.exists(config_filename):
         if debug:
-            print "Not configured, %s missing" % config_filename
+            sys.stdout.write("Not configured, %s missing\n" % config_filename)
         sys.exit(0)
 
     config = ConfigParser.SafeConfigParser(default_options)
@@ -83,12 +83,12 @@ def read_config():
     for config_file in ( [ config_filename ] + glob.glob(config_dir)):
         try:
             if not config.read(config_file):
-                print "**ERROR** Failed to parse configuration file %s!" % config_file;
+                sys.stdout.write("**ERROR** Failed to parse configuration file %s!\n" % config_file)
         except Exception as e:
-                print "**ERROR** Failed to parse config file %s: %s " % (config_file, repr(e))
+            sys.stdout.write("**ERROR** Failed to parse config file %s: %s\n" % (config_file, repr(e)))
 
     if len(config.sections()) == 0:
-        print "**ERROR** Configuration defines no hosts!"
+        sys.stdout.write("**ERROR** Configuration defines no hosts!\n")
         sys.exit(0)
 
     return config
@@ -105,8 +105,8 @@ def read_status():
         try:
             parts = line.split('|')
             if len(parts) < 2:
-                print "**ERROR** (BUG) Status has less than 2 parts: "
-                print parts
+                sys.stdout.write("**ERROR** (BUG) Status has less than 2 parts:\n")
+                sys.stdout.write("%s\n" % parts)
                 continue
             host = parts[0]
             lasttime = int(float(parts[1]))
@@ -124,7 +124,7 @@ def read_status():
                     'stddev' : parts[i*8 + 10].rstrip(),
                 }
         except Exception as e:
-            print "*ERROR** (BUG) Could not parse status line: %s, reason: %s" % (line, repr(e))
+            sys.stdout.write("*ERROR** (BUG) Could not parse status line: %s, reason: %s\n" % (line, repr(e)))
     return status
 
 def save_status(status):
@@ -209,7 +209,8 @@ def parse_report(host):
     # Parse the existing report
     lines = file(reportfile).readlines()
     if len(lines) < 3:
-        print "**ERROR** Report file %s has less than 3 lines, expecting at least 1 hop! Throwing away invalid report" % reportfile
+        sys.stdout.write("**ERROR** Report file %s has less than 3 lines, "
+                         "expecting at least 1 hop! Throwing away invalid report\n" % reportfile)
         os.unlink(reportfile)
         if not host in status.keys():
             # New host
@@ -232,7 +233,8 @@ def parse_report(host):
             hopcount += 1
             parts = line.split()
             if len(parts) < 8:
-                print "**ERROR** Bug parsing host/hop, line has less than 8 parts: %s" % line
+                sys.stdout.write("**ERROR** Bug parsing host/hop, "
+                                 "line has less than 8 parts: %s\n" % line)
                 continue;
             status[host]['hops'][hopcount] = {
                 'hopname': parts[1],
@@ -245,7 +247,8 @@ def parse_report(host):
                 'stddev' : parts[8],
             }
     except Exception, e:
-        print "**ERROR** Could not parse report file %s, tossing away invalid data %s" % (reportfile, e)
+        sys.stdout.write("**ERROR** Could not parse report file %s, "
+                         "tossing away invalid data %s\n" % (reportfile, e))
         del status[host]
     os.unlink(reportfile)
 
@@ -260,7 +263,7 @@ def output_report(host):
     for hop in hostdict["hops"].keys():
         hi = hostdict["hops"][hop]
         hoststring += '|%s|%s|%s|%s|%s|%s|%s|%s' % (hi['hopname'], hi['loss'], hi['snt'], hi['last'], hi['avg'], hi['best'], hi['wrst'], hi['stddev'])
-    print "%s" % hoststring
+    sys.stdout.write("%s\n" % hoststring)
 
 def start_mtr(host):
     options  = [mtr_prog, '--report', '--report-wide']
@@ -278,12 +281,13 @@ def start_mtr(host):
 
     if "running" in status[host].keys():
         if debug:
-            print "MTR for host still running, not restarting MTR!"
+            sys.stdout.write("MTR for host still running, not restarting MTR!\n")
         return
 
     if time.time() - status[host]["lasttime"] < lasttime:
         if debug:
-            print "%s - %s = %s is smaller than %s => mtr run not needed yet." % (time.time(), status[host]["lasttime"], time.time() - status[host]["lasttime"], lasttime)
+            sys.stdout.write("%s - %s = %s is smaller than %s => mtr run not needed yet.\n" %
+                (time.time(), status[host]["lasttime"], time.time() - status[host]["lasttime"], lasttime))
         return
 
 
@@ -332,7 +336,7 @@ def start_mtr(host):
 
     options.append(str(host))
     if debug:
-        print "Startin MTR: %s" % (" ".join(options))
+        sys.stdout.write("Startin MTR: %s\n" % (" ".join(options)))
     reportfile = report_filepre + host_to_filename(host)
     if (os.path.exists(reportfile)):
         os.unlink(reportfile)
@@ -348,8 +352,7 @@ def start_mtr(host):
     os._exit(os.EX_OK)
 
 # Parse config
-import time
-print "<<<mtr:sep(124)>>>"
+sys.stdout.write("<<<mtr:sep(124)>>>\n")
 config = read_config()
 status = read_status()
 for host in config.sections():

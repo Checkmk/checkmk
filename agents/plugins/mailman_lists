@@ -38,7 +38,7 @@ only_advertised = True
 from Mailman import Utils, MailList # pylint: disable=import-error
 
 # 1. list memberships
-print '<<<mailman_lists>>>'
+sys.stdout.write('<<<mailman_lists>>>\n')
 total_members = set([])
 for name in sorted(Utils.list_names()):
     mlist = MailList.MailList(name, lock=0)
@@ -50,5 +50,5 @@ for name in sorted(Utils.list_names()):
     members = rmembers + dmembers
     total_members.update(members)
 
-    print '%s %d' % (name, len(members))
-print 'TOTAL %d' % len(total_members)
+    sys.stdout.write('%s %d\n' % (name, len(members)))
+sys.stdout.write('TOTAL %d\n' % len(total_members))

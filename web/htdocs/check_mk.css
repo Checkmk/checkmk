@@ -278,8 +278,9 @@ img.treeangle.title {
     margin-right: 5px;
 }
 b.treeangle.title {
-   font-weight: bold;
-   color: #ffffff;
+    font-weight: bold;
+    color: #ffffff;
+    cursor: pointer;
 }
 ul.treeangle {
     /* border: 1px solid #4060ff; */

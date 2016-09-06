@@ -1,6 +1,7 @@
 1.2.8p11:
     Checks & Agents:
     * 3797 Check_MK Check helpers: Decreased memory consumption in distributed setups...
+    * 3798 FIX: Clusters: Fixed invalid timestamp of last cached agent data...
 
 
 1.2.8p10:

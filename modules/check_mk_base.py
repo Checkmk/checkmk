@@ -1496,10 +1496,18 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
                 # use the oldest of the timestamps, of course.
                 oldest_cached_at = None
                 largest_interval = None
+
+                def minn(a, b):
+                    if a == None:
+                        return b
+                    elif b == None:
+                        return a
+                    return min(a,b)
+
                 for section_entries in g_agent_cache_info.values():
                     if infotype in section_entries:
                         cached_at, cache_interval = section_entries[infotype]
-                        oldest_cached_at = -max(oldest_cached_at, -cached_at)
+                        oldest_cached_at = minn(oldest_cached_at, cached_at)
                         largest_interval = max(largest_interval, cache_interval)
 
                 submit_check_result(hostname, description, result, aggrname,

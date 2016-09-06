@@ -1,0 +1,9 @@
+Title: Clusters: Fixed invalid timestamp of last cached agent data
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1473152942
+Class: fix
+
+Due to this bug the last checked information was around the year 1923.

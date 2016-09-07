@@ -1,0 +1,10 @@
+Title: check_cpu_peaks: Fixed broken active check
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p11
+Date: 1473230761
+
+

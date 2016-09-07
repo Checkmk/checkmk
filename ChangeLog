@@ -3,6 +3,7 @@
     * 3797 Check_MK Check helpers: Decreased memory consumption in distributed setups...
     * 3798 FIX: Clusters: Fixed invalid timestamp of last cached agent data...
     * 3848 FIX: megaraid_pdisks: Handle "rebuild" state as WARNING instead of UNKNOWN
+    * 3849 FIX: check_cpu_peaks: Fixed broken active check
 
 
 1.2.8p10:

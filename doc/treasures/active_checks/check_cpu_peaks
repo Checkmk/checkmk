@@ -34,6 +34,7 @@ class MKGeneralException(Exception):
 
 
 # Note: This check only works in an OMD environment!
+# TODO: Clean this mess up! Define and use an official API to predictive monitoring.
 sys.path.append(os.path.expanduser("~/share/check_mk/modules"))
 execfile(os.path.expanduser("~/etc/check_mk/defaults"))
 execfile(os.path.expanduser("~/share/check_mk/modules/prediction.py"))

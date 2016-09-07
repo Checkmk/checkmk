@@ -89,7 +89,8 @@ function registerEdgeListeners(obj) {
 }
 
 function on_mouse_leave(e) {
-    mkSearchClose();
+    if (typeof(mkSearchClose) != "undefined")
+        mkSearchClose();
     return stop_snapin_dragging(e);
 }
 

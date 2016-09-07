@@ -1,0 +1,10 @@
+Title: Fixed JS error when quicksearch snapin not in sidebar
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p11
+Date: 1473241273
+
+

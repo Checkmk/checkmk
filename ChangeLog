@@ -5,6 +5,9 @@
     * 3848 FIX: megaraid_pdisks: Handle "rebuild" state as WARNING instead of UNKNOWN
     * 3849 FIX: check_cpu_peaks: Fixed broken active check
 
+    Multisite:
+    * 3850 FIX: Fixed JS error when quicksearch snapin not in sidebar
+
 
 1.2.8p10:
     Core & Setup:

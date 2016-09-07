@@ -1833,8 +1833,8 @@ def tag_tree_url(taggroups, taglist, viewname):
 def tag_tree_bullet(state, path, leaf):
     code = '<div class="tagtree %sstatebullet state%d">&nbsp;</div>' % ((leaf and "leaf " or ""), state)
     if not leaf:
-        code = '<a title="%s" href="javascript:virtual_host_tree_enter(%r);">' % \
-           (_("Display the tree only below this node"), "|".join(path)) + code + "</a>"
+        code = '<a title="%s" href="javascript:virtual_host_tree_enter(\'%s\');">%s</a>' % \
+           (_("Display the tree only below this node"), "|".join(path), code)
     return code + " "
 
 
@@ -1922,7 +1922,7 @@ def render_tag_tree():
     # Give chance to change one level up, if we are in a subtree
     cwd = tree_conf["cwd"].get(tree_conf["tree"])
     if cwd:
-        upurl = "javascript:virtual_host_tree_enter(%r)" % "|".join(cwd[:-1])
+        upurl = "javascript:virtual_host_tree_enter('%s')" % "|".join(cwd[:-1])
         html.icon_button(upurl, _("Go up one tree level"), "back")
 
     html.select("vtree", choices, str(tree_conf["tree"]), onchange = 'virtual_host_tree_changed(this)')

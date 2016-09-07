@@ -3424,7 +3424,7 @@ def mode_bulk_discovery(phase):
     elif phase == "action":
         if html.var("_item"):
             if not html.check_transaction():
-                html.write(repr([ 'failed', 0, 0, 0, 0, 0, 0, ]) + "\n")
+                html.write(json.dumps([ 'failed', 0, 0, 0, 0, 0, 0, ]) + "\n")
                 html.write(_("Error during discovery: Maximum number of retries reached. "
                              "You need to restart the bulk service discovery"))
                 return ""
@@ -3484,10 +3484,10 @@ def mode_bulk_discovery(phase):
                         if not host.locked():
                             host.clear_discovery_failed()
 
-                result = repr([ 'continue', num_hosts, num_failed_hosts, num_skipped_hosts ] + sum_counts) + "\n" + result_txt
+                result = json.dumps([ 'continue', num_hosts, num_failed_hosts, num_skipped_hosts ] + sum_counts) + "\n" + result_txt
 
             except Exception, e:
-                result = repr([ 'failed', num_hosts, num_hosts, 0, 0, 0, 0, ]) + "\n"
+                result = json.dumps([ 'failed', num_hosts, num_hosts, 0, 0, 0, 0, ]) + "\n"
                 if site_id:
                     msg = _("Error during inventory of %s on site %s<div class=exc>%s</div") % \
                                      (", ".join(hostnames), site_id, e)
@@ -3907,7 +3907,7 @@ def mode_parentscan(phase):
                 result = "%s\n%s: %s<br>\n" % (json.dumps(counts), host_name, message)
 
             except Exception, e:
-                result = repr([ 'failed', 1, 0, 0, 0, 0, 0, 1 ]) + "\n"
+                result = json.dumps([ 'failed', 1, 0, 0, 0, 0, 0, 1 ]) + "\n"
                 if site_id:
                     msg = _("Error during parent scan of %s on site %s: %s") % (host_name, site_id, e)
                 else:
@@ -16490,9 +16490,6 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             if topic_is_volatile:
                 volatile_topics.append((topic or _("Basic settings")).encode('utf-8'))
 
-    def dump_json(obj):
-        return repr(obj).replace('None', 'null')
-
     forms.end()
     # Provide Javascript world with the tag dependency information
     # of all attributes.
@@ -16504,13 +16501,13 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                     "var user_roles = %s;\n"\
                     "var hide_attributes = %s;\n"\
                     "wato_fix_visibility();\n" % (
-                       dump_json(inherited_tags),
-                       dump_json(list(set(dependency_mapping_tags.keys()+dependency_mapping_roles.keys()+hide_attributes))),
-                       dump_json(dependency_mapping_tags),
-                       dump_json(dependency_mapping_roles),
-                       dump_json(volatile_topics),
-                       dump_json(config.user_role_ids),
-                       dump_json(hide_attributes)))
+                       json.dumps(inherited_tags),
+                       json.dumps(list(set(dependency_mapping_tags.keys()+dependency_mapping_roles.keys()+hide_attributes))),
+                       json.dumps(dependency_mapping_tags),
+                       json.dumps(dependency_mapping_roles),
+                       json.dumps(volatile_topics),
+                       json.dumps(config.user_role_ids),
+                       json.dumps(hide_attributes)))
 
 
 # Check if at least one host in a folder (or its subfolders)

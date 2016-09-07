@@ -36,7 +36,7 @@ def init_rowselect(view):
         'g_page_id = "view-%s";\n'
         'g_selection = "%s";\n'
         'g_selected_rows = %s;\n'
-        'init_rowselect();' % (view['name'], weblib.selection_id(), repr(selected))
+        'init_rowselect();' % (view['name'], weblib.selection_id(), json.dumps(selected))
     )
 
 def render_checkbox(view, row, num_tds):

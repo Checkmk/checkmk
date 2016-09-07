@@ -35,8 +35,9 @@ class MKGeneralException(Exception):
 
 # Note: This check only works in an OMD environment!
 sys.path.append(os.path.expanduser("~/share/check_mk/modules"))
-execfile(os.path.expanduser("~/etc/check_mk/defaults"), globals())
-execfile(os.path.expanduser("~/share/check_mk/modules/prediction.py"), globals())
+execfile(os.path.expanduser("~/etc/check_mk/defaults"))
+execfile(os.path.expanduser("~/share/check_mk/modules/prediction.py"))
+execfile(os.path.expanduser("~/share/check_mk/modules/check_mk_base.py"))
 rrdcached_socket = None
 
 def usage():

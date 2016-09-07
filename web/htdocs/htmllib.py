@@ -1556,10 +1556,11 @@ class html(GUITester):
         if self.have_help:
             self.javascript("enable_help();")
         if self.keybindings_enabled and self.keybindings:
-            self.javascript("var keybindings = %r;\n"
+            self.javascript("var keybindings = %s;\n"
                             "document.body.onkeydown = keybindings_keydown;\n"
                             "document.body.onkeyup = keybindings_keyup;\n"
-                            "document.body.onfocus = keybindings_focus;\n" % self.keybindings)
+                            "document.body.onfocus = keybindings_focus;\n" %
+                                json.dumps(self.keybindings))
         if self.final_javascript_code:
             self.javascript(self.final_javascript_code)
         self.write("</body></html>\n")

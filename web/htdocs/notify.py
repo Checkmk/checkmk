@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, forms, time, lib, userdb
+import subprocess
 from valuespec import *
 
 def get_gui_messages(user_id = None):
@@ -260,7 +261,6 @@ def notify_gui_msg(user_id, msg):
 
 
 def notify_mail(user_id, msg):
-    import subprocess, time
     users = userdb.load_users(lock = False)
     user = users.get(user_id)
 
@@ -297,8 +297,9 @@ def notify_mail(user_id, msg):
         )
 
     # FIXME: Maybe use the configured mail command for Check_MK-Notify one day
-    command = u"mail -s '$SUBJECT$' '$CONTACTEMAIL$'"
-    command_utf8 = command.replace('$SUBJECT$', subject).replace('$CONTACTEMAIL$', user['email']).encode("utf-8")
+    # TODO: mail does not accept umlauts: "contains invalid character '\303'" in mail
+    #       addresses. handle this correctly.
+    command = ["mail", "-s", "asdasd".encode("utf-8"), user['email'].encode("utf-8")]
 
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
@@ -316,8 +317,9 @@ def notify_mail(user_id, msg):
     else:
         raise MKInternalError(_('No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.'))
 
-    p = subprocess.Popen(command_utf8, shell=True, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE, stdin=subprocess.PIPE,
+                         close_fds=True)
     stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))
     exitcode = p.returncode
     if exitcode != 0:

@@ -154,6 +154,7 @@
     * 3867 filter 'Servicegroup (Regex)' can be negated
     * 3868 f5_bigip_cluster_status: node states are configurable for F5 BigIP devices since version 11.2
     * 3869 ipmi: now IPMI sensors can be ignored by their status texts during discovery
+    * 3744 synology_info: Now also displays OS version
     * 3073 FIX: windows agent: relative paths to mrpe scripts are now treated as relative to the agent installation directory...
     * 3061 FIX: mk_jolokia: Fixed debugging of the agent plugin
     * 3074 FIX: windows agent: fixed incorrect values for 32-bit performance counters

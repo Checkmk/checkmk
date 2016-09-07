@@ -101,6 +101,11 @@ from watolib import *
 import cmk.store as store
 from cmk.regex import escape_regex_chars, regex
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 g_html_head_open = False
 
 wato_styles = [ "pages", "wato", "status" ]
@@ -830,8 +835,8 @@ def show_hosts(folder):
         html.javascript(
             'g_page_id = "wato-folder-%s";\n'
             'g_selection = "%s";\n'
-            'g_selected_rows = %r;\n'
-            'init_rowselect();' % ('/' + folder.path(), weblib.selection_id(), selected)
+            'g_selected_rows = %s;\n'
+            'init_rowselect();' % ('/' + folder.path(), weblib.selection_id(), json.dumps(selected))
         )
 
 
@@ -3899,7 +3904,7 @@ def mode_parentscan(phase):
                     gwcreat and 1 or 0,                          # Gateway hosts created
                     state in [ "failed", "dnserror", "garbled" ] and 1 or 0, # Errors
                 ]
-                result = "%r\n%s: %s<br>\n" % (counts, host_name, message)
+                result = "%s\n%s: %s<br>\n" % (json.dumps(counts), host_name, message)
 
             except Exception, e:
                 result = repr([ 'failed', 1, 0, 0, 0, 0, 0, 1 ]) + "\n"

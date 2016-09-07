@@ -26,7 +26,12 @@
 
 import config
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 def ajax_switch_help():
     state = html.var("enabled", "") != ""
     config.save_user_file("help", state)
-    html.write("%r" % state)
+    html.write(json.dumps(state))

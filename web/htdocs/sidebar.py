@@ -34,6 +34,11 @@ import notify, werks
 import sites
 from lib import *
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 # Constants to be used in snapins
 snapin_width = 230
 
@@ -277,8 +282,8 @@ def page_side():
     html.write("sidebar_update_interval = %0.2f;\n" % config.sidebar_update_interval)
     html.write("registerEdgeListeners();\n")
     html.write("set_sidebar_size();\n")
-    html.write("refresh_snapins = %r;\n" % refresh_snapins)
-    html.write("restart_snapins = %r;\n" % restart_snapins)
+    html.write("refresh_snapins = %s;\n" % json.dumps(refresh_snapins))
+    html.write("restart_snapins = %s;\n" % json.dumps(restart_snapins))
     html.write("sidebar_scheduler();\n")
     html.write("window.onresize = function() { set_sidebar_size(); };\n")
     html.write("if (contentFrameAccessible()) { update_content_location(); };\n")

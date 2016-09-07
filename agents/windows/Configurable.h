@@ -82,7 +82,6 @@ public:
     virtual void startBlock() { _block_mode.startBlock(_values); }
 
     virtual void feed(const std::string &, const std::string &value) override {
-        startBlock();
         this->add(from_string<DataT>(value));
     }
 

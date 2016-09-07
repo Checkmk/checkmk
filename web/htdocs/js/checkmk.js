@@ -2823,8 +2823,6 @@ function show_hover_menu(event, code)
         document.body.appendChild(g_hover_menu);
     }
     g_hover_menu.innerHTML = code;
-    // TOOD: Hier weitermachen. Der <javascript...create_graph()> kommt korrekt an.
-    // Aber wird irgendwie nicht ausgeführt, denn das Menü bleibt unsichtbar.
     executeJSbyObject(g_hover_menu);
 
     // Change cursor to "hand" when displaying hover menu

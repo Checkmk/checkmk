@@ -32,6 +32,12 @@ import config
 import sites
 from lib import *
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
+
 graph_size = 2000, 700
 
 
@@ -133,7 +139,6 @@ def page_graph():
         render_curve(swapped["upper_crit"], "#f0b0b0", square=True)
     render_curve(swapped["average"], "#000000")
     render_curve(swapped["average"], "#000000")
-    # render_curve(stack(swapped["average"], swapped["stdev"], -1),  "#008040")
 
     # Try to get current RRD data and render it also
     from_time, until_time = timegroup["range"]
@@ -326,21 +331,23 @@ def create_graph(name, size, range, v_range, legend):
                  name, range[0], range[1], v_range[0], v_range[1]))
 
 def render_coordinates(v_scala, t_scala):
-    html.javascript('render_coordinates(%r, %r);' % (v_scala, t_scala))
+    html.javascript('render_coordinates(%s, %s);' % (json.dumps(v_scala), json.dumps(t_scala)))
 
 
 def render_curve(points, color, width=1, square=False):
-    html.javascript('render_curve(%r, %r, %d, %d);' % (
-              points, color, width, square and 1 or 0))
+    html.javascript('render_curve(%s, %s, %d, %d);' % (
+              json.dumps(points), json.dumps(color), width, square and 1 or 0))
 
 def render_point(t, v, color):
-    html.javascript('render_point(%r, %r, %r);' % (t, v, color))
+    html.javascript('render_point(%s, %s, %s);' % (json.dumps(t), json.dumps(v), json.dumps(color)))
 
 def render_area(points, color, alpha=1.0):
-    html.javascript('render_area(%r, %r, %f);' % (points, color, alpha))
+    html.javascript('render_area(%s, %s, %f);' % (json.dumps(points), json.dumps(color), alpha))
 
 def render_area_reverse(points, color, alpha=1.0):
-    html.javascript('render_area_reverse(%r, %r, %f);' % (points, color, alpha))
+    html.javascript('render_area_reverse(%s, %s, %f);' %
+        (json.dumps(points), json.dumps(color), alpha))
 
 def render_dual_area(lower_points, upper_points, color, alpha=1.0):
-    html.javascript('render_dual_area(%r, %r, %r, %f);' % (lower_points, upper_points, color, alpha))
+    html.javascript('render_dual_area(%s, %s, %s, %f);' %
+        (json.dumps(lower_points), json.dumps(upper_points), json.dumps(color), alpha))

@@ -37,8 +37,6 @@ var right_border  = 50;
 var top_border    = 40;
 var bottom_border = 50;
 
-var None = null; // make us compatible with Python repr()
-
 function create_graph(cid, ft, ut, vmi, vma)
 {
     // Keep important data as global variables, needed by
@@ -54,11 +52,6 @@ function create_graph(cid, ft, ut, vmi, vma)
     height = canvas.height;
     netto_width = width - left_border - right_border;
     netto_height = height - top_border - bottom_border;
-
-    // Point background and coordinates
-    // var c = canvas.getContext('2d');
-    // c.fillStyle="#eeeeee";
-    // c.fillRect(0, 0, width, height);
 }
 
 function arrow_up(c, cx, cy, length, size, color)

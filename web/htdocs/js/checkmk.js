@@ -34,11 +34,6 @@
 //#   | Generic library functions used anywhere in Check_MK                |
 //#   '--------------------------------------------------------------------'
 
-// Make JS understand Python source code
-// FIXME TODO remove this crap
-var True = true;
-var False = false;
-
 // The nextSibling attribute points also to "text nodes" which might
 // be created by spaces or even newlines in the HTML code and not to
 // the next painted dom object.

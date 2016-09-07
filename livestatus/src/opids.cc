@@ -41,9 +41,13 @@ unordered_map<string, RelationalOperator> fromString = {
     {"~~", RelationalOperator::matches_icase},
     {"!~~", RelationalOperator::doesnt_match_icase},
     {"<", RelationalOperator::less},
+    {"!<", RelationalOperator::greater_or_equal},
     {">=", RelationalOperator::greater_or_equal},
+    {"!>=", RelationalOperator::less},
     {">", RelationalOperator::greater},
-    {"<=", RelationalOperator::less_or_equal}};
+    {"!>", RelationalOperator::less_or_equal},
+    {"<=", RelationalOperator::less_or_equal},
+    {"!<=", RelationalOperator::greater}};
 }  // namespace
 
 ostream &operator<<(ostream &os, const RelationalOperator &relOp) {

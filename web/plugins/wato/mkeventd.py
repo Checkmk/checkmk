@@ -406,7 +406,7 @@ vs_mkeventd_rule = Dictionary(
                                      "event. It will stay open, but the count does not increase anymore. "
                                      "Any further matching message will create a new event."),
                       ),
-                      label = _("Discontinue counting after time as elapsed"),
+                      label = _("Discontinue counting after time has elapsed"),
                       none_label = _("Bar"),
                   )),
                   ( "count_ack",

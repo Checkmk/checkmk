@@ -1857,7 +1857,7 @@ def render_tag_tree_level(taggroups, path, cwd, title, tree):
         if tag_tree_has_svc_problems(tree):
             bullet += html.render_icon_button(tag_tree_url(taggroups, path, "svcproblems"),
                                         _("Show the service problems contained in this branch"),
-                                        "svc_problems")
+                                        "svc_problems", target="main")
 
         if path:
             html.begin_foldable_container("tag-tree", ".".join(map(str, path)),

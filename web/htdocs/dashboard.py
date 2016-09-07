@@ -29,6 +29,11 @@ from valuespec import *
 from lib import *
 import wato
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 loaded_with_language = False
 builtin_dashboards = {}
 builtin_dashboards_transformed = False
@@ -410,7 +415,7 @@ window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
     """ % (MAX, GROW, raster, header_height, screen_margin, dashlet_padding, dashlet_min_size,
            corner_overlap, ','.join(g_refresh_dashlets), ','.join(g_on_resize),
-           name, board['mtime'], repr(g_dashlets_js)))
+           name, board['mtime'], json.dumps(g_dashlets_js)))
 
     if mode == 'edit':
         html.javascript('toggle_dashboard_edit(true)')

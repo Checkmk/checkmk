@@ -119,7 +119,7 @@ mrpe_entry *from_string<mrpe_entry *>(const std::string &value) {
 template <>
 winperf_counter *from_string<winperf_counter *>(const std::string &value) {
     size_t colonIdx = value.find_last_of(":");
-    if (colonIdx != std::string::npos) {
+    if (colonIdx == std::string::npos) {
         fprintf(stderr,
                 "Invalid counter '%s' in section [winperf]: need number(or "
                 "text) and colon, e.g. 238:processor.\n",
@@ -198,7 +198,7 @@ eventlog_config_entry from_string<eventlog_config_entry>(
         }
     }
 
-    return eventlog_config_entry(level, hide_context ? 1 : 0, nullptr, false);
+    return eventlog_config_entry(level, hide_context ? 1 : 0, "", false);
 }
 
 const char *level_name(int level_id) {

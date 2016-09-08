@@ -846,7 +846,7 @@ def create_cmk_automation_user():
 
     users = load_users(lock=True)
     users["cmkautomation"] = {
-        'alias'                 : u'Check_MK internal - Used for site local authentication',
+        'alias'                 : u"Check_MK Automation - used for calling web services",
         'contactgroups'         : [],
         'automation_secret'     : secret,
         'password'              : encrypt_password(secret),

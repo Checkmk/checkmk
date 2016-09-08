@@ -849,8 +849,12 @@ register_configvar(group,
         none_value = False,
         title = _("Lock user accounts after N logon failures"),
         label = _("Activate automatic locking of user accounts"),
-        help = _("This options enables automatic locking of user account after "
-                 "N logon failures. One successful login resets the failure counter.")
+        help = _("This options enables automatic locking of user accounts after "
+                 "the configured number of consecutive invalid login attempts. "
+                 "Once the account is locked only an admin user can unlock it. "
+                 "Beware: Also the admin users will be locked that way. You need "
+                 "to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> "
+                 "in case you are locked out completely."),
     ),
     domain = "multisite"
 )

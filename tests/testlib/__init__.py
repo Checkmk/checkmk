@@ -13,7 +13,7 @@ import pipes
 import subprocess
 
 from urlparse import urlparse
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 
 # Disable insecure requests warning message during SSL testing
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -271,6 +271,8 @@ class Site(object):
     # Not free of races, but should be sufficient.
     def open_livestatus_tcp(self):
         if self.is_running():
+            assert self.get_config("LIVESTATUS_TCP") == "on", \
+                "Livestatus-TCP disabled (Site is running, so could not enable it)"
             return
 
         self.set_config("LIVESTATUS_TCP", "on")
@@ -406,7 +408,7 @@ class WebSession(requests.Session):
 
 
     def _check_html_page_resources(self, response):
-        soup = BeautifulSoup(response.text)
+        soup = BeautifulSoup(response.text, "lxml")
 
         parsed_url = urlparse(response.url)
 

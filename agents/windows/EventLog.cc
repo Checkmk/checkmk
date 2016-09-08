@@ -195,11 +195,11 @@ public:
     }
 
     virtual uint16_t eventId() const override {
-        return _record->EventID % 0xFFFFu;
+        return _record->EventID % 65536;
     }
 
     virtual uint16_t eventQualifiers() const override {
-        return _record->EventID / 0xFFFFu;
+        return _record->EventID / 65536;
     }
 
     virtual time_t timeGenerated() const override {

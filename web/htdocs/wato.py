@@ -14835,7 +14835,7 @@ def mode_custom_attrs(phase, what):
 
         table.cell(_("Name"),  attr['name'])
         table.cell(_("Title"), attr['title'])
-        table.cell(_("Type"),  attr['type'])
+        table.cell(_("Type"),  dict(custom_attr_types)[attr['type']])
 
     table.end()
 

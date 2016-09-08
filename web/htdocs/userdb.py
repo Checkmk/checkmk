@@ -295,7 +295,6 @@ def need_to_change_pw(username):
 def on_failed_login(username):
     users = load_users(lock = True)
     if username in users:
-        html.log(users[username])
         if "num_failed_logins" in users[username]:
             users[username]["num_failed_logins"] += 1
         else:

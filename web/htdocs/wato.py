@@ -871,12 +871,25 @@ def delete_host_files(site_id, hostname):
     # TODO: See bug #2414
     check_mk_automation(site_id, "delete-host", [hostname])
     if not config.site_is_local(site_id):
-        # Delete inventory data from remote sites (not the archive)
+        # Delete inventory data received from remote sites (not the archive)
         for filename in [ "%s/inventory/%s"    % (defaults.var_dir, hostname),
                           "%s/inventory/%s.gz" % (defaults.var_dir, hostname) ]:
             if os.path.exists(filename):
                 os.unlink(filename)
     log_pending(AFFECTED, hostname, "delete-host", _("Deleted host %s") % hostname)
+
+
+def delete_host_after_confirm(delname):
+    c = wato_confirm(_("Confirm host deletion"),
+                     _("Do you really want to delete the host <tt>%s</tt>?") % delname)
+    if c:
+        Folder.current().delete_hosts([delname])
+        # Delete host files
+        return "folder"
+    elif c == False: # not yet confirmed
+        return ""
+    else:
+        return None # browser reload
 
 
 def delete_hosts_after_confirm(host_names):
@@ -1407,18 +1420,6 @@ def validate_host_uniqueness(host_name):
         raise MKUserError("host", _('A host with the name <b><tt>%s</tt></b> already '
                'exists in the folder <a href="%s">%s</a>.') %
                  (host_name, host.folder().url(), host.folder().alias_path()))
-
-
-def delete_host_after_confirm(delname):
-    c = wato_confirm(_("Confirm host deletion"),
-                     _("Do you really want to delete the host <tt>%s</tt>?") % delname)
-    if c:
-        Folder.current().delete_hosts([delname])
-        return "folder"
-    elif c == False: # not yet confirmed
-        return ""
-    else:
-        return None # browser reload
 
 
 def check_new_host_name(varname, host_name):

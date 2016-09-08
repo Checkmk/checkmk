@@ -265,9 +265,9 @@ def update_user_access_time(username):
 
 
 def on_succeeded_login(username):
-    num_failed = load_custom_attr(username, 'num_failed', saveint)
-    if num_failed != None and num_failed != 0:
-        save_custom_attr(username, 'num_failed', '0')
+    num_failed_logins = load_custom_attr(username, 'num_failed_logins', saveint)
+    if num_failed_logins != None and num_failed_logins != 0:
+        save_custom_attr(username, 'num_failed_logins', '0')
 
     update_user_access_time(username)
 
@@ -295,13 +295,14 @@ def need_to_change_pw(username):
 def on_failed_login(username):
     users = load_users(lock = True)
     if username in users:
-        if "num_failed" in users[username]:
-            users[username]["num_failed"] += 1
+        html.log(users[username])
+        if "num_failed_logins" in users[username]:
+            users[username]["num_failed_logins"] += 1
         else:
-            users[username]["num_failed"] = 1
+            users[username]["num_failed_logins"] = 1
 
         if config.lock_on_logon_failures:
-            if users[username]["num_failed"] >= config.lock_on_logon_failures:
+            if users[username]["num_failed_logins"] >= config.lock_on_logon_failures:
                 users[username]["locked"] = True
 
         save_users(users)
@@ -617,7 +618,7 @@ def load_users(lock = False):
             # read special values from own files
             if id in result:
                 for attr, conv_func in [
-                        ('num_failed',        saveint),
+                        ('num_failed_logins', saveint),
                         ('last_pw_change',    saveint),
                         ('last_seen',         savefloat),
                         ('enforce_pw_change', lambda x: bool(saveint(x))),
@@ -704,7 +705,7 @@ def save_users(profiles):
         "language",
         "serial",
         "connector",
-        "num_failed",
+        "num_failed_logins",
         "enforce_pw_change",
         "last_pw_change",
         "last_seen",
@@ -787,7 +788,7 @@ def save_users(profiles):
         # profile directory. The primary reason to have separate files, is to reduce
         # the amount of data to be loaded during regular page processing
         save_custom_attr(user_id, 'serial', str(user.get('serial', 0)))
-        save_custom_attr(user_id, 'num_failed', str(user.get('num_failed', 0)))
+        save_custom_attr(user_id, 'num_failed_logins', str(user.get('num_failed_logins', 0)))
         save_custom_attr(user_id, 'enforce_pw_change', str(int(user.get('enforce_pw_change', False))))
         save_custom_attr(user_id, 'last_pw_change', str(user.get('last_pw_change', int(time.time()))))
 

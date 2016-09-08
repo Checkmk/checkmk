@@ -49,6 +49,9 @@ def check_elphase(item, params, parsed):
     class Bounds:
         Lower, Upper, Both = range(3)
 
+    if params is None:
+        params = {}
+
     for what, title, unit, bound, factor in [
         ( "voltage",     "Voltage",        " V",  Bounds.Lower, 1),
         ( "current",     "Current",        " A",  Bounds.Upper, 1),

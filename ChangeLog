@@ -377,6 +377,7 @@
     * 3836 FIX: Fixed perfometer in kentix multisensor rack...
     * 3848 FIX: megaraid_pdisks: Handle "rebuild" state as WARNING instead of UNKNOWN
     * 3849 FIX: check_cpu_peaks: Fixed broken active check
+    * 3870 FIX: elphase.include: more robust against none type params
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

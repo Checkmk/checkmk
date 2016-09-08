@@ -93,7 +93,7 @@
 //  |      |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/       |
 //  |                                                                      |
 //  +----------------------------------------------------------------------+
-//  | Declarations of macrosk, structs and function prototypes             |
+//  | Declarations of macros, structs and function prototypes             |
 //  '----------------------------------------------------------------------'
 
 const char *check_mk_version = CHECK_MK_VERSION;

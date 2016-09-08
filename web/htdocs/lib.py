@@ -35,6 +35,7 @@ try:
 except:
     pass
 
+# TODO: Remove this! The texts will not be correctly localized
 core_state_names = { -1: _("NODATA"), 0: _("OK"), 1: _("WARNING"), 2: _("CRITICAL"), 3: _("UNKNOWN")}
 nagios_short_state_names = { -1: _("PEND"), 0: _("OK"), 1: _("WARN"), 2: _("CRIT"), 3: _("UNKN") }
 nagios_short_host_state_names = { 0: _("UP"), 1: _("DOWN"), 2: _("UNREACH") }
@@ -50,6 +51,7 @@ LOG_INFO    = 6 # informational
 LOG_DEBUG   = 7 # debug-level messages
 
 class MKAuthException(MKException):
+    # TODO: Remove this! The texts will not be correctly localized
     title       = _("Permission denied")
     plain_title = _("Authentication error")
     def __init__(self, reason):
@@ -58,14 +60,17 @@ class MKAuthException(MKException):
         return self.reason
 
 class MKUnauthenticatedException(MKGeneralException):
+    # TODO: Remove this! The texts will not be correctly localized
     title       = _("Not authenticated")
     plain_title = _("Missing authentication credentials")
 
 class MKConfigError(MKException):
+    # TODO: Remove this! The texts will not be correctly localized
     title       = _("Configuration error")
     plain_title = _("Configuration error")
 
 class MKUserError(MKException):
+    # TODO: Remove this! The texts will not be correctly localized
     title       = _("Invalid User Input")
     plain_title = _("User error")
     def __init__(self, varname, message):
@@ -853,6 +858,7 @@ except ImportError:
 
 seconds_per_day = 86400
 
+# TODO: Remove this! The texts will not be correctly localized
 weekdays = {
    0: _("Monday"),
    1: _("Tuesday"),
@@ -863,6 +869,7 @@ weekdays = {
    6: _("Sunday"),
 }
 
+# TODO: Remove this! The texts will not be correctly localized
 interface_oper_states = {
     1: _("up"),
     2: _("down"),

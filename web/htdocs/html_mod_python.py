@@ -309,3 +309,57 @@ class html_mod_python(htmllib.html):
                         if fn.endswith(".css"):
                             plugin_stylesheets.add(fn)
             return plugin_stylesheets
+
+
+    def css_filename_for_browser(self, css):
+        if not defaults.omd_root:
+            return '%s.css' % css
+
+        rel_path = "/share/check_mk/web/htdocs/" + css + ".css"
+        if os.path.exists(defaults.omd_root + rel_path) or \
+            os.path.exists(defaults.omd_root + "/local" + rel_path):
+            return '%s-%s.css' % (css, defaults.check_mk_version)
+
+
+    # Make the browser load specified javascript files. We have some special handling here:
+    # a) files which can not be found shal not be loaded
+    # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
+    # c) load the minified javascript when not in debug mode
+    def javascript_filename_for_browser(self, jsname):
+        if not defaults.omd_root:
+            return jsname
+
+        filename_for_browser = None
+        rel_path = "/share/check_mk/web/htdocs/js"
+        if self.enable_debug:
+            min_parts = [ "", "_min" ]
+        else:
+            min_parts = [ "_min", "" ]
+
+        for min_part in min_parts:
+            path_pattern = defaults.omd_root + "%s" + rel_path + "/" + jsname + min_part + ".js"
+            if os.path.exists(path_pattern % "") or os.path.exists(path_pattern % "/local"):
+                filename_for_browser = '%s%s-%s' % (jsname, min_part, defaults.check_mk_version)
+                break
+
+        return filename_for_browser
+
+
+    def detect_icon_path(self, icon_name):
+        # Detect whether or not the icon is available as images/icon_*.png
+        # or images/icons/*.png. When an icon is available as internal icon,
+        # always use this one
+        is_internal = False
+        if defaults.omd_root:
+            rel_path = "share/check_mk/web/htdocs/images/icon_"+icon_name+".png"
+            if os.path.exists(defaults.omd_root+"/"+rel_path):
+                is_internal = True
+            elif os.path.exists(defaults.omd_root+"/local/"+rel_path):
+                is_internal = True
+        elif os.path.exists(defaults.web_dir+"/htdocs/images/icon_"+icon_name+".png"):
+            is_internal = True
+
+        if is_internal:
+            return "images/icon_%s.png" % icon_name
+        else:
+            return "images/icons/%s.png" % icon_name

@@ -43,7 +43,12 @@ void SectionOHM::startIfAsync() {
 }
 
 bool SectionOHM::produceOutputInner(std::ostream &out, const Environment &env) {
-    bool res = SectionWMI::produceOutputInner(out, env);
+    bool res = false;
+    try {
+        res = SectionWMI::produceOutputInner(out, env);
+    } catch (const wmi::ComException &e) {
+        res = false;
+    }
     if (!res && !_ohm_monitor->checkAvailabe()) {
         crash_log("ohm not installed or not runnable -> section disabled");
         suspend(3600);

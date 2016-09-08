@@ -221,8 +221,10 @@ def render_availability_page(view, datasource, filterheaders, only_sites, limit)
         html.begin_context_buttons()
         togglebutton("avoptions", html.has_user_errors(), "painteroptions", _("Configure details of the report"))
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
+
         if config.reporting_available():
             html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
+
         if av_mode == "table":
             html.context_button(_("Export as CSV"), html.makeuri([("output_format", "csv_export")]), "download_csv")
 
@@ -230,10 +232,10 @@ def render_availability_page(view, datasource, filterheaders, only_sites, limit)
             html.context_button(_("Availability"), html.makeuri([("av_mode", "availability"), ("av_host", ""), ("av_aggr", "")]), "availability")
         elif not av_object:
             html.context_button(_("Timeline"), html.makeuri([("av_mode", "timeline")]), "timeline")
-
         elif av_mode == "timeline" and what != "bi":
             history_url = availability.history_url_of(av_object, time_range)
             html.context_button(_("History"), history_url, "history")
+
         html.end_context_buttons()
 
     # Render the avoptions again to get the HTML code, because the HTML vars have changed
@@ -248,7 +250,7 @@ def render_availability_page(view, datasource, filterheaders, only_sites, limit)
                       "<b>Note:</b> The number of shown rows does not necessarily reflect the "
                       "matched entries and the result might be incomplete. ") % avoptions["logrow_limit"]
             text += '<a href="%s">%s</a>' % \
-                    (html.makeuri([("_unset_logrow_limit", "1")]), _('Repeat query without limit.'))
+                    (html.makeuri([("_unset_logrow_limit", "1"), ("avo_logrow_limit", 0)]), _('Repeat query without limit.'))
             html.show_warning(text)
 
         do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)

@@ -541,14 +541,14 @@ class CMKWebSession(WebSession):
     #
 
     def _automation_credentials(self):
-        secret_path = "%s/var/check_mk/web/cmkautomation/automation.secret" % self.site.root
+        secret_path = "%s/var/check_mk/web/automation/automation.secret" % self.site.root
         p = self.site.execute(["cat", secret_path], stdout=subprocess.PIPE)
         secret = p.communicate()[0].rstrip()
         if secret == "":
             raise Exception("Failed to read secret from %s" % secret_path)
 
         return {
-            "_username" : "cmkautomation",
+            "_username" : "automation",
             "_secret"   : secret,
         }
 

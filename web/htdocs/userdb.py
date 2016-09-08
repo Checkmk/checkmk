@@ -845,7 +845,7 @@ def create_cmk_automation_user():
     secret = gen_id()
 
     users = load_users(lock=True)
-    users["cmkautomation"] = {
+    users["automation"] = {
         'alias'                 : u"Check_MK Automation - used for calling web services",
         'contactgroups'         : [],
         'automation_secret'     : secret,

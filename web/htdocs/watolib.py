@@ -2551,7 +2551,7 @@ class HostTagAttribute(Attribute):
         tag_id, title, self._taglist = tag_definition
         name = "tag_" + tag_id
         if len(self._taglist) == 1:
-            def_value = None
+            def_value = True
         else:
             def_value = self._taglist[0][0]
         Attribute.__init__(self, name, title, "", def_value)
@@ -2578,7 +2578,7 @@ class HostTagAttribute(Attribute):
     def render_input(self, varprefix, value):
         varname = varprefix + "attr_" + self.name()
         if value == None:
-            value = html.var(varname,"") # "" is important for tag groups with an empty tag entry
+            value = html.var(varname, "") # "" is important for tag groups with an empty tag entry
 
         # Tag groups with just one entry are being displayed
         # as checkboxes

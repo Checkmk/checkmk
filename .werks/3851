@@ -1,0 +1,10 @@
+Title: Host edit dialog: Checkbox hosttags are now checked by default
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i1
+Date: 1473429363
+Class: feature
+
+In most cases you want to have the checkbox ticked by default when
+setting a host tag group explicit for a host.

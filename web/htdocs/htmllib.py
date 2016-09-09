@@ -1816,9 +1816,9 @@ class html(object):
         return self.current_transid
 
 
-    # All generated transids are saved per user. They are stored
-    # in the transids and per user only up to 20 transids are kept.
-    # Transaction ids older than one day are deleted.
+    # All generated transids are saved per user. They are stored in the transids.mk.
+    # Per user only up to 20 transids of the already existing ones are kept. The transids
+    # generated on the current page are all kept. IDs older than one day are deleted.
     def store_new_transids(self):
         if self.new_transids:
             valid_ids = self.load_transids(lock = True)
@@ -1828,7 +1828,7 @@ class html(object):
                 timestamp, rand = valid_id.split("/")
                 if now - int(timestamp) < 86400: # one day
                     cleared_ids.append(valid_id)
-            self.save_transids((cleared_ids + self.new_transids)[-20:], unlock = True)
+            self.save_transids((cleared_ids[-20:] + self.new_transids), unlock = True)
 
 
     # Remove the used transid from the list of valid ones

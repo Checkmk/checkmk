@@ -43,6 +43,8 @@ class html_mod_python(htmllib.html):
     # is not loaded yet. Earliest place is self.init_modes() where config
     # is loaded.
     def __init__(self, req, fields):
+        htmllib.html.__init__(self)
+
         req.content_type = "text/html; charset=UTF-8"
         req.header_sent = False
 
@@ -51,7 +53,6 @@ class html_mod_python(htmllib.html):
         self.myfile = req.uri.split("/")[-1][:-3]
 
         self.req = req
-        htmllib.html.__init__(self)
         self.user = req.user
         if fields:
             self.fields = fields

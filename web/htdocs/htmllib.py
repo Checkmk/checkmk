@@ -92,6 +92,7 @@ __builtin__.HTML = HTML
 class html(object):
     def __init__(self):
         super(html, self).__init__()
+        self.myfile = None
         self.cookies = {}
         self.user = None
         self.user_errors = {}

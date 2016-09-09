@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import bi
+from cmk.defines import short_service_state_name
 
 #     ____        _
 #    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
@@ -119,7 +120,7 @@ def paint_aggr_state_short(state, assumed = False):
     if state == None:
         return "", ""
     else:
-        name = nagios_short_state_names[state["state"]]
+        name = short_service_state_name(state["state"], "")
         classes = "state svcstate state%s" % state["state"]
         if assumed:
             classes += " assumed"

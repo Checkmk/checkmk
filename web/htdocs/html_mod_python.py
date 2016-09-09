@@ -107,8 +107,8 @@ class html_mod_python(htmllib.html):
     def init_modes(self):
         self.verify_not_using_threaded_mpm()
 
-        if config.guitests_enabled:
-            self.init_guitests()
+        #if config.guitests_enabled:
+        #    self.init_guitests()
         self.init_screenshot_mode()
         self.init_debug_mode()
         self.set_buffering(config.buffered_http_stream)
@@ -168,7 +168,8 @@ class html_mod_python(htmllib.html):
 
     # Finish the HTTP request short before handing over to mod_python
     def finalize(self, is_error=False):
-        self.finalize_guitests()
+        #self.finalize_guitests()
+        pass
 
 
     def get_request_header(self, key, deflt=None):

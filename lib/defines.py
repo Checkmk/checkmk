@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+"""This module serves constants which are needed in several components
+of Check_MK."""
 
 # TODO: Clean this up one day by using the way recommended by gettext.
 # (See https://docs.python.org/2/library/gettext.html). For this we
@@ -34,37 +36,69 @@ except NameError:
     _ = lambda x: x # Fake i18n when not available
 
 
-# never used directly in the code. Just some wrapper to make all of our
-# exceptions handleable with one call
-class MKException(Exception):
-    # Do not use the Exception() __str__, because it uses str()
-    # to convert the message. We want to keep unicode strings untouched
-    # And don't use self.message, because older python versions don't
-    # have this variable set. self.args[0] seems to be the most portable
-    # way at the moment.
-    def __str__(self):
-        return self.args[0]
+# TODO: Investigate Check_MK code for more defines and other places
+#       where similar strucures are defined and use the things from
+#       here or move new stuff to this module.
+
+def core_state_names():
+    return {
+        -1 : _("NODATA"),
+         0 : _("OK"),
+         1 : _("WARNING"),
+         2 : _("CRITICAL"),
+         3 : _("UNKNOWN"),
+    }
 
 
-class MKGeneralException(MKException):
-    def __init__(self, reason):
-        self.reason = reason
-
-    def __str__(self):
-        return self.reason
-
-    def plain_title(self):
-        return _("General error")
-
-    def title(self):
-        return _("Error")
+def short_service_state_name(state_num, deflt=""):
+    states = {
+        -1: _("PEND"),
+         0: _("OK"),
+         1: _("WARN"),
+         2: _("CRIT"),
+         3: _("UNKN"),
+    }
+    return states.get(state_num, deflt)
 
 
-# This exception is raises when the current program execution should be
-# terminated. For example it is raised by the SIGINT signal handler to
-# propagate the termination up the callstack.
-# This should be raised in all cases where the program termination is a
-# "normal" case and no exception handling like printing a stack trace
-# should be done.
-class MKTerminate(Exception):
-    pass
+def short_host_state_name(state_num, deflt=""):
+    states = {
+        0: _("UP"),
+        1: _("DOWN"),
+        2: _("UNREACH")
+    }
+    return states.get(state_num, deflt)
+
+
+def weekday_name(day_num):
+    return weekdays()[day_num]
+
+
+def weekdays():
+    return {
+       0: _("Monday"),
+       1: _("Tuesday"),
+       2: _("Wednesday"),
+       3: _("Thursday"),
+       4: _("Friday"),
+       5: _("Saturday"),
+       6: _("Sunday"),
+    }
+
+
+def interface_oper_state_name(state_num, deflt=""):
+    return interface_oper_states().get(state_num, deflt)
+
+
+def interface_oper_states():
+    return {
+        1: _("up"),
+        2: _("down"),
+        3: _("testing"),
+        4: _("unknown"),
+        5: _("dormant"),
+        6: _("not present"),
+        7: _("lower layer down"),
+        8: _("degraded"),    # artificial, not official
+        9: _("admin down"),  # artificial, not official
+    }

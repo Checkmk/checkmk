@@ -218,7 +218,7 @@ def strip_bad_chars(x):
         return s.translate(twofivesix, "'&;<>\"")
 
 def header(title, isopen = True, table_id = "", narrow = False, css=None):
-    html.guitest_record_output("forms", ("header", title))
+    #html.guitest_record_output("forms", ("header", title))
     global g_header_open
     global g_section_open
     global g_section_isopen
@@ -253,7 +253,7 @@ def space():
     html.write('<tr><td colspan=2 style="height:15px;"></td></tr>')
 
 def section(title = None, checkbox = None, id = "", simple=False, hide = False, legend = True):
-    html.guitest_record_output("forms", ("section", title))
+    #html.guitest_record_output("forms", ("section", title))
     global g_section_open
     if g_section_open:
         html.write('</td></tr>')

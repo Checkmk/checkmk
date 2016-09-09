@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.defines as defines
+
 # Rules for configuring parameters of checks (services)
 
 register_rulegroup("checkparams", _("Parameters for discovered services"),
@@ -2775,7 +2777,7 @@ register_rule(group + '/' + subgroup_inventory,
                        "<tt>ifAdminStatus</tt> of <tt>down</tt> - a port administratively switched off. If you check this option "
                        "then an alternate version of the check is being used that fetches the <tt>ifAdminState</tt> in addition. "
                        "This will add about 5% of additional SNMP traffic."),
-              choices = dict_choices(interface_oper_states),
+              choices = dict_choices(defines.interface_oper_states()),
               toggle_all = True,
               default_value = ['1'],
         )),
@@ -5338,7 +5340,7 @@ register_check_parameters(
                 Optional(
                     ListChoice(
                         title = _("Allowed states:"),
-                        choices = dict_choices(interface_oper_states)),
+                        choices = dict_choices(defines.interface_oper_states())),
                     title = _("Operational state"),
                     help = _("If you activate the monitoring of the operational state (<tt>ifOperStatus</tt>) "
                              "the check will get warning or critical if the current state "

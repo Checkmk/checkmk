@@ -2028,9 +2028,7 @@ def today():
 
 class Weekday(DropdownChoice):
     def __init__(self, **kwargs):
-        choices = weekdays.items()
-        choices.sort()
-        kwargs['choices'] = choices
+        kwargs['choices'] = sorted(defines.weekdays().items())
         DropdownChoice.__init__(self, **kwargs)
 
 
@@ -2043,14 +2041,14 @@ class RelativeDate(OptionalDropdownChoice):
         weekday = time.localtime(today()).tm_wday
         for w in range(2, 7):
             wd = (weekday + w) % 7
-            choices.append((w, weekdays[wd]))
+            choices.append((w, weekday_name(wd)))
         for w in range(0, 7):
             wd = (weekday + w) % 7
             if w < 2:
                 title = _(" next week")
             else:
                 title = _(" in %d days") % (w + 7)
-            choices.append((w + 7, weekdays[wd] + title))
+            choices.append((w + 7, weekday_name(wd) + title))
 
         kwargs['choices']    = choices
         kwargs['explicit']   = Integer()

@@ -29,6 +29,7 @@ import sites
 # TODO: Get rid of import of views
 # from lib import *
 from valuespec import *
+import cmk.defines as defines
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -1477,21 +1478,21 @@ def find_next_choord(broken, scale):
         epoch = time.mktime(broken)
         epoch += 2 * 3600
         broken[:] = list(time.localtime(epoch))
-        title = weekdays[broken[6]] + time.strftime(" %H:%M", broken)
+        title = defines.weekday_name(broken[6]) + time.strftime(" %H:%M", broken)
 
     elif scale == "6hours":
         broken[3] = broken[3] / 6 * 6
         epoch = time.mktime(broken)
         epoch += 6 * 3600
         broken[:] = list(time.localtime(epoch))
-        title = weekdays[broken[6]] + time.strftime(" %H:%M", broken)
+        title = defines.weekday_name(broken[6]) + time.strftime(" %H:%M", broken)
 
     elif scale == "days":
         broken[3] = 0
         epoch = time.mktime(broken)
         epoch += 24 * 3600
         broken[:] = list(time.localtime(epoch))
-        title = weekdays[broken[6]] + time.strftime(", %d.%m. 00:00", broken)
+        title = defines.weekday_name(broken[6]) + time.strftime(", %d.%m. 00:00", broken)
 
     elif scale == "weeks":
         broken[3] = 0
@@ -1499,7 +1500,7 @@ def find_next_choord(broken, scale):
         at_monday = at_00 - 86400 * broken[6]
         epoch = at_monday + 7 * 86400
         broken[:] = list(time.localtime(epoch))
-        title = weekdays[broken[6]] + time.strftime(", %d.%m.", broken)
+        title = defines.weekday_name(broken[6]) + time.strftime(", %d.%m.", broken)
 
     else: # scale == "months":
         broken[3] = 0

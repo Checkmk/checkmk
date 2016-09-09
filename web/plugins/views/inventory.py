@@ -26,6 +26,7 @@
 
 import inventory
 from cmk.regex import regex
+import cmk.defines as defines
 
 def paint_host_inventory(row, invpath):
     invdata = inventory.get(row.get("host_inventory"), invpath)
@@ -457,7 +458,8 @@ def inv_paint_if_oper_status(oper_status):
     else:
         css_class = "if_state_other"
 
-    return "if_state " + css_class, interface_oper_states.get(oper_status, str(oper_status)).replace(" ", "&nbsp;")
+    return "if_state " + css_class, \
+        defines.interface_oper_state_name(oper_status, "%s" % oper_status).replace(" ", "&nbsp;")
 
 
 # admin status can only be 1 or 2, matches oper status :-)

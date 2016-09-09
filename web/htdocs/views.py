@@ -780,7 +780,7 @@ class Cell(object):
         thclass = classes and (" class=\"%s\"" % " ".join(classes)) or ""
 
         html.write("<th%s%s%s>%s</th>" % (thclass, onclick, title, self.title()))
-        html.guitest_record_output("view", ("header", title))
+        #html.guitest_record_output("view", ("header", title))
 
 
     def _sort_url(self):
@@ -941,7 +941,7 @@ class Cell(object):
             html.write("<td %s class=\"%s\">%s</td>\n" % (tdattrs, tdclass, content))
         else:
             html.write("<td %s>%s</td>" % (tdattrs, content))
-        html.guitest_record_output("view", ("cell", content))
+        #html.guitest_record_output("view", ("cell", content))
 
         return has_content
 

@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO:
+#
 # Notes for future rewrite:
 #
 # - Make clear which functions return values and which write out values
@@ -46,9 +48,18 @@
 #    directly when reading from file or URL.
 #
 # - indentify internal helper methods and prefix them with "_"
+#
+# - Split HTML handling (page generating) code and generic request
+#   handling (vars, cookies, ...) up into separate classes to make
+#   the different tasks clearer. For example a RequestHandler()
+#   and a HTMLGenerator() or similar.
 
-import time, os, urllib, random, re, __builtin__
-from guitester import GUITester
+import time
+import os
+import urllib
+import random
+import re
+import __builtin__
 
 try:
     import simplejson as json
@@ -57,10 +68,6 @@ except ImportError:
 
 from cmk.exceptions import MKGeneralException
 from lib import MKUserError
-
-# Only parse variable adhering to the following regular expressions
-# TODO: Fix this regex. +-\ selects all from + to \, not +, - and \!
-varname_regex = re.compile('^[\w\d_.%+-\\\*]+$')
 
 # Information about uri
 class InvalidUserInput(Exception):
@@ -82,9 +89,9 @@ class HTML:
 
 __builtin__.HTML = HTML
 
-class html(GUITester):
+class html(object):
     def __init__(self):
-        GUITester.__init__(self)
+        super(html, self).__init__()
         self.cookies = {}
         self.user = None
         self.user_errors = {}
@@ -384,6 +391,9 @@ class html(GUITester):
         self.vars     = {}
         self.listvars = {} # for variables with more than one occurrance
         self.uploads  = {}
+
+        # TODO: Fix this regex. +-\ selects all from + to \, not +, - and \!
+        varname_regex = re.compile('^[\w\d_.%+-\\\*]+$')
 
         for field in fields.list:
             varname = field.name
@@ -1337,7 +1347,7 @@ class html(GUITester):
         else:
             self.write('%s: %s\n' % (prefix, self.strip_tags(msg)))
 
-        self.guitest_record_output("message", (what, msg))
+        #self.guitest_record_output("message", (what, msg))
 
 
     def show_localization_hint(self):
@@ -1366,7 +1376,7 @@ class html(GUITester):
             self.default_html_headers()
             self.write('<title>')
             self.write(self.attrencode(title))
-            self.guitest_record_output("page_title", title)
+            #self.guitest_record_output("page_title", title)
             self.write('</title>\n')
 
             # If the variable _link_target is set, then all links in this page
@@ -1638,7 +1648,7 @@ class html(GUITester):
 
 
     def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title='', fkey=None):
-        self.guitest_record_output("context_button", (title, url, icon))
+        #self.guitest_record_output("context_button", (title, url, icon))
         title = self.attrencode(title)
         display = "block"
         if bestof:
@@ -1860,7 +1870,7 @@ class html(GUITester):
 
         # Now check, if this id is a valid one
         if id in self.load_transids():
-            self.guitest_set_transid_valid()
+            #self.guitest_set_transid_valid()
             return True
         else:
             return False

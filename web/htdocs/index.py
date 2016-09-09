@@ -153,8 +153,8 @@ def handler(req, fields = None, is_profiling = False):
             title       = _("Livestatus problem")
             plain_title = _("Livestatus problem")
         else:
-            title       = e.title
-            plain_title = e.plain_title
+            title       = e.title()
+            plain_title = e.plain_title()
 
         if plain_error():
             html.write("%s: %s\n" % (plain_title, e))

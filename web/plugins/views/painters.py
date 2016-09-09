@@ -66,6 +66,7 @@ import bi # Needed for BI Icon. For arkane reasons (ask htdocs/module.py) this
           # cannot be imported in views.py directly.
 
 from cmk.regex import regex
+from cmk.defines import short_service_state_name, short_host_state_name
 from lib import *
 
 #   .--Painter Options-----------------------------------------------------.
@@ -520,12 +521,14 @@ multisite_painters["sitealias"] = {
 def paint_service_state_short(row):
     if row["service_has_been_checked"] == 1:
         state = str(row["service_state"])
-        name = nagios_short_state_names.get(row["service_state"], "")
+        name = short_service_state_name(row["service_state"], "")
     else:
         state = "p"
-        name = _("PEND")
+        name = short_service_state_name(-1, "")
+
     if is_stale(row):
         state = str(state) + " stale"
+
     return "state svcstate state%s" % state, name
 
 
@@ -534,7 +537,7 @@ def paint_host_state_short(row, short=False):
         state = row["host_state"]
         # A state of 3 is sent by livestatus in cases where no normal state
         # information is avaiable, e.g. for "DOWNTIMESTOPPED (UP)"
-        name = nagios_short_host_state_names.get(row["host_state"], "")
+        name = short_host_state_name(row["host_state"], "")
     else:
         state = "p"
         name = _("PEND")

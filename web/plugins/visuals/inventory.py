@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import inventory
+import cmk.defines as defines
 
 # Try to magically compare two software versions.
 # Currently we only assume the format A.B.C.D....
@@ -157,12 +158,12 @@ class FilterInvtableIDRange(Filter):
 class FilterInvtableOperStatus(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
-        varnames = [ varname + "_" + str(x) for x in interface_oper_states ]
+        varnames = [ varname + "_" + str(x) for x in defines.interface_oper_states() ]
         Filter.__init__(self, varname, title, infoname, varnames, [])
 
     def display(self):
         html.begin_checkbox_group()
-        for state, state_name in sorted(interface_oper_states.items()):
+        for state, state_name in sorted(defines.interface_oper_states().items()):
             if state >= 8:
                 continue # skip artificial state 8 (degraded) and 9 (admin down)
             varname = self.name + "_" + str(state)

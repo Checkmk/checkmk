@@ -27,6 +27,7 @@
 import sites
 import mkeventd
 from valuespec import *
+from cmk.defines import short_service_state_name
 
 try:
     mkeventd_enabled = config.mkeventd_enabled
@@ -259,7 +260,7 @@ if mkeventd_enabled:
 
     def paint_event_state(row):
         state = row["event_state"]
-        name = nagios_short_state_names[row["event_state"]]
+        name = short_service_state_name(state, "")
         return "state svcstate state%s" % state, name
 
     multisite_painters["event_state"] = {

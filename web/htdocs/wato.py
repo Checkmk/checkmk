@@ -100,6 +100,7 @@ from watolib import *
 
 import cmk.store as store
 from cmk.regex import escape_regex_chars, regex
+from cmk.defines import short_service_state_name
 
 try:
     import simplejson as json
@@ -2853,13 +2854,14 @@ def show_service_table(host, firsttime):
             if first:
                 table.groupheader(state_name)
                 first = False
-            statename = nagios_short_state_names.get(state, _("PEND"))
-            if statename == _("PEND"):
+
+            statename = short_service_state_name(state, "")
+            if statename == "":
+                statename = short_service_state_name(-1)
                 stateclass = "state svcstate statep"
                 state = 0 # for tr class
             else:
                 stateclass = "state svcstate state%s" % state
-            # html.write("<tr class=\"data %s%d\">" % (trclass, state))
 
             table.row(css="data", state=state)
 
@@ -2967,9 +2969,8 @@ def ajax_execute_check():
         status, output = check_mk_automation(site, "active-check", [ hostname, checktype, item ])
     except Exception, e:
         status = 1
-        output = str(e)
-    statename = nagios_short_state_names.get(status, "UNKN")
-    html.write("%d\n%s\n%s" % (status, statename, output))
+        output = "%s" % e
+    html.write("%d\n%s\n%s" % (status, short_service_state_name(status, "UNKN"), output))
 
 
 #.
@@ -8697,7 +8698,7 @@ def mode_edit_timeperiod(phase):
     else:
         timeperiod = timeperiods.get(name, {})
 
-    weekdays = [
+    weekdays_by_name = [
       ( "monday",    _("Monday") ),
       ( "tuesday",   _("Tuesday") ),
       ( "wednesday", _("Wednesday") ),
@@ -8720,7 +8721,7 @@ def mode_edit_timeperiod(phase):
             timeperiod.clear()
 
             # extract time ranges of weekdays
-            for weekday, weekday_name in weekdays:
+            for weekday, weekday_name in weekdays_by_name:
                 ranges = get_ranges(weekday)
                 if ranges:
                     timeperiod[weekday] = ranges
@@ -8788,7 +8789,7 @@ def mode_edit_timeperiod(phase):
                "should be active.")
     html.write("<table class=timeperiod>")
 
-    for weekday, weekday_alias in weekdays:
+    for weekday, weekday_alias in weekdays_by_name:
         ranges = timeperiod.get(weekday)
         html.write("<tr><td class=name>%s</td>" % weekday_alias)
         timeperiod_ranges(weekday, weekday, new)
@@ -8804,7 +8805,7 @@ def mode_edit_timeperiod(phase):
 
     exceptions = []
     for k in timeperiod:
-        if k not in [ w[0] for w in weekdays ] and k not in [ "alias", "exclude" ]:
+        if k not in [ w[0] for w in weekdays_by_name ] and k not in [ "alias", "exclude" ]:
             exceptions.append((k, map(convert_from_range, timeperiod[k])))
     exceptions.sort()
     vs_ex.render_input("except", exceptions)

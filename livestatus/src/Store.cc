@@ -22,7 +22,6 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// IWYU pragma: no_include <memory>
 #include "Store.h"
 #include <chrono>
 #include <cstring>
@@ -134,7 +133,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
     }
     string l = input->nextLine();
     const char *line = l.c_str();
-    if (g_debug_level > 0) {
+    if (g_debug_level >= 1) {
         Informational() << "Query: " << line;
     }
     if (strncmp(line, "GET ", 4) == 0) {
@@ -214,7 +213,7 @@ void Store::answerGetRequest(const list<string> &lines, OutputBuffer *output,
 
     auto start = system_clock::now();
     Query(lines, table, g_data_encoding, g_debug_level).process(output);
-    if (g_debug_level > 0) {
+    if (g_debug_level >= 1) {
         auto elapsed = duration_cast<microseconds>(system_clock::now() - start);
         Informational() << "Time to process request: " << elapsed.count()
                         << "us. Size of answer: " << output->size() << " bytes";

@@ -25,7 +25,6 @@
 #include "LogCache.h"
 #include <dirent.h>
 #include <unistd.h>
-#include <cstdarg>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -53,25 +52,6 @@ extern char *log_file;
 
 int num_cached_log_messages = 0;
 
-// Debugging logging is hard if debug messages are logged themselves...
-void debug(const char *loginfo, ...) {
-    // Disable debugging, if not working in code. This can result in
-    // a symlink attack otherwise...
-    return;
-
-    if (g_debug_level >= 3) {
-        return;
-    }
-
-    FILE *x = fopen("/tmp/livestatus.log", "a+");
-    va_list ap;
-    va_start(ap, loginfo);
-    vfprintf(x, loginfo, ap);
-    fputc('\n', x);
-    va_end(ap);
-    fclose(x);
-}
-
 LogCache::LogCache(const CommandsHolder &commands_holder,
                    unsigned long max_cached_messages)
     : _commands_holder(commands_holder)
@@ -83,7 +63,8 @@ LogCache::LogCache(const CommandsHolder &commands_holder,
 #ifdef CMC
 void LogCache::setMaxCachedMessages(unsigned long m) {
     if (m != _max_cached_messages) {
-        Notice() << "Logfile cache: Changing max messages to " << m;
+        Notice() << "changing maximum number of messages for log file cache to "
+                 << m;
         _max_cached_messages = m;
     }
 }
@@ -99,7 +80,7 @@ bool LogCache::logCachePreChecks(
     // Do we have any logfiles (should always be the case, but we don't want to
     // crash...
     if (_logfiles.empty()) {
-        Informational() << "Warning: no logfile found, not even " << log_file;
+        Informational() << "no log file found, not even " << log_file;
         return false;
     }
 // Has Nagios rotated logfiles? => Update our file index. And delete all
@@ -111,7 +92,7 @@ bool LogCache::logCachePreChecks(
     if (last_log_rotation > _last_index_update) {
 #endif
         Informational()
-            << "Core has rotated logfiles. Rebuilding logfile index";
+            << "core has rotated log files, rebuilding log file index";
         forgetLogfiles();
         updateLogfileIndex();
     }
@@ -119,7 +100,7 @@ bool LogCache::logCachePreChecks(
 }
 
 void LogCache::forgetLogfiles() {
-    Informational() << "Logfile cache: flushing complete cache.";
+    Informational() << "flushing complete log file cache.";
     for (auto &logfile : _logfiles) {
         delete logfile.second;
     }
@@ -154,8 +135,7 @@ void LogCache::updateLogfileIndex() {
         free(ent);
         closedir(dir);
     } else {
-        Informational() << "Cannot open log archive '" << log_archive_path
-                        << "'";
+        Informational() << "cannot open log archive " << log_archive_path;
     }
 }
 
@@ -169,7 +149,7 @@ void LogCache::scanLogfile(char *path, bool watch) {
         if (_logfiles.find(since) == _logfiles.end()) {
             _logfiles.emplace(since, logfile);
         } else {
-            Warning() << "Ignoring duplicate logfile " << path;
+            Warning() << "ignoring duplicate log file " << path;
             delete logfile;
         }
     } else {
@@ -236,10 +216,8 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
     for (; it != _logfiles.end(); ++it) {
         Logfile *log = it->second;
         if (log->numEntries() > 0 && (log->classesRead() & ~logclasses) != 0) {
-            if (g_debug_level > 2) {
-                debug("Freeing classes 0x%02x of file %s", ~logclasses,
-                      log->path().c_str());
-            }
+            Debug() << "freeing classes " << ~logclasses << " of file "
+                    << log->path();
             long freed = log->freeMessages(~logclasses);  // flush only messages
                                                           // not needed for
                                                           // current query
@@ -259,7 +237,8 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
     for (it = ++queryit; it != _logfiles.end(); ++it) {
         Logfile *log = it->second;
         if (log->numEntries() > 0) {
-            debug("Flush newer log, msgs %d", log->numEntries());
+            Debug() << "flush newer log, " << log->numEntries()
+                    << " number of entries";
             num_cached_log_messages -= log->numEntries();
             log->flush();
             if (static_cast<unsigned long>(num_cached_log_messages) <=
@@ -274,8 +253,6 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
     // despite the fact that there are still too many messages
     // loaded.
 
-    if (g_debug_level > 2) {
-        debug("Cannot unload more messages. Still %d loaded (max is %d)",
-              num_cached_log_messages, _max_cached_messages);
-    }
+    Debug() << "cannot unload more messages, still " << num_cached_log_messages
+            << " loaded (max is " << _max_cached_messages << ")";
 }

@@ -330,7 +330,7 @@ void start_threads() {
             Warning() << ex;
         }
 
-        if (g_debug_level > 0) {
+        if (g_debug_level >= 1) {
             Informational() << "starting " << g_num_clientthreads
                             << " client threads";
         }
@@ -377,7 +377,7 @@ void terminate_threads() {
                 Informational() << "could not join thread no. " << t;
             }
         }
-        if (g_debug_level > 0) {
+        if (g_debug_level >= 1) {
             Informational() << "main thread + " << g_num_clientthreads
                             << " client threads have finished";
         }
@@ -441,7 +441,7 @@ int open_unix_socket() {
         return false;
     }
 
-    if (g_debug_level > 0) {
+    if (g_debug_level >= 1) {
         Informational() << "opened UNIX socket at " << g_socket_path;
     }
     return true;
@@ -919,7 +919,7 @@ void livestatus_parse_arguments(const char *args_orig) {
 void omd_advertize() {
     char *omd_site = getenv("OMD_SITE");
     if (omd_site != nullptr) {
-        if (g_debug_level > 0) {
+        if (g_debug_level >= 1) {
             Informational() << "running on OMD site " << omd_site << ", cool.";
         }
     } else {
@@ -954,7 +954,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
                    << event_broker_options << ", try setting it to -1.";
         return 1;
     }
-    if (g_debug_level > 0) {
+    if (g_debug_level >= 1) {
         Informational()
             << "your event_broker_options are sufficient for livestatus..";
     }

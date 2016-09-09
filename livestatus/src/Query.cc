@@ -100,7 +100,7 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
         line_copy.push_back('\0');
         char *buffer = &line_copy[0];
         rstrip(buffer);
-        if (_debug_level > 0) {
+        if (_debug_level >= 1) {
             Informational() << "Query: " << buffer;
         }
         if (strncmp(buffer, "Filter:", 7) == 0) {

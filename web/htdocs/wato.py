@@ -4947,9 +4947,7 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     html.write("</td></tr>")
     html.write("</table>")
     html.write("</center>")
-    json_items    = '[ %s ]' % ',\n'.join([ "'" + h + "'" for h in items ])
-    success_stats = '[ %s ]' % ','.join(map(str, success_stats))
-    fail_stats    = '[ %s ]' % ','.join(map(str, fail_stats))
+
     # Remove all sel_* variables. We do not need them for our ajax-calls.
     # They are just needed for the Abort/Finish links. Those must be converted
     # to POST.
@@ -4964,10 +4962,10 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     transids = []
     for i in range(len(items) + 20):
         transids.append(html.fresh_transid())
-    json_transids = '[ %s ]' % ',\n'.join([ "'" + h + "'" for h in transids])
+
     html.javascript(('progress_scheduler("%s", "%s", 50, %s, %s, "%s", %s, %s, "%s", "' + _("FINISHED.") + '");') %
-                     (html.var('mode'), base_url, json_items, json_transids, finish_url,
-                      success_stats, fail_stats, term_url))
+                     (html.var('mode'), base_url, json.dumps(items), json.dumps(transids), finish_url,
+                      json.dumps(success_stats), json.dumps(fail_stats), term_url))
 
 
 #.

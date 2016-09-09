@@ -34,6 +34,7 @@
 import math, os, time, re, sre_constants, urlparse, forms, tempfile
 import socket
 from lib import *
+import cmk.defines as defines
 
 def type_name(v):
     try:
@@ -2041,14 +2042,14 @@ class RelativeDate(OptionalDropdownChoice):
         weekday = time.localtime(today()).tm_wday
         for w in range(2, 7):
             wd = (weekday + w) % 7
-            choices.append((w, weekday_name(wd)))
+            choices.append((w, defines.weekday_name(wd)))
         for w in range(0, 7):
             wd = (weekday + w) % 7
             if w < 2:
                 title = _(" next week")
             else:
                 title = _(" in %d days") % (w + 7)
-            choices.append((w + 7, weekday_name(wd) + title))
+            choices.append((w + 7, defines.weekday_name(wd) + title))
 
         kwargs['choices']    = choices
         kwargs['explicit']   = Integer()

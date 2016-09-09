@@ -8,6 +8,7 @@
 
     Multisite:
     * 3850 FIX: Fixed JS error when quicksearch snapin not in sidebar
+    * 3871 FIX: stale services view: excluded services in downtime per default
 
 
 1.2.8p10:

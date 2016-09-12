@@ -12834,31 +12834,55 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
         condition = None
         if host_list == []:
             condition = _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
-        elif host_list[-1] != ALL_HOSTS[0]:
-            tt_list = []
-            for host_spec in host_list:
-                host = Host.host(host_spec)
-                is_regex = False
-                if host:
-                    host_spec = '<a href="%s">%s</a>' % (html.attrencode(host.edit_url()), host_spec)
-                elif host_spec[0] == "~":
-                    is_regex = True
-                    host_spec = host_spec[1:]
-                tt_list.append("%s<tt>%s</tt>" % (is_regex and "matches regex " or "is ", boldify(host_spec)))
+        else:
+            text_list = []
 
-            if len(host_list) == 1:
-                condition = _("Host name %s") % tt_list[0]
+            if host_list[0][0] == ENTRY_NEGATE_CHAR:
+                host_list = host_list[:-1]
+                is_negate = True
             else:
-                condition = _("Host name ") + ", ".join(tt_list[:-1])
-                condition += _(" or ") + tt_list[-1]
-        elif host_list[0][0] == ENTRY_NEGATE_CHAR:
-            hosts = [ h[1:] for h in host_list[:-1] ]
-            host_texts = map(lambda x: x[0] == "~" and "regex " + x[1:] or x, hosts)
-            if len(host_texts) == 1:
-                condition = _("Host is <b>not</b> ") + host_texts[0]
+                is_negate = False
+
+            regex_count = len([x for x in host_list if "~" in x])
+
+            condition = _("Host name ")
+            # Entries are either complete regex or no regex at all
+            if regex_count == len(host_list) or regex_count == 0:
+                is_regex = regex_count > 0
+                if is_regex:
+                    condition += is_negate and _("is not one of regex ") or _("matches one of regex ")
+                else:
+                    condition += is_negate and _("is not one of ") or _("is ")
+
+                for host_spec in host_list:
+                    if not is_regex:
+                        host = Host.host(host_spec)
+                        if host:
+                            host_spec = '<a href="%s">%s</a>' % (html.attrencode(host.edit_url()), host_spec)
+                    text_list.append(boldify(host_spec.strip("!").strip("~")))
+            # Mixed entries
             else:
-                condition = _("Host is <b>not</b> one of ") + ", ".join(host_texts)
-        # other cases should not occur, e.g. list of explicit hosts
+                for host_spec in host_list:
+                    is_regex = "~" in host_spec
+                    host_spec = host_spec.strip("!").strip("~")
+                    if not is_regex:
+                        host = Host.host(host_spec)
+                        if host:
+                            host_spec = '<a href="%s">%s</a>' % (html.attrencode(host.edit_url()), host_spec)
+
+                    if is_negate:
+                        expression = "%s" % (is_regex and _("does not match regex ") or _("is not "))
+                    else:
+                        expression = "%s" % (is_regex and _("matches regex ") or _("is "))
+                    text_list.append("%s%s" % (expression, boldify(host_spec)))
+
+            if len(text_list) == 1:
+                condition += text_list[0]
+            else:
+                condition += ", ".join(text_list[:-1])
+                condition += _(" or ") + text_list[-1]
+
+        # Other cases should not occur, e.g. list of explicit hosts
         # plus ALL_HOSTS.
         if condition:
             html.write('<li class="condition">%s</li>' % condition)
@@ -12867,26 +12891,45 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
     # Item list
     if ruleset["itemtype"] and item_list != ALL_SERVICES:
         if ruleset["itemtype"] == "service":
-            condition_prefix = _("Service name ")
+            condition = _("Service name ")
         elif ruleset["itemtype"] == "item":
-            condition_prefix = ruleset["itemname"] + " "
+            condition = ruleset["itemname"] + " "
 
-        negated = item_list[-1] == ALL_SERVICES[0]
-        if negated:
+        is_negate = item_list[-1] == ALL_SERVICES[0]
+        if is_negate:
             item_list = item_list[:-1]
-            cleaned_item_list = [ i.lstrip(ENTRY_NEGATE_CHAR) for i in negated and item_list ]
+            cleaned_item_list = [ i.lstrip(ENTRY_NEGATE_CHAR) for i in is_negate and item_list ]
         else:
             cleaned_item_list = item_list
 
+        exact_match_count = len([x for x in item_list if x[-1] == "$"])
 
-        svc_texts = []
-        for item in cleaned_item_list:
-            if item[-1] == "$":
-                svc_texts.append("<b>is %s%s</b>" % (negated and "not " or "", boldify(item[:-1])))
+        text_list = []
+        if exact_match_count == len(cleaned_item_list) or exact_match_count == 0:
+            if is_negate:
+                condition += exact_match_count == 0 and _("begins not with ") or ("is not ")
             else:
-                svc_texts.append("<b>begins %s with %s</b>" % (negated and "not " or "", boldify(item)))
+                condition += exact_match_count == 0 and _("begins with ") or ("is ")
 
-        html.write('<li class="condition">%s %s</li>' % (condition_prefix, (negated and _(" and ") or _(" or ")).join(svc_texts)))
+            for item in cleaned_item_list:
+                text_list.append(boldify(item.rstrip("$")))
+        else:
+            for item in cleaned_item_list:
+                is_exact = item[-1] == "$"
+                if is_negate:
+                    expression = "%s" % (is_exact and _("is not ") or _("begins not with "))
+                else:
+                    expression = "%s" % (is_exact and _("is ") or _("begins with "))
+                text_list.append("%s%s" % (expression, boldify(item.rstrip("$"))))
+
+        if len(text_list) == 1:
+            condition += text_list[0]
+        else:
+            condition += ", ".join(text_list[:-1])
+            condition += _(" or ") + text_list[-1]
+
+        if condition:
+            html.write('<li class="condition">%s</li>' % condition)
 
 
     html.write("</ul>")

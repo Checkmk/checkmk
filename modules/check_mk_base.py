@@ -507,11 +507,15 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
     return info[check_type] # return only data for specified check
 
 def store_persisted_info(hostname, persisted):
-    dir = var_dir + "/persisted/"
+    dirname = var_dir + "/persisted/"
     if persisted:
-        if not os.path.exists(dir):
-            os.makedirs(dir)
-        file(dir + hostname, "w").write("%r\n" % persisted)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        file_path = "%s/%s" % (dirname, hostname)
+        file("%s.#new" % file_path, "w").write("%r\n" % persisted)
+        os.rename("%s.#new" % file_path, file_path)
+
         verbose("Persisted sections %s.\n" % ", ".join(persisted.keys()))
 
 
@@ -543,7 +547,10 @@ def add_persisted_info(hostname, info):
             modified = True
 
     if not persisted:
-        os.remove(file_path)
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass
     elif modified:
         store_persisted_info(hostname, persisted)
 

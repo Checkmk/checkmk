@@ -106,10 +106,10 @@ def do_automation(cmd, args):
                 result = automation_delete_hosts(args)
             elif cmd == "rename-hosts":
                 result = automation_rename_hosts()
-	    elif cmd == "notification-replay":
-		result = automation_notification_replay(args)
-	    elif cmd == "notification-analyse":
-		result = automation_notification_analyse(args)
+            elif cmd == "notification-replay":
+                result = automation_notification_replay(args)
+            elif cmd == "notification-analyse":
+                result = automation_notification_analyse(args)
             elif cmd == "update-dns-cache":
                 result = automation_update_dns_cache()
             elif cmd == "bake-agents":
@@ -382,6 +382,7 @@ def automation_analyse_service(args):
 def automation_delete_hosts(args):
     for hostname in args:
         delete_host_files(hostname)
+    return None
 
 
 def delete_host_files(hostname):

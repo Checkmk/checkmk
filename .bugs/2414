@@ -1,9 +1,9 @@
 Title: Deletion of host's state files omitted in certain situations
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2015-12-04 15:37:30
 Targetversion: future
-Class: bug
 
 If you delete a host via bulk delete, then all files (autochecks, counters,
 many other) are being correctly deleted via the automation delete-host. When
@@ -17,3 +17,5 @@ Change:
 - Rename the automation in "delete-hosts"
 - Write a function that sorts the hosts by their site_ids and call the automation
   once for each affected site.
+
+2016-09-12 10:27:06: changed state open -> done

@@ -1,0 +1,9 @@
+Title: mcafee_webgateway, mcafee_webgateway_misc: new checks which monitor some statistics of McAfee web gatway devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1473684792
+Class: feature
+
+

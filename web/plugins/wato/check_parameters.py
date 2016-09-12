@@ -958,6 +958,68 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_applications,
+    "mcafee_web_gateway",
+    _("McAfee web gateway statistics"),
+    Dictionary(
+        elements = [
+            ("infections",
+                Tuple(
+                    title = _("Upper levels for infections"),
+                    help  = _("Here you can specify upper levels for the number of "
+                              "infections detected by the McAfee Gateway Antimalware Engine."),
+                    elements = [
+                        Integer(title = _("Warning at")),
+                        Integer(title = _("Critical at")),
+                    ]
+                )
+            ),
+            ("connections_blocked",
+                Tuple(
+                    title = _("Upper levels for blocked connections"),
+                    elements = [
+                        Integer(title = _("Warning at")),
+                        Integer(title = _("Critical at")),
+                    ]
+                )
+            ),
+        ]
+    ),
+    None,
+    match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "mcafee_web_gateway_misc",
+    _("McAfee web gateway miscellaneous"),
+    Dictionary(
+        elements = [
+            ("clients",
+                Tuple(
+                    title = _("Upper levels for clients"),
+                    elements = [
+                        Integer(title = _("Warning at")),
+                        Integer(title = _("Critical at")),
+                    ]
+                )
+            ),
+            ("network_sockets",
+                Tuple(
+                    title = _("Upper levels for open network sockets"),
+                    elements = [
+                        Integer(title = _("Warning at")),
+                        Integer(title = _("Critical at")),
+                    ]
+                )
+            ),
+        ]
+    ),
+    None,
+    match_type = "dict",
+)
+
+register_check_parameters(
      subgroup_applications,
      "pfsense_counter",
      _("pfSense Firewall Packet Rates"),

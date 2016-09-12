@@ -1,0 +1,17 @@
+title: McAfee web gateway: statistics
+agents: snmp
+catalog: app/mcafee
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the infections and blocked connections of McAfee web gateway
+ devices which supports the MCAFEE-MWG MIB.
+
+ No default levels are set. Upper levels for infections and blocked connections
+ are configurable.
+
+item:
+ No item.
+
+inventory:
+ One service is created.

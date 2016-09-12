@@ -162,7 +162,7 @@ multisite_builtin_views.update({
                    'context': {
                        'discovery_state': {'discovery_state_var0': 'on',
                                            'discovery_state_var1': '',
-                                           'discovery_state_var2': ''}
+                                           'discovery_state_var2': 'on'}
                    },
                    'group_painters': [('sitealias', None),
                                       ('host_with_state', 'host')],

@@ -4754,7 +4754,7 @@ register_check_parameters(
         optional_keys=[]
     ),
     TextAscii(
-        title = _("Database Names"),
+        title = _("Database Name"),
         help = _("Specify database names that the rule should apply to"),
     ),
     match_type = 'dict'

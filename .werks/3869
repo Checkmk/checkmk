@@ -1,9 +1,17 @@
-Title: ipmi: now IPMI sensors can be ignored by their status texts during discovery
+Title: ipmi: new discovery rule and cleanup
 Level: 1
 Component: checks
-Compatible: compat
+Compatible: incomp
 Version: 1.4.0i1
 Date: 1472818626
 Class: feature
 
+IPMI sensors can be ignored by their status texts during discovery in single
+mode.
 
+This cleanup concerns the following configured discovery rule and will be
+treated as follows: 'summary' mode remains contant but if you have additionally
+configured 'ignored sensors' you have to use the new 'IPMI sensors' rule now.
+This needs no rediscovery and can be configured during runtime.
+
+All other cases are compatible with existing situations.

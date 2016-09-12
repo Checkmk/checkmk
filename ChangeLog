@@ -155,7 +155,8 @@
     * 3647 check_http: Improved rendering of the extended performance data
     * 3867 filter 'Servicegroup (Regex)' can be negated
     * 3868 f5_bigip_cluster_status: node states are configurable for F5 BigIP devices since version 11.2
-    * 3869 ipmi: now IPMI sensors can be ignored by their status texts during discovery
+    * 3869 ipmi: new discovery rule and cleanup...
+            NOTE: Please refer to the migration notes!
     * 3744 synology_info: Now also displays OS version
     * 3799 agent_netapp: No longer requires the files NaServer/NaElements. Reduced CPU usage by 2/3...
     * 3872 mcafee_webgateway, mcafee_webgateway_misc: new checks which monitor some statistics of McAfee web gatway devices

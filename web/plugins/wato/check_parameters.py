@@ -513,48 +513,60 @@ register_check_parameters(
 #   |                                                   |___/              |
 #   '----------------------------------------------------------------------'
 
-register_rule(group + '/' + subgroup_inventory,
+def transform_ipmi_inventory_rules(p):
+    if type(p) == dict:
+        if p.get("summarize", True):
+            summarize = True
+        else:
+            summarize = False
+
+        if summarize:
+            p = 'summarize'
+        else:
+            if p.get('ignored_sensors', []):
+                p = ('single', {'ignored_sensors' : p["ignored_sensors"]})
+            else:
+                p = ('single', {})
+    return p
+
+register_rule(
+    group + '/' + subgroup_inventory,
     varname = "inventory_ipmi_rules",
     title = _("Discovery of IPMI sensors"),
-    valuespec = Dictionary(
-        show_titles = True,
-        elements = [
-            ( "ignored_sensors",
-                ListOfStrings(
-                    title = _("Ignore the following IPMI sensors"),
-                    help  = _("Names of IPMI sensors that should be ignored during inventory "
-                              "and when summarizing."
-                              "The pattern specified here must match exactly the beginning of "
-                              "the actual sensor name (case sensitive)."),
-                    orientation = "horizontal"
-                    )
-                ),
-            ( "ignored_sensorstates",
-                ListOfStrings(
-                    title = _("Ignore the following IPMI sensor states"),
-                    help  = _("IPMI sensors with these states that should be ignored during inventory "
-                              "and when summarizing."
-                              "The pattern specified here must match exactly the beginning of "
-                              "the actual sensor name (case sensitive)."),
-                    orientation = "horizontal",
-                    default_value = [ "nr", "ns" ]
-                    )
-                ),
-            ( "summarize",
-                DropdownChoice(
-                    title = _("Display single sensors or a summary of all sensors"),
-                    help  = _("If active, only a single summary item is displayed. The summary "
-                              "will explicitly mention sensors in warn/crit state but the "
-                              "sensors that are ok are aggregated."),
-                    choices = [
-                        (False, _("Single sensors")),
-                        (True,  _("Summarize")),
-                    ],
-                    default_value = True,
+    valuespec = Transform(CascadingDropdown(
+        orientation = "vertical",
+        choices = [
+            ("summarize", _("Summary")),
+            ("single" ,   _("Single"),
+                Dictionary(
+                    show_titles = True,
+                    elements = [
+                        ( "ignored_sensors",
+                            ListOfStrings(
+                                title = _("Ignore the following IPMI sensors"),
+                                help  = _("Names of IPMI sensors that should be ignored during inventory "
+                                          "and when summarizing."
+                                          "The pattern specified here must match exactly the beginning of "
+                                          "the actual sensor name (case sensitive)."),
+                                orientation = "horizontal"
+                                )
+                            ),
+                        ( "ignored_sensorstates",
+                            ListOfStrings(
+                                title = _("Ignore the following IPMI sensor states"),
+                                help  = _("IPMI sensors with these states that should be ignored during inventory "
+                                          "and when summarizing."
+                                          "The pattern specified here must match exactly the beginning of "
+                                          "the actual sensor name (case sensitive)."),
+                                orientation = "horizontal",
+                                default_value = [ "nr", "ns" ]
+                                )
+                        ),
+                    ]
                 ),
             ),
         ]
-    ),
+    ), forth = transform_ipmi_inventory_rules ),
     match = 'first'
 )
 
@@ -2267,6 +2279,27 @@ register_check_parameters(
                               "the sensor state (case sensitive)."),
                     orientation = "horizontal",
                 )
+            ),
+            ( "ignored_sensors",
+                ListOfStrings(
+                    title = _("Ignore the following IPMI sensors"),
+                    help  = _("Names of IPMI sensors that should be ignored during inventory "
+                              "and when summarizing."
+                              "The pattern specified here must match exactly the beginning of "
+                              "the actual sensor name (case sensitive)."),
+                    orientation = "horizontal"
+                    )
+                ),
+            ( "ignored_sensorstates",
+                ListOfStrings(
+                    title = _("Ignore the following IPMI sensor states"),
+                    help  = _("IPMI sensors with these states that should be ignored during inventory "
+                              "and when summarizing."
+                              "The pattern specified here must match exactly the beginning of "
+                              "the actual sensor name (case sensitive)."),
+                    orientation = "horizontal",
+                    default_value = [ "nr", "ns" ]
+                    )
             ),
         ],
         ignored_keys = ["ignored_sensors", "ignored_sensor_states"],

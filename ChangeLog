@@ -5,6 +5,7 @@
     * 3848 FIX: megaraid_pdisks: Handle "rebuild" state as WARNING instead of UNKNOWN
     * 3849 FIX: check_cpu_peaks: Fixed broken active check
     * 3870 FIX: elphase.include: more robust against none type params
+    * 3801 FIX: Fixed race condition with persisted data...
 
     Multisite:
     * 3850 FIX: Fixed JS error when quicksearch snapin not in sidebar

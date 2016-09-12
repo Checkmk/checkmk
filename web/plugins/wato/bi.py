@@ -1154,14 +1154,26 @@ class ModeBIRules(ModeBI):
             if not only_unused or refs == 0:
                 table.row()
                 table.cell(_("Actions"), css="buttons")
+
                 edit_url = self.url_to_pack([("mode", "bi_edit_rule"), ("id", ruleid)])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
+
+                clone_url = self.url_to_pack([("mode", "bi_edit_rule"), ("clone", ruleid)])
+                html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
+
                 if rule_refs == 0:
                     tree_url = html.makeuri([("mode", "bi_rule_tree"), ("id", ruleid)])
                     html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"), "bitree")
                 if refs == 0:
                     delete_url = html.makeactionuri_contextless([("mode", "bi_rules"), ("_del_rule", ruleid), ("pack", self._pack_id)])
                     html.icon_button(delete_url, _("Delete this rule"), "delete")
+
+                table.cell("", css="narrow")
+                if rule.get("disabled"):
+                    html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
+                else:
+                    html.empty_icon_button()
+
                 table.cell(_("Level"), level or "", css="number")
                 table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, ruleid))
                 table.cell(_("Parameters"), " ".join(rule["params"]))
@@ -1375,7 +1387,11 @@ class ModeBIEditRule(ModeBI):
 
     def page(self):
         if self._new:
-            value = {}
+            cloneid = html.var("clone")
+            if cloneid:
+                value = self._pack["rules"][cloneid]
+            else:
+                value = {}
         else:
             value = self._pack["rules"][self._ruleid]
 
@@ -1405,7 +1421,6 @@ class ModeBIEditRule(ModeBI):
                    size = 64,
                ),
             ),
-
             ( "comment",
                TextUnicode(
                    title = _("Comment"),
@@ -1431,6 +1446,13 @@ class ModeBIEditRule(ModeBI):
                     regex_error = _("Parameters must contain only A-Z, a-z, 0-9 and _ "
                                     "and must not begin with a digit."),
                   )
+              )
+            ),
+            ( "disabled",
+              Checkbox(
+                  title = _("Rule activation"),
+                  help  = _("Disabled rules are kept in the configuration but are not applied."),
+                  label = _("do not apply this rule"),
               )
             ),
             ( "aggregation",
@@ -1471,7 +1493,7 @@ class ModeBIEditRule(ModeBI):
             render = "form",
             elements = elements,
             headers = [
-                ( _("General Properties"),     [ "id", "title", "comment", "params" ]),
+                ( _("General Properties"),     [ "id", "title", "comment", "params", "disabled" ]),
                 ( _("Child Node Generation"),  [ "nodes" ] ),
                 ( _("Aggregation Function"),   [ "aggregation" ], ),
             ]

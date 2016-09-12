@@ -492,6 +492,8 @@ def compile_rule_node(aggr_type, calllist, lvl):
                 "There is no rule named <tt>%s</tt>. Available are: <tt>%s</tt>") %
                 (rulename, "</tt>, <tt>".join(config.aggregation_rules.keys())))
     rule = config.aggregation_rules[rulename]
+    if rule.get("disabled", False):
+        return []
 
     # Execute FOREACH: iterate over matching hosts/services.
     # Create an argument list where $1$, $2$, ... are

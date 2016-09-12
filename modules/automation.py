@@ -102,8 +102,8 @@ def do_automation(cmd, args):
                 result = automation_scan_parents(args)
             elif cmd == "diag-host":
                 result = automation_diag_host(args)
-            elif cmd == "delete-host":
-                result = automation_delete_host(args)
+            elif cmd == "delete-hosts":
+                result = automation_delete_hosts(args)
             elif cmd == "rename-hosts":
                 result = automation_rename_hosts()
 	    elif cmd == "notification-replay":
@@ -379,9 +379,12 @@ def automation_analyse_service(args):
     # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
 
 
-def automation_delete_host(args):
-    hostname = args[0]
+def automation_delete_hosts(args):
+    for hostname in args:
+        delete_host_files(hostname)
 
+
+def delete_host_files(hostname):
     # the inventory_archive as well as the performance data is kept
     # we do not want to loose any historic data for accidently deleted hosts
 

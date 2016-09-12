@@ -1604,15 +1604,30 @@ class Folder(BaseFolder):
         self.need_unlocked_hosts()
         self.need_permission("write")
 
-        # 2. Actual modification
+        # 2. Delete host specific files (caches, tempfiles, ...)
+        self._delete_host_files(host_names)
+
+        # 3. Actual modification
         for host_name in host_names:
             host = self.hosts()[host_name]
             host.mark_dirty()
             del self._hosts[host_name]
             self._num_hosts = len(self._hosts)
             log_pending(AFFECTED, host, "delete-host", _("Deleted host %s") % host_name)
+
         self._save_wato_info() # num_hosts has changed
         self.save_hosts()
+
+
+    # Group the given host names by their site and delete their files
+    def _delete_host_files(self, host_names):
+        hosts_by_site = {}
+        for host_name in host_names:
+            host = self.hosts()[host_name]
+            hosts_by_site.setdefault(host.site_id(), []).append(host_name)
+
+        for site_id, site_host_names in hosts_by_site.items():
+            check_mk_automation(site_id, "delete-hosts", site_host_names)
 
 
     def move_hosts(self, host_names, target_folder):

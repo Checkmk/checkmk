@@ -27,6 +27,7 @@
     * 3149 FIX: fixed rare crash if alert handling tried to long non-latin characters
     * 3843 FIX: Fixed reporting of crashes when using Nagios core
     * 3846 FIX: Nagios: define_contactgroups = False is handled correctly again
+    * 3852 FIX: Host related files are now deleted during host deletion...
 
     Checks & Agents:
     * 3183 aruba_wlc_aps: new check which monitors the provisioned accesspoints of an Aruba Network WLAN Controller

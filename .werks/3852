@@ -1,0 +1,27 @@
+Title: Host related files are now deleted during host deletion
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.4.0i1
+Date: 1473668830
+Class: fix
+
+Some host related files (caches, precompiled checks, counters, ...)
+were not deleted when removing a host via WATO. This has now been
+fixed. These files are removed once a host is deleted:
+
+<ul>
+<li>precompiled host checks (nagios)</li>
+<li>discovered services</li>
+<li>counters</li>
+<li>agent / SNMP caches</li>
+<li>persisted sections</li>
+<li>piggyback data</li>
+<li>HW/SW inventory caches</li>
+<li>baked agents</li>
+<li>logwatch files</li>
+</ul>
+
+The HW/SW inventory archive and performance data (RRDs) are not
+cleaned up by this mechanism. To clean these files up, use the
+disk space cleanup mechanism (see global settings).

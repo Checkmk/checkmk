@@ -868,18 +868,6 @@ def show_host_actions(host):
             html.icon_button(delete_url, _("Delete this host"), "delete")
 
 
-def delete_host_files(site_id, hostname):
-    # TODO: See bug #2414
-    check_mk_automation(site_id, "delete-host", [hostname])
-    if not config.site_is_local(site_id):
-        # Delete inventory data received from remote sites (not the archive)
-        for filename in [ "%s/inventory/%s"    % (defaults.var_dir, hostname),
-                          "%s/inventory/%s.gz" % (defaults.var_dir, hostname) ]:
-            if os.path.exists(filename):
-                os.unlink(filename)
-    log_pending(AFFECTED, hostname, "delete-host", _("Deleted host %s") % hostname)
-
-
 def delete_host_after_confirm(delname):
     c = wato_confirm(_("Confirm host deletion"),
                      _("Do you really want to delete the host <tt>%s</tt>?") % delname)

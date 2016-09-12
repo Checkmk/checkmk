@@ -12907,7 +12907,7 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
         text_list = []
         if exact_match_count == len(cleaned_item_list) or exact_match_count == 0:
             if is_negate:
-                condition += exact_match_count == 0 and _("begins not with ") or ("is not ")
+                condition += exact_match_count == 0 and _("does not begin with ") or ("is not ")
             else:
                 condition += exact_match_count == 0 and _("begins with ") or ("is ")
 

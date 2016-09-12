@@ -1177,31 +1177,46 @@ class FilterStarred(FilterTristate):
 declare_filter(501, FilterStarred("host"))
 declare_filter(501, FilterStarred("service"))
 
-class FilterViewMultiselect(Filter):
-    def __init__(self, name, title, options, info, varname):
-        Filter.__init__(self, name, title,
-                info, ["%s_var%d" % (name, idx) for idx, option in enumerate(options)], [])
-        self.__options = options
-        self.__varname = varname
+class FilterDiscoveryState(Filter):
+    def __init__(self):
+        self.__options = [
+            ("discovery_state_ignored",     _("Hidden")),
+            ("discovery_state_vanished",    _("Vanished")),
+            ("discovery_state_unmonitored", _("New")),
+        ]
+        Filter.__init__(self, "discovery_state", _("Discovery state"), "discovery_state",
+                [ o[0] for o in self.__options ], [])
+        self.__varname = "discovery_state"
+
 
     def display(self):
         html.begin_checkbox_group()
-        for idx, option in enumerate(self.__options):
-            html.checkbox("%s_var%d" % (self.name, idx), True, label=option[1])
+        for varname, title in self.__options:
+            html.checkbox(varname, True, label=title)
         html.end_checkbox_group()
 
-    def filter(self, infoname):
-        filters = []
-        for idx, option in enumerate(self.__options):
-            if html.get_checkbox("%s_var%d" % (self.name, idx)):
-                filters.append("ViewFilter: %s = %s" % (self.__varname, option[0]))
-        if filters:
-            return "\n".join(filters) + "\n"
-        else:
-            return ""
 
-declare_filter(601, FilterViewMultiselect("discovery_state", _("Discovery state"),
-                                          [("ignored", "Hidden"),
-                                           ("vanished", "Vanished"),
-                                           ("unmonitored", "New")], "long_plugin_output",
-                                          "state"))
+    def value(self):
+        val = {}
+        for varname in self.htmlvars:
+            value = html.get_checkbox(varname)
+            if value == None:
+                value = True # Default setting for filter: all checked!
+            val[varname] = value
+        return val
+
+
+    def filter(self, infoname):
+        return ""
+
+
+    def filter_table(self, rows):
+        new_rows = []
+        filter_options = self.value()
+        for row in rows:
+            if filter_options["discovery_state_" + row["discovery_state"]]:
+                new_rows.append(row)
+        return new_rows
+
+
+declare_filter(601, FilterDiscoveryState())

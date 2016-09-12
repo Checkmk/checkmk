@@ -241,59 +241,45 @@ multisite_datasources["alert_stats"] = {
     "time_filters" : [ "logtime" ],
 }
 
+# The livestatus query constructed by the filters of the view may
+# contain filters that are related to the discovery info and should only be
+# handled here. We need to extract them from the query, hand over the regular
+# filters to the host livestatus query and apply the others during the discovery
+# service query.
 def query_service_discovery(columns, query, only_sites, limit, all_active_filters):
-    # query contains combined filters, some of which may refer to an actual livestatus
-    # column, others to the dynamic one generated here. fun fun fun
-    filters = query.split("\n")
-    view_filters = [filt for filt in filters if filt.startswith("ViewFilter")]
+    # Hard code the discovery service filter
+    query += "Filter: check_command = check-mk-inventory\n"
 
-    lq_filters =\
-        ["Filter: check_command = check-mk-inventory"] +\
-        [filt for filt in filters if not filt.startswith("ViewFilter")]
-
-    rows = do_query_data(
-        "GET services\n",
+    service_rows = do_query_data("GET services\n",
         ["host_state", "host_has_been_checked", "long_plugin_output", "host_name"], [], [],
-        "\n".join(lq_filters), only_sites, limit, "read")
+        query, only_sites, limit, "read")
 
-    # convert list of strings "ViewFilter: var = value" to list of tuples (var, value)
-    view_filters = [map(lambda s: s.strip(), filt.split(":")[1].split("="))
-                    for filt in view_filters]
-    # convert list of (var, value) tuples to dictionary {var: [val1, val2, val3] ... }
-    view_filters = dict([(filt[0], [inner[1] for inner in view_filters
-                                    if inner[0] == filt[0]])
-                         for filt in view_filters])
-
-    result = []
-    # one row per host
-    for row in rows:
+    rows = []
+    for row in service_rows:
         for service_line in row["long_plugin_output"].split("\n"):
-            if service_line:
-                state, check, service = map(lambda s: s.strip(), service_line.split(":", 2))
-                include = True
-                for var, varname in [(state, "state"), (check, "check")]:
-                    if varname in view_filters and var not in view_filters[varname]:
-                        include = False
-                if include:
-                    result.append({
-                        "site"                  : row["site"],
-                        "host_name"             : row["host_name"],
-                        "host_state"            : row["host_state"],
-                        "host_has_been_checked" : row["host_has_been_checked"],
-                        "discovery_state"       : state,
-                        "discovery_check"       : check,
-                        "discovery_service"     : service
-                    })
+            if not service_line:
+                continue
 
-    return result
+            state, check, service_description = map(lambda s: s.strip(), service_line.split(":", 2))
+
+            rows.append({
+                "site"                  : row["site"],
+                "host_name"             : row["host_name"],
+                "host_state"            : row["host_state"],
+                "host_has_been_checked" : row["host_has_been_checked"],
+                "discovery_state"       : state,
+                "discovery_check"       : check,
+                "discovery_service"     : service_description
+            })
+
+    return rows
 
 
 multisite_datasources["service_discovery"] = {
     "title"       : _("Service discovery"),
     "table"       : query_service_discovery,
     "add_columns" : [ "discovery_state", "discovery_check", "discovery_service" ],
-    "add_headers" : "Filter: check_command = check-mk-inventory",
-    "infos"       : [ "host", "long_plugin_output" ],
+    "infos"       : [ "host", "host_discovery" ],
     "keys"        : [],
-    "idkeys"      : [ 'host_name' ]
+    "idkeys"      : [ "host_name" ]
 }

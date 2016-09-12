@@ -132,16 +132,8 @@ infos['aggr_group'] = {
     ],
 }
 
-# long_plugin_output can of course exist in every service, but the datasource
-# is (currently) limited to return only the output of the discovery service and
-# works per-host, not per-service
-infos['long_plugin_output'] = {
+infos['discovery'] = {
     'title'       : _('Discovery Output'),
     'title_plural': _('Discovery Outputs'),
-    'single_spec' : [
-        ('long_plugin_output', TextUnicode(
-            title = _('Output'),
-        )),
-    ]
+    'single_spec' : None,
 }
-

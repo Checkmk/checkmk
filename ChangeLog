@@ -384,6 +384,7 @@
     * 3849 FIX: check_cpu_peaks: Fixed broken active check
     * 3870 FIX: elphase.include: more robust against none type params
     * 3801 FIX: Fixed race condition with persisted data...
+    * 3854 FIX: juniper_bgp_state: Fixed service descriptions in some cases...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

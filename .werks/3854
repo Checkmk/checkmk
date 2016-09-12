@@ -1,0 +1,11 @@
+Title: juniper_bgp_state: Fixed service descriptions in some cases
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1473693897
+Class: fix
+
+At least for some devices Juniper M120 router, Juniper SRX240H-DC
+and Juniper MX80-48T the service descriptions were computed wrong
+(containing more numbers than the IP address of the peer).

@@ -385,8 +385,10 @@ def automation_delete_hosts(args):
 
 
 def delete_host_files(hostname):
-    # the inventory_archive as well as the performance data is kept
-    # we do not want to loose any historic data for accidently deleted hosts
+    # The inventory_archive as well as the performance data is kept
+    # we do not want to loose any historic data for accidently deleted hosts.
+    #
+    # These files are cleaned up by the disk space mechanism.
 
     # single files
     for path in [

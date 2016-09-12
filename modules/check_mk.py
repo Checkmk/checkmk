@@ -642,6 +642,20 @@ def all_configured_hosts():
 def all_active_hosts():
     return all_active_realhosts() + all_active_clusters()
 
+# Returns a list of all hosts which are associated with this site,
+# but have been removed by the "only_hosts" rule. Normally these
+# are the hosts which have the tag "offline".
+#
+# This is not optimized for performance, so use in specific situations.
+def all_offline_hosts():
+    hostlist = filter_active_hosts(all_configured_realhosts()
+                                   + all_configured_clusters(),
+                                   keep_offline_hosts=True)
+
+    return [ hostname for hostname in hostlist
+             if not in_binary_hostlist(hostname, only_hosts) ]
+
+
 def duplicate_hosts():
     # Sanity check for duplicate hostnames
     seen_hostnames = set([])
@@ -672,19 +686,22 @@ def all_active_clusters():
         all_clusters_untagged = filter_active_hosts(all_configured_clusters())
     return all_clusters_untagged
 
-def filter_active_hosts(hostlist):
+def filter_active_hosts(hostlist, keep_offline_hosts=False):
     if only_hosts == None and distributed_wato_site == None:
         return hostlist
     elif only_hosts == None:
         return [ hostname for hostname in hostlist
                  if host_is_member_of_site(hostname, distributed_wato_site) ]
     elif distributed_wato_site == None:
-        return [ hostname for hostname in hostlist
-                 if in_binary_hostlist(hostname, only_hosts) ]
+        if keep_offline_hosts:
+            return hostlist
+        else:
+            return [ hostname for hostname in hostlist
+                     if in_binary_hostlist(hostname, only_hosts) ]
     else:
         site_tag = "site:" + distributed_wato_site
         return [ hostname for hostname in hostlist
-                 if in_binary_hostlist(hostname, only_hosts)
+                 if (keep_offline_hosts or in_binary_hostlist(hostname, only_hosts))
                  and host_is_member_of_site(hostname, distributed_wato_site) ]
 
 def host_is_member_of_site(hostname, site):
@@ -3664,7 +3681,13 @@ def list_all_hosts(hostgroups):
 # Same for host tags, needed for --list-tag
 def list_all_hosts_with_tags(tags):
     hosts = []
-    for h in all_active_hosts():
+
+    if "offline" in tags:
+        hostlist = all_offline_hosts()
+    else:
+        hostlist = all_active_hosts()
+
+    for h in hostlist:
         if hosttags_match_taglist(tags_of_host(h), tags):
             hosts.append(h)
     return hosts

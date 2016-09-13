@@ -1,4 +1,4 @@
-Title: mcafee_webgateway, mcafee_webgateway_misc: new checks which monitor some statistics of McAfee web gatway devices
+Title: mcafee_webgateway, mcafee_webgateway_misc: new checks which monitor some statistics of McAfee web gateway devices
 Level: 1
 Component: checks
 Compatible: compat

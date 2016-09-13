@@ -1,0 +1,8 @@
+Title: kentix_humidity, kentix_temp: Added support of MultiSensor-LAN and MultiSensor-RACK
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1473757772
+Class: feature
+

@@ -11,6 +11,9 @@
     * 3850 FIX: Fixed JS error when quicksearch snapin not in sidebar
     * 3871 FIX: stale services view: excluded services in downtime per default
 
+    WATO:
+    * 3855 SEC: Fixed possible command injection by privileged WATO users...
+
 
 1.2.8p10:
     Core & Setup:

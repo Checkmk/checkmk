@@ -4449,8 +4449,8 @@ def do_scan_parents(hosts):
     sys.stdout.write("\nWrote %s\n" % outfilename)
 
 def gateway_reachable_via_ping(ip, probes):
-    return 0 == os.system("ping -q -i 0.2 -l 3 -c %d -W 5 '%s' >/dev/null 2>&1" %
-      (probes, ip)) >> 8
+    return 0 == os.system("ping -q -i 0.2 -l 3 -c %d -W 5 %s >/dev/null 2>&1" %
+      (probes, quote_shell_string(ip))) >> 8
 
 def scan_parents_of(hosts, silent=False, settings={}):
     if monitoring_host:
@@ -4469,11 +4469,11 @@ def scan_parents_of(hosts, silent=False, settings={}):
             sys.stdout.flush()
         try:
             ip = lookup_ipv4_address(host)
-            command = "traceroute -w %d -q %d -m %d -n '%s' 2>&1" % (
+            command = "traceroute -w %d -q %d -m %d -n %s 2>&1" % (
                 settings.get("timeout", 8),
                 settings.get("probes", 2),
                 settings.get("max_ttl", 10),
-                ip)
+                quote_shell_string(ip))
             if opt_debug:
                 sys.stderr.write("Running '%s'\n" % command)
             procs.append( (host, ip, os.popen(command) ) )

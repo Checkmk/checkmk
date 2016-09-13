@@ -1,0 +1,19 @@
+Title: Fixed possible command injection by privileged WATO users
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.8p11
+Date: 1473778544
+Class: security
+
+In all previous 1.2.8 versions authenticated and privileged WATO users,
+the ones which are able to add or edit hosts, were able to inject shell
+commands to Check_MK which are then executed in the context of the monitoring
+site user.
+
+The user was able to configure a host address in a specific format to inject
+such shell commands to the configuration. Once the configuration was activated
+and loaded into the monitoring core, the command was executed in context of
+the monitoring site user in the moment a parent scan was started for that host.
+
+Thanks for analyzing and reporting this issue to Christian Fünfhaus!

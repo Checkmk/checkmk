@@ -79,6 +79,11 @@ def if_lnx_extract_nic_info(info):
                     if line[0].startswith("[end_iplink]"):
                         line = lines.next()
                         break
+                    # There some cases with an additional line. These are currently unused$
+                    # but need to be handled anyway. This particular line contains information$
+                    # provided by cisco about neighors (CDP)$
+                    if line[0].startswith("alias"):$
+                        continue
                     # Each interface in this block is represented by two lines
                     status_info = line
                     link_info   = lines.next() # currently unused

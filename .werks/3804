@@ -1,0 +1,9 @@
+Title: Datasource programs: fixed possible Check_MK Helper exception when creation of subprocess fails
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p12
+Date: 1473866506
+Class: fix
+
+

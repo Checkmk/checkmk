@@ -485,6 +485,12 @@ metric_info["mem_used"] = {
     "unit" : "bytes",
 }
 
+metric_info["mem_available"] = {
+    "color" : "21/a",
+    "title" : _("RAM available"),
+    "unit"  : "bytes",
+}
+
 metric_info["pagefile_used"] = {
     "color": "#408f20",
     "title" : _("Commit Charge"),

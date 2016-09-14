@@ -638,7 +638,7 @@ def nic_speed_human_readable(bits_per_second):
 # and drop useless zeroes at the end of the fraction
 # 45.1 -> "45.1"
 # 45.0 -> "45"
-def drop_dotzero(v, digits=1):
+def drop_dotzero(v, digits=2):
     t = "%%.%df" % digits % v
     if "." in t:
         return t.rstrip("0").rstrip(".")
@@ -775,7 +775,6 @@ def date_month_human_readable(timestamp):
 def calculate_scaled_number(v, base=1024.0, precision=1):
     base = float(base)
 
-    digits = 1
     if v >= base ** 4:
         symbol = "T"
         scale = base ** 4
@@ -800,14 +799,9 @@ def calculate_scaled_number(v, base=1024.0, precision=1):
 
 
 def calculate_scaled_bytes(v, base=1024.0, bytefrac=True):
+    digits = 2
     if not bytefrac:
         digits = 0
-    elif v >= 100:
-        digits = 0
-    elif v >= 10:
-        digits = 1
-    else:
-        digits = 2
 
     return calculate_scaled_number(v, base, precision=digits)
 
@@ -824,7 +818,10 @@ def bytes_human_readable(b, *args, **kwargs):
     scale_symbol, places_after_comma, scale_factor = calculate_scaled_bytes(b, *args, **kwargs)
 
     scaled_value = float(b) / scale_factor
-    return (u"%%.%df %%s%%s" % places_after_comma) % (scaled_value, scale_symbol, unit)
+    if scale_symbol == "" and unit == "B":
+        return u"%.0f %s%s" % (scaled_value, scale_symbol, unit)
+    else:
+        return (u"%%.%df %%s%%s" % places_after_comma) % (scaled_value, scale_symbol, unit)
 
 
 def bytes_human_readable_list(values, *args, **kwargs):

@@ -1,4 +1,7 @@
 1.2.8p12:
+    Multisite:
+    * 3874 FIX: fixed graphs displaying wrong labels
+
 
 1.2.8p11:
     Checks & Agents:

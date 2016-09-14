@@ -756,6 +756,7 @@ def get_agent_info_program(commandline):
     exepath = commandline.split()[0] # for error message, hide options!
 
     vverbose("Calling external program %s\n" % commandline)
+    p = None
     try:
         if monitoring_core == "cmc":
             p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull),

@@ -170,8 +170,8 @@ class html_mod_python(htmllib.html):
 
     # Finish the HTTP request short before handing over to mod_python
     def finalize(self, is_error=False):
+        self.disable_request_timeout()
         #self.finalize_guitests()
-        pass
 
 
     def get_request_header(self, key, deflt=None):

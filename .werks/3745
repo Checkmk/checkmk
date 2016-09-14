@@ -1,0 +1,8 @@
+Title: MIB uploads: Handle latin-1 encoded MIBs
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.4.0i1
+Date: 1473846563
+Class: fix
+

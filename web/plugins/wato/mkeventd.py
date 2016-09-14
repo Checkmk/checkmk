@@ -2036,6 +2036,13 @@ def validate_and_compile_mib(mibname, content):
                            PySnmpCodeGen(),
                            PyFileWriter(mkeventd.compiled_mibs_dir))
 
+    # FIXME: This is a temporary local fix that should be removed once
+    # handling of file contents uses a uniformly encoded representation
+    try:
+        content = content.decode("utf-8")
+    except:
+        content = content.decode("latin-1")
+
     # Provides the just uploaded MIB module
     compiler.addSources(
         CallbackReader(lambda m,c: m==mibname and c or '', content)

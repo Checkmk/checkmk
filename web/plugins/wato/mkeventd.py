@@ -1866,7 +1866,7 @@ def mode_mkeventd_mibs(phase):
                     if config.debug:
                         raise
                     else:
-                        raise MKUserError("_upload_mib", str(e))
+                        raise MKUserError("_upload_mib", "%s" % e)
 
         elif html.var("_bulk_delete_custom_mibs"):
             return bulk_delete_custom_mibs_after_confirm()

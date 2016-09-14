@@ -2581,7 +2581,7 @@ if mkeventd_enabled:
                             regex_error = _("The engine IDs have to be configured as hex strings "
                                             "like <tt>8000000001020304</tt>."),
                         ),
-                        title = _("Engine ID"),
+                        title = _("Engine IDs (only needed for SNMPv3)"),
                         help = _("Each SNMPv3 device has it's own engine ID. This is normally "
                                  "automatically generated, but can also be configured manually "
                                  "for some devices. As the engine ID is used for the encryption "
@@ -2594,10 +2594,10 @@ if mkeventd_enabled:
                 ],
                 optional_keys = [],
             ),
-            title = _("Credentials for processing SNMPv3 traps"),
-            help = _("When you want to process SNMPv3 traps with the Event Console it is "
+            title = _("Credentials for processing SNMP traps"),
+            help = _("When you want to process SNMP traps with the Event Console it is "
                      "necessary to configure the credentials to decrypt the incoming traps."),
-            text_if_empty = _("SNMPv3 traps not configured"),
+            text_if_empty = _("SNMP traps not configured"),
         ),
         domain = "mkeventd",
     )

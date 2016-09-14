@@ -692,6 +692,7 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error,
             address = cached_dns_lookup(address, family)
 
         if protocol == "snmp":
+            management_check_types = []
             try:
                 management_check_types = snmp_scan(hostname, address, on_error)
             except Exception, e:

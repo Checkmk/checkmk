@@ -60,13 +60,14 @@ import urllib
 import random
 import re
 import __builtin__
+import signal
 
 try:
     import simplejson as json
 except ImportError:
     import json
 
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKException
 from lib import MKUserError
 
 # Information about uri
@@ -74,6 +75,10 @@ class InvalidUserInput(Exception):
     def __init__(self, varname, text):
         self.varname = varname
         self.text = text
+
+
+class RequestTimeout(MKException):
+    pass
 
 
 # This is a simple class which wraps a string provided by the caller
@@ -130,6 +135,7 @@ class html(object):
         self.body_classes = ['main']
         self._default_javascripts = [ "checkmk", "graphs" ]
         self._default_stylesheets = [ "check_mk", "graphs" ]
+        self._request_timeout = 110 # seconds
 
         # Time measurement
         self.times            = {}
@@ -159,7 +165,9 @@ class html(object):
         raise NotImplementedError()
 
 
-    def request_timeout(self):
+    # The system web servers configured request timeout. This is the time
+    # before the request is terminated from the view of the client.
+    def client_request_timeout(self):
         raise NotImplementedError()
 
 
@@ -1959,3 +1967,48 @@ class html(object):
         elapsed = now - self.last_measurement
         self.times[name] += elapsed
         self.last_measurement = now
+
+
+    #
+    # Request timeout handling
+    #
+    # The system apache process will end the communication with the client after
+    # the timeout configured for the proxy connection from system apache to site
+    # apache. This is done in /omd/sites/[site]/etc/apache/proxy-port.conf file
+    # in the "timeout=x" parameter of the ProxyPass statement.
+    #
+    # The regular request timeout configured here should always be lower to make
+    # it possible to abort the page processing and send a helpful answer to the
+    # client.
+    #
+    # It is possible to disable the applications request timeout (temoporarily)
+    # or totally for specific calls, but the timeout to the client will always
+    # be applied by the system webserver. So the client will always get a error
+    # page while the site apache continues processing the request (until the
+    # first try to write anything to the client) which will result in an
+    # exception.
+    #
+
+    # The timeout of the Check_MK GUI request processing. When the timeout handling
+    # has been enabled with enable_request_timeout(), after this time an alarm signal
+    # will be raised to give the application the option to end the processing in a
+    # gentle way.
+    def request_timeout(self):
+        return self._request_timeout
+
+
+    def enable_request_timeout(self):
+        signal.signal(signal.SIGALRM, self.handle_request_timeout)
+        signal.alarm(self.request_timeout())
+
+
+    def disable_request_timeout(self):
+        signal.alarm(0)
+
+
+    def handle_request_timeout(self, signum, frame):
+        raise RequestTimeout(_("Your request timed out after %d seconds. This issue may be "
+                               "related to a local configuration problem or a request which works "
+                               "with a too large number of objects. But if you think this "
+                               "issue is a bug, please send a crash report.") %
+                                                            self.request_timeout())

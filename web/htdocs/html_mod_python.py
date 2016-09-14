@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from mod_python import Cookie, util, apache
-from lib import make_utf8, MKGeneralException
+from lib import make_utf8, MKGeneralException, MKException
 import htmllib
 import os, time, config, weblib, re
 import defaults
@@ -44,6 +44,8 @@ class html_mod_python(htmllib.html):
     # is loaded.
     def __init__(self, req, fields):
         htmllib.html.__init__(self)
+
+        self.enable_request_timeout()
 
         req.content_type = "text/html; charset=UTF-8"
         req.header_sent = False
@@ -69,8 +71,7 @@ class html_mod_python(htmllib.html):
         self.set_output_format(self.var("output_format", "html"))
 
 
-    # The web servers configured request timeout (Timeout in case of apache)
-    def request_timeout(self):
+    def client_request_timeout(self):
         return int(self.req.server.timeout)
 
 

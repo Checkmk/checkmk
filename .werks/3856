@@ -1,0 +1,40 @@
+Title: Improved handling of Check_MK GUI request timeouts
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i1
+Date: 1473841576
+Class: feature
+
+In previous Check_MK versions, there was no real user friendly and correct
+handling of too long web request processing. So if a user issued a request
+to the Multisite GUI which took longer than the system apache request timeout,
+it resulted in a default webserver error page showing a "proxy timeout" error
+message.
+
+Another issue: The timeout was dependent on your system apache configuration
+and, if you did not change the settings on your own, on the Linux distribution
+defaults.
+
+We have now changed the timeout mechanism as follows:
+
+The system apache process will end the communication with the client after
+the timeout configured for the proxy connection from system apache to site
+apache. This is done in /omd/sites/[site]/etc/apache/proxy-port.conf file
+in the "timeout=x" parameter of the ProxyPass statement. The client timeout
+has been configured to 120 seconds.
+
+The application (Check_MK GUI) request timeout should always be lower than
+the client timeout to make it possible to abort the page processing and send
+a helpful response page to the client. The default timeout is set to 110
+seconds.
+
+Developer note:
+
+It is possible to disable the applications request timeout (temoporarily)
+or totally for specific calls, but the timeout to the client will always
+be applied by the system webserver. So the client will always get a error
+page while the site apache continues processing the request (until the
+first try to write anything to the client) which will result in an
+exception.
+

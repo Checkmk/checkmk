@@ -1121,18 +1121,18 @@ try:
         server.set_vfiler("") # revert back to default (no) vfiler
 
 
-		# Snapmirror
-	    for vfiler in vfiler_names + [""]:
-	        server.set_vfiler(vfiler)
-	        response = server.invoke("snapmirror-get-status")
-	        data = response.children_get()
-	        if not data:
-	            continue
-	        data = data[1]
-	        print format_config(data, "snapvault", "source-location",
-	                            config_report = ["lag-time", "state", "status", "source-location", "destination-location"],
-	                            config_rename = {"source-location": "source-system", "destination-location": "destination-system"})
-	    server.set_vfiler("")
+        # Snapmirror
+        for vfiler in vfiler_names + [""]:
+            server.set_vfiler(vfiler)
+            response = server.invoke("snapmirror-get-status")
+            data = response.children_get()
+            if not data:
+                continue
+            data = data[1]
+            print format_config(data, "snapvault", "source-location",
+                                config_report = ["lag-time", "state", "status", "source-location", "destination-location"],
+                                config_rename = {"source-location": "source-system", "destination-location": "destination-system"})
+        server.set_vfiler("")
 
 
         # VFiler Counters

@@ -6,6 +6,7 @@
     * 3849 FIX: check_cpu_peaks: Fixed broken active check
     * 3870 FIX: elphase.include: more robust against none type params
     * 3801 FIX: Fixed race condition with persisted data...
+    * 3802 FIX: Fixed excess Check Helper PIPEs when a datasource program runs into a timeout...
 
     Multisite:
     * 3850 FIX: Fixed JS error when quicksearch snapin not in sidebar

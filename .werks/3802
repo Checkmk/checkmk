@@ -1,0 +1,12 @@
+Title: Fixed excess Check Helper PIPEs when a datasource program runs into a timeout
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p11
+Date: 1473846635
+
+A timeout during the execution of a datasource program could cause
+leftover stderr/stderr pipes for the Check_MK Helper process.
+

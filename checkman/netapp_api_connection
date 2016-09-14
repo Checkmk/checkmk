@@ -1,0 +1,14 @@
+title: NetApp API connection
+agents: vsphere
+catalog: os/hardware
+license: GPL
+distribution: check_mk
+description:
+ This check simply shows any connection problems with the netapp filer.
+ This might be because of insufficient user permissions or missing licenses on the target system.
+ These problems are shown as warnings in the plugin output. A WATO rule allows you
+ to down- or upgrade this warning to a different state.
+
+inventory:
+  One check will be created
+

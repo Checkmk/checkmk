@@ -1,0 +1,10 @@
+Title: netapp_api_connection: reports any errors happened during the collection of data
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1473865683
+Class: feature
+
+This check shows insufficient user permissions or invalid user credentials as warnings.
+You can setup a WATO rule which can change the warning message(s) to an other state.

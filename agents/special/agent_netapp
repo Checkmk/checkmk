@@ -62,7 +62,7 @@ OPTIONS:
                                 subquery.
   --nocounters volumes          (clustermode only), skip counters for the given element
                                 right now only "volumes" is supported
-  --legacy                      Legacy mode with NaServer.py/NaElements.py
+  --legacy                      Legacy mode with NaServer.py/NaElements.py (not configurable via WATO)
 
 Required user permissions
 #########################
@@ -169,7 +169,10 @@ if opt_legacy:
 else:
     # The following code in the else: block completely replaces the used functionality of NaServer/NaElements
     import base64
-    from requests import Request, Session
+    import requests
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
     from lxml import etree
     from StringIO import StringIO
 
@@ -187,8 +190,7 @@ else:
             self.messages.append(message)
 
         def format_messages(self):
-            import pprint
-            return pprint.pformat(self.messages)
+            return "\n".join(self.messages)
 
     class NetAppConnection():
         def __init__(self, hostname, user, password):
@@ -200,12 +202,9 @@ else:
             self.status   = None
             self.error_messages = ErrorMessages()
 
-            base64string       = base64.encodestring("%s:%s" %(user,password))[:-1]
-            authheader    = "Basic %s" % base64string
             self.headers = {}
-            self.headers["Authorization"] = authheader
             self.headers["Content-type"]  = "text/xml; charset=\"UTF-8\""
-            self.session = Session()
+            self.session = requests.Session()
             self.debug   = False
 
         def get_xml_message_from_node(self, node):
@@ -251,7 +250,10 @@ else:
                 print "######## START QUERY ########"
                 print prettify(root_node.get_node())
 
-            req = Request('POST', "http://%s/servlets/netapp.servlets.admin.XMLrequest_filer" % self.hostname, data=request_message, headers=self.headers)
+            req = requests.Request('POST', "https://%s/servlets/netapp.servlets.admin.XMLrequest_filer" % self.hostname,
+                                            data    = request_message,
+                                            headers = self.headers,
+                                            auth    = (self.user, self.password))
             prepped  = self.session.prepare_request(req)
             # No SSL certificate check..
             response = self.session.send(prepped, verify = False)
@@ -260,13 +262,13 @@ else:
 
             if self.debug:
                 print "######## GOT RESPONSE #######"
-                if self.last_response.content:
-                    print prettify(self.last_response.content.get_node())
+                if self.last_response.status != "passed":
+                    print "Error: Unable to parse content of response: %s" % self.last_response.content
                 else:
-                    print "Error: Unable ot parse content of response"
+                    print prettify(self.last_response.content.get_node())
 
             if self.last_response.results_status() == "failed":
-                self.error_messages.add_message("In class %s: %s" % (root_node.get_node().tag, self.last_response.results_reason()))
+                self.error_messages.add_message("Querying class %s: %s" % (node.tag, self.last_response.results_reason()))
 
             return self.last_response
 
@@ -341,15 +343,17 @@ else:
             self.content = None
             self.reason  = None
 
+            self.raw_response_text = response.text.encode("utf-8")
+
             # Check for invalid authorization
             if response.status_code == 401:
-                self.status = "failed"
-                self.reason = "Authorization failed"
+                self.status  = "failed"
+                self.reason  = "Authorization failed"
                 return
 
             # We except an XML answer (not HTML)
             #self.node = etree.parse(StringIO(response.text.encode("utf-8")), parser = etree.HTMLParser())
-            self.content = NetAppNode(etree.fromstring(response.text.encode("utf-8")))
+            self.content = NetAppNode(etree.fromstring(self.raw_response_text))
 
             self.status = self.content.child_get("results").node.attrib["status"]
             if self.status != "passed":
@@ -506,11 +510,11 @@ def debug_node(node):
         print prettify(node.get_node())
 
 def output_error_section():
-    print "<<<netapp_errors>>>"
     if opt_legacy:
         import pprint
         pprint.pprint(section_errors)
     else:
+        print "<<<netapp_api_connection>>>"
         print server.error_messages.format_messages()
 
 nodes = []
@@ -1187,11 +1191,9 @@ try:
                                 config_rename = {"quota-users.quota-user.quota-user-name": "quota-users"})
 
 
-    if opt_debug:
-        output_error_section()
 except Exception, e:
-    # Shouldn't happen...
-    output_error_section()
+    # Shouldn't happen at all...
     if opt_debug:
         raise
-
+finally:
+    output_error_section()

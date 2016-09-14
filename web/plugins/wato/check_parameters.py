@@ -10253,6 +10253,25 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
+    "netapp_instance",
+    _("Netapp Instance State"),
+    ListOf(
+        Dictionary(
+        help     = _("This rule allows you to override netapp warnings"),
+        elements = [
+            ("name",  TextAscii(title = _("Warning starts with")) ),
+            ("state", MonitoringState( title = "Set state to", default_value = 1 ))
+                        ],
+            optional_keys = False
+        ),
+        add_label = _("Add warning")
+    ),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_environment,
     "temperature_auto",
     _("Temperature sensors with builtin levels"),
     None,

@@ -402,10 +402,12 @@ def format_var_for_export(val, maxdepth=4, maxsize=1024*1024):
         return "Max recursion depth reached"
 
     if isinstance(val, dict):
+        val = val.copy()
         for item_key, item_val in val.items():
             val[item_key] = format_var_for_export(item_val, maxdepth-1)
 
     elif isinstance(val, list):
+        val = val[:]
         for index, item in enumerate(val):
             val[index] = format_var_for_export(item, maxdepth-1)
 

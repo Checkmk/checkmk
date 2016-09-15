@@ -1,4 +1,7 @@
 1.2.8p12:
+    Core & Setup:
+    * 3857 FIX: Creation of crash reports could lead to further bugs...
+
     Checks & Agents:
     * 3804 FIX: Datasource programs: fixed possible Check_MK Helper exception when creation of subprocess fails
 

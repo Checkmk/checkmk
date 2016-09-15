@@ -1,0 +1,12 @@
+Title: Creation of crash reports could lead to further bugs
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.8p12
+Date: 1473938674
+Class: fix
+
+When creating a crash report existing data structures like the local variables
+of the place where the exception occured are added to the crash report. This
+could modify data structures of the local variables and lead to further bugs
+in subsequent executed code which accesses those data strucutures.

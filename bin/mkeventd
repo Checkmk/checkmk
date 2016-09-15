@@ -26,6 +26,7 @@
 
 import socket, os, time, sys, getopt, signal, thread, pprint, re, \
        select, subprocess, stat, string
+import traceback
 from cmk.regex import regex, is_regex
 import cmk.daemon
 
@@ -355,7 +356,7 @@ def replace_groups(text, origtext, groups):
 
 
 def format_exception():
-    import StringIO, traceback
+    import StringIO
     txt = StringIO.StringIO()
     t, v, tb = sys.exc_info()
     traceback.print_exception(t, v, tb, None, txt)
@@ -375,7 +376,7 @@ class VerboseLock:
             log("LOCK %s: %d -> %d" % (self._name, self._depth-1, self._depth))
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type, value, tb):
         self._depth -= 1
         if opt_debug:
             log("LOCK %s: %d -> %d" % (self._name, self._depth+1, self._depth))
@@ -463,7 +464,7 @@ def initialize_snmp_credentials():
 
         # SNMPv1/v2
         if type(credentials) != tuple:
-            snmp_config.addV1System(g_snmp_engine, 'snmpv2-' % user_num, credentials)
+            snmp_config.addV1System(g_snmp_engine, 'snmpv2-%d' % user_num, credentials)
             continue
 
         # SNMPv3
@@ -4242,4 +4243,4 @@ try:
 except Exception, e:
     if opt_debug:
         raise
-    bail_out(e)
+    bail_out(traceback.format_exc())

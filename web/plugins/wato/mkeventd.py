@@ -2592,7 +2592,7 @@ if mkeventd_enabled:
                         allow_empty = False,
                     )),
                 ],
-                optional_keys = [],
+                optional_keys = ["engine_ids"],
             ),
             title = _("Credentials for processing SNMP traps"),
             help = _("When you want to process SNMP traps with the Event Console it is "

@@ -159,11 +159,11 @@ if which smartctl > /dev/null 2>&1 ; then
 
 
     # Call MegaRaid submodule if conditions are met
-    if type MegaCli >/dev/null ; then
+    if type MegaCli >/dev/null 2>&1; then
         MegaCli_bin="MegaCli"
-    elif type MegaCli64 >/dev/null ; then
+    elif type MegaCli64 >/dev/null 2>&1; then
         MegaCli_bin="MegaCli64"
-    elif type megacli >/dev/null ; then
+    elif type megacli >/dev/null 2>&1; then
         MegaCli_bin="megacli"
     else
         MegaCli_bin="unknown"

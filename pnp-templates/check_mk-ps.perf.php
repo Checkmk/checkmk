@@ -57,7 +57,7 @@ $def[1] = ""
 
 # 2. Graph: Memory usage
 if (isset($RRD["vsz"])) {
- $opt[2] = " --vertical-label \"MB\" -l 0 --title \"Memory Usage per process\" ";
+ $opt[2] = " --vertical-label \"MB\" -l 0 --title \"Memory Usage for all Processes\" ";
  $def[2] = ""
    . "DEF:count=$RRD[count] "
    . "DEF:vsz=$RRD[vsz] "
@@ -76,7 +76,7 @@ if (isset($RRD["vsz"])) {
 }
 
 if (isset($RRD["pcpu"])) {
-    $opt[3] = " --vertical-label \"CPU(%)\" -l 0 -u 100 --title \"CPU Usage\" ";
+    $opt[3] = " --vertical-label \"CPU(%)\" -l 0 -u 100 --title \"CPU Usage for all Processes\" ";
     $def[3] = ""
      . "DEF:pcpu=$RRD[pcpu] "
      . "AREA:pcpu#30ff80:\"CPU usage (%) \" "

@@ -3467,8 +3467,8 @@ def mode_bulk_discovery(phase):
                         result_txt += _("%s: discovery successful<br>\n") % hostname
                         folder.mark_hosts_dirty(need_sync=False)
                         log_pending(AFFECTED, hostname, "bulk-inventory",
-                            _("Did service discovery on host: %d added, %d removed, %d kept, %d total services") %
-                                                                                tuple(counts[hostname]))
+                            _("Did service discovery on host %s: %d added, %d removed, %d kept, %d total services") %
+                                                                                tuple([hostname] + counts[hostname]))
                         if not host.locked():
                             host.clear_discovery_failed()
 

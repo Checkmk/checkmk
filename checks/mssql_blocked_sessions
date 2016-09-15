@@ -30,15 +30,17 @@
 # 119 232292187 LCK_M_U 75
 # 76 221526672 LCK_M_U 115
 
+# TODO: Make this check aware of multiple instances! Don't handle the blocked
+# sessions independent of instances anymore. Use same service description
+# schema as "mssql_instance".
 
 def inventory_mssql_blocked_sessions(info):
     return [(None, None)]
 
 def check_mssql_blocked_sessions(_no_item, params, info):
     if not info:
-        # Assume general connection problem to the database, which is reported
-        # by the "X Instance" service and skip this check.
-        raise MKCounterWrapped("Failed to connect to database")
+	yield 0, "No blocked sessions"
+        return
 
     state = 2
     if params:

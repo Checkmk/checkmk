@@ -466,7 +466,7 @@ def create_crash_dump_info_file(tar):
     content.seek(0)
 
     tarinfo = tarfile.TarInfo(name="crash.info")
-    content.seek(0, os.SEEK_END)
+    content.seek(0, 2)
     tarinfo.size = content.tell()
     content.seek(0)
     tar.addfile(tarinfo=tarinfo, fileobj=content)

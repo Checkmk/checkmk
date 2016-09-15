@@ -1,0 +1,9 @@
+Title: Fixed crash report and snapshot creation when using Python <2.5 (e.g. with CentOS 5)
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p12
+Date: 1473939387
+Class: fix
+
+

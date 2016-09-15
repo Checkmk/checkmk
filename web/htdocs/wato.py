@@ -4910,7 +4910,7 @@ def get_snapshot_status(snapshot, validate_checksums = False):
 
     def check_size():
         if file_stream:
-            file_stream.seek(0, os.SEEK_END)
+            file_stream.seek(0, 2)
             size = file_stream.tell()
         else:
             statinfo = os.stat(snapshot_dir + name)

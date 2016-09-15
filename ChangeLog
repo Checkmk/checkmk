@@ -7,6 +7,7 @@
 
     Multisite:
     * 3874 FIX: fixed graphs displaying wrong labels
+    * 3858 FIX: Fixed crash report and snapshot creation when using Python <2.5 (e.g. with CentOS 5)
 
 
 1.2.8p11:

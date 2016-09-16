@@ -72,8 +72,6 @@ def disconnect():
     _site_status = None
 
 
-
-
 #.
 #   .--Internal------------------------------------------------------------.
 #   |                ___       _                        _                  |
@@ -162,6 +160,40 @@ def _get_enabled_and_disabled_sites():
 
 
 
+def _status_host_state_name(shs):
+    if shs == None:
+        return "dead"
+    else:
+        return { 1:"down", 2:"unreach", 3:"waiting", }.get(shs, "unknown")
+
+
+def _init_site_status():
+    global _site_status
+    _site_status = {}
+
+
+def _set_initial_site_states(enabled_sites, disabled_sites):
+    for site_id, site in enabled_sites.items():
+        _set_site_status(site_id, {
+            "state" : "dead",
+            "site" : site
+        })
+
+    for site_id, site in disabled_sites.items():
+        _set_site_status(site_id, {
+            "state" : "disabled",
+            "site" : site
+        })
+
+
+def _set_site_status(site_id, status):
+    _site_status[site_id] = status
+
+
+def _update_site_status(site_id, status):
+    _site_status[site_id].update(status)
+
+
 # If Multisite is retricted to data the user is a contact for, we need to set an
 # AuthUser: header for livestatus.
 def _set_livestatus_auth():
@@ -206,35 +238,3 @@ def _livestatus_auth_user():
     return None
 
 
-def _status_host_state_name(shs):
-    if shs == None:
-        return "dead"
-    else:
-        return { 1:"down", 2:"unreach", 3:"waiting", }.get(shs, "unknown")
-
-
-def _init_site_status():
-    global _site_status
-    _site_status = {}
-
-
-def _set_initial_site_states(enabled_sites, disabled_sites):
-    for site_id, site in enabled_sites.items():
-        _set_site_status(site_id, {
-            "state" : "dead",
-            "site" : site
-        })
-
-    for site_id, site in disabled_sites.items():
-        _set_site_status(site_id, {
-            "state" : "disabled",
-            "site" : site
-        })
-
-
-def _set_site_status(site_id, status):
-    _site_status[site_id] = status
-
-
-def _update_site_status(site_id, status):
-    _site_status[site_id].update(status)

@@ -38,6 +38,11 @@ from cmk.regex import regex, is_regex
 import cmk.defines as defines
 import cmk.daemon
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 VERSION="1.4.0i1"
 
 #   .--Declarations--------------------------------------------------------.
@@ -2996,15 +3001,25 @@ class StatusServer:
                     response = None
 
                 else:
-                    raise MKClientError("Invalid method %s (allowed are GET, COMMAND and REPLICATE)" % method)
+                    raise MKClientError("Invalid method %s (allowed are GET, COMMAND "
+                                        "and REPLICATE)" % method)
 
                 if output_format == "plain":
                     for line in response:
                         socket.sendall("\t".join([to_utf8(quote_tab(c)) for c in line]))
                         socket.sendall("\n")
-                else:
+
+                elif output_format == "json":
+                    socket.sendall(json.dumps(response))
+                    socket.sendall("\n")
+
+                elif output_format == "python":
                     socket.sendall(repr(response))
                     socket.sendall("\n")
+
+                else:
+                    raise MKClientError("Invalid output format \"%s\" "
+                            "(allowed are python, json and plain)" % output_format)
 
         socket.close()
 

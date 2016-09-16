@@ -7379,6 +7379,12 @@ def event_rule_match_conditions(flavour):
 
 
 def notification_rule_match_conditions():
+    def transform_ec_rule_id_match(val):
+        if isinstance(val, list):
+            return val
+        else:
+            return [val]
+
     return [
        ( "match_escalation",
          Tuple(
@@ -7458,7 +7464,7 @@ def notification_rule_match_conditions():
                                     add_label = _("Add Rule ID"),
                                     title = _("Rule IDs")
                                 ),
-                                forth = lambda x: isinstance(x, list) and x or [x]
+                                forth = transform_ec_rule_id_match,
                             )
                            ),
                            ( "match_priority",

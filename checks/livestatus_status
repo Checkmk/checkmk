@@ -49,25 +49,24 @@ factory_settings["livestatus_status_default_levels"] = {
 
 def parse_livestatus_status(info):
     parsed = {}
-    n = 0
-    while n < len(info):
-        site = info[n][0][1:-1]
-        if n == len(info) - 1 or info[n+1][0].startswith('['):
-            # Handle the case if the check running in cluster
-            if site not in parsed.keys():
-                parsed[site] = None # Site is down
-            n += 1
-        else:
-            headers = info[n+1]
-            values = info[n+2]
-            parsed[site] = dict(zip(headers, values))
-            n += 3
+    site, headers = None, None
+    for line in info:
+        if line and line[0][0] == "[" and line[0][-1] == "]":
+            site = line[0][1:-1]
+            parsed[site] = None # Site is marked as down until overwritten later
+
+        elif site:
+            if headers == None:
+                headers = line
+            else:
+                parsed[site] = dict(zip(headers, line))
+                headers = None
+
     return parsed
 
 
 def inventory_livestatus_status(parsed):
     return [ (site, {}) for (site, status) in parsed.items() if status != None ]
-
 
 
 def check_livestatus_status(item, params, parsed):

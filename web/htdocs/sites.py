@@ -32,7 +32,7 @@ import livestatus
 # to the accessor function live()
 _live = None
 
-# site_status keeps a dictionary for each site with the following keys:
+# _site_status keeps a dictionary for each site with the following keys:
 # "state"              --> "online", "disabled", "down", "unreach", "dead" or "waiting"
 # "exception"          --> An error exception in case of down, unreach, dead or waiting
 # "status_host_state"  --> host state of status host (0, 1, 2 or None)
@@ -65,13 +65,7 @@ def states():
 # Build up a connection to livestatus to either a single site or multiple sites.
 def connect():
     init_site_status()
-
-    # If there is only one site (non-multisite), then user cannot enable/disable.
-    if config.is_multisite():
-        connect_multiple_sites()
-    else:
-        connect_single_site()
-
+    connect_multiple_sites()
     set_livestatus_auth()
 
 
@@ -131,21 +125,6 @@ def get_enabled_and_disabled_sites():
 
     return enabled_sites, disabled_sites
 
-
-def connect_single_site():
-    global _live
-    _live = livestatus.SingleSiteConnection("unix:" + defaults.livestatus_unix_socket)
-    _live.set_timeout(3) # default timeout is 3 seconds
-
-    set_initial_site_states({"": config.site("")}, {})
-
-    v1, v2, ps = _live.query_row("GET status\nColumns: livestatus_version program_version program_start")
-    update_local_site_status({
-        "state"              : "online",
-        "livestatus_version" : v1,
-        "program_version"    : v2,
-        "program_start"      : ps,
-    })
 
 
 # If Multisite is retricted to data the user is a contact for, we need to set an
@@ -224,16 +203,8 @@ def set_initial_site_states(enabled_sites, disabled_sites):
         })
 
 
-def set_local_site_status(status):
-    set_site_status("", status)
-
-
 def set_site_status(site_id, status):
     _site_status[site_id] = status
-
-
-def update_local_site_status(status):
-    update_site_status("", status)
 
 
 def update_site_status(site_id, status):

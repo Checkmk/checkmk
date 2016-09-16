@@ -1,0 +1,12 @@
+Title: WATO WebAPI: The configuration of cluster nodes is now officially supported
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474026075
+Class: feature
+
+You can now set the new key <tt>nodes</tt> in the add_host and edit_host operations.
+The value is a list of cluster node names. A host is treated as normal host if the key
+is entirely missing or if the node list is empty.
+

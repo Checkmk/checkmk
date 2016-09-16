@@ -76,16 +76,17 @@ def validate_host_attributes(attributes):
 
 
 def action_add_host(request):
-    validate_request_keys(request, ["hostname", "folder", "attributes"])
+    validate_request_keys(request, ["hostname", "folder", "attributes", "nodes"])
 
     if html.var("create_folders"):
         create_folders = bool(int(html.var("create_folders")))
     else:
         create_folders = True
 
-    hostname    = request.get("hostname")
-    folder_path = request.get("folder")
-    attributes  = request.get("attributes", {})
+    hostname      = request.get("hostname")
+    folder_path   = request.get("folder")
+    attributes    = request.get("attributes", {})
+    cluster_nodes = request.get("nodes")
 
     # Validate hostname
     if not hostname:
@@ -106,9 +107,8 @@ def action_add_host(request):
        folder_path = ""
        folders =  [""]
 
-    # Validate and cleanup given attributes
-    # CLEANUP: modify WebAPI .nodes argument
-    cluster_nodes = None
+    # Deprecated, but still supported
+    # Nodes are now specified in an extra key
     if ".nodes" in attributes:
         cluster_nodes = attributes[".nodes"]
         del attributes[".nodes"]
@@ -131,11 +131,12 @@ api_actions["add_host"] = {
 ###############
 
 def action_edit_host(request):
-    validate_request_keys(request, ["hostname", "unset_attributes", "attributes"])
+    validate_request_keys(request, ["hostname", "unset_attributes", "attributes", "nodes"])
 
     hostname              = request.get("hostname")
     attributes            = request.get("attributes", {})
     unset_attribute_names = request.get("unset_attributes", [])
+    cluster_nodes         = request.get("nodes")
 
     # Validate host
     if not hostname:
@@ -145,10 +146,8 @@ def action_edit_host(request):
     if not host:
         raise MKUserError(None, _("No such host"))
 
-    # Only validate the new attributes
-    attributes    = request.get("attributes", {})
-    # CLEANUP: modify WebAPI .nodes argument
-    cluster_nodes = None
+    # Deprecated, but still supported
+    # Nodes are now specified in an extra key
     if ".nodes" in attributes:
         cluster_nodes = attributes[".nodes"]
         del attributes[".nodes"]

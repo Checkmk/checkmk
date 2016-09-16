@@ -1,0 +1,11 @@
+Title: filehandler: added new plugin for monitoring file handles in linux
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474028116
+Class: feature
+
+This new plugin reads file handles provided by /proc/sys/fs/file-nr and
+puts them in relation of each other.
+Thresholds of this check can be configured. Defaults are on 80/90%.

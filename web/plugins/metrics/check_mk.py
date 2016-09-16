@@ -3630,6 +3630,11 @@ metric_info["dns_nxdomain"] = {
     "color" : "34/a",
 }
 
+metric_info["filehandler_perc"] = {
+    "title" : _("Used file handles"),
+    "unit"  : "%",
+    "color" : "#4800ff",
+}
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -5572,6 +5577,11 @@ perfometer_info.append({
     # all segments
 })
 
+perfometer_info.append({
+    "type"     : "linear",
+    "segments" : [ "filehandler_perc" ],
+    "total"    : 100.0,
+})
 
 #.
 #   .--Graphs--------------------------------------------------------------.

@@ -2740,6 +2740,26 @@ register_check_parameters(
     match_type = "dict",
 )
 
+register_check_parameters(
+    subgroup_storage,
+    "filehandler",
+    _("Filehandler"),
+    Dictionary(
+        elements = [
+            ( "levels", Tuple(
+                 title = _("Levels"),
+                 default_value = (80.0, 90.0),
+                     elements = [
+                         Percentage(title = _("Warning at"), unit = _("%")),
+                         Percentage(title = _("Critical at"), unit = _("%"))
+                     ]
+                 ),
+            ),
+        ]
+    ),
+    None,
+    match_type = "dict"
+)
 
 #.
 #   .--Unsorted--(Don't create new stuff here!)----------------------------.

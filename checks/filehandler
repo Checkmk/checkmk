@@ -1,0 +1,70 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# Measures total allocated file handles.
+# The output displays
+#  - the number of allocated file handles
+#  - the number of allocatedly used file handles (with the 2.4 kernel); or
+#    the number of allocatedly unused file handles (with the 2.6 kernel)
+#  - the maximum files handles that can be allocated
+#    (can also be found in /proc/sys/fs/file-max)
+# Example output of '/proc/sys/fs/file-nr':
+# <<<filehandler>>>
+# 9376	0	817805
+
+
+factory_settings['filehandler_default_levels'] = {
+    'levels': (80.0, 90.0)
+}
+
+def inventory_filehandler(info):
+    return [ ( None, {} ) ]
+
+def check_filehandler(_no_item, params, info):
+    allocated, used_or_unused, maximum = info[0]
+    state = 0
+    perc = float(allocated) / float(maximum) * 100.0
+    infotext = '%.1f%% used (%s of %s file handles)' % (perc, allocated, maximum)
+    warn, crit = params['levels']
+
+    if perc >= crit:
+        state = 2
+    elif perc >= warn:
+        state = 1
+    if state > 0:
+        infotext += ' (warn/crit at %.1f%%/%.1f%%)' % (warn, crit) 
+
+    return state, infotext, [ ( 'filehandler_perc', perc, warn, crit ) ] 
+
+check_info['filehandler'] = {
+    'check_function'            : check_filehandler,
+    'inventory_function'        : inventory_filehandler,
+    'service_description'       : 'Filehandler',
+    'has_perfdata'              : True,
+    'default_levels_variable'   : 'filehandler_default_levels',
+    'group'                     : 'filehandler',
+}

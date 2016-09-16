@@ -85,10 +85,11 @@ def parse_tinkerforge(info):
 def inventory_tinkerforge(brick_type, parsed):
     for path in parsed.get(brick_type, {}).keys():
         if brick_type == "humidity":
-            # stupid wato rule with its stupid tuple-based parameters is stupid
             yield path, "tinkerforge_humidity_default_levels"
-        else:
+        elif brick_type == "ambient":
             yield path, None
+        else:
+            yield path, {}
 
 
 def check_tinkerforge_master(item, params, parsed):

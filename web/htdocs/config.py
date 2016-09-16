@@ -551,17 +551,20 @@ def sorted_sites():
 
     return sitenames
 
-def site(name):
-    s = sites.get(name, {})
+
+def site(site_id):
+    s = dict(sites.get(site_id, {}))
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
-    if "alias" not in s:
-        s["alias"] = name
-    if "socket" not in s:
-        s["socket"] = "unix:" + defaults.livestatus_unix_socket
-    if "url_prefix" not in s:
-        s["url_prefix"] = "../" # relative URL from /check_mk/
-    s["id"] = name
+    s.setdefault("alias", site_id)
+    s.setdefault("socket", "unix:" + defaults.livestatus_unix_socket)
+    s.setdefault("url_prefix", "../") # relative URL from /check_mk/
+    if type(s["socket"]) == tuple and s["socket"][0] == "proxy":
+        s["cache"] = s["socket"][1].get("cache", True)
+        s["socket"] = "unix:" + defaults.livestatus_unix_socket + "proxy/" + site_id
+    else:
+        s["cache"] = False
+    s["id"] = site_id
     return s
 
 

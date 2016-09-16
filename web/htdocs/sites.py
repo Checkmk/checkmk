@@ -143,14 +143,6 @@ def _get_enabled_and_disabled_sites():
 
     for site_id, site in config.allsites().items():
         siteconf = config.user_siteconf.get(site_id, {})
-        # Convert livestatus-proxy links into UNIX socket
-        s = site["socket"]
-        if type(s) == tuple and s[0] == "proxy":
-            site["socket"] = "unix:" + defaults.livestatus_unix_socket + "proxy/" + site_id
-            site["cache"] = s[1].get("cache", True)
-        else:
-            site["cache"] = False
-
         if siteconf.get("disabled", False):
             disabled_sites[site_id] = site
         else:

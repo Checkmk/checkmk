@@ -25,47 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_hitachi_hus_dku(info):
-    for line in info:
-        # dkuRaidListIndexSerialNumber
-        yield line[0], None
-
-def check_hitachi_hus_dku(item, _no_params, info):
-    # table of end-OIDs, monitored components and OK states
-    component_map = {
-        2: ("Power Supply", (1,), (4, 5) ),
-        3: ("Fan",          (1,), (4, 5) ),
-        4: ("Environment",  (1,), (4, 5) ),
-        5: ("Drive",        (1,), (4, 5) ),
-    }
-    error_list = [
-        "unknown",
-        "no error",
-        "acute",
-        "serious",
-        "moderate",
-        "service",
-    ]
-    for line in info:
-        # dkuRaidListIndexSerialNumber
-        if line[0] == item:
-            infotext = ""
-            errors = False
-            for end_oid, (component, ok_states, warn_states) in component_map.iteritems():
-                severity = int(line[end_oid - 1])
-                if severity in warn_states:
-                    errors = True
-                    yield 1, "%s has errors of severity \"%s\"" % (component, error_list[severity])
-                elif severity not in ok_states:
-                    errors = True
-                    yield 2, "%s has errors of severity \"%s\"" % (component, error_list[severity])
-            if not errors:
-                yield 0, "is working properly"
-
-
 check_info["hitachi_hus_dku"] = {
-    "check_function"        : check_hitachi_hus_dku,
-    "inventory_function"    : inventory_hitachi_hus_dku,
+    "inventory_function"    : inventory_hitachi_hus,
+    "check_function"        : check_hitachi_hus,
     "service_description"   : "HUS DKU Chassis %s",
     "snmp_info"             : (".1.3.6.1.4.1.116.5.11.4.1.1.7.1", [
                                     1, # dkuRaidListIndexSerialNumber
@@ -74,7 +36,6 @@ check_info["hitachi_hus_dku"] = {
                                     4, # dkuHWEnvironment
                                     5, # dkuHWDrive
                               ]),
-    "snmp_scan_function"    : lambda oid: \
-                              oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.116.3.11") or \
-                              oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10"),
+     "snmp_scan_function"    : scan_hitachi_hus,
+     "includes"              : [ "hitachi_hus.include" ],
 }

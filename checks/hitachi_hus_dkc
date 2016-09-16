@@ -25,50 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_hitachi_hus_dkc(info):
-    for line in info:
-        # dkcRaidListIndexSerialNumber
-        yield line[0], None
-
-def check_hitachi_hus_dkc(item, _no_params, info):
-    # table of end-OIDs, monitored entities and OK/Warn states
-    component_map = {
-        2: ("Processor",     (1, ), (4, 5) ),
-        3: ("Internal Bus",  (1, ), (4, 5) ),
-        4: ("Cache",         (1, ), (4, 5) ),
-        5: ("Shared Memory", (1, ), (4, 5) ),
-        6: ("Power Supply",  (1, ), (4, 5) ),
-        7: ("Battery",       (1, ), (4, 5) ),
-        8: ("Fan",           (1, ), (4, 5) ),
-        9: ("Environment",   (1, ), (4, 5) ),
-    }
-    error_list = [
-        "unknown",
-        "no error",
-        "acute",
-        "serious",
-        "moderate",
-        "service",
-    ]
-    for line in info:
-        # dkcRaidListIndexSerialNumber
-        if line[0] == item:
-            infotext = ""
-            errors = False
-            for end_oid, (component, ok_states, warn_states) in component_map.iteritems():
-                severity = int(line[end_oid - 1])
-                if severity in warn_states:
-                    errors = True
-                    yield 1, "%s has errors of severity \"%s\"" % (component, error_list[severity])
-                elif severity not in ok_states:
-                    errors = True
-                    yield 2, "%s has errors of severity \"%s\"" % (component, error_list[severity])
-            if not errors:
-                yield 0, "is working properly"
-
 check_info["hitachi_hus_dkc"] = {
-    "check_function"        : check_hitachi_hus_dkc,
-    "inventory_function"    : inventory_hitachi_hus_dkc,
+    "inventory_function"    : inventory_hitachi_hus,
+    "check_function"        : check_hitachi_hus,
     "service_description"   : "HUS DKC Chassis %s",
     "snmp_info"             : (".1.3.6.1.4.1.116.5.11.4.1.1.6.1", [
                                     1, # dkcRaidListIndexSerialNumber
@@ -81,7 +40,6 @@ check_info["hitachi_hus_dkc"] = {
                                     8, # dkcHWFan
                                     9, # dkcHWEnvironment
                               ]),
-    "snmp_scan_function"    : lambda oid: \
-                              oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.116.3.11") or \
-                              oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10"),
+    "snmp_scan_function"    : scan_hitachi_hus,
+    "includes"              : [ "hitachi_hus.include" ],
 }

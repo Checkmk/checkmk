@@ -1,0 +1,11 @@
+Title: hitachi_hus_dku & hitachi_hus_dkc: more detailed output even if everything is in state OK
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474027119
+Class: feature
+
+The outputs of these Checks are more verbose even if there is no failure 
+of one or more components. So now it is always transparent which components
+are checked an in which state they are.

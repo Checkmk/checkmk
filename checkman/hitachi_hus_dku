@@ -10,11 +10,10 @@ description:
  extract state information of the following hardware components of the DKU:
  Power Supply, Drive, Fan, Environment.
 
- The check is {OK} if all of the components are in the state "noError".
- It is {WARN} if some of the components are in the states "moderate" or
- "service".  It is {CRIT} if some of the components are in other states as
- the above-mentioned.
-
+ The check is {OK} if all of the components are in the state "noError". It
+ is {UNKNOWN} if some of the components are in the state "unknown", {WARN}
+ if some of the components are in the states "moderate" or "service"
+ and {CRIT} if some of the components are in the states "acute" or "serious".
 
 inventory:
  One service for every DKU chassis found

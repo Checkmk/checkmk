@@ -1,0 +1,14 @@
+Title: check_mail_loop.vbs: New MRPE script to perform a mail loop check via Outlook MAPI
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474010004
+Class: feature
+
+The check is similar to the default check_mail_loop active check (which can be configured
+via WATO), but it works using Outlook and the MAPI protocol to send and receive mails. So
+you can construct a mail loop checking your Exchange mail infrastrucure without involving
+other protocols like IMAP, POP3 or SMTP.
+
+Take a look at the file header of the script. It describes how to setup the script.

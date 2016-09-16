@@ -1,0 +1,15 @@
+title: Status and performance of the Check_MK Event Console
+agents: linux
+catalog: app/omd
+license: GPL
+distribution: check_mk
+description:
+ This checks retrieves various performance data from a Check_MK Event Console
+ instance. The check warns you about active event limits and records performance
+ metrics about the performance of the Event Console.
+
+item:
+ The name of the Check_MK site.
+
+inventory:
+ One check per running Check_MK site is being created.

@@ -247,6 +247,7 @@ class Integer(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._size           = kwargs.get("size", 5)
+        # TODO: inconsistency with default_value. All should be named with underscore
         self._minvalue       = kwargs.get("minvalue")
         self._maxvalue       = kwargs.get("maxvalue")
         self._label          = kwargs.get("label")

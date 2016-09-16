@@ -182,6 +182,12 @@ class Site(object):
         return subprocess.Popen(cmd_txt, shell=True, *args, **kwargs)
 
 
+    def read_file(self, rel_path):
+        p = self.execute(["cat", "%s/%s" % (self.root, rel_path)], stdout=subprocess.PIPE)
+        p.wait()
+        return p.stdout.read()
+
+
     def cleanup_if_wrong_version(self):
         if not self.exists():
             return
@@ -656,9 +662,120 @@ class CMKWebSession(WebSession):
         assert result == None
 
 
+class CMKEventConsole(CMKWebSession):
+    def __init__(self, site):
+        super(CMKEventConsole, self).__init__(site)
+
+        self._gather_status_port()
+        self.status = CMKEventConsoleStatus(("127.0.0.1", self.status_port))
+
+
+    def _config(self):
+        cfg = {}
+        content = self.site.read_file("etc/check_mk/mkeventd.d/wato/global.mk")
+        exec(content, {}, cfg)
+        return cfg
+
+
+    def _gather_status_port(self):
+        config = self._config()
+
+        if self.site.reuse and self.site.exists() and "remote_status" in config:
+            port = config["remote_status"][0]
+        else:
+            port = self.site.livestatus_port + 1
+
+        self.status_port = port
+
+
+    def enable_remote_status_port(self, web):
+        html = web.get("wato.py?mode=mkeventd_config").text
+        assert "mode=mkeventd_edit_configvar&site=&varname=remote_status" in html
+
+        html = web.get("wato.py?folder=&mode=mkeventd_edit_configvar&site=&varname=remote_status").text
+        assert "Save" in html
+
+        html = web.post("wato.py", data={
+            "filled_in"          : "value_editor",
+            "ve_use"             : "on",
+            "ve_value_0"         : self.status_port,
+            "ve_value_2_use"     : "on",
+            "ve_value_2_value_0" : "127.0.0.1",
+            "save"               : "Save",
+            "varname"            : "remote_status",
+            "mode"               : "mkeventd_edit_configvar",
+        }, add_transid=True).text
+        assert "%d, no commands, 127.0.0.1" % self.status_port in html
+
+
+    # TODO: Test via self.status whether or not the reload has happened
+    def activate_changes(self, web):
+        old_t = site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
+        assert old_t > time.time() - 86400
+
+        html = web.get("wato.py?mode=mkeventd_changes").text
+        assert "Reload Config!" in html
+        assert "wato.py?_activate=now" in html
+
+        html = web.get("wato.py?_activate=now&mode=mkeventd_changes", add_transid=True).text
+        assert "The new configuration has successfully been activated" in html
+
+        new_t = site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
+        assert new_t > old_t
+
+
+
+class CMKEventConsoleStatus(object):
+    def __init__(self, address):
+        self._address = address
+
+
+    # Copied from web/htdocs/mkeventd.py. Better move to some common lib.
+    def query(self, query):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        timeout = 10
+
+        sock.settimeout(timeout)
+        sock.connect(self._address)
+        sock.sendall(query)
+        sock.shutdown(socket.SHUT_WR)
+
+        response_text = ""
+        while True:
+            chunk = sock.recv(8192)
+            response_text += chunk
+            if not chunk:
+                break
+
+        return eval(response_text)
+
+
+    def query_table_assoc(self, query):
+        response = self.query(query)
+        headers = response[0]
+        result = []
+        for line in response[1:]:
+            result.append(dict(zip(headers, line)))
+        return result
+
+
+    def query_value(self, query):
+        return self.query(query)[0][0]
+
+
+
+
 @pytest.fixture(scope="module")
 def web(site):
     web = CMKWebSession(site)
     web.login()
     web.set_language("en")
     return web
+
+
+@pytest.fixture(scope="module")
+def ec(site, web):
+    ec = CMKEventConsole(site)
+    ec.enable_remote_status_port(web)
+    ec.activate_changes(web)
+    return ec

@@ -1,0 +1,48 @@
+Title: Introduced open event limit mechanism for protecting against message storms
+Level: 3
+Component: ec
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474033893
+Class: feature
+
+The Event Console has been extended to be able to protect agains message storms which can
+either result in too high load and also in out of memory situations.
+
+Because there can be multiple kind of message storms like one device which sends a lot of messages
+or many different devices sending equal messages, we introduced different limits to match them.
+
+There are the following limits:
+
+<ul>
+<li>Limit by host: You can limit the number of open events created by a single host . This is meant to 
+prevent you from message storms created by one device. Once the limit is reached, the Event Console
+will block all future incoming messages sent by this host until the number of open events has been
+reduced to be below this limit. In the moment the limit is reached, the Event Console will notify 
+the configured contacts of the host.</li>
+
+<li>Limit by rule: You can limit the number of open events created by a single rule here. This is meant to 
+prevent you from too generous rules creating a lot of events. Once the limit is reached, the Event Console will stop the rule 
+creating new open events until the number of open events has been reduced to be below this limit. In the 
+moment the limit is reached, the Event Console will notify the configured contacts of the rule or create a notification 
+with empty contact information.</li>
+
+<li>Overall limit: To protect you against a continously growing list of open events created by
+different hosts or rules, you can configure this overall limit of open events. All currently open
+events are counted and once the limit is reached, no further events will be opened which means that
+new incoming messages will be dropped. In the moment the limit is reached, the Event Console will
+create a notification with empty contact information.
+</li>
+</ul>
+
+Each of those limits can be configured to different values. By default the limit is set to
+1000 for the host and rule based limit and 10000 for the overall limit. Please check carefully
+whether or not these defaults are OK for you. But they should be way enough for most environments
+since you really should never have so many open events in the Event Console open.
+
+But if you need to change those limits, you can change them in the global settings of the Event
+Console to fit your needs.
+
+Additionally, you can configure the actions the Event Console should perform once the limit is
+reached instead of the overflow event and notification creation as described above. Another action
+is for example delete the oldest event (of a host, rule or overall).

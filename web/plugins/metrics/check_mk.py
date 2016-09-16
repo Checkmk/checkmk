@@ -2273,6 +2273,66 @@ metric_info["livestatus_overflows_rate"] = {
     "color" : "16/a",
 }
 
+metric_info["num_open_events"] = {
+    "title" : _("Open events"),
+    "unit"  : "count",
+    "color" : "12/a",
+}
+
+metric_info["average_message_rate"] = {
+    "title" : _("Incoming messages"),
+    "unit"  : "1/s",
+    "color" : "11/a",
+}
+
+metric_info["average_rule_trie_rate"] = {
+    "title" : _("Rule tries"),
+    "unit"  : "1/s",
+    "color" : "13/a",
+}
+
+metric_info["average_rule_hit_rate"] = {
+    "title" : _("Rule hits"),
+    "unit"  : "1/s",
+    "color" : "21/a",
+}
+
+metric_info["average_drop_rate"] = {
+    "title" : _("Message drops"),
+    "unit"  : "1/s",
+    "color" : "24/a",
+}
+
+metric_info["average_event_rate"] = {
+    "title" : _("Event creations"),
+    "unit"  : "1/s",
+    "color" : "31/a",
+}
+
+metric_info["average_connect_rate"] = {
+    "title" : _("Status: Client connects"),
+    "unit"  : "1/s",
+    "color" : "34/a",
+}
+
+metric_info["average_request_time"] = {
+    "title" : _("Status: Request time"),
+    "unit"  : "s",
+    "color" : "41/a",
+}
+
+metric_info["average_processing_time"] = {
+    "title" : _("Event processing time"),
+    "unit"  : "s",
+    "color" : "31/a",
+}
+
+metric_info["average_rule_hit_ratio"] = {
+    "title" : _("Rule hit ratio"),
+    "unit"  : "%",
+    "color" : "31/a",
+}
+
 metric_info["log_message_rate"] = {
     "title" : _("Log messages"),
     "unit"  : "1/s",
@@ -6645,6 +6705,26 @@ graph_info.append({
     "metrics" : [
         ( "livestatus_request_rate", "area" ),
         ( "livestatus_connect_rate", "area" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Event Console performance"),
+    "metrics" : [
+        ( "average_message_rate",   "area" ),
+        ( "average_rule_trie_rate", "area" ),
+        ( "average_rule_hit_rate",  "area" ),
+        ( "average_drop_rate",      "area" ),
+        ( "average_event_rate",     "area" ),
+        ( "average_connect_rate",   "area" ),
+    ],
+})
+
+graph_info.append({
+    "title" : _("Event Console times"),
+    "metrics" : [
+        ( "average_request_time",    "stack" ),
+        ( "average_processing_time", "stack" ),
     ],
 })
 

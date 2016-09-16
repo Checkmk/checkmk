@@ -40,6 +40,7 @@ except NameError:
 #       where similar strucures are defined and use the things from
 #       here or move new stuff to this module.
 
+# TODO: Rename to service_state_names()
 def core_state_names():
     return {
         -1 : _("NODATA"),
@@ -48,6 +49,10 @@ def core_state_names():
          2 : _("CRITICAL"),
          3 : _("UNKNOWN"),
     }
+
+
+def service_state_name(state_num, deflt=""):
+    return core_state_names().get(state_num, deflt)
 
 
 def short_service_state_name(state_num, deflt=""):

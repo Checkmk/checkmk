@@ -728,7 +728,17 @@ then
     do
         if [ -S "/omd/sites/$site/tmp/run/live" ] ; then
             echo "[$site]"
-            echo -e "GET status" | waitmax 3 /omd/sites/$site/bin/unixcat /omd/sites/$site/tmp/run/live
+            echo -e "GET status" | \
+                waitmax 3 /omd/sites/$site/bin/unixcat /omd/sites/$site/tmp/run/live
+        fi
+    done
+    echo '<<<mkeventd_status:sep(0)>>>'
+    for site in *
+    do
+        if [ -S "/omd/sites/$site/tmp/run/mkeventd/status" ] ; then
+            echo "[\"$site\"]"
+            echo -e "GET status\nOutputFormat: json" \
+                | waitmax 3 /omd/sites/$site/bin/unixcat /omd/sites/$site/tmp/run/mkeventd/status
         fi
     done
 fi

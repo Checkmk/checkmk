@@ -2473,6 +2473,98 @@ if mkeventd_enabled:
         domain = "mkeventd",
     )
 
+    def vs_ec_event_limit_actions(notify_txt):
+        return DropdownChoice(
+            title = _("Action"),
+            help = _("Choose the action the Event Console should trigger once "
+                     "the limit is reached."),
+            choices = [
+                ("stop",                 _("Stop creating new events")),
+                ("stop_overflow",        _("Stop creating new events, create overflow event")),
+                ("stop_overflow_notify", "%s, %s" % (_("Stop creating new events, create overflow event"), notify_txt)),
+                ("delete_oldest",        _("Delete oldest event, create new event")),
+            ],
+            default_value = "stop_overflow_notify",
+        )
+
+    register_configvar(groups["ec"],
+        "event_limit",
+        Dictionary(
+            title = _("Limit amount of open events"),
+            help = _("This option helps you to protect the Event Console from resoure "
+                     "problems which may occur in case of too many open events at the "
+                     "same time."),
+            elements = [
+                ("by_host", Dictionary(
+                    title = _("Host limit"),
+                    help = _("You can limit the number of open events created by a single "
+                             "host here. This is meant to "
+                             "prevent you from message storms created by one device.<br>"
+                             "Once the limit is reached, the Event Console will block "
+                             "all future incoming messages sent by this host until the "
+                             "number of open "
+                             "events has been reduced to be below this limit. In the "
+                             "moment the limit is reached, the Event Console will notify "
+                             "the configured contacts of the host."),
+                    elements = [
+                        ("limit", Integer(
+                            title = _("Limit"),
+                            minvalue = 1,
+                            default_value = 1000,
+                            unit = _("open events"),
+                        )),
+                        ("action", vs_ec_event_limit_actions("notify all contacts")),
+                    ],
+                    optional_keys = [],
+                )),
+                ("by_rule", Dictionary(
+                    title = _("Host limit"),
+                    help = _("You can limit the number of open events created by a single "
+                             "rule here. This is meant to "
+                             "prevent you from too generous rules creating a lot of events.<br>"
+                             "Once the limit is reached, the Event Console will stop the rule "
+                             "creating new open events until the number of open "
+                             "events has been reduced to be below this limit. In the "
+                             "moment the limit is reached, the Event Console will notify "
+                             "the configured contacts of the rule or create a notification "
+                             "with empty contact information."),
+                    elements = [
+                        ("limit", Integer(
+                            title = _("Limit"),
+                            minvalue = 1,
+                            default_value = 1000,
+                            unit = _("open events"),
+                        )),
+                        ("action", vs_ec_event_limit_actions("notify all rule contacts or without contact info")),
+                    ],
+                    optional_keys = [],
+                )),
+                ("overall", Dictionary(
+                    title = _("Overall open events"),
+                    help = _("To protect you against a continously growing list of open "
+                             "events created by different hosts or rules, you can configure "
+                             "this overall limit of open events. All currently open events "
+                             "are counted and once the limit is reached, no further events "
+                             "will be opened which means that new incoming messages will be "
+                             "dropped. In the moment the limit is reached, the Event Console "
+                             "will create a notification with empty contact information."),
+                    elements = [
+                        ("limit", Integer(
+                            title = _("Limit"),
+                            minvalue = 1,
+                            default_value = 10000,
+                            unit = _("open events"),
+                        )),
+                        ("action", vs_ec_event_limit_actions("notify without contact info")),
+                    ],
+                    optional_keys = [],
+                )),
+            ],
+            optional_keys = [],
+        ),
+        domain = "mkeventd",
+    )
+
     register_configvar(groups["ec"],
         "history_rotation",
         DropdownChoice(

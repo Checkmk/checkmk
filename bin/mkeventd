@@ -24,10 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO: Refactor/document locking. It is not clear when and how to apply
+# locks or when they are held by which component.
+
+# TODO: Refactor events to be handled as objects, e.g. in case when
+# creating objects. Or at least update the documentation. It is not clear
+# which fields are mandatory for the events.
+
 import socket, os, time, sys, getopt, signal, thread, pprint, re, \
        select, subprocess, stat, string
 import traceback
 from cmk.regex import regex, is_regex
+import cmk.defines as defines
 import cmk.daemon
 
 VERSION="1.4.0i1"
@@ -1075,8 +1083,10 @@ class Perfcounters:
             columns.append(("status_" + name, 0.0))
             columns.append(("status_" + name.rstrip("s") + "_rate", 0.0))
             columns.append(("status_average_" + name.rstrip("s") + "_rate", 0.0))
+
         for name, value in self._weights.items():
             columns.append(("status_average_%s_time" % name, 0.0))
+
         return columns
 
     def get_status(self):
@@ -1133,28 +1143,98 @@ class EventServer:
         for facility in range(32):
             self._hash_stats.append([ 0 ] * 8 )
 
+
     def status_columns(self):
-        columns = g_perfcounters.status_columns()
-        # Information about replication
-        columns.append(("status_replication_slavemode", ""))
-        columns.append(("status_replication_last_sync", 0.0))
-        columns.append(("status_replication_success", False))
+        columns  = self._general_columns()
+        columns += g_perfcounters.status_columns()
+        columns += self._replication_columns()
+        columns += self._event_limit_columns()
         return columns
 
-    def get_status(self):
-        headers, row = g_perfcounters.get_status()
 
-        # Replication
-        headers += [ "status_replication_slavemode", "status_replication_last_sync",
-                     "status_replication_success" ]
+    def _general_columns(self):
+        return [
+            ("status_config_load_time",    0),
+            ("status_num_open_events",     0),
+            ("status_virtual_memory_size", 0),
+        ]
+
+
+    def _replication_columns(self):
+        return [
+            ("status_replication_slavemode", ""),
+            ("status_replication_last_sync", 0.0),
+            ("status_replication_success", False),
+        ]
+
+
+    def _event_limit_columns(self):
+        return [
+            ("status_event_limit_host",    0),
+            ("status_event_limit_rule",    0),
+            ("status_event_limit_overall", 0),
+            ("status_event_limit_active_hosts",   []),
+            ("status_event_limit_active_rules",   []),
+            ("status_event_limit_active_overall", False),
+        ]
+
+
+    def get_status(self):
+        headers, row = [], []
+
+        self._add_general_status(headers, row)
+        self._add_perfcounter_status(headers,row)
+        self._add_replication_status(headers, row)
+        self._add_event_limit_status(headers, row)
+
+        return headers, [row]
+
+
+    def _add_general_status(self, headers, row):
+        headers += [ s[0] for s in self._general_columns() ]
+
+        row += [
+            g_last_config_reload,
+            g_event_status.num_open_events,
+            self._virtual_memory_size(),
+        ]
+
+
+    def _virtual_memory_size(self):
+        parts = file('/proc/self/stat').read().split()
+        return int(parts[22]) # in Bytes
+
+
+    def _add_perfcounter_status(self, headers, row):
+        status_headers, status_row = g_perfcounters.get_status()
+        headers += status_headers
+        row += status_row
+
+
+    def _add_replication_status(self, headers, row):
+        headers += [ s[0] for s in self._replication_columns() ]
+
         if is_replication_slave():
-            row.append(g_slave_status["mode"])
-            row.append(g_slave_status["last_sync"])
-            row.append(g_slave_status["success"])
+            row += [
+                g_slave_status["mode"],
+                g_slave_status["last_sync"],
+                g_slave_status["success"],
+            ]
         else:
             row += [ "master", 0.0, False ]
 
-        return headers, [row]
+
+    def _add_event_limit_status(self, headers, row):
+        headers += [ s[0] for s in self._event_limit_columns() ]
+        row += [
+            g_config["event_limit"]["by_host"]["limit"],
+            g_config["event_limit"]["by_rule"]["limit"],
+            g_config["event_limit"]["overall"]["limit"],
+            self.get_hosts_with_active_event_limit(),
+            self.get_rules_with_active_event_limit(),
+            self.is_overall_event_limit_active(),
+        ]
+
 
     def create_pipe(self):
         try:
@@ -2065,6 +2145,7 @@ class EventServer:
                     # them on ASCII-1.
                     event["match_groups"] = groups
                     self.rewrite_event(rule, event, groups)
+
                     if "count" in rule:
                         count = rule["count"]
                         # Check if a matching event already exists that we need to
@@ -2101,8 +2182,10 @@ class EventServer:
                             event["phase"] = "delayed"
                         else:
                             event["phase"] = "open"
+
                         with lock_eventstatus:
-                            g_event_status.new_event(event)
+                            self.new_event_respecting_limits(event)
+
                         if event["phase"] == "open":
                             event_has_opened(rule, event)
                             if rule.get("autodelete"):
@@ -2588,6 +2671,149 @@ class EventServer:
             # not log.
 
 
+    def get_hosts_with_active_event_limit(self):
+        hosts = []
+        for hostname, num_open_events in g_event_status.num_open_events_by_host.items():
+            if num_open_events >= g_config["event_limit"]["by_host"]["limit"]:
+                hosts.append(hostname)
+        return hosts
+
+
+    def get_rules_with_active_event_limit(self):
+        rule_ids = []
+        for rule_id, num_open_events in g_event_status.num_open_events_by_rule.items():
+            if num_open_events >= g_config["event_limit"]["by_rule"]["limit"]:
+                rule_ids.append(rule_id)
+        return rule_ids
+
+
+    def is_overall_event_limit_active(self):
+        return g_event_status.num_open_events \
+                >= g_config["event_limit"]["overall"]["limit"]
+
+
+    # protected by lock_eventstatus
+    def new_event_respecting_limits(self, event):
+        verbose("Checking for event limits")
+
+        if self._handle_event_limit("overall", event):
+            return
+
+        if self._handle_event_limit("by_host", event):
+            return
+
+        if self._handle_event_limit("by_rule", event):
+            return
+
+        g_event_status.new_event(event)
+
+
+    # The following actions can be configured:
+    # stop                 Stop creating new events
+    # stop_overflow        Stop creating new events, create overflow event
+    # stop_overflow_notify Stop creating new events, create overflow event, notfy
+    # delete_oldest        Delete oldest event, create new event
+    # protected by lock_eventstatus
+    def _handle_event_limit(self, ty, event):
+        assert ty in [ "overall", "by_rule", "by_host" ]
+
+        num    = g_event_status.get_num_open_events_by(ty, event)
+        limit  = g_config["event_limit"][ty]["limit"]
+        action = g_config["event_limit"][ty]["action"]
+        verbose("  Type: %s, Open events: %d, Limit: %d" % (ty, num, limit))
+
+        below_limit = num < limit
+        above_limit = num > limit
+
+        if below_limit:
+            return False # Fine. Hand over to next check.
+
+        if action == "delete_oldest":
+            g_event_status.remove_oldest_event(ty, event)
+            return False # Should have solved the issue. Hand over to next check.
+
+        if above_limit:
+            log("  Skip processing because limit is in effect")
+            return True # Prevent creation and prevent one time actions (below)
+
+        log("  The limit has been reached")
+
+        # This is the event which reached the limit, allow creation of it. Further
+        # events will be stopped.
+        g_event_status.new_event(event)
+
+        # Perform one time actions
+        overflow_event = self._create_overflow_event(ty, event)
+
+        if "overflow" in action:
+            log("  Creating overflow event")
+            g_event_status.new_event(overflow_event)
+
+        if "notify" in action:
+            log("  Creating overflow notification")
+            do_notify(overflow_event)
+
+        return True # Just reached limit. Created this last event. Stop processing.
+
+
+    def _create_overflow_event(self, ty, event):
+        now = time.time()
+        new_event = {
+            "rule_id"        : None,
+            "phase"          : "open",
+            "count"          : 1,
+            "time"           : now,
+            "first"          : now,
+            "last"           : now,
+            "comment"        : "",
+            "host"           : "",
+            "ipaddress"      : "",
+            "application"    : "Event Console",
+            "pid"            : 0,
+            "priority"       : 2, # crit
+            "facility"       : 1, # user
+            "match_groups"   : (),
+            "contact_groups" : None,
+            "state"          : 2, # crit
+            "sl"             : event["sl"],
+        }
+
+        if ty == "overall":
+            new_event["text"] = (
+                "The overall event limit of %d open events has been reached. Not "
+                "opening any additional event until open events have been "
+                "archived." % g_config["event_limit"]["overall"]["limit"]
+            )
+
+        elif ty == "by_host":
+            new_event.update({
+                "host"      : event["host"],
+                "ipaddress" : event["ipaddress"],
+                "text"      : (
+                    "The host event limit of %d open events has been reached for host \"%s\". "
+                    "Not opening any additional event for this host until open events have "
+                    "been archived." % (g_config["event_limit"]["by_host"]["limit"], event["host"])
+                )
+            })
+
+        elif ty == "by_rule":
+            new_event.update({
+                "rule_id"        : event["rule_id"],
+                "contact_groups" : event["contact_groups"],
+                "text"           : (
+                    "The rule event limit of %d open events has been reached for rule \"%s\". "
+                    "Not opening any additional event for this rule until open events have "
+                    "been archived." %
+                        (g_config["event_limit"]["by_host"]["limit"], event["rule_id"])
+                )
+            })
+
+        else:
+            raise NotImplementedError()
+
+        return new_event
+
+
 
 #.
 #   .--StatusServer--------------------------------------------------------.
@@ -2782,6 +3008,7 @@ class StatusServer:
 
         socket.close()
 
+    # locked with lock_eventstatus
     def handle_command_request(self, commandline):
         log("Executing command: %s" % commandline)
         parts = commandline.split(";")
@@ -2814,6 +3041,7 @@ class StatusServer:
         else:
             raise MKClientError("Unknown command %s" % command)
 
+    # locked with lock_eventstatus
     def handle_command_delete(self, arguments):
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE")
@@ -2886,7 +3114,7 @@ class StatusServer:
         event = g_event_status.event(int(event_id))
 
         if action_id == "@NOTIFY":
-            do_notify(event, user, is_cancelling = False)
+            do_notify(event, user, is_cancelling=False)
         else:
             with lock_configuration:
                 if action_id not in g_config["action"]:
@@ -3113,6 +3341,7 @@ class EventStatus():
         self._next_event_id = 1
         self._rule_stats = {}
         self._interval_starts = {} # needed for expecting rules
+        self._initialize_event_limit_status()
 
         # TODO: might introduce some performance counters, like:
         # - number of received messages
@@ -3209,6 +3438,7 @@ class EventStatus():
                 self._events          = status["events"]
                 self._rule_stats      = status["rule_stats"]
                 self._interval_starts = status.get("interval_starts", {})
+                self._initialize_event_limit_status()
                 log("Loaded event state from %s." % path)
             except Exception, e:
                 log("Error loading event state from %s: %s" % (path, e))
@@ -3219,12 +3449,45 @@ class EventStatus():
             event.setdefault("ipaddress", "")
 
 
+    # Called on Event Console initialization from status file to initialize
+    # the current event limit state -> Sets internal counters which are
+    # updated during runtime.
+    def _initialize_event_limit_status(self):
+        self.num_open_events   = len(self._events)
+
+        self.num_open_events_by_host = {}
+        self.num_open_events_by_rule = {}
+        for event in self._events:
+            self._count_event_add(event)
+
+
+    def _count_event_add(self, event):
+        if event["host"] not in self.num_open_events_by_host:
+            self.num_open_events_by_host[event["host"]] = 1
+        else:
+            self.num_open_events_by_host[event["host"]] += 1
+
+        if event["rule_id"] not in self.num_open_events_by_rule:
+            self.num_open_events_by_rule[event["rule_id"]] = 1
+        else:
+            self.num_open_events_by_rule[event["rule_id"]] += 1
+
+
+    def _count_event_remove(self, event):
+        self.num_open_events -= 1
+        self.num_open_events_by_host[event["host"]] -= 1
+        self.num_open_events_by_rule[event["rule_id"]] -= 1
+
+
     def new_event(self, event):
         g_perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
         self._events.append(event)
+        self.num_open_events += 1
+        self._count_event_add(event)
         log_event_history(event, "NEW")
+
 
     def archive_event(self, event):
         g_perfcounters.count("events")
@@ -3236,9 +3499,57 @@ class EventStatus():
 
     def remove_event(self, event):
         try:
-            self._events.remove(event);
-        except Exception, e:
+            self._events.remove(event)
+            self._count_event_remove(event)
+        except ValueError, e:
             log("Cannot remove event %d: not present" % event["id"])
+
+
+    # protected by lock_eventstatus
+    def _remove_event_by_nr(self, index):
+        event = self._events.pop(index)
+        self._count_event_remove(event)
+
+
+    # protected by lock_eventstatus
+    def remove_oldest_event(self, ty, event):
+        if ty == "overall":
+            verbose("  Removing oldest event")
+            self._remove_event_by_nr(0)
+        elif ty == "by_rule":
+            verbose("  Removing oldest event of rule \"%s\"" % event["rule_id"])
+            self._remove_oldest_event_of_rule(event["rule_id"])
+        elif ty == "by_host":
+            verbose("  Removing oldest event of host \"%s\"" % event["host"])
+            self._remove_oldest_event_of_host(event["host"])
+
+
+    # protected by lock_eventstatus
+    def _remove_oldest_event_of_rule(self, rule_id):
+        for event in self._events:
+            if event["rule_id"] == rule_id:
+                self.remove_event(event)
+                return
+
+
+    # protected by lock_eventstatus
+    def _remove_oldest_event_of_host(self, hostname):
+        for event in self._events:
+            if event["host"] == hostname:
+                self.remove_event(event)
+                return
+
+
+    # protected by lock_eventstatus
+    def get_num_open_events_by(self, ty, event):
+        if ty == "overall":
+            return self.num_open_events
+        elif ty == "by_rule":
+            return self.num_open_events_by_rule.get(event["rule_id"], 0)
+        elif ty == "by_host":
+            return self.num_open_events_by_host.get(event["host"], 0)
+        else:
+            raise NotImplementedError()
 
 
     # Cancel all events the belong to a certain rule id and are
@@ -3270,8 +3581,9 @@ class EventStatus():
                                 do_event_actions(actions, event, is_cancelling = True)
 
                         to_delete.append(nr)
+
             for nr in to_delete[::-1]:
-                del self._events[nr]
+                self._remove_event_by_nr(nr)
 
     def cancelling_match(self, match_groups, new_event, event, rule):
         debug = g_config["debug_rules"]
@@ -3349,6 +3661,7 @@ class EventStatus():
             if ev["rule_id"] == event["rule_id"] and ev["phase"] == "counting":
                 self.count_event_up(ev, event)
                 return
+
         # None found, create one
         event["count"] = 1
         event["phase"] = "counting"
@@ -3397,12 +3710,13 @@ class EventStatus():
         else:
             return False # do not do event action
 
+    # locked with lock_eventstatus
     def delete_event(self, event_id, user):
         for nr, event in enumerate(self._events):
             if event["id"] == event_id:
                 event["phase"] = "closed"
                 log_event_history(event, "DELETE", user)
-                del self._events[nr]
+                self._remove_event_by_nr(nr)
                 return
         raise MKClientError("No event with id %s" % event_id)
 
@@ -3448,7 +3762,7 @@ def event_has_opened(rule, event):
 def do_event_actions(actions, event, is_cancelling):
     for aname in actions:
         if aname == "@NOTIFY":
-            do_notify(event, None, is_cancelling)
+            do_notify(event, is_cancelling=is_cancelling)
         else:
             action = g_config["action"].get(aname)
             if not action:
@@ -3514,9 +3828,7 @@ def do_event_action(action, event, user=""):
 
 # This function creates a Check_MK Notification for a locally running Check_MK.
 # We simulate a *service* notification.
-monitoring_state_names = [ "OK", "WARN", "CRIT", "UNKNOWN" ]
-
-def do_notify(event, username, is_cancelling):
+def do_notify(event, username=None, is_cancelling=False):
     # Check if notifications are enabled at all
     try:
         answer = livestatus_query("GET status\nColumns: enable_notifications\nOutputFormat: python\n")
@@ -3547,7 +3859,7 @@ def do_notify(event, username, is_cancelling):
         "HOSTDOWNTIME":                "0",
         "HOSTNAME":                    event["host"],
         "HOSTTAGS":                    "", # alas, we have not host tags...
-        "LASTSERVICESTATE":            is_cancelling and "CRIT" or "OK", # better assume OK, we have no transition information
+        "LASTSERVICESTATE":            is_cancelling and "CRITICAL" or "OK", # better assume OK, we have no transition information
         "LASTSERVICESTATEID":          is_cancelling and "2" or "0", # -> immer OK
         "LASTSERVICEOK":               "0", # 1.1.1970
         "LASTSERVICESTATECHANGE":      str(int(event["last"])),
@@ -3560,13 +3872,13 @@ def do_notify(event, username, is_cancelling):
         "SERVICEACKAUTHOR":            "",
         "SERVICEACKCOMMENT":           "",
         "SERVICEATTEMPT":              "1",
-        "SERVICECHECKCOMMAND":         "ec-rule-" + event["rule_id"],
+        "SERVICECHECKCOMMAND":         event["rule_id"] == None and "ec-internal" or "ec-rule-" + event["rule_id"],
         "SERVICEDESC":                 event["application"] or "Unset",
         "SERVICENOTIFICATIONNUMBER":   "1",
         "SERVICEOUTPUT":               event["text"],
         "SERVICEPERFDATA":             "",
         "SERVICEPROBLEMID":            "ec-id-" + str(event["id"]),
-        "SERVICESTATE":                monitoring_state_names[event["state"]],
+        "SERVICESTATE":                defines.service_state_name(event["state"]),
         "SERVICESTATEID":              str(event["state"]),
         "SERVICE_EC_CONTACT":          event.get("owner", ""),
         "SERVICE_SL":                  str(event["sl"]),
@@ -3574,7 +3886,7 @@ def do_notify(event, username, is_cancelling):
 
         # Some fields only found in EC notifications
         "EC_ID":                       str(event["id"]),
-        "EC_RULE_ID":                  event["rule_id"],
+        "EC_RULE_ID":                  event["rule_id"] or "",
         "EC_PRIORITY":                 str(event["priority"]),
         "EC_FACILITY":                 str(event["facility"]),
         "EC_PHASE":                    event["phase"],
@@ -3892,29 +4204,8 @@ def load_slave_status():
 
 def load_configuration():
     global g_config, g_last_config_reload
-    g_config = {
-        "rules"                 : [], # old pre 1.2.7i1 format. Only used if rule_packs is empty
-        "rule_packs"            : [], # new format with rule packages
-        "actions"               : [],
-        "debug_rules"           : False,
-        "rule_optimizer"        : True,
-        "log_level"             : 0,
-        "log_rulehits"          : False,
-        "log_messages"          : False,
-        "retention_interval"    : 60,
-        "housekeeping_interval" : 60,
-        "statistics_interval"   : 5,
-        "history_lifetime"      : 365 * 24 * 3600,
-        "history_rotation"      : "daily",
-        "remote_status"         : None,
-        "socket_queue_len"      : 10,
-        "eventsocket_queue_len" : 10,
-        "hostname_translation"  : {},
-        "archive_orphans"       : False,
-        "archive_mode"          : "file",
-        "translate_snmptraps"   : False,
-        "snmp_credentials"      : [],
-    }
+    g_config = default_config()
+
     main_file = g_config_dir + "/mkeventd.mk"
     if not os.path.exists(main_file):
         bail_out("Main configuration file %s missing." % main_file)
@@ -3946,6 +4237,46 @@ def load_configuration():
         g_config["action"][action["id"]] = action
 
     g_last_config_reload = time.time()
+
+
+def default_config():
+    return {
+        "rules"                 : [], # old pre 1.2.7i1 format. Only used if rule_packs is empty
+        "rule_packs"            : [], # new format with rule packages
+        "actions"               : [],
+        "debug_rules"           : False,
+        "rule_optimizer"        : True,
+        "log_level"             : 0,
+        "log_rulehits"          : False,
+        "log_messages"          : False,
+        "retention_interval"    : 60,
+        "housekeeping_interval" : 60,
+        "statistics_interval"   : 5,
+        "history_lifetime"      : 365 * 24 * 3600,
+        "history_rotation"      : "daily",
+        "remote_status"         : None,
+        "socket_queue_len"      : 10,
+        "eventsocket_queue_len" : 10,
+        "hostname_translation"  : {},
+        "archive_orphans"       : False,
+        "archive_mode"          : "file",
+        "translate_snmptraps"   : False,
+        "snmp_credentials"      : [],
+        "event_limit"           : {
+            'by_host': {
+                'action': 'stop_overflow_notify',
+                'limit': 1000,
+            },
+            'by_rule': {
+                'action': 'stop_overflow_notify',
+                'limit': 1000,
+            },
+            'overall': {
+                'action': 'stop_overflow_notify',
+                'limit': 10000
+            }
+        },
+    }
 
 
 def snmptrap_translation_enabled():

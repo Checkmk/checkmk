@@ -854,6 +854,7 @@ opt_vm_piggyname        = "alias"
 opt_spaces              = "underscore"
 opt_no_cert             = False
 
+win_agent_output = None
 error = None
 error_exit = 1
 
@@ -974,6 +975,10 @@ def get_agent_info_tcp(hostname):
             raise
     return response
 
+
+if opt_agent:
+    win_agent_output = get_agent_info_tcp(host_address)
+    error_exit = 0
 
 # Globals of ESX System. These settings are available after the first "systeminfo" query
 systemfields = [
@@ -1470,7 +1475,14 @@ if not error:
                         output("<<<<%s>>>>" % convert_hostname(properties["name"][0]))
 
                     output("<<<esx_vsphere_hostsystem>>>")
+                    # Special handling. If the windows agent reports winperf_processor skip
+                    # summary.quickStats.overallCpuUsage in output. This would lead to a
+                    # duplicate "CPU utlization" service
+                    skip_cpu_util = opt_agent and "<<<winperf_processor>>>" in win_agent_output
+
                     for key in sorted(properties.keys()):
+                        if skip_cpu_util and key == "summary.quickStats.overallCpuUsage":
+                            continue
                         output("%s %s" % (key, " ".join(properties[key])))
 
                     output("<<<esx_vsphere_sensors:sep(59)>>>")
@@ -1686,9 +1698,8 @@ def make_utf8(line):
 print "\n".join(map(make_utf8, vsphere_output))
 
 if opt_agent:
-    sys.stdout.write(get_agent_info_tcp(host_address))
+    sys.stdout.write(win_agent_output)
     sys.stdout.flush()
-    error_exit = 0
 
 if tracefile:
     tracefile.close()

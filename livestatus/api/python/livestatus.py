@@ -26,13 +26,6 @@
 
 import socket, time, re
 
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-try:
-    set()
-except NameError:
-    from sets import Set as set
-
 """MK Livestatus Python API
 
 This module allows easy access to Nagios via MK Livestatus.
@@ -94,6 +87,9 @@ class MKLivestatusNotFoundError(MKLivestatusException):
 # We need some unique value here
 NO_DEFAULT = lambda: None
 class Helpers:
+    def query(self, query, add_headers = ""):
+        raise NotImplementedError()
+
     def query_value(self, query, deflt = NO_DEFAULT):
         """Issues a query that returns exactly one line and one columns and returns
            the response as a single value"""
@@ -109,7 +105,11 @@ class Helpers:
     def query_row(self, query):
         """Issues a query that returns one line of data and returns the elements
            of that line as list"""
-        return self.query(query, "ColumnHeaders: off\n")[0]
+        result = self.query(query, "ColumnHeaders: off\n")
+        try:
+            return result[0]
+        except IndexError:
+            raise MKLivestatusNotFoundError(query)
 
     def query_row_assoc(self, query):
         """Issues a query that returns one line of data and returns the elements
@@ -166,6 +166,7 @@ class BaseConnection:
     def __init__(self, socketurl, persist = False, allow_cache = False):
         """Create a new connection to a MK Livestatus socket"""
         self.add_headers = ""
+        self.auth_header = ""
         self.persist = persist
         self.allow_cache = allow_cache
         self.socketurl = socketurl
@@ -361,7 +362,6 @@ class SingleSiteConnection(BaseConnection, Helpers):
         self.prepend_site = False
         self.auth_users = {}
         self.deadsites = {} # never filled, just for compatibility
-        self.auth_header = ""
         self.limit = None
 
     def set_prepend_site(self, p):
@@ -389,7 +389,7 @@ class SingleSiteConnection(BaseConnection, Helpers):
     def set_auth_user(self, domain, user):
         if user:
             self.auth_users[domain] = user
-        else:
+        elif domain in self.auth_users:
             del self.auth_users[domain]
 
     # Switch future request to new authorization domain
@@ -407,7 +407,10 @@ class SingleSiteConnection(BaseConnection, Helpers):
 # timeout:  timeout for tcp/unix in seconds
 
 class MultiSiteConnection(Helpers):
-    def __init__(self, sites, disabled_sites = []):
+    def __init__(self, sites, disabled_sites = None):
+        if disabled_sites is None:
+            disabled_sites = {}
+
         self.sites = sites
         self.connections = []
         self.deadsites = {}
@@ -559,7 +562,7 @@ class MultiSiteConnection(Helpers):
         return self.deadsites
 
     def alive_sites(self):
-        return self.connections.keys()
+        return [ s[0] for s in self.connections ]
 
     def successfully_persisted(self):
         for sitename, site, connection in self.connections:
@@ -677,4 +680,4 @@ class MultiSiteConnection(Helpers):
         raise MKLivestatusConfigError("No livestatus connection to local host")
 
 # Examle for forcing local connection:
-# live.local_connection().query_single_value(...)
+# live.local_connection().query_value(...)

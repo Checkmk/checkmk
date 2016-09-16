@@ -28,6 +28,64 @@ import config
 import defaults
 import livestatus
 
+
+#   .--API-----------------------------------------------------------------.
+#   |                             _    ____ ___                            |
+#   |                            / \  |  _ \_ _|                           |
+#   |                           / _ \ | |_) | |                            |
+#   |                          / ___ \|  __/| |                            |
+#   |                         /_/   \_\_|  |___|                           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Functions und names for the public                                  |
+#   '----------------------------------------------------------------------'
+
+def live():
+    """Get Livestatus connection object matching the current site configuration
+       and user settings. On the first call the actual connection is being made."""
+    if _live == None:
+        _connect()
+    return _live
+
+
+# Accessor for the status of a single site
+def state(site_id, deflt=None):
+    """Get the status of a certain site. Returns a dictionary with various
+       entries. deflt is being returned in case the specified site doe not
+       exist or has no state."""
+    if _live == None:
+        _connect()
+    return _site_status.get(site_id, deflt)
+
+
+def states():
+    """Returns dictionary of all known site states."""
+    if _live == None:
+        _connect()
+    return _site_status
+
+
+def disconnect():
+    """Actively closes all Livestatus connections."""
+    global _live, _site_status
+    _live = None
+    _site_status = None
+
+
+
+
+#.
+#   .--Internal------------------------------------------------------------.
+#   |                ___       _                        _                  |
+#   |               |_ _|_ __ | |_ ___ _ __ _ __   __ _| |                 |
+#   |                | || '_ \| __/ _ \ '__| '_ \ / _` | |                 |
+#   |                | || | | | ||  __/ |  | | | | (_| | |                 |
+#   |               |___|_| |_|\__\___|_|  |_| |_|\__,_|_|                 |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Internal functiions and variables                                   |
+#   '----------------------------------------------------------------------'
+
 # The global livestatus object. This is initialized automatically upon first access
 # to the accessor function live()
 _live = None
@@ -41,40 +99,17 @@ _live = None
 _site_status = None
 
 
-# Accessor and initializer to the global livestatus connection object
-def live():
-    if _live == None:
-        connect()
-    return _live
-
-
-# Accessor for the status of a single site
-def state(site_id, deflt=None):
-    if _live == None:
-        connect()
-    return _site_status.get(site_id, deflt)
-
-
-# Returns dictionary of all known site states
-def states():
-    if _live == None:
-        connect()
-    return _site_status
-
-
 # Build up a connection to livestatus to either a single site or multiple sites.
-def connect():
-    init_site_status()
-    connect_multiple_sites()
-    set_livestatus_auth()
+def _connect():
+    _init_site_status()
+    _connect_multiple_sites()
+    _set_livestatus_auth()
 
 
-def connect_multiple_sites():
+def _connect_multiple_sites():
     global _live
-    enabled_sites, disabled_sites = get_enabled_and_disabled_sites()
-
-    set_initial_site_states(enabled_sites, disabled_sites)
-
+    enabled_sites, disabled_sites = _get_enabled_and_disabled_sites()
+    _set_initial_site_states(enabled_sites, disabled_sites)
     _live = livestatus.MultiSiteConnection(enabled_sites, disabled_sites)
 
     # Fetch status of sites by querying the version of Nagios and livestatus
@@ -84,7 +119,7 @@ def connect_multiple_sites():
           "GET status\n"
           "Cache: reload\n"
           "Columns: livestatus_version program_version program_start num_hosts num_services"):
-        update_site_status(site_id, {
+        _update_site_status(site_id, {
             "state"              : "online",
             "livestatus_version" : v1,
             "program_version"    : v2,
@@ -98,14 +133,14 @@ def connect_multiple_sites():
     # Get exceptions in case of dead sites
     for site_id, deadinfo in _live.dead_sites().items():
         shs = deadinfo.get("status_host_state")
-        update_site_status(site_id, {
+        _update_site_status(site_id, {
             "exception"         : deadinfo["exception"],
             "status_host_state" : shs,
-            "state"             : status_host_state_name(shs),
+            "state"             : _status_host_state_name(shs),
         })
 
 
-def get_enabled_and_disabled_sites():
+def _get_enabled_and_disabled_sites():
     enabled_sites, disabled_sites = {}, {}
 
     for site_id, site in config.allsites().items():
@@ -129,8 +164,8 @@ def get_enabled_and_disabled_sites():
 
 # If Multisite is retricted to data the user is a contact for, we need to set an
 # AuthUser: header for livestatus.
-def set_livestatus_auth():
-    user_id = livestatus_auth_user()
+def _set_livestatus_auth():
+    user_id = _livestatus_auth_user()
     if user_id != None:
         _live.set_auth_user('read',   user_id)
         _live.set_auth_user('action', user_id)
@@ -149,7 +184,7 @@ def set_livestatus_auth():
 
 # Returns either None when no auth user shal be set or the name of the user
 # to be used as livestatus auth user
-def livestatus_auth_user():
+def _livestatus_auth_user():
     if not config.may("general.see_all"):
         return config.user_id
 
@@ -171,41 +206,35 @@ def livestatus_auth_user():
     return None
 
 
-def disconnect():
-    global _live, _site_status
-    _live = None
-    _site_status = None
-
-
-def status_host_state_name(shs):
+def _status_host_state_name(shs):
     if shs == None:
         return "dead"
     else:
         return { 1:"down", 2:"unreach", 3:"waiting", }.get(shs, "unknown")
 
 
-def init_site_status():
+def _init_site_status():
     global _site_status
     _site_status = {}
 
 
-def set_initial_site_states(enabled_sites, disabled_sites):
+def _set_initial_site_states(enabled_sites, disabled_sites):
     for site_id, site in enabled_sites.items():
-        set_site_status(site_id, {
+        _set_site_status(site_id, {
             "state" : "dead",
             "site" : site
         })
 
     for site_id, site in disabled_sites.items():
-        set_site_status(site_id, {
+        _set_site_status(site_id, {
             "state" : "disabled",
             "site" : site
         })
 
 
-def set_site_status(site_id, status):
+def _set_site_status(site_id, status):
     _site_status[site_id] = status
 
 
-def update_site_status(site_id, status):
+def _update_site_status(site_id, status):
     _site_status[site_id].update(status)

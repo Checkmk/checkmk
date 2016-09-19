@@ -47,16 +47,16 @@ def render_mkeventd_performance():
           (_("Created events"),      "event",     "%.2f/s"),
           (_("Client connects"),     "connect",   "%.2f/s"),
     ]
-    for what, col, format in columns:
-        write_line(what, format % status["status_average_%s_rate" % col])
+    for what, col, fmt in columns:
+        write_line(what, fmt % status["status_average_%s_rate" % col])
 
     # Hit rate
-    try:
+    if status["status_average_rule_trie_rate"] == 0.0:
+        write_line(_("Rule hit ratio"), _("-.-- %"))
+    else:
         write_line(_("Rule hit ratio"), "%.2f %%" % (
            status["status_average_rule_hit_rate"] /
            status["status_average_rule_trie_rate"] * 100))
-    except: # division by zero
-        write_line(_("Rule hit ratio"), _("-.-- %"))
 
     # Time columns
     time_columns = [
@@ -68,7 +68,7 @@ def render_mkeventd_performance():
         value = status.get("status_average_%s_time" % name)
         if value:
             write_line(title, "%.2f ms" % (value * 1000))
-        else:
+        elif name != "sync":
             write_line(title, _("-.-- ms"))
     html.write("</table>\n")
 

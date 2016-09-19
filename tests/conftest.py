@@ -33,8 +33,8 @@ def add_python_paths():
 
 # Some pre-testing to ensure the developer uses the correct branches in all involved repos
 def ensure_equal_branches():
-    cmk_branch = os.popen("cd %s ; git rev-parse --abbrev-ref HEAD" % cmk_path()).read().strip()
-    cmc_branch = os.popen("cd %s ; git rev-parse --abbrev-ref HEAD" % cmc_path()).read().strip()
+    cmk_branch = os.popen("cd \"%s\" ; git rev-parse --abbrev-ref HEAD" % cmk_path()).read().strip()
+    cmc_branch = os.popen("cd \"%s\" ; git rev-parse --abbrev-ref HEAD" % cmc_path()).read().strip()
 
     assert cmk_branch == cmc_branch, "Different branches (%s != %s)\n" % (cmk_branch, cmc_branch)
 

@@ -710,7 +710,7 @@ class CMKEventConsole(CMKWebSession):
 
     # TODO: Test via self.status whether or not the reload has happened
     def activate_changes(self, web):
-        old_t = site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
+        old_t = web.site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
         assert old_t > time.time() - 86400
 
         html = web.get("wato.py?mode=mkeventd_changes").text
@@ -720,7 +720,7 @@ class CMKEventConsole(CMKWebSession):
         html = web.get("wato.py?_activate=now&mode=mkeventd_changes", add_transid=True).text
         assert "The new configuration has successfully been activated" in html
 
-        new_t = site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
+        new_t = web.site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
         assert new_t > old_t
 
 

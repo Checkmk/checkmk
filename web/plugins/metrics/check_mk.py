@@ -1265,6 +1265,24 @@ metric_info["connection_time"] = {
     "color" : "#94b65a",
 }
 
+metric_info["infections_rate"] = {
+    "title" : _("Infections"),
+    "unit"  : "1/s",
+    "color" : "15/a",
+}
+
+metric_info["connections_blocked_rate"] = {
+    "title" : _("Blocked connections"),
+    "unit"  : "1/s",
+    "color" : "14/a",
+}
+
+metric_info["open_network_sockets"] = {
+    "title" : _("Open network sockets"),
+    "unit"  : "count",
+    "color" : "21/a",
+}
+
 metric_info["connections"] = {
     "title" : _("Connections"),
     "unit"  : "count",
@@ -7227,4 +7245,20 @@ graph_info.append({
         ( "response_time", "line", _("Roundtrip") ),
     ],
     "optional_metrics" : [ "time_ssl" ],
+})
+
+graph_info.append({
+    "title"   : _("Web gateway statistics"),
+    "metrics" : [
+        ( "infections_rate",          "stack" ),
+        ( "connections_blocked_rate", "stack" ),
+    ],
+})
+
+graph_info.append({
+    "title"   : _("Web gateway miscellaneous statistics"),
+    "metrics" : [
+        ( "open_network_sockets", "stack" ),
+        ( "connections",          "stack" ),
+    ],
 })

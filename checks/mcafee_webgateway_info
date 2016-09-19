@@ -25,15 +25,24 @@
 # Boston, MA 02110-1301 USA.
 
 
-# There are a few different fields in the related MIB:
-# Statistics, HTTP, HTTPs, FTP, Miscellaneous
-# Future extensions: each field one check
-# mcafee_webgateway_http, mcafee_webgateway_https, mcafee_webgateway_ftp
+def inventory_mcafee_webgateway_info(info):
+    if info:
+        return [ (None, None) ]
 
 
-def scan_mcafee_webgateway(oid):
-    return 'mcafee web gateway' in oid('.1.3.6.1.2.1.1.1.0').lower()
+def check_mcafee_webgateway_info(_no_item, _no_params, info):
+    version, revision = info[0]
+    return 0, "Product version: %s, Revision: %s" % (version, revision)
 
 
-def inventory_mcafee_webgateway_generic(info):
-    return [ (None, {}) ]
+check_info['mcafee_webgateway_info'] = {
+    'inventory_function'    : inventory_mcafee_webgateway_info,
+    'check_function'        : check_mcafee_webgateway_info,
+    'service_description'   : 'Web gateway info',
+    'snmp_info'             : ('.1.3.6.1.4.1.1230.2.7.1', [
+                                    "3",    # MCAFEE-MWG-MIB::kProductVersion
+                                    "9",    # MCAFEE-MWG-MIB::kRevision
+                              ]),
+    'snmp_scan_function'    : scan_mcafee_webgateway,
+    'includes'              : [ 'mcafee_webgateway.include' ],
+}

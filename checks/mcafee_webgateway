@@ -32,9 +32,27 @@
 
 def check_mcafee_webgateway(_no_item, params, info):
     infections, connections = map(int, info[0])
-    data = [ ("Infections",           infections,  "infections"),
-             ("Connections blocked",  connections, "connections_blocked")]
-    return check_mcafee_webgateway_generic(params, data)
+
+    now = time.time()
+    for what, value, paramskey, perfkey in [
+            ("Infections",           infections,  "infections",          "infections_rate"),
+            ("Connections blocked",  connections, "connections_blocked", "connections_blocked_rate")]:
+        rate       = get_rate("check_mcafee_webgateway.%s" % paramskey, now, value)
+        state      = 0
+        infotext   = '%s: %s/s' % (what, rate)
+        warn, crit = params.get(paramskey, (None, None))
+        if paramskey and paramskey in params:
+            if rate >= crit:
+                state = 2
+            elif rate >= warn:
+                state = 1
+            if state:
+                infotext += ' (warn/crit at %.1f/%.1f)' % (warn, crit)
+        perfdata = []
+        if perfkey:
+            perfdata = [ (perfkey, rate, warn, crit) ]
+
+        yield state, infotext, perfdata
 
 
 check_info['mcafee_webgateway'] = {
@@ -46,6 +64,7 @@ check_info['mcafee_webgateway'] = {
                                     "5",    # MCAFEE-MWG-MIB::stConnectionsBlocked
                               ]),
     'snmp_scan_function'    : scan_mcafee_webgateway,
+    'has_perfdata'          : True,
     'includes'              : [ 'mcafee_webgateway.include' ],
     'group'                 : 'mcafee_web_gateway',
 }

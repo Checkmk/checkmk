@@ -981,8 +981,8 @@ register_check_parameters(
                     help  = _("Here you can specify upper levels for the number of "
                               "infections detected by the McAfee Gateway Antimalware Engine."),
                     elements = [
-                        Integer(title = _("Warning at")),
-                        Integer(title = _("Critical at")),
+                        Float(title = _("Warning at")),
+                        Float(title = _("Critical at")),
                     ]
                 )
             ),
@@ -990,8 +990,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Upper levels for blocked connections"),
                     elements = [
-                        Integer(title = _("Warning at")),
-                        Integer(title = _("Critical at")),
+                        Float(title = _("Warning at")),
+                        Float(title = _("Critical at")),
                     ]
                 )
             ),

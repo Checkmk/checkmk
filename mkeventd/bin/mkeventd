@@ -3360,7 +3360,7 @@ def do_event_action(action, event, user=""):
 
 # This function creates a Check_MK Notification for a locally running Check_MK.
 # We simulate a *service* notification.
-monitoring_state_names = [ "OK", "WARN", "CRIT", "UNKNOWN" ]
+monitoring_state_names = [ "OK", "WARNING", "CRITICAL", "UNKNOWN" ]
 
 def do_notify(event, username, is_cancelling):
     # Create notification context based on event
@@ -3381,7 +3381,7 @@ def do_notify(event, username, is_cancelling):
         "HOSTDOWNTIME":                "0",
         "HOSTNAME":                    event["host"],
         "HOSTTAGS":                    "", # alas, we have not host tags...
-        "LASTSERVICESTATE":            is_cancelling and "CRIT" or "OK", # better assume OK, we have no transition information
+        "LASTSERVICESTATE":            is_cancelling and "CRITICAL" or "OK", # better assume OK, we have no transition information
         "LASTSERVICESTATEID":          is_cancelling and "2" or "0", # -> immer OK
         "LASTSERVICEOK":               "0", # 1.1.1970
         "LASTSERVICESTATECHANGE":      str(int(event["last"])),

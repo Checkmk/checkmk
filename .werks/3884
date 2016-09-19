@@ -1,0 +1,10 @@
+Title: Notifications: Fixed wrong LASTSERVICESTATE and SERVICESTATE in EC notifications
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.8p12
+Date: 1474213972
+Class: fix
+
+The variables LASTSERVICESTATE had CRIT instead of CRITICAL and the SERVICESTATE
+variable had WARN instead of WARNING and CRIT instead of CRITICAL values set.

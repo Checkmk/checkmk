@@ -12,6 +12,9 @@
     Notifications:
     * 3860 FIX: EC condition: Fixed default value of rule id selection
 
+    Event Console:
+    * 3884 FIX: Notifications: Fixed wrong LASTSERVICESTATE and SERVICESTATE in EC notifications...
+
 
 1.2.8p11:
     Checks & Agents:

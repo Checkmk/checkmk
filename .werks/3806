@@ -1,0 +1,11 @@
+Title: Sped up "Activate changes"
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474284771
+Class: feature
+
+Introduced caching for many regularly called functions.
+As a result, the config generation for the core should be at least 2-3 times faster.
+Note: The computation time highly depends on the number of used rules and hosts.

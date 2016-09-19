@@ -1619,13 +1619,39 @@ def is_manual_check(hostname, check_type, item):
     return (check_type, item) in manual_checks
 
 
+g_snmp_info_set  = {}
+g_global_caches.append("g_snmp_info_set")
+g_check_info_set = {}
+g_global_caches.append("g_check_info_set")
+def initialize_checktype_caches():
+    global g_snmp_info_set
+    global g_check_info_set
+
+    if not g_snmp_info_set:
+        g_snmp_info_set  = set(snmp_info.keys())
+        g_check_info_set = set(check_info.keys())
+
+g_is_snmp_check_cache = {}
+g_global_caches.append("g_is_snmp_check_cache")
 def is_snmp_check(check_name):
-    return check_name.split(".")[0] in snmp_info
+    if check_name in g_is_snmp_check_cache:
+        return g_is_snmp_check_cache[check_name]
 
+    initialize_checktype_caches()
+    result = check_name.split(".")[0] in g_snmp_info_set
+    g_is_snmp_check_cache[check_name] = result
+    return result
 
+g_is_tcp_check_cache = {}
+g_global_caches.append("g_is_tcp_check_cache")
 def is_tcp_check(check_name):
-    return check_name in check_info \
-       and check_name.split(".")[0] not in snmp_info # snmp check basename
+    if check_name in g_is_tcp_check_cache:
+        return g_is_tcp_check_cache[check_name]
+
+    initialize_checktype_caches()
+    result = check_name in g_check_info_set and check_name.split(".")[0] not in g_snmp_info_set # snmp check basename
+    g_is_tcp_check_cache[check_name] = result
+    return result
 
 
 

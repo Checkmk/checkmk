@@ -626,23 +626,47 @@ def management_protocol(hostname):
     return host_attributes[hostname]['management_protocol']
 
 
-# Returns a list of all host names, regardless if currently
+# Returns a set of all host names, regardless if currently
 # disabled or monitored on a remote site. Does not return
 # cluster hosts.
+g_all_configured_realhosts_cache = {}
+g_global_caches.append("g_all_configured_realhosts_cache")
 def all_configured_realhosts():
-    return strip_tags(all_hosts)
+    global g_all_configured_realhosts_cache
+    if not g_all_configured_realhosts_cache:
+        g_all_configured_realhosts_cache = set(strip_tags(all_hosts))
+    return g_all_configured_realhosts_cache
 
-# Returns a list of all cluster names, regardless if currently
+# Returns a set of all cluster names, regardless if currently
 # disabled or monitored on a remote site. Does not return
-# cluster hosts.
+# normal hosts.
+g_all_configured_clusters_cache = {}
+g_global_caches.append("g_all_configured_clusters_cache")
 def all_configured_clusters():
-    return strip_tags(clusters.keys())
+    global g_all_configured_clusters_cache
+    if not g_all_configured_clusters_cache:
+        g_all_configured_clusters_cache = set(strip_tags(clusters.keys()))
+    return g_all_configured_clusters_cache
 
+
+# Returns a set of all hosts, regardless if currently
+# disabled or monitored on a remote site.
+g_all_configured_hosts_cache = {}
+g_global_caches.append("g_all_configured_hosts_cache")
 def all_configured_hosts():
-    return all_configured_realhosts() + all_configured_clusters()
+    global g_all_configured_hosts_cache
+    if not g_all_configured_hosts_cache:
+        g_all_configured_hosts_cache = all_configured_realhosts().union(all_configured_clusters())
+    return g_all_configured_hosts_cache
 
+# Returns a set of all active hosts
+g_all_active_hosts_cache = None
+g_global_caches.append('g_all_active_hosts_cache')
 def all_active_hosts():
-    return all_active_realhosts() + all_active_clusters()
+    global g_all_active_hosts_cache
+    if not g_all_active_hosts_cache:
+        g_all_active_hosts_cache = all_active_realhosts().union(all_active_clusters())
+    return g_all_active_hosts_cache
 
 # Returns a list of all hosts which are associated with this site,
 # but have been removed by the "only_hosts" rule. Normally these
@@ -650,8 +674,7 @@ def all_active_hosts():
 #
 # This is not optimized for performance, so use in specific situations.
 def all_offline_hosts():
-    hostlist = filter_active_hosts(all_configured_realhosts()
-                                   + all_configured_clusters(),
+    hostlist = filter_active_hosts(all_configured_realhosts().union(all_configured_clusters()),
                                    keep_offline_hosts=True)
 
     return [ hostname for hostname in hostlist
@@ -670,7 +693,7 @@ def duplicate_hosts():
     return sorted(list(duplicates))
 
 
-# Returns a list of all host names to be handled by this site
+# Returns a set of all host names to be handled by this site
 # hosts of other sitest or disabled hosts are excluded
 all_hosts_untagged = None
 def all_active_realhosts():
@@ -679,7 +702,7 @@ def all_active_realhosts():
         all_hosts_untagged = filter_active_hosts(all_configured_realhosts())
     return all_hosts_untagged
 
-# Returns a list of all cluster host names to be handled by
+# Returns a set of all cluster host names to be handled by
 # this site hosts of other sitest or disabled hosts are excluded
 all_clusters_untagged = None
 def all_active_clusters():
@@ -688,23 +711,24 @@ def all_active_clusters():
         all_clusters_untagged = filter_active_hosts(all_configured_clusters())
     return all_clusters_untagged
 
+# Returns a set of active hosts for this site
 def filter_active_hosts(hostlist, keep_offline_hosts=False):
     if only_hosts == None and distributed_wato_site == None:
         return hostlist
     elif only_hosts == None:
-        return [ hostname for hostname in hostlist
-                 if host_is_member_of_site(hostname, distributed_wato_site) ]
+        return set([ hostname for hostname in hostlist
+                 if host_is_member_of_site(hostname, distributed_wato_site) ])
     elif distributed_wato_site == None:
         if keep_offline_hosts:
-            return hostlist
+            return set(hostlist)
         else:
-            return [ hostname for hostname in hostlist
-                     if in_binary_hostlist(hostname, only_hosts) ]
+            return set([ hostname for hostname in hostlist
+                     if in_binary_hostlist(hostname, only_hosts) ])
     else:
         site_tag = "site:" + distributed_wato_site
-        return [ hostname for hostname in hostlist
+        return set([ hostname for hostname in hostlist
                  if (keep_offline_hosts or in_binary_hostlist(hostname, only_hosts))
-                 and host_is_member_of_site(hostname, distributed_wato_site) ]
+                 and host_is_member_of_site(hostname, distributed_wato_site) ])
 
 def host_is_member_of_site(hostname, site):
     for tag in tags_of_host(hostname):
@@ -718,8 +742,10 @@ def parse_hostname_list(args, with_clusters = True, with_foreign_hosts = False):
         valid_hosts = all_configured_realhosts()
     else:
         valid_hosts = all_active_realhosts()
+
     if with_clusters:
-        valid_hosts += all_active_clusters()
+        valid_hosts = valid_hosts.union(all_active_clusters())
+
     hostlist = []
     for arg in args:
         if arg[0] != '@' and arg in valid_hosts:
@@ -789,8 +815,6 @@ def parents_of(hostname):
                 used_parents.append(pss)
     return used_parents
 
-g_converted_host_rulesets_cache = {}
-g_global_caches.append('g_converted_host_rulesets_cache')
 
 def convert_host_ruleset(ruleset, with_foreign_hosts):
     new_rules = []
@@ -808,23 +832,32 @@ def convert_host_ruleset(ruleset, with_foreign_hosts):
 
     return new_rules
 
-
+g_host_extra_conf_converted_rulesets_cache = {}
+g_global_caches.append('g_host_extra_conf_converted_rulesets_cache')
+g_host_extra_conf_cache = {}
+g_global_caches.append("g_host_extra_conf_cache")
 def host_extra_conf(hostname, ruleset):
+    global g_host_extra_conf_cache
     # When the requested host is part of the local sites configuration,
     # then use only the sites hosts for processing the rules
     with_foreign_hosts = hostname not in all_active_hosts()
     cache_id = id(ruleset), with_foreign_hosts
     try:
-        ruleset = g_converted_host_rulesets_cache[cache_id]
+        ruleset = g_host_extra_conf_converted_rulesets_cache[cache_id]
     except KeyError:
         ruleset = convert_host_ruleset(ruleset, with_foreign_hosts)
-        g_converted_host_rulesets_cache[cache_id] = ruleset
+        g_host_extra_conf_converted_rulesets_cache[cache_id] = ruleset
+        # Generate single match cache
+        g_host_extra_conf_cache[cache_id] = {}
+        for item, hostname_list in ruleset:
+            for name in hostname_list:
+                g_host_extra_conf_cache[cache_id].setdefault(name, [])
+                g_host_extra_conf_cache[cache_id][name].append(item)
 
-    entries = []
-    for item, hostname_list in ruleset:
-        if hostname in hostname_list:
-            entries.append(item)
-    return entries
+
+    if hostname not in g_host_extra_conf_cache[cache_id]:
+        return []
+    return g_host_extra_conf_cache[cache_id][hostname]
 
 
 def parse_host_rule(rule):
@@ -868,46 +901,53 @@ def host_extra_conf_merged(hostname, conf):
             rule_dict.setdefault(key, value)
     return rule_dict
 
-
+g_in_binary_hostlist_cache = {}
+g_global_caches.append("g_in_binary_hostlist_cache")
 def in_binary_hostlist(hostname, conf):
+    cache_id = id(conf), hostname
+
     # if we have just a list of strings just take it as list of hostnames
     if conf and type(conf[0]) == str:
-        return hostname in conf
+        result = hostname in conf
+        g_in_binary_hostlist_cache[cache_id] = result
+    else:
+        for entry in conf:
+            entry, rule_options = get_rule_options(entry)
+            if rule_options.get("disabled"):
+                continue
 
-    for entry in conf:
-        entry, rule_options = get_rule_options(entry)
-        if rule_options.get("disabled"):
-            continue
-
-        try:
-            # Negation via 'NEGATE'
-            if entry[0] == NEGATE:
-                entry = entry[1:]
-                negate = True
-            else:
-                negate = False
-            # entry should be one-tuple or two-tuple. Tuple's elements are
-            # lists of strings. User might forget comma in one tuple. Then the
-            # entry is the list itself.
-            if type(entry) == list:
-                hostlist = entry
-                tags = []
-            else:
-                if len(entry) == 1: # 1-Tuple with list of hosts
-                    hostlist = entry[0]
+            try:
+                # Negation via 'NEGATE'
+                if entry[0] == NEGATE:
+                    entry = entry[1:]
+                    negate = True
+                else:
+                    negate = False
+                # entry should be one-tuple or two-tuple. Tuple's elements are
+                # lists of strings. User might forget comma in one tuple. Then the
+                # entry is the list itself.
+                if type(entry) == list:
+                    hostlist = entry
                     tags = []
                 else:
-                    tags, hostlist = entry
+                    if len(entry) == 1: # 1-Tuple with list of hosts
+                        hostlist = entry[0]
+                        tags = []
+                    else:
+                        tags, hostlist = entry
 
-            if hosttags_match_taglist(tags_of_host(hostname), tags) and \
-                   in_extraconf_hostlist(hostlist, hostname):
-                return not negate
+                if hosttags_match_taglist(tags_of_host(hostname), tags) and \
+                       in_extraconf_hostlist(hostlist, hostname):
+                    g_in_binary_hostlist_cache[cache_id] = not negate
+                    break
 
-        except:
-            MKGeneralException("Invalid entry '%r' in host configuration list: "
-                               "must be tupel with 1 or 2 entries" % (entry,))
+            except:
+                MKGeneralException("Invalid entry '%r' in host configuration list: "
+                                   "must be tupel with 1 or 2 entries" % (entry,))
+        else:
+            g_in_binary_hostlist_cache[cache_id] = False
 
-    return False
+    return g_in_binary_hostlist_cache[cache_id]
 
 
 # Pick out the last element of an entry if it is a dictionary.
@@ -983,17 +1023,24 @@ def all_matching_hosts(tags, hostlist, with_foreign_hosts):
     else:
         valid_hosts = all_active_hosts()
 
+    # Speed up matching process by filter out single matches
     matching = set([])
-    for hostname in valid_hosts:
-        # When no tag matching is requested, do not filter by tags. Accept all hosts
-        # and filter only by hostlist
-        if in_extraconf_hostlist(hostlist, hostname) and \
-           (not tags or hosttags_match_taglist(tags_of_host(hostname), tags)):
-           matching.add(hostname)
+    if not tags and not [x for x in hostlist if x[0] in ["@", "!", "~"]]:
+        for hostname in hostlist:
+            if hostname in valid_hosts:
+                matching.add(hostname)
+    elif not tags and len(hostlist) == 1 and "@all" in hostlist:
+        matching.update(set(valid_hosts))
+    else:
+        for hostname in valid_hosts:
+            # When no tag matching is requested, do not filter by tags. Accept all hosts
+            # and filter only by hostlist
+            if in_extraconf_hostlist(hostlist, hostname) and \
+               (not tags or hosttags_match_taglist(tags_of_host(hostname), tags)):
+               matching.add(hostname)
 
     g_hostlist_match_cache[cache_id] = matching
     return matching
-
 
 g_converted_service_rulesets_cache = {}
 g_global_caches.append('g_converted_service_rulesets_cache')
@@ -1361,8 +1408,16 @@ def parse_negated(pattern):
         negate = False
     return negate, pattern
 
+g_strip_tags_cache = {}
+g_global_caches.append("g_strip_tags_cache")
 def strip_tags(tagged_hostlist):
-    return map(lambda h: h.split('|', 1)[0], tagged_hostlist)
+    tuple_list = tuple(tagged_hostlist)
+    if tuple_list in g_strip_tags_cache:
+        return g_strip_tags_cache[tuple_list]
+
+    result = map(lambda h: h.split('|', 1)[0], tagged_hostlist)
+    g_strip_tags_cache[tuple_list] = result
+    return result
 
 def tags_of_host(hostname):
     try:
@@ -1882,8 +1937,17 @@ def is_cluster(hostname):
 
 # If host is node of one or more clusters, return a list of the cluster host names.
 # If not, return an empty list.
+g_clusters_of_cache = {}
+g_global_caches.append('g_clusters_of_cache')
 def clusters_of(hostname):
-    return [ c.split('|', 1)[0] for c,n in clusters.items() if hostname in n ]
+    if not g_clusters_of_cache:
+        for cluster, hosts in clusters.items():
+            clustername = cluster.split('|', 1)[0]
+            for name in hosts:
+                g_clusters_of_cache.setdefault(name, [])
+                g_clusters_of_cache[name].append(clustername)
+
+    return g_clusters_of_cache.get(hostname, [])
 
 # Determine weather a service (found on a physical host) is a clustered
 # service and - if yes - return the cluster host of the service. If
@@ -1960,6 +2024,26 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
 
     hosttags = tags_of_host(hostname)
 
+    # Just a local cache and its function
+    is_checkname_valid_cache = {}
+    def is_checkname_valid(checkname):
+        the_id = (hostname, checkname)
+        if the_id in is_checkname_valid_cache:
+            return is_checkname_valid_cache[the_id]
+
+        passed = True
+        # Skip SNMP checks for non SNMP hosts (might have been discovered before with other
+        # agent setting. Remove them without rediscovery). Same for agent based checks.
+        if not is_snmp_host(hostname) and is_snmp_check(checkname) and \
+           (not has_management_board(hostname) or management_protocol(hostname) != "snmp"):
+                passed = False
+        if not is_tcp_host(hostname) and not has_piggyback_info(hostname) \
+           and is_tcp_check(checkname):
+            passed = False
+        is_checkname_valid_cache[the_id] = passed
+        return passed
+
+
     def handle_entry(entry):
         num_elements = len(entry)
         if num_elements == 3: # from autochecks
@@ -1994,13 +2078,8 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
             raise MKGeneralException("Invalid entry '%r' in check table. Must be single hostname "
                                      "or list of hostnames" % hostlist)
 
-        # Skip SNMP checks for non SNMP hosts (might have been discovered before with other
-        # agent setting. Remove them without rediscovery). Same for agent based checks.
-        if not is_snmp_host(hostname) and is_snmp_check(checkname) \
-            and (not has_management_board(hostname) or management_protocol(hostname) != "snmp"):
-            return
-        if not is_tcp_host(hostname) and not has_piggyback_info(hostname) \
-           and is_tcp_check(checkname):
+
+        if not is_checkname_valid(checkname):
             return
 
         if hosttags_match_taglist(hosttags, tags) and \
@@ -2197,6 +2276,7 @@ def get_datasource_program(hostname, ipaddress):
                 path = special_agents_dir + "/agent_" + agentname
             return replace_datasource_program_macros(hostname, ipaddress,
                                                      path + " " + cmd_arguments)
+
 
     programs = host_extra_conf(hostname, datasource_programs)
     if not programs:
@@ -2396,8 +2476,14 @@ def exit_code_spec(hostname):
 
 
 # Remove illegal characters from a service description
+g_sanitize_service_description_cache = {}
+g_global_caches.append("g_sanitize_service_description_cache")
 def sanitize_service_description(descr):
-    return "".join([ c for c in descr if c not in nagios_illegal_chars ]).rstrip("\\")
+    if descr in g_sanitize_service_description_cache:
+        return g_sanitize_service_description_cache[descr]
+    new_descr = "".join([ c for c in descr if c not in nagios_illegal_chars ]).rstrip("\\")
+    g_sanitize_service_description_cache[descr] = new_descr
+    return new_descr
 
 
 def service_description(hostname, check_type, item):
@@ -3633,7 +3719,6 @@ def fallback_ip_for(hostname, family=None):
     else:
         return "::"
 
-
 def replace_macros(s, macros):
     for key, value in macros.items():
         if type(value) in (int, long, float):
@@ -3932,8 +4017,7 @@ def show_paths():
 def dump_all_hosts(hostlist):
     if hostlist == []:
         hostlist = all_active_hosts()
-    hostlist.sort()
-    for hostname in hostlist:
+    for hostname in sorted(hostlist):
         dump_host(hostname)
 
 def ip_address_for_dump_host(hostname, family=None):

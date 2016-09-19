@@ -9599,7 +9599,7 @@ def mode_edit_site(phase):
 
     if config.mkeventd_enabled:
         forms.section(_('Event Console'), simple=True)
-        html.checkbox('replicate_ec', site.get("replicate_ec", False), label = _("Replicate Event Console configuration to this site"))
+        html.checkbox('replicate_ec', site.get("replicate_ec", True), label = _("Replicate Event Console configuration to this site"))
         html.help(_("This option enables the distribution of global settings and rules of the Event Console "
                     "to the remote site. Any change in the local Event Console settings will mark the site "
                     "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "

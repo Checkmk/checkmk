@@ -688,6 +688,7 @@
     * 3589 FIX: Fixed processing of RFC 5424 syslog messages
     * 3771 FIX: Fixed exception on edit rule page in case of special URLs
     * 3745 FIX: MIB uploads: Handle latin-1 encoded MIBs
+    * 3884 FIX: Notifications: Fixed wrong LASTSERVICESTATE and SERVICESTATE in EC notifications...
 
     Livestatus:
     * 3644 Fixed 'source' column in 'comments' table.

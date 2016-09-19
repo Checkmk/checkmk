@@ -1,0 +1,21 @@
+Title: mknotifyd mknotifyd.connection: New service description (when enabled)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474206536
+Class: fix
+
+The checks were using an uncommon service description for their checks:
+
+Notification Spooler [site] ...
+
+Because those processes are logically tied to the OMD sites, it makes more
+sense to make them match the other OMD site check naming scheme:
+
+OMD [site] Notification Spooler
+
+This has now been changed. It will automatically be applied to new sites.
+Existing sites will only use this new description after enabling it via
+Global Settings and performing a rediscovery of the services on the affected
+hosts.

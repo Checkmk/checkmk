@@ -14290,6 +14290,8 @@ def create_sample_config():
                 "ups_bat_temp",
                 "innovaphone_temp",
                 "enterasys_temp",
+                "mknotifyd",
+                "mknotifyd.connection",
             ],
             "inventory_check_interval": 120,
             "enable_rulebased_notifications": True,

@@ -287,6 +287,8 @@ old_service_descriptions = {
     "ibm_svc_systemstats.iops"         : "IBM SVC IOPS %s Total",
     "ibm_svc_systemstats.disk_latency" : "IBM SVC Latency %s Total",
     "ibm_svc_systemstats.cache"        : "IBM SVC Cache Total",
+    "mknotifyd"                        : "Notification Spooler %s",
+    "mknotifyd.connection"             : "Notification Connection %s",
 
     "casa_cpu_temp"                    : "Temperature %s",
     "cmciii.temp"                      : get_old_cmciii_temp_description,

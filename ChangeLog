@@ -397,6 +397,7 @@
     * 3701 FIX: FIX ps.perf graph title for Memory and CPU Usage...
     * 3746 FIX: tinkerforge: Keep check from crashing in case of unconfigured params
     * 3862 FIX: mknotifyd mknotifyd.connection: New service description (when enabled)...
+    * 3807 FIX: mssql_counters: fixed crash when the check is unable to parse a timestamp provided by the plugin
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

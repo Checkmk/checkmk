@@ -145,9 +145,12 @@ def mssql_time_from_counter(info):
                 return utc_mktime(time.strptime(" ".join(line[3:]).split(".")[0],
                                                 "%Y-%m-%d %H:%M:%S"))
             except ValueError:
-                # ... german
-                return utc_mktime(time.strptime(" ".join(line[3:]),
-                                                "%d.%m.%Y %H:%M:%S"))
+                try:
+                    # ... german
+                    return utc_mktime(time.strptime(" ".join(line[3:]),
+                                                    "%d.%m.%Y %H:%M:%S"))
+                except:
+                    pass
     return None
 
 def check_mssql_counters_transactions(item, params, info):

@@ -418,7 +418,7 @@ def validate_package_files_part(packages, pacname, part, dir, rel_paths):
 
 def package_install(args):
     if len(args) != 1:
-        raise PackageException("Usage: check_mk -P remove NAME")
+        raise PackageException("Usage: check_mk -P install NAME")
     path = args[0]
     if not os.path.exists(path):
         raise PackageException("No such file %s." % path)

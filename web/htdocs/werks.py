@@ -31,6 +31,7 @@ import defaults, config, os, table
 import re
 from lib import *
 from valuespec import *
+import cmk.store as store
 
 acknowledgement_path = defaults.var_dir + "/acknowledged_werks.mk"
 
@@ -203,7 +204,7 @@ def acknowledge_werks(werks):
 
 
 def save_acknowledgements(acknowledged_werks):
-    file(acknowledgement_path, "w").write("%r\n" % acknowledged_werks)
+    store.save_file(acknowledgement_path, "%r\n" % acknowledged_werks)
 
 
 def acknowledge_all_werks():

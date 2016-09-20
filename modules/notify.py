@@ -1212,7 +1212,10 @@ def create_spoolfile(data):
         os.makedirs(notification_spooldir)
     file_path = "%s/%s" % (notification_spooldir, fresh_uuid())
     notify_log("Creating spoolfile: %s" % file_path)
-    file(file_path,"w").write(pprint.pformat(data))
+
+    # First write into tempfile that is not handled by mknotifyd
+    file(file_path + ".new", "w").write(pprint.pformat(data))
+    os.rename(file_path + ".new", file_path)
 
 
 # There are three types of spool files:

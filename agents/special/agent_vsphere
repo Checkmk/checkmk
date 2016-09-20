@@ -1116,7 +1116,7 @@ def connect_to_server():
             raise
         global error
         error = "Cannot connect to vSphere Server. Please check the IP and SSL certificate (if applicable) "\
-                "\and try again. This error is not related to the login credentials. Error message: %r" % e
+                "and try again. This error is not related to the login credentials. Error message: %r" % e
 
 def retrieve_systeminfo():
     global systeminfo

@@ -2194,11 +2194,13 @@ int launch_program(script_container *cont) {
                             HeapSize(GetProcessHeap(), 0, cont->buffer_work);
                     } else {
                         result = BUFFER_FULL;
+                        break;
                     }
                 }
                 if (result != BUFFER_FULL) {
                     size_t max_read = std::min<size_t>(
                         BUFFER_SIZE - 1, current_heap_size - out_offset);
+
 
                     DWORD bread = command.readStdout(cont->buffer_work + out_offset,
                                                      max_read, true);
@@ -2212,8 +2214,6 @@ int launch_program(script_container *cont) {
             if (result == BUFFER_FULL) {
                 crash_log("plugin produced more than 2MB output -> dropped");
             }
-
-            cont->exit_code = command.exitCode();
 
             if (cont->exit_code != STILL_ACTIVE) {
                 result = SUCCESS;
@@ -2238,6 +2238,7 @@ int launch_program(script_container *cont) {
             memcpy(cont->buffer_work, buffer_u8.c_str(), buffer_u8.size() + 1);
         }
 
+        command.closeScriptHandles();
     } catch (const std::exception &e) {
         crash_log("%s", e.what());
         result = CANCELED;
@@ -2588,6 +2589,7 @@ void section_mrpe(OutputProxy &out) {
             int nagios_code = command.exitCode();
             out.output("%d %s\n", nagios_code, plugin_output);
             crash_log("Script finished");
+            command.closeScriptHandles();
         } catch (const std::exception &e) {
             crash_log("mrpe failed: %s", e.what());
             out.output("3 Unable to execute - plugin may be missing.\n");

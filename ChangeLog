@@ -5,6 +5,7 @@
     Checks & Agents:
     * 3804 FIX: Datasource programs: fixed possible Check_MK Helper exception when creation of subprocess fails
     * 3808 FIX: df.include: fixed incorrect levels calculations on very small filesystems...
+    * 3809 FIX: windows agent: no longer truncates plugin output, no longer freezes when plugin produces too much output...
 
     Multisite:
     * 3874 FIX: fixed graphs displaying wrong labels

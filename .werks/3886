@@ -1,0 +1,31 @@
+Title: Notifications that do not match any rule are sent to fallback mail / contacts
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474378075
+Class: feature
+
+When a notification is received and is not matched by any notification rule, it could
+be sent to a globally configured and optional fallback email address.
+
+So, if you did not configure this fallback email address, it was possible that generated
+notifications, e.g. from the Event Console, were not sent to any user.
+
+This has been extended so that you can either configure the global mail address or set
+and attribute for your user accounts individually. For each of your users you can now
+set the flag "Receive fallback notifications".
+
+Another change: If you use the rule based notifications and have not configured any
+fallback contact (either globally or user), there will be a warning message displayed
+on the notification configuration page.
+
+Another change: When having a notification rule that has a condition on contact groups,
+or any user creates a custom notification rule, and a notification was generated which
+had no contact group information at all, the notification was sent to ALL users, instead
+of none. 
+
+That was implemented this way just to be sure that the notifications are not suppressed
+by accident. This has been changed to be also processed like other notifications that
+do not match any rule. Finally these notifications will be handled with the configured
+fallback contacts.

@@ -52,7 +52,8 @@ register_configvar(group,
         help = _("If you work with rule based notifications then you should configure an email "
                  "address here. In case of a hole in your notification rules a notification "
                  "will be sent to this address. This makes sure that in any case <i>someone</i> gets "
-                 "notified."),
+                 "notified. You can also configure single users to receive those fallback notifications, "
+                 "by enabling the option in the user profile."),
         empty_text = _("<i>(No fallback email address configured!)</i>"),
         make_clickable = False,
    ),

@@ -433,14 +433,17 @@ def notify_rulebased(raw_context, analyse=False):
 
     if not notifications:
         if num_rule_matches:
-            notify_log("%d rules matched, but no notification has been created." % num_rule_matches)
-        else:
-            if notification_fallback_email and not analyse:
-                notify_log("No rule matched, falling back to email to %s" % notification_fallback_email)
-                plugin_context = create_plugin_context(raw_context, [])
-                contact = rbn_fake_email_contact(notification_fallback_email)
-                rbn_add_contact_information(plugin_context, contact)
-                notify_via_email(plugin_context)
+            notify_log("%d rules matched, but no notification has been created." %
+                                                                    num_rule_matches)
+        elif not analyse:
+            fallback_contacts = rbn_fallback_contacts()
+            if fallback_contacts:
+                notify_log("No rule matched, notifying fallback contacts")
+                for fallback_contact in fallback_contacts:
+                    notify_log("  Sending plain email to %s" % fallback_contact["email"])
+                    plugin_context = create_plugin_context(raw_context, [])
+                    rbn_add_contact_information(plugin_context, fallback_contact)
+                    notify_via_email(plugin_context)
 
     else:
         # Now do the actual notifications
@@ -476,6 +479,19 @@ def notify_rulebased(raw_context, analyse=False):
 
     analysis_info = rule_info, plugin_info
     return analysis_info
+
+
+def rbn_fallback_contacts():
+    fallback_contacts = []
+    if notification_fallback_email:
+        fallback_contacts.append(rbn_fake_email_contact(notification_fallback_email))
+
+    for user_id, contact in contacts.items():
+        if contact.get("fallback_contact", False) and contact.get("email"):
+            fallback_contacts.append(contact)
+
+    return fallback_contacts
+
 
 def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
     # Right now we are only able to finalize notification plugins with dict parameters..

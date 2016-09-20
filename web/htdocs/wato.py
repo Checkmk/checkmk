@@ -7850,14 +7850,15 @@ def mode_notifications(phase):
              "<br><br>"
              "You can change this setting <a href=\"%s\">here</a>.") % url)
 
-    # Do not warn for missing fallback email address anymore. It might be a
-    # useful feature to not have one - after all.
-    ## elif not current_settings.get("notification_fallback_email"):
-    ##     url = 'wato.py?mode=edit_configvar&varname=notification_fallback_email'
-    ##     html.show_warning(
-    ##       _("<b>Warning</b><br><br>You haven't configured a fallback email address "
-    ##         "in case of a problem in your notification rules. Please configure "
-    ##         "one <a href=\"%s\">here</a>.") % url)
+    elif not fallback_mail_contacts_configured():
+        url = 'wato.py?mode=edit_configvar&varname=notification_fallback_email'
+        html.show_warning(
+          _("<b>Warning</b><br><br>You haven't configured a "
+            "<a href=\"%s\">fallback email address</a> nor enabled receiving fallback emails for "
+            "any user. If your monitoring produces a notification that is not matched by any of your "
+            "notification rules, the notification will not be sent out. To prevent that, please "
+            "configure either the global setting or enable the fallback contact option for at least"
+            "one of your users.") % url)
 
     if show_bulks:
         if not render_bulks(only_ripe = False): # Warn if there are unsent bulk notificatios
@@ -7998,6 +7999,17 @@ def render_bulks(only_ripe):
     else:
         return False
 
+
+def fallback_mail_contacts_configured():
+    current_settings = load_configuration_settings()
+    if current_settings.get("notification_fallback_email"):
+        return True
+
+    for user_id, user in userdb.load_users(lock=False).items():
+        if user.get("fallback_contact", False):
+            return True
+
+    return False
 
 
 # Similar like mode_notifications, but just for the user specific notification table
@@ -10361,6 +10373,15 @@ def mode_edit_user(phase):
             vs_notification_method.validate_value(value, "notification_method")
             new_user["notification_method"] = value
 
+        else:
+            new_user["fallback_contact"] = html.get_checkbox("fallback_contact")
+            if new_user["fallback_contact"] and not new_user["email"]:
+                raise MKUserError("email",
+                     _("You have enabled the fallback notifications but missed to configure a "
+                       "email address. You need to configure your mail address in order "
+                       "to be able to receive fallback notifications."))
+
+
         # Custom user attributes
         for name, attr in userdb.get_user_attributes():
             value = attr['valuespec'].from_html_vars('ua_' + name)
@@ -10544,9 +10565,8 @@ def mode_edit_user(phase):
                 "If you do not put the user into any contact group "
                 "then no monitoring contact will be created for the user.") % (url1, url2))
 
+    forms.header(_("Notifications"), isopen=False)
     if not rulebased_notifications:
-        forms.header(_("Notifications"), isopen=False)
-
         forms.section(_("Enabling"), simple=True)
         html.checkbox("notifications_enabled", user.get("notifications_enabled", False),
              label = _("enable notifications"))
@@ -10598,6 +10618,16 @@ def mode_edit_user(phase):
         forms.section(_("Notification Method"))
         vs_notification_method.render_input("notification_method", user.get("notification_method"))
         custom_user_attributes('notify')
+
+    else:
+        forms.section(_("Fallback notifications"), simple=True)
+
+        html.checkbox("fallback_contact", False, label = _("Receive fallback notifications"))
+        html.help(_("When using rule based notifications and a notification is created which is "
+                    "not handled by any rule, you can enable this user to receive those "
+                    "notifications. As alternative you could configure a single email address "
+                    "as the global setting <a href=\"wato.py?mode=edit_configvar&varname=notification_fallback_email\">"
+                    "Fallback email address for rule based notifications</a>."))
 
     forms.header(_("Personal Settings"), isopen = False)
     select_language(user)

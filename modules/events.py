@@ -439,9 +439,9 @@ def event_match_contactgroups(rule, context):
 
     if required_groups != None:
         if cgn == None:
-            notify_log("Warning: No information about contact groups in the context. " \
-                       "Seems that you don't use the Check_MK Microcore. ")
-            return
+            return "No information about contact groups is in the context, but " \
+                   "must be in group %s" % (" or ".join(required_groups))
+
         if cgn:
             contactgroups = cgn.split(",")
         else:

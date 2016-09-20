@@ -258,21 +258,24 @@ def all_groups(what):
     return [ (name, groups[name] or name) for name in groups.keys() ]
 
 class FilterMultigroup(Filter):
-    def __init__(self, what, title):
-        htmlvars = [ what + "groups" ]
-        Filter.__init__(self, htmlvars[0], # name
+    def __init__(self, what, title, negateable=False):
+        self.htmlvar = what + "groups"
+        htmlvars = [ self.htmlvar ]
+        self.negateable = negateable
+        if self.negateable:
+            htmlvars.append("neg_" + self.htmlvar)
+        Filter.__init__(self, self.htmlvar, # name
                               title,
                               what,        # info, e.g. "service"
                               htmlvars,
                               [])          # no link info needed
         self.what = what
-        self.htmlvar = htmlvars[0]
 
     def double_height(self):
         return True
 
     def valuespec(self):
-        return DualListChoice(choices = all_groups(self.what), rows=4, autoheight=False, enlarge_active=True)
+        return DualListChoice(choices = all_groups(self.what), rows=2, autoheight=False, enlarge_active=True)
 
     def selection(self):
         current = html.var(self.htmlvar, "").strip().split("|")
@@ -284,16 +287,28 @@ class FilterMultigroup(Filter):
     def display(self):
         html.write('<div class=multigroup>')
         self.valuespec().render_input(self.htmlvar, self.selection())
+        if self.negateable:
+            html.write(" <nobr>")
+            html.checkbox(self.htmlvars[1], label=_("negate"))
+            html.write("</nobr>")
         html.write('</div>')
 
     def filter(self, infoname):
         current = self.selection()
         if len(current) == 0:
             return "" # No group selected = all groups selected, filter unused
+        # not (A or B) => (not A) and (not B)
+        if self.negateable and html.get_checkbox(self.htmlvars[1]):
+            negate = "!"
+            op = "And"
+        else:
+            negate  = ""
+            op = "Or"
         filters = ""
         for group in current:
-            filters += "Filter: %s_groups >= %s\n" % (self.what, lqencode(group))
-        filters += "Or: %d\n" % len(current)
+            filters += "Filter: %s_groups %s>= %s\n" % (self.what, negate, lqencode(group))
+        if len(current) > 1:
+            filters += "%s: %d\n" % (op, len(current))
         return filters
 
 
@@ -376,7 +391,7 @@ declare_filter(104, FilterGroupCombo("host",            _("Host is in Group"),  
 declare_filter(105, FilterMultigroup("host",            _("Several Host Groups")), _("Selection of multiple host groups"))
 declare_filter(204, FilterGroupCombo("service",         _("Service is in Group"),     False), _("Optional selection of service group"))
 declare_filter(205, FilterGroupCombo("service",         _("Servicegroup (enforced)"), True),  _("Dropdown list, selection of service group is <b>enforced</b>"))
-declare_filter(205, FilterMultigroup("service",         _("Several Service Groups")), _("Selection of multiple service groups"))
+declare_filter(205, FilterMultigroup("service",         _("Several Service Groups"), True), _("Selection of multiple service groups"))
 
 declare_filter(106, FilterGroupCombo("host_contact",    _("Host Contact Group"),    False), _("Optional selection of host contact group"))
 declare_filter(206, FilterGroupCombo("service_contact", _("Service Contact Group"), False), _("Optional selection of service contact group"))

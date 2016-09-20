@@ -41,6 +41,8 @@ public:
 
     DWORD stderrAvailable();
 
+    void closeScriptHandles();
+
     DWORD readStdout(char *buffer, size_t buffer_size, bool block = true);
 
     DWORD readStderr(char *buffer, size_t buffer_size, bool block = true);
@@ -49,6 +51,8 @@ private:
     DWORD readPipe(HANDLE pipe, char *buffer, size_t buffer_size, bool block);
 
 private:
+    HANDLE _script_stderr{INVALID_HANDLE_VALUE};
+    HANDLE _script_stdout{INVALID_HANDLE_VALUE};
     HANDLE _process{INVALID_HANDLE_VALUE};
     HANDLE _job_object{INVALID_HANDLE_VALUE};
     HANDLE _stdout{INVALID_HANDLE_VALUE};

@@ -1,0 +1,14 @@
+Title: windows agent: no longer truncates plugin output, no longer freezes when plugin produces too much output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474377073
+Class: fix
+
+Contains two bugfixes.
+Fixed race condition where data from a script was not completely read from the suprocess's pipes.
+
+Fixed an agent freeze when the plugin data exceeded 2MB.
+
+

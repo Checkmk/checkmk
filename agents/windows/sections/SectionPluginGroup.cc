@@ -103,6 +103,7 @@ static int launch_program(script_container *cont) {
                             HeapSize(GetProcessHeap(), 0, cont->buffer_work);
                     } else {
                         result = BUFFER_FULL;
+                        break;
                     }
                 }
                 if (result != BUFFER_FULL) {
@@ -121,8 +122,6 @@ static int launch_program(script_container *cont) {
             if (result == BUFFER_FULL) {
                 crash_log("plugin produced more than 2MB output -> dropped");
             }
-
-            cont->exit_code = command.exitCode();
 
             if (cont->exit_code != STILL_ACTIVE) {
                 result = SUCCESS;
@@ -147,6 +146,7 @@ static int launch_program(script_container *cont) {
             memcpy(cont->buffer_work, buffer_u8.c_str(), buffer_u8.size() + 1);
         }
 
+        command.closeScriptHandles();
     } catch (const std::exception &e) {
         crash_log("%s", e.what());
         result = CANCELED;

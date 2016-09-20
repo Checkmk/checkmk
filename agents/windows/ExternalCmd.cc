@@ -48,20 +48,13 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     // child process needs to be able to inherit the pipe handles
     security_attributes.bInheritHandle = true;
 
-    HANDLE script_stdout{INVALID_HANDLE_VALUE};
-    HANDLE script_stderr{INVALID_HANDLE_VALUE};
 
-    OnScopeExit release_handles([script_stdout, script_stderr]() {
-        ::CloseHandle(script_stdout);
-        ::CloseHandle(script_stderr);
-    });
-
-    if (!CreatePipe(&_stdout, &script_stdout, &security_attributes, 0)) {
+    if (!CreatePipe(&_stdout, &_script_stdout, &security_attributes, 0)) {
         throw win_exception("failed to create pipe");
     }
 
     if (with_stderr) {
-        if (!CreatePipe(&_stderr, &script_stderr, &security_attributes, 0)) {
+        if (!CreatePipe(&_stderr, &_script_stderr, &security_attributes, 0)) {
             throw win_exception("failed to create pipe");
         }
     }
@@ -73,8 +66,9 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     GetStartupInfo(&si);
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
-    si.hStdOutput = script_stdout;
-    si.hStdError = with_stderr ? script_stdout : script_stderr;
+    si.hStdOutput = _script_stdout;
+    si.hStdError = with_stderr ? _script_stdout : _script_stderr;
+
 
     PROCESS_INFORMATION pi;
     ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
@@ -110,6 +104,12 @@ void ExternalCmd::terminateJob(DWORD exit_code) {
     ::CloseHandle(_job_object);
     _job_object = INVALID_HANDLE_VALUE;
 }
+
+void ExternalCmd::closeScriptHandles() {
+    ::CloseHandle(_script_stderr);
+    ::CloseHandle(_script_stdout);
+}
+
 
 DWORD ExternalCmd::exitCode() {
     DWORD res;

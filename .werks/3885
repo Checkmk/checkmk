@@ -1,0 +1,9 @@
+Title: Fixed sorting of version in werk list (1.2.8p10 and 1.2.8p11 were not listed on top)
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p12
+Date: 1474355728
+Class: fix
+
+

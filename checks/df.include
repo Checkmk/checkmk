@@ -321,7 +321,7 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved
        get_percent_human_readable(used_perc), used_hr, size_hr)
 
     status = 0
-    if warn_mb <= -1:
+    if warn_mb < 0:
         # Negative levels, so calculate MB left
         rest_mb = size_mb - used_mb
         crit_mb = crit_mb * -1

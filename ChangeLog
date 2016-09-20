@@ -505,6 +505,7 @@
     * 3850 FIX: Fixed JS error when quicksearch snapin not in sidebar
     * 3871 FIX: stale services view: excluded services in downtime per default
     * 3874 FIX: fixed graphs displaying wrong labels
+    * 3885 FIX: Fixed sorting of version in werk list (1.2.8p10 and 1.2.8p11 were not listed on top)
 
     WATO:
     * 3244 WATO BI Module: swap order of aggregation function and child node selection...

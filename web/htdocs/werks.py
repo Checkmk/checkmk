@@ -606,6 +606,53 @@ def werks_sorted_by_version(werks):
         if lhs["version"] == rhs["version"]:
             return cmp(lhs["date"], rhs["date"])
         else:
-            return cmp(lhs["version"], rhs["version"])
+            return cmp(parse_check_mk_version(lhs["version"]),
+                       parse_check_mk_version(rhs["version"]))
 
     return sorted(werks, cmp=by_version, reverse=True)
+
+
+# Parses versions of Check_MK and converts them into comparable integers.
+# This does not handle daily build numbers, only official release numbers.
+# 1.2.4p1   -> 01020450001
+# 1.2.4     -> 01020450000
+# 1.2.4b1   -> 01020420100
+# 1.2.3i1p1 -> 01020310101
+# 1.2.3i1   -> 01020310100
+# TODO: Copied from check_mk_base.py - find location for common code.
+def parse_check_mk_version(v):
+    def extract_number(s):
+        number = ''
+        for i, c in enumerate(s):
+            try:
+                int(c)
+                number += c
+            except ValueError:
+                s = s[i:]
+                return number and int(number) or 0, s
+        return number and int(number) or 0, ''
+
+    parts = v.split('.')
+    while len(parts) < 3:
+        parts.append("0")
+
+    major, minor, rest = parts
+    sub, rest = extract_number(rest)
+
+    if not rest:
+        val = 50000
+    elif rest[0] == 'p':
+        num, rest = extract_number(rest[1:])
+        val = 50000 + num
+    elif rest[0] == 'i':
+        num, rest = extract_number(rest[1:])
+        val = 10000 + num*100
+
+        if rest and rest[0] == 'p':
+            num, rest = extract_number(rest[1:])
+            val += num
+    elif rest[0] == 'b':
+        num, rest = extract_number(rest[1:])
+        val = 20000 + num*100
+
+    return int('%02d%02d%02d%05d' % (int(major), int(minor), sub, val))

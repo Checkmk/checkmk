@@ -42,45 +42,60 @@ factory_settings["tsm_stagingpools_default_levels"] = {
     "free_below" : 70,
 }
 
-# The agent plugin sometimes seems to mix two lines together some times.
-# detect and fix that.
 def parse_tsm_stagingpools(info):
-    parsed = []
-    for line in info:
-        if len(line) == 6:
-            parsed.append(line[:3])
-            parsed.append(line[3:])
+    parsed = {}
+    def add_item(node, lineinfo):
+        inst, pool, util = lineinfo
+        if inst == "default":
+            item = pool
         else:
-            parsed.append(line)
+            item = inst + " / " + pool
+        parsed.setdefault( item, {} )
+        parsed[item].setdefault( node, [] )
+        parsed[item][node].append( util )
+
+    for line in info:
+        node = line[0]
+        add_item(node, line[1:4])
+        # The agent plugin sometimes seems to mix two lines together some
+        # times. Detect and fix that.
+        if len(line) == 7:
+            add_item(node, line[4:])
+
     return parsed
 
 
 def inventory_tsm_stagingpools(parsed):
-    items = set([])
-    for inst, pool, util in parsed:
-        if inst == "default":
-            items.add(pool)
-        else:
-            items.add(inst + " / " + pool)
-    return [ (item, "tsm_stagingpools_default_levels") for item in items ]
+    for item in parsed:
+        yield item, {}
 
 
 def check_tsm_stagingpools(item, params, parsed):
-    num_tapes = 0
-    num_free_tapes = 0
-    utilization = 0.0 # in relation to one tape size
-    for inst, pool, util in parsed:
-        if inst + " / " + pool == item or pool == item:
-            util = float(util) / 100.0
-            utilization += util
-            num_tapes += 1
-            if util <= params["free_below"] / 100.0:
-                num_free_tapes += 1
+    if item not in parsed:
+        return 3, "Item not found in agent output"
 
+    datasets, nodeinfos = [], []
+    for node, data in parsed[item].items():
+        nodeinfos.append(node)
+        datasets.append( tuple(data) )
+
+    num_tapes      = 0
+    num_free_tapes = 0
+    utilization    = 0.0 # in relation to one tape size
+    for util in datasets[0]:
+        util = float(util) / 100.0
+        utilization += util
+        num_tapes   += 1
+        if util <= params["free_below"] / 100.0:
+            num_free_tapes += 1
+
+    if nodeinfos:
+        infotext = "%s: " % "/".join( nodeinfos )
+    else:
+        infotext = ""
+    infotext += "Total tapes: %d, Tapes less then %d%% full: %d, Utilization: %.1f tapes" % \
+                 (num_tapes, params["free_below"], num_free_tapes, utilization)
     state = 0
-    infotext = "total tapes: %d, tapes less then %d%% full: %d" % \
-               (num_tapes, params["free_below"], num_free_tapes)
-    infotext += ', utilization: %.1f tapes' % utilization
     if "levels" in params:
         warn, crit = params["levels"]
         if num_free_tapes < crit:
@@ -96,12 +111,13 @@ def check_tsm_stagingpools(item, params, parsed):
         state = 3
         infotext = "no tapes in this pool or pool not existant"
 
-    perfdata = [
-           ("tapes", num_tapes),
-           ("free", num_free_tapes, warn, crit),
-           ("util", utilization) ]
+    # In cluster mode we check if data sets are equal from all nodes
+    # else we have only one data set
+    if len(set( datasets )) > 1:
+        state = 3
+        infotext += ", Cluster: data from nodes are not equal"
 
-    return (state, infotext, perfdata)
+    return state, infotext, [ ("tapes", num_tapes), ("free", num_free_tapes, warn, crit), ("util", utilization) ]
 
 
 check_info['tsm_stagingpools'] = {
@@ -112,5 +128,5 @@ check_info['tsm_stagingpools'] = {
     "has_perfdata"            : True,
     "group"                   : "tsm_stagingpools",
     "default_levels_variable" : "tsm_stagingpools_default_levels",
+    "node_info"               : True,
 }
-

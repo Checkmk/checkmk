@@ -802,7 +802,7 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
     query += filter_code
 
     if config.debug_livestatus_queries \
-            and html.output_format == "html" and DisplayOptions.enabled(DisplayOptions.W):
+            and html.output_format == "html" and display_options.enabled(display_options.W):
         html.write('<div class="livestatus message" onmouseover="this.style.display=\'none\';">'
                            '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
 

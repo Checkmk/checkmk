@@ -167,7 +167,7 @@ def paint_perfometer(row):
     content += '<img class=glass src="images/perfometer-bg.png">'
 
     # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
-    if DisplayOptions.enabled(DisplayOptions.X) \
+    if display_options.enabled(display_options.X) \
        and row["service_pnpgraph_present"] != 0:
         if metrics.cmk_graphs_possible():
             url = new_graphing_url(row, "service")

@@ -203,10 +203,10 @@ def render_availability_page(view, datasource, filterheaders, only_sites, limit)
 
     title += " - " + range_title
 
-    if DisplayOptions.enabled(DisplayOptions.H):
+    if display_options.enabled(display_options.H):
         html.body_start(title, stylesheets=["pages","views","status"], force=True)
 
-    if DisplayOptions.enabled(DisplayOptions.T):
+    if display_options.enabled(display_options.T):
         html.top_heading(title)
 
     html.write(confirmation_html_code)
@@ -217,7 +217,7 @@ def render_availability_page(view, datasource, filterheaders, only_sites, limit)
     if html.var("filled_in") == "editanno":
         html.del_var("filled_in")
 
-    if DisplayOptions.enabled(DisplayOptions.B):
+    if display_options.enabled(display_options.B):
         html.begin_context_buttons()
         togglebutton("avoptions", html.has_user_errors(), "painteroptions", _("Configure details of the report"))
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
@@ -255,10 +255,10 @@ def render_availability_page(view, datasource, filterheaders, only_sites, limit)
 
         do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)
 
-    if DisplayOptions.enabled(DisplayOptions.Z):
+    if display_options.enabled(display_options.Z):
         html.bottom_footer()
 
-    if DisplayOptions.enabled(DisplayOptions.H):
+    if display_options.enabled(display_options.H):
         html.body_end()
 
 

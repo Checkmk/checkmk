@@ -1357,10 +1357,15 @@ class BackupTargetLocal(BackupTargetType):
             file(test_file_path, "w")
             os.unlink(test_file_path)
         except IOError, e:
-            raise MKUserError(varprefix,
-                _("Failed to write to the configured directory. The site user needs to be able to "
-                  "write the target directory. The recommended way is to make it writable by the "
-                  "group \"omd\"."))
+            if is_cma():
+                raise MKUserError(varprefix,
+                    _("Failed to write to the configured directory. The target directory needs "
+                      "to be writable."))
+            else:
+                raise MKUserError(varprefix,
+                    _("Failed to write to the configured directory. The site user needs to be able to "
+                      "write the target directory. The recommended way is to make it writable by the "
+                      "group \"omd\"."))
 
 
     # TODO: Duplicate code with mkbackup

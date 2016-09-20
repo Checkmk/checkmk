@@ -1,0 +1,12 @@
+Title: df.include: fixed incorrect levels calculations on very small filesystems
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p12
+Date: 1474364904
+
+Filesystems with <tt>Free space left</tt> levels less than 1MB were incorrectly calculated.
+The check always reported CRIT in this scenario.
+

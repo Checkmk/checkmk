@@ -1,4 +1,4 @@
-Title: ibm_tl_changer_devices, ibm_tl_media_access_devices, ibm_tl_scsi_prot_ctrl: new checks for IBM tape library which support the SNIA-SML and SML MIB.
+Title: ibm_tl_changer_devices, ibm_tl_media_access_devices: new checks for IBM tape library which support the SNIA-SML-MIB.
 Level: 1
 Component: checks
 Compatible: compat

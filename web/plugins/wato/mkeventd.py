@@ -307,21 +307,48 @@ vs_mkeventd_rule = Dictionary(
             prefix_values = True,
           ),
         ),
-        ( "contact_groups",
-          ListOf(
-              GroupSelection("contact"),
-              title = _("Contact Groups"),
-              help = _("When displaying events in the Check_MK GUI, you can make a user see only events "
-                       "for hosts he is a contact for. When you expect this rule to receive events from "
-                       "hosts that are <i>not</i> known to the monitoring, you can specify contact groups "
-                       "for visibility here. Notes: 1. If you activate this option and do not specify "
-                       "any group, then users with restricted permissions can never see these events."
-                       "2. If both the host is found in the monitoring <b>and</b> contact groups are "
-                       "specified in the rule then usually the host's contact groups have precedence. But you "
-                       "can change that via a global setting in the section <i>User Interface</i>."),
-              movable = False,
-          )
-        ),
+        ( "contact_groups", Dictionary(
+            title = _("Contact Groups"),
+            elements = [
+                ("groups", ListOf(
+                    GroupSelection("contact"),
+                    title = _("Contact groups"),
+                    movable = False,
+                )),
+                ("notify", Checkbox(
+                    title = _("Use in notifications"),
+                    label = _("Use in notifications"),
+                    help = _(
+                        "Also use these contact groups in eventually notifications created by "
+                        "this rule. Historically this option only affected the visibility in the "
+                        "GUI and <i>not</i> notifications. New rules will enable this option "
+                        "automatically, existing rules have this disabled by default."),
+                    default_value = True,
+                )),
+                ("precedence", DropdownChoice(
+                    title = _("Precedence of contact groups"),
+                    choices = [
+                        ( "host", _("Host's contact groups have precedence") ),
+                        ( "rule", _("Contact groups in rule have precedence") ),
+                    ],
+                    help = _("Here you can specify which contact groups shall have "
+                             "precedence when both, the host of an event can be found in the "
+                             "monitoring and the event rule has defined contact groups for the event."),
+                    default_value = "host",
+                )),
+            ],
+            help = _("When you expect this rule to receive events from hosts that are <i>not</i> "
+                     "known to the monitoring, you can specify contact groups for controlling "
+                     "the visibility and eventually triggered notifications here.<br>"
+                     "<br><i>Notes:</i><br>"
+                     "1. If you activate this option and do not specify any group, then "
+                     "users with restricted permissions can never see these events.<br>"
+                     "2. If both the host is found in the monitoring <b>and</b> contact groups are "
+                     "specified in the rule then usually the host's contact groups have precedence. "
+                     "But you can change that via a "
+                     "<a href=\"wato.py?mode=mkeventd_edit_configvar&varname=mkeventd_contact_group_handling\">global setting</a>.<br> "),
+            optional_keys = [],
+        )),
         ( "actions",
           ListChoice(
             title = _("Actions"),
@@ -879,7 +906,7 @@ def load_mkeventd_rules():
     # Add information about rule hits: If we are running on OMD then we know
     # the path to the state retention file of mkeventd and can read the rule
     # statistics directly from that file.
-    if defaults.omd_root and os.path.exists(mkeventd_status_file):
+    if os.path.exists(mkeventd_status_file):
         mkeventd_status = eval(file(mkeventd_status_file).read())
         rule_stats = mkeventd_status["rule_stats"]
         for rule_pack in vars["rule_packs"]:
@@ -889,6 +916,16 @@ def load_mkeventd_rules():
                 rule["hits"] = hits
                 pack_hits += hits
             rule_pack["hits"] = pack_hits
+
+    # Migrate old contact_group key (+ add False for notify option)
+    for rule_pack in vars["rule_packs"]:
+        for rule in rule_pack["rules"]:
+            if type(rule.get("contact_groups")) == list:
+                rule["contact_groups"] = {
+                    "groups"     : rule["contact_groups"],
+                    "notify"     : False,
+                    "precedence" : "host",
+                }
 
     # Return old rules also, for easy rolling back to old config
     return vars["rules"], vars["rule_packs"]
@@ -1297,7 +1334,7 @@ def mode_mkeventd_rules(phase):
 
             if rule.get("contact_groups") != None:
                 html.icon(_("This rule attaches contact group(s) to the events: %s") %
-                           (", ".join(rule["contact_groups"]) or _("(none)")),
+                           (", ".join(rule["contact_groups"]["groups"]) or _("(none)")),
                          "contactgroups")
 
             table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, rule["id"]))
@@ -2764,22 +2801,6 @@ if mkeventd_enabled:
                 default_value = False),
         domain = "multisite",
     )
-
-    register_configvar(_("User Interface"),
-        "mkeventd_contact_group_handling",
-        DropdownChoice(
-            title = _("Precedence of contact groups of events"),
-            choices = [
-                ( "host", _("Host's contact groups have precedence") ),
-                ( "rule", _("Contact groups in rule have precedence") ),
-            ],
-            help = _("Here you can specify which contact groups shall have "
-                     "precedence when both the host of an event can be found in the "
-                     "monitoring and the event rule has defined contact groups for the event."),
-        ),
-        domain = "multisite",
-    )
-
 
 
 # Settings that should also be avaiable on distributed Sites that

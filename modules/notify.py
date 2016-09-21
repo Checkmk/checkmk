@@ -444,6 +444,8 @@ def notify_rulebased(raw_context, analyse=False):
                     plugin_context = create_plugin_context(raw_context, [])
                     rbn_add_contact_information(plugin_context, fallback_contact)
                     notify_via_email(plugin_context)
+            else:
+                notify_log("No rule matched, would notify fallback contacts, but none configured")
 
     else:
         # Now do the actual notifications

@@ -31,6 +31,8 @@
 # creating objects. Or at least update the documentation. It is not clear
 # which fields are mandatory for the events.
 
+# TODO: Refactor livestatus to use the livestatus module
+
 import socket, os, time, sys, getopt, signal, thread, pprint, re, \
        select, subprocess, stat, string
 import traceback
@@ -1905,8 +1907,8 @@ class EventServer:
                 "priority"       : 3,
                 "facility"       : 1, # user
                 "match_groups"   : (),
-                "contact_groups" : rule.get("contact_groups"),
             }
+            self._add_rule_contact_groups_to_event(rule, event)
             self.rewrite_event(rule, event, ())
             g_event_status.new_event(event)
             log_event_history(event, "COUNTFAILED")
@@ -2143,7 +2145,8 @@ class EventServer:
                     event["rule_id"] = rule["id"]
 
                     # Attach optional contact group information for visibility
-                    event["contact_groups"] = rule.get("contact_groups")
+                    # and eventually for notifications
+                    self._add_rule_contact_groups_to_event(rule, event)
 
                     # Store groups from matching this event. In order to make
                     # persistence easier, we do not safe them as list but join
@@ -2203,6 +2206,21 @@ class EventServer:
         # End of loop over rules.
         if g_config["archive_orphans"]:
             g_event_status.archive_event(event)
+
+
+    def _add_rule_contact_groups_to_event(self, rule, event):
+        if rule.get("contact_groups") is None:
+            event.update({
+                "contact_groups"            : None,
+                "contact_groups_notify"     : False,
+                "contact_groups_precedence" : "host",
+            })
+        else:
+            event.update({
+                "contact_groups"            : rule["contact_groups"]["groups"],
+                "contact_groups_notify"     : rule["contact_groups"]["notify"],
+                "contact_groups_precedence" : rule["contact_groups"]["precedence"],
+            })
 
 
     # Checks if an event matches a rule. Returns either False (no match)
@@ -2778,10 +2796,10 @@ class EventServer:
             "priority"       : 2, # crit
             "facility"       : 1, # user
             "match_groups"   : (),
-            "contact_groups" : None,
             "state"          : 2, # crit
             "sl"             : event["sl"],
         }
+        self._add_rule_contact_groups_to_event({}, new_event)
 
         if ty == "overall":
             new_event["text"] = (
@@ -2803,9 +2821,11 @@ class EventServer:
 
         elif ty == "by_rule":
             new_event.update({
-                "rule_id"        : event["rule_id"],
-                "contact_groups" : event["contact_groups"],
-                "text"           : (
+                "rule_id"                   : event["rule_id"],
+                "contact_groups"            : event["contact_groups"],
+                "contact_groups_notify"     : event.get("contact_groups_notify", False),
+                "contact_groups_precedence" : event.get("contact_groups_precedence", "host"),
+                "text"                      : (
                     "The rule event limit of %d open events has been reached for rule \"%s\". "
                     "Not opening any additional event for this rule until open events have "
                     "been archived." %
@@ -2968,11 +2988,10 @@ class StatusServer:
 
             except Exception, e:
                 log("Error handling client %s: %s" % (addr_info, e))
+                log(format_exception())
                 if client_socket:
                     client_socket.close()
                     client_socket = None
-                if opt_debug:
-                    log(format_exception())
                 time.sleep(0.2)
             client_socket = None # close without danger of exception
 
@@ -3844,17 +3863,8 @@ def do_event_action(action, event, user=""):
 # This function creates a Check_MK Notification for a locally running Check_MK.
 # We simulate a *service* notification.
 def do_notify(event, username=None, is_cancelling=False):
-    # Check if notifications are enabled at all
-    try:
-        answer = livestatus_query("GET status\nColumns: enable_notifications\nOutputFormat: python\n")
-        if answer:
-            notifications_enabled = eval(answer)
-            if not notifications_enabled[0][0]:
-                log("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
-                return
-    except:
-        # On any error, assume that notifications are enabled
-        pass
+    if core_has_notifications_disabled():
+        return
 
     # Create notification context based on event
 
@@ -3864,6 +3874,10 @@ def do_notify(event, username=None, is_cancelling=False):
         ipaddress = event["host"]
     else:
         ipaddress = ""
+
+    contact_groups            = event.get("contact_groups")
+    contact_groups_notify     = event.get("contact_groups_notify", False)
+    contact_groups_precedence = event.get("contact_groups_precedence", "host")
 
     context = {
         "WHAT":                        "SERVICE",
@@ -3910,8 +3924,12 @@ def do_notify(event, username=None, is_cancelling=False):
         "EC_CONTACT":                  event.get("contact", ""),
         "EC_PID":                      str(event.get("pid", 0)),
         "EC_MATCH_GROUPS":             "\t".join(event["match_groups"]),
-        "EC_CONTACT_GROUPS":           event["contact_groups"] and " ".join(event["contact_groups"]) or "",
+        "EC_CONTACT_GROUPS":           contact_groups and " ".join(contact_groups) or "",
     }
+
+    # Add rule based notification specific macros and add the
+    # contacts according to the rule configuration.
+    add_rbn_contact_information(context, event["host"], contact_groups, contact_groups_notify, contact_groups_precedence)
 
     # Send notification context via stdin.
     context_string = "".join([ "%s=%s\n" % (varname, value.replace("\n", "\\n")) for (varname, value) in context.items() ])
@@ -3924,6 +3942,118 @@ def do_notify(event, username=None, is_cancelling=False):
         log("Error notifying via Check_MK: %s" % response.strip())
     else:
         log("Successfully forwarded notification for event %d to Check_MK" % event["id"])
+
+
+def add_rbn_contact_information(context, host, contact_groups, contact_groups_notify, contact_groups_precedence):
+    verbose("Adding contact information to notification context")
+    host_has_precedence = contact_groups_precedence == "host"
+
+    group_contacts = None
+    # Only add the group contacts from the rule, when configured to do so
+    if contact_groups_notify and contact_groups != None:
+        if contact_groups == []:
+            group_contacts = set([])
+
+        for group_name in contact_groups:
+            contacts = fetch_contacts_of_group_from_livestatus(group_name)
+            if contacts != None:
+                if group_contacts == None:
+                    group_contacts = set([])
+
+                group_contacts.update(fetch_contacts_of_group_from_livestatus(group_name))
+
+        if group_contacts != None:
+            group_contacts = list(group_contacts)
+
+        verbose("  Group contacts: %r" % group_contacts)
+        verbose("  Groups: %r" % contact_groups)
+    else:
+        verbose("  Contact groups not configured in rule")
+
+    host_contacts, host_contact_groups = fetch_contacts_and_groups_of_host_from_livestatus(host)
+    verbose("  Host contacts: %r" % host_contacts)
+    verbose("  Host contact groups: %r" % host_contact_groups)
+
+    # Only add those fields when either the host contacts could be fetched or the contact
+    # group contacts. When not, then let the notification system decide whether or not to
+    # fetch contact information or fallback to the fallback contacts.
+    if host_contacts is None and group_contacts is None:
+        verbose("  -> Not adding any contact information")
+        return
+
+    if host_has_precedence:
+        if host_contacts != None:
+            contacts, groups = host_contacts, host_contact_groups
+        else:
+            contacts, groups = group_contacts, contact_groups
+    else:
+        if group_contacts != None:
+            contacts, groups = group_contacts, contact_groups
+        else:
+            contacts, groups = host_contacts, host_contact_groups
+
+    verbose("  Using these contacts: %r" % contacts)
+    verbose("  Using these groups: %r" % groups)
+
+    context.update({
+        "CONTACTS"                 : " ".join(contacts),
+        "CONTACTNAME"              : "check-mk-notify",
+        "SERVICECONTACTGROUPNAMES" : ",".join(groups),
+    })
+
+
+def core_has_notifications_disabled():
+    try:
+        answer = livestatus_query("GET status\nColumns: enable_notifications\nOutputFormat: python\n")
+        if answer:
+            notifications_enabled = eval(answer)
+            if not notifications_enabled[0][0]:
+                log("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
+                return True
+    except:
+        # On any error, assume that notifications are enabled
+        pass
+
+    return False
+
+
+def fetch_contacts_of_group_from_livestatus(group_name):
+    try:
+        answer = livestatus_query("GET contactgroups\nFilter: name = %s\n"
+                                  "Columns: members\nOutputFormat: python\n" % group_name)
+        if answer:
+            contacts = eval(answer)[0][0]
+            if "check-mk-notify" in contacts: # Remove artifical contact used for rule based notifications
+                contacts.remove("check-mk-notify")
+            return contacts
+    except True:
+        if opt_debug:
+            raise
+
+    return None # No group match or other failure
+
+
+def fetch_contacts_and_groups_of_host_from_livestatus(host):
+    try:
+        answer = livestatus_query("GET hosts\nFilter: host_name = %s\n"
+                                  "Columns: contacts contact_groups\nOutputFormat: python\n" % host)
+        if not answer:
+            return None, None
+
+        data = eval(answer)
+        if not data:
+            return None, None
+
+        contacts, groups = data[0]
+        if "check-mk-notify" in contacts: # Remove artifical contact used for rule based notifications
+            contacts.remove("check-mk-notify")
+        return contacts, groups
+
+    except True:
+        if opt_debug:
+            raise
+
+    return None, None
 
 
 def substitute_event_tags(text, event):
@@ -4245,6 +4375,16 @@ def load_configuration():
         log("Replication: slave configuration, current mode: %s" %
             g_slave_status["mode"])
     load_master_config()
+
+    # Convert old contact_groups config
+    for rule_pack in g_config["rule_packs"]:
+        for rule in rule_pack["rules"]:
+            if type(rule.get("contact_groups")) == list:
+                rule["contact_groups"] = {
+                    "groups"     : rule["contact_groups"],
+                    "notify"     : False,
+                    "precedence" : "host",
+                }
 
     # Create dictionary for actions for easy access
     g_config["action"] = {}

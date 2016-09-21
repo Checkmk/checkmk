@@ -1,0 +1,22 @@
+Title: Event contact groups are now handled in notifications (optionally)
+Level: 2
+Component: ec
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474450916
+Class: feature
+
+Previously you could already configure contact groups in Event Console rules,
+but those groups were only used to control the visibility of the events in
+the GUI.
+
+Now these groups can be used to control the visibility and also make them
+relevant for the notifications created by the Event Console. Besides adding
+the groups to the rule, you can configure whether or not to add the contact
+groups to the notifications and also configure the precedence of the groups
+in case there are host contact groups configured and event contact groups
+in the rule.
+
+Existing rules are treated as before. The contact groups of the rule will
+not be added to the notifications until you open the rule, tick the checkbox
+and save the rule again.

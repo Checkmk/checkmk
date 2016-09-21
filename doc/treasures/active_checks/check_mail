@@ -304,6 +304,7 @@ def forward_to_ec(mails):
             for part in msg.walk():
                 content_type = part.get_content_type()
                 disposition = str(part.get('Content-Disposition'))
+                encoding = part.get('Content-Transfer-Encoding', 'None')
                 if content_type == 'text/plain' and 'attachment' not in disposition:
                     log_line += '|' + part.get_payload()[:body_limit]
                     break

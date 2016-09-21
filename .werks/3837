@@ -1,0 +1,11 @@
+Title: Fixed empty check if lnx_if info contains additional line
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p12
+Date: 1473840897
+Class: fix
+
+The output of lnx_if check has been empty if the interface provides an additional line
+provided by CDP (Cisco Discovery Protocol). This is fixed now but not further handled
+at the moment and may be a feature in the future.

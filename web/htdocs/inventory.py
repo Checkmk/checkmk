@@ -126,6 +126,14 @@ def get(tree, path):
     path = path[1:]
 
     node = tree
+
+    # The root node of the tree MUST be dictionary
+    # This info is taken from the host_inventory column in a livestatus table
+    # Older versions, which do not know this column, report None as fallback value
+    # This workaround prevents the inevitable crash
+    if node == None:
+        node = {}
+
     current_what = "."
     while path not in ('.', ':', ''):
         parts = re.split("[:.]", path)

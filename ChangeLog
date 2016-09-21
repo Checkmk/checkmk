@@ -18,6 +18,9 @@
     Event Console:
     * 3884 FIX: Notifications: Fixed wrong LASTSERVICESTATE and SERVICESTATE in EC notifications...
 
+    HW/SW-Inventory:
+    * 3811 FIX: HW/SW Inventory: Fixed GUI display crash when querying data from older software versions...
+
 
 1.2.8p11:
     Checks & Agents:

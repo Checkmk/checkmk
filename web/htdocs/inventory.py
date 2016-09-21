@@ -24,7 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import defaults, re, os
+import re
+import os
 
 try:
     import simplejson as json
@@ -34,6 +35,7 @@ except ImportError:
 
 import config
 import sites
+import cmk.paths
 from lib import MKException, MKGeneralException, MKAuthException, MKUserError, lqencode
 
 # Load data of a host, cache it in the current HTTP request
@@ -51,13 +53,13 @@ def host(hostname):
         return invdata
 
 def has_inventory(hostname):
-    path = defaults.var_dir + "/inventory/" + hostname
+    path = cmk.paths.var_dir + "/inventory/" + hostname
     return os.path.exists(path)
 
 def load_host(hostname):
     if '/' in hostname:
         return None # just for security reasons
-    path = defaults.var_dir + "/inventory/" + hostname
+    path = cmk.paths.var_dir + "/inventory/" + hostname
     try:
         return eval(file(path).read())
     except:
@@ -69,13 +71,13 @@ def get_host_history(hostname):
     if '/' in hostname:
         return None # just for security reasons
 
-    path = defaults.var_dir + "/inventory/" + hostname
+    path = cmk.paths.var_dir + "/inventory/" + hostname
     try:
         history = [ int(os.stat(path).st_mtime) ]
     except:
         return [] # No inventory for this host
 
-    arcdir = defaults.var_dir + "/inventory_archive/" + hostname
+    arcdir = cmk.paths.var_dir + "/inventory_archive/" + hostname
     if os.path.exists(arcdir):
         for ts in os.listdir(arcdir):
             try:
@@ -108,14 +110,15 @@ def load_historic_host(hostname, timestamp):
     if '/' in hostname:
         return None # just for security reasons
 
-    path = defaults.var_dir + "/inventory/" + hostname
+    path = cmk.paths.var_dir + "/inventory/" + hostname
 
     # Try current tree
     if int(os.stat(path).st_mtime) == timestamp:
         return host(hostname)
 
+    # TODO: Handle valid cases (missing file) correctly, but don't suppress other exceptions!
     try:
-        path = defaults.var_dir + "/inventory_archive/" + hostname + "/%d" % timestamp
+        path = cmk.paths.var_dir + "/inventory_archive/" + hostname + "/%d" % timestamp
         return eval(file(path).read())
     except:
         return {}

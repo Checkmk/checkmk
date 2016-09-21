@@ -24,88 +24,58 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-if not defaults.omd_root:
-    backup_domains.update( {
-    "noomd-config": {
+import cmk.paths
+
+backup_domains.update({
+    "check_mk": {
       "group"       : _("Configuration"),
-      "title"       : _("WATO Configuration"),
-      "prefix"      : defaults.default_config_dir,
+      "title"       : _("Hosts, Services, Groups, Timeperiods, Business Intelligence and Monitoring Configuration"),
+      "prefix"      : cmk.paths.default_config_dir,
       "paths"       : [
-                        ("dir",  "conf.d/wato"),
-                        ("dir",  "multisite.d/wato"),
-                        ("file", "multisite.d/sites.mk")
+                        ("file", "liveproxyd.mk"),
+                        ("file", "main.mk"),
+                        ("file", "final.mk"),
+                        ("file", "local.mk"),
+                        ("file", "mkeventd.mk"),
+                        ("file", "backup.mk"),
+
+                        ("dir", "conf.d"),
+                        ("dir", "multisite.d"),
+                        ("dir", "mkeventd.d"),
+                        ("dir", "mknotifyd.d"),
                       ],
       "default"     : True,
     },
-    "noomd-personalsettings": {
-          "title"       : _("Personal User Settings and Custom Views"),
-          "prefix"      :  defaults.var_dir,
-          "paths"       : [ ("dir", "web") ],
-          "default"     : True
-    },
-    "noomd-authorization": {
+    "authorization_v1": {
       "group"       : _("Configuration"),
       "title"       : _("Local Authentication Data"),
-      "prefix"      : os.path.dirname(defaults.htpasswd_file),
+      "prefix"      : cmk.paths.omd_root,
       "paths"       : [
-                        ("file", "htpasswd"),
-                        ("file", "auth.secret"),
-                        ("file", "auth.serials")
+                        ("file", "etc/htpasswd"),
+                        ("file", "etc/auth.secret"),
+                        ("file", "etc/auth.serials"),
+                        ("file", "var/check_mk/web/*/serial.mk"),
+                        ("file", "var/check_mk/web/*/automation.secret"),
                       ],
       "cleanup"     : False,
       "default"     : True
-    }})
-else:
-    backup_domains.update({
-        "check_mk": {
-          "group"       : _("Configuration"),
-          "title"       : _("Hosts, Services, Groups, Timeperiods, Business Intelligence and Monitoring Configuration"),
-          "prefix"      : defaults.default_config_dir,
-          "paths"       : [
-                            ("file", "liveproxyd.mk"),
-                            ("file", "main.mk"),
-                            ("file", "final.mk"),
-                            ("file", "local.mk"),
-                            ("file", "mkeventd.mk"),
-                            ("file", "backup.mk"),
-
-                            ("dir", "conf.d"),
-                            ("dir", "multisite.d"),
-                            ("dir", "mkeventd.d"),
-                            ("dir", "mknotifyd.d"),
-                          ],
-          "default"     : True,
-        },
-        "authorization_v1": {
-          "group"       : _("Configuration"),
-          "title"       : _("Local Authentication Data"),
-          "prefix"      : defaults.omd_root,
-          "paths"       : [
-                            ("file", "etc/htpasswd"),
-                            ("file", "etc/auth.secret"),
-                            ("file", "etc/auth.serials"),
-                            ("file", "var/check_mk/web/*/serial.mk"),
-                            ("file", "var/check_mk/web/*/automation.secret"),
-                          ],
-          "cleanup"     : False,
-          "default"     : True
-        },
-        "mkeventstatus": {
-          "group"       : _("Configuration"),
-          "title"       : _("Event Console Configuration"),
-          "prefix"      : defaults.omd_root,
-          "paths"       : [
-                            ("dir",  "etc/check_mk/mkeventd.d"),
-                          ],
-          "default"     : True
-        },
-        "extensions" : {
-            "title"    : _("Extensions in <tt>~/local/</tt> and MKPs"),
-            "prefix"   : defaults.omd_root,
-            "paths"    : [
-                            ("dir", "var/check_mk/packages" ),
-                            ("dir", "local" ),
-                         ],
-            "default"  : True,
-        },
-    })
+    },
+    "mkeventstatus": {
+      "group"       : _("Configuration"),
+      "title"       : _("Event Console Configuration"),
+      "prefix"      : cmk.paths.omd_root,
+      "paths"       : [
+                        ("dir",  "etc/check_mk/mkeventd.d"),
+                      ],
+      "default"     : True
+    },
+    "extensions" : {
+        "title"    : _("Extensions in <tt>~/local/</tt> and MKPs"),
+        "prefix"   : cmk.paths.omd_root,
+        "paths"    : [
+                        ("dir", "var/check_mk/packages" ),
+                        ("dir", "local" ),
+                     ],
+        "default"  : True,
+    },
+})

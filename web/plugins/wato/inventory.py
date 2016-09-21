@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.paths
+
 register_rulegroup("inventory",
     _("Hardware/Software-Inventory"),
     _("Configuration of the Check_MK Hardware and Software Inventory System"))
@@ -85,7 +87,7 @@ register_rule(group,
                   help = _("Please specify the path to the export file. The text <tt>&lt;HOST&gt;</tt> "
                            "will be replaced with the host name the inventory has been done for. "
                            "If you use a relative path then that will be relative to Check_MK's directory "
-                           "for variable data, which is <tt>%s</tt>.") % defaults.var_dir,
+                           "for variable data, which is <tt>%s</tt>.") % cmk.paths.var_dir,
                   allow_empty = False,
                   size = 64,
                   default_value = "csv-export/<HOST>.csv",

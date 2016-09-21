@@ -27,8 +27,5 @@ for part in parts:
         fn = fn.strip()
         if not fn.endswith("/"):
             filelist.append(fn)
-    # add file created during setup
-    if part == "web":
-        filelist.append("htdocs/defaults.py")
 
 sys.stdout.write(pprint.pformat(package))

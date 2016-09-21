@@ -26,7 +26,6 @@
 
 from ast import literal_eval
 import config
-import defaults
 import lib
 import errno
 import os

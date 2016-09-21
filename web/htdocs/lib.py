@@ -28,12 +28,7 @@ import math, grp, pprint, os, errno, marshal, re, fcntl, time
 from cmk.exceptions import MKException, MKGeneralException
 from cmk.regex import regex
 import cmk.store as store
-
-# Workaround when the file is included from outside of Multisite
-try:
-    import defaults
-except:
-    pass
+import cmk.paths
 
 # possible log levels for logger()
 LOG_EMERG   = 0 # system is unusable
@@ -99,15 +94,10 @@ def make_nagios_directory(path):
         make_nagios_directory(parent_dir)
         try:
             os.mkdir(path)
-            gid = grp.getgrnam(defaults.www_group).gr_gid
-            os.chown(path, -1, gid)
             os.chmod(path, 0770)
         except Exception, e:
             raise MKConfigError("Your web server cannot create the directory <tt>%s</tt>, "
-                    "or cannot set the group to <tt>%s</tt> or cannot set the permissions to <tt>0770</tt>. "
-                    "Please make sure that:<ul><li>the base directory is writable by the web server.</li>"
-                    "<li>Both Nagios and the web server are in the group <tt>%s</tt>.</ul>Reason: %s" % (
-                        path, defaults.www_group, defaults.www_group, e))
+                    "or cannot set the permissions to <tt>0770</tt>: %s" % (path, e))
 
 # Same as make_nagios_directory but also creates parent directories
 # Logic has been copied from os.makedirs()
@@ -130,15 +120,7 @@ def make_nagios_directories(name):
 def create_user_file(path, mode):
     path = make_utf8(path)
     f = file(path, mode, 0)
-    gid = grp.getgrnam(defaults.www_group).gr_gid
-    # Tackle user problem: If the file is owned by nagios, the web
-    # user can write it but cannot chown the group. In that case we
-    # assume that the group is correct and ignore the error
-    try:
-        os.chown(path, -1, gid)
-        os.chmod(path, 0660)
-    except:
-        pass
+    os.chmod(path, 0660)
     return f
 
 def write_settings_file(path, content):
@@ -204,42 +186,29 @@ def gen_id():
 # Load all files below share/check_mk/web/plugins/WHAT into a
 # specified context (global variables). Also honors the
 # local-hierarchy for OMD
+# TODO: Couldn't we precompile all our plugins during packaging to make loading faster?
+# TODO: Replace the execfile thing by some more pythonic plugin structure. But this would
+#       be a large rewrite :-/
 def load_web_plugins(forwhat, globalvars):
-    plugins_path = defaults.web_dir + "/plugins/" + forwhat
-    if os.path.exists(plugins_path):
-        fns = os.listdir(plugins_path)
-        fns.sort()
-        for fn in fns:
+    for plugins_path in [ cmk.paths.web_dir + "/plugins/" + forwhat,
+                          cmk.paths.local_web_dir + "/plugins/" + forwhat ]:
+        if not os.path.exists(plugins_path):
+            continue
+
+        for fn in sorted(os.listdir(plugins_path)):
             file_path = plugins_path + "/" + fn
-            if fn.endswith(".py"):
-                if not os.path.exists(file_path + "c"):
-                    execfile(file_path, globalvars)
+
+            if fn.endswith(".py") and not os.path.exists(file_path + "c"):
+                execfile(file_path, globalvars)
+
             elif fn.endswith(".pyc"):
                 code_bytes = file(file_path).read()[8:]
                 code = marshal.loads(code_bytes)
                 exec code in globalvars
 
-    if defaults.omd_root:
-        local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/" + forwhat
-        if local_plugins_path != plugins_path: # honor ./setup.sh in site
-            if os.path.exists(local_plugins_path):
-                fns = os.listdir(local_plugins_path)
-                fns.sort()
-                for fn in fns:
-                    file_path = local_plugins_path + "/" + fn
-                    if fn.endswith(".py"):
-                        execfile(file_path, globalvars)
-                    elif fn.endswith(".pyc"):
-                        code_bytes = file(file_path).read()[8:]
-                        code = marshal.loads(code_bytes)
-                        exec code in globalvars
-
 
 def find_local_web_plugins():
-    if not defaults.omd_root:
-        return
-
-    basedir = defaults.omd_root + "/local/share/check_mk/web/plugins/"
+    basedir = cmk.paths.local_web_dir + "/plugins/"
     for plugins_dir in os.listdir(basedir):
         dir_path = basedir + plugins_dir
         yield dir_path # Changes in the directory like deletion of files!
@@ -348,7 +317,7 @@ def logger(level, msg):
     elif type(msg) != str:
         msg = repr(msg)
 
-    log_file = defaults.log_dir + '/web.log'
+    log_file = cmk.paths.log_dir + '/web.log'
     file(log_file, 'a')
     aquire_lock(log_file)
     try:

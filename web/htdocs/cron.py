@@ -26,12 +26,12 @@
 
 import time
 from lib import *
-import defaults
+import cmk.paths
 
 loaded_with_language = False
 multisite_cronjobs = []
 
-lock_file = defaults.tmp_dir + "/cron.lastrun"
+lock_file = cmk.paths.tmp_dir + "/cron.lastrun"
 
 # Load all view plugins
 def load_plugins(force):

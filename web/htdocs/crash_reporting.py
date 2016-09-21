@@ -29,7 +29,7 @@ import i18n
 import sites
 from lib import *
 from valuespec import *
-import table, defaults, config, forms
+import table, config, forms
 import cmk.crash_reporting
 
 try:
@@ -242,7 +242,7 @@ def get_version(what):
         import cma
         return cma.version()
     else:
-        return defaults.check_mk_version
+        return cmk.__version__
 
 
 def warn_about_local_files(info):

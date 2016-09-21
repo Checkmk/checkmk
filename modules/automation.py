@@ -26,6 +26,9 @@
 
 import signal
 
+import cmk.paths
+
+# TODO: Inherit from MKGeneralException
 class MKAutomationError(Exception):
     def __init__(self, reason):
         self.reason = reason
@@ -307,7 +310,7 @@ def automation_analyse_service(args):
     # 2. Load all autochecks of the host in question and try to find
     # our service there
     try:
-        path = "%s/%s.mk" % (autochecksdir, hostname)
+        path = "%s/%s.mk" % (cmk.paths.autochecks_dir, hostname)
         if os.path.exists(path):
             for entry in eval(file(path).read()):
                 if len(entry) == 4: # old format
@@ -393,36 +396,37 @@ def delete_host_files(hostname):
 
     # single files
     for path in [
-        "%s/%s"                  % (precompiled_hostchecks_dir, hostname),
-        "%s/%s.py"               % (precompiled_hostchecks_dir, hostname),
-        "%s/%s.mk"               % (autochecksdir, hostname),
-        "%s/%s"                  % (counters_directory, hostname),
-        "%s/%s"                  % (tcp_cache_dir, hostname),
-        "%s/persisted/%s"        % (var_dir, hostname),
-        "%s/piggyback/%s"        % (tmp_dir, hostname),
-        "%s/inventory/%s"        % (var_dir, hostname),
-        "%s/inventory/%s.gz"     % (var_dir, hostname),
-        "%s/agent_deployment/%s" % (var_dir, hostname),
+        "%s/%s"                  % (cmk.paths.precompiled_hostchecks_dir, hostname),
+        "%s/%s.py"               % (cmk.paths.precompiled_hostchecks_dir, hostname),
+        "%s/%s.mk"               % (cmk.paths.autochecks_dir, hostname),
+        "%s/%s"                  % (cmk.paths.counters_dir, hostname),
+        "%s/%s"                  % (cmk.paths.tcp_cache_dir, hostname),
+        "%s/persisted/%s"        % (cmk.paths.var_dir, hostname),
+        "%s/piggyback/%s"        % (cmk.paths.tmp_dir, hostname),
+        "%s/inventory/%s"        % (cmk.paths.var_dir, hostname),
+        "%s/inventory/%s.gz"     % (cmk.paths.var_dir, hostname),
+        "%s/agent_deployment/%s" % (cmk.paths.var_dir, hostname),
         ]:
         if os.path.exists(path):
             os.unlink(path)
 
     # files from snmp devices
-    for filename in os.listdir(tcp_cache_dir):
+    for filename in os.listdir(cmk.paths.tcp_cache_dir):
         if filename.startswith("%s." % hostname):
-            os.unlink("%s/%s" % (tcp_cache_dir, filename))
+            os.unlink("%s/%s" % (cmk.paths.tcp_cache_dir, filename))
 
     # softlinks for baked agents. obsolete packages are removed upon next bake action
-    agents_dir = var_dir + "/agents/"
-    if os.path.exists(agents_dir):
-        for folder in os.listdir(agents_dir):
+    # TODO: Move to bakery code
+    baked_agents_dir = cmk.paths.var_dir + "/agents/"
+    if os.path.exists(baked_agents_dir):
+        for folder in os.listdir(baked_agents_dir):
             if os.path.exists("%s/%s" % (folder, hostname)):
                 os.unlink("%s/%s" % (folder, hostname))
 
     # logwatch folders
-    if os.path.exists("%s/%s" % (logwatch_dir, hostname)):
+    if os.path.exists("%s/%s" % (cmk.paths.logwatch_dir, hostname)):
         import shutil
-        shutil.rmtree("%s/%s" % (logwatch_dir, hostname))
+        shutil.rmtree("%s/%s" % (cmk.paths.logwatch_dir, hostname))
 
     return None
 
@@ -441,14 +445,14 @@ def automation_restart(job = "restart"):
     # the open file where Apache is listening for incoming
     # HTTP connections. Really.
     if monitoring_core == "nagios":
-        objects_file = nagios_objects_file
+        objects_file = cmk.paths.nagios_objects_file
         for fd in range(3, 256):
             try:
                 os.close(fd)
             except:
                 pass
     else:
-        objects_file = var_dir + "/core/config"
+        objects_file = cmk.paths.var_dir + "/core/config"
         if job == "restart" and not forced:
             job = "reload" # force reload for CMC
 
@@ -516,10 +520,7 @@ def automation_restart(job = "restart"):
 
 
 def check_plugins_have_changed():
-    if not omd_root:
-        return False # not supported for manual setup
-
-    this_time = last_modification_in_dir(local_checks_dir)
+    this_time = last_modification_in_dir(cmk.paths.local_checks_dir)
     last_time = time_of_last_core_restart()
     return this_time > last_time
 
@@ -533,9 +534,9 @@ def last_modification_in_dir(dir_path):
 
 def time_of_last_core_restart():
     if monitoring_core == "cmc":
-        pidfile_path = omd_root + "/tmp/run/cmc.pid"
+        pidfile_path = cmk.paths.omd_root + "/tmp/run/cmc.pid"
     else:
-        pidfile_path = omd_root + "/tmp/lock/nagios.lock"
+        pidfile_path = cmk.paths.omd_root + "/tmp/lock/nagios.lock"
     if os.path.exists(pidfile_path):
         return os.stat(pidfile_path).st_mtime
     else:
@@ -834,12 +835,6 @@ def automation_rename_hosts():
         global ignore_ip_lookup_failures
         ignore_ip_lookup_failures = True # force config generation to succeed. The core *must* start.
         automation_restart("start")
-        if monitoring_core == "cmc":
-            try:
-                os.remove(var_dir + "/core/config.rush")
-                os.remove(var_dir + "/core/config.rush.id")
-            except:
-                pass
 
         for hostname in g_failed_ip_lookups:
             actions.append("dnsfail-" + hostname)
@@ -855,10 +850,10 @@ def automation_rename_hosts():
 
 def rename_host_autochecks(oldname, newname):
     actions = []
-    acpath = autochecksdir + "/" + oldname + ".mk"
+    acpath = cmk.paths.autochecks_dir + "/" + oldname + ".mk"
     if os.path.exists(acpath):
         old_autochecks = parse_autochecks_file(oldname)
-        out = file(autochecksdir + "/" + newname + ".mk", "w")
+        out = file(cmk.paths.autochecks_dir + "/" + newname + ".mk", "w")
         out.write("[\n")
         for ct, item, paramstring in old_autochecks:
             out.write("  (%r, %r, %s),\n" % (ct, item, paramstring))
@@ -874,55 +869,51 @@ def rename_host_files(oldname, newname):
 
     # Rename temporary files of the host
     for d in [ "cache", "counters" ]:
-        if rename_host_file(tmp_dir + "/" + d + "/", oldname, newname):
+        if rename_host_file(cmk.paths.tmp_dir + "/" + d + "/", oldname, newname):
             actions.append(d)
 
-    if rename_host_dir(tmp_dir + "/piggyback/", oldname, newname):
+    if rename_host_dir(cmk.paths.tmp_dir + "/piggyback/", oldname, newname):
         actions.append("piggyback-load")
 
     # Rename piggy files *created* by the host
-    piggybase = tmp_dir + "/piggyback/"
+    piggybase = cmk.paths.tmp_dir + "/piggyback/"
     if os.path.exists(piggybase):
         for piggydir in os.listdir(piggybase):
             if rename_host_file(piggybase + piggydir, oldname, newname):
                 actions.append("piggyback-pig")
 
     # Logwatch
-    if rename_host_dir(logwatch_dir, oldname, newname):
+    if rename_host_dir(cmk.paths.logwatch_dir, oldname, newname):
         actions.append("logwatch")
 
     # SNMP walks
-    if rename_host_file(snmpwalks_dir, oldname, newname):
+    if rename_host_file(cmk.paths.snmpwalks_dir, oldname, newname):
         actions.append("snmpwalk")
 
     # HW/SW-Inventory
-    if rename_host_file(var_dir + "/inventory", oldname, newname):
-        rename_host_file(var_dir + "/inventory", oldname + ".gz", newname + ".gz")
+    if rename_host_file(cmk.paths.var_dir + "/inventory", oldname, newname):
+        rename_host_file(cmk.paths.var_dir + "/inventory", oldname + ".gz", newname + ".gz")
         actions.append("inv")
 
-    if rename_host_dir(var_dir + "/inventory_archive", oldname, newname):
+    if rename_host_dir(cmk.paths.var_dir + "/inventory_archive", oldname, newname):
         actions.append("invarch")
 
     # Baked agents
-    agents_dir = var_dir + "/agents/"
+    baked_agents_dir = cmk.paths.var_dir + "/agents/"
     have_renamed_agent = False
-    if os.path.exists(agents_dir):
-        for opsys in os.listdir(agents_dir):
-            if rename_host_file(agents_dir + opsys, oldname, newname):
+    if os.path.exists(baked_agents_dir):
+        for opsys in os.listdir(baked_agents_dir):
+            if rename_host_file(baked_agents_dir + opsys, oldname, newname):
                 have_renamed_agent = True
     if have_renamed_agent:
         actions.append("agent")
 
     # Agent deployment
-    deployment_dir = var_dir + "/agent_deployment/"
+    deployment_dir = cmk.paths.var_dir + "/agent_deployment/"
     if rename_host_file(deployment_dir, oldname, newname):
         actions.append("agent_deployment")
 
-    # OMD-Stuff. Note: The question really is whether this should be
-    # included in Check_MK. The point is - however - that all these
-    # actions need to take place while the core is stopped.
-    if omd_root:
-        actions += omd_rename_host(oldname, newname)
+    actions += omd_rename_host(oldname, newname)
 
     return actions
 
@@ -951,32 +942,32 @@ def omd_rename_host(oldname, newname):
     actions = []
 
     # Temporarily stop processing of performance data
-    npcd_running = os.path.exists(omd_root + "/tmp/pnp4nagios/run/npcd.pid")
+    npcd_running = os.path.exists(cmk.paths.omd_root + "/tmp/pnp4nagios/run/npcd.pid")
     if npcd_running:
         os.system("omd stop npcd >/dev/null 2>&1 </dev/null")
 
-    rrdcache_running = os.path.exists(omd_root + "/tmp/run/rrdcached.sock")
+    rrdcache_running = os.path.exists(cmk.paths.omd_root + "/tmp/run/rrdcached.sock")
     if rrdcache_running:
         os.system("omd stop rrdcached >/dev/null 2>&1 </dev/null")
 
     # Fix pathnames in XML files
-    dirpath = omd_root + "/var/pnp4nagios/perfdata/" + oldname
+    dirpath = cmk.paths.omd_root + "/var/pnp4nagios/perfdata/" + oldname
     os.system("sed -i 's@/perfdata/%s/@/perfdata/%s/@' %s/*.xml 2>/dev/null" % (oldname, newname, dirpath))
 
     # RRD files
-    if rename_host_dir(rrd_path, oldname, newname):
+    if rename_host_dir(cmk.paths.omd_root + "/var/pnp4nagios/perfdata", oldname, newname):
         actions.append("rrd")
 
     # entries of rrdcached journal
-    dirpath = omd_root + "/var/rrdcached/"
+    dirpath = cmk.paths.omd_root + "/var/rrdcached/"
     if not os.system("sed -i 's@/perfdata/%s/@/perfdata/%s/@' "
-        "%s/var/rrdcached/rrd.journal.* 2>/dev/null" % ( oldregex, newregex, omd_root)):
+        "%s/var/rrdcached/rrd.journal.* 2>/dev/null" % ( oldregex, newregex, cmk.paths.omd_root)):
         actions.append("rrdcached")
 
     # Spoolfiles of NPCD
     if not os.system("sed -i 's/HOSTNAME::%s	/HOSTNAME::%s	/' "
                      "%s/var/pnp4nagios/perfdata.dump %s/var/pnp4nagios/spool/perfdata.* 2>/dev/null" % (
-                     oldregex, newregex, omd_root, omd_root)):
+                     oldregex, newregex, cmk.paths.omd_root, cmk.paths.omd_root)):
         actions.append("pnpspool")
 
     if rrdcache_running:
@@ -1002,7 +993,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
     ]
     one_matched = False
     for pattern in patterns:
-        command = "sed -ri --file=/dev/fd/0 %s/%s >/dev/null 2>&1" % (omd_root, pattern)
+        command = "sed -ri --file=/dev/fd/0 %s/%s >/dev/null 2>&1" % (cmk.paths.omd_root, pattern)
         p = os.popen(command, "w")
         p.write(sed_commands)
         if not p.close():
@@ -1013,20 +1004,20 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
     # State retention (important for Downtimes, Acknowledgements, etc.)
     if monitoring_core == "nagios":
         if not os.system("sed -ri 's/^host_name=%s$/host_name=%s/' %s/var/nagios/retention.dat" % (
-                    oldregex, newregex, omd_root)):
+                    oldregex, newregex, cmk.paths.omd_root)):
             actions.append("retention")
 
     else: # CMC
         # Create a file "renamed_hosts" with the information about the
         # renaming of the hosts. The core will honor this file when it
         # reads the status file with the saved state.
-        file(var_dir + "/core/renamed_hosts", "w").write("%s\n%s\n" % (oldname, newname))
+        file(cmk.paths.var_dir + "/core/renamed_hosts", "w").write("%s\n%s\n" % (oldname, newname))
         actions.append("retention")
 
     # NagVis maps
     if not os.system("sed -i 's/^[[:space:]]*host_name=%s[[:space:]]*$/host_name=%s/' "
                      "%s/etc/nagvis/maps/*.cfg 2>/dev/null" % (
-                     oldregex, newregex, omd_root)):
+                     oldregex, newregex, cmk.paths.omd_root)):
         actions.append("nagvis")
 
     return actions
@@ -1079,7 +1070,7 @@ def automation_active_check(args):
 
 def load_resource_file(macros):
     try:
-        for line in file(omd_root + "/etc/nagios/resource.cfg"):
+        for line in file(cmk.paths.omd_root + "/etc/nagios/resource.cfg"):
             line = line.strip()
             if not line or line[0] == '#':
                 continue
@@ -1147,9 +1138,9 @@ def automation_get_agent_output(args):
         if ty == "agent":
             agent_data = get_plain_hostinfo(hostname)
         else:
-            path = snmpwalks_dir + "/" + hostname
-            do_snmpwalk_on(hostname, snmpwalks_dir + "/" + hostname)
-            agent_data = file(snmpwalks_dir + "/" + hostname).read()
+            path = cmk.paths.snmpwalks_dir + "/" + hostname
+            do_snmpwalk_on(hostname, cmk.paths.snmpwalks_dir + "/" + hostname)
+            agent_data = file(cmk.paths.snmpwalks_dir + "/" + hostname).read()
     except Exception, e:
         success = False
         output = "Failed to fetch data from %s: %s\n" % (hostname, e)

@@ -24,10 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, hooks
+import config, hooks
 from lib import *
 import time, os, pprint, shutil, traceback
 from valuespec import *
+import cmk.paths
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -228,7 +229,7 @@ def _user_exists_according_to_profile(username):
 
 
 def _user_exists_htpasswd(username):
-    for line in open(defaults.htpasswd_file):
+    for line in open(cmk.paths.htpasswd_file):
         l = line.decode("utf-8")
         if l.startswith("%s:" % username):
             return True
@@ -306,8 +307,8 @@ def on_failed_login(username):
 
         save_users(users)
 
-root_dir      = defaults.check_mk_configdir + "/wato/"
-multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
+root_dir      = cmk.paths.check_mk_config_dir + "/wato/"
+multisite_dir = cmk.paths.default_config_dir + "/multisite.d/wato/"
 
 # Old vs:
 #ListChoice(
@@ -572,7 +573,7 @@ def load_users(lock = False):
             return []
 
     # FIXME TODO: Consolidate with htpasswd user connector
-    filename = defaults.htpasswd_file
+    filename = cmk.paths.htpasswd_file
     for line in readlines(filename):
         line = line.strip()
         if ':' in line:
@@ -599,7 +600,7 @@ def load_users(lock = False):
         # Other unknown entries will silently be dropped. Sorry...
 
     # Now read the serials, only process for existing users
-    serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
+    serials_file = '%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file)
     for line in readlines(serials_file):
         line = line.strip()
         if ':' in line:
@@ -609,7 +610,7 @@ def load_users(lock = False):
                 result[user_id]['serial'] = saveint(serial)
 
     # Now read the user specific files
-    dir = defaults.var_dir + "/web/"
+    dir = cmk.paths.var_dir + "/web/"
     for d in os.listdir(dir):
         if d[0] != '.':
             id = d.decode("utf-8")
@@ -650,7 +651,7 @@ def load_users(lock = False):
 
 
 def custom_attr_path(userid, key):
-    return defaults.var_dir + "/web/" + make_utf8(userid) + "/" + key + ".mk"
+    return cmk.paths.var_dir + "/web/" + make_utf8(userid) + "/" + key + ".mk"
 
 
 def load_custom_attr(userid, key, conv_func, default = None):
@@ -757,7 +758,7 @@ def save_users(profiles):
     hook_save(profiles)
 
     # Write out the users serials
-    serials_file = '%s/auth.serials.new' % os.path.dirname(defaults.htpasswd_file)
+    serials_file = '%s/auth.serials.new' % os.path.dirname(cmk.paths.htpasswd_file)
     rename_file = True
     try:
         out = create_user_file(serials_file, "w")
@@ -773,7 +774,7 @@ def save_users(profiles):
 
     # Write user specific files
     for user_id, user in profiles.items():
-        user_dir = defaults.var_dir + "/web/" + user_id
+        user_dir = cmk.paths.var_dir + "/web/" + user_id
         make_nagios_directory(user_dir)
 
         # authentication secret for local processes
@@ -813,8 +814,8 @@ def save_users(profiles):
         "transids.mk",
         "serial.mk",
     ]
-    dir = defaults.var_dir + "/web"
-    for user_dir in os.listdir(defaults.var_dir + "/web"):
+    dir = cmk.paths.var_dir + "/web"
+    for user_dir in os.listdir(cmk.paths.var_dir + "/web"):
         if user_dir not in ['.', '..'] and user_dir.decode("utf-8") not in profiles:
             entry = dir + "/" + user_dir
             if not os.path.isdir(entry):
@@ -1283,12 +1284,12 @@ def general_userdb_job():
     # We assume: Each user must visit this login page before using the multisite based
     #            authorization. So we can easily create the file here if it is missing.
     # This is a good place to replace old api based files in the future.
-    auth_php = defaults.var_dir + '/wato/auth/auth.php'
+    auth_php = cmk.paths.var_dir + '/wato/auth/auth.php'
     if not os.path.exists(auth_php) or os.path.getsize(auth_php) == 0:
         create_auth_file("page_hook", load_users())
 
     # Create initial auth.serials file, same issue as auth.php above
-    serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
+    serials_file = '%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file)
     if not os.path.exists(serials_file) or os.path.getsize(serials_file) == 0:
         save_users(load_users(lock = True))
 
@@ -1335,8 +1336,8 @@ def user_sync_default_config(site_name):
 def user_sync_config():
     # use global option as default for reading legacy options and on remote site
     # for reading the value set by the WATO master site
-    default_cfg = user_sync_default_config(defaults.omd_site)
-    return config.site(defaults.omd_site).get("user_sync", default_cfg)
+    default_cfg = user_sync_default_config(config.omd_site())
+    return config.site(config.omd_site()).get("user_sync", default_cfg)
 
 
 def userdb_sync_job_enabled():

@@ -24,25 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import defaults, config, userdb
+import config
+import userdb
 from lib import *
 from html_mod_python import FinalizeRequest
-import os, time
+import os
+import time
 import traceback
 import i18n
+from hashlib import md5
 
-try:
-    from hashlib import md5
-except ImportError:
-    from md5 import md5 # deprecated with python 2.5
-
+import cmk.paths
 
 def auth_cookie_name():
     return 'auth%s' % site_cookie_suffix()
 
 
 def site_cookie_suffix():
-    url_prefix = defaults.url_prefix
+    url_prefix = config.url_prefix()
 
     # Strip of eventual present "http://<host>". DIRTY!
     if url_prefix.startswith('http:'):
@@ -54,7 +53,7 @@ def site_cookie_suffix():
 # not exist. Having access to the secret means that one can issue valid
 # cookies for the cookie auth.
 def load_secret():
-    secret_path = '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file)
+    secret_path = '%s/auth.secret' % os.path.dirname(cmk.paths.htpasswd_file)
     secret = ''
     if os.path.exists(secret_path):
         secret = file(secret_path).read().strip()
@@ -229,7 +228,7 @@ def check_auth_automation():
     html.del_var('_username')
     html.del_var('_secret')
     if secret and user_id and "/" not in user_id:
-        path = defaults.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
+        path = cmk.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
         if os.path.isfile(path) and file(path).read().strip() == secret:
             # Auth with automation secret succeeded - mark transid as unneeded in this case
             html.set_ignore_transids()
@@ -290,7 +289,7 @@ def do_login():
             #  - side.py: Happens when invalid login is detected during sidebar refresh
             #  - Full qualified URLs (http://...) to prevent redirection attacks
             if not origtarget or "logout.py" in origtarget or 'side.py' in origtarget or '://' in origtarget:
-                origtarget = defaults.url_prefix + 'check_mk/'
+                origtarget = config.url_prefix() + 'check_mk/'
 
             # None        -> User unknown, means continue with other connectors
             # '<user_id>' -> success
@@ -366,7 +365,7 @@ def normal_login_page(called_directly = True):
 
     html.write('<div id="login">\n')
     html.write('<img id="login_window" src="images/login_window.png" />\n')
-    html.write('<div id="version">%s</div>\n' % defaults.check_mk_version)
+    html.write('<div id="version">%s</div>\n' % cmk.__version__)
 
     html.begin_form("login", method = 'POST', add_transid = False, action = 'login.py')
     html.hidden_field('_login', '1')
@@ -386,7 +385,7 @@ def normal_login_page(called_directly = True):
     html.write("</div>\n")
 
     html.write('<div id="foot">Version: %s - &copy; '
-               '<a href="http://mathias-kettner.de">Mathias Kettner</a><br /><br />' % defaults.check_mk_version)
+               '<a href="http://mathias-kettner.de">Mathias Kettner</a><br /><br />' % cmk.__version__)
     html.write(_('You can use, modify and distribute Check_MK under the terms of the <a href="%s">'
                  'GNU GPL Version 2</a>.') % "http://mathias-kettner.de/gpl.html")
     html.write("</div>\n")
@@ -402,13 +401,13 @@ def page_logout():
     invalidate_auth_session()
 
     if config.auth_type == 'cookie':
-        html.http_redirect(defaults.url_prefix + 'check_mk/login.py')
+        html.http_redirect(config.url_prefix() + 'check_mk/login.py')
     else:
         # Implement HTTP logout with cookie hack
         if not html.has_cookie('logout'):
-            html.set_http_header('WWW-Authenticate', 'Basic realm="%s"' % defaults.nagios_auth_name)
+            html.set_http_header('WWW-Authenticate', 'Basic realm="OMD Monitoring Site %s"' % config.omd_site())
             html.set_cookie('logout', '1')
             raise FinalizeRequest(401)
         else:
             html.del_cookie('logout')
-            html.http_redirect(defaults.url_prefix + 'check_mk/')
+            html.http_redirect(config.url_prefix() + 'check_mk/')

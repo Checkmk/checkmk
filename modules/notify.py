@@ -38,6 +38,7 @@
 #       to call and its parameters.
 
 from cmk.regex import regex
+import cmk.paths
 
 #   .--Configuration-------------------------------------------------------.
 #   |    ____             __ _                       _   _                 |
@@ -51,11 +52,11 @@ from cmk.regex import regex
 #   '----------------------------------------------------------------------'
 
 # Default settings
-notification_logdir     = var_dir + "/notify"
-notification_spooldir   = var_dir + "/notify/spool"
-notification_bulkdir    = var_dir + "/notify/bulk"
-notification_core_log   = var_dir + "/notify/nagios.log" # Fallback for history if no CMC running
-notification_log        = log_dir + "/notify.log"
+notification_logdir     = cmk.paths.var_dir + "/notify"
+notification_spooldir   = cmk.paths.var_dir + "/notify/spool"
+notification_bulkdir    = cmk.paths.var_dir + "/notify/bulk"
+notification_core_log   = cmk.paths.var_dir + "/notify/nagios.log" # Fallback for history if no CMC running
+notification_log        = cmk.paths.log_dir + "/notify.log"
 notification_logging    = 1
 notification_backlog    = 10 # keep the last 10 notification contexts for reference
 
@@ -205,7 +206,7 @@ def do_notify(args):
             notify_notify(raw_context_from_env())
 
     except Exception, e:
-        crash_dir = var_dir + "/notify"
+        crash_dir = cmk.paths.var_dir + "/notify"
         if not os.path.exists(crash_dir):
             os.makedirs(crash_dir)
         file(crash_dir + "/crash.log", "a").write("CRASH (%s):\n%s\n" %
@@ -1119,18 +1120,16 @@ def create_bulk_parameter_context(params):
 
 def path_to_notification_script(plugin):
     # Call actual script without any arguments
-    if local_notifications_dir:
-        path = local_notifications_dir + "/" + plugin
-        if not os.path.exists(path):
-            path = notifications_dir + "/" + plugin
+    local_path = cmk.paths.local_notifications_dir + "/" + plugin
+    if os.path.exists(local_path):
+        path = local_path
     else:
-        path = notifications_dir + "/" + plugin
+        path = cmk.paths.notifications_dir + "/" + plugin
 
     if not os.path.exists(path):
         notify_log("Notification plugin '%s' not found" % plugin)
-        notify_log("  not in %s" % notifications_dir)
-        if local_notifications_dir:
-            notify_log("  and not in %s" % local_notifications_dir)
+        notify_log("  not in %s" % cmk.paths.notifications_dir)
+        notify_log("  and not in %s" % cmk.paths.local_notifications_dir)
         return None
 
     else:
@@ -1628,7 +1627,7 @@ def substitute_context(template, context):
 
 def livestatus_fetch_query(query):
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.connect(livestatus_unix_socket)
+    sock.connect(cmk.paths.livestatus_unix_socket)
     sock.send(query)
     sock.shutdown(socket.SHUT_WR)
     response = sock.recv(10000000)
@@ -1639,7 +1638,7 @@ def livestatus_send_command(command):
     try:
         message = "COMMAND [%d] %s\n" % (time.time(), command)
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sock.connect(livestatus_unix_socket)
+        sock.connect(cmk.paths.livestatus_unix_socket)
         sock.send(message)
         sock.close()
     except Exception, e:

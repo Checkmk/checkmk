@@ -69,18 +69,18 @@ def remove_nonrelated_site_folders(effective_hosts):
         logfile.write(info + "\n")
 
     # Is this a master or a viewer site? -> return
-    if os.path.exists(defaults.default_config_dir + "/multisite.d/sites.mk"):
+    if os.path.exists(cmk.paths.default_config_dir + "/multisite.d/sites.mk"):
         return
 
     # The own site id is written into the distributed_wato.mk file. If it's missing -> return
-    if not os.path.exists(defaults.check_mk_configdir + "/distributed_wato.mk"):
+    if not os.path.exists(cmk.paths.check_mk_config_dir + "/distributed_wato.mk"):
         return
 
     # Parse the file with the site name
     file_vars_g = {}
     file_vars   = {}
     try:
-        execfile(defaults.check_mk_configdir + "/distributed_wato.mk", file_vars_g, file_vars)
+        execfile(cmk.paths.check_mk_config_dir + "/distributed_wato.mk", file_vars_g, file_vars)
     except Exception, e:
         # Return on any error
         return
@@ -92,7 +92,7 @@ def remove_nonrelated_site_folders(effective_hosts):
 
 
     # Get all folders in WATO dir
-    config_dir   = defaults.check_mk_configdir + "/wato/"
+    config_dir   = cmk.paths.check_mk_config_dir + "/wato/"
     all_folders  = sorted([x[0][len(config_dir):] for x in os.walk(config_dir)])[1:] # Skip first folder (WATO root!)
 
     keep_folders = set([])

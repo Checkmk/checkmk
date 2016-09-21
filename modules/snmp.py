@@ -417,7 +417,7 @@ def is_snmpwalk_cachable(column):
 
 
 def get_cached_snmpwalk(hostname, fetchoid):
-    path = var_dir + "/snmp_cache/" + hostname + "/" + fetchoid
+    path = cmk.paths.var_dir + "/snmp_cache/" + hostname + "/" + fetchoid
 
     try:
         vverbose("  Loading %s from walk cache %s\n" % (fetchoid, path))
@@ -432,7 +432,7 @@ def get_cached_snmpwalk(hostname, fetchoid):
 
 
 def save_snmpwalk_cache(hostname, fetchoid, rowinfo):
-    base_dir = var_dir + "/snmp_cache/" + hostname + "/"
+    base_dir = cmk.paths.var_dir + "/snmp_cache/" + hostname + "/"
     if not os.path.exists(base_dir):
         os.makedirs(base_dir)
     vverbose("  Caching walk of %s\n" % fetchoid)
@@ -451,7 +451,7 @@ def get_stored_snmpwalk(hostname, oid):
         oid_prefix = oid
         dot_star = False
 
-    path = snmpwalks_dir + "/" + hostname
+    path = cmk.paths.snmpwalks_dir + "/" + hostname
 
     vverbose("  Loading %s from %s\n" % (oid, path))
 

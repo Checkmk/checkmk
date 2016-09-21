@@ -24,13 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import views, time, defaults, dashboard
+import config
+import views, time, dashboard
 import pagetypes, table
 import sites
 import livestatus
 import notifications
 from valuespec import *
 from lib import *
+import cmk.paths
 
 #   .--About---------------------------------------------------------------.
 #   |                       _    _                 _                       |
@@ -42,7 +44,7 @@ from lib import *
 #   '----------------------------------------------------------------------'
 
 def render_about():
-    html.write(_("Version: ") + defaults.check_mk_version)
+    html.write(_("Version: ") + cmk.__version__)
     html.write("<ul>")
     bulletlink(_("Homepage"),        "http://mathias-kettner.de/check_mk.html")
     bulletlink(_("Documentation"),   "http://mathias-kettner.de/checkmk.html")
@@ -959,7 +961,7 @@ div.time {
 def render_nagios():
     html.write('<ul>')
     bulletlink("Home", "http://www.nagios.org")
-    bulletlink("Documentation", "%snagios/docs/toc.html" % defaults.url_prefix)
+    bulletlink("Documentation", "%snagios/docs/toc.html" % config.url_prefix())
     html.write('</ul>')
     for entry in [
         "General",
@@ -1057,7 +1059,7 @@ def render_master_control():
                 continue
 
             colvalue = siteline[i + 1]
-            url = defaults.url_prefix + ("check_mk/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
+            url = config.url_prefix() + ("check_mk/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
             onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
             html.write("<tr><td class=left>%s</td><td>" % title)
             html.icon_button("#", _("Switch %s %s") % (title, colvalue and "off" or "on"),
@@ -1419,7 +1421,7 @@ def render_custom_links():
     links = config.custom_links.get(config.user_baserole_id)
     if not links:
         html.write((_("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.") %
-                  (defaults.default_config_dir + "/multisite.mk")) + "\n")
+                  (cmk.paths.default_config_dir + "/multisite.mk")) + "\n")
         return
 
     def render_list(ids, links):
@@ -1502,7 +1504,7 @@ sidebar_snapins["custom_links"] = {
 #   * [[link4]]
 
 def render_wiki():
-    filename = defaults.omd_root + '/var/dokuwiki/data/pages/sidebar.txt'
+    filename = cmk.paths.omd_root + '/var/dokuwiki/data/pages/sidebar.txt'
     html.javascript("""
     function wiki_search()
     {
@@ -1510,7 +1512,7 @@ def render_wiki():
         top.frames["main"].location.href =
            "/%s/wiki/doku.php?do=search&id=" + escape(oInput.value);
     }
-    """ % defaults.omd_site)
+    """ % config.omd_site())
 
     html.write('<form id="wiki_search" onSubmit="wiki_search()">')
     html.write('<input id="wiki_search_field" type="text" name="wikisearch"></input>\n')
@@ -1563,7 +1565,7 @@ def render_wiki():
                         name = erg[-1]
                     else:
                         name = erg[0]
-                    bulletlink(name, "/%s/wiki/doku.php?id=%s" % (defaults.omd_site, link))
+                    bulletlink(name, "/%s/wiki/doku.php?id=%s" % (config.omd_site(), link))
 
             else:
                 html.write(line)
@@ -1572,61 +1574,60 @@ def render_wiki():
             html.write("</ul>")
     except IOError:
         html.write("<p>To get a navigation menu, you have to create a <a href='/%s/wiki/doku.php?id=%s' "
-                   "target='main'>sidebar</a> in your wiki first.</p>" % (defaults.omd_site, _("sidebar")))
+                   "target='main'>sidebar</a> in your wiki first.</p>" % (config.omd_site(), _("sidebar")))
 
-if defaults.omd_root:
-    sidebar_snapins["wiki"] = {
-        "title" : _("Wiki"),
-        "description" : _("Shows the Wiki Navigation of the OMD Site"),
-        "render" : render_wiki,
-        "allowed" : [ "admin", "user", "guest" ],
-        "styles" : """
-        #snapin_container_wiki div.content {
-            font-weight: bold;
-            color: white;
-        }
-
-        #snapin_container_wiki div.content p {
-            font-weight: normal;
-        }
-
-        #wiki_navigation {
-            text-align: left;
-        }
-
-        #wiki_search {
-            width: 232px;
-            padding: 0;
-        }
-
-        #wiki_side_clear {
-            clear: both;
-        }
-
-        #wiki_search img.iconbutton {
-            width: 33px;
-            height: 26px;
-            margin-top: -25px;
-            left: 196px;
-            float: left;
-            position: relative;
-            z-index:100;
-        }
-
-        #wiki_search input {
-            margin:  0;
-            padding: 0px 5px;
-            font-size: 8pt;
-            width: 194px;
-            height: 25px;
-            background-image: url("images/quicksearch_field_bg.png");
-            background-repeat: no-repeat;
-            -moz-border-radius: 0px;
-            border-style: none;
-            float: left;
-        }
-        """
+sidebar_snapins["wiki"] = {
+    "title" : _("Wiki"),
+    "description" : _("Shows the Wiki Navigation of the OMD Site"),
+    "render" : render_wiki,
+    "allowed" : [ "admin", "user", "guest" ],
+    "styles" : """
+    #snapin_container_wiki div.content {
+        font-weight: bold;
+        color: white;
     }
+
+    #snapin_container_wiki div.content p {
+        font-weight: normal;
+    }
+
+    #wiki_navigation {
+        text-align: left;
+    }
+
+    #wiki_search {
+        width: 232px;
+        padding: 0;
+    }
+
+    #wiki_side_clear {
+        clear: both;
+    }
+
+    #wiki_search img.iconbutton {
+        width: 33px;
+        height: 26px;
+        margin-top: -25px;
+        left: 196px;
+        float: left;
+        position: relative;
+        z-index:100;
+    }
+
+    #wiki_search input {
+        margin:  0;
+        padding: 0px 5px;
+        font-size: 8pt;
+        width: 194px;
+        height: 25px;
+        background-image: url("images/quicksearch_field_bg.png");
+        background-repeat: no-repeat;
+        -moz-border-radius: 0px;
+        border-style: none;
+        float: left;
+    }
+    """
+}
 
 #.
 #   .--Virt. Host Tree-----------------------------------------------------.

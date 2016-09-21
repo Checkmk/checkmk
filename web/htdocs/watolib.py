@@ -43,12 +43,13 @@
 #   '----------------------------------------------------------------------'
 
 import os, shutil, subprocess, base64, pickle, pwd
-import defaults, config, hooks, userdb, multitar
+import config, hooks, userdb, multitar
 import sites
 import traceback
 from lib import *
 from valuespec import *
 
+import cmk.paths
 
 replication_paths = []
 backup_paths = []
@@ -60,34 +61,27 @@ def initialize_before_loading_plugins():
     replication_paths = [
         ( "dir",  "check_mk",   wato_root_dir ),
         ( "dir",  "multisite",  multisite_dir ),
-        ( "file", "htpasswd",   defaults.htpasswd_file ),
-        ( "file", "auth.secret",  '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file) ),
-        ( "file", "auth.serials", '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file) ),
+        ( "file", "htpasswd",   cmk.paths.htpasswd_file ),
+        ( "file", "auth.secret",  '%s/auth.secret' % os.path.dirname(cmk.paths.htpasswd_file) ),
+        ( "file", "auth.serials", '%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file) ),
         # Also replicate the user-settings of Multisite? While the replication
         # as such works pretty well, the count of pending changes will not
         # know.
-        ( "dir", "usersettings", defaults.var_dir + "/web" ),
+        ( "dir", "usersettings", cmk.paths.var_dir + "/web" ),
+        ( "dir", "mkps",  cmk.paths.var_dir + "/packages" ),
+        ( "dir", "local", cmk.paths.omd_root + "/local" ),
     ]
-    if defaults.omd_root:
-        replication_paths += [
-          ( "dir", "mkps",  defaults.var_dir + "/packages" ),
-          ( "dir", "local", defaults.omd_root + "/local" ),
-        ]
 
     # Directories and files for backup & restore
     global backup_paths
     backup_paths = replication_paths + [
         ( "file", "sites",      sites_mk)
-        # autochecks are a site-local ressource. This does only make
-        # sense for single-site installations. How should we handle
-        # this?
-        # ( "dir", "autochecks", defaults.autochecksdir ),
     ]
 
     # Include rule configuration into backup/restore/replication. Current
     # status is not backed up.
     if config.mkeventd_enabled:
-        mkeventd_config_dir = defaults.default_config_dir + "/mkeventd.d/wato/"
+        mkeventd_config_dir = cmk.paths.default_config_dir + "/mkeventd.d/wato/"
         replication_paths.append(("dir", "mkeventd", mkeventd_config_dir))
         backup_paths.append(("dir", "mkeventd", mkeventd_config_dir))
 
@@ -127,10 +121,10 @@ AFFECTED     = 4
 LOCALRESTART = 5
 
 # Some paths and directories
-wato_root_dir  = defaults.check_mk_configdir + "/wato/"
-multisite_dir  = defaults.default_config_dir + "/multisite.d/wato/"
-sites_mk       = defaults.default_config_dir + "/multisite.d/sites.mk"
-var_dir        = defaults.var_dir + "/wato/"
+wato_root_dir  = cmk.paths.check_mk_config_dir + "/wato/"
+multisite_dir  = cmk.paths.default_config_dir + "/multisite.d/wato/"
+sites_mk       = cmk.paths.default_config_dir + "/multisite.d/sites.mk"
+var_dir        = cmk.paths.var_dir + "/wato/"
 log_dir        = var_dir + "log/"
 snapshot_dir   = var_dir + "snapshots/"
 repstatus_file = var_dir + "replication_status.mk"
@@ -3195,7 +3189,7 @@ def save_sites(sites, activate=True):
 
 
 def save_liveproxyd_config(sites):
-    path = defaults.default_config_dir + "/liveproxyd.mk"
+    path = cmk.paths.default_config_dir + "/liveproxyd.mk"
     out = create_user_file(path, "w")
     out.write(wato_fileheader())
 
@@ -3207,7 +3201,7 @@ def save_liveproxyd_config(sites):
 
     out.write("sites = \\\n%s\n" % pprint.pformat(conf))
     try:
-        pidfile = defaults.livestatus_unix_socket + "proxyd.pid"
+        pidfile = cmk.paths.livestatus_unix_socket + "proxyd.pid"
         pid = int(file(pidfile).read().strip())
         os.kill(pid, 10)
     except Exception, e:
@@ -3215,13 +3209,11 @@ def save_liveproxyd_config(sites):
 
 
 def create_nagvis_backends(sites):
-    if not defaults.omd_root:
-        return # skip when not in OMD environment
     cfg = [
         '; MANAGED BY CHECK_MK WATO - Last Update: %s' % time.strftime('%Y-%m-%d %H:%M:%S'),
     ]
     for site_id, site in sites.items():
-        if site == defaults.omd_site:
+        if site == config.omd_site():
             continue # skip local site, backend already added by omd
         if 'socket' not in site:
             continue # skip sites without configured sockets
@@ -3242,7 +3234,7 @@ def create_nagvis_backends(sites):
         if site.get("status_host"):
             cfg.append('statushost="%s"' % ':'.join(site['status_host']))
 
-    file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % defaults.omd_root, 'w').write('\n'.join(cfg))
+    file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.paths.omd_root, 'w').write('\n'.join(cfg))
 
 
 def create_site_globals_file(siteid, tmp_dir):
@@ -3265,7 +3257,7 @@ def create_site_globals_file(siteid, tmp_dir):
 
 
 def create_distributed_wato_file(siteid, mode):
-    out = create_user_file(defaults.check_mk_configdir + "/distributed_wato.mk", "w")
+    out = create_user_file(cmk.paths.check_mk_config_dir + "/distributed_wato.mk", "w")
     out.write(wato_fileheader())
     out.write("# This file has been created by the master site\n"
               "# push the configuration to us. It makes sure that\n"
@@ -3274,7 +3266,7 @@ def create_distributed_wato_file(siteid, mode):
 
 
 def delete_distributed_wato_file():
-    p = defaults.check_mk_configdir + "/distributed_wato.mk"
+    p = cmk.paths.check_mk_config_dir + "/distributed_wato.mk"
     # We do not delete the file but empty it. That way
     # we do not need write permissions to the conf.d
     # directory!
@@ -3283,8 +3275,8 @@ def delete_distributed_wato_file():
 
 
 def has_distributed_wato_file():
-    return os.path.exists(defaults.check_mk_configdir + "/distributed_wato.mk") \
-        and os.stat(defaults.check_mk_configdir + "/distributed_wato.mk").st_size != 0
+    return os.path.exists(cmk.paths.check_mk_config_dir + "/distributed_wato.mk") \
+        and os.stat(cmk.paths.check_mk_config_dir + "/distributed_wato.mk").st_size != 0
 
 
 # Makes sure, that in distributed mode we monitor only
@@ -3372,7 +3364,7 @@ def get_url(url, insecure, user=None, password=None, params = '', post_data = No
             command += ' --data-binary "%s"' % post_data
         else:
             import tempfile
-            tmp_file = tempfile.NamedTemporaryFile(dir = defaults.tmp_dir)
+            tmp_file = tempfile.NamedTemporaryFile(dir = cmk.paths.tmp_dir)
             tmp_file.write(post_data)
             tmp_file.flush()
             command += ' --data-binary "@%s"' % tmp_file.name
@@ -3602,7 +3594,7 @@ def remove_sync_snapshot(siteid):
 
 
 def sync_snapshot_file(siteid):
-    return defaults.tmp_dir + "/sync-%s.tar.gz" % siteid
+    return cmk.paths.tmp_dir + "/sync-%s.tar.gz" % siteid
 
 
 def create_sync_snapshot(site_id):
@@ -3611,7 +3603,7 @@ def create_sync_snapshot(site_id):
         tmp_path = "%s-%s" % (path, id(html))
 
         # Add site-specific global settings.
-        site_tmp_dir = defaults.tmp_dir + "/sync-%s-specific-%s" % (site_id, id(html))
+        site_tmp_dir = cmk.paths.tmp_dir + "/sync-%s-specific-%s" % (site_id, id(html))
         create_site_globals_file(site_id, site_tmp_dir)
 
         paths = replication_paths + [("dir", "sitespecific", site_tmp_dir)]
@@ -3713,7 +3705,7 @@ def automation_push_snapshot():
         # of all global settings, that should override the ones in global.mk
         # in various directories.
         try:
-            tmp_dir = defaults.tmp_dir + "/sitespecific-%s" % id(html)
+            tmp_dir = cmk.paths.tmp_dir + "/sitespecific-%s" % id(html)
             if not os.path.exists(tmp_dir):
                 make_nagios_directory(tmp_dir)
             multitar.extract_from_buffer(tarcontent, [ ("dir", "sitespecific", tmp_dir) ])
@@ -3755,7 +3747,7 @@ def automation_push_snapshot():
 
 def mkeventd_reload():
     import mkeventd
-    mkeventd.execute_command("RELOAD", site=defaults.omd_site)
+    mkeventd.execute_command("RELOAD", site=config.omd_site())
     try:
         os.remove(log_dir + "mkeventd.log")
     except OSError:
@@ -4260,35 +4252,7 @@ def check_mk_local_automation(command, args=[], indata="", stdin_data=None, time
     if timeout:
         args = [ "--timeout", "%d" % timeout ] + args
 
-    # Gather the command to use for executing --automation calls to check_mk
-    # - First try to use the check_mk_automation option from the defaults
-    # - When not set use "check_mk --automation"
-    if defaults.check_mk_automation:
-        commandargs = defaults.check_mk_automation.split()
-    else:
-        commandargs = [ 'check_mk', '--automation' ]
-
-    cmd = commandargs  + [ command, '--' ] + args
-    sudo_msg = ''
-    if commandargs[0] == 'sudo':
-        if commandargs[1] == '-u': # skip -u USER in /etc/sudoers
-            sudoline = "%s ALL = (%s) NOPASSWD: %s *" % \
-                        (apache_user(), commandargs[2], " ".join(commandargs[3:]))
-        else:
-            sudoline = "%s ALL = (root) NOPASSWD: %s *" % \
-                        (apache_user(), " ".join(commandargs[1:]))
-
-        sudo_msg = ("<p>The webserver is running as user which has no rights on the "
-                    "needed Check_MK/Nagios files.<br>Please ensure you have set-up "
-                    "the sudo environment correctly. e.g. proceed as follows:</p>\n"
-                    "<ol><li>install sudo package</li>\n"
-                    "<li>Append the following to the <tt>/etc/sudoers</tt> file:\n"
-                    "<pre># Needed for WATO - the Check_MK Web Administration Tool\n"
-                    "Defaults:%s !requiretty\n"
-                    "%s\n"
-                    "</pre></li>\n"
-                    "<li>Retry this operation</li></ol>\n" %
-                    (apache_user(), sudoline))
+    cmd = [ 'check_mk', '--automation',  command, '--' ] + args
 
     if command in [ 'restart', 'reload' ]:
         try:
@@ -4307,21 +4271,20 @@ def check_mk_local_automation(command, args=[], indata="", stdin_data=None, time
         p = subprocess.Popen(cmd,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
     except Exception, e:
-        if commandargs[0] == 'sudo':
-            raise MKGeneralException("Cannot execute <tt>%s</tt>: %s<br><br>%s" % (commandargs[0], e, sudo_msg))
-        else:
-            raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (commandargs[0], e))
+        raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (" ".join(cmd), e))
+
     if stdin_data != None:
         p.stdin.write(stdin_data)
     else:
         p.stdin.write(repr(indata))
+
     p.stdin.close()
     outdata = p.stdout.read()
     exitcode = p.wait()
     if exitcode != 0:
         if config.debug:
-            raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
-                  (" ".join(cmd), exitcode, hilite_errors(outdata), outdata.lstrip().startswith('sudo:') and sudo_msg or ''))
+            raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>" %
+                  (" ".join(cmd), exitcode, hilite_errors(outdata)))
         else:
             raise MKGeneralException(hilite_errors(outdata))
 
@@ -4584,17 +4547,17 @@ def load_user_scripts_from(adir):
 
 def load_user_scripts(what):
     scripts = {}
-    not_dir = defaults.share_dir + "/" + what
+    not_dir = cmk.paths.share_dir + "/" + what
     try:
         if what == "notifications":
              # Support for setup.sh
-             not_dir = defaults.notifications_dir
+             not_dir = cmk.paths.notifications_dir
     except:
         pass
 
     scripts = load_user_scripts_from(not_dir)
     try:
-        local_dir = defaults.omd_root + "/local/share/check_mk/" + what
+        local_dir = cmk.paths.omd_root + "/local/share/check_mk/" + what
         scripts.update(load_user_scripts_from(local_dir))
     except:
         pass
@@ -4673,16 +4636,16 @@ def make_action_link(vars):
     return folder_preserving_link(vars + [("_transid", html.get_transid())])
 
 def lock_exclusive():
-    aquire_lock(defaults.default_config_dir + "/multisite.mk")
+    aquire_lock(cmk.paths.default_config_dir + "/multisite.mk")
 
 
 def unlock_exclusive():
-    release_lock(defaults.default_config_dir + "/multisite.mk")
+    release_lock(cmk.paths.default_config_dir + "/multisite.mk")
 
 
 def git_command(args):
     encoded_args = " ".join([ a.encode("utf-8") for a in args ])
-    command = "cd '%s' && git %s 2>&1" % (defaults.default_config_dir, encoded_args)
+    command = "cd '%s' && git %s 2>&1" % (cmk.paths.default_config_dir, encoded_args)
     p = os.popen(command)
     output = p.read()
     status = p.close()
@@ -4702,7 +4665,7 @@ def prepare_git_commit():
 
 def do_git_commit():
     author = shell_quote("%s <%s>" % (config.user_id, config.user_email))
-    git_dir = defaults.default_config_dir + "/.git"
+    git_dir = cmk.paths.default_config_dir + "/.git"
     if not os.path.exists(git_dir):
         git_command(["init"])
 
@@ -4737,13 +4700,13 @@ def git_add_files():
 
 def git_has_pending_changes():
     return os.popen("cd '%s' && git status --porcelain" %
-                        defaults.default_config_dir).read().strip()
+                        cmk.paths.default_config_dir).read().strip()
 
 
 # Make sure that .gitignore-files are present and uptodate. Only files below the "wato" directories
 # should be under git control. The files in etc/check_mk/*.mk should not be put under control.
 def write_gitignore_files():
-    file(defaults.default_config_dir + "/.gitignore", "w").write(
+    file(cmk.paths.default_config_dir + "/.gitignore", "w").write(
         "# This file is under control of Check_MK. Please don't modify it.\n"
         "# Your changes will be overwritten.\n"
         "\n"
@@ -4753,14 +4716,14 @@ def write_gitignore_files():
         "*swp\n"
         "*.mk.new\n")
 
-    for subdir in os.listdir(defaults.default_config_dir):
+    for subdir in os.listdir(cmk.paths.default_config_dir):
         if subdir.endswith(".d"):
-            file(defaults.default_config_dir + "/" + subdir + "/.gitignore", "w").write(
+            file(cmk.paths.default_config_dir + "/" + subdir + "/.gitignore", "w").write(
                 "*\n"
                 "!wato\n")
 
-            if os.path.exists(defaults.default_config_dir + "/" + subdir + "/wato"):
-                file(defaults.default_config_dir + "/" + subdir + "/wato/.gitignore", "w").write("!*\n")
+            if os.path.exists(cmk.paths.default_config_dir + "/" + subdir + "/wato"):
+                file(cmk.paths.default_config_dir + "/" + subdir + "/wato/.gitignore", "w").write("!*\n")
 
 
 # Make sure that the user is in all of cgs contact groups.

@@ -26,6 +26,7 @@
 
 from cmk.regex import regex
 import cmk.tty as tty
+import cmk.paths
 
 #   .--cmk -I--------------------------------------------------------------.
 #   |                                  _           ___                     |
@@ -396,7 +397,7 @@ def set_rediscovery_flag(hostname, need_rediscovery):
             f = open(filename, "w")
             f.close()
 
-    autodiscovery_dir = var_dir + '/autodiscovery'
+    autodiscovery_dir = cmk.paths.var_dir + '/autodiscovery'
     discovery_filename = os.path.join(autodiscovery_dir, hostname)
     if need_rediscovery:
         if not os.path.exists(autodiscovery_dir):
@@ -442,7 +443,7 @@ def discover_marked_hosts():
 
         return None
 
-    autodiscovery_dir = var_dir + '/autodiscovery'
+    autodiscovery_dir = cmk.paths.var_dir + '/autodiscovery'
 
     if not os.path.exists(autodiscovery_dir):
         # there is obviously nothing to do
@@ -1232,9 +1233,9 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 # 3. parameters evaluated!
 def read_autochecks_of(hostname, world="config"):
     if world == "config":
-        basedir = autochecksdir
+        basedir = cmk.paths.autochecks_dir
     else:
-        basedir = var_dir + "/core/autochecks"
+        basedir = cmk.paths.var_dir + "/core/autochecks"
     filepath = basedir + '/' + hostname + '.mk'
 
     if not os.path.exists(filepath):
@@ -1305,7 +1306,7 @@ def parse_autochecks_file(hostname):
 
         return line.strip(), None
 
-    path = "%s/%s.mk" % (autochecksdir, hostname)
+    path = "%s/%s.mk" % (cmk.paths.autochecks_dir, hostname)
     if not os.path.exists(path):
         return []
     lineno = 0
@@ -1359,11 +1360,11 @@ def parse_autochecks_file(hostname):
 
 
 def has_autochecks(hostname):
-    return os.path.exists(autochecksdir + "/" + hostname + ".mk")
+    return os.path.exists(cmk.paths.autochecks_dir + "/" + hostname + ".mk")
 
 
 def remove_autochecks_file(hostname):
-    filepath = autochecksdir + "/" + hostname + ".mk"
+    filepath = cmk.paths.autochecks_dir + "/" + hostname + ".mk"
     try:
         os.remove(filepath)
     except OSError:
@@ -1372,9 +1373,9 @@ def remove_autochecks_file(hostname):
 
 # FIXME TODO: Consolidate with automation.py automation_write_autochecks_file()
 def save_autochecks_file(hostname, items):
-    if not os.path.exists(autochecksdir):
-        os.makedirs(autochecksdir)
-    filepath = "%s/%s.mk" % (autochecksdir, hostname)
+    if not os.path.exists(cmk.paths.autochecks_dir):
+        os.makedirs(cmk.paths.autochecks_dir)
+    filepath = "%s/%s.mk" % (cmk.paths.autochecks_dir, hostname)
     out = file(filepath, "w")
     out.write("[\n")
     for check_type, item, paramstring in items:

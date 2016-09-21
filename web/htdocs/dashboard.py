@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, visuals, pprint, time, copy
+import config, visuals, pprint, time, copy
 from valuespec import *
 from lib import *
 import wato

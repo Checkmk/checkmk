@@ -42,7 +42,6 @@ try:
 except ImportError:
     import json
 
-import defaults
 import table
 import key_mgmt
 from valuespec import *

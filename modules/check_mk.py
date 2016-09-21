@@ -49,9 +49,7 @@ from cmk.regex import regex, is_regex
 from cmk.exceptions import MKGeneralException, MKTerminate
 import cmk.tty as tty
 import cmk.store as store
-
-# These variable will be substituted at 'make dist' time
-check_mk_version  = '(inofficial)'
+import cmk.paths
 
 #   .--Prelude-------------------------------------------------------------.
 #   |                  ____           _           _                        |
@@ -92,98 +90,8 @@ if '--profile' in sys.argv[1:]:
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-# are we running OMD? If yes, honor local/ hierarchy
-omd_root = os.getenv("OMD_ROOT", None)
-omd_site = os.getenv("OMD_SITE", None)
-if omd_root:
-    local_share              = omd_root + "/local/share/check_mk"
-    local_checks_dir         = local_share + "/checks"
-    local_notifications_dir  = local_share + "/notifications"
-    local_inventory_dir      = local_share + "/inventory"
-    local_check_manpages_dir = local_share + "/checkman"
-    local_agents_dir         = local_share + "/agents"
-    local_special_agents_dir = local_agents_dir + "/special"
-    local_mibs_dir           = local_share + "/mibs"
-    local_web_dir            = local_share + "/web"
-    local_pnp_templates_dir  = local_share + "/pnp-templates"
-    local_doc_dir            = omd_root + "/local/share/doc/check_mk"
-    local_locale_dir         = local_share + "/locale"
-    local_bin_dir            = omd_root + "/local/bin"
-    local_lib_dir            = omd_root + "/local/lib"
-else:
-    local_checks_dir         = None
-    local_notifications_dir  = None
-    local_inventory_dir      = None
-    local_check_manpages_dir = None
-    local_agents_dir         = None
-    local_special_agents_dir = None
-    local_mibs_dir           = None
-    local_web_dir            = None
-    local_pnp_templates_dir  = None
-    local_doc_dir            = None
-    local_locale_dir         = None
-    local_bin_dir            = None
-    local_lib_dir            = None
-
-# Pathnames, directories   and  other  settings.  All  these  settings
-# should be  overriden by  /usr/share/check_mk/modules/defaults, which
-# is created by setup.sh. The user might override those values again
-# in main.mk
-
-default_config_dir                 = '/etc/check_mk'
-check_mk_configdir                 = default_config_dir + "/conf.d"
-checks_dir                         = '/usr/share/check_mk/checks'
-notifications_dir                  = '/usr/share/check_mk/notifications'
-inventory_dir                      = '/usr/share/check_mk/inventory'
-agents_dir                         = '/usr/share/check_mk/agents'
-check_manpages_dir                 = '/usr/share/doc/check_mk/checks'
-modules_dir                        = '/usr/share/check_mk/modules'
-var_dir                            = '/var/lib/check_mk'
-autochecksdir                      = var_dir + '/autochecks'
-snmpwalks_dir                      = var_dir + '/snmpwalks'
-precompiled_hostchecks_dir         = var_dir + '/precompiled'
-counters_directory                 = var_dir + '/counters'
-tcp_cache_dir                      = var_dir + '/cache'
-logwatch_dir                       = var_dir + '/logwatch'
-www_group                          = None # unset
-logwatch_notes_url                 = "/nagios/logwatch.php?host=%s&file=%s"
-rrdcached_socket                   = None
-rrd_path                           = None
-
-# Stuff for supporting Nagios
-check_result_path                  = '/usr/local/nagios/var/spool/checkresults'
-nagios_objects_file                = var_dir + '/check_mk_objects.cfg'
-nagios_command_pipe_path           = '/usr/local/nagios/var/rw/nagios.cmd'
-nagios_startscript                 = '/etc/init.d/nagios'
-nagios_binary                      = '/usr/sbin/nagios'
-nagios_config_file                 = '/etc/nagios/nagios.cfg'
-
-# During setup a file called defaults is created in the modules
-# directory.  In this file all directories are configured.  We need to
-# read in this file first. It tells us where to look for our
-# configuration file. In python argv[0] always contains the directory,
-# even if the binary lies in the PATH and is called without
-# '/'. This allows us to find our directory by taking everything up to
-# the first '/'
-
-# Allow to specify defaults file on command line (needed for OMD)
-if len(sys.argv) >= 2 and sys.argv[1] == '--defaults':
-    defaults_path = sys.argv[2]
-    del sys.argv[1:3]
-else:
-    defaults_path = os.path.dirname(sys.argv[0]) + "/defaults"
-
-try:
-    execfile(defaults_path)
-except Exception, e:
-    sys.stderr.write(("ERROR: Cannot read installation settings of check_mk.\n%s\n\n"+
-                      "During setup the file '%s'\n"+
-                      "should have been created. Please make sure that that file\n"+
-                      "exists, is readable and contains valid Python code.\n") %
-                     (e, defaults_path))
-    sys.exit(3)
-
+# TODO: Can this be cleaned up? Can we drop the "-c" option? Otherwise: move it to cmk.paths?
+#
 # Now determine the location of the directory containing main.mk. It
 # is searched for at several places:
 #
@@ -193,10 +101,10 @@ except Exception, e:
 try:
     i = sys.argv.index('-c')
     if i > 0 and i < len(sys.argv)-1:
-        check_mk_configfile = sys.argv[i+1]
-        parts = check_mk_configfile.split('/')
+        cmk.paths.main_config_file = sys.argv[i+1]
+        parts = cmk.paths.main_config_file.split('/')
         if len(parts) > 1:
-            check_mk_basedir = check_mk_configfile.rsplit('/',1)[0]
+            check_mk_basedir = cmk.paths.main_config_file.rsplit('/',1)[0]
         else:
             check_mk_basedir = "." # no / contained in filename
 
@@ -204,24 +112,23 @@ try:
             sys.stderr.write("Directory %s does not exist.\n" % check_mk_basedir)
             sys.exit(1)
 
-        if not os.path.exists(check_mk_configfile):
-            sys.stderr.write("Missing configuration file %s.\n" % check_mk_configfile)
+        if not os.path.exists(cmk.paths.main_config_file):
+            sys.stderr.write("Missing configuration file %s.\n" % cmk.paths.main_config_file)
             sys.exit(1)
 
         # Also rewrite the location of the conf.d directory
         if os.path.exists(check_mk_basedir + "/conf.d"):
-            check_mk_configdir = check_mk_basedir + "/conf.d"
+            cmk.paths.check_mk_config_dir = check_mk_basedir + "/conf.d"
 
     else:
         sys.stderr.write("Missing argument to option -c.\n")
         sys.exit(1)
 
 except ValueError:
-    if not os.path.exists(default_config_dir + "/main.mk"):
-        sys.stderr.write("Missing main configuration file %s/main.mk\n" % default_config_dir)
+    cmk.paths.main_config_file = cmk.paths.default_config_dir + "/main.mk"
+    if not os.path.exists(cmk.paths.main_config_file):
+        sys.stderr.write("Missing main configuration file %s\n" % cmk.paths.main_config_file)
         sys.exit(4)
-    check_mk_basedir = default_config_dir
-    check_mk_configfile = check_mk_basedir + "/main.mk"
 
 except SystemExit, exitcode:
     sys.exit(exitcode)
@@ -328,11 +235,11 @@ service_rule_groups = set([
 #   '----------------------------------------------------------------------'
 
 def module_exists(name):
-    path = modules_dir + "/" + name + ".py"
+    path = cmk.paths.modules_dir + "/" + name + ".py"
     return os.path.exists(path)
 
 def load_module(name):
-    path = modules_dir + "/" + name + ".py"
+    path = cmk.paths.modules_dir + "/" + name + ".py"
     execfile(path, globals())
 
 known_vars = set(vars().keys())
@@ -407,8 +314,8 @@ special_agent_info                 = {}
 # If a check or check.include is both found in local/ and in the
 # normal structure, then only the file in local/ must be read!
 def load_checks():
-    filelist = plugin_pathnames_in_directory(local_checks_dir) \
-             + plugin_pathnames_in_directory(checks_dir)
+    filelist = plugin_pathnames_in_directory(cmk.paths.local_checks_dir) \
+             + plugin_pathnames_in_directory(cmk.paths.checks_dir)
 
     # read include files always first, but still in the sorted
     # order with local ones last (possibly overriding variables)
@@ -1274,7 +1181,7 @@ def autodetect_plugin(command_line):
     if command_line[0] not in [ '$', '/' ]:
         try:
             for dir in [ "/local", "" ]:
-                path = omd_root + dir + "/lib/nagios/plugins/"
+                path = cmk.paths.omd_root + dir + "/lib/nagios/plugins/"
                 if os.path.exists(path + plugin_name):
                     command_line = path + command_line
                     break
@@ -1540,6 +1447,14 @@ def aggregated_service_name(hostname, servicedesc):
 #   | Misc functions which do not belong to any other topic                |
 #   '----------------------------------------------------------------------'
 
+def omd_site():
+    try:
+        return os.environ["OMD_SITE"]
+    except KeyError:
+        raise MKGeneralException(_("OMD_SITE environment variable not set. You can "
+                                   "only execute this in an OMD site."))
+
+
 def plugin_pathnames_in_directory(path):
     if path and os.path.exists(path):
         return sorted([
@@ -1575,7 +1490,7 @@ def agent_target_version(hostname):
         if spec == "ignore":
             return None
         elif spec == "site":
-            return check_mk_version
+            return cmk.__version__
         elif type(spec) == str:
             # Compatibility to old value specification format (a single version string)
             return spec
@@ -1636,7 +1551,7 @@ def schedule_inventory_check(hostname):
     try:
         import socket
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(livestatus_unix_socket)
+        s.connect(cmk.paths.livestatus_unix_socket)
         now = int(time.time())
         if 'cmk-inventory' in use_new_descriptions_for:
             command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK Discovery;%d" % (hostname, now)
@@ -2261,7 +2176,8 @@ def get_sorted_check_table(hostname, remove_duplicates=False, world="config"):
 # Determine, which program to call to get the agent data. This is an alternative to fetch
 # the agent data via TCP port, mostly used for special agents.
 def get_datasource_program(hostname, ipaddress):
-    special_agents_dir = agents_dir + "/special"
+    special_agents_dir       = cmk.paths.agents_dir + "/special"
+    local_special_agents_dir = cmk.paths.local_agents_dir + "/special"
 
     # First check WATO-style special_agent rules
     for agentname, ruleset in special_agents.items():
@@ -2269,8 +2185,7 @@ def get_datasource_program(hostname, ipaddress):
         if params: # rule match!
             # Create command line using the special_agent_info
             cmd_arguments = special_agent_info[agentname](params[0], hostname, ipaddress)
-            if local_special_agents_dir and \
-                os.path.exists(local_special_agents_dir + "/agent_" + agentname):
+            if os.path.exists(local_special_agents_dir + "/agent_" + agentname):
                 path = local_special_agents_dir + "/agent_" + agentname
             else:
                 path = special_agents_dir + "/agent_" + agentname
@@ -2394,7 +2309,7 @@ def init_ip_lookup_cache():
     global g_ip_lookup_cache
     if g_ip_lookup_cache is None:
         try:
-            g_ip_lookup_cache = eval(file(var_dir + '/ipaddresses.cache').read())
+            g_ip_lookup_cache = eval(file(cmk.paths.var_dir + '/ipaddresses.cache').read())
 
             # be compatible to old caches which were created by Check_MK without IPv6 support
             if g_ip_lookup_cache and type(g_ip_lookup_cache.keys()[0]) != tuple:
@@ -2407,9 +2322,10 @@ def init_ip_lookup_cache():
 
 
 def write_ip_lookup_cache():
+    # TODO: Write using cmk.store
     suffix = "." + str(os.getpid())
-    file(var_dir + '/ipaddresses.cache' + suffix, 'w').write(repr(g_ip_lookup_cache))
-    os.rename(var_dir + '/ipaddresses.cache' + suffix, var_dir + '/ipaddresses.cache')
+    file(cmk.paths.var_dir + '/ipaddresses.cache' + suffix, 'w').write(repr(g_ip_lookup_cache))
+    os.rename(cmk.paths.var_dir + '/ipaddresses.cache' + suffix, cmk.paths.var_dir + '/ipaddresses.cache')
 
 
 def do_update_dns_cache():
@@ -2606,7 +2522,8 @@ def pack_config():
         except:
             return False
 
-    filepath = var_dir + "/core/helper_config.mk"
+    # TODO: Write using cmk.store.
+    filepath = cmk.paths.var_dir + "/core/helper_config.mk"
     out = file(filepath + ".new", "w")
     out.write("#!/usr/bin/python\n"
               "# encoding: utf-8\n"
@@ -2676,14 +2593,14 @@ def pack_config():
 
 def read_packed_config():
     import marshal
-    filepath = var_dir + "/core/helper_config.mk"
+    filepath = cmk.paths.var_dir + "/core/helper_config.mk"
     exec(marshal.load(open(filepath)), globals())
 
 def pack_autochecks():
-    dstpath = var_dir + "/core/autochecks"
+    dstpath = cmk.paths.var_dir + "/core/autochecks"
     if not os.path.exists(dstpath):
         os.makedirs(dstpath)
-    srcpath = autochecksdir
+    srcpath = cmk.paths.autochecks_dir
     needed = set([])
 
     # hardlink used files
@@ -2716,10 +2633,10 @@ def pack_autochecks():
 #   '----------------------------------------------------------------------'
 
 def all_manuals():
-    entries = dict([(fn, check_manpages_dir + "/" + fn) for fn in os.listdir(check_manpages_dir)])
-    if local_check_manpages_dir and os.path.exists(local_check_manpages_dir):
-        entries.update(dict([(fn, local_check_manpages_dir + "/" + fn)
-                for fn in os.listdir(local_check_manpages_dir)]))
+    entries = dict([(fn, cmk.paths.check_manpages_dir + "/" + fn) for fn in os.listdir(cmk.paths.check_manpages_dir)])
+    if os.path.exists(cmk.paths.local_check_manpages_dir):
+        entries.update(dict([(fn, cmk.paths.local_check_manpages_dir + "/" + fn)
+                for fn in os.listdir(cmk.paths.local_check_manpages_dir)]))
     return entries
 
 def list_all_manuals():
@@ -3350,6 +3267,7 @@ def do_restore(tarname):
     if not os.path.exists(tarname):
         raise MKGeneralException("Unable to restore: File does not exist")
 
+    # TODO: Cleanup owned_by_nagios and group_www handling - not needed in pure OMD env anymore
     for name, path, canonical_name, descr, is_dir, owned_by_nagios, group_www in backup_paths:
         absdir = os.path.abspath(path)
         if is_dir:
@@ -3396,11 +3314,11 @@ def do_restore(tarname):
 
         if i_am_root():
             if owned_by_nagios:
-                to_user = str(nagios_user)
+                to_user = omd_site()
             else:
                 to_user = "root"
-            if group_www and www_group != None:
-                to_group = ":" + str(www_group)
+            if group_www:
+                to_group = ":%s" % omd_site()
                 if opt_verbose:
                     sys.stderr.write("  Adding group write permissions\n")
                     os.system("chmod -R g+w '%s'" % absdir)
@@ -3424,7 +3342,7 @@ def do_flush(hosts):
 
         # counters
         try:
-            os.remove(counters_directory + "/" + host)
+            os.remove(cmk.paths.counters_dir + "/" + host)
             sys.stdout.write(tty.bold + tty.blue + " counters")
             sys.stdout.flush()
             flushed = True
@@ -3433,8 +3351,8 @@ def do_flush(hosts):
 
         # cache files
         d = 0
-        dir = tcp_cache_dir
-        if os.path.exists(tcp_cache_dir):
+        dir = cmk.paths.tcp_cache_dir
+        if os.path.exists(dir):
             for f in os.listdir(dir):
                 if f == host or f.startswith(host + "."):
                     try:
@@ -3456,7 +3374,7 @@ def do_flush(hosts):
 
 
         # logfiles
-        dir = logwatch_dir + "/" + host
+        dir = cmk.paths.logwatch_dir + "/" + host
         if os.path.exists(dir):
             d = 0
             for f in os.listdir(dir):
@@ -3477,7 +3395,7 @@ def do_flush(hosts):
             sys.stdout.write(tty.bold + tty.cyan + " autochecks(%d)" % count)
 
         # inventory
-        path = var_dir + "/inventory/" + host
+        path = cmk.paths.var_dir + "/inventory/" + host
         if os.path.exists(path):
             os.remove(path)
             sys.stdout.write(tty.bold + tty.yellow + " inventory")
@@ -3518,7 +3436,7 @@ def create_core_config():
         do_create_cmc_config(opt_cmc_relfilename)
     else:
         load_module("nagios")
-        out = file(nagios_objects_file, "w")
+        out = file(cmk.paths.nagios_objects_file, "w")
         create_nagios_config(out)
 
     write_stored_passwords()
@@ -3581,7 +3499,7 @@ def write_stored_passwords():
     for ident, pw in stored_passwords.items():
         content += "%s:%s\n" % (ident, pw["password"])
 
-    store.save_file(var_dir + "/stored_passwords", content)
+    store.save_file(cmk.paths.var_dir + "/stored_passwords", content)
 
 
 def get_cluster_nodes_for_config(hostname):
@@ -3738,6 +3656,11 @@ def replace_macros(s, macros):
     return s
 
 
+def logwatch_notes_url(hostname, filename):
+    return "/%s/nagios/logwatch.php?host=%s&file=%s" % \
+        (omd_site(), urllib.quote(hostname), urllib.quote(make_utf8(filename)))
+
+
 #.
 #   .--Main Functions------------------------------------------------------.
 #   | __  __       _         _____                 _   _                   |
@@ -3815,7 +3738,7 @@ def do_snmptranslate(args):
         raise MKGeneralException("Please provide the name of a SNMP walk file")
     walk_filename = args[0]
 
-    walk_path = "%s/%s" % (snmpwalks_dir, walk_filename)
+    walk_path = "%s/%s" % (cmk.paths.snmpwalks_dir, walk_filename)
     if not os.path.exists(walk_path):
         raise MKGeneralException("Walk does not exist")
 
@@ -3826,10 +3749,8 @@ def do_snmptranslate(args):
             for line in lines:
                 oids_for_command.append(line.split(" ")[0])
 
-            extra_mib_path = ""
-            if local_mibs_dir:
-                extra_mib_path = " -M+%s" % local_mibs_dir
-            command = "snmptranslate -m ALL%s %s 2>/dev/null" % (extra_mib_path, " ".join(oids_for_command))
+            command = "snmptranslate -m ALL -M+%s %s 2>/dev/null" % \
+                        (cmk.paths.local_mibs_dir, " ".join(oids_for_command))
             process = os.popen(command, "r")
             output  = process.read()
             result  = output.split("\n")[0::2]
@@ -3872,12 +3793,12 @@ def do_snmpwalk(hostnames):
         sys.stderr.write("Please specify host names to walk on.\n")
         return
 
-    if not os.path.exists(snmpwalks_dir):
-        os.makedirs(snmpwalks_dir)
+    if not os.path.exists(cmk.paths.snmpwalks_dir):
+        os.makedirs(cmk.paths.snmpwalks_dir)
 
     for host in hostnames:
         try:
-            do_snmpwalk_on(host, snmpwalks_dir + "/" + host)
+            do_snmpwalk_on(host, cmk.paths.snmpwalks_dir + "/" + host)
         except Exception, e:
             sys.stderr.write("Error walking %s: %s\n" % (host, e))
             if opt_debug:
@@ -3941,58 +3862,54 @@ def show_paths():
     fil = 2
 
     paths = [
-        ( modules_dir,                 dir, inst, "Main components of check_mk"),
-        ( checks_dir,                  dir, inst, "Checks"),
-        ( notifications_dir,           dir, inst, "Notification scripts"),
-        ( inventory_dir,               dir, inst, "Inventory plugins"),
-        ( agents_dir,                  dir, inst, "Agents for operating systems"),
-        ( doc_dir,                     dir, inst, "Documentation files"),
-        ( web_dir,                     dir, inst, "Check_MK's web pages"),
-        ( check_manpages_dir,          dir, inst, "Check manpages (for check_mk -M)"),
-        ( lib_dir,                     dir, inst, "Binary plugins (architecture specific)"),
-        ( pnp_templates_dir,           dir, inst, "Templates for PNP4Nagios"),
+        ( cmk.paths.modules_dir,                 dir, inst, "Main components of check_mk"),
+        ( cmk.paths.checks_dir,                  dir, inst, "Checks"),
+        ( cmk.paths.notifications_dir,           dir, inst, "Notification scripts"),
+        ( cmk.paths.inventory_dir,               dir, inst, "Inventory plugins"),
+        ( cmk.paths.agents_dir,                  dir, inst, "Agents for operating systems"),
+        ( cmk.paths.doc_dir,                     dir, inst, "Documentation files"),
+        ( cmk.paths.web_dir,                     dir, inst, "Check_MK's web pages"),
+        ( cmk.paths.check_manpages_dir,          dir, inst, "Check manpages (for check_mk -M)"),
+        ( cmk.paths.lib_dir,                     dir, inst, "Binary plugins (architecture specific)"),
+        ( cmk.paths.pnp_templates_dir,           dir, inst, "Templates for PNP4Nagios"),
     ]
     if monitoring_core == "nagios":
         paths += [
-            ( nagios_startscript,          fil, inst, "Startscript for Nagios daemon"),
-            ( nagios_binary,               fil, inst, "Path to Nagios executable"),
+            ( cmk.paths.nagios_startscript,          fil, inst, "Startscript for Nagios daemon"),
+            ( cmk.paths.nagios_binary,               fil, inst, "Path to Nagios executable"),
+            ( cmk.paths.nagios_config_file,          fil, conf, "Main configuration file of Nagios"),
+            ( cmk.paths.nagios_conf_dir,             dir, conf, "Directory where Nagios reads all *.cfg files"),
+            ( cmk.paths.nagios_objects_file,         fil, data, "File into which Nagios configuration is written"),
+            ( cmk.paths.nagios_status_file,          fil, data, "Path to Nagios status.dat"),
+            ( cmk.paths.nagios_command_pipe_path,    fil, pipe, "Nagios' command pipe"),
+            ( cmk.paths.check_result_path,           fil, pipe, "Nagios' check results directory"),
         ]
 
     paths += [
-        ( default_config_dir,          dir, conf, "Directory that contains main.mk"),
-        ( check_mk_configdir,          dir, conf, "Directory containing further *.mk files"),
-        ( nagios_config_file,          fil, conf, "Main configuration file of Nagios"),
-        ( nagios_conf_dir,             dir, conf, "Directory where Nagios reads all *.cfg files"),
-        ( apache_config_dir,           dir, conf, "Directory where Apache reads all config files"),
-        ( htpasswd_file,               fil, conf, "Users/Passwords for HTTP basic authentication"),
+        ( cmk.paths.default_config_dir,          dir, conf, "Directory that contains main.mk"),
+        ( cmk.paths.check_mk_config_dir,         dir, conf, "Directory containing further *.mk files"),
+        ( cmk.paths.apache_config_dir,           dir, conf, "Directory where Apache reads all config files"),
+        ( cmk.paths.htpasswd_file,               fil, conf, "Users/Passwords for HTTP basic authentication"),
 
-        ( var_dir,                     dir, data, "Base working directory for variable data"),
-        ( autochecksdir,               dir, data, "Checks found by inventory"),
-        ( precompiled_hostchecks_dir,  dir, data, "Precompiled host checks"),
-        ( snmpwalks_dir,               dir, data, "Stored snmpwalks (output of --snmpwalk)"),
-        ( counters_directory,          dir, data, "Current state of performance counters"),
-        ( tcp_cache_dir,               dir, data, "Cached output from agents"),
-        ( logwatch_dir,                dir, data, "Unacknowledged logfiles of logwatch extension"),
-        ( nagios_objects_file,         fil, data, "File into which Nagios configuration is written"),
-        ( nagios_status_file,          fil, data, "Path to Nagios status.dat"),
+        ( cmk.paths.var_dir,                     dir, data, "Base working directory for variable data"),
+        ( cmk.paths.autochecks_dir,              dir, data, "Checks found by inventory"),
+        ( cmk.paths.precompiled_hostchecks_dir,  dir, data, "Precompiled host checks"),
+        ( cmk.paths.snmpwalks_dir,               dir, data, "Stored snmpwalks (output of --snmpwalk)"),
+        ( cmk.paths.counters_dir,                dir, data, "Current state of performance counters"),
+        ( cmk.paths.tcp_cache_dir,               dir, data, "Cached output from agents"),
+        ( cmk.paths.logwatch_dir,                dir, data, "Unacknowledged logfiles of logwatch extension"),
+        ( cmk.paths.livestatus_unix_socket,     fil, pipe, "Socket of Check_MK's livestatus module"),
 
-        ( nagios_command_pipe_path,    fil, pipe, "Nagios' command pipe"),
-        ( check_result_path,           fil, pipe, "Nagios' check results directory"),
-        ( livestatus_unix_socket,      fil, pipe, "Socket of Check_MK's livestatus module"),
-        ]
-
-    if omd_root:
-        paths += [
-         ( local_checks_dir,           dir, local, "Locally installed checks"),
-         ( local_notifications_dir,    dir, local, "Locally installed notification scripts"),
-         ( local_inventory_dir,        dir, local, "Locally installed inventory plugins"),
-         ( local_check_manpages_dir,   dir, local, "Locally installed check man pages"),
-         ( local_agents_dir,           dir, local, "Locally installed agents and plugins"),
-         ( local_web_dir,              dir, local, "Locally installed Multisite addons"),
-         ( local_pnp_templates_dir,    dir, local, "Locally installed PNP templates"),
-         ( local_doc_dir,              dir, local, "Locally installed documentation"),
-         ( local_locale_dir,           dir, local, "Locally installed localizations"),
-        ]
+        ( cmk.paths.local_checks_dir,           dir, local, "Locally installed checks"),
+        ( cmk.paths.local_notifications_dir,    dir, local, "Locally installed notification scripts"),
+        ( cmk.paths.local_inventory_dir,        dir, local, "Locally installed inventory plugins"),
+        ( cmk.paths.local_check_manpages_dir,   dir, local, "Locally installed check man pages"),
+        ( cmk.paths.local_agents_dir,           dir, local, "Locally installed agents and plugins"),
+        ( cmk.paths.local_web_dir,              dir, local, "Locally installed Multisite addons"),
+        ( cmk.paths.local_pnp_templates_dir,    dir, local, "Locally installed PNP templates"),
+        ( cmk.paths.local_doc_dir,              dir, local, "Locally installed documentation"),
+        ( cmk.paths.local_locale_dir,           dir, local, "Locally installed localizations"),
+    ]
 
     def show_paths(title, t):
         if t != inst:
@@ -4197,7 +4114,7 @@ Copyright (C) 2009 Mathias Kettner
     the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
     Boston, MA 02111-1307, USA.
 
-""" % check_mk_version)
+""" % cmk.__version__)
 
 def usage():
     sys.stdout.write("""WAYS TO CALL:
@@ -4358,7 +4275,8 @@ NOTES:
   additional OIDs to walk.
 
   --snmptranslate does not contact the host again, but reuses the hosts
-  walk from the directory %s.%s
+  walk from the directory %s. You can add further MIBs to the directory
+  %s.
 
   --scan-parents uses traceroute in order to automatically detect
   hosts's parents. It creates the file conf.d/parents.mk which
@@ -4386,11 +4304,11 @@ NOTES:
   will be used even if they are outdated.
 
 
-""" % (check_mk_configfile,
-       precompiled_hostchecks_dir,
-       snmpwalks_dir,
-       snmpwalks_dir,
-       local_mibs_dir and ("\n  You can add further MIBs to %s" % local_mibs_dir) or "",
+""" % (cmk.paths.main_config_file,
+       cmk.paths.precompiled_hostchecks_dir,
+       cmk.paths.snmpwalks_dir,
+       cmk.paths.snmpwalks_dir,
+       cmk.paths.local_mibs_dir
        ))
 
 
@@ -4444,7 +4362,7 @@ def do_update(with_precompile):
 
 def do_check_nagiosconfig():
     if monitoring_core == 'nagios':
-        command = nagios_binary + " -vp "  + nagios_config_file + " 2>&1"
+        command = cmk.paths.nagios_binary + " -vp "  + cmk.paths.nagios_config_file + " 2>&1"
         sys.stdout.write("Validating Nagios configuration...")
         if opt_verbose:
             sys.stderr.write("Running '%s'" % command)
@@ -4471,7 +4389,7 @@ def do_core_action(action, quiet=False):
         sys.stdout.flush()
     if monitoring_core == "nagios":
         os.putenv("CORE_NOVERIFY", "yes")
-        command = nagios_startscript + " %s 2>&1" % action
+        command = cmk.paths.nagios_startscript + " %s 2>&1" % action
     else:
         command = "omd %s cmc 2>&1" % action
 
@@ -4487,7 +4405,7 @@ def do_core_action(action, quiet=False):
 
 def core_is_running():
     if monitoring_core == "nagios":
-        command = nagios_startscript + " status >/dev/null 2>&1"
+        command = cmk.paths.nagios_startscript + " status >/dev/null 2>&1"
     else:
         command = "omd status cmc >/dev/null 2>&1"
     code = os.system(command)
@@ -4506,11 +4424,11 @@ def do_restart(only_reload = False):
             sys.exit(1)
 
         # Save current configuration
-        if os.path.exists(nagios_objects_file):
-            backup_path = nagios_objects_file + ".save"
+        if os.path.exists(cmk.paths.nagios_objects_file):
+            backup_path = cmk.paths.nagios_objects_file + ".save"
             if opt_verbose:
-                sys.stderr.write("Renaming %s to %s\n" % (nagios_objects_file, backup_path))
-            os.rename(nagios_objects_file, backup_path)
+                sys.stderr.write("Renaming %s to %s\n" % (cmk.paths.nagios_objects_file, backup_path))
+            os.rename(cmk.paths.nagios_objects_file, backup_path)
         else:
             backup_path = None
 
@@ -4519,7 +4437,7 @@ def do_restart(only_reload = False):
         except Exception, e:
             sys.stderr.write("Error creating configuration: %s\n" % e)
             if backup_path:
-                os.rename(backup_path, nagios_objects_file)
+                os.rename(backup_path, cmk.paths.nagios_objects_file)
             if opt_debug:
                 raise
             sys.exit(1)
@@ -4535,9 +4453,9 @@ def do_restart(only_reload = False):
         else:
             sys.stderr.write("Configuration for monitoring core is invalid. Rolling back.\n")
             if backup_path:
-                os.rename(backup_path, nagios_objects_file)
+                os.rename(backup_path, cmk.paths.nagios_objects_file)
             else:
-                os.remove(nagios_objects_file)
+                os.remove(cmk.paths.nagios_objects_file)
             sys.exit(1)
 
     except Exception, e:
@@ -4556,7 +4474,7 @@ def try_get_activation_lock():
     global restart_lock_fd
     # In some bizarr cases (as cmk -RR) we need to avoid duplicate locking!
     if restart_locking and restart_lock_fd == None:
-        lock_file = default_config_dir + "/main.mk"
+        lock_file = cmk.paths.default_config_dir + "/main.mk"
         import fcntl
         restart_lock_fd = os.open(lock_file, os.O_RDONLY)
         # Make sure that open file is not inherited to monitoring core!
@@ -4574,7 +4492,7 @@ def try_get_activation_lock():
 
 def do_donation():
     donate = []
-    cache_files = os.listdir(tcp_cache_dir)
+    cache_files = os.listdir(cmk.paths.tcp_cache_dir)
     for host in all_active_realhosts():
         if in_binary_hostlist(host, donation_hosts):
             for f in cache_files:
@@ -4586,7 +4504,7 @@ def do_donation():
 
     verbose("Donating files %s\n" % " ".join(cache_files))
     import base64
-    indata = base64.b64encode(os.popen("tar czf - -C %s %s" % (tcp_cache_dir, " ".join(donate))).read())
+    indata = base64.b64encode(os.popen("tar czf - -C %s %s" % (cmk.paths.tcp_cache_dir, " ".join(donate))).read())
     output = os.popen(donation_command, "w")
     output.write("\n\n@STARTDATA\n")
     while len(indata) > 0:
@@ -4616,7 +4534,7 @@ def do_scan_parents(hosts):
     if max_num_processes < 1:
         max_num_processes = 1
 
-    outfilename = check_mk_configdir + "/parents.mk"
+    outfilename = cmk.paths.check_mk_config_dir + "/parents.mk"
 
     traceroute_prog = find_bin_in_path('traceroute')
     if not traceroute_prog:
@@ -4872,18 +4790,15 @@ def ip_to_dnsname(ip):
 
 def config_timestamp():
     mtime = 0
-    for dirpath, dirnames, filenames in os.walk(check_mk_configdir):
+    for dirpath, dirnames, filenames in os.walk(cmk.paths.check_mk_config_dir):
         for f in filenames:
             mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
-    mtime = max(mtime, os.stat(default_config_dir + "/main.mk").st_mtime)
-    try:
-        mtime = max(mtime, os.stat(default_config_dir + "/final.mk").st_mtime)
-    except:
-        pass
-    try:
-        mtime = max(mtime, os.stat(default_config_dir + "/local.mk").st_mtime)
-    except:
-        pass
+
+    for path in [ cmk.paths.main_config_file, cmk.paths.final_config_file, cmk.paths.local_config_file ]:
+        try:
+            mtime = max(mtime, os.stat(path).st_mtime)
+        except:
+            pass
     return mtime
 
 
@@ -4948,9 +4863,9 @@ def all_nonfunction_vars():
                 if name[0] != '_' and type(value) != type(lambda:0) ])
 
 def marks_hosts_with_path(old, all, filename):
-    if not filename.startswith(check_mk_configdir):
+    if not filename.startswith(cmk.paths.check_mk_config_dir):
         return
-    path = filename[len(check_mk_configdir):]
+    path = filename[len(cmk.paths.check_mk_config_dir):]
     old = set([ o.split("|", 1)[0] for o in old ])
     all = set([ a.split("|", 1)[0] for a in all ])
     for host in all:
@@ -4982,7 +4897,7 @@ def interactive_abort(error):
 
 
 def read_config_files(with_conf_d=True, validate_hosts=True):
-    global vars_before_config, final_mk, local_mk, checks
+    global vars_before_config, checks
 
     # Initialize dictionary-type default levels variables
     for check in check_info.values():
@@ -4994,19 +4909,16 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
     if with_conf_d:
         list_of_files = reduce(lambda a,b: a+b,
            [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")]
-             for d, sb, fs in os.walk(check_mk_configdir) ], [])
+             for d, sb, fs in os.walk(cmk.paths.check_mk_config_dir) ], [])
         # list_of_files.sort()
         list_of_files.sort(cmp = cmp_config_paths)
-        list_of_files = [ check_mk_configfile ] + list_of_files
+        list_of_files = [ cmk.paths.main_config_file ] + list_of_files
     else:
-        list_of_files = [ check_mk_configfile ]
+        list_of_files = [ cmk.paths.main_config_file ]
 
-    final_mk = check_mk_basedir + "/final.mk"
-    if os.path.exists(final_mk):
-        list_of_files.append(final_mk)
-    local_mk = check_mk_basedir + "/local.mk"
-    if os.path.exists(local_mk):
-        list_of_files.append(local_mk)
+    for path in [ cmk.paths.final_config_file, cmk.paths.local_config_file ]:
+        if os.path.exists(path):
+            list_of_files.append(path)
 
     global FILE_PATH, FOLDER_PATH
     FILE_PATH = None
@@ -5022,8 +4934,8 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
             _old_clusters = clusters.keys()
             # Make the config path available as a global variable to
             # be used within the configuration file
-            if _f.startswith( check_mk_configdir + "/"):
-                FILE_PATH = _f[len(check_mk_configdir) + 1:]
+            if _f.startswith(cmk.paths.check_mk_config_dir + "/"):
+                FILE_PATH = _f[len(cmk.paths.check_mk_config_dir) + 1:]
                 FOLDER_PATH = os.path.dirname(FILE_PATH)
             else:
                 FILE_PATH = None
@@ -5119,13 +5031,13 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
     global backup_paths
     backup_paths = [
         # tarname               path                 canonical name   description                is_dir owned_by_nagios www_group
-        ('check_mk_configfile', check_mk_configfile, "main.mk",       "Main configuration file",           False, False, False ),
-        ('final_mk',            final_mk,            "final.mk",      "Final configuration file final.mk", False, False, False ),
-        ('check_mk_configdir',  check_mk_configdir,  "",              "Configuration sub files",           True,  False, False ),
-        ('autochecksdir',       autochecksdir,       "",              "Automatically inventorized checks", True,  False, False ),
-        ('counters_directory',  counters_directory,  "",              "Performance counters",              True,  True,  False ),
-        ('tcp_cache_dir',       tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
-        ('logwatch_dir',        logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
+        ('check_mk_configfile', cmk.paths.main_config_file,    "main.mk",       "Main configuration file",           False, False, False ),
+        ('final_mk',            cmk.paths.final_config_file,   "final.mk",      "Final configuration file final.mk", False, False, False ),
+        ('check_mk_configdir',  cmk.paths.check_mk_config_dir, "",              "Configuration sub files",           True,  False, False ),
+        ('autochecksdir',       cmk.paths.autochecks_dir,      "",              "Automatically inventorized checks", True,  False, False ),
+        ('counters_directory',  cmk.paths.counters_dir,        "",              "Performance counters",              True,  True,  False ),
+        ('tcp_cache_dir',       cmk.paths.tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
+        ('logwatch_dir',        cmk.paths.logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
         ]
 
 
@@ -5300,7 +5212,7 @@ for o,a in opts:
     elif o in [ '-f', '--force' ]:
         opt_force = True
     elif o == '-c':
-        if check_mk_configfile != a:
+        if cmk.paths.main_config_file != a:
             sys.stderr.write("Please use the option -c separated by the other options.\n")
             sys.exit(1)
     elif o == '--cache':

@@ -98,6 +98,7 @@ import backup
 import modules as multisite_modules
 from watolib import *
 
+import cmk.paths
 import cmk.store as store
 from cmk.regex import escape_regex_chars, regex
 from cmk.defines import short_service_state_name
@@ -2865,7 +2866,7 @@ def show_service_table(host, firsttime):
             table.cell(_("Service Description"), html.attrencode(descr))
             table.cell(_("Plugin output"))
 
-            if defaults.omd_root and check_source in ( "custom", "active" ):
+            if cmk.paths.omd_root and check_source in ( "custom", "active" ):
                 divid += 1
                 html.write("<div id='activecheck%d'>%s</div>" %
                     (divid, html.render_icon("reload", cssclass="reloading")))
@@ -3022,7 +3023,7 @@ def mode_search(phase):
 #   '----------------------------------------------------------------------'
 
 class ModeBulkImport(WatoMode):
-    _upload_tmp_path = defaults.tmp_dir + "/host-import"
+    _upload_tmp_path = cmk.paths.tmp_dir + "/host-import"
 
     def __init__(self):
         super(ModeBulkImport, self).__init__()
@@ -5029,15 +5030,12 @@ def get_snapshot_status(snapshot, validate_checksums = False):
                     raise MKGeneralException(_("Invalid snapshot (missing file: %s)") % entry)
 
     def check_core():
-        if not defaults.omd_root:
-            return # Do not perform this check in non OMD environments
-
         if "check_mk.tar.gz" not in status["files"]:
             return
 
         cmk_tar = cStringIO.StringIO(access_snapshot(lambda x: multitar.get_file_content(x, 'check_mk.tar.gz')))
         files = multitar.list_tar_content(cmk_tar)
-        using_cmc = os.path.exists(defaults.omd_root + '/etc/check_mk/conf.d/microcore.mk')
+        using_cmc = os.path.exists(cmk.paths.omd_root + '/etc/check_mk/conf.d/microcore.mk')
         snapshot_cmc = 'conf.d/microcore.mk' in files
         if using_cmc and not snapshot_cmc:
             raise MKGeneralException(_('You are currently using the Check_MK Micro Core, but this snapshot does not use the '
@@ -5146,7 +5144,7 @@ def get_snapshot_status(snapshot, validate_checksums = False):
 
 
 def snapshot_secret():
-    path = defaults.default_config_dir + '/snapshot.secret'
+    path = cmk.paths.default_config_dir + '/snapshot.secret'
     try:
         return file(path).read()
     except IOError:
@@ -5222,7 +5220,7 @@ def create_snapshot(ty, comment=None):
 
 def do_create_snapshot(data):
     snapshot_name = data["snapshot_name"]
-    snapshot_dir  = defaults.var_dir + "/wato/snapshots"
+    snapshot_dir  = cmk.paths.var_dir + "/wato/snapshots"
     work_dir      = snapshot_dir + "/workdir/%s" % snapshot_name
 
     try:
@@ -5443,7 +5441,7 @@ class ModeAjaxBackupJobState(WatoMode):
 class SiteBackupKeypairStore(backup.BackupKeypairStore):
     def __init__(self):
         super(SiteBackupKeypairStore, self).__init__(
-            defaults.default_config_dir + "/backup_keys.mk",
+            cmk.paths.default_config_dir + "/backup_keys.mk",
             "keys")
 
 
@@ -5467,7 +5465,7 @@ class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, Wa
 
 class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey, WatoMode):
     def _file_name(self, key_id, key):
-        return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), defaults.omd_site, key_id)
+        return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), config.omd_site(), key_id)
 
 
 class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
@@ -5988,7 +5986,7 @@ def vs_ldap_connection(new, connection_id):
             label = _("Activate logging of LDAP transactions"),
             help = _("If this option is enabled, Check_MK will log LDAP related debug messages to <tt>%s</tt>. "
                      "You should enable this option only for debugging.") % \
-                        site_neutral_path(defaults.log_dir + "/web.log"),
+                        site_neutral_path(cmk.paths.log_dir + "/web.log"),
             default_value = False
         )),
     ]
@@ -6618,11 +6616,10 @@ def get_nagvis_maps():
     # for each map. When no maps can be found skip this problem silently.
     # This only works in OMD environments.
     maps = []
-    if defaults.omd_root:
-        nagvis_maps_path = defaults.omd_root + '/etc/nagvis/maps'
-        for f in os.listdir(nagvis_maps_path):
-            if f[0] != '.' and f.endswith('.cfg'):
-                maps.append((f[:-4], f[:-4]))
+    nagvis_maps_path = cmk.paths.omd_root + '/etc/nagvis/maps'
+    for f in os.listdir(nagvis_maps_path):
+        if f[0] != '.' and f.endswith('.cfg'):
+            maps.append((f[:-4], f[:-4]))
     return maps
 
 def mode_groups(phase, what):
@@ -6763,7 +6760,7 @@ def mode_edit_group(phase, what):
     all_groups = userdb.load_group_information()
     groups = all_groups.setdefault(what, {})
 
-    edit_nagvis_map_permissions = what == 'contact' and defaults.omd_root
+    edit_nagvis_map_permissions = what == 'contact'
     if edit_nagvis_map_permissions:
         vs_nagvis_maps = ListChoice(
             title = _('NagVis Maps'),
@@ -7869,7 +7866,7 @@ def mode_notifications(phase):
     # Show recent notifications. We can use them for rule analysis
     if show_backlog:
         try:
-            backlog = eval(file(defaults.var_dir + "/notify/backlog.mk").read())
+            backlog = eval(file(cmk.paths.var_dir + "/notify/backlog.mk").read())
         except:
             backlog = []
 
@@ -9090,7 +9087,7 @@ def mode_sites(phase):
             repl = _("Slave")
             if site.get("replicate_ec"):
                 repl += ", " + _("EC")
-            if site.get("replicate_mkps") and defaults.omd_root:
+            if site.get("replicate_mkps"):
                 repl += ", " + _("MKPs")
         else:
             repl = ""
@@ -9199,10 +9196,7 @@ def mode_edit_site(phase):
     if cloneid:
         site = configured_sites[cloneid]
     elif new:
-        if defaults.omd_root:
-            site = { "replicate_mkps" : True }
-        else:
-            site = { }
+        site = { "replicate_mkps" : True }
     else:
         site = configured_sites.get(siteid, {})
 
@@ -9427,8 +9421,7 @@ def mode_edit_site(phase):
         new_site["replicate_ec"] = html.get_checkbox("replicate_ec")
 
         # MKPs and ~/local/
-        if defaults.omd_root:
-            new_site["replicate_mkps"] = html.get_checkbox("replicate_mkps")
+        new_site["replicate_mkps"] = html.get_checkbox("replicate_mkps")
 
         # Secret is not checked here, just kept
         if not new and "secret" in old_site:
@@ -9617,13 +9610,12 @@ def mode_edit_site(phase):
                     "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
                     "the remote site."))
 
-    if defaults.omd_root:
-        forms.section(_("Extensions"), simple=True)
-        html.checkbox("replicate_mkps", site.get("replicate_mkps", False), label = _("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"))
-        html.help(_("If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
-                    "that are installed on your master site and all other files below the <tt>~/local/</tt> "
-                    "directory will be also transferred to the "
-                    "slave site. Note: <b>all other MKPs and files below <tt>~/local/</tt> on the slave will be removed</b>."))
+    forms.section(_("Extensions"), simple=True)
+    html.checkbox("replicate_mkps", site.get("replicate_mkps", False), label = _("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"))
+    html.help(_("If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
+                "that are installed on your master site and all other files below the <tt>~/local/</tt> "
+                "directory will be also transferred to the "
+                "slave site. Note: <b>all other MKPs and files below <tt>~/local/</tt> on the slave will be removed</b>."))
 
     forms.end()
     html.button("save", _("Save"))
@@ -15220,8 +15212,8 @@ def validate_icon(value, varprefix):
     if w > 80 or h > 80:
         raise MKUserError(varprefix, _('Maximum image size: 80x80px'))
 
-    if os.path.exists("%s/share/check_mk/web/htdocs/images/icon_%s" % (defaults.omd_root, file_name)) \
-       or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (defaults.omd_root, file_name)):
+    if os.path.exists("%s/share/check_mk/web/htdocs/images/icon_%s" % (cmk.paths.omd_root, file_name)) \
+       or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.paths.omd_root, file_name)):
         raise MKUserError(varprefix, _('Your icon conflicts with a Check_MK builtin icon. Please '
                                        'choose another name for your icon.'))
 
@@ -15238,7 +15230,7 @@ def upload_icon(icon_info):
             meta.add_text(k, v, 0)
 
     # and finally save the image
-    dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % defaults.omd_root
+    dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % cmk.paths.omd_root
     make_nagios_directories(dest_dir)
     try:
         im.save(dest_dir+'/'+icon_info['icon'][0], 'PNG', pnginfo=meta)
@@ -15291,7 +15283,7 @@ def mode_icons(phase):
                                  _("Do you really want to delete the icon <b>%s</b>?") % icon_name)
                 if c:
                     os.remove("%s/local/share/check_mk/web/htdocs/images/icons/%s.png" %
-                                                        (defaults.omd_root, icon_name))
+                                                        (cmk.paths.omd_root, icon_name))
                 elif c == False:
                     return ""
                 else:
@@ -15304,7 +15296,7 @@ def mode_icons(phase):
         return
 
     html.write("<h3>" + _("Upload Icon") + "</h3>")
-    if not defaults.omd_site:
+    if not config.omd_site():
         html.message(_("Sorry, you can mange your icons only within OMD environments."))
         return
 
@@ -15639,7 +15631,7 @@ def download_table(title, file_titles, paths):
     forms.container()
     for path in paths:
         os_path  = path
-        relpath  = path.replace(defaults.agents_dir+'/', '')
+        relpath  = path.replace(cmk.paths.agents_dir+'/', '')
         filename = path.split('/')[-1]
         title = file_titles.get(os_path, filename)
 
@@ -15668,9 +15660,9 @@ def mode_download_agents(phase):
         return
 
     html.write('<div class="rulesets">')
-    packed = glob.glob(defaults.agents_dir + "/*.deb") \
-            + glob.glob(defaults.agents_dir + "/*.rpm") \
-            + glob.glob(defaults.agents_dir + "/windows/c*.msi")
+    packed = glob.glob(cmk.paths.agents_dir + "/*.deb") \
+            + glob.glob(cmk.paths.agents_dir + "/*.rpm") \
+            + glob.glob(cmk.paths.agents_dir + "/windows/c*.msi")
 
     download_table(_("Packaged Agents"), {}, packed)
 
@@ -15697,7 +15689,7 @@ def mode_download_agents(phase):
 
     file_titles = {}
     other_sections = []
-    for root, dirs, files in os.walk(defaults.agents_dir):
+    for root, dirs, files in os.walk(cmk.paths.agents_dir):
         file_paths = []
         relpath = root.split('agents')[1]
         if relpath not in banned_paths:

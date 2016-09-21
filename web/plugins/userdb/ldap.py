@@ -39,8 +39,11 @@
 #   | Some basic declarations and module loading etc.                      |
 #   '----------------------------------------------------------------------'
 
-import config, defaults
-import time, copy
+import config
+import time
+import copy
+
+import cmk.paths
 
 try:
     # docs: http://www.python-ldap.org/doc/html/index.html
@@ -140,9 +143,9 @@ class LDAPUserConnector(UserConnector):
         self._group_cache = {}
 
         # File for storing the time of the last success event
-        self._sync_time_file = defaults.var_dir + '/web/ldap_%s_sync_time.mk'% self.id()
+        self._sync_time_file = cmk.paths.var_dir + '/web/ldap_%s_sync_time.mk'% self.id()
         # Exists when last ldap sync failed, contains exception text
-        self._sync_fail_file = defaults.var_dir + '/web/ldap_%s_sync_fail.mk' % self.id()
+        self._sync_fail_file = cmk.paths.var_dir + '/web/ldap_%s_sync_fail.mk' % self.id()
 
         self.save_suffix()
 
@@ -538,7 +541,7 @@ class LDAPUserConnector(UserConnector):
     def replace_macros(self, tmpl):
         dn = tmpl
 
-        for key, val in [ ('$OMD_SITE$', defaults.omd_site) ]:
+        for key, val in [ ('$OMD_SITE$', config.omd_site()) ]:
             if val:
                 dn = dn.replace(key, val)
             else:

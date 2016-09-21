@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import __builtin__, os, gettext
-import defaults
+import cmk.paths
 
 #.
 #   .--Gettext i18n--------------------------------------------------------.
@@ -47,10 +47,7 @@ def get_current_language():
     return current_language
 
 def get_language_dirs():
-    dirs = [ defaults.locale_dir ]
-    if defaults.omd_root:
-        dirs.append(defaults.omd_root + "/local/share/check_mk/locale")
-    return dirs
+    return [ cmk.paths.locale_dir, cmk.paths.local_locale_dir ]
 
 
 def get_language_alias(lang):
@@ -82,17 +79,11 @@ def get_languages():
 
 
 def get_cmk_locale_path(lang):
-    locale_path = defaults.locale_dir
-
-    # OMD users can put their localization into a local path into the site
-    if defaults.omd_root:
-        local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
-        po_path = '/%s/LC_MESSAGES/multisite.mo' % lang
-        # Use file in OMD local strucuture when existing
-        if os.path.exists(local_locale_path + po_path):
-            locale_path = local_locale_path
-
-    return locale_path
+    po_path = '/%s/LC_MESSAGES/multisite.mo' % lang
+    if os.path.exists(cmk.paths.local_locale_dir + po_path):
+        return cmk.paths.local_locale_dir
+    else:
+        return cmk.paths.locale_dir
 
 
 def init_language(lang, domain="multisite", locale_path=None):

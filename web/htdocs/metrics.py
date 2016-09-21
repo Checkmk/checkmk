@@ -35,7 +35,7 @@
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
 import math, time, colorsys, shlex, operator, random
-import config, defaults, pagetypes, table
+import config, pagetypes, table
 import sites
 import traceback
 from lib import *

@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import defaults, config
+import config
 
 def page_index():
     default_start_url = config.user.get("start_url") or config.start_url
@@ -40,7 +40,7 @@ def page_index():
         start_url = default_start_url
 
     if "%s" in config.page_heading:
-        heading = config.page_heading % (config.site(defaults.omd_site).get('alias', _("Multisite")))
+        heading = config.page_heading % (config.site(config.omd_site()).get('alias', _("Multisite")))
     else:
         heading = config.page_heading
 

@@ -27,6 +27,7 @@
 # Code for support of Nagios (and compatible) cores
 
 import cmk.tty as tty
+import cmk.paths
 
 #   .--Create config-------------------------------------------------------.
 #   |      ____                _                          __ _             |
@@ -295,7 +296,7 @@ define servicedependency {
 
         # Hardcoded for logwatch check: Link to logwatch.php
         if checkname == "logwatch":
-            logwatch = "  notes_url\t\t\t" + (logwatch_notes_url % (urllib.quote(hostname), urllib.quote(make_utf8(item)))) + "\n"
+            logwatch = "  notes_url\t\t\t" + (logwatch_notes_url(hostname, item)) + "\n"
         else:
             logwatch = "";
 
@@ -903,13 +904,12 @@ def find_check_plugins(checktype):
 
     paths = []
     for candidate in candidates:
-        if local_checks_dir:
-            filename = local_checks_dir + "/" + candidate
-            if os.path.exists(filename):
-                paths.append(filename)
-                continue
+        filename = cmk.paths.local_checks_dir + "/" + candidate
+        if os.path.exists(filename):
+            paths.append(filename)
+            continue
 
-        filename = checks_dir + "/" + candidate
+        filename = cmk.paths.checks_dir + "/" + candidate
         if os.path.exists(filename):
             paths.append(filename)
 
@@ -917,8 +917,8 @@ def find_check_plugins(checktype):
 
 
 def precompile_hostchecks():
-    if not os.path.exists(precompiled_hostchecks_dir):
-        os.makedirs(precompiled_hostchecks_dir)
+    if not os.path.exists(cmk.paths.precompiled_hostchecks_dir):
+        os.makedirs(cmk.paths.precompiled_hostchecks_dir)
     for host in all_active_hosts():
         try:
             precompile_hostcheck(host)
@@ -942,12 +942,12 @@ def stripped_python_file(filename):
     g_stripped_file_cache[filename] = a
     return a
 
-# TODO: move this into a new module nagios.py (for creating Nagios config)
+
 def precompile_hostcheck(hostname):
     if opt_verbose:
         sys.stderr.write("%s%s%-16s%s:" % (tty.bold, tty.blue, hostname, tty.normal))
 
-    compiled_filename = precompiled_hostchecks_dir + "/" + hostname
+    compiled_filename = cmk.paths.precompiled_hostchecks_dir + "/" + hostname
     source_filename = compiled_filename + ".py"
     for fname in [ compiled_filename, source_filename ]:
         try:
@@ -979,14 +979,14 @@ if os.path.islink(%(dst)r):
 
 """ % { "src" : source_filename, "dst" : compiled_filename })
 
-    output.write(stripped_python_file(modules_dir + "/check_mk_base.py"))
+    output.write(stripped_python_file(cmk.paths.modules_dir + "/check_mk_base.py"))
 
     # Register default Check_MK signal handler
     output.write("register_sigint_handler()\n")
 
     # TODO: can we avoid adding this module if no predictive monitoring
     # is being used?
-    output.write(stripped_python_file(modules_dir + "/prediction.py"))
+    output.write(stripped_python_file(cmk.paths.modules_dir + "/prediction.py"))
 
     # initialize global variables
     output.write("""
@@ -1000,16 +1000,14 @@ no_discovery_possible = None
 
     # Compile in all neccessary global variables
     output.write("\n# Global variables\n")
-    for var in [ 'check_mk_version', 'tcp_connect_timeout', 'agent_min_version',
+    for var in [ 'tcp_connect_timeout', 'agent_min_version',
                  'perfdata_format', 'aggregation_output_format',
-                 'aggr_summary_hostname', 'nagios_command_pipe_path',
-                 'check_result_path', 'check_submission', 'monitoring_core',
-                 'var_dir', 'counters_directory', 'tcp_cache_dir', 'tmp_dir', 'log_dir',
-                 'snmpwalks_dir', 'check_mk_basedir', 'nagios_user',
-                 'omd_root', 'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
+                 'aggr_summary_hostname',
+                 'check_submission', 'monitoring_core',
+                 'cluster_max_cachefile_age', 'check_max_cachefile_age',
                  'piggyback_max_cachefile_age', 'fallback_agent_output_encoding',
                  'simulation_mode', 'agent_simulator', 'aggregate_check_mk',
-                 'check_mk_perfdata_with_times', 'livestatus_unix_socket',
+                 'check_mk_perfdata_with_times',
                  'use_inline_snmp', 'record_inline_snmp_stats',
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
@@ -1052,10 +1050,10 @@ no_discovery_possible = None
     output.write("def check_period_of(hostname, service):\n    return precompiled_service_timeperiods.get(service)\n\n")
 
     if need_snmp_module:
-        output.write(stripped_python_file(modules_dir + "/snmp.py"))
+        output.write(stripped_python_file(cmk.paths.modules_dir + "/snmp.py"))
 
         if is_inline_snmp_host(hostname):
-            output.write(stripped_python_file(modules_dir + "/inline_snmp.py"))
+            output.write(stripped_python_file(cmk.paths.modules_dir + "/inline_snmp.py"))
             output.write("\ndef oid_range_limits_of(hostname):\n    return %r\n" % oid_range_limits_of(hostname))
         else:
             output.write("has_inline_snmp = False\n")
@@ -1063,7 +1061,7 @@ no_discovery_possible = None
         output.write("has_inline_snmp = False\n")
 
     if agent_simulator:
-        output.write(stripped_python_file(modules_dir + "/agent_simulator.py"))
+        output.write(stripped_python_file(cmk.paths.modules_dir + "/agent_simulator.py"))
 
     # check info table
     # We need to include all those plugins that are referenced in the host's
@@ -1073,10 +1071,11 @@ no_discovery_possible = None
         basename = check_type.split(".")[0]
         # Add library files needed by check (also look in local)
         for lib in set(check_includes.get(basename, [])):
-            if local_checks_dir and os.path.exists(local_checks_dir + "/" + lib):
-                to_add = local_checks_dir + "/" + lib
+            if os.path.exists(cmk.paths.local_checks_dir + "/" + lib):
+                to_add = cmk.paths.local_checks_dir + "/" + lib
             else:
-                to_add = checks_dir + "/" + lib
+                to_add = cmk.paths.checks_dir + "/" + lib
+
             if to_add not in filenames:
                 filenames.append(to_add)
 
@@ -1242,13 +1241,13 @@ no_discovery_possible = None
 
     # debug logging
     output.write("\n")
-    output.write("    l = file(log_dir + \"/crashed-checks.log\", \"a\")\n")
+    output.write("    l = file(cmk.paths.log_dir + \"/crashed-checks.log\", \"a\")\n")
     output.write("    l.write((\"Exception in precompiled check:\\n\"\n")
     output.write("            \"  Check_MK Version: %s\\n\"\n")
     output.write("            \"  Date:             %s\\n\"\n")
     output.write("            \"  Host:             %s\\n\"\n")
     output.write("            \"  %s\\n\") % (\n")
-    output.write("            check_mk_version,\n")
+    output.write("            cmk.__version__,\n")
     output.write("            time.strftime(\"%Y-%d-%m %H:%M:%S\"),\n")
     output.write("            \"%s\",\n" % hostname)
     output.write("            traceback.format_exc().replace('\\n', '\\n      ')))\n")

@@ -24,16 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# +------------------------------------------------------------------+
-# | This file has been contributed and is copyrighted by:            |
-# |                                                                  |
-# | Lars Michelsen <lm@mathias-kettner.de>            Copyright 2010 |
-# +------------------------------------------------------------------+
-
-import views, defaults
+import views
+import config
 
 def render_nagvis_maps():
-    refresh_url = "%snagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps" % (defaults.url_prefix)
+    refresh_url = "%snagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps" % (config.url_prefix())
     return refresh_url
 
 sidebar_snapins["nagvis_maps"] = {

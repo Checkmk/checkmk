@@ -24,12 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, time, os, re, pprint
+import config, time, os, re, pprint
 import weblib, traceback, forms, valuespec, inventory, visuals, metrics
 import sites
 import bi
 import inspect
 from lib import *
+
+import cmk.paths
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -866,8 +868,8 @@ class Cell(object):
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
             dirs = [
-                defaults.omd_root + "/local/share/check_mk/web/htdocs/",
-                defaults.omd_root + "/share/check_mk/web/htdocs/",
+                cmk.paths.local_web_dir + "/htdocs/",
+                cmk.paths.web_dir + "/htdocs/",
             ]
             for d in dirs:
                 if os.path.exists(d + filename):
@@ -1972,7 +1974,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 
         if config.may('wato.users'):
             try:
-                msg = file(defaults.var_dir + '/web/ldap_sync_fail.mk').read()
+                msg = file(cmk.paths.var_dir + '/web/ldap_sync_fail.mk').read()
                 html.add_status_icon("ldap", _('Last LDAP sync failed! %s') % html.attrencode(msg))
             except IOError:
                 pass

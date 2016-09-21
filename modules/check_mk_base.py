@@ -58,6 +58,7 @@ from cmk.regex import regex
 import cmk.tty as tty
 import cmk.render as render
 import cmk.crash_reporting as crash_reporting
+import cmk.paths
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -391,7 +392,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
         oid_info = None
 
     if oid_info:
-        cache_path = tcp_cache_dir + "/" + cache_relpath
+        cache_path = cmk.paths.tcp_cache_dir + "/" + cache_relpath
 
         # Handle SNMP check interval. The idea: An SNMP check should only be
         # executed every X seconds. Skip when called too often.
@@ -507,7 +508,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
     return info[check_type] # return only data for specified check
 
 def store_persisted_info(hostname, persisted):
-    dirname = var_dir + "/persisted/"
+    dirname = cmk.paths.var_dir + "/persisted/"
     if persisted:
         if not os.path.exists(dirname):
             os.makedirs(dirname)
@@ -520,7 +521,7 @@ def store_persisted_info(hostname, persisted):
 
 
 def add_persisted_info(hostname, info):
-    file_path = var_dir + "/persisted/" + hostname
+    file_path = cmk.paths.var_dir + "/persisted/" + hostname
     try:
         persisted = eval(file(file_path).read())
     except:
@@ -557,7 +558,7 @@ def add_persisted_info(hostname, info):
 
 def get_piggyback_files(hostname):
     files = []
-    dir = tmp_dir + "/piggyback/" + hostname
+    dir = cmk.paths.tmp_dir + "/piggyback/" + hostname
     if os.path.exists(dir):
         for sourcehost in os.listdir(dir):
             if sourcehost not in ['.', '..'] \
@@ -589,7 +590,7 @@ def get_piggyback_info(hostname):
 
 
 def store_piggyback_info(sourcehost, piggybacked):
-    piggyback_path = tmp_dir + "/piggyback/"
+    piggyback_path = cmk.paths.tmp_dir + "/piggyback/"
     for backedhost, lines in piggybacked.items():
         verbose("Storing piggyback data for %s.\n" % backedhost)
         dir = piggyback_path + backedhost
@@ -607,7 +608,7 @@ def store_piggyback_info(sourcehost, piggybacked):
 
 def remove_piggyback_info_from(sourcehost, keep=[]):
     removed = 0
-    piggyback_path = tmp_dir + "/piggyback/"
+    piggyback_path = cmk.paths.tmp_dir + "/piggyback/"
     if not os.path.exists(piggyback_path):
         return # Nothing to do
 
@@ -682,7 +683,7 @@ def do_hostname_translation(translation, hostname):
 
 def read_cache_file(relpath, max_cache_age):
     # Cache file present, caching allowed? -> read from cache
-    cachefile = tcp_cache_dir + "/" + relpath
+    cachefile = cmk.paths.tcp_cache_dir + "/" + relpath
     if os.path.exists(cachefile) and (
         (opt_use_cachefile and ( not opt_no_cache ) )
         or (simulation_mode and not opt_no_cache) ):
@@ -706,12 +707,12 @@ def read_cache_file(relpath, max_cache_age):
 
 
 def write_cache_file(relpath, output):
-    cachefile = tcp_cache_dir + "/" + relpath
-    if not os.path.exists(tcp_cache_dir):
+    cachefile = cmk.paths.tcp_cache_dir + "/" + relpath
+    if not os.path.exists(cmk.paths.tcp_cache_dir):
         try:
-            os.makedirs(tcp_cache_dir)
+            os.makedirs(cmk.paths.tcp_cache_dir)
         except Exception, e:
-            raise MKGeneralException("Cannot create directory %s: %s" % (tcp_cache_dir, e))
+            raise MKGeneralException("Cannot create directory %s: %s" % (cmk.paths.tcp_cache_dir, e))
     try:
         # write retrieved information to cache file - if we are not root.
         # We assume that the core never runs as root.
@@ -1033,7 +1034,7 @@ def cachefile_age(filename):
 
 def load_item_state(hostname):
     global g_item_state
-    filename = counters_directory + "/" + hostname
+    filename = cmk.paths.counters_dir + "/" + hostname
     try:
         g_item_state = eval(file(filename).read())
     except:
@@ -1042,10 +1043,10 @@ def load_item_state(hostname):
 
 def save_item_state(hostname):
     if not opt_dont_submit and not i_am_root(): # never writer counters as root
-        filename = counters_directory + "/" + hostname
+        filename = cmk.paths.counters_dir + "/" + hostname
         try:
-            if not os.path.exists(counters_directory):
-                os.makedirs(counters_directory)
+            if not os.path.exists(cmk.paths.counters_dir):
+                os.makedirs(cmk.paths.counters_dir)
             file(filename, "w").write("%r\n" % g_item_state)
         except Exception, e:
             import pwd
@@ -1213,7 +1214,7 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
 # This is the main check function - the central entry point to all and
 # everything
 def do_check(hostname, ipaddress, only_check_types = None):
-    verbose("Check_mk version %s\n" % check_mk_version)
+    verbose("Check_mk version %s\n" % cmk.__version__)
 
     start_time = time.time()
 
@@ -1581,7 +1582,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
 def create_crash_dump(hostname, check_type, item, params, description, info):
     text = "check failed - please submit a crash report!"
     try:
-        crash_dir = var_dir + "/crashed_checks/" + hostname + "/" + description.replace("/", "\\")
+        crash_dir = cmk.paths.var_dir + "/crashed_checks/" + hostname + "/" + description.replace("/", "\\")
         prepare_crash_dump_directory(crash_dir)
 
         create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text)
@@ -1673,7 +1674,7 @@ def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, d
 
 
 def write_crash_dump_snmp_info(crash_dir, hostname, check_type):
-    cachefile = tcp_cache_dir + "/" + hostname + "." + check_type.split(".")[0]
+    cachefile = cmk.paths.tcp_cache_dir + "/" + hostname + "." + check_type.split(".")[0]
     if os.path.exists(cachefile):
         file(crash_dir + "/snmp_info", "w").write(file(cachefile).read())
 
@@ -1682,7 +1683,7 @@ def write_crash_dump_agent_output(crash_dir, hostname):
     if "get_rtc_package" in globals():
         file(crash_dir + "/agent_output", "w").write(get_rtc_package())
     else:
-        cachefile = tcp_cache_dir + "/" + hostname
+        cachefile = cmk.paths.tcp_cache_dir + "/" + hostname
         if os.path.exists(cachefile):
             file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
 
@@ -1856,10 +1857,10 @@ def open_checkresult_file():
     if checkresult_file_fd == None:
         try:
             checkresult_file_fd, checkresult_file_path = \
-                tempfile.mkstemp('', 'c', check_result_path)
+                tempfile.mkstemp('', 'c', cmk.paths.check_result_path)
         except Exception, e:
             raise MKGeneralException("Cannot create check result file in %s: %s" %
-                    (check_result_path, e))
+                    (cmk.paths.check_result_path, e))
 
 
 def close_checkresult_file():
@@ -1877,14 +1878,14 @@ def core_pipe_open_timeout(signum, stackframe):
 def open_command_pipe():
     global nagios_command_pipe
     if nagios_command_pipe == None:
-        if not os.path.exists(nagios_command_pipe_path):
+        if not os.path.exists(cmk.paths.nagios_command_pipe_path):
             nagios_command_pipe = False # False means: tried but failed to open
-            raise MKGeneralException("Missing core command pipe '%s'" % nagios_command_pipe_path)
+            raise MKGeneralException("Missing core command pipe '%s'" % cmk.paths.nagios_command_pipe_path)
         else:
             try:
                 signal.signal(signal.SIGALRM, core_pipe_open_timeout)
                 signal.alarm(3) # three seconds to open pipe
-                nagios_command_pipe =  file(nagios_command_pipe_path, 'w')
+                nagios_command_pipe =  file(cmk.paths.nagios_command_pipe_path, 'w')
                 signal.alarm(0) # cancel alarm
             except Exception, e:
                 nagios_command_pipe = False
@@ -2375,7 +2376,7 @@ def camelcase_to_underscored(name):
 # Return plain response from local Livestatus - without any parsing
 def simple_livestatus_query(lql):
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    s.connect(livestatus_unix_socket)
+    s.connect(cmk.paths.livestatus_unix_socket)
     # We just get the currently inactive timeperiods. All others
     # (also non-existing) are considered to be active
     s.send(lql)

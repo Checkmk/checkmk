@@ -28,8 +28,8 @@ from mod_python import Cookie, util, apache
 from lib import make_utf8, MKGeneralException, MKException
 import htmllib
 import os, time, config, weblib, re
-import defaults
 import mobile
+import cmk.paths
 
 # Is used to end the HTTP request processing from deeper code levels
 class FinalizeRequest(Exception):
@@ -287,41 +287,35 @@ class html_mod_python(htmllib.html):
     def save_tree_states(self):
         config.save_user_file("treestates", self.treestates)
 
+
     def load_tree_states(self):
         if self.treestates == None:
             self.treestates = config.load_user_file("treestates", {})
 
+
     def add_custom_style_sheet(self):
         for css in self.plugin_stylesheets():
            self.write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
+
         if config.custom_style_sheet:
             self.write('<link rel="stylesheet" type="text/css" href="%s">\n' % config.custom_style_sheet)
 
+
     def plugin_stylesheets(self):
-        global plugin_stylesheets
-        try:
-            return plugin_stylesheets
-        except:
-            plugins_paths = [ defaults.web_dir + "/htdocs/css" ]
-            if defaults.omd_root:
-                plugins_paths.append(defaults.omd_root + "/local/share/check_mk/web/htdocs/css")
-            plugin_stylesheets = set([])
-            for dir in plugins_paths:
-                if os.path.exists(dir):
-                    for fn in os.listdir(dir):
-                        if fn.endswith(".css"):
-                            plugin_stylesheets.add(fn)
-            return plugin_stylesheets
+        plugin_stylesheets = set([])
+        for dir in [ cmk.paths.web_dir + "/htdocs/css", cmk.paths.local_web_dir + "/htdocs/css" ]:
+            if os.path.exists(dir):
+                for fn in os.listdir(dir):
+                    if fn.endswith(".css"):
+                        plugin_stylesheets.add(fn)
+        return plugin_stylesheets
 
 
     def css_filename_for_browser(self, css):
-        if not defaults.omd_root:
-            return '%s.css' % css
-
         rel_path = "/share/check_mk/web/htdocs/" + css + ".css"
-        if os.path.exists(defaults.omd_root + rel_path) or \
-            os.path.exists(defaults.omd_root + "/local" + rel_path):
-            return '%s-%s.css' % (css, defaults.check_mk_version)
+        if os.path.exists(cmk.paths.omd_root + rel_path) or \
+            os.path.exists(cmk.paths.omd_root + "/local" + rel_path):
+            return '%s-%s.css' % (css, cmk.__version__)
 
 
     # Make the browser load specified javascript files. We have some special handling here:
@@ -329,9 +323,6 @@ class html_mod_python(htmllib.html):
     # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
     # c) load the minified javascript when not in debug mode
     def javascript_filename_for_browser(self, jsname):
-        if not defaults.omd_root:
-            return jsname
-
         filename_for_browser = None
         rel_path = "/share/check_mk/web/htdocs/js"
         if self.enable_debug:
@@ -340,9 +331,9 @@ class html_mod_python(htmllib.html):
             min_parts = [ "_min", "" ]
 
         for min_part in min_parts:
-            path_pattern = defaults.omd_root + "%s" + rel_path + "/" + jsname + min_part + ".js"
+            path_pattern = cmk.paths.omd_root + "%s" + rel_path + "/" + jsname + min_part + ".js"
             if os.path.exists(path_pattern % "") or os.path.exists(path_pattern % "/local"):
-                filename_for_browser = '%s%s-%s' % (jsname, min_part, defaults.check_mk_version)
+                filename_for_browser = '%s%s-%s' % (jsname, min_part, cmk.__version__)
                 break
 
         return filename_for_browser
@@ -353,13 +344,10 @@ class html_mod_python(htmllib.html):
         # or images/icons/*.png. When an icon is available as internal icon,
         # always use this one
         is_internal = False
-        if defaults.omd_root:
-            rel_path = "share/check_mk/web/htdocs/images/icon_"+icon_name+".png"
-            if os.path.exists(defaults.omd_root+"/"+rel_path):
-                is_internal = True
-            elif os.path.exists(defaults.omd_root+"/local/"+rel_path):
-                is_internal = True
-        elif os.path.exists(defaults.web_dir+"/htdocs/images/icon_"+icon_name+".png"):
+        rel_path = "share/check_mk/web/htdocs/images/icon_"+icon_name+".png"
+        if os.path.exists(cmk.paths.omd_root+"/"+rel_path):
+            is_internal = True
+        elif os.path.exists(cmk.paths.omd_root+"/local/"+rel_path):
             is_internal = True
 
         if is_internal:

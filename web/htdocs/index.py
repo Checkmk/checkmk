@@ -33,9 +33,11 @@ import sites
 import livestatus
 import modules
 import userdb
-import defaults, config, login
+import config
+import login
 from lib import *
 from html_mod_python import html_mod_python, FinalizeRequest
+import cmk.paths
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
 def handler(req, fields = None, is_profiling = False):
@@ -85,8 +87,8 @@ def handler(req, fields = None, is_profiling = False):
                 # Never render the login form directly when accessing urls like "index.py"
                 # or "dashboard.py". This results in strange problems.
                 if html.myfile != 'login':
-                    html.http_redirect(defaults.url_prefix + 'check_mk/login.py?_origtarget=%s' %
-                                                html.urlencode(html.makeuri([])))
+                    html.http_redirect('%scheck_mk/login.py?_origtarget=%s' %
+                                       (config.url_prefix(), html.urlencode(html.makeuri([]))))
 
                 # Initialize the i18n for the login dialog. This might be overridden
                 # later after user login
@@ -223,13 +225,11 @@ def page_not_found():
 
 
 # prepare local-structure within OMD sites
-# FIXME: Still needed?
+# TODO FIXME: Still needed?
 def init_sys_path():
-    if defaults.omd_root:
-        local_module_path = defaults.omd_root + "/local/share/check_mk/web/htdocs"
-        local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
-        if local_module_path not in sys.path:
-            sys.path[0:0] = [ local_module_path, defaults.web_dir + "/htdocs" ]
+    local_module_path = cmk.paths.omd_root + "/local/share/check_mk/web/htdocs"
+    if local_module_path not in sys.path:
+        sys.path[0:0] = [ local_module_path, cmk.paths.web_dir + "/htdocs" ]
 
 
 def init_profiling(is_profiling):
@@ -237,7 +237,7 @@ def init_profiling(is_profiling):
         import cProfile
 
         # Ubuntu: install python-profiler when using this feature
-        profile_file = defaults.var_dir + "/multisite.profile"
+        profile_file = cmk.paths.var_dir + "/multisite.profile"
 
         p = cProfile.Profile()
         p.runcall(handler, html.req, html.fields, True)

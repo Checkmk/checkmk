@@ -24,7 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# CLEANUP: Replace MKUserError by MKAPIError or something like that
+# TODO CLEANUP: Replace MKUserError by MKAPIError or something like that
+
+import cmk
 
 def validate_request_keys(request, valid_keys):
     for key in request.keys():
@@ -342,7 +344,7 @@ def action_bake_agents(request):
     try:
         check_mk_local_automation('bake-agents')
         last_bake_file = var_dir + "last_bake.mk"
-        file(last_bake_file, 'w').write('%s\n' % defaults.check_mk_version)
+        file(last_bake_file, 'w').write('%s\n' % cmk.__version__)
         return _("Successfully baked agents")
     except Exception, e:
         raise e

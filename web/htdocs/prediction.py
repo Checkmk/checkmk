@@ -27,7 +27,7 @@
 import os
 import time
 
-import defaults
+import cmk.paths
 import config
 import sites
 from lib import *
@@ -55,7 +55,7 @@ def page_graph():
     current_value = get_current_perfdata(host, service, dsname)
 
     dir = "%s/prediction/%s/%s/%s" % (
-            defaults.var_dir, host, pnp_cleanup(service), pnp_cleanup(dsname))
+            cmk.paths.var_dir, host, pnp_cleanup(service), pnp_cleanup(dsname))
 
     if not os.path.exists(dir):
         raise MKGeneralException(_("There is currently no prediction information "

@@ -24,16 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import mkeventd, defaults
+import mkeventd
 import zipfile
 import cStringIO
+import cmk.paths
 
 mkeventd_enabled = config.mkeventd_enabled
 
-# main_config_file = defaults.check_mk_configdir + "/mkeventd.mk"
-mkeventd_config_dir  = defaults.default_config_dir + "/mkeventd.d/wato/"
-if defaults.omd_root:
-    mkeventd_status_file = defaults.omd_root + "/var/mkeventd/status"
+mkeventd_config_dir  = cmk.paths.default_config_dir + "/mkeventd.d/wato/"
+mkeventd_status_file = cmk.paths.omd_root + "/var/mkeventd/status"
 
 #.
 #   .--ValueSpecs----------------------------------------------------------.
@@ -941,7 +940,7 @@ def default_rule_pack(rules):
 
 
 def save_mkeventd_rules(legacy_rules, rule_packs):
-    make_nagios_directory(defaults.default_config_dir + "/mkeventd.d")
+    make_nagios_directory(cmk.paths.default_config_dir + "/mkeventd.d")
     make_nagios_directory(mkeventd_config_dir)
     out = create_user_file(mkeventd_config_dir + "rules.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
@@ -1017,7 +1016,7 @@ def mode_mkeventd_rule_packs(phase):
             c = wato_confirm(_("Confirm counter reset"),
                              _("Do you really want to reset all rule hit counters in <b>all rule packs</b> to zero?"))
             if c:
-                mkeventd.execute_command("RESETCOUNTERS", site=defaults.omd_site)
+                mkeventd.execute_command("RESETCOUNTERS", site=config.omd_site())
                 log_mkeventd("counter-reset", _("Resetted all rule hit counters to zero"))
             elif c == False:
                 return ""
@@ -1156,9 +1155,8 @@ def mode_mkeventd_rule_packs(phase):
             table.cell(_("Rules"), css="number")
             html.write('<a href="%s">%d</a>' % (rules_url, len(rule_pack["rules"])))
 
-            if defaults.omd_root:
-                hits = rule_pack.get('hits')
-                table.cell(_("Hits"), hits != None and hits or '', css="number")
+            hits = rule_pack.get('hits')
+            table.cell(_("Hits"), hits != None and hits or '', css="number")
 
         table.end()
 
@@ -1376,9 +1374,8 @@ def mode_mkeventd_rules(phase):
 
             table.cell(_("Service Level"),
                       dict(mkeventd.service_levels()).get(rule["sl"], rule["sl"]))
-            if defaults.omd_root:
-                hits = rule.get('hits')
-                table.cell(_("Hits"), hits != None and hits or '', css="number")
+            hits = rule.get('hits')
+            table.cell(_("Hits"), hits != None and hits or '', css="number")
 
             # Text to match
             table.cell(_("Text to match"), rule.get("match"))
@@ -1616,7 +1613,7 @@ def mode_mkeventd_edit_rule(phase):
         else:
             log_mkeventd("edit-rule", _("Modified event correlation rule %s") % rule["id"])
             # Reset hit counters of this rule
-            mkeventd.execute_command("RESETCOUNTERS", [rule["id"]], defaults.omd_site)
+            mkeventd.execute_command("RESETCOUNTERS", [rule["id"]], config.omd_site())
         return "mkeventd_rules"
 
 
@@ -1657,9 +1654,8 @@ def mode_mkeventd_changes(phase):
     else:
         if not mkeventd.daemon_running():
             warning = _("The Event Console Daemon is currently not running. ")
-            if defaults.omd_root:
-                warning += _("Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
-                             "before starting this site.")
+            warning += _("Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
+                         "before starting this site.")
             html.show_warning(warning)
         entries = parse_audit_log("mkeventd")
         if entries:
@@ -1731,7 +1727,7 @@ def mode_mkeventd_status(phase):
                     _("Do you really want to switch the event daemon to %s mode?") %
                         new_mode)
             if c:
-                mkeventd.execute_command("SWITCHMODE", [new_mode], defaults.omd_site)
+                mkeventd.execute_command("SWITCHMODE", [new_mode], config.omd_site())
                 log_audit(None, "mkeventd-switchmode", _("Switched replication slave mode to %s") % new_mode)
                 return None, _("Switched to %s mode") % new_mode
             elif c == False:
@@ -1743,9 +1739,8 @@ def mode_mkeventd_status(phase):
 
     if not mkeventd.daemon_running():
         warning = _("The Event Console Daemon is currently not running. ")
-        if defaults.omd_root:
-            warning += _("Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
-                         "before starting this site.")
+        warning += _("Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
+                     "before starting this site.")
         html.show_warning(warning)
         return
 
@@ -2749,7 +2744,7 @@ if mkeventd_enabled:
             title = _("Log level"),
             help = _("You can configure the Event Console to log more details about it's actions. "
                      "These information are logged into the file <tt>%s</tt>") %
-                                site_neutral_path(defaults.log_dir + "/mkeventd.log"),
+                                site_neutral_path(cmk.paths.log_dir + "/mkeventd.log"),
             choices = [
                 (0, _("Normal logging")),
                 (1, _("Verbose logging")),
@@ -2996,9 +2991,7 @@ register_rule(
                       ),
 
                  ],
-                 default_value = defaults.omd_root
-                      and defaults.omd_root + "/tmp/run/mkeventd/status"
-                      or defaults.livestatus_unix_socket.split("/",1)[0] + "/mkeventd/status"
+                 default_value = cmk.paths.omd_root + "/tmp/run/mkeventd/status"
             )
           ),
         ],
@@ -3104,7 +3097,7 @@ def mkeventd_update_notifiation_configuration(hosts):
     if not remote_console:
         remote_console = ""
 
-    path = defaults.nagios_conf_dir + "/mkeventd_notifications.cfg"
+    path = cmk.paths.nagios_conf_dir + "/mkeventd_notifications.cfg"
     if not contactgroup and os.path.exists(path):
         os.remove(path)
     elif contactgroup:

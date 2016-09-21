@@ -60,7 +60,9 @@
 # may(<USER_NAME>, <PERMISSION>)
 # Returns true/false wether or not the user is permitted
 
-g_auth_base_dir = defaults.var_dir + '/wato/auth'
+import cmk.paths
+
+g_auth_base_dir = cmk.paths.var_dir + '/wato/auth'
 
 def format_php(data, lvl = 1):
     s = ''

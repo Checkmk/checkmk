@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.paths
+
 def paint_wiki_notes(row):
     host = row["host_name"]
     svc = row.get("service_description")
@@ -33,9 +35,9 @@ def paint_wiki_notes(row):
     svc = svc.replace(' ','_')
     svc = svc.lower()
     host = host.lower()
-    filename = defaults.omd_root + '/var/dokuwiki/data/pages/docu/%s/%s.txt' % (host, svc)
+    filename = cmk.paths.omd_root + '/var/dokuwiki/data/pages/docu/%s/%s.txt' % (host, svc)
     if not os.path.isfile(filename):
-        filename = defaults.omd_root + '/var/dokuwiki/data/pages/docu/default/%s.txt' % (svc,)
+        filename = cmk.paths.omd_root + '/var/dokuwiki/data/pages/docu/default/%s.txt' % (svc,)
    
     text = u"<a href='../wiki/doku.php?id=docu:default:%s'>Edit Default Instructions</a> - " %  svc
     text += u"<a href='../wiki/doku.php?id=docu:%s:%s'>Edit Host Instructions</a> <hr> " % (host, svc)

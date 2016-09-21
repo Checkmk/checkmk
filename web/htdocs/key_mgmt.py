@@ -481,7 +481,7 @@ class PageDownloadKey(object):
 
 def create_self_signed_cert(pkey):
     cert = crypto.X509()
-    cert.get_subject().O = "Check_MK Site %s" % defaults.omd_site
+    cert.get_subject().O = "Check_MK Site %s" % config.omd_site()
     cert.get_subject().CN = config.user_id or "### Check_MK ###"
     cert.set_serial_number(1)
     cert.gmtime_adj_notBefore(0)

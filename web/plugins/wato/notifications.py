@@ -91,7 +91,7 @@ register_notification_parameters(
                                     "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
                     size = 64,
                     default_value = "http://" + socket.gethostname() + "/" + (
-                        defaults.omd_site and defaults.omd_site + "/" or "") + "check_mk/",
+                        config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
                 )
             ),
             ( "no_floating_graphs",
@@ -353,7 +353,7 @@ register_notification_parameters("pushover", Dictionary(
                               "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
               size = 64,
               default_value = "http://" + socket.gethostname() + "/" + (
-                      defaults.omd_site and defaults.omd_site + "/" or "") + "check_mk/",
+                      config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
         )),
         ("priority", DropdownChoice(
             title = _("Priority"),

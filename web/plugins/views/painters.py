@@ -65,6 +65,7 @@
 import bi # Needed for BI Icon. For arkane reasons (ask htdocs/module.py) this
           # cannot be imported in views.py directly.
 
+import cmk.paths
 from cmk.regex import regex
 from cmk.defines import short_service_state_name, short_host_state_name
 from lib import *
@@ -1034,7 +1035,7 @@ def paint_time_graph_pnp(row):
     return "pnpgraph", "<div id=\"%s\"></div>" \
                        "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, '%s', %s, %s)</script>" % \
                           (container_id, container_id, sitename, host, service, pnpview,
-                           defaults.url_prefix + "check_mk/", pnp_url, with_link, _('Add this graph to...'), from_ts, to_ts)
+                           config.url_prefix() + "check_mk/", pnp_url, with_link, _('Add this graph to...'), from_ts, to_ts)
 
 
 multisite_painters["svc_pnpgraph" ] = {
@@ -1052,32 +1053,29 @@ def paint_check_manpage(row):
     if not command.startswith("check_mk-"):
         return "", ""
     checktype = command[9:]
+
     # Honor man-pages in OMD's local structure
-    p = None
-    if defaults.omd_root:
-        p = defaults.omd_root + "/local/share/check_mk/checkman/" + checktype
-        if not os.path.isfile(p):
-            p = None
-    if not p:
-        p = defaults.check_manpages_dir + "/" + checktype
-    if os.path.isfile(p):
-        description = None
-        for line in file(p):
-            line = line.rstrip()
-            if line == "description:":
-                description = ""
-            elif line.strip() == "" and description != None:
-                description += "<p>"
-            elif not line.startswith(' ') and line[-1] == ':':
-                break
-            elif description != None:
-                description += " " + line.replace("<", "&lt;").replace(">", "&gt;")
-        if not description:
-            return "", ""
-        else:
-            return "", description.replace("{", "<b>").replace("}", "</b>")
+    p = cmk.paths.local_check_manpages_dir + "/" + checktype
+    if not os.path.exists(p):
+        p = cmk.paths.check_manpages_dir + "/" + checktype
+        if not os.path.exists(p):
+            return "", _("Man-Page: %s not found.") % p
+
+    description = None
+    for line in file(p):
+        line = line.rstrip()
+        if line == "description:":
+            description = ""
+        elif line.strip() == "" and description != None:
+            description += "<p>"
+        elif not line.startswith(' ') and line[-1] == ':':
+            break
+        elif description != None:
+            description += " " + line.replace("<", "&lt;").replace(">", "&gt;")
+    if not description:
+        return "", ""
     else:
-        return "", _("Man-Page: %s not found.") % p
+        return "", description.replace("{", "<b>").replace("}", "</b>")
 
 multisite_painters["check_manpage"] = {
     "title"   : _("Check manual (for Check_MK based checks)"),
@@ -1124,11 +1122,11 @@ def paint_custom_notes(what, row):
     host = row["host_name"]
     svc = row.get("service_description")
     if what == "service":
-        notes_dir = defaults.default_config_dir + "/notes/services"
+        notes_dir = cmk.paths.default_config_dir + "/notes/services"
         dirs = notes_matching_pattern_entries([notes_dir], host)
         item = svc
     else:
-        dirs = [ defaults.default_config_dir + "/notes/hosts" ]
+        dirs = [ cmk.paths.default_config_dir + "/notes/hosts" ]
         item = host
 
     files = notes_matching_pattern_entries(dirs, item)

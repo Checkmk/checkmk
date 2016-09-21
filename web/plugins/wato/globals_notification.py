@@ -29,6 +29,8 @@
 # TODO: Remove all configuration for legacy-Email to deprecated, or completely
 # remove from WATO.
 
+import cmk.paths
+
 group = _("Notifications")
 configvar_order()[group] = 15
 
@@ -111,7 +113,7 @@ register_configvar(group,
         title = _("Notification log level"),
         help = _("You can configure the notification mechanism to log more details about "
                  "the notifications into the notification log. This information are logged "
-                 "into the file <tt>%s</tt>") % site_neutral_path(defaults.log_dir + "/notify.log"),
+                 "into the file <tt>%s</tt>") % site_neutral_path(cmk.paths.log_dir + "/notify.log"),
     ),
     domain = "check_mk")
 

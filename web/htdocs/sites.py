@@ -25,9 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config
-import defaults
 import livestatus
-
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |

@@ -27,13 +27,14 @@
 # Functions for parsing Werks and showing the users a browsable change
 # log
 
-import defaults, config, os, table
+import config, os, table
 import re
 from lib import *
 from valuespec import *
 import cmk.store as store
+import cmk.paths
 
-acknowledgement_path = defaults.var_dir + "/acknowledged_werks.mk"
+acknowledgement_path = cmk.paths.var_dir + "/acknowledged_werks.mk"
 
 def werk_classes():
     return {
@@ -93,7 +94,7 @@ g_werks = None
 werks_stylesheets = [ "pages", "check_mk", "status", "wato", "views" ]
 
 def page_version():
-    html.header(_("Check_MK %s Release Notes") % defaults.check_mk_version, stylesheets = werks_stylesheets)
+    html.header(_("Check_MK %s Release Notes") % cmk.__version__, stylesheets = werks_stylesheets)
     load_werks()
     handle_acknowledgement()
     render_werks_table()
@@ -160,7 +161,7 @@ def load_werks():
     global g_werks
     if g_werks == None:
         g_werks = {}
-        werks_dir = defaults.share_dir + "/werks/"
+        werks_dir = cmk.paths.share_dir + "/werks/"
         try:
             for file_name in os.listdir(werks_dir):
                 if file_name[0].isdigit():
@@ -591,7 +592,7 @@ def insert_manpage_links(text):
     new_parts = []
     check_regex = re.compile("[-_\.a-z0-9]")
     for part in parts:
-        if check_regex.match(part) and os.path.exists(defaults.check_manpages_dir + "/" + part):
+        if check_regex.match(part) and os.path.exists(cmk.paths.check_manpages_dir + "/" + part):
             part = '<a href="wato.py?mode=check_manpage&check_type=%s">%s</a>' % (part, part)
         new_parts.append(part)
     return " ".join(new_parts)

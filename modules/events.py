@@ -190,9 +190,8 @@ def complete_raw_context(raw_context, with_dump, event_log):
         raw_context["WHAT"] = raw_context.get("SERVICEDESC") and "SERVICE" or "HOST"
         raw_context["MONITORING_HOST"] = socket.gethostname()
         raw_context["LOGDIR"] = notification_logdir
-        if omd_root:
-            raw_context["OMD_ROOT"] = omd_root
-            raw_context["OMD_SITE"] = os.getenv("OMD_SITE", "")
+        raw_context["OMD_ROOT"] = cmk.paths.omd_root
+        raw_context["OMD_SITE"] = omd_site()
         raw_context["MAIL_COMMAND"] = notification_mail_command
 
         # The Check_MK Micro Core sends the MICROTIME and no other time stamps. We add

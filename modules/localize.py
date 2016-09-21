@@ -27,7 +27,9 @@
 import sys, getopt, os, datetime
 
 import cmk.tty as tty
+import cmk.paths
 
+# TODO: Inherit from MKGeneralException?
 class LocalizeException(Exception):
     def __init__(self, reason):
         self.reason = reason
@@ -45,15 +47,10 @@ pot_file   = None
 po_file    = None
 mo_file    = None
 alias_file = None
+locale_base = cmk.paths.local_locale_dir
 
-if local_locale_dir:
-    locale_base = local_locale_dir
-else:
-    locale_base = locale_dir
-
-
-if local_locale_dir and os.path.exists(local_locale_dir + '/multisite.pot'):
-    pot_file = local_locale_dir + '/multisite.pot'
+if os.path.exists(cmk.paths.local_locale_dir + '/multisite.pot'):
+    pot_file = cmk.paths.local_locale_dir + '/multisite.pot'
 else:
     pot_file = locale_base + '/multisite.pot'
 
@@ -168,9 +165,9 @@ def localize_init_po(lang):
 def localize_sniff():
     sys.stdout.write('Sniffing source code...\n')
 
-    paths = [ default_config_dir, web_dir ]
-    if local_web_dir and os.path.exists(local_web_dir):
-        paths.append(local_web_dir)
+    paths = [ cmk.paths.default_config_dir, cmk.paths.web_dir ]
+    if os.path.exists(cmk.paths.local_web_dir):
+        paths.append(cmk.paths.local_web_dir)
 
     if verbose_system('xgettext --no-wrap --sort-output --force-po '
                  '-L Python --from-code=utf-8 --omit-header '
@@ -248,7 +245,7 @@ def localize_update(lang):
 
     # Maybe initialize the file in the local hierarchy with the file in
     # the default hierarchy
-    if local_locale_dir and not os.path.exists(po_file) \
+    if not os.path.exists(po_file) \
        and os.path.exists(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
         file(po_file, 'w').write(file(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
         sys.stdout.write('Initialize %s with the file in the default hierarchy\n' % po_file)
@@ -273,7 +270,7 @@ def localize_compile(lang):
 
     # Maybe initialize the file in the local hierarchy with the file in
     # the default hierarchy
-    if local_locale_dir and not os.path.exists(po_file) \
+    if not os.path.exists(po_file) \
        and os.path.exists(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
         file(po_file, 'w').write(file(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
         sys.stdout.write('Initialize %s with the file in the default hierarchy\n' % po_file)

@@ -27,7 +27,8 @@
 # This module contains some helper functions dealing with the creation
 # of multi-tier tar files (tar files containing tar files)
 
-import os, tarfile, time, shutil, cStringIO, defaults, grp
+import cmk.paths
+import os, tarfile, time, shutil, cStringIO, grp
 import traceback
 from lib import *
 
@@ -117,10 +118,8 @@ def extract_domains(tar, domains):
         except Exception, e:
             pass
 
-    gid = grp.getgrnam(defaults.www_group).gr_gid
-
-    # We are using the defaults.var_dir, because defaults.tmp_dir might not have enough space
-    restore_dir = defaults.var_dir + "/wato/snapshots/restore_snapshot"
+    # We are using the var_dir, because tmp_dir might not have enough space
+    restore_dir = cmk.paths.var_dir + "/wato/snapshots/restore_snapshot"
     if not os.path.exists(restore_dir):
         os.makedirs(restore_dir)
 
@@ -262,7 +261,7 @@ def extract_domains(tar, domains):
         if errors:
             if what == "Permissions":
                 errors = list(set(errors))
-                errors.append(_("<br>If there are permission problems, please ensure the group is set to '%s' and has write permissions.") % defaults.www_group)
+                errors.append(_("<br>If there are permission problems, please ensure the site user has write permissions."))
             if abort_on_error:
                 raise MKGeneralException(_("%s - Unable to restore snapshot:<br>%s") % (what, "<br>".join(errors)))
             total_errors.extend(errors)

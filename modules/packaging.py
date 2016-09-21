@@ -27,36 +27,38 @@
 import pprint, tarfile
 
 import cmk.tty as tty
+import cmk.paths
 
 pac_ext = ".mkp"
 
+# TODO: Subclass MKGeneralException()?
 class PackageException(Exception):
     def __init__(self, reason):
         self.reason = reason
     def __str__(self):
         return self.reason
 
-if omd_root:
-    pac_dir = omd_root + "/var/check_mk/packages/"
-else:
-    pac_dir = var_dir + "/packages/"
+pac_dir = cmk.paths.omd_root + "/var/check_mk/packages/"
+
+# TODO: OMD: Pack this path and remote this makedirs call
 try:
     os.makedirs(pac_dir)
 except:
     pass
 
 # in case of local directories (OMD) use those instead
+# TODO: Since we only care about OMD environments: Simplify that -> remove ldir
 package_parts = [ (part, title, perm, ldir and ldir or dir) for part, title, perm, dir, ldir in [
-  ( "checks",        "Checks",                    0644, checks_dir,          local_checks_dir ),
-  ( "notifications", "Notification scripts",      0755, notifications_dir,   local_notifications_dir ),
-  ( "inventory",     "Inventory plugins",         0644, inventory_dir,       local_inventory_dir ),
-  ( "checkman",      "Checks' man pages",         0644, check_manpages_dir,  local_check_manpages_dir ),
-  ( "agents",        "Agents",                    0755, agents_dir,          local_agents_dir ),
-  ( "web",           "Multisite extensions",      0644, web_dir,             local_web_dir ),
-  ( "pnp-templates", "PNP4Nagios templates",      0644, pnp_templates_dir,   local_pnp_templates_dir ),
-  ( "doc",           "Documentation files",       0644, doc_dir,             local_doc_dir ),
-  ( "bin",           "Binaries",                  0755, None,                local_bin_dir ),
-  ( "lib",           "Libraries",                 0644, None,                local_lib_dir),
+  ( "checks",        "Checks",                    0644, cmk.paths.checks_dir,          cmk.paths.local_checks_dir ),
+  ( "notifications", "Notification scripts",      0755, cmk.paths.notifications_dir,   cmk.paths.local_notifications_dir ),
+  ( "inventory",     "Inventory plugins",         0644, cmk.paths.inventory_dir,       cmk.paths.local_inventory_dir ),
+  ( "checkman",      "Checks' man pages",         0644, cmk.paths.check_manpages_dir,  cmk.paths.local_check_manpages_dir ),
+  ( "agents",        "Agents",                    0755, cmk.paths.agents_dir,          cmk.paths.local_agents_dir ),
+  ( "web",           "Multisite extensions",      0644, cmk.paths.web_dir,             cmk.paths.local_web_dir ),
+  ( "pnp-templates", "PNP4Nagios templates",      0644, cmk.paths.pnp_templates_dir,   cmk.paths.local_pnp_templates_dir ),
+  ( "doc",           "Documentation files",       0644, cmk.paths.doc_dir,             cmk.paths.local_doc_dir ),
+  ( "bin",           "Binaries",                  0755, None,                cmk.paths.local_bin_dir ),
+  ( "lib",           "Libraries",                 0644, None,                cmk.paths.local_lib_dir),
 ]]
 
 package_ignored_files = {
@@ -215,8 +217,8 @@ def package_create(args):
         "name"                 : pacname,
         "description"          : "Please add a description here",
         "version"              : "1.0",
-        "version.packaged"     : check_mk_version,
-        "version.min_required" : check_mk_version,
+        "version.packaged"     : cmk.__version__,
+        "version.min_required" : cmk.__version__,
         "author"               : "Add your name here",
         "download_url"         : "http://example.com/%s/" % pacname,
         "files"                : filelists
@@ -286,7 +288,7 @@ def package_pack(args):
 
     # Make sure, user is not in data directories of Check_MK
     p = os.path.abspath(os.curdir)
-    for dir in [var_dir] + [ dir for x,y,perm,dir in get_package_parts() ]:
+    for dir in [cmk.paths.var_dir] + [ dir for x,y,perm,dir in get_package_parts() ]:
         if p == dir or p.startswith(dir + "/"):
             raise PackageException("You are in %s!\n"
                                "Please leave the directories of Check_MK before creating\n"
@@ -303,7 +305,7 @@ def package_pack(args):
 
 
 def create_mkp_file(package, file_name=None, file_object=None):
-    package["version.packaged"] = check_mk_version
+    package["version.packaged"] = cmk.__version__
 
     def create_info(filename, size):
         info = tarfile.TarInfo("info")
@@ -515,7 +517,7 @@ def install_package(file_name=None, file_object=None):
 # can not be parsed or is a daily build, the check is simply passing without error.
 def verify_check_mk_version(package):
     min_version = package["version.min_required"]
-    cmk_version = check_mk_version
+    cmk_version = cmk.__version__
 
     if is_daily_build_version(min_version):
         min_branch = branch_of_daily_build(min_version)

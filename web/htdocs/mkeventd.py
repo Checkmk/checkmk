@@ -24,10 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import socket, config, defaults, re, time
+import socket, config, re, time
 
 import sites
 from lib import *
+import cmk.paths
 
 
 # ASN1 MIB source directory candidates. Non existing dirs are ok.
@@ -35,22 +36,22 @@ from lib import *
 mib_dirs = [ ('/usr/share/snmp/mibs', _('System MIBs')) ]
 
 try:
-    socket_path       = defaults.omd_root + "/tmp/run/mkeventd/status"
-    pipe_path         = defaults.omd_root + "/tmp/run/mkeventd/events"
+    socket_path       = cmk.paths.omd_root + "/tmp/run/mkeventd/status"
+    pipe_path         = cmk.paths.omd_root + "/tmp/run/mkeventd/events"
 
-    compiled_mibs_dir = defaults.omd_root + "/local/share/check_mk/compiled_mibs"
+    compiled_mibs_dir = cmk.paths.omd_root + "/local/share/check_mk/compiled_mibs"
 
     # Please sync these paths with htdocs/mkeventd.py
-    mib_upload_dir    = defaults.omd_root + "/local/share/snmp/mibs"
-    mib_dirs.insert(0, (defaults.omd_root + "/share/snmp/mibs", _('MIBs shipped with Check_MK')))
+    mib_upload_dir    = cmk.paths.omd_root + "/local/share/snmp/mibs"
+    mib_dirs.insert(0, (cmk.paths.omd_root + "/share/snmp/mibs", _('MIBs shipped with Check_MK')))
     mib_dirs.insert(0, (mib_upload_dir, _('Custom MIBs')))
 except:
-    run_dir           = defaults.livestatus_unix_socket.rsplit("/",1)[0]
+    run_dir           = cmk.paths.livestatus_unix_socket.rsplit("/",1)[0]
     socket_path       = run_dir + "/mkeventd/status"
     pipe_path         = run_dir + "/mkeventd/events"
 
     # Please sync these paths with htdocs/mkeventd.py
-    mib_upload_dir    = defaults.var_dir + "/mkeventd/mibs"
+    mib_upload_dir    = cmk.paths.var_dir + "/mkeventd/mibs"
     compiled_mibs_dir = "/var/lib/mkeventd/compiled_mibs"
     mib_dirs.insert(0, (mib_upload_dir, _('Custom MIBs')))
 
@@ -147,10 +148,10 @@ def eventd_configuration():
         "rule_packs"            : [],
         "debug_rules"           : False,
     }
-    main_file = defaults.default_config_dir + "/mkeventd.mk"
+    main_file = cmk.paths.default_config_dir + "/mkeventd.mk"
     list_of_files = reduce(lambda a,b: a+b,
          [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")]
-             for d, sb, fs in os.walk(defaults.default_config_dir + "/mkeventd.d" ) ], [])
+             for d, sb, fs in os.walk(cmk.paths.default_config_dir + "/mkeventd.d" ) ], [])
 
     list_of_files.sort()
     for path in [ main_file ] + list_of_files:
@@ -316,7 +317,7 @@ def event_rule_matches_non_inverted(rule, event):
 def check_timeperiod(tpname):
     try:
         livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        livesock.connect(defaults.livestatus_unix_socket)
+        livesock.connect(cmk.paths.livestatus_unix_socket)
         livesock.send("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname)
         livesock.shutdown(socket.SHUT_WR)
         answer = livesock.recv(100).strip()

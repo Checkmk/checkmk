@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # Configuration variables in main.mk needed during the actual check
-logwatch_dir = var_dir + '/logwatch'
+logwatch_dir = cmk.paths.var_dir + '/logwatch'
 logwatch_patterns = { }
 logwatch_rules = []
 logwatch_max_filesize = 500000 # do not save more than 500k of message (configurable)

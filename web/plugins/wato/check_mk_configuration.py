@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.paths
 
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
@@ -409,7 +410,7 @@ register_configvar(group,
         help = _("If this option is enabled, Check_MK BI will create a log with details "
                  "about compiling BI aggregations. This includes statistics and "
                  "details for each executed compilation. The logs are written to "
-                 "<tt>%s</tt>") % site_neutral_path(defaults.log_dir + "/web.log"),
+                 "<tt>%s</tt>") % site_neutral_path(cmk.paths.log_dir + "/web.log"),
         default_value = False,
     ),
     domain = "multisite"
@@ -1978,9 +1979,7 @@ register_rule(group,
             title = _("Icon image for hosts in status GUI"),
             help = _("You can assign icons to hosts for the status GUI. "
                      "Put your images into <tt>%s</tt>. ") %
-                    ( defaults.omd_root
-                       and defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons"
-                       or defaults.web_dir + "/htdocs/images/icons" ),
+                    ( cmk.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
         ),
         forth = lambda v: v and (v.endswith('.png') and v[:-4]) or v,
     ))
@@ -1993,9 +1992,7 @@ register_rule(group,
             title = _("Icon image for services in status GUI"),
             help = _("You can assign icons to services for the status GUI. "
                      "Put your images into <tt>%s</tt>. ") %
-                    ( defaults.omd_root
-                       and defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons"
-                       or defaults.web_dir + "/htdocs/images/icons" ),
+                    (cmk.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
         ),
         forth = lambda v: v and (v.endswith('.png') and v[:-4]) or v,
     ),

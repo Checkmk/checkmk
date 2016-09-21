@@ -27,14 +27,7 @@
 import os, pprint, glob
 import i18n
 from lib import *
-
-# In case we start standalone and outside a Check_MK enviroment,
-# we have another path for the defaults.
-# FIXME: Do we need thus rubbish anymore?
-try:
-    import defaults
-except:
-    import defaults_standalone as defaults
+import cmk.paths
 
 # FIXME: Make clear whether or not user related values should be part
 # of the "config" module. Maybe move to dedicated module (userdb?). Then
@@ -60,18 +53,10 @@ builtin_role_ids = [ "user", "admin", "guest" ] # hard coded in various permissi
 user_role_ids = []
 
 # Base directory of dynamic configuration
-config_dir = defaults.var_dir + "/web"
+config_dir = cmk.paths.var_dir + "/web"
 
 # Detect modification in configuration
 modification_timestamps = []
-
-# Detect if we are running on OMD, make sure that
-# omd_site and omd_root are always available.
-try:
-    defaults.omd_site
-except:
-    defaults.omd_site = None
-    defaults.omd_root = None
 
 # Global table of available permissions. Plugins may add their own
 # permissions by calling declare_permission()
@@ -116,7 +101,7 @@ aggregation_functions = {}
 # Read in a multisite.d/*.mk file
 def include(filename):
     if not filename.startswith("/"):
-        filename = defaults.default_config_dir + "/" + filename
+        filename = cmk.paths.default_config_dir + "/" + filename
 
     # Config file is obligatory. An empty example is installed
     # during setup.sh. Better signal an error then simply ignore
@@ -147,7 +132,7 @@ def load_config():
     include("multisite.mk")
 
     # Load also recursively all files below multisite.d
-    conf_dir = defaults.default_config_dir + "/multisite.d"
+    conf_dir = cmk.paths.default_config_dir + "/multisite.d"
     filelist = []
     if os.path.isdir(conf_dir):
         for root, dirs, files in os.walk(conf_dir):
@@ -507,20 +492,18 @@ def user_file_modified(name):
 #   |  The config module provides some helper functions for sites.         |
 #   '----------------------------------------------------------------------'
 
+def omd_site():
+    return os.environ["OMD_SITE"]
+
+def url_prefix():
+    return "/%s/" % omd_site()
 
 use_siteicons = False
 
 def default_single_site_configuration():
-    if defaults.omd_site:
-        site_name = defaults.omd_site
-        site_alias = _("Local site %s") % site_name
-    else:
-        site_name = "local"
-        site_alias = _("Local site")
-
     return {
-        site_name: {
-            'alias'        : site_alias,
+        omd_site(): {
+            'alias'        : _("Local site %s") % omd_site(),
             'disable_wato' : True,
             'disabled'     : False,
             'insecure'     : False,
@@ -557,11 +540,11 @@ def site(site_id):
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
     s.setdefault("alias", site_id)
-    s.setdefault("socket", "unix:" + defaults.livestatus_unix_socket)
+    s.setdefault("socket", "unix:" + cmk.paths.livestatus_unix_socket)
     s.setdefault("url_prefix", "../") # relative URL from /check_mk/
     if type(s["socket"]) == tuple and s["socket"][0] == "proxy":
         s["cache"] = s["socket"][1].get("cache", True)
-        s["socket"] = "unix:" + defaults.livestatus_unix_socket + "proxy/" + site_id
+        s["socket"] = "unix:" + cmk.paths.livestatus_unix_socket + "proxy/" + site_id
     else:
         s["cache"] = False
     s["id"] = site_id
@@ -571,7 +554,7 @@ def site(site_id):
 def site_is_local(site_name):
     s = sites.get(site_name, {})
     sock = s.get("socket")
-    return not sock or sock == "unix:" + defaults.livestatus_unix_socket
+    return not sock or sock == "unix:" + cmk.paths.livestatus_unix_socket
 
 
 def default_site():

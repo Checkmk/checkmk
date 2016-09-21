@@ -28,7 +28,7 @@ import re
 import time
 
 import config
-import defaults
+import cmk.paths
 import sites
 from lib import *
 
@@ -81,7 +81,7 @@ class GUITester:
 
 
     def save_guitest_step(self, step):
-        path = defaults.var_dir + "/guitests/RECORD"
+        path = cmk.paths.var_dir + "/guitests/RECORD"
         if not os.path.exists(path):
             test_steps = []
         else:
@@ -101,7 +101,7 @@ class GUITester:
 
 
     def load_guitest(self, name):
-        path = defaults.var_dir + "/guitests/" + name + ".mk"
+        path = cmk.paths.var_dir + "/guitests/" + name + ".mk"
         try:
             return eval(file(path).read())
         except IOError, e:
@@ -144,7 +144,7 @@ class GUITester:
 
     def guitest_recording_active(self):
         # Activated by symoblic link pointing to recording file
-        return os.path.lexists(defaults.var_dir + "/guitests/RECORD") and not \
+        return os.path.lexists(cmk.paths.var_dir + "/guitests/RECORD") and not \
            self.myfile in self.guitest_ignored_pages()
 
 

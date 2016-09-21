@@ -205,7 +205,7 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
        get_prediction_timegroup(now, period_info)
 
     # Compute directory for prediction data
-    dir = "%s/prediction/%s/%s/%s" % (var_dir, g_hostname,
+    dir = "%s/prediction/%s/%s/%s" % (cmk.paths.var_dir, g_hostname,
              pnp_cleanup(g_service_description), pnp_cleanup(dsname))
     if not os.path.exists(dir):
         os.makedirs(dir)

@@ -27,9 +27,10 @@
 import gzip
 
 import cmk.tty as tty
+import cmk.paths
 
-inventory_output_dir = var_dir + "/inventory"
-inventory_archive_dir = var_dir + "/inventory_archive"
+inventory_output_dir = cmk.paths.var_dir + "/inventory"
+inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
 inventory_pprint_output = True
 
 #   .--Plugins-------------------------------------------------------------.
@@ -49,8 +50,8 @@ inv_info = {}   # Inventory plugins
 inv_export = {} # Inventory export hooks
 
 # Read all inventory plugins right now
-filelist = plugin_pathnames_in_directory(inventory_dir) \
-         + plugin_pathnames_in_directory(local_inventory_dir)
+filelist = plugin_pathnames_in_directory(cmk.paths.inventory_dir) \
+         + plugin_pathnames_in_directory(cmk.paths.local_inventory_dir)
 
 
 # read include files always first, but still in the sorted

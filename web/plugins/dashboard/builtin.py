@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import config
+
 builtin_dashboards["main"] = {
     "single_infos": [],
     "context"     : {},
@@ -195,37 +197,35 @@ builtin_dashboards["main"] = {
     ]
 }
 
-#Only work in OMD installations
-if defaults.omd_site:
-    def topology_url():
-        return defaults.url_prefix + 'nagvis/frontend/nagvis-js/index.php?' + \
-               'mod=Map&header_template=on-demand-filter&header_menu=1&label_show=1' + \
-               '&sources=automap&act=view&backend_id=' + defaults.omd_site + \
-               '&render_mode=undirected&url_target=main&filter_group=' + \
-               (config.topology_default_filter_group or '')
+def topology_url():
+    return config.url_prefix() + 'nagvis/frontend/nagvis-js/index.php?' + \
+           'mod=Map&header_template=on-demand-filter&header_menu=1&label_show=1' + \
+           '&sources=automap&act=view&backend_id=' + config.omd_site() + \
+           '&render_mode=undirected&url_target=main&filter_group=' + \
+           (config.topology_default_filter_group or '')
 
-    builtin_dashboards["topology"] = {
-        "single_infos": [],
-        "context"     : {},
-        "mtime"       : 0,
-        "show_title"  : True,
-        "title"       : _("Network Topology"),
-        "topic"       : _("Overview"),
-        "description" : _("This dashboard uses the parent relationships of your hosts to display a "
-                          "hierarchical map."),
-        "dashlets" : [
-            {
-                "type"             : "url",
-                "title"            : "Topology of Site " + defaults.omd_site,
-                "urlfunc"          : 'topology_url',
-                "reload_on_resize" : True,
-                "position"         : (1, 1),
-                "size"             : (GROW, GROW),
-                "context"          : {},
-                "single_infos"     : [],
-            },
-        ]
-    }
+builtin_dashboards["topology"] = {
+    "single_infos": [],
+    "context"     : {},
+    "mtime"       : 0,
+    "show_title"  : True,
+    "title"       : _("Network Topology"),
+    "topic"       : _("Overview"),
+    "description" : _("This dashboard uses the parent relationships of your hosts to display a "
+                      "hierarchical map."),
+    "dashlets" : [
+        {
+            "type"             : "url",
+            "title"            : "Topology of Site " + config.omd_site(),
+            "urlfunc"          : 'topology_url',
+            "reload_on_resize" : True,
+            "position"         : (1, 1),
+            "size"             : (GROW, GROW),
+            "context"          : {},
+            "single_infos"     : [],
+        },
+    ]
+}
 
 builtin_dashboards["simple_problems"] = {
     "single_infos": [],

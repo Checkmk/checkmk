@@ -3687,14 +3687,11 @@ class IconSelector(ValueSpec):
     # witten in the PNG meta data. For the default images we have done this scripted.
     # During upload of user specific icons, the meta data is added to the images.
     def available_icons(self, only_local=False):
-        if defaults.omd_root:
-            dirs = [
-                os.path.join(defaults.omd_root, "local/share/check_mk/web/htdocs/images/icons"),
-            ]
-            if not only_local:
-                dirs.append(os.path.join(defaults.omd_root, "share/check_mk/web/htdocs/images/icons"))
-        else:
-            dirs = [ os.path.join(defaults.web_dir, "htdocs/images/icons") ]
+        dirs = [
+            os.path.join(cmk.paths.omd_root, "local/share/check_mk/web/htdocs/images/icons"),
+        ]
+        if not only_local:
+            dirs.append(os.path.join(cmk.paths.omd_root, "share/check_mk/web/htdocs/images/icons"))
 
         valid_categories = dict(self._categories).keys()
 
@@ -3802,7 +3799,7 @@ class IconSelector(ValueSpec):
             html.write('</div>')
 
         import config# FIXME: Clean this up. But how?
-        if defaults.omd_site and config.may('wato.icons'):
+        if config.omd_site() and config.may('wato.icons'):
             back_param = html.has_var('back') and '&back='+html.urlencode(html.var('back')) or ''
             html.buttonlink('wato.py?mode=icons' + back_param, _('Manage'))
 
@@ -3970,7 +3967,7 @@ class SSHKeyPair(ValueSpec):
 
     @staticmethod
     def _tmp_file_name():
-        fd, path = tempfile.mkstemp(dir=defaults.tmp_dir)
+        fd, path = tempfile.mkstemp(dir=cmk.paths.tmp_dir)
         os.close(fd)
         return path
 

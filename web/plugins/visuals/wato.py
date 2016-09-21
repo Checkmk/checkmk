@@ -26,6 +26,7 @@
 
 import wato
 import sites
+import cmk.paths
 
 class FilterWatoFile(Filter):
     def __init__(self):
@@ -38,7 +39,7 @@ class FilterWatoFile(Filter):
         # To determine if this site is a slave we check the existance of the distributed_wato.mk
         # file and the absence of any site configuration
         return (config.wato_enabled or\
-               (not wato.is_distributed() and os.path.exists(defaults.check_mk_configdir + "/distributed_wato.mk")))\
+               (not wato.is_distributed() and os.path.exists(cmk.paths.check_mk_config_dir + "/distributed_wato.mk")))\
 
 
     def load_wato_data(self):

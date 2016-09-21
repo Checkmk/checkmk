@@ -29,10 +29,11 @@ import os
 import copy
 import urlparse
 
-import config, defaults, views, userdb, pagetypes
+import config, views, userdb, pagetypes
 import notify, werks
 import sites
 from lib import *
+import cmk.paths
 
 try:
     import simplejson as json
@@ -82,7 +83,7 @@ def link(text, url, target="main", onclick = None):
     # [2] /absolute/link.py
     # [3] relative.py
     if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != '/':
-        url = defaults.url_prefix + "check_mk/" + url
+        url = config.url_prefix() + "check_mk/" + url
     onclick = onclick and (' onclick="%s"' % html.attrencode(onclick)) or ''
     return '<a onfocus="if (this.blur) this.blur();" target="%s" ' \
            'class=link href="%s"%s>%s</a>' % \
@@ -114,7 +115,7 @@ def footnotelinks(links):
 
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%snagios/cgi-bin/%s\">%s</a></li>" % \
-            (defaults.url_prefix, target, html.attrencode(text)))
+            (config.url_prefix(), target, html.attrencode(text)))
 
 def heading(text):
     html.write("<h3>%s</h3>\n" % html.attrencode(text))
@@ -154,9 +155,7 @@ def save_user_config(user_config):
 
 
 def get_check_mk_edition_title():
-    if not defaults.omd_root:
-        return "Raw"
-    version_link = os.readlink("%s/version" % defaults.omd_root)
+    version_link = os.readlink("%s/version" % cmk.paths.omd_root)
     if version_link.endswith(".cee.demo"):
         return "Enterprise (Demo)"
     elif "cee" in version_link:
@@ -173,7 +172,7 @@ def sidebar_head():
     html.write('<img id="side_bg" src="images/sidebar_top.png">')
     html.write('<div id="side_version">'
                '<a href="version.py" target="main" title=\"%s\">%s<br>%s' %
-        (_("Open release notes"), get_check_mk_edition_title(), defaults.check_mk_version))
+        (_("Open release notes"), get_check_mk_edition_title(), cmk.__version__))
     if werks.may_acknowledge():
         num_unacknowledged_werks = werks.num_unacknowledged_incompatible_werks()
         if num_unacknowledged_werks:

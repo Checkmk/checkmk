@@ -2996,8 +2996,8 @@ class StatusServer:
             client_socket = None # close without danger of exception
 
 
-    def handle_client(self, socket, allow_commands, client_ip):
-        for query in Queries(socket):
+    def handle_client(self, client_socket, allow_commands, client_ip):
+        for query in Queries(client_socket):
             verbose("Query: %s" % "\\n".join(query))
             parts = query[0].split(None, 1)
             if len(parts) != 2:
@@ -3023,24 +3023,33 @@ class StatusServer:
                     raise MKClientError("Invalid method %s (allowed are GET, COMMAND "
                                         "and REPLICATE)" % method)
 
-                if output_format == "plain":
-                    for line in response:
-                        socket.sendall("\t".join([to_utf8(quote_tab(c)) for c in line]))
-                        socket.sendall("\n")
+                try:
+                    self._answer_query(client_socket, output_format, response)
+                except socket.error, e:
+                    if e.errno == 32: # Broken pipe -> ignore this
+                        pass
 
-                elif output_format == "json":
-                    socket.sendall(json.dumps(response))
-                    socket.sendall("\n")
+        client_socket.close()
 
-                elif output_format == "python":
-                    socket.sendall(repr(response))
-                    socket.sendall("\n")
 
-                else:
-                    raise MKClientError("Invalid output format \"%s\" "
-                            "(allowed are python, json and plain)" % output_format)
+    def _answer_query(self, client_socket, output_format, response):
+        if output_format == "plain":
+            for line in response:
+                client_socket.sendall("\t".join([to_utf8(quote_tab(c)) for c in line]))
+                client_socket.sendall("\n")
 
-        socket.close()
+        elif output_format == "json":
+            client_socket.sendall(json.dumps(response))
+            client_socket.sendall("\n")
+
+        elif output_format == "python":
+            client_socket.sendall(repr(response))
+            client_socket.sendall("\n")
+
+        else:
+            raise MKClientError("Invalid output format \"%s\" "
+                    "(allowed are python, json and plain)" % output_format)
+
 
     # locked with lock_eventstatus
     def handle_command_request(self, commandline):

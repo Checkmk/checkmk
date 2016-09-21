@@ -60,7 +60,7 @@
 # 1248 2664021277 2664021277 type(40030500)
 # 1250 1330 1330 counter
 
-check_includes['winperf_phydisk'] = [ "diskstat.include" ]
+
 
 def winperf_phydisk_convert(info):
     # node_info has been activated. This check simply ignores this
@@ -182,6 +182,16 @@ def check_winperf_phydisk(item, params, info):
                     'average_write_wait' : (sec_per_write_counter / frequency) / sec_per_write_base,
                 })
 
+
+            # Queue Lengths (currently only Windows). Windows uses counters here.
+            # I have not understood, why....
+            for what, ctr in [ ("read_ql",  disk[7]),
+                               ("write_ql", disk[8]) ]:
+                qlx = get_rate("%s_%s" % (what, disk_id) , this_time, int(ctr))
+                ql = qlx / 10000000.0
+                result[disk[1]].update({what: ql})
+
+
         return result
 
     return check_diskstat_dict(item, params, dictify(winperf_phydisk_convert(info)))
@@ -194,5 +204,6 @@ check_info["winperf_phydisk"] = {
     'service_description':     'Disk IO %s',
     'node_info':               True,
     'has_perfdata':            True,
+    'includes':                [ "diskstat.include" ],
     'group':                   'disk_io',
 }

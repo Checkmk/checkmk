@@ -1614,6 +1614,18 @@ metric_info["write_latency"] = {
 metric_info["disk_queue_length"] = {
     "title" : _("Average disk I/O-queue length"),
     "unit"  : "",
+    "color" : "35/a",
+}
+
+metric_info["disk_read_ql"] = {
+    "title" : _("Average disk read queue length"),
+    "unit"  : "",
+    "color" : "45/a",
+}
+
+metric_info["disk_write_ql"] = {
+    "title" : _("Average disk write queue length"),
+    "unit"  : "",
     "color" : "#7060b0",
 }
 
@@ -5809,6 +5821,14 @@ graph_info.append({
     "metrics" : [
         ( "read_latency", "area" ),
         ( "write_latency", "-area" )
+    ],
+})
+
+graph_info.append({
+    "title"   : _("Read / Write queue length"),
+    "metrics" : [
+        ( "disk_read_ql", "area" ),
+        ( "disk_write_ql", "-area" )
     ],
 })
 

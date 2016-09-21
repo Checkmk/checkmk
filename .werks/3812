@@ -1,0 +1,10 @@
+Title: winperf_phydisk: reintroduced read and write queue length performance data
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474457752
+Class: fix
+
+These values were lost due to a recent code refactoring.
+

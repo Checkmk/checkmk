@@ -308,6 +308,8 @@ def diskstat_select_disk(disks, item):
             # "average_write_wait"         : 0.0,
             # "average_write_request_size" : 0.0,
             # "queue_length"               : 0.0,
+            # "read_ql"                    : 0.0,
+            # "write_ql"                   : 0.0,
         }
 
         if disks:
@@ -360,6 +362,8 @@ def diskstat_select_disk(disks, item):
 #       'write_ios'                  : 1.6153846153846154,
 #       'write_throughput'           : 65536.0,
 #       'queue_length'               : 0.0,
+#       'read_ql'                    : 0.0,
+#       'write_ql'                   : 0.0,
 # }}
 def check_diskstat_dict(item, params, disks):
     # Take care of previously discovered services
@@ -372,6 +376,7 @@ def check_diskstat_dict(item, params, disks):
     disk = diskstat_select_disk(disks, item)
     if not disk:
         return
+
 
     # Averaging
     # Note: this check uses a simple method of averaging: As soon as averaging
@@ -422,6 +427,16 @@ def check_diskstat_dict(item, params, disks):
         state, text, extraperf = check_levels(latency, "disk_latency", params.get("latency"),
                                               unit = "ms", scale = 0.001, statemarkers=False)
         yield state, "Latency: %.2f ms%s" % (latency * 1000.0, text), extraperf
+
+    # Queue lengths
+    for what, plugin_text in [ ("queue_length", "Queue Length"),
+                               ("read_ql",      "Read Queue Length"),
+                               ("write_ql",     "Write Queue Length") ]:
+        if what in disk:
+            ql = disk[what]
+            state, levels_text, extraperf = check_levels(ql, what, params.get(what),
+                                                         statemarkers=False)
+            yield state, "Average %s: %.2f%s" % (plugin_text, ql, levels_text), extraperf
 
     # All the other metrics are currently not output in the plugin output - simply because
     # of their amount. They are present as performance data and will shown in graphs.

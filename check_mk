@@ -1,7 +1,0 @@
-#!/usr/bin/env python
-# Small wrapper for being able to start check_mk from git directory
-
-import sys
-sys.path.insert(0, "")
-
-execfile("modules/check_mk.py")

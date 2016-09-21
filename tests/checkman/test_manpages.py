@@ -3,6 +3,7 @@
 
 import os
 import sys
+import subprocess
 from testlib import cmk_path
 
 
@@ -28,22 +29,29 @@ def _check_manpage(name):
     assert found_catalog, "Did not find \"catalog:\" header in manpage \"%s\"" % name
 
 
-def test_manpage_list():
-    result = os.popen("cd %s ; ./check_mk --list-man 2>&1" % cmk_path()).read()
+def test_manpage_list(site):
+    p = site.execute(["check_mk", "--list-man"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    result = p.communicate()[0]
+
+    assert p.returncode == 0
     assert result != ""
-    assert not "ERROR" in result, "Manpage list broken \"./check_mk --list-man\": %s\"" % result
+    assert not "ERROR" in result, "Manpage list broken \"check_mk --list-man\": %s\"" % result
     assert type(eval(result)) == dict
 
 
-def test_missing_manpage():
+def test_missing_manpage(site):
     missing = []
 
+    p = site.execute(["check_mk", "--list-checks"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    result = p.communicate()[0]
+    assert p.returncode == 0
+
     checks = 0
-    for line in os.popen('cd %s ; ./check_mk --list-checks' % cmk_path()).readlines():
+    for line in result.split("\n"):
         checks += 1
         line = line.strip()
         check_name = line.split(" ", 1)[0]
         assert '(no man page present)' not in line, "Manpage missing: %s" % check_name
 
     if checks == 0:
-        raise Exception("\"./check_mk --list-checks\" Did not output a checks")
+        raise Exception("\"check_mk --list-checks\" Did not output a checks")

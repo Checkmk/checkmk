@@ -1,0 +1,9 @@
+Title: check_mail: fixed missing base64 decoding on multipart mails
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474467090
+Class: fix
+
+

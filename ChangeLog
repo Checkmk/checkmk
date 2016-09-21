@@ -726,6 +726,7 @@
     * 3455 FIX: Fixed broken switch port filtering/sorting view
     * 3663 FIX: Added missing system manufacturer filter/painter
     * 3664 FIX: Fixed not working hardware/system serial and model painters and filters...
+    * 3811 FIX: HW/SW Inventory: Fixed GUI display crash when querying data from older software versions...
 
 
 1.2.8b1:

@@ -1,0 +1,13 @@
+Title: HW/SW Inventory: Fixed GUI display crash when querying data from older software versions
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1474450273
+
+Older software (livestatus) versions did not provide sufficient inventory data.
+
+The crash happened when a site with a newer software version tried to query
+data from a site running an older version.

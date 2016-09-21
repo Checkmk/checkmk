@@ -279,7 +279,7 @@ multisite_datasources["service_discovery"] = {
     "title"       : _("Service discovery"),
     "table"       : query_service_discovery,
     "add_columns" : [ "discovery_state", "discovery_check", "discovery_service" ],
-    "infos"       : [ "host", "host_discovery" ],
+    "infos"       : [ "host", "discovery" ],
     "keys"        : [],
     "idkeys"      : [ "host_name" ]
 }

@@ -3863,7 +3863,7 @@ def do_event_action(action, event, user=""):
 # This function creates a Check_MK Notification for a locally running Check_MK.
 # We simulate a *service* notification.
 def do_notify(event, username=None, is_cancelling=False):
-    if core_has_notifications_disabled():
+    if core_has_notifications_disabled(event):
         return
 
     # Create notification context based on event
@@ -4002,7 +4002,7 @@ def add_rbn_contact_information(context, host, contact_groups, contact_groups_no
     })
 
 
-def core_has_notifications_disabled():
+def core_has_notifications_disabled(event):
     try:
         answer = livestatus_query("GET status\nColumns: enable_notifications\nOutputFormat: python\n")
         if answer:
@@ -4026,7 +4026,7 @@ def fetch_contacts_of_group_from_livestatus(group_name):
             if "check-mk-notify" in contacts: # Remove artifical contact used for rule based notifications
                 contacts.remove("check-mk-notify")
             return contacts
-    except True:
+    except: # TODO: Make this more specific
         if opt_debug:
             raise
 
@@ -4049,7 +4049,7 @@ def fetch_contacts_and_groups_of_host_from_livestatus(host):
             contacts.remove("check-mk-notify")
         return contacts, groups
 
-    except True:
+    except: # TODO: Make this more specific
         if opt_debug:
             raise
 

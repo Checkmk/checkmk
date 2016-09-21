@@ -1,0 +1,16 @@
+title: IBM tape library: Media access devices
+agents: snmp
+catalog: hw/storagehw/ibm
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the availability status of media access
+ devices of IBM tape library which support the SML MIB.
+
+ The device sends its state itself.
+
+item:
+ The media access device name.
+
+inventory:
+ One service for each device is created.

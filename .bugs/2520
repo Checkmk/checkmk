@@ -1,0 +1,14 @@
+Title: WATO mass host tags remove does not work
+Component: wato
+State: open
+Date: 2016-09-22 17:03:35
+Targetversion: 1.2.8
+Class: bug
+
+If hosts tags are assigned to hosts and you want to remove a specific host tag in mass edit action of hosts,
+it will be not removed. The host tag is stiull assigned to the hosts.
+
+Inheritance of folder host tags does not work if you try to remove the host tags.
+
+Workaround:
+Please edit single hosts and remove the wrong host tag. This will remove the host tag from the host.

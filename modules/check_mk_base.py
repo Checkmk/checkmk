@@ -816,20 +816,23 @@ def get_agent_info_program(commandline):
                                  close_fds=True)
         stdout, stderr = p.communicate()
         exitstatus = p.returncode
+        p.stdout.close()
+        p.stderr.close()
     except MKTimeout:
         # On timeout exception try to stop the process to prevent child process "leakage"
         if p:
             os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+            p.stdout.close()
+            p.stderr.close()
         raise
     except Exception, e:
-        raise MKAgentError("Could not execute '%s': %s" % (exepath, e))
-    finally:
         # The stdout and stderr pipe are not closed correctly on a MKTimeout
         # Normally these pipes getting closed after p.communicate finishes
         # Closing them a second time in a OK scenario won't hurt neither..
         if p:
             p.stdout.close()
             p.stderr.close()
+        raise MKAgentError("Could not execute '%s': %s" % (exepath, e))
 
     if exitstatus:
         if exitstatus == 127:

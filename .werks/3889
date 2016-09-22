@@ -1,0 +1,11 @@
+Title: Fixed incompatiblity with Python 2.4 (CentOS 5.5) introduced with 1.2.8p11
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.8p12
+Date: 1474531937
+Class: fix
+
+This exception occures first during creation of the site with the message:
+
+Cannot read module check_mk_base: invalid syntax (check_mk_base.py, line 826)

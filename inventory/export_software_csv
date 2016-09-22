@@ -43,7 +43,7 @@ def inv_export_software_csv(hostname, params, tree):
 
     filename  = params["filename"].replace("<HOST>", hostname)
     if not filename.startswith("/"):
-        filename = var_dir + "/" + filename
+        filename = cmk.paths.var_dir + "/" + filename
     dirname = filename.rsplit("/", 1)[0]
     if not os.path.exists(dirname):
         try:

@@ -238,7 +238,7 @@ def logwatch_parse_line(line):
 # ignored.
 def check_logwatch(item, params, info):
     def cachefile_path(node):
-        return tcp_cache_dir + "/" + node
+        return cmk.paths.tcp_cache_dir + "/" + node
 
     now = time.time()
     last_run = get_item_state("logwatch_last_run_%s" % item, 0)

@@ -403,6 +403,7 @@
     * 3810 FIX: windows agent: no longer truncates plugin output, no longer freezes when plugin produces too much output...
     * 3812 FIX: winperf_phydisk: reintroduced read and write queue length performance data...
     * 3813 FIX: check_mail: fixed missing base64 decoding on multipart mails
+    * 3888 FIX: df checks: Fixed invalid displayed WARN / CRIT lines in graphs when using "bytes left" thresholds
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

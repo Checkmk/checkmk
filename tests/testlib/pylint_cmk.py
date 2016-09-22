@@ -16,7 +16,6 @@ from testlib import repo_path
 
 def ordered_module_files():
     ordered_modules = [
-        "defaults",
         "modules/check_mk_base.py",
         "modules/check_mk.py",
         "modules/config.py",

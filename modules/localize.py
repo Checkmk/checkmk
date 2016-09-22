@@ -246,8 +246,8 @@ def localize_update(lang):
     # Maybe initialize the file in the local hierarchy with the file in
     # the default hierarchy
     if not os.path.exists(po_file) \
-       and os.path.exists(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
-        file(po_file, 'w').write(file(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
+       and os.path.exists(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
+        file(po_file, 'w').write(file(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
         sys.stdout.write('Initialize %s with the file in the default hierarchy\n' % po_file)
 
     localize_sniff()
@@ -271,8 +271,8 @@ def localize_compile(lang):
     # Maybe initialize the file in the local hierarchy with the file in
     # the default hierarchy
     if not os.path.exists(po_file) \
-       and os.path.exists(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
-        file(po_file, 'w').write(file(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
+       and os.path.exists(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
+        file(po_file, 'w').write(file(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
         sys.stdout.write('Initialize %s with the file in the default hierarchy\n' % po_file)
 
     if not os.path.exists(po_file):

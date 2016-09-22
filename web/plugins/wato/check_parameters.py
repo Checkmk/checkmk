@@ -609,6 +609,674 @@ register_rule(
     match = "first"
 )
 
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "inventory_services_rules",
+    title     = _("Windows Service Discovery"),
+    valuespec = Dictionary(
+        elements = [
+            ('services', ListOfStrings(
+                title = _("Services (Regular Expressions)"),
+                help  = _('Regular expressions matching the begining of the internal name '
+                          'or the description of the service. '
+                          'If no name is given then this rule will match all services. The '
+                          'match is done on the <i>beginning</i> of the service name. It '
+                          'is done <i>case sensitive</i>. You can do a case insensitive match '
+                          'by prefixing the regular expression with <tt>(?i)</tt>. Example: '
+                          '<tt>(?i).*mssql</tt> matches all services which contain <tt>MSSQL</tt> '
+                          'or <tt>MsSQL</tt> or <tt>mssql</tt> or...'),
+
+                orientation = "horizontal",
+            )),
+            ('state', DropdownChoice(
+                choices = [
+                    ('running', _('Running')),
+                    ('stopped', _('Stopped')),
+                ],
+                title = _("Create check if service is in state"),
+            )),
+            ('start_mode', DropdownChoice(
+                choices = [
+                    ('auto',     _('Automatic')),
+                    ('demand',   _('Manual')),
+                    ('disabled', _('Disabled')),
+                ],
+                title = _("Create check if service is in start mode"),
+            )),
+        ],
+        help = _('This rule can be used to configure the inventory of the windows services check. '
+                 'You can configure specific windows services to be monitored by the windows check by '
+                 'selecting them by name, current state during the inventory, or start mode.'),
+    ),
+    match = 'all',
+)
+
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "discovery_win_dhcp_pools",
+    title     = _("Discovery of Windows DHCP Pools"),
+    valuespec = Dictionary(
+        elements = [
+          ( "empty_pools",
+             Checkbox(
+                 title = _("Discovery of empty DHCP pools"),
+                 label = _("Include empty pools into the monitoring"),
+                 help = _("You can activate the creation of services for "
+                          "DHCP pools, which contain no IP addresses."),
+          )),
+        ]
+    ),
+    match = 'dict',
+)
+
+
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "inventory_if_rules",
+    title     = _("Network Interface and Switch Port Discovery"),
+    valuespec = Dictionary(
+        elements = [
+         ( "use_desc",
+           Checkbox(
+                title = _("Use description as service name for network interface checks"),
+                label = _("use description"),
+                help = _("This option lets Check_MK use the interface description as item instead "
+                         "of the port number. If no description is available then the port number is "
+                         "used anyway."))),
+        ( "use_alias",
+          Checkbox(
+                 title = _("Use alias as service name for network interface checks"),
+                     label = _("use alias"),
+                     help = _("This option lets Check_MK use the alias of the port (ifAlias) as item instead "
+                              "of the port number. If no alias is available then the port number is used "
+                              "anyway."))),
+        ( "match_alias",
+          ListOfStrings(
+              title = _("Match interface alias (regex)"),
+              help = _("Only discover interfaces whose alias matches one of the configured "
+                       "regular expressions. The match is done on the beginning of the alias. "
+                       "This allows you to select interfaces based on the alias without having "
+                       "the alias be part of the service description."),
+              orientation = "horizontal",
+              valuespec = RegExp(size = 32),
+        )),
+        ( "pad_portnumbers",
+          Checkbox(title = _("Pad port numbers with zeroes"),
+              label = _("pad port numbers"),
+              help = _("If this option is activated then Check_MK will pad port numbers of "
+                       "network interfaces with zeroes so that all port descriptions from "
+                       "all ports of a host or switch have the same length and thus sort "
+                       "currectly in the GUI. In versions prior to 1.1.13i3 there was no "
+                       "padding. You can switch back to the old behaviour by disabling this "
+                       "option. This will retain the old service descriptions and the old "
+                       "performance data."),
+        )),
+        ( "match_desc",
+          ListOfStrings(
+              title = _("Match interface description (regex)"),
+              help = _("Only discover interfaces whose the description matches one of the configured "
+                       "regular expressions. The match is done on the beginning of the description. "
+                       "This allows you to select interfaces based on the description without having "
+                       "the alias be part of the service description."),
+              orientation = "horizontal",
+              valuespec = RegExp(size = 32),
+        )),
+        ( "portstates",
+          ListChoice(title = _("Network interface port states to discover"),
+              help = _("When doing discovery on switches or other devices with network interfaces "
+                       "then only ports found in one of the configured port states will be added to the monitoring. "
+                       "Note: the state <i>admin down</i> is in fact not an <tt>ifOperStatus</tt> but represents the "
+                       "<tt>ifAdminStatus</tt> of <tt>down</tt> - a port administratively switched off. If you check this option "
+                       "then an alternate version of the check is being used that fetches the <tt>ifAdminState</tt> in addition. "
+                       "This will add about 5% of additional SNMP traffic."),
+              choices = dict_choices(defines.interface_oper_states()),
+              toggle_all = True,
+              default_value = ['1'],
+        )),
+        ( "porttypes",
+          DualListChoice(title = _("Network interface port types to discover"),
+              help = _("When doing discovery on switches or other devices with network interfaces "
+                       "then only ports of the specified types will be created services for."),
+              choices = interface_port_type_choices,
+              custom_order = True,
+              rows = 40,
+              toggle_all = True,
+              default_value = [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205','229' ],
+        )),
+        ( "rmon",
+          Checkbox(
+              title = _("Collect RMON statistics data"),
+              help = _("If you enable this option, for every RMON capable switch port an additional service will "
+                       "be created which is always OK and collects RMON data. This will give you detailed information "
+                       "about the distribution of packet sizes transferred over the port. Note: currently "
+                       "this extra RMON check does not honor the inventory settings for switch ports. In a future "
+                       "version of Check_MK RMON data may be added to the normal interface service and not add "
+                       "an additional service."),
+              label = _("Create extra service with RMON statistics data (if available for the device)"),
+        )),
+        ],
+        help = _('This rule can be used to control the inventory for network ports. '
+                 'You can configure the port types and port states for inventory'
+                 'and the use of alias or description as service name.'),
+    ),
+    match = 'list',
+)
+
+_brocade_fcport_adm_choices = [
+    ( 1, 'online(1)'),
+    ( 2, 'offline(2)'),
+    ( 3, 'testing(3)'),
+    ( 4, 'faulty(4)'),
+]
+
+_brocade_fcport_op_choices = [
+    ( 0, 'unkown(0)'),
+    ( 1, 'online(1)'),
+    ( 2, 'offline(2)'),
+    ( 3, 'testing(3)'),
+    ( 4, 'faulty(4)'),
+]
+
+_brocade_fcport_phy_choices = [
+    ( 1, 'noCard(1)'),
+    ( 2, 'noTransceiver(2)'),
+    ( 3, 'laserFault(3)'),
+    ( 4, 'noLight(4)'),
+    ( 5, 'noSync(5)'),
+    ( 6, 'inSync(6)'),
+    ( 7, 'portFault(7)'),
+    ( 8, 'diagFault(8)'),
+    ( 9, 'lockRef(9)'),
+    ( 10, 'validating(10)'),
+    ( 11, 'invalidModule(11)'),
+    ( 14, 'noSigDet(14)'),
+    ( 255, 'unkown(255)'),
+]
+
+
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "brocade_fcport_inventory",
+    title     = _("Brocade Port Discovery"),
+    valuespec = Dictionary(
+        elements = [
+         ("use_portname", Checkbox(
+                title = _("Use port name as service name"),
+                label = _("use port name"),
+                default_value = True,
+                help = _("This option lets Check_MK use the port name as item instead of the "
+                         "port number. If no description is available then the port number is "
+                         "used anyway."))),
+        ("show_isl", Checkbox(
+                title = _("add \"ISL\" to service description for interswitch links"),
+                label = _("add ISL"),
+                default_value = True,
+                help = _("This option lets Check_MK add the string \"ISL\" to the service "
+                         "description for interswitch links."))),
+        ("admstates", ListChoice(title = _("Administrative port states to discover"),
+                help = _("When doing service discovery on brocade switches only ports with the given administrative "
+                         "states will be added to the monitoring system."),
+                choices = _brocade_fcport_adm_choices,
+                columns = 1,
+                toggle_all = True,
+                default_value = ['1', '3', '4' ],
+        )),
+        ("phystates", ListChoice(title = _("Physical port states to discover"),
+                help = _("When doing service discovery on brocade switches only ports with the given physical "
+                         "states will be added to the monitoring system."),
+                choices = _brocade_fcport_phy_choices,
+                columns = 1,
+                toggle_all = True,
+                default_value =  [ 3, 4, 5, 6, 7, 8, 9, 10 ]
+        )),
+        ("opstates", ListChoice(title = _("Operational port states to discover"),
+                help = _("When doing service discovery on brocade switches only ports with the given operational "
+                         "states will be added to the monitoring system."),
+                choices = _brocade_fcport_op_choices,
+                columns = 1,
+                toggle_all = True,
+                default_value = [ 1, 2, 3, 4 ]
+        )),
+        ],
+        help = _('This rule can be used to control the service discovery for brocade ports. '
+                 'You can configure the port states for inventory '
+                 'and the use of the description as service name.'),
+    ),
+    match = 'dict',
+)
+
+# Next step in conversion: introduce "levels"
+def ps_convert_from_singlekeys(old_params):
+    params = {}
+    params.update(ps_convert_from_tuple(old_params))
+    if "warnmin" in params:
+        params["levels"] = (
+            params.get("warnmin",     1),
+            params.get("okmin",       1),
+            params.get("warnmax", 99999),
+            params.get("okmax",   99999),
+        )
+        for key in [ "warnmin", "warnmax", "okmin", "okmax" ]:
+            if key in params:
+                del params[key]
+    return params
+
+def ps_convert_inventorized_from_singlekeys(old_params):
+    params = ps_convert_from_singlekeys(old_params)
+    if 'user' in params:
+        del params['user']
+    if 'process' in params:
+        del params['process']
+    return params
+
+
+process_level_elements = [
+    ('levels', Tuple(
+        title = _('Levels for process count'),
+        help = _("Please note that if you specify and also if you modify levels here, the change is activated "
+                 "only during an inventory.  Saving this rule is not enough. This is due to the nature of inventory rules."),
+        elements = [
+            Integer(
+                title = _("Critical below"),
+                unit = _("processes"),
+                default_value = 1,
+            ),
+            Integer(
+                title = _("Warning below"),
+                unit = _("processes"),
+                default_value = 1,
+            ),
+            Integer(
+                title = _("Warning above"),
+                unit = _("processes"),
+                default_value = 99999,
+            ),
+            Integer(
+                title = _("Critical above"),
+                unit = _("processes"),
+                default_value = 99999,
+            ),
+        ],
+    )),
+    ( "cpulevels",
+      Tuple(
+        title = _("Levels on CPU utilization"),
+        elements = [
+           Percentage(title = _("Warning at"),  default_value = 90, maxvalue = 10000),
+           Percentage(title = _("Critical at"), default_value = 98, maxvalue = 10000),
+        ],
+    )),
+    ( "cpu_average",
+     Integer(
+         title = _("CPU Averaging"),
+         help = _("By activating averaging, Check_MK will compute the average of "
+                  "the CPU utilization over a given interval. If you have defined "
+                  "alerting levels then these will automatically be applied on the "
+                  "averaged value. This helps to mask out short peaks. "),
+         unit = _("minutes"),
+         minvalue = 1,
+         default_value = 15,
+     )
+   ),
+   ( "max_age",
+     Tuple(
+       title = _("Maximum allowed age"),
+       help = _("Alarms you if the age of the process (not the consumed CPU time, but the real time) exceed the configured levels."),
+       elements = [
+           Age(title=_("Warning at"), default_value = 3600),
+           Age(title=_("Critical at"), default_value = 7200),
+       ]
+   )),
+   ( "virtual_levels",
+      Tuple(
+        title = _("Virtual memory usage"),
+        elements = [
+            Filesize(title = _("Warning at"), default_value = 1000 * 1024 * 1024 * 1024),
+            Filesize(title = _("Critical at"), default_value = 2000 * 1024 * 1024 * 1024),
+        ],
+   )),
+   ( "resident_levels",
+      Tuple(
+        title = _("Physical memory usage"),
+        elements = [
+            Filesize(title = _("Warning at"), default_value = 100 * 1024 * 1024),
+            Filesize(title = _("Critical at"), default_value = 200 * 1024 * 1024),
+        ],
+   )),
+   ( "resident_levels_perc",
+     Tuple(
+       title = _("Physical memory usage, in percentage of total RAM"),
+       elements = [
+           Percentage(title = _("Warning at"), default_value = 25.0),
+           Percentage(title = _("Critical at"), default_value = 50.0),
+       ]
+   )),
+   ( "handle_count", Tuple(
+        title = _('Handle Count (Windows only)'),
+        help  = _("The number of object handles in the processes object table. This includes open handles to "
+                  "threads, files and other resources like registry keys."),
+        elements = [
+            Integer(
+                title = _("Warning above"),
+                unit = _("handles"),
+            ),
+            Integer(
+                title = _("Critical above"),
+                unit = _("handles"),
+            ),
+        ],
+   )),
+   ('process_info', DropdownChoice(
+       title = _("Enable per-process details in long-output"),
+       label = _("Enable per-process details"),
+       help  = _("If active, the long output of this service will contain a list of "
+                   "all the matching processes and their details (i.e. PID, CPU usage, memory usage). "
+                   "Please note that HTML output will only work if \"Escape HTML codes in plugin output\" is "
+                   "disabled in global settings. This might expose you to Cross-Site-Scripting (everyone "
+                   "with write-access to checks could get scripts executed on the monitoring site in the context "
+                   "of the user of the monitoring site) so please do this if you understand the consequences."),
+       choices = [
+           (None, _("Disable")),
+           ("text", _("Text output")),
+           ("html", _("HTML output"))
+       ],
+       default_value = "disable",
+   )),
+]
+
+# In version 1.2.4 the check parameters for the resulting ps check
+# where defined in the dicovery rule. We moved that to an own rule
+# in the classical check parameter style. In order to support old
+# configuration we allow reading old discovery rules and ship these
+# settings in an optional sub-dictionary.
+def convert_inventory_processes(old_dict):
+    new_dict = { "default_params" : {} }
+    for key, value in old_dict.items():
+        if key in ['levels', 'handle_count', 'cpulevels', 'cpu_average', 'virtual_levels', 'resident_levels']:
+            new_dict["default_params"][key] = value
+        elif key != "perfdata":
+            new_dict[key] = value
+    return new_dict
+
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "inventory_processes_rules",
+    title     = _('Process Discovery'),
+    help      = _("This ruleset defines criteria for automatically creating checks for running processes "
+                  "based upon what is running when the service discovery is done. These services will be "
+                  "created with default parameters. They will get critical when no process is running and "
+                  "OK otherwise. You can parameterize the check with the ruleset <i>State and count of processes</i>."),
+    valuespec = Transform(
+        Dictionary(
+            elements = [
+                ('descr', TextAscii(
+                    title = _('Process Name'),
+                    style = "dropdown",
+                    allow_empty = False,
+                    help  = _('<p>The process name may contain one or more occurances of <tt>%s</tt>. If you do this, then the pattern must be a regular '
+                              'expression and be prefixed with ~. For each <tt>%s</tt> in the description, the expression has to contain one "group". A group '
+                              'is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a process '
+                              'matching the pattern, it will substitute all such groups with the actual values when creating the check. That way one '
+                              'rule can create several checks on a host.</p>'
+                              '<p>If the pattern contains more groups then occurrances of <tt>%s</tt> in the service description then only the first matching '
+                              'subexpressions  are used for the  service descriptions. The matched substrings corresponding to the remaining groups '
+                              'are copied into the regular expression, nevertheless.</p>'
+                              '<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, <tt>%2</tt>, etc. '
+                              'These will be replaced by the first, second, ... matching group. This allows you to reorder things.</p>'
+                              ),
+                )),
+                ('match', Alternative(
+                    title = _("Process Matching"),
+                    style = "dropdown",
+                    elements = [
+                        TextAscii(
+                            title = _("Exact name of the process without argments"),
+                            label = _("Executable:"),
+                            size = 50,
+                        ),
+                        Transform(
+                            RegExp(size = 50),
+                            title = _("Regular expression matching command line"),
+                            label = _("Command line:"),
+                            help = _("This regex must match the <i>beginning</i> of the complete "
+                                     "command line of the process including arguments"),
+                            forth = lambda x: x[1:],   # remove ~
+                            back  = lambda x: "~" + x, # prefix ~
+                        ),
+                        FixedValue(
+                            None,
+                            totext = "",
+                            title = _("Match all processes"),
+                        )
+                    ],
+                    match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0),
+                    default_value = '/usr/sbin/foo',
+                )),
+                ('user', Alternative(
+                    title = _('Name of the User'),
+                    style = "dropdown",
+                    elements = [
+                        FixedValue(
+                            None,
+                            totext = "",
+                            title = _("Match all users"),
+                        ),
+                        TextAscii(
+                            title = _('Exact name of the user'),
+                            label = _("User:"),
+                        ),
+                        FixedValue(
+                            False,
+                            title = _('Grab user from found processess'),
+                            totext = '',
+                        ),
+                    ],
+                    help = _('<p>The user specification can either be a user name (string). The inventory will then trigger only if that user matches '
+                             'the user the process is running as and the resulting check will require that user. Alternatively you can specify '
+                             '"grab user". If user is not selected the created check will not check for a specific user.</p>'
+                             '<p>Specifying "grab user" makes the created check expect the process to run as the same user as during inventory: the user '
+                             'name will be hardcoded into the check. In that case if you put %u into the service description, that will be replaced '
+                             'by the actual user name during inventory. You need that if your rule might match for more than one user - your would '
+                             'create duplicate services with the same description otherwise.</p><p>Windows users are specified by the namespace followed by '
+                             'the actual user name. For example "\\\\NT AUTHORITY\NETWORK SERVICE" or "\\\\CHKMKTEST\Administrator".</p>'),
+                )),
+                ('icon', UserIconOrAction(
+                    title = _("Add custom icon or action"),
+                    help = _("You can assign icons or actions to the found services in the status GUI."),
+                )),
+                ('default_params',
+                 Dictionary(
+                     title = _("Default parameters for detected services"),
+                     help = _("Here you can select default parameters that are being set "
+                              "for detected services. Note: the preferred way for setting parameters is to use "
+                              "the rule set <a href='wato.py?varname=checkgroup_parameters%3Apsmode=edit_ruleset'> "
+                              "State and Count of Processes</a> instead. "
+                              "A change there will immediately be active, while a change in this rule "
+                              "requires a re-discovery of the services."),
+                     elements = process_level_elements,
+                )),
+            ],
+            required_keys = [ "descr" ],
+        ),
+        forth = convert_inventory_processes,
+    ),
+    match = 'all',
+)
+
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "inv_domino_tasks_rules",
+    title     = _('Lotus Domino Task Discovery'),
+    help      = _("This rule controls the discovery of tasks on Lotus Domino systems. "
+                  "Any changes later on require a host re-discovery"),
+    valuespec = Dictionary(
+        elements = [
+            ('descr', TextAscii(
+                title = _('Service Description'),
+                allow_empty = False,
+                help  = _('<p>The service description may contain one or more occurances of <tt>%s</tt>. In this '
+                          'case, the pattern must be a regular expression prefixed with ~. For each '
+                          '<tt>%s</tt> in the description, the expression has to contain one "group". A group '
+                          'is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or '
+                          '<tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a task '
+                          'matching the pattern, it will substitute all such groups with the actual values when '
+                          'creating the check. In this way one rule can create several checks on a host.</p>'
+                          '<p>If the pattern contains more groups than occurrences of <tt>%s</tt> in the service '
+                          'description, only the first matching subexpressions are used for the service '
+                          'descriptions. The matched substrings corresponding to the remaining groups '
+                          'are nevertheless copied into the regular expression.</p>'
+                          '<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, <tt>%2</tt>, etc. '
+                          'These expressions will be replaced by the first, second, ... matching group, allowing '
+                          'you to reorder things.</p>'
+                          ),
+            )),
+            ('match', Alternative(
+                title = _("Task Matching"),
+                elements = [
+                    TextAscii(
+                        title = _("Exact name of the task"),
+                        size = 50,
+                    ),
+                    Transform(
+                        RegExp(size = 50),
+                        title = _("Regular expression matching command line"),
+                        help = _("This regex must match the <i>beginning</i> of the task"),
+                        forth = lambda x: x[1:],   # remove ~
+                        back  = lambda x: "~" + x, # prefix ~
+                    ),
+                    FixedValue(
+                        None,
+                        totext = "",
+                        title = _("Match all tasks"),
+                    )
+                ],
+                match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0),
+                default_value = 'foo',
+            )),
+            ('levels', Tuple(
+                title = _('Levels'),
+                help = _("Please note that if you specify and also if you modify levels here, the change is "
+                         "activated only during an inventory.  Saving this rule is not enough. This is due to "
+                         "the nature of inventory rules."),
+                elements = [
+                    Integer(
+                        title = _("Critical below"),
+                        unit = _("processes"),
+                        default_value = 1,
+                    ),
+                    Integer(
+                        title = _("Warning below"),
+                        unit = _("processes"),
+                        default_value = 1,
+                    ),
+                    Integer(
+                        title = _("Warning above"),
+                        unit = _("processes"),
+                        default_value = 1,
+                    ),
+                    Integer(
+                        title = _("Critical above"),
+                        unit = _("processes"),
+                        default_value = 1,
+                    ),
+                ],
+            )),
+        ],
+        required_keys = ['match', 'levels', 'descr'],
+    ),
+    match = 'all',
+)
+
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "inventory_sap_values",
+    title     = _('SAP R/3 Single Value Inventory'),
+    valuespec = Dictionary(
+        elements = [
+            ('match', Alternative(
+                title = _("Node Path Matching"),
+                elements = [
+                    TextAscii(
+                        title = _("Exact path of the node"),
+                        size = 100,
+                    ),
+                    Transform(
+                        RegExp(size = 100),
+                        title = _("Regular expression matching the path"),
+                        help = _("This regex must match the <i>beginning</i> of the complete "
+                                 "path of the node as reported by the agent"),
+                        forth = lambda x: x[1:],   # remove ~
+                        back  = lambda x: "~" + x, # prefix ~
+                    ),
+                    FixedValue(
+                        None,
+                        totext = "",
+                        title = _("Match all nodes"),
+                    )
+                ],
+                match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0),
+                default_value = 'SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime',
+            )),
+            ('limit_item_levels', Integer(
+                title = _("Limit Path Levels for Service Names"),
+                unit = _('path levels'),
+                minvalue = 1,
+                help = _("The service descriptions of the inventorized services are named like the paths "
+                         "in SAP. You can use this option to let the inventory function only use the last "
+                         "x path levels for naming."),
+            )),
+        ],
+        optional_keys = ['limit_item_levels'],
+    ),
+    match = 'all',
+)
+
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "sap_value_groups",
+    title     = _('SAP Value Grouping Patterns'),
+    help      = _('The check <tt>sap.value</tt> normally creates one service for each SAP value. '
+                  'By defining grouping patterns, you can switch to the check <tt>sap.value-groups</tt>. '
+                  'That check monitors a list of SAP values at once.'),
+    valuespec = ListOf(
+        Tuple(
+            help = _("This defines one value grouping pattern"),
+            show_titles = True,
+            orientation = "horizontal",
+            elements = [
+                TextAscii(
+                     title = _("Name of group"),
+                ),
+                Tuple(
+                    show_titles = True,
+                    orientation = "vertical",
+                    elements = [
+                        RegExpUnicode(title = _("Include Pattern")),
+                        RegExpUnicode(title = _("Exclude Pattern"))
+                    ],
+                ),
+            ],
+        ),
+        add_label = _("Add pattern group"),
+    ),
+    match = 'all',
+)
+
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "inventory_heartbeat_crm_rules",
+    title     = _("Heartbeat CRM Discovery"),
+    valuespec = Dictionary(
+        elements = [
+            ("naildown_dc", Checkbox(
+                   title = _("Naildown the DC"),
+                   label = _("Mark the currently distinguished controller as preferred one"),
+                   help = _("Nails down the DC to the node which is the DC during discovery. The check "
+                            "will report CRITICAL when another node becomes the DC during later checks.")
+            )),
+            ("naildown_resources", Checkbox(
+                   title = _("Naildown the resources"),
+                   label = _("Mark the nodes of the resources as preferred one"),
+                   help = _("Nails down the resources to the node which is holding them during discovery. "
+                            "The check will report CRITICAL when another holds the resource during later checks.")
+            )),
+        ],
+        help = _('This rule can be used to control the discovery for Heartbeat CRM checks.'),
+        optional_keys = [],
+    ),
+    match = 'dict',
+)
 
 #.
 #   .--Applications--------------------------------------------------------.
@@ -2204,6 +2872,108 @@ register_check_parameters(
     "dict"
 )
 
+# Rule for disovered process checks
+register_check_parameters(
+    subgroup_applications,
+    "ps",
+    _("State and count of processes"),
+    Transform(
+        Dictionary(
+            elements = process_level_elements + [
+                ('icon', UserIconOrAction(
+                    title = _("Add custom icon or action"),
+                    help = _("You can assign icons or actions to the found services in the status GUI."),
+                ))
+            ]
+        ),
+        forth = ps_convert_inventorized_from_singlekeys,
+    ),
+    TextAscii(
+        title = _("Process name as defined at discovery"),
+    ),
+    "dict",
+    has_inventory = True,
+    register_static_check = False,
+)
+
+# Rule for static process checks
+register_check_parameters(
+    subgroup_applications,
+    "ps",
+    _("State and count of processes"),
+    Transform(
+        Dictionary(
+            elements = [
+                ( "process", Alternative(
+                    title = _("Process Matching"),
+                    style = "dropdown",
+                    elements = [
+                        TextAscii(
+                            title = _("Exact name of the process without argments"),
+                            size = 50,
+                        ),
+                        Transform(
+                            RegExp(size = 50),
+                            title = _("Regular expression matching command line"),
+                            help = _("This regex must match the <i>beginning</i> of the complete "
+                                     "command line of the process including arguments"),
+                            forth = lambda x: x[1:],   # remove ~
+                            back  = lambda x: "~" + x, # prefix ~
+                        ),
+                        FixedValue(
+                            None,
+                            totext = "",
+                            title = _("Match all processes"),
+                        )
+                    ],
+                    match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
+                )),
+                ( "user", Alternative(
+                    title = _("Name of operating system user"),
+                    style = "dropdown",
+                    elements = [
+                        TextAscii(
+                            title = _("Exact name of the operating system user")
+                        ),
+                        Transform(
+                            RegExp(size = 50),
+                            title = _("Regular expression matching username"),
+                            help = _("This regex must match the <i>beginning</i> of the complete "
+                                     "username"),
+                            forth = lambda x: x[1:],   # remove ~
+                            back  = lambda x: "~" + x, # prefix ~
+                        ),
+                        FixedValue(
+                            None,
+                            totext = "",
+                            title = _("Match all users"),
+                        )
+
+                    ],
+                    match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
+
+                )),
+                ('icon', UserIconOrAction(
+                    title = _("Add custom icon or action"),
+                    help = _("You can assign icons or actions to the found services in the status GUI."),
+                )),
+            ] + process_level_elements,
+            # required_keys = [ "process" ],
+        ),
+        forth = ps_convert_from_singlekeys,
+    ),
+    TextAscii(
+        title = _("Process Name"),
+        help = _("This name will be used in the description of the service"),
+        allow_empty = False,
+        regex = "^[a-zA-Z_0-9 _.-]*$",
+        regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
+                        "dot and hyphon for your service description"),
+    ),
+    "dict",
+    has_inventory = False,
+)
+
 
 #.
 #   .--Environment---------------------------------------------------------.
@@ -2761,666 +3531,6 @@ register_check_parameters(
     match_type = "dict"
 )
 
-#.
-#   .--Unsorted--(Don't create new stuff here!)----------------------------.
-#   |              _   _                      _           _                |
-#   |             | | | |_ __  ___  ___  _ __| |_ ___  __| |               |
-#   |             | | | | '_ \/ __|/ _ \| '__| __/ _ \/ _` |               |
-#   |             | |_| | | | \__ \ (_) | |  | ||  __/ (_| |               |
-#   |              \___/|_| |_|___/\___/|_|   \__\___|\__,_|               |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  All these rules have not been moved into their according sections.  |
-#   |  Please move them as you come along - but beware of dependecies!     |
-#   |  Remove this section as soon as it's empty.                          |
-#   '----------------------------------------------------------------------'
-
-register_rule(group + '/' + subgroup_inventory,
-    varname   = "inventory_services_rules",
-    title     = _("Windows Service Discovery"),
-    valuespec = Dictionary(
-        elements = [
-            ('services', ListOfStrings(
-                title = _("Services (Regular Expressions)"),
-                help  = _('Regular expressions matching the begining of the internal name '
-                          'or the description of the service. '
-                          'If no name is given then this rule will match all services. The '
-                          'match is done on the <i>beginning</i> of the service name. It '
-                          'is done <i>case sensitive</i>. You can do a case insensitive match '
-                          'by prefixing the regular expression with <tt>(?i)</tt>. Example: '
-                          '<tt>(?i).*mssql</tt> matches all services which contain <tt>MSSQL</tt> '
-                          'or <tt>MsSQL</tt> or <tt>mssql</tt> or...'),
-
-                orientation = "horizontal",
-            )),
-            ('state', DropdownChoice(
-                choices = [
-                    ('running', _('Running')),
-                    ('stopped', _('Stopped')),
-                ],
-                title = _("Create check if service is in state"),
-            )),
-            ('start_mode', DropdownChoice(
-                choices = [
-                    ('auto',     _('Automatic')),
-                    ('demand',   _('Manual')),
-                    ('disabled', _('Disabled')),
-                ],
-                title = _("Create check if service is in start mode"),
-            )),
-        ],
-        help = _('This rule can be used to configure the inventory of the windows services check. '
-                 'You can configure specific windows services to be monitored by the windows check by '
-                 'selecting them by name, current state during the inventory, or start mode.'),
-    ),
-    match = 'all',
-)
-
-register_rule(group + '/' + subgroup_inventory,
-    varname   = "discovery_win_dhcp_pools",
-    title     = _("Discovery of Windows DHCP Pools"),
-    valuespec = Dictionary(
-        elements = [
-          ( "empty_pools",
-             Checkbox(
-                 title = _("Discovery of empty DHCP pools"),
-                 label = _("Include empty pools into the monitoring"),
-                 help = _("You can activate the creation of services for "
-                          "DHCP pools, which contain no IP addresses."),
-          )),
-        ]
-    ),
-    match = 'dict',
-)
-
-
-register_rule(group + '/' + subgroup_inventory,
-    varname   = "inventory_if_rules",
-    title     = _("Network Interface and Switch Port Discovery"),
-    valuespec = Dictionary(
-        elements = [
-         ( "use_desc",
-           Checkbox(
-                title = _("Use description as service name for network interface checks"),
-                label = _("use description"),
-                help = _("This option lets Check_MK use the interface description as item instead "
-                         "of the port number. If no description is available then the port number is "
-                         "used anyway."))),
-        ( "use_alias",
-          Checkbox(
-                 title = _("Use alias as service name for network interface checks"),
-                     label = _("use alias"),
-                     help = _("This option lets Check_MK use the alias of the port (ifAlias) as item instead "
-                              "of the port number. If no alias is available then the port number is used "
-                              "anyway."))),
-        ( "match_alias",
-          ListOfStrings(
-              title = _("Match interface alias (regex)"),
-              help = _("Only discover interfaces whose alias matches one of the configured "
-                       "regular expressions. The match is done on the beginning of the alias. "
-                       "This allows you to select interfaces based on the alias without having "
-                       "the alias be part of the service description."),
-              orientation = "horizontal",
-              valuespec = RegExp(size = 32),
-        )),
-        ( "pad_portnumbers",
-          Checkbox(title = _("Pad port numbers with zeroes"),
-              label = _("pad port numbers"),
-              help = _("If this option is activated then Check_MK will pad port numbers of "
-                       "network interfaces with zeroes so that all port descriptions from "
-                       "all ports of a host or switch have the same length and thus sort "
-                       "currectly in the GUI. In versions prior to 1.1.13i3 there was no "
-                       "padding. You can switch back to the old behaviour by disabling this "
-                       "option. This will retain the old service descriptions and the old "
-                       "performance data."),
-        )),
-        ( "match_desc",
-          ListOfStrings(
-              title = _("Match interface description (regex)"),
-              help = _("Only discover interfaces whose the description matches one of the configured "
-                       "regular expressions. The match is done on the beginning of the description. "
-                       "This allows you to select interfaces based on the description without having "
-                       "the alias be part of the service description."),
-              orientation = "horizontal",
-              valuespec = RegExp(size = 32),
-        )),
-        ( "portstates",
-          ListChoice(title = _("Network interface port states to discover"),
-              help = _("When doing discovery on switches or other devices with network interfaces "
-                       "then only ports found in one of the configured port states will be added to the monitoring. "
-                       "Note: the state <i>admin down</i> is in fact not an <tt>ifOperStatus</tt> but represents the "
-                       "<tt>ifAdminStatus</tt> of <tt>down</tt> - a port administratively switched off. If you check this option "
-                       "then an alternate version of the check is being used that fetches the <tt>ifAdminState</tt> in addition. "
-                       "This will add about 5% of additional SNMP traffic."),
-              choices = dict_choices(defines.interface_oper_states()),
-              toggle_all = True,
-              default_value = ['1'],
-        )),
-        ( "porttypes",
-          DualListChoice(title = _("Network interface port types to discover"),
-              help = _("When doing discovery on switches or other devices with network interfaces "
-                       "then only ports of the specified types will be created services for."),
-              choices = interface_port_type_choices,
-              custom_order = True,
-              rows = 40,
-              toggle_all = True,
-              default_value = [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205','229' ],
-        )),
-        ( "rmon",
-          Checkbox(
-              title = _("Collect RMON statistics data"),
-              help = _("If you enable this option, for every RMON capable switch port an additional service will "
-                       "be created which is always OK and collects RMON data. This will give you detailed information "
-                       "about the distribution of packet sizes transferred over the port. Note: currently "
-                       "this extra RMON check does not honor the inventory settings for switch ports. In a future "
-                       "version of Check_MK RMON data may be added to the normal interface service and not add "
-                       "an additional service."),
-              label = _("Create extra service with RMON statistics data (if available for the device)"),
-        )),
-        ],
-        help = _('This rule can be used to control the inventory for network ports. '
-                 'You can configure the port types and port states for inventory'
-                 'and the use of alias or description as service name.'),
-    ),
-    match = 'list',
-)
-
-
-_brocade_fcport_adm_choices = [
-    ( 1, 'online(1)'),
-    ( 2, 'offline(2)'),
-    ( 3, 'testing(3)'),
-    ( 4, 'faulty(4)'),
-]
-
-_brocade_fcport_op_choices = [
-    ( 0, 'unkown(0)'),
-    ( 1, 'online(1)'),
-    ( 2, 'offline(2)'),
-    ( 3, 'testing(3)'),
-    ( 4, 'faulty(4)'),
-]
-
-_brocade_fcport_phy_choices = [
-    ( 1, 'noCard(1)'),
-    ( 2, 'noTransceiver(2)'),
-    ( 3, 'laserFault(3)'),
-    ( 4, 'noLight(4)'),
-    ( 5, 'noSync(5)'),
-    ( 6, 'inSync(6)'),
-    ( 7, 'portFault(7)'),
-    ( 8, 'diagFault(8)'),
-    ( 9, 'lockRef(9)'),
-    ( 10, 'validating(10)'),
-    ( 11, 'invalidModule(11)'),
-    ( 14, 'noSigDet(14)'),
-    ( 255, 'unkown(255)'),
-]
-
-
-register_rule(group + '/' + subgroup_inventory,
-    varname   = "brocade_fcport_inventory",
-    title     = _("Brocade Port Discovery"),
-    valuespec = Dictionary(
-        elements = [
-         ("use_portname", Checkbox(
-                title = _("Use port name as service name"),
-                label = _("use port name"),
-                default_value = True,
-                help = _("This option lets Check_MK use the port name as item instead of the "
-                         "port number. If no description is available then the port number is "
-                         "used anyway."))),
-        ("show_isl", Checkbox(
-                title = _("add \"ISL\" to service description for interswitch links"),
-                label = _("add ISL"),
-                default_value = True,
-                help = _("This option lets Check_MK add the string \"ISL\" to the service "
-                         "description for interswitch links."))),
-        ("admstates", ListChoice(title = _("Administrative port states to discover"),
-                help = _("When doing service discovery on brocade switches only ports with the given administrative "
-                         "states will be added to the monitoring system."),
-                choices = _brocade_fcport_adm_choices,
-                columns = 1,
-                toggle_all = True,
-                default_value = ['1', '3', '4' ],
-        )),
-        ("phystates", ListChoice(title = _("Physical port states to discover"),
-                help = _("When doing service discovery on brocade switches only ports with the given physical "
-                         "states will be added to the monitoring system."),
-                choices = _brocade_fcport_phy_choices,
-                columns = 1,
-                toggle_all = True,
-                default_value =  [ 3, 4, 5, 6, 7, 8, 9, 10 ]
-        )),
-        ("opstates", ListChoice(title = _("Operational port states to discover"),
-                help = _("When doing service discovery on brocade switches only ports with the given operational "
-                         "states will be added to the monitoring system."),
-                choices = _brocade_fcport_op_choices,
-                columns = 1,
-                toggle_all = True,
-                default_value = [ 1, 2, 3, 4 ]
-        )),
-        ],
-        help = _('This rule can be used to control the service discovery for brocade ports. '
-                 'You can configure the port states for inventory '
-                 'and the use of the description as service name.'),
-    ),
-    match = 'dict',
-)
-
-process_level_elements = [
-    ('levels', Tuple(
-        title = _('Levels for process count'),
-        help = _("Please note that if you specify and also if you modify levels here, the change is activated "
-                 "only during an inventory.  Saving this rule is not enough. This is due to the nature of inventory rules."),
-        elements = [
-            Integer(
-                title = _("Critical below"),
-                unit = _("processes"),
-                default_value = 1,
-            ),
-            Integer(
-                title = _("Warning below"),
-                unit = _("processes"),
-                default_value = 1,
-            ),
-            Integer(
-                title = _("Warning above"),
-                unit = _("processes"),
-                default_value = 99999,
-            ),
-            Integer(
-                title = _("Critical above"),
-                unit = _("processes"),
-                default_value = 99999,
-            ),
-        ],
-    )),
-    ( "cpulevels",
-      Tuple(
-        title = _("Levels on CPU utilization"),
-        elements = [
-           Percentage(title = _("Warning at"),  default_value = 90, maxvalue = 10000),
-           Percentage(title = _("Critical at"), default_value = 98, maxvalue = 10000),
-        ],
-    )),
-    ( "cpu_average",
-     Integer(
-         title = _("CPU Averaging"),
-         help = _("By activating averaging, Check_MK will compute the average of "
-                  "the CPU utilization over a given interval. If you have defined "
-                  "alerting levels then these will automatically be applied on the "
-                  "averaged value. This helps to mask out short peaks. "),
-         unit = _("minutes"),
-         minvalue = 1,
-         default_value = 15,
-     )
-   ),
-   ( "max_age",
-     Tuple(
-       title = _("Maximum allowed age"),
-       help = _("Alarms you if the age of the process (not the consumed CPU time, but the real time) exceed the configured levels."),
-       elements = [
-           Age(title=_("Warning at"), default_value = 3600),
-           Age(title=_("Critical at"), default_value = 7200),
-       ]
-   )),
-   ( "virtual_levels",
-      Tuple(
-        title = _("Virtual memory usage"),
-        elements = [
-            Filesize(title = _("Warning at"), default_value = 1000 * 1024 * 1024 * 1024),
-            Filesize(title = _("Critical at"), default_value = 2000 * 1024 * 1024 * 1024),
-        ],
-   )),
-   ( "resident_levels",
-      Tuple(
-        title = _("Physical memory usage"),
-        elements = [
-            Filesize(title = _("Warning at"), default_value = 100 * 1024 * 1024),
-            Filesize(title = _("Critical at"), default_value = 200 * 1024 * 1024),
-        ],
-   )),
-   ( "resident_levels_perc",
-     Tuple(
-       title = _("Physical memory usage, in percentage of total RAM"),
-       elements = [
-           Percentage(title = _("Warning at"), default_value = 25.0),
-           Percentage(title = _("Critical at"), default_value = 50.0),
-       ]
-   )),
-   ( "handle_count", Tuple(
-        title = _('Handle Count (Windows only)'),
-        help  = _("The number of object handles in the processes object table. This includes open handles to "
-                  "threads, files and other resources like registry keys."),
-        elements = [
-            Integer(
-                title = _("Warning above"),
-                unit = _("handles"),
-            ),
-            Integer(
-                title = _("Critical above"),
-                unit = _("handles"),
-            ),
-        ],
-   )),
-   ('process_info', DropdownChoice(
-       title = _("Enable per-process details in long-output"),
-       label = _("Enable per-process details"),
-       help  = _("If active, the long output of this service will contain a list of "
-                   "all the matching processes and their details (i.e. PID, CPU usage, memory usage). "
-                   "Please note that HTML output will only work if \"Escape HTML codes in plugin output\" is "
-                   "disabled in global settings. This might expose you to Cross-Site-Scripting (everyone "
-                   "with write-access to checks could get scripts executed on the monitoring site in the context "
-                   "of the user of the monitoring site) so please do this if you understand the consequences."),
-       choices = [
-           (None, _("Disable")),
-           ("text", _("Text output")),
-           ("html", _("HTML output"))
-       ],
-       default_value = "disable",
-   )),
-]
-
-# In version 1.2.4 the check parameters for the resulting ps check
-# where defined in the dicovery rule. We moved that to an own rule
-# in the classical check parameter style. In order to support old
-# configuration we allow reading old discovery rules and ship these
-# settings in an optional sub-dictionary.
-def convert_inventory_processes(old_dict):
-    new_dict = { "default_params" : {} }
-    for key, value in old_dict.items():
-        if key in ['levels', 'handle_count', 'cpulevels', 'cpu_average', 'virtual_levels', 'resident_levels']:
-            new_dict["default_params"][key] = value
-        elif key != "perfdata":
-            new_dict[key] = value
-    return new_dict
-
-register_rule(group + '/' + subgroup_inventory,
-    varname   = "inventory_processes_rules",
-    title     = _('Process Discovery'),
-    help      = _("This ruleset defines criteria for automatically creating checks for running processes "
-                  "based upon what is running when the service discovery is done. These services will be "
-                  "created with default parameters. They will get critical when no process is running and "
-                  "OK otherwise. You can parameterize the check with the ruleset <i>State and count of processes</i>."),
-    valuespec = Transform(
-        Dictionary(
-            elements = [
-                ('descr', TextAscii(
-                    title = _('Process Name'),
-                    style = "dropdown",
-                    allow_empty = False,
-                    help  = _('<p>The process name may contain one or more occurances of <tt>%s</tt>. If you do this, then the pattern must be a regular '
-                              'expression and be prefixed with ~. For each <tt>%s</tt> in the description, the expression has to contain one "group". A group '
-                              'is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a process '
-                              'matching the pattern, it will substitute all such groups with the actual values when creating the check. That way one '
-                              'rule can create several checks on a host.</p>'
-                              '<p>If the pattern contains more groups then occurrances of <tt>%s</tt> in the service description then only the first matching '
-                              'subexpressions  are used for the  service descriptions. The matched substrings corresponding to the remaining groups '
-                              'are copied into the regular expression, nevertheless.</p>'
-                              '<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, <tt>%2</tt>, etc. '
-                              'These will be replaced by the first, second, ... matching group. This allows you to reorder things.</p>'
-                              ),
-                )),
-                ('match', Alternative(
-                    title = _("Process Matching"),
-                    style = "dropdown",
-                    elements = [
-                        TextAscii(
-                            title = _("Exact name of the process without argments"),
-                            label = _("Executable:"),
-                            size = 50,
-                        ),
-                        Transform(
-                            RegExp(size = 50),
-                            title = _("Regular expression matching command line"),
-                            label = _("Command line:"),
-                            help = _("This regex must match the <i>beginning</i> of the complete "
-                                     "command line of the process including arguments"),
-                            forth = lambda x: x[1:],   # remove ~
-                            back  = lambda x: "~" + x, # prefix ~
-                        ),
-                        FixedValue(
-                            None,
-                            totext = "",
-                            title = _("Match all processes"),
-                        )
-                    ],
-                    match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0),
-                    default_value = '/usr/sbin/foo',
-                )),
-                ('user', Alternative(
-                    title = _('Name of the User'),
-                    style = "dropdown",
-                    elements = [
-                        FixedValue(
-                            None,
-                            totext = "",
-                            title = _("Match all users"),
-                        ),
-                        TextAscii(
-                            title = _('Exact name of the user'),
-                            label = _("User:"),
-                        ),
-                        FixedValue(
-                            False,
-                            title = _('Grab user from found processess'),
-                            totext = '',
-                        ),
-                    ],
-                    help = _('<p>The user specification can either be a user name (string). The inventory will then trigger only if that user matches '
-                             'the user the process is running as and the resulting check will require that user. Alternatively you can specify '
-                             '"grab user". If user is not selected the created check will not check for a specific user.</p>'
-                             '<p>Specifying "grab user" makes the created check expect the process to run as the same user as during inventory: the user '
-                             'name will be hardcoded into the check. In that case if you put %u into the service description, that will be replaced '
-                             'by the actual user name during inventory. You need that if your rule might match for more than one user - your would '
-                             'create duplicate services with the same description otherwise.</p><p>Windows users are specified by the namespace followed by '
-                             'the actual user name. For example "\\\\NT AUTHORITY\NETWORK SERVICE" or "\\\\CHKMKTEST\Administrator".</p>'),
-                )),
-                ('icon', UserIconOrAction(
-                    title = _("Add custom icon or action"),
-                    help = _("You can assign icons or actions to the found services in the status GUI."),
-                )),
-                ('default_params',
-                 Dictionary(
-                     title = _("Default parameters for detected services"),
-                     help = _("Here you can select default parameters that are being set "
-                              "for detected services. Note: the preferred way for setting parameters is to use "
-                              "the rule set <a href='wato.py?varname=checkgroup_parameters%3Apsmode=edit_ruleset'> "
-                              "State and Count of Processes</a> instead. "
-                              "A change there will immediately be active, while a change in this rule "
-                              "requires a re-discovery of the services."),
-                     elements = process_level_elements,
-                )),
-            ],
-            required_keys = [ "descr" ],
-        ),
-        forth = convert_inventory_processes,
-    ),
-    match = 'all',
-)
-
-
-register_rule(group + '/' + subgroup_inventory,
-    varname   = "inv_domino_tasks_rules",
-    title     = _('Lotus Domino Task Discovery'),
-    help      = _("This rule controls the discovery of tasks on Lotus Domino systems. "
-                  "Any changes later on require a host re-discovery"),
-    valuespec = Dictionary(
-        elements = [
-            ('descr', TextAscii(
-                title = _('Service Description'),
-                allow_empty = False,
-                help  = _('<p>The service description may contain one or more occurances of <tt>%s</tt>. In this '
-                          'case, the pattern must be a regular expression prefixed with ~. For each '
-                          '<tt>%s</tt> in the description, the expression has to contain one "group". A group '
-                          'is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or '
-                          '<tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a task '
-                          'matching the pattern, it will substitute all such groups with the actual values when '
-                          'creating the check. In this way one rule can create several checks on a host.</p>'
-                          '<p>If the pattern contains more groups than occurrences of <tt>%s</tt> in the service '
-                          'description, only the first matching subexpressions are used for the service '
-                          'descriptions. The matched substrings corresponding to the remaining groups '
-                          'are nevertheless copied into the regular expression.</p>'
-                          '<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, <tt>%2</tt>, etc. '
-                          'These expressions will be replaced by the first, second, ... matching group, allowing '
-                          'you to reorder things.</p>'
-                          ),
-            )),
-            ('match', Alternative(
-                title = _("Task Matching"),
-                elements = [
-                    TextAscii(
-                        title = _("Exact name of the task"),
-                        size = 50,
-                    ),
-                    Transform(
-                        RegExp(size = 50),
-                        title = _("Regular expression matching command line"),
-                        help = _("This regex must match the <i>beginning</i> of the task"),
-                        forth = lambda x: x[1:],   # remove ~
-                        back  = lambda x: "~" + x, # prefix ~
-                    ),
-                    FixedValue(
-                        None,
-                        totext = "",
-                        title = _("Match all tasks"),
-                    )
-                ],
-                match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0),
-                default_value = 'foo',
-            )),
-            ('levels', Tuple(
-                title = _('Levels'),
-                help = _("Please note that if you specify and also if you modify levels here, the change is "
-                         "activated only during an inventory.  Saving this rule is not enough. This is due to "
-                         "the nature of inventory rules."),
-                elements = [
-                    Integer(
-                        title = _("Critical below"),
-                        unit = _("processes"),
-                        default_value = 1,
-                    ),
-                    Integer(
-                        title = _("Warning below"),
-                        unit = _("processes"),
-                        default_value = 1,
-                    ),
-                    Integer(
-                        title = _("Warning above"),
-                        unit = _("processes"),
-                        default_value = 1,
-                    ),
-                    Integer(
-                        title = _("Critical above"),
-                        unit = _("processes"),
-                        default_value = 1,
-                    ),
-                ],
-            )),
-        ],
-        required_keys = ['match', 'levels', 'descr'],
-    ),
-    match = 'all',
-)
-
-register_rule(group + '/' + subgroup_inventory,
-    varname   = "inventory_sap_values",
-    title     = _('SAP R/3 Single Value Inventory'),
-    valuespec = Dictionary(
-        elements = [
-            ('match', Alternative(
-                title = _("Node Path Matching"),
-                elements = [
-                    TextAscii(
-                        title = _("Exact path of the node"),
-                        size = 100,
-                    ),
-                    Transform(
-                        RegExp(size = 100),
-                        title = _("Regular expression matching the path"),
-                        help = _("This regex must match the <i>beginning</i> of the complete "
-                                 "path of the node as reported by the agent"),
-                        forth = lambda x: x[1:],   # remove ~
-                        back  = lambda x: "~" + x, # prefix ~
-                    ),
-                    FixedValue(
-                        None,
-                        totext = "",
-                        title = _("Match all nodes"),
-                    )
-                ],
-                match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0),
-                default_value = 'SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime',
-            )),
-            ('limit_item_levels', Integer(
-                title = _("Limit Path Levels for Service Names"),
-                unit = _('path levels'),
-                minvalue = 1,
-                help = _("The service descriptions of the inventorized services are named like the paths "
-                         "in SAP. You can use this option to let the inventory function only use the last "
-                         "x path levels for naming."),
-            )),
-        ],
-        optional_keys = ['limit_item_levels'],
-    ),
-    match = 'all',
-)
-
-register_rule(group + '/' + subgroup_inventory,
-    varname   = "sap_value_groups",
-    title     = _('SAP Value Grouping Patterns'),
-    help      = _('The check <tt>sap.value</tt> normally creates one service for each SAP value. '
-                  'By defining grouping patterns, you can switch to the check <tt>sap.value-groups</tt>. '
-                  'That check monitors a list of SAP values at once.'),
-    valuespec = ListOf(
-        Tuple(
-            help = _("This defines one value grouping pattern"),
-            show_titles = True,
-            orientation = "horizontal",
-            elements = [
-                TextAscii(
-                     title = _("Name of group"),
-                ),
-                Tuple(
-                    show_titles = True,
-                    orientation = "vertical",
-                    elements = [
-                        RegExpUnicode(title = _("Include Pattern")),
-                        RegExpUnicode(title = _("Exclude Pattern"))
-                    ],
-                ),
-            ],
-        ),
-        add_label = _("Add pattern group"),
-    ),
-    match = 'all',
-)
-
-register_rule(group + '/' + subgroup_inventory,
-    varname   = "inventory_heartbeat_crm_rules",
-    title     = _("Heartbeat CRM Discovery"),
-    valuespec = Dictionary(
-        elements = [
-            ("naildown_dc", Checkbox(
-                   title = _("Naildown the DC"),
-                   label = _("Mark the currently distinguished controller as preferred one"),
-                   help = _("Nails down the DC to the node which is the DC during discovery. The check "
-                            "will report CRITICAL when another node becomes the DC during later checks.")
-            )),
-            ("naildown_resources", Checkbox(
-                   title = _("Naildown the resources"),
-                   label = _("Mark the nodes of the resources as preferred one"),
-                   help = _("Nails down the resources to the node which is holding them during discovery. "
-                            "The check will report CRITICAL when another holds the resource during later checks.")
-            )),
-        ],
-        help = _('This rule can be used to control the discovery for Heartbeat CRM checks.'),
-        optional_keys = [],
-    ),
-    match = 'dict',
-)
-
 register_check_parameters(
     subgroup_storage,
     "brocade_fcport",
@@ -3591,6 +3701,21 @@ register_check_parameters(
         allow_empty = False),
     "first"
 )
+
+#.
+#   .--Unsorted--(Don't create new stuff here!)----------------------------.
+#   |              _   _                      _           _                |
+#   |             | | | |_ __  ___  ___  _ __| |_ ___  __| |               |
+#   |             | | | | '_ \/ __|/ _ \| '__| __/ _ \/ _` |               |
+#   |             | |_| | | | \__ \ (_) | |  | ||  __/ (_| |               |
+#   |              \___/|_| |_|___/\___/|_|   \__\___|\__,_|               |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  All these rules have not been moved into their according sections.  |
+#   |  Please move them as you come along - but beware of dependecies!     |
+#   |  Remove this section as soon as it's empty.                          |
+#   '----------------------------------------------------------------------'
+
 
 register_check_parameters(
     subgroup_os,
@@ -11535,131 +11660,6 @@ def ps_convert_from_tuple(params):
             params["user"] = user
     return params
 
-# Next step in conversion: introduce "levels"
-def ps_convert_from_singlekeys(old_params):
-    params = {}
-    params.update(ps_convert_from_tuple(old_params))
-    if "warnmin" in params:
-        params["levels"] = (
-            params.get("warnmin",     1),
-            params.get("okmin",       1),
-            params.get("warnmax", 99999),
-            params.get("okmax",   99999),
-        )
-        for key in [ "warnmin", "warnmax", "okmin", "okmax" ]:
-            if key in params:
-                del params[key]
-    return params
-
-def ps_convert_inventorized_from_singlekeys(old_params):
-    params = ps_convert_from_singlekeys(old_params)
-    if 'user' in params:
-        del params['user']
-    if 'process' in params:
-        del params['process']
-    return params
-
-# Rule for disovered process checks
-register_check_parameters(
-    subgroup_applications,
-    "ps",
-    _("State and count of processes"),
-    Transform(
-        Dictionary(
-            elements = process_level_elements + [
-                ('icon', UserIconOrAction(
-                    title = _("Add custom icon or action"),
-                    help = _("You can assign icons or actions to the found services in the status GUI."),
-                ))
-            ]
-        ),
-        forth = ps_convert_inventorized_from_singlekeys,
-    ),
-    TextAscii(
-        title = _("Process name as defined at discovery"),
-    ),
-    "dict",
-    has_inventory = True,
-    register_static_check = False,
-)
-
-# Rule for static process checks
-register_check_parameters(
-    subgroup_applications,
-    "ps",
-    _("State and count of processes"),
-    Transform(
-        Dictionary(
-            elements = [
-                ( "process", Alternative(
-                    title = _("Process Matching"),
-                    style = "dropdown",
-                    elements = [
-                        TextAscii(
-                            title = _("Exact name of the process without argments"),
-                            size = 50,
-                        ),
-                        Transform(
-                            RegExp(size = 50),
-                            title = _("Regular expression matching command line"),
-                            help = _("This regex must match the <i>beginning</i> of the complete "
-                                     "command line of the process including arguments"),
-                            forth = lambda x: x[1:],   # remove ~
-                            back  = lambda x: "~" + x, # prefix ~
-                        ),
-                        FixedValue(
-                            None,
-                            totext = "",
-                            title = _("Match all processes"),
-                        )
-                    ],
-                    match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
-                )),
-                ( "user", Alternative(
-                    title = _("Name of operating system user"),
-                    style = "dropdown",
-                    elements = [
-                        TextAscii(
-                            title = _("Exact name of the operating system user")
-                        ),
-                        Transform(
-                            RegExp(size = 50),
-                            title = _("Regular expression matching username"),
-                            help = _("This regex must match the <i>beginning</i> of the complete "
-                                     "username"),
-                            forth = lambda x: x[1:],   # remove ~
-                            back  = lambda x: "~" + x, # prefix ~
-                        ),
-                        FixedValue(
-                            None,
-                            totext = "",
-                            title = _("Match all users"),
-                        )
-
-                    ],
-                    match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
-
-                )),
-                ('icon', UserIconOrAction(
-                    title = _("Add custom icon or action"),
-                    help = _("You can assign icons or actions to the found services in the status GUI."),
-                )),
-            ] + process_level_elements,
-            # required_keys = [ "process" ],
-        ),
-        forth = ps_convert_from_singlekeys,
-    ),
-    TextAscii(
-        title = _("Process Name"),
-        help = _("This name will be used in the description of the service"),
-        allow_empty = False,
-        regex = "^[a-zA-Z_0-9 _.-]*$",
-        regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
-                        "dot and hyphon for your service description"),
-    ),
-    "dict",
-    has_inventory = False,
-)
 
 register_check_parameters(
     subgroup_os,

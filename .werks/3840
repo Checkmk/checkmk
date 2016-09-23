@@ -1,0 +1,10 @@
+Title: cisco_qos: Fixed wrong units in graphs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474624292
+Class: fix
+
+The used units in graphs for QoS-Services changed from bytes/s to bits/s
+and is now equivalent to other network service graphs.

@@ -5780,8 +5780,8 @@ graph_info.append({
 graph_info.append({
     "title"   : _("QoS class traffic"),
     "metrics" : [
-        ( "qos_outbound_bytes_rate", "area" ),
-        ( "qos_dropped_bytes_rate", "-area" ),
+        ( "qos_outbound_bytes_rate,8,*@bits/s", "area" ),
+        ( "qos_dropped_bytes_rate,8,*@bits/s", "-area" ),
     ],
 })
 

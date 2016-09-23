@@ -25,7 +25,6 @@ def ordered_module_files():
         "modules/notify.py",
         "modules/events.py",
         "modules/nagios.py",
-        "modules/catalog.py",
         "modules/packaging.py",
         "modules/prediction.py",
         "modules/automation.py",

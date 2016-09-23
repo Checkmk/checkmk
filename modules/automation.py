@@ -564,14 +564,13 @@ def automation_get_check_catalog(args):
         else:
             return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
 
-    read_manpage_catalog()
     tree = {}
     if len(args) > 0:
         only_path = tuple(args)
     else:
         only_path = ()
 
-    for path, entries in g_manpage_catalog.items():
+    for path, entries in man_pages.load_man_page_catalog().items():
         if not path_prefix_matches(path, only_path):
             continue
         subtree = tree
@@ -582,7 +581,7 @@ def automation_get_check_catalog(args):
     for p in only_path:
         tree = tree[p]
 
-    return tree, manpage_catalog_titles
+    return tree, man_pages.man_page_catalog_titles()
 
 def strip_manpage_entry(entry):
     return dict([ (k,v) for (k,v) in entry.items() if k in [
@@ -590,7 +589,7 @@ def strip_manpage_entry(entry):
     ]])
 
 def automation_get_check_information():
-    manuals = all_manuals()
+    manuals = man_pages.all_man_pages()
 
     checks = {}
     for check_type, check in check_info.items():
@@ -613,7 +612,7 @@ def automation_get_check_information():
 
 
 def automation_get_real_time_checks():
-    manuals = all_manuals()
+    manuals = man_pages.all_man_pages()
 
     checks = []
     for check_type, check in check_info.items():
@@ -637,7 +636,7 @@ def automation_get_check_manpage(args):
         raise MKAutomationError("Need exactly one argument.")
 
     check_type = args[0]
-    manpage = load_manpage(args[0])
+    manpage = man_pages.load_man_page(args[0])
 
     # Add a few informations from check_info. Note: active checks do not
     # have an entry in check_info

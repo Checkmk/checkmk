@@ -106,11 +106,7 @@ local_lib_dir             = None
 
 
 def _set_paths():
-    try:
-        omd_root = os.environ["OMD_ROOT"]
-    except KeyError:
-        raise MKGeneralException(_("OMD_ROOT environment variable not set. You can "
-                                   "only execute this in an OMD site."))
+    omd_root = _omd_root()
 
     globals().update({
         "omd_root"                    : omd_root,
@@ -146,6 +142,14 @@ def _set_paths():
 
     _set_overridable_paths()
     _set_overridable_paths(local=True)
+
+
+def _omd_root():
+    return os.environ.get("OMD_ROOT", "")
+    #try:
+    #except KeyError:
+    #    raise MKGeneralException(_("OMD_ROOT environment variable not set. You can "
+    #                               "only execute this in an OMD site."))
 
 
 def _set_overridable_paths(local=False):

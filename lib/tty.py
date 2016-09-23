@@ -31,6 +31,7 @@ import fcntl
 import sys
 import struct
 import termios
+import io
 
 if sys.stdout.isatty():
     red       = '\033[31m'
@@ -90,6 +91,8 @@ def get_size():
         lines, columns, x, y = struct.unpack("HHHH", ws)
         if lines > 0 and columns > 0:
             return lines, columns
+    except io.UnsupportedOperation:
+        pass # When sys.stdout is StringIO() or similar, then .fileno() is not available
     except IOError, e:
         if e.errno == 25:
             # Inappropriate ioctl for device: Occurs when redirecting output
@@ -98,3 +101,33 @@ def get_size():
             raise
 
     return (24, 80)
+
+
+# TODO: Is this a good place?
+# TODO: Cleanup this function!
+def print_table(headers, colors, rows, indent = ""):
+    lengths = [ len(h) for h in headers ]
+
+    def make_utf8(x):
+        if type(x) == unicode:
+            return x.encode('utf-8')
+        else:
+            return x
+
+    for row in rows:
+        lengths = [ max(len(str(make_utf8(c))), l) for c, l in zip(row, lengths) ]
+
+    sumlen = sum(lengths) + len(headers)
+    fmt = indent
+    sep = ""
+    for l,c in zip(lengths, colors):
+        fmt += c + sep + "%-" + str(l) + "s" + normal
+        sep = " "
+
+    first = True
+    fmt += "\n"
+    for row in [ headers ] + rows:
+        sys.stdout.write(fmt % tuple(row[:len(headers)]))
+        if first:
+            first = False
+            sys.stdout.write(fmt % tuple([ "-" * l for l in lengths ]))

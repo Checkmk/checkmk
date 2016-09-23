@@ -138,7 +138,7 @@ def package_list(args):
             for pacname in all_package_names():
                 package = read_package_info(pacname)
                 table.append((pacname, package["title"], package["num_files"]))
-            print_table(["Name", "Title", "Files"], [ tty.bold, "", "" ], table)
+            tty.print_table(["Name", "Title", "Files"], [ tty.bold, "", "" ], table)
         else:
             for pacname in all_package_names():
                 sys.stdout.write("%s\n" % pacname)

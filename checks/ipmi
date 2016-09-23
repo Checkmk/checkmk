@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 #   .--output--------------------------------------------------------------.
 #   |                               _               _                      |
 #   |                    ___  _   _| |_ _ __  _   _| |_                    |
@@ -32,7 +33,6 @@
 #   |                   \___/ \__,_|\__| .__/ \__,_|\__|                   |
 #   |                                  |_|                                 |
 #   '----------------------------------------------------------------------'
-
 
 # Example of output from ipmi:
 # <<<ipmi>>>
@@ -147,28 +147,7 @@
 # 27-Sys_Exhaust 31.000 degrees_C ok na na na na 80.000 85.000
 # PS3_Inpu
 
-
 #.
-#   .--parse/discover------------------------------------------------------.
-#   |                               __  _ _                                |
-#   |  _ __   __ _ _ __ ___  ___   / /_| (_)___  ___ _____   _____ _ __    |
-#   | | '_ \ / _` | '__/ __|/ _ \ / / _` | / __|/ __/ _ \ \ / / _ \ '__|   |
-#   | | |_) | (_| | |  \__ \  __// / (_| | \__ \ (_| (_) \ V /  __/ |      |
-#   | | .__/ \__,_|_|  |___/\___/_/ \__,_|_|___/\___\___/ \_/ \___|_|      |
-#   | |_|                                                                  |
-#   '----------------------------------------------------------------------'
-
-
-def ipmi_ignore_entry(name, status_txt, rules):
-    ignored_sensors      = rules.get("ignored_sensors", [])
-    ignored_sensorstates = rules.get("ignored_sensorstates", [])
-    for cmp_status in ignored_sensorstates:
-        if status_txt.startswith(cmp_status):
-            return True
-    for e in ignored_sensors:
-        if name.startswith(e):
-            return True
-    return False
 
 
 def parse_ipmi(info):
@@ -217,9 +196,10 @@ factory_settings["ipmi_default_levels"] = {
 
 
 def inventory_ipmi(info):
+    # TODO: Cleanup Check API so extra_sections can be passed to parse_function.
+    #       For the moment, this seemingly strange contraption has to remain as is.
     parsed = parse_ipmi(info)
     rules  = host_extra_conf(g_hostname, inventory_ipmi_rules)
-
     if rules and type(rules[0]) == dict:
         if rules[0].get("summarize", True):
             summarize = True
@@ -246,159 +226,19 @@ def inventory_ipmi(info):
                 yield sensorname, {}
 
 
-#.
-#   .--check---------------------------------------------------------------.
-#   |                           _               _                          |
-#   |                       ___| |__   ___  ___| | __                      |
-#   |                      / __| '_ \ / _ \/ __| |/ /                      |
-#   |                     | (__| | | |  __/ (__|   <                       |
-#   |                      \___|_| |_|\___|\___|_|\_\                      |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
 def ipmi_status_txt_mapping(status_txt):
     if status_txt.startswith('ok') and not "failure detected" in status_txt.lower():
-        state = 0
+        return 0
     elif status_txt.startswith('nc'):
-        state = 1
+        return 1
     else:
-        state = 2
-    return state
+        return 2
 
 
 def check_ipmi(item, params, info):
     # TODO: Cleanup Check API so extra_sections can be passed to parse_function.
     #       For the moment, this seemingly strange contraption has to remain as is.
-    parsed = parse_ipmi(info)
-
-    if params is None:
-        params = {}
-
-    if item == "Summary":
-        return check_ipmi_summarized(params, parsed)
-    elif item in parsed:
-        return check_ipmi_detailed(item, params, parsed[item])
-
-
-def check_ipmi_detailed(item, params, data):
-    val        = data["value"]
-    unit       = data["unit"]
-    status_txt = data["status_txt"]
-    crit_low   = data["crit_low"]
-    warn_low   = data["warn_low"]
-    warn_high  = data["warn_high"]
-    crit_high  = data["crit_high"]
-
-    # stay compatible with older versions
-    infotext = status_txt
-    perfdata = []
-    if val is not None:
-        infotext    += ", %s" % val
-        old_perf_val = str(val)
-        if unit is not None:
-            infotext     += " %s" % unit
-            old_perf_val += unit
-        perfdata = [ (item, old_perf_val, warn_high, crit_high) ]
-
-    state = ipmi_status_txt_mapping(status_txt)
-    for wato_status_txt, wato_status in params.get("sensor_states", []):
-        if status_txt.startswith(wato_status_txt):
-            state = wato_status
-            break
-
-    lvlstxts = []
-    for ty, warn, crit in [
-        ("at",    warn_low,  crit_low),
-        ("below", warn_high, crit_high) ]:
-        lvlstxt = ""
-        if warn is not None and crit is None:
-            lvlstxt = "warn %s %s" % (ty, warn)
-        elif warn is not None and crit is not None:
-            lvlstxt = "warn/crit %s %s/%s" % (ty, warn, crit)
-        elif warn is None and crit is not None:
-            lvlstxt = "crit %s %s" % (ty, crit)
-        if lvlstxt:
-            if unit is not None:
-                lvlstxt += " %s" % unit
-            lvlstxts.append(lvlstxt)
-
-    levelsinfo = ""
-    if state and lvlstxts:
-        levelsinfo = " (%s)" % ", ".join(lvlstxts)
-
-    return state, "Status: %s%s" % (infotext, levelsinfo), perfdata
-
-
-def check_ipmi_summarized(params, parsed):
-    worst_state   = 0
-    warn_texts    = []
-    crit_texts    = []
-    ok_texts      = []
-    skipped_texts = []
-    ambient_count = 0
-    ambient_sum   = 0.0
-
-    for sensorname, data in parsed.items():
-        val        = data["value"]
-        unit       = data["unit"]
-        status_txt = data["status_txt"]
-        crit_low   = data["crit_low"]
-        warn_low   = data["warn_low"]
-        warn_high  = data["warn_high"]
-        crit_high  = data["crit_high"]
-
-        # Skip datasets which have no valid data (zero value, no unit and state nc)
-        if (val == '0.000' and unit is None and status_txt.startswith('nc')) or \
-            ipmi_ignore_entry(sensorname, status_txt, params):
-            skipped_texts.append( "%s (%s)" % (sensorname, status_txt) )
-            continue
-
-        sensorstate = ipmi_status_txt_mapping(status_txt)
-        for wato_status_txt, wato_status in params.get("sensor_states", []):
-            if status_txt.startswith(wato_status_txt):
-                sensorstate = wato_status
-                break
-
-        infotext = "%s (%s)" % (sensorname, status_txt)
-        if sensorstate == 1:
-            warn_texts.append(infotext)
-        elif sensorstate == 2:
-            crit_texts.append(infotext)
-        else:
-            ok_texts.append(infotext)
-
-        worst_state = max(worst_state, sensorstate)
-
-        if "amb" in sensorname or "Ambient" in sensorname:
-            try:
-                ambient_count += 1
-                ambient_sum   += float(val)
-            except:
-                pass
-
-    if ambient_count > 0:
-        perfdata = [ ("ambient_temp", ambient_sum / ambient_count) ]
-    else:
-        perfdata = []
-
-    infotexts  = [ "%d sensors" % len(parsed) ]
-    for title, texts, extrainfo in [
-        ("OK",   ok_texts,   ""),     ("WARN",    warn_texts,    "(!)"),
-        ("CRIT", crit_texts, "(!!)"), ("skipped", skipped_texts, "") ]:
-        if len(parsed) == len(texts):
-            infotext = "%d sensors %s" % (len(parsed), title)
-            if extrainfo:
-                infotext += ": %s%s" % (", ".join(texts), extrainfo)
-            infotexts = [ infotext ]
-            break
-        elif texts:
-            infotext = "%d %s" % (len(texts), title)
-            if extrainfo:
-                infotext += ": %s%s" % (", ".join(texts), extrainfo)
-            infotexts.append( infotext )
-
-    return worst_state, ' - '.join(infotexts), perfdata
+    return check_ipmi_common(item, params, parse_ipmi(info), "ipmitool", ipmi_status_txt_mapping)
 
 
 check_info["ipmi"] = {
@@ -409,4 +249,5 @@ check_info["ipmi"] = {
     'extra_sections'            : [ "ipmi_discrete" ],
     'group'                     : 'ipmi',
     'default_levels_variable'   : 'ipmi_default_levels',
+    'includes'                  : [ 'ipmi_common.include' ],
 }

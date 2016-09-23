@@ -24,7 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output of agent:
+
+#   .--output--------------------------------------------------------------.
+#   |                               _               _                      |
+#   |                    ___  _   _| |_ _ __  _   _| |_                    |
+#   |                   / _ \| | | | __| '_ \| | | | __|                   |
+#   |                  | (_) | |_| | |_| |_) | |_| | |_                    |
+#   |                   \___/ \__,_|\__| .__/ \__,_|\__|                   |
+#   |                                  |_|                                 |
+#   '----------------------------------------------------------------------'
+
+# Old output format from agent and special agent
 # <<<ipmi_sensors>>>
 # 32 Temperature_Ambient 20.00_C_(1.00/42.00) [OK]
 # 96 Temperature_Systemboard 23.00_C_(1.00/65.00) [OK]
@@ -75,79 +85,107 @@
 # 808 Voltage_AVCC 3.33_V_(NA/NA) [OK]
 # 875 Power_Supply_PS_Status NA_NA_(NA/NA) [Presence_detected]
 
+# Newer output format
+# <<<ipmi_sensors:sep(124)>>>
+# ID   | Name            | Type              | Reading    | Units | Event
+# 4    | CPU Temp        | Temperature       | 28.00      | C     | 'OK'
+# 71   | System Temp     | Temperature       | 28.00      | C     | 'OK'
+# 607  | P1-DIMMC2 TEMP  | Temperature       | N/A        | C     | N/A
 
-def inventory_freeipmi(info):
-    return [ (line[1], "", None) for line in info
-             if not ( line[-1] in ['[Unknown]', '[NA]'] or
-                      "_=_" in line[-1] )]
+#.
 
 
-def check_freeipmi(item, _no_params, info):
+def parse_freeipmi(info):
+    parsed = {}
     for line in info:
-        if line[1] == item:
-            status = line[-1][1:-1]
-            perfdata = []
-            infotext = "Sensor status is " + status
+        stripped_line = map(lambda x: x.strip(), line)
+        status_txt = stripped_line[-1]
+        if status_txt.startswith("[") or status_txt.startswith("'"):
+            status_txt = status_txt[1:]
+        if status_txt.endswith("]") or status_txt.endswith("'"):
+            status_txt = status_txt[:-1]
+        if status_txt in [ "NA", "N/A", "Unknown" ] or "_=_" in status_txt:
+            status_txt = None
+        else:
+            status_txt = status_txt.replace("_", " ")
 
-            # some sensors have a value and levels (e.g. temperature)
-            if len(line) == 4:
-                current, levels = line[2].split('(')
+        sensorname = stripped_line[1].replace(" ", "_")
+        parsed.setdefault(sensorname, {
+            "value"      : None,
+            "unit"       : None,
+            "status_txt" : status_txt,
+            "unrec_low"  : None,
+            "crit_low"   : None,
+            "warn_low"   : None,
+            "warn_high"  : None,
+            "crit_high"  : None,
+            "unrec_high" : None,
+        })
 
-                # extract current sensor value
-                cparts = current.split("_")
-                if cparts[0] == "NA":
-                    current = None
-                else:
-                    current = float(cparts[0])
-                    if len(cparts) > 1:
-                        unit = " " + cparts[1]
-                    else:
-                        unit = ""
+        if len(stripped_line) == 4:
+            current, levels = stripped_line[2].split("(")
 
-                    # extract levels
-                    lower, upper = levels[:-1].split("/")
-                    if lower == "NA" and upper != "NA":
-                        crit = upper
-                        levelstext = ", critical at %.1f%s" % (float(upper), unit)
-                    elif lower != "NA" and upper == "NA":
-                        crit = lower
-                        levelstext = ", critical below %.1f%s" % (float(lower), unit)
-                    elif lower != "NA" and upper != "NA":
-                        # PNP 0.4.14 cannot handle ranges in thresholds :-(
-                        # crit = "%s:%s" % (lower, upper)
-                        crit = upper
-                        levelstext = ", valid range is %.1f%s ... %.1f%s" % \
-                                      (float(lower), unit, float(upper), unit)
-                    else:
-                        crit = None
-                        levelstext = ""
+            cparts = current.split("_")
+            if cparts[0] not in [ "NA", "N/A" ]:
+                parsed[sensorname]["value"] = float(cparts[0])
+                if len(cparts) > 1:
+                    parsed[sensorname]["unit"] = cparts[1]
 
-                    # Do not save performance data for FANs. This produces
-                    # much data and is - in my opinion - useless.
-                    if "temperature" in item.lower():
-                        perfdata = [ ("value", current, None, crit) ]
-                    else:
-                        perfdata = []
+            lower, upper = levels[:-1].split("/")
+            for key, what in [ ("crit_low", lower), ( "crit_high", upper) ]:
+                if what not in [ "NA", "N/A" ]:
+                    parsed[sensorname][key] = float(what)
 
-                    infotext = "Current value %.1f%s%s" % (current, unit, levelstext)
+        elif len(stripped_line) == 6:
+            sid, name, sensortype, reading_str, unit = stripped_line[:-1]
+            if reading_str not in [ "NA", "N/A" ]:
+                parsed[sensorname]["value"] = float(reading_str)
+            if unit not in [ "NA", "N/A" ]:
+                parsed[sensorname]["unit"] = unit
 
-            if status in [ "OK", "Entity_Present", "battery_presence_detected",
-                           "Drive_Presence", "transition_to_Running", "Device_Enabled" ] or \
-               status.startswith("Fully_Redundant") or \
-               status.endswith("is_connected") or \
-               status.endswith("Presence_detected") or \
-               status.endswith("Device_Present"):
-                return (0, infotext, perfdata)
+    return parsed
 
-            else:
-                return (2, infotext, perfdata)
 
-    return (3, "item %s not found" % item)
+inventory_ipmi_rules = []
+
+
+def inventory_freeipmi(parsed):
+    rules = host_extra_conf(g_hostname, inventory_ipmi_rules)
+    if rules == []:
+        rules = [ ('single', {}) ]
+
+    if type(rules[0]) == tuple:
+        single_rules = rules[0][1].copy()
+        for sensorname, data in parsed.items():
+            if not ipmi_ignore_entry(sensorname, data["status_txt"], single_rules):
+                yield sensorname, {}
+
+    elif rules[0] == "summarize":
+        yield "Summary FreeIPMI", {}
+
+
+def freeipmi_status_txt_mapping(status_txt):
+    if status_txt in [ "OK", "Entity Present", "battery presence detected",
+          "Drive Presence", "transition to Running", "Device Enabled" ] or \
+       status_txt.startswith("Fully Redundant") or \
+       status_txt.endswith("is connected") or \
+       status_txt.endswith("Presence detected") or \
+       status_txt.endswith("Device Present"):
+        return 0
+    else:
+        return 2
+
+
+def check_freeipmi(item, params, parsed):
+    return check_ipmi_common(item, params, parsed, "freeipmi", freeipmi_status_txt_mapping)
 
 
 check_info["ipmi_sensors"] = {
-    'check_function':          check_freeipmi,
-    'inventory_function':      inventory_freeipmi,
-    'service_description':     'IPMI Sensor %s',
-    'has_perfdata':            True,
+    'parse_function'        : parse_freeipmi,
+    'inventory_function'    : inventory_freeipmi,
+    'check_function'        : check_freeipmi,
+    'service_description'   : 'IPMI Sensor %s',
+    'has_perfdata'          : True,
+    'group'                 : 'ipmi',
+    'includes'              : [ 'ipmi_common.include' ],
 }

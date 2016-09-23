@@ -122,17 +122,13 @@ def parse_ipmi_sensor_data(ipmi_sensor_data):
         if line.startswith("ID"):
             continue
         else:
-            sensor_id, sensor_name, sensor_type, reading, unit, event = \
-                map(lambda x: x.strip().replace(" ", "_").replace("/", ""), line.split("|"))
-            sys.stdout.write("%s %s_%s %s_%s_(NA/NA) [%s]\n" % \
-                  (sensor_id, sensor_type, sensor_name,
-                   reading, unit, event.replace("'", "")))
+            sys.stdout.write("%s\n" % line)
 
 
 if err:
     sys.stderr.write("ERROR: '%s'\n" % err[:-1])
     sys.exit(1)
 else:
-    sys.stdout.write("<<<ipmi_sensors>>>\n")
+    sys.stdout.write("<<<ipmi_sensors:sep(124)>>>\n")
     parse_ipmi_sensor_data(sensor_data.splitlines())
     sys.exit(0)

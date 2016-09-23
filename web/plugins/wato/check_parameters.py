@@ -559,7 +559,6 @@ register_rule(
                                           "The pattern specified here must match exactly the beginning of "
                                           "the actual sensor name (case sensitive)."),
                                 orientation = "horizontal",
-                                default_value = [ "nr", "ns" ]
                                 )
                         ),
                     ]

@@ -66,6 +66,7 @@ import bi # Needed for BI Icon. For arkane reasons (ask htdocs/module.py) this
           # cannot be imported in views.py directly.
 
 import cmk.paths
+import cmk.man_pages as man_pages
 from cmk.regex import regex
 from cmk.defines import short_service_state_name, short_host_state_name
 from lib import *
@@ -1048,41 +1049,30 @@ multisite_painters["svc_pnpgraph" ] = {
 }
 
 
-def paint_check_manpage(row):
+def paint_check_man_page(row):
     command = row["service_check_command"]
     if not command.startswith("check_mk-"):
         return "", ""
     checktype = command[9:]
 
-    # Honor man-pages in OMD's local structure
-    p = cmk.paths.local_check_manpages_dir + "/" + checktype
-    if not os.path.exists(p):
-        p = cmk.paths.check_manpages_dir + "/" + checktype
-        if not os.path.exists(p):
-            return "", _("Man-Page: %s not found.") % p
+    page = man_pages.load_man_page(checktype)
+    if page is None:
+        return "", _("Man page %s not found.") % checktype
 
-    description = None
-    for line in file(p):
-        line = line.rstrip()
-        if line == "description:":
-            description = ""
-        elif line.strip() == "" and description != None:
-            description += "<p>"
-        elif not line.startswith(' ') and line[-1] == ':':
-            break
-        elif description != None:
-            description += " " + line.replace("<", "&lt;").replace(">", "&gt;")
-    if not description:
-        return "", ""
-    else:
-        return "", description.replace("{", "<b>").replace("}", "</b>")
+    description = page["header"]["description"]
+    return "", description.replace("<", "&lt;") \
+                          .replace(">", "&gt;") \
+                          .replace("{", "<b>") \
+                          .replace("}", "</b>") \
+                          .replace("&lt;br&gt;", "<br>")
 
 multisite_painters["check_manpage"] = {
     "title"   : _("Check manual (for Check_MK based checks)"),
     "short"   : _("Manual"),
     "columns" : [ "service_check_command" ],
-    "paint"   : paint_check_manpage,
+    "paint"   : paint_check_man_page,
 }
+
 
 def paint_comments(prefix, row):
     comments = row[ prefix + "comments_with_info"]

@@ -29,16 +29,6 @@ def _check_manpage(name):
     assert found_catalog, "Did not find \"catalog:\" header in manpage \"%s\"" % name
 
 
-def test_manpage_list(site):
-    p = site.execute(["check_mk", "--list-man"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    result = p.communicate()[0]
-
-    assert p.returncode == 0
-    assert result != ""
-    assert not "ERROR" in result, "Manpage list broken \"check_mk --list-man\": %s\"" % result
-    assert type(eval(result)) == dict
-
-
 def test_missing_manpage(site):
     missing = []
 

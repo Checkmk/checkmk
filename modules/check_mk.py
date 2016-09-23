@@ -4610,7 +4610,7 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "man", "config-check", "backup=", "restore=",
                  "check-inventory=", "check-discovery=", "discover-marked-hosts", "paths",
                  "checks=", "inventory", "inventory-as-check=", "hw-changes=", "sw-changes=", "sw-missing=",
-                 "inv-fail-status=", "cmc-file=", "browse-man", "list-man", "update-dns-cache", "cap", "real-time-checks",
+                 "inv-fail-status=", "cmc-file=", "browse-man", "update-dns-cache", "cap", "real-time-checks",
                  "log-to-stdout"]
 
 non_config_options = ['-L', '--list-checks', '-P', '--package', '-M',
@@ -4780,9 +4780,6 @@ try:
                 man_pages.print_man_page(args[0])
             else:
                 man_pages.print_man_page_table()
-            done = True
-        elif o in [ '--list-man' ]:
-            pprint.pprint(man_pages.load_man_page_catalog())
             done = True
         elif o in [ '-m', '--browse-man' ]:
             man_pages.print_man_page_browser()

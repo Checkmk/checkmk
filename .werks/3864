@@ -1,4 +1,4 @@
-Title: tactical overview now shows the number of stale hosts and services
+Title: Now tactical overview is able to show the number of stale hosts and services
 Level: 1
 Component: multisite
 Compatible: compat
@@ -6,4 +6,4 @@ Version: 1.4.0i1
 Date: 1472469803
 Class: feature
 
-
+If and only if there are some stale hosts or services then an additional column is shown automatically.

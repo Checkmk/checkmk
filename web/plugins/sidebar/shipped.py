@@ -608,29 +608,37 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
         html.write("<center>No data from any site</center>")
         return
 
+    td_class = 'col3'
+    if hstdata[-1] or svcdata[-1]:
+        td_class = 'col4'
+
     html.write("<table class=\"content_center tacticaloverview\" cellspacing=2 cellpadding=0 border=0>\n")
     for title, data, view, stale_view, what in [
             (_("Hosts"),    hstdata, 'hostproblems', 'stale_hosts',  'host'),
             (_("Services"), svcdata, 'svcproblems',  'uncheckedsvc', 'service')]:
 
         amount, problems, unhandled_problems, stales = data
-        html.write("<tr><th>%s</th><th>%s</th><th>%s</th>"
-                   "<th>%s</th></tr>\n" % (title, _('Problems'), _('Unhandled'), _("Stale")))
-        html.write("<tr>")
 
+        title_row = "<tr><th>%s</th><th>%s</th><th>%s</th>" % (title, _('Problems'), _('Unhandled'))
+        if td_class == 'col4':
+            title_row += "<th>%s</th></tr>" % _("Stale")
+        html.write("%s\n" % title_row)
+
+        html.write("<tr>")
         url = html.makeuri_contextless([("view_name", "all" + what + "s")] + extra_url_variables, filename="view.py")
-        html.write('<td class=total><a target="main" href="%s">%d</a></td>' % (url, amount))
+        html.write('<td class="total %s"><a target="main" href="%s">%d</a></td>' % (td_class, url, amount))
 
         for value, unhandled in [ (problems, False), (unhandled_problems, True) ]:
             url = html.makeuri_contextless([("view_name", view)] + extra_url_variables, filename="view.py")
             if unhandled:
                 url += "&is_%s_acknowledged=0" % what
             text = link(str(value), url)
-            html.write('<td class="%s">%s</td>' % (value == 0 and " " or "states prob", text))
+            html.write('<td class="%s%s">%s</td>' % (td_class, value == 0 and "" or ' states prob', text))
 
-        url = html.makeuri_contextless([("view_name", stale_view)] + extra_url_variables, filename="view.py")
-        text = link(str(stales), url)
-        html.write('<td class="%s">%s</td>' % (stales == 0 and " " or "states prob", text))
+        if td_class == 'col4':
+            url = html.makeuri_contextless([("view_name", stale_view)] + extra_url_variables, filename="view.py")
+            text = link(str(stales), url)
+            html.write('<td class="%s%s">%s</td>' % (td_class, value == 0 and "" or ' states prob', text))
 
         html.write("</tr>\n")
     html.write("</table>\n")
@@ -672,7 +680,6 @@ table.tacticaloverview th {
     vertical-align: bottom;
 }
 table.tacticaloverview td {
-    width: 25%%;
     text-align: right;
     /* border: 1px solid #123a4a; */
     background-color: #6da1b8;
@@ -682,6 +689,12 @@ table.tacticaloverview td {
 }
 table.tacticaloverview td.prob {
     box-shadow: 0px 0px 4px #ffd000;
+}
+table.tacticaloverview td.col3 {
+    width:33%%;
+}
+table.tacticaloverview td.col4 {
+    width:25%%;
 }
 table.tacticaloverview a { display: block; margin-right: 2px; }
 div.tacticalalert {

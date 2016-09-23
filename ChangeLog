@@ -408,6 +408,7 @@
     * 3813 FIX: check_mail: fixed missing base64 decoding on multipart mails
     * 3888 FIX: df checks: Fixed invalid displayed WARN / CRIT lines in graphs when using "bytes left" thresholds
     * 3840 FIX: cisco_qos: Fixed wrong units in graphs...
+    * 3890 FIX: check_mk_agent.openbsd: Fixed broken MRPE checks
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

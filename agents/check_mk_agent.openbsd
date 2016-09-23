@@ -204,7 +204,7 @@ for IF in $(jot $NI)
 done
 
 # reset IFS to default
-IFW=$OFS
+IFS=$OFS
 
 # IPMI-Data (Fans, CPU, temperature, etc)
 # needs the sysutils/ipmitool and kldload ipmi.ko

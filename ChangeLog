@@ -10,6 +10,7 @@
     * 3809 FIX: windows agent: no longer truncates plugin output, no longer freezes when plugin produces too much output...
     * 3888 FIX: df checks: Fixed invalid displayed WARN / CRIT lines in graphs when using "bytes left" thresholds
     * 3840 FIX: cisco_qos: Fixed wrong units in graphs...
+    * 3890 FIX: check_mk_agent.openbsd: Fixed broken MRPE checks
 
     Multisite:
     * 3874 FIX: fixed graphs displaying wrong labels

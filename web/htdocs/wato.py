@@ -100,6 +100,7 @@ from watolib import *
 
 import cmk.paths
 import cmk.store as store
+import cmk.man_pages as man_pages
 from cmk.regex import escape_regex_chars, regex
 from cmk.defines import short_service_state_name
 
@@ -14946,7 +14947,8 @@ def declare_custom_host_attrs():
 #   '----------------------------------------------------------------------'
 
 # topic, has_second_level, title, description
-check_manpage_topics = [
+def man_page_catalog_topics():
+   return [
     ("hw", True, _("Appliances, other dedicated hardware"),
         _("Switches, load balancers, storage, UPSes, "
           "environmental sensors, etc. ")),
@@ -14972,30 +14974,26 @@ check_manpage_topics = [
 def mode_check_plugins(phase):
     topic = html.var("topic")
     if topic:
-        path = topic.split("/") # e.g. [ "hw", "network" ]
+        path = tuple(topic.split("/")) # e.g. [ "hw", "network" ]
         if not re.match("^[a-zA-Z0-9_./]+$", topic):
             raise Exception("Invalid topic")
     else:
-        path = []
+        path = tuple()
 
-    if html.is_cached("check_manpages"):
-        manpages, titles = html.get_cached("check_manpages")
-    else:
-        for comp in path:
-            ID().validate_value(comp, None) # Beware against code injection!
-        manpages, titles = check_mk_local_automation("get-check-catalog", path)
-        html.set_cache("check_manpages", (manpages, titles))
+    for comp in path:
+        ID().validate_value(comp, None) # Beware against code injection!
+
+    manpages = get_check_catalog(path)
+    titles = man_pages.man_page_catalog_titles()
 
     has_second_level = None
     if topic:
-        path = topic.split("/") # e.g. [ "hw", "network" ]
-        for t, has_second_level, title, helptext in check_manpage_topics:
+        for t, has_second_level, title, helptext in man_page_catalog_topics():
             if t == path[0]:
                 topic_title = title
                 break
         if len(path) == 2:
             topic_title = titles.get(path[1], path[1])
-
 
     if phase == "title":
         heading = _("Catalog of Check Plugins")
@@ -15030,10 +15028,44 @@ def mode_check_plugins(phase):
         render_manpage_topic(manpages, titles, has_second_level, path, topic_title)
     else:
         menu_items = []
-        for topic, has_second_level, title, helptext in check_manpage_topics:
+        for topic, has_second_level, title, helptext in man_page_catalog_topics():
             menu_items.append((
                 html.makeuri([("topic", topic)]), title, "plugins_" + topic, None, helptext))
         render_main_menu(menu_items)
+
+
+def get_check_catalog(args):
+    def path_prefix_matches(p, op):
+        if op and not p:
+            return False
+        elif not op:
+            return True
+        else:
+            return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
+
+    def strip_manpage_entry(entry):
+        return dict([ (k,v) for (k,v) in entry.items() if k in [
+            "name", "agents", "title"
+        ]])
+
+    tree = {}
+    if len(args) > 0:
+        only_path = tuple(args)
+    else:
+        only_path = ()
+
+    for path, entries in man_pages.load_man_page_catalog().items():
+        if not path_prefix_matches(path, only_path):
+            continue
+        subtree = tree
+        for component in path[:-1]:
+            subtree = subtree.setdefault(component, {})
+        subtree[path[-1]] = map(strip_manpage_entry, entries)
+
+    for p in only_path:
+        tree = tree[p]
+
+    return tree
 
 
 def render_manpage_topic(manpages, titles, has_second_level, path, topic_title):
@@ -15103,6 +15135,9 @@ def mode_check_manpage(phase):
         if not re.match("^[-a-zA-Z0-9_.]+$", check_type):
             raise Exception("Invalid check type")
 
+        # TODO: remove call of automation and then the automation. This can be done once the check_info
+        # data is also available in the "cmk." module because the get-check-manpage automation not only
+        # fetches the man page. It also contains info from check_info. What a hack.
         manpage = check_mk_local_automation("get-check-manpage", [ check_type ])
         if manpage == None:
             raise MKUserError(None, _("There is no manpage for this check."))

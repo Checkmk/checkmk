@@ -27,6 +27,7 @@
 import signal
 
 import cmk.paths
+import cmk.man_pages as man_pages
 
 # TODO: Inherit from MKGeneralException
 class MKAutomationError(Exception):
@@ -63,8 +64,6 @@ def do_automation(cmd, args):
             result = automation_get_real_time_checks()
         elif cmd == "get-check-manpage":
             result = automation_get_check_manpage(args)
-        elif cmd == "get-check-catalog":
-            result = automation_get_check_catalog(args)
         elif cmd == "get-package-info":
             result = automation_get_package_info(args)
         elif cmd == "get-package":
@@ -554,39 +553,6 @@ def automation_get_configuration():
                 result[varname] = globals()[varname]
     return result
 
-
-def automation_get_check_catalog(args):
-    def path_prefix_matches(p, op):
-        if op and not p:
-            return False
-        elif not op:
-            return True
-        else:
-            return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
-
-    tree = {}
-    if len(args) > 0:
-        only_path = tuple(args)
-    else:
-        only_path = ()
-
-    for path, entries in man_pages.load_man_page_catalog().items():
-        if not path_prefix_matches(path, only_path):
-            continue
-        subtree = tree
-        for component in path[:-1]:
-            subtree = subtree.setdefault(component, {})
-        subtree[path[-1]] = map(strip_manpage_entry, entries)
-
-    for p in only_path:
-        tree = tree[p]
-
-    return tree, man_pages.man_page_catalog_titles()
-
-def strip_manpage_entry(entry):
-    return dict([ (k,v) for (k,v) in entry.items() if k in [
-        "name", "agents", "title"
-    ]])
 
 def automation_get_check_information():
     manuals = man_pages.all_man_pages()

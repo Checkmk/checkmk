@@ -2460,9 +2460,9 @@ class Timerange(CascadingDropdown):
         kwargs['choices'] += [
             ( "4h",  _("The last 4 hours")),
             ( "25h", _("The last 25 hours")),
-            ( "7d",  _("The last 7 days")),
-            ( "31d", _("The last 31 days")),
-            ( "365d", _("The last 365 days")),
+            ( "8d",  _("The last 8 days")),
+            ( "35d", _("The last 35 days")),
+            ( "400d", _("The last 400 days")),
 
             ( "d0",  _("Today") ),
             ( "d1",  _("Yesterday") ),
@@ -2520,9 +2520,9 @@ class Timerange(CascadingDropdown):
             rangespec = {
                 1: "4h",
                 2: "25h",
-                3: "7d",
-                4: "31d",
-                5: "365d"
+                3: "8d",
+                4: "35d",
+                5: "400d"
             }.get(rangespec[1], "4h")
 
         now = time.time()
@@ -2547,7 +2547,7 @@ class Timerange(CascadingDropdown):
 
         else:
             until_time = now
-            if rangespec[0].isdigit(): # 4h, 365d
+            if rangespec[0].isdigit(): # 4h, 400d
                 count = int(rangespec[:-1])
                 from_time = TimeHelper.add(now, count * -1, rangespec[-1])
                 unit_name = {

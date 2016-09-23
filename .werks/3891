@@ -1,0 +1,18 @@
+Title: Changed graph time range choices
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474636659
+Class: feature
+
+It seems more practical to have slightly wider time ranges, e.g. 8 days instead of 7 days
+to have a little more context. We also extended the "month" and "year" time ranges.
+
+You have now the following available:
+
+The last 4 hours
+The last 25 hours
+The last 8 days
+The last 35 days
+The last 400 days

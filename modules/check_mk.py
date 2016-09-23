@@ -499,7 +499,10 @@ def is_tcp_host(hostname):
     return in_binary_hostlist(hostname, tcp_hosts)
 
 def is_ping_host(hostname):
-    return not is_snmp_host(hostname) and not is_tcp_host(hostname) and not has_piggyback_info(hostname)
+    return not is_snmp_host(hostname) \
+       and not is_tcp_host(hostname) \
+       and not has_piggyback_info(hostname) \
+       and not has_management_board(hostname)
 
 def is_dual_host(hostname):
     return is_tcp_host(hostname) and is_snmp_host(hostname)

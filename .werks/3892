@@ -1,0 +1,16 @@
+Title: CSV export of views: Joined columns have now a title
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i1
+Date: 1474638125
+Class: fix
+
+The title cells of joined columns (service columns in host views) had no title in 
+CSV exports of views. Now, the titles have been added and are computed as follows:
+
+[painter_name].[service_description_of_join_service]
+
+For example:
+
+perfometer.CPU load

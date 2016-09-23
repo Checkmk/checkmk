@@ -41,7 +41,7 @@ multisite_layouts["python-raw"] = {
 
 def render_python(rows, view, group_cells, cells, num_columns, show_checkboxes):
     html.write("[\n")
-    html.write(repr([cell.painter_name() for cell in cells]))
+    html.write(repr([cell.export_title() for cell in cells]))
     html.write(",\n")
     for row in rows:
         html.write("[")
@@ -71,7 +71,7 @@ def render_json(rows, view, group_cells, cells, num_columns, show_checkboxes, ex
 
     header_row = []
     for cell in cells:
-        header_row.append(html.strip_tags(cell.painter_name()))
+        header_row.append(html.strip_tags(cell.export_title()))
     painted_rows.append(header_row)
 
     for row in rows:
@@ -135,7 +135,7 @@ def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, exp
             first = False
         else:
             html.write(csv_separator)
-        content = cell.painter_name()
+        content = cell.export_title()
         content = type(content) in [ int, float ] and str(content) or content
         stripped = html.strip_tags(content).replace('\n', '').replace('"', '""')
         html.write('"%s"' % stripped.encode("utf-8"))

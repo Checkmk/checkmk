@@ -704,6 +704,10 @@ class Cell(object):
         return self._painter_name
 
 
+    def export_title(self):
+        return self._painter_name
+
+
     def painter_options(self):
         return self.painter().get("options", [])
 
@@ -980,6 +984,11 @@ class JoinCell(Cell):
             return self._custom_title
         else:
             return self._join_service_descr
+
+
+    def export_title(self):
+        return "%s.%s" % (self._painter_name, self.join_service())
+
 
 
 

@@ -144,16 +144,27 @@ def test_load_man_page_format():
         assert len(entry) == 2
 
 
-def test_print_man_page_nowiki(capsys):
-    man_pages.print_man_page_nowiki("if64")
+def test_print_man_page_nowiki_index(capsys):
+    renderer = man_pages.NowikiManPageRenderer("if64")
+    index_entry = renderer.index_entry()
     out, err = capsys.readouterr()
+    assert out == ""
+    assert err == ""
 
-    # Entry for index page
-    assert "<tr>" in err
-    assert "[check_if64|" in err
+    assert "<tr>" in index_entry
+    assert "[check_if64|" in index_entry
 
-    assert out.startswith("TI:")
-    assert "\nH1:" in out
+
+
+def test_print_man_page_nowiki_content(capsys):
+    renderer = man_pages.NowikiManPageRenderer("if64")
+    content = renderer.render()
+    out, err = capsys.readouterr()
+    assert out == ""
+    assert err == ""
+
+    assert content.startswith("TI:")
+    assert "\nH1:" in content
 
 
 def test_print_man_page(capsys):

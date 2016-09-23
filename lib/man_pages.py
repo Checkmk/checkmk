@@ -34,6 +34,7 @@ Linux/Unix man pages"""
 import os
 import re
 import sys
+import StringIO
 import subprocess
 import time
 
@@ -201,6 +202,7 @@ check_mk_agents = {
     "openvms" : "OpenVMS",
     "vsphere" : "vSphere"
 }
+
 
 def man_page_exists(name):
     return man_page_path(name) != None
@@ -497,10 +499,6 @@ def load_man_page(name):
     return man_page
 
 
-def print_man_page_nowiki(name):
-    NowikiManPageRenderer(name).paint()
-
-
 def print_man_page(name):
     renderer = ConsoleManPageRenderer(name)
     renderer.init_output()
@@ -525,22 +523,26 @@ class ManPageRenderer(object):
         self._parameters_color   = tty.colorset(6, 4, 1)
         self._examples_color     = tty.colorset(6, 4, 1)
 
+        self._load()
 
-    def paint(self):
-        man_page = load_man_page(self.name)
-        if not man_page:
+
+    def _load(self):
+        self.man_page = load_man_page(self.name)
+        if not self.man_page:
             sys.stdout.write("ERROR: No manpage for %s. Sorry.\n" % self.name)
             return
 
+
+    def paint(self):
         try:
-            self._paint_man_page(man_page)
+            self._paint_man_page()
         except Exception, e:
             sys.stdout.write("ERROR: Invalid check manpage %s: %s\n" % (self.name, e))
 
 
-    def _paint_man_page(self, man_page):
+    def _paint_man_page(self):
         self._print_header()
-        header = man_page['header']
+        header = self.man_page['header']
 
         self._print_sectionheader(header['title'])
 
@@ -563,10 +565,10 @@ class ManPageRenderer(object):
             self._print_textbody(header['item'])
 
         self._print_subheader("Check parameters")
-        if man_page.has_key('parameters'):
+        if self.man_page.has_key('parameters'):
             self._begin_table(["Parameter", "Type", "Description"])
             first = True
-            for parameter_name, text in man_page['parameters']:
+            for parameter_name, text in self.man_page['parameters']:
                 if not first:
                     self._print_empty_line()
                 first = False
@@ -588,10 +590,10 @@ class ManPageRenderer(object):
             self._print_textbody("No inventory supported.")
 
         self._print_subheader("Configuration variables")
-        if man_page.has_key('configuration'):
+        if self.man_page.has_key('configuration'):
             self._begin_table(["Variable", "Type", "Description"])
             first = True
-            for conf_name, text in man_page['configuration']:
+            for conf_name, text in self.man_page['configuration']:
                 if not first:
                     self._print_empty_line()
                 first = False
@@ -818,6 +820,21 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
 
 class NowikiManPageRenderer(ManPageRenderer):
+    def __init__(self, name):
+        super(NowikiManPageRenderer, self).__init__(name)
+        self.output = StringIO.StringIO()
+
+
+    def index_entry(self):
+        return "<tr><td class=tt>%s</td><td>[check_%s|%s]</td></tr>\n" % \
+                  (self.name, self.name, self.man_page["header"]["title"])
+
+
+    def render(self):
+        self.paint()
+        return self.output.getvalue()
+
+
     def _markup(self, line, ignored=None):
         # preserve the inner { and } in double braces and then replace the braces left
         return line.replace('{{', '{&#123;') \
@@ -834,9 +851,6 @@ class NowikiManPageRenderer(ManPageRenderer):
 
     def _print_sectionheader(self, title):
         self.output.write("H1:%s\n" % title)
-        # Be aware: the entry for the "index" goes to stderr. What a hack.
-        sys.stderr.write("<tr><td class=tt>%s</td><td>[check_%s|%s]</td></tr>\n" %
-                                                        (self.name, self.name, title))
 
 
     def _print_subheader(self, line):

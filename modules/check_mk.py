@@ -4593,7 +4593,6 @@ def output_profile():
 register_sigint_handler()
 load_checks()
 
-opt_nowiki     = False
 opt_split_rrds = False
 opt_delete_rrds = False
 opt_log_to_stdout = False
@@ -4608,7 +4607,7 @@ long_options = [ "help", "version", "verbose", "compile", "debug", "interactive"
                  "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
                  "convert-rrds", "compress-history", "split-rrds", "delete-rrds",
                  "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
-                 "man", "nowiki", "config-check", "backup=", "restore=",
+                 "man", "config-check", "backup=", "restore=",
                  "check-inventory=", "check-discovery=", "discover-marked-hosts", "paths",
                  "checks=", "inventory", "inventory-as-check=", "hw-changes=", "sw-changes=", "sw-missing=",
                  "inv-fail-status=", "cmc-file=", "browse-man", "list-man", "update-dns-cache", "cap", "real-time-checks",
@@ -4676,8 +4675,6 @@ for o,a in opts:
         opt_extra_oids.append(a)
     elif o == '--procs':
         max_num_processes = int(a)
-    elif o == '--nowiki':
-        opt_nowiki = True
     elif o == '--debug':
         opt_debug = True
     elif o == '--interactive':
@@ -4780,10 +4777,7 @@ try:
             done = True
         elif o in [ '-M', '--man' ]:
             if args:
-                if opt_nowiki:
-                    man_pages.print_man_page_nowiki(args[0])
-                else:
-                    man_pages.print_man_page(args[0])
+                man_pages.print_man_page(args[0])
             else:
                 man_pages.print_man_page_table()
             done = True

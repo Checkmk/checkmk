@@ -1,91 +1,17 @@
-title: APC Symmetra UPS: Status of battery and output
+title: APC Symmetra UPS: Device and battery states
 agents: snmp
 catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:
+ This check monitors some aspects of an APC Symmetra UPS:
+ the battery and output status, self test,  battery capacity,
+ battery replace, battery number batt packs, battery remaining time,
+ calibration result and last diagnostic date.
 
- This check monitors ten aspects of an APC Symmetra UPS: {(1)} the
- battery status, {(2)} the battery replacement status including the number
- of batteries to be replaced, {(3)} the output status, {(4)} the battery
- capacity, {(5)} the battery temperature, {(6)} the battery current, {(7)}
- the output voltage, {(8)} the output current, {(9)} the remaing run time,
- and {(10)} the current load in percent.
-
- The output current and remaining run time are not checked against a level,
- but just displayed. {(2)} is only displayed if a problem is found, the level
- is {WARN} if one battery needs to be replaced and {CRIT} if more than one
- battery needs to be replaced. {(1)} is not displayed if the state is normal
- but a problem in {(2)} was found.
-
- The check output includes the calibration status of the UPS. During a
- calibration the check result in section {(2)} is OK even though the UPS is
- running on battery.  The check reads the date of the last calibration and
- optionally applies an alternative level for the battery capacity on the
- day of the calibration. This is because the battery capacity is reduced
- after calibration and may cause an unwanted critical condition with the
- standard level. In addition a time span after the day of the calibration
- can be configured during which the post-calibration phase still persists.
-
-examples:
- # Set the critical levels for the normal operation mode of all APC checks to:
- # - battery capacity at 90% or lower
- # - battery temperature to 38C or higher
- # - battery current to 10A or higher
- # - output voltage to 225V or lower
- # old method, unsets the post calibration levels
- apc_default_levels = ( 90, 38, 10, 225 )
- # new method
- apc_default_levels = {
-     "levels": ( 90, 38, 10, 225 )
- }
-
- # also set the alternative level for the battery capacity and the delay time span
- apc_default_levels = {
-     "levels": ( 90, 38, 10, 225 ),
-     "post_calibration_levels": {
-         "altcapacity": 50,          # in percent
-         "additional_time_span": 60  # in minutes
- }
-
- # checkgroup_parameters syntax
- # please note that the name of the group is apc_symentra, NOT apc_symmetra !
- checkgroup_parameters.setdefault('apc_symentra', [])
-
- checkgroup_parameters['apc_symentra'] += [
-    # All UPS in production get other critical levels
-    ( { "levels": (85, 35, 2, 210) }, ["prod"], ALL_HOSTS ),
-    ( { "output_load": (40, 50) }, ["power"], ALL_HOSTS ),
-    # All UPS get post calibration level of 50%
-    ( { "post_calibration_levels": { "altcapacity": 50 } }, ["prod"],ALL_HOSTS ),
-    ( { "post_calibration_levels": { "additional_time_span": 60 } }, ["prod"], ALL_HOSTS ),
-    ]
-
-perfdata:
- This check outputs six performance values: the battery capacity,
- the battery temperature, the battery current, the output voltage,
- the output current in percent and the output current.
+ Default capacity levels are set to 80, 95 percent. These are configurable.
+ The device sends its own state in case of battery and output status,
+ battery replace and calibration result.
 
 inventory:
- The inventory process checks if the device has a system description OIDs (.1.3.6.1.2.1.1.2.0)
- and if the name of this OID is known to the test. If this is true the system is inventorized.
-
-[parameters]
-parameters(dict): parameters is a dictionary with the following keys:
-
- {"levels"}: a tuple of critical levels for battery capacity, temperature, current and output
- voltage. The numbers are integers.
-
- {"post_calibration_levels"}: a dictionary of two parameters: {"altcapacity"} is the alternative
- critical level for the battery capacity in the post-calibration phase in precent.  {"additional_time_span"}
- is a time span the post-calibration phase is extended past the day of the calibration in minutes.
-
- {"battime"}: A tuple (warn(int), crit(int)) of levels for the remaining battery time in seconds.
- This key is optional.
-
-parameters(tuple): The old format of a tuple of 4 values is also still supported, containing what
- is found in the key {"levels"} in the dictionary.
-
-
-[configuration]
-apc_default_levels (dict): This variable is preset to {{ "levels": ( 95, 40, 1, 220 ) }}
+ One check is created.

@@ -10533,9 +10533,18 @@ register_check_parameters(
     "first"
 )
 
-def apc_convert_from_tuple(params):
+def transform_apc_symmetra(params):
     if type(params) in (list, tuple):
-        params = { "levels": params}
+        params = { "levels": params }
+
+    if "levels" in params and len(params["levels"]) > 2:
+        cap = float(params["levels"][0])
+        params["capacity"] = (cap, cap)
+        del params["levels"]
+
+    if "output_load" in params:
+        del params["output_load"]
+
     return params
 
 register_check_parameters(
@@ -10545,51 +10554,21 @@ register_check_parameters(
     Transform(
         Dictionary(
             elements = [
-                ("levels",
-                Tuple(
-                    title = _("Levels of battery parameters during normal operation"),
-                    elements = [
-                        Integer(
-                            title = _("Critical Battery Capacity"),
-                            help = _("The battery capacity in percent at and below which a critical state is triggered"),
-                            unit = "%", default_value = 95,
-                        ),
-                        Integer(
-                            title = _("Critical System Temperature"),
-                            help = _("The critical temperature of the System"),
-                            unit = u"°C",
-                            default_value = 55,
-                        ),
-                        Integer(
-                            title = _("Critical Battery Current"),
-                            help = _("The critical battery current in Ampere"),
-                            unit = _("A"),
-                            default_value = 1,
-                        ),
-                        Integer(
-                            title = _("Critical Battery Voltage"),
-                            help = _("The output voltage at and below which a critical state "
-                                     "is triggered."),
-                            unit = _("V"),
-                            default_value = 220,
-                        ),
-                    ]
-                )),
-                ("output_load",
-                Tuple(
-                  title = _("Current Output Load"),
-                  help = _("Here you can set levels on the current percentual output load of the UPS. "
-                           "This load affects the running time of all components being supplied "
-                           "with battery power."),
-                  elements = [
-                     Percentage(
-                         title = _("Warning level"),
-                     ),
-                     Percentage(
-                         title = _("Critical level"),
-                     ),
-                  ]
-                )),
+                ("capacity",
+                    Tuple(
+                        title = _("Levels of battery capacity"),
+                        elements = [
+                            Percentage(
+                                title = _("Warning below"),
+                                default_value = 95.0,
+                            ),
+                            Percentage(
+                                title = _("Critical below"),
+                                default_value = 90.0,
+                            ),
+                        ]
+                    ),
+                ),
                 ("post_calibration_levels",
                 Dictionary(
                     title = _("Levels of battery parameters after calibration"),
@@ -10638,7 +10617,7 @@ register_check_parameters(
         )],
             optional_keys = ['post_calibration_levels', 'output_load', 'battime'],
         ),
-        forth = apc_convert_from_tuple
+        forth = transform_apc_symmetra,
     ),
     None,
     "first"

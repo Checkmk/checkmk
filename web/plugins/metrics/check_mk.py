@@ -4226,6 +4226,15 @@ check_metrics["check_mk-apc_symmetra"] = {
     "runtime"    : { "name" : "lifetime_remaining", "scale" : 60 },
 }
 
+check_metrics["check_mk-apc_symmetra.temp"] = {
+    "systemp"    : { "name" : "battery_temp" },
+}
+
+check_metrics["check_mk-apc_symmetra.elphase"] = {
+    "OutputLoad" : { "name" : "output_load" },
+    "batcurr"    : { "name" : "battery_current" },
+}
+
 check_metrics["check_mk-kernel.util"] = {
     "wait" : { "name" : "io_wait" },
     "guest" : { "name" : "cpu_util_guest" },

@@ -1,0 +1,17 @@
+Title: apc_symmetra: divided into several checks
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.4.0i1
+Date: 1474607721
+Class: feature
+
+Now the check is more clearer and each check has its own, already
+existing WATO group.
+
+The separation of apc_symmetra is as follows:
+- apc_symmetra monitors some states and battery aspects (as before)
+- apc_symmetra.temp reports the battery temperature
+- apc_symmetra.elphase reports the battery current
+- apc_symmetra_input checks the electrical inphase
+- apc_symmetra_output checks the electrical outphase

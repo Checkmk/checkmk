@@ -1,0 +1,14 @@
+title: APC Symmetra UPS: Battery temperature
+agents: snmp
+catalog: hw/power/apc
+license: GPL
+distribution: check_mk
+description:
+ This check monitors battery temperature of APC Symmetra UPS which
+ support the PowerNet-MIB.
+ Default levels are set to 50, 60 degree celsius. Upper and lower
+ levels are configurable.
+
+inventory:
+ One service is created.
+

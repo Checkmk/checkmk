@@ -1,0 +1,14 @@
+title: APC Symmetra UPS: Output voltage, current and load
+agents: snmp
+catalog: hw/power/apc
+license: GPL
+distribution: check_mk
+description:
+ This check monitors output voltage, current and load of APC Symmetra UPS
+ which support the PowerNet-MIB.
+ Lower default levels are set to 220, 220 voltage. These and other levels
+ are configurable.
+
+inventory:
+ One service is created.
+

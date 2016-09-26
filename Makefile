@@ -281,7 +281,6 @@ livestatus/config.h: livestatus/configure livestatus/config.h.in
 	cd livestatus && ./configure CXXFLAGS="$(CXX_FLAGS)"
 
 GTAGS: livestatus/config.h
-	@echo "making $@: $? is newer"
 	$(MAKE) -C livestatus distclean-tags
 	$(MAKE) -C livestatus GTAGS
 

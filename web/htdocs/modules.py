@@ -86,7 +86,7 @@ def init_modules():
 
     # Load the list of internal hard coded modules
     for module_name in internal_module_names:
-        # FIXME: use __import__
+        # TODO: use __import__
         modules.append(import_module(module_name))
 
     # Load all multisite pages which will also perform imports of the needed modules
@@ -102,7 +102,7 @@ g_all_modules_loaded = False
 def load_all_plugins():
     global g_all_modules_loaded
 
-    # CLEANUP: Move this to the pagehandlers if this concept works out.
+    # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
     if html.myfile == "ajax_graph" and g_all_modules_loaded:
         only_modules = ["metrics"]
     else:

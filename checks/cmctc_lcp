@@ -143,10 +143,17 @@ def check_cmctc_lcp_temp(item, params, info):
     for index, typeid, statuscode, value, high, low, warn, description in info:
         if itemindex == index:
             status = int(statuscode)
-            levels = None if high == low == warn == "0" else \
-                     (float(warn), float(high))
-            levels_low = None if high == low == warn == "0" else \
-                         (float(low), float("-inf"))  # no lower critical level specified
+
+            if high == "0" and low == "0" and warn == "0":
+                levels = None
+            else:
+                levels = float(warn), float(high)
+
+            if high == "0" and low == "0" and warn == "0":
+                levels_low = None
+            else:
+                levels_low = float(low), float("-inf") # no lower critical level specified
+
             return check_temperature(float(value), params, "cmctc_lcp_temp_%s" % item,
                     dev_levels=levels,
                     dev_levels_lower=levels_low,

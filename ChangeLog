@@ -30,6 +30,7 @@
     * 3843 FIX: Fixed reporting of crashes when using Nagios core
     * 3846 FIX: Nagios: define_contactgroups = False is handled correctly again
     * 3852 FIX: Host related files are now deleted during host deletion...
+    * 3737 FIX: Fixed slow activation of changes due to loss of IP address cache...
 
     Checks & Agents:
     * 3183 aruba_wlc_aps: new check which monitors the provisioned accesspoints of an Aruba Network WLAN Controller

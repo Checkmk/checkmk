@@ -169,7 +169,7 @@ def _set_overridable_paths(local=False):
         var_prefix+"doc_dir"            : os.path.join(omd_root, rel_base, "share/doc/check_mk"),
         var_prefix+"locale_dir"         : os.path.join(omd_root, rel_base, "share/check_mk/locale"),
         var_prefix+"bin_dir"            : os.path.join(omd_root, rel_base, "bin"),
-        var_prefix+"lib_dir"            : os.path.join(omd_root, rel_base, "lib/check_mk"),
+        var_prefix+"lib_dir"            : os.path.join(omd_root, rel_base, "lib"),
     })
 
 

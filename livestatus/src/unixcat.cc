@@ -62,7 +62,8 @@ ssize_t read_with_timeout(int from, char *buffer, int size, int us) {
 }
 
 void *copy_thread(void *info) {
-    signal(SIGWINCH, SIG_IGN);
+    // https://llvm.org/bugs/show_bug.cgi?id=29089
+    signal(SIGWINCH, SIG_IGN);  // NOLINT
 
     struct thread_info *ti = reinterpret_cast<struct thread_info *>(info);
     int from = ti->from;
@@ -113,7 +114,8 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    signal(SIGWINCH, SIG_IGN);
+    // https://llvm.org/bugs/show_bug.cgi?id=29089
+    signal(SIGWINCH, SIG_IGN);  // NOLINT
 
     const char *unixpath = argv[1];
     struct stat st;

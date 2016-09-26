@@ -1765,7 +1765,7 @@ class ListChoice(ValueSpec):
             html.write("</td>")
         html.write("</tr></table>")
         # Make sure that at least one variable with the prefix is present
-        html.hidden_field(varprefix, "1")
+        html.hidden_field(varprefix, "1", add_var=True)
 
     def value_to_text(self, value):
         self.load_elements()
@@ -3908,7 +3908,7 @@ class SSHKeyPair(ValueSpec):
     def render_input(self, varprefix, value):
         if value:
             html.write(_("Fingerprint: %s") % self.value_to_text(value))
-            html.hidden_field(varprefix, self._encode_key_for_url(value))
+            html.hidden_field(varprefix, self._encode_key_for_url(value), add_var=True)
         else:
             html.write(_("Key pair will be generated when you save."))
 

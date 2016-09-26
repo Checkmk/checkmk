@@ -273,16 +273,20 @@ setup:
 	sudo apt-get install figlet pngcrush slimit bear dietlibc-dev
 
 $(addprefix %/,$(LIVESTATUS_AUTO)): $(addprefix %/,configure.ac m4/* Makefile.am src/Makefile.am)
+	@echo "making $@: $? is newer"
 	cd livestatus && autoreconf --install --include=m4
 
 livestatus/config.h: livestatus/configure livestatus/config.h.in
+	@echo "making $@: $? is newer"
 	cd livestatus && ./configure CXXFLAGS="$(CXX_FLAGS)"
 
 GTAGS: livestatus/config.h
+	@echo "making $@: $? is newer"
 	$(MAKE) -C livestatus distclean-tags
 	$(MAKE) -C livestatus GTAGS
 
 compile_commands.json: livestatus/config.h $(FILES_TO_FORMAT)
+	@echo "making $@: $? is newer"
 	$(MAKE) -C livestatus clean
 	$(BEAR) $(MAKE) -C livestatus -j8
 

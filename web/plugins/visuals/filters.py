@@ -275,7 +275,11 @@ class FilterMultigroup(Filter):
         return True
 
     def valuespec(self):
-        return DualListChoice(choices = all_groups(self.what), rows=2, autoheight=False, enlarge_active=True)
+        return DualListChoice(
+            choices = all_groups(self.what),
+            rows=3 if self.negateable else 4,
+            enlarge_active=True
+        )
 
     def selection(self):
         current = html.var(self.htmlvar, "").strip().split("|")

@@ -3238,6 +3238,20 @@ register_check_parameters(
     match_type = "dict"
 )
 
+
+register_check_parameters(
+    subgroup_environment,
+    "lamp_operation_time",
+    _("Beamer lamp operation time"),
+    Tuple(
+        elements = [
+            Age(title = _("Warning at"), default_value = 1000*3600, display = [ "hours" ]),
+            Age(title = _("Critical at"), default_value = 1500*3600, display = [ "hours" ]),
+        ]),
+    None,
+    match_type = "first",
+)
+
 #.
 #   .--Storage-------------------------------------------------------------.
 #   |                 ____  _                                              |

@@ -12,6 +12,7 @@
     * 3888 FIX: df checks: Fixed invalid displayed WARN / CRIT lines in graphs when using "bytes left" thresholds
     * 3840 FIX: cisco_qos: Fixed wrong units in graphs...
     * 3890 FIX: check_mk_agent.openbsd: Fixed broken MRPE checks
+    * 3814 FIX: win_netstat: fixed unicode warning while parsing data
 
     Multisite:
     * 3874 FIX: fixed graphs displaying wrong labels

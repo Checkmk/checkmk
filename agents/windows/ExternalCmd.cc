@@ -48,7 +48,6 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     // child process needs to be able to inherit the pipe handles
     security_attributes.bInheritHandle = true;
 
-
     if (!CreatePipe(&_stdout, &_script_stdout, &security_attributes, 0)) {
         throw win_exception("failed to create pipe");
     }
@@ -68,7 +67,6 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     si.wShowWindow = SW_HIDE;
     si.hStdOutput = _script_stdout;
     si.hStdError = with_stderr ? _script_stdout : _script_stderr;
-
 
     PROCESS_INFORMATION pi;
     ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
@@ -109,7 +107,6 @@ void ExternalCmd::closeScriptHandles() {
     ::CloseHandle(_script_stderr);
     ::CloseHandle(_script_stdout);
 }
-
 
 DWORD ExternalCmd::exitCode() {
     DWORD res;

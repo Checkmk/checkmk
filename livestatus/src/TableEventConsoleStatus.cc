@@ -36,20 +36,19 @@ TableEventConsoleStatus::TableEventConsoleStatus()
     addColumn(new IntEventConsoleColumn(
         "status_config_load_time",
         "The time when the Event Console config was loaded"));
-    addColumn(new IntEventConsoleColumn(
-        "status_num_open_events",
-        "The number of currently open events"));
-    addColumn(new IntEventConsoleColumn(
-        "status_virtual_memory_size",
-        "The current virtual memory size in bytes"));
+    addColumn(new IntEventConsoleColumn("status_num_open_events",
+                                        "The number of currently open events"));
+    addColumn(
+        new IntEventConsoleColumn("status_virtual_memory_size",
+                                  "The current virtual memory size in bytes"));
 
     addColumn(new IntEventConsoleColumn(
         "status_messages",
         "The number of messages received since startup of the Event Console"));
     addColumn(new DoubleEventConsoleColumn("status_message_rate",
                                            "The incoming message rate"));
-    addColumn(new DoubleEventConsoleColumn("status_average_message_rate",
-                                           "The average incoming message rate"));
+    addColumn(new DoubleEventConsoleColumn(
+        "status_average_message_rate", "The average incoming message rate"));
     addColumn(
         new IntEventConsoleColumn("status_connects", "The number of connects"));
     addColumn(new DoubleEventConsoleColumn("status_connect_rate",
@@ -86,10 +85,12 @@ TableEventConsoleStatus::TableEventConsoleStatus()
     addColumn(new DoubleEventConsoleColumn("status_average_rule_hit_rate",
                                            "The average rule hit rate"));
 
-    addColumn(new DoubleEventConsoleColumn("status_average_processing_time",
-                                           "The average incoming message processing time"));
-    addColumn(new DoubleEventConsoleColumn("status_average_request_time",
-                                           "The average status client request time"));
+    addColumn(new DoubleEventConsoleColumn(
+        "status_average_processing_time",
+        "The average incoming message processing time"));
+    addColumn(
+        new DoubleEventConsoleColumn("status_average_request_time",
+                                     "The average status client request time"));
     addColumn(new DoubleEventConsoleColumn("status_average_sync_time",
                                            "The average sync time"));
     addColumn(new StringEventConsoleColumn(

@@ -2210,7 +2210,6 @@ def lookup_ip_address(hostname, family=None):
             g_dns_cache[(hostname, family)] = None
             raise
 
-g_global_caches.append('g_ip_lookup_cache')
 def init_ip_lookup_cache():
     global g_ip_lookup_cache
     if g_ip_lookup_cache is None:

@@ -1,0 +1,15 @@
+Title: Fixed slow activation of changes due to loss of IP address cache
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.8p12
+Date: 1474925029
+Class: fix
+
+In some situations Check_MK would loose the cached IP addresses
+in <tt>var/check_mk/ipaddresses.cache</tt>. The results in the
+next activation of changes being very slow - depending on your
+DNS. The problem seems to happen (especially) if you have activated
+periodic service discovery with automatic activation of changes.
+
+This has been fixed.

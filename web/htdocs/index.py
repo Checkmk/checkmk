@@ -40,11 +40,11 @@ from html_mod_python import html_mod_python, FinalizeRequest
 import cmk.paths
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
-def handler(req, fields = None, is_profiling = False):
+def handler(mod_python_req, fields = None, is_profiling = False):
     # Create an object that contains all data about the request and
     # helper functions for creating valid HTML. Parse URI and
     # store results in the request object for later usage.
-    __builtin__.html = html_mod_python(req, fields)
+    __builtin__.html = html_mod_python(mod_python_req, fields)
 
     response_code = apache.OK
     try:
@@ -62,6 +62,8 @@ def handler(req, fields = None, is_profiling = False):
 
         # Some pages do skip authentication. This is done by adding
         # noauth: to the page hander, e.g. "noauth:run_cron" : ...
+        # TODO: Eliminate those "noauth:" pages. Eventually replace it by call using
+        #       the now existing default automation user.
         if handler == page_not_found:
             handler = modules.get_handler("noauth:" + html.myfile, page_not_found)
             if handler != page_not_found:
@@ -73,41 +75,11 @@ def handler(req, fields = None, is_profiling = False):
                         html.write(html.attrencode(traceback.format_exc()))
                 raise FinalizeRequest()
 
-        # Is the user set by the webserver? otherwise use the cookie based auth
-        if not html.is_logged_in():
-            config.auth_type = 'cookie'
-            # When not authed tell the browser to ask for the password
-            html.login(login.check_auth())
-            if not html.is_logged_in():
-                if fail_silently():
-                    # While api call don't show the login dialog
-                    raise MKUnauthenticatedException(_('You are not authenticated.'))
-
-                # Redirect to the login-dialog with the current url as original target
-                # Never render the login form directly when accessing urls like "index.py"
-                # or "dashboard.py". This results in strange problems.
-                if html.myfile != 'login':
-                    html.http_redirect('%scheck_mk/login.py?_origtarget=%s' %
-                                       (config.url_prefix(), html.urlencode(html.makeuri([]))))
-
-                # Initialize the i18n for the login dialog. This might be overridden
-                # later after user login
-                i18n.localize(html.var("lang", config.get_language()))
-
-                # This either displays the login page or validates the information submitted
-                # to the login form. After successful login a http redirect to the originally
-                # requested page is performed.
-                login.page_login(plain_error())
-                raise FinalizeRequest()
-        else:
-            # In case of basic auth the user is already known, but we still need to decide
-            # whether or not the user is an automation user (which is allowed to use transid=-1)
-            if html.var("_secret"):
-                login.check_auth_automation()
-
-        # Set all permissions, read site config, and similar stuff
-        config.login(html.user)
-        html.load_help_visible()
+        # Ensure the user is authenticated. This call is wrapping all the different
+        # authentication modes the Check_MK GUI supports and initializes the logged
+        # in user objects.
+        if not login.authenticate(mod_python_req):
+            handle_not_authenticated()
 
         # Initialize the multiste i18n. This will be replaced by
         # language settings stored in the user profile after the user
@@ -121,23 +93,7 @@ def handler(req, fields = None, is_profiling = False):
         if i18n.get_current_language() != previous_language:
             modules.load_all_plugins()
 
-        # User allowed to login at all?
-        if not config.may("general.use"):
-            reason = _("You are not authorized to use Check_MK Multisite. Sorry. "
-                       "You are logged in as <b>%s</b>.") % config.user_id
-            if len(config.user_role_ids):
-                reason += _("Your roles are <b>%s</b>. ") % ", ".join(config.user_role_ids)
-            else:
-                reason += _("<b>You do not have any roles.</b> ")
-            reason += _("If you think this is an error, "
-                        "please ask your administrator to check the permissions configuration.")
-
-            if config.auth_type == 'cookie':
-                reason += _('<p>You have been logged out. Please reload the page to re-authenticate.</p>')
-                login.del_auth_cookie()
-
-            raise MKAuthException(reason)
-
+        ensure_general_access()
         handler()
 
     except FinalizeRequest, e:
@@ -197,6 +153,49 @@ def handler(req, fields = None, is_profiling = False):
     return response_code
 
 
+def handle_not_authenticated():
+    if fail_silently():
+        # While api call don't show the login dialog
+        raise MKUnauthenticatedException(_('You are not authenticated.'))
+
+    # Redirect to the login-dialog with the current url as original target
+    # Never render the login form directly when accessing urls like "index.py"
+    # or "dashboard.py". This results in strange problems.
+    if html.myfile != 'login':
+        html.http_redirect('%scheck_mk/login.py?_origtarget=%s' %
+                           (config.url_prefix(), html.urlencode(html.makeuri([]))))
+    else:
+        # This either displays the login page or validates the information submitted
+        # to the login form. After successful login a http redirect to the originally
+        # requested page is performed.
+        login.page_login(plain_error())
+
+    raise FinalizeRequest()
+
+
+def ensure_general_access():
+    if config.may("general.use"):
+        return
+
+    reason = [ _("You are not authorized to use the Check_MK GUI. Sorry. "
+               "You are logged in as <b>%s</b>.") % config.user_id ]
+
+    if len(config.user_role_ids):
+        reason.append(_("Your roles are <b>%s</b>.") % ", ".join(config.user_role_ids))
+    else:
+        reason.append(_("<b>You do not have any roles.</b>"))
+
+    reason.append(_("If you think this is an error, please ask your administrator "
+                    "to check the permissions configuration."))
+
+    if login.auth_type == 'cookie':
+        reason.append(_("<p>You have been logged out. Please reload the page "
+                        "to re-authenticate.</p>"))
+        login.del_auth_cookie()
+
+    raise MKAuthException(" ".join(reason))
+
+
 def finalize_request(is_error=False):
     release_all_locks()
     userdb.finalize()
@@ -208,6 +207,7 @@ def finalize_request(is_error=False):
 # just a plain server result code of 500
 def fail_silently():
     return html.has_var("_ajaxid")
+
 
 # Webservice functions may decide to get a normal result code
 # but a text with an error message in case of an error

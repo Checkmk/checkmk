@@ -99,7 +99,7 @@ class html(object):
         super(html, self).__init__()
         self.myfile = None
         self.cookies = {}
-        self.user = None
+        self._user_id = None
         self.user_errors = {}
         self.focus_object = None
         self.render_headfoot = True
@@ -148,6 +148,10 @@ class html(object):
     ALT = 18
     BACKSPACE = 8
     F1 = 112
+
+    def set_user_id(self, user_id):
+        self._user_id = user_id
+
 
     def is_mobile(self):
         return self.mobile
@@ -1709,7 +1713,7 @@ class html(object):
                                  tree_img="tree"):
         self.folding_indent = indent
 
-        if self.user:
+        if self._user_id:
             isopen = self.foldable_container_is_open(treename, id, isopen)
 
         onclick = ' onclick="toggle_foldable_container(\'%s\', \'%s\', \'%s\')"' % (

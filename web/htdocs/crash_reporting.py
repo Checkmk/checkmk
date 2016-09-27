@@ -27,6 +27,7 @@
 import subprocess, base64, time, pprint, traceback, tarfile, cStringIO, sys
 import i18n
 import sites
+import login
 from lib import *
 from valuespec import *
 import table, config, forms
@@ -426,7 +427,7 @@ def create_crash_dump_info_file(tar, what):
     crash_info = cmk.crash_reporting.create_crash_info(what, details={
         "page"           : html.myfile+".py",
         "vars"           : html.vars,
-        "username"       : html.user,
+        "username"       : login.user_id,
         "user_agent"     : html.get_user_agent(),
         "referer"        : html.get_referer(),
         "is_mobile"      : html.is_mobile(),

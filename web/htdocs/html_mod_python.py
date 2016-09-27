@@ -55,7 +55,6 @@ class html_mod_python(htmllib.html):
         self.myfile = req.uri.split("/")[-1][:-3]
 
         self.req = req
-        self.user = req.user
         if fields:
             self.fields = fields
         else:
@@ -152,21 +151,10 @@ class html_mod_python(htmllib.html):
         return self.req.uri
 
 
-    def login(self, user_id):
-        self.user = user_id
-
-
-    def is_logged_in(self):
-        # Form based authentication always provides unicode strings, but the basic
-        # authentication of mod_python provides regular strings.
-        return self.user and type(self.user) in [ str, unicode ]
-
-
-    def load_help_visible(self):
-        try:
-            self.help_visible = config.load_user_file("help", False)  # cache for later usage
-        except:
-            pass
+    def set_user_id(self, user_id):
+        super(html_mod_python, self).set_user_id(user_id)
+        # TODO: Shouldn't this be moved to some other place?
+        self.help_visible = config.load_user_file("help", False)  # cache for later usage
 
     # Finish the HTTP request short before handing over to mod_python
     def finalize(self, is_error=False):

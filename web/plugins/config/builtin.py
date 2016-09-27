@@ -176,10 +176,6 @@ hide_languages = []
 # Default timestamp format to be used in multisite
 default_ts_format = 'mixed'
 
-# Default authentication type. Can be changed to e.g. "cookie" for
-# using the cookie auth
-auth_type = 'basic'
-
 # Show only most used buttons, set to None if you want
 # always all buttons to be shown
 context_buttons_to_show = 5

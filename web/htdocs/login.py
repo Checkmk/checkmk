@@ -36,6 +36,43 @@ from hashlib import md5
 
 import cmk.paths
 
+auth_type = None
+
+# Perform the user authentication. This is called by index.py to ensure user
+# authentication and initialization of the user related data structures.
+#
+# Initialize the user session with the mod_python provided request object.
+# The user may have configured (basic) authentication by the web server. In
+# case a user is provided, we trust that user and assume it as authenticated.
+#
+# Otherwise we check / ask for the cookie authentication or eventually the
+# automation secret authentication.
+def authenticate(mod_python_req):
+    # Check whether or not already authenticated
+    user_id = login.check_auth(mod_python_req)
+    if user_id:
+        login(user_id)
+        return True
+    else:
+        return False
+
+
+# After the user has been authenticated, tell the different components
+# of the GUI which user is authenticated.
+def login(_user_id):
+    global user_id
+    if type(_user_id) != unicode:
+        raise MKInternalError("Invalid user id type")
+    user_id = _user_id
+
+    html.set_user_id(user_id)
+    config.login(user_id)
+
+
+def is_logged_in():
+    return user_id != None
+
+
 def auth_cookie_name():
     return 'auth%s' % site_cookie_suffix()
 
@@ -222,6 +259,24 @@ def auth_cookie_is_valid(cookie_name):
         return False
 
 
+def check_auth(mod_python_req):
+    user_id = check_auth_web_server(mod_python_req)
+
+    if html.var("_secret"):
+        user_id = check_auth_automation()
+
+    elif config.auth_by_http_header:
+        user_id = check_auth_http_header()
+
+    if user_id is None:
+        user_id = check_auth_cookie()
+
+    if (user_id is not None and type(user_id) != unicode) or user_id == u'':
+        raise MKInternalError(_("Invalid user authentication"))
+
+    return user_id
+
+
 def check_auth_automation():
     secret = html.var("_secret").strip()
     user_id = html.get_unicode_input("_username").strip()
@@ -232,42 +287,47 @@ def check_auth_automation():
         if os.path.isfile(path) and file(path).read().strip() == secret:
             # Auth with automation secret succeeded - mark transid as unneeded in this case
             html.set_ignore_transids()
+            set_auth_type("automation")
             return user_id
     raise MKAuthException(_("Invalid automation secret for user %s") % html.attrencode(user_id))
+
 
 # When http header auth is enabled, try to read the user_id from the var
 # and when there is some available, set the auth cookie (for other addons) and proceed.
 def check_auth_http_header():
     user_id = html.get_request_header(config.auth_by_http_header)
-    if user_id:
-        user_id = user_id.decode("utf-8")
-        renew_cookie(auth_cookie_name(), user_id)
-    else:
-        user_id = None
+    if not user_id:
+        return None
+
+    user_id = user_id.decode("utf-8")
+    set_auth_type("http_header")
+    renew_cookie(auth_cookie_name(), user_id)
     return user_id
 
-def check_auth():
-    user_id = None
-    if html.var("_secret"):
-        user_id = check_auth_automation()
 
-    elif config.auth_by_http_header:
-        user_id = check_auth_http_header()
+# Try to get the authenticated user from the mod_python provided request object.
+# The user may have configured (basic) authentication by the web server. In
+# case a user is provided, we trust that user.
+def check_auth_web_server(mod_python_req):
+    if mod_python_req.user != None:
+        set_auth_type("web_server")
+        return mod_python_req.user.decode("utf-8")
 
-    if user_id == None:
-        for cookie_name in html.get_cookie_names():
-            if cookie_name.startswith('auth_'):
-                try:
-                    user_id = check_auth_cookie(cookie_name)
-                    break
-                except Exception:
-                    logger(LOG_ERR, 'Exception while checking cookie %s: %s' %
-                                        (cookie_name, traceback.format_exc()))
 
-    if (user_id != None and type(user_id) != unicode) or user_id == u'':
-        raise MKInternalError(_("Invalid user authentication"))
+def check_auth_cookie():
+    for cookie_name in html.get_cookie_names():
+        if cookie_name.startswith('auth_'):
+            try:
+                set_auth_type("cookie")
+                return check_auth_cookie(cookie_name)
+            except Exception, e:
+                logger(LOG_ERR, 'Exception while checking cookie %s: %s' %
+                                    (cookie_name, traceback.format_exc()))
 
-    return user_id
+
+def set_auth_type(ty):
+    global auth_type
+    auth_type = ty
 
 
 def do_login():
@@ -331,6 +391,10 @@ def do_login():
             return "%s" % e
 
 def page_login(no_html_output = False):
+    # Initialize the i18n for the login dialog. This might be overridden
+    # later after user login
+    i18n.localize(html.var("lang", config.get_language()))
+
     result = do_login()
     if type(result) == tuple:
         return result # Successful login
@@ -359,7 +423,7 @@ def normal_login_page(called_directly = True):
 }''')
 
     # When someone calls the login page directly and is already authed redirect to main page
-    if html.myfile == 'login' and check_auth():
+    if html.myfile == 'login' and check_auth(html.req):
         html.http_redirect(origtarget and origtarget or 'index.py')
 
     html.write('<div id="login">\n')
@@ -399,7 +463,7 @@ def normal_login_page(called_directly = True):
 def page_logout():
     invalidate_auth_session()
 
-    if config.auth_type == 'cookie':
+    if auth_type == 'cookie':
         html.http_redirect(config.url_prefix() + 'check_mk/login.py')
     else:
         # Implement HTTP logout with cookie hack

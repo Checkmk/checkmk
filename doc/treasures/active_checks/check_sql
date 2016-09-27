@@ -254,7 +254,7 @@ try:
         sys.exit(3)
 
     number = float(result[0])
-    text   = str(result[1])
+    text   = "%s %s" % (number, str(result[1]))
 
     try:
         perf = " | performance_data=%s" % str(result[2])

@@ -21,6 +21,9 @@
     * 3858 FIX: Fixed crash report and snapshot creation when using Python <2.5 (e.g. with CentOS 5)
     * 3885 FIX: Fixed sorting of version in werk list (1.2.8p10 and 1.2.8p11 were not listed on top)
 
+    WATO:
+    * 3881 FIX: fixed automation call 'delete piggyback host'
+
     Notifications:
     * 3860 FIX: EC condition: Fixed default value of rule id selection
 

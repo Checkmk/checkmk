@@ -394,7 +394,6 @@ def automation_delete_host(args):
         "%s/%s"                  % (counters_directory, hostname),
         "%s/%s"                  % (tcp_cache_dir, hostname),
         "%s/persisted/%s"        % (var_dir, hostname),
-        "%s/piggyback/%s"        % (tmp_dir, hostname),
         "%s/inventory/%s"        % (var_dir, hostname),
         "%s/inventory/%s.gz"     % (var_dir, hostname),
         "%s/agent_deployment/%s" % (var_dir, hostname),
@@ -414,10 +413,12 @@ def automation_delete_host(args):
             if os.path.exists("%s/%s" % (folder, hostname)):
                 os.unlink("%s/%s" % (folder, hostname))
 
-    # logwatch folders
-    if os.path.exists("%s/%s" % (logwatch_dir, hostname)):
-        import shutil
-        shutil.rmtree("%s/%s" % (logwatch_dir, hostname))
+    # logwatch and piggyback folders
+    import shutil
+    for what_dir in [ "%s/%s" % (logwatch_dir, hostname),
+                      "%s/piggyback/%s" % (tmp_dir, hostname), ]:
+        if os.path.exists(what_dir):
+            shutil.rmtree(what_dir)
 
 
 def automation_restart(job = "restart"):

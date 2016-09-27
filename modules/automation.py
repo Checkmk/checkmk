@@ -401,7 +401,6 @@ def delete_host_files(hostname):
         "%s/%s"                  % (cmk.paths.counters_dir, hostname),
         "%s/%s"                  % (cmk.paths.tcp_cache_dir, hostname),
         "%s/persisted/%s"        % (cmk.paths.var_dir, hostname),
-        "%s/piggyback/%s"        % (cmk.paths.tmp_dir, hostname),
         "%s/inventory/%s"        % (cmk.paths.var_dir, hostname),
         "%s/inventory/%s.gz"     % (cmk.paths.var_dir, hostname),
         "%s/agent_deployment/%s" % (cmk.paths.var_dir, hostname),
@@ -422,10 +421,12 @@ def delete_host_files(hostname):
             if os.path.exists("%s/%s" % (folder, hostname)):
                 os.unlink("%s/%s" % (folder, hostname))
 
-    # logwatch folders
-    if os.path.exists("%s/%s" % (cmk.paths.logwatch_dir, hostname)):
-        import shutil
-        shutil.rmtree("%s/%s" % (cmk.paths.logwatch_dir, hostname))
+    # logwatch and piggyback folders
+    import shutil
+    for what_dir in [ "%s/%s" % (cmk.paths.logwatch_dir, hostname),
+                      "%s/piggyback/%s" % (cmk.paths.tmp_dir, hostname), ]:
+        if os.path.exists(what_dir):
+            shutil.rmtree(what_dir)
 
     return None
 

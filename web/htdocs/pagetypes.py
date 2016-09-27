@@ -738,7 +738,7 @@ class Overridable(Base):
             if page.owner() == owner:
                 save_dict[page.name()] = page.internal_representation()
 
-        config.save_user_file('user_%ss' % self.type_name(), save_dict, user=owner)
+        config.save_user_file('user_%ss' % self.type_name(), save_dict, owner)
 
 
     @classmethod

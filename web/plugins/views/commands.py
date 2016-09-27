@@ -825,12 +825,12 @@ def command_star(cmdtag, spec, row):
 
 def command_executor_star(command, site):
     foo, star, spec = command.split(";", 2)
-    stars = config.load_stars()
+    stars = config.user.load_stars()
     if star == "0" and spec in stars:
         stars.remove(spec)
     elif star == "1":
         stars.add(spec)
-    config.save_stars(stars)
+    config.user.save_stars(stars)
 
 config.declare_permission("action.star",
     _("Use favorites"),

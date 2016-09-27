@@ -1294,7 +1294,7 @@ pagetypes.declare(BookmarkList)
 
 
 def load_legacy_bookmarks():
-    path = config.user_confdir + "/bookmarks.mk"
+    path = config.user.confdir + "/bookmarks.mk"
     return store.load_data_from_file(path, [])
 
 
@@ -1428,7 +1428,7 @@ div.bookmark {
 #   '----------------------------------------------------------------------'
 
 def render_custom_links():
-    links = config.custom_links.get(config.user_baserole_id)
+    links = config.custom_links.get(config.user.baserole_id)
     if not links:
         html.write((_("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.") %
                   (cmk.paths.default_config_dir + "/multisite.mk")) + "\n")

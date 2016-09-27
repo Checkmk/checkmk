@@ -4665,7 +4665,7 @@ def prepare_git_commit():
 
 
 def do_git_commit():
-    author = shell_quote("%s <%s>" % (config.user_id, config.user_email))
+    author = shell_quote("%s <%s>" % (config.user.id, config.user.email))
     git_dir = cmk.paths.default_config_dir + "/.git"
     if not os.path.exists(git_dir):
         git_command(["init"])

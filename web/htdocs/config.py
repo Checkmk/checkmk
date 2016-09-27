@@ -29,11 +29,6 @@ import i18n
 from lib import *
 import cmk.paths
 
-# FIXME: Make clear whether or not user related values should be part
-# of the "config" module. Maybe move to dedicated module (userdb?). Then
-# move all user related stuff there. e.g. html.user should also be moved
-# there.
-
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
 #   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
@@ -45,12 +40,8 @@ import cmk.paths
 #   |  Declarations of global variables and constants                      |
 #   '----------------------------------------------------------------------'
 
-
-user = None
-user_id = None
-user_confdir = None
-builtin_role_ids = [ "user", "admin", "guest" ] # hard coded in various permissions
-user_role_ids = []
+# hard coded in various permissions
+builtin_role_ids = [ "user", "admin", "guest" ]
 
 # Base directory of dynamic configuration
 config_dir = cmk.paths.var_dir + "/web"
@@ -98,6 +89,12 @@ aggregation_functions = {}
 #   |  Helper functions for config parsing, login, etc.                    |
 #   '----------------------------------------------------------------------'
 
+
+def initialize():
+    clear_user_login()
+    load_config()
+
+
 # Read in a multisite.d/*.mk file
 def include(filename):
     if not filename.startswith("/"):
@@ -111,8 +108,6 @@ def include(filename):
         execfile(filename, globals(), globals())
         modification_timestamps.append(lm)
     except Exception, e:
-        global user_id
-        user_id = "nobody"
         raise MKConfigError(_("Cannot read configuration file %s: %s:") % (filename, e))
 
 # Load multisite.mk and all files in multisite.d/. This will happen
@@ -161,6 +156,17 @@ def reporting_available():
         return False
 
 
+def hide_language(lang):
+    return lang in hide_languages
+
+
+def get_language(default=None):
+    if default == None:
+        return default_language
+    else:
+        return default
+
+
 #.
 #   .--Permissions---------------------------------------------------------.
 #   |        ____                     _         _                          |
@@ -170,11 +176,16 @@ def reporting_available():
 #   |       |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/         |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |  Handling of users, permissions and roles                            |
+#   | Declarations of permissions and roles                                |
 #   '----------------------------------------------------------------------'
 
 def declare_permission(name, title, description, defaults):
-    perm = { "name" : name, "title" : title, "description" : description, "defaults" : defaults }
+    perm = {
+        "name"        : name,
+        "title"       : title,
+        "description" : description,
+        "defaults"    : defaults,
+    }
 
     # Detect if this permission has already been declared before
     # The dict value is replaced automatically but the list value
@@ -192,10 +203,12 @@ def declare_permission(name, title, description, defaults):
 
     permissions_by_name[name] = perm
 
+
 def declare_permission_section(name, title, prio = 0, do_sort = False):
     # Prio can be a number which is used for sorting. Higher numbers will
     # be listed first, e.g. in the edit dialogs
     permission_sections[name] = (prio, title, do_sort)
+
 
 # Some module have a non-fixed list of permissions. For example for
 # each user defined view there is also a permission. This list is
@@ -206,158 +219,37 @@ def declare_permission_section(name, title, prio = 0, do_sort = False):
 def declare_dynamic_permissions(func):
     permission_declaration_functions.append(func)
 
+
 # This function needs to be called by all code that needs access
 # to possible dynamic permissions
 def load_dynamic_permissions():
     for func in permission_declaration_functions:
         func()
 
-# Compute permissions for HTTP user and set in
-# global variables. Also store user.
-def login(u):
-    global user_id
-    user_id = u
 
-    # Determine the roles of the user. If the user is listed in
-    # users, admin_users or guest_users in multisite.mk then we
-    # give him the according roles. If the user has an explicit
-    # profile in multisite_users (e.g. due to WATO), we rather
-    # use that profile. Remaining (unknown) users get the default_user_role.
-    # That can be set to None -> User has no permissions at all.
-    global user_role_ids
-    user_role_ids = roles_of_user(user_id)
-
-    # Get base roles (admin/user/guest)
-    global user_baserole_ids
-    user_baserole_ids = base_roles_of(user_role_ids)
-
-    # Get best base roles and use as "the" role of the user
-    global user_baserole_id
-    if "admin" in user_baserole_ids:
-        user_baserole_id = "admin"
-    elif "user" in user_baserole_ids:
-        user_baserole_id = "user"
-    else:
-        user_baserole_id = "guest"
-
-    # Prepare user object
-    global user, user_alias, user_email
-    if u in multisite_users:
-        user = multisite_users[u]
-        user_alias = user.get("alias", user_id)
-        user_email = user.get("email", user_id)
-    else:
-        user = { "roles" : user_role_ids }
-        user_alias = user_id
-        user_email = user_id
-
-    # Prepare cache of already computed permissions
-    global user_permissions
-    user_permissions = {}
-
-    # Make sure, admin can restore permissions in any case!
-    if user_id in admin_users:
-        user_permissions["general.use"] = True # use Multisite
-        user_permissions["wato.use"]    = True # enter WATO
-        user_permissions["wato.edit"]   = True # make changes in WATO...
-        user_permissions["wato.users"]  = True # ... with access to user management
-
-    # Prepare users' own configuration directory
-    set_user_confdir(user_id)
-
-    # load current on/off-switching states of sites
-    read_site_config()
-
-# Login a user that has all permissions. This is needed for making
-# Livestatus queries from unauthentiated page handlers
-def login_super_user():
-    global user_id
-    user_id = None
-
-    global user_role_ids
-    user_role_ids = [ "admin" ]
-
-    global user_baserole_ids
-    user_baserole_ids = [ "admin" ]
-
-    global user_baserole_id
-    user_baserole_id = "admin"
-
-    # Prepare user object
-    global user, user_alias, user_email
-    user = { "roles" : "admin" }
-    user_alias = "Superuser for unauthenticated pages"
-    user_email = "admin"
-
-    # Prepare cache of already computed permissions
-    global user_permissions
-    user_permissions = {}
-
-    # All sites are enabled
-    global user_siteconf
-    user_siteconf = {}
-
-def set_user_confdir(user_id):
-    global user_confdir
-    user_confdir = config_dir + "/" + user_id.encode("utf-8")
-    make_nagios_directory(user_confdir)
-
-def get_language(default = None):
-    if user and "language" in user:
-        return user["language"]
-    elif default == None:
-        return default_language
-    else:
-        return default
-
-def hide_language(lang):
-    return lang in hide_languages
-
-def roles_of_user(user):
-    if user in multisite_users:
-        return existing_role_ids(multisite_users[user]["roles"])
-    elif user in admin_users:
-        return [ "admin" ]
-    elif user in guest_users:
-        return [ "guest" ]
-    elif users != None and user in users:
-        return [ "user" ]
-    elif os.path.exists(config_dir + "/" + user.encode("utf-8") + "/automation.secret"):
-        return [ "guest" ] # unknown user with automation account
-    elif 'roles' in default_user_profile:
-        return existing_role_ids(default_user_profile['roles'])
-    elif default_user_role:
-        return existing_role_ids([ default_user_role ])
-    else:
-        return []
+def permission_exists(pname):
+    return pname in permissions_by_name
 
 
-def existing_role_ids(role_ids):
-    return [
-        role_id for role_id in role_ids
-        if role_id in roles
-    ]
+def get_role_permissions():
+    role_permissions = {}
+    # Loop all permissions
+    # and for each permission loop all roles
+    # and check wether it has the permission or not
+
+    roleids = roles.keys()
+    for perm in permissions_by_order:
+        for role_id in roleids:
+            if not role_id in role_permissions:
+                role_permissions[role_id] = []
+
+            if _may_with_roles([role_id], perm['name']):
+                role_permissions[role_id].append(perm['name'])
+    return role_permissions
 
 
-def alias_of_user(user):
-    if user in multisite_users:
-        return multisite_users[user].get("alias", user)
-    else:
-        return user
-
-
-def base_roles_of(some_roles):
-    base_roles = set([])
-    for r in some_roles:
-        if r in builtin_role_ids:
-            base_roles.add(r)
-        else:
-            base_roles.add(roles[r]["basedon"])
-    return list(base_roles)
-
-
-def may_with_roles(some_role_ids, pname):
-    # If at least one of the user's roles has this permission, it's fine
+def _may_with_roles(some_role_ids, pname):
+    # If at least one of the given roles has this permission, it's fine
     for role_id in some_role_ids:
         role = roles[role_id]
 
@@ -381,87 +273,263 @@ def may_with_roles(some_role_ids, pname):
     return False
 
 
-def may(pname):
-    global user_permissions
-    if pname in user_permissions:
-        return user_permissions[pname]
-    he_may = may_with_roles(user_role_ids, pname)
-    user_permissions[pname] = he_may
-    return he_may
 
-def user_may(user_id, pname):
-    return may_with_roles(roles_of_user(user_id), pname)
+#.
+#   .--User Login----------------------------------------------------------.
+#   |           _   _                 _                _                   |
+#   |          | | | |___  ___ _ __  | |    ___   __ _(_)_ __              |
+#   |          | | | / __|/ _ \ '__| | |   / _ \ / _` | | '_ \             |
+#   |          | |_| \__ \  __/ |    | |__| (_) | (_| | | | | |            |
+#   |           \___/|___/\___|_|    |_____\___/ \__, |_|_| |_|            |
+#   |                                            |___/                     |
+#   +----------------------------------------------------------------------+
+#   | Managing the currently logged in user                                |
+#   '----------------------------------------------------------------------'
+# TODO: Shouldn't this be moved to e.g. login.py or userdb.py?
 
-def need_permission(pname):
-    if not may(pname):
-        perm = permissions_by_name[pname]
-        raise MKAuthException(_("We are sorry, but you lack the permission "
-                              "for this operation. If you do not like this "
-                              "then please ask you administrator to provide you with "
-                              "the following permission: '<b>%s</b>'.") % perm["title"])
+# TODO: replace config.may(...) with config.user.may(...)
+# TODO: replace config.need_permission(...) with config.user.need_permission(...)
+# TODO: replace config.load_user_file(...) with config.user.load_file(...)
 
-def permission_exists(pname):
-    return pname in permissions_by_name
+# This holds the currently logged in user object or is set to none, when the
+# user is currently not yet logged in.
+user = None
 
-def get_role_permissions():
-    role_permissions = {}
-    # Loop all permissions
-    # and for each permission loop all roles
-    # and check wether it has the permission or not
+# This objects intention is currently only to handle the currently logged in user after authentication.
+# But maybe this can be used for managing all user objects in future.
+class LoggedInUser(object):
+    def __init__(self, user_id):
+        self.id = user_id
 
-    roleids = roles.keys()
-    for perm in permissions_by_order:
-        for role_id in roleids:
-            if not role_id in role_permissions:
-                role_permissions[role_id] = []
+        self._load_roles()
+        self._load_attributes()
+        self._load_permissions()
+        self._load_confdir()
 
-            if may_with_roles([role_id], perm['name']):
-                role_permissions[role_id].append(perm['name'])
-    return role_permissions
+    # TODO: Clean up that baserole_* stuff?
+    def _load_roles(self):
+        # Determine the roles of the user. If the user is listed in
+        # users, admin_users or guest_users in multisite.mk then we
+        # give him the according roles. If the user has an explicit
+        # profile in multisite_users (e.g. due to WATO), we rather
+        # use that profile. Remaining (unknown) users get the default_user_role.
+        # That can be set to None -> User has no permissions at all.
+        self.role_ids = roles_of_user(self.id)
 
+        # Get base roles (admin/user/guest)
+        self._load_base_roles()
 
-def load_stars():
-    return set(load_user_file("favorites", []))
-
-def save_stars(stars):
-    save_user_file("favorites", list(stars))
-
-
-# Helper functions
-def load_user_file(name, deflt, lock = False):
-    # In some early error during login phase there are cases where it might
-    # happen that a user file is requested byt the user_confdir is not yet
-    # set. We have all information to set it, then do it.
-    if user_confdir == None:
-        if user_id:
-            set_user_confdir(user_id)
+        # Get best base roles and use as "the" role of the user
+        if "admin" in self.baserole_ids:
+            self.baserole_id = "admin"
+        elif "user" in self.baserole_ids:
+            self.baserole_id = "user"
         else:
+            self.baserole_id = "guest"
+
+
+    def _load_base_roles(self):
+        base_roles = set([])
+        for r in self.role_ids:
+            if r in builtin_role_ids:
+                base_roles.add(r)
+            else:
+                base_roles.add(roles[r]["basedon"])
+
+        self.baserole_ids = list(base_roles)
+
+
+    def _load_attributes(self):
+        if u in multisite_users:
+            self.attributes = multisite_users[u]
+        else:
+            self.attributes = {
+                "roles" : self.role_ids,
+            }
+
+        self.alias = self.attributes.get("alias", self.id)
+        self.email = self.attributes.get("email", self.id)
+
+
+    def _load_permissions(self):
+        # Prepare cache of already computed permissions
+        # Make sure, admin can restore permissions in any case!
+        if self.id in admin_users:
+            self.permissions = {
+                "general.use" : True, # use Multisite
+                "wato.use"    : True, # enter WATO
+                "wato.edit"   : True, # make changes in WATO...
+                "wato.users"  : True, # ... with access to user management
+            }
+        else:
+            self.permissions = {}
+
+
+    def _load_confdir(self):
+        self.confdir = config_dir + "/" + self.id.encode("utf-8")
+        make_nagios_directory(self.confdir)
+
+
+    def _load_site_config(self):
+        self.siteconf = self.load_file("siteconfig", {})
+
+
+    def save_site_config(self):
+        self.save_file("siteconfig", self.siteconf)
+
+
+    def language(self, default=None):
+        if "language" in self.attributes:
+            return self.attributes["language"]
+
+        else:
+            return get_language(default)
+
+
+    def load_stars(self):
+        return set(self.load_file("favorites", []))
+
+
+    def save_stars(self, stars):
+        self.save_file("favorites", list(stars))
+
+
+    def may(self, pname):
+        if pname in self.permissions:
+            return self.permissions[pname]
+        he_may = _may_with_roles(user.role_ids, pname)
+        self.permissions[pname] = he_may
+        return he_may
+
+
+    def need_permission(self, pname):
+        if not self.may(pname):
+            perm = permissions_by_name[pname]
+            raise MKAuthException(_("We are sorry, but you lack the permission "
+                                  "for this operation. If you do not like this "
+                                  "then please ask you administrator to provide you with "
+                                  "the following permission: '<b>%s</b>'.") % perm["title"])
+
+
+    def load_file(self, name, deflt, lock=False):
+        # In some early error during login phase there are cases where it might
+        # happen that a user file is requested but the user is not yet
+        # set. We have all information to set it, then do it.
+        if not user:
             return deflt # No user known at this point of time
 
-    path = user_confdir + "/" + name + ".mk"
-    return store.load_data_from_file(path, deflt, lock)
+        path = self.confdir + "/" + name + ".mk"
+        return store.load_data_from_file(path, deflt, lock)
 
 
-def save_user_file(name, data, user=None):
-    if user == None:
-        user = user_id
+    def save_file(self, name, content, unlock=False):
+        save_user_file(name, content, self.id, unlock)
+
+
+    def file_modified(self, name):
+        if self.confdir == None:
+            return 0
+
+        try:
+            return os.stat(self.confdir + "/" + name + ".mk").st_mtime
+        except OSError, e:
+            if e.errno == errno.ENOENT:
+                return 0
+            else:
+                raise
+
+
+
+# Login a user that has all permissions. This is needed for making
+# Livestatus queries from unauthentiated page handlers
+# TODO: Can we somehow get rid of this?
+class LoggedInSuperUser(LoggedInUser):
+    def __init__(self):
+        self.id = None
+        self.role_ids = [ "admin" ]
+        self.baserole_ids = [ "admin" ]
+        self.baserole_id = "admin"
+        self.attributes = { "roles" : "admin" }
+        self.alias = "Superuser for unauthenticated pages"
+        self.email = "admin"
+        self.permissions = {}
+        self.siteconf = {}
+
+
+
+def clear_user_login():
+    # TODO: Do we need some "null" user here to make the using code clearer?
+    _set_user(None)
+
+
+def set_user_by_id(user_id):
+    _set_user(LoggedInUser(user_id))
+
+
+def set_super_user():
+    _set_user(LoggedInSuperUser())
+
+
+def _set_user(_user):
+    global user
+    user = _user
+
+#.
+#   .--User Handling-------------------------------------------------------.
+#   |    _   _                 _   _                 _ _ _                 |
+#   |   | | | |___  ___ _ __  | | | | __ _ _ __   __| | (_)_ __   __ _     |
+#   |   | | | / __|/ _ \ '__| | |_| |/ _` | '_ \ / _` | | | '_ \ / _` |    |
+#   |   | |_| \__ \  __/ |    |  _  | (_| | | | | (_| | | | | | | (_| |    |
+#   |    \___/|___/\___|_|    |_| |_|\__,_|_| |_|\__,_|_|_|_| |_|\__, |    |
+#   |                                                            |___/     |
+#   +----------------------------------------------------------------------+
+#   | General user handling of all users, not only the currently logged in |
+#   '----------------------------------------------------------------------'
+# TODO: This should be moved to userdb.py module
+
+def roles_of_user(user_id):
+    def existing_role_ids(role_ids):
+        return [
+            role_id for role_id in role_ids
+            if role_id in roles
+        ]
+
+    if user_id in multisite_users:
+        return existing_role_ids(multisite_users[user_id]["roles"])
+    elif user_id in admin_users:
+        return [ "admin" ]
+    elif user_id in guest_users:
+        return [ "guest" ]
+    elif users != None and user_id in users:
+        return [ "user" ]
+    elif os.path.exists(config_dir + "/" + user_id.encode("utf-8") + "/automation.secret"):
+        return [ "guest" ] # unknown user with automation account
+    elif 'roles' in default_user_profile:
+        return existing_role_ids(default_user_profile['roles'])
+    elif default_user_role:
+        return existing_role_ids([ default_user_role ])
+    else:
+        return []
+
+
+def alias_of_user(user_id):
+    if user_id in multisite_users:
+        return multisite_users[user_id].get("alias", user_id)
+    else:
+        return user_id
+
+
+def user_may(user_id, pname):
+    return _may_with_roles(roles_of_user(user_id), pname)
+
+
+# TODO: Check all calls for arguments (changed optional user to 3rd positional)
+def save_user_file(name, content, user, unlock=False):
     dirname = config_dir + "/" + user.encode("utf-8")
     make_nagios_directory(dirname)
     path = dirname + "/" + name + ".mk"
     store.save_data_to_file(path, data)
 
-
-def user_file_modified(name):
-    if user_confdir == None:
-        return 0
-
-    try:
-        return os.stat(user_confdir + "/" + name + ".mk").st_mtime
-    except OSError, e:
-        if e.errno == errno.ENOENT:
-            return 0
-        else:
-            raise
 
 #.
 #   .--Sites---------------------------------------------------------------.
@@ -561,13 +629,6 @@ def is_single_local_site():
         # Also use Multisite mode if the one and only site is not local
         sitename = sites.keys()[0]
         return site_is_local(sitename)
-
-def read_site_config():
-    global user_siteconf
-    user_siteconf = load_user_file("siteconfig", {})
-
-def save_site_config():
-    save_user_file("siteconfig", user_siteconf)
 
 #.
 #   .--Plugins-------------------------------------------------------------.

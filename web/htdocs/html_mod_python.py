@@ -210,10 +210,10 @@ class html_mod_python(htmllib.html):
 
     def top_heading(self, title):
         if self.is_logged_in():
-            login_text = "<b>%s</b> (%s" % (config.user_id, "+".join(config.user_role_ids))
+            login_text = "<b>%s</b> (%s" % (config.user.id, "+".join(config.user.role_ids))
             if self.enable_debug:
-                if config.get_language():
-                    login_text += "/%s" % config.get_language()
+                if config.user.language():
+                    login_text += "/%s" % config.user.language()
             login_text += ')'
         else:
             login_text = _("not logged in")

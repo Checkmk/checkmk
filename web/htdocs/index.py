@@ -48,7 +48,7 @@ def handler(mod_python_req, fields = None, is_profiling = False):
 
     response_code = apache.OK
     try:
-        config.load_config() # load multisite.mk etc.
+        config.initialize()
         init_profiling(is_profiling)
         html.init_modes()
 
@@ -85,7 +85,7 @@ def handler(mod_python_req, fields = None, is_profiling = False):
         # language settings stored in the user profile after the user
         # has been initialized
         previous_language = i18n.get_current_language()
-        i18n.localize(html.var("lang", config.get_language()))
+        i18n.localize(html.var("lang", config.user.language()))
 
         # All plugins might have to be reloaded due to a language change. Only trigger
         # a second plugin loading when the user is really using a custom localized GUI.
@@ -180,8 +180,8 @@ def ensure_general_access():
     reason = [ _("You are not authorized to use the Check_MK GUI. Sorry. "
                "You are logged in as <b>%s</b>.") % config.user_id ]
 
-    if len(config.user_role_ids):
-        reason.append(_("Your roles are <b>%s</b>.") % ", ".join(config.user_role_ids))
+    if config.user.role_ids:
+        reason.append(_("Your roles are <b>%s</b>.") % ", ".join(config.user.role_ids))
     else:
         reason.append(_("<b>You do not have any roles.</b>"))
 

@@ -9655,7 +9655,7 @@ def page_automation():
     # into the page handler we always want to have a user context initialized to keep
     # the code free from special cases (if no user logged in, then...). So fake the
     # logged in user here.
-    config.login_super_user()
+    config.set_super_user()
 
     # To prevent mixups in written files we use the same lock here as for
     # the normal WATO page processing. This might not be needed for some
@@ -14021,7 +14021,7 @@ def page_user_profile(change_pw=False):
                             del config.user['language']
 
                     # load the new language
-                    i18n.localize(config.get_language())
+                    i18n.localize(config.user.language())
                     multisite_modules.load_all_plugins()
 
                     user = users.get(config.user_id)
@@ -15809,7 +15809,7 @@ def execute_network_scan_job():
         return # Nothing to do.
 
     # We need to have the context of the user. The jobs are executed when
-    # config.login() has not been executed yet. So there is no user context
+    # config.set_user_by_id() has not been executed yet. So there is no user context
     # available. Use the run_as attribute from the job config and revert
     # the previous state after completion.
     old_user = config.user_id
@@ -15817,7 +15817,7 @@ def execute_network_scan_job():
     if not userdb.user_exists(run_as):
         raise MKGeneralException(_("The user %s used by the network "
             "scan of the folder %s does not exist.") % (run_as, folder.title()))
-    config.login(folder.attribute("network_scan")["run_as"])
+    config.set_user_by_id(folder.attribute("network_scan")["run_as"])
 
     result = {
         "start"  : time.time(),
@@ -15859,7 +15859,7 @@ def execute_network_scan_job():
     save_network_scan_result(folder, result)
 
     if old_user:
-        config.login(old_user)
+        config.set_user(old_user)
 
 
 # Find the folder which network scan is longest waiting and return the
@@ -16599,7 +16599,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                        json.dumps(dependency_mapping_tags),
                        json.dumps(dependency_mapping_roles),
                        json.dumps(volatile_topics),
-                       json.dumps(config.user_role_ids),
+                       json.dumps(config.user.role_ids),
                        json.dumps(hide_attributes)))
 
 

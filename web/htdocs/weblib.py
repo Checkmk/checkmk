@@ -65,7 +65,7 @@ def cleanup_old_selections():
     # Loop all selection files and compare the last modification time with
     # the current time and delete the selection file when it is older than
     # the livetime.
-    path = config.user_confdir + '/rowselection'
+    path = config.user.confdir + '/rowselection'
     try:
         for f in os.listdir(path):
             if f[1] != '.' and f.endswith('.mk'):
@@ -110,8 +110,8 @@ def set_rowselection(ident, rows, action):
     elif action == 'unset':
         del vo[ident]
 
-    if not os.path.exists(config.user_confdir + '/rowselection'):
-        make_nagios_directory(config.user_confdir + '/rowselection')
+    if not os.path.exists(config.user.confdir + '/rowselection'):
+        make_nagios_directory(config.user.confdir + '/rowselection')
 
     config.save_user_file("rowselection/%s" % selection_id(), vo, True)
 

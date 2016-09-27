@@ -66,7 +66,7 @@ def login(_user_id):
     user_id = _user_id
 
     html.set_user_id(user_id)
-    config.login(user_id)
+    config.set_user_by_id(_user_id)
 
 
 def is_logged_in():

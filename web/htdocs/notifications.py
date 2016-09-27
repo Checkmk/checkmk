@@ -55,7 +55,7 @@ def save_acknowledgements():
 
 def acknowledged_time():
     if g_acknowledgement_time.get(config.user_id) is None or\
-            config.user_file_modified("acknowledged_notifications") > g_modified_time:
+            config.user.file_modified("acknowledged_notifications") > g_modified_time:
         load_acknowledgements()
     return g_acknowledgement_time[config.user_id]
 

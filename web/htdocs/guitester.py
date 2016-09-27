@@ -108,7 +108,7 @@ class GUITester:
 
 
     def guitest_fake_login(self, user_id):
-        config.login(user_id)
+        config.set_user_by_id(user_id)
         self.user = user_id
 
 

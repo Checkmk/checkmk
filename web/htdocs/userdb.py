@@ -888,6 +888,7 @@ def contactgroups_of_user(user_id):
 def convert_idle_timeout(value):
     return value != "False" and int(value) or False
 
+
 #.
 #   .-Roles----------------------------------------------------------------.
 #   |                       ____       _                                   |

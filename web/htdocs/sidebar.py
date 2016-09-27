@@ -125,7 +125,7 @@ def heading(text):
 # old format (just a snapin list) to the new format
 # (dictionary) on the fly
 def load_user_config():
-    path = config.user_confdir + "/sidebar.mk"
+    path = config.user.confdir + "/sidebar.mk"
     user_config = store.load_data_from_file(path)
     if user_config == None:
         user_config = {
@@ -617,10 +617,10 @@ def ajax_switch_site():
             if sitename not in config.sitenames():
                 continue
 
-            d = config.user_siteconf.get(sitename, {})
+            d = config.user.siteconf.get(sitename, {})
             d["disabled"] = onoff != "on"
-            config.user_siteconf[sitename] = d
-        config.save_site_config()
+            config.user.siteconf[sitename] = d
+        config.user.save_site_config()
 
 
 #.

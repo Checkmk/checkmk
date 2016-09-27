@@ -140,7 +140,7 @@ def _get_enabled_and_disabled_sites():
     enabled_sites, disabled_sites = {}, {}
 
     for site_id, site in config.allsites().items():
-        siteconf = config.user_siteconf.get(site_id, {})
+        siteconf = config.user.siteconf.get(site_id, {})
         if siteconf.get("disabled", False):
             disabled_sites[site_id] = site
         else:

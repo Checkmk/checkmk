@@ -213,6 +213,13 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
     pred_file = "%s/%s" % (dir, timegroup)
     info_file = pred_file + ".info"
 
+    # In previous versions it could happen that the files were created with 0 bytes of size
+    # which was never handled correctly so that the prediction could never be used again until
+    # manual removal of the files. Clean this up.
+    for file_path in [ pred_file, info_file ]:
+        if os.stat(file_path).st_size == 0:
+            os.unlink(file_path)
+
     # Check, if we need to (re-)compute the prediction file. This is
     # the case if:
     # - no prediction has been done yet for this time group

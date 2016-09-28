@@ -1,0 +1,9 @@
+Title: Now inventory shows age of sections provided by check_mk_agent
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.4.0i1
+Date: 1475052515
+Class: feature
+
+

@@ -292,6 +292,8 @@ def do_inv_for(hostname):
         else:
             inv_function(info)
 
+    extend_tree_with_check_mk_inventory_info(hostname)
+
     # Remove empty paths
     inv_cleanup_tree(g_inv_tree)
     old_timestamp = save_inv_tree(hostname)
@@ -302,6 +304,44 @@ def do_inv_for(hostname):
 
     run_inv_export_hooks(hostname, g_inv_tree)
     return g_inv_tree, old_timestamp
+
+
+def extend_tree_with_check_mk_inventory_info(hostname):
+    persisted_file = cmk.paths.omd_root + "/var/check_mk/persisted/%s" % hostname
+    try:
+        persisted_data = eval(file(persisted_file).read()).items()
+
+    except IOError, e:
+        if e.errno == 2: # IOError: [Errno 2] No such file or directory
+            return
+        else:
+            raise
+
+    except Exception, e:
+        raise MKGeneralException(_("Cannot parse persisted file of %s: %s") % (hostname, e))
+
+    add_check_mk_inventory_info_to_tree(persisted_data)
+    if opt_verbose:
+        sys.stdout.write(tty.green + tty.bold + "check_mk_sections" + " " + tty.normal)
+        sys.stdout.flush()
+
+
+def add_check_mk_inventory_info_to_tree(persisted_data):
+    node = inv_tree_list("software.applications.check_mk.inventory.sections:")
+    section_ages = []
+    for section, sectiondata in persisted_data:
+        when, until, info = sectiondata
+        section_ages.append(when)
+
+        node.append({
+            "section" : section,
+            "age"     : when,
+            "until"   : until,
+        })
+
+    node = inv_tree("software.applications.check_mk.inventory.")
+    node["oldest_section"] = min(section_ages)
+
 
 def get_inv_params(hostname, info_type):
     return host_extra_conf_merged(hostname, inv_parameters.get(info_type, []))

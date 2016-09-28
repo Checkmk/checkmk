@@ -512,9 +512,16 @@ def inv_paint_volt(volt):
     else:
         return "", ""
 
-def inv_paint_date(stamp):
-    if stamp:
-        date_painted = time.strftime("%Y-%m-%d", time.localtime(stamp))
+def inv_paint_date(timestamp):
+    if timestamp:
+        date_painted = time.strftime("%Y-%m-%d", time.localtime(timestamp))
+        return "date", "%s" % date_painted
+    else:
+        return "", ""
+
+def inv_paint_date_and_time(timestamp):
+    if timestamp:
+        date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
         return "date", "%s" % date_painted
     else:
         return "", ""
@@ -691,7 +698,17 @@ inventory_displayhints.update({
     ".software.packages:*.size"                        : { "title" : _("Size"), "paint" : "count" },
     ".software.packages:*.path"                        : { "title" : _("Path"), },
 
-    "software.applications."                           : { "title" : _("Applications"), },
+    ".software.applications."                          : { "title" : _("Applications"), },
+
+    ".software.applications.check_mk."                         : { "title" : _("Check_MK"), },
+    ".software.applications.check_mk.inventory."               : { "title" : _("Hardware/Software Inventory"), },
+    ".software.applications.check_mk.inventory.oldest_section" : { "title" : _("Oldest agent section"), "paint" : "timestamp_as_age" },
+    ".software.applications.check_mk.inventory.sections:"      : { "title"    : _("Agent sections"),
+                                                                  "render"   : render_inv_dicttable,
+                                                                  "keyorder" : [ "section", "age", "until" ] },
+    ".software.applications.check_mk.inventory.sections:*.section" : { "title" : _("Section") },
+    ".software.applications.check_mk.inventory.sections:*.age"     : { "title" : _("Age"), "paint" : "timestamp_as_age" },
+    ".software.applications.check_mk.inventory.sections:*.until"   : { "title" : _("Valid until"), "paint" : "date_and_time" },
 
     ".software.applications.citrix."                              : { "title" : _("Citrix") },
     ".software.applications.citrix.controller."                   : { "title" : _("Controller") },

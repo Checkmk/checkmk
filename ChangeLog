@@ -731,6 +731,7 @@
     * 3585 Implemented API for exporting the full host inventory...
     * 3591 mssql_clusters: Added information about nodes to MSSQL instance inventory
     * 3550 HW/SW inventory: Now able to raise an alert when SW packages info is missing...
+    * 3904 Now inventory shows age of sections provided by check_mk_agent
     * 3219 FIX: lnx_distro: Now detecting Oracle VM Server correctly
     * 3229 FIX: lnx_distro: SLES based systems have now an OS name inventorized\
     * 3265 FIX: mk_inventory.solaris: fix problem on Solaris 10, do prtdiag and prtpicl only in global zone

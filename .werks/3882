@@ -1,0 +1,10 @@
+Title: mk_inventory.linux: fixed wrong graphic card section name
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1475046348
+
+

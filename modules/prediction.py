@@ -222,18 +222,15 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
         last_info = eval(file(info_file).read())
         for k, v in params.items():
             if last_info.get(k) != v:
-                if opt_debug:
-                    sys.stderr.write("Prediction parameters have changed.\n")
+                verbose("Prediction parameters have changed")
                 last_info = None
                 break
     except IOError:
-        if opt_debug:
-            sys.stderr.write("No previous prediction for group %s available.\n" % timegroup)
+        verbose("No previous prediction for group %s available." % timegroup)
         last_info = None
 
     if last_info and last_info["time"] + period_info["valid"] * period_info["slice"] < now:
-        if opt_debug:
-            sys.stderr.write("Prediction of %s outdated.\n" % timegroup)
+        verbose("Prediction of %s outdated" % timegroup)
         last_info = None
 
     if last_info:
@@ -249,16 +246,15 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
                 try:
                     info = eval(file(dir + "/" + f).read())
                     if info["period"] != params["period"]:
-                        if opt_debug:
-                            sys.stderr.write("Removing obsolete prediction %s\n" % f[:-5])
+                        verbose("Removing obsolete prediction %s" % f[:-5])
                         os.remove(dir + "/" + f)
                         os.remove(dir + "/" + f[:-5])
                 except:
                     pass
 
-        if opt_debug:
-            sys.stderr.write("Computing prediction for time group %s.\n" % timegroup)
+        verbose("Computing prediction for time group %s" % timegroup)
         prediction = compute_prediction(pred_file, timegroup, params, period_info, from_time, dsname, cf)
+
         info = {
             "time"         : now,
             "range"        : (from_time, until_time),
@@ -267,6 +263,7 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
             "slice"        : period_info["slice"],
         }
         info.update(params)
+
         file(info_file, "w").write("%r\n" % info)
         file(pred_file, "w").write("%r\n" % prediction)
 
@@ -302,8 +299,6 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
             else:
                 levels.append((None, None))
 
-
-    # print levels
     return ref_value, levels
 
 

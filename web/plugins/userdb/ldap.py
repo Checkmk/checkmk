@@ -1308,7 +1308,7 @@ def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_c
         if user_cmp_val in group['members']:
             group_cns.append(group['cn'])
 
-    return group_cns
+    return sorted(group_cns)
 
 
 group_membership_parameters = [

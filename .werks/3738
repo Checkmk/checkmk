@@ -1,0 +1,13 @@
+Title: Fixed sporadic pending changes due to (not) changed contact groups
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1475091791
+
+The LDAP connector sometimes creates pending changes because of changed
+contact groups. But the groups have not really changed. Just the order
+of the groups in the answer from the LDAP server has changed. This
+has been fixed.

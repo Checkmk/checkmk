@@ -154,7 +154,7 @@ class Base(object):
         # with more than one topic
         parameters = []
         for topic, elements in sorted_topics:
-            for order, key, vs in elements:
+            for _unused_order, key, vs in elements:
                 parameters.append((key, vs))
 
         return parameters

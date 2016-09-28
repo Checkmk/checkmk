@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import time
+import traceback
 from lib import *
 import cmk.paths
 
@@ -53,7 +54,6 @@ def load_plugins(force):
 # There is no output written to the user in regular cases. Exceptions
 # are written to the web log.
 def page_run_cron():
-    now = time.time()
     # Prevent cron jobs from being run too often, also we need
     # locking in order to prevent overlapping runs
     if os.path.exists(lock_file):
@@ -66,9 +66,8 @@ def page_run_cron():
     for cron_job in multisite_cronjobs:
         try:
             cron_job()
-        except Exception, e:
+        except Exception:
             html.write("An exception occured. Take a look at the web.log.\n")
-            import traceback
             logger(LOG_ERR, "Exception in cron_job [%s]:\n%s" %
                              (cron_job.__name__, traceback.format_exc()))
 

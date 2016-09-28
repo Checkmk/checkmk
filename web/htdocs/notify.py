@@ -317,12 +317,18 @@ def notify_mail(user_id, msg):
     else:
         raise MKInternalError(_('No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.'))
 
-    p = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, stdin=subprocess.PIPE,
+    try:
+        p = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT, stdin=subprocess.PIPE,
                          close_fds=True)
-    stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))
+    except OSError, e:
+        raise MKInternalError(_('Mail could not be delivered. '
+                                'Failed to execute command "%s": %s' % (" ".join(command), e)))
+
+    output = p.communicate(body.encode("utf-8"))[0]
     exitcode = p.returncode
     if exitcode != 0:
-        raise MKInternalError(_('Mail could not be delivered. Exit code of command is %r') % exitcode)
+        raise MKInternalError(_('Mail could not be delivered. Exit code of command is %r. '
+                                'Output is: %s') % (exitcode, output))
     else:
         return True

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import ast
 import pprint, tarfile
 
 import cmk.tty as tty
@@ -640,12 +641,4 @@ def all_package_names():
 
 
 def parse_package_info(python_string):
-    try:
-        # ast.literal_eval does not execute any code, just reads in passive
-        # data structures, so it is safe. But: not available on all supported
-        # Python versions
-        import ast
-    except:
-        return eval(python_string)
-
     return ast.literal_eval(python_string)

@@ -1,0 +1,13 @@
+Title: Predictive levels: Improved handling of broken prediction files (empty files)
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p12
+Date: 1475061250
+
+In previous versions it could happen that the predictive levels feature created empty
+(zero byte sized) files below var/check_mk/prediction which made the predictive levels
+not work anymore for the affected service. This situation is now being repaired
+automatically.

@@ -60,14 +60,20 @@ def page_graph():
     timegroups = []
     now = time.time()
     for f in os.listdir(dir):
-        if f.endswith(".info"):
-            tg_info = eval(file(dir + "/" + f).read())
-            tg_info["name"] = f[:-5]
-            timegroups.append(tg_info)
-            if tg_info["name"] == tg_name or \
-                (tg_name == None and now >= tg_info["range"][0] and now <= tg_info["range"][1]):
-                timegroup = tg_info
-                tg_name = tg_info["name"]
+        file_path = dir + "/" + f
+        if not f.endswith(".info"):
+            continue
+
+        if os.stat(file_path).st_size == 0:
+            continue
+
+        tg_info = eval(file(dir + "/" + f).read())
+        tg_info["name"] = f[:-5]
+        timegroups.append(tg_info)
+        if tg_info["name"] == tg_name or \
+            (tg_name == None and now >= tg_info["range"][0] and now <= tg_info["range"][1]):
+            timegroup = tg_info
+            tg_name = tg_info["name"]
 
     timegroups.sort(cmp = lambda a,b: cmp(a["range"][0], b["range"][0]))
 

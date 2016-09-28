@@ -24,6 +24,7 @@
 
     WATO:
     * 3881 FIX: fixed automation call 'delete piggyback host'
+    * 3738 FIX: Fixed sporadic pending changes due to (not) changed contact groups...
 
     Notifications:
     * 3860 FIX: EC condition: Fixed default value of rule id selection

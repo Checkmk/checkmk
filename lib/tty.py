@@ -97,6 +97,9 @@ def get_size():
         if e.errno == 25:
             # Inappropriate ioctl for device: Occurs when redirecting output
             pass
+        elif e.errno == 22:
+            # Invalid argument: Occurs e.g. when executing from cron
+            pass
         else:
             raise
 

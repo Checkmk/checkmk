@@ -46,6 +46,7 @@ import os, shutil, subprocess, base64, pickle, pwd
 import config, hooks, userdb, multitar
 import sites
 import traceback
+import ast
 from lib import *
 from valuespec import *
 
@@ -4808,10 +4809,11 @@ def rename_host_in_list(thelist, oldname, newname):
     return did_rename
 
 
+# TODO: Deprecate this legacy format with 1.4.0 or later?!
 def mk_eval(s):
     try:
-        if literal_eval and not config.wato_legacy_eval:
-            return literal_eval(base64.b64decode(s))
+        if not config.wato_legacy_eval:
+            return ast.literal_eval(base64.b64decode(s))
         else:
             return pickle.loads(base64.b64decode(s))
     except:
@@ -4819,7 +4821,7 @@ def mk_eval(s):
 
 
 def mk_repr(s):
-    if literal_eval and not config.wato_legacy_eval:
+    if not config.wato_legacy_eval:
         return base64.b64encode(repr(s))
     else:
         return base64.b64encode(pickle.dumps(s))

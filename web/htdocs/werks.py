@@ -205,7 +205,7 @@ def acknowledge_werks(werks):
 
 
 def save_acknowledgements(acknowledged_werks):
-    store.save_file(acknowledgement_path, "%r\n" % acknowledged_werks)
+    store.save_data_to_file(acknowledged_werks)
 
 
 def acknowledge_all_werks():
@@ -238,12 +238,7 @@ def load_werk(path):
 
 
 def load_acknowledgements():
-    if os.path.exists(acknowledgement_path):
-        content = file(acknowledgement_path).read().strip()
-        if content:
-            return literal_eval(file(acknowledgement_path).read())
-
-    return []
+    return store.load_data_from_file(acknowledgement_path, [])
 
 
 def unacknowledged_incompatible_werks():

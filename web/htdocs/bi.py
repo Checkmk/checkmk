@@ -1290,6 +1290,7 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
     # This is needed to allow cluster hosts (which have the nodes as parents) in the
     # host_aggregation construct.
     if fetch_parents:
+        # TODO: WTF? This code is not working as intended. parent_filter_txt is not used!
         parent_filter = []
         for row in rows:
             parent_filter += [ 'Filter: name = %s\n' % p for p in row["services_with_fullstate"] ]

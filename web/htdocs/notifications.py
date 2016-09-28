@@ -46,9 +46,13 @@ def acknowledge_failed_notifications(timestamp):
     g_acknowledgement_time[config.user_id] = timestamp
     save_acknowledgements()
 
+def set_modified_time():
+    global g_modified_time
+    g_modified_time = time.time()
+
 def save_acknowledgements():
     config.save_user_file("acknowledged_notifications", int(g_acknowledgement_time[config.user_id]))
-    g_modified_time = time.time()
+    set_modified_time()
 
 def acknowledged_time():
     if g_acknowledgement_time.get(config.user_id) is None or\
@@ -59,7 +63,7 @@ def acknowledged_time():
 def load_acknowledgements():
     global g_acknowledgement_time
     g_acknowledgement_time[config.user_id] = config.load_user_file("acknowledged_notifications", 0)
-    g_modified_time = time.time()
+    set_modified_time()
     if g_acknowledgement_time[config.user_id] == 0:
         # when this timestamp is first initialized, save the current timestamp as the acknowledge
         # date. This should considerably reduce the number of log files that have to be searched

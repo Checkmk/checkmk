@@ -318,7 +318,7 @@ class html(object):
 
 
     def all_varnames_with_prefix(self, prefix):
-        for varname, value in self.vars.items():
+        for varname in self.vars.keys():
             if varname.startswith(prefix):
                 yield varname
 
@@ -1833,7 +1833,7 @@ class html(object):
             cleared_ids = []
             now = time.time()
             for valid_id in valid_ids:
-                timestamp, rand = valid_id.split("/")
+                timestamp = valid_id.split("/")[0]
                 if now - int(timestamp) < 86400: # one day
                     cleared_ids.append(valid_id)
             self.save_transids((cleared_ids[-20:] + self.new_transids), unlock = True)
@@ -1869,7 +1869,7 @@ class html(object):
             return False
 
         # Normal user/password auth user handling
-        timestamp, rand = id.split("/", 1)
+        timestamp = id.split("/", 1)[0]
 
         # If age is too old (one week), it is always
         # invalid:

@@ -260,7 +260,7 @@ def check_auth():
                 try:
                     user_id = check_auth_cookie(cookie_name)
                     break
-                except Exception, e:
+                except Exception:
                     logger(LOG_ERR, 'Exception while checking cookie %s: %s' %
                                         (cookie_name, traceback.format_exc()))
 
@@ -272,7 +272,6 @@ def check_auth():
 
 def do_login():
     # handle the sent login form
-    err = None
     if html.var('_login'):
         try:
             username = html.get_unicode_input('_username', '').rstrip()

@@ -14,7 +14,7 @@
     * 3840 FIX: cisco_qos: Fixed wrong units in graphs...
     * 3890 FIX: check_mk_agent.openbsd: Fixed broken MRPE checks
     * 3814 FIX: win_netstat: fixed unicode warning while parsing data
-    * 3880 FIX: fixed missing number in check details
+    * 3880 FIX: check_sql: fixed missing number in check details
 
     Multisite:
     * 3874 FIX: fixed graphs displaying wrong labels

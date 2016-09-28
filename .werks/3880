@@ -1,4 +1,4 @@
-Title: fixed missing number in check details
+Title: check_sql: fixed missing number in check details
 Level: 1
 Component: checks
 Compatible: compat

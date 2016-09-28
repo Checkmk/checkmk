@@ -77,7 +77,7 @@ then
         uname -r
     fi
     if type lspci > /dev/null ; then
-        echo "<<<lnx_vga:sep(58):persist($UNTIL)>>>"
+        echo "<<<lnx_video:sep(58):persist($UNTIL)>>>"
         lspci  -v -s  $(lspci | grep VGA | cut -d" " -f 1)
     fi
 

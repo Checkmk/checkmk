@@ -1,0 +1,10 @@
+Title: Sidebar slow on new apache process because of werk loading
+Component: multisite
+State: open
+Date: 2016-09-28 11:33:19
+Targetversion: 1.2.8
+Class: bug
+
+When rendering the side bar for the first time in a new apache process, all werk files
+are loaded which seem to take a lot of time in some installations. This should be
+optimized.

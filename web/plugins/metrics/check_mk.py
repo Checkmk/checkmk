@@ -2865,14 +2865,14 @@ metric_info["connector_outlets"] = {
 }
 
 metric_info["qos_dropped_bytes_rate"] = {
-    "title" : _("QoS dropped bytes"),
-    "unit"  : "bytes/s",
+    "title" : _("QoS dropped bits"),
+    "unit"  : "bits/s",
     "color" : "41/a",
 }
 
 metric_info["qos_outbound_bytes_rate"] = {
-    "title" : _("QoS outbound bytes"),
-    "unit"  : "bytes/s",
+    "title" : _("QoS outbound bits"),
+    "unit"  : "bits/s",
     "color" : "26/a",
 }
 
@@ -5780,8 +5780,8 @@ graph_info.append({
 graph_info.append({
     "title"   : _("QoS class traffic"),
     "metrics" : [
-        ( "qos_outbound_bytes_rate,8,*@bits/s", "area" ),
-        ( "qos_dropped_bytes_rate,8,*@bits/s", "-area" ),
+        ( "qos_outbound_bytes_rate,8,*@bits/s", "area", _("Qos outbound bits")),
+        ( "qos_dropped_bytes_rate,8,*@bits/s", "-area" _("QoS dropped bits")),
     ],
 })
 

@@ -323,7 +323,7 @@ def notify_mail(user_id, msg):
                          close_fds=True)
     except OSError, e:
         raise MKInternalError(_('Mail could not be delivered. '
-                                'Failed to execute command "%s": %s' % (" ".join(command), e)))
+                                'Failed to execute command "%s": %s') % (" ".join(command), e))
 
     output = p.communicate(body.encode("utf-8"))[0]
     exitcode = p.returncode

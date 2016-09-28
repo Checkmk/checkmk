@@ -28,6 +28,7 @@
 functionality is the locked file opening realized with the File() context
 manager."""
 
+import ast
 import fcntl
 import os
 import pprint
@@ -139,7 +140,8 @@ open = LockedOpenWithTempfile
 #   '----------------------------------------------------------------------'
 
 # This function generalizes reading from a .mk configuration file. It is basically meant to
-# generalize the exception handling for all file IO.
+# generalize the exception handling for all file IO. This function handles all those files
+# that are read with execfile().
 def load_mk_file(path, default=None, lock=False):
     if default == None:
         raise MKGeneralException(_("You need to provide a config dictionary to merge with the "
@@ -174,6 +176,32 @@ def save_mk_file(path, mk_content):
     content += mk_content
     content += "\n"
     save_file(path, content)
+
+
+# Handle .mk files that are only holding a python data structure and often
+# directly read via file/open and then parsed using eval.
+# TODO: Consolidate with load_mk_file?
+def load_data_from_file(path, default=None, lock=False):
+    if lock:
+        aquire_lock(path)
+
+    try:
+        return ast.literal_eval(file(path).read())
+    except IOError, e:
+        if e.errno == 2: # IOError: [Errno 2] No such file or directory
+            return default
+        else:
+            raise
+
+    except Exception, e:
+        # TODO: How to handle debug mode or logging?
+        raise MKGeneralException(_("Cannot read file \"%s\": %s") % (path, e))
+
+
+# A simple wrapper for cases where you want to store a python data
+# structure that is then read by load_data_from_file() again
+def save_data_to_file(path, data):
+    save_file(path, "%r\n" % data)
 
 
 # Saving assumes a locked destination file (usually done by loading code)

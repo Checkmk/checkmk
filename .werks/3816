@@ -1,0 +1,14 @@
+Title: WATO-Web API: fixed bug in API request validation
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1475146794
+Class: fix
+
+Recent code changes did not consider that only the keys of the request
+object itself got validated. The validiation function now got feeded with
+some additional keys, e.g effective_attributes, didn't accept these keys
+and returned an "Invalid request" as result.
+
+This has been fixed.

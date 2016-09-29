@@ -78,7 +78,7 @@ def validate_host_attributes(attributes):
 
 
 def action_add_host(request):
-    validate_request_keys(request, ["hostname", "folder", "attributes", "nodes"])
+    validate_request_keys(request, ["hostname", "folder", "attributes", "nodes", "create_folders"])
 
     if html.var("create_folders"):
         create_folders = bool(int(html.var("create_folders")))
@@ -175,7 +175,7 @@ api_actions["edit_host"] = {
 ###############
 
 def action_get_host(request):
-    validate_request_keys(request, ["hostname"])
+    validate_request_keys(request, ["hostname", "effective_attributes"])
 
     hostname = request.get("hostname")
     if not hostname:
@@ -203,6 +203,8 @@ api_actions["get_host"] = {
 ###############
 
 def action_get_all_hosts(request):
+    validate_request_keys(request, ["effective_attributes"])
+
     if html.var("effective_attributes"):
         effective_attributes = bool(int(html.var("effective_attributes")))
     else:
@@ -295,7 +297,7 @@ api_actions["discover_services"] = {
 ###############
 
 def action_activate_changes(request):
-    validate_request_keys(request, ["sites"])
+    validate_request_keys(request, ["modes", "sites"])
 
     mode = html.var("mode") and html.var("mode") or "dirty"
     if html.var("allow_foreign_changes"):

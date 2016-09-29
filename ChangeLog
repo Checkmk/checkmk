@@ -417,6 +417,7 @@
     * 3814 FIX: win_netstat: fixed unicode warning while parsing data
     * 3880 FIX: check_sql: fixed missing number in check details
     * 3815 FIX: windows_agent: fixed incorrect parsing of only_from parameter...
+    * 3816 FIX: WATO-Web API: fixed bug in API request validation...
 
     Multisite:
     * 3187 notification view: new filter for log command via regex

@@ -214,6 +214,10 @@ old_service_descriptions = {
     "enterasys_temp"                   : lambda item: (False, "Temperature"),
     "raritan_emx"                      : "Rack %s",
     "raritan_pdu_inlet"                : "Input Phase %s",
+    "postfix_mailq"                    : lambda item: (False, "Postfix Queue"),
+    "nullmailer_mailq"                 : lambda item: (False, "Nullmailer Queue"),
+    "barracuda_mailqueues"             : lambda item: (False, "Mail Queue"),
+    "qmail_stats"                      : lambda item: (False, "Qmail Queue"),
 }
 
 # workaround: set of check-groups that are to be treated as service-checks even if

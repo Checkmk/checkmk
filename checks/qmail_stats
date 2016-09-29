@@ -31,7 +31,7 @@ factory_settings['qmail_stats_default_levels'] = {
 
 def inventory_qmail_stats(info):
     if len(info) > 0:
-        return [ (None, {}) ]
+        return [ ("", {}) ]
 
 def check_qmail_stats(_no_item, params, info):
     if type(params) != dict:
@@ -47,7 +47,7 @@ def check_qmail_stats(_no_item, params, info):
     elif queue_length >= warn:
         state = 1
     if state:
-	label = "(Levels at %d/%d)" % (warn, crit)
+        label = "(Levels at %d/%d)" % (warn, crit)
 
     perf = [ ('queue', queue_length, warn, crit) ]
     message = "Mailqueue length is %d %s" % (queue_length, label)
@@ -57,8 +57,8 @@ def check_qmail_stats(_no_item, params, info):
 check_info['qmail_stats'] = {
   "inventory_function"      : inventory_qmail_stats,
   "check_function"          : check_qmail_stats,
-  "service_description"     : "Qmail Queue",
+  "service_description"     : "Qmail Queue %s",
   "has_perfdata"            : True,
   "default_levels_variable" : "qmail_stats_default_levels",
-  "group"                   : "mailqueue_length",
+  "group"                   : "mail_queue_length",
 }

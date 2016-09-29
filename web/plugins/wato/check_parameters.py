@@ -9085,42 +9085,57 @@ register_rule(group + '/' + subgroup_inventory,
     match = 'all',
 )
 
+mailqueue_params = Dictionary(
+    elements = [
+        ( "deferred",
+            Tuple(
+                title = _("Mails in outgoing mail queue/deferred mails"),
+                help = _("This rule is applied to the number of E-Mails currently "
+                         "in the deferred mail queue, or in the general outgoing mail "
+                         "queue, if such a distinction is not available."),
+                elements = [
+                    Integer(title = _("Warning at"), unit = _("mails"), default_value = 10),
+                    Integer(title = _("Critical at"), unit = _("mails"), default_value = 20),
+                ],
+            ),
+        ),
+        ( "active",
+            Tuple(
+                title = _("Mails in active mail queue"),
+                help = _("This rule is applied to the number of E-Mails currently "
+                         "in the active mail queue"),
+                elements = [
+                    Integer(title = _("Warning at"), unit = _("mails"), default_value = 800),
+                    Integer(title = _("Critical at"), unit = _("mails"), default_value = 1000),
+                ],
+            ),
+        ),
+    ],
+    optional_keys = [ "active" ],
+)
+
 register_check_parameters(
     subgroup_applications,
     "mailqueue_length",
     _("Number of mails in outgoing mail queue"),
     Transform(
-        Dictionary(
-            elements = [
-                ( "deferred",
-                    Tuple(
-                        title = _("Mails in outgoing mail queue/deferred mails"),
-                        help = _("This rule is applied to the number of E-Mails currently "
-                                 "in the deferred mail queue, or in the general outgoing mail "
-                                 "queue, if such a distinction is not available."),
-                        elements = [
-                            Integer(title = _("Warning at"), unit = _("mails"), default_value = 10),
-                            Integer(title = _("Critical at"), unit = _("mails"), default_value = 20),
-                        ],
-                    ),
-                ),
-                ( "active",
-                    Tuple(
-                        title = _("Mails in active mail queue"),
-                        help = _("This rule is applied to the number of E-Mails currently "
-                                 "in the active mail queue"),
-                        elements = [
-                            Integer(title = _("Warning at"), unit = _("mails"), default_value = 800),
-                            Integer(title = _("Critical at"), unit = _("mails"), default_value = 1000),
-                        ],
-                    ),
-                ),
-            ],
-            optional_keys = [ "active" ],
-        ),
+        mailqueue_params,
         forth = lambda old: type(old) != dict and { "deferred" : old } or old,
     ),
     None,
+    match_type = "dict",
+    deprecated=True,
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "mail_queue_length",
+    _("Number of mails in outgoing mail queue"),
+    Transform(
+        mailqueue_params,
+        forth = lambda old: type(old) != dict and { "deferred" : old } or old,
+    ),
+    TextAscii(title = _("Mail queue name")),
     match_type = "dict",
 )
 

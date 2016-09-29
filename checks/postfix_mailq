@@ -67,14 +67,22 @@
 # QUEUE_deferred 60 1
 # QUEUE_active 4 0
 
+# new format multi-instance
+# <<<postfix_mailq>>>
+# [[[/etc/postfix-external]]]
+# QUEUE_deferred 0 0
+# QUEUE_active 0 0
+# <<<postfix_mailq>>>
+# [[[/etc/postfix-internal]]]
+# QUEUE_deferred 0 0
+# QUEUE_active 0 0
+
+
 factory_settings['postfix_mailq_default_levels'] = {
     "deferred" : (10, 20),
     "active"   : (200, 300), # may become large for big mailservers
 }
 
-def inventory_postfix_mailq(info):
-    if len(info) > 0 and info[0] != '':
-        return [(None, {})]
 
 def postfix_mailq_to_bytes(value, uom):
     uom = uom.lower()
@@ -85,17 +93,18 @@ def postfix_mailq_to_bytes(value, uom):
     elif uom == 'gbytes':
         return value * 1024 * 1024 * 1024
 
-def check_postfix_mailq(_no_item, params, info):
-    if type(params) != dict:
-        params = {
-            "deferred" : params,
-        }
+
+def parse_postfix_mailq(info):
+    parsed        = {}
+    instance_name = ""
     for line in info:
-        state = 0
-        # new extended version of agent output
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            instance_name = line[0][3:-3]
+
+        queueinfo = None
+        # single and old output formats
         if line[0].startswith("QUEUE_"):
             queue = line[0].split("_")[1]
-
             # Deal with old agent (pre 1.2.8) which did not send size
             # infos in case of different error cases
             if len(line) == 2:
@@ -104,40 +113,13 @@ def check_postfix_mailq(_no_item, params, info):
             else:
                 size   = int(line[1]) # in bytes
                 length = int(line[2]) # number of mails
-            infotext = "%s queue length is %d" % (queue, length)
-            if queue == "deferred":
-                length_var = "length"
-                size_var = "size"
-            else:
-                length_var = "mail_queue_%s_length" % queue
-                size_var = "mail_queue_%s_size" % queue
-            if queue in params:
-                warn, crit = params[queue]
-                if length >= crit:
-                    state = 2
-                elif length >= warn:
-                    state = 1
-                if state:
-                    infotext += " (Levels at %d/%d)" % (warn, crit)
-                perfdata = [ (length_var, length, warn, crit) ]
-            else:
-                perfdata = [ (length_var, length) ]
 
-            perfdata.append((size_var, size))
+            queueinfo = line[0].split("_")[1], size, length
 
-            yield state, infotext, perfdata
-
-        # old output of mailq command for empty queue
         elif " ".join(line[-2:]) == 'is empty':
-            warn, crit = params["deferred"]
-            infotext = 'The mailqueue is empty'
-            perfdata = [ ('length', 0, warn, crit),
-                         ('size', 0) ]
-            yield 0, infotext, perfdata
+            queueinfo = "empty", 0, 0
 
-        # old output of mailq command
         elif line[0] == '--' or line[0:2] == [ 'Total', 'requests:']:
-            warn, crit = params["deferred"]
             if line[0] == '--':
                 size    = postfix_mailq_to_bytes(float(line[1]), line[2])
                 length  = int(line[4])
@@ -145,24 +127,63 @@ def check_postfix_mailq(_no_item, params, info):
                 size    = 0
                 length  = int(line[2])
 
-            infotext = 'Mailqueue length is %d' % length
-            perfdata = [ ('length', length, warn, crit),
-                         ('size', size) ]
+            queueinfo = "mail", size, length
 
-            if length >= crit:
+        if queueinfo is not None:
+            parsed.setdefault(instance_name, [])
+            parsed[instance_name].append( queueinfo )
+
+    return parsed
+
+
+def inventory_postfix_mailq(parsed):
+    for queue in parsed:
+        yield queue, {}
+
+
+def check_postfix_mailq(item, params, parsed):
+    if item is None:
+        item = ""
+
+    if item not in parsed:
+        yield 3, "Item not found"
+        return
+
+    if type(params) is not dict:
+        params = { "deferred" : params }
+
+    for what, size, length in parsed[item]:
+        warn, crit = params.get("deferred", (None, None))
+        if what in [ "active", "deferred", "mail" ]:
+            state    = 0
+            infotext = "%s%s queue length: %d" % (what[0].upper(), what[1:], length)
+
+            if what in [ "deferred", "mail" ]:
+                length_var = "length"
+                size_var   = "size"
+            else:
+                length_var = "mail_queue_active_length"
+                size_var   = "mail_queue_active_size"
+
+            if crit is not None and length >= crit:
                 state = 2
-            elif length >= warn:
+                infotext += " (warn/crit at %d/%d)" % (warn, crit)
+            elif warn is not None and length >= warn:
                 state = 1
-            if state:
                 infotext += " (warn/crit at %d/%d)" % (warn, crit)
 
-            yield state, infotext, perfdata
+            yield state, infotext, [ (length_var, length, warn, crit), (size_var, size) ]
+
+        elif what == "empty":
+            yield 0, 'The mailqueue is empty', [ ('length', 0, warn, crit), ('size', 0) ]
+
 
 check_info["postfix_mailq"] = {
-    'check_function'          : check_postfix_mailq,
+    'parse_function'          : parse_postfix_mailq,
     'inventory_function'      : inventory_postfix_mailq,
-    'service_description'     : 'Postfix Queue',
+    'check_function'          : check_postfix_mailq,
+    'service_description'     : 'Postfix Queue %s',
     'default_levels_variable' : 'postfix_mailq_default_levels',
-    'group'                   : 'mailqueue_length',
+    'group'                   : "mail_queue_length",
     'has_perfdata'            : True,
 }

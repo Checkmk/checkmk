@@ -37,15 +37,14 @@ factory_settings["barracuda_mailq_default_levels"] = {
 
 
 def inventory_barracuda_mailqueues(info):
-    return [ (None, {}) ]
+    return [ ("", {}) ]
 
 
 def check_barracuda_mailqueues(_no_item, params, info):
     in_queue_str, active_queue_str, deferred_queue_str, daily_sent = info[0]
     for queue_type, queue in [
         ("Active",   int(active_queue_str)),
-        ("Deferred", int(deferred_queue_str))
-    ]:
+        ("Deferred", int(deferred_queue_str)), ]:
         state = 0
         infotext = "%s: %s" % (queue_type, queue)
         warn, crit = params[queue_type.lower()]
@@ -59,13 +58,15 @@ def check_barracuda_mailqueues(_no_item, params, info):
 
         yield state, infotext, [ ("mail_queue_%s_length" % queue_type.lower(), queue, warn, crit) ]
 
-    yield 0, "Incoming: %s, Daily sent: %s" % (in_queue_str, daily_sent)
+    yield 0, "Incoming: %s" % in_queue_str
+    if daily_sent:
+        yield 0, "Daily sent: %s" % daily_sent
 
 
 check_info['barracuda_mailqueues'] = {
     'inventory_function'        : inventory_barracuda_mailqueues,
     'check_function'            : check_barracuda_mailqueues,
-    'service_description'       : 'Mail Queue',
+    'service_description'       : 'Mail Queue %s',
     'has_perfdata'              : True,
     # The barracuda spam firewall does not response or returns a timeout error
     # executing 'snmpwalk' on whole tables. But we can workaround here specifying
@@ -79,5 +80,5 @@ check_info['barracuda_mailqueues'] = {
     'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10") and \
                                               "barracuda" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     'default_levels_variable'   : "barracuda_mailq_default_levels",
-    'group'                     : "mailqueue_length",
+    'group'                     : "mail_queue_length",
 }

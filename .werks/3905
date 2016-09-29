@@ -1,0 +1,12 @@
+Title: barracuda_mailqueues, nullmailer_mailq, postfix_mailq, qmail_stats: these checks now have items, postfix can now monitor multi directories
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.4.0i1
+Date: 1475141806
+Class: feature
+
+Note: existing ruleset mailqueue length is now deprecated. These checks will
+work further on but the related ruleset won't be applied any more except default levels.
+Please use new service descriptions for these checks below global settings, rediscover the
+affected hosts and use new mail queue length ruleset.

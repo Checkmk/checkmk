@@ -618,11 +618,13 @@ fi
 
 # Postfix mailqueue monitoring
 # Determine the number of mails and their size in several postfix mail queues
-if type postconf >/dev/null ; then
-    postfix_queue_dir=$(postconf -h queue_directory 2>/dev/null)
-
+function read_postfix_queue_dirs {
+    postfix_queue_dir=$1
     if [ -n "$postfix_queue_dir" ]; then
         echo '<<<postfix_mailq>>>'
+        if [ ! -z "$2" ]; then
+            echo "[[[${2}]]]"
+        fi
         for queue in deferred active
         do
             count=$(find $postfix_queue_dir/$queue -type f | wc -l)
@@ -630,13 +632,41 @@ if type postconf >/dev/null ; then
             if [ -z "$size" ]; then
                 size=0
             fi
-            echo "QUEUE_${queue} $size $count"
+            if [ -z "$count" ]; then
+                echo "Mail queue is empty"
+            else
+                echo "QUEUE_${queue} $size $count"
+            fi
         done
     fi
+}
+
+# Postfix mailqueue monitoring
+# Determine the number of mails and their size in several postfix mail queues
+if type postconf >/dev/null ; then
+    # Check if multi_instance_directories exists in main.cf and is not empty
+    # always takes the last entry, multiple entries possible
+    multi_instances_dirs=$(postconf -d multi_instance_directories 2>/dev/null | sed 's/.*=[[:space:]]*//g')
+    if [ ! -z "$multi_instances_dirs" ]; then
+        for queue_dir in $multi_instances_dirs
+        do
+            if [ -n "$queue_dir" ]; then
+                postfix_queue_dir=$(postconf -c $queue_dir 2>/dev/null | grep ^queue_directory | sed 's/.*=[[:space:]]*//g')
+                read_postfix_queue_dirs $postfix_queue_dir $queue_dir
+            fi
+        done
+
+    else
+        postfix_queue_dir=$(postconf -h queue_directory 2>/dev/null)
+        read_postfix_queue_dirs $postfix_queue_dir
+    fi
+
 elif [ -x /usr/sbin/ssmtp ] ; then
     echo '<<<postfix_mailq>>>'
     mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
+
 fi
+
 
 # Check status of qmail mailqueue
 if type qmail-qstat >/dev/null

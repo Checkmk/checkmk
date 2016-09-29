@@ -33,7 +33,7 @@ factory_settings['nullmailer_mailq_default_levels'] = {
 }
 
 def inventory_nullmailer_mailq(info):
-    return [(None, {})]
+    return [("", {})]
 
 def check_nullmailer_mailq(_no_item, params, info):
     if type(params) != dict:
@@ -65,15 +65,15 @@ def check_nullmailer_mailq(_no_item, params, info):
 
     if length != 0:
         output += " having a size of %s" % \
-                      (get_bytes_human_readable(size_bytes))
+                   (get_bytes_human_readable(size_bytes))
 
     return state, output, perfdata
 
 check_info["nullmailer_mailq"] = {
     'check_function'          : check_nullmailer_mailq,
     'inventory_function'      : inventory_nullmailer_mailq,
-    'service_description'     : 'Nullmailer Queue',
+    'service_description'     : 'Nullmailer Queue %s',
     'default_levels_variable' : 'nullmailer_mailq_default_levels',
-    'group'                   : 'mailqueue_length',
+    'group'                   : "mail_queue_length",
     'has_perfdata'            : True,
 }

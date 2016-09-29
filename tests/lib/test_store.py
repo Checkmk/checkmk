@@ -17,6 +17,13 @@ def test_load_data_from_file_not_existing(tmpdir):
     assert data == "DEFAULT"
 
 
+def test_load_data_from_file_empty(tmpdir):
+    locked_file = tmpdir.join("test")
+    locked_file.write("")
+    data = store.load_data_from_file("%s/x" % tmpdir, "DEF")
+    assert data == "DEF"
+
+
 def test_load_data_not_locked(tmpdir):
     locked_file = tmpdir.join("locked_file")
     locked_file.write("[1, 2]")

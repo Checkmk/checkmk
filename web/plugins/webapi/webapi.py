@@ -26,8 +26,6 @@
 
 # TODO CLEANUP: Replace MKUserError by MKAPIError or something like that
 
-import cmk
-
 def validate_request_keys(request, valid_keys):
     for key in request.keys():
         if key not in valid_keys:
@@ -339,20 +337,6 @@ def action_activate_changes(request):
 
 api_actions["activate_changes"] = {
     "handler"         : action_activate_changes,
-    "locking"         : True,
-}
-
-def action_bake_agents(request):
-    try:
-        check_mk_local_automation('bake-agents')
-        last_bake_file = var_dir + "last_bake.mk"
-        file(last_bake_file, 'w').write('%s\n' % cmk.__version__)
-        return _("Successfully baked agents")
-    except Exception, e:
-        raise e
-
-api_actions["bake_agents"] = {
-    "handler"         : action_bake_agents,
     "locking"         : True,
 }
 

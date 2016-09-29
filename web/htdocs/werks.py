@@ -205,7 +205,7 @@ def acknowledge_werks(werks):
 
 
 def save_acknowledgements(acknowledged_werks):
-    store.save_data_to_file(acknowledged_werks)
+    store.save_data_to_file(acknowledgement_path, acknowledged_werks)
 
 
 def acknowledge_all_werks():

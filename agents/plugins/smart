@@ -93,6 +93,8 @@ if which smartctl > /dev/null 2>&1 ; then
 	    serial=AMCC_${serial}00000000000
 	    echo "$serial=$twaminor"
         done`
+    else:
+        echo "tw_cli not found" >&2
     fi
 
     echo '<<<smart>>>'
@@ -172,6 +174,7 @@ if which smartctl > /dev/null 2>&1 ; then
     if [ "$MegaCli_bin" != "unknown" ]; then
         megaraid_info "$MegaCli_bin"
     fi
-
+else
+    echo "ERROR: smartctl not found" >&2
 fi
 

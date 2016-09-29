@@ -71,6 +71,40 @@ def test_save_data_to_file(tmpdir):
     assert store.load_data_from_file(path) == [2, 3]
 
 
+def test_save_data_to_file_pretty(tmpdir):
+    f = tmpdir.join("test")
+    path = "%s" % f
+
+    data = {
+        "asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
+        "1asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
+        "2asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
+        "3asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
+        "4asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
+        "5asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
+    }
+    store.save_data_to_file(path, data)
+    assert file(path).read().count("\n") > 4
+    assert store.load_data_from_file(path) == data
+
+
+def test_save_data_to_file_not_pretty(tmpdir):
+    f = tmpdir.join("test")
+    path = "%s" % f
+
+    data = {
+        "asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
+        "1asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
+        "2asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
+        "3asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
+        "4asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
+        "5asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
+    }
+    store.save_data_to_file(path, data, pretty=False)
+    assert file(path).read().count("\n") == 1
+    assert store.load_data_from_file(path) == data
+
+
 def test_acquire_lock_not_existing(tmpdir):
     store.aquire_lock("%s/asd" % tmpdir)
 

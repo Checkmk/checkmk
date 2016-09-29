@@ -34,6 +34,7 @@ import os
 import pprint
 import tempfile
 import time
+import pprint
 
 from .exceptions import MKGeneralException
 
@@ -139,6 +140,10 @@ open = LockedOpenWithTempfile
 #   | Loading and saving of .mk configuration files                        |
 #   '----------------------------------------------------------------------'
 
+# TODO: These functions could handle paths unicode > str conversion. This would make
+#       the using code again shorter in some cases. It would not have to care about
+#       encoding anymore.
+
 # This function generalizes reading from a .mk configuration file. It is basically meant to
 # generalize the exception handling for all file IO. This function handles all those files
 # that are read with execfile().
@@ -207,8 +212,22 @@ def load_data_from_file(path, default=None, lock=False):
 
 # A simple wrapper for cases where you want to store a python data
 # structure that is then read by load_data_from_file() again
-def save_data_to_file(path, data):
-    save_file(path, "%r\n" % data)
+def save_data_to_file(path, data, pretty=True):
+    if pretty:
+        try:
+            formated_data = pprint.pformat(data)
+        except UnicodeDecodeError:
+            # When writing a dict with unicode keys and normal strings with garbled
+            # umlaut encoding pprint.pformat() fails with UnicodeDecodeError().
+            # example:
+            #   pprint.pformat({'Z\xc3\xa4ug': 'on',  'Z\xe4ug': 'on', u'Z\xc3\xa4ugx': 'on'})
+            # Catch the exception and use repr() instead
+            formated_data = repr(data)
+    else:
+        formated_data = repr(data)
+
+    print formated_data
+    save_file(path, "%s\n" % formated_data)
 
 
 # Saving assumes a locked destination file (usually done by loading code)

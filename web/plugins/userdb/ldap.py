@@ -997,7 +997,7 @@ class LDAPUserConnector(UserConnector):
                 intersect = set_new.intersection(set_old)
                 added = set_new - intersect
                 removed = set_old - intersect
-                changed = set(o for o in intersect if users[user_id][o] != user[o])
+                changed = self.find_changed_user_keys(intersect, users[user_id], user)
 
             users[user_id] = user # Update the user record
 
@@ -1045,6 +1045,20 @@ class LDAPUserConnector(UserConnector):
             pass
 
         save_users(users)
+
+
+    def find_changed_user_keys(self, keys, user, new_user):
+        changed = set([])
+        for key in keys:
+            value = user[key]
+            new_value = new_user[key]
+            if type(value) == list and type(new_value) == list:
+                is_changed = sorted(value) != sorted(new_value)
+            else:
+                is_changed = value != new_value
+            if is_changed:
+                changed.add(key)
+        return changed
 
 
     def execute_active_sync_plugins(self, user_id, ldap_user, user):
@@ -1308,7 +1322,7 @@ def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_c
         if user_cmp_val in group['members']:
             group_cns.append(group['cn'])
 
-    return sorted(group_cns)
+    return group_cns
 
 
 group_membership_parameters = [

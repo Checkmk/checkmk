@@ -5543,6 +5543,7 @@ register_check_parameters(
     # Transform old traffic related levels which used "traffic" and "traffic_minimum"
     # keys where each was configured with an Alternative valuespec
     Transform(Dictionary(
+        ignored_keys = [ "aggr_member_item", "aggregate" ], # Created by discovery when using interface grouping
         elements = [
              ( "errors",
                Alternative(

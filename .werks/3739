@@ -1,0 +1,12 @@
+Title: Fix exception in displaying check parameter of grouped interfaces
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1475162057
+
+In the list of services WATO would show an exception about an invalid
+key <tt>aggr_item_member</tt>. This has been fixed and the parameter
+is now correctly being displayed.

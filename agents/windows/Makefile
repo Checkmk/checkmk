@@ -24,7 +24,7 @@
 
 
 SHELL         = /bin/bash
-VERSION       = 1.4.0i1
+VERSION       = 1.4.0i1p1
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i686-w64-mingw32-windres
 GIT_REV       = $(shell git describe --abbrev=4 --dirty --always --tags)

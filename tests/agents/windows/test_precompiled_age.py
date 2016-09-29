@@ -28,7 +28,7 @@ def test_precompiled_file_ages():
     for filename in precompiled_files:
         path = "%s/agents/windows/%s" % (cmk_path(), filename)
         commit_time = last_commit_time(path)
-        assert commit_time > newest_source_time, \
+        assert commit_time >= newest_source_time, \
             "%s is older than source code file %s" % (path, newest_source_file)
 
 

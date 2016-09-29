@@ -40,6 +40,9 @@ import cmk.paths
 #   |  Declarations of global variables and constants                      |
 #   '----------------------------------------------------------------------'
 
+multisite_users = {}
+admin_users     = []
+
 # hard coded in various permissions
 builtin_role_ids = [ "user", "admin", "guest" ]
 
@@ -309,7 +312,7 @@ class LoggedInUser(object):
         # profile in multisite_users (e.g. due to WATO), we rather
         # use that profile. Remaining (unknown) users get the default_user_role.
         # That can be set to None -> User has no permissions at all.
-        self.role_ids = roles_of_user(self.id)
+        self.role_ids = self._gather_roles()
 
         # Get base roles (admin/user/guest)
         self._load_base_roles()
@@ -321,6 +324,10 @@ class LoggedInUser(object):
             self.baserole_id = "user"
         else:
             self.baserole_id = "guest"
+
+
+    def _gather_roles(self):
+        return roles_of_user(self.id)
 
 
     def _load_base_roles(self):
@@ -451,28 +458,42 @@ class LoggedInUser(object):
 # TODO: Can we somehow get rid of this?
 class LoggedInSuperUser(LoggedInUser):
     def __init__(self):
-        self.id = None
-        self.role_ids = [ "admin" ]
-        self.baserole_ids = [ "admin" ]
-        self.baserole_id = "admin"
-        self.attributes = { "roles" : self.role_ids }
+        super(LoggedInSuperUser, self).__init__(None)
         self.alias = "Superuser for unauthenticated pages"
         self.email = "admin"
-        self.permissions = {}
+
+
+    def _gather_roles(self):
+        return [ "admin" ]
+
+
+    def _load_confdir(self):
+        self.confdir = None
+
+
+    def _load_site_config(self):
         self.siteconf = {}
+
 
 
 class LoggedInNobody(LoggedInUser):
     def __init__(self):
-        self.id = None
-        self.role_ids = []
-        self.baserole_ids = []
-        self.baserole_id = ""
-        self.attributes = { "roles" : self.role_ids }
+        super(LoggedInNobody, self).__init__(None)
         self.alias = "Unauthenticated user"
-        self.email = ""
-        self.permissions = {}
+        self.email = "nobody"
+
+
+    def _gather_roles(self):
+        return []
+
+
+    def _load_confdir(self):
+        self.confdir = None
+
+
+    def _load_site_config(self):
         self.siteconf = {}
+
 
 
 def clear_user_login():

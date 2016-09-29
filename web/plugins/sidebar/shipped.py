@@ -33,6 +33,7 @@ import notifications
 from valuespec import *
 from lib import *
 import cmk.paths
+import cmk.store as store
 
 #   .--About---------------------------------------------------------------.
 #   |                       _    _                 _                       |
@@ -1295,10 +1296,7 @@ pagetypes.declare(BookmarkList)
 
 def load_legacy_bookmarks():
     path = config.user_confdir + "/bookmarks.mk"
-    try:
-        return eval(file(path).read())
-    except:
-        return []
+    return store.load_data_from_file(path, [])
 
 
 def save_legacy_bookmarks(bookmarks):

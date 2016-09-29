@@ -32,6 +32,7 @@ import os, inspect
 import config, table, forms, userdb
 from lib import *
 from valuespec import *
+import cmk.store as store
 
 try:
     import simplejson as json
@@ -706,7 +707,7 @@ class Overridable(Base):
                 if not userdb.user_exists(user):
                     continue
 
-                user_pages = eval(file(path).read())
+                user_pages = store.load_data_from_file(path, {})
                 for name, page_dict in user_pages.items():
                     page_dict["owner"] = user
                     page_dict["name"] = name

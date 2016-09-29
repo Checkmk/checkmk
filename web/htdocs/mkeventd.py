@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import socket, config, re, time
+import ast
 
 import sites
 from lib import *
@@ -203,7 +204,7 @@ def query_ec_directly(query):
             if not chunk:
                 break
 
-        return eval(response_text)
+        return ast.literal_eval(response_text)
     except SyntaxError, e:
         raise MKGeneralException(_("Invalid response from event daemon: "
                                  "<pre>%s</pre>") % response_text)

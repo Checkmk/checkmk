@@ -426,6 +426,7 @@ def load_stars():
 def save_stars(stars):
     save_user_file("favorites", list(stars))
 
+
 # Helper functions
 def load_user_file(name, deflt, lock = False):
     # In some early error during login phase there are cases where it might
@@ -438,15 +439,8 @@ def load_user_file(name, deflt, lock = False):
             return deflt # No user known at this point of time
 
     path = user_confdir + "/" + name + ".mk"
+    return store.load_data_from_file(path, deflt, lock)
 
-    if lock:
-        aquire_lock(path)
-
-    try:
-        return eval(file(path).read())
-    except:
-        # TODO: Really "throw user data away" and start over?
-        return deflt
 
 def save_user_file(name, content, unlock=False, user=None):
     if user == None:

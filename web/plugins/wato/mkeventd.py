@@ -28,6 +28,7 @@ import mkeventd
 import zipfile
 import cStringIO
 import cmk.paths
+import cmk.store as store
 
 mkeventd_enabled = config.mkeventd_enabled
 
@@ -905,8 +906,8 @@ def load_mkeventd_rules():
     # Add information about rule hits: If we are running on OMD then we know
     # the path to the state retention file of mkeventd and can read the rule
     # statistics directly from that file.
-    if os.path.exists(mkeventd_status_file):
-        mkeventd_status = eval(file(mkeventd_status_file).read())
+    mkeventd_status = store.load_data_from_file(mkeventd_status_file)
+    if mkeventd_status != None:
         rule_stats = mkeventd_status["rule_stats"]
         for rule_pack in vars["rule_packs"]:
             pack_hits = 0

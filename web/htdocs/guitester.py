@@ -31,6 +31,7 @@ import config
 import cmk.paths
 import sites
 from lib import *
+import cmk.store as store
 
 
 class MKGuitestFailed(MKException):
@@ -82,10 +83,7 @@ class GUITester:
 
     def save_guitest_step(self, step):
         path = cmk.paths.var_dir + "/guitests/RECORD"
-        if not os.path.exists(path):
-            test_steps = []
-        else:
-            test_steps = eval(file(path).read())
+        test_steps = store.load_data_from_file(path, [])
 
         if self.guitest_repair_step != None:
             if self.guitest_repair_step > len(test_steps):
@@ -102,10 +100,11 @@ class GUITester:
 
     def load_guitest(self, name):
         path = cmk.paths.var_dir + "/guitests/" + name + ".mk"
-        try:
-            return eval(file(path).read())
-        except IOError, e:
-            raise MKGeneralException(_("Cannot load GUI test file %s: %s") % (self.attrencode(path), e))
+        data = store.load_data_from_file(path)
+        if data == None:
+            raise MKGeneralException(_("GUI test file does not exist %s.") % path)
+        else:
+            return data
 
 
     def guitest_fake_login(self, user_id):

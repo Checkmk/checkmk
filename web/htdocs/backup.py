@@ -47,6 +47,7 @@ import key_mgmt
 from valuespec import *
 from lib import write_settings_file, MKUserError
 import cmk.render as render
+import cmk.store as store
 from cmk.schedule import next_scheduled_time
 
 #.
@@ -103,17 +104,14 @@ class Config(object):
 
 
     def load(self):
-        if not os.path.exists(self._file_path):
-            return {
-                "targets" : {},
-                "jobs"    : {},
-            }
-
-        return eval(file(self._file_path).read())
+        return store.load_data_from_file(self._file_path, {
+            "targets" : {},
+            "jobs"    : {},
+        })
 
 
     def save(self, config):
-        write_settings_file(self._file_path, config)
+        store.save_data_to_file(self._file_path, config)
 
 
 #.

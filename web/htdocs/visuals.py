@@ -35,6 +35,7 @@ from lib import *
 from valuespec import *
 import config, table, userdb
 import pagetypes # That will replace visuals.py one day
+import cmk.store as store
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -145,10 +146,7 @@ def load(what, builtin_visuals, skip_func = None, lock=False):
             if not userdb.user_exists(user):
                 continue
 
-            if lock:
-                aquire_lock(path)
-
-            user_visuals = eval(file(path).read())
+            user_visuals = store.load_data_from_file(path, {}, lock)
             for name, visual in user_visuals.items():
                 visual["owner"] = user
                 visual["name"] = name
@@ -198,7 +196,7 @@ def declare_custom_permissions(what):
                 path = "%s/%s.mk" % (dirpath, what)
                 if not os.path.exists(path):
                     continue
-                visuals = eval(file(path).read())
+                visuals = store.load_data_from_file(path, {})
                 for name, visual in visuals.items():
                     declare_visual_permission(what, name, visual)
         except:

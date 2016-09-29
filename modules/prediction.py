@@ -217,7 +217,7 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
     # which was never handled correctly so that the prediction could never be used again until
     # manual removal of the files. Clean this up.
     for file_path in [ pred_file, info_file ]:
-        if os.stat(file_path).st_size == 0:
+        if os.path.exists(file_path) and os.stat(file_path).st_size == 0:
             os.unlink(file_path)
 
     # Check, if we need to (re-)compute the prediction file. This is

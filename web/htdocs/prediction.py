@@ -31,6 +31,7 @@ import cmk.paths
 import config
 import sites
 from lib import *
+import cmk.store as store
 
 try:
     import simplejson as json
@@ -71,10 +72,10 @@ def page_graph():
         if not f.endswith(".info"):
             continue
 
-        if os.stat(file_path).st_size == 0:
+        tg_info = store.load_data_from_file(dir + "/" + f)
+        if tg_info == None:
             continue
 
-        tg_info = eval(file(dir + "/" + f).read())
         tg_info["name"] = f[:-5]
         timegroups.append(tg_info)
         if tg_info["name"] == tg_name or \
@@ -101,11 +102,10 @@ def page_graph():
     html.end_form()
 
     # Get prediction data
-    try:
-        path = dir + "/" + timegroup["name"]
-        tg_data = eval(file(path).read())
-    except IOError:
-        raise MKGeneralException(_("Failed to read the prediction data from <tt>%s</tt>.") % path)
+    path = dir + "/" + timegroup["name"]
+    tg_data = store.load_data_from_file(path)
+    if tg_data == None:
+        raise MKGeneralException(_("Missing prediction data."))
 
     swapped = swap_and_compute_levels(tg_data, timegroup)
     vertical_range = compute_vertical_range(swapped)

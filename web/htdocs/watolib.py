@@ -51,6 +51,7 @@ from lib import *
 from valuespec import *
 
 import cmk.paths
+import cmk.store as store
 
 replication_paths = []
 backup_paths = []
@@ -1038,10 +1039,7 @@ class Folder(BaseFolder):
 
 
     def _load_wato_info(self):
-        if os.path.exists(self.wato_info_path()):
-            return eval(file(self.wato_info_path()).read())
-        else:
-            return {}
+        return store.load_data_from_file(self.wato_info_path(), {})
 
 
     def save(self):
@@ -3108,14 +3106,17 @@ def save_configuration_vars(vars, filename):
 
 def get_login_secret(create_on_demand = False):
     path = var_dir + "automation_secret.mk"
-    try:
-        return eval(file(path).read())
-    except:
-        if not create_on_demand:
-            return None
-        secret = get_random_string(32)
-        write_settings_file(path, secret)
+
+    secret = store.load_data_from_file(path)
+    if secret != None:
         return secret
+
+    if not create_on_demand:
+        return None
+
+    secret = get_random_string(32)
+    store.save_data_to_file(path, secret)
+    return secret
 
 
 # Returns the ID of our site. This function only works in replication
@@ -3335,7 +3336,7 @@ def do_site_login(site_id, name, password):
         raise MKAutomationException(_("Empty response from web service"))
     else:
         try:
-            return eval(response)
+            return ast.literal_eval(response)
         except:
             raise MKAutomationException(response)
 
@@ -3428,7 +3429,7 @@ def do_remote_automation(site, command, vars):
         raise MKAutomationException("Empty output from remote site.")
 
     try:
-        response = eval(response)
+        response = ast.literal_eval(response)
     except:
         # The remote site will send non-Python data in case of an error.
         raise MKAutomationException("<pre>%s</pre>" % response)
@@ -3522,29 +3523,25 @@ class SiteAttribute(ValueSpecAttribute):
 # the following keys:
 # "need_sync" : 17,  # number of non-synchronized changes
 # "need_restart" : True, # True, if remote site needs a restart (cmk -R)
-def load_replication_status():
-    try:
-        repstatus = eval(file(repstatus_file).read())
+def load_replication_status(lock=False):
+    repstatus = store.load_data_from_file(repstatus_file, {}, lock)
 
-        for site_id, status in repstatus.items():
-            if config.site_is_local(site_id): # nevery sync to local site
-                status["need_sync"] = False
+    for site_id, status in repstatus.items():
+        if config.site_is_local(site_id): # nevery sync to local site
+            status["need_sync"] = False
 
-        return repstatus
-    except:
-        return {}
+    return repstatus
 
 def save_replication_status(repstatus):
-    config.write_settings_file(repstatus_file, repstatus)
+    store.save_data_to_file(repstatus_file, repstatus)
 
 # Updates one or more dict elements of a site in an
 # atomic way. If vars is None, the sites status will
 # be removed
 def update_replication_status(site_id, vars, times = {}):
     make_nagios_directory(var_dir)
-    fd = os.open(repstatus_file, os.O_RDWR | os.O_CREAT)
-    fcntl.flock(fd, fcntl.LOCK_EX)
-    repstatus = load_replication_status()
+    repstatus = load_replication_status(lock=True)
+
     if vars == None:
         if site_id in repstatus:
             del repstatus[site_id]
@@ -3561,8 +3558,8 @@ def update_replication_status(site_id, vars, times = {}):
                 old_times[what] = duration
             else:
                 old_times[what] = 0.8 * old_times[what] + 0.2 * duration
+
     save_replication_status(repstatus)
-    os.close(fd)
 
 def update_login_sites_replication_status():
     for siteid, site in config.sites.items():
@@ -3710,10 +3707,13 @@ def automation_push_snapshot():
             if not os.path.exists(tmp_dir):
                 make_nagios_directory(tmp_dir)
             multitar.extract_from_buffer(tarcontent, [ ("dir", "sitespecific", tmp_dir) ])
-            site_globals = eval(file(tmp_dir + "/sitespecific.mk").read())
+
+            site_globals = store.load_data_from_file(tmp_dir + "/sitespecific.mk", {})
+
             current_settings = load_configuration_settings()
             current_settings.update(site_globals)
             save_configuration_settings(current_settings)
+
             shutil.rmtree(tmp_dir)
         except Exception, e:
             logger(LOG_WARNING, "Warning: cannot extract site-specific global settings: %s" % e)
@@ -3781,7 +3781,7 @@ def push_snapshot_to_site(site, do_restart):
     url = url_base + var_string
     response_text = upload_file(url, sync_snapshot_file(site["id"]), site.get('insecure', False))
     try:
-        return eval(response_text)
+        return ast.literal_eval(response_text)
     except:
         raise MKAutomationException(_("Garbled automation response from site %s: '%s'") %
             (site["id"], response_text))
@@ -4295,7 +4295,7 @@ def check_mk_local_automation(command, args=[], indata="", stdin_data=None, time
         call_hook_activate_changes()
 
     try:
-        return eval(outdata)
+        return ast.literal_eval(outdata)
     except Exception, e:
         raise MKGeneralException("Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
                       (" ".join(cmd), e, outdata))

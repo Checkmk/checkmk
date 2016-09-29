@@ -31,6 +31,7 @@ import sites
 from valuespec import *
 import cmk.defines as defines
 import cmk.paths
+import cmk.store as store
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -1021,8 +1022,7 @@ def melt_short_intervals(entries, duration, dont_merge):
 
 def save_annotations(annotations):
     path = cmk.paths.var_dir + "/availability_annotations.mk"
-    file(path + ".new", "w").write(repr(annotations) + "\n")
-    os.rename(path + ".new", path)
+    store.save_data_to_file(path, annotations)
 
 
 def load_annotations(lock = False):
@@ -1031,12 +1031,7 @@ def load_annotations(lock = False):
         # Support legacy old wrong name-clashing path
         path = cmk.paths.var_dir + "/web/statehist_annotations.mk"
 
-    if os.path.exists(path):
-        if lock:
-            aquire_lock(path)
-        return eval(file(path).read())
-    else:
-        return {}
+    return store.load_data_from_file(path, {}, lock)
 
 
 def update_annotations(site_host_svc, annotation, replace_existing):

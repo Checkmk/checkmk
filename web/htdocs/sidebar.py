@@ -34,6 +34,7 @@ import notify, werks
 import sites
 from lib import *
 import cmk.paths
+import cmk.store as store
 
 try:
     import simplejson as json
@@ -125,17 +126,17 @@ def heading(text):
 # (dictionary) on the fly
 def load_user_config():
     path = config.user_confdir + "/sidebar.mk"
-    try:
-        user_config = eval(file(path).read())
-        if type(user_config) == list:
-            user_config = {
-                "snapins" : user_config,
-                "fold":     False,
-            }
-    except:
+    user_config = store.load_data_from_file(path)
+    if user_config == None:
         user_config = {
             "snapins": config.sidebar,
             "fold":    False,
+        }
+
+    if type(user_config) == list:
+        user_config = {
+            "snapins" : user_config,
+            "fold":     False,
         }
 
     # Remove entries the user is not allowed for or which have state "off" (from legacy version)

@@ -36,6 +36,7 @@ except ImportError:
 import config
 import sites
 import cmk.paths
+import cmk.store as store
 from lib import MKException, MKGeneralException, MKAuthException, MKUserError, lqencode
 
 # Load data of a host, cache it in the current HTTP request
@@ -60,10 +61,7 @@ def load_host(hostname):
     if '/' in hostname:
         return None # just for security reasons
     path = cmk.paths.var_dir + "/inventory/" + hostname
-    try:
-        return eval(file(path).read())
-    except:
-        return {}
+    return store.load_data_from_file(path, {})
 
 # Return a list of timestamps of all inventory snapshost
 # of a host.
@@ -116,13 +114,8 @@ def load_historic_host(hostname, timestamp):
     if int(os.stat(path).st_mtime) == timestamp:
         return host(hostname)
 
-    # TODO: Handle valid cases (missing file) correctly, but don't suppress other exceptions!
-    try:
-        path = cmk.paths.var_dir + "/inventory_archive/" + hostname + "/%d" % timestamp
-        return eval(file(path).read())
-    except:
-        return {}
-
+    path = cmk.paths.var_dir + "/inventory_archive/" + hostname + "/%d" % timestamp
+    return store.load_data_from_file(path, {})
 
 
 # Example for the paths:

@@ -27,16 +27,13 @@
 import config, forms, time, lib, userdb
 import subprocess
 from valuespec import *
+import cmk.store as store
 
 def get_gui_messages(user_id = None):
     if user_id is None:
         user_id = config.user_id
     path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
-
-    try:
-        messages = eval(file(path).read())
-    except IOError:
-        messages = [] # Initialize list of messages
+    messages = store.load_data_from_file(path, [])
 
     # Delete too old messages
     updated = False
@@ -64,7 +61,7 @@ def save_gui_messages(messages, user_id = None):
         user_id = config.user_id
     path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
     make_nagios_directory(os.path.dirname(path))
-    file(path, 'w').write(repr(messages) + "\n")
+    store.save_data_to_file(path, messages)
 
 loaded_with_language = False
 def load_plugins(force):

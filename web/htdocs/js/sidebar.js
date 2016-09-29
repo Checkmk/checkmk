@@ -628,7 +628,7 @@ function remove_sidebar_snapin(oLink, url)
     call_ajax(url, {
         handler_data     : "snapin_" + id,
         response_handler : function (id, _unused) {
-            remove_snapin(id);   
+            remove_snapin(id);
         },
         method           : "GET"
     });

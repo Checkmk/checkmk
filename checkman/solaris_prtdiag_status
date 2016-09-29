@@ -4,11 +4,11 @@ catalog: os/solaris
 license: GPL
 distribution: check_mk
 description:
- This check looks for the return value of the prtdiag command on solaris based systems. 
+ This check looks for the return value of the prtdiag command on solaris based systems.
  A return value of 0 is interpreted as OK as documented in the prtdiag man page.
- Each other return value results in a CRITICAL state. 
+ Each other return value results in a CRITICAL state.
 
  CAVEAT:
  The extend of the hardware that is considered in the prtdiag command varies from
  solaris platform to platform (i.e. huge differences between e.g. M series and T
- series systems). Please have a look at the documentation of prtdiag for your system.  
+ series systems). Please have a look at the documentation of prtdiag for your system.

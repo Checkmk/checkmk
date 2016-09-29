@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check checks the status of Check_MK site backup jobs. It
  will raise a {CRIT} state in case the job failed or the next execution of
- the job is overdue. 
+ the job is overdue.
 
 item:
  The site_id joined with the ident of the job (string).

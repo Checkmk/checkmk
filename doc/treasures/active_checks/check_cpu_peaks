@@ -129,10 +129,10 @@ try:
             step_secs = data[0]
 
 	def sumsum(x):
-	    if None in x: 
+	    if None in x:
 		return None
 	    return int(sum([y for y in x]))
-		     
+
         #util_total = map(lambda x: int(sum([y for y in x if y != None])),
         util_total = map(sumsum, zip(datasets[0], datasets[1], datasets[2]))
 

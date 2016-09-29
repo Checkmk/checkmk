@@ -29,7 +29,7 @@
 # [[[site:heute2:encrypted]]]
 # {'bytes_per_second': 0,
 #  'finished': 1467733556.67532,
-#  'output': '2016-07-05 17:45:56 --- Starting backup (Check_MK-Klappspaten-heute2-encrypted) ---\n2016-07-05 17:45:56 Cleaning up previously completed backup\n2016-07-05 17:45:56 
+#  'output': '2016-07-05 17:45:56 --- Starting backup (Check_MK-Klappspaten-heute2-encrypted) ---\n2016-07-05 17:45:56 Cleaning up previously completed backup\n2016-07-05 17:45:56
 # --- Backup completed (Duration: 0:00:00, Size: 6.49 MB, IO: 0.00 B/s) ---\n',
 #  'pid': 14850,
 #  'size': 6809879,

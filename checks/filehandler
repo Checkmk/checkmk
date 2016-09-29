@@ -56,9 +56,9 @@ def check_filehandler(_no_item, params, info):
     elif perc >= warn:
         state = 1
     if state > 0:
-        infotext += ' (warn/crit at %.1f%%/%.1f%%)' % (warn, crit) 
+        infotext += ' (warn/crit at %.1f%%/%.1f%%)' % (warn, crit)
 
-    return state, infotext, [ ( 'filehandler_perc', perc, warn, crit ) ] 
+    return state, infotext, [ ( 'filehandler_perc', perc, warn, crit ) ]
 
 check_info['filehandler'] = {
     'check_function'            : check_filehandler,

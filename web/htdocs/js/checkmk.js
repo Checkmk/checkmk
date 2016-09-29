@@ -1180,7 +1180,7 @@ function update_reload_pause_timer(seconds_left)
         window.location.reload(false);
     }
     else {
-        // update the pause counter        
+        // update the pause counter
         var counter = document.getElementById("reload_pause_counter");
         if (counter) {
             counter.innerHTML = seconds_left;
@@ -3158,7 +3158,7 @@ function handle_job_detail_response(handler_data, response_body)
     else {
         reload_sidebar();
         window.location.reload();
-    }   
+    }
 }
 
 function handle_job_detail_error(handler_data, status_code, error_msg)

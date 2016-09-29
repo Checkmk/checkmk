@@ -3,7 +3,7 @@ agents: linux
 catalog: os/networking
 license: GPL
 distribution: check_mk
-description: 
+description:
  This plugin can be used for network diagnostics. It collects data for each network hop to the target
  destination address(es).  You can configure levels for the round trip average, the package loss and the standard deviation.
  Install agent plugin and edit agent plugin configuration {{ mtr.cfg }} Define one or more hosts in it and run inventory.

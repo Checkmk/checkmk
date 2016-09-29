@@ -1,0 +1,11 @@
+Title: Default setting of inline_snmp not displayed correctly
+Component: wato
+State: open
+Date: 2016-09-29 18:33:56
+Targetversion: 1.2.8
+Class: nastiness
+
+Create a new site, go to global settings, go to Inline SNMP setting. Open it
+do not changed it (it's set to YES) and safe. No go back to editing it.
+It now shows "off" as the default setting - which is wrong. If you reset it
+to factory defaults then it correctly goes to "on" again.

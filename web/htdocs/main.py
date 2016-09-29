@@ -27,7 +27,7 @@
 import config
 
 def page_index():
-    default_start_url = config.user.get("start_url") or config.start_url
+    default_start_url = config.user.get_attribute("start_url") or config.start_url
     start_url = html.var("start_url", default_start_url).strip()
 
     # Prevent redirecting to absolute URL which could be used to redirect

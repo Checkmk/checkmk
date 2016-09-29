@@ -56,7 +56,7 @@ def get_availability_options_from_url(what):
 
 def render_availability_options(what):
     if html.var("_reset"):
-        config.save_user_file("avoptions", {})
+        config.user.save_file("avoptions", {})
         for varname in html.vars.keys():
             if varname.startswith("avo_"):
                 html.del_var(varname)
@@ -108,7 +108,7 @@ def render_availability_options(what):
 
 
     if html.form_submitted():
-        config.save_user_file("avoptions", avoptions)
+        config.user.save_file("avoptions", avoptions)
 
     return avoptions
 

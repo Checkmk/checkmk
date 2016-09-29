@@ -438,7 +438,7 @@ class PainterOptions(object):
     def save_to_config(self):
         vo = config.user.load_file("viewoptions", {}, lock=True)
         vo[self._view_name] = self._options
-        config.save_user_file("viewoptions", vo)
+        config.user.save_file("viewoptions", vo)
 
 
     def update_from_url(self, view):
@@ -2258,7 +2258,7 @@ def ajax_count_button():
         counts[i] *= 0.95
     counts.setdefault(id, 0)
     counts[id] += 1
-    config.save_user_file("buttoncounts", counts)
+    config.user.save_file("buttoncounts", counts)
 
 
 # Retrieve data via livestatus, convert into list of dicts,

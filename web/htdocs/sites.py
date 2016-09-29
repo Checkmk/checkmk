@@ -219,10 +219,11 @@ def _livestatus_auth_user():
         return force_authuser # set a different user
 
     # TODO: Remove this with 1.5.0/1.6.0
-    if html.output_format != 'html' and config.user.get("force_authuser_webservice"):
+    if html.output_format != 'html' \
+       and config.user.get_attribute("force_authuser_webservice"):
         return config.user.id
 
-    if config.user.get("force_authuser"):
+    if config.user.get_attribute("force_authuser"):
         return config.user.id
 
     return None

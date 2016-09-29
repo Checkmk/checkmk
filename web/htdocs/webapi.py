@@ -66,7 +66,7 @@ def page_api():
         else:
             html.set_output_format(output_format)
 
-        if not config.user.get("automation_secret"):
+        if not config.user.get_attribute("automation_secret"):
             raise MKAuthException("The WATO API is only available for automation users")
 
         config.user.need_permission("wato.use")

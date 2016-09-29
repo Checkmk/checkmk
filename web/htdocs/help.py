@@ -33,5 +33,5 @@ except ImportError:
 
 def ajax_switch_help():
     state = html.var("enabled", "") != ""
-    config.save_user_file("help", state)
+    config.user.save_file("help", state)
     html.write(json.dumps(state))

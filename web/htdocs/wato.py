@@ -1162,7 +1162,7 @@ def mode_editfolder(phase, new):
 
 
 def ajax_set_foldertree():
-    config.save_user_file("foldertree", (html.var('topic'), html.var('target')))
+    config.user.save_file("foldertree", (html.var('topic'), html.var('target')))
 
 
 #.
@@ -2698,11 +2698,11 @@ def mode_inventory(phase, firsttime):
             # Settings for showing parameters
             if html.var("_show_parameters"):
                 parameter_column = True
-                config.save_user_file("parameter_column", True)
+                config.user.save_file("parameter_column", True)
                 return
             elif html.var("_hide_parameters"):
                 parameter_column = False
-                config.save_user_file("parameter_column", False)
+                config.user.save_file("parameter_column", False)
                 return
 
             config.user.need_permission("wato.services")
@@ -3957,7 +3957,7 @@ def mode_parentscan(phase):
 
     if html.var("_start"):
         # Persist settings
-        config.save_user_file("parentscan", settings)
+        config.user.save_file("parentscan", settings)
 
 
         # Start interactive progress
@@ -7809,17 +7809,17 @@ def mode_notifications(phase):
         if html.has_var("_show_user"):
             if html.check_transaction():
                 options["show_user_rules"] = not not html.var("_show_user")
-                config.save_user_file("notification_display_options", options)
+                config.user.save_file("notification_display_options", options)
 
         elif html.has_var("_show_backlog"):
             if html.check_transaction():
                 options["show_backlog"] = not not html.var("_show_backlog")
-                config.save_user_file("notification_display_options", options)
+                config.user.save_file("notification_display_options", options)
 
         elif html.has_var("_show_bulks"):
             if html.check_transaction():
                 options["show_bulks"] = not not html.var("_show_bulks")
-                config.save_user_file("notification_display_options", options)
+                config.user.save_file("notification_display_options", options)
 
         elif html.has_var("_replay"):
             if html.check_transaction():
@@ -14010,7 +14010,7 @@ def page_user_profile(change_pw=False):
                             language = None
                         # Set custom language
                         users[config.user.id]['language'] = language
-                        config.user['language'] = language
+                        config.user.set_attribute("language", language)
                         i18n.set_language_cookie(language)
 
                     else:
@@ -14018,7 +14018,7 @@ def page_user_profile(change_pw=False):
                         if 'language' in users[config.user.id]:
                             del users[config.user.id]['language']
                         if 'language' in config.user:
-                            del config.user['language']
+                            config.user.unset_attribute("language")
 
                     # load the new language
                     i18n.localize(config.user.language())

@@ -49,7 +49,7 @@ auth_type = None
 # automation secret authentication.
 def authenticate(mod_python_req):
     # Check whether or not already authenticated
-    user_id = login.check_auth(mod_python_req)
+    user_id = check_auth(mod_python_req)
     if user_id:
         login(user_id)
         return True
@@ -262,7 +262,7 @@ def check_auth(mod_python_req):
         user_id = check_auth_http_header()
 
     if user_id is None:
-        user_id = check_auth_cookie()
+        user_id = check_auth_by_cookie()
 
     if (user_id is not None and type(user_id) != unicode) or user_id == u'':
         raise MKInternalError(_("Invalid user authentication"))
@@ -307,7 +307,7 @@ def check_auth_web_server(mod_python_req):
         return mod_python_req.user.decode("utf-8")
 
 
-def check_auth_cookie():
+def check_auth_by_cookie():
     for cookie_name in html.get_cookie_names():
         if cookie_name.startswith('auth_'):
             try:

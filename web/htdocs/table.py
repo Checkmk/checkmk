@@ -375,7 +375,7 @@ def end():
                            (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
 
     if actions_enabled and not do_csv:
-        config.save_user_file("tableoptions", user_opts)
+        config.user.save_file("tableoptions", user_opts)
 
     table = None
 

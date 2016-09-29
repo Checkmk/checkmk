@@ -2074,13 +2074,13 @@ def load_assumptions():
     g_assumptions = config.user.load_file("bi_assumptions", {})
 
 def save_assumptions():
-    config.save_user_file("bi_assumptions", g_assumptions)
+    config.user.save_file("bi_assumptions", g_assumptions)
 
 def load_ex_level():
     return config.user.load_file("bi_treestate", (None, ))[0]
 
 def save_ex_level(current_ex_level):
-    config.save_user_file("bi_treestate", (current_ex_level, ))
+    config.user.save_file("bi_treestate", (current_ex_level, ))
 
 def status_tree_depth(tree):
     if len(tree) == 3:

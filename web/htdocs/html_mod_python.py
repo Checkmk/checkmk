@@ -271,10 +271,10 @@ class html_mod_python(htmllib.html):
 
     def save_transids(self, used_ids):
         if config.user.id:
-            config.save_user_file("transids", used_ids)
+            config.user.save_file("transids", used_ids)
 
     def save_tree_states(self):
-        config.save_user_file("treestates", self.treestates)
+        config.user.save_file("treestates", self.treestates)
 
 
     def load_tree_states(self):

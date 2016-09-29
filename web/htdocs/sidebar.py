@@ -152,7 +152,7 @@ def load_user_config():
 
 def save_user_config(user_config):
     if config.user.may("general.configure_sidebar"):
-        config.save_user_file("sidebar", user_config)
+        config.user.save_file("sidebar", user_config)
 
 
 def get_check_mk_edition_title():
@@ -169,7 +169,8 @@ def sidebar_head():
     html.write('<div id="side_header">')
     html.write('<div id="side_fold"></div>')
     html.write('<a title="%s" target="main" href="%s">' %
-          (_("Go to main overview"), html.attrencode(config.user.get("start_url") or config.start_url)))
+          (_("Go to main overview"),
+           html.attrencode(config.user.get_attribute("start_url") or config.start_url)))
     html.write('<img id="side_bg" src="images/sidebar_top.png">')
     html.write('<div id="side_version">'
                '<a href="version.py" target="main" title=\"%s\">%s<br>%s' %
@@ -596,13 +597,13 @@ def ajax_tag_tree():
     if type(tree_conf) == int:
         tree_conf = {"cwd":{}} # convert from old style
     tree_conf["tree"] = newconf
-    config.save_user_file("virtual_host_tree", tree_conf)
+    config.user.save_file("virtual_host_tree", tree_conf)
 
 def ajax_tag_tree_enter():
     path = html.var("path") and html.var("path").split("|") or []
     tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
     tree_conf["cwd"][tree_conf["tree"]] = path
-    config.save_user_file("virtual_host_tree", tree_conf)
+    config.user.save_file("virtual_host_tree", tree_conf)
 
 
 def ajax_switch_site():

@@ -298,6 +298,7 @@ class LoggedInUser(object):
         self._load_attributes()
         self._load_permissions()
         self._load_confdir()
+        self._load_site_config()
 
 
     # TODO: Clean up that baserole_* stuff?
@@ -334,8 +335,8 @@ class LoggedInUser(object):
 
 
     def _load_attributes(self):
-        if u in multisite_users:
-            self.attributes = multisite_users[u]
+        if self.id in multisite_users:
+            self.attributes = multisite_users[self.id]
         else:
             self.attributes = {
                 "roles" : self.role_ids,
@@ -372,12 +373,23 @@ class LoggedInUser(object):
         self.save_file("siteconfig", self.siteconf)
 
 
-    def language(self, default=None):
-        if "language" in self.attributes:
-            return self.attributes["language"]
+    def get_attribute(self, key, deflt=None):
+        return self.attributes.get(key, deflt)
 
-        else:
-            return get_language(default)
+
+    def set_attribute(self, key, value):
+        self.attributes[key] = value
+
+
+    def unset_attribute(self, key):
+        try:
+            del self.attributes[key]
+        except KeyError:
+            pass
+
+
+    def language(self, default=None):
+        return self.get_attribute("language", get_language(default))
 
 
     def load_stars(self):
@@ -535,7 +547,7 @@ def user_may(user_id, pname):
 
 
 # TODO: Check all calls for arguments (changed optional user to 3rd positional)
-def save_user_file(name, content, user, unlock=False):
+def save_user_file(name, data, user, unlock=False):
     dirname = config_dir + "/" + user.encode("utf-8")
     make_nagios_directory(dirname)
     path = dirname + "/" + name + ".mk"

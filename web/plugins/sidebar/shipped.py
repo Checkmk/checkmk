@@ -1299,7 +1299,7 @@ def load_legacy_bookmarks():
 
 
 def save_legacy_bookmarks(bookmarks):
-    config.save_user_file("bookmarks", bookmarks)
+    config.user.save_file("bookmarks", bookmarks)
 
 
 def get_bookmarks_by_topic():

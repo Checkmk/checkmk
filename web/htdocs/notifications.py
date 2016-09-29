@@ -50,7 +50,7 @@ def set_modified_time():
     g_modified_time = time.time()
 
 def save_acknowledgements():
-    config.save_user_file("acknowledged_notifications", int(g_acknowledgement_time[config.user.id]))
+    config.user.save_file("acknowledged_notifications", int(g_acknowledgement_time[config.user.id]))
     set_modified_time()
 
 def acknowledged_time():
@@ -61,7 +61,7 @@ def acknowledged_time():
 
 def load_acknowledgements():
     global g_acknowledgement_time
-    g_acknowledgement_time[config.user.id] = config.load_user_file("acknowledged_notifications", 0)
+    g_acknowledgement_time[config.user.id] = config.user.load_file("acknowledged_notifications", 0)
     set_modified_time()
     if g_acknowledgement_time[config.user.id] == 0:
         # when this timestamp is first initialized, save the current timestamp as the acknowledge

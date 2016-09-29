@@ -1875,26 +1875,25 @@ def rename_host_in_multisite(oldname, newname):
     users_changed = 0
     total_changed = 0
     for userid in os.listdir(config.config_dir):
-        if userid[0] != '.':
-            favpath = config.config_dir + "/" + userid + "/favorites.mk"
-            if os.path.exists(favpath):
-                try:
-                    num_changed = 0
-                    favorites = eval(file(favpath).read())
-                    for nr, entry in enumerate(favorites):
-                        if entry == oldname:
-                            favorites[nr] = newname
-                            num_changed += 1
-                        elif entry.startswith(oldname + ";"):
-                            favorites[nr] = newname + ";" + entry.split(";")[1]
-                            num_changed += 1
-                    if num_changed:
-                        file(favpath, "w").write(repr(favorites) + "\n")
-                        users_changed += 1
-                        total_changed += num_changed
-                except:
-                    if config.debug:
-                        raise
+        if userid[0] == '.':
+            continue
+
+        favpath = config.config_dir + "/" + userid + "/favorites.mk"
+        num_changed = 0
+        favorites = store.load_data_from_file(favpath, [], lock=True)
+        for nr, entry in enumerate(favorites):
+            if entry == oldname:
+                favorites[nr] = newname
+                num_changed += 1
+            elif entry.startswith(oldname + ";"):
+                favorites[nr] = newname + ";" + entry.split(";")[1]
+                num_changed += 1
+
+        if num_changed:
+            store.save_data_to_file(favpath, favorites)
+            users_changed += 1
+            total_changed += num_changed
+
     if users_changed:
         return [ "favorites" ] * total_changed
     else:
@@ -7866,11 +7865,7 @@ def mode_notifications(phase):
 
     # Show recent notifications. We can use them for rule analysis
     if show_backlog:
-        try:
-            backlog = eval(file(cmk.paths.var_dir + "/notify/backlog.mk").read())
-        except:
-            backlog = []
-
+        backlog = store.load_data_from_file(cmk.paths.var_dir + "/notify/backlog.mk", [])
         if backlog:
             table.begin(table_id = "backlog", title = _("Recent notifications (for analysis)"), sortable=False)
             for nr, context in enumerate(backlog):

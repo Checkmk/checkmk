@@ -15859,7 +15859,7 @@ def execute_network_scan_job():
     save_network_scan_result(folder, result)
 
     if old_user:
-        config.set_user(old_user)
+        config.set_user_by_id(old_user)
 
 
 # Find the folder which network scan is longest waiting and return the

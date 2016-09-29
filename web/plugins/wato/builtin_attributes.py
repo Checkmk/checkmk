@@ -283,7 +283,7 @@ class NetworkScanAttribute(ValueSpecAttribute):
                                  "choosen user. This user needs the permission to add new hosts "
                                  "to this folder."),
                         choices = get_all_user_ids,
-                        default_value = lambda: config.user_id,
+                        default_value = lambda: config.user.id,
                     )),
                     ("translate_names", HostnameTranslation(
                         title = _("Translate Hostnames"),
@@ -348,7 +348,7 @@ declare_host_attribute(NetworkScanAttribute(),
                        show_in_folder = True,
                        show_in_host_search = False,
                        show_inherited_value = False,
-                       may_edit = lambda: config.may("wato.manage_hosts"),
+                       may_edit = lambda: config.user.may("wato.manage_hosts"),
                        topic = _("Network Scan"))
 
 

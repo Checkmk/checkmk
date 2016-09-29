@@ -27,7 +27,6 @@
 import subprocess, base64, time, pprint, traceback, tarfile, cStringIO, sys
 import i18n
 import sites
-import login
 from lib import *
 from valuespec import *
 import table, config, forms
@@ -281,7 +280,7 @@ def show_report_form(what, details):
 def add_gui_user_infos_to_details(details):
     import userdb
     users = userdb.load_users()
-    user = users.get(config.user_id, {})
+    user = users.get(config.user.id, {})
     details.setdefault("name", user.get("alias"))
     details.setdefault("mail", user.get("mail"))
 
@@ -427,7 +426,7 @@ def create_crash_dump_info_file(tar, what):
     crash_info = cmk.crash_reporting.create_crash_info(what, details={
         "page"           : html.myfile+".py",
         "vars"           : html.vars,
-        "username"       : login.user_id,
+        "username"       : config.user.id,
         "user_agent"     : html.get_user_agent(),
         "referer"        : html.get_referer(),
         "is_mobile"      : html.is_mobile(),

@@ -174,11 +174,11 @@ def handle_not_authenticated():
 
 
 def ensure_general_access():
-    if config.may("general.use"):
+    if config.user.may("general.use"):
         return
 
     reason = [ _("You are not authorized to use the Check_MK GUI. Sorry. "
-               "You are logged in as <b>%s</b>.") % config.user_id ]
+               "You are logged in as <b>%s</b>.") % config.user.id ]
 
     if config.user.role_ids:
         reason.append(_("Your roles are <b>%s</b>.") % ", ".join(config.user.role_ids))

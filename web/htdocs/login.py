@@ -59,18 +59,11 @@ def authenticate(mod_python_req):
 
 # After the user has been authenticated, tell the different components
 # of the GUI which user is authenticated.
-def login(_user_id):
-    global user_id
-    if type(_user_id) != unicode:
+def login(user_id):
+    if type(user_id) != unicode:
         raise MKInternalError("Invalid user id type")
-    user_id = _user_id
-
+    config.set_user_by_id(user_id)
     html.set_user_id(user_id)
-    config.set_user_by_id(_user_id)
-
-
-def is_logged_in():
-    return user_id != None
 
 
 def auth_cookie_name():
@@ -146,7 +139,7 @@ def auth_cookie_value(username):
 
 def invalidate_auth_session():
     if config.single_user_session != None:
-        userdb.invalidate_session(config.user_id)
+        userdb.invalidate_session(config.user.id)
 
     del_auth_cookie()
     i18n.del_language_cookie()

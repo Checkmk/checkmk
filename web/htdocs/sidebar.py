@@ -145,13 +145,13 @@ def load_user_config():
           entry for entry in user_config["snapins"]
                 if entry[0] in sidebar_snapins
                    and entry[1] != "off"
-                   and config.may("sidesnap." + entry[0])]
+                   and config.user.may("sidesnap." + entry[0])]
 
     return user_config
 
 
 def save_user_config(user_config):
-    if config.may("general.configure_sidebar"):
+    if config.user.may("general.configure_sidebar"):
         config.save_user_file("sidebar", user_config)
 
 
@@ -208,16 +208,16 @@ def ajax_message_read():
 
 def sidebar_foot():
     html.write('<div id="side_footer">')
-    if config.may("general.configure_sidebar"):
+    if config.user.may("general.configure_sidebar"):
         html.icon_button("sidebar_add_snapin.py", _("Add snapin to the sidebar"), "sidebar_addsnapin",
                          target="main")
     # editing the profile is not possible on remote sites which are sync targets
     # of a central WATO system
     if config.wato_enabled and \
-       (config.may("general.edit_profile") or config.may("general.change_password")):
+       (config.user.may("general.edit_profile") or config.user.may("general.change_password")):
         html.icon_button("user_profile.py", _("Edit your personal settings, change your password"),
             "sidebar_settings", target="main")
-    if config.may("general.logout") and not config.auth_by_http_header:
+    if config.user.may("general.logout") and not config.auth_by_http_header:
         html.icon_button("logout.py", _("Log out"), "sidebar_logout", target="_top")
 
     html.icon_button("return void();", _("You have pending messages."),
@@ -235,7 +235,7 @@ def sidebar_foot():
 
 # Standalone sidebar
 def page_side():
-    if not config.may("general.see_sidebar"):
+    if not config.user.may("general.see_sidebar"):
         return
     if config.sidebar_notify_interval is not None:
         interval = config.sidebar_notify_interval
@@ -262,7 +262,7 @@ def page_side():
 
     html.write('<div id="side_content"%s>' % scrolling)
     for name, state in user_config["snapins"]:
-        if not name in sidebar_snapins or not config.may("sidesnap." + name):
+        if not name in sidebar_snapins or not config.user.may("sidesnap." + name):
             continue
         # Performs the initial rendering and might return an optional refresh url,
         # when the snapin contents are refreshed from an external source
@@ -302,7 +302,7 @@ def render_snapin(name, state):
 
     html.write("<div id=\"snapin_container_%s\" class=snapin>\n" % name)
     # When not permitted to open/close snapins, the snapins are always opened
-    if state == "open" or not config.may("general.configure_sidebar"):
+    if state == "open" or not config.user.may("general.configure_sidebar"):
         style = ""
         headclass = "open"
         minimaxi = "mini"
@@ -316,7 +316,7 @@ def render_snapin(name, state):
     html.write('<div class="head %s" ' % headclass)
 
     # If the user may modify the sidebar then add code for dragging the snapin
-    if config.may("general.configure_sidebar"):
+    if config.user.may("general.configure_sidebar"):
         html.write("onmouseover=\"document.body.style.cursor='move';\" "
                    "onmouseout=\"document.body.style.cursor='';\" "
                    "onmousedown=\"snapinStartDrag(event)\" onmouseup=\"snapinStopDrag(event)\">")
@@ -324,7 +324,7 @@ def render_snapin(name, state):
         html.write(">")
 
 
-    if config.may("general.configure_sidebar"):
+    if config.user.may("general.configure_sidebar"):
         # Icon for mini/maximizing
         html.write('<div class="minisnapin">')
         html.icon_button(url=None, help=_("Toggle this snapin"), icon="%ssnapin" % minimaxi,
@@ -339,7 +339,7 @@ def render_snapin(name, state):
         html.write('</div>')
 
     # The heading. A click on the heading mini/maximizes the snapin
-    if config.may("general.configure_sidebar"):
+    if config.user.may("general.configure_sidebar"):
         toggle_actions = " onclick=\"toggle_sidebar_snapin(this,'%s')\"" \
                          " onmouseover=\"this.style.cursor='pointer'\"" \
                          " onmouseout=\"this.style.cursor='auto'\"" % toggle_url
@@ -389,7 +389,7 @@ def ajax_openclose():
 
 def ajax_snapin():
     # Update online state of the user (if enabled)
-    userdb.update_user_access_time(config.user_id)
+    userdb.update_user_access_time(config.user.id)
 
     snapname = html.var("name")
     if snapname:
@@ -401,7 +401,7 @@ def ajax_snapin():
     snapin_code = []
     try:
         for snapname in snapnames:
-            if not config.may("sidesnap." + snapname):
+            if not config.user.may("sidesnap." + snapname):
                 continue
             snapin = sidebar_snapins.get(snapname)
 
@@ -437,7 +437,7 @@ def ajax_snapin():
         raise
 
 def move_snapin():
-    if not config.may("general.configure_sidebar"):
+    if not config.user.may("general.configure_sidebar"):
         return
 
     snapname_to_move = html.var("name")
@@ -469,7 +469,7 @@ def move_snapin():
     save_user_config(user_config)
 
 def page_add_snapin():
-    if not config.may("general.configure_sidebar"):
+    if not config.user.may("general.configure_sidebar"):
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
     html.header(_("Available snapins"), stylesheets=["pages", "sidebar", "status"])
@@ -489,7 +489,7 @@ def page_add_snapin():
     for name in names:
         if name in used_snapins:
             continue
-        if not config.may("sidesnap." + name):
+        if not config.user.may("sidesnap." + name):
             continue # not allowed for this user
 
         snapin = sidebar_snapins[name]
@@ -592,7 +592,7 @@ def ajax_switch_masterstate():
 
 def ajax_tag_tree():
     newconf = int(html.var("conf"))
-    tree_conf = config.load_user_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+    tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
     if type(tree_conf) == int:
         tree_conf = {"cwd":{}} # convert from old style
     tree_conf["tree"] = newconf
@@ -600,14 +600,14 @@ def ajax_tag_tree():
 
 def ajax_tag_tree_enter():
     path = html.var("path") and html.var("path").split("|") or []
-    tree_conf = config.load_user_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+    tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
     tree_conf["cwd"][tree_conf["tree"]] = path
     config.save_user_file("virtual_host_tree", tree_conf)
 
 
 def ajax_switch_site():
     # _site_switch=sitename1:on,sitename2:off,...
-    if not config.may("sidesnap.sitestatus"):
+    if not config.user.may("sidesnap.sitestatus"):
         return
 
     switch_var = html.var("_site_switch")

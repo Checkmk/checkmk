@@ -431,12 +431,12 @@ class PainterOptions(object):
             return
 
         # Options are stored per view. Get all options for all views
-        vo = config.load_user_file("viewoptions", {})
+        vo = config.user.load_file("viewoptions", {})
         self._options = vo.get(self._view_name, {})
 
 
     def save_to_config(self):
-        vo = config.load_user_file("viewoptions", {}, lock=True)
+        vo = config.user.load_file("viewoptions", {}, lock=True)
         vo[self._view_name] = self._options
         config.save_user_file("viewoptions", vo)
 
@@ -542,7 +542,7 @@ class PainterOptions(object):
 
 
     def painter_options_permitted(self):
-        return config.may("general.painter_options")
+        return config.user.may("general.painter_options")
 
 
     def painter_option_form_enabled(self):
@@ -1912,7 +1912,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 
     # Also execute commands in cases without command form (needed for Python-
     # web service e.g. for NagStaMon)
-    elif row_count > 0 and config.may("general.act") \
+    elif row_count > 0 and config.user.may("general.act") \
          and html.do_actions() and html.transaction_valid():
 
         # There are one shot actions which only want to affect one row, filter the rows
@@ -1981,7 +1981,7 @@ def render_view(view, rows, datasource, group_painters, painters,
         if bi.reused_compilation():
             html.add_status_icon("aggrcomp", _("Reused cached compiled BI aggregations (PID %d)") % pid)
 
-        if config.may('wato.users'):
+        if config.user.may('wato.users'):
             try:
                 msg = file(cmk.paths.var_dir + '/web/ldap_sync_fail.mk').read()
                 html.add_status_icon("ldap", _('Last LDAP sync failed! %s') % html.attrencode(msg))
@@ -2066,9 +2066,9 @@ def play_alarm_sounds():
 # How many data rows may the user query?
 def get_limit():
     limitvar = html.var("limit", "soft")
-    if limitvar == "hard" and config.may("general.ignore_soft_limit"):
+    if limitvar == "hard" and config.user.may("general.ignore_soft_limit"):
         return config.hard_query_limit
-    elif limitvar == "none" and config.may("general.ignore_hard_limit"):
+    elif limitvar == "none" and config.user.may("general.ignore_hard_limit"):
         return None
     else:
         return config.soft_query_limit
@@ -2191,13 +2191,13 @@ def show_context_links(thisview, show_filters,
         html.javascript('g_selection_enabled = %s;' % (selection_enabled and 'true' or 'false'))
 
     if display_options.enabled(display_options.O):
-        if config.may("general.view_option_columns"):
+        if config.user.may("general.view_option_columns"):
             choices = [ [x, "%s" % x] for x in config.view_option_columns ]
             view_optiondial(thisview, "num_columns", choices, _("Change the number of display columns"))
         else:
             view_optiondial_off("num_columns")
 
-        if display_options.enabled(display_options.R) and config.may("general.view_option_refresh"):
+        if display_options.enabled(display_options.R) and config.user.may("general.view_option_refresh"):
             choices = [ [x, {0:_("off")}.get(x,str(x) + "s") + (x and "" or "")] for x in config.view_option_refreshes ]
             view_optiondial(thisview, "refresh", choices, _("Change the refresh rate"))
         else:
@@ -2208,8 +2208,8 @@ def show_context_links(thisview, show_filters,
         # WATO: If we have a host context, then show button to WATO, if permissions allow this
         if html.has_var("host") \
            and config.wato_enabled \
-           and config.may("wato.use") \
-           and (config.may("wato.hosts") or config.may("wato.seeall")):
+           and config.user.may("wato.use") \
+           and (config.user.may("wato.hosts") or config.user.may("wato.seeall")):
             host = html.var("host")
             if host:
                 url = wato.link_to_host_by_name(host)
@@ -2228,9 +2228,9 @@ def show_context_links(thisview, show_filters,
             html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)
 
     # Customize/Edit view button
-    if display_options.enabled(display_options.E) and config.may("general.edit_views"):
+    if display_options.enabled(display_options.E) and config.user.may("general.edit_views"):
         backurl = html.urlencode(html.makeuri([]))
-        if thisview["owner"] == config.user_id:
+        if thisview["owner"] == config.user.id:
             url = "edit_view.py?load_name=%s&back=%s" % (thisview["name"], backurl)
         else:
             url = "edit_view.py?load_user=%s&load_name=%s&back=%s" % \
@@ -2253,7 +2253,7 @@ def update_context_links(enable_command_toggle, enable_checkbox_toggle):
 
 def ajax_count_button():
     id = html.var("id")
-    counts = config.load_user_file("buttoncounts", {})
+    counts = config.user.load_file("buttoncounts", {})
     for i in counts:
         counts[i] *= 0.95
     counts.setdefault(id, 0)
@@ -2529,7 +2529,7 @@ def painter_choices_with_params(painters):
 def should_show_command_form(datasource, ignore_display_option=False):
     if not ignore_display_option and display_options.disabled(display_options.C):
         return False
-    if not config.may("general.act"):
+    if not config.user.may("general.act"):
         return False
 
     # What commands are available depends on the Livestatus table we
@@ -2539,7 +2539,7 @@ def should_show_command_form(datasource, ignore_display_option=False):
     # will be one of "host", "service", "command" or "downtime".
     what = datasource["infos"][0]
     for command in multisite_commands:
-        if what in command["tables"] and config.may(command["permission"]):
+        if what in command["tables"] and config.user.may(command["permission"]):
             return True
 
     return False
@@ -2562,7 +2562,7 @@ def show_command_form(is_open, datasource):
     # Show command forms, grouped by (optional) command group
     by_group = {}
     for command in multisite_commands:
-        if what in command["tables"] and config.may(command["permission"]):
+        if what in command["tables"] and config.user.may(command["permission"]):
             # Some special commands can be shown on special views using this option.
             # It is currently only used in custom views, not shipped with check_mk.
             if command.get('only_view') and html.var('view_name') != command['only_view']:
@@ -2611,7 +2611,7 @@ def core_command(what, row, row_nr, total_rows):
     # will return a command to execute and a title for the
     # confirmation dialog.
     for cmd in multisite_commands:
-        if config.may(cmd["permission"]):
+        if config.user.may(cmd["permission"]):
 
             # Does the command need information about the total number of rows
             # and the number of the current row? Then specify that
@@ -2654,7 +2654,7 @@ _("aggregations")
 # False -> No actions done because now rows selected
 # [...] new rows -> Rows actions (shall/have) be performed on
 def do_actions(view, what, action_rows, backurl):
-    if not config.may("general.act"):
+    if not config.user.may("general.act"):
         html.show_error(_("You are not allowed to perform actions. "
                           "If you think this is an error, please ask "
                           "your administrator grant you the permission to do so."))
@@ -3195,7 +3195,7 @@ def ajax_reschedule():
 
 
 def do_reschedule():
-    if not config.may("action.reschedule"):
+    if not config.user.may("action.reschedule"):
         raise MKGeneralException("You are not allowed to reschedule checks.")
 
     site = html.var("site")

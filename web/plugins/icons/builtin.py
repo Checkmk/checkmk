@@ -141,7 +141,7 @@ def paint_reschedule(what, row, tags, host_custom_vars):
 
     if (row[what + "_active_checks_enabled"] == 1
         or row[what + '_check_command'].startswith('check_mk-')) \
-       and config.may('action.reschedule'):
+       and config.user.may('action.reschedule'):
 
         servicedesc = ''
         wait_svc    = ''
@@ -185,7 +185,7 @@ def paint_rule_editor(what, row, tags, host_custom_vars):
     if row[what + "_check_type"] == 2:
         return # shadow services have no parameters
 
-    if config.wato_enabled and config.may("wato.rulesets") and config.multisite_draw_ruleicon:
+    if config.wato_enabled and config.user.may("wato.rulesets") and config.multisite_draw_ruleicon:
         urlvars = [("mode", "object_parameters"),
                    ("host", row["host_name"])]
 
@@ -217,7 +217,7 @@ multisite_icons_and_actions['rule_editor'] = {
 #   '----------------------------------------------------------------------'
 
 def paint_manpage_icon(what, row, tags, host_custom_vars):
-    if what == "service" and config.wato_enabled and config.may("wato.use"):
+    if what == "service" and config.wato_enabled and config.user.may("wato.use"):
         command = row["service_check_command"]
         if command.startswith("check_mk-"):
             check_type = command[9:]
@@ -778,7 +778,7 @@ multisite_icons_and_actions['aggregations'] = {
 def paint_stars(what, row, tags, host_custom_vars):
     stars = html.get_cached("stars")
     if stars is None:
-        stars = set(config.load_user_file("favorites", []))
+        stars = set(config.user.load_file("favorites", []))
         html.set_cache("stars", stars)
 
     if what == "host":

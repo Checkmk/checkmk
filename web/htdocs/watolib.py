@@ -165,7 +165,7 @@ def activate_changes():
 def foreign_changes():
     changes = {}
     for t, linkinfo, user, action, text in parse_audit_log("pending"):
-        if user != '-' and user != config.user_id:
+        if user != '-' and user != config.user.id:
             changes.setdefault(user, 0)
             changes[user] += 1
     return changes
@@ -190,8 +190,8 @@ def log_entry(linkinfo, action, message, logfilename, user_id = None):
     else:
         link = linkinfo
 
-    if user_id == None and config.user_id != None:
-        user_id = config.user_id.encode("utf-8")
+    if user_id == None and config.user.id != None:
+        user_id = config.user.id.encode("utf-8")
     elif user_id == '':
         user_id = '-'
 
@@ -324,11 +324,11 @@ class WithPermissions(object):
         object.__init__(self)
 
     def may(self, how): # how is "read" or "write"
-        return self.user_may(config.user_id, how)
+        return self.user_may(config.user.id, how)
 
 
     def reason_why_may_not(self, how):
-        return self.reason_why_user_may_not(config.user_id, how)
+        return self.reason_why_user_may_not(config.user.id, how)
 
 
     def user_needs_permission(self, user_id, how):
@@ -336,7 +336,7 @@ class WithPermissions(object):
 
 
     def need_permission(self, how):
-        self.user_needs_permission(config.user_id, how)
+        self.user_needs_permission(config.user.id, how)
 
 
     def user_may(self, user_id, how):
@@ -1471,7 +1471,7 @@ class Folder(BaseFolder):
 
     def create_subfolder(self, name, title, attributes):
         # 1. Check preconditions
-        config.need_permission("wato.manage_folders")
+        config.user.need_permission("wato.manage_folders")
         self.need_permission("write")
         self.need_unlocked_subfolders()
         must_be_in_contactgroups(attributes.get("contactgroups"))
@@ -1488,7 +1488,7 @@ class Folder(BaseFolder):
 
     def delete_subfolder(self, name):
         # 1. Check preconditions
-        config.need_permission("wato.manage_folders")
+        config.user.need_permission("wato.manage_folders")
         self.need_permission("write")
         self.need_unlocked_subfolders()
 
@@ -1505,7 +1505,7 @@ class Folder(BaseFolder):
 
     def move_subfolder_to(self, subfolder, target_folder):
         # 1. Check preconditions
-        config.need_permission("wato.manage_folders")
+        config.user.need_permission("wato.manage_folders")
         self.need_permission("write")
         self.need_unlocked_subfolders()
         target_folder.need_permission("write")
@@ -1567,7 +1567,7 @@ class Folder(BaseFolder):
 
     def create_hosts(self, entries):
         # 1. Check preconditions
-        config.need_permission("wato.manage_hosts")
+        config.user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
         self.need_permission("write")
 
@@ -1593,7 +1593,7 @@ class Folder(BaseFolder):
 
     def delete_hosts(self, host_names):
         # 1. Check preconditions
-        config.need_permission("wato.manage_hosts")
+        config.user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
         self.need_permission("write")
 
@@ -1625,9 +1625,9 @@ class Folder(BaseFolder):
 
     def move_hosts(self, host_names, target_folder):
         # 1. Check preconditions
-        config.need_permission("wato.manage_hosts")
-        config.need_permission("wato.edit_hosts")
-        config.need_permission("wato.move_hosts")
+        config.user.need_permission("wato.manage_hosts")
+        config.user.need_permission("wato.edit_hosts")
+        config.user.need_permission("wato.move_hosts")
         self.need_permission("write")
         self.need_unlocked_hosts()
         target_folder.need_permission("write")
@@ -1651,8 +1651,8 @@ class Folder(BaseFolder):
 
     def rename_host(self, oldname, newname):
         # 1. Check preconditions
-        config.need_permission("wato.manage_hosts")
-        config.need_permission("wato.edit_hosts")
+        config.user.need_permission("wato.manage_hosts")
+        config.user.need_permission("wato.edit_hosts")
         self.need_unlocked_hosts()
         host = self.hosts()[oldname]
         host.need_permission("write")
@@ -2099,11 +2099,11 @@ class Host(WithPermissionsAndAttributes):
 
 
     def user_needs_permission(self, user_id, how):
-        if config.may("wato.all_folders"):
+        if config.user.may("wato.all_folders"):
             return True
 
         if how == "write":
-            config.need_permission("wato.edit_hosts")
+            config.user.need_permission("wato.edit_hosts")
 
         permitted_groups, host_contact_groups, use_for_services = self.groups()
         user_contactgroups = userdb.contactgroups_of_user(user_id)
@@ -3838,7 +3838,7 @@ def ajax_profile_repl():
     else:
         site = config.site(site_id)
         try:
-            result = synchronize_profile(site, config.user_id)
+            result = synchronize_profile(site, config.user.id)
         except Exception, e:
             result = str(e)
 
@@ -4731,7 +4731,7 @@ def write_gitignore_files():
 # This is needed when the user assigns contact groups to
 # objects. He may only assign such groups he is member himself.
 def must_be_in_contactgroups(cgspec):
-    if config.may("wato.all_folders"):
+    if config.user.may("wato.all_folders"):
         return
 
     # No contact groups specified
@@ -4741,10 +4741,10 @@ def must_be_in_contactgroups(cgspec):
     cgconf = convert_cgroups_from_tuple(cgspec)
     cgs = cgconf["groups"]
     users = userdb.load_users()
-    if config.user_id not in users:
+    if config.user.id not in users:
         user_cgs = []
     else:
-        user_cgs = users[config.user_id]["contactgroups"]
+        user_cgs = users[config.user.id]["contactgroups"]
     for c in cgs:
         if c not in user_cgs:
             raise MKAuthException(_("Sorry, you cannot assign the contact group '<b>%s</b>' "

@@ -38,7 +38,7 @@ def render_wato(mini):
     if not config.wato_enabled:
         html.write(_("WATO is disabled."))
         return False
-    elif not config.may("wato.use"):
+    elif not config.user.may("wato.use"):
         html.write(_("You are not allowed to use Check_MK's web configuration GUI."))
         return False
 
@@ -49,7 +49,7 @@ def render_wato(mini):
     for mode, title, icon, permission, help in wato.modules:
         if permission and "." not in permission:
             permission = "wato." + permission
-        if not permission or config.may(permission) or config.may("wato.seeall"):
+        if not permission or config.user.may(permission) or config.user.may("wato.seeall"):
             url = "wato.py?mode=%s" % mode
             if mini:
                 html.icon_button(url, title, icon, target="main", ty="icon")
@@ -233,7 +233,7 @@ def render_wato_foldertree():
     #
     # Render link target selection
     #
-    selected_topic, selected_target = config.load_user_file("foldertree", (_('Hosts'), 'allhosts'))
+    selected_topic, selected_target = config.user.load_file("foldertree", (_('Hosts'), 'allhosts'))
 
     views.load_views()
     dashboard.load_dashboards()

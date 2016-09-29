@@ -983,7 +983,7 @@ def mode_mkeventd_rule_packs(phase):
     elif phase == "buttons":
         home_button()
         mkeventd_changes_button()
-        if config.may("mkeventd.edit"):
+        if config.user.may("mkeventd.edit"):
             html.context_button(_("New Rule Pack"), html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack")]), "new")
             html.context_button(_("Reset Counters"),
               make_action_link([("mode", "mkeventd_rule_packs"), ("_reset_counters", "1")]), "resetcounters")
@@ -1163,7 +1163,7 @@ def mode_mkeventd_rule_packs(phase):
 
 
 def show_event_simulator():
-    event = config.load_user_file("simulated_event", {})
+    event = config.user.load_file("simulated_event", {})
     html.begin_form("simulator")
     vs_mkeventd_event.render_input("event", event)
     forms.end()
@@ -1214,7 +1214,7 @@ def mode_mkeventd_rules(phase):
     elif phase == "buttons":
         mkeventd_rules_button()
         mkeventd_changes_button()
-        if config.may("mkeventd.edit"):
+        if config.user.may("mkeventd.edit"):
             html.context_button(_("New Rule"), html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id)]), "new")
             html.context_button(_("Properties"), html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("edit", rule_pack_nr)]), "edit")
         return
@@ -1640,7 +1640,7 @@ def mode_mkeventd_changes(phase):
     elif phase == "buttons":
         home_button()
         mkeventd_rules_button()
-        if config.may("mkeventd.activate") and parse_audit_log("mkeventd") and mkeventd.daemon_running():
+        if config.user.may("mkeventd.activate") and parse_audit_log("mkeventd") and mkeventd.daemon_running():
             html.context_button(_("Reload Config!"),
                     html.makeactionuri([("_activate", "now")]), "apply", hot=True)
         mkeventd_config_button()
@@ -1698,7 +1698,7 @@ def mkeventd_rules_button():
     html.context_button(_("Rule Packs"), html.makeuri_contextless([("mode", "mkeventd_rule_packs")]), "back")
 
 def mkeventd_config_button():
-    if config.may("mkeventd.config"):
+    if config.user.may("mkeventd.config"):
         html.context_button(_("Settings"), html.makeuri_contextless([("mode", "mkeventd_config")]), "configuration")
 
 def mkeventd_status_button():
@@ -1719,7 +1719,7 @@ def mode_mkeventd_status(phase):
         return
 
     elif phase == "action":
-        if config.may("mkeventd.switchmode"):
+        if config.user.may("mkeventd.switchmode"):
             if html.has_var("_switch_sync"):
                 new_mode = "sync"
             else:
@@ -1765,7 +1765,7 @@ def mode_mkeventd_status(phase):
 
     html.write("</ul>")
 
-    if config.may("mkeventd.switchmode"):
+    if config.user.may("mkeventd.switchmode"):
         html.begin_form("switch")
         if repl_mode == "sync":
             html.button("_switch_takeover", _("Switch to Takeover mode!"))

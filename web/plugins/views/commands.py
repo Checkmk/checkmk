@@ -253,7 +253,7 @@ def command_fake_checks(cmdtag, spec, row):
         if statename:
             pluginoutput = html.get_unicode_input("_fake_output").strip()
             if not pluginoutput:
-                pluginoutput = _("Manually set to %s by %s") % (html.attrencode(statename), config.user_id)
+                pluginoutput = _("Manually set to %s by %s") % (html.attrencode(statename), config.user.id)
             perfdata = html.var("_fake_perfdata")
             if perfdata:
                 pluginoutput += "|" + perfdata
@@ -333,7 +333,7 @@ def command_custom_notification(cmdtag, spec, row):
         broadcast = html.get_checkbox("_cusnot_broadcast") and 1 or 0
         forced = html.get_checkbox("_cusnot_forced") and 2 or 0
         command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % \
-                ( cmdtag, spec, broadcast + forced, config.user_id, lqencode(comment))
+                ( cmdtag, spec, broadcast + forced, config.user.id, lqencode(comment))
         title = _("<b>send a custom notification</b> regarding")
         return command, title
 
@@ -400,7 +400,7 @@ def command_acknowledgement(cmdtag, spec, row):
 
         def make_command(spec, cmdtag):
             return "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;%d;%d;%d;%s" % \
-                          (spec, sticky, sendnot, perscomm, config.user_id) + (";%s" % lqencode(comment)) \
+                          (spec, sticky, sendnot, perscomm, config.user.id) + (";%s" % lqencode(comment)) \
                           + expire_text
 
         if "aggr_tree" in row: # BI mode
@@ -467,7 +467,7 @@ def command_comment(cmdtag, spec, row):
         if not comment:
             raise MKUserError("_comment", _("You need to supply a comment."))
         command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
-                  (spec, config.user_id) + (";%s" % lqencode(comment))
+                  (spec, config.user.id) + (";%s" % lqencode(comment))
         title = _("<b>add a comment to</b>")
         return command, title
 
@@ -633,7 +633,7 @@ def command_downtime(cmdtag, spec, row):
 
         def make_command(spec, cmdtag):
             return ("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec ) \
-                   + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed_and_recurring, duration, config.user_id)) \
+                   + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed_and_recurring, duration, config.user.id)) \
                    + lqencode(comment)
 
         if "aggr_tree" in row: # BI mode

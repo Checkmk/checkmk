@@ -92,11 +92,11 @@ def selection_id():
             return sel_id
 
 def get_rowselection(ident):
-    vo = config.load_user_file("rowselection/%s" % selection_id(), {})
+    vo = config.user.load_file("rowselection/%s" % selection_id(), {})
     return vo.get(ident, [])
 
 def set_rowselection(ident, rows, action):
-    vo = config.load_user_file("rowselection/%s" % selection_id(), {}, True)
+    vo = config.user.load_file("rowselection/%s" % selection_id(), {}, True)
 
     if action == 'set':
         vo[ident] = rows

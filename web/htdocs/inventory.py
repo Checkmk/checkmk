@@ -377,7 +377,7 @@ def filter_tree_by_paths(tree, paths):
 
 
 def may_see(host_name, site=None):
-    if config.may("general.see_all"):
+    if config.user.may("general.see_all"):
         return True
 
 

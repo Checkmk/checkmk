@@ -62,8 +62,8 @@ class ModeBI(WatoMode):
         }
         self._load_config()
 
-        if not config.may("wato.bi_admin"):
-            self._user_contactgroups = userdb.contactgroups_of_user(config.user_id)
+        if not config.user.may("wato.bi_admin"):
+            self._user_contactgroups = userdb.contactgroups_of_user(config.user.id)
         else:
             self._user_contactgroups = None # meaning I am admin
         self._create_valuespecs()
@@ -841,12 +841,12 @@ class ModeBIPacks(ModeBI):
 
     def buttons(self):
         ModeBI.buttons(self)
-        if config.may("wato.bi_admin"):
+        if config.user.may("wato.bi_admin"):
             html.context_button(_("New BI Pack"), html.makeuri_contextless([("mode", "bi_edit_pack")]), "new")
 
 
     def action(self):
-        if config.may("wato.bi_admin") and html.has_var("_delete"):
+        if config.user.may("wato.bi_admin") and html.has_var("_delete"):
             pack_id = html.var("_delete")
             pack = self._packs[pack_id]
             if pack["rules"]:
@@ -870,7 +870,7 @@ class ModeBIPacks(ModeBI):
 
             table.row()
             table.cell(_("Actions"), css="buttons")
-            if config.may("wato.bi_admin"):
+            if config.user.may("wato.bi_admin"):
                 edit_url = html.makeuri_contextless([("mode", "bi_edit_pack"), ("pack", pack_id)])
                 html.icon_button(edit_url, _("Edit properties of this BI pack"), "edit")
                 delete_url = html.makeactionuri([("_delete", pack_id)])

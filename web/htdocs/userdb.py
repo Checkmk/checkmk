@@ -244,7 +244,7 @@ def user_locked(username):
 def login_timed_out(username, last_activity):
     idle_timeout = load_custom_attr(username, "idle_timeout", convert_idle_timeout, None)
     if idle_timeout == None:
-        idle_timeout = config.user_idle_timeout
+        idle_timeout = config.user.idle_timeout
 
     if idle_timeout in [ None, False ]:
         return False # no timeout activated at all
@@ -873,7 +873,7 @@ def save_cached_profile(user_id, user, multisite_keys, non_contact_keys):
 
 
 def load_cached_profile():
-    return config.load_user_file("cached_profile", None)
+    return config.user.load_file("cached_profile", None)
 
 
 def contactgroups_of_user(user_id):

@@ -147,7 +147,7 @@ def render_views():
 
 
     links = []
-    if config.may("general.edit_views"):
+    if config.user.may("general.edit_views"):
         if config.debug:
             links.append((_("EXPORT"), "export_views.py"))
         links.append((_("EDIT"), "edit_views.py"))
@@ -202,7 +202,7 @@ def render_dashboards():
             render_topic(topic, s)
 
     links = []
-    if config.may("general.edit_dashboards"):
+    if config.user.may("general.edit_dashboards"):
         if config.debug:
             links.append((_("EXPORT"), "export_dashboards.py"))
         links.append((_("EDIT"), "edit_dashboards.py"))
@@ -297,7 +297,7 @@ def render_hosts(mode):
         num_columns = 2
 
     views.load_views()
-    target = views.get_context_link(config.user_id, view)
+    target = views.get_context_link(config.user.id, view)
     html.write("<table class=allhosts>\n")
     col = 1
     for site, host, state, worstsvc in hosts:
@@ -1236,29 +1236,29 @@ class BookmarkList(pagetypes.Overridable):
         attrs = {
             "title"         : u"My Bookmarks",
             "public"        : False,
-            "owner"         : config.user_id,
+            "owner"         : config.user.id,
             "name"          : "my_bookmarks",
             "description"   : u"Your personal bookmarks",
             "default_topic" : u"My Bookmarks",
             "bookmarks"     : [],
         }
 
-        cls.add_instance((config.user_id, "my_bookmarks"), cls(attrs))
+        cls.add_instance((config.user.id, "my_bookmarks"), cls(attrs))
 
 
     @classmethod
     def load_legacy_bookmarks(self):
         # Don't load the legacy bookmarks when there is already a my_bookmarks list
-        if self.has_instance((config.user_id, "my_bookmarks")):
+        if self.has_instance((config.user.id, "my_bookmarks")):
             return
 
         # Also don't load them when the user has at least one bookmark list
         for user_id, name in self.instances_dict().keys():
-            if user_id == config.user_id:
+            if user_id == config.user.id:
                 return
 
         self.add_default_bookmark_list()
-        bookmark_list = self.instance((config.user_id, "my_bookmarks"))
+        bookmark_list = self.instance((config.user.id, "my_bookmarks"))
 
         for title, url in load_legacy_bookmarks():
             bookmark_list.add_bookmark(title, url)
@@ -1381,10 +1381,10 @@ def try_shorten_url(url):
 def add_bookmark(title, url):
     BookmarkList.load()
 
-    if not BookmarkList.has_instance((config.user_id, "my_bookmarks")):
+    if not BookmarkList.has_instance((config.user.id, "my_bookmarks")):
         BookmarkList.add_default_bookmark_list()
 
-    bookmarks = BookmarkList.instance((config.user_id, "my_bookmarks"))
+    bookmarks = BookmarkList.instance((config.user.id, "my_bookmarks"))
     bookmarks.add_bookmark(title, try_shorten_url(url))
     bookmarks.save_user_instances()
 
@@ -1924,7 +1924,7 @@ def render_tag_tree():
                      'do this in the global settings for <a target=main href="%s">Multisite</a>.') % url)
         return
 
-    tree_conf = config.load_user_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+    tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
     if type(tree_conf) == int:
         tree_conf = {"tree": tree_conf, "cwd":{}} # convert from old style
 

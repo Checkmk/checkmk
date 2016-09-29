@@ -69,8 +69,8 @@ def page_api():
         if not config.user.get("automation_secret"):
             raise MKAuthException("The WATO API is only available for automation users")
 
-        config.need_permission("wato.use")
-        config.need_permission("wato.api_allowed")
+        config.user.need_permission("wato.use")
+        config.user.need_permission("wato.api_allowed")
 
         action = html.var('action')
         if action not in api_actions:

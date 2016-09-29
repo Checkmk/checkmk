@@ -28,7 +28,7 @@ def init_rowselect(view):
     # Don't make rows selectable when no commands can be fired
     # Ignore "C" display option here. Otherwise the rows will not be selectable
     # after view reload.
-    if not config.may("general.act"):
+    if not config.user.may("general.act"):
         return
 
     selected = weblib.get_rowselection('view-' + view['name'])

@@ -53,7 +53,7 @@ def query_ec_table(datasource, columns, add_columns, query, only_sites, limit, t
     rows = query_data(datasource, columns, add_columns, query, only_sites, limit,
                       tablename=tablename)
 
-    if config.may("mkeventd.seeunrelated"):
+    if config.user.may("mkeventd.seeunrelated"):
         return rows # user is allowed to see all events returned by the core
 
     return [ r for r in rows if r["event_contact_groups"] != [] or r["host_name"] != "" ]
@@ -245,7 +245,7 @@ if mkeventd_enabled:
 
     def paint_rule_id(row):
         rule_id = row["event_rule_id"]
-        if config.may("mkeventd.edit"):
+        if config.user.may("mkeventd.edit"):
             urlvars = html.urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
             return "", '<a href="wato.py?%s">%s</a>' % (urlvars, rule_id)
         else:
@@ -290,7 +290,7 @@ if mkeventd_enabled:
         return html.render_icon(phase, help=title)
 
     def render_delete_event_icons(row):
-        if config.may("mkeventd.delete"):
+        if config.user.may("mkeventd.delete"):
             urlvars = []
 
             # Found no cleaner way to get the view. Sorry.
@@ -438,11 +438,11 @@ if mkeventd_enabled:
 
     def render_mkeventd_update():
         html.write('<table border=0 cellspacing=3 cellpadding=0>')
-        if config.may("mkeventd.update_comment"):
+        if config.user.may("mkeventd.update_comment"):
             html.write('<tr><td>%s</td><td>' % _("Change comment:"))
             html.text_input('_mkeventd_comment', size=50)
             html.write('</td></tr>')
-        if config.may("mkeventd.update_contact"):
+        if config.user.may("mkeventd.update_contact"):
             html.write('<tr><td>%s</td><td>' % _("Change contact:"))
             html.text_input('_mkeventd_contact', size=50)
             html.write('</td></tr>')
@@ -454,17 +454,17 @@ if mkeventd_enabled:
 
     def command_mkeventd_update(cmdtag, spec, row):
         if html.var('_mkeventd_update'):
-            if config.may("mkeventd.update_comment"):
+            if config.user.may("mkeventd.update_comment"):
                 comment = html.get_unicode_input("_mkeventd_comment").strip().replace(";",",")
             else:
                 comment = ""
-            if config.may("mkeventd.update_contact"):
+            if config.user.may("mkeventd.update_contact"):
                 contact = html.get_unicode_input("_mkeventd_contact").strip().replace(":",",")
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")
             return "UPDATE;%s;%s;%s;%s;%s" % \
-                (row["event_id"], config.user_id, ack and 1 or 0, comment, contact), \
+                (row["event_id"], config.user.id, ack and 1 or 0, comment, contact), \
                 _("update")
 
     multisite_commands.append({
@@ -492,7 +492,7 @@ if mkeventd_enabled:
         if html.var('_mkeventd_changestate'):
             state = MonitoringState().from_html_vars("_mkeventd_state")
             return "CHANGESTATE;%s;%s;%s" % \
-                (row["event_id"], config.user_id, state), \
+                (row["event_id"], config.user.id, state), \
                 _("change the state")
 
     multisite_commands.append({
@@ -520,7 +520,7 @@ if mkeventd_enabled:
     def command_mkeventd_action(cmdtag, spec, row):
         for action_id, title in mkeventd.action_choices(omit_hidden = True):
             if html.var("_action_" + action_id):
-                return "ACTION;%s;%s;%s" % (row["event_id"], config.user_id, action_id), \
+                return "ACTION;%s;%s;%s" % (row["event_id"], config.user.id, action_id), \
                   (_("execute the action \"%s\"") % title)
 
     multisite_commands.append({
@@ -542,7 +542,7 @@ if mkeventd_enabled:
 
     def command_mkeventd_delete(cmdtag, spec, row):
         if html.var("_delete_event"):
-            command = "DELETE;%s;%s" % (row["event_id"], config.user_id)
+            command = "DELETE;%s;%s" % (row["event_id"], config.user.id)
             title = _("<b>archive</b>")
             return command, title
 

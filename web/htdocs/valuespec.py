@@ -3799,7 +3799,7 @@ class IconSelector(ValueSpec):
             html.write('</div>')
 
         import config# FIXME: Clean this up. But how?
-        if config.omd_site() and config.may('wato.icons'):
+        if config.omd_site() and config.user.may('wato.icons'):
             back_param = html.has_var('back') and '&back='+html.urlencode(html.var('back')) or ''
             html.buttonlink('wato.py?mode=icons' + back_param, _('Manage'))
 

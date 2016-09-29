@@ -129,7 +129,7 @@ class PageKeyManagement(object):
                 raise MKUserError("", _("This key is still used."))
 
             message = self._delete_confirm_msg()
-            if key["owner"] != config.user_id:
+            if key["owner"] != config.user.id:
                 message += _("<br><b>Note</b>: this key has created by user <b>%s</b>") % key["owner"]
             c = html.confirm(message, add_header=self.title())
             if c:
@@ -222,7 +222,7 @@ class PageEditKey(object):
             "certificate" : crypto.dump_certificate(crypto.FILETYPE_PEM, cert),
             "private_key" : crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey, "AES256", passphrase),
             "alias"       : alias,
-            "owner"       : config.user_id,
+            "owner"       : config.user.id,
             "date"        : time.time(),
         }
 
@@ -344,7 +344,7 @@ class PageUploadKey(object):
             "certificate" : cert_pem,
             "private_key" : key_pem,
             "alias"       : value["alias"],
-            "owner"       : config.user_id,
+            "owner"       : config.user.id,
             "date"        : created,
         }
 
@@ -482,7 +482,7 @@ class PageDownloadKey(object):
 def create_self_signed_cert(pkey):
     cert = crypto.X509()
     cert.get_subject().O = "Check_MK Site %s" % config.omd_site()
-    cert.get_subject().CN = config.user_id or "### Check_MK ###"
+    cert.get_subject().CN = config.user.id or "### Check_MK ###"
     cert.set_serial_number(1)
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(30*365*24*60*60) # valid for 30 years.

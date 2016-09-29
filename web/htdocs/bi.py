@@ -192,7 +192,7 @@ def aggregation_groups():
 
     else:
         # classic mode: precompile all and display only groups with members
-        compile_forest(config.user_id)
+        compile_forest(config.user.id)
         group_names = list(set([ group for group, trees in g_user_cache["forest"].items() if trees ]))
 
     return sorted(group_names, cmp = lambda a,b: cmp(a.lower(), b.lower()))
@@ -221,7 +221,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
     # OPTIMIZE: All users that have the permissing bi.see_all
     # can use the same cache.
-    if config.may("bi.see_all"):
+    if config.user.may("bi.see_all"):
         user = '<<<see_all>>>'
 
     def empty_user_cache():
@@ -1443,7 +1443,7 @@ config.aggregation_functions['running_on'] = aggr_running_on
 
 # Just for debugging
 def page_debug():
-    compile_forest(config.user_id)
+    compile_forest(config.user.id)
 
     html.header("BI Debug")
     render_forest()
@@ -1453,7 +1453,7 @@ def page_debug():
 # Just for debugging, as well
 def page_all():
     html.header("All")
-    compile_forest(config.user_id)
+    compile_forest(config.user.id)
     load_assumptions()
     for group, trees in g_user_cache["forest"].items():
         html.write("<h2>%s</h2>" % group)
@@ -1503,9 +1503,9 @@ def ajax_render_tree():
 
     # Make sure that BI aggregates are available
     if config.bi_precompile_on_demand:
-        compile_forest(config.user_id, only_hosts = reqhosts, only_groups = [ aggr_group ])
+        compile_forest(config.user.id, only_hosts = reqhosts, only_groups = [ aggr_group ])
     else:
-        compile_forest(config.user_id)
+        compile_forest(config.user.id)
 
     # Load current assumptions
     load_assumptions()
@@ -1881,10 +1881,10 @@ def table(columns, add_headers, only_sites, limit, filters):
 
     if config.bi_precompile_on_demand and only_group:
         # optimized mode: if aggregation group known only precompile this one
-        compile_forest(config.user_id, only_groups = [ only_group ])
+        compile_forest(config.user.id, only_groups = [ only_group ])
     else:
         # classic mode: precompile everything
-        compile_forest(config.user_id)
+        compile_forest(config.user.id)
 
     # TODO: Optimation of affected_hosts filter!
 
@@ -1960,11 +1960,11 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
 
     if config.bi_precompile_on_demand:
         log("* Compiling forest on demand...")
-        compile_forest(config.user_id, only_groups = only_groups,
+        compile_forest(config.user.id, only_groups = only_groups,
                        only_hosts = [ (h['site'], h['name']) for h in hostrows ])
     else:
         log("* Compiling forest...")
-        compile_forest(config.user_id)
+        compile_forest(config.user.id)
 
     # rows by site/host - needed for later cluster state gathering
     if config.bi_precompile_on_demand and not joinbyname:
@@ -2071,13 +2071,13 @@ def debug(x):
 
 def load_assumptions():
     global g_assumptions
-    g_assumptions = config.load_user_file("bi_assumptions", {})
+    g_assumptions = config.user.load_file("bi_assumptions", {})
 
 def save_assumptions():
     config.save_user_file("bi_assumptions", g_assumptions)
 
 def load_ex_level():
-    return config.load_user_file("bi_treestate", (None, ))[0]
+    return config.user.load_file("bi_treestate", (None, ))[0]
 
 def save_ex_level(current_ex_level):
     config.save_user_file("bi_treestate", (current_ex_level, ))
@@ -2093,7 +2093,7 @@ def status_tree_depth(tree):
         return maxdepth + 1
 
 def is_part_of_aggregation(what, site, host, service):
-    compile_forest(config.user_id)
+    compile_forest(config.user.id)
     if what == "host":
         return (site, host) in g_user_cache["affected_hosts"]
     else:

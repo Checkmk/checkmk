@@ -90,7 +90,7 @@ def paint_download_snmp_walk(*args):
 
 def paint_download_host_info(what, row, tags, host_custom_vars, ty):
     if (what == "host" or (what == "service" and row["service_description"] == "Check_MK")) \
-       and config.may("wato.download_agent_output") \
+       and config.user.may("wato.download_agent_output") \
        and not row["host_check_type"] == 2: # Not for shadow hosts
 
         # Not 100% acurate to use the tags here, but this is the best we can do

@@ -66,7 +66,7 @@ def render_availability_options(what):
 
     # Users of older versions might not have all keys set. The following
     # trick will merge their options with our default options.
-    avoptions.update(config.load_user_file("avoptions", {}))
+    avoptions.update(config.user.load_file("avoptions", {}))
 
     is_open = False
     html.begin_form("avoptions")
@@ -749,7 +749,7 @@ def edit_annotation():
         del value["site"]
         del value["host"]
         value["date"] = time.time()
-        value["author"] = config.user_id
+        value["author"] = config.user.id
         availability.update_annotations(site_host_svc, value, replace_existing=annotation)
         html.drain() # omit previous HTML code, not needed
         html.unplug()

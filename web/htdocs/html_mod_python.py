@@ -154,7 +154,8 @@ class html_mod_python(htmllib.html):
     def set_user_id(self, user_id):
         super(html_mod_python, self).set_user_id(user_id)
         # TODO: Shouldn't this be moved to some other place?
-        self.help_visible = config.load_user_file("help", False)  # cache for later usage
+        self.help_visible = config.user.load_file("help", False)  # cache for later usage
+
 
     # Finish the HTTP request short before handing over to mod_python
     def finalize(self, is_error=False):
@@ -206,10 +207,10 @@ class html_mod_python(htmllib.html):
             self.log('%s' % e)
 
     def get_button_counts(self):
-        return config.load_user_file("buttoncounts", {})
+        return config.user.load_file("buttoncounts", {})
 
     def top_heading(self, title):
-        if self.is_logged_in():
+        if not isinstance(config.user, config.LoggedInNobody):
             login_text = "<b>%s</b> (%s" % (config.user.id, "+".join(config.user.role_ids))
             if self.enable_debug:
                 if config.user.language():
@@ -252,10 +253,10 @@ class html_mod_python(htmllib.html):
         count = len(rows)
         if limit != None and count >= limit + 1:
             text = _("Your query produced more than %d results. ") % limit
-            if self.var("limit", "soft") == "soft" and config.may("general.ignore_soft_limit"):
+            if self.var("limit", "soft") == "soft" and config.user.may("general.ignore_soft_limit"):
                 text += '<a href="%s">%s</a>' % \
                              (self.makeuri([("limit", "hard")]), _('Repeat query and allow more results.'))
-            elif self.var("limit") == "hard" and config.may("general.ignore_hard_limit"):
+            elif self.var("limit") == "hard" and config.user.may("general.ignore_hard_limit"):
                 text += '<a href="%s">%s</a>' % \
                              (self.makeuri([("limit", "none")]), _('Repeat query without limit.'))
             text += " " + _("<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")
@@ -266,10 +267,10 @@ class html_mod_python(htmllib.html):
 
 
     def load_transids(self, lock = False):
-        return config.load_user_file("transids", [], lock)
+        return config.user.load_file("transids", [], lock)
 
     def save_transids(self, used_ids):
-        if config.user_id:
+        if config.user.id:
             config.save_user_file("transids", used_ids)
 
     def save_tree_states(self):
@@ -278,7 +279,7 @@ class html_mod_python(htmllib.html):
 
     def load_tree_states(self):
         if self.treestates == None:
-            self.treestates = config.load_user_file("treestates", {})
+            self.treestates = config.user.load_file("treestates", {})
 
 
     def add_custom_style_sheet(self):

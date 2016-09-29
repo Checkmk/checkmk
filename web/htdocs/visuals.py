@@ -99,7 +99,7 @@ def load_plugins(force):
 
 def save(what, visuals, user_id = None):
     if user_id == None:
-        user_id = config.user_id
+        user_id = config.user.id
 
     uservisuals = {}
     for (owner_id, name), visual in visuals.items():
@@ -206,7 +206,7 @@ def declare_custom_permissions(what):
 # Get the list of visuals which are available to the user
 # (which could be retrieved with get_visual)
 def available(what, all_visuals):
-    user = config.user_id
+    user = config.user.id
     visuals = {}
     permprefix = what[:-1]
 
@@ -222,7 +222,7 @@ def available(what, all_visuals):
         return False
 
     # 1. user's own visuals, if allowed to edit visuals
-    if config.may("general.edit_" + what):
+    if config.user.may("general.edit_" + what):
         for (u, n), visual in all_visuals.items():
             if u == user:
                 visuals[n] = visual
@@ -233,25 +233,25 @@ def available(what, all_visuals):
             # Honor original permissions for the current user
             permname = "%s.%s" % (permprefix, n)
             if config.permission_exists(permname) \
-                and not config.may(permname):
+                and not config.user.may(permname):
                 continue
             visuals[n] = visual
 
     # 3. Builtin visuals, if allowed.
     for (u, n), visual in all_visuals.items():
-        if u == '' and n not in visuals and config.may("%s.%s" % (permprefix, n)):
+        if u == '' and n not in visuals and config.user.may("%s.%s" % (permprefix, n)):
             visuals[n] = visual
 
     # 4. other users visuals, if public. Sill make sure we honor permission
     #    for builtin visuals. Also the permission "general.see_user_visuals" is
     #    necessary.
-    if config.may("general.see_user_" + what):
+    if config.user.may("general.see_user_" + what):
         for (u, n), visual in all_visuals.items():
             if n not in visuals and published_to_user(visual) and config.user_may(u, "general.publish_" + what):
                 # Is there a builtin visual with the same name? If yes, honor permissions.
                 permname = "%s.%s" % (permprefix, n)
                 if config.permission_exists(permname) \
-                    and not config.may(permname):
+                    and not config.user.may(permname):
                     continue
                 visuals[n] = visual
 
@@ -279,7 +279,7 @@ def page_list(what, title, visuals, custom_columns = [],
     check_deletable_handler = None):
 
     what_s = what[:-1]
-    if not config.may("general.edit_" + what):
+    if not config.user.may("general.edit_" + what):
         raise MKAuthException(_("Sorry, you lack the permission for editing this type of visuals."))
 
     html.header(title, stylesheets=["pages", "views", "status"])
@@ -304,10 +304,10 @@ def page_list(what, title, visuals, custom_columns = [],
     # Deletion of visuals
     delname  = html.var("_delete")
     if delname and html.transaction_valid():
-        if config.may('general.delete_foreign_%s' % what):
-            user_id = html.var('_user_id', config.user_id)
+        if config.user.may('general.delete_foreign_%s' % what):
+            user_id = html.var('_user_id', config.user.id)
         else:
-            user_id = config.user_id
+            user_id = config.user.id
 
         deltitle = visuals[(user_id, delname)]['title']
 
@@ -333,11 +333,11 @@ def page_list(what, title, visuals, custom_columns = [],
     custom  = []
     builtin = []
     for (owner, visual_name) in keys_sorted:
-        if owner == "" and not config.may("%s.%s" % (what_s, visual_name)):
+        if owner == "" and not config.user.may("%s.%s" % (what_s, visual_name)):
             continue # not allowed to see this view
 
         visual = visuals[(owner, visual_name)]
-        if owner == config.user_id or \
+        if owner == config.user.id or \
            (visual["public"] and owner != '' and config.user_may(owner, "general.publish_" + what)):
             custom.append((owner, visual_name, visual))
         elif visual["public"] and owner == "":
@@ -362,14 +362,14 @@ def page_list(what, title, visuals, custom_columns = [],
             html.icon_button(clone_url, buttontext, "clone")
 
             # Delete
-            if owner and (owner == config.user_id or config.may('general.delete_foreign_%s' % what)):
+            if owner and (owner == config.user.id or config.user.may('general.delete_foreign_%s' % what)):
                 add_vars = [('_delete', visual_name)]
-                if owner != config.user_id:
+                if owner != config.user.id:
                     add_vars.append(('_user_id', owner))
                 html.icon_button(html.makeactionuri(add_vars), _("Delete!"), "delete")
 
             # Edit
-            if owner == config.user_id:
+            if owner == config.user.id:
                 html.icon_button("edit_%s.py?load_name=%s" % (what_s, visual_name), _("Edit"), "edit")
 
             # Custom buttons - visual specific
@@ -563,7 +563,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     visual_type = visual_types[what]
 
     visual_type = visual_types[what]
-    if not config.may("general.edit_" + what):
+    if not config.user.may("general.edit_" + what):
         raise MKAuthException(_("You are not allowed to edit %s.") % visual_type["plural_title"])
     what_s = what[:-1]
 
@@ -582,23 +582,23 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                 raise MKUserError('cloneuser', _('The %s does not exist.') % visual_type["title"])
 
             # Make sure, name is unique
-            if cloneuser == config.user_id: # Clone own visual
+            if cloneuser == config.user.id: # Clone own visual
                 newname = visualname + "_clone"
             else:
                 newname = visualname
             # Name conflict -> try new names
             n = 1
-            while (config.user_id, newname) in all_visuals:
+            while (config.user.id, newname) in all_visuals:
                 n += 1
                 newname = visualname + "_clone%d" % n
             visual["name"] = newname
             visual["public"] = False
             visualname = newname
             oldname = None # Prevent renaming
-            if cloneuser == config.user_id:
+            if cloneuser == config.user.id:
                 visual["title"] += _(" (Copy)")
         else:
-            visual = all_visuals.get((config.user_id, visualname))
+            visual = all_visuals.get((config.user.id, visualname))
             if not visual:
                 visual = all_visuals.get(('', visualname)) # load builtin visual
                 mode = 'clone'
@@ -654,7 +654,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
             title = _('Do not show a context button to this %s') % visual_type["title"],
         )),
     ]
-    if config.may("general.publish_" + what):
+    if config.user.may("general.publish_" + what):
         visibility_elements.append(('public', CascadingDropdown(
             choices = [
                 (True, _("Publish to all users")),
@@ -738,7 +738,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
             for key in dict(visibility_elements).keys():
                 visual[key] = general_properties['visibility'].get(key, False)
 
-            if not config.may("general.publish_" + what):
+            if not config.user.may("general.publish_" + what):
                 visual['public'] = False
 
             if create_handler:
@@ -756,12 +756,12 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                         back = 'edit_%s.py' % what
 
                 if html.check_transaction():
-                    all_visuals[(config.user_id, visual["name"])] = visual
+                    all_visuals[(config.user.id, visual["name"])] = visual
                     # Handle renaming of visuals
                     if oldname and oldname != visual["name"]:
                         # -> delete old entry
-                        if (config.user_id, oldname) in all_visuals:
-                            del all_visuals[(config.user_id, oldname)]
+                        if (config.user.id, oldname) in all_visuals:
+                            del all_visuals[(config.user.id, oldname)]
                         # -> change visual_name in back parameter
                         if back:
                             varstring = visual_type["ident_attr"] + "="

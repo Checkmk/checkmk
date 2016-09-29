@@ -188,7 +188,7 @@ def load_werks():
 
 
 def may_acknowledge():
-    return config.may("general.acknowledge_werks")
+    return config.user.may("general.acknowledge_werks")
 
 
 def acknowledge_werk(werk):
@@ -196,7 +196,7 @@ def acknowledge_werk(werk):
 
 
 def acknowledge_werks(werks):
-    config.need_permission("general.acknowledge_werks")
+    config.user.need_permission("general.acknowledge_werks")
     ack_ids = load_acknowledgements()
     for werk in werks:
         ack_ids.append(werk["id"])

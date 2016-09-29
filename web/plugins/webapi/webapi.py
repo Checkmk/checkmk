@@ -254,7 +254,7 @@ api_actions["delete_host"] = {
 
 def action_discover_services(request):
     validate_request_keys(request, ["hostname", "mode"])
-    config.need_permission("wato.services")
+    config.user.need_permission("wato.services")
 
     mode = html.var("mode") and html.var("mode") or "new"
     hostname = request.get("hostname")
@@ -306,7 +306,7 @@ def action_activate_changes(request):
     sites = request.get("sites")
 
     if foreign_changes():
-        if not config.may("wato.activateforeign"):
+        if not config.user.may("wato.activateforeign"):
             raise MKAuthException(_("You are not allowed to activate changes of other users."))
         if not allow_foreign_changes:
             raise MKAuthException(_("There are changes from other users and foreign changes "\

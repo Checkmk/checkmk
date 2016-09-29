@@ -169,7 +169,7 @@ def end():
     search_term = None
     actions_enabled = (table["searchable"] or table["sortable"]) and not do_csv
     if actions_enabled:
-        user_opts = config.load_user_file("tableoptions", {})
+        user_opts = config.user.load_file("tableoptions", {})
         user_opts.setdefault(table_id, {})
         table_opts = user_opts[table_id]
 

@@ -308,14 +308,14 @@ def apply_global_context(board, dashlet):
 
 def load_dashboard_with_cloning(name, edit = True):
     board = available_dashboards[name]
-    if edit and board['owner'] != config.user_id:
+    if edit and board['owner'] != config.user.id:
         # This dashboard which does not belong to the current user is about to
         # be edited. In order to make this possible, the dashboard is being
         # cloned now!
         board = copy.deepcopy(board)
-        board['owner'] = config.user_id
+        board['owner'] = config.user.id
 
-        dashboards[(config.user_id, name)] = board
+        dashboards[(config.user.id, name)] = board
         available_dashboards[name] = board
         visuals.save('dashboards', dashboards)
 
@@ -327,7 +327,7 @@ def draw_dashboard(name):
     if html.var('edit') == '1':
         mode = 'edit'
 
-    if mode == 'edit' and not config.may("general.edit_dashboards"):
+    if mode == 'edit' and not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
     board = load_dashboard_with_cloning(name, edit = mode == 'edit')
@@ -467,12 +467,12 @@ def draw_dashlet_content(nr, the_dashlet, wato_folder, stash_html_vars=True):
 
 def dashboard_edit_controls(name, board, dashlet_types):
     # Show the edit menu to all users which are allowed to edit dashboards
-    if not config.may("general.edit_dashboards"):
+    if not config.user.may("general.edit_dashboards"):
         return
 
     html.write('<ul id="controls" class="menu" style="display:none">\n')
 
-    if board['owner'] != config.user_id:
+    if board['owner'] != config.user.id:
         # Not owned dashboards must be cloned before being able to edit. Do not switch to
         # edit mode using javascript, use the URL with edit=1. When this URL is opened,
         # the dashboard will be cloned for this user
@@ -949,7 +949,7 @@ def choose_view(name):
     html.footer()
 
 def page_edit_dashlet():
-    if not config.may("general.edit_dashboards"):
+    if not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
     board = html.var('name')
@@ -1141,7 +1141,7 @@ def page_edit_dashlet():
     html.footer()
 
 def page_delete_dashlet():
-    if not config.may("general.edit_dashboards"):
+    if not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
     board = html.var('name')
@@ -1203,7 +1203,7 @@ def page_delete_dashlet():
 #   '----------------------------------------------------------------------'
 
 def check_ajax_update():
-    if not config.may("general.edit_dashboards"):
+    if not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
     board = html.var('name')
@@ -1248,7 +1248,7 @@ def ajax_dashlet_pos():
 #   '----------------------------------------------------------------------'
 
 def popup_list_dashboards():
-    if not config.may("general.edit_dashboards"):
+    if not config.user.may("general.edit_dashboards"):
         return []
 
     load_dashboards()
@@ -1270,7 +1270,7 @@ def add_dashlet(dashlet, dashboard):
     visuals.save('dashboards', dashboards)
 
 def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
-    if not config.may("general.edit_dashboards"):
+    if not config.user.may("general.edit_dashboards"):
 	# Exceptions do not work here.
 	return
 

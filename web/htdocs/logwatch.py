@@ -235,7 +235,7 @@ def show_file(site, host_name, file_name):
 
 
 def ack_button(site=None, host_name=None, int_filename=None):
-    if not config.may("general.act") or (host_name and not may_see(site, host_name)):
+    if not config.user.may("general.act") or (host_name and not may_see(site, host_name)):
         return
 
     if int_filename:
@@ -294,7 +294,7 @@ def do_log_ack(site, host_name, file_name):
         html.footer()
         return
 
-    if not config.may("general.act"):
+    if not config.user.may("general.act"):
         html.write("<h1 class=error>"+_('Permission denied')+"</h1>\n")
         html.write("<div class=error>" + _('You are not allowed to acknowledge %s</div>') % ack_msg)
         html.footer()
@@ -557,7 +557,7 @@ def all_logs():
 
 
 def may_see(site, host_name):
-    if config.may("general.see_all"):
+    if config.user.may("general.see_all"):
         return True
 
     # livestatus connection is setup with AuthUser

@@ -31,7 +31,7 @@ import cmk.store as store
 
 def get_gui_messages(user_id = None):
     if user_id is None:
-        user_id = config.user_id
+        user_id = config.user.id
     path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
     messages = store.load_data_from_file(path, [])
 
@@ -58,7 +58,7 @@ def delete_gui_message(msg_id):
 
 def save_gui_messages(messages, user_id = None):
     if user_id is None:
-        user_id = config.user_id
+        user_id = config.user.id
     path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
     make_nagios_directory(os.path.dirname(path))
     store.save_data_to_file(path, messages)
@@ -141,7 +141,7 @@ def load_plugins(force):
 
 
 def page_notify():
-    if not config.may("general.notify"):
+    if not config.user.may("general.notify"):
         raise MKAuthException(_("You are not allowed to use the notification module."))
 
     html.header(_('Notify Users'), stylesheets = ['pages', 'status', 'views'])
@@ -271,7 +271,7 @@ def notify_mail(user_id, msg):
     if not recipient_name:
         recipient_name = user_id
 
-    sender_name = users[config.user_id].get('alias')
+    sender_name = users[config.user.id].get('alias')
     if not sender_name:
         sender_name = user_id
 

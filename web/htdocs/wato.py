@@ -177,18 +177,18 @@ def page_handler():
         return
 
     # Check general permission for this mode
-    if modeperms != None and not config.may("wato.seeall"):
+    if modeperms != None and not config.user.may("wato.seeall"):
         ensure_mode_permissions(modeperms)
 
     # Do actions (might switch mode)
     action_message = None
     if html.is_transaction():
         try:
-            config.need_permission("wato.edit")
+            config.user.need_permission("wato.edit")
 
             # Even if the user has seen this mode because auf "seeall",
             # he needs an explicit access permission for doing changes:
-            if config.may("wato.seeall"):
+            if config.user.may("wato.seeall"):
                 if modeperms:
                     ensure_mode_permissions(modeperms)
 
@@ -219,11 +219,11 @@ def page_handler():
                 html.set_var("mode", newmode) # will be used by makeuri
 
                 # Check general permissions for the new mode
-                if modeperms != None and not config.may("wato.seeall"):
+                if modeperms != None and not config.user.may("wato.seeall"):
                     for pname in modeperms:
                         if '.' not in pname:
                             pname = "wato." + pname
-                        config.need_permission(pname)
+                        config.user.need_permission(pname)
 
         except MKUserError, e:
             action_message = "%s" % e
@@ -295,7 +295,7 @@ def get_mode_function(mode):
         mode_class = modefunc
         modefunc = mode_class.create_mode_function()
 
-    if modeperms != None and not config.may("wato.use"):
+    if modeperms != None and not config.user.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
 
     return modeperms, modefunc
@@ -305,7 +305,7 @@ def ensure_mode_permissions(modeperms):
     for pname in modeperms:
         if '.' not in pname:
             pname = "wato." + pname
-        config.need_permission(pname)
+        config.user.need_permission(pname)
 
 
 class WatoMode(object):
@@ -365,28 +365,28 @@ def mode_folder(phase):
     elif phase == "buttons":
         global_buttons()
         if folder.is_disk_folder():
-            if config.may("wato.rulesets") or config.may("wato.seeall"):
+            if config.user.may("wato.rulesets") or config.user.may("wato.seeall"):
                 html.context_button(_("Rulesets"),        folder_preserving_link([("mode", "ruleeditor")]), "rulesets")
                 html.context_button(_("Manual Checks"),   folder_preserving_link([("mode", "static_checks")]), "static_checks")
             if folder.may("read"):
                 html.context_button(_("Folder Properties"), folder.edit_url(backfolder=folder), "edit")
-            if not folder.locked_subfolders() and config.may("wato.manage_folders") and folder.may("write"):
+            if not folder.locked_subfolders() and config.user.may("wato.manage_folders") and folder.may("write"):
                 html.context_button(_("New folder"),        folder.url([("mode", "newfolder")]), "newfolder")
-            if not folder.locked_hosts() and config.may("wato.manage_hosts") and folder.may("write"):
+            if not folder.locked_hosts() and config.user.may("wato.manage_hosts") and folder.may("write"):
                 html.context_button(_("New host"),    folder.url([("mode", "newhost")]), "new")
                 html.context_button(_("New cluster"), folder.url([("mode", "newcluster")]), "new_cluster")
                 html.context_button(_("Bulk import"), folder.url([("mode", "bulk_import")]), "bulk_import")
-            if config.may("wato.services"):
+            if config.user.may("wato.services"):
                 html.context_button(_("Bulk discovery"), folder.url([("mode", "bulkinventory"), ("all", "1")]),
                             "inventory")
-            if config.may("wato.rename_hosts"):
+            if config.user.may("wato.rename_hosts"):
                 html.context_button(_("Bulk renaming"), folder.url([("mode", "bulk_rename_host")]), "rename_host")
             html.context_button(_("Custom attributes"), folder_preserving_link([("mode", "host_attrs")]), "custom_attr")
-            if not folder.locked_hosts() and config.may("wato.parentscan") and folder.may("write"):
+            if not folder.locked_hosts() and config.user.may("wato.parentscan") and folder.may("write"):
                 html.context_button(_("Parent scan"), folder.url([("mode", "parentscan"), ("all", "1")]),
                             "parentscan")
             folder_status_button()
-            if config.may("wato.random_hosts"):
+            if config.user.may("wato.random_hosts"):
                 html.context_button(_("Random Hosts"), folder.url([("mode", "random_hosts")]), "random")
             html.context_button(_("Search"), folder_preserving_link([("mode", "search")]), "search")
         else:
@@ -579,7 +579,7 @@ def show_subfolder_buttons(subfolder):
     show_subfolder_edit_button(subfolder)
 
     if not subfolder.locked_subfolders() and not subfolder.locked():
-        if subfolder.may("write") and config.may("wato.manage_folders"):
+        if subfolder.may("write") and config.user.may("wato.manage_folders"):
             show_move_to_folder_action(subfolder)
             show_subfolder_delete_button(subfolder)
 
@@ -667,17 +667,17 @@ def show_hosts(folder):
         html.write(' ' + _("Selected hosts:\n"))
 
         if not folder.locked_hosts():
-            if config.may("wato.manage_hosts"):
+            if config.user.may("wato.manage_hosts"):
                 html.button("_bulk_delete", _("Delete"))
-            if config.may("wato.edit_hosts"):
+            if config.user.may("wato.edit_hosts"):
                 html.button("_bulk_edit", _("Edit"))
                 html.button("_bulk_cleanup", _("Cleanup"))
-        if config.may("wato.services"):
+        if config.user.may("wato.services"):
             html.button("_bulk_inventory", _("Discovery"))
         if not folder.locked_hosts():
-            if config.may("wato.parentscan"):
+            if config.user.may("wato.parentscan"):
                 html.button("_parentscan", _("Parentscan"))
-            if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+            if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
                 host_bulk_move_to_folder_combo(folder, top)
                 if at_least_one_imported:
                     html.button("_bulk_movetotarget", _("Move to Target Folders"))
@@ -710,7 +710,7 @@ def show_hosts(folder):
     for attr, topic in all_host_attributes():
         if attr.show_in_table():
             colspan += 1
-    if not folder.locked_hosts() and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+    if not folder.locked_hosts() and config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
         colspan += 1
     if show_checkboxes:
         colspan += 1
@@ -720,7 +720,7 @@ def show_hosts(folder):
     # Add the bulk action buttons also to the top of the table when this
     # list shows more than 10 rows
     if more_than_ten_items and \
-        (config.may("wato.edit_hosts") or config.may("wato.manage_hosts")):
+        (config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts")):
         bulk_actions(at_least_one_imported, True, True, colspan, show_checkboxes)
         search_shown = True
 
@@ -821,7 +821,7 @@ def show_hosts(folder):
             html.write('<a href="%s">%s</a>' % (host.folder().url(), host.folder().alias_path()))
 
 
-    if config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
+    if config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts"):
         bulk_actions(at_least_one_imported, False, not search_shown, colspan, show_checkboxes)
 
     table.end()
@@ -845,11 +845,11 @@ def show_hosts(folder):
 
 def show_host_actions(host):
     html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
-    if config.may("wato.rulesets"):
+    if config.user.may("wato.rulesets"):
         html.icon_button(host.params_url(), _("View the rule based parameters of this host"), "rulesets")
 
     if host.may('read'):
-        if config.may("wato.services"):
+        if config.user.may("wato.services"):
             msg = _("Edit the services of this host, do a service discovery")
         else:
             msg = _("Display the services of this host")
@@ -860,11 +860,11 @@ def show_host_actions(host):
         html.icon_button(host.services_url(), msg, image)
 
     if not host.locked():
-        if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+        if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
             show_move_to_folder_action(host)
 
-        if config.may("wato.manage_hosts"):
-            if config.may("wato.clone_hosts"):
+        if config.user.may("wato.manage_hosts"):
+            if config.user.may("wato.clone_hosts"):
                 html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
             delete_url  = make_action_link([("mode", "folder"), ("_delete_host", host.name())])
             html.icon_button(delete_url, _("Delete this host"), "delete")
@@ -1186,7 +1186,7 @@ def mode_edit_host(phase, new, is_cluster):
         if not Folder.current().has_host(clonename):
             raise MKGeneralException(_("You called this page with an invalid host name."))
 
-        if not config.may("wato.clone_hosts"):
+        if not config.user.may("wato.clone_hosts"):
             raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
 
         mode = "clone"
@@ -1225,10 +1225,10 @@ def mode_edit_host(phase, new, is_cluster):
 
             html.context_button(_("Services"),
                   folder_preserving_link([("mode", "inventory"), ("host", hostname)]), "services")
-            if config.may('wato.agents'):
+            if config.user.may('wato.agents'):
                 html.context_button(_("Monitoring Agent"),
                   folder_preserving_link([("mode", "agent_of_host"), ("host", hostname)]), "agents")
-            if config.may('wato.rulesets'):
+            if config.user.may('wato.rulesets'):
                 html.context_button(_("Parameters"),
                   folder_preserving_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
                 if is_cluster:
@@ -1236,7 +1236,7 @@ def mode_edit_host(phase, new, is_cluster):
                       folder_preserving_link([("mode", "edit_ruleset"), ("varname", "clustered_services")]), "rulesets")
 
             if not Folder.current().locked_hosts():
-                if config.may("wato.rename_hosts"):
+                if config.user.may("wato.rename_hosts"):
                     html.context_button(is_cluster and _("Rename cluster") or _("Rename host"),
                       folder_preserving_link([("mode", "rename_host"), ("host", hostname)]), "rename_host")
                 html.context_button(is_cluster and _("Delete cluster") or _("Delete host"),
@@ -1253,7 +1253,7 @@ def mode_edit_host(phase, new, is_cluster):
     elif phase == "action":
         if html.var("_update_dns_cache"):
             if html.check_transaction():
-                config.need_permission("wato.update_dns_cache")
+                config.user.need_permission("wato.update_dns_cache")
                 num_updated, failed_hosts = check_mk_automation(host.site_id(), "update-dns-cache", [])
                 infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
                 if failed_hosts:
@@ -1435,7 +1435,7 @@ def check_new_host_name(varname, host_name):
 
 def mode_bulk_rename_host(phase):
 
-    if not config.may("wato.rename_hosts"):
+    if not config.user.may("wato.rename_hosts"):
         raise MKGeneralException(_("You don't have the right to rename hosts"))
 
     if phase == "title":
@@ -1673,7 +1673,7 @@ def mode_rename_host(phase):
     if not Folder.current().has_host(host_name):
         raise MKGeneralException(_("You called this page with an invalid host name."))
 
-    if not config.may("wato.rename_hosts"):
+    if not config.user.may("wato.rename_hosts"):
         raise MKGeneralException(_("You don't have the right to rename hosts"))
 
 
@@ -2415,7 +2415,7 @@ def mode_diag_host(phase):
         html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "back")
         host_status_button(hostname, "hoststatus")
         html.context_button(_("Properties"), host.edit_url(), "edit")
-        if config.may('wato.rulesets'):
+        if config.user.may('wato.rulesets'):
             html.context_button(_("Parameters"), host.params_url(), "rulesets")
         html.context_button(_("Services"), host.services_url(), "services")
         return
@@ -2587,7 +2587,7 @@ def ajax_diag_host():
     try:
         init_wato_datastructures()
 
-        if not config.may('wato.diag_host'):
+        if not config.user.may('wato.diag_host'):
             raise MKAuthException(_('You are not permitted to perform this action.'))
 
         hostname = html.var("host")
@@ -2680,7 +2680,7 @@ def mode_inventory(phase, firsttime):
                             folder_preserving_link([("mode", "folder")]), "back")
         host_status_button(hostname, "host")
         html.context_button(_("Properties"), folder_preserving_link([("mode", "edit_host"), ("host", hostname)]), "edit")
-        if config.may('wato.rulesets'):
+        if config.user.may('wato.rulesets'):
             html.context_button(_("Parameters"),
                                 folder_preserving_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
             if host.is_cluster():
@@ -2690,7 +2690,7 @@ def mode_inventory(phase, firsttime):
             # only display for non cluster hosts
             html.context_button(_("Diagnostic"),
                   folder_preserving_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
-        if config.may("wato.services"):
+        if config.user.may("wato.services"):
             html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
     elif phase == "action":
@@ -2705,7 +2705,7 @@ def mode_inventory(phase, firsttime):
                 config.save_user_file("parameter_column", False)
                 return
 
-            config.need_permission("wato.services")
+            config.user.need_permission("wato.services")
 
             cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
             new_target = "folder"
@@ -2763,7 +2763,7 @@ def show_service_table(host, firsttime):
 
     # Read current check configuration
     cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
-    parameter_column = config.load_user_file("parameter_column", False)
+    parameter_column = config.user.load_file("parameter_column", False)
     error_options = not html.var("ignoreerrors") and [ "@raiseerrors" ] or []
 
     # We first try using the Cache (if the user has not pressed Full Scan).
@@ -2788,7 +2788,7 @@ def show_service_table(host, firsttime):
 
     html.begin_form("checks", method = "POST")
     fixall = 0
-    if config.may("wato.services"):
+    if config.user.may("wato.services"):
         for entry in checktable:
             if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:
                 html.button("_activate_all", _("Activate missing"))
@@ -2903,7 +2903,7 @@ def show_service_table(host, firsttime):
 
             # Icon for Service parameters. Not for missing services!
             table.cell(css='buttons')
-            if check_source not in [ "new", "ignored" ] and config.may('wato.rulesets'):
+            if check_source not in [ "new", "ignored" ] and config.user.may('wato.rulesets'):
                 # Link to list of all rulesets affecting this service
                 params_url = folder_preserving_link([("mode", "object_parameters"),
                                         ("host", hostname),
@@ -2939,7 +2939,7 @@ def show_service_table(host, firsttime):
                 html.icon_button(url, _("Create rule to permanently disable this service"), "ignore")
 
             # Temporary ignore checkbox
-            if config.may("wato.services"):
+            if config.user.may("wato.services"):
                 table.cell()
                 if checkbox != None:
                     varname = "_%s_%s" % (ct, html.varencode(item))
@@ -3053,7 +3053,7 @@ class ModeBulkImport(WatoMode):
 
 
     def _file_path(self):
-        file_id = html.var("file_id", "%s-%d" % (config.user_id, int(time.time())))
+        file_id = html.var("file_id", "%s-%d" % (config.user.id, int(time.time())))
         return self._upload_tmp_path + "/%s.csv" % file_id
 
 
@@ -3070,7 +3070,7 @@ class ModeBulkImport(WatoMode):
         self._vs_upload().validate_value(upload_info, "_upload")
         file_name, mime_type, content = upload_info["file"]
 
-        file_id = "%s-%d" % (config.user_id, int(time.time()))
+        file_id = "%s-%d" % (config.user.id, int(time.time()))
         f = create_user_file(self._file_path(), "w")
         f.write(content.encode("utf-8"))
         f.close()
@@ -3503,7 +3503,7 @@ def mode_bulk_discovery(phase):
                 entries += recurse_hosts(subfolder, recurse, only_failed)
         return entries
 
-    config.need_permission("wato.services")
+    config.user.need_permission("wato.services")
 
     if html.get_checkbox("only_failed_invcheck"):
         restrict_to_hosts = find_hosts_with_failed_inventory_check()
@@ -3674,7 +3674,7 @@ def mode_bulk_edit(phase):
 
     elif phase == "action":
         if html.check_transaction():
-            config.need_permission("wato.edit_hosts")
+            config.user.need_permission("wato.edit_hosts")
 
             changed_attributes = collect_attributes("bulk")
             host_names = get_hostnames_from_checkboxes()
@@ -3741,7 +3741,7 @@ def mode_bulk_cleanup(phase):
 
     elif phase == "action":
         if html.check_transaction():
-            config.need_permission("wato.edit_hosts")
+            config.user.need_permission("wato.edit_hosts")
             to_clean = bulk_collect_cleaned_attributes()
             if "contactgroups" in to_clean:
                 folder.need_permission("write")
@@ -3909,7 +3909,7 @@ def mode_parentscan(phase):
         return
 
 
-    config.need_permission("wato.parentscan")
+    config.user.need_permission("wato.parentscan")
 
     # interactive progress is *not* done in action phase. It
     # renders the page content itself.
@@ -3998,7 +3998,7 @@ def mode_parentscan(phase):
 
         forms.header(_("Settings for Parent Scan"))
 
-        settings = config.load_user_file("parentscan", {
+        settings = config.user.load_file("parentscan", {
             "where"          : "subfolder",
             "alias"          : _("Created by parent scan"),
             "recurse"        : True,
@@ -4245,22 +4245,22 @@ def mode_auditlog(phase):
     elif phase == "buttons":
         home_button()
         changelog_button()
-        if log_exists("audit") and config.may("wato.auditlog") and config.may("wato.edit"):
+        if log_exists("audit") and config.user.may("wato.auditlog") and config.user.may("wato.edit"):
             html.context_button(_("Download"),
                 html.makeactionuri([("_action", "csv")]), "download")
-            if config.may("wato.edit"):
+            if config.user.may("wato.edit"):
                 html.context_button(_("Clear Log"),
                     html.makeactionuri([("_action", "clear")]), "trash")
         return
 
     elif phase == "action":
         if html.var("_action") == "clear":
-            config.need_permission("wato.auditlog")
-            config.need_permission("wato.edit")
+            config.user.need_permission("wato.auditlog")
+            config.user.need_permission("wato.edit")
             return clear_audit_log_after_confirm()
 
         elif html.var("_action") == "csv":
-            config.need_permission("wato.auditlog")
+            config.user.need_permission("wato.auditlog")
             return export_audit_log()
 
     audit = parse_audit_log("audit")
@@ -4340,7 +4340,7 @@ def mode_changelog(phase):
 
 
         if html.var("_action") != "activate":
-            if config.may("wato.activate") and not activation_blocked_reasons and (
+            if config.user.may("wato.activate") and not activation_blocked_reasons and (
                     (not is_distributed() and log_exists("pending"))
                 or (is_distributed() and global_replication_state() == "dirty")):
                 html.context_button(_("Activate Changes!"),
@@ -4350,7 +4350,7 @@ def mode_changelog(phase):
         if is_distributed():
             html.context_button(_("Site Configuration"), folder_preserving_link([("mode", "sites")]), "sites")
 
-        if config.may("wato.auditlog"):
+        if config.user.may("wato.auditlog"):
             html.context_button(_("Audit Log"), folder_preserving_link([("mode", "auditlog")]), "auditlog")
 
         if config.guitests_enabled:
@@ -4395,7 +4395,7 @@ def mode_changelog(phase):
                 return None
             transaction_already_checked = True
 
-        if changes and not config.may("wato.activateforeign"):
+        if changes and not config.user.may("wato.activateforeign"):
             raise MKAuthException(_("Sorry, you are not allowed to activate "
                                     "changes of other users."))
 
@@ -4411,7 +4411,7 @@ def mode_changelog(phase):
 
         sitestatus_do_async_replication = False # see below
         if html.has_var("_siteaction"):
-            config.need_permission("wato.activate")
+            config.user.need_permission("wato.activate")
             site_id = html.var("_site")
             action = html.var("_siteaction")
             if transaction_already_checked or html.check_transaction():
@@ -4444,7 +4444,7 @@ def mode_changelog(phase):
                     update_replication_status(site_id, {"update_started": None})
 
         elif transaction_already_checked or html.check_transaction():
-            config.need_permission("wato.activate")
+            config.user.need_permission("wato.activate")
             create_snapshot("automatic")
 
             # Do nothing here, but let site status table be shown in a mode
@@ -4677,7 +4677,7 @@ def ajax_activation():
         if is_distributed():
             raise MKUserError(None, _('Call not supported in distributed setups.'))
 
-        config.need_permission("wato.activate")
+        config.user.need_permission("wato.activate")
 
         init_wato_datastructures()
 
@@ -4847,7 +4847,7 @@ def render_audit_log(log, what, with_filename = False, hilite_others=False):
     even = "even"
     for t, linkinfo, user, action, text in log:
         even = even == "even" and "odd" or "even"
-        hilite = hilite_others and user != '-' and config.user_id != user
+        hilite = hilite_others and user != '-' and config.user.id != user
         htmlcode += '<tr class="data %s%d">' % (even, hilite and 2 or 0)
         htmlcode += '<td class=nobreak>%s</td>' % render_logfile_linkinfo(linkinfo)
         htmlcode += '<td class=nobreak>%s</td>' % fmt_date(float(t))
@@ -5200,13 +5200,13 @@ def create_snapshot(ty, comment=None):
 
     if comment == None:
         if ty == "manual":
-            comment = _("Snapshot created by %s") % config.user_id
+            comment = _("Snapshot created by %s") % config.user.id
         else:
-            comment = _("Activated changes by %s") % config.user_id
+            comment = _("Activated changes by %s") % config.user.id
 
     data = {}
     data["comment"]       = comment
-    data["created_by"]    = config.user_id
+    data["created_by"]    = config.user.id
     data["type"]          = ty
     data["snapshot_name"] = snapshot_name
 
@@ -5429,7 +5429,7 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
 
 class ModeAjaxBackupJobState(WatoMode):
     def page(self):
-        config.need_permission("wato.backups")
+        config.user.need_permission("wato.backups")
         if html.var("job") == "restore":
             page = backup.PageBackupRestoreState()
         else:
@@ -5577,7 +5577,7 @@ def render_main_menu(some_modules, columns = 2):
         if permission:
             if "." not in permission:
                 permission = "wato." + permission
-            if not config.may(permission) and not config.may("wato.seeall"):
+            if not config.user.may(permission) and not config.user.may("wato.seeall"):
                 continue
 
         if '?' in mode_or_url or '/' in mode_or_url or mode_or_url.endswith(".py"):
@@ -7775,7 +7775,7 @@ def convert_context_to_unicode(context):
 
 
 def mode_notifications(phase):
-    options         = config.load_user_file("notification_display_options", {})
+    options         = config.user.load_file("notification_display_options", {})
     show_user_rules = options.get("show_user_rules", False)
     show_backlog    = options.get("show_backlog", False)
     show_bulks      = options.get("show_bulks", False)
@@ -8010,9 +8010,9 @@ def mode_user_notifications(phase, profilemode):
     global notification_rule_start_async_repl
 
     if profilemode:
-        userid = config.user_id
+        userid = config.user.id
         title = _("Your personal notification rules")
-        config.need_permission("general.edit_notifications")
+        config.user.need_permission("general.edit_notifications")
     else:
         userid = html.get_unicode_input("user")
         title = _("Custom notification table for user ") + userid
@@ -8095,8 +8095,8 @@ def mode_notification_rule(phase, profilemode):
     edit_nr = int(html.var("edit", "-1"))
     clone_nr = int(html.var("clone", "-1"))
     if profilemode:
-        userid = config.user_id
-        config.need_permission("general.edit_notifications")
+        userid = config.user.id
+        config.user.need_permission("general.edit_notifications")
     else:
         userid = html.get_unicode_input("user", "")
 
@@ -9634,7 +9634,7 @@ def mode_edit_site(phase):
 #   '----------------------------------------------------------------------'
 
 def page_automation_login():
-    if not config.may("wato.automation"):
+    if not config.user.may("wato.automation"):
         raise MKAuthException(_("This account has no permission for automation."))
     # When we are here, a remote (master) site has successfully logged in
     # using the credentials of the administrator. The login is done be exchanging
@@ -9903,7 +9903,7 @@ def mode_users(phase):
         html.context_button(_("Custom Attributes"), folder_preserving_link([("mode", "user_attrs")]), "custom_attr")
         if userdb.sync_possible():
             html.context_button(_("Sync Users"), html.makeactionuri([("_sync", 1)]), "replicate")
-        if config.may("general.notify"):
+        if config.user.may("general.notify"):
             html.context_button(_("Notify Users"), 'notify.py', "notification")
         html.context_button(_("LDAP Connections"), folder_preserving_link([("mode", "ldap_config")]), "ldap")
         return
@@ -9916,7 +9916,7 @@ def mode_users(phase):
     if phase == "action":
         if html.var('_delete'):
             delid = html.get_unicode_input("_delete")
-            if delid == config.user_id:
+            if delid == config.user.id:
                 raise MKUserError(None, _("You cannot delete your own account!"))
 
             if delid not in users:
@@ -9967,7 +9967,7 @@ def mode_users(phase):
                    " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'),
                    sortable=False, css="buttons")
 
-        if id != config.user_id:
+        if id != config.user.id:
             html.checkbox("_c_user_%s" % id)
 
         user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
@@ -10237,7 +10237,7 @@ def mode_edit_user(phase):
         new_user["alias"] = alias
 
         # Locking
-        if id == config.user_id and html.get_checkbox("locked"):
+        if id == config.user.id and html.get_checkbox("locked"):
             raise MKUserError("locked", _("You cannot lock your own account!"))
         new_user["locked"] = html.get_checkbox("locked")
 
@@ -11954,7 +11954,7 @@ def mode_ineffective_rules(phase):
     elif phase == "buttons":
         global_buttons()
         html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
-        if config.may("wato.hosts") or config.may("wato.seeall"):
+        if config.user.may("wato.hosts") or config.user.may("wato.seeall"):
             html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "folder")
         return
 
@@ -12110,7 +12110,7 @@ def mode_rulesets(phase, group=None):
                 else:
                     html.context_button(_("Deprecated Rulesets"),
                         folder_preserving_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "1")]), "rulesets_deprecated")
-            if config.may("wato.hosts") or config.may("wato.seeall"):
+            if config.user.may("wato.hosts") or config.user.may("wato.seeall"):
                 html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "folder")
             if group == "agents":
                 html.context_button(_("Agent Bakery"), folder_preserving_link([("mode", "agents")]), "agents")
@@ -12337,7 +12337,7 @@ def mode_edit_ruleset(phase):
     elif phase == "buttons":
         global_buttons()
 
-        if config.may('wato.rulesets'):
+        if config.user.may('wato.rulesets'):
             if not rulespec:
                 html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
             else:
@@ -12351,7 +12351,7 @@ def mode_edit_ruleset(phase):
         if hostname:
             html.context_button(_("Services"),
                  folder_preserving_link([("mode", "inventory"), ("host", hostname)]), "services")
-            if config.may('wato.rulesets'):
+            if config.user.may('wato.rulesets'):
                 html.context_button(_("Parameters"),
                       folder_preserving_link([("mode", "object_parameters"), ("host", hostname), ("service", item)]), "rulesets")
         return
@@ -13001,7 +13001,7 @@ def get_rule_conditions(ruleset):
 
 
 def date_and_user():
-    return time.strftime("%F", time.localtime()) + " " + config.user_id + ": "
+    return time.strftime("%F", time.localtime()) + " " + config.user.id + ": "
 
 
 def mode_edit_rule(phase, new = False):
@@ -13985,10 +13985,10 @@ def user_profile_async_replication_dialog():
 def page_user_profile(change_pw=False):
     start_async_replication = False
 
-    if not config.user_id:
+    if not config.user.id:
         raise MKUserError(None, _('Not logged in.'))
 
-    if not config.may('general.edit_profile') and not config.may('general.change_password'):
+    if not config.user.may('general.edit_profile') and not config.user.may('general.change_password'):
         raise MKAuthException(_("You are not allowed to edit your user profile."))
 
     if not config.wato_enabled:
@@ -14000,7 +14000,7 @@ def page_user_profile(change_pw=False):
 
         try:
             # Profile edit (user options like language etc.)
-            if config.may('general.edit_profile'):
+            if config.user.may('general.edit_profile'):
                 if not change_pw:
                     set_lang = html.get_checkbox('_set_lang')
                     language = html.var('language')
@@ -14009,14 +14009,14 @@ def page_user_profile(change_pw=False):
                         if language == '':
                             language = None
                         # Set custom language
-                        users[config.user_id]['language'] = language
+                        users[config.user.id]['language'] = language
                         config.user['language'] = language
                         i18n.set_language_cookie(language)
 
                     else:
                         # Remove the customized language
-                        if 'language' in users[config.user_id]:
-                            del users[config.user_id]['language']
+                        if 'language' in users[config.user.id]:
+                            del users[config.user.id]['language']
                         if 'language' in config.user:
                             del config.user['language']
 
@@ -14024,24 +14024,24 @@ def page_user_profile(change_pw=False):
                     i18n.localize(config.user.language())
                     multisite_modules.load_all_plugins()
 
-                    user = users.get(config.user_id)
-                    if config.may('general.edit_notifications') and user.get("notifications_enabled"):
+                    user = users.get(config.user.id)
+                    if config.user.may('general.edit_notifications') and user.get("notifications_enabled"):
                         value = forms.get_input(vs_notification_method, "notification_method")
-                        users[config.user_id]["notification_method"] = value
+                        users[config.user.id]["notification_method"] = value
 
                     # Custom attributes
-                    if config.may('general.edit_user_attributes'):
+                    if config.user.may('general.edit_user_attributes'):
                         for name, attr in userdb.get_user_attributes():
                             if attr['user_editable']:
-                                if not attr.get("permission") or config.may(attr["permission"]):
+                                if not attr.get("permission") or config.user.may(attr["permission"]):
                                     vs = attr['valuespec']
                                     value = vs.from_html_vars('ua_' + name)
                                     vs.validate_value(value, "ua_" + name)
-                                    users[config.user_id][name] = value
+                                    users[config.user.id][name] = value
 
             # Change the password if requested
             password_changed = False
-            if config.may('general.change_password'):
+            if config.user.may('general.change_password'):
                 cur_password = html.var('cur_password')
                 password     = html.var('password')
                 password2    = html.var('password2', '')
@@ -14056,24 +14056,24 @@ def page_user_profile(change_pw=False):
                         raise MKUserError("password", _("The new password must differ from your current one."))
 
                 if cur_password and password:
-                    if userdb.hook_login(config.user_id, cur_password) in [ None, False ]:
+                    if userdb.hook_login(config.user.id, cur_password) in [ None, False ]:
                         raise MKUserError("cur_password", _("Your old password is wrong."))
                     if password2 and password != password2:
                         raise MKUserError("password2", _("The both new passwords do not match."))
 
                     verify_password_policy(password)
-                    users[config.user_id]['password'] = userdb.encrypt_password(password)
-                    users[config.user_id]['last_pw_change'] = int(time.time())
+                    users[config.user.id]['password'] = userdb.encrypt_password(password)
+                    users[config.user.id]['last_pw_change'] = int(time.time())
 
                     if change_pw:
                         # Has been changed, remove enforcement flag
-                        del users[config.user_id]['enforce_pw_change']
+                        del users[config.user.id]['enforce_pw_change']
 
                     # Increase serial to invalidate old cookies
-                    if 'serial' not in users[config.user_id]:
-                        users[config.user_id]['serial'] = 1
+                    if 'serial' not in users[config.user.id]:
+                        users[config.user.id]['serial'] = 1
                     else:
-                        users[config.user_id]['serial'] += 1
+                        users[config.user.id]['serial'] += 1
 
                     password_changed = True
 
@@ -14086,7 +14086,7 @@ def page_user_profile(change_pw=False):
 
             if password_changed:
                 # Set the new cookie to prevent logout for the current user
-                login.set_auth_cookie(config.user_id)
+                login.set_auth_cookie(config.user.id)
 
             success = True
         except MKUserError, e:
@@ -14112,7 +14112,7 @@ def page_user_profile(change_pw=False):
     # right now.
     if not change_pw:
         rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
-        if rulebased_notifications and config.may('general.edit_notifications'):
+        if rulebased_notifications and config.user.may('general.edit_notifications'):
             html.begin_context_buttons()
             url = "wato.py?mode=user_notifications_p"
             html.context_button(_("Notifications"), url, "notifications")
@@ -14135,7 +14135,7 @@ def page_user_profile(change_pw=False):
     if html.has_user_errors():
         html.show_user_errors()
 
-    user = users.get(config.user_id)
+    user = users.get(config.user.id)
     if user == None:
         html.show_warning(_("Sorry, your user account does not exist."))
         html.footer()
@@ -14154,9 +14154,9 @@ def page_user_profile(change_pw=False):
 
     if not change_pw:
         forms.section(_("Name"), simple=True)
-        html.write(user.get("alias", config.user_id))
+        html.write(user.get("alias", config.user.id))
 
-    if config.may('general.change_password') and not is_locked('password'):
+    if config.user.may('general.change_password') and not is_locked('password'):
         forms.section(_("Current Password"))
         html.password_input('cur_password', autocomplete="new-password")
 
@@ -14166,25 +14166,25 @@ def page_user_profile(change_pw=False):
         forms.section(_("New Password Confirmation"))
         html.password_input('password2', autocomplete="new-password")
 
-    if not change_pw and config.may('general.edit_profile'):
+    if not change_pw and config.user.may('general.edit_profile'):
         select_language(user)
 
         # Let the user configure how he wants to be notified
         if not rulebased_notifications \
-            and config.may('general.edit_notifications') \
+            and config.user.may('general.edit_notifications') \
             and user.get("notifications_enabled"):
             forms.section(_("Notifications"))
             html.help(_("Here you can configure how you want to be notified about host and service problems and "
                         "other monitoring events."))
             vs_notification_method.render_input("notification_method", user.get("notification_method"))
 
-        if config.may('general.edit_user_attributes'):
+        if config.user.may('general.edit_user_attributes'):
             for name, attr in userdb.get_user_attributes():
                 if attr['user_editable']:
                     vs = attr['valuespec']
                     forms.section(_u(vs.title()))
                     value = user.get(name, vs.default_value())
-                    if not attr.get("permission") or config.may(attr["permission"]):
+                    if not attr.get("permission") or config.user.may(attr["permission"]):
                         vs.render_input("ua_" + name, value)
                         html.help(_u(vs.help()))
                     else:
@@ -14212,7 +14212,7 @@ def page_user_profile(change_pw=False):
 #   '----------------------------------------------------------------------'
 
 def page_download_agent_output():
-    config.need_permission("wato.download_agent_output")
+    config.user.need_permission("wato.download_agent_output")
 
     host_name = html.var("host")
     if not host_name:
@@ -15381,18 +15381,18 @@ class PasswordStore(object):
 
 
     def _owned_passwords(self):
-        if config.may("wato.edit_all_passwords"):
+        if config.user.may("wato.edit_all_passwords"):
             return self._load()
 
-        user_groups = userdb.contactgroups_of_user(config.user_id)
+        user_groups = userdb.contactgroups_of_user(config.user.id)
         return dict([ (k, v) for k, v in self._load().items() if v["owned_by"] in user_groups ])
 
 
     def usable_passwords(self):
-        if config.may("wato.edit_all_passwords"):
+        if config.user.may("wato.edit_all_passwords"):
             return self._load()
 
-        user_groups = userdb.contactgroups_of_user(config.user_id)
+        user_groups = userdb.contactgroups_of_user(config.user.id)
 
         passwords = self._owned_passwords()
         passwords.update(dict([ (k, v) for k, v in self._load().items()
@@ -15533,7 +15533,7 @@ class ModeEditPassword(WatoMode, PasswordStore):
                 )),
             ]
 
-        if config.may("wato.edit_all_passwords"):
+        if config.user.may("wato.edit_all_passwords"):
             admin_element = [
                 FixedValue(None,
                     title = _("Administrators"),
@@ -15594,7 +15594,7 @@ class ModeEditPassword(WatoMode, PasswordStore):
         contact_groups = userdb.load_group_information().get("contact", {})
 
         if only_own:
-            user_groups = userdb.contactgroups_of_user(config.user_id)
+            user_groups = userdb.contactgroups_of_user(config.user.id)
         else:
             user_groups = []
 
@@ -15812,7 +15812,7 @@ def execute_network_scan_job():
     # config.set_user_by_id() has not been executed yet. So there is no user context
     # available. Use the run_as attribute from the job config and revert
     # the previous state after completion.
-    old_user = config.user_id
+    old_user = config.user.id
     run_as = folder.attribute("network_scan")["run_as"]
     if not userdb.user_exists(run_as):
         raise MKGeneralException(_("The user %s used by the network "
@@ -16109,9 +16109,9 @@ def scan_ip_addresses(folder, ip_addresses):
 
 def may_edit_ruleset(varname):
     if varname == "ignored_services":
-        return config.may("wato.services") or config.may("wato.rulesets")
+        return config.user.may("wato.services") or config.user.may("wato.rulesets")
     else:
-        return config.may("wato.rulesets")
+        return config.user.may("wato.rulesets")
 
 
 def host_status_button(hostname, viewname):
@@ -16186,8 +16186,8 @@ def wato_html_head(title):
 
 
 def may_see_hosts():
-    return config.may("wato.use") and \
-       (config.may("wato.seeall") or config.may("wato.hosts"))
+    return config.user.may("wato.use") and \
+       (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
 
 
 def is_alias_used(my_what, my_name, my_alias):

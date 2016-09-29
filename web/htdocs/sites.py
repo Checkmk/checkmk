@@ -193,11 +193,11 @@ def _set_livestatus_auth():
         _live.set_auth_user('action', user_id)
 
     # May the user see all objects in BI aggregations or only some?
-    if not config.may("bi.see_all"):
+    if not config.user.may("bi.see_all"):
         _live.set_auth_user('bi', user_id)
 
     # May the user see all Event Console events or only some?
-    if not config.may("mkeventd.seeall"):
+    if not config.user.may("mkeventd.seeall"):
         _live.set_auth_user('ec', user_id)
 
     # Default auth domain is read. Please set to None to switch off authorization
@@ -207,12 +207,12 @@ def _set_livestatus_auth():
 # Returns either None when no auth user shal be set or the name of the user
 # to be used as livestatus auth user
 def _livestatus_auth_user():
-    if not config.may("general.see_all"):
-        return config.user_id
+    if not config.user.may("general.see_all"):
+        return config.user.id
 
     force_authuser = html.var("force_authuser")
     if force_authuser == "1":
-        return config.user_id
+        return config.user.id
     elif force_authuser == "0":
         return None
     elif force_authuser:
@@ -220,10 +220,10 @@ def _livestatus_auth_user():
 
     # TODO: Remove this with 1.5.0/1.6.0
     if html.output_format != 'html' and config.user.get("force_authuser_webservice"):
-        return config.user_id
+        return config.user.id
 
     if config.user.get("force_authuser"):
-        return config.user_id
+        return config.user.id
 
     return None
 

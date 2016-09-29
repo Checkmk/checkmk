@@ -287,16 +287,9 @@ def _may_with_roles(some_role_ids, pname):
 #   '----------------------------------------------------------------------'
 # TODO: Shouldn't this be moved to e.g. login.py or userdb.py?
 
-# TODO: replace config.may(...) with config.user.may(...)
-# TODO: replace config.need_permission(...) with config.user.need_permission(...)
-# TODO: replace config.load_user_file(...) with config.user.load_file(...)
-
-# This holds the currently logged in user object or is set to none, when the
-# user is currently not yet logged in.
-user = None
-
 # This objects intention is currently only to handle the currently logged in user after authentication.
 # But maybe this can be used for managing all user objects in future.
+# TODO: Cleanup accesses to module global vars and functions
 class LoggedInUser(object):
     def __init__(self, user_id):
         self.id = user_id
@@ -305,6 +298,7 @@ class LoggedInUser(object):
         self._load_attributes()
         self._load_permissions()
         self._load_confdir()
+
 
     # TODO: Clean up that baserole_* stuff?
     def _load_roles(self):
@@ -449,17 +443,28 @@ class LoggedInSuperUser(LoggedInUser):
         self.role_ids = [ "admin" ]
         self.baserole_ids = [ "admin" ]
         self.baserole_id = "admin"
-        self.attributes = { "roles" : "admin" }
+        self.attributes = { "roles" : self.role_ids }
         self.alias = "Superuser for unauthenticated pages"
         self.email = "admin"
         self.permissions = {}
         self.siteconf = {}
 
 
+class LoggedInNobody(LoggedInUser):
+    def __init__(self):
+        self.id = None
+        self.role_ids = []
+        self.baserole_ids = []
+        self.baserole_id = ""
+        self.attributes = { "roles" : self.role_ids }
+        self.alias = "Unauthenticated user"
+        self.email = ""
+        self.permissions = {}
+        self.siteconf = {}
+
 
 def clear_user_login():
-    # TODO: Do we need some "null" user here to make the using code clearer?
-    _set_user(None)
+    _set_user(LoggedInNobody())
 
 
 def set_user_by_id(user_id):
@@ -474,6 +479,10 @@ def _set_user(_user):
     global user
     user = _user
 
+
+# This holds the currently logged in user object
+user = LoggedInNobody()
+
 #.
 #   .--User Handling-------------------------------------------------------.
 #   |    _   _                 _   _                 _ _ _                 |
@@ -483,9 +492,11 @@ def _set_user(_user):
 #   |    \___/|___/\___|_|    |_| |_|\__,_|_| |_|\__,_|_|_|_| |_|\__, |    |
 #   |                                                            |___/     |
 #   +----------------------------------------------------------------------+
-#   | General user handling of all users, not only the currently logged in |
+#   | General user handling of all users, not only the currently logged    |
+#   | in user. These functions are mostly working with the loaded multisite|
+#   | configuration data (multisite_users, admin_users, ...), so they are  |
+#   | more related to this module than to the userdb module.               |
 #   '----------------------------------------------------------------------'
-# TODO: This should be moved to userdb.py module
 
 def roles_of_user(user_id):
     def existing_role_ids(role_ids):

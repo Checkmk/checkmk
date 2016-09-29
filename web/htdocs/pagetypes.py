@@ -463,7 +463,7 @@ class Overridable(Base):
 
 
     def is_mine(self):
-        return self.owner() == config.user_id
+        return self.owner() == config.user.id
 
     def owner(self):
         return self._["owner"]
@@ -472,10 +472,10 @@ class Overridable(Base):
     # TODO: Wie is die Semantik hier genau? Umsetzung vervollständigen!
     def may_see(self):
         perm_name = "%s.%s" % (self.type_name(), self.name())
-        if config.permission_exists(perm_name) and not config.may(perm_name):
+        if config.permission_exists(perm_name) and not config.user.may(perm_name):
             return False
 
-        # if self.owner() == "" and not config.may(perm_name):
+        # if self.owner() == "" and not config.user.may(perm_name):
         #    return False
 
         return True
@@ -483,7 +483,7 @@ class Overridable(Base):
 
         # TODO: Permissions
         ### visual = visuals[(owner, visual_name)]
-        ### if owner == config.user_id or \
+        ### if owner == config.user.id or \
         ###    (visual["public"] and owner != '' and config.user_may(owner, "general.publish_" + what)):
         ###     custom.append((owner, visual_name, visual))
         ### elif visual["public"] and owner == "":
@@ -495,7 +495,7 @@ class Overridable(Base):
         elif self.is_mine():
             return True
         else:
-            return config.may('general.delete_foreign_%s' % self.type_name())
+            return config.user.may('general.delete_foreign_%s' % self.type_name())
 
 
     def may_edit(self):
@@ -504,7 +504,7 @@ class Overridable(Base):
         elif self.is_mine():
             return True
         else:
-            return config.may('general.edit_foreign_%s' % self.type_name())
+            return config.user.may('general.edit_foreign_%s' % self.type_name())
 
 
     def edit_url(self):
@@ -582,7 +582,7 @@ class Overridable(Base):
 
     @classmethod
     def has_overriding_permission(self, how):
-        return config.may("general.%s_%s" % (how, self.type_name()))
+        return config.user.may("general.%s_%s" % (how, self.type_name()))
 
 
     @classmethod
@@ -615,7 +615,7 @@ class Overridable(Base):
 
         # My own pages
         for page in self.instances():
-            if page.is_mine() and config.may("general.edit_" + self.type_name()):
+            if page.is_mine() and config.user.may("general.edit_" + self.type_name()):
                 pages[page.name()] = page
 
         return sorted(pages.values(), cmp = lambda a, b: cmp(a.title(), b.title()))
@@ -639,7 +639,7 @@ class Overridable(Base):
             if page.name() != name:
                 continue
 
-            if page.is_mine() and config.may("general.edit_" + self.type_name()):
+            if page.is_mine() and config.user.may("general.edit_" + self.type_name()):
                 mine = page
 
             elif page.is_public() and page.may_see():
@@ -731,7 +731,7 @@ class Overridable(Base):
     @classmethod
     def save_user_instances(self, owner=None):
         if not owner:
-            owner = config.user_id
+            owner = config.user.id
 
         save_dict = {}
         for page in self.instances():
@@ -749,7 +749,7 @@ class Overridable(Base):
     def clone(self):
         page_dict = {}
         page_dict.update(self._)
-        page_dict["owner"] = config.user_id
+        page_dict["owner"] = config.user.id
         new_page = self.__class__(page_dict)
         self.add_page(new_page)
         return new_page
@@ -801,14 +801,14 @@ class Overridable(Base):
         # Deletion
         delname  = html.var("_delete")
         if delname and html.transaction_valid():
-            owner = html.var('_owner', config.user_id)
-            if owner != config.user_id:
+            owner = html.var('_owner', config.user.id)
+            if owner != config.user.id:
                 self.need_overriding_permission("delete_foreign")
 
             instance = self.instance((owner, delname))
 
             try:
-                if owner != config.user_id:
+                if owner != config.user.id:
                     owned_by = _(" (owned by %s)") % owner
                 else:
                     owned_by = ""
@@ -931,8 +931,8 @@ class Overridable(Base):
             if mode == "edit":
                 title = self.phrase("edit")
 
-                owner_user_id = html.var("owner", config.user_id)
-                if owner_user_id == config.user_id:
+                owner_user_id = html.var("owner", config.user.id)
+                if owner_user_id == config.user.id:
                     page = self.find_my_page(page_name)
                 else:
                     page = self.find_foreign_page(owner_user_id, page_name)
@@ -963,9 +963,9 @@ class Overridable(Base):
         )
 
         def validate(page_dict):
-            owner_user_id = html.var("owner", config.user_id)
+            owner_user_id = html.var("owner", config.user.id)
             page_name = page_dict["name"]
-            if owner_user_id == config.user_id:
+            if owner_user_id == config.user.id:
                 page = self.find_my_page(page_name)
             else:
                 page = self.find_foreign_page(owner_user_id, page_name)
@@ -980,7 +980,7 @@ class Overridable(Base):
                 for key, value in page_dict.items():
                     new_page_dict.setdefault(key, value)
 
-            owner = html.var("owner", config.user_id)
+            owner = html.var("owner", config.user.id)
             new_page_dict["owner"] = owner
             new_page = self(new_page_dict)
 

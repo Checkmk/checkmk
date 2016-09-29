@@ -1345,8 +1345,8 @@ def save_state(new_attrs, update=True):
         state = {}
     state.update(new_attrs)
 
-    with store.open(state_path(), "w") as f:
-        json.dump(state, f, sort_keys=True, indent=4, separators=(',', ': '))
+    store.save_file(state_path(),
+        json.dumps(state, sort_keys=True, indent=4, separators=(',', ': ')))
 
 
 def state_path():

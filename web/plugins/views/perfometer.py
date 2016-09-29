@@ -173,7 +173,8 @@ def paint_perfometer(row):
             url = new_graphing_url(row, "service")
         else:
             url = pnp_url(row, "service")
-        return "perfometer" + stale_css, ('<a href="%s">%s</a>' % (url, content))
+        return "perfometer" + stale_css, ('<a href="%s" title="%s">%s</a>' % \
+                                            (url, title, content))
     else:
         return "perfometer" + stale_css, content
 

@@ -188,7 +188,12 @@ def load_data_from_file(path, default=None, lock=False):
 
     try:
         try:
-            return ast.literal_eval(file(path).read())
+            content = file(path).read().strip()
+            if not content:
+                # May be created empty during locking
+                return default
+            else:
+                return ast.literal_eval(file(path).read())
         except IOError, e:
             if e.errno == 2: # IOError: [Errno 2] No such file or directory
                 return default
@@ -212,7 +217,7 @@ def save_file(path, content, mode=0660):
     try:
         tmp_path = None
         with tempfile.NamedTemporaryFile("w", dir=os.path.dirname(path),
-                                         prefix=os.path.basename(path)+".new",
+                                         prefix=".%s.new" % os.path.basename(path),
                                          delete=False) as tmp:
             tmp_path = tmp.name
             os.chmod(tmp_path, mode)

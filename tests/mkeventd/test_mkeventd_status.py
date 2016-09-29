@@ -27,6 +27,7 @@ def test_command_reload(site, ec, core):
 
     time.sleep(1) # needed to have at least one second after EC start
     live.command("[%d] EC_RELOAD" % (int(time.time())))
+    time.sleep(1) # needed to have at least one second after EC reload
 
     new_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
     assert new_t > old_t

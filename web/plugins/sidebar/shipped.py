@@ -589,8 +589,12 @@ def get_tactical_overview_data(extra_filter_headers):
     try:
         hstdata = sites.live().query_summed_stats(host_query)
         svcdata = sites.live().query_summed_stats(service_query)
-        notdata = notifications.load_failed_notifications(after=notifications.acknowledged_time(),
-                                                          stat_only=True)
+
+        notdata = notifications.load_failed_notifications(
+                        after=notifications.acknowledged_time(),
+                        stat_only=True,
+                        extra_headers=extra_filter_headers)
+
         if notdata is None:
             notdata = [0]
 
@@ -645,28 +649,25 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
     html.write("</table>\n")
 
     failed_notifications = notdata[0]
-    if failed_notifications > 0:
-        view_url = html.makeuri_contextless(
-            [("view_name", "failed_notifications")] + extra_url_variables, filename="view.py")
-        content = '<a target="main" href="%s">%d failed notifications</a>' %\
-            (view_url, failed_notifications)
+    if failed_notifications:
+        html.write('<div class=spacertop><div class=tacticalalert>')
 
         confirm_url = html.makeuri_contextless(extra_url_variables,
                                                filename="clear_failed_notifications.py")
-        content = ('<a target="main" href="%s">'
-                    '<img src="images/button_closetimewarp.png" style="width:16px;height:16px;">'
-                    '</a>&nbsp;' % confirm_url) + content
+        html.icon_button(confirm_url, _("Confirm failed notifications"), "delete", target="main")
 
-        html.write('<div class=spacertop><div class=tacticalalert>%s</div></div>' % content)
+        view_url = html.makeuri_contextless(
+            [("view_name", "failed_notifications")] + extra_url_variables, filename="view.py")
+
+        html.write('<a target="main" href="%s">%s</a>' %
+            (view_url, _("%d failed notifications") % failed_notifications))
+
+        html.write('</div></div>')
+
 
 snapin_tactical_overview_styles = """
 table.tacticaloverview {
    border-collapse: separate;
-   /**
-    * Don't use border-spacing. It is not supported by IE8 with compat mode and older IE versions.
-    * Better set cellspacing in HTML code. This works in all browsers.
-    * border-spacing: 5px 2px;
-    */
    width: %dpx;
    margin-top: -7px;
 }
@@ -682,11 +683,9 @@ table.tacticaloverview th {
 }
 table.tacticaloverview td {
     text-align: right;
-    /* border: 1px solid #123a4a; */
     background-color: #6da1b8;
     padding: 0px;
     height: 14px;
-    /* box-shadow: 1px 0px 1px #386068; */
 }
 table.tacticaloverview td.prob {
     box-shadow: 0px 0px 4px #ffd000;
@@ -699,9 +698,9 @@ table.tacticaloverview td.col4 {
 }
 table.tacticaloverview a { display: block; margin-right: 2px; }
 div.tacticalalert {
-    font-weight: bold;
-    font-size: 14pt;
-
+    font-size: 9pt;
+    line-height: 25px;
+    height: 25px;
     text-align: center;
     background-color: #ff5500;
     box-shadow: 0px 0px 4px #ffd000;

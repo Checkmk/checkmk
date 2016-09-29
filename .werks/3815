@@ -1,0 +1,11 @@
+Title: windows_agent: fixed incorrect parsing of only_from parameter
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1475144502
+Class: fix
+
+only_from needs to be configured like this:
+
+only_from = 127.0.0.1 191.15.12.23 10.1.1.139

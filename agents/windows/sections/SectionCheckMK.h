@@ -32,7 +32,7 @@ class Environment;
 
 class SectionCheckMK : public Section {
     Configurable<bool> _crash_debug;
-    ListConfigurable<only_from_t, BlockMode::FileExclusive<only_from_t>>
+    SplittingListConfigurable<only_from_t, BlockMode::FileExclusive<only_from_t>>
         _only_from;
 
     typedef std::pair<const char *, std::string> KVPair;

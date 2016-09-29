@@ -1836,7 +1836,7 @@ class html(object):
                 timestamp = valid_id.split("/")[0]
                 if now - int(timestamp) < 86400: # one day
                     cleared_ids.append(valid_id)
-            self.save_transids((cleared_ids[-20:] + self.new_transids), unlock = True)
+            self.save_transids((cleared_ids[-20:] + self.new_transids))
 
 
     # Remove the used transid from the list of valid ones
@@ -1846,7 +1846,7 @@ class html(object):
             valid_ids.remove(used_id)
         except ValueError:
             return
-        self.save_transids(valid_ids, unlock = True)
+        self.save_transids(valid_ids)
 
 
     # Checks, if the current transaction is valid, i.e. in case of
@@ -1911,7 +1911,7 @@ class html(object):
         raise NotImplementedError()
 
 
-    def save_transids(self, used_ids, unlock=False):
+    def save_transids(self, used_ids):
         raise NotImplementedError()
 
 

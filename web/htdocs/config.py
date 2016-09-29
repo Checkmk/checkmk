@@ -442,25 +442,14 @@ def load_user_file(name, deflt, lock = False):
     return store.load_data_from_file(path, deflt, lock)
 
 
-def save_user_file(name, content, unlock=False, user=None):
+def save_user_file(name, data, user=None):
     if user == None:
         user = user_id
     dirname = config_dir + "/" + user.encode("utf-8")
     make_nagios_directory(dirname)
     path = dirname + "/" + name + ".mk"
+    store.save_data_to_file(path, data)
 
-    try:
-        try:
-            write_settings_file(path + ".new", content)
-            os.rename(path + ".new", path)
-        except Exception, e:
-            if debug:
-                raise
-            raise MKConfigError(_("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s") % \
-                    (name, user, path, e))
-    finally:
-        if unlock:
-            release_lock(path)
 
 def user_file_modified(name):
     if user_confdir == None:

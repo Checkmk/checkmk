@@ -280,9 +280,9 @@ class html_mod_python(htmllib.html):
     def load_transids(self, lock = False):
         return config.load_user_file("transids", [], lock)
 
-    def save_transids(self, used_ids, unlock = False):
+    def save_transids(self, used_ids):
         if config.user_id:
-            config.save_user_file("transids", used_ids, unlock)
+            config.save_user_file("transids", used_ids)
 
     def save_tree_states(self):
         config.save_user_file("treestates", self.treestates)

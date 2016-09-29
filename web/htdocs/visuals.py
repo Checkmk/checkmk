@@ -105,7 +105,7 @@ def save(what, visuals, user_id = None):
     for (owner_id, name), visual in visuals.items():
         if user_id == owner_id:
             uservisuals[name] = visual
-    config.save_user_file('user_' + what, uservisuals, user = user_id, unlock=True)
+    config.save_user_file('user_' + what, uservisuals, user = user_id)
 
 # FIXME: Currently all user visual files of this type are locked. We could optimize
 # this not to lock all files but only lock the files the user is about to modify.

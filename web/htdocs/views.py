@@ -438,7 +438,7 @@ class PainterOptions(object):
     def save_to_config(self):
         vo = config.load_user_file("viewoptions", {}, lock=True)
         vo[self._view_name] = self._options
-        config.save_user_file("viewoptions", vo, unlock=True)
+        config.save_user_file("viewoptions", vo)
 
 
     def update_from_url(self, view):

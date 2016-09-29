@@ -226,7 +226,6 @@ def save_data_to_file(path, data, pretty=True):
     else:
         formated_data = repr(data)
 
-    print formated_data
     save_file(path, "%s\n" % formated_data)
 
 

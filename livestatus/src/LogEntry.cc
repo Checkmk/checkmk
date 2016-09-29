@@ -300,9 +300,13 @@ bool LogEntry::classifyLogMessage() {
 
 void LogEntry::applyWorkarounds() {
     if (_logclass == LOGCLASS_NOTIFICATION) {
-        // in notification messages the state is derived from the "state type".
-        // CUSTOM and DOWNTIME notifications have a different column order. This
-        // is as a bug, but we need to parse that anyway.
+        // The NotifyHelper class has a long, tragic history: Through a long
+        // series of commits, it suffered from spelling mistakes like
+        // "HOST_NOTIFICATION" or "HOST NOTIFICATION" (without a colon),
+        // parameter lists not matching the corresponding format strings, and
+        // last but not least wrong ordering of fields. The net result of this
+        // tragedy is that due to legacy reasons, we have to support parsing an
+        // incorrect ordering of "state type" and "command name" fields. :-P
         _state = (_svc_desc == nullptr) ? hostStateToInt(_state_type)
                                         : serviceStateToInt(_state_type);
 
@@ -357,11 +361,14 @@ int LogEntry::serviceStateToInt(const char *s) {
     }
 
     const char *last = s + strlen(s) - 1;
+    // Ugly: Depending on where we're called, the actual state can be in
+    // parentheses at the end, e.g. "ALERTHANDLER (OK)".
     if (*last == ')') {
         last--;
     }
 
-    // WARNING, CRITICAL, OK, UNKNOWN, RECOVERY
+    // normal states: OK, WARNING, CRITICAL, UNKNOWN
+    // states from "... ALERT"/"... NOTIFICATION": RECOVERY
     switch (*last) {
         case 'K':
             return 0;
@@ -384,12 +391,15 @@ int LogEntry::hostStateToInt(const char *s) {
     }
 
     const char *last = s + strlen(s) - 1;
-    if (*last == ')') {  // handle CUSTOM (UP) and DOWNTIMESTOPPED (DOWN) and
-                         // ALERTHANDLER (OK)
+    // Ugly: Depending on where we're called, the actual state can be in
+    // parentheses at the end, e.g. "ALERTHANDLER (OK)".
+    if (*last == ')') {
         last--;
     }
 
-    // UP, DOWN, UNREACHABLE, RECOVERY, OK, WARN, CRITICAL, UNKNOWN
+    // normal states: UP, DOWN, UNREACHABLE
+    // states from "... ALERT"/"... NOTIFICATION": RECOVERY
+    // states from "... ALERT HANDLER STOPPED": OK, WARNING, CRITICAL, UNKNOWN
     switch (*last) {
         case 'P':
             return 0;

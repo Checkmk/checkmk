@@ -124,9 +124,9 @@ def render_notification_table(failed_notifications):
 
     table.end()
 
+# TODO: We should really recode this to use the view and a normal view command / action
 def render_page_confirm(acktime, prev_url, failed_notifications):
-    html.set_render_headfoot(False)
-    html.header(_("Confirm"), javascripts=[], stylesheets=[ "pages", "check_mk" ])
+    html.header(_("Confirm failed notifications"), javascripts=[], stylesheets=[ "pages", "check_mk" ])
     html.write('<div class="really">\n')
     html.write(_("Do you really want to acknowledge all failed notifications up to %s?") %\
                lib.datetime_human_readable(acktime))
@@ -140,6 +140,7 @@ def render_page_confirm(acktime, prev_url, failed_notifications):
 
     html.footer()
 
+# TODO: We should really recode this to use the view and a normal view command / action
 def render_page_done():
     html.set_render_headfoot(False)
     html.header(_("Confirm"), javascripts=[], stylesheets=[ "pages", "check_mk" ])

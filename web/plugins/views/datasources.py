@@ -250,9 +250,10 @@ def query_service_discovery(columns, query, only_sites, limit, all_active_filter
     # Hard code the discovery service filter
     query += "Filter: check_command = check-mk-inventory\n"
 
-    service_rows = do_query_data("GET services\n",
-        ["host_state", "host_has_been_checked", "long_plugin_output", "host_name"], [], [],
-        query, only_sites, limit, "read")
+    if "long_plugin_output" not in columns:
+        columns.append("long_plugin_output")
+
+    service_rows = do_query_data("GET services\n", columns, [], [], query, only_sites, limit, "read")
 
     rows = []
     for row in service_rows:
@@ -262,15 +263,13 @@ def query_service_discovery(columns, query, only_sites, limit, all_active_filter
 
             state, check, service_description = map(lambda s: s.strip(), service_line.split(":", 2))
 
-            rows.append({
-                "site"                  : row["site"],
-                "host_name"             : row["host_name"],
-                "host_state"            : row["host_state"],
-                "host_has_been_checked" : row["host_has_been_checked"],
-                "discovery_state"       : state,
-                "discovery_check"       : check,
-                "discovery_service"     : service_description
+            this_row = row.copy()
+            this_row.update({
+                "discovery_state"   : state,
+                "discovery_check"   : check,
+                "discovery_service" : service_description
             })
+            rows.append(this_row)
 
     return rows
 

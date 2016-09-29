@@ -1,8 +1,67 @@
+# encoding: utf-8
+
 import cmk.store as store
+from cmk.exceptions import MKGeneralException
 import imp
 import sys
 import threading
 import time
+import os
+import pytest
+
+def test_load_data_from_file_not_existing(tmpdir):
+    data = store.load_data_from_file("%s/x" % tmpdir)
+    assert data == None
+
+    data = store.load_data_from_file("%s/x" % tmpdir, "DEFAULT")
+    assert data == "DEFAULT"
+
+
+def test_load_data_not_locked(tmpdir):
+    locked_file = tmpdir.join("locked_file")
+    locked_file.write("[1, 2]")
+
+    data = store.load_data_from_file("%s" % locked_file)
+    assert store.have_lock("%s" % locked_file) == False
+
+
+def test_load_data_from_file_locking(tmpdir):
+    locked_file = tmpdir.join("locked_file")
+    locked_file.write("[1, 2]")
+
+    data = store.load_data_from_file("%s" % locked_file, lock=True)
+    assert data == [1, 2]
+    assert store.have_lock("%s" % locked_file) == True
+
+
+def test_load_data_from_not_permitted_file(tmpdir):
+    locked_file = tmpdir.join("test")
+    locked_file.write("[1, 2]")
+    os.chmod("%s" % locked_file, 0200)
+
+    with pytest.raises(MKGeneralException) as e:
+        store.load_data_from_file("%s" % locked_file)
+    assert "%s" % locked_file in "%s" % e
+    assert "Permission denied" in "%s" % e
+
+
+def test_load_data_from_file_dict(tmpdir):
+    locked_file = tmpdir.join("test")
+    locked_file.write(repr({"1": 2, "ä": u"ß"}))
+
+    data = store.load_data_from_file("%s" % locked_file)
+    assert type(data) == dict
+    assert data["1"] == 2
+    assert type(data["ä"]) == unicode
+    assert data["ä"] == u"ß"
+
+
+def test_save_data_to_file(tmpdir):
+    f = tmpdir.join("test")
+    path = "%s" % f
+
+    store.save_data_to_file(path, [2, 3])
+    assert store.load_data_from_file(path) == [2, 3]
 
 
 def test_acquire_lock_not_existing(tmpdir):

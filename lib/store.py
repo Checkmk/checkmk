@@ -152,13 +152,14 @@ def load_mk_file(path, default=None, lock=False):
         aquire_lock(path)
 
     try:
-        execfile(path, globals(), default)
-        return default
-    except IOError, e:
-        if e.errno == 2: # IOError: [Errno 2] No such file or directory
+        try:
+            execfile(path, globals(), default)
             return default
-        else:
-            raise
+        except IOError, e:
+            if e.errno == 2: # IOError: [Errno 2] No such file or directory
+                return default
+            else:
+                raise
 
     except Exception, e:
         # TODO: How to handle debug mode or logging?
@@ -186,12 +187,13 @@ def load_data_from_file(path, default=None, lock=False):
         aquire_lock(path)
 
     try:
-        return ast.literal_eval(file(path).read())
-    except IOError, e:
-        if e.errno == 2: # IOError: [Errno 2] No such file or directory
-            return default
-        else:
-            raise
+        try:
+            return ast.literal_eval(file(path).read())
+        except IOError, e:
+            if e.errno == 2: # IOError: [Errno 2] No such file or directory
+                return default
+            else:
+                raise
 
     except Exception, e:
         # TODO: How to handle debug mode or logging?

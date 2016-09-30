@@ -1,6 +1,10 @@
 1.4.0i1p1:
+    Core & Setup:
+    * 3648 FIX: Fixed log file parsing of host states...
+
     Checks & Agents:
     * 3894 FIX: mkeventd_status: Fixed bug in case Event Console is not running
+
 
 1.4.0i1:
     Core & Setup:

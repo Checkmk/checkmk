@@ -721,7 +721,7 @@ class MonitoredHostname(TextAsciiAutocomplete):
 
 
     @classmethod
-    def _get_choies_via_wato(cls, value):
+    def _get_choices_via_wato(cls, value):
         raise NotImplementedError()
         return []
 

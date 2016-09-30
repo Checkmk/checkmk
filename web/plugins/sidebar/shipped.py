@@ -638,12 +638,12 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
             if unhandled:
                 url += "&is_%s_acknowledged=0" % what
             text = link(str(value), url)
-            html.write('<td class="%s%s">%s</td>' % (td_class, value == 0 and "" or ' states prob', text))
+            html.write('<td class="%s%s">%s</td>' % (td_class, value == 0 and " " or ' states prob', text))
 
         if td_class == 'col4':
             url = html.makeuri_contextless([("view_name", stale_view)] + extra_url_variables, filename="view.py")
             text = link(str(stales), url)
-            html.write('<td class="%s%s">%s</td>' % (td_class, value == 0 and "" or ' states prob', text))
+            html.write('<td class="%s%s">%s</td>' % (td_class, value == 0 and " " or ' states prob', text))
 
         html.write("</tr>\n")
     html.write("</table>\n")

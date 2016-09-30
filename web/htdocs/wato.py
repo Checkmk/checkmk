@@ -10711,6 +10711,10 @@ def mode_roles(phase):
     if phase == "action":
         if html.var("_delete"):
             delid = html.var("_delete")
+
+            if delid not in roles:
+                raise MKUserError(None, _("This role does not exist."))
+
             if html.transaction_valid() and roles[delid].get('builtin'):
                 raise MKUserError(None, _("You cannot delete the builtin roles!"))
 
@@ -10727,15 +10731,28 @@ def mode_roles(phase):
         elif html.var("_clone"):
             if html.check_transaction():
                 cloneid = html.var("_clone")
-                cloned_role = roles[cloneid]
+
+                try:
+                    cloned_role = roles[cloneid]
+                except KeyError:
+                    raise MKUserError(None, _("This role does not exist."))
+
                 newid = cloneid
                 while newid in roles:
                     newid += "x"
+
                 new_role = {}
                 new_role.update(cloned_role)
+
+                new_alias = new_role["alias"]
+                while not is_alias_used("roles", newid, new_alias)[0]:
+                    new_alias += _(" (copy)")
+                new_role["alias"] = new_alias
+
                 if cloned_role.get("builtin"):
-                    new_role["builtin"] =  False
+                    new_role["builtin"] = False
                     new_role["basedon"] = cloneid
+
                 roles[newid] = new_role
                 save_roles(roles)
                 update_login_sites_replication_status()

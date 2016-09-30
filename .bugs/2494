@@ -1,9 +1,12 @@
 Title: Cloning of roles creates roles with an existing non-unique alias
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2016-05-19 14:53:37
 Targetversion: 1.2.8
-Class: bug
 
 This prevents you from saving the properties. And creates in invalid state.
 Rather create an artificial Alias like "Clone of role Administrator" or the like.
+
+2016-09-30 01:50:51: changed state open -> done
+Fied

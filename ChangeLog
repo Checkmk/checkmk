@@ -3,6 +3,7 @@
     * 3894 FIX: mkeventd_status: Fixed bug in case Event Console is not running
 
     WATO:
+    * 3915 User access times: New icon when never logged in; New column "last seen"
     * 3914 FIX: Roles: Aliases are now unique during cloning
 
 

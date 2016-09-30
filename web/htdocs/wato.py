@@ -9997,12 +9997,23 @@ def mode_users(phase):
             last_seen = user.get('last_seen', 0)
             if last_seen >= online_threshold:
                 title = _('Online')
-                img_txt = 'on'
-            else:
+                img_txt = 'online'
+            elif last_seen != 0:
                 title = _('Offline')
-                img_txt = 'off'
+                img_txt = 'offline'
+            elif last_seen == 0:
+                title = _('Never logged in')
+                img_txt = 'inactive'
+
             title += ' (%s %s)' % (fmt_date(last_seen), fmt_time(last_seen))
-            table.cell(_("Act."), '<img class=icon title="%s" src="images/icon_%sline.png" />' % (title, img_txt))
+            table.cell(_("Act."))
+            html.icon(title, img_txt)
+
+            table.cell(_("Last seen"))
+            if last_seen != 0:
+                html.write("%s %s" % (fmt_date(last_seen), fmt_time(last_seen)))
+            else:
+                html.write(_("Never logged in"))
 
         # Connection
         if connection:

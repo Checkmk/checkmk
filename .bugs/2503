@@ -1,0 +1,9 @@
+Title: If you change a ruleset that is just used by the agent bakery, no pending change should be created
+Component: wato
+State: open
+Date: 2016-09-30 17:45:04
+Targetversion: 1.2.8
+Class: nastiness
+
+For example create a rule for restricting the agent access to certain
+IP addresses. This does but should not create a pending change in WATO.

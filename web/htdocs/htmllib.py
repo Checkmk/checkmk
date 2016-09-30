@@ -985,7 +985,7 @@ class html(object):
         if id:
             addprops += ' id="%s"' % id
 
-        attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
+        attributes = ' ' + ' '.join([ '%s="%s"' % (k, self.attrencode(v)) for k, v in attrs.iteritems() ])
         html += "<input type=\"%s\" class=\"%s\" value=\"%s\" name=\"%s\"%s%s />\n" % \
                      (mytype, cssclass, self.attrencode(value), varname, addprops, attributes)
         if error:

@@ -522,6 +522,36 @@ table.vs_duallist a.control.del {
     float: left;
 }
 
+div.vs_autocomplete {
+    display: block;
+    width: 160px;
+    background-color: #DFDFDF;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    color: #000;
+    box-shadow: 0 0 1.5px #000000;
+    position: absolute;
+    z-index: 20;
+}
+
+div.vs_autocomplete ul {
+    margin: 0;
+    list-style-type:none;
+    padding-left:0;
+    max-height: 80px;
+    overflow-y: scroll;
+}
+
+div.vs_autocomplete li {
+    padding: 1px 3px;
+}
+
+div.vs_autocomplete li:hover {
+    background-color: #2c5766;
+    color: #fff;
+    cursor: default;
+}
+
 textarea.tt {
     font-family: monospace;
 }
@@ -797,4 +827,3 @@ table.modifydowntimes > tbody > tr > td:nth-child(1) {
 table.modifydowntimes > tbody > tr:nth-child(1) > td:nth-child(1)  {
     padding-top: 0px;
 }
-

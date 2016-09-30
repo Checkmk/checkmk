@@ -36,6 +36,11 @@ import socket
 from lib import *
 import cmk.defines as defines
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 def type_name(v):
     try:
         return type(v).__name__
@@ -43,8 +48,9 @@ def type_name(v):
         return html.attrencode(type(v))
 
 # Abstract base class of all value declaration classes.
-class ValueSpec:
+class ValueSpec(object):
     def __init__(self, **kwargs):
+        super(ValueSpec, self).__init__()
         self._title         = kwargs.get("title")
         self._help          = kwargs.get("help")
         if "default_value" in kwargs:
@@ -353,7 +359,7 @@ class Filesize(Integer):
 # Editor for a line of text
 class TextAscii(ValueSpec):
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(TextAscii, self).__init__(**kwargs)
         self._label         = kwargs.get("label")
         self._size          = kwargs.get("size", 25) # also possible: "max"
         self._cssclass      = kwargs.get("cssclass", "text")
@@ -371,6 +377,7 @@ class TextAscii(ValueSpec):
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
         self._prefix_buttons = kwargs.get("prefix_buttons", [])
+        self._onkeyup       = kwargs.get("onkeyup")
 
     def canonical_value(self):
         return ""
@@ -393,7 +400,17 @@ class TextAscii(ValueSpec):
         else:
             type_ = "text"
 
-        html.text_input(varprefix, value, size = self._size, read_only = self._read_only, cssclass = self._cssclass, type = type_)
+        attrs = {}
+        if self._onkeyup:
+            attrs["onkeyup"] = self._onkeyup
+
+        html.text_input(varprefix, value,
+            size=self._size,
+            read_only=self._read_only,
+            cssclass=self._cssclass,
+            type=type_,
+            attrs=attrs,
+        )
         if self._prefix_buttons:
             self.render_buttons()
             html.write('</div>')
@@ -614,6 +631,101 @@ class IPv4Address(IPv4Network):
     def validate_value(self, value, varprefix):
         self.validate_ipaddress(value, varprefix)
         ValueSpec.custom_validate(self, value, varprefix)
+
+
+class TextAsciiAutocomplete(TextAscii):
+    def __init__(self, completion_ident, completion_params, **kwargs):
+        kwargs["onkeyup"] = "vs_autocomplete(this, %s, %s, %s);%s" % \
+                            (json.dumps(completion_ident),
+                             json.dumps(completion_params),
+                             json.dumps(kwargs.get("onkeyup")),
+                             kwargs.get("onkeyup", ""))
+        super(TextAsciiAutocomplete, self).__init__(**kwargs)
+
+
+    @classmethod
+    def idents(cls):
+        idents = {}
+        for type_class in cls.__subclasses__(): # pylint: disable=no-member
+            idents[type_class.ident] = type_class
+        return idents
+
+
+    @classmethod
+    def ajax_handler(cls):
+        ident = html.var("ident")
+        if not ident:
+            raise MKUserError("ident", _("You need to set the \"%s\" parameter.") % "ident")
+
+        if ident not in cls.idents():
+            raise MKUserError("ident", _("Invalid ident: %s") % ident)
+
+        raw_params = html.var("params")
+        if not raw_params:
+            raise MKUserError("params", _("You need to set the \"%s\" parameter.") % "params")
+
+        try:
+            params = json.loads(raw_params)
+        except json.JSONDecodeError, e:
+            raise MKUserError("params", _("Invalid parameters: %s") % e)
+
+        value = html.var("value")
+        if value is None:
+            raise MKUserError("params", _("You need to set the \"%s\" parameter.") % "value")
+
+        result_data = cls.idents()[ident].autocomplete_choices(value, params)
+
+        # Check for correct result_data format
+        assert type(result_data) == list
+        if result_data:
+            assert type(result_data[0]) in [list, tuple]
+            assert len(result_data[0]) == 2
+
+        html.write(json.dumps(result_data))
+
+
+# Renders an input field for entering a host name while providing
+# an auto completion dropdown field
+class MonitoredHostname(TextAsciiAutocomplete):
+    ident = "hostname"
+
+    def __init__(self, from_active_config=False, **kwargs):
+        super(MonitoredHostname, self).__init__("hostname", {
+            # Autocomplete from active config via livestatus or WATO world
+            "from_active_config": from_active_config,
+        }, **kwargs)
+
+
+    # called by the webservice with the current input fiel value and
+    # the completions_params to get the list of choices
+    @classmethod
+    def autocomplete_choices(cls, value, params):
+        if params["from_active_config"]:
+            return cls._get_choices_via_livestatus(value)
+        else:
+            return cls._get_choices_via_wato(value)
+
+
+    @classmethod
+    def _get_choices_via_livestatus(cls, value):
+        import sites
+
+        query = (
+            "GET hosts\n"
+            "Columns: host_name\n"
+            "Filter: host_name ~~ %s" % lqencode(value)
+        )
+        hosts = sorted(sites.live().query_column_unique(query))
+
+        return [ (h, h) for h in hosts ]
+
+
+    @classmethod
+    def _get_choies_via_wato(cls, value):
+        raise NotImplementedError()
+        return []
+
+
 
 # A host name with or without domain part. Also allow IP addresses
 class Hostname(TextAscii):

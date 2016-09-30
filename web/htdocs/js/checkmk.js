@@ -2228,6 +2228,121 @@ function vs_listofmultiple_disable_selected_options(varprefix)
     }
 }
 
+var g_autocomplete_ajax = null;
+
+function vs_autocomplete(input, completion_ident, completion_params, on_change)
+{
+    // TextAscii does not set the id attribute on the input field.
+    // Set the id to the name of the field here.
+    input.setAttribute("id", input.name);
+
+    // Terminate pending request
+    if (g_autocomplete_ajax) {
+        g_autocomplete_ajax.abort();       
+    }
+
+    g_autocomplete_ajax = call_ajax("ajax_vs_autocomplete.py?ident=" + encodeURIComponent(completion_ident), {
+        response_handler : vs_autocomplete_handle_response,
+        error_handler    : vs_autocomplete_handle_error,
+        handler_data     : [ input.id, on_change ],
+        method           : "POST",
+        post_data        : "params="+encodeURIComponent(JSON.stringify(completion_params))
+                          +"&value="+encodeURIComponent(input.value)
+                          +"&_plain_error=1",
+        add_ajax_id      : false
+    });
+}
+
+function vs_autocomplete_handle_response(handler_data, response_text)
+{
+    var input_id = handler_data[0];
+    var on_change = handler_data[1];
+
+    try {
+        var response = eval(response_text);
+    } catch(e) {
+        vs_autocomplete_show_error(input_id, response_text);
+        return;
+    }
+
+    if (response.length == 0) {
+        vs_autocomplete_close(input_id);
+    }
+    else {
+        // When only one result and values equal, hide the menu
+        var input = document.getElementById(input_id);
+        if (response.length == 1
+            && input
+            && response[0][0] == input.value) {
+            vs_autocomplete_close(input_id);
+            return;
+        }
+
+        vs_autocomplete_show_choices(input_id, on_change, response);
+    }
+}
+
+function vs_autocomplete_handle_error(handler_data, status_code, error_msg)
+{
+    var input_id = handler_data[0];
+
+    if (status_code == 0)
+        return; // aborted (e.g. by subsequent call)
+    vs_autocomplete_show_error(input_id, error_msg + " (" + status_code + ")");
+}
+
+function vs_autocomplete_show_choices(input_id, on_change, choices)
+{
+    var code = "<ul>";
+    for(var i = 0; i < choices.length; i++) {
+        var value = choices[i][0];
+        var label = choices[i][1];
+
+        code += "<li onclick=\"vs_autocomplete_choose('"
+                    + input_id + "', '" + value + "');" 
+                    + on_change + "\">" + label + "</li>";
+    }
+    code += "</ul>";
+
+    vs_autocomplete_show(input_id, code);
+}
+
+function vs_autocomplete_choose(input_id, value)
+{
+    var input = document.getElementById(input_id);
+    input.value = value;
+    vs_autocomplete_close(input_id);
+}
+
+function vs_autocomplete_show_error(input_id, msg)
+{
+    vs_autocomplete_show(input_id, "<div class=error>ERROR: " + msg + "</div>");
+}
+
+function vs_autocomplete_show(input_id, inner_html)
+{
+    var popup = document.getElementById(input_id + "_popup");
+    if (!popup) {
+        var input = document.getElementById(input_id);
+        var popup = document.createElement("div");
+        popup.setAttribute("id", input_id + "_popup");
+        popup.className = "vs_autocomplete";
+        input.parentNode.appendChild(popup);
+
+        // set minimum width of list to input field width
+        popup.style.minWidth = input.clientWidth + "px";
+    }
+
+    popup.innerHTML = inner_html;
+}
+
+function vs_autocomplete_close(input_id)
+{
+    var popup = document.getElementById(input_id + "_popup");
+    if (popup)
+        popup.parentNode.removeChild(popup);
+}
+
 //#.
 //#   .-Help Toggle--------------------------------------------------------.
 //#   |          _   _      _         _____                 _              |

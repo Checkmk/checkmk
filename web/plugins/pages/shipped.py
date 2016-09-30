@@ -45,6 +45,7 @@ import metrics
 import werks
 import inventory
 import notifications
+import valuespec
 
 # map URLs to page rendering functions
 
@@ -53,6 +54,7 @@ pagehandlers.update({
     "login"                         : login.page_login,
     "logout"                        : login.page_logout,
     "ajax_switch_help"              : help.ajax_switch_help,
+    "ajax_vs_autocomplete"          : valuespec.TextAsciiAutocomplete.ajax_handler,
     "edit_views"                    : views.page_edit_views,
     "create_view"                   : views.page_create_view,
     "create_view_infos"             : views.page_create_view_infos,

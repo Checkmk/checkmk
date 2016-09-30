@@ -9,6 +9,9 @@
     * 3915 User access times: New icon when never logged in; New column "last seen"
     * 3914 FIX: Roles: Aliases are now unique during cloning
 
+    HW/SW-Inventory:
+    * 3906 oracle: now version, database creation and startup time, log and open mode, logins, flashback are inventorised
+
 
 1.4.0i1:
     Core & Setup:

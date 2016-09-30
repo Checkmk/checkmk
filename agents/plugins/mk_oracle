@@ -155,6 +155,11 @@ sql_performance()
                      ||'|'|| b.BUFFER_BUSY_WAIT
               from v\$instance i, V\$BUFFER_POOL_STATISTICS b;
               select upper(i.INSTANCE_NAME)
+                     ||'|'|| 'SGA_info'
+                     ||'|'|| s.name
+                     ||'|'|| s.bytes
+              from v\$sgainfo s, v\$instance i;
+              select upper(i.INSTANCE_NAME)
                      ||'|'|| 'librarycache'
                      ||'|'|| b.namespace
                      ||'|'|| b.gets
@@ -238,6 +243,7 @@ sql_dataguard_stats()
                      ||'|'|| d.DATABASE_ROLE
                      ||'|'|| ds.name
                      ||'|'|| ds.value
+                     ||'|'|| d.SWITCHOVER_STATUS
               FROM  v\$database d
               JOIN  v\$parameter vp on 1=1
               JOIN v\$instance i on 1=1
@@ -367,6 +373,7 @@ sql_recovery_area()
                      ||' '|| round(SPACE_LIMIT/1024/1024)
                      ||' '|| round(SPACE_USED/1024/1024)
                      ||' '|| round(SPACE_RECLAIMABLE/1024/1024)
+                     ||' '|| d.FLASHBACK_ON
               from V\$RECOVERY_FILE_DEST, v\$database d, v\$instance i;
              "
     fi
@@ -522,6 +529,7 @@ sql_instance()
                      || '|' || DATABASE_ROLE
                      || '|' || FORCE_LOGGING
                      || '|' || d.name
+                     || '|' || to_char(d.created, 'ddmmyyyyhh24mi')
                 from v\$instance i, v\$database d;
              "
     fi

@@ -1,0 +1,9 @@
+Title: oracle: now version, database creation and startup time, log and open mode, logins, flashback are inventorised
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.4.0i2
+Date: 1475241371
+Class: feature
+
+

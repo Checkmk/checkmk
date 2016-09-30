@@ -1,0 +1,78 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# example output
+# DONE  Database (SID)                *
+# DONE  Oracle Version                *
+# DONE  Database Creation Time        -
+# DONE  DB Startup Time               -
+# DONE  DB Log Mode                   *
+# DONE  DB Open Mode                  *
+# DONE  DB Logins                     *
+# OTHER Dataguard State               -
+# OTHER Flashback                     -
+#       SGA (System Global Area)      -
+#       Temp File Size                -
+
+
+# <<<oracle_instance:sep(124)>>>
+# XE|11.2.0.2.0|OPEN|ALLOWED|STOPPED|3524|2752243048|NOARCHIVELOG|PRIMARY|NO|XE|080220151025
+# last entry: db creation time 'ddmmyyyyhh24mi'
+
+
+def inv_oracle_instance(info):
+    node = inv_tree_list("software.applications.oracle.instance:")
+    for line in info:
+        db_creation_time = None
+        if len(line) == 6:
+            sid, version, openmode, logins, _unused, _unused2 = line
+            logmode          = None
+            up_seconds       = None
+
+        elif len(line) >= 11:
+            sid, version, openmode, logins, archiver, up_seconds_str, dbid, \
+                logmode, database_role, force_logging, name = line[:11]
+            up_seconds = int(up_seconds_str)
+            if len(line) > 11:
+                db_creation_time = time.strftime("%d-%m-%Y %H:%M:%S", time.strptime(line[-1], "%d%m%Y%H%M%S"))
+
+        else:
+            continue
+
+        node.append({
+            "id"               : sid,
+            "version"          : version,
+            "openmode"         : openmode,
+            "logmode"          : logmode,
+            "logins"           : logins,
+            "db_uptime"        : up_seconds,
+            "db_creation_time" : db_creation_time,
+        })
+
+
+inv_info['oracle_instance'] = {
+    'inv_function' : inv_oracle_instance,
+}

@@ -14045,8 +14045,7 @@ def page_user_profile(change_pw=False):
                         # Remove the customized language
                         if 'language' in users[config.user.id]:
                             del users[config.user.id]['language']
-                        if 'language' in config.user:
-                            config.user.unset_attribute("language")
+                        config.user.unset_attribute("language")
 
                     # load the new language
                     i18n.localize(config.user.language())

@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <ctime>
+#include <string>
 #include <vector>
 #include "CommandsHolder.h"
 #include "nagios.h"
@@ -44,28 +45,33 @@
 #define LOGCLASS_INVALID 0x7fffffff  // never stored
 #define LOGCLASS_ALL 0xffff
 
-enum LogEntryType {
-    NONE = 0,
-    ALERT_HOST = 1,
-    ALERT_SERVICE = 2,
-    DOWNTIME_ALERT_HOST = 3,
-    DOWNTIME_ALERT_SERVICE = 4,
-    STATE_HOST = 5,
-    STATE_HOST_INITIAL = 6,
-    STATE_SERVICE = 7,
-    STATE_SERVICE_INITIAL = 8,
-    FLAPPING_HOST = 9,
-    FLAPPING_SERVICE = 10,
-    TIMEPERIOD_TRANSITION = 11,
-    CORE_STARTING = 12,
-    CORE_STOPPING = 13,
-    LOG_VERSION = 14,
-    LOG_INITIAL_STATES = 15,
-    ACKNOWLEDGE_ALERT_HOST = 16,
-    ACKNOWLEDGE_ALERT_SERVICE = 17,
+enum class ServiceState { ok = 0, warning = 1, critical = 2, unknown = 3 };
+
+enum class HostState { up = 0, down = 1, unreachable = 2 };
+
+enum class LogEntryType {
+    none,
+    alert_host,
+    alert_service,
+    downtime_alert_host,
+    downtime_alert_service,
+    state_host,
+    state_host_initial,
+    state_service,
+    state_service_initial,
+    flapping_host,
+    flapping_service,
+    timeperiod_transition,
+    core_starting,
+    core_stopping,
+    log_version,
+    log_initial_states,
+    acknowledge_alert_host,
+    acknowledge_alert_service
 };
 
-struct LogEntry {
+class LogEntry {
+public:
     unsigned _lineno;  // line number in file
     time_t _time;
     unsigned _logclass;
@@ -94,8 +100,8 @@ struct LogEntry {
              const char *line);
     ~LogEntry();
     unsigned updateReferences(const CommandsHolder &commands_holder);
-    static int serviceStateToInt(const char *s);
-    static int hostStateToInt(const char *s);
+    static ServiceState parseServiceState(const std::string &str);
+    static HostState parseHostState(const std::string &str);
 
 private:
     enum class Param {
@@ -113,7 +119,7 @@ private:
     };
 
     struct LogDef {
-        const char *prefix;
+        std::string prefix;
         unsigned log_class;
         LogEntryType log_type;
         std::vector<Param> params;
@@ -121,7 +127,6 @@ private:
 
     static std::vector<LogDef> log_definitions;
 
-private:
     bool assign(Param par, char **scan);
     void applyWorkarounds();
     bool classifyLogMessage();

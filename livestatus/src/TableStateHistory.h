@@ -42,7 +42,7 @@ class DowntimesOrComments;
 #endif
 class Query;
 class HostServiceState;
-struct LogEntry;
+class LogEntry;
 
 #define CLASSMASK_STATEHIST 0xC6
 

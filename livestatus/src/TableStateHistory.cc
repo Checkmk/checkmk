@@ -448,8 +448,8 @@ void TableStateHistory::answerQuery(Query *query) {
         }
 
         if (in_nagios_initial_states &&
-            !(entry->_type == STATE_SERVICE_INITIAL ||
-              entry->_type == STATE_HOST_INITIAL)) {
+            !(entry->_type == LogEntryType::state_service_initial ||
+              entry->_type == LogEntryType::state_host_initial)) {
             // Set still unknown hosts / services to unmonitored
             for (auto &it_hst : state_info) {
                 HostServiceState *hst = it_hst.second;
@@ -463,26 +463,26 @@ void TableStateHistory::answerQuery(Query *query) {
         HostServiceKey key = nullptr;
         bool is_service = false;
         switch (entry->_type) {
-            case NONE:
-            case CORE_STARTING:
-            case CORE_STOPPING:
-            case LOG_VERSION:
-            case ACKNOWLEDGE_ALERT_HOST:
-            case ACKNOWLEDGE_ALERT_SERVICE:
+            case LogEntryType::none:
+            case LogEntryType::core_starting:
+            case LogEntryType::core_stopping:
+            case LogEntryType::log_version:
+            case LogEntryType::acknowledge_alert_host:
+            case LogEntryType::acknowledge_alert_service:
                 break;
-            case ALERT_SERVICE:
-            case STATE_SERVICE:
-            case STATE_SERVICE_INITIAL:
-            case DOWNTIME_ALERT_SERVICE:
-            case FLAPPING_SERVICE:
+            case LogEntryType::alert_service:
+            case LogEntryType::state_service:
+            case LogEntryType::state_service_initial:
+            case LogEntryType::downtime_alert_service:
+            case LogEntryType::flapping_service:
                 key = entry->_service;
                 is_service = true;
             // fall-through
-            case ALERT_HOST:
-            case STATE_HOST:
-            case STATE_HOST_INITIAL:
-            case DOWNTIME_ALERT_HOST:
-            case FLAPPING_HOST: {
+            case LogEntryType::alert_host:
+            case LogEntryType::state_host:
+            case LogEntryType::state_host_initial:
+            case LogEntryType::downtime_alert_host:
+            case LogEntryType::flapping_host: {
                 if (!is_service) {
                     key = entry->_host;
                 }
@@ -658,8 +658,9 @@ void TableStateHistory::answerQuery(Query *query) {
                 int state_changed =
                     updateHostServiceState(query, entry, state, only_update);
                 // Host downtime or state changes also affect its services
-                if (entry->_type == ALERT_HOST || entry->_type == STATE_HOST ||
-                    entry->_type == DOWNTIME_ALERT_HOST) {
+                if (entry->_type == LogEntryType::alert_host ||
+                    entry->_type == LogEntryType::state_host ||
+                    entry->_type == LogEntryType::downtime_alert_host) {
                     if (state_changed != 0) {
                         for (auto &_service : state->_services) {
                             updateHostServiceState(query, entry, _service,
@@ -669,7 +670,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 }
                 break;
             }
-            case TIMEPERIOD_TRANSITION: {
+            case LogEntryType::timeperiod_transition: {
                 char *save_ptr;
                 char *buffer = strdup(entry->_options);
                 char *tp_name = strtok_r(buffer, ";", &save_ptr);
@@ -695,7 +696,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 free(buffer);
                 break;
             }
-            case LOG_INITIAL_STATES: {
+            case LogEntryType::log_initial_states: {
                 // This feature is only available if log_initial_states is set
                 // to 1. If log_initial_states is set, each nagios startup logs
                 // the initial states of all known hosts and services. Therefore
@@ -763,7 +764,8 @@ int TableStateHistory::updateHostServiceState(Query *query,
     int state_changed = 1;
 
     // Revive host / service if it was unmonitored
-    if (entry->_type != TIMEPERIOD_TRANSITION && hs_state->_has_vanished) {
+    if (entry->_type != LogEntryType::timeperiod_transition &&
+        hs_state->_has_vanished) {
         hs_state->_time = hs_state->_last_known_time;
         hs_state->_until = hs_state->_last_known_time;
         if (!only_update) {
@@ -813,22 +815,22 @@ int TableStateHistory::updateHostServiceState(Query *query,
 
     // A timeperiod entry never brings an absent host or service into
     // existence..
-    if (entry->_type != TIMEPERIOD_TRANSITION) {
+    if (entry->_type != LogEntryType::timeperiod_transition) {
         hs_state->_may_no_longer_exist = false;
     }
 
     switch (entry->_type) {
-        case NONE:
-        case CORE_STARTING:
-        case CORE_STOPPING:
-        case LOG_VERSION:
-        case LOG_INITIAL_STATES:
-        case ACKNOWLEDGE_ALERT_HOST:
-        case ACKNOWLEDGE_ALERT_SERVICE:
+        case LogEntryType::none:
+        case LogEntryType::core_starting:
+        case LogEntryType::core_stopping:
+        case LogEntryType::log_version:
+        case LogEntryType::log_initial_states:
+        case LogEntryType::acknowledge_alert_host:
+        case LogEntryType::acknowledge_alert_service:
             break;
-        case STATE_HOST:
-        case STATE_HOST_INITIAL:
-        case ALERT_HOST: {
+        case LogEntryType::state_host:
+        case LogEntryType::state_host_initial:
+        case LogEntryType::alert_host: {
             if (hs_state->_is_host) {
                 if (hs_state->_state != entry->_state) {
                     if (!only_update) {
@@ -850,9 +852,9 @@ int TableStateHistory::updateHostServiceState(Query *query,
             }
             break;
         }
-        case STATE_SERVICE:
-        case STATE_SERVICE_INITIAL:
-        case ALERT_SERVICE: {
+        case LogEntryType::state_service:
+        case LogEntryType::state_service_initial:
+        case LogEntryType::alert_service: {
             if (hs_state->_state != entry->_state) {
                 if (!only_update) {
                     process(query, hs_state);
@@ -862,7 +864,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
             }
             break;
         }
-        case DOWNTIME_ALERT_HOST: {
+        case LogEntryType::downtime_alert_host: {
             int downtime_active =
                 strncmp(entry->_state_type, "STARTED", 7) == 0 ? 1 : 0;
 
@@ -881,7 +883,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
             }
             break;
         }
-        case DOWNTIME_ALERT_SERVICE: {
+        case LogEntryType::downtime_alert_service: {
             int downtime_active =
                 strncmp(entry->_state_type, "STARTED", 7) == 0 ? 1 : 0;
             if (hs_state->_in_downtime != downtime_active) {
@@ -893,8 +895,8 @@ int TableStateHistory::updateHostServiceState(Query *query,
             }
             break;
         }
-        case FLAPPING_HOST:
-        case FLAPPING_SERVICE: {
+        case LogEntryType::flapping_host:
+        case LogEntryType::flapping_service: {
             int flapping_active =
                 strncmp(entry->_state_type, "STARTED", 7) == 0 ? 1 : 0;
             if (hs_state->_is_flapping != flapping_active) {
@@ -908,7 +910,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
             }
             break;
         }
-        case TIMEPERIOD_TRANSITION: {
+        case LogEntryType::timeperiod_transition: {
             char *save_ptr;
             char *buffer = strdup(entry->_options);
             char *tp_name = strtok_r(buffer, ";", &save_ptr);
@@ -945,13 +947,13 @@ int TableStateHistory::updateHostServiceState(Query *query,
         }
     }
 
-    if (entry->_type != TIMEPERIOD_TRANSITION) {
+    if (entry->_type != LogEntryType::timeperiod_transition) {
         if (hs_state->_log_output != nullptr) {
             free(hs_state->_log_output);
         }
 
-        if ((entry->_type == STATE_HOST_INITIAL ||
-             entry->_type == STATE_SERVICE_INITIAL) &&
+        if ((entry->_type == LogEntryType::state_host_initial ||
+             entry->_type == LogEntryType::state_service_initial) &&
             (entry->_check_output != nullptr &&
              (strcmp(entry->_check_output, "(null)") == 0))) {
             hs_state->_log_output = nullptr;

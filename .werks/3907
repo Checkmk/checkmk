@@ -1,0 +1,17 @@
+Title: oracle_tablespaces: simplyfied free space calculation depending on version
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p12
+Date: 1475242264
+Class: fix
+
+Oracle version greater than 11:
+The size of next extent in datafile is ignored when remaining
+free space is > then next extend. Oracle uses all space up to the maximum!
+
+Oracle version lower than 11:
+The free space in this table is the current free space plus
+the additional space that can be gathered by using all available
+remaining increment
+

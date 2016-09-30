@@ -16,6 +16,7 @@
     * 3890 FIX: check_mk_agent.openbsd: Fixed broken MRPE checks
     * 3814 FIX: win_netstat: fixed unicode warning while parsing data
     * 3880 FIX: check_sql: fixed missing number in check details
+    * 3907 FIX: oracle_tablespaces: simplyfied free space calculation depending on version...
 
     Multisite:
     * 3874 FIX: fixed graphs displaying wrong labels

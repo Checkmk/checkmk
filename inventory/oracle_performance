@@ -24,18 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# example output
-# OTHER Database (SID)                *
-# OTHER Oracle Version                *
-# OTHER Database Creation Time        -
-# OTHER DB Startup Time               -
-# OTHER DB Log Mode                   *
-# OTHER DB Open Mode                  *
-# OTHER DB Logins                     *
-# OTHER Dataguard State               -
-# OTHER Flashback                     -
-# DONE  SGA (System Global Area)      -
-#       Temp File Size                -
 
 # <<<oracle_performance:sep(124)>>>
 # XE|SGA_info|Maximum SGA Size|367439872

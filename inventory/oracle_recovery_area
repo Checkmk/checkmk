@@ -24,19 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# example output
-# OHTER Database (SID)                *
-# OHTER Oracle Version                *
-# OHTER Database Creation Time        -
-# OHTER DB Startup Time               -
-# OHTER DB Log Mode                   *
-# OHTER DB Open Mode                  *
-# OHTER DB Logins                     *
-# OTHER Dataguard State               -
-# DONE  Flashback                     -
-#       SGA (System Global Area)      -
-#       Temp File Size                -
-
 
 def inv_oracle_recovery_area(info):
     node = inv_tree_list("software.applications.oracle.recovery_area:")

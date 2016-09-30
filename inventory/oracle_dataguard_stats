@@ -24,19 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# example output
-# OTHER Database (SID)                *
-# OTHER Oracle Version                *
-# OTHER Database Creation Time        'SELECT CREATED' or 'SELECT MIN(created) FROM dba_objects'
-#       DB Startup Time               'SELECT to_char(startup_time,'DD-MON-YYYY HH24:MI:SS') "DB Startup Time" FROM sys.v_$instance;'
-# OTHER DB Log Mode                   *
-# OTHER DB Open Mode                  *
-# OTHER DB Logins                     *
-# DONE  Dataguard State               -
-# OTHER Flashback                     'SELECT flashback_on FROM v$database;'
-#       SGA (System Global Area)      'SELECT * FROM V$SGA;' or 'select * from V$SGAINFO;'
-#       Temp File Size                'SELECT * FROM V$TEMPFILE'
-
 
 def inv_oracle_dataguard_stats(info):
     node = inv_tree_list("software.applications.oracle.dataguard_stats:")

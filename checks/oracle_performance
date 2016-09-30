@@ -57,6 +57,8 @@
 def parse_oracle_performance(info):
     parsed = {}
     for line in info:
+        if len(line) < 3:
+            continue
         parsed.setdefault(line[0], {})
         parsed[line[0]].setdefault(line[1], {})
         counters = line[3:]

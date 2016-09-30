@@ -27,15 +27,18 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include "StringUtils.h"
 #include "strutil.h"
 
 using mk::starts_with;
 using std::string;
+using std::unordered_map;
 
 LogEntry::LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
                    const char *line)
-    : _type(NONE) {
+    : _type(LogEntryType::none) {
     // TODO(sp) Fix all handleFooEntry() member functions below to always set
     // all fields and remove this set-me-to-zero-to-be-sure-block.
     _logclass = LOGCLASS_INFO;
@@ -111,12 +114,12 @@ bool LogEntry::assign(Param par, char **scan) {
             this->_svc_desc = next_token(scan, ';');
             break;
         case Param::HostState:
-            // textual host state (UP, DOWN, ...)
-            this->_state = hostStateToInt(safe_next_token(scan, ';'));
+            this->_state =
+                static_cast<int>(parseHostState(safe_next_token(scan, ';')));
             break;
         case Param::ServiceState:
-            // textual service state (OK, WARN, ...)
-            this->_state = serviceStateToInt(safe_next_token(scan, ';'));
+            this->_state =
+                static_cast<int>(parseServiceState(safe_next_token(scan, ';')));
             break;
         case Param::State:
             // numeric state
@@ -149,136 +152,139 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
     ////////////////
     LogDef{"INITIAL HOST STATE: ",
            LOGCLASS_ALERT,
-           ALERT_HOST,
+           LogEntryType::alert_host,
            {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
             Param::CheckOutput}},
     ////////////////
     LogDef{"CURRENT HOST STATE: ",
            LOGCLASS_STATE,
-           STATE_HOST_INITIAL,
+           LogEntryType::state_host_initial,
            {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
             Param::CheckOutput}},
     ////////////////
     LogDef{"HOST ALERT: ",
            LOGCLASS_STATE,
-           STATE_HOST,
+           LogEntryType::state_host,
            {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
             Param::CheckOutput}},
     ////////////////
     LogDef{"HOST DOWNTIME ALERT: ",
            LOGCLASS_ALERT,
-           DOWNTIME_ALERT_HOST,
+           LogEntryType::downtime_alert_host,
            {Param::HostName, Param::StateType, Param::Comment}},
     ////////////////
     LogDef{"HOST ACKNOWLEDGE ALERT: ",
            LOGCLASS_ALERT,
-           ACKNOWLEDGE_ALERT_HOST,
+           LogEntryType::acknowledge_alert_host,
            {Param::HostName, Param::StateType, Param::ContactName,
             Param::Comment}},
     ////////////////
     LogDef{"HOST FLAPPING ALERT: ",
            LOGCLASS_ALERT,
-           FLAPPING_HOST,
+           LogEntryType::flapping_host,
            {Param::HostName, Param::StateType, Param::Comment}},
     ////////////////
     LogDef{"INITIAL SERVICE STATE: ",
            LOGCLASS_STATE,
-           STATE_SERVICE_INITIAL,
+           LogEntryType::state_service_initial,
            {Param::HostName, Param::SvcDesc, Param::ServiceState,
             Param::StateType, Param::Attempt, Param::CheckOutput}},
     ////////////////
     LogDef{"CURRENT SERVICE STATE: ",
            LOGCLASS_STATE,
-           STATE_SERVICE,
+           LogEntryType::state_service,
            {Param::HostName, Param::SvcDesc, Param::ServiceState,
             Param::StateType, Param::Attempt, Param::CheckOutput}},
     ////////////////
     LogDef{"SERVICE ALERT: ",
            LOGCLASS_ALERT,
-           ALERT_SERVICE,
+           LogEntryType::alert_service,
            {Param::HostName, Param::SvcDesc, Param::ServiceState,
             Param::StateType, Param::Attempt, Param::CheckOutput}},
     ////////////////
     LogDef{"SERVICE DOWNTIME ALERT: ",
            LOGCLASS_ALERT,
-           DOWNTIME_ALERT_SERVICE,
+           LogEntryType::downtime_alert_service,
            {Param::HostName, Param::SvcDesc, Param::StateType, Param::Comment}},
     ////////////////
     LogDef{"SERVICE ACKNOWLEDGE ALERT: ",
            LOGCLASS_ALERT,
-           ACKNOWLEDGE_ALERT_SERVICE,
+           LogEntryType::acknowledge_alert_service,
            {Param::HostName, Param::SvcDesc, Param::StateType,
             Param::ContactName, Param::Comment}},
     ////////////////
     LogDef{"SERVICE FLAPPING ALERT: ",
            LOGCLASS_ALERT,
-           FLAPPING_SERVICE,
+           LogEntryType::flapping_service,
            {Param::HostName, Param::SvcDesc, Param::StateType, Param::Comment}},
     ////////////////
-    LogDef{
-        "TIMEPERIOD_TRANSITION: ", LOGCLASS_STATE, TIMEPERIOD_TRANSITION, {}},
+    LogDef{"TIMEPERIOD_TRANSITION: ",
+           LOGCLASS_STATE,
+           LogEntryType::timeperiod_transition,
+           {}},
     ////////////////
     LogDef{"HOST NOTIFICATION: ",
            LOGCLASS_NOTIFICATION,
-           NONE,
+           LogEntryType::none,
            {Param::ContactName, Param::HostName, Param::StateType,
             Param::CommandName, Param::CheckOutput}},
     ////////////////
     LogDef{"SERVICE NOTIFICATION: ",
            LOGCLASS_NOTIFICATION,
-           NONE,
+           LogEntryType::none,
            {Param::ContactName, Param::HostName, Param::SvcDesc,
             Param::StateType, Param::CommandName, Param::CheckOutput}},
     ////////////////
     LogDef{"HOST NOTIFICATION RESULT: ",
            LOGCLASS_NOTIFICATION,
-           NONE,
+           LogEntryType::none,
            {Param::ContactName, Param::HostName, Param::StateType,
             Param::CommandName, Param::Comment}},
     ////////////////
     LogDef{"SERVICE NOTIFICATION RESULT: ",
            LOGCLASS_NOTIFICATION,
-           NONE,
+           LogEntryType::none,
            {Param::ContactName, Param::HostName, Param::SvcDesc,
             Param::StateType, Param::CommandName, Param::Comment}},
     ////////////////
     LogDef{"HOST ALERT HANDLER STARTED: ",
            8,  // LOGCLASS_ALERT_HANDLERS,
-           NONE,
+           LogEntryType::none,
            {Param::HostName, Param::CommandName}},
     ////////////////
     LogDef{"SERVICE ALERT HANDLER STARTED: ",
            8,  // LOGCLASS_ALERT_HANDLERS,
-           NONE,
+           LogEntryType::none,
            {Param::HostName, Param::SvcDesc, Param::CommandName}},
     ////////////////
     LogDef{"HOST ALERT HANDLER STOPPED: ",
            8,  // LOGCLASS_ALERT_HANDLERS
-           NONE,
+           LogEntryType::none,
            {Param::HostName, Param::CommandName, Param::ServiceState,
             Param::CheckOutput}},
     ////////////////
     LogDef{"SERVICE ALERT HANDLER STOPPED: ",
            8,  // LOGCLASS_ALERT_HANDLERS,
-           NONE,
+           LogEntryType::none,
            {Param::HostName, Param::SvcDesc, Param::CommandName,
             Param::ServiceState, Param::CheckOutput}},
     ////////////////
     LogDef{"PASSIVE SERVICE CHECK: ",
            LOGCLASS_PASSIVECHECK,
-           NONE,
+           LogEntryType::none,
            {Param::HostName, Param::SvcDesc, Param::State, Param::CheckOutput}},
     ////////////////
     LogDef{"PASSIVE HOST CHECK: ",
            LOGCLASS_PASSIVECHECK,
-           NONE,
+           LogEntryType::none,
            {Param::HostName, Param::State, Param::CheckOutput}},
     ////////////////
-    LogDef{"EXTERNAL COMMAND: ", LOGCLASS_COMMAND, NONE, {}}};
+    LogDef{"EXTERNAL COMMAND: ", LOGCLASS_COMMAND, LogEntryType::none, {}}};
 
 bool LogEntry::classifyLogMessage() {
+    string text = _text;
     for (const auto &def : log_definitions) {
-        if (starts_with(string(_text), string(def.prefix))) {
+        if (starts_with(text, def.prefix)) {
             _logclass = def.log_class;
             _type = def.log_type;
             char *scan = _text;
@@ -298,37 +304,43 @@ bool LogEntry::classifyLogMessage() {
     return true;
 }
 
+// The NotifyHelper class has a long, tragic history: Through a long series of
+// commits, it suffered from spelling mistakes like "HOST_NOTIFICATION" or "HOST
+// NOTIFICATION" (without a colon), parameter lists not matching the
+// corresponding format strings, and last but not least wrong ordering of
+// fields. The net result of this tragedy is that due to legacy reasons, we have
+// to support parsing an incorrect ordering of "state type" and "command name"
+// fields. :-P
 void LogEntry::applyWorkarounds() {
-    if (_logclass == LOGCLASS_NOTIFICATION) {
-        // The NotifyHelper class has a long, tragic history: Through a long
-        // series of commits, it suffered from spelling mistakes like
-        // "HOST_NOTIFICATION" or "HOST NOTIFICATION" (without a colon),
-        // parameter lists not matching the corresponding format strings, and
-        // last but not least wrong ordering of fields. The net result of this
-        // tragedy is that due to legacy reasons, we have to support parsing an
-        // incorrect ordering of "state type" and "command name" fields. :-P
-        _state = (_svc_desc == nullptr) ? hostStateToInt(_state_type)
-                                        : serviceStateToInt(_state_type);
-
-        if (((_svc_desc == nullptr) && (_state == 3)) ||
-            ((_svc_desc != nullptr) && (_state == 4))) {
-            std::swap(_state_type, _command_name);
-            _state = (_svc_desc == nullptr) ? hostStateToInt(_state_type)
-                                            : serviceStateToInt(_state_type);
-        }
+    if (_logclass != LOGCLASS_NOTIFICATION ||  // no need for any workaround
+        _state_type == nullptr) {              // extremely broken line
+        return;
     }
+
+    if (strcmp(_state_type, "check-mk-notify") == 0) {
+        // Ooops, we encounter one of our own buggy lines...
+        std::swap(_state_type, _command_name);
+    }
+
+    if (_state_type == nullptr) {
+        return;  // extremely broken line, even after a potential swap
+    }
+
+    _state = (_svc_desc == nullptr)
+                 ? static_cast<int>(parseHostState(_state_type))
+                 : static_cast<int>(parseServiceState(_state_type));
 }
 
 bool LogEntry::handleTextEntry() {
     if (strncmp(_text, "LOG VERSION: 2.0", 16) == 0) {
         _logclass = LOGCLASS_PROGRAM;
-        _type = LOG_VERSION;
+        _type = LogEntryType::log_version;
         return true;
     }
     if ((strncmp(_text, "logging initial states", 22) == 0) ||
         (strncmp(_text, "logging intitial states", 23) == 0)) {
         _logclass = LOGCLASS_PROGRAM;
-        _type = LOG_INITIAL_STATES;
+        _type = LogEntryType::log_initial_states;
         return true;
     }
     return false;
@@ -338,14 +350,14 @@ bool LogEntry::handleProgrammEntry() {
     if ((strstr(_text, "starting...") != nullptr) ||
         (strstr(_text, "active mode...") != nullptr)) {
         _logclass = LOGCLASS_PROGRAM;
-        _type = CORE_STARTING;
+        _type = LogEntryType::core_starting;
         return true;
     }
     if ((strstr(_text, "shutting down...") != nullptr) ||
         (strstr(_text, "Bailing out") != nullptr) ||
         (strstr(_text, "standby mode...") != nullptr)) {
         _logclass = LOGCLASS_PROGRAM;
-        _type = CORE_STOPPING;
+        _type = LogEntryType::core_stopping;
         return true;
     }
     if (strstr(_text, "restarting...") != nullptr) {
@@ -355,73 +367,50 @@ bool LogEntry::handleProgrammEntry() {
     return false;
 }
 
-int LogEntry::serviceStateToInt(const char *s) {
-    if (s == nullptr) {
-        return 3;  // can happen at garbled log line
+namespace {
+// Ugly: Depending on where we're called, the actual state type can be in
+// parentheses at the end, e.g. "ALERTHANDLER (OK)".
+string extractStateType(const string &str) {
+    if (!str.empty() && str[str.size() - 1] == ')') {
+        size_t lparen = str.rfind('(');
+        if (lparen != string::npos) {
+            return str.substr(lparen + 1, str.size() - lparen - 2);
+        }
     }
-
-    const char *last = s + strlen(s) - 1;
-    // Ugly: Depending on where we're called, the actual state can be in
-    // parentheses at the end, e.g. "ALERTHANDLER (OK)".
-    if (*last == ')') {
-        last--;
-    }
-
-    // normal states: OK, WARNING, CRITICAL, UNKNOWN
-    // states from "... ALERT"/"... NOTIFICATION": RECOVERY
-    switch (*last) {
-        case 'K':
-            return 0;
-        case 'Y':
-            return 0;
-        case 'G':
-            return 1;
-        case 'L':
-            return 2;
-        case 'N':
-            return 3;
-        default:
-            return 4;
-    }
+    return str;
 }
 
-int LogEntry::hostStateToInt(const char *s) {
-    if (s == nullptr) {
-        return 2;  // can happen at garbled log line
-    }
+unordered_map<string, ServiceState> serviceStateTypes{
+    // normal states
+    {"OK", ServiceState::ok},
+    {"WARNING", ServiceState::warning},
+    {"CRITICAL", ServiceState::critical},
+    {"UNKNOWN", ServiceState::unknown},
+    // states from "... ALERT"/"... NOTIFICATION"
+    {"RECOVERY", ServiceState::ok}};
 
-    const char *last = s + strlen(s) - 1;
-    // Ugly: Depending on where we're called, the actual state can be in
-    // parentheses at the end, e.g. "ALERTHANDLER (OK)".
-    if (*last == ')') {
-        last--;
-    }
+unordered_map<string, HostState> hostStateTypes{
+    // normal states
+    {"UP", HostState::up},
+    {"DOWN", HostState::down},
+    {"UNREACHABLE", HostState::unreachable},
+    // states from "... ALERT"/"... NOTIFICATION"
+    {"RECOVERY", HostState::up},
+    // states from "... ALERT HANDLER STOPPED"
+    {"OK", HostState::up},
+    {"WARNING", HostState::down},
+    {"CRITICAL", HostState::unreachable},
+    {"UNKNOWN", HostState::up}};
+}  // namespace
 
-    // normal states: UP, DOWN, UNREACHABLE
-    // states from "... ALERT"/"... NOTIFICATION": RECOVERY
-    // states from "... ALERT HANDLER STOPPED": OK, WARNING, CRITICAL, UNKNOWN
-    switch (*last) {
-        case 'P':
-            return 0;
-        case 'Y':
-            return 0;
-        case 'E':
-            return 2;
-        case 'K':
-            return 0;
-        case 'G':
-            return 1;
-        case 'L':
-            return 2;
-        case 'N':
-            if (*(last - 1) == 'W') {
-                return 3;  // UNKNOWN
-            } else {
-                return 2;  // DOWN
-            }
-        default:
-            return 3;
-    }
+ServiceState LogEntry::parseServiceState(const string &str) {
+    auto it = serviceStateTypes.find(extractStateType(str));
+    return it == serviceStateTypes.end() ? ServiceState::ok : it->second;
+}
+
+HostState LogEntry::parseHostState(const string &str) {
+    auto it = hostStateTypes.find(extractStateType(str));
+    return it == hostStateTypes.end() ? HostState::up : it->second;
 }
 
 unsigned LogEntry::updateReferences(const CommandsHolder &commands_holder) {

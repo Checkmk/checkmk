@@ -34,7 +34,7 @@
 class CommandsHolder;
 class LogCache;
 class Query;
-struct LogEntry;
+class LogEntry;
 
 #ifdef CMC
 class World;

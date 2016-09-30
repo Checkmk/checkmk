@@ -1,9 +1,12 @@
 Title: Wrong calculation of levels for remaining space in per cent on small filesystems
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2016-08-03 13:14:29
 Targetversion: 1.2.8
-Class: bug
 
 On small filesystems like 4KB on routers or switches the calculation of remaining hard disk space at per cent is wrong.
 The calculation calculates the wrong levels for it.
+
+2016-09-30 10:59:57: changed state open -> done
+Should have been fixed in the meantime.

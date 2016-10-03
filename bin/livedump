@@ -257,25 +257,27 @@ def bail_out(x):
     sys.exit(1)
 
 def usage():
-    sys.stderr.write("""
-Usage: %s [OPTION]...
-
-  -C, --config               Dump configuration (instead of state)
-
-  -h, --help                 Show this help
-  -V, --version              Show version and exit
-  -T, --dump-templates       Also dump host/service templates
-  -M, --mark-mode            Puts the mode (state/configuration dump) in the first
-                             line for use with livedump-ssh-recv and similar scripts
-  -p, --prefix P             Add a prefix P to hostnames. Use this option to dump live
-                             data from multiple sites with duplicated hostnames
+    sys.stderr.write("""Usage: %s [OPTION]...
 
   -s, --socket S             Connect to Livestatus-socket at S
                              -s tcp:10.11.0.55:6557
                              -s unix:/var/run/nagios/rw/live
+
+  -C, --config               Dump configuration (instead of state)
+
+  -T, --dump-templates       Also dump host/service templates
+
+  -M, --mark-mode            Puts the mode (state/configuration dump) in the first
+                             line for use with livedump-ssh-recv and similar scripts
+
+  -p, --prefix P             Add a prefix P to hostnames. Use this option to dump live
+                             data from multiple sites with duplicated hostnames
+
   -O, --host-only-header H   Add header H to host queries only (usually Filter: ...)
+
   -H, --host-header H        Add header H to host queries (usually Filter: ...)
                              This header is also used in service queries
+
   -S, --service-header H     Add header H to service queries (usually Filter: ...)
 
   -i, --interval I           Assume this check interval for hosts/services. This is
@@ -284,11 +286,14 @@ Usage: %s [OPTION]...
                              option is only used when dumping the config together
                              with templates (-C -T)
 
-  -v, --verbose              Output debug information on stderr
   -G, --include-groups       Use contact groups instead of contacts on dumping config
-      --include-host-icon    Add host icon_image to config
-      --debug                Do not catch Python exceptions
 
+      --include-host-icon    Add host icon_image to config
+
+  -V, --version              Show version and exit
+  -h, --help                 Show this help
+  -v, --verbose              Output debug information on stderr
+      --debug                Do not catch Python exceptions
 """ % os.path.split(sys.argv[0])[1])
 
 def print_version():

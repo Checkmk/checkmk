@@ -378,11 +378,11 @@ try:
     for o, a in opts:
         if o in [ '-C', '--config' ]:
             if opt_mark_mode:
-                print "config", omd_site()
+                sys.stdout.write("config %s\n" % omd_site())
             livedump_config()
             sys.exit(0)
     if opt_mark_mode:
-        print "status"
+        sys.stdout.write("status\n")
     livedump_state()
 
 except Exception, e:

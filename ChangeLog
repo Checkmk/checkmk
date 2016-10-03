@@ -34,6 +34,9 @@
     Event Console:
     * 3884 FIX: Notifications: Fixed wrong LASTSERVICESTATE and SERVICESTATE in EC notifications...
 
+    Livestatus:
+    * 3740 Moved livedump utility from treasures directly into bin directory...
+
     HW/SW-Inventory:
     * 3811 FIX: HW/SW Inventory: Fixed GUI display crash when querying data from older software versions...
     * 3882 FIX: mk_inventory.linux: fixed wrong graphic card section name

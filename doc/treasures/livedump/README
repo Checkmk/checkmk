@@ -15,19 +15,13 @@ Advantages:
 Disadvantages:
 - Introduces some latency
 
-How to setup livedump
----------------------
-Copy the file livedump to a convenient place. Make sure that
-../livestatus/api/python/livestatus.py is either in the same
-directory as livedump or somewhere in the Python path.
-
 Using livedump
 --------------
 The first step is to extract the configuration from the source system using. This step
 is needed whenever your configuration of hosts or services changes.
 NSCA users will now this. This is easily done by:
 
-./livedump -TC > some_file.cfg
+livedump -TC > some_file.cfg
 
 and then copying that file to your objects or conf.d directory on
 your target nagios. Note: The option -T will add some templates
@@ -41,7 +35,7 @@ and be in pending state.
 
 Now create a cronjob that does the following every 1 or 5 minutes:
 
-1. ./livedump > ca1b2c3
+1. livedump > ca1b2c3
 2. copy that file to the target system into the checkresults directory
    (in OMD this is ~/tmp/nagios/checkresults)
 3. After a correct copy touch the file ca1b2c3.ok in that
@@ -59,7 +53,7 @@ and service livestatus headers. The following example will only dump
 hosts and services of the host group "foo". Please make sure that 
 all hosts that are needed by the dumped services are also dumped:
 
-./livedump -H "Filter: host_groups > foo"
+livedump -H "Filter: host_groups > foo"
 
 Note: The -H headers will also be added to the service queries.
 Make sure that all columns are prefixed with host_ in these.

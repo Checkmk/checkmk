@@ -1,0 +1,11 @@
+Title: logwatch patterns: now able to set a rule which converts on incoming state to another
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1475521109
+Class: feature
+
+The WATO rule now allows you to configure a complete state conversion.
+For example, you can set that all reported <i>C</i> lines are converted to <i>W</i>.
+

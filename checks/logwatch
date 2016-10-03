@@ -156,14 +156,19 @@ def logwatch_level_worst(worst, level):
 # Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
 def logwatch_precompile(hostname, item, _unused):
     # Initialize the patterns list with the logwatch_rules
-    params = []
+    params = {"reclassify_patterns": [], "reclassify_states": {}}
     description = check_info['logwatch']['service_description'] % item
 
     # This is the new (-> WATO controlled) variable
     rules = service_extra_conf(hostname, item, logwatch_rules)
+
     for rule in rules:
-        for pattern in rule:
-            params.append((pattern[0], pattern[1]))
+        if isinstance(rule, dict):
+            params["reclassify_patterns"].extend(x[:2] for x in rule.get("reclassify_patterns"))
+            if "reclassify_states" in rule:
+                params["reclassify_states"] = rule["reclassify_states"]
+        else:
+            params["reclassify_patterns"].extend(x[:2] for x in rule)
 
     # Now load the old logwatch_patterns var
     patterns = logwatch_patterns.get(item)
@@ -185,13 +190,23 @@ def logwatch_precompile(hostname, item, _unused):
                     in_extraconf_hostlist(hostlist, hostname)):
                 continue
 
-            params.append((level, pattern))
+            params["reclassify_patterns"].append((level, pattern))
 
     return params
 
 
-def logwatch_reclassify(counts, patterns, text):
-    for level, pattern in patterns:
+def logwatch_reclassify(counts, patterns, text, old_level):
+    new_level = None
+
+    # Reclassify state to another state
+    change_state_paramkey = ("%s_to" % old_level).lower()
+    if change_state_paramkey in patterns.get("reclassify_states", {}) and\
+        patterns["reclassify_states"][change_state_paramkey] != old_level:
+            new_level = patterns["reclassify_states"][change_state_paramkey]
+
+    # Reclassify state if a given regex pattern matches
+    # A match overrules the previous state->state reclassification
+    for level, pattern in patterns.get("reclassify_patterns", []):
         reg = regex(pattern)
         if reg.search(text):
             # If the level is not fixed like 'C' or 'W' but a pair like (10, 20),
@@ -209,7 +224,8 @@ def logwatch_reclassify(counts, patterns, text):
                     return 'I'
             else:
                 return level
-    return None
+
+    return new_level
 
 def logwatch_parse_line(line):
     parts = line.split(None, 1)
@@ -424,7 +440,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
 
         def __reclassify_line(self, patterns, text, level):
             if patterns:
-                newlevel = logwatch_reclassify(self.counts, patterns, text)
+                newlevel = logwatch_reclassify(self.counts, patterns, text, level)
                 if newlevel != None:
                     level = newlevel
             return level
@@ -711,35 +727,45 @@ def check_logwatch_ec(item, params, info):
     # Get the logwatch patterns if they are not already precompiled
     # The precompile feature is not required when using the cmc as core
     # HACK: opt_keepalive is used to detect cmc
-    if not opt_keepalive and "logwatch_patterns" not in params:
+    if not opt_keepalive and "logwatch_settings" not in params:
         params = logwatch_ec_precompile(g_hostname, item, params)
 
     # Keep track of reclassifed lines
     rclfd_total     = 0
     rclfd_to_ignore = 0
 
+    logfile_reclassify_settings = {}
+    def add_reclassify_settings(settings):
+        if isinstance(settings, dict):
+            logfile_reclassify_settings["reclassify_patterns"].extend(x[:2] for x in settings.get("reclassify_patterns"))
+            if "reclassify_states" in settings:
+                logfile_reclassify_settings["reclassify_states"] = settings["reclassify_states"]
+        else: # legacy configuration
+            logfile_reclassify_settings["reclassify_patterns"].extend(x[:2] for x in settings)
+
     for logfile, lines in logs.items():
+        logfile_reclassify_settings["reclassify_patterns"] = []
+        logfile_reclassify_settings["reclassify_states"]   = {}
         # Determine logwatch patterns specifically for this logfile
-        log_reclassify_patterns = []
         # HACK: opt_keepalive is used to detect cmc
         if opt_keepalive:
-            logfile_patterns = service_extra_conf(g_hostname, logfile, logwatch_rules)
-            if logfile_patterns:
-                log_reclassify_patterns.extend(map(lambda x: x[:2], [z for y in logfile_patterns for z in y]))
+            logfile_settings = service_extra_conf(g_hostname, logfile, logwatch_rules)
+            for settings in logfile_settings:
+                add_reclassify_settings(settings)
         else:
-            for entry in params["logwatch_patterns"]:
-                patterns, log_items = entry
+            for entry in params["logwatch_settings"]:
+                settings, log_items = entry
                 for log_item in log_items:
                     reg = regex(log_item)
                     if reg.search(logfile):
-                        log_reclassify_patterns.extend(patterns)
+                        add_reclassify_settings(settings)
 
         for line in lines:
             rclfd_level = None
-            if log_reclassify_patterns:
+            if logfile_reclassify_settings:
                 counts = {} # unused...
                 old_level, text = line.split(" ", 1)
-                level = logwatch_reclassify(counts, log_reclassify_patterns, line[2:]) or old_level
+                level = logwatch_reclassify(counts, logfile_reclassify_settings, line[2:], old_level) or old_level
                 if level != old_level:
                     rclfd_total += 1
                     rclfd_level = level
@@ -822,7 +848,7 @@ def logwatch_ec_precompile(hostname, item, params):
 
     # HACK: opt_keepalive is used to detect cmc
     if (opt_keepalive or not params.get("logwatch_reclassify")):
-        params.update({"logwatch_patterns": []})
+        params.update({"logwatch_settings": []})
         return params
 
     # The following code is used for creating the params of precompiled checks
@@ -835,34 +861,36 @@ def logwatch_ec_precompile(hostname, item, params):
             continue
 
         if len(rule) == 3:
-            item, hostlist, servlist = rule
+            settings, hostlist, servlist = rule
             tags = []
         elif len(rule) == 4:
-            item, tags, hostlist, servlist = rule
+            settings, tags, hostlist, servlist = rule
         else:
             continue
 
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
         hosts = all_matching_hosts(tags, hostlist, with_foreign_hosts=False)
-        ruleset.append((item, hosts, servlist))
+        ruleset.append((settings, hosts, servlist))
 
     # Filter out any logwatch_rules which do apply to to this host
     # 1st filter: Do not use rules where the hostname does not match
     # 2nd filter: Do not use rules with configured items where no item matches the
     #             "restrict_logfiles" condition (if applicable)
-    logwatch_patterns = []
+    logwatch_settings = []
     for rule in ruleset:
-        patterns, hosts, rule_items = rule
+        settings, hosts, rule_items = rule
         if hostname in hosts:
             if params.get("restrict_logfiles"):
                 for rule_item in rule_items:
                     if rule_item == "" or logwatch_ec_forwarding_enabled(params, rule_item):
-                        logwatch_patterns.append( (map(lambda x: x[:2], patterns), rule_items) )
+                        logwatch_settings.append((settings, rule_items))
                         break
             else:
-                logwatch_patterns.append( (map(lambda x: x[:2], patterns), rule_items) )
-    params.update({"logwatch_patterns": logwatch_patterns})
+                logwatch_settings.append((settings, rule_items))
+
+    params.update({"logwatch_settings": logwatch_settings})
+
     return params
 
 precompile_params['logwatch.ec'] = logwatch_ec_precompile

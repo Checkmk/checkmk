@@ -1290,41 +1290,93 @@ register_rule(group + '/' + subgroup_inventory,
 register_rule(group + '/' + subgroup_applications,
     varname   = "logwatch_rules",
     title     = _('Logwatch Patterns'),
-    valuespec = ListOf(
-      Tuple(
-          help = _("This defines one logfile pattern rule"),
-          show_titles = True,
-          orientation = "horizontal",
-          elements = [
-             DropdownChoice(
-               title = _("State"),
-               choices = [
-                   ('C', _('CRITICAL')),
-                   ('W', _('WARNING')),
-                   ('O', _('OK')),
-                   ('I', _('IGNORE')),
-               ],
-             ),
-             RegExpUnicode(
-                 title = _("Pattern (Regex)"),
-                 size  = 40,
-             ),
-             TextUnicode(
-                 title = _("Comment"),
-                 size  = 40,
-             ),
-          ]
-      ),
-      title = _("Logfile pattern rules"),
-      help = _('<p>You can define one or several patterns (regular expressions) in each logfile pattern rule. '
-               'These patterns are applied to the selected logfiles to reclassify the '
-               'matching log messages. The first pattern which matches a line will '
-               'be used for reclassifying a message. You can use the '
-               '<a href="wato.py?mode=pattern_editor">Logfile Pattern Analyzer</a> '
-               'to test the rules you defined here.</p>'
-               '<p>Select "Ignore" as state to get the matching logs deleted. Other states will keep the '
-               'log entries but reclassify the state of them.</p>'),
-      add_label = _("Add pattern"),
+    valuespec = Transform(
+      Dictionary(
+        elements = [
+                    ("reclassify_patterns",
+                         ListOf(
+                           Tuple(
+                               help = _("This defines one logfile pattern rule"),
+                               show_titles = True,
+                               orientation = "horizontal",
+                               elements = [
+                                  DropdownChoice(
+                                    title = _("State"),
+                                    choices = [
+                                        ('C', _('CRITICAL')),
+                                        ('W', _('WARNING')),
+                                        ('O', _('OK')),
+                                        ('I', _('IGNORE')),
+                                    ],
+                                  ),
+                                  RegExpUnicode(
+                                      title = _("Pattern (Regex)"),
+                                      size  = 40,
+                                  ),
+                                  TextUnicode(
+                                      title = _("Comment"),
+                                      size  = 40,
+                                  ),
+                               ]
+                           ),
+                           title = _("Reclassify state matching regex pattern"),
+                           help = _('<p>You can define one or several patterns (regular expressions) in each logfile pattern rule. '
+                                    'These patterns are applied to the selected logfiles to reclassify the '
+                                    'matching log messages. The first pattern which matches a line will '
+                                    'be used for reclassifying a message. You can use the '
+                                    '<a href="wato.py?mode=pattern_editor">Logfile Pattern Analyzer</a> '
+                                    'to test the rules you defined here.</p>'
+                                    '<p>Select "Ignore" as state to get the matching logs deleted. Other states will keep the '
+                                    'log entries but reclassify the state of them.</p>'),
+                           add_label = _("Add pattern"),
+
+                         ),
+                    ),
+                    ("reclassify_states", Dictionary(
+                            title = _("Reclassify complete state"),
+                            help  = _("This setting allows you to convert all incoming states to another state. "
+                                      "The option is applied before the state conversion via regexes. So the regex values can "
+                                      "modify the state even further."),
+                            elements = [ ("c_to",
+                               DropdownChoice(
+                                 title = _("Change CRITICAL State to"),
+                                 choices = [
+                                     ('C', _('CRITICAL')),
+                                     ('W', _('WARNING')),
+                                     ('O', _('OK')),
+                                     ('I', _('IGNORE')),
+                                 ],
+                                 default_value = "C",
+                               )),
+                               ("w_to", DropdownChoice(
+                                 title = _("Change WARNING State to"),
+                                 choices = [
+                                     ('C', _('CRITICAL')),
+                                     ('W', _('WARNING')),
+                                     ('O', _('OK')),
+                                     ('I', _('IGNORE')),
+                                 ],
+                                 default_value = "W",
+                               )),
+                               ("o_to", DropdownChoice(
+                                 title = _("Change OK State to"),
+                                 choices = [
+                                     ('C', _('CRITICAL')),
+                                     ('W', _('WARNING')),
+                                     ('O', _('OK')),
+                                     ('I', _('IGNORE')),
+                                 ],
+                                 default_value = "O",
+                               )),
+                            ],
+                            optional_keys = False
+                        ),
+                    )
+
+            ],
+            optional_keys = [ "reclassify_states" ],
+        ),
+        forth = lambda x: type(x) == dict and x or {"reclassify_patterns": x}
     ),
     itemtype = 'item',
     itemname = 'Logfile',

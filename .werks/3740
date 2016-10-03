@@ -1,0 +1,10 @@
+Title: Moved livedump utility from treasures directly into bin directory
+Level: 1
+Component: livestatus
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.4.0i2
+Date: 1475522726
+
+You can now use <tt>livedump</tt> without specifying a path.

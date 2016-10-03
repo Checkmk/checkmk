@@ -10,6 +10,9 @@
     * 3915 User access times: New icon when never logged in; New column "last seen"
     * 3914 FIX: Roles: Aliases are now unique during cloning
 
+    Livestatus:
+    * 3740 Moved livedump utility from treasures directly into bin directory...
+
     HW/SW-Inventory:
     * 3906 oracle: now version, database creation and startup time, log and open mode, logins, flashback are inventorised
 

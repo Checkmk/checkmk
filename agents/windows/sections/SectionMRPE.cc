@@ -125,17 +125,17 @@ bool SectionMRPE::produceOutputInner(std::ostream &out,
         crash_log("%s (%s) %s ", entry->run_as_user, entry->plugin_name,
                   entry->service_description);
 
-        char command[1024];
+        char modified_command[1024];
         char run_as_prefix[512];
         memset(run_as_prefix, 0, sizeof(run_as_prefix));
         if (strlen(entry->run_as_user) > 0)
             snprintf(run_as_prefix, sizeof(run_as_prefix), "runas /User:%s ",
                      entry->run_as_user);
-        snprintf(command, sizeof(command), "%s%s", run_as_prefix,
+        snprintf(modified_command, sizeof(command), "%s%s", run_as_prefix,
                  entry->command_line);
 
         try {
-            ExternalCmd command(entry->command_line);
+            ExternalCmd command(modified_command);
             crash_log("Script started -> collecting data");
             std::string buffer;
             buffer.resize(8192);
@@ -143,11 +143,11 @@ bool SectionMRPE::produceOutputInner(std::ostream &out,
             char *pos = &buffer[0];
             while (command.exitCode() == STILL_ACTIVE) {
                 DWORD read = command.readStdout(
-                    pos, buffer.size() - (pos - buf_start), true);
+                    pos, buffer.size() - (pos - buf_start), false);
                 pos += read;
                 Sleep(10);
             }
-            command.readStdout(pos, buffer.size() - (pos - buf_start), true);
+            command.readStdout(pos, buffer.size() - (pos - buf_start), false);
 
             char *output_end = rstrip(&buffer[0]);
             char *plugin_output = lstrip(&buffer[0]);

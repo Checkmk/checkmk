@@ -45,14 +45,19 @@
 # zam19-113565 Sebastian Hirschdobler 3561472 Fri Jul 31 12:58:01 2015
 
 # Default thresholds
-# ("<Warning max entries>", "<Critical num entries>", "<Warning entry age in seconds>", "<Critical entry age>")
-cups_queues_default_levels = (5, 10, 360, 720)
+factory_settings['cups_queues_default_levels'] = {
+        'job_count'         : (5,10),       #warn/crit for queue entries
+        'job_age'           : (360,720),    #warn/crit for entry age in seconds
+        'is_idle'           : 0,            #state for "is idle"
+        'now_printing'      : 0,            #state for "now printing"
+        'disabled_since'    : 2,            #state for "disbaled since"
+}
 
 def inventory_cups_queues(info):
-    return [ ('%s' % line[1], '', "cups_queues_default_levels") for line in info if line[0] == 'printer' ]
-
+    return [ ('%s' % line[1], '', {}) for line in info if line[0] == 'printer' ]
 def check_cups_queues(item, params, info):
-    warnNum, critNum, warnAge, critAge = params
+    warnNum, critNum = params["job_count"]
+    warnAge, critAge = params["job_age"]
     state   = 3
     output  = "Queue not found"
     numJobs = 0
@@ -68,11 +73,8 @@ def check_cups_queues(item, params, info):
             if len(info) > num+1 and not info[num+1][0] in [ 'printer', '---' ]:
                 statusoutput += " (%s)" % " ".join(info[num+1])
 
-            if status == "disabled since":
-                state = 2
-                output = "%s" % statusoutput
-            elif status in [ "is idle.", "now printing" ]:
-                state = 0
+            if status in [ "is idle.", "now printing", "disabled since"]:
+                state = params[status.replace(" ", "_").replace(".", "")]
                 output = "%s" % statusoutput
             else:
                 state = 3
@@ -110,8 +112,10 @@ def check_cups_queues(item, params, info):
 
 
 check_info["cups_queues"] = {
-    'check_function':          check_cups_queues,
-    'inventory_function':      inventory_cups_queues,
-    'service_description':     'CUPS Queue %s',
-    'has_perfdata':            True,
+    'inventory_function'        : inventory_cups_queues,
+    'check_function'            : check_cups_queues,
+    'service_description'       : 'CUPS Queue %s',
+    'has_perfdata'              : True,
+    'default_levels_variable'   : 'cups_queues_default_levels',
+    'group'                     : 'cups_queues'
 }

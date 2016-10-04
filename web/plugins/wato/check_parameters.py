@@ -3715,6 +3715,53 @@ register_check_parameters(
     "first"
 )
 
+register_check_parameters(
+    subgroup_printing,
+    "cups_queues",
+    _("CUPS Queue"),
+    Dictionary(
+        elements = [
+            ( "job_count", Tuple(
+                title = _("Levels of current jobs"),
+                default_value = (5, 10),
+                    elements = [
+                        Integer(title = _("Warning at")),
+                        Integer(title = _("Critical at"))
+                    ]
+                ),
+            ),
+            ( "job_age", Tuple(
+                title = _("Levels for age of jobs"),
+                help = _("A value in seconds"),
+                default_value = (360, 720),
+                    elements = [
+                        Integer(title = _("Warning at")),
+                        Integer(title = _("Critical at"))
+                    ]
+                ),
+            ),
+            ( "is_idle", MonitoringState(
+                title = _("State for 'is idle'"),
+                default_value = 0,
+                )
+            ),
+            ( "now_printing", MonitoringState(
+                title = _("State for 'now printing'"),
+                default_value = 0,
+                )
+            ),
+            ( "disabled_since", MonitoringState(
+                title = _("State for 'disabled since'"),
+                default_value = 2,
+               )
+            ),
+        ],
+    ),
+    TextAscii(
+        title = _("CUPS Queue") ),
+    "dict",
+)
+
 #.
 #   .--Unsorted--(Don't create new stuff here!)----------------------------.
 #   |              _   _                      _           _                |

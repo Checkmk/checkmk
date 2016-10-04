@@ -14,27 +14,24 @@ description:
  The resulting state also depends on the number of jobs in the queue and
  the age of the oldest job in the queue.
 
+ Be aware that custom parameters for jobs in
+ queue will be preferred. Even if e.g. "disabled since" would result in {CRIT}
+ but the length of queue is {OK} and vice versa.
+
 item:
  The name of the printer in CUPS as printed by {lpstat -p}.
 
-examples:
- # Set number of minimum jobs to 5 to result in a warning state and 10 to result in a critical state
- # Set the maximum age of a job to 5 minutes to result in a warning state and 10 minutes to result in
- # a critical state. The age is given in seconds.
- cups_queues_default_levels = (5, 10, 360, 720)
-
 perfdata:
- It contains the current number of jobs in the queue in the {jobs} value.
+ It contains the current number of jobs in the queue.
 
 inventory:
  Checks are created for all available printers in {lpstat -p} output.
 
 [parameters]
-warning_count (int): Number of jobs to result in a warning state
-critical_count (int): Number of jobs to result in a critical state
-warning_age (int): Age of oldest job to result in a warning state
-critical_age (int): Age of oldest job to result in a critical state
+ job_count (int, int): WARN/CRIT if number of jobs are above
+ job_age (int, int): WARN/CRIT if oldest job is above in seconds
+ is_idle (int): Internal state for pritner state "is idle"
 
 [configuration]
-cups_queues_default_levels (int, int, int, int): The global default levels for
+ cups_queues_default_levels (int, int, int, int): The global default levels for
  all checks of this type. This is {(5, 10, 360, 720)}.

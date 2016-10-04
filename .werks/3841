@@ -1,0 +1,16 @@
+Title: cups_queues: thresholds are now configurable in WATO
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i2
+Date: 1475568172
+Class: feature
+
+Thresholds are now configurable through WATO. Additionally the
+printer states are also confugrable.
+Defaults are the following:
+job_count:      (5,10)
+job_age:        (360,720)
+is idle:        OK
+now printing:   OK
+disbaled since: CRIT

@@ -17,6 +17,7 @@
     * 3814 FIX: win_netstat: fixed unicode warning while parsing data
     * 3880 FIX: check_sql: fixed missing number in check details
     * 3907 FIX: oracle_tablespaces: simplyfied free space calculation depending on version...
+    * 3818 FIX: windows agent: fixed 2 bugs related to mrpe...
 
     Multisite:
     * 3874 FIX: fixed graphs displaying wrong labels

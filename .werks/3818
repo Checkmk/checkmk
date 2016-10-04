@@ -1,0 +1,13 @@
+Title: windows agent: fixed 2 bugs related to mrpe
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p12
+Date: 1475592614
+Class: fix
+
+Calling MRPE scripts could cause an agent freeze.
+The <i>run as</i> option didn't work as well.
+
+Both issues have been fixed.
+

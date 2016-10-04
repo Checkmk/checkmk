@@ -131,7 +131,7 @@ bool SectionMRPE::produceOutputInner(std::ostream &out,
         if (strlen(entry->run_as_user) > 0)
             snprintf(run_as_prefix, sizeof(run_as_prefix), "runas /User:%s ",
                      entry->run_as_user);
-        snprintf(modified_command, sizeof(command), "%s%s", run_as_prefix,
+        snprintf(modified_command, sizeof(modified_command), "%s%s", run_as_prefix,
                  entry->command_line);
 
         try {

@@ -17,6 +17,7 @@
 
     HW/SW-Inventory:
     * 3906 oracle: now version, database creation and startup time, log and open mode, logins, flashback are inventorised
+    * 3944 Added OS related information for Cisco, Fireeye and Infoblox devices...
 
 
 1.4.0i1:

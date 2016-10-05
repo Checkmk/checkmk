@@ -1,0 +1,79 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# TODO unify with other if inventory plugins
+def inv_winperf_if(parsed, params):
+    perf, dhcp, nic_names, nic_index = parsed
+    node = inv_tree_list("networking.interfaces:")
+
+    usage_port_types = params.get("usage_port_types",
+           [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229' ])
+
+    def render_mac_address(bytestring):
+        return ":".join(["%02s" % hex(ord(m))[2:] for m in bytestring]).replace(' ', '0').upper()
+
+    total_ethernet_ports = 0
+    available_ethernet_ports = 0
+    for if_index, if_descr, if_type, if_speed, if_oper_status, \
+        if_in_octets, inucast, inmcast, inbcast, if_in_discards, \
+        if_in_errors, if_out_octets, outucast, outmcast, outbcast, \
+        if_out_discards, if_out_errors, if_out_qlen, if_alias, if_phys_address in perf:
+
+        if if_type in ( "231", "232" ) or not if_speed:
+            continue # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
+                     # Ignore useless half-empty tables (e.g. Viprinet-Router)
+
+        if_info = {
+            "index"        : int(if_index[-1]),
+            "description"  : if_descr,
+            "alias"        : if_alias,
+            "speed"        : int(if_speed),
+            "phys_address" : render_mac_address(if_phys_address),
+            "oper_status"  : int(if_oper_status[0]),
+            "port_type"    : int(if_type),
+        }
+
+        if if_type in usage_port_types:
+            if_available = if_oper_status == '2'
+            total_ethernet_ports += 1
+            if if_available:
+                available_ethernet_ports += 1
+        else:
+            if_available = None
+
+        if_info["available"] = if_available
+        node.append(if_info)
+
+    node = inv_tree("networking.")
+    node["available_ethernet_ports"] = available_ethernet_ports
+    node["total_ethernet_ports"] = total_ethernet_ports
+    node["total_interfaces"] = len(perf)
+
+
+inv_info['winperf_if'] = {
+    'inv_function' : inv_winperf_if,
+}

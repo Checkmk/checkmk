@@ -89,7 +89,9 @@ def winperf_if_normalize_nic_name(name, nic_names):
     return mod_nic_name
 
 
-def convert_winperf_if(info, nic_names, nic_index):
+def parse_winperf_if(info):
+    nic_names = map(winperf_if_canonize_nic_name, info[1][2:])
+    nic_index = winperf_if_get_nic_index_map(nic_names)
 
     lines = iter(info)
     lines.next() # skip line with timestamp and counter number
@@ -284,7 +286,7 @@ def convert_winperf_if(info, nic_names, nic_index):
            mac,
         ))
 
-    return converted, dhcp_lines
+    return converted, dhcp_lines, nic_names, nic_index
 
 
 def winperf_if_get_nic_index_map(nic_names):
@@ -324,32 +326,27 @@ def check_if_dhcp(item, _no_params, info, nic_names, nic_index):
     return 0, ""
 
 
-def inventory_winperf_if(info):
-    nic_names = map(winperf_if_canonize_nic_name, info[1][2:])
-    nic_index = winperf_if_get_nic_index_map(nic_names)
+def inventory_winperf_if(parsed):
+    perf, dhcp, nic_names, nic_index = parsed
 
-    perf, dhcp = convert_winperf_if(info, nic_names, nic_index)
-
-    return inventory_if_common(perf)
     # dhcp info irrelevant to inventory
+    return inventory_if_common(perf)
 
 
-def check_winperf_if(item, params, info):
-    nic_names = map(winperf_if_canonize_nic_name, info[1][2:])
-    nic_index = winperf_if_get_nic_index_map(nic_names)
-
-    perf, dhcp = convert_winperf_if(info, nic_names, nic_index)
+def check_winperf_if(item, params, parsed):
+    perf, dhcp, nic_names, nic_index = parsed
 
     yield check_if_common(item, params, perf, group_name = "Teaming")
     yield check_if_dhcp(item, params, dhcp, nic_names, nic_index)
 
 
 check_info["winperf_if"] = {
-    'check_function':          check_winperf_if,
-    'inventory_function':      inventory_winperf_if,
-    'service_description':     'Interface %s',
-    'has_perfdata':            True,
-    'includes':                [ 'if.include' ],
-    'group':                   'if',
-    'default_levels_variable': 'if_default_levels'
+    'parse_function'          : parse_winperf_if,
+    'inventory_function'      : inventory_winperf_if,
+    'check_function'          : check_winperf_if,
+    'service_description'     : 'Interface %s',
+    'has_perfdata'            : True,
+    'includes'                : [ 'if.include' ],
+    'group'                   : 'if',
+    'default_levels_variable' : 'if_default_levels'
 }

@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+# TODO unify with other if inventory plugins
 def inv_if(info, params):
     def round_to_day(ts):
         broken = time.localtime(ts)

@@ -121,7 +121,7 @@ def if_lnx_extract_nic_info(info):
     return nic_info
 
 
-def if_lnx_convert_to_if64(info):
+def parse_lnx_if(info):
     nic_info = if_lnx_extract_nic_info(info)
 
     if_table = []
@@ -208,20 +208,19 @@ def if_lnx_convert_to_if64(info):
 
     return if_table
 
-def inventory_lnx_if(info):
+
+def inventory_lnx_if(parsed):
     if linux_nic_check == "legacy":
         return []
-    return inventory_if_common(if_lnx_convert_to_if64(info))
-
-def check_lnx_if(item, params, info):
-    return check_if_common(item, params, if_lnx_convert_to_if64(info))
+    return inventory_if_common(parsed)
 
 
 check_info["lnx_if"] = {
-    'check_function':          check_lnx_if,
-    'inventory_function':      inventory_lnx_if,
-    'service_description':     'Interface %s',
-    'has_perfdata':            True,
-    'group':                   'if',
-    'default_levels_variable': 'if_default_levels',
+    'parse_function'          : parse_lnx_if,
+    'inventory_function'      : inventory_lnx_if,
+    'check_function'          : check_if_common,
+    'service_description'     : 'Interface %s',
+    'has_perfdata'            : True,
+    'group'                   : 'if',
+    'default_levels_variable' : 'if_default_levels',
 }

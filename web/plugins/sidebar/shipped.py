@@ -563,6 +563,8 @@ def get_tactical_overview_data(extra_filter_headers):
         "Stats: acknowledged = 0\n" \
         "StatsAnd: 3\n" \
         "Stats: host_staleness >= %s\n" % configured_staleness_threshold + \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 2\n" \
         "Filter: custom_variable_names < _REALNAME\n" + \
         extra_filter_headers
 
@@ -581,8 +583,9 @@ def get_tactical_overview_data(extra_filter_headers):
         "Stats: host_state = 0\n" \
         "StatsAnd: 5\n" \
         "Stats: service_staleness >= %s\n" % configured_staleness_threshold + \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: service_scheduled_downtime_depth = 0\n" \
-        "StatsAnd: 2\n" \
+        "StatsAnd: 3\n" \
         "Filter: host_custom_variable_names < _REALNAME\n" + \
         extra_filter_headers
 

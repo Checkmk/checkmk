@@ -44,23 +44,32 @@
 # lpr2-3                  root              1024   Tue Jun 29 09:05:54 2010
 # zam19-113565 Sebastian Hirschdobler 3561472 Fri Jul 31 12:58:01 2015
 
+
 # Default thresholds
 factory_settings['cups_queues_default_levels'] = {
-        'job_count'         : (5,10),       #warn/crit for queue entries
-        'job_age'           : (360,720),    #warn/crit for entry age in seconds
-        'is_idle'           : 0,            #state for "is idle"
-        'now_printing'      : 0,            #state for "now printing"
-        'disabled_since'    : 2,            #state for "disbaled since"
+        'job_count'         : (5, 10),      # warn/crit for queue entries
+        'job_age'           : (360, 720),   # warn/crit for entry age in seconds
+        'is_idle'           : 0,            # state for "is idle"
+        'now_printing'      : 0,            # state for "now printing"
+        'disabled_since'    : 2,            # state for "disbaled since"
 }
 
+
 def inventory_cups_queues(info):
-    return [ ('%s' % line[1], '', {}) for line in info if line[0] == 'printer' ]
+    return [ ('%s' % line[1], {}) for line in info if line[0] == 'printer' ]
+
+
 def check_cups_queues(item, params, info):
-    warnNum, critNum = params["job_count"]
-    warnAge, critAge = params["job_age"]
+    if type(params) == tuple and len(params) == 4:
+        params = {"job_count" : (params[0], params[1]),
+                  "job_age"   : (params[2], params[3]),
+        }
+
+    warn_num, crit_num = params["job_count"]
+    warn_age, crit_age = params["job_age"]
     state   = 3
     output  = "Queue not found"
-    numJobs = 0
+    jobs    = 0
     now     = time.time()
     oldest  = now
     for num, line in enumerate(info):
@@ -73,7 +82,7 @@ def check_cups_queues(item, params, info):
             if len(info) > num+1 and not info[num+1][0] in [ 'printer', '---' ]:
                 statusoutput += " (%s)" % " ".join(info[num+1])
 
-            if status in [ "is idle.", "now printing", "disabled since"]:
+            if status in [ "is idle.", "now printing", "disabled since" ]:
                 state = params[status.replace(" ", "_").replace(".", "")]
                 output = "%s" % statusoutput
             else:
@@ -83,7 +92,7 @@ def check_cups_queues(item, params, info):
         # Parse job
         elif line[0].startswith(item+'-'):
             # This is a queue item count the number of items and check the max age
-            numJobs += 1
+            jobs += 1
 
             # Try to parse different time formats. TODO: Couldn't we run the lpr command
             # with some environment var to fixate the date format?
@@ -100,15 +109,15 @@ def check_cups_queues(item, params, info):
             if dt < oldest:
                 oldest = dt
 
-    jobOutput = 'Jobs: %d' % numJobs
-    if numJobs > 0:
-        if oldest < now - critAge or numJobs > critNum:
+    jobOutput = 'Jobs: %d' % jobs
+    if jobs > 0:
+        if oldest < now - crit_age or jobs > crit_num:
             state = 2
-        elif oldest < now - warnAge or numJobs > warnNum:
+        elif oldest < now - warn_age or jobs > warn_num:
             state = 1
         jobOutput += ', Oldest job is from %s' % time.strftime("%c", time.localtime(oldest))
 
-    return (state, output + " - " + jobOutput, [ ("jobs", numJobs, warnNum, critNum, 0) ])
+    return (state, output + " - " + jobOutput, [ ("jobs", jobs, warn_num, crit_num, 0) ])
 
 
 check_info["cups_queues"] = {

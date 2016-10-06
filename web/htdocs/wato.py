@@ -15232,8 +15232,6 @@ def do_network_scan_automation():
 
 automation_commands["network-scan"] = do_network_scan_automation
 
-
-# FIXME/TODO: What happens in case of duplicate host names?
 def add_scanned_hosts_to_folder(folder, found):
     translation = folder.attribute("network_scan").get("translate_names", {})
 
@@ -15245,7 +15243,8 @@ def add_scanned_hosts_to_folder(folder, found):
             "ipaddress"       : ipaddress,
             "tag_criticality" : "offline",
         }
-        entries.append((host_name, attrs, None))
+        if not Host.host_exists(host_name):
+            entries.append((host_name, attrs, None))
 
     lock_exclusive()
     folder.create_hosts(entries)

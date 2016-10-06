@@ -1,0 +1,11 @@
+Title: Network scan: no longer fails completely if hostname already exists in configuration
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i2
+Date: 1475760893
+
+Already known hostnames are now skipped instead.
+

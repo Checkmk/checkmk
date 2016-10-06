@@ -1,0 +1,9 @@
+Title: postfix_mailq: fixed readout postfix config
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i1p1
+Date: 1475744029
+Class: fix
+
+

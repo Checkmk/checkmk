@@ -646,7 +646,7 @@ function read_postfix_queue_dirs {
 if type postconf >/dev/null ; then
     # Check if multi_instance_directories exists in main.cf and is not empty
     # always takes the last entry, multiple entries possible
-    multi_instances_dirs=$(postconf -d multi_instance_directories 2>/dev/null | sed 's/.*=[[:space:]]*//g')
+    multi_instances_dirs=$(postconf -c /etc/postfix 2>/dev/null | grep ^multi_instance_directories | sed 's/.*=[[:space:]]*//g')
     if [ ! -z "$multi_instances_dirs" ]; then
         for queue_dir in $multi_instances_dirs
         do

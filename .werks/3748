@@ -1,0 +1,11 @@
+Title: vertias_vcs: Fix empty agent section for standard xinetd configuration
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p12
+Date: 1475758739
+Class: fix
+
+Due to the PATH variable not being set correctly by default in non-interactive
+shells, the veritas_vcs agent section would be empty when called via xinetd
+in some instances.

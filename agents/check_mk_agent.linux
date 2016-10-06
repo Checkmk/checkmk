@@ -660,10 +660,10 @@ if [ -x /opt/VRTSvcs/bin/haclus ]
 then
     echo "<<<veritas_vcs>>>"
     vcshost=$(hostname | cut -d. -f1)
-    haclus -display -localclus | grep -e ClusterName -e ClusState
-    hasys -display -attribute SysState
-    hagrp -display -sys $vcshost -attribute State -localclus
-    hares -display -sys $vcshost -attribute State -localclus
+    /opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
+    /opt/VRTSvcs/bin/hasys -display -attribute SysState
+    /opt/VRTSvcs/bin/hagrp -display -sys $vcshost -attribute State -localclus
+    /opt/VRTSvcs/bin/hares -display -sys $vcshost -attribute State -localclus
 fi
 
 

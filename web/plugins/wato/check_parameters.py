@@ -7631,7 +7631,16 @@ register_check_parameters(
                      Age(title = _("Warning if below")),
                      Age(title = _("Critical if below")),
                  ]
-           )),
+           )),(
+            'ignore_noarchivelog',
+                Checkbox(
+                    title = _("Ignore state of no-archive log"),
+                    label = _("Enable"),
+                    help  = _("If active, only a single summary item is displayed. The summary "
+                              "will explicitly mention sensors in warn/crit state but the "
+                              "sensors that are ok are aggregated."),
+                    default_value = False)
+            ),
         ],
     ),
     TextAscii(

@@ -50,8 +50,8 @@ def inventory_oracle_instance(info):
 def check_oracle_instance(item, params, info):
 
     def state_marker(state, infotext, param, column, data):
-	value = params.get(param)
-	if value != None and column == data:
+        value = params.get(param)
+        if value != None and column == data:
             state = max(state, value)
             if value == 1:
                 infotext += '(!)'
@@ -125,7 +125,8 @@ def check_oracle_instance(item, params, info):
                 if name != '_MGMTDB' and sid != '-MGMTDB':
                     infotext += ', Log Mode %s' % (log_mode.lower())
                     state, infotext = state_marker(state, infotext, 'archivelog', log_mode, 'ARCHIVELOG')
-                    state, infotext = state_marker(state, infotext, 'noarchivelog',log_mode,  'NOARCHIVELOG')
+                    if not params.get('ignore_noarchivelog', False):
+                        state, infotext = state_marker(state, infotext, 'noarchivelog',log_mode,  'NOARCHIVELOG')
 
                     # force logging is only usable when archivelog is enabled
                     if log_mode == 'ARCHIVELOG':

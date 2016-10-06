@@ -1,0 +1,9 @@
+Title: oracle_instance: noarchivelog can now be ignored
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i2
+Date: 1475759543
+Class: feature
+
+

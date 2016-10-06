@@ -7,6 +7,7 @@
     * 3894 FIX: mkeventd_status: Fixed bug in case Event Console is not running
     * 3907 FIX: oracle_tablespaces: simplyfied free space calculation depending on version...
     * 3819 FIX: windows agent: fixed 2 bugs related to mrpe...
+    * 3909 FIX: postfix_mailq: fixed readout postfix config
 
     WATO:
     * 3915 User access times: New icon when never logged in; New column "last seen"

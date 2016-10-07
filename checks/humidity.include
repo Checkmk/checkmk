@@ -27,15 +27,15 @@
 
 # old params = (crit_low , warn_low, warn, crit)
 def check_humidity(humidity, params):
-    if params and type(params) in [ list, tuple ]:
-        params = {
-            "levels_lower" : (params[0], params[1]),
-            "levels"       : (params[2], params[3]),
-        }
-    else:
+    if params is None:
         params = {
             "levels_lower" : (-1, -1),
             "levels"       : (101, 101),
+        }
+    elif type(params) in [ list, tuple ]:
+        params = {
+            "levels_lower" : (params[0], params[1]),
+            "levels"       : (params[2], params[3]),
         }
 
     crit_lower, warn_lower = params["levels_lower"]

@@ -1,11 +1,15 @@
-title: GUDE Power Control: Relay port status
+title: GUDE Power Control: Relay port status and electricity
 agents: snmp
 catalog: hw/other
 license: GPL
 distribution: check_mk
 description:
- This check monitors the ON/OFF state of a GUDE Power
- Control device which supports the GUDEADS-EPC1100-MIB.
+ This check monitors the ON/OFF state and electricity of a GUDE Power
+ Control device which supports the GUDEADS-EPC1100-MIB or
+ -822X-MIB.
+
+ Default levels are set to 220, 210 V, 15, 16 A and 3500, 3600 Wh.
+ These and other levels are configurable
 
 item:
  The relay port name.

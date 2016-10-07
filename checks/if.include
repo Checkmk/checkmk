@@ -576,7 +576,8 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
     targetspeed        = params.get("speed")
     assumed_speed_in   = params.get("assumed_speed_in")
     assumed_speed_out  = params.get("assumed_speed_out")
-    targetstate        = params.get("state")
+    targetstates       = params.get("state")
+    map_operstates     = dict(params.get("map_operstates", []))
     average            = params.get("average")
     unit               = params.get("unit") in ["Bit", "bit"] and "Bit" or "B"
     unit_multiplier    = unit == "Bit" and 8.0 or 1.0
@@ -668,14 +669,23 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                     infotext = "%son %s: " % ( infotext, node )
 
             state = 0
-
-            if targetstate and  \
-                (ifOperStatus != targetstate
-                and not (type(targetstate) in [ list, tuple ] and ifOperStatus in targetstate)):
+            infotext += "(%s)" % ifOperStatusName
+            if targetstates and \
+                (ifOperStatus != targetstates
+                and not (type(targetstates) in [ list, tuple ] and ifOperStatus in targetstates)):
                 state = 2
-                infotext += "(%s)(!!) " % ifOperStatusName
+
+            if map_operstates and ifOperStatus in map_operstates:
+                state = map_operstates[ifOperStatus]
+
+            if state == 1:
+                infotext += "(!) "
+            elif state == 2:
+                infotext += "(!!) "
+            elif state == 3:
+                infotext += "(?) "
             else:
-                infotext += "(%s) " % ifOperStatusName
+                infotext += " "
 
             if group_members:
                 infotext = infotext[:-1] # remove last space

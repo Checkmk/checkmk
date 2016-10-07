@@ -5912,6 +5912,17 @@ register_check_parameters(
                     none_label = _("ignore"),
                     negate = True)
              ),
+             ( "map_operstates",
+                ListOf(
+                    Tuple(
+                        orientation = "horizontal",
+                        elements = [
+                            DropdownChoice(choices = dict_choices(defines.interface_oper_states())),
+                            MonitoringState()
+                        ]),
+                    title = _('Map operational states'),
+                )
+             ),
              ( "assumed_speed_in",
                OptionalDropdownChoice(
                         title = _("Assumed input speed"),

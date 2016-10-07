@@ -1,0 +1,9 @@
+Title: elphase.include: now device states can be mapped to monitoring states
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i2
+Date: 1475839045
+Class: feature
+
+

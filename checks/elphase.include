@@ -32,6 +32,7 @@ def inventory_elphase(parsed):
 # Parsed has the following form:
 # parsed = {
 #    "Phase 1" : {
+#        "device_state" : (1, "warning"),                 # overall device state: state, state readable
 #        "voltage" : (220.17, (1, "Voltage is too low")), # with device state
 #        "current" : 12.0,                                # without device state
 #     }
@@ -51,6 +52,20 @@ def check_elphase(item, params, parsed):
 
     if params is None:
         params = {}
+
+    if "device_state" in parsed[item]:
+        device_state, device_state_readable = parsed[item]["device_state"]
+        if params.get("map_device_states", []):
+            device_state_params = dict(params["map_device_states"])
+            if device_state in device_state_params:
+                state = device_state_params[device_state]
+            elif device_state_readable in device_state_params:
+                state = device_state_params[device_state_readable]
+            else:
+                state = 0
+        else:
+            state = device_state
+        yield state, "Device status: %s(%s)" % (device_state_readable, device_state)
 
     for what, title, unit, bound, factor in [
         ( "voltage",     "Voltage",        " V",  Bounds.Lower, 1),

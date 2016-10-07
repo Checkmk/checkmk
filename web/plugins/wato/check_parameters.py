@@ -10368,6 +10368,13 @@ register_check_parameters(
                       Integer(title = _("critical at"), unit = u"%", default_value = 90),
                   ]
             )),
+            ("map_device_states",
+                ListOf(Tuple(
+                    elements = [ TextAscii(size=10), MonitoringState() ]),
+                    title    = _("Map device state"),
+                    help     = _("Here you can enter either device state number (eg. from SNMP devices) "
+                                 "or exact device state name and the related monitoring state."),
+            )),
         ]),
     TextAscii(
         title = _("Output Name"),
@@ -10383,7 +10390,15 @@ register_check_parameters(
         help = _("This rule allows you to specify levels for the voltage, current, power "
                  "and apparent power of your device. The levels will only be applied if the device "
                  "actually supplies values for these parameters."),
-        elements = phase_elements,
+        elements = phase_elements + [
+            ("map_device_states",
+                ListOf(Tuple(
+                    elements = [ TextAscii(size=10), MonitoringState() ]),
+                    title    = _("Map device state"),
+                    help     = _("Here you can enter either device state number (eg. from SNMP devices) "
+                                 "or exact device state name and the related monitoring state."),
+            )),
+        ],
     ),
     TextAscii(
         title = _("Input Name"),

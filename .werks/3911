@@ -1,4 +1,4 @@
-Title: if: each operational state can now be mapped to a check state
+Title: if.include: each operational state can now be mapped to a check state
 Level: 1
 Component: checks
 Compatible: compat

@@ -24,37 +24,51 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+# old params = (crit_low , warn_low, warn, crit)
 def check_humidity(humidity, params):
-
-    if params:
-        crit_lower, warn_lower, warn_upper, crit_upper = params
+    if params and type(params) in [ list, tuple ]:
+        params = {
+            "levels_lower" : (params[0], params[1]),
+            "levels"       : (params[2], params[3]),
+        }
     else:
-        crit_lower, warn_lower, warn_upper, crit_upper = -1, -1, 101, 101
+        params = {
+            "levels_lower" : (-1, -1),
+            "levels"       : (101, 101),
+        }
 
+    crit_lower, warn_lower = params["levels_lower"]
+    warn_upper, crit_upper = params["levels"]
     perfdata = [ ("humidity", humidity, warn_upper, crit_upper, 0, 100) ]
     infotext = get_percent_human_readable(humidity)
-    levelstext = ""
-    levelstext_lower = " (warn/crit at or below %s/%s)" % (
+
+    levelstext_lower = " (warn/crit below %s/%s)" % (
                         get_percent_human_readable(warn_lower),
                         get_percent_human_readable(crit_lower))
-    levelstext_upper = " (warn/crit at or above %s/%s)" % (
+    levelstext_upper = " (warn/crit at %s/%s)" % (
                         get_percent_human_readable(warn_upper),
                         get_percent_human_readable(crit_upper))
 
-    if humidity <= crit_lower:
+    status = 0
+    levelstext = ""
+    if humidity < crit_lower:
         status = 2
-        levelstext += levelstext_lower
+        levelstext = levelstext_lower
+
     elif humidity >= crit_upper:
         status = 2
-        levelstext += levelstext_upper
-    elif humidity <= warn_lower:
+        levelstext = levelstext_upper
+
+    elif humidity < warn_lower:
         status = 1
-        levelstext += levelstext_lower
+        levelstext = levelstext_lower
+
     elif humidity >= warn_upper:
         status = 1
-        levelstext += levelstext_upper
-    else:
-        status = 0
+        levelstext = levelstext_upper
 
-    infotext += levelstext
+    if status:
+        infotext += levelstext
+
     return status, infotext, perfdata

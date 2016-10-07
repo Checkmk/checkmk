@@ -7188,18 +7188,40 @@ register_check_parameters(
     "dict",
 )
 
+def transform_humidity(p):
+    if type(p) in [ list, tuple ]:
+        p = {
+            "levels_lower" : (float(p[1]), float(p[0])),
+            "levels"       : (float(p[2]), float(p[3])),
+        }
+    return p
+
 register_check_parameters(
     subgroup_environment,
     "humidity",
     _("Humidity Levels"),
-    Tuple(
-          help = _("This Ruleset sets the threshold limits for humidity sensors"),
-          elements = [
-              Integer(title = _("Critical at or below"), unit="%" ),
-              Integer(title = _("Warning at or below"), unit="%" ),
-              Integer(title = _("Warning at or above"), unit="%" ),
-              Integer(title = _("Critical at or above"), unit="%" ),
-              ]),
+    Transform(
+        Dictionary(
+            help = _("This Ruleset sets the threshold limits for humidity sensors"),
+            elements = [
+                ("levels", Tuple(
+                    title    = _("Upper levels"),
+                    elements = [
+                        Percentage(title=_("Warning at")),
+                        Percentage(title=_("Critical at")),
+                    ]
+                )),
+                ("levels_lower", Tuple(
+                    title    = _("Lower levels"),
+                    elements = [
+                        Percentage(title=_("Warning below")),
+                        Percentage(title=_("Critical below")),
+                    ]
+                )),
+            ]
+        ),
+        forth = transform_humidity,
+    ),
     TextAscii(
         title = _("Sensor name"),
         help = _("The identifier of the sensor."),

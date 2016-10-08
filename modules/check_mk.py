@@ -461,7 +461,7 @@ def active_check_arguments(hostname, description, args):
                 formated.append(quote_shell_string(arg))
 
             elif arg_type == tuple and len(arg) == 3:
-                ty, pw_ident, preformated_arg = arg
+                pw_ident, preformated_arg = arg[1:]
                 try:
                     password = stored_passwords[pw_ident]["password"]
                 except KeyError:
@@ -639,7 +639,6 @@ def filter_active_hosts(hostlist, keep_offline_hosts=False):
             return set([ hostname for hostname in hostlist
                      if in_binary_hostlist(hostname, only_hosts) ])
     else:
-        site_tag = "site:" + distributed_wato_site
         return set([ hostname for hostname in hostlist
                  if (keep_offline_hosts or in_binary_hostlist(hostname, only_hosts))
                  and host_is_member_of_site(hostname, distributed_wato_site) ])
@@ -798,7 +797,7 @@ def generic_host_extra_conf(ruleset):
     entries = []
 
     for rule in ruleset:
-        item, tags, hostlist, rule_options = parse_host_rule(rule)
+        item, tags, hostlist = parse_host_rule(rule)[:-1]
         if tags and not hosttags_match_taglist([], tags):
             continue
         if not in_extraconf_hostlist(hostlist, ""):
@@ -1571,7 +1570,7 @@ def schedule_inventory_check(hostname):
             command += ";TRY"
 
         s.send("COMMAND [%d] %s\n" % (now, command))
-    except Exception, e:
+    except Exception:
         if opt_debug:
             raise
 
@@ -2078,7 +2077,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
 def get_precompiled_check_table(hostname, remove_duplicates=True, world="config"):
     host_checks = get_sorted_check_table(hostname, remove_duplicates, world)
     precomp_table = []
-    for check_type, item, params, description, deps in host_checks:
+    for check_type, item, params, description, _unused_deps in host_checks:
         # make these globals available to the precompile function
         global g_service_description, g_check_type, g_checked_item
         g_service_description = description
@@ -2225,8 +2224,6 @@ def get_datasource_program(hostname, ipaddress):
 def replace_datasource_program_macros(hostname, ipaddress, cmd):
     # Make "legacy" translation. The users should use the $...$ macros in future
     cmd = cmd.replace("<IP>", ipaddress).replace("<HOST>", hostname)
-
-    is_clust = is_cluster(hostname)
 
     tags = tags_of_host(hostname)
     attrs = get_host_attributes(hostname, tags)
@@ -2596,7 +2593,7 @@ def pack_config():
                     val = filter_var_functions[varname](val)
                 out.write("\n%s = %r\n" % (varname, val))
 
-    for varname, factory_setting in factory_settings.items():
+    for varname, _unused_factory_setting in factory_settings.items():
         if varname in globals():
             out.write("\n%s = %r\n" % (varname, globals()[varname]))
         else: # remove explicit setting from previous packed config!
@@ -2700,7 +2697,9 @@ def do_backup(tarname):
     tar = tarfile.open(tarname, "w:gz")
 
 
-    for name, path, canonical_name, descr, is_dir, owned_by_nagios, group_www in backup_paths:
+    for name, path, canonical_name, descr, is_dir, \
+        _unused_owned_by_nagios, _unused_group_www in backup_paths:
+
         absdir = os.path.abspath(path)
         if os.path.exists(path):
             if opt_verbose:
@@ -2735,7 +2734,7 @@ def do_backup(tarname):
 
 
 def do_restore(tarname):
-    import tarfile, shutil
+    import shutil
 
     if opt_verbose:
         sys.stderr.write("Restoring from '%s'...\n" % tarname)
@@ -2929,7 +2928,7 @@ def create_core_config():
 def verify_non_deprecated_checkgroups():
     groups = checks_by_checkgroup()
 
-    for checkgroup, rules in checkgroup_parameters.items():
+    for checkgroup in checkgroup_parameters.keys():
         if checkgroup not in groups:
             configuration_warning(
                 "Found configured rules of deprecated check group \"%s\". These rules are not used "
@@ -3524,7 +3523,6 @@ def dump_host(hostname):
         sys.stdout.write(tty.yellow + "Is aggregated:          " + tty.normal + "no\n")
 
 
-    format_string = " %-15s %s%-10s %s%-17s %s%-14s%s %s%-16s%s"
     sys.stdout.write(tty.yellow + "Services:" + tty.normal + "\n")
     check_items = get_sorted_check_table(hostname)
 
@@ -3982,7 +3980,6 @@ def do_scan_parents(hosts):
     if len(hosts) == 0:
         hosts = filter(lambda h: in_binary_hostlist(h, scanparent_hosts), all_active_realhosts())
 
-    found = []
     parent_hosts = []
     parent_ips   = {}
     parent_rules = []
@@ -4025,7 +4022,7 @@ def do_scan_parents(hosts):
 
         gws = scan_parents_of(chunk)
 
-        for host, (gw, state, ping_fails, message) in zip(chunk, gws):
+        for host, (gw, _unused_state, _unused_ping_fails, _unused_message) in zip(chunk, gws):
             if gw:
                 gateway, gateway_ip, dns_name = gw
                 if not gateway: # create artificial host
@@ -4240,14 +4237,13 @@ def ip_to_hostname(ip):
 
 def ip_to_dnsname(ip):
     try:
-        dnsname, aliaslist, addresslist = socket.gethostbyaddr(ip)
-        return dnsname
+        return socket.gethostbyaddr(ip)[0]
     except:
         return None
 
 def config_timestamp():
     mtime = 0
-    for dirpath, dirnames, filenames in os.walk(cmk.paths.check_mk_config_dir):
+    for dirpath, _unused_dirnames, filenames in os.walk(cmk.paths.check_mk_config_dir):
         for f in filenames:
             mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
 
@@ -4366,7 +4362,7 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
     if with_conf_d:
         list_of_files = reduce(lambda a,b: a+b,
            [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")]
-             for d, sb, fs in os.walk(cmk.paths.check_mk_config_dir) ], [])
+             for d, _unused_sb, fs in os.walk(cmk.paths.check_mk_config_dir) ], [])
         # list_of_files.sort()
         list_of_files.sort(cmp = cmp_config_paths)
         list_of_files = [ cmk.paths.main_config_file ] + list_of_files

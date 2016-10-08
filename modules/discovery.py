@@ -307,7 +307,7 @@ def check_discovery(hostname, ipaddress=None):
             count = 0
             unfiltered = False
 
-            for (check_type, item), (check_source, paramstring) in services.items():
+            for (check_type, item), (check_source, _unused_paramstring) in services.items():
                 if check_source == check_state:
                     count += 1
                     affected_check_types.setdefault(check_type, 0)
@@ -649,7 +649,7 @@ def gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan):
         # Otherwise use all check types that we already have discovered
         # previously
         else:
-            for check_type, item, params in read_autochecks_of(hostname):
+            for check_type, _unused_item, _unused_params in read_autochecks_of(hostname):
                 if check_type not in check_types and check_uses_snmp(check_type):
                     check_types.append(check_type)
 
@@ -775,7 +775,7 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
     positive_found = []
     default_found = []
 
-    for check_type, check in items:
+    for check_type, _unused_check in items:
         if check_type in ignored_checktypes:
             continue
         elif not check_uses_snmp(check_type):
@@ -906,7 +906,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, u
                 item, paramstring = entry
             else:
                 try:
-                    item, comment, paramstring = entry
+                    item, paramstring = entry[0], entry[2]
                 except ValueError:
                     sys.stderr.write("%s: Check %s returned invalid discovery data (not 2 or 3 elements): %r\n" %
                                                                            (hostname, check_type, repr(entry)))
@@ -1019,12 +1019,12 @@ def get_node_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error):
 def merge_manual_services(services, hostname, on_error):
     # Find manual checks. These can override discovered checks -> "manual"
     manual_items = get_check_table(hostname, skip_autochecks=True)
-    for (check_type, item), (params, descr, deps) in manual_items.items():
+    for (check_type, item), (params, descr, _unused_deps) in manual_items.items():
         services[(check_type, item)] = ('manual', repr(params) )
 
     # Add legacy checks -> "legacy"
     legchecks = host_extra_conf(hostname, legacy_checks)
-    for cmd, descr, perf in legchecks:
+    for _unused_cmd, descr, _unused_perf in legchecks:
         services[('legacy', descr)] = ('legacy', 'None')
 
     # Add custom checks -> "custom"
@@ -1132,7 +1132,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             # whole Check_MK. Nobody dares to clean it up, YET. But that
             # day is getting nearer...
             set_use_cachefile()
-            opt_dont_submit = True # hack for get_realhost_info, avoid skipping because of check interval
 
             if check_type not in check_info:
                 continue # Skip not existing check silently
@@ -1147,22 +1146,16 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 output = "Error getting data from agent"
                 if str(e):
                     output += ": %s" % e
-                tcp_error = output
 
             except MKSNMPError, e:
                 exitcode = 3
                 output = "Error getting data from agent for %s via SNMP" % infotype
                 if str(e):
                     output += ": %s" % e
-                snmp_error = output
 
             except Exception, e:
                 exitcode = 3
                 output = "Error getting data for %s: %s" % (infotype, e)
-                if check_uses_snmp(check_type):
-                    snmp_error = output
-                else:
-                    tcp_error = output
 
             restore_use_cachefile()
 

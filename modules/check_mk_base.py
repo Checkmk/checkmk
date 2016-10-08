@@ -255,7 +255,7 @@ def apply_parse_function(info, section_name):
                 g_check_type = section_name
                 g_checked_item = None
                 return parse_function(info)
-            except Exception, e:
+            except Exception:
                 if opt_debug:
                     raise
 
@@ -863,8 +863,9 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
 
         if encryption_settings["use_regular"] != "disabled":
             try:
-                protocol_version = int(output[0:2])
                 # currently ignoring version and timestamp
+                #protocol_version = int(output[0:2])
+
                 output = decrypt_package(output[2:], encryption_settings["passphrase"])
             except Exception, e:
                 if encryption_settings["use_regular"] == "enforce":
@@ -924,7 +925,6 @@ def parse_info(lines, hostname):
     agent_cache_info = {}
     separator = None
     encoding  = None
-    to_unicode = False
     for line in lines:
         line = line.rstrip("\r")
         stripped_line = line.strip()
@@ -1077,8 +1077,7 @@ def unique_item_state_key(user_key):
 # available as a global variable, so that this_time would be an optional argument.
 def get_rate(user_key, this_time, this_val, allow_negative=False, onwrap=SKIP, is_rate=False):
     try:
-        timedif, rate = get_counter(user_key, this_time, this_val, allow_negative, is_rate)
-        return rate
+        return get_counter(user_key, this_time, this_val, allow_negative, is_rate)[1]
     except MKCounterWrapped, e:
         if onwrap is RAISE:
             raise
@@ -1562,7 +1561,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
                 agent_version = version_info[0][1]
             else:
                 agent_version = None
-        except MKAgentError, e:
+        except MKAgentError:
             g_broken_agent_hosts.add(hostname)
             agent_version = "(unknown)"
         except:
@@ -2089,7 +2088,7 @@ def set_use_cachefile(state=True):
 def ensure_directory(path):
     try:
         os.makedirs(path)
-    except Exception, e:
+    except Exception:
         if os.path.exists(path):
             return
         raise
@@ -2403,7 +2402,7 @@ def check_timeperiod(timeperiod):
         except MKTimeout:
             raise
 
-        except Exception, e:
+        except Exception:
             if opt_debug:
                 raise
             else:

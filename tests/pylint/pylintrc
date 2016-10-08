@@ -21,7 +21,7 @@ disable=C0111,C0326
 disable=unsubscriptable-object,unsupported-membership-test,unpacking-non-sequence,assignment-from-none
 # W0612: Unused variable
 # TODO: enable this and prepare code for it!
-enable=W0612
+#enable=W0612
 
 [TYPECHECK]
 # rrdtool

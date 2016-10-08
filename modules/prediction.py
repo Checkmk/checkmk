@@ -53,8 +53,7 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
     if not response:
         raise MKGeneralException("Got no historic metrics")
 
-    real_fromtime, real_untiltime, step = response[:3]
-    values = response[3:]
+    step, values = response[2], response[3:]
     return step, values
 
 
@@ -74,7 +73,7 @@ def timezone_at(timestamp):
 
 def group_by_wday(t):
     wday = time.localtime(t).tm_wday
-    day_of_epoch, rel_time = divmod(t - timezone_at(t), 86400)
+    rel_time = divmod(t - timezone_at(t), 86400)[1]
     return daynames[wday], rel_time
 
 def group_by_day(t):
@@ -139,7 +138,7 @@ def compute_prediction(pred_file, timegroup, params, period_info, from_time, dsn
     # is checked against the beginning of the slice.
     smallest_step = None
     while begin >= absolute_begin:
-        tg, fr, un, rel = get_prediction_timegroup(begin, period_info)
+        tg, fr, un = get_prediction_timegroup(begin, period_info)[:3]
         if tg == timegroup:
             step, data = get_rrd_data(g_hostname, g_service_description,
                                       dsname, cf, fr, un-1)

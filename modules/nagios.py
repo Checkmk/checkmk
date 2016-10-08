@@ -452,7 +452,6 @@ define service {
 
     # legacy checks via active_checks
     actchecks = []
-    needed_commands = []
     for acttype, rules in active_checks.items():
         entries = host_extra_conf(hostname, rules)
         if entries:
@@ -1023,7 +1022,7 @@ no_discovery_possible = None
     needed_sections = set([])
     service_timeperiods = {}
     check_intervals = {}
-    for check_type, item, param, descr, aggr in check_table:
+    for check_type, _unused_item, _unused_param, descr, _unused_aggr in check_table:
         if check_type not in check_info:
             sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_type)
             continue

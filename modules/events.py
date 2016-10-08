@@ -114,7 +114,7 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
 
 
 def event_data_available(loop_interval):
-    readable, writeable, exceptionable = select.select([0], [], [], loop_interval)
+    readable = select.select([0], [], [], loop_interval)[0]
     return not not readable
 
 
@@ -125,7 +125,7 @@ def raw_context_from_string(data):
         for line in data.split('\n'):
             varname, value = line.strip().split("=", 1)
             context[varname] = expand_backslashes(value)
-    except Exception, e: # line without '=' ignored or alerted
+    except Exception: # line without '=' ignored or alerted
         if opt_debug:
             raise
     return context

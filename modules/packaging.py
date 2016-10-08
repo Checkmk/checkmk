@@ -191,14 +191,14 @@ def show_package(name, show_info = False):
     else:
         if opt_verbose:
             sys.stdout.write("Files in package %s:\n" % name)
-            for part, title, perm, dir in get_package_parts():
+            for part, title, _unused_perm, dir in get_package_parts():
                 files = package["files"].get(part, [])
                 if len(files) > 0:
                     sys.stdout.write("  %s%s%s:\n" % (tty.bold, title, tty.normal))
                     for f in files:
                         sys.stdout.write("    %s\n" % f)
         else:
-            for part, title, perm, dir in get_package_parts():
+            for part, title, _unused_perm, dir in get_package_parts():
                 for fn in package["files"].get(part, []):
                     sys.stdout.write(dir + "/" + fn + "\n")
 
@@ -225,7 +225,7 @@ def package_create(args):
         "files"                : filelists
     }
     num_files = 0
-    for part, title, perm, dir in get_package_parts():
+    for part, title, _unused_perm, dir in get_package_parts():
         files = unpackaged_files_in_dir(part, dir)
         filelists[part] = files
         num_files += len(files)
@@ -242,7 +242,7 @@ def package_create(args):
 
 def package_find(_no_args):
     first = True
-    for part, title, perm, dir in get_package_parts():
+    for part, title, _unused_perm, dir in get_package_parts():
         files = unpackaged_files_in_dir(part, dir)
         if len(files) > 0:
             if first:
@@ -263,13 +263,12 @@ def package_release(args):
         raise PackageException("Usage: check_mk -P release NAME")
 
     pacname = args[0]
-    pacpath = pac_dir + pacname
     if not package_exists(pacname):
         raise PackageException("No such package %s." % pacname)
     package = read_package_info(pacname)
     verbose("Releasing files of package %s into freedom...\n" % pacname)
     if opt_verbose:
-        for part, title, perm, dir in get_package_parts():
+        for part, title, _unused_perm, _unused_dir in get_package_parts():
             filenames = package["files"].get(part, [])
             if len(filenames) > 0:
                 verbose("  %s%s%s:\n" % (tty.bold, title, tty.normal))
@@ -289,7 +288,7 @@ def package_pack(args):
 
     # Make sure, user is not in data directories of Check_MK
     p = os.path.abspath(os.curdir)
-    for dir in [cmk.paths.var_dir] + [ dir for x,y,perm,dir in get_package_parts() ]:
+    for dir in [cmk.paths.var_dir] + [ p[-1] for p in get_package_parts() ]:
         if p == dir or p.startswith(dir + "/"):
             raise PackageException("You are in %s!\n"
                                "Please leave the directories of Check_MK before creating\n"
@@ -325,7 +324,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
     tar.addfile(info, info_file)
 
     # Now pack the actual files into sub tars
-    for part, title, perm, dir in get_package_parts():
+    for part, title, _unused_perm, dir in get_package_parts():
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             verbose("  %s%s%s:\n" % (tty.bold, title, tty.normal))
@@ -352,7 +351,7 @@ def package_remove(args):
 
 
 def remove_package(package):
-    for part, title, perm, dir in get_package_parts():
+    for part, title, _unused_perm, dir in get_package_parts():
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             verbose("  %s%s%s\n" % (tty.bold, title, tty.normal))
@@ -402,7 +401,7 @@ def validate_package_files(pacname, files):
     for package_name in all_package_names():
         packages[package_name] = read_package_info(package_name)
 
-    for part, title, perm, dir in get_package_parts():
+    for part, _unused_title, _unused_perm, dir in get_package_parts():
         validate_package_files_part(packages, pacname, part, dir, files.get(part, []))
 
 
@@ -446,7 +445,7 @@ def install_package(file_name=None, file_object=None):
 
     # Before installing check for conflicts
     keep_files = {}
-    for part, title, perm, dir in get_package_parts():
+    for part, _unused_title, _unused_perm, dir in get_package_parts():
         packaged = packaged_files_in_dir(part)
         keep = []
         keep_files[part] = keep
@@ -555,7 +554,7 @@ def files_in_dir(part, dir, prefix = ""):
         return []
 
     # Handle case where one part-dir lies below another
-    taboo_dirs = [ d for p, t, perm, d in get_package_parts() if p != part ]
+    taboo_dirs = [ d for p, _unused_t, _unused_perm, d in get_package_parts() if p != part ]
     if dir in taboo_dirs:
         return []
 
@@ -580,7 +579,7 @@ def files_in_dir(part, dir, prefix = ""):
 
 def unpackaged_files():
     unpackaged = {}
-    for part, title, perm, dir in get_package_parts():
+    for part, _unused_title, _unused_perm, dir in get_package_parts():
         unpackaged[part] = unpackaged_files_in_dir(part, dir)
     return unpackaged
 
@@ -589,10 +588,10 @@ def package_part_info():
     part_info = {}
     for part, title, perm, dir in get_package_parts():
         part_info[part] = {
-            "title" : title,
+            "title"      : title,
             "permission" : perm,
-            "path" : dir,
-            "files" : os.listdir(dir),
+            "path"       : dir,
+            "files"      : os.listdir(dir),
         }
     return part_info
 

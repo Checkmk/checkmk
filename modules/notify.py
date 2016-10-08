@@ -205,7 +205,7 @@ def do_notify(args):
         else:
             notify_notify(raw_context_from_env())
 
-    except Exception, e:
+    except Exception:
         crash_dir = cmk.paths.var_dir + "/notify"
         if not os.path.exists(crash_dir):
             os.makedirs(crash_dir)
@@ -218,7 +218,7 @@ def convert_legacy_configuration():
     # Convert legacy spooling configuration to new one (see above)
     if notification_spooling in (True, False):
         if notification_spool_to:
-            remote_host, tcp_port, also_local = notification_spool_to
+            also_local = notification_spool_to[2]
             if also_local:
                 notification_spooling = "both"
             else:
@@ -419,7 +419,7 @@ def notify_rulebased(raw_context, analyse=False):
                     key = contact, plugin
                     plugintxt = plugin or "plain email"
                     if key in notifications:
-                        locked, previous_parameters, old_bulk = notifications[key]
+                        locked = notifications[key][0]
                         if locked and "contact" in rule:
                             notify_log("   - cannot modify notification of %s via %s: it is locked" % (contact, plugintxt))
                             continue
@@ -489,7 +489,7 @@ def rbn_fallback_contacts():
     if notification_fallback_email:
         fallback_contacts.append(rbn_fake_email_contact(notification_fallback_email))
 
-    for user_id, contact in contacts.items():
+    for contact in contacts.values():
         if contact.get("fallback_contact", False) and contact.get("email"):
             fallback_contacts.append(contact)
 
@@ -1433,7 +1433,7 @@ def send_ripe_bulks():
         for bulk in ripe:
             try:
                 notify_bulk(bulk[0], bulk[-1])
-            except Exception, e:
+            except Exception:
                 if opt_debug:
                     raise
                 notify_log("Error sending bulk %s: %s" % (bulk[0], format_exception()))

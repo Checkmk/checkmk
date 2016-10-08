@@ -131,7 +131,6 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
     if not oid.startswith("."):
         raise MKGeneralException("OID definition '%s' does not begin with ." % oid)
 
-    all_values = []
     index_column = -1
     index_format = None
     info = []
@@ -174,7 +173,7 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
             index_rows = []
             # Take end-oids of non-index columns as indices
             fetchoid, max_column, value_encoding  = columns[max_len_col]
-            for o, value in max_column:
+            for o, _unused_value in max_column:
                 if index_format == OID_END:
                     index_rows.append((o, extract_end_oid(fetchoid, o)))
                 elif index_format == OID_STRING:
@@ -404,7 +403,6 @@ def check_snmp_fixed(item, targetvalue, info):
     for line in info:
         if item == line[0]:
             value = line[1]
-            text = line[2]
             if value != targetvalue:
                 return (2, "CRIT - %s (should be %s)" % (value, targetvalue))
             else:

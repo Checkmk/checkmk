@@ -589,7 +589,7 @@ def automation_get_real_time_checks():
                 manfile = manuals.get(check_type)
                 if manfile:
                     title = file(manfile).readline().strip().split(":", 1)[1].strip()
-            except Exception, e:
+            except Exception:
                 if opt_debug:
                     raise
 
@@ -1010,8 +1010,6 @@ def automation_get_bulks(args):
 def automation_active_check(args):
     hostname, plugin, item = args
     item = item.decode("utf-8")
-    actchecks = []
-    needed_commands = []
 
     if plugin == "custom":
         custchecks = host_extra_conf(hostname, custom_checks)
@@ -1108,8 +1106,8 @@ def automation_get_agent_output(args):
             agent_data = get_plain_hostinfo(hostname)
         else:
             path = cmk.paths.snmpwalks_dir + "/" + hostname
-            do_snmpwalk_on(hostname, cmk.paths.snmpwalks_dir + "/" + hostname)
-            agent_data = file(cmk.paths.snmpwalks_dir + "/" + hostname).read()
+            do_snmpwalk_on(hostname, path)
+            agent_data = file(path).read()
     except Exception, e:
         success = False
         output = "Failed to fetch data from %s: %s\n" % (hostname, e)
@@ -1190,7 +1188,7 @@ def automation_remove_unpackaged_file(args):
     if "../" in rel_path or rel_path.startswith("/"):
         raise MKAutomationError("Invalid file name")
 
-    for part, title, perm, dir in package_parts:
+    for part, _unused_title, _unused_perm, dir in package_parts:
         if part == part_name:
             abspath = dir + "/" + rel_path
             if not os.path.isfile(abspath):

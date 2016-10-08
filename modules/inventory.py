@@ -330,7 +330,7 @@ def add_check_mk_inventory_info_to_tree(persisted_data):
     node = inv_tree_list("software.applications.check_mk.inventory.sections:")
     section_ages = []
     for section, sectiondata in persisted_data:
-        when, until, info = sectiondata
+        when, until = sectiondata[:2]
         section_ages.append(when)
 
         node.append({

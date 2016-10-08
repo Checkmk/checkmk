@@ -334,7 +334,7 @@ def check_discovery(hostname, ipaddress=None):
             else:
                 infotexts.append("no %s services found" % title)
 
-        for (check_type, item), (check_source, paramstring) in services.items():
+        for (check_type, item), (check_source, _unused_paramstring) in services.items():
             if check_source == "ignored":
                 long_infotexts.append("ignored: %s: %s" % (check_type, service_description(hostname, check_type, item)))
 

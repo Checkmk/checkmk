@@ -694,7 +694,11 @@ register_rule(group + '/' + subgroup_inventory,
                        "This allows you to select interfaces based on the alias without having "
                        "the alias be part of the service description."),
               orientation = "horizontal",
-              valuespec = RegExp(size = 32),
+              valuespec = RegExp(
+                  size = 32,
+                  mode = RegExp.prefix,
+                  case_sensitive = True,
+              ),
         )),
         ( "pad_portnumbers",
           Checkbox(title = _("Pad port numbers with zeroes"),
@@ -715,7 +719,11 @@ register_rule(group + '/' + subgroup_inventory,
                        "This allows you to select interfaces based on the description without having "
                        "the alias be part of the service description."),
               orientation = "horizontal",
-              valuespec = RegExp(size = 32),
+              valuespec = RegExp(
+                  size = 32,
+                  mode = RegExp.prefix,
+                  case_sensitive = True,
+              ),
         )),
         ( "portstates",
           ListChoice(title = _("Network interface port states to discover"),
@@ -1029,7 +1037,11 @@ register_rule(group + '/' + subgroup_inventory,
                             size = 50,
                         ),
                         Transform(
-                            RegExp(size = 50),
+                            RegExp(
+                                size = 50,
+                                mode = RegExp.prefix,
+                                case_sensitive = True,
+                            ),
                             title = _("Regular expression matching command line"),
                             label = _("Command line:"),
                             help = _("This regex must match the <i>beginning</i> of the complete "
@@ -1131,7 +1143,11 @@ register_rule(group + '/' + subgroup_inventory,
                         size = 50,
                     ),
                     Transform(
-                        RegExp(size = 50),
+                        RegExp(
+                            size = 50,
+                            mode = RegExp.prefix,
+                            case_sensitive = True,
+                        ),
                         title = _("Regular expression matching command line"),
                         help = _("This regex must match the <i>beginning</i> of the task"),
                         forth = lambda x: x[1:],   # remove ~
@@ -1193,7 +1209,11 @@ register_rule(group + '/' + subgroup_inventory,
                         size = 100,
                     ),
                     Transform(
-                        RegExp(size = 100),
+                        RegExp(
+                            size = 100,
+                            mode = RegExp.prefix,
+                            case_sensitive = True,
+                        ),
                         title = _("Regular expression matching the path"),
                         help = _("This regex must match the <i>beginning</i> of the complete "
                                  "path of the node as reported by the agent"),
@@ -1242,8 +1262,16 @@ register_rule(group + '/' + subgroup_inventory,
                     show_titles = True,
                     orientation = "vertical",
                     elements = [
-                        RegExpUnicode(title = _("Include Pattern")),
-                        RegExpUnicode(title = _("Exclude Pattern"))
+                        RegExpUnicode(
+                            title = _("Include Pattern"),
+                            mode = RegExp.prefix,
+                            case_sensitive = True,
+                        ),
+                        RegExpUnicode(
+                            title = _("Exclude Pattern"),
+                            mode = RegExp.prefix,
+                            case_sensitive = True,
+                        )
                     ],
                 ),
             ],
@@ -1312,6 +1340,8 @@ register_rule(group + '/' + subgroup_applications,
                                   RegExpUnicode(
                                       title = _("Pattern (Regex)"),
                                       size  = 40,
+                                      mode = RegExp.infix,
+                                      case_sensitive = True,
                                   ),
                                   TextUnicode(
                                       title = _("Comment"),
@@ -2964,7 +2994,11 @@ register_check_parameters(
                             size = 50,
                         ),
                         Transform(
-                            RegExp(size = 50),
+                            RegExp(
+                                size = 50,
+                                mode = RegExp.prefix,
+                                case_sensitive = True,
+                            ),
                             title = _("Regular expression matching command line"),
                             help = _("This regex must match the <i>beginning</i> of the complete "
                                      "command line of the process including arguments"),
@@ -2987,7 +3021,11 @@ register_check_parameters(
                             title = _("Exact name of the operating system user")
                         ),
                         Transform(
-                            RegExp(size = 50),
+                            RegExp(
+                                size = 50,
+                                mode = RegExp.prefix,
+                                case_sensitive = True,
+                            ),
                             title = _("Regular expression matching username"),
                             help = _("This regex must match the <i>beginning</i> of the complete "
                                      "username"),
@@ -12579,7 +12617,11 @@ register_check_parameters(
                         size = 50,
                     ),
                     Transform(
-                        RegExp(size = 50),
+                        RegExp(
+                            size = 50,
+                            mode = RegExp.prefix,
+                            case_sensitive = True,
+                        ),
                         title = _("Regular expression matching tasks"),
                         help = _("This regex must match the <i>beginning</i> of the complete "
                                  "command line of the task including arguments"),

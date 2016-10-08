@@ -1590,7 +1590,9 @@ def HostnameRenamingConfig():
             ( "match_hostname",
               RegExp(
                   title = _("Hostname matching"),
-                  help = _("Only rename hostnames whose names <i>begin</i> with the regular expression entered here.")
+                  help = _("Only rename hostnames whose names <i>begin</i> with the regular expression entered here."),
+                  mode = RegExp.complete,
+                  case_sensitive = True,
             )),
             ( "renamings",
               ListOf(
@@ -1646,6 +1648,8 @@ def HostnameRenaming(**kwargs):
                           maxgroups = 9,
                           size = 30,
                           allow_empty = False,
+                          mode = RegExpUnicode.prefix,
+                          case_sensitive = True,
                       ),
                       TextUnicode(
                           title = _("Replacement"),
@@ -7072,6 +7076,8 @@ def vs_notification_rule(userid = None):
                               title = _("Required match (regular expression)"),
                               help = _("This expression must match the value of the variable"),
                               allow_empty = False,
+                              mode = RegExp.complete,
+                              case_sensitive = True,
                          ),
                       ]
                   ),
@@ -7294,7 +7300,11 @@ def generic_rule_match_conditions():
                   ListOfStrings(
                       help = _("The service group alias must match one of the following regular expressions."
                                " For host events this condition never matches as soon as at least one group is selected."),
-                      valuespec = RegExpUnicode(size = 32),
+                      valuespec = RegExpUnicode(
+                          size = 32,
+                          mode = RegExpUnicode.infix,
+                          case_sensitive = True,
+                      ),
                       orientation = "horizontal",
                   )
                 ]
@@ -7314,7 +7324,11 @@ def generic_rule_match_conditions():
                   ListOfStrings(
                       help = _("The service group alias must not match one of the following regular expressions. "
                                "For host events this condition is simply ignored."),
-                      valuespec = RegExpUnicode(size = 32),
+                      valuespec = RegExpUnicode(
+                          size = 32,
+                          mode = RegExpUnicode.infix,
+                          case_sensitive = True,
+                      ),
                       orientation = "horizontal",
                   )
                 ]
@@ -7326,7 +7340,11 @@ def generic_rule_match_conditions():
               help = _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
                        "service name in order for the rule to match. Note: Host notifications never match this "
                        "rule if this option is being used."),
-              valuespec = RegExpUnicode(size = 32),
+              valuespec = RegExpUnicode(
+                  size = 32,
+                  mode = RegExpUnicode.prefix,
+                  case_sensitive = True,
+              ),
               orientation = "horizontal",
               allow_empty = False,
               empty_text = _("Please specify at least one service regex. Disable the option if you want to allow all services."),
@@ -7335,7 +7353,11 @@ def generic_rule_match_conditions():
         ( "match_exclude_services",
           ListOfStrings(
               title = _("Exclude the following services"),
-              valuespec = RegExpUnicode(size = 32),
+              valuespec = RegExpUnicode(
+                  size = 32,
+                  mode = RegExpUnicode.prefix,
+                  case_sensitive = True,
+              ),
               orientation = "horizontal",
           )
         ),
@@ -7351,6 +7373,8 @@ def generic_rule_match_conditions():
              title = _("Match the output of the check plugin"),
              help = _("This text is a regular expression that is being searched in the output "
                       "of the check plugins that produced the alert. It is not a prefix but an infix match."),
+             mode = RegExpUnicode.prefix,
+             case_sensitive = True,
           ),
         ),
         ( "match_contacts",
@@ -7523,6 +7547,8 @@ def notification_rule_match_conditions():
                       "make a condition of that comment. It is a regular expression matching the beginning "
                       "of the comment."),
              size = 60,
+             mode = RegExpUnicode.prefix,
+             case_sensitive = True,
         )),
         ( "match_ec",
           Alternative(
@@ -7571,6 +7597,8 @@ def notification_rule_match_conditions():
                              RegExpUnicode(
                                  title = _("Match event comment"),
                                  help = _("This is a regular expression for matching the event's comment."),
+                                 mode = RegExpUnicode.prefix,
+                                 case_sensitive = True,
                              )
                            ),
                        ]
@@ -13796,12 +13824,14 @@ def HostnameTranslation(**kwargs):
                             orientation = "horizontal",
                             elements    =  [
                                 RegExpUnicode(
-                                    title       = _("Regular expression"),
-                                    help        = _("Must contain at least one subgroup <tt>(...)</tt>"),
-                                    mingroups   = 0,
-                                    maxgroups   = 9,
-                                    size        = 30,
-                                    allow_empty = False,
+                                    title          = _("Regular expression"),
+                                    help           = _("Must contain at least one subgroup <tt>(...)</tt>"),
+                                    mingroups      = 0,
+                                    maxgroups      = 9,
+                                    size           = 30,
+                                    allow_empty    = False,
+                                    mode           = RegExp.prefix,
+                                    case_sensitive = False,
                                 ),
                                 TextUnicode(
                                     title       = _("Replacement"),

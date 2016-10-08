@@ -951,7 +951,10 @@ register_rule(group,
                                         orientation = "vertical",
                                         show_titles = False,
                                         elements = [
-                                            RegExp(label = _("Regular expression: ")),
+                                            RegExp(
+                                                label = _("Regular expression: "),
+                                                mode = RegExp.infix,
+                                            ),
                                             Checkbox(label = _("Case insensitive")),
                                             Checkbox(label = _("return CRITICAL if found, OK if not")),
                                             Checkbox(label = _("Multiline string matching")),
@@ -1669,6 +1672,8 @@ register_rule(group,
                     )),
                     ("expect_regex", RegExp(
                         title = _("Regular expression to expect in content"),
+                        mode = RegExp.infix,
+                        case_sensitive = True,
                     )),
                     ("form_name", TextAscii(
                         title = _("Name of the form to populate and submit"),
@@ -1973,6 +1978,8 @@ register_rule(group,
                         title = _('Only process mails with matching subject'),
                         help = _('Use this option to not process all messages found in the inbox, '
                                  'but only the those whose subject matches the given regular expression.'),
+                        mode = RegExp.prefix,
+                        case_sensitive = True,
                     )),
                     ('facility', DropdownChoice(
                         title = _("Events: Syslog facility"),

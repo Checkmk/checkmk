@@ -485,32 +485,94 @@ class TextUnicode(TextAscii):
             raise MKUserError(varprefix, _("The value must be of type str or unicode, but it has type %s") %
                                                                                 type_name(value))
 
+
 # Internal ID as used in many places (for contact names, group name,
 # an so on)
 class ID(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
         self._regex = re.compile('^[a-zA-Z_][-a-zA-Z0-9_]*$')
-        self._regex_error = _("An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore.")
+        self._regex_error = _("An identifier must only consist of letters, digits, dash and "
+                              "underscore and it must start with a letter or underscore.")
+
 
 # Same as the ID class, but allowing unicode objects
 class UnicodeID(TextUnicode):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
         self._regex = re.compile(r'^[\w][-\w0-9_]*$', re.UNICODE)
-        self._regex_error = _("An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore.")
+        self._regex_error = _("An identifier must only consist of letters, digits, dash and "
+                              "underscore and it must start with a letter or underscore.")
+
 
 class UserID(TextUnicode):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
         self._regex = re.compile(r'^[\w][-\w0-9_\.@]*$', re.UNICODE)
-        self._regex_error = _("An identifier must only consist of letters, digits, dash, dot, at and underscore. But it must start with a letter or underscore.")
+        self._regex_error = _("An identifier must only consist of letters, digits, dash, dot, "
+                              "at and underscore. But it must start with a letter or underscore.")
+
 
 class RegExp(TextAscii):
-    def __init__(self, **kwargs):
-        TextAscii.__init__(self, attrencode = True, cssclass = 'text regexp', **kwargs)
+    infix    = "infix"
+    prefix   = "prefix"
+    complete = "complete"
+
+    # TODO: Make "mode" a positional argument
+    def __init__(self, help=None, **kwargs):
+        self._mode           = kwargs.get("mode")
+        # TODO: Maybe make "True" the new default and remove all explicit
+        # case_sensitive=True calls. But for initial implementation we
+        # need to differentiate between not set yet and True.
+        self._case_sensitive = kwargs.get("case_sensitive")
+
+        TextAscii.__init__(self,
+            attrencode = True,
+            cssclass = self._css_classes(),
+            **kwargs
+        )
+
         self._mingroups = kwargs.get("mingroups", 0)
         self._maxgroups = kwargs.get("maxgroups")
+
+
+    def help(self):
+        help_text = []
+
+        default_help_text = TextAscii.help(self)
+        if default_help_text != None:
+            help_text.append(default_help_text + "<br><br>")
+
+        help_text.append(_("The text entered here is handled as a regular expression pattern."))
+
+        if self._mode == RegExp.infix:
+            help_text.append(_("The pattern is applied as infix search."))
+        elif self._mode == RegExp.prefix:
+            help_text.append(_("The pattern is matched from the beginning."))
+        elif self._mode == RegExp.complete:
+            help_text.append(_("The pattern is matching the whole text."))
+
+        if self._case_sensitive == True:
+            help_text.append(_("The match is performed case sensitive."))
+        elif self._case_sensitive == False:
+            help_text.append(_("The match is performed case insensitive."))
+
+        return " ".join(help_text)
+
+
+    def _css_classes(self):
+        classes = [ "text", "regexp" ]
+
+        if self._case_sensitive == True:
+            classes.append("case_sensitive")
+        elif self._case_sensitive == False:
+            classes.append("case_insensitive")
+
+        if self._mode != None:
+            classes.append(self._mode)
+
+        return " ".join(classes)
+
 
     def validate_value(self, value, varprefix):
         TextAscii.validate_value(self, value, varprefix)
@@ -972,6 +1034,8 @@ class Filename(TextAscii):
 
         ValueSpec.custom_validate(self, value, varprefix)
 
+
+
 class ListOfStrings(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
@@ -984,6 +1048,17 @@ class ListOfStrings(ValueSpec):
         self._vertical = kwargs.get("orientation", "vertical") == "vertical"
         self._allow_empty = kwargs.get("allow_empty", True)
         self._empty_text  = kwargs.get("empty_text", "")
+
+
+    def help(self):
+        help_text = ValueSpec.help(self)
+
+        field_help = self._valuespec.help()
+        if field_help:
+            return help_text + " " + field_help
+        else:
+            return help_text
+
 
     def render_input(self, vp, value):
         # Form already submitted?
@@ -1050,6 +1125,8 @@ class ListOfStrings(ValueSpec):
             for nr, s in enumerate(value):
                 self._valuespec.validate_value(s, vp + "_%d" % nr)
         ValueSpec.custom_validate(self, value, vp)
+
+
 
 class ListOfIntegers(ListOfStrings):
     def __init__(self, **kwargs):

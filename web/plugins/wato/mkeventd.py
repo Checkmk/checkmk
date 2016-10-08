@@ -215,18 +215,24 @@ class RuleState(CascadingDropdown):
                             help = _("When the given regular expression (infix search) matches "
                                      "the events state is set to CRITICAL."),
                             size = 64,
+                            mode = RegExp.infix,
+                            case_sensitive = True,
                         )),
                         ('1', RegExpUnicode(
                             title = _("WARN Pattern"),
                             help = _("When the given regular expression (infix search) matches "
                                      "the events state is set to WARNING."),
                             size = 64,
+                            mode = RegExp.infix,
+                            case_sensitive = True,
                         )),
                         ('0', RegExpUnicode(
                             title = _("OK Pattern"),
                             help = _("When the given regular expression (infix search) matches "
                                      "the events state is set to OK."),
                             size = 64,
+                            mode = RegExp.infix,
+                            case_sensitive = True,
                         )),
                     ],
                     help = _('Individual patterns matching the text (which must have been matched by '
@@ -607,6 +613,8 @@ vs_mkeventd_rule = Dictionary(
             help = _("The rules does only apply when the given regular expression matches "
                      "the message text (infix search)."),
             size = 64,
+            mode = RegExp.infix,
+            case_sensitive = False,
           )
         ),
         ( "match_host",
@@ -615,6 +623,8 @@ vs_mkeventd_rule = Dictionary(
             help = _("The rules does only apply when the given regular expression matches "
                      "the host name the message originates from. Note: in some cases the "
                      "event might use the IP address instead of the host name."),
+            mode = RegExp.infix,
+            case_sensitive = False,
           )
         ),
         ( "match_ipaddress",
@@ -629,6 +639,8 @@ vs_mkeventd_rule = Dictionary(
           RegExpUnicode(
               title = _("Match syslog application (tag)"),
               help = _("Regular expression for matching the syslog tag (case insenstive)"),
+              mode = RegExp.infix,
+              case_sensitive = False,
           )
         ),
         ( "match_priority",
@@ -683,6 +695,8 @@ vs_mkeventd_rule = Dictionary(
                      "it will cancel all events where the specified groups match the same number "
                      "of groups in the initial text, starting from the left."),
             size = 64,
+            mode = RegExp.infix,
+            case_sensitive = False,
           )
         ),
         ( "cancel_priority",
@@ -706,6 +720,8 @@ vs_mkeventd_rule = Dictionary(
                        "(case insensitive) and either no text to cancel is specified or "
                        "that text also matched, then events created by this rule will "
                        "automatically be cancelled (if host, facility and match groups match)."),
+              mode = RegExp.infix,
+              case_sensitive = False,
           ),
         ),
         ( "invert_matching",
@@ -2929,6 +2945,8 @@ register_rule(
                    "of the application name. Use anchors <tt>^</tt> and <tt>$</tt> "
                    "if you need a complete match."),
                 allow_empty = False,
+                mode = RegExp.infix,
+                case_sensitive = False,
               )
             ),
             ( "ignore_acknowledged",

@@ -138,6 +138,13 @@ input.button:active {
     box-shadow: inset 0 0 0.5px #444444;
 }
 
+/* pattern / regex input styling */
+
+input.regexp {
+    font-family: monospace;
+    background-color: #eee;
+}
+
 a.button {
     background-color: #cca;
     color: #000;

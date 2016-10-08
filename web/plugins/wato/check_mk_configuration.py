@@ -666,6 +666,8 @@ register_configvar(group,
                     title = _('Grouping expression'),
                     help = _('This regular expression is used to match the services to be put '
                              'into this group. This is a prefix match regular expression.'),
+                    mode = RegExpUnicode.prefix,
+                    case_sensitive = True,
                 )),
                 ('min_items', Integer(
                     title = _('Minimum number of items to create a group'),

@@ -683,7 +683,9 @@ def automation_diag_host(args):
     try:
         if test == 'ping':
             base_cmd = ipv6_primary and "ping6" or "ping"
-            p = subprocess.Popen('%s -A -i 0.2 -c 2 -W 5 %s 2>&1' % (base_cmd, ipaddress), shell = True, stdout = subprocess.PIPE)
+            p = subprocess.Popen([base_cmd, "-A", "-i", "0.2",
+                                            "-c", "2", "-W", "5", ipaddress ],
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             response = p.stdout.read()
             return (p.wait(), response)
 
@@ -702,7 +704,8 @@ def automation_diag_host(args):
                 return 1, "Cannot find binary <tt>traceroute</tt>."
             else:
                 family_flag = ipv6_primary and "-6" or "-4"
-                p = subprocess.Popen('traceroute %s -n %s 2>&1' % (family_flag, ipaddress), shell = True, stdout = subprocess.PIPE)
+                p = subprocess.Popen(['traceroute', family_flag, '-n', ipaddress ],
+                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 response = p.stdout.read()
                 return (p.wait(), response)
 

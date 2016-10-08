@@ -1670,64 +1670,76 @@ def snmp_proto_spec(hostname):
 # options for authentication. This handles communities and
 # authentication for SNMP V3. Also bulkwalk hosts
 def snmp_walk_command(hostname):
-    return snmp_base_command('walk', hostname) + " -Cc"
+    return snmp_base_command('walk', hostname) + [ "-Cc" ]
 
+# if the credentials are a string, we use that as community,
+# if it is a four-tuple, we use it as V3 auth parameters:
+# (1) security level (-l)
+# (2) auth protocol (-a, e.g. 'md5')
+# (3) security name (-u)
+# (4) auth password (-A)
+# And if it is a six-tuple, it has the following additional arguments:
+# (5) privacy protocol (DES|AES) (-x)
+# (6) privacy protocol pass phrase (-X)
 def snmp_base_command(what, hostname):
-    # if the credentials are a string, we use that as community,
-    # if it is a four-tuple, we use it as V3 auth parameters:
-    # (1) security level (-l)
-    # (2) auth protocol (-a, e.g. 'md5')
-    # (3) security name (-u)
-    # (4) auth password (-A)
-    # And if it is a six-tuple, it has the following additional arguments:
-    # (5) privacy protocol (DES|AES) (-x)
-    # (6) privacy protocol pass phrase (-X)
-
-    credentials = snmp_credentials_of(hostname)
     if what == 'get':
-        command = 'snmpget'
+        command = [ 'snmpget' ]
     elif what == 'getnext':
-        command = 'snmpgetnext -Cf'
+        command = [ 'snmpgetnext', '-Cf' ]
     elif is_bulkwalk_host(hostname):
-        command = 'snmpbulkwalk'
+        command = [ 'snmpbulkwalk' ]
     else:
-        command = 'snmpwalk'
+        command = [ 'snmpwalk' ]
 
-    # Handle V1 and V2C
+    options = []
+    credentials = snmp_credentials_of(hostname)
+
     if type(credentials) in [ str, unicode ]:
+        # Handle V1 and V2C
         if is_bulkwalk_host(hostname):
-            options = '-v2c'
+            options.append('-v2c')
         else:
             if what == 'walk':
-                command = 'snmpwalk'
+                command = [ 'snmpwalk' ]
             if is_snmpv2c_host(hostname):
-                options = '-v2c'
+                options.append('-v2c')
             else:
-                options = '-v1'
-        options += " -c '%s'" % credentials
+                options.append('-v1')
 
-        # Handle V3
+        options += [ "-c", credentials ]
+
     else:
+        # Handle V3
         if len(credentials) == 6:
-           options = "-v3 -l '%s' -a '%s' -u '%s' -A '%s' -x '%s' -X '%s'" % tuple(credentials)
+            options += [
+                "-v3", "-l", credentials[0], "-a", credentials[1],
+                "-u", credentials[2], "-A", credentials[3],
+                "-x", credentials[4], "-X", credentials[5],
+            ]
         elif len(credentials) == 4:
-           options = "-v3 -l '%s' -a '%s' -u '%s' -A '%s'" % tuple(credentials)
+            options += [
+                "-v3", "-l", credentials[0], "-a", credentials[1],
+                "-u", credentials[2], "-A", credentials[3],
+            ]
         elif len(credentials) == 2:
-           options = "-v3 -l '%s' -u '%s'" % tuple(credentials)
+            options += [
+                "-v3", "-l", credentials[0], "-u", credentials[1],
+            ]
         else:
-            raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be string, 2-tuple, 4-tuple or 6-tuple" % (credentials, hostname))
+            raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be "
+                                     "string, 2-tuple, 4-tuple or 6-tuple" % (credentials, hostname))
 
     # Do not load *any* MIB files. This save lot's of CPU.
-    options += " -m '' -M ''"
+    options += [ "-m", "", "-M", "" ]
 
     # Configuration of timing and retries
     settings = snmp_timing_of(hostname)
     if "timeout" in settings:
-        options += " -t %0.2f" % settings["timeout"]
+        options += [ "-t", "%0.2f" % settings["timeout"] ]
     if "retries" in settings:
-        options += " -r %d" % settings["retries"]
+        options += [ "-r", "%d" % settings["retries"] ]
 
-    return command + ' ' + options
+    return command + options
 
 def snmp_get_oid(hostname, ipaddress, oid):
     if oid.endswith(".*"):
@@ -1740,12 +1752,15 @@ def snmp_get_oid(hostname, ipaddress, oid):
     protospec = snmp_proto_spec(hostname)
     portspec = snmp_port_spec(hostname)
     command = snmp_base_command(commandtype, hostname) + \
-              " -On -OQ -Oe -Ot %s%s%s %s" % (protospec, ipaddress, portspec, oid_prefix)
+               [ "-On", "-OQ", "-Oe", "-Ot",
+                 "%s%s%s" % (protospec, ipaddress, portspec),
+                 oid_prefix ]
 
-    if opt_debug:
-        sys.stdout.write("Running '%s'\n" % command)
+    debug_cmd = [ "''" if a == "" else a for a in command ]
+    vverbose("Running '%s'\n" % " ".join(debug_cmd))
 
-    snmp_process = subprocess.Popen(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    snmp_process = subprocess.Popen(command, close_fds=True,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     exitstatus = snmp_process.wait()
     if exitstatus:
         if opt_verbose:

@@ -1070,7 +1070,10 @@ def notify_via_email(plugin_context):
     # handshake signal.
     notify_log_debug("Executing command: %s" % command)
 
-    p = subprocess.Popen(command_utf8, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    # TODO: Cleanup this shell=True call!
+    p = subprocess.Popen(command_utf8, shell=True, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE, stdin=subprocess.PIPE,
+                         close_fds=True)
     stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))
     exitcode = p.returncode
     os.putenv("LANG", old_lang) # Important: do not destroy our environment
@@ -1161,8 +1164,9 @@ def call_notification_script(plugin, plugin_context):
     plugin_log("executing %s" % path)
     try:
         set_notification_timeout()
-        p = subprocess.Popen([path], shell=False, stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT, env=notification_script_env(plugin_context))
+        p = subprocess.Popen([path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             env=notification_script_env(plugin_context),
+                             close_fds=True)
 
         while True:
             # read and output stdout linewise to ensure we don't force python to produce
@@ -1524,9 +1528,9 @@ def call_bulk_notification_script(plugin, context_text):
         # Protocol: The script gets the context on standard input and
         # read until that is closed. It is being called with the parameter
         # --bulk.
-        p = subprocess.Popen([path, "--bulk"], shell=False,
+        p = subprocess.Popen([path, "--bulk"],
                              stdout = subprocess.PIPE, stderr = subprocess.PIPE,
-                             stdin = subprocess.PIPE)
+                             stdin = subprocess.PIPE, close_fds=True)
 
         stdout_txt, stderr_txt = p.communicate(context_text.encode("utf-8"))
         exitcode = p.returncode

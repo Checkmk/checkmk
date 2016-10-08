@@ -574,11 +574,13 @@ def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False, context_name = None
     portspec = snmp_port_spec(hostname)
     command = snmp_walk_command(hostname)
     if context_name != None:
-        command += " -n %s" % quote_shell_string(context_name)
-    command += " -OQ -OU -On -Ot %s%s%s %s" % (protospec, ip, portspec, oid)
-    vverbose('   Running %s\n' % command)
+        command += [ "-n", context_name ]
+    command += [ "-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ip, portspec), oid ]
 
-    snmp_process = subprocess.Popen(command, shell=True, close_fds=True, stdin=open(os.devnull),
+    debug_cmd = [ "''" if a == "" else a for a in command ]
+    vverbose("Running '%s'\n" % " ".join(debug_cmd))
+
+    snmp_process = subprocess.Popen(command, close_fds=True, stdin=open(os.devnull),
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Ugly(1): in some cases snmpwalk inserts line feed within one

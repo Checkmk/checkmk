@@ -147,7 +147,8 @@ def extract_domains(tar, domains):
 
         # Older versions of python tarfile handle empty subtar archives :(
         # This won't work: subtar = tarfile.open("%s/%s" % (restore_dir, tar_member.name))
-        p = subprocess.Popen("tar tzf %s/%s" % (restore_dir, tar_member.name), shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        p = subprocess.Popen(["tar", "tzf", "%s/%s" % (restore_dir, tar_member.name) ],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
         if stderr:
             errors.append(_("Contains corrupt file %s") % tar_member.name)

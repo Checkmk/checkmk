@@ -264,7 +264,7 @@ class MKBackupJob(object):
 
     def start(self, env=None):
         p = subprocess.Popen(self._start_command(),
-                         shell=False, close_fds=True, stdout=subprocess.PIPE,
+                         close_fds=True, stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, stdin=open(os.devnull), env=env)
         output = p.stdout.read()
         if p.wait() != 0:

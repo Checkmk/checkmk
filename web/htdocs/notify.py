@@ -315,7 +315,7 @@ def notify_mail(user_id, msg):
         raise MKInternalError(_('No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.'))
 
     try:
-        p = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE,
+        p = subprocess.Popen(command, stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, stdin=subprocess.PIPE,
                          close_fds=True)
     except OSError, e:

@@ -5261,10 +5261,10 @@ def do_create_snapshot(data):
             path_subtar     = "%s/%s" % (work_dir, filename_subtar)
 
             paths = map(lambda x: x[1] == "" and "." or x[1], info.get("paths", []))
-            command = "tar czf %s --ignore-failed-read --force-local -C %s %s" % \
-                                    (path_subtar, prefix, " ".join(paths))
+            command = [ "tar", "czf", path_subtar, "--ignore-failed-read",
+                        "--force-local", "-C", prefix ] + paths
 
-            proc = subprocess.Popen(command, shell=True, stdin=None, close_fds=True,
+            proc = subprocess.Popen(command, stdin=None, close_fds=True,
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=prefix)
             stdout, stderr = proc.communicate()
             exit_code      = proc.wait()
@@ -5279,11 +5279,14 @@ def do_create_snapshot(data):
             subtar_info[filename_subtar] = (subtar_hash, subtar_signed)
 
             # Append tar.gz subtar to snapshot
-            command = "tar --append --file=%s %s ; rm %s" % \
-                    (filename_work, filename_subtar, filename_subtar)
-            proc = subprocess.Popen(command, shell=True, cwd = work_dir)
+            command = [ "tar", "--append", "--file="+filename_work, filename_subtar ]
+            proc = subprocess.Popen(command, cwd = work_dir, close_fds=True)
             proc.communicate()
             exit_code = proc.wait()
+
+            if os.path.exists(filename_subtar):
+                os.unlink(filename_subtar)
+
             if exit_code != 0:
                 raise MKGeneralException("Error on adding backup domain %s to tarfile" % name)
 
@@ -5323,7 +5326,7 @@ class SiteBackupJobs(backup.Jobs):
 
     def _apply_cron_config(self):
         p = subprocess.Popen(["omd", "restart", "crontab"],
-                         shell=False, close_fds=True, stdout=subprocess.PIPE,
+                         close_fds=True, stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, stdin=open(os.devnull))
         if p.wait() != 0:
             raise MKGeneralException(_("Failed to apply the cronjob config: %s") % p.stderr.read())

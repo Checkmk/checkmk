@@ -1,0 +1,9 @@
+Title: Fixed broken row selection for bulk actions
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i1p1
+Date: 1476090237
+Class: fix
+
+

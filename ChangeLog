@@ -7,6 +7,9 @@
     * 3907 FIX: oracle_tablespaces: simplyfied free space calculation depending on version...
     * 3909 FIX: postfix_mailq: fixed readout postfix config
 
+    Multisite:
+    * 3895 FIX: Fixed broken row selection for bulk actions
+
 
 1.4.0i1:
     Core & Setup:

@@ -295,7 +295,7 @@ api_actions["discover_services"] = {
 ###############
 
 def action_activate_changes(request):
-    validate_request_keys(request, ["modes", "sites"])
+    validate_request_keys(request, ["mode", "sites"])
 
     mode = html.var("mode") and html.var("mode") or "dirty"
     if html.var("allow_foreign_changes"):

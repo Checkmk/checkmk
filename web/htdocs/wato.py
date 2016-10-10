@@ -9880,7 +9880,10 @@ def load_notification_table():
                                         help = _("Configure the hosts for this notification. Without prefix, only exact, case sensitive matches, "
                                                  "<tt>!</tt> for negation and <tt>~</tt> for regex matches."),
                                         orientation = "horizontal",
-                                        valuespec = RegExp(size = 20),
+                                        # TODO: Clean this up to use an alternative between TextAscii() and RegExp(). Also handle the negation in a different way
+                                        valuespec = TextAscii(
+                                            size = 20,
+                                        ),
                                     ),
                                   ),
                                   ( "only_services",
@@ -9889,7 +9892,10 @@ def load_notification_table():
                                         help = _("Configure regular expressions that match the beginning of the service names here. Prefix an "
                                                  "entry with <tt>!</tt> in order to <i>exclude</i> that service."),
                                         orientation = "horizontal",
-                                        valuespec = RegExp(size = 20),
+                                        # TODO: Clean this up to use an alternative between TextAscii() and RegExp(). Also handle the negation in a different way
+                                        valuespec = TextAscii(
+                                            size = 20,
+                                        ),
                                         validate = validate_only_services,
                                     ),
                                   ),
@@ -9898,7 +9904,10 @@ def load_notification_table():
                                         title = _("Blacklist the following services"),
                                         help = _("Configure regular expressions that match the beginning of the service names here."),
                                         orientation = "horizontal",
-                                        valuespec = RegExp(size = 20),
+                                        valuespec = RegExp(
+                                            size = 20,
+                                            mode = RegExp.prefix,
+                                        ),
                                         validate = validate_only_services,
                                     ),
                                   ),
@@ -13028,7 +13037,7 @@ def get_rule_conditions(ruleset):
                 itemspec = ListChoice(choices = itemenum, columns = 3)
                 item_list = [ x+"$" for x in itemspec.from_html_vars("item") ]
             else:
-                vs = ListOfStrings(valuespec = RegExpUnicode())
+                vs = vs_rule_service_conditions()
                 item_list = vs.from_html_vars("itemlist")
                 vs.validate_value(item_list, "itemlist")
 
@@ -13047,6 +13056,16 @@ def get_rule_conditions(ruleset):
         item_list = None
 
     return tag_list, host_list, item_list
+
+
+def vs_rule_service_conditions():
+    return ListOfStrings(
+        orientation = "horizontal",
+        valuespec = RegExpUnicode(
+            size = 30,
+            mode = RegExpUnicode.prefix
+        ),
+    )
 
 
 def date_and_user():
@@ -13294,9 +13313,7 @@ def mode_edit_rule(phase, new = False):
                 itemspec = ListChoice(choices = itemenum, columns = 3)
                 itemspec.render_input("item", value)
             else:
-                ListOfStrings(
-                    orientation = "horizontal",
-                    valuespec = RegExpUnicode(size = 30)).render_input("itemlist", cleaned_item_list)
+                vs_rule_service_conditions().render_input("itemlist", cleaned_item_list)
                 html.write("<br><br>")
 
             html.checkbox("negate_entries", negate_entries, label =

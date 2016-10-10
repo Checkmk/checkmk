@@ -13314,16 +13314,9 @@ def mode_edit_rule(phase, new = False):
                 itemspec.render_input("item", value)
             else:
                 vs_rule_service_conditions().render_input("itemlist", cleaned_item_list)
-                html.write("<br><br>")
 
             html.checkbox("negate_entries", negate_entries, label =
                          _("<b>Negate:</b> make rule apply for <b>all but</b> the above entries"))
-
-            if not itemenum:
-                html.help(_("The entries here are regular expressions to match the beginning. "
-                             "Add a <tt>$</tt> for an exact match. An arbitrary substring is matched "
-                             "with <tt>.*</tt><br>Please note that on windows systems any backslashes need to be escaped."
-                             "For example C:\\\\tmp\\\\message.log"))
 
             html.write("</div>")
 

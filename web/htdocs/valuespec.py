@@ -542,16 +542,27 @@ class RegExp(TextAscii):
         help_text.append(_("The text entered here is handled as a regular expression pattern."))
 
         if self._mode == RegExp.infix:
-            help_text.append(_("The pattern is applied as infix search."))
+            help_text.append(_("The pattern is applied as infix search. Add a leading <tt>^</tt> "
+                               "to make it match from the beginning and/or a tailing <tt>$</tt> "
+                               "to match till the end of the text."))
         elif self._mode == RegExp.prefix:
-            help_text.append(_("The pattern is matched from the beginning."))
+            help_text.append(_("The pattern is matched from the beginning. Add a tailing "
+                               "<tt>$</tt> to change it to a whole text match."))
         elif self._mode == RegExp.complete:
-            help_text.append(_("The pattern is matching the whole text."))
+            help_text.append(_("The pattern is matching the whole text. You can add <tt>.*</tt> "
+                               "in front or at the end of your pattern to make it either a prefix "
+                               "or infix search."))
 
         if self._case_sensitive == True:
             help_text.append(_("The match is performed case sensitive."))
         elif self._case_sensitive == False:
             help_text.append(_("The match is performed case insensitive."))
+
+        help_text.append(
+            _("Please note that any backslashes need to be escaped using a backslash, "
+              "for example you need to insert <tt>C:\\\\windows\\\\</tt> if you want to match "
+              "<tt>c:\windows\</tt>.")
+        )
 
         return " ".join(help_text)
 
@@ -1050,8 +1061,10 @@ class ListOfStrings(ValueSpec):
         help_text = ValueSpec.help(self)
 
         field_help = self._valuespec.help()
-        if field_help:
+        if help_text and field_help:
             return help_text + " " + field_help
+        elif field_help:
+            return field_help
         else:
             return help_text
 
@@ -1074,6 +1087,8 @@ class ListOfStrings(ValueSpec):
             self._valuespec.render_input(vp + "_%d" % nr, s)
             html.write('</div>')
         html.write('</div>')
+        html.write("<div style=\"clear:left\"></div>")
+        html.help(self.help())
         html.javascript("list_of_strings_init('%s');" % vp);
 
     def canonical_value(self):

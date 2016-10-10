@@ -1351,10 +1351,29 @@ class ModeBIEditRule(ModeBI):
 
     def action(self):
         self.must_be_contact_for_pack()
-        if html.check_transaction():
-            vs_rule = self.valuespec()
-            new_rule = vs_rule.from_html_vars('rule')
-            vs_rule.validate_value(new_rule, 'rule')
+
+        vs_rule = self.valuespec()
+        new_rule = vs_rule.from_html_vars('rule')
+        vs_rule.validate_value(new_rule, 'rule')
+
+        if self._ruleid and self._ruleid != new_rule["id"]:
+            existing_ruleid = self._ruleid
+            new_ruleid = new_rule["id"]
+            c = wato_confirm(_("Confirm renaming existing BI rule"),
+                             _("Do you really want to rename the existing BI rule <b>%s</b> to <b>%s</b>?") % \
+                              (existing_ruleid, new_ruleid))
+            if c:
+                self._ruleid = new_ruleid
+                del self._pack["rules"][existing_ruleid]
+                self._pack["rules"][new_ruleid] = new_rule
+                self._rename_existing_ruleid_after_confirm(existing_ruleid)
+                log_pending(SYNC, None, "bi-edit-rule", _("Renamed BI rule %s") % self._ruleid)
+                self.save_config()
+
+            else:
+                return False
+
+        elif html.check_transaction():
             if self._new:
                 self._ruleid = new_rule["id"]
 
@@ -1365,6 +1384,7 @@ class ModeBIEditRule(ModeBI):
                     _("There is already a rule with the id <b>%s</b>. "
                       "It is in the pack <b>%s</b> and as the title <b>%s</b>") % (
                             self._ruleid, pack["title"], existing_rule["title"]))
+
             if not new_rule["nodes"]:
                 raise MKUserError(None,
                     _("Please add at least one child node. Empty rules are useless."))
@@ -1380,9 +1400,23 @@ class ModeBIEditRule(ModeBI):
                     raise MKUserError(None, _("There is a cycle in your rules. This rule calls itself - "
                                               "either directly or indirectly."))
                 log_pending(SYNC, None, "bi-edit-rule", _("Modified BI rule %s") % self._ruleid)
+
             self.save_config()
 
         return "bi_rules"
+
+
+    def _rename_existing_ruleid_after_confirm(self, existing_ruleid):
+        for packinfo in self._packs.values():
+            for rule_id, rule_info in packinfo['rules'].items():
+                new_nodes = []
+                for this_node in rule_info.get('nodes', []):
+                    node_ty, node_info = this_node
+                    if node_ty == 'call' and existing_ruleid == node_info[0]:
+                        new_nodes.append( ('call', tuple( [self._ruleid] + list(node_info)[1:] )) )
+                    else:
+                        new_nodes.append( this_node )
+                rule_info['nodes'] = new_nodes
 
 
     def page(self):
@@ -1410,6 +1444,16 @@ class ModeBIEditRule(ModeBI):
 
     def valuespec(self):
         elements = [
+            ( "id",
+              TextAscii(
+                  title = _("Unique Rule ID"),
+                  help = _("The ID of the rule must be a unique text. It will be used as an internal key "
+                           "when rules refer to each other. The rule IDs will not be visible in the status "
+                           "GUI. They are just used within the configuration."),
+                  allow_empty = False,
+                  size = 24,
+              ),
+            ),
             ( "title",
                TextUnicode(
                    title = _("Rule Title"),
@@ -1472,20 +1516,6 @@ class ModeBIEditRule(ModeBI):
               ),
             ),
         ]
-
-
-        if self._new:
-            elements = [
-            ( "id",
-              TextAscii(
-                  title = _("Unique Rule ID"),
-                  help = _("The ID of the rule must be a unique text. It will be used as an internal key "
-                           "when rules refer to each other. The rule IDs will not be visible in the status "
-                           "GUI. They are just used within the configuration."),
-                  allow_empty = False,
-                  size = 24,
-              ),
-            )] + elements
 
         return Dictionary(
             title = _("General Properties"),

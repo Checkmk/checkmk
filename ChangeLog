@@ -21,6 +21,9 @@
     * 3914 FIX: Roles: Aliases are now unique during cloning
     * 3820 FIX: Network scan: no longer fails completely if hostname already exists in configuration...
 
+    BI:
+    * 3955 BI rule ID can now be renamed
+
     Livestatus:
     * 3740 Moved livedump utility from treasures directly into bin directory...
 

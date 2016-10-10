@@ -2829,7 +2829,7 @@ class EventServer:
                     "The rule event limit of %d open events has been reached for rule \"%s\". "
                     "Not opening any additional event for this rule until open events have "
                     "been archived." %
-                        (g_config["event_limit"]["by_host"]["limit"], event["rule_id"])
+                        (g_config["event_limit"]["by_rule"]["limit"], event["rule_id"])
                 )
             })
 

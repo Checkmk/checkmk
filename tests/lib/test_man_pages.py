@@ -65,6 +65,13 @@ def test_all_man_pages(tmpdir):
     assert pages["if64"] == "%s/checkman/if64" % cmk_path()
 
 
+def test_load_all_man_pages():
+    for name in man_pages.all_man_pages().keys():
+        man_page = man_pages.load_man_page(name)
+        assert type(man_page) == dict
+        _check_man_page_structure(man_page)
+
+
 def test_print_man_page_table(capsys):
     man_pages.print_man_page_table()
     out, err = capsys.readouterr()
@@ -123,16 +130,35 @@ def test_load_man_page_not_existing():
     assert man_pages.load_man_page("not_existing") == None
 
 
+def _check_man_page_structure(page):
+    for key in [ "header" ]:
+        assert key in page
+
+    for key in [ 'description', 'license', 'title',
+                 'catalog', 'agents',
+                 'distribution']:
+        assert key in page["header"]
+
+    if "configuration" in page:
+       assert type(page["configuration"]) == list
+
+    if "parameters" in page:
+        assert type(page["parameters"]) == list
+
+    if "inventory" in page:
+        assert type(page["inventory"]) == list
+
+    assert type(page["header"]["agents"]) == list
+
+
 def test_load_man_page_format():
     page = man_pages.load_man_page("if64")
     assert type(page) == dict
 
-    for key in [ "header", "configuration", "parameters" ]:
-        assert key in page
+    _check_man_page_structure(page)
 
-    for key in [ 'description', 'license', 'title', 'perfdata',
-                 'item', 'catalog', 'agents', 'inventory',
-                 'distribution', 'examples']:
+    # Check optional keys
+    for key in [ 'perfdata', 'item', 'examples', 'inventory']:
         assert key in page["header"]
 
     for entry in page["configuration"]:

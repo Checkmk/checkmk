@@ -35,6 +35,7 @@ AutoReq:   off
 AutoProv:  off
 BuildArch: noarch
 Obsoletes: check_mk-agent check_mk_agent
+Provides:  check_mk-agent check_mk_agent
 
 %description
 The Check_MK Agent uses xinetd to provide information about the system

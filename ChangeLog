@@ -15,6 +15,7 @@
     * 3909 FIX: postfix_mailq: fixed readout postfix config
     * 3748 FIX: vertias_vcs: Fix empty agent section for standard xinetd configuration...
     * 3935 FIX: FIX avaya_45xx_cpu: check got UNKNOWN using Nagios core
+    * 3896 FIX: Agent RPMs: Fixing dependency issue with old check_mk-agent-oracle-*.rpm and check_mk-agent-logwatch-*.rpm
 
     WATO:
     * 3915 User access times: New icon when never logged in; New column "last seen"

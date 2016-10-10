@@ -171,6 +171,9 @@ def _set_core_specific_paths():
         })
 
 
+# TODO: Find a better way to determine the currently configured core.
+# For example generalize the etc/check_mk/conf.d/microcore.mk which is written by the CORE
+# hook -> Change the name to core.mk and write it for all configured cores.
 def _get_core_name():
     try:
         for l in open(os.path.join(omd_root, "etc/omd/site.conf")):

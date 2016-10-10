@@ -125,14 +125,14 @@ def _set_paths():
         "tcp_cache_dir"               : os.path.join(omd_root, "tmp/check_mk/cache"),
         "tmp_dir"                     : os.path.join(omd_root, "tmp/check_mk"),
         "logwatch_dir"                : os.path.join(omd_root, "var/check_mk/logwatch"),
+        "nagios_startscript"          : os.path.join(omd_root, "etc/init.d/core"),
+
+        # Switched via symlinks on icinga/nagios change
+        "nagios_conf_dir"             : os.path.join(omd_root, "etc/nagios/conf.d"),
         "nagios_objects_file"         : os.path.join(omd_root, "etc/nagios/conf.d/check_mk_objects.cfg"),
-        "nagios_command_pipe_path"    : os.path.join(omd_root, "tmp/run/nagios.cmd"),
         "check_result_path"           : os.path.join(omd_root, "tmp/nagios/checkresults"),
         "nagios_status_file"          : os.path.join(omd_root, "tmp/nagios/status.dat"),
-        "nagios_conf_dir"             : os.path.join(omd_root, "etc/nagios/conf.d"),
-        "nagios_config_file"          : os.path.join(omd_root, "tmp/nagios/nagios.cfg"),
-        "nagios_startscript"          : os.path.join(omd_root, "etc/init.d/core"),
-        "nagios_binary"               : os.path.join(omd_root, "bin/nagios"),
+
         "apache_config_dir"           : os.path.join(omd_root, "etc/apache"),
         "htpasswd_file"               : os.path.join(omd_root, "etc/htpasswd"),
         "livestatus_unix_socket"      : os.path.join(omd_root, "tmp/run/live"),
@@ -140,6 +140,7 @@ def _set_paths():
         "livebackendsdir"             : os.path.join(omd_root, "share/check_mk/livestatus"),
     })
 
+    _set_core_specific_paths()
     _set_overridable_paths()
     _set_overridable_paths(local=True)
 
@@ -150,6 +151,38 @@ def _omd_root():
     #except KeyError:
     #    raise MKGeneralException(_("OMD_ROOT environment variable not set. You can "
     #                               "only execute this in an OMD site."))
+
+
+def _set_core_specific_paths():
+    omd_root = _omd_root()
+    core = _get_core_name()
+
+    if core == "icinga":
+        globals().update({
+            "nagios_binary"               : os.path.join(omd_root, "bin/icinga"),
+            "nagios_config_file"          : os.path.join(omd_root, "tmp/icinga/icinga.cfg"),
+            "nagios_command_pipe_path"    : os.path.join(omd_root, "tmp/run/icinga.cmd"),
+        })
+    else:
+        globals().update({
+            "nagios_binary"               : os.path.join(omd_root, "bin/nagios"),
+            "nagios_config_file"          : os.path.join(omd_root, "tmp/nagios/nagios.cfg"),
+            "nagios_command_pipe_path"    : os.path.join(omd_root, "tmp/run/nagios.cmd"),
+        })
+
+
+def _get_core_name():
+    try:
+        for l in open(os.path.join(omd_root, "etc/omd/site.conf")):
+            if l.startswith("CONFIG_CORE='"):
+                return l.split("'")[1]
+    except IOError, e:
+        # At least in test environment the file is not available. We only added this try/except for
+        # this case. This should better be solved in a cleaner way.
+        if e.errno == 2:
+            pass
+        else:
+            raise
 
 
 def _set_overridable_paths(local=False):

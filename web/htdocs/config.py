@@ -569,9 +569,8 @@ def user_may(user_id, pname):
 
 # TODO: Check all calls for arguments (changed optional user to 3rd positional)
 def save_user_file(name, data, user, unlock=False):
-    dirname = config_dir + "/" + user.encode("utf-8")
-    make_nagios_directory(dirname)
-    path = dirname + "/" + name + ".mk"
+    path = config_dir + "/" + user.encode("utf-8") + "/" + name + ".mk"
+    make_nagios_directory(os.path.dirname(path))
     store.save_data_to_file(path, data)
 
 

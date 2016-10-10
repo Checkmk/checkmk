@@ -216,7 +216,6 @@ class RuleState(CascadingDropdown):
                                      "the events state is set to CRITICAL."),
                             size = 64,
                             mode = RegExp.infix,
-                            case_sensitive = True,
                         )),
                         ('1', RegExpUnicode(
                             title = _("WARN Pattern"),
@@ -224,7 +223,6 @@ class RuleState(CascadingDropdown):
                                      "the events state is set to WARNING."),
                             size = 64,
                             mode = RegExp.infix,
-                            case_sensitive = True,
                         )),
                         ('0', RegExpUnicode(
                             title = _("OK Pattern"),
@@ -232,7 +230,6 @@ class RuleState(CascadingDropdown):
                                      "the events state is set to OK."),
                             size = 64,
                             mode = RegExp.infix,
-                            case_sensitive = True,
                         )),
                     ],
                     help = _('Individual patterns matching the text (which must have been matched by '

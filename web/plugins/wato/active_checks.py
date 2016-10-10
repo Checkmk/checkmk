@@ -1673,7 +1673,6 @@ register_rule(group,
                     ("expect_regex", RegExp(
                         title = _("Regular expression to expect in content"),
                         mode = RegExp.infix,
-                        case_sensitive = True,
                     )),
                     ("form_name", TextAscii(
                         title = _("Name of the form to populate and submit"),
@@ -1979,7 +1978,6 @@ register_rule(group,
                         help = _('Use this option to not process all messages found in the inbox, '
                                  'but only the those whose subject matches the given regular expression.'),
                         mode = RegExp.prefix,
-                        case_sensitive = True,
                     )),
                     ('facility', DropdownChoice(
                         title = _("Events: Syslog facility"),

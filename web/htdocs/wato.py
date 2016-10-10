@@ -1592,7 +1592,6 @@ def HostnameRenamingConfig():
                   title = _("Hostname matching"),
                   help = _("Only rename hostnames whose names <i>begin</i> with the regular expression entered here."),
                   mode = RegExp.complete,
-                  case_sensitive = True,
             )),
             ( "renamings",
               ListOf(
@@ -1649,7 +1648,6 @@ def HostnameRenaming(**kwargs):
                           size = 30,
                           allow_empty = False,
                           mode = RegExpUnicode.prefix,
-                          case_sensitive = True,
                       ),
                       TextUnicode(
                           title = _("Replacement"),
@@ -7077,7 +7075,6 @@ def vs_notification_rule(userid = None):
                               help = _("This expression must match the value of the variable"),
                               allow_empty = False,
                               mode = RegExp.complete,
-                              case_sensitive = True,
                          ),
                       ]
                   ),
@@ -7303,7 +7300,6 @@ def generic_rule_match_conditions():
                       valuespec = RegExpUnicode(
                           size = 32,
                           mode = RegExpUnicode.infix,
-                          case_sensitive = True,
                       ),
                       orientation = "horizontal",
                   )
@@ -7327,7 +7323,6 @@ def generic_rule_match_conditions():
                       valuespec = RegExpUnicode(
                           size = 32,
                           mode = RegExpUnicode.infix,
-                          case_sensitive = True,
                       ),
                       orientation = "horizontal",
                   )
@@ -7343,7 +7338,6 @@ def generic_rule_match_conditions():
               valuespec = RegExpUnicode(
                   size = 32,
                   mode = RegExpUnicode.prefix,
-                  case_sensitive = True,
               ),
               orientation = "horizontal",
               allow_empty = False,
@@ -7356,7 +7350,6 @@ def generic_rule_match_conditions():
               valuespec = RegExpUnicode(
                   size = 32,
                   mode = RegExpUnicode.prefix,
-                  case_sensitive = True,
               ),
               orientation = "horizontal",
           )
@@ -7374,7 +7367,6 @@ def generic_rule_match_conditions():
              help = _("This text is a regular expression that is being searched in the output "
                       "of the check plugins that produced the alert. It is not a prefix but an infix match."),
              mode = RegExpUnicode.prefix,
-             case_sensitive = True,
           ),
         ),
         ( "match_contacts",
@@ -7548,7 +7540,6 @@ def notification_rule_match_conditions():
                       "of the comment."),
              size = 60,
              mode = RegExpUnicode.prefix,
-             case_sensitive = True,
         )),
         ( "match_ec",
           Alternative(
@@ -7598,7 +7589,6 @@ def notification_rule_match_conditions():
                                  title = _("Match event comment"),
                                  help = _("This is a regular expression for matching the event's comment."),
                                  mode = RegExpUnicode.prefix,
-                                 case_sensitive = True,
                              )
                            ),
                        ]

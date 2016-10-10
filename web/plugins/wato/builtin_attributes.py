@@ -335,7 +335,6 @@ class NetworkScanAttribute(ValueSpecAttribute):
                 ("ip_regex_list", _("List of patterns to exclude"), ListOfStrings(
                     valuespec = RegExp(
                         mode = RegExp.prefix,
-                        case_sensitive = True,
                     ),
                     orientation = "horizontal",
                     help = _("A list of regular expressions which are matched against the found "

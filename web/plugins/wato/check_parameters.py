@@ -697,7 +697,6 @@ register_rule(group + '/' + subgroup_inventory,
               valuespec = RegExp(
                   size = 32,
                   mode = RegExp.prefix,
-                  case_sensitive = True,
               ),
         )),
         ( "pad_portnumbers",
@@ -722,7 +721,6 @@ register_rule(group + '/' + subgroup_inventory,
               valuespec = RegExp(
                   size = 32,
                   mode = RegExp.prefix,
-                  case_sensitive = True,
               ),
         )),
         ( "portstates",
@@ -1040,7 +1038,6 @@ register_rule(group + '/' + subgroup_inventory,
                             RegExp(
                                 size = 50,
                                 mode = RegExp.prefix,
-                                case_sensitive = True,
                             ),
                             title = _("Regular expression matching command line"),
                             label = _("Command line:"),
@@ -1146,7 +1143,6 @@ register_rule(group + '/' + subgroup_inventory,
                         RegExp(
                             size = 50,
                             mode = RegExp.prefix,
-                            case_sensitive = True,
                         ),
                         title = _("Regular expression matching command line"),
                         help = _("This regex must match the <i>beginning</i> of the task"),
@@ -1212,7 +1208,6 @@ register_rule(group + '/' + subgroup_inventory,
                         RegExp(
                             size = 100,
                             mode = RegExp.prefix,
-                            case_sensitive = True,
                         ),
                         title = _("Regular expression matching the path"),
                         help = _("This regex must match the <i>beginning</i> of the complete "
@@ -1265,12 +1260,10 @@ register_rule(group + '/' + subgroup_inventory,
                         RegExpUnicode(
                             title = _("Include Pattern"),
                             mode = RegExp.prefix,
-                            case_sensitive = True,
                         ),
                         RegExpUnicode(
                             title = _("Exclude Pattern"),
                             mode = RegExp.prefix,
-                            case_sensitive = True,
                         )
                     ],
                 ),
@@ -1341,7 +1334,6 @@ register_rule(group + '/' + subgroup_applications,
                                       title = _("Pattern (Regex)"),
                                       size  = 40,
                                       mode = RegExp.infix,
-                                      case_sensitive = True,
                                   ),
                                   TextUnicode(
                                       title = _("Comment"),
@@ -2997,7 +2989,6 @@ register_check_parameters(
                             RegExp(
                                 size = 50,
                                 mode = RegExp.prefix,
-                                case_sensitive = True,
                             ),
                             title = _("Regular expression matching command line"),
                             help = _("This regex must match the <i>beginning</i> of the complete "
@@ -3024,7 +3015,6 @@ register_check_parameters(
                             RegExp(
                                 size = 50,
                                 mode = RegExp.prefix,
-                                case_sensitive = True,
                             ),
                             title = _("Regular expression matching username"),
                             help = _("This regex must match the <i>beginning</i> of the complete "
@@ -12620,7 +12610,6 @@ register_check_parameters(
                         RegExp(
                             size = 50,
                             mode = RegExp.prefix,
-                            case_sensitive = True,
                         ),
                         title = _("Regular expression matching tasks"),
                         help = _("This regex must match the <i>beginning</i> of the complete "

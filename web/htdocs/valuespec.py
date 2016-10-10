@@ -521,10 +521,7 @@ class RegExp(TextAscii):
     # TODO: Make "mode" a positional argument
     def __init__(self, help=None, **kwargs):
         self._mode           = kwargs.get("mode")
-        # TODO: Maybe make "True" the new default and remove all explicit
-        # case_sensitive=True calls. But for initial implementation we
-        # need to differentiate between not set yet and True.
-        self._case_sensitive = kwargs.get("case_sensitive")
+        self._case_sensitive = kwargs.get("case_sensitive", True)
 
         TextAscii.__init__(self,
             attrencode = True,

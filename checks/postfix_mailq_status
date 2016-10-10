@@ -1,0 +1,77 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# single
+# <<<postfix_mailq_status:sep(58)>>>
+# postfix/postfix-script: the Postfix mail system is running: PID: 2839
+
+# multi instances
+# <<<postfix_mailq_status:sep(58)>>>
+# postfix/postfix-script: the Postfix mail system is running: PID: 12910
+# postfix-external/postfix-script: the Postfix mail system is running: PID: 12982
+# postfix-internal/postfix-script: the Postfix mail system is running: PID: 13051
+# postfix-uat-cdi/postfix-script: the Postfix mail system is not running
+
+
+def parse_postfix_mailq_status(info):
+    parsed = {}
+    for line in info:
+        stripped_line = map(lambda x: x.strip(), line)
+        queuename = stripped_line[0].split("/")[0]
+        if queuename == "postfix":
+            queuename = ""
+        parsed.setdefault(queuename, { "state" : stripped_line[1] })
+        if len(line) > 2:
+            parsed[queuename]["pid"] = stripped_line[-1]
+
+    return parsed
+
+
+def inventory_postfix_mailq_status(parsed):
+    return [ (queuename, None) for queuename in parsed ]
+
+
+def check_postfix_mailq_status(item, params, parsed):
+    if item in parsed:
+        state_readable = parsed[item]["state"]
+        pid = parsed[item].get("pid", "")
+        if state_readable.endswith("is running"):
+            state = 0
+        else:
+            state = 2
+        yield state, 'Status: %s' % state_readable
+
+        if pid:
+            yield 0, 'PID: %s' % pid
+
+
+check_info['postfix_mailq_status'] = {
+    'parse_function'        : parse_postfix_mailq_status,
+    'inventory_function'    : inventory_postfix_mailq_status,
+    'check_function'        : check_postfix_mailq_status,
+    'service_description'   : 'Postfix status %s',
+}

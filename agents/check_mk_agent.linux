@@ -667,6 +667,11 @@ elif [ -x /usr/sbin/ssmtp ] ; then
 
 fi
 
+if type postmulti >/dev/null ; then
+    echo "<<<postfix_mailq_status:sep(58)>>>"
+    postmulti -p status
+fi
+
 
 # Check status of qmail mailqueue
 if type qmail-qstat >/dev/null

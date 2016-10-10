@@ -518,9 +518,8 @@ class RegExp(TextAscii):
     prefix   = "prefix"
     complete = "complete"
 
-    # TODO: Make "mode" a positional argument
-    def __init__(self, help=None, **kwargs):
-        self._mode           = kwargs.get("mode")
+    def __init__(self, mode, help=None, **kwargs):
+        self._mode           = mode
         self._case_sensitive = kwargs.get("case_sensitive", True)
 
         TextAscii.__init__(self,

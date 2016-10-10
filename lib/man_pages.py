@@ -478,14 +478,14 @@ def load_man_page(name):
 
             if line[0] == '[' and line[-1] == ']':
                 section_header = line[1:-1]
-                current_section = []
+                current_section, current_variable = [], None
                 man_page[section_header] = current_section
             else:
                 current_variable, restofline = line.split(':', 1)
                 current_section.append((current_variable, restofline.lstrip()))
 
         except Exception, e:
-            raise MKGeneralException("Syntax error in %s line %d (%s).\n" % (path, lineno, e))
+            raise MKGeneralException("Syntax error in %s line %d (%s).\n" % (path, lineno+1, e))
 
     header = {}
     for key, value in man_page['header']:

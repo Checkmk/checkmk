@@ -28,10 +28,10 @@ inventory:
  Checks are created for all available printers in {lpstat -p} output.
 
 [parameters]
- job_count (int, int): WARN/CRIT if number of jobs are above
- job_age (int, int): WARN/CRIT if oldest job is above in seconds
- is_idle (int): Internal state for pritner state "is idle"
+job_count (int, int): WARN/CRIT if number of jobs are above
+job_age (int, int): WARN/CRIT if oldest job is above in seconds
+is_idle (int): Internal state for pritner state "is idle"
 
 [configuration]
- cups_queues_default_levels (int, int, int, int): The global default levels for
+cups_queues_default_levels (int, int, int, int): The global default levels for
  all checks of this type. This is {(5, 10, 360, 720)}.

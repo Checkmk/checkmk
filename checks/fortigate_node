@@ -165,34 +165,38 @@ check_info["fortigate_node.cpu"] = {
 #   '----------------------------------------------------------------------'
 
 
-fortigate_node_memory_default_levels = (70, 80)
+#fortigate_node_memory_default_levels = (70, 80)
+factory_settings['fortigate_node_memory_default_levels'] = {
+        'levels'  : ( 70.0, 80.0 ),
+}
 
 
 def inventory_fortigate_node_mem(parsed):
     for hostname in parsed["nodes"]:
-        yield hostname, "fortigate_node_memory_default_levels"
+        yield hostname, {}
 
 
 def check_fortigate_node_mem(item, params, parsed):
     if item in parsed["nodes"]:
-        if type(params) == dict:
-            params = params["levels"]
-
+        status = 3
+        current = parsed["nodes"][item]["memory"]
         # This check is only able to check the used space
         # The checkgroup "memory" might set negative values which act as levels for free space
         # These levels are converted to used space, too..
-        warn, crit = map(abs, params)
+        if type(params) == dict:
+            warn, crit = map(abs, params["levels"])
+        else:
+            warn, crit = map(abs, params)
 
-        current = parsed["nodes"][item]["memory"]
-
-        status = 0
         if current >= crit:
             status = 2
         elif current >= warn:
             status = 1
+        else:
+            status = 0
 
         if status > 0:
-            wcsuffix = ", (warn/crit at %d/%d)" % (warn, crit)
+            wcsuffix = ", (warn/crit at %d/%d)" % (float(warn), float(crit))
         else:
             wcsuffix = ""
 
@@ -201,10 +205,12 @@ def check_fortigate_node_mem(item, params, parsed):
 
 
 check_info["fortigate_node.memory"] = {
-    "inventory_function"  : inventory_fortigate_node_mem,
-    "check_function"      : check_fortigate_node_mem,
-    "service_description" : "Memory usage %s",
-    "has_perfdata"        : True,
+    "inventory_function"        : inventory_fortigate_node_mem,
+    "check_function"            : check_fortigate_node_mem,
+    "service_description"       : "Memory usage %s",
+    "has_perfdata"              : True,
+    "default_levels_variable"   : "fortigate_node_memory_default_levels",
+    "group"                     : "fortigate_node_memory",
 }
 
 

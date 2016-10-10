@@ -4051,6 +4051,40 @@ register_check_parameters(
 )
 
 #.
+#   .--Os------------------------------------------------------------------.
+#   |                               ___                                    |
+#   |                              / _ \ ___                               |
+#   |                             | | | / __|                              |
+#   |                             | |_| \__ \                              |
+#   |                              \___/|___/                              |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+register_check_parameters(
+    subgroup_os,
+    "fortigate_node_memory",
+    _("Fortigate node memory"),
+   Dictionary(
+        elements = [
+            ("levels", Tuple (
+                title = _("Levels"),
+                elements = [
+                    Percentage(title = _("Warning at"),  default_value = 70.0, ),
+                    Percentage(title = _("Critical at"), default_value = 80.0, ),
+                ],
+            ))
+        ],
+    ),
+    TextAscii(
+        title = _("node"),
+    ),
+    "dict",
+)
+
+
+#.
 #   .--Unsorted--(Don't create new stuff here!)----------------------------.
 #   |              _   _                      _           _                |
 #   |             | | | |_ __  ___  ___  _ __| |_ ___  __| |               |

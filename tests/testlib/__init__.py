@@ -276,13 +276,17 @@ class Site(object):
     # This opens a currently free TCP port and remembers it in the object for later use
     # Not free of races, but should be sufficient.
     def open_livestatus_tcp(self):
+        start_again = False
+
         if self.is_running():
-            assert self.get_config("LIVESTATUS_TCP") == "on", \
-                "Livestatus-TCP disabled (Site is running, so could not enable it)"
-            return
+            start_again = True
+            self.stop()
 
         self.set_config("LIVESTATUS_TCP", "on")
         self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
+
+        if start_again:
+            self.start()
 
 
     def _gather_livestatus_port(self):

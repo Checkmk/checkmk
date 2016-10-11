@@ -73,17 +73,30 @@ def fileinfo_process_date(pattern, reftime):
 
     return pattern
 
-def fileinfo_groups_of_file(check_filename,reftime):
+def fileinfo_groups_of_file(check_filename, reftime):
     groups = []
     for line in host_extra_conf(g_hostname, fileinfo_groups):
         for group_name, pattern in line:
             if type(pattern) == str: # support old format
                 pattern = ( pattern, '' )
+
             inclusion, exclusion = pattern
-            inclusion = fileinfo_process_date(inclusion,reftime)
-            if fnmatch.fnmatch(check_filename, inclusion) \
-                    and not fnmatch.fnmatch(check_filename, exclusion):
+            if inclusion.startswith("~"):
+                reg = regex(inclusion[1:])
+                incl_match = reg.match( check_filename )
+            else:
+                inclusion = fileinfo_process_date(inclusion, reftime)
+                incl_match = fnmatch.fnmatch(check_filename, inclusion)
+
+            if exclusion.startswith("~"):
+                reg = regex(exlusion[1:])
+                excl_match = reg.match( check_filename )
+            else:
+                excl_match = fnmatch.fnmatch(check_filename, exclusion)
+
+            if incl_match and not excl_match:
                 groups.append(group_name)
+
     return groups
 
 def fileinfo_check_timeranges(params):

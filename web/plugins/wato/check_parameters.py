@@ -4300,7 +4300,9 @@ register_rule(group + '/' + subgroup_storage,
                   'not only for the total size and the age of the oldest/youngest '
                   'file but also on the count. You can define one or several '
                   'patterns for a group containing <tt>*</tt> and <tt>?</tt>, for example '
-                  '<tt>/var/log/apache/*.log</tt>. For files contained in a group '
+                  '<tt>/var/log/apache/*.log</tt>. If the pattern begins with a tilde then '
+                  'this pattern is interpreted as a regular expression otherwise it is a '
+                  'glob. For files contained in a group '
                   'the discovery will automatically create a group service instead '
                   'of single services for each file. This rule also applies when '
                   'you use manually configured checks instead of inventorized ones. '
@@ -4314,7 +4316,7 @@ register_rule(group + '/' + subgroup_storage,
                   'The YESTERDAY syntax simply subtracts one day from the reference time.'),
     valuespec = ListOf(
         Tuple(
-            help = _("This defines one file grouping pattern"),
+            help = _("This defines one file grouping pattern."),
             show_titles = True,
             orientation = "horizontal",
             elements = [

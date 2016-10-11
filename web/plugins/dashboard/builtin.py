@@ -55,15 +55,6 @@ builtin_dashboards["main"] = {
             'single_infos' : [],
         },
         {
-            "title"      : _("Failed Notifications"),
-            "type"       : 'notify_failed_notifications',
-            "position"   : (61, 1),
-            "size"       : (30, 18),
-            "refresh"    : 60,
-            "show_title" : True,
-            "context"    : {},
-        },
-        {
             "type"       : "view",
             "title"      : _("Host Problems (unhandled)"),
             "title_url"  : "view.py?view_name=hostproblems&is_host_acknowledged=0",

@@ -43,6 +43,7 @@
     * 3906 oracle: now version, database creation and startup time, log and open mode, logins, flashback are inventorised
     * 3944 Added OS related information for Cisco, Fireeye and Infoblox devices...
     * 3908 winperf_if, lnx_if: new inventory plugins for switch port statistics of linux and windows hosts
+    * 3946 uptime: added the uptime to inventory...
 
 
 1.4.0i1:

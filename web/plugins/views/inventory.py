@@ -680,6 +680,7 @@ inventory_displayhints.update({
     ".software.os.service_pack"                        : { "title" : _("Service Pack"), "short" : _("Service Pack") },
     ".software.os.service_packs:"                      : { "title" : _("Service Packs"), "render" : render_inv_dicttable,
                                                             "keyorder" : [ "name" ] },
+    ".software.os.since"                               : { "title" : _("Up since") },
     ".software.configuration."                         : { "title" : _("Configuration"), },
     ".software.configuration.snmp_info."               : { "title" : _("SNMP Information"), },
     ".software.configuration.snmp_info.contact"        : { "title" : _("Contact"), },

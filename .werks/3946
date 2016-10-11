@@ -1,0 +1,13 @@
+Title: uptime: added the uptime to inventory
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476199109
+Class: feature
+
+Added uptime of snmp and other agent based devices into
+the "Operating System" subtree. Be aware that the check
+interval default for the "HW/SW Inventory" is on
+"once per day".
+

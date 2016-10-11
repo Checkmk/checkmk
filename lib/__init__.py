@@ -30,3 +30,33 @@ This library is currently handled as internal module of Check_MK and
 does not offer stable APIs. The code may change at any time."""
 
 __version__ = "1.4.0i2"
+
+import os
+
+import cmk.paths
+
+
+def omd_version():
+    return os.path.basename(os.readlink(cmk.paths.omd_root + "/version"))
+
+
+def edition_short():
+    """Can currently either return \"cre\" or \"cee\"."""
+    parts = omd_version().split(".")
+    if parts[-1] == "demo":
+        return parts[-2]
+    else:
+        return parts[-1]
+
+
+def is_enterprise_edition():
+    return edition_short() == "cee"
+
+
+def is_raw_edition():
+    return edition_short() == "cre"
+
+
+def is_demo():
+    parts = omd_version().split(".")
+    return parts[-1] == "demo"

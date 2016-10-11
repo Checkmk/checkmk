@@ -287,9 +287,9 @@ def package_pack(args):
         raise PackageException("Usage: check_mk -P pack NAME")
 
     # Make sure, user is not in data directories of Check_MK
-    p = os.path.abspath(os.curdir)
+    abs_curdir = os.path.abspath(os.curdir)
     for dir in [cmk.paths.var_dir] + [ p[-1] for p in get_package_parts() ]:
-        if p == dir or p.startswith(dir + "/"):
+        if abs_curdir == dir or abs_curdir.startswith(dir + "/"):
             raise PackageException("You are in %s!\n"
                                "Please leave the directories of Check_MK before creating\n"
                                "a packet file. Foreign files lying around here will mix up things." % p)

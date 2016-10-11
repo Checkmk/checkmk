@@ -957,10 +957,10 @@ def paint_time_graph(row, cell):
 
 
 def time_graph_params():
-    if metrics.cmk_graphs_possible(row["site"]):
+    try:
         return metrics.vs_graph_render_options()
-    else:
-        return None
+    except AttributeError:
+        return None # The method is only available in CEE
 
 
 def paint_time_graph_cmk(row, cell, show_timeranges=False):

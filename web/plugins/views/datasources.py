@@ -261,7 +261,13 @@ def query_service_discovery(columns, query, only_sites, limit, all_active_filter
             if not service_line:
                 continue
 
-            state, check, service_description = map(lambda s: s.strip(), service_line.split(":", 2))
+            parts = map(lambda s: s.strip(), service_line.split(":", 2))
+            if len(parts) != 3:
+                continue
+
+            state, check, service_description = parts
+            if state not in ["ignored", "vanished", "unmonitored"]:
+                continue
 
             this_row = row.copy()
             this_row.update({

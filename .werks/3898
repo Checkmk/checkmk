@@ -1,0 +1,9 @@
+Title: Unmonitored services: Fixed possible bug in case discovery service produces unexpected output
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476189684
+Class: fix
+
+

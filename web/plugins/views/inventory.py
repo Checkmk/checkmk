@@ -749,7 +749,7 @@ inventory_displayhints.update({
                                                      "keyorder" : [ "id", "sga_info", "sga_size" ] },
     ".software.applications.oracle.performance:*.id"        : { "title" : _("ID"), },
     ".software.applications.oracle.performance:*.sga_info" : { "title" : _("SGA info"), },
-    ".software.applications.oracle.performance:*.sga_size" : { "title" : _("SGA size"), "paint" : "bytes" },
+    ".software.applications.oracle.performance:*.sga_size" : { "title" : _("SGA size"), "paint" : "size" },
 
     ".software.applications.vmwareesx:*."              : { "title" : _("Datacenter %d") },
     ".software.applications.vmwareesx:*.clusters:*."   : { "title" : _("Cluster %d") },

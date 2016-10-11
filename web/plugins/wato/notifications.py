@@ -168,7 +168,15 @@ register_notification_parameters(
                  ],
                  optional_keys = ["auth", "encryption"]
              )
-            )
+            ),
+            ("insert_html_section",
+                TextAreaUnicode(
+                    title = _("Insert HTML section between body and table"),
+                    default_value = "<HTMLTAG>CONTENT</HTMLTAG>",
+                    cols = 40,
+                    rows = "auto",
+                ),
+            ),
         ]
     )
 )

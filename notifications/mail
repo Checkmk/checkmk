@@ -60,7 +60,8 @@ try:
 except ImportError:
     import json
 
-tmpl_head_html = '''
+def tmpl_head_html(html_section):
+    return '''
 <html>
 <head>
 <title>$SUBJECT$</title>
@@ -224,8 +225,7 @@ table.context td {
 
 </style>
 </head>
-<body>
-<table>'''
+<body>''' + html_section + '<table>'
 
 tmpl_foot_html = '''</table>
 </body>
@@ -812,7 +812,11 @@ def construct_content(context):
         except Exception, e:
             sys.stderr.write("Failed to add graphs to mail. Continue without them. (%s)\n" % e)
 
-    content_html = substitute_context(tmpl_head_html, context) + \
+    extra_html_section = ""
+    if "PARAMETER_INSERT_HTML_SECTION" in context:
+        extra_html_section = context['PARAMETER_INSERT_HTML_SECTION']
+
+    content_html = substitute_context(tmpl_head_html(extra_html_section), context) + \
                    content_html + \
                    substitute_context(tmpl_foot_html, context)
 

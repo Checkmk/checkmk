@@ -32,12 +32,13 @@
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
 class DynamicColumn;
+class Logger;
 class Query;
 
 /// A table-like view for some underlying data, exposed via LQL.
 class Table {
 public:
-    Table();
+    explicit Table(Logger *logger);
     virtual ~Table();
 
     void addColumn(Column *);
@@ -83,6 +84,8 @@ public:
     virtual void answerQuery(Query *query) = 0;
     virtual bool isAuthorized(contact *ctc, void *data);
     virtual void *findObject(const std::string &objectspec);
+
+    Logger *const _logger;
 
 private:
     Column *dynamicColumn(const std::string &name, const std::string &rest);

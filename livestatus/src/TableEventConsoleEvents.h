@@ -38,6 +38,7 @@ class Core;
 #else
 #include "nagios.h"
 class DowntimesOrComments;
+class Logger;
 #endif
 
 class TableEventConsoleEvents : public TableEventConsole {
@@ -55,7 +56,8 @@ public:
                            std::recursive_mutex &holder_lock, Core *core);
 #else
     TableEventConsoleEvents(const DowntimesOrComments &downtimes_holder,
-                            const DowntimesOrComments &comments_holder);
+                            const DowntimesOrComments &comments_holder,
+                            Logger *logger);
     static void addColumns(Table *table,
                            const DowntimesOrComments &downtimes_holder,
                            const DowntimesOrComments &comments_holder);

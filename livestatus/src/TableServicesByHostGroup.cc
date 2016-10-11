@@ -43,7 +43,8 @@ struct servicebyhostgroup {
 
 TableServicesByHostGroup::TableServicesByHostGroup(
     const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder) {
+    const DowntimesOrComments &comments_holder, Logger *logger)
+    : Table(logger) {
     struct servicebyhostgroup hgref;
     TableServices::addColumns(this, "", -1, true, downtimes_holder,
                               comments_holder);

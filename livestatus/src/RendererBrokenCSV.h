@@ -61,7 +61,7 @@ public:
                       OutputBuffer::ResponseHeader response_header,
                       bool do_keep_alive, std::string invalid_header_message,
                       CSVSeparators separators, int timezone_offset,
-                      Encoding data_encoding, int debug_level);
+                      Encoding data_encoding);
 
     void outputNull() override;
     void outputBlob(const std::vector<char>& value) override;

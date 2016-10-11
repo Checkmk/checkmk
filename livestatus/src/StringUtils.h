@@ -25,7 +25,10 @@
 #ifndef StringUtils_h
 #define StringUtils_h
 
-#include "config.h"   // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
+#ifdef CMC
+#include <netinet/in.h>
+#endif
 #include <algorithm>  // IWYU pragma: keep
 #include <string>
 #include <utility>
@@ -53,6 +56,10 @@ std::string strip(const std::string &str,
 std::pair<std::string, std::string> nextField(
     const std::string &str, const std::string &chars = " \t\n\v\f\r");
 
+#ifdef CMC
+std::string ipv4ToString(in_addr_t ipv4_address);
+std::string portToString(in_port_t port);
+#endif
 }  // namespace
 
 #endif  // StringUtils_h

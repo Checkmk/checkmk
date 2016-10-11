@@ -44,7 +44,8 @@ TableEventConsoleHistory::TableEventConsoleHistory(
 #else
 TableEventConsoleHistory::TableEventConsoleHistory(
     const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder)
+    const DowntimesOrComments &comments_holder, Logger *logger)
+    : TableEventConsole(logger)
 #endif
 {
     addColumn(new IntEventConsoleColumn(

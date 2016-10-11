@@ -35,6 +35,7 @@ class CommandsHolder;
 class LogCache;
 class Query;
 class LogEntry;
+class Logger;
 
 #ifdef CMC
 class World;
@@ -56,6 +57,7 @@ private:
 #ifdef CMC
     World *_world;  // CMC: world our references point into
 #endif
+    Logger *const _logger;
 
 public:
     Logfile(const CommandsHolder &commands_holder, std::string path,

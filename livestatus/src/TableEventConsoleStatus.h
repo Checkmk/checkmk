@@ -30,6 +30,8 @@
 #include "TableEventConsole.h"
 #ifdef CMC
 class Core;
+#else
+class Logger;
 #endif
 
 class TableEventConsoleStatus : public TableEventConsole {
@@ -37,7 +39,7 @@ public:
 #ifdef CMC
     explicit TableEventConsoleStatus(Core *core);
 #else
-    TableEventConsoleStatus();
+    explicit TableEventConsoleStatus(Logger *logger);
 #endif
     std::string name() const override;
     std::string namePrefix() const override;

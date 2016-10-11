@@ -23,8 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Filter.h"
+#include "Logger.h"
 
 using std::string;
+
+Filter::Filter() : _logger(Logger::getLogger("cmk.livestatus")) {}
 
 Filter::~Filter() = default;
 

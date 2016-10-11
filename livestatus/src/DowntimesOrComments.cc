@@ -30,6 +30,9 @@
 
 using std::make_unique;
 
+DowntimesOrComments::DowntimesOrComments()
+    : _logger(Logger::getLogger("cmk.livestatus")) {}
+
 void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
     unsigned long id = data->downtime_id;
     switch (data->type) {
@@ -39,7 +42,8 @@ void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
             break;
         case NEBTYPE_DOWNTIME_DELETE:
             if (_entries.erase(id) == 0) {
-                Informational() << "Cannot delete non-existing downtime " << id;
+                Informational(_logger) << "Cannot delete non-existing downtime "
+                                       << id;
             }
             break;
         default:
@@ -56,7 +60,8 @@ void DowntimesOrComments::registerComment(nebstruct_comment_data *data) {
             break;
         case NEBTYPE_COMMENT_DELETE:
             if (_entries.erase(id) == 0) {
-                Informational() << "Cannot delete non-existing comment " << id;
+                Informational(_logger) << "Cannot delete non-existing comment "
+                                       << id;
             }
             break;
         default:

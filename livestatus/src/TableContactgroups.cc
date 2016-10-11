@@ -32,7 +32,7 @@ using std::string;
 
 extern contactgroup *contactgroup_list;
 
-TableContactgroups::TableContactgroups() {
+TableContactgroups::TableContactgroups(Logger *logger) : Table(logger) {
     contactgroup cg;
     char *ref = reinterpret_cast<char *>(&cg);
     addColumn(

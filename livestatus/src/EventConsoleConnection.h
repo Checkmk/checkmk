@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <iosfwd>
 #include <string>
+#include "Logger.h"
 
 class EventConsoleConnection {
 public:
@@ -45,8 +46,7 @@ private:
     std::string _path;
     int _socket;
     bool writeRequest();
+    LoggerAdapter _logger;
 };
-
-std::ostream &operator<<(std::ostream &os, const EventConsoleConnection &ecc);
 
 #endif  // EventConsoleConnection_h

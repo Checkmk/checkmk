@@ -48,11 +48,11 @@ using std::vector;
 Renderer::Renderer(OutputBuffer *output,
                    OutputBuffer::ResponseHeader response_header,
                    bool do_keep_alive, string invalid_header_message,
-                   int timezone_offset, Encoding data_encoding, int debug_level)
+                   int timezone_offset, Encoding data_encoding)
     : _data_encoding(data_encoding)
     , _output(output)
     , _timezone_offset(timezone_offset)
-    , _debug_level(debug_level) {
+    , _logger(Logger::getLogger("cmk.livestatus")) {
     _output->setResponseHeader(response_header);
     _output->setDoKeepalive(do_keep_alive);
     if (invalid_header_message != "") {
@@ -68,28 +68,28 @@ unique_ptr<Renderer> Renderer::make(
     OutputFormat format, OutputBuffer *output,
     OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
     string invalid_header_message, const CSVSeparators &separators,
-    int timezone_offset, Encoding data_encoding, int debug_level) {
+    int timezone_offset, Encoding data_encoding) {
     switch (format) {
         case OutputFormat::csv:
             return make_unique<RendererCSV>(
                 output, response_header, do_keep_alive, invalid_header_message,
-                timezone_offset, data_encoding, debug_level);
+                timezone_offset, data_encoding);
         case OutputFormat::broken_csv:
             return make_unique<RendererBrokenCSV>(
                 output, response_header, do_keep_alive, invalid_header_message,
-                separators, timezone_offset, data_encoding, debug_level);
+                separators, timezone_offset, data_encoding);
         case OutputFormat::json:
             return make_unique<RendererJSON>(
                 output, response_header, do_keep_alive, invalid_header_message,
-                timezone_offset, data_encoding, debug_level);
+                timezone_offset, data_encoding);
         case OutputFormat::python:
             return make_unique<RendererPython>(
                 output, response_header, do_keep_alive, invalid_header_message,
-                timezone_offset, data_encoding, debug_level);
+                timezone_offset, data_encoding);
         case OutputFormat::python3:
             return make_unique<RendererPython3>(
                 output, response_header, do_keep_alive, invalid_header_message,
-                timezone_offset, data_encoding, debug_level);
+                timezone_offset, data_encoding);
     }
     return nullptr;  // unreachable
 }
@@ -160,15 +160,11 @@ bool isBoringChar(unsigned char ch) {
 }  // namespace
 
 void Renderer::truncatedUTF8() {
-    if (_debug_level >= 2) {
-        Informational() << "UTF-8 sequence too short";
-    }
+    Warning(_logger) << "UTF-8 sequence too short";
 }
 
 void Renderer::invalidUTF8(unsigned char ch) {
-    if (_debug_level >= 2) {
-        Informational() << "invalid byte " << int(ch) << " in UTF-8 sequence";
-    }
+    Warning(_logger) << "invalid byte " << int(ch) << " in UTF-8 sequence";
 }
 
 void Renderer::outputByteString(const string &prefix,

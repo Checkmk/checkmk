@@ -30,6 +30,8 @@
 #include "Table.h"
 #ifdef CMC
 class Core;
+#else
+class Logger;
 #endif
 class Query;
 
@@ -38,7 +40,7 @@ public:
 #ifdef CMC
     explicit TableStatus(Core *core);
 #else
-    TableStatus();
+    explicit TableStatus(Logger *logger);
 #endif
 
     std::string name() const override;

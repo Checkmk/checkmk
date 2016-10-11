@@ -123,9 +123,10 @@ private:
 }  // namespace
 
 #ifdef CMC
-TableEventConsole::TableEventConsole(Core *core) : _core(core) {}
+TableEventConsole::TableEventConsole(Core *core)
+    : Table(core->_logger_livestatus), _core(core) {}
 #else
-TableEventConsole::TableEventConsole() {}
+TableEventConsole::TableEventConsole(Logger *logger) : Table(logger) {}
 #endif
 
 void TableEventConsole::answerQuery(Query *query) {

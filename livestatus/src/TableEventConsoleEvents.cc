@@ -47,7 +47,8 @@ TableEventConsoleEvents::TableEventConsoleEvents(
 #else
 TableEventConsoleEvents::TableEventConsoleEvents(
     const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder) {
+    const DowntimesOrComments &comments_holder, Logger *logger)
+    : TableEventConsole(logger) {
     addColumns(this, downtimes_holder, comments_holder);
 }
 #endif

@@ -30,8 +30,9 @@
 
 using std::string;
 
-TableCommands::TableCommands(const CommandsHolder &commands_holder)
-    : _commands_holder(commands_holder) {
+TableCommands::TableCommands(const CommandsHolder &commands_holder,
+                             Logger *logger)
+    : Table(logger), _commands_holder(commands_holder) {
     addColumns(this, "", 0);
 }
 

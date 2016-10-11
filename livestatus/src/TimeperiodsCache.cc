@@ -33,11 +33,11 @@
 using std::lock_guard;
 using std::mutex;
 using std::string;
-using std::to_string;
 
 extern timeperiod *timeperiod_list;
 
-TimeperiodsCache::TimeperiodsCache() { _cache_time = 0; }
+TimeperiodsCache::TimeperiodsCache(Logger *logger)
+    : _logger(logger), _cache_time(0) {}
 
 TimeperiodsCache::~TimeperiodsCache() = default;
 
@@ -96,7 +96,7 @@ void TimeperiodsCache::update(time_t now) {
     if (num_periods > 0) {
         _cache_time = minutes;
     } else {
-        Informational()
+        Informational(_logger)
             << "Timeperiod cache not updated, there are no timeperiods (yet)";
     }
 }
@@ -117,8 +117,8 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp) {
     if (it != _cache.end()) {
         is_in = it->second;
     } else {
-        Informational() << "No timeperiod information available for "
-                        << tp->name << ". Assuming out of period.";
+        Informational(_logger) << "No timeperiod information available for "
+                               << tp->name << ". Assuming out of period.";
         is_in = false;
         // Problem: The method check_time_against_period is to a high
         // degree not thread safe. In the current situation Icinga is
@@ -130,7 +130,6 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp) {
 }
 
 void TimeperiodsCache::logTransition(char *name, int from, int to) {
-    extern void writeToAllLogs(const string &message);
-    writeToAllLogs(string("TIMEPERIOD TRANSITION: ") + name + ";" +
-                   to_string(from) + ";" + to_string(to));
+    Informational(_logger) << "TIMEPERIOD TRANSITION: " << name << ";" << from
+                           << ";" << to;
 }

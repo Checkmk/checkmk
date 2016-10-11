@@ -34,6 +34,7 @@
 #include "OutputBuffer.h"
 #include "data_encoding.h"
 class CSVSeparators;
+class Logger;
 
 enum class OutputFormat { csv, broken_csv, json, python, python3 };
 
@@ -53,7 +54,7 @@ public:
         OutputFormat format, OutputBuffer *output,
         OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
         std::string invalid_header_message, const CSVSeparators &separators,
-        int timezone_offset, Encoding data_encoding, int debug_level);
+        int timezone_offset, Encoding data_encoding);
 
     virtual ~Renderer();
 
@@ -106,7 +107,7 @@ public:
 protected:
     Renderer(OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
              bool do_keep_alive, std::string invalid_header_message,
-             int timezone_offset, Encoding data_encoding, int debug_level);
+             int timezone_offset, Encoding data_encoding);
 
     void add(const std::string &str);
     void add(const std::vector<char> &value);
@@ -121,7 +122,7 @@ protected:
 private:
     OutputBuffer *const _output;
     const int _timezone_offset;
-    const int _debug_level;
+    Logger *const _logger;
 
     void outputUTF8(const char *start, const char *end);
     void outputLatin1(const char *start, const char *end);

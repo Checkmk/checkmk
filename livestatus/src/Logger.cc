@@ -24,46 +24,35 @@
 
 #include "Logger.h"
 #include <algorithm>
+#include <cstddef>
 #include <iostream>
+#include <utility>
 #include "ChronoUtils.h"
 
-using std::cout;
+using std::cerr;
+using std::endl;
 using std::lock_guard;
 using std::make_unique;
 using std::mutex;
 using std::ostream;
 using std::ostringstream;
 using std::string;
-using std::unique_ptr;
 
 ostream &operator<<(ostream &os, const LogLevel &c) {
     return os << static_cast<int>(c);
 }
 
-string SimpleFormatter::format(const LogRecord &record) const {
-    ostringstream os;
+void SimpleFormatter::format(ostream &os, const LogRecord &record) {
     os << FormattedTimePoint(record.getTimePoint(), "%F %T ")  //
        << "[" << record.getLevel() << "] " << record.getMessage();
-    return os.str();
-}
-
-Handler::Handler() { setFormatter(make_unique<SimpleFormatter>()); }
-
-Formatter *Handler::getFormatter() {
-    lock_guard<mutex> lg(_mutex);
-    return _formatter.get();
-}
-
-void Handler::setFormatter(unique_ptr<Formatter> formatter) {
-    lock_guard<mutex> lg(_mutex);
-    _formatter = move(formatter);
 }
 
 StreamHandler::StreamHandler(ostream &os) : _os(os) {}
 
 void StreamHandler::publish(const LogRecord &record) {
     lock_guard<mutex> lg(_mutex);
-    _os << getFormatter()->format(record) << std::endl;
+    getFormatter()->format(_os, record);
+    _os << endl;
 }
 
 FileHandler::FileHandler(const std::string &filename) : StreamHandler(_os) {
@@ -73,43 +62,70 @@ FileHandler::FileHandler(const std::string &filename) : StreamHandler(_os) {
     }
 }
 
-Logger::Logger()
-    : _level(LogLevel::debug), _handler(make_unique<StreamHandler>(cout)) {}
-
-LogLevel Logger::getLevel() {
-    lock_guard<mutex> lg(_mutex);
-    return _level;
+Logger::Logger(string name, Logger *parent)
+    : _name(move(name))
+    , _parent(parent)
+    , _level(LogLevel::debug)
+    , _use_parent_handlers(true) {
+    setHandler(make_unique<StreamHandler>(cerr));
 }
 
-#ifdef CMC
-void Logger::setLevel(LogLevel level) {
-    lock_guard<mutex> lg(_mutex);
-    _level = level;
-}
+Logger::~Logger() { delete getHandler(); }
 
-Handler *Logger::getHandler() {
-    lock_guard<mutex> lg(_mutex);
-    return _handler.get();
+// static
+Logger *Logger::getLogger(const string &name) {
+    return LogManager::getLogManager()->getLogger(name);
 }
-#endif
-
-void Logger::setHandler(std::unique_ptr<Handler> handler) {
-    lock_guard<mutex> lg(_mutex);
-    _handler = std::move(handler);
-}
-
-#ifdef CMC
-bool Logger::isLoggable(LogLevel level) { return level <= getLevel(); }
-#endif
 
 void Logger::log(const LogRecord &record) {
-    lock_guard<mutex> lg(_mutex);
-    if (record.getLevel() <= _level && _handler) {
-        _handler->publish(record);
+    if (!isLoggable(record.getLevel())) {
+        return;
+    }
+    for (Logger *logger = this; logger != nullptr;
+         logger = logger->getParent()) {
+        if (Handler *handler = logger->getHandler()) {
+            handler->publish(record);
+        }
+        if (!logger->getUseParentHandlers()) {
+            break;
+        }
     }
 }
 
-Logger Logger::_global_logger;
+Logger *LogManager::getLogger(const string &name) {
+    Logger *current = lookup("", nullptr);
+    for (size_t pos = 0; pos <= name.size();) {
+        size_t dot = name.find('.', pos);
+        if (dot == string::npos) {
+            dot = name.size();
+        }
+        if (dot != pos) {
+            current = lookup(
+                (current->getName().empty() ? "" : (current->getName() + ".")) +
+                    name.substr(pos, dot - pos),
+                current);
+        }
+        pos = dot + 1;
+    }
+    return current;
+}
+
+Logger *LogManager::lookup(const string &name, Logger *parent) {
+    lock_guard<mutex> lg(_mutex);
+    auto it = _known_loggers.find(name);
+    if (it == _known_loggers.end()) {
+        // Just because *we* are a friend of Logger doesn't mean that
+        // make_unique is a friend, too, so we have to use a helper class.
+        struct Helper : public Logger {
+            Helper(const string &name, Logger *parent) : Logger(name, parent) {}
+        };
+        it = _known_loggers.emplace(name, make_unique<Helper>(name, parent))
+                 .first;
+    }
+    return it->second.get();
+}
+
+LogManager LogManager::_global_log_manager;
 
 ostream &operator<<(ostream &os, const generic_error &ge) {
     return os << ge.what();

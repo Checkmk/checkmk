@@ -81,8 +81,9 @@ bool AttributelistFilter::accepts(void *row, contact * /* auth_user */,
             return act_value <= _ref;
         case RelationalOperator::equal_icase:
         case RelationalOperator::not_equal_icase:
-            Informational() << "Sorry. Operator " << _relOp
-                            << " for attribute list columns not implemented.";
+            Informational(_logger)
+                << "Sorry. Operator " << _relOp
+                << " for attribute list columns not implemented.";
             return false;
     }
     return false;  // unreachable

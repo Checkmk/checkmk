@@ -36,7 +36,9 @@ Ethan: please help me here: how should this be code to be
 portable? */
 extern servicegroup *servicegroup_list;
 
-TableServicegroups::TableServicegroups() { addColumns(this, "", -1); }
+TableServicegroups::TableServicegroups(Logger *logger) : Table(logger) {
+    addColumns(this, "", -1);
+}
 
 string TableServicegroups::name() const { return "servicegroups"; }
 

@@ -29,11 +29,12 @@
 #include <string>
 #include "Table.h"
 class CommandsHolder;
+class Logger;
 class Query;
 
 class TableCommands : public Table {
 public:
-    explicit TableCommands(const CommandsHolder &commands_holder);
+    TableCommands(const CommandsHolder &commands_holder, Logger *logger);
 
     std::string name() const override;
     std::string namePrefix() const override;

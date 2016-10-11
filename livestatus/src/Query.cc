@@ -76,10 +76,8 @@ private:
 };
 }  // namespace
 
-Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
-             int debug_level)
+Query::Query(const list<string> &lines, Table *table, Encoding data_encoding)
     : _data_encoding(data_encoding)
-    , _debug_level(debug_level)
     , _response_header(OutputBuffer::ResponseHeader::off)
     , _do_keepalive(false)
     , _table(table)
@@ -94,15 +92,14 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
     , _time_limit(-1)
     , _time_limit_timeout(0)
     , _current_line(0)
-    , _timezone_offset(0) {
+    , _timezone_offset(0)
+    , _logger(table->_logger) {
     for (auto &line : lines) {
         vector<char> line_copy(line.begin(), line.end());
         line_copy.push_back('\0');
         char *buffer = &line_copy[0];
         rstrip(buffer);
-        if (_debug_level >= 1) {
-            Informational() << "Query: " << buffer;
-        }
+        Informational(_logger) << "Query: " << buffer;
         if (strncmp(buffer, "Filter:", 7) == 0) {
             parseFilterLine(lstrip(buffer + 7), _filter);
 
@@ -490,7 +487,7 @@ void Query::parseAuthUserHeader(char *line) {
 }
 
 void Query::parseStatsGroupLine(char *line) {
-    Warning()
+    Warning(_logger)
         << "Warning: StatsGroupBy is deprecated. Please use Columns instead.";
     parseColumnsLine(line);
 }
@@ -501,8 +498,9 @@ void Query::parseColumnsLine(char *line) {
         if (column != nullptr) {
             _columns.push_back(column);
         } else {
-            Warning() << "Replacing non-existing column '"
-                      << string(column_name) << "' with null column";
+            Informational(_logger) << "Replacing non-existing column '"
+                                   << string(column_name)
+                                   << "' with null column";
             // Do not fail any longer. We might want to make this configurable.
             // But not failing has the advantage that an updated GUI, that
             // expects new columns,
@@ -714,19 +712,16 @@ void Query::parseLocaltimeLine(char *line) {
         return;
     }
     _timezone_offset = full * 1800;
-    if (_debug_level >= 2) {
-        Informational() << "Timezone difference is "
-                        << (_timezone_offset / 3600.0) << " hours";
-    }
+    Debug(_logger) << "Timezone difference is " << (_timezone_offset / 3600.0)
+                   << " hours";
 }
 
 bool Query::doStats() { return !_stats_columns.empty(); }
 
 void Query::process(OutputBuffer *output) {
-    auto renderer =
-        Renderer::make(_output_format, output, _response_header, _do_keepalive,
-                       _invalid_header_message, _separators, _timezone_offset,
-                       _data_encoding, _debug_level);
+    auto renderer = Renderer::make(
+        _output_format, output, _response_header, _do_keepalive,
+        _invalid_header_message, _separators, _timezone_offset, _data_encoding);
     doWait();
     QueryRenderer q(*renderer);
     _renderer_query = &q;
@@ -764,8 +759,8 @@ void Query::start(QueryRenderer &q) {
 
 bool Query::timelimitReached() {
     if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
-        Informational() << "Maximum query time of " << _time_limit
-                        << " seconds exceeded!";
+        Informational(_logger) << "Maximum query time of " << _time_limit
+                               << " seconds exceeded!";
         _renderer_query->setError(OutputBuffer::ResponseCode::limit_exceeded,
                                   "Maximum query time of " +
                                       to_string(_time_limit) +
@@ -777,8 +772,8 @@ bool Query::timelimitReached() {
 
 bool Query::processDataset(void *data) {
     if (_renderer_query->size() > g_max_response_size) {
-        Informational() << "Maximum response size of " << g_max_response_size
-                        << " bytes exceeded!";
+        Informational(_logger) << "Maximum response size of "
+                               << g_max_response_size << " bytes exceeded!";
         // currently we only log an error into the log file and do
         // not abort the query. We handle it like Limit:
         return false;
@@ -901,9 +896,7 @@ void Query::doWait() {
     // is already true, we do not need to way
     if (_wait_condition.hasSubFilters() &&
         _wait_condition.accepts(_wait_object, _auth_user, _timezone_offset)) {
-        if (_debug_level >= 2) {
-            Informational() << "Wait condition true, no waiting neccessary";
-        }
+        Debug(_logger) << "Wait condition true, no waiting neccessary";
         return;
     }
 
@@ -915,21 +908,13 @@ void Query::doWait() {
 
     do {
         if (_wait_timeout == 0) {
-            if (_debug_level >= 2) {
-                Informational()
-                    << "Waiting unlimited until condition becomes true";
-            }
+            Debug(_logger) << "Waiting unlimited until condition becomes true";
             trigger_wait(_wait_trigger);
         } else {
-            if (_debug_level >= 2) {
-                Informational() << "Waiting " << _wait_timeout
-                                << "ms or until condition becomes true";
-            }
+            Debug(_logger) << "Waiting " << _wait_timeout
+                           << "ms or until condition becomes true";
             if (trigger_wait_for(_wait_trigger, _wait_timeout) == 0) {
-                if (_debug_level >= 2) {
-                    Informational() << "WaitTimeout after " << _wait_timeout
-                                    << "ms";
-                }
+                Debug(_logger) << "WaitTimeout after " << _wait_timeout << "ms";
                 return;  // timeout occurred. do not wait any longer
             }
         }

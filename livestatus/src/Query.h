@@ -44,13 +44,13 @@
 class Aggregator;
 class Column;
 class Filter;
+class Logger;
 class StatsColumn;
 class Table;
 
 class Query {
 public:
-    Query(const std::list<std::string> &lines, Table *, Encoding data_encoding,
-          int debug_level);
+    Query(const std::list<std::string> &lines, Table *, Encoding data_encoding);
     ~Query();
 
     void process(OutputBuffer *output);
@@ -71,7 +71,6 @@ public:
 
 private:
     const Encoding _data_encoding;
-    const int _debug_level;
     QueryRenderer *_renderer_query;
     OutputBuffer::ResponseHeader _response_header;
     bool _do_keepalive;
@@ -91,6 +90,7 @@ private:
     time_t _time_limit_timeout;
     unsigned _current_line;
     int _timezone_offset;
+    Logger *const _logger;
 
     // normal queries
     typedef std::vector<Column *> _columns_t;

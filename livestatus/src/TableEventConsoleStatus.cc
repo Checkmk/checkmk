@@ -30,7 +30,8 @@ using std::string;
 TableEventConsoleStatus::TableEventConsoleStatus(Core *core)
     : TableEventConsole(core)
 #else
-TableEventConsoleStatus::TableEventConsoleStatus()
+TableEventConsoleStatus::TableEventConsoleStatus(Logger *logger)
+    : TableEventConsole(logger)
 #endif
 {
     addColumn(new IntEventConsoleColumn(

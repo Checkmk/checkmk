@@ -35,6 +35,7 @@
 class Core;
 #else
 class DowntimesOrComments;
+class Logger;
 #endif
 class Query;
 
@@ -46,7 +47,8 @@ public:
                       std::recursive_mutex &holder_lock, Core *core);
 #else
     TableHostsByGroup(const DowntimesOrComments &_downtimes_holder,
-                      const DowntimesOrComments &_comments_holder);
+                      const DowntimesOrComments &_comments_holder,
+                      Logger *logger);
 #endif
 
     std::string name() const override;

@@ -36,6 +36,7 @@ class CommandsHolder;
 class Core;
 #endif
 class Logfile;
+class Logger;
 
 typedef std::map<time_t, Logfile *> _logfiles_t;
 
@@ -43,6 +44,7 @@ class LogCache {
     const CommandsHolder &_commands_holder;
     unsigned long _max_cached_messages;
     unsigned long _num_at_last_check;
+    Logger *const _logger;
     _logfiles_t _logfiles;
 
 public:

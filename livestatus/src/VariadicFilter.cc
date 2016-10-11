@@ -72,9 +72,10 @@ void VariadicFilter::findIntLimits(const string &colum_nname, int *lower,
 
 void VariadicFilter::combineFilters(int count, LogicalOperator andor) {
     if (count > static_cast<int>(_subfilters.size())) {
-        Informational() << "Cannot combine " << count << " filters with '"
-                        << (andor == LogicalOperator::and_ ? "AND" : "OR")
-                        << "': only " << _subfilters.size() << " are on stack";
+        Informational(_logger)
+            << "Cannot combine " << count << " filters with '"
+            << (andor == LogicalOperator::and_ ? "AND" : "OR") << "': only "
+            << _subfilters.size() << " are on stack";
         return;
     }
 

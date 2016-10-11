@@ -29,7 +29,7 @@
 
 using std::string;
 
-TableColumns::TableColumns() {
+TableColumns::TableColumns(Logger *logger) : Table(logger) {
     addColumn(new ColumnsColumn("table", "The name of the table", COLCOL_TABLE,
                                 this));
     addColumn(new ColumnsColumn(

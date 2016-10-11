@@ -53,8 +53,9 @@ bool ListFilter::accepts(void *row, contact * /* auth_user */,
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
             if (!_empty_ref) {
-                Informational() << "Sorry, equality for lists implemented only "
-                                   "for emptyness";
+                Informational(_logger)
+                    << "Sorry, equality for lists implemented only "
+                       "for emptyness";
             }
             return _column->isEmpty(data) ==
                    (_relOp == RelationalOperator::equal);
@@ -70,8 +71,8 @@ bool ListFilter::accepts(void *row, contact * /* auth_user */,
         case RelationalOperator::doesnt_match_icase:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            Informational() << "Sorry. Operator " << _relOp
-                            << " for list columns not implemented.";
+            Informational(_logger) << "Sorry. Operator " << _relOp
+                                   << " for list columns not implemented.";
             return false;
     }
     return false;  // unreachable

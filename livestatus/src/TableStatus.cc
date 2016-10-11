@@ -76,7 +76,7 @@ extern int external_command_buffer_slots;
 // TODO: check if this data is available in nagios_squeue
 #endif  // NAGIOS4
 
-TableStatus::TableStatus() {
+TableStatus::TableStatus(Logger *logger) : Table(logger) {
     addColumn(new GlobalCountersColumn(
         "neb_callbacks", "The number of NEB call backs since program start",
         COUNTER_NEB_CALLBACKS, false));

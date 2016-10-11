@@ -30,13 +30,14 @@
 #include <vector>
 #include "Table.h"
 class Column;
+class Logger;
 class Query;
 
 class TableColumns : public Table {
     std::vector<Table *> _tables;
 
 public:
-    TableColumns();
+    explicit TableColumns(Logger *logger);
 
     std::string name() const override;
     std::string namePrefix() const override;

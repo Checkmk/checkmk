@@ -40,8 +40,9 @@ using std::string;
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
 TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
-                             const DowntimesOrComments &comments_holder)
-    : _holder(comments_holder) {
+                             const DowntimesOrComments &comments_holder,
+                             Logger *logger)
+    : Table(logger), _holder(comments_holder) {
     Comment *ref = nullptr;
     addColumn(new OffsetSStringColumn(
         "author", "The contact that entered the comment",

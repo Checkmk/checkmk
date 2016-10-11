@@ -36,7 +36,9 @@ using std::string;
    portable? */
 extern hostgroup *hostgroup_list;
 
-TableHostgroups::TableHostgroups() { addColumns(this, "", -1); }
+TableHostgroups::TableHostgroups(Logger *logger) : Table(logger) {
+    addColumns(this, "", -1);
+}
 
 string TableHostgroups::name() const { return "hostgroups"; }
 

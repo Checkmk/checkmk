@@ -56,10 +56,11 @@ Logfile::Logfile(const CommandsHolder &commands_holder, string path, bool watch)
 #ifdef CMC
     , _world(nullptr)
 #endif
+    , _logger(Logger::getLogger("cmk.livestatus"))
     , _logclasses_read(0) {
     int fd = open(_path.c_str(), O_RDONLY);
     if (fd < 0) {
-        Informational() << generic_error("cannot open logfile " + _path);
+        Informational(_logger) << generic_error("cannot open logfile " + _path);
         return;
     }
 
@@ -70,8 +71,8 @@ Logfile::Logfile(const CommandsHolder &commands_holder, string path, bool watch)
     }
 
     if (line[0] != '[' || line[11] != ']') {
-        Informational() << "ignoring logfile '" << _path
-                        << "': does not begin with '[123456789] '";
+        Informational(_logger) << "ignoring logfile '" << _path
+                               << "': does not begin with '[123456789] '";
         close(fd);
         return;
     }
@@ -105,7 +106,7 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
     if (_watch) {
         file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
-            Informational() << "cannot open logfile '" << _path << "'";
+            Informational(_logger) << "cannot open logfile '" << _path << "'";
             return;
         }
         // If we read this file for the first time, we initialize
@@ -137,7 +138,8 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
 
         file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
-            Informational() << generic_error("cannot open logfile " + _path);
+            Informational(_logger)
+                << generic_error("cannot open logfile " + _path);
             return;
         }
 
@@ -153,8 +155,9 @@ void Logfile::loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
     vector<char> linebuffer(65536);
     while (fgets(&linebuffer[0], linebuffer.size(), file) != nullptr) {
         if (_lineno >= g_max_lines_per_logfile) {
-            Error() << "more than " << g_max_lines_per_logfile << " lines in "
-                    << this->_path << ", ignoring the rest!";
+            Error(_logger) << "more than " << g_max_lines_per_logfile
+                           << " lines in " << this->_path
+                           << ", ignoring the rest!";
             return;
         }
         _lineno++;
@@ -198,7 +201,7 @@ bool Logfile::processLogLine(uint32_t lineno, const char *linebuffer,
     uint64_t key = makeKey(entry->_time, entry->_lineno);
     if (_entries.find(key) != _entries.end()) {
         // this should never happen. The lineno must be unique!
-        Error() << "strange duplicate logfile line " << entry->_complete;
+        Error(_logger) << "strange duplicate logfile line " << entry->_complete;
         return false;
     }
     _entries.emplace(key, entry.release());
@@ -267,8 +270,8 @@ void Logfile::updateReferences() {
         for (auto &entry : _entries) {
             num += entry.second->updateReferences(_commands_holder);
         }
-        Notice() << "updated " << num << " log cache references of " << _path
-                 << " to new world.";
+        Notice(_logger) << "updated " << num << " log cache references of "
+                        << _path << " to new world.";
         _world = g_live_world;
     }
 #endif
@@ -282,13 +285,14 @@ void Logfile::updateReferences() {
 char *Logfile::readIntoBuffer(size_t *size) {
     int fd = open(_path.c_str(), O_RDONLY);
     if (fd < 0) {
-        Warning() << generic_error("cannot open " + _path + " for reading");
+        Warning(_logger) << generic_error("cannot open " + _path +
+                                          " for reading");
         return nullptr;
     }
 
     off_t o = lseek(fd, 0, SEEK_END);
     if (o == -1) {
-        Warning() << generic_error("cannot seek to end of " + _path);
+        Warning(_logger) << generic_error("cannot seek to end of " + _path);
         close(fd);
         return nullptr;
     }
@@ -299,22 +303,23 @@ char *Logfile::readIntoBuffer(size_t *size) {
     // add space for binary 0 at beginning and end
     char *buffer = static_cast<char *>(malloc(*size + 2));
     if (buffer == nullptr) {
-        Warning() << generic_error("cannot malloc buffer for reading " + _path);
+        Warning(_logger) << generic_error("cannot malloc buffer for reading " +
+                                          _path);
         close(fd);
         return nullptr;
     }
 
     ssize_t r = read(fd, buffer + 1, *size);
     if (r < 0) {
-        Warning() << generic_error("cannot read " + to_string(*size) +
-                                   " bytes from " + _path);
+        Warning(_logger) << generic_error("cannot read " + to_string(*size) +
+                                          " bytes from " + _path);
         free(buffer);
         close(fd);
         return nullptr;
     }
     if (static_cast<size_t>(r) != *size) {
-        Warning() << "read only " << r << " out of " << *size << " bytes from "
-                  << _path;
+        Warning(_logger) << "read only " << r << " out of " << *size
+                         << " bytes from " << _path;
         free(buffer);
         close(fd);
         return nullptr;

@@ -50,6 +50,7 @@ class NegatingFilter;
 class VariadicFilter;
 
 #ifdef CMC
+#include "Core.h"
 #include "Host.h"
 #include "Service.h"
 #include "Timeperiod.h"
@@ -91,15 +92,17 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
 #else
                                      const DowntimesOrComments
                                          &downtimes_holder,
-                                     const DowntimesOrComments &comments_holder
+                                     const DowntimesOrComments &comments_holder,
+                                     Logger *logger
 #endif
                                      )
-    :
 #ifdef CMC
-    _core(core)
-    ,
+    : Table(core->_logger_livestatus)
+    , _core(core)
+#else
+    : Table(logger)
 #endif
-    _log_cache(log_cache) {
+    , _log_cache(log_cache) {
     HostServiceState *ref = nullptr;
     addColumn(new OffsetTimeColumn(
         "time", "Time of the log event (seconds since 1/1/1970)",
@@ -681,7 +684,7 @@ void TableStateHistory::answerQuery(Query *query) {
 
                 if (tp_state == nullptr) {
                     // This line is broken...
-                    Warning()
+                    Warning(_logger)
                         << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
                         << entry->_complete;
                     free(buffer);

@@ -29,6 +29,7 @@
 #include <string>
 #include "opids.h"
 class Filter;
+class Logger;
 class RowRenderer;
 
 #ifdef CMC
@@ -40,12 +41,6 @@ class RowRenderer;
 enum class ColumnType { int_, double_, string, list, time, dict, blob, null };
 
 class Column {
-    std::string _name;
-    std::string _description;
-    int _indirect_offset;
-    int _extra_offset;
-    int _extra_extra_offset;
-
 public:
     Column(std::string name, std::string description, int indirect_offset,
            int extra_offset, int extra_extra_offset = -1);
@@ -71,6 +66,16 @@ public:
         return false;  // true for dynamic Columns to be deleted after Query
     }
     virtual Filter *createFilter(RelationalOperator, const std::string &);
+
+protected:
+    Logger *const _logger;
+
+private:
+    std::string _name;
+    std::string _description;
+    int _indirect_offset;
+    int _extra_offset;
+    int _extra_extra_offset;
 };
 
 #endif  // Column_h

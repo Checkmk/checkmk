@@ -32,7 +32,7 @@ using std::string;
 
 extern timeperiod *timeperiod_list;
 
-TableTimeperiods::TableTimeperiods() {
+TableTimeperiods::TableTimeperiods(Logger *logger) : Table(logger) {
     timeperiod tp;
     char *ref = reinterpret_cast<char *>(&tp);
     addColumn(new OffsetStringColumn("name", "The name of the timeperiod",

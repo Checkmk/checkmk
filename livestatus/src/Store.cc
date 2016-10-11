@@ -38,7 +38,6 @@
 #include "strutil.h"
 
 extern Encoding g_data_encoding;
-extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
 
 using std::chrono::duration_cast;
@@ -49,20 +48,30 @@ using std::lock_guard;
 using std::mutex;
 using std::string;
 
-Store::Store()
+Store::Store(Logger *logger)
     : _log_cache(_commands_holder, g_max_cached_messages)
-    , _table_commands(_commands_holder)
-    , _table_hosts(_downtimes, _comments)
-    , _table_hostsbygroup(_downtimes, _comments)
-    , _table_services(_downtimes, _comments)
-    , _table_servicesbygroup(_downtimes, _comments)
-    , _table_servicesbyhostgroup(_downtimes, _comments)
-    , _table_downtimes(_downtimes, _comments)
-    , _table_comments(_downtimes, _comments)
-    , _table_log(&_log_cache, _downtimes, _comments)
-    , _table_statehistory(&_log_cache, _downtimes, _comments)
-    , _table_eventconsoleevents(_downtimes, _comments)
-    , _table_eventconsolehistory(_downtimes, _comments) {
+    , _table_contacts(logger)
+    , _table_commands(_commands_holder, logger)
+    , _table_hostgroups(logger)
+    , _table_hosts(_downtimes, _comments, logger)
+    , _table_hostsbygroup(_downtimes, _comments, logger)
+    , _table_servicegroups(logger)
+    , _table_services(_downtimes, _comments, logger)
+    , _table_servicesbygroup(_downtimes, _comments, logger)
+    , _table_servicesbyhostgroup(_downtimes, _comments, logger)
+    , _table_timeperiods(logger)
+    , _table_contactgroups(logger)
+    , _table_downtimes(_downtimes, _comments, logger)
+    , _table_comments(_downtimes, _comments, logger)
+    , _table_status(logger)
+    , _table_log(&_log_cache, _downtimes, _comments, logger)
+    , _table_statehistory(&_log_cache, _downtimes, _comments, logger)
+    , _table_columns(logger)
+    , _table_eventconsoleevents(_downtimes, _comments, logger)
+    , _table_eventconsolehistory(_downtimes, _comments, logger)
+    , _table_eventconsolestatus(logger)
+    , _table_eventconsolereplication(logger)
+    , _logger(logger) {
     addTable(&_table_columns);
     addTable(&_table_commands);
     addTable(&_table_comments);
@@ -133,9 +142,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
     }
     string l = input->nextLine();
     const char *line = l.c_str();
-    if (g_debug_level >= 1) {
-        Informational() << "Query: " << line;
-    }
+    Informational(_logger) << "Query: " << line;
     if (strncmp(line, "GET ", 4) == 0) {
         answerGetRequest(getLines(input), output,
                          lstrip(const_cast<char *>(line) + 4));
@@ -146,14 +153,14 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
         answerCommandRequest(lstrip(const_cast<char *>(line) + 8));
         output->setDoKeepalive(true);
     } else if (strncmp(line, "LOGROTATE", 9) == 0) {
-        Informational() << "Forcing logfile rotation";
+        Informational(_logger) << "Forcing logfile rotation";
         rotate_log_file(time(nullptr));
         schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
                            0, 0,
                            reinterpret_cast<void *>(get_next_log_rotation_time),
                            1, nullptr, nullptr, 0);
     } else {
-        Informational() << "Invalid request '" << line << "'";
+        Warning(_logger) << "Invalid request '" << line << "'";
         output->setError(OutputBuffer::ResponseCode::invalid_request,
                          "Invalid request method");
     }
@@ -212,10 +219,9 @@ void Store::answerGetRequest(const list<string> &lines, OutputBuffer *output,
     }
 
     auto start = system_clock::now();
-    Query(lines, table, g_data_encoding, g_debug_level).process(output);
-    if (g_debug_level >= 1) {
-        auto elapsed = duration_cast<microseconds>(system_clock::now() - start);
-        Informational() << "Time to process request: " << elapsed.count()
-                        << "us. Size of answer: " << output->size() << " bytes";
-    }
+    Query(lines, table, g_data_encoding).process(output);
+    auto elapsed = duration_cast<microseconds>(system_clock::now() - start);
+    Informational(_logger) << "Time to process request: " << elapsed.count()
+                           << "us. Size of answer: " << output->size()
+                           << " bytes";
 }

@@ -42,7 +42,8 @@ struct servicebygroup {
 
 TableServicesByGroup::TableServicesByGroup(
     const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder) {
+    const DowntimesOrComments &comments_holder, Logger *logger)
+    : Table(logger) {
     struct servicebygroup sgref;
     TableServices::addColumns(this, "", -1, true, downtimes_holder,
                               comments_holder);

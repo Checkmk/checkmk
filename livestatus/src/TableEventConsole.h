@@ -50,6 +50,7 @@ class Query;
 class Core;
 #else
 #include "nagios.h"
+class Logger;
 #endif
 
 class TableEventConsole : public Table {
@@ -57,7 +58,7 @@ public:
 #ifdef CMC
     explicit TableEventConsole(Core *core);
 #else
-    TableEventConsole();
+    explicit TableEventConsole(Logger *logger);
 #endif
     void answerQuery(Query *) override;
 

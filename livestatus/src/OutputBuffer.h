@@ -29,6 +29,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+class Logger;
 
 class OutputBuffer {
 public:
@@ -45,7 +46,7 @@ public:
 
     enum class ResponseHeader { off, fixed16 };
 
-    OutputBuffer();
+    explicit OutputBuffer(Logger *logger);
     ~OutputBuffer();
 
     void add(const std::string &str);
@@ -71,6 +72,7 @@ private:
     ResponseCode _response_code;
     std::string _error_message;
     bool _do_keepalive;
+    Logger *const _logger;
 
     // We use dynamically allocated memory => disable copy/assignment
     // TODO: Just use vector instead of all this manual fiddling...

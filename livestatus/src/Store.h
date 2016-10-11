@@ -55,13 +55,14 @@
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
 #include "nagios.h"
+class Logger;
 class InputBuffer;
 class OutputBuffer;
 class Table;
 
 class Store {
 public:
-    Store();
+    explicit Store(Logger *logger);
     bool answerRequest(InputBuffer *, OutputBuffer *);
 
     void registerDowntime(nebstruct_downtime_data *);
@@ -93,6 +94,7 @@ private:
     TableEventConsoleHistory _table_eventconsolehistory;
     TableEventConsoleStatus _table_eventconsolestatus;
     TableEventConsoleReplication _table_eventconsolereplication;
+    Logger *const _logger;
 
     std::map<std::string, Table *> _tables;
 

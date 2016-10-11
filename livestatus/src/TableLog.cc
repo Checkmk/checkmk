@@ -41,7 +41,9 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 
-#ifndef CMC
+#ifdef CMC
+#include "Core.h"
+#else
 #include "auth.h"
 #endif
 
@@ -58,15 +60,16 @@ TableLog::TableLog(LogCache *log_cache,
                    std::recursive_mutex &holder_lock, Core *core
 #else
                    const DowntimesOrComments &downtimes_holder,
-                   const DowntimesOrComments &comments_holder
+                   const DowntimesOrComments &comments_holder, Logger *logger
 #endif
                    )
-    :
 #ifdef CMC
-    _core(core)
-    ,
+    : Table(core->_logger_livestatus)
+    , _core(core)
+#else
+    : Table(logger)
 #endif
-    _log_cache(log_cache) {
+    , _log_cache(log_cache) {
     LogEntry *ref = nullptr;
     addColumn(new OffsetTimeColumn("time",
                                    "Time of the log event (UNIX timestamp)",

@@ -48,9 +48,10 @@ ServicelistFilter::ServicelistFilter(ServicelistColumn *column,
     // service_description
     const char *sep = index(value.c_str(), HOSTSERVICE_SEPARATOR);
     if (sep == nullptr) {
-        Informational() << "Invalid reference value for service list "
-                           "membership. Must be 'hostname"
-                        << string(1, HOSTSERVICE_SEPARATOR) << "servicename'";
+        Informational(_logger) << "Invalid reference value for service list "
+                                  "membership. Must be 'hostname"
+                               << string(1, HOSTSERVICE_SEPARATOR)
+                               << "servicename'";
         _ref_host = "";
         _ref_service = "";
     } else {
@@ -99,8 +100,8 @@ bool ServicelistFilter::accepts(void *row, contact * /* auth_user */,
         case RelationalOperator::doesnt_match_icase:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            Informational() << "Sorry. Operator " << _relOp
-                            << " for service lists not implemented.";
+            Informational(_logger) << "Sorry. Operator " << _relOp
+                                   << " for service lists not implemented.";
             return false;
     }
     return false;  // unreachable

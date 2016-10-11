@@ -29,11 +29,12 @@
 #include <string>
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
+class Logger;
 class Query;
 
 class TableServicegroups : public Table {
 public:
-    TableServicegroups();
+    explicit TableServicegroups(Logger *logger);
 
     std::string name() const override;
     std::string namePrefix() const override;

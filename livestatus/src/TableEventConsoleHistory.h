@@ -37,6 +37,7 @@ class Core;
 #else
 #include "nagios.h"
 class DowntimesOrComments;
+class Logger;
 #endif
 
 class TableEventConsoleHistory : public TableEventConsole {
@@ -47,7 +48,8 @@ public:
                              std::recursive_mutex &holder_lock, Core *core);
 #else
     TableEventConsoleHistory(const DowntimesOrComments &downtimes_holder,
-                             const DowntimesOrComments &comments_holder);
+                             const DowntimesOrComments &comments_holder,
+                             Logger *logger);
 #endif
     std::string name() const override;
     std::string namePrefix() const override;

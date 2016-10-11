@@ -40,9 +40,10 @@ string mk_logwatch_path_of_host(const string &host_name) {
 }
 
 void mk_logwatch_acknowledge(const string &host_name, const string &file_name) {
+    Logger *logger = Logger::getLogger("cmk.livestatus");
     if (file_name.find('/') != string::npos) {
-        Warning() << "Invalid character / in mk_logfile filename '" << file_name
-                  << "' of host '" << host_name << "'";
+        Warning(logger) << "Invalid character / in mk_logfile filename '"
+                        << file_name << "' of host '" << host_name << "'";
         return;
     }
 
@@ -54,7 +55,8 @@ void mk_logwatch_acknowledge(const string &host_name, const string &file_name) {
 
     int r = remove(path.c_str());
     if (r != 0) {
-        Warning() << generic_error("Cannot acknowledge mk_logfile file '" +
-                                   file_name + "' of host '" + host_name + "'");
+        Warning(logger) << generic_error(
+            "Cannot acknowledge mk_logfile file '" + file_name + "' of host '" +
+            host_name + "'");
     }
 }

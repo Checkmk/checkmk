@@ -30,9 +30,11 @@
 #include <memory>
 #include "DowntimeOrComment.h"  // IWYU pragma: keep
 #include "nagios.h"
+class Logger;
 
 class DowntimesOrComments {
 public:
+    DowntimesOrComments();
     void registerDowntime(nebstruct_downtime_data *data);
     void registerComment(nebstruct_comment_data *data);
     DowntimeOrComment *findEntry(unsigned long id) const;
@@ -41,6 +43,7 @@ public:
 
 private:
     std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> _entries;
+    Logger *const _logger;
 };
 
 #endif  // DowntimesOrComments_h

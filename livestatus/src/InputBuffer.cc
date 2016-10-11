@@ -59,10 +59,11 @@ bool timeout_reached(const struct timeval *start, int timeout_ms) {
 }
 }  // namespace
 
-InputBuffer::InputBuffer(int fd, const int *termination_flag)
+InputBuffer::InputBuffer(int fd, const int *termination_flag, Logger *logger)
     : _fd(fd)
     , _termination_flag(termination_flag)
-    , _readahead_buffer(initial_buffer_size) {
+    , _readahead_buffer(initial_buffer_size)
+    , _logger(logger) {
     _read_index = 0;   // points to data not yet processed
     _write_index = 0;  // points to end of data in buffer
 }
@@ -105,13 +106,14 @@ InputBuffer::Result InputBuffer::readRequest() {
                     readData();  // tries to read in further data into buffer
                 if (rd == Result::timeout) {
                     if (query_started) {
-                        Informational() << "Timeout of " << g_query_timeout_msec
-                                        << " ms exceeded while reading query";
+                        Informational(_logger)
+                            << "Timeout of " << g_query_timeout_msec
+                            << " ms exceeded while reading query";
                         return Result::timeout;
                     }
                     // Check if we exceeded the maximum time between two queries
                     if (timeout_reached(&start_of_idle, g_idle_timeout_msec)) {
-                        Informational()
+                        Informational(_logger)
                             << "Idle timeout of " << g_idle_timeout_msec
                             << " ms exceeded. Going to close connection.";
                         return Result::timeout;
@@ -168,7 +170,7 @@ InputBuffer::Result InputBuffer::readRequest() {
             else {
                 size_t new_capacity = _readahead_buffer.capacity() * 2;
                 if (new_capacity > maximum_buffer_size) {
-                    Informational()
+                    Informational(_logger)
                         << "Error: maximum length of request line exceeded";
                     return Result::line_too_long;
                 }
@@ -194,7 +196,7 @@ InputBuffer::Result InputBuffer::readRequest() {
                 _request_lines.emplace_back(&_readahead_buffer[_read_index],
                                             length);
             } else {
-                Informational()
+                Informational(_logger)
                     << "Warning ignoring line containing only whitespace";
             }
             query_started = true;

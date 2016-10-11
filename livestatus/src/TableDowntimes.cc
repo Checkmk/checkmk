@@ -40,8 +40,9 @@ using std::string;
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
 TableDowntimes::TableDowntimes(const DowntimesOrComments &downtimes_holder,
-                               const DowntimesOrComments &comments_holder)
-    : _holder(downtimes_holder) {
+                               const DowntimesOrComments &comments_holder,
+                               Logger *logger)
+    : Table(logger), _holder(downtimes_holder) {
     Downtime *ref = nullptr;
     addColumn(new OffsetSStringColumn(
         "author", "The contact that scheduled the downtime",

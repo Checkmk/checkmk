@@ -53,7 +53,9 @@ extern service *service_list;
 using std::string;
 
 TableServices::TableServices(const DowntimesOrComments &downtimes_holder,
-                             const DowntimesOrComments &comments_holder) {
+                             const DowntimesOrComments &comments_holder,
+                             Logger *logger)
+    : Table(logger) {
     addColumns(this, "", -1, true, downtimes_holder, comments_holder);
 }
 

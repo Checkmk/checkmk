@@ -24,35 +24,42 @@
 
 // IWYU pragma: no_include <type_traits>
 #include "StringUtils.h"
+#ifdef CMC
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#endif
 #include <cctype>
 #include <sstream>
 
+using std::pair;
 using std::string;
+using std::transform;
+using std::vector;
 
 namespace mk {
 
 string unsafe_tolower(const string &str) {
     string result = str;
-    std::transform(str.begin(), str.end(), result.begin(), ::tolower);
+    transform(str.begin(), str.end(), result.begin(), ::tolower);
     return result;
 }
 
 #ifdef CMC
 string unsafe_toupper(const string &str) {
     string result = str;
-    std::transform(str.begin(), str.end(), result.begin(), ::toupper);
+    transform(str.begin(), str.end(), result.begin(), ::toupper);
     return result;
 }
 #endif
 
-bool starts_with(const std::string &input, const std::string &test) {
+bool starts_with(const string &input, const string &test) {
     return input.size() >= test.size() &&
            std::equal(test.begin(), test.end(), input.begin());
 }
 
-std::vector<string> split(const string &str, char delimiter) {
+vector<string> split(const string &str, char delimiter) {
     std::istringstream iss(str);
-    std::vector<string> result;
+    vector<string> result;
     string field;
     while (std::getline(iss, field, delimiter)) {
         result.push_back(field);
@@ -74,11 +81,21 @@ string strip(const string &str, const string &chars) {
     return rstrip(lstrip(str, chars), chars);
 }
 
-std::pair<string, string> nextField(const string &str, const string &chars) {
+pair<string, string> nextField(const string &str, const string &chars) {
     auto s = lstrip(str, chars);
     auto pos = s.find_first_of(chars);
     return pos == string::npos ? make_pair(s, "")
                                : make_pair(s.substr(0, pos), s.substr(pos + 1));
 }
 
+#ifdef CMC
+string ipv4ToString(in_addr_t ipv4_address) {
+    char addr_buf[INET_ADDRSTRLEN];
+    struct in_addr ia = {ipv4_address};
+    inet_ntop(AF_INET, &ia, addr_buf, sizeof(addr_buf));
+    return addr_buf;
+}
+
+string portToString(in_port_t port) { return std::to_string(ntohs(port)); }
+#endif
 }  // namespace mk

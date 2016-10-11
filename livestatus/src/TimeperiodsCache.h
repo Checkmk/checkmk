@@ -30,15 +30,11 @@
 #include <map>
 #include <mutex>
 #include "nagios.h"
+class Logger;
 
 class TimeperiodsCache {
-    time_t _cache_time;
-    typedef std::map<timeperiod *, bool> _cache_t;
-    _cache_t _cache;
-    std::mutex _cache_lock;
-
 public:
-    TimeperiodsCache();
+    explicit TimeperiodsCache(Logger *logger);
     ~TimeperiodsCache();
     void update(time_t now);
     bool inTimeperiod(timeperiod *tp);
@@ -46,6 +42,11 @@ public:
     void logCurrentTimeperiods();
 
 private:
+    Logger *const _logger;
+    time_t _cache_time;
+    std::map<timeperiod *, bool> _cache;
+    std::mutex _cache_lock;
+
     void logTransition(char *name, int from, int to);
 };
 

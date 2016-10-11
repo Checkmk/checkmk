@@ -81,8 +81,8 @@ bool HostlistFilter::accepts(void *row, contact * /* auth_user */,
         case RelationalOperator::doesnt_match_icase:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            Informational() << "Sorry. Operator " << _relOp
-                            << " for host lists not implemented.";
+            Informational(_logger) << "Sorry. Operator " << _relOp
+                                   << " for host lists not implemented.";
             return false;
     }
     return false;  // unreachable

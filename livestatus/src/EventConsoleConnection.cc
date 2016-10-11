@@ -27,6 +27,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <cstring>
+#include <functional>
 #include <sstream>
 #include <utility>
 #include "Logger.h"
@@ -37,13 +38,17 @@ using std::ostringstream;
 using std::string;
 
 EventConsoleConnection::EventConsoleConnection(string path)
-    : _path(move(path)), _socket(-1) {}
+    : _path(move(path))
+    , _socket(-1)
+    , _logger(Logger::getLogger("cmk.livestatus"), [this](ostream &os) {
+        os << "[mkeventd at " << getPath() << "] ";
+    }) {}
 
 void EventConsoleConnection::run() {
     _socket = socket(PF_UNIX, SOCK_STREAM, 0);
     if (_socket == -1) {
         generic_error ge("cannot create socket");
-        Alert() << *this << ": " << ge;
+        Alert(_logger) << ge;
         return;
     }
 
@@ -53,21 +58,21 @@ void EventConsoleConnection::run() {
     if (connect(_socket, reinterpret_cast<const struct sockaddr *>(&sa),
                 sizeof(sockaddr_un)) == -1) {
         generic_error ge("cannot connect");
-        Alert() << *this << ": " << ge;
+        Alert(_logger) << ge;
         close(_socket);
         return;
     }
-    Notice() << *this << ": successfully connected";
+    Informational(_logger) << "successfully connected";
 
     if (!writeRequest()) {
         generic_error ge("cannot write");
-        Alert() << *this << ": " << ge;
+        Alert(_logger) << ge;
     } else if (!receiveReply()) {
         generic_error ge("cannot read");
-        Alert() << *this << ": " << ge;
+        Alert(_logger) << ge;
     }
 
-    Notice() << *this << ": closing connection";
+    Informational(_logger) << "closing connection";
     close(_socket);
 }
 
@@ -112,8 +117,4 @@ bool EventConsoleConnection::writeRequest() {
     }
 
     return shutdown(_socket, SHUT_WR) == 0;
-}
-
-ostream &operator<<(ostream &os, const EventConsoleConnection &ecc) {
-    return os << "mkeventd at " << ecc.getPath();
 }

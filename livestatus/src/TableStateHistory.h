@@ -39,6 +39,7 @@ class Column;
 class Core;
 #else
 class DowntimesOrComments;
+class Logger;
 #endif
 class Query;
 class HostServiceState;
@@ -77,7 +78,8 @@ public:
 #else
     TableStateHistory(LogCache *log_cache,
                       const DowntimesOrComments &downtimes_holder,
-                      const DowntimesOrComments &comments_holder);
+                      const DowntimesOrComments &comments_holder,
+                      Logger *logger);
 #endif
 
     std::string name() const override;

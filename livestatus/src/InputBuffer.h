@@ -30,6 +30,7 @@
 #include <list>
 #include <string>
 #include <vector>
+class Logger;
 
 class InputBuffer {
 public:
@@ -44,7 +45,7 @@ public:
         timeout
     };
 
-    InputBuffer(int fd, const int *termination_flag);
+    InputBuffer(int fd, const int *termination_flag, Logger *logger);
     Result readRequest();
     bool empty() const;
     std::string nextLine();
@@ -56,6 +57,7 @@ private:
     size_t _read_index;
     size_t _write_index;
     std::list<std::string> _request_lines;
+    Logger *const _logger;
 
     Result readData();
 };

@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <cstdint>
 #include <string>
+class Logger;
 class FilterVisitor;
 
 #ifdef CMC
@@ -38,6 +39,7 @@ class FilterVisitor;
 
 class Filter {
 public:
+    Filter();
     virtual ~Filter();
     virtual void accept(FilterVisitor &) = 0;
 
@@ -49,6 +51,9 @@ public:
                                int *upper, int timezone_offset) const;
     virtual bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
                                  int timezone_offset) const;
+
+protected:
+    Logger *const _logger;
 };
 
 #endif  // Filter_h

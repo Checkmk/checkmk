@@ -43,7 +43,8 @@ struct hostbygroup {
 
 TableHostsByGroup::TableHostsByGroup(
     const DowntimesOrComments &_downtimes_holder,
-    const DowntimesOrComments &_comments_holder) {
+    const DowntimesOrComments &_comments_holder, Logger *logger)
+    : Table(logger) {
     struct hostbygroup ref;
     TableHosts::addColumns(this, "", -1, -1, _downtimes_holder,
                            _comments_holder);

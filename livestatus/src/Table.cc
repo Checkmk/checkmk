@@ -32,7 +32,7 @@
 using mk::starts_with;
 using std::string;
 
-Table::Table() {}
+Table::Table(Logger *logger) : _logger(logger) {}
 
 Table::~Table() {
     for (auto &column : _columns) {
@@ -89,19 +89,21 @@ Column *Table::column(string colname) {
 Column *Table::dynamicColumn(const string &name, const string &rest) {
     auto it = _dynamic_columns.find(name);
     if (it == _dynamic_columns.end()) {
-        Warning() << "Unknown dynamic column '" << name << "'";
+        Warning(_logger) << "Unknown dynamic column '" << name << "'";
         return nullptr;
     }
 
     auto sep_pos = rest.find(':');
     if (sep_pos == string::npos) {
-        Warning() << "Missing separator in dynamic column '" << name << "'";
+        Warning(_logger) << "Missing separator in dynamic column '" << name
+                         << "'";
         return nullptr;
     }
 
     string name2 = rest.substr(0, sep_pos);
     if (name2.empty()) {
-        Warning() << "Empty column name for dynamic column '" << name << "'";
+        Warning(_logger) << "Empty column name for dynamic column '" << name
+                         << "'";
         return nullptr;
     }
 

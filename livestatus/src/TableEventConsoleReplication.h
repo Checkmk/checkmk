@@ -30,6 +30,8 @@
 #include "Table.h"
 #ifdef CMC
 class Core;
+#else
+class Logger;
 #endif
 class Query;
 
@@ -38,7 +40,7 @@ public:
 #ifdef CMC
     explicit TableEventConsoleReplication(Core *core);
 #else
-    TableEventConsoleReplication();
+    explicit TableEventConsoleReplication(Logger *logger);
 #endif
     std::string name() const override;
     std::string namePrefix() const override;

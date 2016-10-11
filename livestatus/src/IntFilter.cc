@@ -69,8 +69,8 @@ bool IntFilter::accepts(void *row, contact *auth_user, int timezone_offset) {
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Informational() << "Sorry. Operator " << _relOp
-                            << " for integer columns not implemented.";
+            Informational(_logger) << "Sorry. Operator " << _relOp
+                                   << " for integer columns not implemented.";
             return false;
     }
     return false;  // unreachable
@@ -132,8 +132,8 @@ void IntFilter::findIntLimits(const string &column_name, int *lower, int *upper,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Emergency() << "Invalid relational operator " << _relOp
-                        << " in IntFilter::findIntLimits";
+            Emergency(_logger) << "Invalid relational operator " << _relOp
+                               << " in IntFilter::findIntLimits";
             return;
     }
 }
@@ -191,8 +191,8 @@ bool IntFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Emergency() << "Invalid relational operator " << _relOp
-                        << " in IntFilter::optimizeBitmask";
+            Emergency(_logger) << "Invalid relational operator " << _relOp
+                               << " in IntFilter::optimizeBitmask";
             return false;
     }
     return false;  // unreachable

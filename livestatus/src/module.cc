@@ -25,6 +25,7 @@
 // Needed for strdup and S_ISSOCK
 #define _XOPEN_SOURCE 500
 
+// IWYU pragma: no_include <ext/alloc_traits.h>
 #include "config.h"
 #include <fcntl.h>
 #include <pthread.h>
@@ -44,6 +45,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 #include "ChronoUtils.h"
 #include "ClientQueue.h"
 #include "InputBuffer.h"
@@ -62,10 +64,12 @@
 
 using mk::unsafe_tolower;
 using std::make_unique;
+using std::ostream;
 using std::ostringstream;
 using std::string;
-using std::unique_ptr;
+using std::to_string;
 using std::unordered_map;
+using std::vector;
 
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 #ifndef NAGIOS4
@@ -80,7 +84,8 @@ int g_idle_timeout_msec =
     300 * 1000; /* maximum idle time for connection in keep alive state */
 int g_query_timeout_msec = 10 * 1000; /* maximum time for reading a query */
 
-int g_num_clientthreads = 10; /* allow 10 concurrent connections per default */
+size_t g_num_clientthreads =
+    10; /* allow 10 concurrent connections per default */
 int g_num_queued_connections =
     0; /* current number of queued connections (for statistics) */
 int g_num_active_connections =
@@ -101,16 +106,20 @@ char g_mk_inventory_path[4096];  // base path of Check_MK inventory files
 char g_mk_logwatch_path[4096];   // base path of Check_MK logwatch files
 static char fl_logfile_path[4096];
 char g_mkeventd_socket_path[4096];
-int g_debug_level = 0;
 int g_should_terminate = false;
-pthread_t g_mainthread_id;
-pthread_t *g_clientthread_id;
+
+struct ThreadInfo {
+    pthread_t id;
+    string name;
+};
+
+static vector<ThreadInfo> fl_thread_info;
+static thread_local ThreadInfo *tl_info;
 unsigned long g_max_cached_messages = 500000;
 unsigned long g_max_lines_per_logfile =
     1000000;  // do never read more than that number of lines from a logfile
 unsigned long g_max_response_size = 100 * 1024 * 1024;  // limit answer to 10 MB
 int g_thread_running = 0;
-int g_thread_pid = 0;
 int g_service_authorization = AUTH_LOOSE;
 int g_group_authorization = AUTH_STRICT;
 Encoding g_data_encoding = Encoding::utf8;
@@ -118,6 +127,9 @@ Encoding g_data_encoding = Encoding::utf8;
 // Map to speed up access via name/alias/address
 unordered_map<string, host *> fl_hosts_by_designation;
 
+static Logger *fl_logger_nagios = nullptr;
+static Logger *fl_logger_livestatus = nullptr;
+static LogLevel fl_livestatus_log_level = LogLevel::notice;
 static Store *fl_store = nullptr;
 static ClientQueue *fl_client_queue = nullptr;
 TimeperiodsCache *g_timeperiods_cache = nullptr;
@@ -143,11 +155,6 @@ void count_services() {
     for (service *s = service_list; s != nullptr; s = s->next) {
         g_num_services++;
     }
-}
-
-void writeToAllLogs(const string &message) {
-    // TODO(sp) The Nagios headers are (once again) not const-correct...
-    write_to_all_logs(const_cast<char *>(message.c_str()), NSLOG_INFO_MESSAGE);
 }
 
 host *getHostByDesignation(const char *designation) {
@@ -186,20 +193,10 @@ void livestatus_cleanup_after_fork() {
     }
 }
 
-bool runningInLivestatusMainThread() {
-    return g_mainthread_id == pthread_self();
-}
-
-void *main_thread(void *data __attribute__((__unused__))) {
-    g_mainthread_id = pthread_self();
-    g_thread_pid = getpid();
+void *main_thread(void *data) {
+    tl_info = static_cast<ThreadInfo *>(data);
     while (g_should_terminate == 0) {
         do_statistics();
-        if (g_thread_pid != getpid()) {
-            Informational() << "I'm not the main process but " << getpid()
-                            << "!";
-            // return;
-        }
         struct timeval tv;
         tv.tv_sec = 2;
         tv.tv_usec = 500 * 1000;
@@ -214,7 +211,7 @@ void *main_thread(void *data __attribute__((__unused__))) {
                 g_max_fd_ever = cc;
             }
             if (fcntl(cc, F_SETFD, FD_CLOEXEC) < 0) {
-                Informational() << generic_error(
+                Warning(fl_logger_livestatus) << generic_error(
                     "cannot set close-on-exec bit on client socket");
             }
             fl_client_queue->addConnection(cc);  // closes fd
@@ -222,27 +219,29 @@ void *main_thread(void *data __attribute__((__unused__))) {
             g_counters[COUNTER_CONNECTIONS]++;
         }
     }
-    Informational() << "socket thread has terminated";
+    Notice(fl_logger_livestatus) << "socket thread has terminated";
     return voidp;
 }
 
-void *client_thread(void *data __attribute__((__unused__))) {
-    OutputBuffer output_buffer;
+void *client_thread(void *data) {
+    tl_info = static_cast<ThreadInfo *>(data);
+    OutputBuffer output_buffer(fl_logger_livestatus);
     while (g_should_terminate == 0) {
         int cc = fl_client_queue->popConnection();
         g_num_queued_connections--;
         g_num_active_connections++;
         if (cc >= 0) {
-            if (g_debug_level >= 2) {
-                Informational() << "accepted client connection on fd " << cc;
-            }
-            InputBuffer input_buffer(cc, &g_should_terminate);
+            Debug(fl_logger_livestatus) << "accepted client connection on fd "
+                                        << cc;
+            InputBuffer input_buffer(cc, &g_should_terminate,
+                                     fl_logger_livestatus);
             bool keepalive = true;
             unsigned requestnr = 1;
             while (keepalive) {
-                if (g_debug_level >= 2 && requestnr > 1) {
-                    Informational() << "handling request " << requestnr
-                                    << " on same connection";
+                if (requestnr > 1) {
+                    Debug(fl_logger_livestatus) << "handling request "
+                                                << requestnr
+                                                << " on same connection";
                 }
                 keepalive =
                     fl_store->answerRequest(&input_buffer, &output_buffer);
@@ -264,13 +263,17 @@ public:
 
 private:
     class NagiosFormatter : public Formatter {
-        string format(const LogRecord &record) const override {
-            return "livestatus: " + record.getMessage();
+        void format(ostream &os, const LogRecord &record) override {
+            os << "livestatus: " << record.getMessage();
         }
     };
 
     void publish(const LogRecord &record) override {
-        writeToAllLogs(getFormatter()->format(record));
+        ostringstream os;
+        getFormatter()->format(os, record);
+        // TODO(sp) The Nagios headers are (once again) not const-correct...
+        write_to_all_logs(const_cast<char *>(os.str().c_str()),
+                          NSLOG_INFO_MESSAGE);
     }
 };
 
@@ -282,33 +285,12 @@ public:
 
 private:
     class LivestatusFormatter : public Formatter {
-        string format(const LogRecord &record) const override {
-            ostringstream os;
-            os << FormattedTimePoint(record.getTimePoint(), "%F %T ")
-               << record.getMessage();
-            return os.str();
+        void format(ostream &os, const LogRecord &record) override {
+            os << FormattedTimePoint(record.getTimePoint(), "%F %T [")
+               << tl_info->name << "] " << record.getMessage();
         }
     } _formatter;
 };
-
-class SwitchHandler : public Handler {
-public:
-    explicit SwitchHandler(const string &filename)
-        : _livestatus_handler(make_unique<LivestatusHandler>(filename)) {}
-
-private:
-    unique_ptr<Handler> _main_thread_handler{make_unique<NagiosHandler>()};
-    unique_ptr<Handler> _livestatus_handler;
-
-    void publish(const LogRecord &record) override {
-        if (runningInLivestatusMainThread()) {
-            _main_thread_handler->publish(record);
-        } else {
-            _livestatus_handler->publish(record);
-        }
-    }
-};
-
 }  // namespace
 
 void start_threads() {
@@ -316,46 +298,47 @@ void start_threads() {
     count_services();
 
     if (g_thread_running == 0) {
-        /* start thread that listens on socket */
+        fl_logger_livestatus->setLevel(fl_livestatus_log_level);
+        fl_logger_livestatus->setUseParentHandlers(false);
+        try {
+            fl_logger_livestatus->setHandler(
+                make_unique<LivestatusHandler>(fl_logfile_path));
+        } catch (const generic_error &ex) {
+            Warning(fl_logger_nagios) << ex;
+        }
+
+        Informational(fl_logger_nagios) << "starting main thread and "
+                                        << g_num_clientthreads
+                                        << " client threads";
+
         pthread_atfork(livestatus_count_fork, nullptr,
                        livestatus_cleanup_after_fork);
-        pthread_create(&g_mainthread_id, nullptr, main_thread, nullptr);
 
-        Logger::getLogger()->setHandler(make_unique<NagiosHandler>());
-        try {
-            Logger::getLogger()->setHandler(
-                make_unique<SwitchHandler>(fl_logfile_path));
-        } catch (const generic_error &ex) {
-            Warning() << ex;
-        }
-
-        if (g_debug_level >= 1) {
-            Informational() << "starting " << g_num_clientthreads
-                            << " client threads";
-        }
-
-        int t;
-        g_clientthread_id = reinterpret_cast<pthread_t *>(
-            malloc(sizeof(pthread_t) * g_num_clientthreads));
         pthread_attr_t attr;
         pthread_attr_init(&attr);
         size_t defsize;
-        if (g_debug_level >= 2 &&
-            0 == pthread_attr_getstacksize(&attr, &defsize)) {
-            Informational() << "default stack size is " << defsize;
+        if (pthread_attr_getstacksize(&attr, &defsize) == 0) {
+            Debug(fl_logger_nagios) << "default stack size is " << defsize;
         }
-        if (0 != pthread_attr_setstacksize(&attr, g_thread_stack_size)) {
-            Informational() << "cannot set thread stack size to "
-                            << g_thread_stack_size;
+        if (pthread_attr_setstacksize(&attr, g_thread_stack_size) != 0) {
+            Warning(fl_logger_nagios) << "cannot set thread stack size to "
+                                      << g_thread_stack_size;
         } else {
-            if (g_debug_level >= 2) {
-                Informational() << "setting thread stack size to "
-                                << g_thread_stack_size;
-            }
+            Debug(fl_logger_nagios) << "setting thread stack size to "
+                                    << g_thread_stack_size;
         }
-        for (t = 0; t < g_num_clientthreads; t++) {
-            pthread_create(&g_clientthread_id[t], &attr, client_thread,
-                           nullptr);
+
+        fl_thread_info.resize(g_num_clientthreads + 1);
+        for (auto &info : fl_thread_info) {
+            ptrdiff_t idx = &info - &fl_thread_info[0];
+            if (idx == 0) {
+                // start thread that listens on socket
+                info.name = "main";
+                pthread_create(&info.id, nullptr, main_thread, &info);
+            } else {
+                info.name = "client " + to_string(idx);
+                pthread_create(&info.id, &attr, client_thread, &info);
+            }
         }
 
         g_thread_running = 1;
@@ -366,34 +349,34 @@ void start_threads() {
 void terminate_threads() {
     if (g_thread_running != 0) {
         g_should_terminate = true;
-        Informational() << "waiting for main to terminate...";
-        pthread_join(g_mainthread_id, nullptr);
-        Informational() << "waiting for client threads to terminate...";
+        Informational(fl_logger_nagios) << "waiting for main to terminate...";
+        pthread_join(fl_thread_info[0].id, nullptr);
+        Informational(fl_logger_nagios)
+            << "waiting for client threads to terminate...";
         fl_client_queue->terminate();
-        int t;
-        for (t = 0; t < g_num_clientthreads; t++) {
-            if (0 != pthread_join(g_clientthread_id[t], nullptr)) {
-                Informational() << "could not join thread no. " << t;
+        for (const auto &info : fl_thread_info) {
+            if (pthread_join(info.id, nullptr) != 0) {
+                Warning(fl_logger_nagios) << "could not join thread "
+                                          << info.name;
             }
         }
-        if (g_debug_level >= 1) {
-            Informational() << "main thread + " << g_num_clientthreads
-                            << " client threads have finished";
-        }
+        Informational(fl_logger_nagios) << "main thread + "
+                                        << g_num_clientthreads
+                                        << " client threads have finished";
         g_thread_running = 0;
         g_should_terminate = false;
     }
-    free(g_clientthread_id);
 }
 
 int open_unix_socket() {
     struct stat st;
-    if (0 == stat(g_socket_path, &st)) {
-        if (0 == unlink(g_socket_path)) {
-            Debug() << "removed old socket file " << g_socket_path;
+    if (stat(g_socket_path, &st) == 0) {
+        if (unlink(g_socket_path) == 0) {
+            Debug(fl_logger_nagios) << "removed old socket file "
+                                    << g_socket_path;
         } else {
-            Alert() << generic_error("cannot remove old socket file " +
-                                     string(g_socket_path));
+            Alert(fl_logger_nagios) << generic_error(
+                "cannot remove old socket file " + string(g_socket_path));
             return false;
         }
     }
@@ -401,14 +384,15 @@ int open_unix_socket() {
     g_unix_socket = socket(PF_UNIX, SOCK_STREAM, 0);
     g_max_fd_ever = g_unix_socket;
     if (g_unix_socket < 0) {
-        Critical() << generic_error("cannot create UNIX socket");
+        Critical(fl_logger_nagios)
+            << generic_error("cannot create UNIX socket");
         return false;
     }
 
     // Imortant: close on exec -> check plugins must not inherit it!
     if (fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) < 0) {
-        Informational() << generic_error(
-            "cannot set close-on-exec bit on socket");
+        Informational(fl_logger_nagios)
+            << generic_error("cannot set close-on-exec bit on socket");
     }
 
     // Bind it to its address. This creates the file with the name g_socket_path
@@ -417,8 +401,8 @@ int open_unix_socket() {
     strncpy(sockaddr.sun_path, g_socket_path, sizeof(sockaddr.sun_path));
     if (bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
              sizeof(sockaddr)) < 0) {
-        Error() << generic_error("cannot bind UNIX socket to adress " +
-                                 string(g_socket_path));
+        Error(fl_logger_nagios) << generic_error(
+            "cannot bind UNIX socket to adress " + string(g_socket_path));
         close(g_unix_socket);
         return false;
     }
@@ -426,7 +410,7 @@ int open_unix_socket() {
     // Make writable group members (fchmod didn't do nothing for me. Don't know
     // why!)
     if (0 != chmod(g_socket_path, 0660)) {
-        Error() << generic_error(
+        Error(fl_logger_nagios) << generic_error(
             "cannot change file permissions for UNIX socket at " +
             string(g_socket_path) + " to 0660");
         close(g_unix_socket);
@@ -434,15 +418,14 @@ int open_unix_socket() {
     }
 
     if (0 != listen(g_unix_socket, 3 /* backlog */)) {
-        Error() << generic_error("cannot listen to UNIX socket at " +
-                                 string(g_socket_path));
+        Error(fl_logger_nagios) << generic_error(
+            "cannot listen to UNIX socket at " + string(g_socket_path));
         close(g_unix_socket);
         return false;
     }
 
-    if (g_debug_level >= 1) {
-        Informational() << "opened UNIX socket at " << g_socket_path;
-    }
+    Informational(fl_logger_nagios) << "opened UNIX socket at "
+                                    << g_socket_path;
     return true;
 }
 
@@ -557,17 +540,18 @@ void livestatus_log_initial_states() {
     // Log DOWNTIME hosts
     for (host *h = host_list; h != nullptr; h = h->next) {
         if (h->scheduled_downtime_depth > 0) {
-            writeToAllLogs(string("HOST DOWNTIME ALERT: ") + h->name +
-                           ";STARTED;" +
-                           get_downtime_comment(h->name, nullptr));
+            Informational(fl_logger_nagios)
+                << "HOST DOWNTIME ALERT: " << h->name << ";STARTED;"
+                << get_downtime_comment(h->name, nullptr);
         }
     }
     // Log DOWNTIME services
     for (service *s = service_list; s != nullptr; s = s->next) {
         if (s->scheduled_downtime_depth > 0) {
-            writeToAllLogs(string("SERVICE DOWNTIME ALERT: ") + s->host_name +
-                           ";" + s->description + ";STARTED;" +
-                           get_downtime_comment(s->host_name, s->description));
+            Informational(fl_logger_nagios)
+                << "SERVICE DOWNTIME ALERT: " << s->host_name << ";"
+                << s->description << ";STARTED;"
+                << get_downtime_comment(s->host_name, s->description);
         }
     }
     // Log TIMERPERIODS
@@ -583,7 +567,7 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
             livestatus_log_initial_states();
         } else if (log_initial_states == 1) {
             // initial info during startup
-            writeToAllLogs("logging initial states");
+            Informational(fl_logger_nagios) << "logging initial states";
         }
     }
     g_timeperiods_cache->update(ts->timestamp.tv_sec);
@@ -604,9 +588,9 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
                 }
                 fl_hosts_by_designation[unsafe_tolower(hst->name)] = hst;
             }
-            fl_store = new Store();
+            fl_store = new Store(fl_logger_livestatus);
             fl_client_queue = new ClientQueue();
-            g_timeperiods_cache = new TimeperiodsCache();
+            g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
             g_timeperiods_cache->update(time(nullptr));
@@ -621,60 +605,69 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
 int verify_event_broker_options() {
     int errors = 0;
     if ((event_broker_options & BROKER_PROGRAM_STATE) == 0) {
-        Critical() << "need BROKER_PROGRAM_STATE (" << BROKER_PROGRAM_STATE
-                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios) << "need BROKER_PROGRAM_STATE ("
+                                   << BROKER_PROGRAM_STATE
+                                   << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_TIMED_EVENTS) == 0) {
-        Critical() << "need BROKER_TIMED_EVENTS (" << BROKER_TIMED_EVENTS
-                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios) << "need BROKER_TIMED_EVENTS ("
+                                   << BROKER_TIMED_EVENTS
+                                   << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_SERVICE_CHECKS) == 0) {
-        Critical() << "need BROKER_SERVICE_CHECKS (" << BROKER_SERVICE_CHECKS
-                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios) << "need BROKER_SERVICE_CHECKS ("
+                                   << BROKER_SERVICE_CHECKS
+                                   << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_HOST_CHECKS) == 0) {
-        Critical() << "need BROKER_HOST_CHECKS (" << BROKER_HOST_CHECKS
-                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios) << "need BROKER_HOST_CHECKS ("
+                                   << BROKER_HOST_CHECKS
+                                   << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_LOGGED_DATA) == 0) {
-        Critical() << "need BROKER_LOGGED_DATA (" << BROKER_LOGGED_DATA
-                   << ") event_broker_option enabled to work.",
+        Critical(fl_logger_nagios) << "need BROKER_LOGGED_DATA ("
+                                   << BROKER_LOGGED_DATA
+                                   << ") event_broker_option enabled to work.",
             errors++;
     }
     if ((event_broker_options & BROKER_COMMENT_DATA) == 0) {
-        Critical() << "need BROKER_COMMENT_DATA (" << BROKER_COMMENT_DATA
-                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios) << "need BROKER_COMMENT_DATA ("
+                                   << BROKER_COMMENT_DATA
+                                   << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_DOWNTIME_DATA) == 0) {
-        Critical() << "need BROKER_DOWNTIME_DATA (" << BROKER_DOWNTIME_DATA
-                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios) << "need BROKER_DOWNTIME_DATA ("
+                                   << BROKER_DOWNTIME_DATA
+                                   << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_STATUS_DATA) == 0) {
-        Critical() << "need BROKER_STATUS_DATA (" << BROKER_STATUS_DATA
-                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios) << "need BROKER_STATUS_DATA ("
+                                   << BROKER_STATUS_DATA
+                                   << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_ADAPTIVE_DATA) == 0) {
-        Critical() << "need BROKER_ADAPTIVE_DATA (" << BROKER_ADAPTIVE_DATA
-                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios) << "need BROKER_ADAPTIVE_DATA ("
+                                   << BROKER_ADAPTIVE_DATA
+                                   << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_EXTERNALCOMMAND_DATA) == 0) {
-        Critical() << "need BROKER_EXTERNALCOMMAND_DATA ("
-                   << BROKER_EXTERNALCOMMAND_DATA
-                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios) << "need BROKER_EXTERNALCOMMAND_DATA ("
+                                   << BROKER_EXTERNALCOMMAND_DATA
+                                   << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_STATECHANGE_DATA) == 0) {
-        Critical() << "need BROKER_STATECHANGE_DATA ("
-                   << BROKER_STATECHANGE_DATA
-                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios) << "need BROKER_STATECHANGE_DATA ("
+                                   << BROKER_STATECHANGE_DATA
+                                   << ") event_broker_option enabled to work.";
         errors++;
     }
 
@@ -724,12 +717,13 @@ void check_path(const char *name, char *path) {
     struct stat st;
     if (0 == stat(path, &st)) {
         if (0 != access(path, R_OK)) {
-            Error() << name << " '" << path
-                    << "' not readable, please fix permissions.";
+            Error(fl_logger_nagios)
+                << name << " '" << path
+                << "' not readable, please fix permissions.";
             path[0] = 0;  // disable
         }
     } else {
-        Error() << name << " '" << path << "' not existing!";
+        Error(fl_logger_nagios) << name << " '" << path << "' not existing!";
         path[0] = 0;  // disable
     }
 }
@@ -767,8 +761,16 @@ void livestatus_parse_arguments(const char *args_orig) {
             strncpy(g_socket_path, left, sizeof(g_socket_path));
         } else {
             if (strcmp(left, "debug") == 0) {
-                g_debug_level = atoi(right);
-                Informational() << "setting debug level to " << g_debug_level;
+                int debug_level = atoi(right);
+                if (debug_level >= 2) {
+                    fl_livestatus_log_level = LogLevel::debug;
+                } else if (debug_level >= 1) {
+                    fl_livestatus_log_level = LogLevel::informational;
+                } else {
+                    fl_livestatus_log_level = LogLevel::notice;
+                }
+                Notice(fl_logger_nagios) << "setting debug level to "
+                                         << fl_livestatus_log_level;
             } else if (strcmp(left, "log_file") == 0) {
                 strncpy(fl_logfile_path, right, sizeof(fl_logfile_path));
             } else if (strcmp(left, "mkeventd_socket_path") == 0) {
@@ -776,43 +778,45 @@ void livestatus_parse_arguments(const char *args_orig) {
                         sizeof(g_mkeventd_socket_path));
             } else if (strcmp(left, "max_cached_messages") == 0) {
                 g_max_cached_messages = strtoul(right, nullptr, 10);
-                Informational()
+                Notice(fl_logger_nagios)
                     << "setting max number of cached log messages to "
                     << g_max_cached_messages;
             } else if (strcmp(left, "max_lines_per_logfile") == 0) {
                 g_max_lines_per_logfile = strtoul(right, nullptr, 10);
-                Informational() << "setting max number lines per logfile to "
-                                << g_max_lines_per_logfile;
+                Notice(fl_logger_nagios)
+                    << "setting max number lines per logfile to "
+                    << g_max_lines_per_logfile;
             } else if (strcmp(left, "thread_stack_size") == 0) {
                 g_thread_stack_size = strtoul(right, nullptr, 10);
-                Informational() << "setting size of thread stacks to "
-                                << g_thread_stack_size;
+                Notice(fl_logger_nagios) << "setting size of thread stacks to "
+                                         << g_thread_stack_size;
             } else if (strcmp(left, "max_response_size") == 0) {
                 g_max_response_size = strtoul(right, nullptr, 10);
-                Informational() << "setting maximum response size to "
-                                << g_max_response_size << " bytes ("
-                                << (g_max_response_size / (1024.0 * 1024.0))
-                                << " MB)";
+                Notice(fl_logger_nagios)
+                    << "setting maximum response size to "
+                    << g_max_response_size << " bytes ("
+                    << (g_max_response_size / (1024.0 * 1024.0)) << " MB)";
             } else if (strcmp(left, "num_client_threads") == 0) {
                 int c = atoi(right);
                 if (c <= 0 || c > 1000) {
-                    Informational() << "cannot set num_client_threads to " << c
-                                    << ", must be > 0 and <= 1000";
+                    Warning(fl_logger_nagios)
+                        << "cannot set num_client_threads to " << c
+                        << ", must be > 0 and <= 1000";
                 } else {
-                    Informational() << "setting number of client threads to "
-                                    << c;
+                    Notice(fl_logger_nagios)
+                        << "setting number of client threads to " << c;
                     g_num_clientthreads = c;
                 }
             } else if (strcmp(left, "query_timeout") == 0) {
                 int c = atoi(right);
                 if (c < 0) {
-                    Informational() << "query_timeout must be >= 0";
+                    Warning(fl_logger_nagios) << "query_timeout must be >= 0";
                 } else {
                     g_query_timeout_msec = c;
                     if (c == 0) {
-                        Informational() << "disabled query timeout!";
+                        Notice(fl_logger_nagios) << "disabled query timeout!";
                     } else {
-                        Informational()
+                        Notice(fl_logger_nagios)
                             << "Setting timeout for reading a query to " << c
                             << " ms";
                     }
@@ -820,14 +824,14 @@ void livestatus_parse_arguments(const char *args_orig) {
             } else if (strcmp(left, "idle_timeout") == 0) {
                 int c = atoi(right);
                 if (c < 0) {
-                    Informational() << "idle_timeout must be >= 0";
+                    Warning(fl_logger_nagios) << "idle_timeout must be >= 0";
                 } else {
                     g_idle_timeout_msec = c;
                     if (c == 0) {
-                        Informational() << "disabled idle timeout!";
+                        Notice(fl_logger_nagios) << "disabled idle timeout!";
                     } else {
-                        Informational() << "setting idle timeout to " << c
-                                        << " ms";
+                        Notice(fl_logger_nagios) << "setting idle timeout to "
+                                                 << c << " ms";
                     }
                 }
             } else if (strcmp(left, "service_authorization") == 0) {
@@ -836,8 +840,9 @@ void livestatus_parse_arguments(const char *args_orig) {
                 } else if (strcmp(right, "loose") == 0) {
                     g_service_authorization = AUTH_LOOSE;
                 } else {
-                    Informational() << "invalid service authorization mode, "
-                                       "allowed are strict and loose";
+                    Warning(fl_logger_nagios)
+                        << "invalid service authorization mode, "
+                           "allowed are strict and loose";
                 }
             } else if (strcmp(left, "group_authorization") == 0) {
                 if (strcmp(right, "strict") == 0) {
@@ -845,8 +850,9 @@ void livestatus_parse_arguments(const char *args_orig) {
                 } else if (strcmp(right, "loose") == 0) {
                     g_group_authorization = AUTH_LOOSE;
                 } else {
-                    Informational() << "invalid group authorization mode, "
-                                       "allowed are strict and loose";
+                    Warning(fl_logger_nagios)
+                        << "invalid group authorization mode, "
+                           "allowed are strict and loose";
                 }
             } else if (strcmp(left, "pnp_path") == 0) {
                 strncpy(g_pnp_path, right, sizeof(pnp_path_storage) - 1);
@@ -884,17 +890,18 @@ void livestatus_parse_arguments(const char *args_orig) {
                 } else if (strcmp(right, "mixed") == 0) {
                     g_data_encoding = Encoding::mixed;
                 } else {
-                    Informational() << "invalid data_encoding " << right
-                                    << ", allowed are utf8, latin1 and mixed";
+                    Warning(fl_logger_nagios)
+                        << "invalid data_encoding " << right
+                        << ", allowed are utf8, latin1 and mixed";
                 }
             } else if (strcmp(left, "livecheck") == 0) {
-                Informational()
+                Warning(fl_logger_nagios)
                     << "livecheck has been removed from Livestatus, sorry.";
             } else if (strcmp(left, "disable_statehist_filtering") == 0) {
                 g_disable_statehist_filtering = atoi(right);
             } else {
-                Informational() << "ignoring invalid option " << left << "="
-                                << right;
+                Warning(fl_logger_nagios) << "ignoring invalid option " << left
+                                          << "=" << right;
             }
         }
     }
@@ -909,22 +916,25 @@ void livestatus_parse_arguments(const char *args_orig) {
             &g_mkeventd_socket_path[sizeof(g_mkeventd_socket_path)] - slash);
         g_mkeventd_socket_path[sizeof(g_mkeventd_socket_path) - 1] = 0;
     }
-    Warning() << "g_socket_path=[" << g_socket_path
-              << "], g_mkeventd_socket_path=[" << g_mkeventd_socket_path << "]";
+    Warning(fl_logger_nagios) << "g_socket_path=[" << g_socket_path
+                              << "], g_mkeventd_socket_path=["
+                              << g_mkeventd_socket_path << "]";
 
     // free(args); won't free, since we use pointers?
 }
 
 void omd_advertize() {
-    char *omd_site = getenv("OMD_SITE");
-    if (omd_site != nullptr) {
-        if (g_debug_level >= 1) {
-            Informational() << "running on OMD site " << omd_site << ", cool.";
-        }
+    Notice(fl_logger_nagios) << "Livestatus " << VERSION
+                             << " by Mathias Kettner. Socket: '"
+                             << g_socket_path << "'";
+    Notice(fl_logger_nagios) << "Please visit us at http://mathias-kettner.de/";
+    if (char *omd_site = getenv("OMD_SITE")) {
+        Informational(fl_logger_nagios) << "running on OMD site " << omd_site
+                                        << ", cool.";
     } else {
-        Informational()
+        Notice(fl_logger_nagios)
             << "Hint: Please try out OMD - the Open Monitoring Distribution";
-        Informational() << "Please visit OMD at http://omdistro.org";
+        Notice(fl_logger_nagios) << "Please visit OMD at http://omdistro.org";
     }
 }
 
@@ -932,15 +942,14 @@ void omd_advertize() {
 // cppcheck-suppress unusedFunction
 extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
                               void *handle) {
-    Logger::getLogger()->setHandler(make_unique<NagiosHandler>());
+    fl_logger_nagios = Logger::getLogger("nagios");
+    fl_logger_nagios->setHandler(make_unique<NagiosHandler>());
+    fl_logger_nagios->setUseParentHandlers(false);
+
+    fl_logger_livestatus = Logger::getLogger("cmk.livestatus");
 
     g_nagios_handle = handle;
     livestatus_parse_arguments(args);
-
-    Informational() << "Livestatus " << VERSION
-                    << " by Mathias Kettner. Socket: '" << g_socket_path << "'";
-    Informational() << "Please visit us at http://mathias-kettner.de/";
-
     omd_advertize();
 
     if (open_unix_socket() == 0) {
@@ -948,19 +957,20 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
     }
 
     if (verify_event_broker_options() == 0) {
-        Critical() << "bailing out, please fix event_broker_options.";
-        Critical() << "hint: your event_broker_options are set to "
-                   << event_broker_options << ", try setting it to -1.";
+        Critical(fl_logger_nagios)
+            << "bailing out, please fix event_broker_options.";
+        Critical(fl_logger_nagios)
+            << "hint: your event_broker_options are set to "
+            << event_broker_options << ", try setting it to -1.";
         return 1;
     }
-    if (g_debug_level >= 1) {
-        Informational()
-            << "your event_broker_options are sufficient for livestatus..";
-    }
+    Informational(fl_logger_nagios)
+        << "your event_broker_options are sufficient for livestatus..";
 
     if (enable_environment_macros == 1) {
-        Informational() << "environment_macros are enabled, this might "
-                           "decrease the overall nagios performance";
+        Notice(fl_logger_nagios)
+            << "environment_macros are enabled, this might decrease the "
+               "overall nagios performance";
     }
 
     register_callbacks();
@@ -971,8 +981,9 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
        thread the first time one of our callbacks is called. Before
        that happens, we haven't got any data anyway... */
 
-    Informational() << "finished initialization, further log messages go to "
-                    << fl_logfile_path;
+    Notice(fl_logger_nagios)
+        << "finished initialization, further log messages go to "
+        << fl_logfile_path;
     return 0;
 }
 
@@ -980,7 +991,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
 // cppcheck-suppress unusedFunction
 extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
                                 int reason __attribute__((__unused__))) {
-    Informational() << "deinitializing";
+    Notice(fl_logger_nagios) << "deinitializing";
     terminate_threads();
     close_unix_socket();
     delete fl_store;
@@ -990,6 +1001,5 @@ extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
     delete g_timeperiods_cache;
     g_timeperiods_cache = nullptr;
     deregister_callbacks();
-    Logger::getLogger()->setHandler(nullptr);
     return 0;
 }

@@ -57,7 +57,9 @@ extern char g_mk_inventory_path[];
 using std::string;
 
 TableHosts::TableHosts(const DowntimesOrComments &downtimes_holder,
-                       const DowntimesOrComments &comments_holder) {
+                       const DowntimesOrComments &comments_holder,
+                       Logger *logger)
+    : Table(logger) {
     addColumns(this, "", -1, -1, downtimes_holder, comments_holder);
 }
 

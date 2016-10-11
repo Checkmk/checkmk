@@ -39,7 +39,7 @@ using std::string;
 using std::to_string;
 using std::vector;
 
-OutputBuffer::OutputBuffer() : _max_size(1) {
+OutputBuffer::OutputBuffer(Logger *logger) : _max_size(1), _logger(logger) {
     _buffer = static_cast<char *>(malloc(_max_size));
     _end = _buffer + _max_size;
     reset();
@@ -128,9 +128,9 @@ void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
         if (retval > 0 && FD_ISSET(fd, &fds)) {
             ssize_t bytes_written = write(fd, buffer, bytes_to_write);
             if (bytes_written == -1) {
-                Informational() << generic_error("could not write " +
-                                                 to_string(bytes_to_write) +
-                                                 " bytes to client socket");
+                Informational(_logger) << generic_error(
+                    "could not write " + to_string(bytes_to_write) +
+                    " bytes to client socket");
                 break;
             }
             buffer += bytes_written;
@@ -142,7 +142,7 @@ void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
 void OutputBuffer::setError(ResponseCode code, const string &message) {
     // only the first error is being returned
     if (_error_message == "") {
-        Informational() << "error: " << message;
+        Informational(_logger) << "error: " << message;
         _error_message = message + "\n";
         _response_code = code;
     }

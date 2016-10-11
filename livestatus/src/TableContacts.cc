@@ -38,7 +38,9 @@ using std::string;
 
 extern contact *contact_list;
 
-TableContacts::TableContacts() { addColumns(this, "", -1); }
+TableContacts::TableContacts(Logger *logger) : Table(logger) {
+    addColumns(this, "", -1);
+}
 
 string TableContacts::name() const { return "contacts"; }
 

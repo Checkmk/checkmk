@@ -76,7 +76,10 @@ notification_plugin_timeout    = 60
 # "both"   - Asynchronous local delivery plus remote forwarding
 # False    - legacy: sync delivery  (and notification_spool_to)
 # True     - legacy: async delivery (and notification_spool_to)
-notification_spooling = "off"
+if cmk.is_raw_edition():
+    notification_spooling = "off"
+else:
+    notification_spooling = "local"
 
 # Legacy setting. The spool target is now specified in the
 # configuration of the spooler. notification_spool_to has

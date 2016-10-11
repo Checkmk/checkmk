@@ -7418,6 +7418,27 @@ register_check_parameters(
                   ]
                 )
             ),
+            ( "set_file_online_status",
+                Dictionary(
+                    title    = _("Interpretation of datafiles' file online states RECOVER or OFFLINE"),
+                    help     = _("If specified the datafiles with state RECOVER or OFFLINE are collected"),
+                    elements = [
+                        ( "RECOVER",
+                            MonitoringState(
+                                title = _("Interpretation of RECOVER state"),
+                                default_value = 2,
+                            )
+                        ),
+                        ( "OFFLINE",
+                            MonitoringState(
+                                title = _("Interpretation of OFFLINE state"),
+                                default_value = 2,
+                            )
+                        ),
+                    ],
+                    required_keys = [ "RECOVER", "OFFLINE" ]
+                ),
+            ),
         ],
     ),
     TextAscii(

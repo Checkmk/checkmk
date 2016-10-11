@@ -224,6 +224,7 @@ def check_oracle_tablespaces(item, params, parsed):
     num_increments = 0
     increment_size = 0
     free_space     = 0
+    dfs_recover_offline = {}
 
     # Conversion of old autochecks params
     if type(params) == tuple:
@@ -234,9 +235,18 @@ def check_oracle_tablespaces(item, params, parsed):
 
     for datafile in tablespace["datafiles"]:
 
-        if datafile["file_online_status"] in [ "OFFLINE", "RECOVER" ]:
-            yield 2, "One or more datafiles OFFLINE or RECOVER"
-            return
+        df_file_online_status = datafile["file_online_status"]
+        if df_file_online_status in [ "OFFLINE", "RECOVER" ]:
+            if params.get("set_file_online_status"):
+                dfs_recover_offline.setdefault(df_file_online_status, {
+                    "state" : params["set_file_online_status"][df_file_online_status],
+                    "sids"  : [],
+                })
+                dfs_recover_offline[df_file_online_status]["sids"].append(sid)
+
+            else:
+                yield 2, "One or more datafiles OFFLINE or RECOVER"
+                return
 
         num_files += 1
         if datafile["status"] in [ "AVAILABLE", "ONLINE", "READONLY" ]:
@@ -346,6 +356,10 @@ def check_oracle_tablespaces(item, params, parsed):
     if num_files != 1 or num_avail != 1 or num_extensible != 1:
         yield 0, "%d data files (%d avail, %d autoext)" % \
                   (num_files, num_avail, num_extensible)
+
+    for df_file_online_status, this_state_info in dfs_recover_offline:
+        this_state = this_state_info["state"]
+        yield this_state, "Datafiles %s: %s" % (this_state, ", ".join(this_state_info["sids"]))
 
 
 check_info['oracle_tablespaces'] = {

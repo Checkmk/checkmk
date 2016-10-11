@@ -21,6 +21,9 @@
     * 3936 FIX: chrony: support new params dictionary and rule "State of NTP time synchronisation"
     * 3649 FIX: Added a workaround for an escaping-related bug in old bash versions...
 
+    Multisite:
+    * 3897 FIX: Fixed possible exception in raw edition when rendering graphs
+
     WATO:
     * 3915 User access times: New icon when never logged in; New column "last seen"
     * 3914 FIX: Roles: Aliases are now unique during cloning

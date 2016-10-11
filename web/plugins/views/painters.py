@@ -957,8 +957,10 @@ def paint_time_graph(row, cell):
 
 
 def time_graph_params():
-    # TODO: for PNP graphs return None
-    return metrics.vs_graph_render_options()
+    if metrics.cmk_graphs_possible(row["site"]):
+        return metrics.vs_graph_render_options()
+    else:
+        return None
 
 
 def paint_time_graph_cmk(row, cell, show_timeranges=False):

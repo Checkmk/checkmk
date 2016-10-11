@@ -1,0 +1,12 @@
+Title: Added a workaround for an escaping-related bug in old bash versions
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p12
+Date: 1476188198
+Class: fix
+
+Some old bash versions (up to 3.2.x) had a slightly obscure bug regarding
+the escaping of special characters in regular expression matches, so a
+workaround for this was necessary.
+

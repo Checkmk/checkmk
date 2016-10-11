@@ -754,7 +754,10 @@ then
     while read descr cmdline
     do
         interval=
-        if [[ $cmdline =~ \(([^\)]*)\)[[:space:]](.*) ]]
+        # NOTE: Due to an escaping-related bug in some old bash versions
+        # (3.2.x), we have to use an intermediate variable for the pattern.
+        pattern='\(([^\)]*)\)[[:space:]](.*)'
+        if [[ $cmdline =~ $pattern ]]
         then
             parameters=${BASH_REMATCH[1]}
             cmdline=${BASH_REMATCH[2]}
@@ -802,7 +805,11 @@ then
                 while read descr cmdline
                 do
                     interval=
-                    if [[ $cmdline =~ \(([^\)]*)\)[[:space:]](.*) ]]
+                    # NOTE: Due to an escaping-related bug in some old bash
+                    # versions (3.2.x), we have to use an intermediate variable
+                    # for the pattern.
+                    pattern='\(([^\)]*)\)[[:space:]](.*)'
+                    if [[ $cmdline =~ $pattern ]]
                     then
                         parameters=${BASH_REMATCH[1]}
                         cmdline=${BASH_REMATCH[2]}

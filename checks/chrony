@@ -26,6 +26,11 @@
 
 ntp_default_levels = (10, 200.0, 500.0) # stratum, ms offset
 
+factory_settings["ntp_time_default_levels"] = {
+    "ntp_levels" : ntp_default_levels,
+    "alert_delay" : (300, 3600),
+}
+
 # Example output from agent:
 # <<<chrony>>>
 # Reference ID    : 212.18.3.18 (ntp1.m-online.net)
@@ -53,7 +58,7 @@ def parse_chrony(info):
 def inventory_chrony(info):
     parsed = parse_chrony(info)
     if parsed:
-        return [(None, "ntp_default_levels")]
+        return [(None, {})]
 
 
 def check_chrony(_no_item, params, info):
@@ -63,7 +68,12 @@ def check_chrony(_no_item, params, info):
         return
 
     # Prepare parameters
-    crit_stratum, warn, crit = params
+    if type(params) == tuple:
+        params = {
+            "ntp_levels": params,
+            "alert_delay": (300, 3600),
+        } 
+    crit_stratum, warn, crit = params["ntp_levels"]
 
     # Check offset and stratum, output a few info texsts
     offset = float(parsed["System time"].split()[0]) * 1000 # converted to ms
@@ -97,4 +107,5 @@ check_info["chrony"] = {
     'service_description':     'NTP Time',
     'has_perfdata':            True,
     'group':                   'ntp_time',
+    'default_levels_variable': "ntp_time_default_levels",
 }

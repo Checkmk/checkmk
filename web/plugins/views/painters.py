@@ -2312,6 +2312,14 @@ def paint_log_icon(row):
             img = "notify"
             title = _("User notification")
 
+    elif log_type.endswith("NOTIFICATION RESULT"):
+        img = "notify_result"
+        title = _("Final notification result")
+
+    elif log_type.endswith("NOTIFICATION PROGRESS"):
+        img = "notify_progress"
+        title = _("The notification is being processed")
+
     elif log_type == "EXTERNAL COMMAND":
         img = "command"
         title = _("External command")

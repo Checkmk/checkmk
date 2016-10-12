@@ -170,6 +170,7 @@ try:
         db = pymssql
         if opt_port == None:
             opt_port=1433
+        # pylint: disable=no-member
         db_connection = db.connect(host=opt_hostname+":"+str(opt_port), \
             database=opt_name, user=opt_user, password=opt_password )
 

@@ -88,7 +88,7 @@ def get_size():
     try:
         ws = struct.pack("HHHH", 0, 0, 0, 0)
         ws = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
-        lines, columns, x, y = struct.unpack("HHHH", ws)
+        lines, columns = struct.unpack("HHHH", ws)[:2]
         if lines > 0 and columns > 0:
             return lines, columns
     except io.UnsupportedOperation:
@@ -120,7 +120,6 @@ def print_table(headers, colors, rows, indent = ""):
     for row in rows:
         lengths = [ max(len(str(make_utf8(c))), l) for c, l in zip(row, lengths) ]
 
-    sumlen = sum(lengths) + len(headers)
     fmt = indent
     sep = ""
     for l,c in zip(lengths, colors):

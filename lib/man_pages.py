@@ -420,7 +420,7 @@ def _parse_man_page_header(name, path):
             else:
                 key, rest = line.split(":", 1)
                 parsed[key] = rest.lstrip()
-        except Exception, e:
+        except Exception:
             # TODO
             #if opt_debug:
             #    raise

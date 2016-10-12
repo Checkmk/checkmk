@@ -738,7 +738,7 @@ class MKBackupStream(object):
     def _read_from_stream(self, size):
         try:
             return self._stream.read(size)
-        except ValueError, e:
+        except ValueError:
             if self._stream.closed:
                 return "" # handle EOF transparently
             else:
@@ -773,7 +773,7 @@ class MKBackupStream(object):
     def _get_key_spec(self, key_id):
         keys = self._load_backup_keys()
 
-        for ident, key in keys.items():
+        for key in keys.values():
             cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
             if key_id == cert.digest("md5"):
                 return key
@@ -1657,7 +1657,7 @@ def verify_cma_version_compatible(info):
 
 def get_system_rw_files():
     files = []
-    for base_dir, dir_names, file_names in os.walk("/rw"):
+    for base_dir, _unused_dir_names, file_names in os.walk("/rw"):
         for name in file_names:
             files.append("%s/%s" % (base_dir, name))
     return files
@@ -1706,12 +1706,10 @@ def cleanup_system_processes():
 
 
 def do_system_rw_restore(opts, info):
-    backup_path = system_backup_archive_path()
     return restore_system_backup(system_backup_archive_path())
 
 
 def do_system_data_restore(opts, info):
-    backup_path = system_backup_archive_path()
     return restore_system_backup(system_data_backup_archive_path())
 
 
@@ -1885,7 +1883,7 @@ def main():
     except getopt.GetoptError, e:
         usage("%s" % e)
 
-    for o, a in opts:
+    for o, _unused_a in opts:
         if o in [ "-h", "--help" ]:
             usage()
         elif o == "--version":

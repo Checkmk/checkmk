@@ -66,6 +66,15 @@ def short_service_state_name(state_num, deflt=""):
     return states.get(state_num, deflt)
 
 
+def host_state_name(state_num, deflt=""):
+    states = {
+        0: _("UP"),
+        1: _("DOWN"),
+        2: _("UNREACHABLE"),
+    }
+    return states.get(state_num, deflt)
+
+
 def short_host_state_name(state_num, deflt=""):
     states = {
         0: _("UP"),

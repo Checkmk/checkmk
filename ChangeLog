@@ -1,4 +1,7 @@
 1.2.8p13:
+    Multisite:
+    * 3902 FIX: Graph search view: Changing painter options made page empty
+
 
 1.2.8p12:
     Core & Setup:

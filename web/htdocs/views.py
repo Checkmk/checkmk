@@ -1653,7 +1653,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     need_inventory_data = is_inventory_data_needed(group_cells, cells, sorters)
 
     # Fetch data. Some views show data only after pressing [Search]
-    if (only_count or (not view.get("mustsearch")) or html.var("filled_in") in ["filter", 'actions', 'confirm']):
+    if (only_count or (not view.get("mustsearch")) or html.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
         # names for additional columns (through Stats: headers)
         add_columns = datasource.get("add_columns", [])
 

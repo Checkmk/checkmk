@@ -152,8 +152,8 @@ def check_fileinfo(item, params, info):
             age = reftime - int(line[2])
 
             check_definition = [
-                ("size", size, get_filesize_human_readable),
-                ("age",  age,  get_age_human_readable) ]
+                ("Size", "size", size, get_filesize_human_readable),
+                ("Age",  "age",  age,  get_age_human_readable) ]
 
     if check_definition == False:
         return in_timerange and state_missing or 0, "File not found" + (outof_range_txt or "")
@@ -255,18 +255,18 @@ def check_fileinfo_groups(item, params, info):
 
     # Start Checking
     check_definition = [
-        ("age_oldest",    age_oldest,    get_age_human_readable),
-        ("age_newest",    age_newest,    get_age_human_readable),
-        ("count",         count_all,     saveint),
-        ("size",          size_all,      get_filesize_human_readable),
+        ("Oldest age", "age_oldest", age_oldest, get_age_human_readable),
+        ("Newest age", "age_newest", age_newest, get_age_human_readable),
+        ("Count",      "count",      count_all,  saveint),
+        ("Size",       "size",       size_all,   get_filesize_human_readable),
     ]
 
     if size_smallest is not None:
-        check_definition.append(("size_smallest", size_smallest, get_filesize_human_readable))
+        check_definition.append(("Smallest size", "size_smallest", size_smallest, get_filesize_human_readable))
     if size_largest != 0:
-        check_definition.append(("size_largest",  size_largest,  get_filesize_human_readable))
+        check_definition.append(("Largest size", "size_largest",  size_largest,  get_filesize_human_readable))
     if date_inclusion:
-        check_definition.append(("date pattern",  date_inclusion, str ))
+        check_definition.append(("Date pattern", "date pattern",  date_inclusion, str ))
 
     return fileinfo_check_function(check_definition, params, outof_range_txt)
 
@@ -274,8 +274,8 @@ def fileinfo_check_function(check_definition, params, outof_range_txt):
     state = 0
     infos = []
     perfdata = []
-    for what, val, verbfunc in check_definition:
-        infos.append("%s is %s" % (what, verbfunc(val)))
+    for what_title, what, val, verbfunc in check_definition:
+        infos.append("%s: %s" % (what_title, verbfunc(val)))
         if type(val) in [long, int]: # because strings go into infos but not into perfdata
             warn, crit = "", ""
             for how, comp, cfunc in [
@@ -292,6 +292,7 @@ def fileinfo_check_function(check_definition, params, outof_range_txt):
                         state = max(state, 1)
                         infos[-1] += " (%s %s)(!)" % (comp, verbfunc(warn))
             perfdata.append((what, val, warn, crit))
+
     infotext = ", ".join(infos)
     if outof_range_txt:
         state = 0

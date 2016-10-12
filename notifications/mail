@@ -437,6 +437,8 @@ def send_mail_sendmail(m, target, from_address):
     except OSError:
         raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
     p.communicate(m.as_string())
+
+    sys.stdout.write("Spooled mail to local mail transmission agent")
     return 0
 
 def send_mail_smtp(message, target, from_address, context):

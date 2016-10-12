@@ -475,6 +475,10 @@ class LoggedInSuperUser(LoggedInUser):
         self.siteconf = {}
 
 
+    def load_file(self, name, deflt, lock=False):
+        return deflt
+
+
 
 class LoggedInNobody(LoggedInUser):
     def __init__(self):
@@ -493,6 +497,10 @@ class LoggedInNobody(LoggedInUser):
 
     def _load_site_config(self):
         self.siteconf = {}
+
+
+    def load_file(self, name, deflt, lock=False):
+        return deflt
 
 
 

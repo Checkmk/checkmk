@@ -7,7 +7,7 @@
     * 3910 oracle_instance: noarchivelog can now be ignored
     * 3911 if.include: each operational state can now be mapped to a check state
     * 3912 elphase.include: now device states can be mapped to monitoring states
-    * 3913 gude_relayport, gude_temp, gude_humidity: new checks and relayport check now monitors electricity
+    * 3913 gude_powerbanks, gude_relayport, gude_temp, gude_humidity: new checks for Gude Power Control devices
     * 3954 postfix_mailq_status: new check which monitors the status of postfix mail instances
     * 3945 fortigate_node: Memory on fortigate clusters are now configurable by WATO...
     * 3956 fileinfo.groups: now allows regular expressions within include and exclude patterns each beginning with a tilde

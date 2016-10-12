@@ -1,4 +1,4 @@
-Title: gude_relayport, gude_temp, gude_humidity: new checks and relayport check now monitors electricity
+Title: gude_powerbanks, gude_relayport, gude_temp, gude_humidity: new checks for Gude Power Control devices
 Level: 1
 Component: checks
 Compatible: compat

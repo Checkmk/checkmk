@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -41,7 +41,7 @@
 #
 # - General rules:
 # 1. values of type str that are passed as arguments or
-#    return values or are stored in datastructures most not contain
+#    return values or are stored in datastructures must not contain
 #    non-Ascii characters! UTF-8 encoding must just be used in
 #    the last few CPU cycles before outputting. Conversion from
 #    input to str or unicode must happen as early as possible,
@@ -61,6 +61,8 @@ import random
 import re
 import __builtin__
 import signal
+
+from collections import deque
 
 try:
     import simplejson as json
@@ -94,60 +96,776 @@ class HTML:
 
 __builtin__.HTML = HTML
 
-class html(object):
+
+#   .--OutputFunnel--------------------------------------------------------.
+#   |     ___        _               _   _____                       _     |
+#   |    / _ \ _   _| |_ _ __  _   _| |_|  ___|   _ _ __  _ __   ___| |    |
+#   |   | | | | | | | __| '_ \| | | | __| |_ | | | | '_ \| '_ \ / _ \ |    |
+#   |   | |_| | |_| | |_| |_) | |_| | |_|  _|| |_| | | | | | | |  __/ |    |
+#   |    \___/ \__,_|\__| .__/ \__,_|\__|_|   \__,_|_| |_|_| |_|\___|_|    |
+#   |                   |_|                                                |
+#   +----------------------------------------------------------------------+
+#   | Provides the write functionality. The method lowlevel_write needs to |
+#   | to be overwritten in the specific subclass!                          |
+#   '----------------------------------------------------------------------'
+
+
+class OutputFunnel(object):
+
+
+    def __init__(self):
+        self.plugged = False
+        self.plugged_text = ""
+
+
+    # The plugged functionality can be used for debugging.
+    def write(self, text):
+        if self.plugged:
+            self.plugged_text += text
+        else:
+            # encode when really writing out the data. Not when writing plugged,
+            # because the plugged code will be handled somehow by our code. We
+            # only encode when leaving the pythonic world.
+            if type(text) == unicode:
+                text = text.encode("utf-8")
+            self.lowlevel_write(text)
+
+
+    def lowlevel_write(self, text):
+        raise NotImplementedError()
+
+
+    # Put in a plug which stops the text stream and redirects it to a sink.
+    def plug(self):
+        self.plugged = True
+        self.plugged_text = ''
+
+
+    def is_plugged(self):
+        return self.plugged
+
+
+    # Pull the plug for a moment to allow the sink content to pass through.
+    def flush(self):
+        if self.plugged:
+            text = self.plugged_text
+
+            # encode when really writing out the data. Not when writing plugged,
+            # because the plugged code will be handled somehow by our code. We
+            # only encode when leaving the pythonic world.
+            if type(text) == unicode:
+                text = text.encode("utf-8")
+
+            self.lowlevel_write(text)
+            self.plugged_text = ''
+
+
+    # Get the sink content in order to do something with it.
+    def drain(self):
+        if self.plugged:
+            text = self.plugged_text
+            self.plugged_text = ''
+            return text
+        else:
+            return ''
+
+
+    def unplug(self):
+        self.flush()
+        self.plugged = False
+
+
+#.
+#   .--HTML Generator------------------------------------------------------.
+#   |                      _   _ _____ __  __ _                            |
+#   |                     | | | |_   _|  \/  | |                           |
+#   |                     | |_| | | | | |\/| | |                           |
+#   |                     |  _  | | | | |  | | |___                        |
+#   |                     |_| |_| |_| |_|  |_|_____|                       |
+#   |                                                                      |
+#   |             ____                           _                         |
+#   |            / ___| ___ _ __   ___ _ __ __ _| |_ ___  _ __             |
+#   |           | |  _ / _ \ '_ \ / _ \ '__/ _` | __/ _ \| '__|            |
+#   |           | |_| |  __/ | | |  __/ | | (_| | || (_) | |               |
+#   |            \____|\___|_| |_|\___|_|  \__,_|\__\___/|_|               |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Generator which provides top level HTML writing functionality.      |
+#   '----------------------------------------------------------------------'
+
+
+class HTMLGenerator(OutputFunnel):
+
+    """ Usage Notes:
+
+          - Tags can be opened using the open_[tag]() call where [tag] is one of the possible tag names.
+            All attributes can be passed as function arguments, such as open_div(class_="example").
+            However, python specific key words need to be escaped using a trailing underscore.
+            One can also provide a dictionary as attributes: open_div(**{"class": "example"}).
+
+          - All tags can be closed again using the close_[tag]() syntax.
+
+          - For tags which shall only contain plain text (i.e. no tags other than highlighting tags)
+            you can a the direct call using the tag name only as function name,
+            self.div("Text content", **attrs). Tags featuring this functionality are listed in
+            the "featured shortcuts" list.
+
+          - Some tags require mandatory arguments. Those are defined explicitly below.
+            For example an a tag needs the href attribute everytime.
+
+          - If you want to provide plain HTML to a tag, please use the tag_content function or
+            facillitate the HTML class.
+
+        HOWTO HTML Attributes:
+
+          - Python specific attributes have to be escaped using a trailing underscore
+
+          - All attributes can be python objects. However, some attributes can also be lists of attrs:
+
+                'class' attributes will be concatenated using one whitespace
+                'style' attributes will be concatenated using the semicolon and one whitespace
+                Behaviorial attributes such as 'onclick', 'onmouseover' will bec concatenated using
+                a semicolon and one whitespace.
+
+          - All attributes will be escaped, i.e. the characters '&', '<', '>', '"' will be replaced by
+            non HtML relevant signs '&amp;', '&lt;', '&gt;' and '&quot;'. """
+
+
+    # these tags can be called by their tag names, e.g. 'self.title(content)'
+    _shortcut_tags = set(['title', 'h1', 'h2', 'h3', 'th', 'tr', 'td', 'center',\
+                              'div', 'p', 'span', 'canvas', 'strong', 'sub'])
+
+    # these tags can be called by open_name(), close_name() and render_name(), e.g. 'self.open_html()'
+    _tag_names = set(['html', 'head', 'body', 'header', 'footer', 'a', 'b',\
+                              'script', 'form', 'button', 'p', 'select', 'pre',\
+                              'table', 'row', 'ul', 'li', 'br', 'nobr'])
+
+    # Of course all shortcut tags can be used as well.
+    _tag_names.update(_shortcut_tags)
+
+
+    def __init__(self):
+        super(HTMLGenerator, self).__init__()
+
+        self.indent_level = 0
+        self.indent = 2
+
+
+
+    #
+    # Escaping functions
+    #
+
+
+    # Encode HTML attributes. Replace HTML syntax with HTML text.
+    # For example: replace '"' with '&quot;', '<' with '&lt;'.
+    # This code is slow. Works on str and unicode without changing
+    # the type. Also works on things that can be converted with '%s'.
+    def _escape_attribute(self, value):
+        attr_type = type(value)
+        if value is None:
+            return ''
+        elif attr_type == int:
+            return str(value)
+        elif isinstance(value, HTML):
+            return value.value # This is HTML code which must not be escaped
+        elif attr_type not in [str, unicode]: # also possible: type Exception!
+            value = "%s" % value # Note: this allows Unicode. value might not have type str now
+        return value.replace("&", "&amp;")\
+                    .replace('"', "&quot;")\
+                    .replace("<", "&lt;")\
+                    .replace(">", "&gt;")
+
+
+    # render HTML text.
+    # We only strip od some tags and allow some simple tags
+    # such as <h1>, <b> or <i> to be part of the string.
+    # This is useful for messages where we want to keep formatting
+    # options. (Formerly known as 'permissive_attrencode') """
+    # for the escaping functions
+
+    _unescaper_text = re.compile(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
+    _unescaper_href = re.compile(r'&lt;a href=&quot;(.*?)&quot;&gt;')
+
+    def _escape_text(self, text):
+
+        if isinstance(text, HTML):
+            return text.value # This is HTML code which must not be escaped
+
+        text = self._escape_attribute(text)
+        text = self._unescaper_text.sub(r'<\1\2>', text)
+        # Also repair link definitions
+        text = self._unescaper_href.sub(r'<a href="\1">', text)
+        return text
+
+
+    #
+    # Rendering
+    #
+
+
+    def _render_attributes(self, **attrs):
+        # TODO: REMOVE AFTER REFACTORING IS DONE!!
+        for key in attrs:
+            assert key.rstrip('_') in ['class', 'id', 'src', 'type', 'name',\
+                'onclick', 'onmouseover', 'onmouseout', 'onfocus', 'value', \
+                'content',  'href', 'http-equiv', 'rel', 'for', 'title', 'target',\
+                'align', 'valign', 'style', 'width', 'height', 'colspan', 'data-role',\
+                'cellspacing', 'cellpadding', 'border'], key
+
+        for k, v in attrs.iteritems():
+            if v is None: continue
+
+            if not isinstance(v, list):
+                yield ' %s=\"%s\"' % (k.rstrip('_'), self._escape_attribute(v))
+            elif k in ["class", "class_"]:
+                yield ' %s=\"%s\"' % (k.rstrip('_'),  ' '.join(a for a in (self._escape_attribute(vi) for vi in v) if a))
+            elif k == "style" or k.startswith('on'):
+                yield ' %s=\"%s;\"' % (k.rstrip('_'), '; '.join(a for a in (self._escape_attribute(vi) for vi in v) if a))
+            else:
+                yield ' %s=\"%s\"' % (k.rstrip('_'),   '_'.join(a for a in (self._escape_attribute(vi) for vi in v) if a))
+
+
+    # applies attribute encoding to prevent code injections.
+    def _render_opening_tag(self, tag_name, close_tag=False, **attrs):
+        """ You have to replace attributes which are also python elements such as
+            'class', 'id', 'for' or 'type' using a trailing underscore (e.g. 'class_' or 'id_'). """
+        self.indent_level += self.indent
+        if not attrs:
+            return "%s<%s%s>\n" % (' ' * (self.indent_level - self.indent),\
+                                   tag_name,\
+                                   ' /' if close_tag else '')
+        else:
+            return "%s<%s%s%s>\n" % (' ' * (self.indent_level - self.indent),\
+                                     tag_name, ''.join(self._render_attributes(**attrs)),\
+                                     ' /' if close_tag else '')
+
+
+    def _render_closing_tag(self, tag_name):
+        self.indent_level -= self.indent if self.indent_level < 0 else 0
+        return  "%s</%s>\n" % (' ' * self.indent_level, tag_name)
+
+
+    def _render_content_tag(self, tag_name, tag_content, **attrs):
+        return "%s%s%s\n%s" % (self._render_opening_tag(tag_name, **attrs),\
+                               ' ' * self.indent_level,\
+                               self._escape_text(tag_content),\
+                               self._render_closing_tag(tag_name))
+
+
+    # does not escape the script content
+    def _render_javascript(self, code):
+        return "<script language=\"javascript\">\n%s\n</script>\n" % code
+
+
+    # Write functionlity
+#    def write(self, text):
+#        raise NotImplementedError()
+
+
+    # This is used to create all the render_tag() and close_tag() functions
+    def __getattr__(self, name):
+        """ All closing tags can be called like this: 
+            self.close_html(), self.close_tr(), etc. """
+
+        parts = name.split('_')
+
+        # generating the shortcut tag calls
+        if len(parts) == 1 and name in self._shortcut_tags:
+            return lambda content, **attrs: self.write(self._render_content_tag(name, content, **attrs))
+
+        # generating the open, close and render calls
+        elif len(parts) == 2:
+            what, tag_name = parts[0], parts[1]
+
+            if what == "open" and tag_name in self._tag_names:
+                return lambda **attrs: self.write(self._render_opening_tag(tag_name, **attrs))
+
+            elif what == "close" and tag_name in self._tag_names:
+                return lambda : self.write(self._render_closing_tag(tag_name))
+
+            elif what == "render" and tag_name in self._tag_names:
+                # TODO: return an instance of HTML class here!!!
+                return lambda content, **attrs: self._render_content_tag(tag_name, content, **attrs)
+
+        else:
+            return object.__getattribute__(self, name)
+
+    #
+    # HTML element methods
+    # If an argument is mandatory, it is used as default and it will overwrite an
+    # implicit argument (e.g. id_ will overwrite attrs["id"]).
+    #
+
+
+    #
+    # basic elements
+    #
+
+    def write_text(self, text):
+        """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
+        self.write(self._escape_text(text))
+
+
+    def write_html(self, content):
+        """ Write HTML code directly, without escaping. """
+        self.write(content + "\n")
+
+
+    def comment(self, comment_text):
+        self.write("<!--%s-->" % self.encode_attribute(comment_text))
+
+
+    def meta(self, httpequiv=None, **attrs):
+        if httpequiv:
+            attrs['http-equiv'] = httpequiv
+        self.write(self._render_opening_tag('meta', close_tag=True, **attrs))
+
+
+    def base(self, target):
+        self.write(self._render_opening_tag('base', close_tag=True, target=target))
+
+
+    def open_a(self, href, **attrs):
+        attrs['href'] = href
+        self.write(self._render_opening_tag('a', **attrs))
+
+
+    def a(self, href, content, **attrs):
+        attrs['href'] = href
+        self.write(self._render_content_tag('a', content, **attrs))
+
+
+    def link(self, rel, type_, href, **attrs):
+        attrs['rel'] = rel
+        attrs['type'] = type_
+        attrs['href'] = href
+        self.write(self._render_opening_tag('link', close_tag=True, **attrs))
+
+
+    def stylesheet(self, href):
+        self.link(rel="stylesheet", type_="text/css", href=href)
+
+
+    #
+    # Scriptingi
+    #
+
+
+    def javascript(self, code):
+        self.write(self._render_javascript(code))
+
+
+    def javascript_file(self, name):
+        """ <script type="text/javascript" src="js/%(name)s.js"/>\n """
+        self.write(self._render_content_tag('script', '', type_="text/javascript", src='js/%s.js' % name))
+
+
+    def img(self, src, **attrs):
+        attrs['src'] = src
+        self.write(self._render_opening_tag('img', close_tag=True, **attrs))
+
+
+    def open_button(self, type_, **attrs):
+        attrs['type'] = type_
+        self.write(self._render_opening_tag('button', close_tag=True, **attrs))
+
+
+    def play_sound(self, url):
+        self.write(self._render_opening_tag('audio autoplay', src_=url))
+
+
+    #
+    # form elements
+    #
+
+
+    def label(self, for_, content, **attrs):
+        attrs['for'] = for_
+        self.write(self._render_content_tag('label', content, **attrs))
+
+
+    def input(self, name, type_, **attrs):
+        attrs['type_'] = type_
+        attrs['name'] = name
+        self.write(self._render_opening_tag('input', close_tag=True, **attrs))
+
+
+    #
+    # table elements
+    #
+
+
+    def td(self, content, **attrs):
+        """ Only for text content. You can't put HTML structure here. """
+        self.write(self._render_content_tag('td', content, **attrs))
+
+
+    #
+    # list elements
+    #
+
+
+    def li(self, content, **attrs):
+        """ Only for text content. You can't put HTML structure here. """
+        self.write(self._render_content_tag('li', content, **attrs))
+
+
+    #
+    # structural text elements
+    #
+
+
+    def heading(self, content):
+        """ <h2>%(content)</h2> """
+        self.write(self._render_content_tag('h2', content))
+
+
+    def br(self):
+        self.write('<br/>')
+
+
+    def hr(self, **attrs):
+        self.write(self._render_opening_tag('hr', close_tag=True, **attrs))
+
+
+    def rule(self):
+        self.hr()
+
+
+#.
+#   .--HTML Check_MK-------------------------------------------------------.
+#   |                      _   _ _____ __  __ _                            |
+#   |                     | | | |_   _|  \/  | |                           |
+#   |                     | |_| | | | | |\/| | |                           |
+#   |                     |  _  | | | | |  | | |___                        |
+#   |                     |_| |_| |_| |_|  |_|_____|                       |
+#   |                                                                      |
+#   |              ____ _               _        __  __ _  __              |
+#   |             / ___| |__   ___  ___| | __   |  \/  | |/ /              |
+#   |            | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /               |
+#   |            | |___| | | |  __/ (__|   <    | |  | | . \               |
+#   |             \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\              |
+#   |                                      |_____|                         |
+#   +----------------------------------------------------------------------+
+#   | A HTML generating class which introduces some logic of the Check_MK  |
+#   | web application.                                                     |
+#   | It also contains various settings for how the page should be built.  |
+#   '----------------------------------------------------------------------'
+
+
+class HTMLCheck_MK(HTMLGenerator):
+
+
+    def __init__(self):
+        super(HTMLCheck_MK, self).__init__()
+
+        # rendering state
+        self.html_is_open = False
+        self.header_sent = False
+
+        # style options
+        self.body_classes = ['main']
+        self._default_stylesheets = [ "check_mk", "graphs" ]
+        self._default_javascripts = [ "checkmk", "graphs" ]
+
+        # behaviour options
+        self.render_headfoot = True
+        self.enable_debug = False
+        self.screenshotmode = False
+        self.help_visible = False
+
+        # browser options
+        self.output_format = "html"
+        self.browser_reload = 0
+        self.browser_redirect = ''
+        self.link_target = None
+
+    def default_html_headers(self):
+        self.meta(httpequiv="Content-Type", content="text/html; charset=utf-8")
+        self.meta(httpequiv="X-UA-Compatible", content="IE=edge")
+        self.link(rel="shortcut icon", href="images/favicon.ico", type_="image/ico")
+
+
+    def _head(self, title, javascripts=None, stylesheets=None):
+
+        javascripts = javascripts if javascripts else []
+        stylesheets = stylesheets if stylesheets else ["pages"]
+
+        self.open_head()
+
+        self.default_html_headers()
+        self.title(title)
+
+        # If the variable _link_target is set, then all links in this page
+        # should be targetted to the HTML frame named by _link_target. This
+        # is e.g. useful in the dash-board
+        if self.link_target:
+            self.base(target=self.link_target)
+
+        # Load all specified style sheets and all user style sheets in htdocs/css
+        for css in self._default_stylesheets + stylesheets:
+            fname = self.css_filename_for_browser(css)
+            if fname is not None:
+                self.stylesheet(fname)
+
+        # write css for internet explorer
+        fname = self.css_filename_for_browser("ie")
+        if fname is not None:
+            self.write("<!--[if IE]>\n")
+            self.stylesheet(fname)
+            self.write("<![endif]-->\n")
+
+        self.add_custom_style_sheet()
+
+        # Load all scripts
+        for js in self._default_javascripts + javascripts:
+            filename_for_browser = self.javascript_filename_for_browser(js)
+            if filename_for_browser:
+                self.javascript_file(filename_for_browser)
+
+        if self.browser_reload != 0:
+            if self.browser_redirect != '':
+                self.javascript('set_reload(%s, \'%s\')' % (self.browser_reload, self.browser_redirect))
+            else:
+                self.javascript('set_reload(%s)' % (self.browser_reload))
+
+        self.close_head()
+
+
+    def html_head(self, title, javascripts=None, stylesheets=None, force=False):
+
+        force_new_document = force # for backward stability and better readability
+
+        #TODO: html_is_open?
+
+        if force_new_document:
+            self.header_sent = False
+
+        if not self.header_sent:
+            self.write('<!DOCTYPE HTML>\n')
+            self.open_html()
+            self._head(title, javascripts, stylesheets)
+            self.header_sent = True
+
+
+
+    def header(self, title='', javascripts=None, stylesheets=None, force=False):
+        if self.output_format == "html":
+            if not self.header_sent:
+                self.body_start(title, javascripts=javascripts, stylesheets=stylesheets, force=force)
+                self.header_sent = True
+                if self.render_headfoot:
+                    self.top_heading(title)
+
+
+    def body_start(self, title='', javascripts=None, stylesheets=None, force=False):
+        self.html_head(title, javascripts, stylesheets, force)
+        self.open_body(class_=self._get_body_css_classes())
+
+
+    def _get_body_css_classes(self):
+        if self.screenshotmode:
+            return self.body_classes + ["screenshotmode"]
+        else:
+            return self.body_classes
+
+
+    def add_custom_style_sheet(self):
+        raise NotImplementedError()
+
+
+    def css_filename_for_browser(self, css):
+        raise NotImplementedError()
+
+
+    def javascript_filename_for_browser(self, jsname):
+        raise NotImplementedError()
+
+
+    def html_foot(self):
+        self.close_html()
+
+
+    def top_heading(self, title):
+        raise NotImplementedError()
+
+
+    def top_heading_left(self, title):
+        self.open_table(class_="header")
+        self.open_tr()
+        self.open_td(width="*", class_="heading")
+        self.a(href="#", content = title, onfocus="if (this.blur) this.blur();", 
+               onclick="this.innerHTML=\'%s\'; document.location.reload();" % _("Reloading..."))
+        self.close_td()
+
+
+    def top_heading_right(self):
+        cssclass = "active" if self.help_visible else "passive"
+
+        self.icon_button(None, _("Toggle context help texts"), "help", id="helpbutton",
+                         onclick="toggle_help()", style="display:none", ty="icon", cssclass=cssclass)
+        self.open_a(href=_("http://mathias-kettner.de"), class_="head_logo")
+        self.img(src="images/logo_cmk_small.png")
+        self.close_a()
+        self.close_td()
+        self.close_tr()
+        self.close_table()
+        self.hr(class_="header")
+
+        if self.enable_debug:
+            self._dump_get_vars()
+
+
+    #
+    # HTML form rendering
+    #
+
+
+    def detect_icon_path(self, icon_name):
+        raise NotImplementedError()
+
+
+    def icon(self, help, icon, **kwargs):
+
+        #TODO: Refactor
+        title = help
+
+        self.write(self.render_icon(icon, title, **kwargs))
+
+
+    def empty_icon(self):
+        self.write(self.render_icon("images/trans.png"))
+
+
+    def render_icon(self, icon_name, help=None, middle=True, id=None, cssclass=None):
+
+        # TODO: Refactor
+        title    = help
+        id_      = id
+
+        attributes = {'title'   : title,
+                      'id'      : id_,
+                      'class'   : ["icon", cssclass],
+                      'align'   : 'absmiddle' if middle else None,
+                      'src'     : icon_name if "/" in icon_name else self.detect_icon_path(icon_name)}
+
+        return self._render_opening_tag('img', close_tag=True, **attributes)
+
+
+    def render_icon_button(self, url, help, icon, id=None, onclick=None,
+                           style=None, target=None, cssclass=None, ty="button"):
+
+        # TODO: Refactor
+        title    = help
+        id_      = id
+
+        # TODO: Can we clean this up and move all button_*.png to internal_icons/*.png?
+        if ty == "button":
+            icon = "images/button_" + icon + ".png"
+
+        icon = HTML(self.render_icon(icon, cssclass="iconbutton"))
+
+        return self.render_a(icon, **{'title'   : title,
+                                      'id'      : id_,
+                                      'class'   : cssclass,
+                                      'style'   : style,
+                                      'target'  : target if target else '',
+                                      'href'    : url if not onclick else "javascript:void(0)",
+                                      'onfocus' : "if (this.blur) this.blur();",
+                                      'onclick' : onclick })
+
+
+    def icon_button(self, *args, **kwargs):
+        self.write(self.render_icon_button(*args, **kwargs))
+
+
+class DeprecationWrapper(HTMLCheck_MK):
+
+
+    # Only strip off some tags. We allow some simple tags like
+    # <b>, <tt>, <i> to be part of the string. This is useful
+    # for messages where we still want to have formating options.
+    def permissive_attrencode(self, obj):
+        return self._escape_text(obj)
+
+
+    # Encode HTML attributes: replace " with &quot;, also replace
+    # < and >. This code is slow. Works on str and unicode without
+    # changing the type. Also works on things that can be converted
+    # with %s.
+    def attrencode(self, value):
+        return self._escape_attribute(value)
+
+
+#.
+#   .--html----------------------------------------------------------------.
+#   |                        _     _             _                         |
+#   |                       | |__ | |_ _ __ ___ | |                        |
+#   |                       | '_ \| __| '_ ` _ \| |                        |
+#   |                       | | | | |_| | | | | | |                        |
+#   |                       |_| |_|\__|_| |_| |_|_|                        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Caution! The class needs to be derived from Outputfunnel first!      |
+#   '----------------------------------------------------------------------'
+
+
+class html(DeprecationWrapper):
+
+
     def __init__(self):
         super(html, self).__init__()
+
         self.myfile = None
         self.cookies = {}
         self._user_id = None
         self.user_errors = {}
         self.focus_object = None
-        self.render_headfoot = True
-        self.browser_reload = 0
-        self.browser_redirect = ''
         self.events = set([]) # currently used only for sounds
-        self.header_sent = False
-        self.output_format = "html"
         self.status_icons = {}
-        self.link_target = None
-        self.form_name = None
-        self.form_vars = []
-        self.var_stash = []
-        self.context_buttons_open = False
-        self.mobile = False
-        self.buffering = True
         self.final_javascript_code = ""
         self.auto_id = 0
-        self.have_help = False
-        self.plugged = False
-        self.keybindings = []
-        self.keybindings_enabled = True
-        self.io_error = False
-        self.enable_debug = False
-        self.screenshotmode = False
-        self.help_visible = False
-        self.treestates = None
         self.caches = {}
+        self.treestates = None
         self.new_transids = []
         self.ignore_transids = False
         self.current_transid = None
         self.page_context = {}
-        self.body_classes = ['main']
-        self._default_javascripts = [ "checkmk", "graphs" ]
-        self._default_stylesheets = [ "check_mk", "graphs" ]
         self._request_timeout = 110 # seconds
+
+        # Settings
+        self.have_help = False
+        self.io_error = False
+        self.mobile = False
+        self.buffering = True
+        self.keybindings_enabled = True
+        self.keybindings = []
+        self.context_buttons_open = False
+
+        # Forms
+        self.form_name = None
+        self.form_vars = []
+
+        # Variable management
+        self.vars      = {}
+        self.listvars  = {} # for variables with more than one occurrance
+        self.uploads   = {}
+        self.var_stash = []
 
         # Time measurement
         self.times            = {}
         self.start_time       = time.time()
         self.last_measurement = self.start_time
 
-    RETURN = 13
-    SHIFT = 16
-    CTRL = 17
-    ALT = 18
+
+    RETURN    = 13
+    SHIFT     = 16
+    CTRL      = 17
+    ALT       = 18
     BACKSPACE = 8
-    F1 = 112
+    F1        = 112
+
 
     def set_user_id(self, user_id):
         self._user_id = user_id
@@ -499,35 +1217,6 @@ class html(object):
     # Encoding and escaping
     #
 
-    # Only strip off some tags. We allow some simple tags like
-    # <b>, <tt>, <i> to be part of the string. This is useful
-    # for messages where we still want to have formating options.
-    def permissive_attrencode(self, obj):
-        msg = self.attrencode(obj)
-        msg = re.sub(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;', r'<\1\2>', msg)
-        # Also repair link definitions
-        return re.sub(r'&lt;a href=&quot;(.*?)&quot;&gt;', r'<a href="\1">', msg)
-
-
-    # Encode HTML attributes: replace " with &quot;, also replace
-    # < and >. This code is slow. Works on str and unicode without
-    # changing the type. Also works on things that can be converted
-    # with %s.
-    def attrencode(self, value):
-        ty = type(value)
-        if ty == int:
-            return str(value)
-        elif isinstance(value, HTML):
-            return value.value # This is HTML code which must not be escaped
-        elif ty not in [str, unicode]: # also possible: type Exception!
-            value = "%s" % value # Note: this allows Unicode. value might not have type str now
-
-        return value.replace("&", "&amp;")\
-                    .replace('"', "&quot;")\
-                    .replace("<", "&lt;")\
-                    .replace(">", "&gt;")
-
-
     # This function returns a str object, never unicode!
     # Beware: this code is crucial for the performance of Multisite!
     # Changing from the self coded urlencode to urllib.quote
@@ -623,64 +1312,6 @@ class html(object):
 
 
     #
-    # Response handling
-    #
-
-    def write(self, text):
-        if self.plugged:
-            self.plugged_text += text
-        else:
-            # encode when really writing out the data. Not when writing plugged,
-            # because the plugged code will be handled somehow by our code. We
-            # only encode when leaving the pythonic world.
-            if type(text) == unicode:
-	        text = text.encode("utf-8")
-
-            self.lowlevel_write(text)
-
-
-    def lowlevel_write(self, text):
-        raise NotImplementedError()
-
-
-    def plug(self):
-        self.plugged = True
-        self.plugged_text = ''
-
-
-    def is_plugged(self):
-        return self.plugged
-
-
-    def flush(self):
-        if self.plugged:
-            text = self.plugged_text
-
-            # encode when really writing out the data. Not when writing plugged,
-            # because the plugged code will be handled somehow by our code. We
-            # only encode when leaving the pythonic world.
-            if type(text) == unicode:
-	        text = text.encode("utf-8")
-
-            self.lowlevel_write(text)
-            self.plugged_text = ''
-
-
-    def drain(self):
-        if self.plugged:
-            t = self.plugged_text
-            self.plugged_text = ''
-            return t
-        else:
-            return ''
-
-
-    def unplug(self):
-        self.flush()
-        self.plugged = False
-
-
-    #
     # Debugging, diagnose and logging
     #
 
@@ -698,37 +1329,6 @@ class html(object):
         raise NotImplementedError()
 
 
-    #
-    # HTML low level rendering and writing functions. Only put most basic function in
-    # this section which are really creating only some simple tags.
-    #
-
-    def heading(self, text):
-        self.write("<h2>%s</h2>\n" % text)
-
-
-    def rule(self):
-        self.write("<hr/>")
-
-
-    def p(self, content):
-        self.write("<p>%s</p>" % self.attrencode(content))
-
-
-    def render_javascript(self, code):
-        return "<script language=\"javascript\">\n%s\n</script>\n" % code
-
-
-    def javascript(self, code):
-        self.write(self.render_javascript(code))
-
-
-    def javascript_file(self, name):
-        self.write('<script type="text/javascript" src="js/%s.js"></script>\n' % name)
-
-
-    def play_sound(self, url):
-        self.write("<audio src=\"%s\" autoplay>\n" % self.attrencode(url))
 
 
     #
@@ -857,64 +1457,6 @@ class html(object):
         if not self.mobile:
             self.write('</label>')
 
-
-    def detect_icon_path(self, icon_name):
-        raise NotImplementedError()
-
-
-    def icon(self, help, icon, **kwargs):
-        self.write(self.render_icon(icon, help, **kwargs))
-
-
-    def empty_icon(self):
-        self.write(self.render_icon("images/trans.png"))
-
-
-    def render_icon(self, icon_name, help="", middle=True, id=None, cssclass=None):
-        align = middle and ' align=absmiddle' or ''
-        title = help and ' title="%s"' % self.attrencode(help) or ""
-        id = id and ' id="%s"' % id or ''
-        cssclass = cssclass and (" " + cssclass) or ""
-
-        if "/" in icon_name:
-            icon_path = icon_name
-        else:
-            icon_path = self.detect_icon_path(icon_name)
-
-        return '<img src="%s" class="icon%s"%s%s%s />' % (icon_path, cssclass, align, title, id)
-
-
-    def render_icon_button(self, url, help, icon, id="", onclick="",
-                           style="", target="", cssclass="", ty="button"):
-        if id:
-            id = "id='%s' " % id
-
-        if onclick:
-            onclick = 'onclick="%s" ' % onclick
-            url = "javascript:void(0)"
-
-        if style:
-            style = 'style="%s" ' % style
-
-        if target:
-            target = 'target="%s" ' % target
-        else:
-            target = ""
-
-        if cssclass:
-            cssclass = 'class="%s" ' % cssclass
-
-        # TODO: Can we clean this up and move all button_*.png to internal_icons/*.png?
-        if ty == "button":
-            icon = "images/button_" + icon + ".png"
-
-        return '<a %s%s%s%s%sonfocus="if (this.blur) this.blur();" href="%s" title="%s">%s</a>' % \
-                 (id, onclick, style, target, cssclass, url, self.attrencode(help),
-                  self.render_icon(icon, cssclass="iconbutton"))
-
-
-    def icon_button(self, *args, **kwargs):
-        self.write(self.render_icon_button(*args, **kwargs))
 
 
     def empty_icon_button(self):
@@ -1380,119 +1922,6 @@ class html(object):
                         not self.help_visible and "none" or "block"))
             self.write(text.strip())
             self.write('</div>')
-
-
-    def html_head(self, title, javascripts = [], stylesheets = ["pages"], force=False):
-        if not self.header_sent or force:
-            self.write('<!DOCTYPE HTML>\n'
-                       '<html><head>\n')
-            self.default_html_headers()
-            self.write('<title>')
-            self.write(self.attrencode(title))
-            #self.guitest_record_output("page_title", title)
-            self.write('</title>\n')
-
-            # If the variable _link_target is set, then all links in this page
-            # should be targetted to the HTML frame named by _link_target. This
-            # is e.g. useful in the dash-board
-            if self.link_target:
-                self.write('<base target="%s">\n' % self.attrencode(self.link_target))
-
-            # Load all specified style sheets and all user style sheets in htdocs/css
-            for css in self._default_stylesheets + stylesheets + [ 'ie' ]:
-                fname = self.css_filename_for_browser(css)
-                if fname == None:
-                    continue
-
-                if css == 'ie':
-                    self.write('<!--[if IE]>\n')
-                self.write('<link rel="stylesheet" type="text/css" href="%s" />\n' % fname)
-                if css == 'ie':
-                    self.write('<![endif]-->\n')
-
-            self.add_custom_style_sheet()
-
-            for js in self._default_javascripts + javascripts:
-                filename_for_browser = self.javascript_filename_for_browser(js)
-                if filename_for_browser:
-                    self.javascript_file(filename_for_browser)
-
-            if self.browser_reload != 0:
-                if self.browser_redirect != '':
-                    self.javascript('set_reload(%s, \'%s\')' % (self.browser_reload, self.browser_redirect))
-                else:
-                    self.javascript('set_reload(%s)' % (self.browser_reload))
-
-            self.write("</head>\n")
-            self.header_sent = True
-
-
-    def default_html_headers(self):
-        self.write('<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n')
-        self.write('<meta http-equiv="X-UA-Compatible" content="IE=edge" />\n')
-        self.write('<link rel="shortcut icon" href="images/favicon.ico" type="image/ico">\n')
-
-
-    def add_custom_style_sheet(self):
-        raise NotImplementedError()
-
-
-    def css_filename_for_browser(self, css):
-        raise NotImplementedError()
-
-
-    def javascript_filename_for_browser(self, jsname):
-        raise NotImplementedError()
-
-
-    def html_foot(self):
-        self.write("</html>\n")
-
-
-    def header(self, title='', **args):
-        if self.output_format == "html":
-            if not self.header_sent:
-                self.body_start(title, **args)
-                self.header_sent = True
-                if self.render_headfoot:
-                    self.top_heading(title)
-
-
-    def body_start(self, title='', **args):
-        self.html_head(title, **args)
-        self.write('<body class="%s">' % self._get_body_css_classes())
-
-
-    def _get_body_css_classes(self):
-        body_classes = self.body_classes
-        if self.screenshotmode:
-            body_classes.append("screenshotmode")
-        return " ".join(body_classes)
-
-
-    def top_heading(self, title):
-        raise NotImplementedError()
-
-
-    def top_heading_left(self, title):
-        self.write('<table class=header><tr><td width="*" class=heading>')
-        self.write('<a href="#" onfocus="if (this.blur) this.blur();" '
-                   'onclick="this.innerHTML=\'%s\'; document.location.reload();">%s</a></td>' %
-                   (_("Reloading..."), self.attrencode(title)))
-
-
-    def top_heading_right(self):
-        cssclass = self.help_visible and "active" or "passive"
-        self.icon_button(None, _("Toggle context help texts"), "help", id="helpbutton",
-                         onclick="toggle_help()", style="display:none", ty="icon", cssclass=cssclass)
-
-        self.write("%s</td></tr></table>" %
-                   _("<a class=head_logo href=\"http://mathias-kettner.de\">"
-                     "<img src=\"images/logo_cmk_small.png\"/></a>"))
-        self.write("<hr class=header>\n")
-        if self.enable_debug:
-            self._dump_get_vars()
-
 
     def _dump_get_vars(self):
         self.begin_foldable_container("html", "debug_vars", True, _("GET/POST variables of this page"))

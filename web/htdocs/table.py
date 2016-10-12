@@ -194,9 +194,11 @@ def end():
                 filtered_rows = []
                 for row, css, state, fixed in rows:
                     if state == "header" or fixed:
+                        filtered_rows.append((row, css, state, fixed))
                         continue # skip filtering of headers or fixed rows
+
                     for cell_content, css_classes, colspan in row:
-                        if fixed or search_term in cell_content.lower():
+                        if search_term in cell_content.lower():
                             filtered_rows.append((row, css, state, fixed))
                             break # skip other cells when matched
                 rows = filtered_rows

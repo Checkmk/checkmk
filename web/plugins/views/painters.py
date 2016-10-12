@@ -2213,8 +2213,8 @@ def paint_log_plugin_output(row):
 
 
 multisite_painters["log_plugin_output"] = {
-    "title"   : _("Log: output of check plugin"),
-    "short"   : _("Check output"),
+    "title"   : _("Log: Output"),
+    "short"   : _("Output"),
     "columns" : ["log_plugin_output", "log_type", "log_state_type", "log_comment" ],
     "paint"   : paint_log_plugin_output,
 }
@@ -2410,7 +2410,12 @@ multisite_painters["log_date"] = {
 
 def paint_log_state(row):
     state = row["log_state"]
-    if row["log_service_description"]:
+
+    # Notification result/progress lines don't hold real states. They hold notification plugin
+    # exit results (0: ok, 1: temp issue, 2: perm issue). We display them as service states.
+    if row["log_service_description"] \
+       or row["log_type"].endswith("NOTIFICATION RESULT") \
+       or row["log_type"].endswith("NOTIFICATION PROGRESS"):
         return paint_service_state_short({"service_has_been_checked":1, "service_state" : state})
     else:
         return paint_host_state_short({"host_has_been_checked":1, "host_state" : state})
@@ -2418,7 +2423,7 @@ def paint_log_state(row):
 multisite_painters["log_state"] = {
     "title"   : _("Log: state of host/service at log time"),
     "short"   : _("State"),
-    "columns" : ["log_state", "log_state_type", "log_service_description"],
+    "columns" : ["log_state", "log_state_type", "log_service_description", "log_type"],
     "paint"   : paint_log_state,
 }
 

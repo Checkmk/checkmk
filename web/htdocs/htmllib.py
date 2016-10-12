@@ -431,7 +431,7 @@ class HTMLGenerator(OutputFunnel):
         self.write(self._render_opening_tag('a', **attrs))
 
 
-    def a(self, href, content, **attrs):
+    def a(self, content, href, **attrs):
         attrs['href'] = href
         self.write(self._render_content_tag('a', content, **attrs))
 
@@ -480,7 +480,7 @@ class HTMLGenerator(OutputFunnel):
     #
 
 
-    def label(self, for_, content, **attrs):
+    def label(self, content, for_, **attrs):
         attrs['for'] = for_
         self.write(self._render_content_tag('label', content, **attrs))
 
@@ -695,7 +695,7 @@ class HTMLCheck_MK(HTMLGenerator):
         self.open_table(class_="header")
         self.open_tr()
         self.open_td(width="*", class_="heading")
-        self.a(href="#", content = title, onfocus="if (this.blur) this.blur();", 
+        self.a(title, href="#", onfocus="if (this.blur) this.blur();", 
                onclick="this.innerHTML=\'%s\'; document.location.reload();" % _("Reloading..."))
         self.close_td()
 
@@ -780,9 +780,10 @@ class HTMLCheck_MK(HTMLGenerator):
         self.write(self.render_icon_button(*args, **kwargs))
 
 
+#.
+
+
 class DeprecationWrapper(HTMLCheck_MK):
-
-
     # Only strip off some tags. We allow some simple tags like
     # <b>, <tt>, <i> to be part of the string. This is useful
     # for messages where we still want to have formating options.

@@ -661,6 +661,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                 ("contact_groups", _("Publish to members of contact groups"), userdb.GroupChoice(
                     "contact",
                     title = _("Publish to members of contact groups"),
+                    rows = 5,
+                    size = 40,
                 )),
             ],
             title = _('Make this %s available for other users') % visual_type["title"]

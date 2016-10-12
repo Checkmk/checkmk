@@ -14599,6 +14599,9 @@ def mode_pattern_editor(phase):
         last_in_group = rulenr == len(ruleset) - 1 or ruleset[rulenr+1][0] != folder
         pattern_list, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
 
+        if type(pattern_list) == dict:
+            pattern_list = pattern_list["reclassify_patterns"]
+
         # Check if this rule applies to the given host/service
         if hostname:
             # If hostname (and maybe filename) try match it

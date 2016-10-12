@@ -27,6 +27,7 @@
 
     WATO:
     * 3915 User access times: New icon when never logged in; New column "last seen"
+    * 3901 Logfile pattern analyser: pattern lists can now be searched
     * 3914 FIX: Roles: Aliases are now unique during cloning
     * 3820 FIX: Network scan: no longer fails completely if hostname already exists in configuration...
 

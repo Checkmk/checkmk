@@ -14631,13 +14631,7 @@ def mode_pattern_editor(phase):
 
         html.begin_foldable_container("rule", str(rulenr), True,
                     HTML("<b>Rule #%d</b>" % (rulenr + 1)), indent = False)
-        html.write('<table style="width:100%" class="data logwatch"><tr>')
-        html.write('<th style="width:30px;">' + _('Match') + '</th>')
-        html.write('<th style="width:50px;">' + _('State') + '</th>')
-        html.write('<th style="width:300px;">' + _('Pattern') + '</th>')
-        html.write('<th>' + _('Comment') + '</th>')
-        html.write('<th style="width:300px;">' + _('Matched line') + '</th>')
-        html.write('</tr>\n')
+        table.begin("pattern_editor_rule_%d" % rulenr, sortable=False)
 
         # Each rule can hold no, one or several patterns. Loop them all here
         odd = "odd"
@@ -14651,9 +14645,9 @@ def mode_pattern_editor(phase):
                     # Prepare highlighted search txt
                     match_start = matched.start()
                     match_end   = matched.end()
-                    disp_match_txt = match_txt[:match_start] \
-                                     + '<span class=match>' + match_txt[match_start:match_end] + '</span>' \
-                                     + match_txt[match_end:]
+                    disp_match_txt = html.attrencode(match_txt[:match_start]) \
+                                     + '<span class=match>' + html.attrencode(match_txt[match_start:match_end]) + '</span>' \
+                                     + html.attrencode(match_txt[match_end:])
 
                     if already_matched == False:
                         # First match
@@ -14671,23 +14665,20 @@ def mode_pattern_editor(phase):
                     match_img   = 'nmatch'
                     match_title = _('This logfile pattern does not match the given string.')
 
-            html.write('<tr class="data %s0 %s">' % (odd, reason_class))
-            html.write('<td><img align=absmiddle title="%s" ' \
-                        'class=icon src="images/icon_rule%s.png" />' % \
-                        (match_title, match_img))
+            table.row(css=reason_class)
+            table.cell(_('Match'))
+            html.icon(match_title, "rule%s" % match_img)
 
             cls = ''
             if match_class == 'match first':
-                cls = ' class="svcstate state%d"' % logwatch.level_state(state)
-            html.write('<td style="text-align:center" %s>%s</td>' % (cls, logwatch.level_name(state)))
-            html.write('<td><code>%s</code></td>' % pattern)
-            html.write('<td>%s</td>' % comment)
-            html.write('<td>%s</td>' % disp_match_txt)
-            html.write('</tr>\n')
+                cls = 'svcstate state%d' % logwatch.level_state(state)
+            table.cell(_('State'), logwatch.level_name(state), css=cls)
+            table.cell(_('Pattern'), html.render_tt(html.attrencode(pattern)))
+            table.cell(_('Comment'), html.attrencode(comment))
+            table.cell(_('Matched line'), disp_match_txt)
 
-            odd = odd == "odd" and "even" or "odd"
-
-        html.write('<tr class="data %s0"><td colspan=5>' % odd)
+        table.row(fixed=True)
+        table.cell(colspan=5)
         edit_url = folder_preserving_link([
             ("mode", "edit_rule"),
             ("varname", varname),
@@ -14696,9 +14687,8 @@ def mode_pattern_editor(phase):
             ("item", mk_repr(item)),
             ("rule_folder", folder.path())])
         html.icon_button(edit_url, _("Edit this rule"), "edit")
-        html.write('</td></tr>\n')
 
-        html.write('</table>\n')
+        table.end()
         html.end_foldable_container()
 
 

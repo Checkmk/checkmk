@@ -81,18 +81,31 @@ def fileinfo_groups_of_file(check_filename, reftime):
                 pattern = ( pattern, '' )
 
             inclusion, exclusion = pattern
+
+            inclusion_is_regex = False
+            exclusion_is_regex = False
             if inclusion.startswith("~"):
-                reg = regex(inclusion[1:])
+                inclusion_is_regex = True
+                inclusion = inclusion[1:]
+            if exclusion.startswith("~"):
+                exclusion_is_regex = True
+                exclusion = exclusion[1:]
+
+            inclusion_tmp = fileinfo_process_date(inclusion, reftime)
+            if inclusion != inclusion_tmp:
+                inclusion = inclusion_tmp
+
+            if inclusion_is_regex:
+                reg = regex(inclusion)
                 incl_match = reg.match( check_filename )
             else:
-                inclusion = fileinfo_process_date(inclusion, reftime)
-                incl_match = fnmatch.fnmatch(check_filename, inclusion)
+                incl_match = fnmatch.fnmatch( check_filename, inclusion )
 
-            if exclusion.startswith("~"):
-                reg = regex(exclusion[1:])
+            if exclusion_is_regex:
+                reg = regex(exclusion)
                 excl_match = reg.match( check_filename )
             else:
-                excl_match = fnmatch.fnmatch(check_filename, exclusion)
+                excl_match = fnmatch.fnmatch( check_filename, exclusion )
 
             if incl_match and not excl_match:
                 groups.append(group_name)
@@ -185,16 +198,41 @@ def check_fileinfo_groups(item, params, info):
             continue
 
         for pattern in params['precompiled_patterns']:
+            # endswith("No such file...") is needed to
+            # support the solaris perl based version of fileinfo
+            if line[0].endswith("No such file or directory"):
+                continue
+
             inclusion, exclusion = pattern
-            inclusion_tmp = fileinfo_process_date(inclusion,reftime)
+
+            inclusion_is_regex = False
+            exclusion_is_regex = False
+            if inclusion.startswith("~"):
+                inclusion_is_regex = True
+                inclusion = inclusion[1:]
+            if exclusion.startswith("~"):
+                exclusion_is_regex = True
+                exclusion = exclusion[1:]
+
+            inclusion_tmp = fileinfo_process_date(inclusion, reftime)
             if inclusion != inclusion_tmp:
                 inclusion = inclusion_tmp
                 date_inclusion = inclusion_tmp
-            # endswith("No such file...") is needed to
-            # support the solaris perl based version of fileinfo
-            if not line[0].endswith("No such file or directory") \
-                        and fnmatch.fnmatch(line[0], inclusion) and str(line[1]) not in ['missing',''] \
-                        and not fnmatch.fnmatch(line[0], exclusion):
+
+            if inclusion_is_regex:
+                reg = regex(inclusion)
+                incl_match = reg.match( line[0] )
+            else:
+                incl_match = fnmatch.fnmatch( line[0], inclusion )
+
+            if exclusion_is_regex:
+                reg = regex(exclusion)
+                excl_match = reg.match( line[0] )
+            else:
+                excl_match = fnmatch.fnmatch( line[0], exclusion )
+
+            if str(line[1]) not in [ 'missing', '' ] and \
+               incl_match and not excl_match:
                 size = int(line[1])
                 size_all += size
                 if size_smallest == None:

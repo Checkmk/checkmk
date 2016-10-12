@@ -30,11 +30,9 @@
 
 def inv_uptime(info):
     uptime          = float(info[0][0])
-    current         = time.time()
-    since           = time.strftime("%c", time.localtime(current - float(info[0][0])) )
+    since           = time.strftime("%c", time.localtime(time.time() - float(info[0][0])) )
     node            = inv_tree("software.os.")
     node["since"]   = since
-    node["last"]    = time.strftime("%c", time.localtime(current))
 
 inv_info['uptime'] = {
     "inv_function" : inv_uptime,

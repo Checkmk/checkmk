@@ -26,11 +26,9 @@
 
 def inv_snmp_uptime(info):
     uptime          = parse_snmp_uptime(info[0][0])
-    current         = time.time()
-    since           = time.strftime("%c", time.localtime(current - float(uptime)))
+    since           = time.strftime("%c", time.localtime(time.time() - float(uptime)))
     node            = inv_tree("software.os.")
     node["since"]   = since
-    node["last"]    = time.strftime("%c", time.localtime(current))
 
 
 inv_info['snmp_uptime'] = {

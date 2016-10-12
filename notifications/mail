@@ -466,12 +466,14 @@ def send_mail_smtp(message, target, from_address, context):
             # the exception contains a dict of failed recipients to the respective error. since we
             # only have one recipient there has to be exactly one element
             errorcode, message = e.recipients.values()[0]
+
             # default is to retry, these errorcodes are known to
             if errorcode not in [
                 450,    # sender address domain not found
                 550,    # sender address unknown
-            ]:
+                 ]:
                 retry_possible = True
+
             sys.stderr.write("mail to \"%s\" refused: %d, %s\n" % (target, errorcode, message))
         except smtplib.SMTPHeloError, e:
             retry_possible = True  # server is acting up, this may be fixed quickly
@@ -487,6 +489,7 @@ def send_mail_smtp(message, target, from_address, context):
         except smtplib.SMTPException, e:
             retry_possible = True  # who knows what went wrong, a retry might just work
             sys.stderr.write("undocumented error code from \"%s\": %s\n" % (host, str(e)))
+
     if success:
         return 0
     elif retry_possible:
@@ -905,7 +908,7 @@ def main():
         subject = context['SUBJECT']
 
     if not mailto: # e.g. empty field in user database
-        sys.stdout.write("Cannot send HTML email: empty destination email address")
+        sys.stderr.write("Cannot send HTML email: empty destination email address\n")
         sys.exit(2)
 
     # Create the mail and send it
@@ -915,7 +918,7 @@ def main():
     try:
         sys.exit(send_mail(m, mailto, from_address, context))
     except Exception, e:
-        sys.stdout.write("unhandled exception %s" % str(e))
+        sys.stderr.write("Unhandled exception: %s\n" % e)
         # unhandled exception, don't retry this...
         sys.exit(2)
 

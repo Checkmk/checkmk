@@ -2,7 +2,7 @@ Title: Fixed loosing site configuration when editing hosts in WATO slave sites
 Level: 2
 Component: wato
 Compatible: compat
-Version: 1.2.8p9
+Version: 1.4.0i1
 Date: 1470213362
 Class: fix
 

@@ -299,7 +299,7 @@ def process_logfile(logfile, patterns):
                 # Check for continuation lines
                 for cont_pattern in cont_patterns:
                     if type(cont_pattern) == int: # add that many lines
-                        for x in range(cont_pattern):
+                        for _unused_x in range(cont_pattern):
                             cont_line = next_line(file_handle)
                             if cont_line == None: # end of file
                                 break

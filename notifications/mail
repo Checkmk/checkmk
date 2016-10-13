@@ -554,7 +554,6 @@ def fetch_pnp_data(context, params):
         # Non-omd environment - use plugin argument 1
         path = context.get('PARAMETER_1', '')
         php_save_path = "" # Using default path
-        skip_authorization = False
         env = 'REMOTE_USER="%s"' % context['CONTACTNAME'].encode('utf-8')
 
     if not os.path.exists(path):

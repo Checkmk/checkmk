@@ -160,19 +160,18 @@ if var_dir:
     last_timestamp = None
     output_all     = False
 
-    year_available = False
     # Supports: Nov  6 13:44:09
     #           2015-10-17T05:35:24
     def get_timestamp(text):
-        for pattern, has_year in [ ("%a %b %d %H:%M:%S", False),
-                                   ("%Y-%m-%dT%H:%M:%S", True) ]:
+        for pattern in [ "%a %b %d %H:%M:%S",
+                         "%Y-%m-%dT%H:%M:%S" ]:
             try:
                 result = time.mktime(time.strptime(text, pattern))
-                year_available = has_year
                 return result
             except:
                 continue
 
+    year_available = False
     if os.path.exists(state_file):
         last_timestamp = int(file(state_file).read())
         if time.localtime(last_timestamp).tm_year >= 2015:

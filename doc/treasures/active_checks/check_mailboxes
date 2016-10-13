@@ -100,7 +100,7 @@ class ImapWrapper(object):
             raise LoginError("Login as user \"%s\" failed" % user)
 
     def mailboxes(self):
-        res, mb_list = self.__conn.list()
+        mb_list = self.__conn.list()[1]
         pattern = re.compile(r'\((.*?)\) "(.*)" (.*)')
         return [pattern.search(mb).group(3).strip("\"") for mb in mb_list]
 
@@ -192,7 +192,7 @@ def parse_args():
     parser.add_option("--retrieve-max", type="int", default=5,
                       help="limit the number of mails retrieved per mailbox. Only relevant when checking age")
 
-    options, args = parser.parse_args()
+    options = parser.parse_args()[0]
 
     for mandatory in ["server", "username"]:
         if getattr(options, mandatory) is None:
@@ -211,7 +211,7 @@ def main(options):
 
     try:
         imap = ImapWrapper(options.server, options.username, options.password, True)
-    except LoginError, e:
+    except LoginError:
         output("login failed")
         sys.exit(2)
 

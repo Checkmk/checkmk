@@ -206,9 +206,7 @@ def read_bulk_contexts():
 
 def main():
     if bulk_mode:
-        attachments = []
         content_txt = ""
-        content_html = ""
         parameters, contexts = read_bulk_contexts()
         hosts = set([])
         for context in contexts:

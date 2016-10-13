@@ -323,7 +323,7 @@ def alert_details(cfg, alert):
         'EXTERNAL_USER_NAME': cfg['user'],
         'AID': aid(alert),
     })
-    prop  = f.PROPERTIES.value
+    #prop  = f.PROPERTIES.value
     state = f.VALUE.value
     msg   =  f.XMI_EXT_MSG.value['MSG'].strip()
     return state, msg

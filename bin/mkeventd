@@ -1092,7 +1092,7 @@ class Perfcounters:
             columns.append(("status_" + name.rstrip("s") + "_rate", 0.0))
             columns.append(("status_average_" + name.rstrip("s") + "_rate", 0.0))
 
-        for name, value in self._weights.items():
+        for name in self._weights:
             columns.append(("status_average_%s_time" % name, 0.0))
 
         return columns

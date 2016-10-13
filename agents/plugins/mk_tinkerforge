@@ -184,7 +184,6 @@ def display_on_segment(conn, settings, text):
     #      |______|
     #        0x08
 
-    DIGITS = []
     CHARACTERS = {
         "0" : 0x3f, "1" : 0x06, "2" : 0x5b, "3" : 0x4f, "4" : 0x66,
         "5" : 0x6d, "6" : 0x7d, "7" : 0x07, "8" : 0x7f, "9" : 0x6f,
@@ -277,7 +276,7 @@ def main():
     parser.add_option("--install", action="store_true",
                       help="install tinkerforge python api to same directory as the plugin")
 
-    (options, args) = parser.parse_args()
+    options = parser.parse_args()[0]
 
     settings = {
         'host': options.host,

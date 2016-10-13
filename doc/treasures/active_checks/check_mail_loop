@@ -285,7 +285,7 @@ def fetch_mails():
             if retcode == 'OK' and messages[0].strip():
                 for num in messages[0].split(' '):
                     try:
-                        ty, data = g_M.fetch(num, '(RFC822)')
+                        data = g_M.fetch(num, '(RFC822)')[1]
                         mails[num] = email.message_from_string(data[0][1])
                     except Exception, e:
                         raise Exception('Failed to fetch mail %s (%s). Available messages: %r' % (num, parse_exception(e), messages))
@@ -357,9 +357,9 @@ def check_mails():
     now          = time.time()
 
     # Loop all expected mails and check whether or not they have been received
-    for ident, (send_ts, key) in g_expected.items():
+    for ident, (send_ts, _unused_key) in g_expected.items():
         if ident in g_mails:
-            mail_index, recv_ts  = g_mails[ident]
+            recv_ts  = g_mails[ident][1]
 
             if duration == None:
                 duration = recv_ts - send_ts
@@ -411,13 +411,13 @@ def cleanup_mailbox():
     try:
         # Do not delete all messages in the inbox. Only the ones which were
         # processed before! In the meantime there might be occured new ones.
-        for ident, (mail_index, recv_ts) in g_mails.items() + g_obsolete.items():
+        for mail_index, _unused_recv_ts in g_mails.values() + g_obsolete.values():
             if fetch_proto == 'POP3':
                 response = g_M.dele(mail_index + 1)
                 if not response.startswith("+OK"):
                     raise Exception("Response from server: [%s]" % response)
             else:
-                ty, data = g_M.store(mail_index, '+FLAGS', '\\Deleted')
+                ty = g_M.store(mail_index, '+FLAGS', '\\Deleted')[0]
                 if ty != 'OK':
                     raise Exception("Response from server: [%s]" % response)
 

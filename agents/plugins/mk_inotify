@@ -73,7 +73,7 @@ def output_data():
         sys.stdout.write(file(configured_paths).read())
 
     now = time.time()
-    for dirpath, dirnames, filenames in os.walk(mk_vardir):
+    for dirpath, _unused_dirnames, filenames in os.walk(mk_vardir):
         for filename in filenames:
             if filename.startswith("mk_inotify.stats"):
                 try:
@@ -151,7 +151,7 @@ output = []         # Data to be written to disk
 def get_watched_files():
     files = set([])
     for folder, attributes in folder_configs.items():
-        for mode, filenames in attributes["monitor_files"].items():
+        for filenames in attributes["monitor_files"].values():
             for filename in filenames:
                 files.add("configured\tfile\t%s/%s" % (folder, filename))
         if attributes.get("monitor_all"):
@@ -209,7 +209,7 @@ def do_output(what, event):
             try:
                 stats = os.stat(event.pathname)
                 line += "\t%d\t%d" % (stats.st_size, stats.st_mtime)
-            except Exception, e:
+            except Exception:
                 pass
         output.append(line)
         if opt_foreground:

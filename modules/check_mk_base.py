@@ -1346,10 +1346,12 @@ def is_expected_agent_version(agent_version, expected_version):
                 (agent_version, expected_version, e))
 
 
+# Works with Check_MK version (without tailing .cee and/or .demo)
 def is_daily_build_version(v):
     return len(v) == 10 or '-' in v
 
 
+# Works with Check_MK version (without tailing .cee and/or .demo)
 def branch_of_daily_build(v):
     if len(v) == 10:
         return "master"

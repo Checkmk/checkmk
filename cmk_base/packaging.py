@@ -24,8 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
 import ast
-import pprint, tarfile
+import pprint
+import sys
+import tarfile
+import time
 
 import cmk.tty as tty
 import cmk.paths

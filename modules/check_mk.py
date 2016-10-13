@@ -4773,8 +4773,8 @@ try:
             show_paths()
             done = True
         elif o in ['-P', '--package']:
-            load_module("packaging")
-            do_packaging(args)
+            import cmk_base.packaging
+            cmk_base.packaging.do_packaging(args)
             done = True
         elif o in ['--localize']:
             import cmk_base.localize

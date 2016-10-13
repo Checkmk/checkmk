@@ -1118,47 +1118,47 @@ def automation_get_agent_output(args):
 
 
 def automation_get_package_info(args):
-    load_module("packaging")
+    import cmk_base.packaging
     packages = {}
-    for package_name in all_package_names():
-        packages[package_name] = read_package_info(package_name)
+    for package_name in cmk_base.packaging.all_package_names():
+        packages[package_name] = cmk_base.packaging.read_package_info(package_name)
 
     return {
-        "installed" : packages,
-        "unpackaged" : unpackaged_files(),
-        "parts" : package_part_info(),
+        "installed"  : packages,
+        "unpackaged" : cmk_base.packaging.unpackaged_files(),
+        "parts"      : cmk_base.packaging.package_part_info(),
     }
 
 
 def automation_get_package(args):
-    load_module("packaging")
+    import cmk_base.packaging
     package_name = args[0]
-    package = read_package_info(package_name)
+    package = cmk_base.packaging.read_package_info(package_name)
     if not package:
         raise MKAutomationError("Package not installed or corrupt")
 
     output_file = fake_file()
-    create_mkp_file(package, file_object=output_file)
+    cmk_base.packaging.create_mkp_file(package, file_object=output_file)
     return package, output_file.content()
 
 
 def automation_create_or_edit_package(args, mode):
-    load_module("packaging")
+    import cmk_base.packaging
     package_name = args[0]
     new_package_info = eval(sys.stdin.read())
     if mode == "create":
-        create_package(new_package_info)
+        cmk_base.packaging.create_package(new_package_info)
     else:
-        edit_package(package_name, new_package_info)
+        cmk_base.packaging.edit_package(package_name, new_package_info)
     return None
 
 
 def automation_install_package(args):
-    load_module("packaging")
+    import cmk_base.packaging
     file_content = sys.stdin.read()
     input_file = fake_file(file_content)
     try:
-        return install_package(file_object=input_file)
+        return cmk_base.packaging.install_package(file_object=input_file)
     except Exception, e:
         if cmk.debug.enabled():
             raise
@@ -1166,29 +1166,29 @@ def automation_install_package(args):
 
 
 def automation_remove_or_release_package(args, mode):
-    load_module("packaging")
+    import cmk_base.packaging
     package_name = args[0]
-    package = read_package_info(package_name)
+    package = cmk_base.packaging.read_package_info(package_name)
     if not package:
         raise MKAutomationError("Package not installed or corrupt")
     if mode == "remove":
-        remove_package(package)
+        cmk_base.packaging.remove_package(package)
     else:
-        remove_package_info(package_name)
+        cmk_base.packaging.remove_package_info(package_name)
     return None
 
 
 def automation_remove_unpackaged_file(args):
-    load_module("packaging")
+    import cmk_base.packaging
     part_name = args[0]
-    if part_name not in [ p[0] for p in package_parts ]:
+    if part_name not in [ p[0] for p in cmk_base.packaging.package_parts ]:
         raise MKAutomationError("Invalid package part")
 
     rel_path = args[1]
     if "../" in rel_path or rel_path.startswith("/"):
         raise MKAutomationError("Invalid file name")
 
-    for part, _unused_title, _unused_perm, dir in package_parts:
+    for part, _unused_title, _unused_perm, dir in cmk_base.packaging.package_parts:
         if part == part_name:
             abspath = dir + "/" + rel_path
             if not os.path.isfile(abspath):

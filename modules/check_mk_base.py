@@ -62,7 +62,7 @@ import cmk.paths
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
-#   out because of errors. Remove all explicit "if opt_debug:...".
+#   out because of errors. Remove all explicit "if cmk.debug.enabled()...".
 #   Note: these new functions should force a flush() if TTY is not
 #   a terminal (so that error messages arrive the CMC in time)
 # - --debug should *only* influence exception handling
@@ -256,7 +256,7 @@ def apply_parse_function(info, section_name):
                 g_checked_item = None
                 return parse_function(info)
             except Exception:
-                if opt_debug:
+                if cmk.debug.enabled():
                     raise
 
                 # In case of a failed parse function return the exception instead of
@@ -474,7 +474,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
 
             if not piggy_output:
                 raise
-            elif opt_debug:
+            elif cmk.debug.enabled():
                 raise
 
     output += piggy_output
@@ -1269,7 +1269,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
         raise
 
     except MKGeneralException, e:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         output = "%s, " % e
         status = exit_spec.get("exception", 3)
@@ -1278,7 +1278,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
         try:
             submit_check_mk_aggregation(hostname, status, output)
         except:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
 
     if checkresult_file_fd != None:
@@ -1338,7 +1338,7 @@ def is_expected_agent_version(agent_version, expected_version):
 
         return True
     except Exception, e:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         raise MKGeneralException("Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
                 (agent_version, expected_version, e))
@@ -1499,7 +1499,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
                 dont_submit = True
 
             except Exception, e:
-                if opt_debug:
+                if cmk.debug.enabled():
                     raise
                 result = 3, create_crash_dump(hostname, checkname, item, params, description, info), []
 
@@ -1592,7 +1592,7 @@ def create_crash_dump(hostname, check_type, item, params, description, info):
 
         text += "\n" + "Crash dump:\n" + pack_crash_dump(crash_dir) + "\n"
     except:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
 
     return text
@@ -2180,7 +2180,7 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
             infotexts.append("no reference for prediction (%s)" % e)
 
         except Exception, e:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             return 3, "%s" % e, []
 
@@ -2403,7 +2403,7 @@ def check_timeperiod(timeperiod):
             raise
 
         except Exception:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             else:
                 # If the query is not successful better skip this check then fail

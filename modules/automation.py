@@ -123,20 +123,20 @@ def do_automation(cmd, args):
 
     except (MKAutomationError, MKTimeout), e:
         sys.stderr.write("%s\n" % e)
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         output_profile()
         sys.exit(1)
 
     except Exception, e:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         else:
             sys.stderr.write("%s\n" % e)
             output_profile()
             sys.exit(2)
 
-    if opt_debug:
+    if cmk.debug.enabled():
         import pprint
         sys.stdout.write(pprint.pformat(result)+"\n")
     else:
@@ -338,7 +338,7 @@ def automation_analyse_service(args):
                         "parameters"       : compute_check_parameters(hostname, ct, item, params),
                     }
     except:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
 
     # 3. Classical checks
@@ -489,7 +489,7 @@ def automation_restart(job = "restart"):
         except Exception, e:
 	    if backup_path:
 		os.rename(backup_path, objects_file)
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
 	    raise MKAutomationError("Error creating configuration: %s" % e)
 
@@ -511,7 +511,7 @@ def automation_restart(job = "restart"):
     except Exception, e:
         if backup_path and os.path.exists(backup_path):
             os.remove(backup_path)
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         raise MKAutomationError(str(e))
 
@@ -572,7 +572,7 @@ def automation_get_check_information():
             checks[check_type]["service_description"] = check.get("service_description","%s")
             checks[check_type]["snmp"] = check_uses_snmp(check_type)
         except Exception, e:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             raise MKAutomationError("Failed to parse man page '%s': %s" % (check_type, e))
     return checks
@@ -590,7 +590,7 @@ def automation_get_real_time_checks():
                 if manfile:
                     title = file(manfile).readline().strip().split(":", 1)[1].strip()
             except Exception:
-                if opt_debug:
+                if cmk.debug.enabled():
                     raise
 
             checks.append((check_type, "%s - %s" % (check_type, title)))
@@ -771,7 +771,7 @@ def automation_diag_host(args):
             return 1, "Command not implemented"
 
     except Exception, e:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         return 1, str(e)
 
@@ -1044,7 +1044,7 @@ def load_resource_file(macros):
             varname, value = line.split('=', 1)
             macros[varname] = value
     except:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
 
 
@@ -1080,7 +1080,7 @@ def execute_check_plugin(commandline):
         return status, output
 
     except Exception, e:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         return 3, "UNKNOWN - Cannot execute command: %s" % e
 
@@ -1111,7 +1111,7 @@ def automation_get_agent_output(args):
     except Exception, e:
         success = False
         output = "Failed to fetch data from %s: %s\n" % (hostname, e)
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
 
     return success, output, agent_data
@@ -1160,7 +1160,7 @@ def automation_install_package(args):
     try:
         return install_package(file_object=input_file)
     except Exception, e:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         raise MKAutomationError("Cannot install package: %s" % e)
 

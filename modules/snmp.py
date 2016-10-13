@@ -423,7 +423,7 @@ def get_cached_snmpwalk(hostname, fetchoid):
     except IOError:
         return None # don't print error when not cached yet
     except:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         verbose("Failed to read cached SNMP walk from %s, ignoring.\n" % path)
         return None

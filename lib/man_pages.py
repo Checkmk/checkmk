@@ -38,6 +38,7 @@ import StringIO
 import subprocess
 import time
 
+import cmk.debug
 import cmk.paths
 import cmk.tty as tty
 
@@ -260,9 +261,8 @@ def load_man_page_catalog():
         try:
             parsed = _parse_man_page_header(name, path)
         except Exception, e:
-            # TODO
-            #if opt_debug:
-            #    raise
+            if cmk.debug.enabled():
+                raise
             parsed = _create_fallback_man_page(name, path, e)
 
         if "catalog" in parsed:
@@ -421,9 +421,8 @@ def _parse_man_page_header(name, path):
                 key, rest = line.split(":", 1)
                 parsed[key] = rest.lstrip()
         except Exception:
-            # TODO
-            #if opt_debug:
-            #    raise
+            if cmk.debug.enabled():
+                raise
             sys.stderr.write("ERROR: Invalid line %d in man page %s\n%s" % (
                     lineno, path, line))
             break

@@ -47,6 +47,7 @@ import inspect
 
 from cmk.regex import regex, is_regex
 from cmk.exceptions import MKGeneralException, MKTerminate
+import cmk.debug
 import cmk.tty as tty
 import cmk.store as store
 import cmk.paths
@@ -69,7 +70,9 @@ import cmk.man_pages as man_pages
 g_profile      = None
 g_profile_path = 'profile.out'
 
-opt_debug        = '--debug' in sys.argv[1:]
+if '--debug' in sys.argv[1:]:
+    cmk.debug.enable()
+
 opt_interactive  = '--interactive' in sys.argv[1:]
 opt_verbose      = ('-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]) and 1 or 0
 
@@ -261,7 +264,7 @@ try:
             load_module(module)
 
 except Exception, e:
-    if opt_debug:
+    if cmk.debug.enabled():
         raise
     sys.stderr.write("Cannot read module %s: %s\n" % (module, e))
     sys.exit(5)
@@ -343,7 +346,7 @@ def load_checks():
                     execfile(f, globals())
                 except Exception, e:
                     sys.stderr.write("Error in plugin file %s: %s\n" % (f, e))
-                    if opt_debug:
+                    if cmk.debug.enabled():
                         raise
                     # If we exit here, from a check_mk helper, check_mk will just
                     # try to restart the helper. This causes a tight loop of helper
@@ -1119,7 +1122,7 @@ def in_extraconf_hostlist(hostlist, hostname):
                 if regex(hostentry).match(hostname) != None:
                     return not negate
         except MKGeneralException:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
 
     return False
@@ -1571,7 +1574,7 @@ def schedule_inventory_check(hostname):
 
         s.send("COMMAND [%d] %s\n" % (now, command))
     except Exception:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
 
 
@@ -1769,13 +1772,13 @@ def snmp_get_oid(hostname, ipaddress, oid):
 
     line = snmp_process.stdout.readline().strip()
     if not line:
-        if opt_debug:
+        if cmk.debug.enabled():
             sys.stdout.write("Error in response to snmpget.\n")
         return None
 
     item, value = line.split("=", 1)
     value = value.strip()
-    if opt_debug:
+    if cmk.debug.enabled():
         sys.stdout.write("SNMP answer: ==> [%s]\n" % value)
     if value.startswith('No more variables') or value.startswith('End of MIB') \
        or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
@@ -1809,7 +1812,7 @@ def get_single_oid(hostname, ipaddress, oid):
     # in question. The *cache* is working including the X, however.
 
     if oid[0] != '.':
-        if opt_debug:
+        if cmk.debug.enabled():
             raise MKGeneralException("OID definition '%s' does not begin with a '.'" % oid)
         else:
             oid = '.' + oid
@@ -1838,7 +1841,7 @@ def get_single_oid(hostname, ipaddress, oid):
             else:
                 value = snmp_get_oid(hostname, ipaddress, oid)
         except:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             value = None
 
@@ -2372,7 +2375,7 @@ def do_update_dns_cache():
                 except Exception, e:
                     failed.append(hostname)
                     verbose("lookup failed: %s\n" % e)
-                    if opt_debug:
+                    if cmk.debug.enabled():
                         raise
                     continue
 
@@ -3125,7 +3128,7 @@ def replace_macros(s, macros):
                 s = s.replace(key, value.decode("utf-8"))
             except:
                 # If this does not help, do not replace
-                if opt_debug:
+                if cmk.debug.enabled():
                     raise
 
     return s
@@ -3276,7 +3279,7 @@ def do_snmpwalk(hostnames):
             do_snmpwalk_on(host, cmk.paths.snmpwalks_dir + "/" + host)
         except Exception, e:
             sys.stderr.write("Error walking %s: %s\n" % (host, e))
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
         cleanup_globals()
 
@@ -3307,7 +3310,7 @@ def do_snmpwalk_on(hostname, filename):
                 out.write("%s %s\n" % (oid, value))
             verbose("%d variables.\n" % len(rows))
         except:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
 
     out.close()
@@ -3780,7 +3783,7 @@ def do_create_config(with_agents=True):
             do_bake_agents()
             sys.stdout.write(tty.ok + "\n")
         except Exception, e:
-            if opt_debug:
+            if cmk.debug.enabled():
                raise
             sys.stdout.write("Error: %s\n" % e)
 
@@ -3811,7 +3814,7 @@ def do_update(with_precompile):
 
     except Exception, e:
         sys.stderr.write("Configuration Error: %s\n" % e)
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         sys.exit(1)
 
@@ -3893,7 +3896,7 @@ def do_restart(only_reload = False):
             sys.stderr.write("Error creating configuration: %s\n" % e)
             if backup_path:
                 os.rename(backup_path, cmk.paths.nagios_objects_file)
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             sys.exit(1)
 
@@ -3919,7 +3922,7 @@ def do_restart(only_reload = False):
                 os.remove(backup_path)
         except:
             pass
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         sys.stderr.write("An error occurred: %s\n" % e)
         sys.exit(1)
@@ -3935,7 +3938,7 @@ def try_get_activation_lock():
         # Make sure that open file is not inherited to monitoring core!
         fcntl.fcntl(restart_lock_fd, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
         try:
-            if opt_debug:
+            if cmk.debug.enabled():
                 sys.stderr.write("Waiting for exclusive lock on %s.\n" %
                     lock_file)
             fcntl.flock(restart_lock_fd, fcntl.LOCK_EX |
@@ -4083,7 +4086,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
                 settings.get("probes", 2),
                 settings.get("max_ttl", 10),
                 quote_shell_string(ip))
-            if opt_debug:
+            if cmk.debug.enabled():
                 sys.stderr.write("Running '%s'\n" % command)
             procs.append( (host, ip, os.popen(command) ) )
         except:
@@ -4116,7 +4119,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
             continue
 
         elif len(lines) == 0:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise MKGeneralException("Cannot execute %s. Is traceroute installed? Are you root?" % command)
             else:
                 dot(tty.red, '!')
@@ -4398,7 +4401,7 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
             marks_hosts_with_path(_old_all_hosts, all_hosts, _f)
             marks_hosts_with_path(_old_clusters, clusters.keys(), _f)
         except Exception, e:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             else:
                 interactive_abort("Cannot read in configuration file %s: %s" % (_f, e))
@@ -4693,7 +4696,7 @@ for o,a in opts:
     elif o == '--procs':
         max_num_processes = int(a)
     elif o == '--debug':
-        opt_debug = True
+        cmk.debug.enable()
     elif o == '--interactive':
         opt_interactive = True
     elif o == '-I':
@@ -4941,7 +4944,7 @@ except MKTerminate, e:
 
 except (MKGeneralException, MKBailOut), e:
     sys.stderr.write("%s\n" % e)
-    if opt_debug:
+    if cmk.debug.enabled():
         raise
     sys.exit(3)
 

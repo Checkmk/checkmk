@@ -312,7 +312,7 @@ def locally_deliver_raw_context(raw_context, analyse=False):
             notify_plain_email(raw_context)
 
     except Exception, e:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         notify_log("ERROR: %s\n%s" % (e, format_exception()))
 
@@ -477,7 +477,7 @@ def notify_rulebased(raw_context, analyse=False):
                         call_notification_script(plugin, plugin_context)
 
             except Exception, e:
-                if opt_debug:
+                if cmk.debug.enabled():
                     raise
                 fe = format_exception()
                 notify_log("    ERROR: %s" % e)
@@ -589,7 +589,7 @@ def livestatus_fetch_contacts(host, service):
         return ",".join(aslist)
 
     except:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         return "" # We must allow notifications without Livestatus access
 
@@ -1437,7 +1437,7 @@ def send_ripe_bulks():
             try:
                 notify_bulk(bulk[0], bulk[-1])
             except Exception:
-                if opt_debug:
+                if cmk.debug.enabled():
                     raise
                 notify_log("Error sending bulk %s: %s" % (bulk[0], format_exception()))
 
@@ -1458,7 +1458,7 @@ def notify_bulk(dirname, uuids):
         try:
             params, context = eval(file(dirname + "/" + uuid).read())
         except Exception, e:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             notify_log("    Deleting corrupted or empty bulk file %s/%s: %s" % (dirname, uuid, e))
             continue
@@ -1649,7 +1649,7 @@ def livestatus_send_command(command):
         sock.send(message)
         sock.close()
     except Exception, e:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         notify_log("WARNING: cannot send livestatus command: %s" % e)
         notify_log("Command was: %s" % command)

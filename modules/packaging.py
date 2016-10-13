@@ -362,7 +362,7 @@ def remove_package(package):
                     os.remove(path)
                     verbose("\n")
                 except Exception, e:
-                    if opt_debug:
+                    if cmk.debug.enabled():
                         raise
                     raise Exception("Cannot remove %s: %s\n" % (path, e))
 
@@ -540,7 +540,7 @@ def verify_check_mk_version(package):
         compatible = parse_check_mk_version(min_version) <= parse_check_mk_version(cmk_version)
     except:
         # Be compatible: When a version can not be parsed, then skip this check
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         return
 

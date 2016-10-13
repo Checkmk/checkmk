@@ -40,7 +40,7 @@ def do_compress_history(args):
             compress_history_file(filename, filename + ".compressed")
             verbose("OK\n")
         except Exception, e:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             bail_out(str(e))
 

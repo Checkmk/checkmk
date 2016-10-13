@@ -46,7 +46,7 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
     try:
         response = eval(simple_livestatus_query(lql))[0][0]
     except Exception, e:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)
 

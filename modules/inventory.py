@@ -65,7 +65,7 @@ for f in filelist:
             execfile(f)
         except Exception, e:
             sys.stderr.write("Error in inventory plugin file %s: %s\n" % (f, e))
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             sys.exit(5)
 
@@ -180,7 +180,7 @@ def do_inv(hostnames):
             do_inv_for(hostname)
             verbose("..OK\n")
         except Exception, e:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             verbose("Failed: %s\n" % e)
             errors.append("Failed to inventorize %s: %s" % (hostname, e))
@@ -228,7 +228,7 @@ def do_inv_check(hostname):
         sys.exit(state)
 
     except Exception, e:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         sys.stdout.write("Inventory failed: %s\n" % e)
         sys.exit(opt_inv_fail_status)
@@ -407,7 +407,7 @@ def run_inv_export_hooks(hostname, tree):
             try:
                 inv_export[hookname]["export_function"](hostname, params, tree)
             except Exception, e:
-                if opt_debug:
+                if cmk.debug.enabled():
                     raise
                 raise MKGeneralException("Failed to execute export hook %s: %s" % (
                     hookname, e))

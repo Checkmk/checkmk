@@ -71,14 +71,14 @@ def do_discovery(hostnames, check_types, only_new):
     for hostname in hostnames:
         try:
             verbose(tty.bold + hostname + tty.normal + ":\n")
-            if opt_debug:
+            if cmk.debug.enabled():
                 on_error = "raise"
             else:
                 on_error = "warn"
             do_discovery_for(hostname, check_types, only_new, use_caches, on_error)
             verbose("\n")
         except Exception, e:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             verbose(" -> Failed: %s\n" % e)
 
@@ -215,7 +215,7 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
         raise # let general timeout through
 
     except Exception, e:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         err = str(e)
     return [counts["added"], counts["removed"], counts["kept"], counts["added"] + counts["kept"]], err
@@ -273,7 +273,7 @@ def check_discovery(hostname, ipaddress=None):
                                         on_error="raise",
                                         ipaddress=ipaddress)
         except socket.gaierror, e:
-            if e[0] == -2 and not opt_debug:
+            if e[0] == -2 and cmk.debug.disabled():
                 # Don't crash on unknown host name, it may be provided by the user
                 raise MKAgentError(e[1])
             raise
@@ -371,7 +371,7 @@ def check_discovery(hostname, ipaddress=None):
         raise
 
     except Exception, e:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         output = create_crash_dump(hostname, "discovery", None, None, "Check_MK Discovery", [])\
             .replace("Crash dump:\n", "Crash dump:\\n")
@@ -597,7 +597,7 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
                 info.append(None)
 
             except:
-                if opt_debug:
+                if cmk.debug.enabled():
                     raise
                 info.append(None)
 
@@ -733,7 +733,7 @@ def discover_services_impl(hostname, check_types, use_caches, on_error,
             except (KeyboardInterrupt, MKAgentError, MKSNMPError, MKTimeout):
                 raise
             except Exception, e:
-                if opt_debug:
+                if cmk.debug.enabled():
                     raise
                 raise MKGeneralException("Exception in check plugin '%s': %s" % (check_type, e))
         return discovered_services
@@ -865,7 +865,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, u
         if str(e):
             raise
     except MKParseFunctionError, e:
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
 
     if info == None: # No data for this check type
@@ -1178,7 +1178,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 except MKCounterWrapped, e:
                     result = (None, "WAITING - Counter based check, cannot be done offline")
                 except Exception, e:
-                    if opt_debug:
+                    if cmk.debug.enabled():
                         raise
                     result = (3, "UNKNOWN - invalid output from agent or error in check implementation")
                 if len(result) == 2:
@@ -1237,15 +1237,15 @@ def read_autochecks_of(hostname, world="config"):
     try:
         autochecks_raw = eval(file(filepath).read())
     except SyntaxError,e:
-        if opt_verbose or opt_debug:
+        if opt_verbose or cmk.debug.enabled():
             sys.stderr.write("Syntax error in file %s: %s\n" % (filepath, e))
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         return []
     except Exception, e:
-        if opt_verbose or opt_debug:
+        if opt_verbose or cmk.debug.enabled():
             sys.stderr.write("Error in file %s:\n%s\n" % (filepath, e))
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
         return []
 
@@ -1347,7 +1347,7 @@ def parse_autochecks_file(hostname):
 
             table.append((eval(checktypestring), item, paramstring))
         except:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             raise Exception("Invalid line %d in autochecks file %s" % (lineno, path))
     return table

@@ -72,7 +72,7 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
                     except IOError, e:
                         new_data = ""
                     except Exception, e:
-                        if opt_debug:
+                        if cmk.debug.enabled():
                             raise
                         log_function("Cannot read data from CMC: %s" % e)
 
@@ -87,7 +87,7 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
                     context = raw_context_from_string(data.rstrip('\n'))
                     event_function(context)
                 except Exception, e:
-                    if opt_debug:
+                    if cmk.debug.enabled():
                         raise
                     log_function("ERROR %s\n%s" % (e, format_exception()))
 
@@ -100,7 +100,7 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
         except SystemExit, e:
             sys.exit(e)
         except Exception, e:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             log_function("ERROR %s\n%s" % (e, format_exception()))
 
@@ -108,7 +108,7 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
             try:
                 call_every_loop()
             except Exception, e:
-                if opt_debug:
+                if cmk.debug.enabled():
                     raise
                 log_function("ERROR %s\n%s" % (e, format_exception()))
 
@@ -126,7 +126,7 @@ def raw_context_from_string(data):
             varname, value = line.strip().split("=", 1)
             context[varname] = expand_backslashes(value)
     except Exception: # line without '=' ignored or alerted
-        if opt_debug:
+        if cmk.debug.enabled():
             raise
     return context
 

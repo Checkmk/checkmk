@@ -922,7 +922,7 @@ def precompile_hostchecks():
         try:
             precompile_hostcheck(host)
         except Exception, e:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             sys.stderr.write("Error precompiling checks for host %s: %s\n" % (host, e))
             sys.exit(5)
@@ -991,7 +991,11 @@ if os.path.islink(%(dst)r):
     output.write("""
 # very simple commandline parsing: only -v and -d are supported
 opt_verbose = ('-v' in sys.argv) and 1 or 0
-opt_debug   = '-d' in sys.argv
+
+import cmk.debug
+
+if '-d' in sys.argv:
+    cmk.debug.enable()
 
 # make sure these names are defined (even if never needed)
 no_discovery_possible = None

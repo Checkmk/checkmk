@@ -30,6 +30,8 @@ import subprocess
 
 import cmk.tty as tty
 
+import cmk_base.agent_simulator
+
 OID_END              =  0  # Suffix-part of OID that was not specified
 OID_STRING           = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
 OID_BIN              = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
@@ -516,7 +518,7 @@ def get_stored_snmpwalk(hostname, oid):
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
                     try:
-                        value = agent_simulator_process(parts[1])
+                        value = cmk_base.agent_simulator.process(parts[1])
                     except:
                         value = parts[1] # agent simulator missing in precompiled mode
                 else:

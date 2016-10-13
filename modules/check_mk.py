@@ -266,7 +266,7 @@ config_variable_names = set(vars().keys()).difference(known_vars)
 
 # at check time (and many of what is also needed at administration time).
 try:
-    modules = [ 'check_mk_base', 'discovery', 'snmp', 'agent_simulator', 'notify', 'events',
+    modules = [ 'check_mk_base', 'discovery', 'snmp', 'notify', 'events',
                  'alert_handling', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery', 'cap' ]
     for module in modules:
         if module_exists(module):
@@ -4777,8 +4777,8 @@ try:
             do_packaging(args)
             done = True
         elif o in ['--localize']:
-            load_module("localize")
-            do_localize(args)
+            import cmk_base.localize
+            cmk_base.localize.do_localize(args)
             done = True
         elif o == '--donate':
             do_donation()
@@ -4868,15 +4868,18 @@ try:
             load_module("rrd")
             do_create_rrd(args)
             done = True
+
         elif o == '--convert-rrds':
             read_config_files(with_conf_d=True)
             load_module("rrd")
             do_convert_rrds(args)
             done = True
+
         elif o == '--compress-history':
-            load_module("compresslog")
-            do_compress_history(args)
+            import cmk_base.compress_history
+            cmk_base.compress_history.do_compress_history(args)
             done = True
+
         elif o in [ '-A', '--bake-agents' ]:
             if 'do_bake_agents' not in globals():
                 bail_out("Agent baking is not implemented in your version of Check_MK. Sorry.")

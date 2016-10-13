@@ -1063,9 +1063,6 @@ no_discovery_possible = None
     else:
         output.write("has_inline_snmp = False\n")
 
-    if agent_simulator:
-        output.write(stripped_python_file(cmk.paths.modules_dir + "/agent_simulator.py"))
-
     # check info table
     # We need to include all those plugins that are referenced in the host's
     # check table

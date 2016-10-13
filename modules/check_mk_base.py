@@ -60,6 +60,8 @@ import cmk.render as render
 import cmk.crash_reporting as crash_reporting
 import cmk.paths
 
+import cmk_base.agent_simulator
+
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
 #   out because of errors. Remove all explicit "if cmk.debug.enabled()...".
@@ -748,7 +750,7 @@ def get_agent_info(hostname, ipaddress, max_cache_age):
         write_cache_file(hostname, output)
 
     if agent_simulator:
-        output = agent_simulator_process(output)
+        output = cmk_base.agent_simulator.process(output)
 
     return output
 

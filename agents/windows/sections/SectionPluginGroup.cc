@@ -476,12 +476,12 @@ bool SectionPluginGroup::fileInvalid(const char *name) const {
 }
 
 std::string SectionPluginGroup::withInterpreter(const char *path) const {
-    size_t path_len = strlen(path) - 4;
+    size_t path_len = strlen(path);
     if (!strcmp(path + path_len - 3, ".pl")) {
         return std::string("perl.exe \"") + path + "\"";
     } else if (!strcmp(path + path_len - 3, ".py")) {
         return std::string("python.exe \"") + path + "\"";
-    } else if (!strcmp(path + path_len, ".vbs")) {
+    } else if (!strcmp(path + path_len - 4, ".vbs")) {
         // If this is a vbscript don't rely on the default handler for this
         // file extensions. This might be notepad or some other editor by
         // default on a lot of systems. So better add cscript as interpreter.

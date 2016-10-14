@@ -21,6 +21,7 @@
     * 3936 FIX: chrony: support new params dictionary and rule "State of NTP time synchronisation"
     * 3649 FIX: Added a workaround for an escaping-related bug in old bash versions...
     * 3958 FIX: netapp_qtree_quota: fixed graph scaling
+    * 3823 FIX: The windows agent were unable to execute powershell, python and pearl scripts
 
     Multisite:
     * 3897 FIX: Fixed possible exception in raw edition when rendering graphs

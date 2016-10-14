@@ -10,6 +10,7 @@ import testlib.pylint_cmk as pylint_cmk
 def test_pylint_misc():
     search_paths = [
         "cmk_base",
+        "../cmc/cmk_base",
         "lib",
         "bin",
         "notifications",

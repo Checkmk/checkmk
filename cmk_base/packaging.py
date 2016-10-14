@@ -38,6 +38,8 @@ import cmk.paths
 import cmk.log
 logger = cmk.log.get_logger(__name__)
 
+import cmk_base.utils
+
 pac_ext = ".mkp"
 
 # TODO: Subclass MKGeneralException()?
@@ -528,16 +530,16 @@ def verify_check_mk_version(package):
     min_version = package["version.min_required"]
     cmk_version = cmk.__version__
 
-    if is_daily_build_version(min_version):
-        min_branch = branch_of_daily_build(min_version)
+    if cmk_base.utils.is_daily_build_version(min_version):
+        min_branch = cmk_base.utils.branch_of_daily_build(min_version)
         if min_branch == "master":
             return # can not check exact version
         else:
             # use the branch name (e.g. 1.2.8 as min version)
             min_version = min_branch
 
-    if is_daily_build_version(cmk_version):
-        branch = branch_of_daily_build(cmk_version)
+    if cmk_base.utils.is_daily_build_version(cmk_version):
+        branch = cmk_base.utils.branch_of_daily_build(cmk_version)
         if branch == "master":
             return # can not check exact version
         else:
@@ -546,7 +548,8 @@ def verify_check_mk_version(package):
 
     compatible = True
     try:
-        compatible = parse_check_mk_version(min_version) <= parse_check_mk_version(cmk_version)
+        compatible = cmk_base.utils.parse_check_mk_version(min_version) \
+                        <= cmk_base.utils.parse_check_mk_version(cmk_version)
     except:
         # Be compatible: When a version can not be parsed, then skip this check
         if cmk.debug.enabled():

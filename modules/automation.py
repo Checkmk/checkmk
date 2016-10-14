@@ -1155,8 +1155,7 @@ def automation_create_or_edit_package(args, mode):
 
 def automation_install_package(args):
     import cmk_base.packaging
-    file_content = sys.stdin.read()
-    input_file = fake_file(file_content)
+    input_file = StringIO(sys.stdin.read())
     try:
         return cmk_base.packaging.install_package(file_object=input_file)
     except Exception, e:

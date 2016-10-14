@@ -61,6 +61,7 @@ import cmk.crash_reporting as crash_reporting
 import cmk.paths
 
 import cmk_base.agent_simulator
+import cmk_base.utils
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -1308,10 +1309,10 @@ def is_expected_agent_version(agent_version, expected_version):
 
         elif type(expected_version) == tuple and expected_version[0] == 'at_least':
             spec = expected_version[1]
-            if is_daily_build_version(agent_version) and 'daily_build' in spec:
+            if cmk_base.utils.is_daily_build_version(agent_version) and 'daily_build' in spec:
                 expected = int(spec['daily_build'].replace('.', ''))
 
-                branch = branch_of_daily_build(agent_version)
+                branch = cmk_base.utils.branch_of_daily_build(agent_version)
                 if branch == "master":
                     agent = int(agent_version.replace('.', ''))
 
@@ -1322,7 +1323,8 @@ def is_expected_agent_version(agent_version, expected_version):
                     return False
 
             elif 'release' in spec:
-                if parse_check_mk_version(agent_version) < parse_check_mk_version(spec['release']):
+                if cmk_base.utils.parse_check_mk_version(agent_version) \
+                    < cmk_base.utils.parse_check_mk_version(spec['release']):
                     return False
 
         return True
@@ -1331,65 +1333,6 @@ def is_expected_agent_version(agent_version, expected_version):
             raise
         raise MKGeneralException("Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
                 (agent_version, expected_version, e))
-
-
-# Works with Check_MK version (without tailing .cee and/or .demo)
-def is_daily_build_version(v):
-    return len(v) == 10 or '-' in v
-
-
-# Works with Check_MK version (without tailing .cee and/or .demo)
-def branch_of_daily_build(v):
-    if len(v) == 10:
-        return "master"
-    else:
-        return v.split('-')[0]
-
-
-# Parses versions of Check_MK and converts them into comparable integers.
-# This does not handle daily build numbers, only official release numbers.
-# 1.2.4p1   -> 01020450001
-# 1.2.4     -> 01020450000
-# 1.2.4b1   -> 01020420100
-# 1.2.3i1p1 -> 01020310101
-# 1.2.3i1   -> 01020310100
-# TODO: Copied to werks.py - find location for common code.
-def parse_check_mk_version(v):
-    def extract_number(s):
-        number = ''
-        for i, c in enumerate(s):
-            try:
-                int(c)
-                number += c
-            except ValueError:
-                s = s[i:]
-                return number and int(number) or 0, s
-        return number and int(number) or 0, ''
-
-    parts = v.split('.')
-    while len(parts) < 3:
-        parts.append("0")
-
-    major, minor, rest = parts
-    sub, rest = extract_number(rest)
-
-    if not rest:
-        val = 50000
-    elif rest[0] == 'p':
-        num, rest = extract_number(rest[1:])
-        val = 50000 + num
-    elif rest[0] == 'i':
-        num, rest = extract_number(rest[1:])
-        val = 10000 + num*100
-
-        if rest and rest[0] == 'p':
-            num, rest = extract_number(rest[1:])
-            val += num
-    elif rest[0] == 'b':
-        num, rest = extract_number(rest[1:])
-        val = 20000 + num*100
-
-    return int('%02d%02d%02d%05d' % (int(major), int(minor), sub, val))
 
 
 # Loops over all checks for a host, gets the data, calls the check

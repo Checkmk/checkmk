@@ -62,6 +62,7 @@ import cmk.paths
 
 import cmk_base.agent_simulator
 import cmk_base.utils
+import cmk_base.prediction
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -2101,7 +2102,8 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
     else:
         try:
             ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
-                get_predictive_levels(dsname, params, "MAX", levels_factor=factor * scale)
+                cmk_base.prediction.get_levels(g_hostname, g_service_description,
+                                dsname, params, "MAX", levels_factor=factor * scale)
 
             if ref_value:
                 infotexts.append("predicted reference: %.2f%s" % (ref_value / scale, unit))
@@ -2307,6 +2309,7 @@ def camelcase_to_underscored(name):
 
 
 # Return plain response from local Livestatus - without any parsing
+# TODO: Use livestatus module
 def simple_livestatus_query(lql):
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.connect(cmk.paths.livestatus_unix_socket)

@@ -24,27 +24,40 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Code for predictive monitoring / anomaly detection
+"""Code for predictive monitoring / anomaly detection"""
 
-# Export data from an RRD file. This requires an up-to-date
-# version of the rrdtools.
+import os
+import time
+import math
 
+import livestatus
+
+import cmk.paths
+import cmk.debug
+
+from cmk.exceptions import MKGeneralException
+
+import cmk.log
+logger = cmk.log.get_logger(__name__)
 
 # Fetch RRD historic metrics data of a specific service. returns a tuple
 # of (step, [value1, value2, ...])
-# IMPORTANT: Until we have a central library, keep this function in sync with
+# TODO: IMPORTANT: Until we have a central library, keep this function in sync with
 # the function get_rrd_data() from web/prediction.py.
 def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
     step = 1
     rpn = "%s.%s" % (varname, cf.lower()) # "MAX" -> "max"
+
     lql = "GET services\n" \
           "Columns: rrddata:m1:%s:%d:%d:%d\n" \
           "OutputFormat: python\n" \
           "Filter: host_name = %s\n" \
           "Filter: description = %s\n" % (
              rpn, fromtime, untiltime, step, hostname, service_description)
+
     try:
-        response = eval(simple_livestatus_query(lql))[0][0]
+        connection = livestatus.SingleSiteConnection("unix:%s" % cmk.paths.livestatus_unix_socket)
+        response = connection.query_value(lql)
     except Exception, e:
         if cmk.debug.enabled():
             raise
@@ -120,7 +133,7 @@ def get_prediction_timegroup(t, period_info):
     return timegroup, from_time, until_time, rel_time
 
 
-def compute_prediction(pred_file, timegroup, params, period_info, from_time, dsname, cf):
+def compute_prediction(hostname, service_description, pred_file, timegroup, params, period_info, from_time, dsname, cf):
     # Collect all slices back into the past until the time horizon
     # is reached
     begin = from_time
@@ -140,7 +153,7 @@ def compute_prediction(pred_file, timegroup, params, period_info, from_time, dsn
     while begin >= absolute_begin:
         tg, fr, un = get_prediction_timegroup(begin, period_info)[:3]
         if tg == timegroup:
-            step, data = get_rrd_data(g_hostname, g_service_description,
+            step, data = get_rrd_data(hostname, service_description,
                                       dsname, cf, fr, un-1)
             if smallest_step == None:
                 smallest_step = step
@@ -190,7 +203,7 @@ def stdev(point_line, average):
 # levels_factor: this multiplies all absolute levels. Usage for example
 # in the cpu.loads check the multiplies the levels by the number of CPU
 # cores.
-def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
+def get_levels(hostname, service_description, dsname, params, cf, levels_factor=1.0):
     # Compute timegroup
     now = time.time()
     period_info = prediction_periods[params["period"]]
@@ -204,8 +217,8 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
        get_prediction_timegroup(now, period_info)
 
     # Compute directory for prediction data
-    dir = "%s/prediction/%s/%s/%s" % (cmk.paths.var_dir, g_hostname,
-             pnp_cleanup(g_service_description), pnp_cleanup(dsname))
+    dir = "%s/prediction/%s/%s/%s" % (cmk.paths.var_dir, hostname,
+             pnp_cleanup(service_description), pnp_cleanup(dsname))
     if not os.path.exists(dir):
         os.makedirs(dir)
 
@@ -228,15 +241,15 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
         last_info = eval(file(info_file).read())
         for k, v in params.items():
             if last_info.get(k) != v:
-                verbose("Prediction parameters have changed")
+                logger.verbose("Prediction parameters have changed")
                 last_info = None
                 break
     except IOError:
-        verbose("No previous prediction for group %s available." % timegroup)
+        logger.verbose("No previous prediction for group %s available.", timegroup)
         last_info = None
 
     if last_info and last_info["time"] + period_info["valid"] * period_info["slice"] < now:
-        verbose("Prediction of %s outdated" % timegroup)
+        logger.verbose("Prediction of %s outdated", timegroup)
         last_info = None
 
     if last_info:
@@ -252,14 +265,15 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
                 try:
                     info = eval(file(dir + "/" + f).read())
                     if info["period"] != params["period"]:
-                        verbose("Removing obsolete prediction %s" % f[:-5])
+                        logger.verbose("Removing obsolete prediction %s", f[:-5])
                         os.remove(dir + "/" + f)
                         os.remove(dir + "/" + f[:-5])
                 except:
                     pass
 
-        verbose("Computing prediction for time group %s" % timegroup)
-        prediction = compute_prediction(pred_file, timegroup, params, period_info, from_time, dsname, cf)
+        logger.verbose("Computing prediction for time group %s", timegroup)
+        prediction = compute_prediction(hostname, service_description, pred_file, timegroup,
+                                        params, period_info, from_time, dsname, cf)
 
         info = {
             "time"         : now,

@@ -1,0 +1,10 @@
+Title: MRPE commands longer than 256 characters got truncated
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p13
+Date: 1476444014
+Class: fix
+
+These truncated commands usually failed..
+The agent now supports MRPE commands up to 1024 characters.

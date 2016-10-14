@@ -1,4 +1,7 @@
 1.2.8p13:
+    Checks & Agents:
+    * 3822 FIX: MRPE commands longer than 256 characters got truncated...
+
     Multisite:
     * 3902 FIX: Graph search view: Changing painter options made page empty
 

@@ -131,8 +131,8 @@ enum script_type { PLUGIN, LOCAL, MRPE };
 
 // Used by mrpe and local/plugins scripts
 struct runas_include {
-    char path[256];
-    char user[256];
+    char path[1024];
+    char user[1024];
     script_type type;
 };
 
@@ -209,10 +209,10 @@ struct globline_container {
 
 // Command definitions for MRPE
 struct mrpe_entry {
-    char run_as_user[256];
-    char command_line[256];
-    char plugin_name[64];
-    char service_description[256];
+    char run_as_user[1024];
+    char command_line[1024];
+    char plugin_name[512];
+    char service_description[512];
 };
 
 // Our memory of what event logs we know and up to

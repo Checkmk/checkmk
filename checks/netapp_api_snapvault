@@ -72,8 +72,12 @@ def check_netapp_api_snapvault(item, params, parsed):
 
     yield state, "Lag-Time: %s" % get_age_human_readable(lag_time)
 
+def netapp_api_snapvault_item(name):
+    return name.replace("$", "_")
+
 check_info["netapp_api_snapvault"] = {
     'parse_function'      : netapp_api_parse_lines,
+    'parse_function'      : lambda x: netapp_api_parse_lines(x, item_func = netapp_api_snapvault_item),
     'check_function'      : check_netapp_api_snapvault,
     'inventory_function'  : inventory_netapp_api_snapvault,
     'group'               : "snapvault",

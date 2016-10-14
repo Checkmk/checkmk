@@ -20,6 +20,7 @@
     * 3896 FIX: Agent RPMs: Fixing dependency issue with old check_mk-agent-oracle-*.rpm and check_mk-agent-logwatch-*.rpm
     * 3936 FIX: chrony: support new params dictionary and rule "State of NTP time synchronisation"
     * 3649 FIX: Added a workaround for an escaping-related bug in old bash versions...
+    * 3958 FIX: netapp_qtree_quota: fixed graph scaling
 
     Multisite:
     * 3897 FIX: Fixed possible exception in raw edition when rendering graphs

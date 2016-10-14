@@ -49,7 +49,7 @@ def inv_export_software_csv(hostname, params, tree):
         try:
             os.makedirs(dirname)
         except Exception, e:
-            if opt_debug:
+            if cmk.debug.enabled():
                 raise
             raise MKGeneralException("Cannot create missing directory %s: %s" % (
                     dirname, e))

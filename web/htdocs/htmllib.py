@@ -72,6 +72,18 @@ except ImportError:
 from cmk.exceptions import MKGeneralException, MKException
 from lib import MKUserError
 
+
+# TODO: REMOVE (JUST FOR TESTING)
+__builtin__._ = lambda x: x
+try:
+    import config
+except:
+    os.environ["OMD_SITE"] = "OMD"
+    import config
+
+
+
+
 # Information about uri
 class InvalidUserInput(Exception):
     def __init__(self, varname, text):
@@ -83,16 +95,92 @@ class RequestTimeout(MKException):
     pass
 
 
-# This is a simple class which wraps a string provided by the caller
-# to make html.attrencode() know that this string should not be
-# encoded, html.attrencode() will then return the unmodified value.
-#
-# This way we can implement encodings while still allowing HTML code
-# processing for some special cases. This is useful when one needs
-# to print out HTML tables in messages or help texts.
-class HTML:
+#.
+#   .--HTML----------------------------------------------------------------.
+#   |                      _   _ _____ __  __ _                            |
+#   |                     | | | |_   _|  \/  | |                           |
+#   |                     | |_| | | | | |\/| | |                           |
+#   |                     |  _  | | | | |  | | |___                        |
+#   |                     |_| |_| |_| |_|  |_|_____|                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | This is a simple class which wraps a string provided by the caller   |
+#   | to make html.attrencode() know that this string should not be        |
+#   | encoded, html.attrencode() will then return the unmodified value.    |
+#   |                                                                      |
+#   | This way we can implement encodings while still allowing HTML code   |
+#   | processing for some special cases. This is useful when one needs     |
+#   | to print out HTML tables in messages or help texts.                  |
+#   |                                                                      |
+#   | The class now implements all relevant string comparison methods.     |
+#   | The HTMLGenerator render_tag() function returns a HTML object.       |
+#   '----------------------------------------------------------------------'
+class HTML(object):
+
+
     def __init__(self, value):
-        self.value = value
+        if isinstance(value, HTML):
+            self.value = value.value
+        else:
+            self.value = value
+
+
+    def __str__(self):
+        return self.value
+
+
+    def __add__(self, other):
+        if isinstance(other, HTML):
+            return self.value + other.value
+        else:
+            return self.value + other
+
+
+    def __iadd__(self, other):
+        self.value = self.__add__(other)
+        return self
+
+    def __lt__(self, other):
+        if isinstance(other, HTML):
+            return self.value < other.value
+        else:
+            return self.value < other
+
+
+    def ___le__(self, other):
+        if isinstance(other, HTML):
+            return self.value <= other.value
+        else:
+            return self.value <= other
+
+
+    def __eq__(self, other):
+        if isinstance(other, HTML):
+            return self.value == other.value
+        else:
+            return self.value == other
+
+
+    def __ne__(self, other):
+        if isinstance(other, HTML):
+            return self.value != other.value
+        else:
+            return self.value != other
+
+
+    def __gt__(self, other):
+        if isinstance(other, HTML):
+            return self.value > other.value
+        else:
+            return self.value > other
+
+
+    def __ge__(self, other):
+        if isinstance(other, HTML):
+            return self.value >= other.value
+        else:
+            return self.value >= other
+
 
 __builtin__.HTML = HTML
 
@@ -118,8 +206,16 @@ class OutputFunnel(object):
         self.plugged_text = ""
 
 
+    # Accepts str and unicode objects only!
     # The plugged functionality can be used for debugging.
     def write(self, text):
+
+        if isinstance(text, HTML):
+            text = text.value
+
+        if type(text) not in [str, unicode]: # also possible: type Exception!
+            raise MKGeneralException(_('Write accepts str and unicode objects only!'))
+
         if self.plugged:
             self.plugged_text += text
         else:
@@ -233,12 +329,13 @@ class HTMLGenerator(OutputFunnel):
 
     # these tags can be called by their tag names, e.g. 'self.title(content)'
     _shortcut_tags = set(['title', 'h1', 'h2', 'h3', 'th', 'tr', 'td', 'center',\
-                              'div', 'p', 'span', 'canvas', 'strong', 'sub', 'tt'])
+                              'div', 'p', 'span', 'canvas', 'strong', 'sub', 'tt', 'u'])
 
     # these tags can be called by open_name(), close_name() and render_name(), e.g. 'self.open_html()'
     _tag_names = set(['html', 'head', 'body', 'header', 'footer', 'a', 'b',\
                               'script', 'form', 'button', 'p', 'select', 'pre',\
-                              'table', 'row', 'ul', 'li', 'br', 'nobr'])
+                              'table', 'row', 'ul', 'li', 'br', 'nobr', 'input',\
+                              'tt'])
 
     # Of course all shortcut tags can be used as well.
     _tag_names.update(_shortcut_tags)
@@ -308,7 +405,7 @@ class HTMLGenerator(OutputFunnel):
         # TODO: REMOVE AFTER REFACTORING IS DONE!!
         for key in attrs:
             assert key.rstrip('_') in ['class', 'id', 'src', 'type', 'name',\
-                'onclick', 'onmouseover', 'onmouseout', 'onfocus', 'value', \
+                'onclick', 'onsubmit', 'onmouseover', 'onmouseout', 'onfocus', 'value', \
                 'content',  'href', 'http-equiv', 'rel', 'for', 'title', 'target',\
                 'align', 'valign', 'style', 'width', 'height', 'colspan', 'data-role',\
                 'cellspacing', 'cellpadding', 'border'], key
@@ -321,7 +418,7 @@ class HTMLGenerator(OutputFunnel):
             elif k in ["class", "class_"]:
                 yield ' %s=\"%s\"' % (k.rstrip('_'),  ' '.join(a for a in (self._escape_attribute(vi) for vi in v) if a))
             elif k == "style" or k.startswith('on'):
-                yield ' %s=\"%s;\"' % (k.rstrip('_'), '; '.join(a for a in (self._escape_attribute(vi) for vi in v) if a))
+                yield ' %s=\"%s;\"' % (k.rstrip('_'), re.sub(';+', ';', '; '.join(a for a in (self._escape_attribute(vi) for vi in v) if a)))
             else:
                 yield ' %s=\"%s\"' % (k.rstrip('_'),   '_'.join(a for a in (self._escape_attribute(vi) for vi in v) if a))
 
@@ -384,9 +481,11 @@ class HTMLGenerator(OutputFunnel):
             elif what == "close" and tag_name in self._tag_names:
                 return lambda : self.write(self._render_closing_tag(tag_name))
 
+            elif what == "idle" and tag_name in self._tag_names:
+                return lambda **attrs: self.write(self._render_content_tag(tag_name, '', **attrs))
+
             elif what == "render" and tag_name in self._tag_names:
-                # TODO: return an instance of HTML class here!!!
-                return lambda content, **attrs: self._render_content_tag(tag_name, content, **attrs)
+                return lambda content, **attrs: HTML(self._render_content_tag(tag_name, content, **attrs))
 
         else:
             return object.__getattribute__(self, name)
@@ -436,15 +535,79 @@ class HTMLGenerator(OutputFunnel):
         self.write(self._render_content_tag('a', content, **attrs))
 
 
-    def link(self, rel, type_, href, **attrs):
-        attrs['rel'] = rel
-        attrs['type'] = type_
-        attrs['href'] = href
-        self.write(self._render_opening_tag('link', close_tag=True, **attrs))
-
-
     def stylesheet(self, href):
-        self.link(rel="stylesheet", type_="text/css", href=href)
+        self.write(self._render_opening_tag('link', rel="stylesheet", type_="text/css", href=href, close_tag=True))
+
+
+    #
+    # Helper functions to be used by snapins
+    #
+
+
+    def render_link(self, text, url, target="main", onclick = None):
+        # Convert relative links into absolute links. We have three kinds
+        # of possible links and we change only [3]
+        # [1] protocol://hostname/url/link.py
+        # [2] /absolute/link.py
+        # [3] relative.py
+        if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != '/':
+            url = config.url_prefix() + "check_mk/" + url
+        return self.render_a(text, class_="link", target=target or '', href=url,\
+                             onfocus = "if (this.blur) this.blur();",\
+                             onclick = onclick or None)
+
+
+    def link(self, text, url, target="main", onclick = None):
+        self.write(self.render_link(text, url, target=target, onclick=onclick))
+
+
+    def simplelink(self, text, url, target="main"):
+        self.link(text, url, target)
+        self.br()
+
+
+    def bulletlink(self, text, url, target="main", onclick = None):
+        self.open_li(class_="sidebar")
+        self.link(text, url, target, onclick)
+        self.close_li()
+
+
+    def iconlink(self, text, url, icon):
+        self.open_a(class_=["iconlink", "link"], target="main", href=url)
+        self.icon(icon=icon, help=None, cssclass="inline")
+        self.write_text(text)
+        self.close_a()
+        self.br()
+
+
+    def begin_footnote_links(self):
+        self.open_div(class_="footnotelink")
+
+
+    def end_footnote_links(self):
+        self.close_div()
+
+
+    def footnotelinks(self, links):
+        self.begin_footnote_links()
+        for text, target in links:
+            self.link(text, target)
+        self.end_footnote_links()
+
+
+    def nagioscgilink(self, text, target):
+        self.open_li(class_="sidebar")
+        self.a(text, class_="link", target="main", href="%snagios/cgi-bin/%s" % (config.url_prefix(), target))
+        self.close_li()
+
+
+    def heading(self, text):
+        self.h3(text)
+
+
+
+
+
 
 
     #
@@ -584,7 +747,7 @@ class HTMLCheck_MK(HTMLGenerator):
     def default_html_headers(self):
         self.meta(httpequiv="Content-Type", content="text/html; charset=utf-8")
         self.meta(httpequiv="X-UA-Compatible", content="IE=edge")
-        self.link(rel="shortcut icon", href="images/favicon.ico", type_="image/ico")
+        self.write(self._render_opening_tag('link', rel="shortcut icon", href="images/favicon.ico", type_="image/ico", close_tag=True))
 
 
     def _head(self, title, javascripts=None, stylesheets=None):
@@ -731,7 +894,7 @@ class HTMLCheck_MK(HTMLGenerator):
         #TODO: Refactor
         title = help
 
-        self.write(self.render_icon(icon, title, **kwargs))
+        self.write(self.render_icon(icon_name=icon, help=title, **kwargs))
 
 
     def empty_icon(self):

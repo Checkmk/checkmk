@@ -28,7 +28,6 @@ import pprint
 import os
 import copy
 import urlparse
-
 import config, views, userdb, pagetypes
 import notify, werks
 import sites
@@ -75,48 +74,33 @@ def load_plugins(force):
             snapin["description"],
             snapin["allowed"])
 
+
 # Helper functions to be used by snapins
-# FIXME: Clean this up and merge with htmllib
+# TODO: Replace wrappers in code
 def link(text, url, target="main", onclick = None):
-    # Convert relative links into absolute links. We have three kinds
-    # of possible links and we change only [3]
-    # [1] protocol://hostname/url/link.py
-    # [2] /absolute/link.py
-    # [3] relative.py
-    if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != '/':
-        url = config.url_prefix() + "check_mk/" + url
-    onclick = onclick and (' onclick="%s"' % html.attrencode(onclick)) or ''
-    return '<a onfocus="if (this.blur) this.blur();" target="%s" ' \
-           'class=link href="%s"%s>%s</a>' % \
-            (html.attrencode(target or ""), html.attrencode(url), onclick, html.attrencode(text))
+    return html.render_link(text, url, target=target, onclick=onclick)
 
 def simplelink(text, url, target="main"):
-    html.write(link(text, url, target) + "<br>\n")
+    html.simplelink(text, url, target)
 
 def bulletlink(text, url, target="main", onclick = None):
-    html.write("<li class=sidebar>" + link(text, url, target, onclick) + "</li>\n")
+    html.bulletlink(text, url, target, onclick)
 
 def iconlink(text, url, icon):
-    linktext = html.render_icon(icon, cssclass="inline") \
-               + html.attrencode(text)
-    html.write('<a target=main class="iconlink link" href="%s">%s</a><br>' % \
-            (html.attrencode(url), linktext))
+    html.iconlink(text, url, icon)
 
 def begin_footnote_links():
-    html.write("<div class=footnotelink>")
+    html.begin_footnote_links()
 
 def end_footnote_links():
-    html.write("</div>\n")
+    html.end_footnote_links()
 
 def footnotelinks(links):
-    begin_footnote_links()
-    for text, target in links:
-        html.write(link(text, target))
-    end_footnote_links()
+    html.footnotelinks(links)
 
 def nagioscgilink(text, target):
-    html.write("<li class=sidebar><a target=\"main\" class=link href=\"%snagios/cgi-bin/%s\">%s</a></li>" % \
-            (config.url_prefix(), target, html.attrencode(text)))
+    html.nagioscgilink(text, target)
+
 
 def heading(text):
     html.write("<h3>%s</h3>\n" % html.attrencode(text))

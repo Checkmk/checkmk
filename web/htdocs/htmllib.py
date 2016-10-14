@@ -601,15 +601,6 @@ class HTMLGenerator(OutputFunnel):
         self.close_li()
 
 
-    def heading(self, text):
-        self.h3(text)
-
-
-
-
-
-
-
     #
     # Scriptingi
     #

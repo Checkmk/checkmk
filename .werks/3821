@@ -1,0 +1,15 @@
+Title: WATO Network Scan: Fixed risk of loosing site tags when performing a network scan
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p13
+Date: 1476439400
+
+A network scan on a folder could cause the loss of any site tags configured in this
+folder. As a result, these hosts were monitored multiple times on different sites,
+when a distributed WATO setup was used.
+
+Developer note: This only happened when a "fresh" apache process handled this request.
+Any hosttags and site defines were missing..

@@ -15145,6 +15145,8 @@ def read_agent_contents_file(root):
 # master site. Finds the next folder to scan and starts it via WATO
 # automation. The result is written to the folder in the master site.
 def execute_network_scan_job():
+    init_wato_datastructures()
+
     if is_wato_slave_site():
         return # Don't execute this job on slaves.
 

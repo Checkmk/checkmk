@@ -2,6 +2,9 @@
     Multisite:
     * 3902 FIX: Graph search view: Changing painter options made page empty
 
+    WATO:
+    * 3821 FIX: WATO Network Scan: Fixed risk of loosing site tags when performing a network scan...
+
 
 1.2.8p12:
     Core & Setup:

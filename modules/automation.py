@@ -1137,9 +1137,9 @@ def automation_get_package(args):
     if not package:
         raise MKAutomationError("Package not installed or corrupt")
 
-    output_file = fake_file()
+    output_file = StringIO()
     cmk_base.packaging.create_mkp_file(package, file_object=output_file)
-    return package, output_file.content()
+    return package, output_file.getvalue()
 
 
 def automation_create_or_edit_package(args, mode):

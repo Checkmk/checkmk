@@ -45,6 +45,8 @@ import fcntl
 import py_compile
 import inspect
 
+from cStringIO import StringIO
+
 from cmk.regex import regex, is_regex
 from cmk.exceptions import MKGeneralException, MKTerminate, MKBailOut
 import cmk.debug
@@ -2660,46 +2662,6 @@ def pack_autochecks():
 #   | implemented here.                                                    |
 #   '----------------------------------------------------------------------'
 
-class fake_file:
-    def __init__(self, content=""):
-        self._content = content
-        self._pointer = 0
-
-    def size(self):
-        return len(self._content)
-
-    def read(self, size):
-        size = min(size, len(self._content) - self._pointer)
-        new_end = self._pointer + size
-        data = self._content[self._pointer:new_end]
-        self._pointer = new_end
-        return data
-
-    def write(self, data):
-        self._content += data
-
-    def content(self):
-        return self._content
-
-    def tell(self):
-        return self._pointer
-
-    def seek(self, offset, whence=0):
-        if whence == 0:
-            new_pointer = offset
-        elif whence == 1:
-            new_pointer = self._pointer + offset
-        elif whence == 2:
-            new_pointer = self.size() - offset
-        else:
-            raise IOError("Invalid value for whence")
-
-        if new_pointer < 0:
-            raise IOError("Invalid seek")
-
-        self._pointer = new_pointer
-
-
 def do_backup(tarname):
     import tarfile
     logger.verbose("Creating backup file '%s'...", tarname)
@@ -2731,7 +2693,7 @@ def do_backup(tarname):
             info.type = tarfile.REGTYPE
             info.name = subtarname
             logger.verbose("  Added %s (%s) with a size of %s", descr, absdir, render.bytes(info.size))
-            tar.addfile(info, fake_file(subdata))
+            tar.addfile(info, StringIO(subdata))
 
     tar.close()
     logger.verbose("Successfully created backup.")

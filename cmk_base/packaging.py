@@ -30,6 +30,7 @@ import pprint
 import sys
 import tarfile
 import time
+from cStringIO import StringIO
 
 import cmk.tty as tty
 import cmk.paths
@@ -328,8 +329,8 @@ def create_mkp_file(package, file_name=None, file_object=None):
         return info
 
     tar = tarfile.open(name=file_name, fileobj=file_object, mode="w:gz")
-    info_file = fake_file(pprint.pformat(package))
-    info = create_info("info", info_file.size())
+    info_file = StringIO(pprint.pformat(package))
+    info = create_info("info", len(info_file.getvalue()))
     tar.addfile(info, info_file)
 
     # Now pack the actual files into sub tars
@@ -342,7 +343,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
             subtarname = part + ".tar"
             subdata = os.popen("tar cf - --dereference --force-local -C '%s' %s" % (dir, " ".join(filenames))).read()
             info = create_info(subtarname, len(subdata))
-            tar.addfile(info, fake_file(subdata))
+            tar.addfile(info, StringIO(subdata))
     tar.close()
 
 

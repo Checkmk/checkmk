@@ -75,12 +75,7 @@ from lib import MKUserError
 
 # TODO: REMOVE (JUST FOR TESTING)
 __builtin__._ = lambda x: x
-try:
-    import config
-except:
-    os.environ["OMD_SITE"] = "OMD"
-    import config
-
+import config
 
 
 

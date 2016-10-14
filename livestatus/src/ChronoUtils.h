@@ -73,6 +73,8 @@ public:
     FormattedTimePoint(std::chrono::system_clock::time_point tp,
                        const std::string &format)
         : _tp(tp), _format(format) {}
+    FormattedTimePoint(time_t t, const std::string &format)
+        : _tp(std::chrono::system_clock::from_time_t(t)), _format(format) {}
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const FormattedTimePoint &f) {

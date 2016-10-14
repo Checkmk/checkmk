@@ -239,13 +239,26 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
            LOGCLASS_NOTIFICATION,
            LogEntryType::none,
            {Param::ContactName, Param::HostName, Param::StateType,
-            Param::CommandName, Param::Comment}},
+            Param::CommandName, Param::CheckOutput, Param::Comment}},
     ////////////////
-    LogDef{"SERVICE NOTIFICATION RESULT: ",
+    LogDef{
+        "SERVICE NOTIFICATION RESULT: ",
+        LOGCLASS_NOTIFICATION,
+        LogEntryType::none,
+        {Param::ContactName, Param::HostName, Param::SvcDesc, Param::StateType,
+         Param::CommandName, Param::CheckOutput, Param::Comment}},
+    ////////////////
+    LogDef{"HOST NOTIFICATION PROGRESS: ",
+           LOGCLASS_NOTIFICATION,
+           LogEntryType::none,
+           {Param::ContactName, Param::HostName, Param::StateType,
+            Param::CommandName, Param::CheckOutput}},
+    ////////////////
+    LogDef{"SERVICE NOTIFICATION PROGRESS: ",
            LOGCLASS_NOTIFICATION,
            LogEntryType::none,
            {Param::ContactName, Param::HostName, Param::SvcDesc,
-            Param::StateType, Param::CommandName, Param::Comment}},
+            Param::StateType, Param::CommandName, Param::CheckOutput}},
     ////////////////
     LogDef{"HOST ALERT HANDLER STARTED: ",
            8,  // LOGCLASS_ALERT_HANDLERS,
@@ -396,7 +409,8 @@ unordered_map<string, HostState> hostStateTypes{
     {"UNREACHABLE", HostState::unreachable},
     // states from "... ALERT"/"... NOTIFICATION"
     {"RECOVERY", HostState::up},
-    // states from "... ALERT HANDLER STOPPED"
+    // states from "... ALERT HANDLER STOPPED" and "(HOST|SERVICE) NOTIFICATION
+    // (RESULT|PROGRESS)"
     {"OK", HostState::up},
     {"WARNING", HostState::down},
     {"CRITICAL", HostState::unreachable},

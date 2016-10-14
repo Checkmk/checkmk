@@ -27,7 +27,7 @@
 # force load of environment
 if [ -e $HOME/.profile ]
 then
-    . $HOME/.profile
+    . $HOME/.profile >/dev/null 2>&1
 fi
 
 # Remove locale settings to eliminate localized outputs where possible
@@ -219,7 +219,7 @@ fi
 
 if [ -x /usr/sbin/sendmail ] ; then
     echo '<<<postfix_mailq>>>';
-    mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
+    mailq 2>&1 | tail -n 6
 fi
 
 # uptime formats

@@ -74,8 +74,7 @@ from lib import MKUserError
 
 
 # TODO: REMOVE (JUST FOR TESTING)
-__builtin__._ = lambda x: x
-import config
+#__builtin__._ = lambda x: x
 
 
 
@@ -539,6 +538,10 @@ class HTMLGenerator(OutputFunnel):
     #
 
 
+    def url_prefix(self):
+        raise NotImplementedError()
+
+
     def render_link(self, text, url, target="main", onclick = None):
         # Convert relative links into absolute links. We have three kinds
         # of possible links and we change only [3]
@@ -546,7 +549,7 @@ class HTMLGenerator(OutputFunnel):
         # [2] /absolute/link.py
         # [3] relative.py
         if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != '/':
-            url = config.url_prefix() + "check_mk/" + url
+            url = self.url_prefix() + "check_mk/" + url
         return self.render_a(text, class_="link", target=target or '', href=url,\
                              onfocus = "if (this.blur) this.blur();",\
                              onclick = onclick or None)
@@ -575,24 +578,9 @@ class HTMLGenerator(OutputFunnel):
         self.br()
 
 
-    def begin_footnote_links(self):
-        self.open_div(class_="footnotelink")
-
-
-    def end_footnote_links(self):
-        self.close_div()
-
-
-    def footnotelinks(self, links):
-        self.begin_footnote_links()
-        for text, target in links:
-            self.link(text, target)
-        self.end_footnote_links()
-
-
     def nagioscgilink(self, text, target):
         self.open_li(class_="sidebar")
-        self.a(text, class_="link", target="main", href="%snagios/cgi-bin/%s" % (config.url_prefix(), target))
+        self.a(text, class_="link", target="main", href="%snagios/cgi-bin/%s" % (self.url_prefix(), target))
         self.close_li()
 
 

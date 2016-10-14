@@ -240,6 +240,12 @@ class html_mod_python(htmllib.html):
         self.set_http_header('Location', url)
         raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
 
+
+    # Used in htmllib
+    def url_prefix(self):
+        return config.url_prefix()
+
+
     # When setting err_headers_out, don't set headers_out because setting
     # err_headers_out is also setting headers_out within mod_python. Otherwise
     # we would send out duplicate HTTP headers which might cause bugs.

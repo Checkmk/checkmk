@@ -89,14 +89,19 @@ def bulletlink(text, url, target="main", onclick = None):
 def iconlink(text, url, icon):
     html.iconlink(text, url, icon)
 
+
 def begin_footnote_links():
-    html.begin_footnote_links()
+    html.open_div(class_="footnotelink")
 
 def end_footnote_links():
-    html.end_footnote_links()
+    html.close_div()
 
 def footnotelinks(links):
-    html.footnotelinks(links)
+    begin_footnote_links()
+    for text, target in links:
+        html.link(text, target)
+    end_footnote_links()
+
 
 def nagioscgilink(text, target):
     html.nagioscgilink(text, target)

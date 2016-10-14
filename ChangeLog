@@ -1,11 +1,8 @@
 1.2.8p13:
     Checks & Agents:
-<<<<<<< 504fb9f4104a9089a07ddffdd20c2e980c40cce0
     * 3822 FIX: MRPE commands longer than 256 characters got truncated...
     * 3958 FIX: netapp_qtree_quota: fixed graph scaling
-=======
     * 3937 FIX: check_mk_agent.aix: fixed hadling of mailq command
->>>>>>> 3937 FIX check_mk_agent.aix: fixed hadling of mailq command
 
     Multisite:
     * 3902 FIX: Graph search view: Changing painter options made page empty

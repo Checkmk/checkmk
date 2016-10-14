@@ -23,6 +23,7 @@
     * 3958 FIX: netapp_qtree_quota: fixed graph scaling
     * 3823 FIX: The windows agent were unable to execute powershell, python and pearl scripts
     * 3824 FIX: netapp_api_snapvault: fixed duplicate service when item name contains a $ character...
+    * 3937 FIX: check_mk_agent.aix: fixed hadling of mailq command
 
     Multisite:
     * 3897 FIX: Fixed possible exception in raw edition when rendering graphs

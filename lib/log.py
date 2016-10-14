@@ -121,12 +121,12 @@ class LogMixin(object):
     @property
     def logger(self):
         if not self._logger:
-            self._logger = logging.getLogger('.'.join([__name__, self.__class__.__name__]))
+            self._logger = _logging.getLogger('.'.join([__name__, self.__class__.__name__]))
         return self._logger
 
 
     @classmethod
-    def logger(cls):
+    def cls_logger(cls):
         if not cls._cls_logger:
-            cls._cls_logger = logging.getLogger('.'.join([__name__, cls.__name__]))
+            cls._cls_logger = _logging.getLogger('.'.join([__name__, cls.__name__]))
         return cls._cls_logger

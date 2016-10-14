@@ -48,8 +48,13 @@ class CMKLogger(_logging.getLoggerClass()):
         _logging.addLevelName(VERBOSE, "VERBOSE")
 
     def verbose(self, msg, *args, **kwargs):
-        if self.isEnabledFor(VERBOSE):
+        if self.is_verbose():
             self._log(VERBOSE, msg, args, **kwargs)
+
+
+    def is_verbose(self):
+        return self.isEnabledFor(VERBOSE)
+
 
 _logging.setLoggerClass(CMKLogger)
 

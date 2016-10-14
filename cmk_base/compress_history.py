@@ -29,6 +29,8 @@
 # logfiles and then compress them. Do *not* compress compressed
 # files again.
 
+import cmk.log
+logger = cmk.log.get_logger(__name__)
 
 def do_compress_history(args):
     if not args:
@@ -36,9 +38,8 @@ def do_compress_history(args):
 
     for filename in args:
         try:
-            verbose("%s..." % filename)
+            logger.verbose("%s...", filename)
             compress_history_file(filename, filename + ".compressed")
-            verbose("OK\n")
         except Exception, e:
             if cmk.debug.enabled():
                 raise
@@ -55,7 +56,7 @@ def compress_history_file(input_path, output_path):
         timestamp = int(line[1:11])
         line_type, host, service = parse_history_line(line)
 
-        vverbose("%s  (%s) %s / %s / %s\n" % (line, machine_state, line_type, host, service))
+        logger.debug("%s  (%s) %s / %s / %s", line, machine_state, line_type, host, service)
 
         if line_type == "RESTART" or line_type == "LOGGING_INITIAL":
             if machine_state != "START":

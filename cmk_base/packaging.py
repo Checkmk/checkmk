@@ -34,6 +34,9 @@ import time
 import cmk.tty as tty
 import cmk.paths
 
+import cmk.log
+logger = cmk.log.get_logger(__name__)
+
 pac_ext = ".mkp"
 
 # TODO: Subclass MKGeneralException()?
@@ -122,14 +125,14 @@ def do_packaging(args):
         try:
             f(args)
         except PackageException, e:
-            sys.stderr.write("%s\n" % e)
+            logger.error("%s" % e)
             sys.exit(1)
     else:
         allc = commands.keys()
         allc.sort()
         allc = [ tty.bold + c + tty.normal for c in allc ]
-        sys.stderr.write("Invalid packaging command. Allowed are: %s and %s.\n" %
-                (", ".join(allc[:-1]), allc[-1]))
+        logger.error("Invalid packaging command. Allowed are: %s and %s.",
+                                            ", ".join(allc[:-1]), allc[-1])
         sys.exit(1)
 
 
@@ -138,7 +141,7 @@ def package_list(args):
         for name in args:
             show_package_contents(name)
     else:
-        if opt_verbose:
+        if logger.is_verbose():
             table = []
             for pacname in all_package_names():
                 package = read_package_info(pacname)
@@ -193,7 +196,7 @@ def show_package(name, show_info = False):
                 " ".join([ "%s(%d)" % (part, len(fs)) for part, fs in package["files"].items() ]))
         sys.stdout.write("Description:\n  %s\n" % package["description"])
     else:
-        if opt_verbose:
+        if logger.is_verbose():
             sys.stdout.write("Files in package %s:\n" % name)
             for part, title, _unused_perm, dir in get_package_parts():
                 files = package["files"].get(part, [])
@@ -215,7 +218,7 @@ def package_create(args):
     if read_package_info(pacname):
         raise PackageException("Package %s already existing." % pacname)
 
-    verbose("Creating new package %s...\n" % pacname)
+    logger.verbose("Creating new package %s...", pacname)
     filelists = {}
     package = {
         "title"                : "Title of %s" % pacname,
@@ -234,14 +237,14 @@ def package_create(args):
         filelists[part] = files
         num_files += len(files)
         if len(files) > 0:
-            verbose("  %s%s%s:\n" % (tty.bold, title, tty.normal))
+            logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
             for f in files:
-                verbose("    %s\n" % f)
+                logger.verbose("    %s", f)
 
 
     write_package_info(package)
-    verbose("New package %s created with %d files.\n" % (pacname, num_files))
-    verbose("Please edit package details in %s%s%s\n" % (tty.bold, pac_dir + pacname, tty.normal))
+    logger.verbose("New package %s created with %d files.", pacname, num_files)
+    logger.verbose("Please edit package details in %s%s%s", tty.bold, pac_dir + pacname, tty.normal)
 
 
 def package_find(_no_args):
@@ -250,16 +253,18 @@ def package_find(_no_args):
         files = unpackaged_files_in_dir(part, dir)
         if len(files) > 0:
             if first:
-                verbose("Unpackaged files:\n")
+                logger.verbose("Unpackaged files:")
                 first = False
-            verbose("  %s%s%s:\n" % (tty.bold, title, tty.normal))
+
+            logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
             for f in files:
-                if opt_verbose:
-                    sys.stdout.write("    %s\n" % f)
+                if logger.is_verbose():
+                    logger.verbose("    %s", f)
                 else:
-                    sys.stdout.write("%s/%s\n" % (dir, f))
+                    logger.info("%s/%s", dir, f)
+
     if first:
-        verbose("No unpackaged files found.\n")
+        logger.verbose("No unpackaged files found.")
 
 
 def package_release(args):
@@ -270,14 +275,14 @@ def package_release(args):
     if not package_exists(pacname):
         raise PackageException("No such package %s." % pacname)
     package = read_package_info(pacname)
-    verbose("Releasing files of package %s into freedom...\n" % pacname)
-    if opt_verbose:
+    logger.verbose("Releasing files of package %s into freedom...", pacname)
+    if logger.is_verbose():
         for part, title, _unused_perm, _unused_dir in get_package_parts():
             filenames = package["files"].get(part, [])
             if len(filenames) > 0:
-                verbose("  %s%s%s:\n" % (tty.bold, title, tty.normal))
+                logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
                 for f in filenames:
-                    verbose("    %s\n" % f)
+                    logger.verbose("    %s", f)
     remove_package_info(pacname)
 
 
@@ -303,9 +308,9 @@ def package_pack(args):
     if not package:
         raise PackageException("Package %s not existing or corrupt." % pacname)
     tarfilename = "%s-%s%s" % (pacname, package["version"], pac_ext)
-    verbose("Packing %s into %s...\n" % (pacname, tarfilename))
+    logger.verbose("Packing %s into %s...", pacname, tarfilename)
     create_mkp_file(package, file_name=tarfilename)
-    verbose("Successfully created %s\n" % tarfilename)
+    logger.verbose("Successfully created %s", tarfilename)
 
 
 def create_mkp_file(package, file_name=None, file_object=None):
@@ -331,9 +336,9 @@ def create_mkp_file(package, file_name=None, file_object=None):
     for part, title, _unused_perm, dir in get_package_parts():
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
-            verbose("  %s%s%s:\n" % (tty.bold, title, tty.normal))
+            logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
             for f in filenames:
-                verbose("    %s\n" % f)
+                logger.verbose("    %s", f)
             subtarname = part + ".tar"
             subdata = os.popen("tar cf - --dereference --force-local -C '%s' %s" % (dir, " ".join(filenames))).read()
             info = create_info(subtarname, len(subdata))
@@ -349,22 +354,21 @@ def package_remove(args):
     if not package:
         raise PackageException("No such package %s." % pacname)
 
-    verbose("Removing package %s...\n" % pacname)
+    logger.verbose("Removing package %s...", pacname)
     remove_package(package)
-    verbose("Successfully removed package %s.\n" % pacname)
+    logger.verbose("Successfully removed package %s.", pacname)
 
 
 def remove_package(package):
     for part, title, _unused_perm, dir in get_package_parts():
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
-            verbose("  %s%s%s\n" % (tty.bold, title, tty.normal))
+            logger.verbose("  %s%s%s", tty.bold, title, tty.normal)
             for fn in filenames:
-                verbose("    %s" % fn)
+                logger.verbose("    %s", fn)
                 try:
                     path = dir + "/" + fn
                     os.remove(path)
-                    verbose("\n")
                 except Exception, e:
                     if cmk.debug.enabled():
                         raise
@@ -441,10 +445,10 @@ def install_package(file_name=None, file_object=None):
     pacname = package["name"]
     old_package = read_package_info(pacname)
     if old_package:
-        verbose("Updating %s from version %s to %s.\n" % (pacname, old_package["version"], package["version"]))
+        logger.verbose("Updating %s from version %s to %s.", pacname, old_package["version"], package["version"])
         update = True
     else:
-        verbose("Installing %s version %s.\n" % (pacname, package["version"]))
+        logger.verbose("Installing %s version %s.", pacname, package["version"])
         update = False
 
     # Before installing check for conflicts
@@ -471,12 +475,12 @@ def install_package(file_name=None, file_object=None):
     for part, title, perm, dir in get_package_parts():
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
-            verbose("  %s%s%s:\n" % (tty.bold, title, tty.normal))
+            logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
             for fn in filenames:
-                verbose("    %s\n" % fn)
+                logger.verbose("    %s", fn)
             # make sure target directory exists
             if not os.path.exists(dir):
-                verbose("    Creating directory %s\n" % dir)
+                logger.verbose("    Creating directory %s", dir)
                 os.makedirs(dir)
             tarsource = tar.extractfile(part + ".tar")
             subtar = "tar xf - -C %s %s" % (dir, " ".join(filenames))
@@ -493,7 +497,7 @@ def install_package(file_name=None, file_object=None):
                 path = dir + "/" + filename
                 has_perm = os.stat(path).st_mode & 07777
                 if has_perm != perm:
-                    verbose("    Fixing permissions of %s: %04o -> %04o\n" % (path, has_perm, perm))
+                    logger.verbose("    Fixing permissions of %s: %04o -> %04o", path, has_perm, perm)
                     os.chmod(path, perm)
 
 
@@ -505,11 +509,11 @@ def install_package(file_name=None, file_object=None):
             for fn in filenames:
                 if fn not in keep:
                     path = dir + "/" + fn
-                    verbose("Removing outdated file %s.\n" % path)
+                    logger.verbose("Removing outdated file %s.", path)
                     try:
                         os.remove(path)
                     except Exception, e:
-                        sys.stderr.write("Error removing %s: %s\n" % (path, e))
+                        logger.error("Error removing %s: %s", path, e)
 
     # Last but not least install package file
     write_package_info(package)
@@ -625,7 +629,7 @@ def read_package_info(pacname):
     except IOError:
         return None
     except Exception:
-        verbose("Ignoring invalid package file '%s%s'. Please remove it from %s!\n" % (pac_dir, pacname, pac_dir))
+        logger.verbose("Ignoring invalid package file '%s%s'. Please remove it from %s!", pac_dir, pacname, pac_dir)
         return None
 
 

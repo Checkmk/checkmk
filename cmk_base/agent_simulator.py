@@ -26,6 +26,8 @@
 
 import math
 
+import cmk.debug
+
 def our_uptime():
     return float((file("/proc/uptime").read().split()[0]))
 

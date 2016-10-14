@@ -72,7 +72,6 @@ import cmk_base.agent_simulator
 #   from --debug
 # - remove all remaining print commands and use sys.stdout.write instead
 #   or define a new output function
-# - Also create a function bail_out() for printing and error and exiting
 
 #.
 #   .--Globals-------------------------------------------------------------.
@@ -113,12 +112,6 @@ def verbose(text):
 def vverbose(text):
     if opt_verbose >= 2:
         verbose(text)
-
-# Output text to sys.stderr with a linefeed added. Exists
-# afterwards with and exit code of 3, in order to be
-# compatible with monitoring plugin API.
-def bail_out(reason):
-    raise MKBailOut(reason)
 
 def warning(reason):
     stripped = reason.lstrip()
@@ -186,12 +179,6 @@ SKIP  = None
 RAISE = False
 ZERO  = 0.0
 
-
-class MKBailOut(Exception):
-    def __init__(self, reason):
-        self.reason = reason
-    def __str__(self):
-        return self.reason
 
 class MKCounterWrapped(Exception):
     def __init__(self, reason):

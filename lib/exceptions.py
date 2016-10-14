@@ -65,6 +65,18 @@ class MKGeneralException(MKException):
 # propagate the termination up the callstack.
 # This should be raised in all cases where the program termination is a
 # "normal" case and no exception handling like printing a stack trace
-# should be done.
+# nor an error message should be done. The program is stopped with
+# exit code 0.
 class MKTerminate(Exception):
     pass
+
+
+# This is raised to print an error message and then end the program.
+# The program should catch this at top level and end exit the program
+# with exit code 3, in order to be compatible with monitoring plugin API.
+class MKBailOut(Exception):
+    def __init__(self, reason):
+        self.reason = reason
+
+    def __str__(self):
+        return self.reason

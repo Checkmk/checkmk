@@ -46,7 +46,7 @@ import py_compile
 import inspect
 
 from cmk.regex import regex, is_regex
-from cmk.exceptions import MKGeneralException, MKTerminate
+from cmk.exceptions import MKGeneralException, MKTerminate, MKBailOut
 import cmk.debug
 import cmk.log
 import cmk.tty as tty
@@ -4882,7 +4882,8 @@ try:
 
         elif o in [ '-A', '--bake-agents' ]:
             if 'do_bake_agents' not in globals():
-                bail_out("Agent baking is not implemented in your version of Check_MK. Sorry.")
+                raise MKBailOut("Agent baking is not implemented in your version of Check_MK. Sorry.")
+
             if args:
                 hostnames = parse_hostname_list(args, with_clusters = False, with_foreign_hosts = True)
             else:
@@ -4892,7 +4893,8 @@ try:
 
         elif o == '--cap':
             if 'do_cap' not in globals():
-                bail_out("Agent packages are not supported by your version of Check_MK.")
+                raise MKBailOut("Agent packages are not supported by your version of Check_MK.")
+
             do_cap(args)
             done = True
 

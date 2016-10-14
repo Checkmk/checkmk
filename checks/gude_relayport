@@ -37,7 +37,6 @@
 factory_settings["gude_relayport_default_levels"] = {
     "voltage" : (  220,  210 ),
     "current" : (   15,   16 ),
-    "energy"  : ( 3500, 3600 ),
 }
 
 

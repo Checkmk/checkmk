@@ -295,8 +295,7 @@ except Exception, e:
 # those checks that do not support inventory. It must be known before
 # we read in all the checks
 def no_discovery_possible(check_type, info):
-    if opt_verbose:
-        sys.stdout.write("%s does not support discovery. Skipping it.\n" % check_type)
+    logger.verbose("%s does not support discovery. Skipping it.\n", check_type)
     return []
 
 
@@ -1774,9 +1773,8 @@ def snmp_get_oid(hostname, ipaddress, oid):
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     exitstatus = snmp_process.wait()
     if exitstatus:
-        if opt_verbose:
-            sys.stderr.write(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
-            sys.stderr.write(snmp_process.stderr.read())
+        logger.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error")
+        logger.verbose(snmp_process.stderr.read())
         return None
 
     line = snmp_process.stdout.readline().strip()
@@ -2704,18 +2702,14 @@ class fake_file:
 
 def do_backup(tarname):
     import tarfile
-    if opt_verbose:
-        sys.stderr.write("Creating backup file '%s'...\n" % tarname)
+    logger.verbose("Creating backup file '%s'...", tarname)
     tar = tarfile.open(tarname, "w:gz")
-
 
     for name, path, canonical_name, descr, is_dir, \
         _unused_owned_by_nagios, _unused_group_www in backup_paths:
 
         absdir = os.path.abspath(path)
         if os.path.exists(path):
-            if opt_verbose:
-                sys.stderr.write("  Adding %s (%s) " %  (descr, absdir))
             if is_dir:
                 basedir = absdir
                 filename = "."
@@ -2736,20 +2730,17 @@ def do_backup(tarname):
             info.mode = 0644
             info.type = tarfile.REGTYPE
             info.name = subtarname
-            if opt_verbose:
-                sys.stderr.write("(%d bytes)...\n" % info.size)
+            logger.verbose("  Added %s (%s) with a size of %s", descr, absdir, render.bytes(info.size))
             tar.addfile(info, fake_file(subdata))
 
     tar.close()
-    if opt_verbose:
-        sys.stderr.write("Successfully created backup.\n")
+    logger.verbose("Successfully created backup.")
 
 
 def do_restore(tarname):
     import shutil
 
-    if opt_verbose:
-        sys.stderr.write("Restoring from '%s'...\n" % tarname)
+    logger.verbose("Restoring from '%s'...", tarname)
 
     if not os.path.exists(tarname):
         raise MKGeneralException("Unable to restore: File does not exist")
@@ -2761,8 +2752,7 @@ def do_restore(tarname):
             basedir = absdir
             filename = "."
             if os.path.exists(absdir):
-                if opt_verbose:
-                    sys.stderr.write("  Deleting old contents of '%s'\n" % absdir)
+                logger.verbose("  Deleting old contents of '%s'", absdir)
                 # The path might point to a symbalic link. So it is no option
                 # to call shutil.rmtree(). We must delete just the contents
                 for f in os.listdir(absdir):
@@ -2774,23 +2764,20 @@ def do_restore(tarname):
                             else:
                                 os.remove(p)
                         except Exception, e:
-                            sys.stderr.write("  Warning: cannot delete %s: %s\n" % (p, e))
+                            logger.warning("  Warning: cannot delete %s: %s", p, e)
         else:
             basedir = os.path.dirname(absdir)
             filename = os.path.basename(absdir)
             canonical_path = basedir + "/" + canonical_name
             if os.path.exists(canonical_path):
-                if opt_verbose:
-                    sys.stderr.write("  Deleting old version of '%s'\n" % canonical_path)
+                logger.verbose("  Deleting old version of '%s'", canonical_path)
                 os.remove(canonical_path)
 
         if not os.path.exists(basedir):
-            if opt_verbose:
-                sys.stderr.write("  Creating directory %s\n" %  basedir)
+            logger.verbose("  Creating directory %s", basedir)
             os.makedirs(basedir)
 
-        if opt_verbose:
-            sys.stderr.write("  Extracting %s (%s)\n" % (descr, absdir))
+        logger.verbose("  Extracting %s (%s)", descr, absdir)
         if is_dir:
             os.system("tar xzf '%s' --force-local --to-stdout '%s' 2>/dev/null "
                       "| tar xf - -C '%s' '%s' 2>/dev/null" % \
@@ -2804,19 +2791,19 @@ def do_restore(tarname):
                 to_user = omd_site()
             else:
                 to_user = "root"
+
             if group_www:
                 to_group = ":%s" % omd_site()
-                if opt_verbose:
-                    sys.stderr.write("  Adding group write permissions\n")
-                    os.system("chmod -R g+w '%s'" % absdir)
+
+                logger.verbose("  Adding group write permissions")
+                os.system("chmod -R g+w '%s'" % absdir)
             else:
                 to_group = ":root"
-            if opt_verbose:
-                sys.stderr.write("  Changing ownership to %s%s\n" % (to_user, to_group))
+
+            logger.verbose("  Changing ownership to %s%s\n", to_user, to_group)
             os.system("chown -R '%s%s' '%s' 2>/dev/null" % (to_user, to_group, absdir))
 
-    if opt_verbose:
-        sys.stderr.write("Successfully restored backup.\n")
+    logger.verbose("Successfully restored backup.")
 
 
 def do_flush(hosts):

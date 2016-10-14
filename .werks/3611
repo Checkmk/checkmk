@@ -1,4 +1,4 @@
-Title: websphere_mq_queues: now age of messages not processed is configurable
+Title: websphere_mq_queues: now age and state of messages not processed is configurable
 Level: 1
 Component: checks
 Compatible: compat

@@ -74,7 +74,7 @@ def parse_websphere_mq_queues(info):
                 parsed[queue_name].setdefault('max_depth', int(line[2]))
 
             if len(line) > 3:
-                for what in line[3].split(')'):
+                for what in "".join(line[3:-1]).replace(" ", "").split(')'):
                     if "(" in what:
                         key, val = what.split('(')
                         parsed[queue_name].setdefault(key, val)
@@ -141,29 +141,40 @@ def check_websphere_mq_queues(item, params, parsed):
 
             yield state_perc, info_perc
 
-        if data.get("time_on_client") and data.get("LGETDATE") and \
-           data.get("LGETTIME"):
+        if data.get("time_on_client") and \
+           "LGETDATE" in data and "LGETTIME" in data:
 
-            time_str   = "%s %s" % (data['LGETDATE'], data['LGETTIME'])
-            time_diff  = data["time_on_client"] - \
-                time.mktime(time.strptime(time_str, "%Y-%m-%d %H.%M.%S"))
-            state_diff = 0
-            info_diff  = "since %s" % get_age_human_readable(time_diff)
+            params = params.get("messages_not_processed", {})
 
-            if 'messages_not_processed_age' in params:
-                warn_diff, crit_diff = params['messages_not_processed_age']
+            if cur_depth and data["LGETDATE"] and data["LGETTIME"]:
+                time_str   = "%s %s" % (data['LGETDATE'], data['LGETTIME'])
+                time_diff  = data["time_on_client"] - \
+                    time.mktime(time.strptime(time_str, "%Y-%m-%d %H.%M.%S"))
+                state_diff = 0
+                info_diff  = "Messages not processed since %s" % get_age_human_readable(time_diff)
 
-                if time_diff >= crit_diff:
-                    state_diff = 2
-                elif time_diff >= warn_diff:
-                    state_diff = 1
+                if 'age' in params:
+                    warn_diff, crit_diff = params['age']
 
-                if state_diff:
-                    info_diff += " (warn/crit at %s/%s)" % \
-                        (get_age_human_readable(warn_diff),
-                         get_age_human_readable(crit_diff))
+                    if time_diff >= crit_diff:
+                        state_diff = 2
+                    elif time_diff >= warn_diff:
+                        state_diff = 1
 
-            yield state_diff, info_diff
+                    if state_diff:
+                        info_diff += " (warn/crit at %s/%s)" % \
+                                       (get_age_human_readable(warn_diff),
+                                        get_age_human_readable(crit_diff))
+
+                yield state_diff, info_diff
+
+            elif cur_depth:
+                yield params.get("state", 0), "No age of %d message%s not processed" % \
+                      (cur_depth, cur_depth > 1 and "s" or "")
+
+            else:
+                yield 0, "Messages processed"
+
 
 
 check_info["websphere_mq_queues"] = {

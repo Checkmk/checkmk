@@ -48,9 +48,11 @@ import inspect
 from cmk.regex import regex, is_regex
 from cmk.exceptions import MKGeneralException, MKTerminate
 import cmk.debug
+import cmk.log
 import cmk.tty as tty
 import cmk.store as store
 import cmk.paths
+import cmk.render as render
 import cmk.man_pages as man_pages
 
 #   .--Prelude-------------------------------------------------------------.
@@ -74,14 +76,21 @@ if '--debug' in sys.argv[1:]:
     cmk.debug.enable()
 
 opt_interactive  = '--interactive' in sys.argv[1:]
-opt_verbose      = ('-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]) and 1 or 0
+
+opt_verbose = 0 # TODO: Remove this once opt_verbose is gone
+
+cmk.log.setup_console_logging()
+logger = cmk.log.get_logger("base")
+
+# TODO: This is not really good parsing, because it not cares about syntax like e.g. "-nv".
+#       The later regular argument parsing is handling this correctly. Try to clean this up.
+cmk.log.set_verbosity(verbosity=len([ a for a in sys.argv if a in [ "-v", "--verbose"] ]))
 
 if '--profile' in sys.argv[1:]:
     import cProfile
     g_profile = cProfile.Profile()
     g_profile.enable()
-    if opt_verbose:
-        sys.stderr.write("Enabled profiling.\n")
+    logger.verbose("Enabled profiling.")
 
 
 #.
@@ -4654,16 +4663,17 @@ done = False
 seen_I = 0
 check_types = None
 exit_status = 0
-opt_verbose = 0 # start again from 0, was already faked at the beginning
 opt_inv_hw_changes = 0
 opt_inv_sw_changes = 0
 opt_inv_sw_missing = 0
 opt_inv_fail_status = 1 # State in case of an error (default: WARN)
+_verbosity = 0
 
 # Scan modifying options first (makes use independent of option order)
 for o,a in opts:
+    # -v/--verbose is handled above manually. Simply ignore it here.
     if o in [ '-v', '--verbose' ]:
-        opt_verbose += 1
+        _verbosity += 1
     elif o in [ '-f', '--force' ]:
         opt_force = True
     elif o == '-c':
@@ -4719,6 +4729,8 @@ for o,a in opts:
         opt_inv_fail_status = int(a)
     elif o == "--log-to-stdout":
         opt_log_to_stdout = True
+
+cmk.log.set_verbosity(verbosity=_verbosity)
 
 # Perform actions (major modes)
 try:

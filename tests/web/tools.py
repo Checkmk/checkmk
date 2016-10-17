@@ -12,7 +12,6 @@ import re
 import difflib
 import warnings
 import traceback  # for tracebacks
-import dill.source # for displaying lambda functional code
 import time
 from bs4 import BeautifulSoup as bs
 from bs4 import NavigableString
@@ -208,6 +207,7 @@ def html_generator_test(old, new, fun, attributes=None, reinit=True):
 
 
     if reinit:
+        import dill.source
         print bcolors.HEADER + "TESTING" + bcolors.ENDC + dill.source.getsource(fun)
 
 

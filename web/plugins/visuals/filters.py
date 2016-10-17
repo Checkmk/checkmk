@@ -837,6 +837,10 @@ declare_filter(251, FilterTime("service", "svc_last_check", _("Last service chec
 declare_filter(250, FilterTime("host", "host_last_state_change", _("Last host state change"), "host_last_state_change"))
 declare_filter(251, FilterTime("host", "host_last_check", _("Last host check"), "host_last_check"))
 declare_filter(253, FilterTime("comment", "comment_entry_time", _("Time of comment"), "comment_entry_time" ))
+
+declare_filter(258, FilterText("comment_comment", _("Comment"), "comment", "comment_comment", "comment_comment", "~~" , True))
+declare_filter(259, FilterText("comment_author", _("Author comment"), "comment", "comment_author", "comment_author", "~~" , True))
+
 declare_filter(253, FilterTime("downtime", "downtime_entry_time", _("Time when downtime was created"), "downtime_entry_time" ))
 declare_filter(254, FilterText("downtime_comment", _("Downtime comment"), "downtime", "downtime_comment", "downtime_comment", "~"))
 declare_filter(255, FilterTime("downtime", "downtime_start_time", _("Start of downtime"), "downtime_start_time" ))

@@ -1,0 +1,10 @@
+Title: mssql_blocked_sessions: thresholds for wait time can be set now
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476691606
+Class: feature
+
+Thresholds for wait_duration_ms can be set now. The value will be a floating point
+in seconds to provide a better usability.

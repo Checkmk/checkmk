@@ -39,21 +39,30 @@ def inventory_mssql_blocked_sessions(info):
 
 def check_mssql_blocked_sessions(_no_item, params, info):
     if not info:
-	yield 0, "No blocked sessions"
+        yield 0, "No blocked sessions"
         return
 
     state = 2
-    if params:
-        state = params.get("state", 2)
     for session_id, wait_duration_ms, wait_type, blocking_session_id in info[1:]:
+        if params:
+            state               = params.get("state", 2)
+            warn, crit          = params.get("waittime", (0, 0))
+            wait_duration_sec   = float(wait_duration_ms) / 100
+            if wait_duration_sec >= crit and not crit == 0:
+                state = 2
+            elif wait_duration_sec >= warn and not warn == 0:
+                state = 1
+            elif warn > 0 or crit > 0:
+                state = 0
+
         yield state, \
               "Session %s blocked by %s (Wait %s ms, Type: %s)" % \
               ( session_id, blocking_session_id, wait_duration_ms, wait_type )
 
 
 check_info['mssql_blocked_sessions'] = {
-    'check_function'            : check_mssql_blocked_sessions,
     'inventory_function'        : inventory_mssql_blocked_sessions,
+    'check_function'            : check_mssql_blocked_sessions,
     'service_description'       : "MSSQL Blocked Sessions",
     'group'                     : "mssql_blocked_sessions",
 }

@@ -8195,10 +8195,22 @@ register_check_parameters(
     _("MSSQL Blocked Sessions"),
     Dictionary(
         elements = [
-            ( "state",
+            (   "state",
                 MonitoringState(
-                    title = _("State of MSSQL Blocked Sessions is treated as"),
-                    default_value = 2,
+                    title           = _("State of MSSQL Blocked Sessions is treated as"),
+                    help            = _("The default state if there is at least one "
+                                        "blocked session."),
+                    default_value   = 2,
+            )),
+            (   "waittime", Tuple(
+                    title           = _("Levels for wait"),
+                    help            = _("The threshholds for wait_duration_ms. Will "
+                                        "overwrite the default state set above."),
+                    default_value   = (0, 0),
+                    elements = [
+                        Float(title = _("Warning at"),  unit = _("seconds")),
+                        Float(title = _("Critical at"), unit = _("seconds")),
+                    ]
             )),
         ],
     ),

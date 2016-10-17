@@ -19,11 +19,13 @@ test-pylint-ci:
 
 
 setup:
-	sudo pip install \
+	sudo apt-get install \
+	    python-pip \
+	    python-lxml
+	pip install --upgrade pip
+	pip install \
 	    pytest \
 	    requests \
 	    beautifulsoup4 \
 	    pytest-stepwise
-	sudo apt-get install \
-	    python-lxml
 	$(MAKE) -C pylint setup

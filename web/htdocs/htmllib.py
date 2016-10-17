@@ -2304,7 +2304,7 @@ class html(DeprecationWrapper):
                 if indent != "form":
                     self.write("<br>")
             else:
-                self.write('<b class="treeangle title" class=treeangle %s>' % (not title_url and onclick or ""))
+                self.write('<b class="treeangle title" %s>' % (not title_url and onclick or ""))
                 if icon:
                     self.write('<img class="treeangle title" src="images/icon_%s.png">' % self.attrencode(icon))
                 if title_url:

@@ -28,10 +28,11 @@
 # SYS5.OMVS.ALF0.HFS         720          92        504       16% /ALF0
 # HFS, Read/Write, Device:2, ACLS=Y
 # Filetag : T=off   codeset=0
-#
+# ##########
 # SYS5.OMVS.SYSPLEX.ROOT     720         224        372       38% /
 # HFS, Read Only, Device:1, ACLS=Y
 # Filetag : T=off   codeset=0
+# ##########
 
 # FS Types:
 # AUTOMNT
@@ -40,52 +41,86 @@
 # NFS
 # HFS
 
-def df_zos_convert(data):
-    entries = []
-    found = False
-    for line in data:
-        if len(line) == 6:
-            entry = list(line)
-            found = True
+
+def parse_df_zos(info):
+    parsed = {}
+    fs = None
+    usage = []
+    options = []
+
+    for line in info:
+        if line[0].startswith('#####'):
+            # Add item for filesystem
+            parsed.setdefault(fs, {})
+            parsed[fs].setdefault('size', usage)
+            parsed[fs].setdefault('options', options)
+
+            fs = None
+            usage = []
+            options = []
+        elif line[0].startswith('Filesystem'):
+            # Ignore header line
             continue
-        elif found:
-            entry.append(line[0][:-1]) #Filesystem Type
-            # Read/Write
-            if len(line) == 4:
-                entry.append('rw')
-            # Read Only
-            else:
-                entry.append('ro')
-            entries.append(entry)
-            found = False
-    return entries
+        else:
+            if fs == None:
+                # First line: filesystem with usage information
+                fs = line[5]
+                usage = line[1:5]
+            elif not options:
+                # Second line: filesystem options
+                for option in line:
+                    options.append(option.replace(',', ''))
+                if 'Read' in options and 'Only' in options:
+                    options.remove('Read')
+                    options.remove('Only')
+                    options.append('ReadOnly')
+    return parsed
+
 
 df_zos_exclude_list = ['AUTOMNT', 'TFS', 'NFS']
 
-def inventory_df_zos(info):
-    info = df_zos_convert(info)
+def inventory_df_zos(parsed):
     mplist = []
-    for line in info:
-        if line[-1] == "rw" and line[-2] not in df_zos_exclude_list:
-            mplist.append(line[5])
+
+    for item in parsed.keys():
+        fs_rw = False
+        fs_ex = False
+
+        # Check filesystem options
+        for option in parsed[item]['options']:
+            # Check if filesystem is rw
+            if option == 'Read/Write':
+                fs_rw = True
+
+            # Check if filesystem is excluded
+            if option in df_zos_exclude_list:
+                fs_ex = True
+
+        if fs_rw and not fs_ex:
+            mplist.append(item)
     return df_inventory(mplist)
 
 
-def check_df_zos(item, params, info):
-    info_convert = df_zos_convert(info)
+def check_df_zos(item, params, parsed):
     fslist = []
-    for fs, size, used, avail, used_perc, mount_point, fs_type, fs_state in info_convert:
-        size_mb    = float(size) / 1024
-        avail_mb   = float(avail) / 1024
-        fslist.append((mount_point, size_mb, avail_mb, 0))
+
+    for filesystem in parsed.keys():
+        (size_mb, used_mb, avail_mb) = map(float, parsed[filesystem]['size'][0:3])
+        size_mb  /= 1024
+        used_mb  /= 1024
+        avail_mb /= 1024
+        fslist.append((filesystem, size_mb, avail_mb, 0))
+
     return df_check_filesystem_list(item, params, fslist)
 
+
 check_info['df_zos'] = {
-    "check_function"          : check_df_zos,
-    "inventory_function"      : inventory_df_zos,
-    "service_description"     : "Filesystem %s",
-    "has_perfdata"            : True,
-    "group"                   : "filesystem",
-    "default_levels_variable" : "filesystem_default_levels",
-    "includes"                : [ "df.include" ],
+    'parse_function'          : parse_df_zos,
+    'check_function'          : check_df_zos,
+    'inventory_function'      : inventory_df_zos,
+    'service_description'     : "Filesystem %s",
+    'has_perfdata'            : True,
+    'group'                   : 'filesystem',
+    'default_levels_variable' : "filesystem_default_levels",
+    'includes'                : [ 'df.include' ],
 }

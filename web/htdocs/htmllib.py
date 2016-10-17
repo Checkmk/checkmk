@@ -421,24 +421,24 @@ class HTMLGenerator(OutputFunnel):
     def _render_opening_tag(self, tag_name, close_tag=False, **attrs):
         """ You have to replace attributes which are also python elements such as
             'class', 'id', 'for' or 'type' using a trailing underscore (e.g. 'class_' or 'id_'). """
-        self.indent_level += self.indent
+        #self.indent_level += self.indent
         if not attrs:
-            return "%s<%s%s>\n" % (' ' * (self.indent_level - self.indent),\
+            return "%s<%s%s>" % (' ' * (self.indent_level - self.indent),\
                                    tag_name,\
                                    ' /' if close_tag else '')
         else:
-            return "%s<%s%s%s>\n" % (' ' * (self.indent_level - self.indent),\
+            return "%s<%s%s%s>" % (' ' * (self.indent_level - self.indent),\
                                      tag_name, ''.join(self._render_attributes(**attrs)),\
                                      ' /' if close_tag else '')
 
 
     def _render_closing_tag(self, tag_name):
-        self.indent_level -= self.indent if self.indent_level < 0 else 0
-        return  "%s</%s>\n" % (' ' * self.indent_level, tag_name)
+        #self.indent_level -= self.indent if self.indent_level < 0 else 0
+        return  "%s</%s>" % (' ' * self.indent_level, tag_name)
 
 
     def _render_content_tag(self, tag_name, tag_content, **attrs):
-        return "%s%s%s\n%s" % (self._render_opening_tag(tag_name, **attrs),\
+        return "%s%s%s%s" % (self._render_opening_tag(tag_name, **attrs),\
                                ' ' * self.indent_level,\
                                self._escape_text(tag_content),\
                                self._render_closing_tag(tag_name))
@@ -2304,7 +2304,7 @@ class html(DeprecationWrapper):
                 if indent != "form":
                     self.write("<br>")
             else:
-                self.write('<b class="treeangle title" class=treeangle %s>' % (not title_url and onclick or ""))
+                self.write('<b class="treeangle title" %s>' % (not title_url and onclick or ""))
                 if icon:
                     self.write('<img class="treeangle title" src="images/icon_%s.png">' % self.attrencode(icon))
                 if title_url:

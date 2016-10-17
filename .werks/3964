@@ -1,4 +1,4 @@
-Title: df_zos: Fixed not working filesystemcheck for IBM zOS
+Title: df_zos: Fixed not working filesystemcheck for IBM z/OS
 Level: 1
 Component: checks
 Compatible: compat
@@ -6,4 +6,4 @@ Version: 1.2.8p13
 Date: 1476713605
 Class: fix
 
-
+Updated filesystemchecks to new output format of z/OS.

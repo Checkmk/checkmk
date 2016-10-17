@@ -8208,8 +8208,8 @@ register_check_parameters(
                                         "overwrite the default state set above."),
                     default_value   = (0, 0),
                     elements = [
-                        Float(title = _("Warning at"),  unit = _("seconds")),
-                        Float(title = _("Critical at"), unit = _("seconds")),
+                        Float(title = _("Warning at"),  unit = _("seconds"), display_format = _("%.3f")),
+                        Float(title = _("Critical at"), unit = _("seconds"), display_format = _("%.3f")),
                     ]
             )),
         ],

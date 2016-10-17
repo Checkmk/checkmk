@@ -27,6 +27,7 @@
     * 3824 FIX: netapp_api_snapvault: fixed duplicate service when item name contains a $ character...
     * 3825 FIX: local check: no longer cuts away any trailing "9" digits in P mode
     * 3964 FIX: df_zos: Fixed not working filesystemcheck for IBM zOS
+    * 3826 FIX: netapp_api_connection: now removes duplicate warning messages
 
     Multisite:
     * 3959 Two new filters for the comment view: author and comment text field

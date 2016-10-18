@@ -1,0 +1,9 @@
+Title: if.include: fixed wrong order if interface groups are configured
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p13
+Date: 1476804826
+Class: fix
+
+

@@ -29,7 +29,4 @@ setup:
 	    beautifulsoup4 \
 	    pytest-stepwise \
 	    dill
-	sudo apt-get install \
-	    python-lxml
->>>>>>> Added dill module to test setup
 	$(MAKE) -C pylint setup

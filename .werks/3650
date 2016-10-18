@@ -1,0 +1,23 @@
+Title: Fixed bash versionitis, unbreaking cached check results.
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p13
+Date: 1476797337
+Class: fix
+
+Our shebang lines in scripts explicitly state which bash they want, and the
+bash instances we start from the script should better use the exact same
+version.  If there is a version mismatch, lots of funny things can happen,
+the most prominent being that caching check results doesn't work anymore
+(e.g.  when using MRPE).  This is caused by the bash fixes for the
+Shellshock vulnerability which change (among other things) how functions are
+exported to sub-shells.  The consequence is that a pre-Shellshock bash
+doesn't see the functions exported by a post-Shellshock bash, and vice
+versa.  This setup can happen when the shebang and the user's PATH have
+different ideas about which bash to use.
+    
+To fix this, we use the same absolute path for starting the bash
+sub-processes as the one stated in the corresponding shebang.
+
+

@@ -5,6 +5,7 @@
     * 3937 FIX: check_mk_agent.aix: fixed hadling of mailq command
     * 3825 FIX: local check: no longer cuts away any trailing "9" digits in P mode
     * 3964 FIX: df_zos: Fixed not working filesystemcheck for IBM z/OS...
+    * 3650 FIX: Fixed bash versionitis, unbreaking cached check results....
 
     Multisite:
     * 3902 FIX: Graph search view: Changing painter options made page empty

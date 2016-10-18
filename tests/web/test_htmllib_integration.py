@@ -10,6 +10,8 @@ sys.path.insert(0, "%s/web/htdocs" % cmk_path())
 # external imports
 import re
 
+import i18n
+
 # internal imports
 from htmllib import html
 from htmllib import HTMLGenerator, HTMLCheck_MK

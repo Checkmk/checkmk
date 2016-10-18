@@ -14,12 +14,6 @@ import re
 from htmllib import html
 from htmllib import HTMLGenerator, HTMLCheck_MK
 
-# Hack to fix localized calls
-try:
-    _
-except:
-    _ = lambda x: x
-
 #   .--Deprecated Renderer-------------------------------------------------.
 #   |          ____                                _           _           |
 #   |         |  _ \  ___ _ __  _ __ ___  ___ __ _| |_ ___  __| |          |

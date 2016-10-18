@@ -26,3 +26,5 @@ RemoteSystemsTempFiles
 .DS_Store
 .cache
 tags
+
+tests/web/data/*

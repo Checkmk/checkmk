@@ -4661,6 +4661,7 @@ for o,a in opts:
     # -v/--verbose is handled above manually. Simply ignore it here.
     if o in [ '-v', '--verbose' ]:
         _verbosity += 1
+        opt_verbose += 1 # TODO: Remove this once opt_verbose usage has been removed
     elif o in [ '-f', '--force' ]:
         opt_force = True
     elif o == '-c':

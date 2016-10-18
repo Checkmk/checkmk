@@ -60,6 +60,18 @@ register_rule(group,
                       allow_empty = False,
                   )
                 ),
+                ( "direct",
+                  DropdownChoice(
+                      title = _("Type of query"),
+                      choices = [
+                          ( True,               _("Queried host is a host system" ) ),
+                          ( "hostsystem_agent", _("Queried host is a host system with Check_MK Agent installed") ),
+                          ( False,              _("Queried host is the vCenter") ),
+                          ( "agent",            _("Queried host is the vCenter with Check_MK Agent installed") ),
+                      ],
+                      default = True,
+                  )
+                ),
                 ( "tcp_port",
                   Integer(
                        title = _("TCP Port number"),
@@ -93,6 +105,17 @@ register_rule(group,
                       unit = _("seconds"),
                   )
                 ),
+                ( "use_pysphere",
+                  Checkbox(
+                    title = _("Compatibility mode"),
+                    label = _("Support ESX 4.1 (using slower PySphere implementation)"),
+                    true_label = _("Support 4.1"),
+                    false_label = _("fast"),
+                    help = _("The current very performant implementation of the ESX special agent "
+                             "does not support older ESX versions than 5.0. Please use the slow "
+                             "compatibility mode for those old hosts."),
+                  )
+                ),
                 ( "infos",
                   Transform(
                       ListChoice(
@@ -110,9 +133,32 @@ register_rule(group,
                        title = _("Retrieve information about..."),
                     )
                  ),
+                 ( "skip_placeholder_vms",
+                    Checkbox(
+                        title = _("Placeholder VMs"),
+                        label = _("Do no monitor placeholder VMs"),
+                        default_value = True,
+                        true_label = _("ignore"),
+                        false_label = _("monitor"),
+                        help = _("Placeholder VMs are created by the Site Recovery Manager(SRM) and act as backup "
+                                 "virtual machines in case the default vm is unable to start. This option tells the "
+                                 "vsphere agent to exclude placeholder vms in its output."
+                        ))
+                 ),
                  ( "host_pwr_display",
                    DropdownChoice(
                        title = _("Display ESX Host power state on"),
+                       choices = [
+                           ( None,      _("The queried ESX system (vCenter / Host)") ),
+                           ( "esxhost", _("The ESX Host") ),
+                           ( "vm",      _("The Virtual Machine") ),
+                       ],
+                       default = None,
+                   )
+                 ),
+                 ( "vm_pwr_display",
+                   DropdownChoice(
+                       title = _("Display VM power state on"),
                        choices = [
                            ( None,      _("The queried ESX system (vCenter / Host)") ),
                            ( "esxhost", _("The ESX Host") ),
@@ -131,17 +177,6 @@ register_rule(group,
                        default = "alias",
                    )
                  ),
-                 ( "vm_pwr_display",
-                   DropdownChoice(
-                       title = _("Display VM power state on"),
-                       choices = [
-                           ( None,      _("The queried ESX system (vCenter / Host)") ),
-                           ( "esxhost", _("The ESX Host") ),
-                           ( "vm",      _("The Virtual Machine") ),
-                       ],
-                       default = None,
-                   )
-                 ),
                  ( "spaces",
                    DropdownChoice(
                        title = _("Spaces in hostnames"),
@@ -152,41 +187,6 @@ register_rule(group,
                        default = "underscore",
                    )
                  ),
-                 ( "direct",
-                   DropdownChoice(
-                       title = _("Type of query"),
-                       choices = [
-                           ( True,               _("Queried host is a host system" ) ),
-                           ( "hostsystem_agent", _("Queried host is a host system with Check_MK Agent installed") ),
-                           ( False,              _("Queried host is the vCenter") ),
-                           ( "agent",            _("Queried host is the vCenter with Check_MK Agent installed") ),
-                       ],
-                       default = True,
-                   )
-                ),
-                ( "skip_placeholder_vms",
-                   Checkbox(
-                       title = _("Placeholder VMs"),
-                       label = _("Do no monitor placeholder VMs"),
-                       default_value = True,
-                       true_label = _("ignore"),
-                       false_label = _("monitor"),
-                       help = _("Placeholder VMs are created by the Site Recovery Manager(SRM) and act as backup "
-                                "virtual machines in case the default vm is unable to start. This option tells the "
-                                "vsphere agent to exclude placeholder vms in its output."
-                       ))
-                ),
-                ( "use_pysphere",
-                  Checkbox(
-                    title = _("Compatibility mode"),
-                    label = _("Support ESX 4.1 (using slower PySphere implementation)"),
-                    true_label = _("Support 4.1"),
-                    false_label = _("fast"),
-                    help = _("The current very performant implementation of the ESX special agent "
-                             "does not support older ESX versions than 5.0. Please use the slow "
-                             "compatibility mode for those old hosts."),
-                  )
-                ),
             ],
             optional_keys = [ "tcp_port", "timeout", "vm_pwr_display", "host_pwr_display", "vm_piggyname" ],
         ),

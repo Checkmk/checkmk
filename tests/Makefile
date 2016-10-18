@@ -23,10 +23,11 @@ setup:
 	    python-pip \
 	    python-lxml
 	pip install --upgrade pip
-	pip install \
+	pip install --upgrade \
 	    pytest \
 	    requests \
 	    beautifulsoup4 \
 	    pytest-stepwise \
-	    dill
+	    dill \
+	    html5lib
 	$(MAKE) -C pylint setup

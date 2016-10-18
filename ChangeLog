@@ -30,6 +30,7 @@
     * 3826 FIX: netapp_api_connection: now removes duplicate warning messages
     * 3827 FIX: windows agent: fixed 3 bugs which broke the skype section
     * 3650 FIX: Fixed bash versionitis, unbreaking cached check results....
+    * 3960 FIX: if.include: fixed wrong order if interface groups are configured
 
     Multisite:
     * 3959 Two new filters for the comment view: author and comment text field

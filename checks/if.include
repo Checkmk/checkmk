@@ -393,28 +393,26 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
     if params.get("aggregate"):
         group_members = []
         matching_interfaces = []
-        node_offset = has_nodeinfo and 1 or 0
-
-        def get_interface_item(line, what):
-            ifIndex = line[ 0 + node_offset]
-            if type(ifIndex) == tuple:
-                ifGroup, ifIndex = ifIndex
-
-            if what == "description":
-                return line[ 1 + node_offset]
-            elif what == "alias":
-                return line[18 + node_offset]
-            else: # index
-                pad_portnumbers = item[0] == '0'
-                return if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers)
 
         for element in info:
-            ifIndex = element[0 + node_offset]
+            node, line = if_extract_node(element, has_nodeinfo)
+            ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
+                inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
+                outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
+                ifOutQLen, ifAlias, ifPhysAddress = line
+
             ifGroup = None
             if type(ifIndex) == tuple:
                 ifGroup, ifIndex = ifIndex
 
-            if_member_item = get_interface_item(element, params.get("aggr_member_item"))
+            service_name_type = params.get("aggr_member_item")
+            if service_name_type == "description":
+                if_member_item = ifDescr
+            elif service_name_type == "alias":
+                if_member_item = ifAlias
+            else: # index
+                pad_portnumbers = item[0] == '0'
+                if_member_item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers)
 
             if ifGroup and ifGroup == item:
                 matching_interfaces.append((if_member_item, element))
@@ -425,7 +423,7 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
                 # tryint -> force "01" and "1" to be identical.
                 if params.get("include_items") != None and tryint(if_member_item) not in map(tryint, params["include_items"]):
                     add_interface = False
-                elif params.get("iftype") != None and saveint(element[2 + node_offset]) != params["iftype"]:
+                elif params.get("iftype") != None and saveint(ifType) != params["iftype"]:
                     add_interface = False
                 if add_interface:
                     matching_interfaces.append((if_member_item, element))
@@ -505,14 +503,19 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
 
             group_info["ifType"] = ifType # This is the fallback ifType if none is set in the parameters
 
-
-
         # Append an additional entry to the info table containing the calculated group_info
         num_up = 0
         for (if_member_item, element) in matching_interfaces:
-            if element[4] == '1' or (
-                  type(element[4]) == tuple and element[4][0] == '1'):
-                  num_up += 1
+            node, line = if_extract_node(element, has_nodeinfo)
+            ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
+                inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
+                outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
+                ifOutQLen, ifAlias, ifPhysAddress = line
+
+            if ifOperStatus == '1' or (
+                type(ifOperStatus) == tuple and ifOperStatus == '1'):
+                num_up += 1
+
         if num_up == len(matching_interfaces):
             group_operStatus = "1" # up
         elif num_up > 0:

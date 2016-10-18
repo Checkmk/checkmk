@@ -375,6 +375,10 @@ class ModeBI(WatoMode):
 
 
 
+    def _add_change(self, action_name, text):
+        add_change(action_name, text, domains=[ConfigDomainGUI], sites=get_login_sites())
+
+
     # .--------------------------------------------------------------------.
     # | Valuespecs                                                         |
     # '--------------------------------------------------------------------'
@@ -918,14 +922,14 @@ class ModeBIEditPack(ModeBI):
             new_pack = self._vs_pack().from_html_vars("bi_pack")
             self._vs_pack().validate_value(new_pack, 'bi_pack')
             if self._pack:
-                log_pending(SYNC, None, "bi-edit-pack", _("Modified BI pack %s") % self._pack_id)
+                self._add_change("bi-edit-pack", _("Modified BI pack %s") % self._pack_id)
                 new_pack["rules"] = self._pack["rules"]
                 new_pack["aggregations"] = self._pack["aggregations"]
                 new_pack["id"] = self._pack_id
             else:
                 if new_pack["id"] in self._packs:
                     raise MKUserError("pack_id", _("A BI pack with this ID already exists."))
-                log_pending(SYNC, None, "bi-new-pack", _("Created new BI pack %s") % new_pack["id"])
+                self._add_change("bi-new-pack", _("Created new BI pack %s") % new_pack["id"])
                 new_pack["rules"] = {}
                 new_pack["aggregations"] = []
             self._packs[new_pack["id"]] = new_pack
@@ -1028,7 +1032,7 @@ class ModeBIAggregations(ModeBI):
             _("Do you really want to delete the aggregation number <b>%s</b>?") % (nr+1))
         if c:
             del self._pack["aggregations"][nr]
-            log_pending(SYNC, None, "bi-delete-aggregation", _("Deleted BI aggregation number %d") % (nr+1))
+            self._add_change("bi-delete-aggregation", _("Deleted BI aggregation number %d") % (nr+1))
             self.save_config()
         elif c == False: # not yet confirmed
             return ""
@@ -1114,7 +1118,7 @@ class ModeBIRules(ModeBI):
                   "the id <b>%s</b>?") % ruleid)
             if c:
                 del self._pack["rules"][ruleid]
-                log_pending(SYNC, None, "bi-delete-rule", _("Deleted BI rule with id %s") % ruleid)
+                self._add_change("bi-delete-rule", _("Deleted BI rule with id %s") % ruleid)
                 self.save_config()
             elif c == False: # not yet confirmed
                 return ""
@@ -1302,10 +1306,10 @@ class ModeBIEditAggregation(ModeBI):
                 raise MKUserError('rule_p_groups_0', _("Please define at least one aggregation group"))
             if self._new:
                 self._pack["aggregations"].append(new_aggr)
-                log_pending(SYNC, None, "bi-new-aggregation", _("Created new BI aggregation %d") % (len(self._pack["aggregations"])))
+                self._add_change("bi-new-aggregation", _("Created new BI aggregation %d") % (len(self._pack["aggregations"])))
             else:
                 self._pack["aggregations"][self._edited_nr] = new_aggr
-                log_pending(SYNC, None, "bi-edit-aggregation", _("Modified BI aggregation %d") % (self._edited_nr + 1))
+                self._add_change("bi-edit-aggregation", _("Modified BI aggregation %d") % (self._edited_nr + 1))
             self.save_config()
         return "bi_aggregations"
 
@@ -1367,7 +1371,7 @@ class ModeBIEditRule(ModeBI):
                 del self._pack["rules"][existing_ruleid]
                 self._pack["rules"][new_ruleid] = new_rule
                 self._rename_existing_ruleid_after_confirm(existing_ruleid)
-                log_pending(SYNC, None, "bi-edit-rule", _("Renamed BI rule %s") % self._ruleid)
+                self._add_change("bi-edit-rule", _("Renamed BI rule %s") % self._ruleid)
                 self.save_config()
 
             else:
@@ -1392,14 +1396,14 @@ class ModeBIEditRule(ModeBI):
             if self._new:
                 del new_rule["id"]
                 self._pack["rules"][self._ruleid] = new_rule
-                log_pending(SYNC, None, "bi-new-rule", _("Create new BI rule %s") % self._ruleid)
+                self._add_change("bi-new-rule", _("Create new BI rule %s") % self._ruleid)
             else:
                 self._pack["rules"][self._ruleid].update(new_rule)
                 new_rule["id"] = self._ruleid
                 if self.rule_uses_rule(new_rule, new_rule["id"]):
                     raise MKUserError(None, _("There is a cycle in your rules. This rule calls itself - "
                                               "either directly or indirectly."))
-                log_pending(SYNC, None, "bi-edit-rule", _("Modified BI rule %s") % self._ruleid)
+                self._add_change("bi-edit-rule", _("Modified BI rule %s") % self._ruleid)
 
             self.save_config()
 

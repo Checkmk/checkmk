@@ -114,14 +114,6 @@ NEGATE       = '@negate'
 NO_ITEM      = {} # Just an arbitrary unique thing
 ENTRY_NEGATE_CHAR = "!"
 
-
-# Actions for log_pending
-RESTART      = 1
-SYNC         = 2
-SYNCRESTART  = 3
-AFFECTED     = 4
-LOCALRESTART = 5
-
 # Some paths and directories
 wato_root_dir  = cmk.paths.check_mk_config_dir + "/wato/"
 multisite_dir  = cmk.paths.default_config_dir + "/multisite.d/wato/"
@@ -209,51 +201,6 @@ def log_audit(linkinfo, what, message, user_id = None):
     log_entry(linkinfo, what, message, "audit.log", user_id)
 
 
-# status is one of:
-# SYNC        -> Only sync neccessary
-# RESTART     -> Restart and sync neccessary (where is this used??)
-# SYNCRESTART -> Do sync and restart
-# AFFECTED    -> affected sites are already marked for sync+restart
-#                by mark_affected_sites_dirty().
-# LOCALRESTART-> Called after inventory. In distributed mode, affected
-#                sites have already been marked for restart. Do nothing here.
-#                In non-distributed mode mark for restart
-def log_pending(status, linkinfo, what, message, user_id = None):
-    log_audit(linkinfo, what, message, user_id)
-    need_sidebar_reload()
-
-    # On each change to the Check_MK configuration mark the agents to be rebuild
-    if 'need_to_bake_agents' in globals():
-        # pylint: disable=undefined-variable
-        need_to_bake_agents()
-
-    # Only add pending log entries when a restart is needed
-    if has_wato_slave_sites() or status != SYNC:
-        log_entry(linkinfo, what, message, "pending.log", user_id)
-
-    # Currently we add the pending to each site, regardless if
-    # the site is really affected. This needs to be optimized
-    # in future.
-    for siteid, site in config.sites.items():
-        changes = {}
-
-        # Local site can never have pending changes to be synced
-        if config.site_is_local(siteid):
-            if status in [ RESTART, SYNCRESTART ]:
-                changes["need_restart"] = True
-        else:
-            if status in [ SYNC, SYNCRESTART ]:
-                changes["need_sync"] = True
-
-            if status in [ RESTART, SYNCRESTART ]:
-                changes["need_restart"] = True
-        update_replication_status(siteid, changes)
-
-        # Make sure that a new snapshot for syncing will be created
-        # when times comes to syncing
-        remove_sync_snapshot(siteid)
-
-
 def log_exists(what):
     path = log_dir + what + ".log"
     return os.path.exists(path)
@@ -294,6 +241,84 @@ def log_commit_pending():
     if os.path.exists(pending):
         os.remove(pending)
     need_sidebar_reload()
+
+
+#
+# NEW sync code
+#
+
+
+def add_change(action_name, text, obj=None, add_user=True, need_sync=True, need_restart=None, domains=None, sites=None):
+    # Default to a core only change
+    if domains == None:
+        domains = [ConfigDomainCore]
+
+    log_audit(obj, action_name, text, config.user.id if add_user else '')
+    need_sidebar_reload()
+
+    # On each change to the Check_MK configuration mark the agents to be rebuild
+    if 'need_to_bake_agents' in globals():
+        # pylint: disable=undefined-variable
+        need_to_bake_agents()
+
+    # All sites in case no specific site is given
+    if sites == None:
+        sites = config.sitenames()
+
+    for site_id in sites:
+        add_change_to_site(site_id, action_name, text, obj, add_user, need_sync, need_restart, domains)
+
+
+def add_service_change(host, action_name, text):
+    add_change(action_name, text, obj=host, sites=[host.site_id()], need_sync=False)
+
+
+def add_change_to_site(site_id, action_name, text, obj, add_user, need_sync, need_restart, domains):
+    # Individual changes may override the domain restart default value
+    if need_restart == None:
+        need_restart = any([ d.needs_restart for d in domains ])
+
+    def serialize_object(obj):
+        return obj.__class__.__name__, obj.ident()
+
+    update_replication_status(site_id, {
+        "need_sync"    : need_sync,
+        "need_restart" : need_restart,
+    }, changes=[{
+        "action_name" : action_name,
+        "text"        : "%s" % text,
+        "object"      : serialize_object(obj),
+        "user_id"     : config.user.id if add_user else None,
+        "domains"     : [ d.ident for d in domains ],
+        "time"        : time.time(),
+    }])
+
+
+
+class ConfigDomain(object):
+    @classmethod
+    def get_class(cls, ident):
+        for domain_class in cls.__subclasses__(): # pylint: disable=no-member
+            if domain_class.ident == ident:
+                return domain_class
+        raise NotImplementedError()
+
+    def restart(self):
+        raise NotImplementedError()
+
+
+
+class ConfigDomainCore(ConfigDomain):
+    needs_restart = True
+    ident = "check_mk"
+
+
+
+class ConfigDomainGUI(ConfigDomain):
+    needs_restart = False
+    ident = "multisite"
+
+
 
 #.
 #   .--Hosts & Folders-----------------------------------------------------.
@@ -1123,6 +1148,10 @@ class Folder(BaseFolder):
         return (wato_root_dir + self.path()).rstrip("/")
 
 
+    def ident(self):
+        return self.path()
+
+
     def path(self):
         if self.is_root():
             return ""
@@ -1480,7 +1509,9 @@ class Folder(BaseFolder):
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
         self._subfolders[name] = new_subfolder
         new_subfolder.save()
-        log_pending(AFFECTED, new_subfolder, "new-folder", _("Created new folder %s") % new_subfolder.alias_path())
+        add_change("new-folder", _("Created new folder %s") % new_subfolder.alias_path(),
+            obj=new_subfolder,
+            sites=[new_subfolder.site_id()])
         call_hook_folder_created(new_subfolder)
         need_sidebar_reload()
         return new_subfolder
@@ -1494,9 +1525,10 @@ class Folder(BaseFolder):
 
         # 2. Actual modification
         subfolder = self.subfolder(name)
-        subfolder.mark_hosts_dirty()
         call_hook_folder_deleted(subfolder)
-        log_pending(AFFECTED, self, "delete-folder", _("Deleted folder %s") % subfolder.alias_path())
+        add_change("delete-folder", _("Deleted folder %s") % subfolder.alias_path(),
+            obj=self,
+            sites=subfolder.all_site_ids())
         self._remove_subfolder(name)
         shutil.rmtree(subfolder.filesystem_path())
         Folder.invalidate_caches()
@@ -1515,17 +1547,19 @@ class Folder(BaseFolder):
             raise MKUserError(None, _("Cannot move folder: A folder with this name already exists in the target folder."))
 
         # 2. Actual modification
-        subfolder.mark_hosts_dirty()
+        affected_sites = [subfolder.all_site_ids()]
         old_filesystem_path = subfolder.filesystem_path()
         del self._subfolders[subfolder.name()]
         subfolder._parent = target_folder
         target_folder._subfolders[subfolder.name()] = subfolder
         shutil.move(old_filesystem_path, subfolder.filesystem_path())
         subfolder.rewrite_hosts_files() # fixes changed inheritance
-        subfolder.mark_hosts_dirty()
         Folder.invalidate_caches()
-        log_pending(AFFECTED, subfolder, "move-folder",
-            _("Moved folder %s to %s") % (subfolder.alias_path(), target_folder.alias_path()))
+        affected_sites = list(set(affected_sites + [subfolder.all_site_ids()]))
+        add_change("move-folder",
+            _("Moved folder %s to %s") % (subfolder.alias_path(), target_folder.alias_path()),
+            obj=subfolder,
+            sites=affected_sites)
         need_sidebar_reload()
 
 
@@ -1550,7 +1584,7 @@ class Folder(BaseFolder):
         # dirty. Therefore we first mark dirty according to the current
         # host->site mapping and after the change we mark again according
         # to the new mapping.
-        self.mark_hosts_dirty()
+        affected_sites = self.all_site_ids()
 
         self._title      = new_title
         self._attributes = new_attributes
@@ -1561,8 +1595,10 @@ class Folder(BaseFolder):
         self.save()
         self.rewrite_hosts_files()
 
-        self.mark_hosts_dirty()
-        log_pending(AFFECTED, self, "edit-folder", _("Edited properties of folder %s") % self.title())
+        affected_sites = list(set(affected_sites + self.all_site_ids()))
+        add_change("edit-folder", _("Edited properties of folder %s") % self.title(),
+            obj=self,
+            sites=affected_sites)
 
 
     def create_hosts(self, entries):
@@ -1585,8 +1621,9 @@ class Folder(BaseFolder):
             host = Host(self, host_name, attributes, cluster_nodes)
             self._hosts[host_name] = host
             self._num_hosts = len(self._hosts)
-            host.mark_dirty()
-            log_pending(AFFECTED, host, "create-host", _("Created new host %s.") % host_name)
+            add_change("create-host", _("Created new host %s.") % host_name,
+                obj=host,
+                sites=[host.site_id()])
         self._save_wato_info() # num_hosts has changed
         self.save_hosts()
 
@@ -1603,10 +1640,11 @@ class Folder(BaseFolder):
         # 3. Actual modification
         for host_name in host_names:
             host = self.hosts()[host_name]
-            host.mark_dirty()
             del self._hosts[host_name]
             self._num_hosts = len(self._hosts)
-            log_pending(AFFECTED, host, "delete-host", _("Deleted host %s") % host_name)
+            add_change("delete-host", _("Deleted host %s") % host_name,
+                obj=host,
+                sites=[host.site_id()])
 
         self._save_wato_info() # num_hosts has changed
         self.save_hosts()
@@ -1636,12 +1674,17 @@ class Folder(BaseFolder):
         # 2. Actual modification
         for host_name in host_names:
             host = self.host(host_name)
-            host.mark_dirty()
+
+            affected_sites = [host.site_id()]
+
             self._remove_host(host)
             target_folder._add_host(host)
-            host.mark_dirty()
-            log_pending(AFFECTED, host, "move-host", _("Moved host from %s to %s") %
-                (self.path(), target_folder.path()))
+
+            affected_sites = list(set(affected_sites + [host.site_id()]))
+            add_change("move-host", _("Moved host from %s to %s") %
+                (self.path(), target_folder.path()),
+                obj=host,
+                sites=affected_sites)
 
         self._save_wato_info() # num_hosts has changed
         self.save_hosts()
@@ -1661,7 +1704,8 @@ class Folder(BaseFolder):
         host.rename(newname)
         del self._hosts[oldname]
         self._hosts[newname] = host
-        host.mark_dirty()
+        add_change("rename-host", _("Renamed host from %s to %s") % (oldname, newname),
+            obj=host, sites=[host.site_id()])
         self.save_hosts()
 
 
@@ -1669,20 +1713,12 @@ class Folder(BaseFolder):
         # Must not fail because of auth problems. Auth is check at the
         # actually renamed host.
         changed = rename_host_in_list(self._attributes["parents"], oldname, newname)
-        self.mark_hosts_dirty()
+        add_change("rename-parent",
+            _("Renamed parent (set in folder) from %s to %s") % (self.path(), oldname, newname),
+            obj=self, sites=[self.all_site_ids()])
         self.save_hosts()
         self.save()
         return changed
-
-
-    def mark_hosts_dirty(self, need_sync=True, need_restart=True):
-        for site_id in self.all_site_ids():
-            changes = {}
-            if need_sync and not config.site_is_local(site_id):
-                changes["need_sync"] = True
-            if need_restart: # Is this parameter used at all?
-                changes["need_restart"] = True
-            update_replication_status(site_id, changes)
 
 
     def rewrite_hosts_files(self):
@@ -2013,6 +2049,10 @@ class Host(WithPermissionsAndAttributes):
     # | ELEMENT ACCESS                                                     |
     # '--------------------------------------------------------------------'
 
+    def ident(self):
+        return self.name()
+
+
     def name(self):
         return self._name
 
@@ -2167,12 +2207,13 @@ class Host(WithPermissionsAndAttributes):
         must_be_in_contactgroups(attributes.get("contactgroups"))
 
         # 2. Actual modification
-        self.mark_dirty()
+        affected_sites = [self.site_id()]
         self._attributes = attributes
         self._cluster_nodes = cluster_nodes
-        self.mark_dirty()
+        affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
-        log_pending(AFFECTED, self, "edit-host", _("Modified host %s.") % self.name())
+        add_change("edit-host", _("Modified host %s.") % self.name(),
+            obj=self, sites=affected_sites)
 
 
     def update_attributes(self, changed_attributes):
@@ -2188,13 +2229,14 @@ class Host(WithPermissionsAndAttributes):
         self.need_unlocked()
 
         # 2. Actual modification
-        self.mark_dirty()
+        affected_sites = [self.site_id()]
         for attrname in attrnames_to_clean:
             if attrname in self._attributes:
                 del self._attributes[attrname]
-        self.mark_dirty()
+        affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
-        log_pending(AFFECTED, self, "edit-host", _("Removed explicit attributes of host %s.") % self.name())
+        add_change("edit-host", _("Removed explicit attributes of host %s.") % self.name(),
+            obj=self, sites=affected_sites)
 
 
     def _need_folder_write_permissions(self):
@@ -2228,21 +2270,13 @@ class Host(WithPermissionsAndAttributes):
                 self.folder().save_hosts()
 
 
-    def mark_dirty(self, need_sync=True):
-        site_id = self.site_id()
-        changes = {}
-        if not config.site_is_local(site_id):
-            changes["need_sync"] = need_sync
-        changes["need_restart"] = True
-        update_replication_status(site_id, changes)
-
-
     def rename_cluster_node(self, oldname, newname):
         # We must not check permissions here. Permissions
         # on the renamed host must be sufficient. If we would
         # fail here we would leave an inconsistent state
         changed = rename_host_in_list(self._cluster_nodes, oldname, newname)
-        self.mark_dirty()
+        add_change("rename-node", _("Renamed cluster node from %s into %s.") % (oldname, newname),
+            obj=self, sites=[self.site_id()])
         self.folder().save_hosts()
         return changed
 
@@ -2250,15 +2284,16 @@ class Host(WithPermissionsAndAttributes):
     def rename_parent(self, oldname, newname):
         # Same is with rename_cluster_node()
         changed = rename_host_in_list(self._attributes["parents"], oldname, newname)
-        self.mark_dirty()
+        add_change("rename-parent", _("Renamed parent from %s into %s.") % (oldname, newname),
+            obj=self, sites=[self.site_id()])
         self.folder().save_hosts()
         return changed
 
 
     def rename(self, new_name):
-        log_pending(AFFECTED, self, "rename-host", _("Renamed host from %s into %s.") % (self.name(), new_name))
+        add_change("rename-host", _("Renamed host from %s into %s.") % (self.name(), new_name),
+            obj=self, sites=[self.site_id()])
         self._name = new_name
-        self.mark_dirty()
 
 
 #.
@@ -3395,7 +3430,7 @@ def check_mk_remote_automation(siteid, command, args, indata, stdin_data=None, t
     # If the site is not up-to-date, synchronize it first.
     repstatus = load_replication_status()
     if repstatus.get(siteid, {}).get("need_sync"):
-        synchronize_site(config.site(siteid), False)
+        synchronize_site(config.site(siteid), restart=False)
 
     # Now do the actual remote command
     response = do_remote_automation(
@@ -3535,36 +3570,64 @@ def load_replication_status(lock=False):
 def save_replication_status(repstatus):
     store.save_data_to_file(repstatus_file, repstatus)
 
-# Updates one or more dict elements of a site in an
-# atomic way. If vars is None, the sites status will
-# be removed
-def update_replication_status(site_id, vars, times = {}):
-    make_nagios_directory(var_dir)
+
+def clear_replication_status(site_id):
     repstatus = load_replication_status(lock=True)
 
-    if vars == None:
-        if site_id in repstatus:
-            del repstatus[site_id]
-    else:
-        repstatus.setdefault(site_id, {})
-        repstatus[site_id].update(vars)
-
-        if config.site_is_local(site_id): # nevery sync to local site
-            repstatus[site_id]["need_sync"] = False
-
-        old_times = repstatus[site_id].setdefault("times", {})
-        for what, duration in times.items():
-            if what not in old_times:
-                old_times[what] = duration
-            else:
-                old_times[what] = 0.8 * old_times[what] + 0.2 * duration
+    try:
+        del repstatus[site_id]
+    except KeyError:
+        pass
 
     save_replication_status(repstatus)
 
+
+# Updates one or more dict elements of a site in an atomic way.
+def update_replication_status(site_id, vars, times=None, changes=None):
+    if times == None:
+        times = {}
+
+    make_nagios_directory(var_dir)
+    repstatus = load_replication_status(lock=True)
+
+    repstatus.setdefault(site_id, {})
+    repstatus[site_id].setdefault("times", {})
+    repstatus[site_id].setdefault("changes", [])
+
+    repstatus[site_id].update(vars)
+
+    # Nevery sync to local site
+    if config.site_is_local(site_id):
+        repstatus[site_id]["need_sync"] = False
+
+    # Apply optional replication / activation time updates
+    for what, duration in times.items():
+        old_times = repstatus[site_id]["times"]
+        if what not in old_times:
+            old_times[what] = duration
+        else:
+            old_times[what] = 0.8 * old_times[what] + 0.2 * duration
+
+    # Optionally add new pending change entries
+    if changes:
+        repstatus[site_id]["changes"] += changes
+
+    save_replication_status(repstatus)
+
+
+# Returns a list of site ids where users can login
+def get_login_sites():
+    sites = []
+    for site_id, site in config.sites.items():
+        if site.get('user_login', True) and not config.site_is_local(site_id):
+            sites.append(site_id)
+    return sites
+
+
 def update_login_sites_replication_status():
-    for siteid, site in config.sites.items():
-        if site.get('user_login', True) and not config.site_is_local(siteid):
-            update_replication_status(siteid, {'need_sync': True})
+    for site_id in get_login_sites():
+        update_replication_status(site_id, {'need_sync': True})
+
 
 def global_replication_state():
     repstatus = load_replication_status()
@@ -3851,10 +3914,9 @@ def ajax_profile_repl():
     html.write(answer)
 
 
+# Add pending entry to make sync possible later for admins
 def add_profile_replication_change(site_id, result):
-    # Add pending entry to make sync possible later for admins
-    update_replication_status(site_id, {"need_sync": True})
-    log_pending(AFFECTED, None, "edit-users", _('Profile changed (sync failed: %s)') % result)
+    add_change("edit-users", _('Profile changed (sync failed: %s)') % result, sites=[site_id], need_restart=False)
 
 
 #.
@@ -4588,6 +4650,8 @@ def user_script_title(what, name):
 #   +----------------------------------------------------------------------+
 #   | CLEAN THIS UP LATER                                                  |
 #   '----------------------------------------------------------------------'
+
+
 def get_folder_cgconf_from_attributes(attributes):
     v = attributes.get("contactgroups", ( False, [] ))
     cgconf = convert_cgroups_from_tuple(v)

@@ -1803,7 +1803,10 @@ def rename_host_in_rulesets(folder, oldname, newname):
 
         if changed:
             save_changed_ruleset(varname, folder, rulesets)
-            folder.mark_hosts_dirty()
+            add_change("edit-ruleset", _("Renamed host in %d rulesets of folder %s") %
+                                                    (len(changed_rulesets), folder.title),
+                obj=folder,
+                sites=folder.all_site_ids())
 
         for subfolder in folder.subfolders().values():
             rename_host_in_folder_rules(subfolder)
@@ -1920,12 +1923,15 @@ def rename_hosts_in_check_mk(renamings):
     action_counts = {}
     for site_id, name_pairs in group_renamings_by_site(renamings).items():
         site = config.site(site_id)
-        update_replication_status(site_id, { "need_sync" : True })
         message = _("Renamed host %s") % ", ".join(
             [_("%s into %s") % (oldname, newname) for (oldname, newname) in name_pairs])
-        log_pending(AFFECTED, None, "renamed-hosts", message)
-        synchronize_site(site, False)
+
+        # Restart is done by remote automation (below), so don't do it during rename/sync
+        add_change("renamed-hosts", message, sites=[site_id], need_restart=False)
+        synchronize_site(site, restart=False)
+
         new_counts = check_mk_automation(site_id, "rename-hosts", [], name_pairs)
+
         merge_action_counts(action_counts, new_counts)
     return action_counts
 
@@ -2765,7 +2771,7 @@ def mode_inventory(phase, firsttime):
                 if not host.locked():
                     host.clear_discovery_failed()
 
-                log_pending(LOCALRESTART, hostname, "refresh-autochecks", message)
+                add_service_change(host, "refresh-autochecks", message)
 
             else:
                 table = check_mk_automation(host.site_id(), "try-inventory", cache_options + [hostname])
@@ -2793,9 +2799,8 @@ def mode_inventory(phase, firsttime):
                 if not host.locked():
                     host.clear_discovery_failed()
 
-                log_pending(LOCALRESTART, hostname, "set-autochecks", message)
+                add_service_change(host, "set-autochecks", message)
 
-            host.mark_dirty(need_sync=False)
             return new_target, message
         return "folder"
 
@@ -3509,10 +3514,11 @@ def mode_bulk_discovery(phase):
                                 host.set_discovery_failed()
                     else:
                         result_txt += _("%s: discovery successful<br>\n") % hostname
-                        folder.mark_hosts_dirty(need_sync=False)
-                        log_pending(AFFECTED, hostname, "bulk-inventory",
-                            _("Did service discovery on host %s: %d added, %d removed, %d kept, %d total services") %
-                                                                                tuple([hostname] + counts[hostname]))
+
+                        add_service_change(host, "bulk-inventory",
+                            _("Did service discovery on host %s: %d added, %d removed, %d kept, "
+                              "%d total services") % tuple([hostname] + counts[hostname]))
+
                         if not host.locked():
                             host.clear_discovery_failed()
 
@@ -4687,7 +4693,7 @@ def ajax_replication():
         update_replication_status(site_id, {"update_started":\
                             (need_restart and "sync+restart" or "sync", time.time())})
         if need_sync:
-            result = synchronize_site(site, need_restart)
+            result = synchronize_site(site, restart=need_restart)
         else:
             result = restart_site(site)
 
@@ -5698,6 +5704,11 @@ def render_main_menu(some_modules, columns = 2):
 #   | LDAP configuration and diagnose page                                 |
 #   '----------------------------------------------------------------------'
 
+def add_ldap_change(action_name, text):
+    add_change(action_name, text, domains=[ConfigDomainGUI],
+        sites=get_login_sites())
+
+
 def mode_ldap_config(phase):
     title = _("LDAP Connections")
 
@@ -5719,7 +5730,8 @@ def mode_ldap_config(phase):
                              _("Do you really want to delete the LDAP connection <b>%s</b>?") %
                                (connection["id"]))
             if c:
-                log_pending(SYNC, None, "delete-ldap-connection", _("Deleted LDAP connection %s") % (connection["id"]))
+                add_ldap_change("delete-ldap-connection",
+                    _("Deleted LDAP connection %s") % (connection["id"]))
                 del connections[nr]
                 userdb.save_connection_config(connections)
             elif c == False:
@@ -5732,8 +5744,8 @@ def mode_ldap_config(phase):
                 from_pos = int(html.var("_move"))
                 to_pos = int(html.var("_where"))
                 connection = connections[from_pos]
-                log_pending(SYNC, None, "move-ldap-connection", _("Changed position of LDAP connection %s to %d") %
-                                                                            (connection["id"], to_pos))
+                add_ldap_change("move-ldap-connection",
+                    _("Changed position of LDAP connection %s to %d") % (connection["id"], to_pos))
                 del connections[from_pos] # make to_pos now match!
                 connections[to_pos:to_pos] = [connection]
                 userdb.save_connection_config(connections)
@@ -6157,7 +6169,7 @@ def mode_edit_ldap_connection(phase):
         else:
             log_what = "edit-ldap-connection"
             log_text = _("Changed LDAP connection %s") % connection_id
-        log_pending(SYNC, None, log_what, log_text)
+        add_ldap_change(log_what, log_text)
 
         userdb.save_connection_config(connections)
         config.user_connections = connections # make directly available on current page
@@ -6394,11 +6406,14 @@ def mode_globalvars(phase):
                 msg = _("Changed Configuration variable %s to %s.") % (varname,
                     current_settings[varname] and "on" or "off")
                 save_configuration_settings(current_settings)
+
                 pending_func  = configvar_domains()[domain].get("pending")
                 if pending_func:
                     pending_func(msg)
                 else:
-                    log_pending(need_restart and SYNCRESTART or SYNC, None, "edit-configvar", msg)
+                    add_change("edit-configvar", msg, domains=[ConfigDomain.get_class(domain)],
+                        need_restart=need_restart)
+
                 if action == "_reset":
                     return "globalvars", msg
                 else:
@@ -6571,24 +6586,23 @@ def mode_edit_configvar(phase, what = 'globalvars'):
 
         if siteid:
             save_sites(configured_sites, activate=False)
-            changes = { "need_sync" : True }
-            if need_restart:
-                changes["need_restart"] = True
-            update_replication_status(siteid, changes)
-            log_pending(AFFECTED, None, "edit-configvar", msg)
+
+            add_change("edit-configvar", msg, sites=[siteid],
+                domains=[ConfigDomain.get_class(domain)],
+                need_restart=need_restart)
+
             return "edit_site_globals"
         else:
             save_configuration_settings(current_settings)
-            if need_restart:
-                status = SYNCRESTART
-            else:
-                status = SYNC
 
             pending_func  = configvar_domains()[domain].get("pending")
             if pending_func:
                 pending_func(msg)
             else:
-                log_pending(status, None, "edit-configvar", msg)
+                add_change("edit-configvar", msg,
+                    domains=[ConfigDomain.get_class(domain)],
+                    need_restart=need_restart)
+
             if what == 'mkeventd':
                 return 'mkeventd_config'
             else:
@@ -6784,7 +6798,7 @@ def mode_groups(phase, what):
                 save_group_information(all_groups)
                 if what == 'contact':
                     call_hook_contactsgroups_saved(all_groups)
-                log_pending(SYNCRESTART, None, "edit-%sgroups", _("Deleted %s group %s") % (what, delname))
+                add_change("edit-%sgroups", _("Deleted %s group %s") % (what, delname))
             elif c == False:
                 return ""
 
@@ -6898,12 +6912,12 @@ def mode_edit_group(phase, what):
                 groups[name] = {
                     'alias': alias,
                 }
-                log_pending(SYNCRESTART, None, "edit-%sgroups" % what, _("Create new %s group %s") % (what, name))
+                add_change("edit-%sgroups" % what, _("Create new %s group %s") % (what, name))
             else:
                 groups[name] = {
                     'alias': alias,
                 }
-                log_pending(SYNCRESTART, None, "edit-%sgroups" % what, _("Updated properties of %s group %s") % (what, name))
+                add_change("edit-%sgroups" % what, _("Updated properties of %s group %s") % (what, name))
 
             if edit_nagvis_map_permissions:
                 permitted_maps = vs_nagvis_maps.from_html_vars('nagvis_maps')
@@ -7867,6 +7881,10 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
         table.end()
 
 
+def add_notify_change(action_name, text):
+    add_change(action_name, text, need_restart=False)
+
+
 def generic_rule_list_actions(rules, what, what_title, save_rules):
     if html.has_var("_delete"):
         nr = int(html.var("_delete"))
@@ -7875,7 +7893,7 @@ def generic_rule_list_actions(rules, what, what_title, save_rules):
                          _("Do you really want to delete the %s <b>%d</b> <i>%s</i>?") %
                            (what_title, nr, rule.get("description","")))
         if c:
-            log_pending(SYNC, None, what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
+            add_notify_change(what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
             del rules[nr]
             save_rules(rules)
         elif c == False:
@@ -7891,7 +7909,8 @@ def generic_rule_list_actions(rules, what, what_title, save_rules):
             del rules[from_pos] # make to_pos now match!
             rules[to_pos:to_pos] = [rule]
             save_rules(rules)
-            log_pending(SYNC, None, what + "-move-rule", _("Changed position of %s %d") % (what_title, from_pos))
+            add_notify_change(what + "-move-rule",
+                _("Changed position of %s %d") % (what_title, from_pos))
 
 
 def convert_context_to_unicode(context):
@@ -8187,7 +8206,7 @@ def mode_user_notifications(phase, profilemode):
                     notification_rule_start_async_repl = True
                     log_audit(None, log_what, log_text)
                 else:
-                    log_pending(SYNC, None, log_what, log_text)
+                    add_notify_change(log_what, log_text)
             elif c == False:
                 return ""
             else:
@@ -8210,7 +8229,7 @@ def mode_user_notifications(phase, profilemode):
                     notification_rule_start_async_repl = True
                     log_audit(None, log_what, log_text)
                 else:
-                    log_pending(SYNC, None, log_what, log_text)
+                    add_notify_change(log_what, log_text)
         return
 
     if notification_rule_start_async_repl:
@@ -8310,7 +8329,7 @@ def mode_notification_rule(phase, profilemode):
             log_audit(None, log_what, log_text)
             return # don't redirect to other page
         else:
-            log_pending(SYNC, None, log_what, log_text)
+            add_notify_change(log_what, log_text)
 
         if profilemode:
             return "user_notifications_p"
@@ -8413,7 +8432,7 @@ def mode_timeperiods(phase):
             if c:
                 del timeperiods[delname]
                 save_timeperiods(timeperiods)
-                log_pending(SYNCRESTART, None, "edit-timeperiods", _("Deleted timeperiod %s") % delname)
+                add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
             elif c == False:
                 return ""
         return None
@@ -8879,9 +8898,9 @@ def mode_edit_timeperiod(phase):
                 if name == "24X7":
                     raise MKUserError("name", _("The time period name 24X7 cannot be used. It is always autmatically defined."))
                 timeperiods[name] = timeperiod
-                log_pending(SYNCRESTART, None, "edit-timeperiods", _("Created new time period %s") % name)
+                add_change("edit-timeperiods", _("Created new time period %s") % name)
             else:
-                log_pending(SYNCRESTART, None, "edit-timeperiods", _("Modified time period %s") % name)
+                add_change("edit-timeperiods", _("Modified time period %s") % name)
             timeperiod["alias"] = alias
             save_timeperiods(timeperiods)
             return "timeperiods"
@@ -9063,13 +9082,9 @@ def mode_sites(phase):
             if c:
                 del configured_sites[delid]
                 save_sites(configured_sites)
-                update_replication_status(delid, None)
-
-                # Due to the deletion the replication state can get clean.
-                if is_distributed() and global_replication_state() == "clean":
-                    log_commit_pending()
-
-                log_pending(SYNCRESTART, None, "edit-sites", _("Deleted site %s") % (delid))
+                clear_replication_status(delid)
+                add_change("edit-sites", _("Deleted site %s") % (delid),
+                           domains=[ConfigDomainGUI], sites=[default_site()])
                 return None
             elif c == False:
                 return ""
@@ -9085,7 +9100,8 @@ def mode_sites(phase):
                 if "secret" in site:
                     del site["secret"]
                 save_sites(configured_sites)
-                log_audit(None, "edit-site", _("Logged out of remote site '%s'") % site["alias"])
+                add_change("edit-site", _("Logged out of remote site '%s'") % site["alias"],
+                           domains=[ConfigDomainGUI], sites=[default_site()])
                 return None, _("Logged out.")
             elif c == False:
                 return ""
@@ -9288,11 +9304,7 @@ def mode_edit_site_globals(phase):
                 site.setdefault("globals", {})[varname] = current_settings[varname]
                 save_sites(configured_sites, activate=False)
 
-                changes = { "need_sync" : True }
-                if need_restart:
-                    changes["need_restart"] = True
-                update_replication_status(siteid, changes)
-                log_pending(AFFECTED, None, "edit-configvar", msg)
+                add_change("edit-configvar", msg, sites=[siteid], need_restart=need_restart)
                 if action == "_reset":
                     return "edit_site_globals", msg
                 else:
@@ -9566,22 +9578,18 @@ def mode_edit_site(phase):
 
         save_sites(configured_sites)
 
+        # TODO: Why?
         # Own site needs RESTART in any case
-        update_replication_status(our_site_id(), { "need_restart" : True })
+        # update_replication_status(our_site_id(), { "need_restart" : True })
+
         if new:
-            if not config.site_is_local(id):
-                update_replication_status(id, { "need_sync" : True, "need_restart" : True })
-            log_pending(AFFECTED, None, "edit-sites", _("Created new connection to site %s") % id)
+            add_change("edit-sites", _("Created new connection to site %s") % id, sites=[id])
         else:
-            log_pending(AFFECTED, None, "edit-sites", _("Modified site connection %s") % id)
-            # Replication mode has switched on/off => handle replication state
-            repstatus = load_replication_status()
-            if repl:              # Repl is on
-                update_replication_status(id, { "need_sync" : True, "need_restart" : True })
-            elif id in repstatus: # Repl switched off
-                update_replication_status(id, None) # Replication switched off
-                if is_distributed() and global_replication_state() == "clean":
-                    log_commit_pending()
+            add_change("edit-sites", _("Modified site connection %s") % id, sites=[id])
+
+            # In case replication has been disabled, totally clear the replication state
+            if not repl:
+                clear_replication_status(id)
         return "sites"
 
     html.begin_form("site")
@@ -10275,7 +10283,7 @@ def bulk_delete_users_after_confirm(users):
 
 def delete_user(delid, users):
     del users[delid]
-    log_pending(SYNCRESTART, None, "edit-users", _("Deleted user %s") % (delid))
+    add_change("edit-users", _("Deleted user %s") % (delid))
 
 
 def mode_edit_user(phase):
@@ -10538,9 +10546,9 @@ def mode_edit_user(phase):
         # Saving
         userdb.save_users(users)
         if new:
-            log_pending(SYNCRESTART, None, "edit-users", _("Create new user %s") % id)
+            add_change("edit-users", _("Create new user %s") % id)
         else:
-            log_pending(SYNCRESTART, None, "edit-users", _("Modified user %s") % id)
+            add_change("edit-users", _("Modified user %s") % id)
         return "users"
 
     # Let exceptions from loading notification scripts happen now
@@ -10910,8 +10918,7 @@ def mode_roles(phase):
                 rename_user_role(delid, None) # Remove from existing users
                 del roles[delid]
                 save_roles(roles)
-                update_login_sites_replication_status()
-                log_pending(AFFECTED, None, "edit-roles", _("Deleted role '%s'") % delid)
+                add_change("edit-roles", _("Deleted role '%s'") % delid, sites=get_login_sites())
             elif c == False:
                 return ""
         elif html.var("_clone"):
@@ -10941,8 +10948,8 @@ def mode_roles(phase):
 
                 roles[newid] = new_role
                 save_roles(roles)
-                update_login_sites_replication_status()
-                log_pending(AFFECTED, None, "edit-roles", _("Created new role '%s'") % newid)
+                add_change("edit-roles", _("Created new role '%s'") % newid,
+                           sites=get_login_sites())
         return
 
     table.begin("roles")
@@ -11053,8 +11060,7 @@ def mode_edit_role(phase):
             rename_user_role(role_id, new_id)
 
         save_roles(roles)
-        update_login_sites_replication_status()
-        log_pending(AFFECTED, None, "edit-roles", _("Modified user role '%s'") % new_id)
+        add_change("edit-roles", _("Modified user role '%s'") % new_id, sites=get_login_sites())
         return "roles"
 
     html.begin_form("role", method="POST")
@@ -11276,7 +11282,7 @@ def mode_hosttags(phase):
                 save_hosttags(hosttags, auxtags)
                 Folder.invalidate_caches()
                 Folder.root_folder().rewrite_hosts_files()
-                log_pending(SYNCRESTART, None, "edit-hosttags", _("Removed host tag group %s (%s)") % (message, del_id))
+                add_change("edit-hosttags", _("Removed host tag group %s (%s)") % (message, del_id))
                 return "hosttags", message != True and message or None
 
         # Deletion of auxiliary tags
@@ -11319,7 +11325,7 @@ def mode_hosttags(phase):
                 save_hosttags(hosttags, auxtags)
                 Folder.invalidate_caches()
                 Folder.root_folder().rewrite_hosts_files()
-                log_pending(SYNCRESTART, None, "edit-hosttags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
+                add_change("edit-hosttags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
                 return "hosttags", message != True and message or None
 
         move_nr = html.var("_move")
@@ -11336,7 +11342,7 @@ def mode_hosttags(phase):
                 hosttags[move_nr+dir:move_nr+dir] = [moved]
                 save_hosttags(hosttags, auxtags)
                 config.wato_host_tags = hosttags
-                log_pending(SYNCRESTART, None, "edit-hosttags", _("Changed order of host tag groups"))
+                add_change("edit-hosttags", _("Changed order of host tag groups"))
         return
 
     if not hosttags + auxtags:
@@ -11697,7 +11703,7 @@ def mode_edit_hosttag(phase):
                 declare_host_tag_attributes()
                 Folder.invalidate_caches()
                 Folder.root_folder().rewrite_hosts_files()
-                log_pending(SYNCRESTART, None, "edit-hosttags", _("Created new host tag group '%s'") % tag_id)
+                add_change("edit-hosttags", _("Created new host tag group '%s'") % tag_id)
                 return "hosttags", _("Created new host tag group '%s'") % title
             else:
                 new_hosttags = []
@@ -11744,7 +11750,7 @@ def mode_edit_hosttag(phase):
                     declare_host_tag_attributes()
                     Folder.invalidate_caches()
                     Folder.root_folder().rewrite_hosts_files()
-                    log_pending(SYNCRESTART, None, "edit-hosttags", _("Edited host tag group %s (%s)") % (message, tag_id))
+                    add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, tag_id))
                     return "hosttags", message != True and message or None
 
         return "hosttags"
@@ -12588,9 +12594,8 @@ def mode_edit_ruleset(phase):
             if c:
                 del rules[rulenr]
                 save_changed_ruleset(varname, rule_folder, rulesets)
-                rule_folder.mark_hosts_dirty()
-                log_pending(AFFECTED, None, "edit-ruleset",
-                      _("Deleted rule in ruleset '%s'") % rulespec["title"])
+                add_change("edit-ruleset", _("Deleted rule in ruleset '%s'") % rulespec["title"],
+                           sites=rule_folder.all_site_ids())
                 return
             elif c == False: # not yet confirmed
                 return ""
@@ -12602,10 +12607,9 @@ def mode_edit_ruleset(phase):
                 return None # browser reload
             rules[rulenr:rulenr] = [rules[rulenr]]
             save_changed_ruleset(varname, rule_folder, rulesets)
-            rule_folder.mark_hosts_dirty()
-
-            log_pending(AFFECTED, None, "edit-ruleset",
-                  _("Inserted new rule in ruleset %s") % rulespec["title"])
+            add_change("edit-ruleset",
+                  _("Inserted new rule in ruleset %s") % rulespec["title"],
+                  sites=rule_folder.all_site_ids())
             return
 
         else:
@@ -12622,9 +12626,9 @@ def mode_edit_ruleset(phase):
             else:
                 rules.append(rule)
             save_changed_ruleset(varname, rule_folder, rulesets)
-            rule_folder.mark_hosts_dirty()
-            log_pending(AFFECTED, None, "edit-ruleset",
-                     _("Changed order of rules in ruleset %s") % rulespec["title"])
+            add_change("edit-ruleset",
+                     _("Changed order of rules in ruleset %s") % rulespec["title"],
+                     sites=rule_folder.all_site_ids())
             return
 
     if not rulespec:
@@ -13314,14 +13318,15 @@ def mode_edit_rule(phase, new = False):
                 else:
                     rules[rulenr] = rule
                 save_changed_ruleset(varname, folder, rulesets)
-                folder.mark_hosts_dirty()
 
                 if new:
-                    log_pending(AFFECTED, None, "edit-rule", _("Created new rule in ruleset %s in folder %s") %
-                               (rulespec["title"], new_rule_folder.alias_path()))
+                    add_change("edit-rule", _("Created new rule in ruleset %s in folder %s") %
+                               (rulespec["title"], new_rule_folder.alias_path()),
+                               sites=folder.all_site_ids())
                 else:
-                    log_pending(AFFECTED, None, "edit-rule", _("Changed properties of rule %s in folder %s") %
-                               (rulespec["title"], new_rule_folder.alias_path()))
+                    add_change("edit-rule", _("Changed properties of rule %s in folder %s") %
+                               (rulespec["title"], new_rule_folder.alias_path()),
+                               sites=folder.all_site_ids())
             else: # Move rule to new folder
                 if not new:
                     del rules[rulenr]
@@ -13330,11 +13335,11 @@ def mode_edit_rule(phase, new = False):
                 rules = rulesets.setdefault(varname, [])
                 rules.append(rule)
                 save_changed_ruleset(varname, new_rule_folder, rulesets)
-                folder.mark_hosts_dirty()
-                new_rule_folder.mark_hosts_dirty()
-                log_pending(AFFECTED, None, "edit-rule", _("Changed properties of rule %s, moved rule from "
+
+                affected_sites = list(set(folder.all_site_ids() + new_rule_folder.all_site_ids()))
+                add_change("edit-rule", _("Changed properties of rule %s, moved rule from "
                             "folder %s to %s") % (rulespec["title"], folder.alias_path(),
-                            new_rule_folder.alias_path()))
+                            new_rule_folder.alias_path()), sites=affected_sites)
         else:
             return back_mode
 
@@ -14946,9 +14951,9 @@ def mode_edit_custom_attr(phase, what):
                 }
                 attrs.append(attr)
 
-                log_pending(SYNCRESTART, None, "edit-%sattr" % what, _("Create new %s attribute %s") % (what, name))
+                add_change("edit-%sattr" % what, _("Create new %s attribute %s") % (what, name))
             else:
-                log_pending(SYNCRESTART, None, "edit-%sattr" % what, _("Modified %s attribute %s") % (what, name))
+                add_change("edit-%sattr" % what, _("Modified %s attribute %s") % (what, name))
             attr.update({
                 'title'            : title,
                 'topic'            : topic,
@@ -15084,7 +15089,7 @@ def mode_custom_attrs(phase, what):
                     if attr['name'] == delname:
                         attrs.pop(index)
                 save_changed_custom_attrs(all_attrs, what)
-                log_pending(SYNCRESTART, None, "edit-%sattrs" % what, _("Deleted attribute %s") % (delname))
+                add_change("edit-%sattrs" % what, _("Deleted attribute %s") % (delname))
             elif c == False:
                 return ""
 
@@ -15667,8 +15672,7 @@ class ModePasswords(WatoMode, PasswordStore):
             if ident not in passwords:
                 raise MKUserError("ident", _("This password does not exist."))
 
-            log_pending(SYNCRESTART, ident, "delete-password",
-                        _("Removed the password '%s'") % ident)
+            add_change("delete-password", _("Removed the password '%s'") % ident)
             del passwords[ident]
             self._save(passwords)
 
@@ -15853,11 +15857,9 @@ class ModeEditPassword(WatoMode, PasswordStore):
             passwords[self._ident] = self._cfg
 
             if self._new:
-                log_pending(SYNCRESTART, self._ident, "add-host",
-                            _("Added the password '%s'") % self._ident)
+                add_change("add-password", _("Added the password '%s'") % self._ident)
             else:
-                log_pending(SYNCRESTART, self._ident, "edit-password",
-                            _("Edited the password '%s'") % self._ident)
+                add_change("edit-password", _("Edited the password '%s'") % self._ident)
 
             self._save(passwords)
 

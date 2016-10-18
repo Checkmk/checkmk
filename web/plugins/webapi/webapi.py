@@ -275,14 +275,12 @@ def action_discover_services(request):
     if host.discovery_failed():
         host.clear_discovery_failed()
 
-    host.mark_dirty()
-
     if mode == "refresh":
         message = _("Refreshed check configuration of host [%s] with %d services") % (hostname, counts[hostname][3])
-        log_pending(LOCALRESTART, hostname, "refresh-autochecks", message)
+        add_service_change(host, "refresh-autochecks", message)
     else:
         message = _("Saved check configuration of host [%s] with %d services") % (hostname, counts[hostname][3])
-        log_pending(LOCALRESTART, hostname, "set-autochecks", message)
+        add_service_change(host, "set-autochecks", message)
 
     msg = _("Service discovery successful. Added %d, Removed %d, Kept %d, New Count %d") % tuple(counts[hostname])
     return msg

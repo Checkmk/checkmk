@@ -669,7 +669,7 @@ fi
 
 if type postmulti >/dev/null ; then
     echo "<<<postfix_mailq_status:sep(58)>>>"
-    postmulti -p status
+    script -c 'postmulti -p status'
 fi
 
 

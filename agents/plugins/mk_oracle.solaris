@@ -147,7 +147,7 @@ for SID in $SIDS; do
     # to update the information for this instance.
     if [ -z "$CACHE_FILE_UPTODATE" -a ! -e "$CACHE_FILE.new" ]
     then
-        nohup bash -c "
+        nohup /bin/bash -c "
             set -o noclobber
             function sqlplus ()
             {

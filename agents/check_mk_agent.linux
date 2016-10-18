@@ -1033,6 +1033,7 @@ then
 
     for file in *
     do
+        test "$file" = "*" && break
         # output every file in this directory. If the file is prefixed
         # with a number, then that number is the maximum age of the
         # file in seconds. If the file is older than that, it is ignored.

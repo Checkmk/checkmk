@@ -185,6 +185,11 @@ class HTML(object):
             return self.value >= other
 
 
+    def __len__(self):
+        return len(self.value)
+
+
+
 __builtin__.HTML = HTML
 
 

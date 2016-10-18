@@ -113,6 +113,7 @@ class HTML(object):
 
 
     def __init__(self, value):
+        super(HTML, self).__init__()
         if isinstance(value, HTML):
             self.value = value.value
         else:
@@ -130,9 +131,17 @@ class HTML(object):
             return self.value + other
 
 
+    def __radd__(self, other):
+        if isinstance(other, HTML):
+            return other.value + self.value
+        else:
+            return other + self.value
+
+
     def __iadd__(self, other):
         self.value = self.__add__(other)
         return self
+
 
     def __lt__(self, other):
         if isinstance(other, HTML):

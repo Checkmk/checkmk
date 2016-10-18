@@ -27,5 +27,9 @@ setup:
 	    pytest \
 	    requests \
 	    beautifulsoup4 \
-	    pytest-stepwise
+	    pytest-stepwise \
+	    dill
+	sudo apt-get install \
+	    python-lxml
+>>>>>>> Added dill module to test setup
 	$(MAKE) -C pylint setup

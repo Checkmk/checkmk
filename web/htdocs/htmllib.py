@@ -1745,11 +1745,18 @@ class html(DeprecationWrapper):
         self.write(self.render_icon(icon, cssclass="iconbutton"))
 
 
-    def jsbutton(self, varname, text, onclick, style=''):
+    # TODO: Cleanup to use standard attributes etc.
+    def jsbutton(self, varname, text, onclick, style='', cssclass=""):
         if style:
             style = ' style="%s"' % style
-        self.write("<input type=button name=%s id=%s onclick=\"%s\" "
-                   "class=button%s value=\"%s\" />" % (varname, varname, onclick, style, text))
+
+        if cssclass:
+            cssclass = " %s" % cssclass
+
+        # autocomplete="off": Is needed for firefox not to set "disabled="disabled" during page reload
+        # when it has been set on a page via javascript before. Needed for WATO activate changes page.
+        self.write("<input type=button name=%s id=%s autocomplete=\"off\" onclick=\"%s\" "
+                   "class=\"button%s\"%s value=\"%s\" />" % (varname, varname, self.attrencode(onclick), cssclass, style, text))
 
 
     def number_input(self, varname, deflt = "", size=8, style="", submit=None):

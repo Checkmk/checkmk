@@ -28,8 +28,10 @@ import wato
 
 pagehandlers.update({
     "wato"                      : wato.page_handler,
-    "wato_ajax_replication"     : wato.ajax_replication,
-    "wato_ajax_activation"      : wato.ajax_activation,
+
+    "ajax_start_activation"     : lambda: wato.ModeAjaxStartActivation().handle_page(),
+    "ajax_activation_state"     : lambda: wato.ModeAjaxActivationState().handle_page(),
+
     "automation_login"          : wato.page_automation_login,
     "noauth:automation"         : wato.page_automation,
     "user_profile"              : wato.page_user_profile,

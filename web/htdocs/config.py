@@ -622,11 +622,20 @@ sites = default_single_site_configuration()
 def sitenames():
     return sites.keys()
 
+# TODO: Cleanup: Make clear that this function is used by the status GUI (and not WATO)
+# and only returns the currently enabled sites. Or should we redeclare the "disabled" state
+# to disable the sites at all?
+# TODO: Rename this!
 def allsites():
     return dict( [(name, site(name))
                   for name in sitenames()
                   if not site(name).get("disabled", False)
                      and site(name)['socket'] != 'disabled' ] )
+
+
+def configured_sites():
+    return [(site_id, site(site_id)) for site_id in sitenames() ]
+
 
 def sorted_sites():
     sitenames = []

@@ -84,7 +84,7 @@
 #   `----------------------------------------------------------------------'
 
 import sys, pprint, socket, re, time, datetime,  \
-       shutil, tarfile, cStringIO, math, fcntl, random, glob, \
+       shutil, math, fcntl, random, glob, \
        base64, csv
 import subprocess
 import traceback
@@ -103,6 +103,7 @@ import cmk.store as store
 import cmk.man_pages as man_pages
 from cmk.regex import escape_regex_chars, regex
 from cmk.defines import short_service_state_name
+import cmk.render as render
 
 try:
     import simplejson as json
@@ -310,7 +311,7 @@ def ensure_mode_permissions(modeperms):
 
 class WatoMode(object):
     def __init__(self):
-        object.__init__(self)
+        super(WatoMode, self).__init__()
 
 
     @classmethod
@@ -324,7 +325,7 @@ class WatoMode(object):
             elif phase == "action":
                 return mode_object.action()
             else:
-                return mode_object.page()
+                return mode_object.handle_page()
         return mode_function
 
 
@@ -342,6 +343,32 @@ class WatoMode(object):
 
     def page(self):
         return _("(This module is not yet implemented)")
+
+
+    def handle_page(self):
+        return self.page()
+
+
+
+class WatoWebApiMode(WatoMode):
+    def webapi_request(self):
+        return html.get_request()
+
+
+    def handle_page(self):
+        try:
+            action_response = self.page()
+            response = { "result_code": 0, "result": action_response }
+        except MKException, e:
+            response = { "result_code": 1, "result": "%s" % e }
+
+        except Exception, e:
+            if config.debug:
+                raise
+            log_exception()
+            response = { "result_code": 1, "result": "%s" % e }
+
+        html.write(json.dumps(response))
 
 
 #.
@@ -4353,414 +4380,741 @@ def mode_auditlog(phase):
 #   | remote sites in distributed WATO.                                    |
 #   '----------------------------------------------------------------------'
 
-def get_activation_blocked_reasons():
-    act_blocked_reasons = {}
-    repstatus = load_replication_status()
-    for site, values in repstatus.items():
-        if values.get("update_started"):
-            what, update_start_time = values["update_started"]
 
-            times = values.get("times")
-            if not times:
-                continue
-
-            # Fix for a strange scenario. Syncing a slave site actually updates the "restart" field...
-            last_duration = times.get(what, times.get("restart"))
-            if not last_duration:
-                continue
-
-            if time.time() - update_start_time > 2 * last_duration:
-                # Ignore updates which take way too long.
-                # We do not modify the replication status file. The update_started value will
-                # be automatically reset on the activation call
-                continue
-            else:
-                act_blocked_reasons.setdefault("sites", {})
-                infotext = _("Activation running since: %s.") % fmt_time(update_start_time)
-                if last_duration:
-                    est_time_left = last_duration - (time.time() - update_start_time)
-                    if est_time_left < 0:
-                        infotext += " " + _("Takes %.1f seconds longer than expected") % abs(est_time_left)
-                    else:
-                        infotext += " " + _("Approximately finishes in %.1f seconds") % est_time_left
-
-                act_blocked_reasons["sites"][site] = infotext
-
-    return act_blocked_reasons
-
-def mode_changelog(phase):
-    # See below for the usage of this weird variable...
-    global sitestatus_do_async_replication
-    try:
-        sitestatus_do_async_replication
-    except:
-        sitestatus_do_async_replication = False
+class ModeActivateChanges(WatoMode, ActivateChanges):
+    def __init__(self):
+        self._value = {}
+        super(ModeActivateChanges, self).__init__()
 
 
-    if phase != "title":
-        activation_blocked_reasons = get_activation_blocked_reasons()
+    def title(self):
+        return _("Activate pending changes")
 
-    if phase == "title":
-        return _("Pending changes to activate")
 
-    elif phase == "buttons":
+    def buttons(self):
         home_button()
-        # Commit pending log right here, if all sites are up-to-date
-        if is_distributed() and global_replication_state() == "clean":
-            log_commit_pending()
 
-
-        if html.var("_action") != "activate":
-            if config.user.may("wato.activate") and not activation_blocked_reasons and (
-                    (not is_distributed() and log_exists("pending"))
-                or (is_distributed() and global_replication_state() == "dirty")):
-                html.context_button(_("Activate Changes!"),
-                    html.makeactionuri([("_action", "activate")]),
-                                 "apply", True, id="act_changes_button")
-
-        if is_distributed():
-            html.context_button(_("Site Configuration"), folder_preserving_link([("mode", "sites")]), "sites")
+        html.context_button(_("Site Configuration"), folder_preserving_link([("mode", "sites")]), "sites")
 
         if config.user.may("wato.auditlog"):
             html.context_button(_("Audit Log"), folder_preserving_link([("mode", "auditlog")]), "auditlog")
 
-        if config.guitests_enabled:
-            html.context_button(_("Reschedule All"), "guitest_reschedule_all.py", "guitest")
+        #if config.guitests_enabled:
+        #    html.context_button(_("Reschedule All"), "guitest_reschedule_all.py", "guitest")
 
-    elif phase == "action":
-        action = html.var("_action", html.var("_siteaction"))
-        if action == "activate":
-            # Let host validators do their work
-            defective_hosts = validate_all_hosts([], force_all = True)
-            if defective_hosts:
-                raise MKUserError(None, _("You cannot activate changes while some hosts have "
-                  "an invalid configuration: ") + ", ".join(
-                    [ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_host"), ("host", hn)]), hn)
-                      for hn in defective_hosts.keys() ]))
 
-        # If there are changes by other users, we need a confirmation
-        transaction_already_checked = False
-        changes = foreign_changes()
-        if changes:
-            table_html = "<table class=foreignchanges>"
-            for user_id, count in changes.items():
-                table_html += '<tr><td>%s: </td><td>%d %s</td></tr>' % \
-                   (config.alias_of_user(user_id), count, _("changes"))
-            table_html += '</table>'
+    def action(self):
+        pass
 
-            if action in [ "activate", "sync_restart", "restart" ]:
-                title = _("Confirm activating foreign changes")
-                text  = _("There are some changes made by your colleagues that you will "
-                          "activate if you proceed:")
-            elif action == "sync":
-                title = _("Confirm synchronizing foreign changes")
-                text  = _("There are some changes made by your colleagues that you will "
-                          "synchronize if you proceed:")
 
-            c = wato_confirm(title,
-              HTML('<img class=foreignchanges src="images/icon_foreign_changes.png">' + text + table_html +
-              _("Do you really want to proceed?")))
-            if c == False:
-                return ""
-            elif not c:
-                return None
-            transaction_already_checked = True
+    def page(self):
+        # TODO: Prevent activation when:
+        # a) Foreign changes and not permitted
+        # c) Activation currently in progress (for some sites)
+        self._activation_msg()
+        self._activation_form()
 
-        if changes and not config.user.may("wato.activateforeign"):
-            raise MKAuthException(_("Sorry, you are not allowed to activate "
-                                    "changes of other users."))
+        html.h2(_("Activation status"))
+        self._activation_status()
 
-        # Give hooks chance to do some pre-activation things (and maybe stop
-        # the activation)
-        try:
-            call_hook_pre_distribute_changes()
-        except Exception, e:
-            if config.debug:
-                raise
+        html.h2(_("Pending changes"))
+        self._change_table()
+
+
+    def _activation_msg(self):
+        html.open_div(id_="activation_msg", style="display:none")
+        html.show_info("")
+        html.close_div()
+
+
+    def _activation_form(self):
+        if not config.user.may("wato.activate"):
+            html.show_warning(_("You are not permitted to activate configuration changes."))
+            return
+
+        if not self._changes:
+            html.show_info(_("Currently there are no changes to activate."))
+            return
+
+        valuespec = self._vs_activation()
+
+        html.begin_form("activate", method="POST", action="")
+        html.hidden_field("activate_until", self._get_last_change_id(), id="activate_until")
+        forms.header(valuespec.title())
+
+        valuespec.render_input("activate", self._value)
+        valuespec.set_focus("activate")
+        html.help(valuespec.help())
+
+        forms.end()
+        html.jsbutton("activate_affected", _("Activate affected"),
+                      "activate_changes(\"affected\")")
+        html.jsbutton("activate_selected", _("Activate selected"),
+                      "activate_changes(\"selected\")")
+        # TODO: Revert button?
+        html.hidden_fields()
+        html.end_form()
+
+
+    def _vs_activation(self):
+        if self._has_foreign_changes():
+            # TODO: Hier noch eine Meldung mit foreign changes anzeigen
+            foreign_changes_elements = [
+                ("foreign", Checkbox(
+                    title = _("Activate foreign changes"),
+                    label = _("Activate changes of other users"),
+                )),
+            ]
+        else:
+            foreign_changes_elements = []
+
+        return Dictionary(
+            title = self.title(),
+            elements = [
+                ("comment", TextAreaUnicode(
+                    title = _("Comment (optional)"),
+                    cols = 93,
+                    rows = 3,
+                    help = _("You can provide an optional comment for the current activation. "
+                             "This can be useful to document the reason why the changes you "
+                             "activate have been made."),
+                )),
+            ] + foreign_changes_elements,
+            optional_keys = [],
+            render = "form_part",
+        )
+
+
+    def _has_foreign_changes(self):
+        return any([ change for change_id, change in self._changes
+                     if change.get("user_id") != config.user.id ])
+
+
+    def _change_table(self):
+        table.begin("changes", sortable=False, searchable=False)
+        for change_id, change in reversed(self._changes):
+            # TODO: Hightlight foreign changes
+            table.row()
+
+            table.cell(_("Object"))
+            rendered = self._render_change_object(change["object"])
+            if rendered:
+                html.write(rendered)
+
+            table.cell(_("Time"), render.date_and_time(change["time"]))
+            table.cell(_("User"), change["user_id"] if change["user_id"] else "")
+            table.cell(_("Change"), html.permissive_attrencode(change["text"]))
+
+            table.cell(_("Affected sites"))
+            if len(change["affected_sites"]) == len(config.sitenames()):
+                html.write("<i>%s</i>" % _("All sites"))
             else:
-                raise MKUserError(None, "<h1>%s</h1>%s" % (_("Cannot activate changes"), e))
-
-        sitestatus_do_async_replication = False # see below
-        if html.has_var("_siteaction"):
-            config.user.need_permission("wato.activate")
-            site_id = html.var("_site")
-            action = html.var("_siteaction")
-            if transaction_already_checked or html.check_transaction():
-                try:
-                    update_replication_status(site_id, {"update_started": (action.replace("_", "+"), time.time())})
-                    # If the site has no pending changes but just needs restart,
-                    # the button text is just "Restart". We do a sync anyway. This
-                    # can be optimized in future but is the save way for now.
-                    site = config.site(site_id)
-                    if action in [ "sync", "sync_restart" ]:
-                        response = synchronize_site(site, restart = action == "sync_restart")
-                    else:
-                        try:
-                            response = restart_site(site)
-                        except Exception, e:
-                            response = "%s" % e
-
-                    if type(response) == list:
-                        return
-                    else:
-                        raise MKUserError(None, _("Error on remote access to site: %s") % response)
-
-                except MKAutomationException, e:
-                    raise MKUserError(None, _("Remote command on site %s failed: <pre>%s</pre>") % (site_id, e))
-                except Exception, e:
-                    if config.debug:
-                        raise
-                    raise MKUserError(None, _("Remote command on site %s failed: <pre>%s</pre>") % (site_id, e))
-                finally:
-                    update_replication_status(site_id, {"update_started": None})
-
-        elif transaction_already_checked or html.check_transaction():
-            config.user.need_permission("wato.activate")
-            create_snapshot("automatic")
-
-            # Do nothing here, but let site status table be shown in a mode
-            # were in each site that is not up-to-date an asynchronus AJAX
-            # job is being startet that updates that site
-            sitestatus_do_async_replication = True
-
-    else: # phase: regular page rendering
-
-        if activation_blocked_reasons:
-            html.show_warning(_("Another activation is currently running."))
-
-        changes_activated = False
-
-        if is_distributed():
-            # Distributed WATO: Show replication state of each site
-
-            repstatus = load_replication_status()
-            configured_sites = [(name, config.site(name)) for name in config.sitenames() ]
-            sort_sites(configured_sites)
-
-            table.begin("site-status", searchable=False)
-
-            num_replsites = 0 # for detecting end of bulk replication
-            for site_id, site in configured_sites:
-                is_local = config.site_is_local(site_id)
-
-                if not is_local and not site.get("replication"):
-                    continue
-
-                table.row()
-
-                if site.get("disabled"):
-                    ss = {}
-                    status = "disabled"
-                else:
-                    ss = sites.state(site_id, {})
-                    status = ss.get("state", "unknown")
-
-                srs = repstatus.get(site_id, {})
-
-                # Iconbuttons
-                table.cell(_("Actions"), css="buttons")
-                edit_url = folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
-                html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
-                site_url = site.get("multisiteurl")
-                if site_url:
-                    html.icon_button(site_url, _("Open this site's local web user interface"), "url", target="_blank")
-
-                # ID & Alias
-                table.cell(_("ID"), site_id)
-                table.cell(_("Alias"), site.get("alias", ""))
-
-                # Livestatus
-                table.cell(_("Status"))
-                html.img("images/button_sitestatus_%s.png" % status)
-
-                # Livestatus-Version
-                table.cell(_("Version"), ss.get("livestatus_version", ""))
-
-                # Core-Version
-                table.cell(_("Core"), ss.get("program_version", ""))
-
-                # Hosts/services
-                table.cell(_("Hosts"), css="number")
-                html.a(ss.get("num_hosts", ""), href="view.py?view_name=sitehosts&site=%s" % site_id)
-                table.cell(_("Services"), css="number")
-                html.a(ss.get("num_services", ""), href="view.py?view_name=sitesvcs&site=%s" % site_id)
-
-                need_restart = srs.get("need_restart")
-                need_sync    = srs.get("need_sync") and not config.site_is_local(site_id)
-                uptodate = not (need_restart or need_sync)
-
-                # Start asynchronous replication
-                if sitestatus_do_async_replication:
-                    table.cell(_("Activation"), css="repprogress")
-                    # Do only include sites that are known to be up
-                    if not config.site_is_local(site_id) and not "secret" in site:
-                        html.b(_("Not logged in."))
-                    else:
-                        html.div(_("nothing to do") if uptodate else "", id_="repstate_%s" % site_id)
-                        if not uptodate:
-                            if need_restart and need_sync:
-                                what = "sync+restart"
-                            elif need_restart:
-                                what = "restart"
-                            else:
-                                what = "sync"
-                            estimated_duration = srs.get("times", {}).get(what, 2.0)
-                            html.javascript("wato_do_replication('%s', %d);" %
-                              (site_id, int(estimated_duration * 1000.0)))
-                            num_replsites += 1
-                else:
-                    # State
-                    table.cell("", css="buttons")
-                    if srs.get("need_sync") and not config.site_is_local(site_id):
-                        html.icon(_("This site is not update and needs a replication."), "need_replicate")
-                    if srs.get("need_restart"):
-                        html.icon(_("This site needs a restart for activating the changes."), "need_restart")
-                    if uptodate:
-                        html.icon(_("This site is up-to-date."), "siteuptodate")
-
-                    # Actions
-                    table.cell(_("Activate"), css="buttons")
-                    if site_id not in activation_blocked_reasons.get("sites", {}):
-                        sync_url = make_action_link([("mode", "changelog"),
-                                ("_site", site_id), ("_siteaction", "sync")])
-                        restart_url = make_action_link([("mode", "changelog"),
-                                ("_site", site_id), ("_siteaction", "restart")])
-                        sync_restart_url = make_action_link([("mode", "changelog"),
-                                ("_site", site_id), ("_siteaction", "sync_restart")])
-                        if not config.site_is_local(site_id) and "secret" not in site:
-                            html.b(_("Not logged in."))
-                        elif not uptodate:
-                            if not config.site_is_local(site_id):
-                                if srs.get("need_sync"):
-                                    html.buttonlink(sync_url, _("Sync"))
-                                    if srs.get("need_restart"):
-                                        html.buttonlink(sync_restart_url, _("Sync & Restart"))
-                                else:
-                                    html.buttonlink(restart_url, _("Restart"))
-                            else:
-                                html.buttonlink(restart_url, _("Restart"))
-
-                    # Last result
-                    if activation_blocked_reasons:
-                        table.cell(_("Update status"))
-                    else:
-                        table.cell(_("Last Result"))
-
-                    site_reason = activation_blocked_reasons.get("sites", {}).get(site_id)
-                    if site_reason:
-                        html.write_text(site_reason)
-                    else:
-                        result = srs.get("result", "")
-                        if len(result) > 20:
-                            result = html.strip_tags(result)
-                            html.span("%s..." % result[:20], title=result)
-                        else:
-                            configuration_warnings = srs.get("warnings", [])
-                            if configuration_warnings:
-                                html.write(render_replication_warnings(configuration_warnings))
-
-            table.end()
-
-            # The Javascript world needs to know, how many asynchronous
-            # replication jobs it should wait to be finished.
-            if sitestatus_do_async_replication and num_replsites > 0:
-                html.javascript("var num_replsites = %d;\n" % num_replsites)
-
-        sitestatus_do_async_replication = None # could survive in global context!
-
-        pending = parse_audit_log("pending")
-        if len(pending) == 0:
-            if not changes_activated:
-                html.div(_("There are no pending changes."), class_="info")
-        else:
-            html.open_div(id_="pending_changes")
-            render_audit_log(pending, "pending", hilite_others=True)
-            html.close_div()
-
-# AJAX handler for asynchronous site replication. This is running on the
-# master site.
-def ajax_replication():
-    site_id = html.var("site")
-    repstatus = load_replication_status()
-    srs = repstatus.get(site_id, {})
-    need_sync = srs.get("need_sync", False)
-    need_restart = srs.get("need_restart", False)
-
-    init_wato_datastructures()
-
-    site = config.site(site_id)
-    try:
-        update_replication_status(site_id, {"update_started":\
-                            (need_restart and "sync+restart" or "sync", time.time())})
-        if need_sync:
-            result = synchronize_site(site, restart=need_restart)
-        else:
-            result = restart_site(site)
-
-    except Exception, e:
-        if config.debug:
-            raise
-        result = str(e)
-    finally:
-        update_replication_status(site_id, {"update_started": None})
-
-    # Pre 1.2.7i3 sites return True on success and a string on error.
-    # 1.2.7i3 and later return a ist of warning messages on success.
-    # [] means OK and no warnings. The error handling is unchanged
-    if result == True or result == None:
-        result = []
-
-    if type(result) == list:
-        configuration_warnings = result
-        if configuration_warnings:
-            answer = render_replication_warnings(configuration_warnings)
-        else:
-            answer = "OK:" + _("Success")
-        # Make sure that the pending changes are clean as soon as the
-        # last site has successfully been updated.
-        if is_distributed() and global_replication_state() == "clean":
-            log_commit_pending()
-    else:
-        answer = "<div class=error>%s: %s</div>" % (_("Error"), hilite_errors(result))
-
-    html.write(answer)
+                html.write(", ".join(sorted(change["affected_sites"])))
+        table.end()
 
 
-def render_replication_warnings(configuration_warnings):
-    html_code  = "<div class=warning>"
-    html_code += "<b>%s</b>" % _("Warnings:")
-    html_code += "<ul>"
-    for warning in configuration_warnings:
-        html_code += "<li>%s</li>" % html.attrencode(warning)
-    html_code += "</ul>"
-    html_code += "</div>"
-    return HTML(html_code)
+    def _render_change_object(self, obj):
+        if not obj:
+            return
+
+        ty, ident = obj
+        url, title = None, None
+
+        if ty == "Host":
+            host = Host.host(ident)
+            if host:
+                url = host.edit_url()
+                title = host.name()
+
+        elif ty == "Folder":
+            if Folder.folder_exists(ident):
+                folder = Folder.folder(ident)
+                url = folder.url()
+                title = folder.title()
+
+        if url and title:
+            return html.render_a(title, href=url)
 
 
-# AJAX handler for javascript triggered wato activation
-def ajax_activation():
-    try:
-        if is_distributed():
-            raise MKUserError(None, _('Call not supported in distributed setups.'))
+    def _activation_status(self):
+        table.begin("site-status", searchable=False, sortable=False)
+
+        repstatus = load_replication_status()
+
+        for site_id, site in sort_sites(wato_activation_sites()):
+            table.row()
+
+            if site.get("disabled"):
+                site_status = {}
+                status = "disabled"
+            else:
+                site_status = sites.state(site_id, {})
+                status = site_status.get("state", "unknown")
+
+            repl_status = repstatus.get(site_id, {})
+            changes     = repl_status.get("changes", [])
+
+            # Activation checkbox
+            table.cell("", css="buttons")
+            html.checkbox("site_%s" % site_id, cssclass="site_checkbox")
+
+            # Iconbuttons
+            table.cell(_("Actions"), css="buttons")
+            edit_url = folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
+            html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
+            site_url = site.get("multisiteurl")
+            if site_url:
+                html.icon_button(site_url, _("Open this site's local web user interface"), "url", target="_blank")
+
+            # ID & Alias
+            table.cell(_("ID"), site_id)
+            table.cell(_("Alias"), site.get("alias", ""))
+
+            # Livestatus
+            table.cell(_("Status"))
+            html.write('<img src="images/button_sitestatus_%s.png">' % (status))
+
+            # Livestatus-Version
+            table.cell(_("Version"), site_status.get("livestatus_version", ""))
+
+            # Core-Version
+            table.cell(_("Core"), site_status.get("program_version", ""))
+
+            # Hosts/services
+            table.cell(_("Hosts"), css="number")
+            html.a(site_status.get("num_hosts", ""), href='view.py?view_name=sitehosts&site=%s' % site_id)
+            table.cell(_("Services"), css="number")
+            html.a(site_status.get("num_services", ""), href="view.py?view_name=sitesvcs&site=%s" % site_id)
+
+            need_restart = repl_status.get("need_restart")
+            need_sync    = repl_status.get("need_sync") and not config.site_is_local(site_id)
+            uptodate = not (need_restart or need_sync)
+
+            # Start asynchronous replication
+            #if sitestatus_do_async_replication:
+            #    table.cell(_("Activation"), css="repprogress")
+            #    # Do only include sites that are known to be up
+            #    if not config.site_is_local(site_id) and not "secret" in site:
+            #        html.write("<b>%s</b>" % _("Not logged in."))
+            #    else:
+            #        html.write('<div id="repstate_%s">%s</div>' %
+            #                (site_id, uptodate and _("nothing to do") or ""))
+            #        if not uptodate:
+            #            if need_restart and need_sync:
+            #                what = "sync+restart"
+            #            elif need_restart:
+            #                what = "restart"
+            #            else:
+            #                what = "sync"
+            #            estimated_duration = repl_status.get("times", {}).get(what, 2.0)
+            #            html.javascript("wato_do_replication('%s', %d);" %
+            #              (site_id, int(estimated_duration * 1000.0)))
+            #            num_replsites += 1
+            #else:
+            # State
+            table.cell("", css="buttons")
+            if repl_status.get("need_sync") and not config.site_is_local(site_id):
+                html.icon(_("This site is not update and needs a replication."), "need_replicate")
+            if repl_status.get("need_restart"):
+                html.icon(_("This site needs a restart for activating the changes."), "need_restart")
+            if uptodate:
+                html.icon(_("This site is up-to-date."), "siteuptodate")
+
+            table.cell(_("Changes"), "%d" % len(changes), css="number")
+            table.cell(_("Activate"))
+            if repl_status.get("need_sync") or repl_status.get("need_restart"):
+                html.jsbutton("activate_%s" % site_id, _("Activate"),
+                              "activate_changes(\"site\", \"%s\")" % site_id, cssclass="activate_site")
+
+            ## Actions
+            #table.cell(_("Activate"), css="buttons")
+            ##if site_id not in activation_blocked_reasons.get("sites", {}):
+            #sync_url = make_action_link([("mode", "changelog"),
+            #        ("_site", site_id), ("_siteaction", "sync")])
+            #restart_url = make_action_link([("mode", "changelog"),
+            #        ("_site", site_id), ("_siteaction", "restart")])
+            #sync_restart_url = make_action_link([("mode", "changelog"),
+            #        ("_site", site_id), ("_siteaction", "sync_restart")])
+            #if not config.site_is_local(site_id) and "secret" not in site:
+            #    html.write("<b>%s</b>" % _("Not logged in."))
+            #elif not uptodate:
+            #    if not config.site_is_local(site_id):
+            #        if repl_status.get("need_sync"):
+            #            html.buttonlink(sync_url, _("Sync"))
+            #            if repl_status.get("need_restart"):
+            #                html.buttonlink(sync_restart_url, _("Sync & Restart"))
+            #        else:
+            #            html.buttonlink(restart_url, _("Restart"))
+            #    else:
+            #        html.buttonlink(restart_url, _("Restart"))
+
+            # Last result
+            #if activation_blocked_reasons:
+            #    table.cell(_("Update status"))
+            #else:
+            table.cell(_("Last Result"))
+
+            #site_reason = activation_blocked_reasons.get("sites", {}).get(site_id)
+            #if site_reason:
+            #    html.write(html.attrencode(site_reason))
+            #else:
+            result = repl_status.get("result", "")
+            if len(result) > 20:
+                result = html.strip_tags(result)
+                html.write('<span title="%s">%s...</span>' % \
+                    (html.attrencode(result), result[:20]))
+
+            else:
+                configuration_warnings = repl_status.get("warnings", [])
+                if configuration_warnings:
+                    html.write(render_replication_warnings(configuration_warnings))
+
+        table.end()
+
+
+
+class ModeAjaxStartActivation(WatoWebApiMode):
+    def page(self):
+        init_wato_datastructures()
 
         config.user.need_permission("wato.activate")
 
+        request = self.webapi_request()
+
+        activate_until = request.get("activate_until")
+        if not activate_until:
+            raise MKUserError("activate_until", _("Missing parameter \"%s\".") % "activate_until")
+
+        sites = request.get("sites", "").strip()
+        if not sites:
+            sites = get_dirty_sites()
+        else:
+            sites = sites.split(",")
+
+        comment = request.get("comment", "").strip()
+        if comment == "":
+            comment = None
+
+        activate_foreign = request.get("activate_foreign", "0") == "1"
+
+        manager = ActivateChangesManager()
+        activation_id = manager.start(sites, activate_until, comment, activate_foreign)
+
+        return {
+            "activation_id": activation_id,
+        }
+
+
+class ActivateChangesManager(object):
+    def __init__(self, sites, activate_until, comment=None, activate_foreign=False):
+        self._sites            = sites
+        self._activate_until   = activate_until
+        self._comment          = comment
+        self._activate_foreign = activate_foreign
+
+
+    # Creates the snapshot and starts the single site sync processes. In case these
+    # steps could not be started, exceptions are raised and have to be handled by
+    # the caller.
+    #
+    # On success a separate thread is started that writes it's state to a state file
+    # below "var/check_mk/wato/activation/<id>_general.state". The <id> is written to
+    # the javascript code and can be used for fetching the activation state while
+    # the activation is running.
+    #
+    # For each site a separate thread is started that controls the activation of the
+    # configuration on that site. The state is checked by the general activation
+    # thread.
+    def start(self):
+        self._create_snapshot()
+        self._start_activation()
+
+
+    # Lock WATO modifications during snapshot creation
+    def _create_snapshot(self):
+        lock_exclusive()
+
+        # TODO: Check that self._activate_until is the last made modification.
+        # If not, terminate this!
+
+        # TODO: Create the snapshot (check naming that multiple activations can be made)
+
+        unlock_exclusive()
+
+
+    def _start_activation(self):
+        for site_id in self._sites:
+            self._start_site_activation(site_id)
+
+
+    def _start_site_activation(self):
+        # TODO: Lock the site activation
+
+        # TODO: Perform the activation
+        # TODO: Confirm changes till (self._activate_until)
+
+        # TODO: Unlock site activation
+        pass
+
+
+
+class ModeAjaxActivationState(WatoWebApiMode):
+    def page(self):
         init_wato_datastructures()
 
-        # Activate changes for single site
-        activate_changes()
+        config.user.need_permission("wato.activate")
 
-        log_commit_pending() # flush logfile with pending actions
-        log_audit(None, "activate-config", _("Configuration activated, monitoring server restarted"))
+        request = self.webapi_request()
 
-        html.write_text('OK: ')
-        html.open_div(class_="act_success")
-        html.img("images/icon_apply.png")
-        html.write_text(_("Configuration successfully activated."))
-        html.close_div()
-    except Exception, e:
-        html.show_error(str(e))
+        activation_id = request.get("activation_id")
+        if not activation_id:
+            raise MKUserError("activation_id", _("Missing parameter \"%s\".") % "activation_id")
 
+        manager = ActivateChangesManager()
+        manager.load(activation_id)
+
+        return manager.get_state()
+
+# TODO: Remove this!
+#def get_activation_blocked_reasons():
+#    act_blocked_reasons = {}
+#    repstatus = load_replication_status()
+#    for site, values in repstatus.items():
+#        if values.get("update_started"):
+#            what, update_start_time = values["update_started"]
+#
+#            times = values.get("times")
+#            if not times:
+#                continue
+#
+#            # Fix for a strange scenario. Syncing a slave site actually updates the "restart" field...
+#            last_duration = times.get(what, times.get("restart"))
+#            if not last_duration:
+#                continue
+#
+#            if time.time() - update_start_time > 2 * last_duration:
+#                # Ignore updates which take way too long.
+#                # We do not modify the replication status file. The update_started value will
+#                # be automatically reset on the activation call
+#                continue
+#            else:
+#                act_blocked_reasons.setdefault("sites", {})
+#                infotext = _("Activation running since: %s.") % fmt_time(update_start_time)
+#                if last_duration:
+#                    est_time_left = last_duration - (time.time() - update_start_time)
+#                    if est_time_left < 0:
+#                        infotext += " " + _("Takes %.1f seconds longer than expected") % abs(est_time_left)
+#                    else:
+#                        infotext += " " + _("Approximately finishes in %.1f seconds") % est_time_left
+#
+#                act_blocked_reasons["sites"][site] = infotext
+#
+#    return act_blocked_reasons
+
+#def mode_changelog(phase):
+#    # See below for the usage of this weird variable...
+#    global sitestatus_do_async_replication
+#    try:
+#        sitestatus_do_async_replication
+#    except:
+#        sitestatus_do_async_replication = False
+#
+#
+#    if phase != "title":
+#        activation_blocked_reasons = get_activation_blocked_reasons()
+#
+#    if phase == "title":
+#        return _("Pending changes to activate")
+#
+#    elif phase == "buttons":
+#        home_button()
+#        # Commit pending log right here, if all sites are up-to-date
+#        if is_distributed() and global_replication_state() == "clean":
+#            log_commit_pending()
+#
+#
+#        if html.var("_action") != "activate":
+#            if config.user.may("wato.activate") and not activation_blocked_reasons and (
+#                    (not is_distributed() and log_exists("pending"))
+#                or (is_distributed() and global_replication_state() == "dirty")):
+#                html.context_button(_("Activate Changes!"),
+#                    html.makeactionuri([("_action", "activate")]),
+#                                 "apply", True, id="act_changes_button")
+#
+#        if is_distributed():
+#            html.context_button(_("Site Configuration"), folder_preserving_link([("mode", "sites")]), "sites")
+#
+#        if config.user.may("wato.auditlog"):
+#            html.context_button(_("Audit Log"), folder_preserving_link([("mode", "auditlog")]), "auditlog")
+#
+#        if config.guitests_enabled:
+#            html.context_button(_("Reschedule All"), "guitest_reschedule_all.py", "guitest")
+#
+#    elif phase == "action":
+#        action = html.var("_action", html.var("_siteaction"))
+#        if action == "activate":
+#            # Let host validators do their work
+#            defective_hosts = validate_all_hosts([], force_all = True)
+#            if defective_hosts:
+#                raise MKUserError(None, _("You cannot activate changes while some hosts have "
+#                  "an invalid configuration: ") + ", ".join(
+#                    [ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_host"), ("host", hn)]), hn)
+#                      for hn in defective_hosts.keys() ]))
+#
+#        # If there are changes by other users, we need a confirmation
+#        transaction_already_checked = False
+#        changes = foreign_changes()
+#        if changes:
+#            table_html = "<table class=foreignchanges>"
+#            for user_id, count in changes.items():
+#                table_html += '<tr><td>%s: </td><td>%d %s</td></tr>' % \
+#                   (config.alias_of_user(user_id), count, _("changes"))
+#            table_html += '</table>'
+#
+#            if action in [ "activate", "sync_restart", "restart" ]:
+#                title = _("Confirm activating foreign changes")
+#                text  = _("There are some changes made by your colleagues that you will "
+#                          "activate if you proceed:")
+#            elif action == "sync":
+#                title = _("Confirm synchronizing foreign changes")
+#                text  = _("There are some changes made by your colleagues that you will "
+#                          "synchronize if you proceed:")
+#
+#            c = wato_confirm(title,
+#              HTML('<img class=foreignchanges src="images/icon_foreign_changes.png">' + text + table_html +
+#              _("Do you really want to proceed?")))
+#            if c == False:
+#                return ""
+#            elif not c:
+#                return None
+#            transaction_already_checked = True
+#
+#        if changes and not config.user.may("wato.activateforeign"):
+#            raise MKAuthException(_("Sorry, you are not allowed to activate "
+#                                    "changes of other users."))
+#
+#        # Give hooks chance to do some pre-activation things (and maybe stop
+#        # the activation)
+#        try:
+#            call_hook_pre_distribute_changes()
+#        except Exception, e:
+#            if config.debug:
+#                raise
+#            else:
+#                raise MKUserError(None, "<h1>%s</h1>%s" % (_("Cannot activate changes"), e))
+#
+#        sitestatus_do_async_replication = False # see below
+#        if html.has_var("_siteaction"):
+#            config.user.need_permission("wato.activate")
+#            site_id = html.var("_site")
+#            action = html.var("_siteaction")
+#            if transaction_already_checked or html.check_transaction():
+#                try:
+#                    update_replication_status(site_id, {"update_started": (action.replace("_", "+"), time.time())})
+#                    # If the site has no pending changes but just needs restart,
+#                    # the button text is just "Restart". We do a sync anyway. This
+#                    # can be optimized in future but is the save way for now.
+#                    site = config.site(site_id)
+#                    if action in [ "sync", "sync_restart" ]:
+#                        response = synchronize_site(site, restart = action == "sync_restart")
+#                    else:
+#                        try:
+#                            response = restart_site(site)
+#                        except Exception, e:
+#                            response = "%s" % e
+#
+#                    if type(response) == list:
+#                        return
+#                    else:
+#                        raise MKUserError(None, _("Error on remote access to site: %s") % response)
+#
+#                except MKAutomationException, e:
+#                    raise MKUserError(None, _("Remote command on site %s failed: <pre>%s</pre>") % (site_id, e))
+#                except Exception, e:
+#                    if config.debug:
+#                        raise
+#                    raise MKUserError(None, _("Remote command on site %s failed: <pre>%s</pre>") % (site_id, e))
+#                finally:
+#                    update_replication_status(site_id, {"update_started": None})
+#
+#        elif transaction_already_checked or html.check_transaction():
+#            config.user.need_permission("wato.activate")
+#            create_snapshot("automatic")
+#
+#            # Do nothing here, but let site status table be shown in a mode
+#            # were in each site that is not up-to-date an asynchronus AJAX
+#            # job is being startet that updates that site
+#            sitestatus_do_async_replication = True
+#
+#    else: # phase: regular page rendering
+#
+#        if activation_blocked_reasons:
+#            html.show_warning(_("Another activation is currently running."))
+#
+#        changes_activated = False
+#
+#        if is_distributed():
+#            # Distributed WATO: Show replication state of each site
+#
+#            repstatus = load_replication_status()
+#            configured_sites = [(name, config.site(name)) for name in config.sitenames() ]
+#            sort_sites(configured_sites)
+#
+#            table.begin("site-status", searchable=False)
+#
+#            num_replsites = 0 # for detecting end of bulk replication
+#            for site_id, site in configured_sites:
+#                is_local = config.site_is_local(site_id)
+#
+#                if not is_local and not site.get("replication"):
+#                    continue
+#
+#                table.row()
+#
+#                if site.get("disabled"):
+#                    ss = {}
+#                    status = "disabled"
+#                else:
+#                    ss = sites.state(site_id, {})
+#                    status = ss.get("state", "unknown")
+#
+#                srs = repstatus.get(site_id, {})
+#
+#                # Iconbuttons
+#                table.cell(_("Actions"), css="buttons")
+#                edit_url = folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
+#                html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
+#                site_url = site.get("multisiteurl")
+#                if site_url:
+#                    html.icon_button(site_url, _("Open this site's local web user interface"), "url", target="_blank")
+#
+#                # ID & Alias
+#                table.cell(_("ID"), site_id)
+#                table.cell(_("Alias"), site.get("alias", ""))
+#
+#                # Livestatus
+#                table.cell(_("Status"))
+#                html.write('<img src="images/button_sitestatus_%s.png">' % (status))
+#
+#                # Livestatus-Version
+#                table.cell(_("Version"), ss.get("livestatus_version", ""))
+#
+#                # Core-Version
+#                table.cell(_("Core"), ss.get("program_version", ""))
+#
+#                # Hosts/services
+#                table.cell(_("Hosts"), css="number")
+#                html.write('<a href="view.py?view_name=sitehosts&site=%s">%s</a>' %
+#                  (site_id, ss.get("num_hosts", "")))
+#                table.cell(_("Services"), css="number")
+#                html.write('<a href="view.py?view_name=sitesvcs&site=%s">%s</a>' %
+#                  (site_id, ss.get("num_services", "")))
+#
+#                need_restart = srs.get("need_restart")
+#                need_sync    = srs.get("need_sync") and not config.site_is_local(site_id)
+#                uptodate = not (need_restart or need_sync)
+#
+#                # Start asynchronous replication
+#                if sitestatus_do_async_replication:
+#                    table.cell(_("Activation"), css="repprogress")
+#                    # Do only include sites that are known to be up
+#                    if not config.site_is_local(site_id) and not "secret" in site:
+#                        html.write("<b>%s</b>" % _("Not logged in."))
+#                    else:
+#                        html.write('<div id="repstate_%s">%s</div>' %
+#                                (site_id, uptodate and _("nothing to do") or ""))
+#                        if not uptodate:
+#                            if need_restart and need_sync:
+#                                what = "sync+restart"
+#                            elif need_restart:
+#                                what = "restart"
+#                            else:
+#                                what = "sync"
+#                            estimated_duration = srs.get("times", {}).get(what, 2.0)
+#                            html.javascript("wato_do_replication('%s', %d);" %
+#                              (site_id, int(estimated_duration * 1000.0)))
+#                            num_replsites += 1
+#                else:
+#                    # State
+#                    table.cell("", css="buttons")
+#                    if srs.get("need_sync") and not config.site_is_local(site_id):
+#                        html.icon(_("This site is not update and needs a replication."), "need_replicate")
+#                    if srs.get("need_restart"):
+#                        html.icon(_("This site needs a restart for activating the changes."), "need_restart")
+#                    if uptodate:
+#                        html.icon(_("This site is up-to-date."), "siteuptodate")
+#
+#                    # Actions
+#                    table.cell(_("Activate"), css="buttons")
+#                    if site_id not in activation_blocked_reasons.get("sites", {}):
+#                        sync_url = make_action_link([("mode", "changelog"),
+#                                ("_site", site_id), ("_siteaction", "sync")])
+#                        restart_url = make_action_link([("mode", "changelog"),
+#                                ("_site", site_id), ("_siteaction", "restart")])
+#                        sync_restart_url = make_action_link([("mode", "changelog"),
+#                                ("_site", site_id), ("_siteaction", "sync_restart")])
+#                        if not config.site_is_local(site_id) and "secret" not in site:
+#                            html.write("<b>%s</b>" % _("Not logged in."))
+#                        elif not uptodate:
+#                            if not config.site_is_local(site_id):
+#                                if srs.get("need_sync"):
+#                                    html.buttonlink(sync_url, _("Sync"))
+#                                    if srs.get("need_restart"):
+#                                        html.buttonlink(sync_restart_url, _("Sync & Restart"))
+#                                else:
+#                                    html.buttonlink(restart_url, _("Restart"))
+#                            else:
+#                                html.buttonlink(restart_url, _("Restart"))
+#
+#                    # Last result
+#                    if activation_blocked_reasons:
+#                        table.cell(_("Update status"))
+#                    else:
+#                        table.cell(_("Last Result"))
+#
+#                    site_reason = activation_blocked_reasons.get("sites", {}).get(site_id)
+#                    if site_reason:
+#                        html.write(html.attrencode(site_reason))
+#                    else:
+#                        result = srs.get("result", "")
+#                        if len(result) > 20:
+#                            result = html.strip_tags(result)
+#                            html.write('<span title="%s">%s...</span>' % \
+#                                (html.attrencode(result), result[:20]))
+#
+#                        else:
+#                            configuration_warnings = srs.get("warnings", [])
+#                            if configuration_warnings:
+#                                html.write(render_replication_warnings(configuration_warnings))
+#
+#            table.end()
+#
+#            # The Javascript world needs to know, how many asynchronous
+#            # replication jobs it should wait to be finished.
+#            if sitestatus_do_async_replication and num_replsites > 0:
+#                html.javascript("var num_replsites = %d;\n" % num_replsites)
+#
+#        sitestatus_do_async_replication = None # could survive in global context!
+#
+#        pending = parse_audit_log("pending")
+#        if len(pending) == 0:
+#            if not changes_activated:
+#                html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
+#        else:
+#            html.write('<div id=pending_changes>')
+#            render_audit_log(pending, "pending", hilite_others=True)
+#            html.write('</div>')
+
+
+#def render_replication_warnings(configuration_warnings):
+#    html_code  = "<div class=warning>"
+#    html_code += "<b>%s</b>" % _("Warnings:")
+#    html_code += "<ul>"
+#    for warning in configuration_warnings:
+#        html_code += "<li>%s</li>" % html.attrencode(warning)
+#    html_code += "</ul>"
+#    html_code += "</div>"
+#    return html_code
 
 
 def clear_audit_log_after_confirm():
@@ -5045,357 +5399,6 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     html.javascript(('progress_scheduler("%s", "%s", 50, %s, %s, "%s", %s, %s, "%s", "' + _("FINISHED.") + '");') %
                      (html.var('mode'), base_url, json.dumps(items), json.dumps(transids), finish_url,
                       json.dumps(success_stats), json.dumps(fail_stats), term_url))
-
-
-#.
-#   .--Snapshots-----------------------------------------------------------.
-#   |           ____                        _           _                  |
-#   |          / ___| _ __   __ _ _ __  ___| |__   ___ | |_ ___            |
-#   |          \___ \| '_ \ / _` | '_ \/ __| '_ \ / _ \| __/ __|           |
-#   |           ___) | | | | (_| | |_) \__ \ | | | (_) | |_\__ \           |
-#   |          |____/|_| |_|\__,_| .__/|___/_| |_|\___/ \__|___/           |
-#   |                            |_|                                       |
-#   +----------------------------------------------------------------------+
-#   | Mode for backup/restore/creation of snapshots                        |
-#   '----------------------------------------------------------------------'
-
-# Returns status information for snapshots or snapshots in progress
-def get_snapshot_status(snapshot, validate_checksums = False):
-    if type(snapshot) == tuple:
-        name, file_stream = snapshot
-    else:
-        name = snapshot
-        file_stream = None
-
-    # Defaults of available keys
-    status = {
-        "name"            : "",
-        "total_size"      : 0,
-        "type"            : None,
-        "files"           : {},
-        "comment"         : "",
-        "created_by"      : "",
-        "broken"          : False,
-        "progress_status" : "",
-    }
-
-    def access_snapshot(handler):
-        if file_stream:
-            file_stream.seek(0)
-            return handler(file_stream)
-        else:
-            return handler(snapshot_dir + name)
-
-    def check_size():
-        if file_stream:
-            file_stream.seek(0, os.SEEK_END)
-            size = file_stream.tell()
-        else:
-            statinfo = os.stat(snapshot_dir + name)
-            size = statinfo.st_size
-        if size < 256:
-            raise MKGeneralException(_("Invalid snapshot (too small)"))
-        else:
-            status["total_size"] = size
-
-    def check_extension():
-        # Check snapshot extension: tar or tar.gz
-        if name.endswith(".tar.gz"):
-            status["type"]    = "legacy"
-            status["comment"] = _("Snapshot created with old version")
-        elif not name.endswith(".tar"):
-            raise MKGeneralException(_("Invalid snapshot (incorrect file extension)"))
-
-    def check_content():
-        status["files"] = access_snapshot(multitar.list_tar_content)
-
-        if status.get("type") == "legacy":
-            allowed_files = map(lambda x: "%s.tar" % x[1], backup_paths)
-            for tarname in status["files"].keys():
-                if tarname not in allowed_files:
-                    raise MKGeneralException(_("Invalid snapshot (contains invalid tarfile %s)") % tarname)
-        else: # new snapshots
-            for entry in ["comment", "created_by", "type"]:
-                if entry in status["files"]:
-                    status[entry] = access_snapshot(lambda x: multitar.get_file_content(x, entry))
-                else:
-                    raise MKGeneralException(_("Invalid snapshot (missing file: %s)") % entry)
-
-    def check_core():
-        if "check_mk.tar.gz" not in status["files"]:
-            return
-
-        cmk_tar = cStringIO.StringIO(access_snapshot(lambda x: multitar.get_file_content(x, 'check_mk.tar.gz')))
-        files = multitar.list_tar_content(cmk_tar)
-        using_cmc = os.path.exists(cmk.paths.omd_root + '/etc/check_mk/conf.d/microcore.mk')
-        snapshot_cmc = 'conf.d/microcore.mk' in files
-        if using_cmc and not snapshot_cmc:
-            raise MKGeneralException(_('You are currently using the Check_MK Micro Core, but this snapshot does not use the '
-                                       'Check_MK Micro Core. If you need to migrate your data, you could consider changing '
-                                       'the core, restoring the snapshot and changing the core back again.'))
-        elif not using_cmc and snapshot_cmc:
-            raise MKGeneralException(_('You are currently not using the Check_MK Micro Core, but this snapshot uses the '
-                                       'Check_MK Micro Core. If you need to migrate your data, you could consider changing '
-                                       'the core, restoring the snapshot and changing the core back again.'))
-
-    def check_checksums():
-        for f in status["files"].values():
-            f['checksum'] = None
-
-        # checksums field might contain three states:
-        # a) None  - This is a legacy snapshot, no checksum file available
-        # b) False - No or invalid checksums
-        # c) True  - Checksums successfully validated
-        if status['type'] == 'legacy':
-            status['checksums'] = None
-            return
-
-        if 'checksums' not in status['files'].keys():
-            status['checksums'] = False
-            return
-
-        # Extract all available checksums from the snapshot
-        checksums_raw = access_snapshot(lambda x: multitar.get_file_content(x, 'checksums'))
-        checksums = {}
-        for l in checksums_raw.split('\n'):
-            line = l.strip()
-            if ' ' in line:
-                parts = line.split(' ')
-                if len(parts) == 3:
-                    checksums[parts[0]] = (parts[1], parts[2])
-
-        # now loop all known backup domains and check wheter or not they request
-        # checksum validation, there is one available and it is valid
-        status['checksums'] = True
-        for domain_id, domain in backup_domains.items():
-            filename = domain_id + '.tar.gz'
-            if not domain.get('checksum', True) or filename not in status['files']:
-                continue
-
-            if filename not in checksums:
-                continue
-
-            checksum, signed = checksums[filename]
-
-            # Get hashes of file in question
-            subtar = access_snapshot(lambda x: multitar.get_file_content(x, filename))
-            subtar_hash   = sha256(subtar).hexdigest()
-            subtar_signed = sha256(subtar_hash + snapshot_secret()).hexdigest()
-
-            status['files'][filename]['checksum'] = checksum == subtar_hash and signed == subtar_signed
-            status['checksums'] &= status['files'][filename]['checksum']
-
-    try:
-        if len(name) > 35:
-            status["name"] = "%s %s" % (name[14:24], name[25:33].replace("-",":"))
-        else:
-            status["name"] = name
-
-        if not file_stream:
-            # Check if the snapshot build is still in progress...
-            path_status = "%s/workdir/%s/%s.status" % (snapshot_dir, name, name)
-            path_pid    = "%s/workdir/%s/%s.pid"    % (snapshot_dir, name, name)
-
-            # Check if this process is still running
-            if os.path.exists(path_pid):
-                if os.path.exists(path_pid) and not os.path.exists("/proc/%s" % open(path_pid).read()):
-                    status["progress_status"] = _("ERROR: Snapshot progress no longer running!")
-                    raise MKGeneralException(_("Error: The process responsible for creating the snapshot is no longer running!"))
-                else:
-                    status["progress_status"] = _("Snapshot build currently in progress")
-
-            # Read snapshot status file (regularly updated by snapshot process)
-            if os.path.exists(path_status):
-                lines = file(path_status, "r").readlines()
-                status["comment"] = lines[0].split(":", 1)[1]
-                file_info = {}
-                for filename in lines[1:]:
-                    name, info = filename.split(":", 1)
-                    text, size = info[:-1].split(":", 1)
-                    file_info[name] = {"size" : saveint(size), "text": text}
-                status["files"] = file_info
-                return status
-
-        # Snapshot exists and is finished - do some basic checks
-        check_size()
-        check_extension()
-        check_content()
-        check_core()
-
-        if validate_checksums:
-            check_checksums()
-
-    except Exception, e:
-        if config.debug:
-            status["broken_text"] = traceback.format_exc()
-            status["broken"]      = True
-        else:
-            status["broken_text"] = '%s' % e
-            status["broken"]      = True
-    return status
-
-
-def snapshot_secret():
-    path = cmk.paths.default_config_dir + '/snapshot.secret'
-    try:
-        return file(path).read()
-    except IOError:
-        # create a secret during first use
-        try:
-            s = os.urandom(256)
-        except NotImplementedError:
-            s = sha256(time.time())
-        file(path, 'w').write(s)
-        return s
-
-
-def get_snapshots():
-    snapshots = []
-    try:
-        for f in os.listdir(snapshot_dir):
-            if os.path.isfile(snapshot_dir + f):
-                snapshots.append(f)
-        snapshots.sort(reverse=True)
-    except OSError:
-        pass
-    return snapshots
-
-
-def get_default_backup_domains():
-    domains = {}
-    for domain, value in backup_domains.items():
-        if "default" in value and not value.get("deprecated"):
-            domains.update({domain: value})
-    return domains
-
-
-def do_snapshot_maintenance():
-    snapshots = []
-    for f in os.listdir(snapshot_dir):
-        if f.startswith('wato-snapshot-'):
-            status = get_snapshot_status(f)
-            # only remove automatic and legacy snapshots
-            if status.get("type") in [ "automatic", "legacy" ]:
-                snapshots.append(f)
-
-    snapshots.sort(reverse=True)
-    while len(snapshots) > config.wato_max_snapshots:
-        log_audit(None, "snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
-        os.remove(snapshot_dir + snapshots.pop())
-
-
-def create_snapshot(ty, comment=None):
-    make_nagios_directory(snapshot_dir)
-
-    snapshot_name = "wato-snapshot-%s.tar" % time.strftime("%Y-%m-%d-%H-%M-%S",
-                                                           time.localtime(time.time()))
-
-    if comment == None:
-        if ty == "manual":
-            comment = _("Snapshot created by %s") % config.user.id
-        else:
-            comment = _("Activated changes by %s") % config.user.id
-
-    data = {}
-    data["comment"]       = comment
-    data["created_by"]    = config.user.id
-    data["type"]          = ty
-    data["snapshot_name"] = snapshot_name
-
-    do_create_snapshot(data)
-
-    log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
-    do_snapshot_maintenance()
-
-    return snapshot_name
-
-
-def do_create_snapshot(data):
-    snapshot_name = data["snapshot_name"]
-    snapshot_dir  = cmk.paths.var_dir + "/wato/snapshots"
-    work_dir      = snapshot_dir + "/workdir/%s" % snapshot_name
-
-    try:
-        if not os.path.exists(work_dir):
-            os.makedirs(work_dir)
-
-        # Open / initialize files
-        filename_target = "%s/%s"        % (snapshot_dir, snapshot_name)
-        filename_work   = "%s/%s.work"   % (work_dir, snapshot_name)
-
-        file(filename_target, "w").close()
-
-        def get_basic_tarinfo(name):
-            tarinfo = tarfile.TarInfo(name)
-            tarinfo.mtime = time.time()
-            tarinfo.uid   = 0
-            tarinfo.gid   = 0
-            tarinfo.mode  = 0644
-            tarinfo.type  = tarfile.REGTYPE
-            return tarinfo
-
-        # Initialize the snapshot tar file and populate with initial information
-        tar_in_progress = tarfile.open(filename_work, "w")
-
-        for key in [ "comment", "created_by", "type" ]:
-            tarinfo       = get_basic_tarinfo(key)
-            encoded_value = data[key].encode("utf-8")
-            tarinfo.size  = len(encoded_value)
-            tar_in_progress.addfile(tarinfo, cStringIO.StringIO(encoded_value))
-
-        tar_in_progress.close()
-
-        # Process domains (sorted)
-        subtar_info = {}
-        for name, info in sorted(get_default_backup_domains().items()):
-            prefix          = info.get("prefix","")
-            filename_subtar = "%s.tar.gz" % name
-            path_subtar     = "%s/%s" % (work_dir, filename_subtar)
-
-            paths = map(lambda x: x[1] == "" and "." or x[1], info.get("paths", []))
-            command = [ "tar", "czf", path_subtar, "--ignore-failed-read",
-                        "--force-local", "-C", prefix ] + paths
-
-            proc = subprocess.Popen(command, stdin=None, close_fds=True,
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=prefix)
-            stdout, stderr = proc.communicate()
-            exit_code      = proc.wait()
-            # Allow exit codes 0 and 1 (files changed during backup)
-            if exit_code not in [0, 1]:
-                raise MKGeneralException("Error while creating backup of %s (Exit Code %d) - %s.\n%s" %
-							(name, exit_code, stderr, command))
-
-            subtar_size   = os.stat(path_subtar).st_size
-            subtar_hash   = sha256(file(path_subtar).read()).hexdigest()
-            subtar_signed = sha256(subtar_hash + snapshot_secret()).hexdigest()
-            subtar_info[filename_subtar] = (subtar_hash, subtar_signed)
-
-            # Append tar.gz subtar to snapshot
-            command = [ "tar", "--append", "--file="+filename_work, filename_subtar ]
-            proc = subprocess.Popen(command, cwd = work_dir, close_fds=True)
-            proc.communicate()
-            exit_code = proc.wait()
-
-            if os.path.exists(filename_subtar):
-                os.unlink(filename_subtar)
-
-            if exit_code != 0:
-                raise MKGeneralException("Error on adding backup domain %s to tarfile" % name)
-
-        # Now add the info file which contains hashes and signed hashes for
-        # each of the subtars
-        info = ''.join([ '%s %s %s\n' % (k, v[0], v[1]) for k, v in subtar_info.items() ]) + '\n'
-
-        tar_in_progress = tarfile.open(filename_work, "a")
-        tarinfo      = get_basic_tarinfo("checksums")
-        tarinfo.size = len(info)
-        tar_in_progress.addfile(tarinfo, cStringIO.StringIO(info))
-        tar_in_progress.close()
-
-        shutil.move(filename_work, filename_target)
-
-    finally:
-        shutil.rmtree(work_dir)
 
 
 #.
@@ -9035,11 +9038,13 @@ def find_usages_of_timeperiod(tpname):
 #   '----------------------------------------------------------------------'
 
 # Sort given sites argument by local, followed by slaves
+# TODO: Change to sorted() mechanism
 def sort_sites(sitelist):
     def custom_sort(a,b):
         return cmp(a[1].get("replication"), b[1].get("replication")) or \
                cmp(a[1].get("alias"), b[1].get("alias"))
     sitelist.sort(cmp = custom_sort)
+    return sitelist
 
 
 def mode_sites(phase):
@@ -16389,8 +16394,7 @@ def home_button():
 
 
 def changelog_button():
-    pending = parse_audit_log("pending")
-    num_pending = len(pending)
+    num_pending = get_number_of_pending_changes()
     if num_pending >= 1:
         hot = True
         icon = "wato_changes"
@@ -16913,7 +16917,7 @@ modes = {
    "bulkedit"           : (["hosts", "edit_hosts"], mode_bulk_edit),
    "bulkcleanup"        : (["hosts", "edit_hosts"], mode_bulk_cleanup),
    "random_hosts"       : (["hosts", "random_hosts"], mode_random_hosts),
-   "changelog"          : ([], mode_changelog),
+   "changelog"          : ([], ModeActivateChanges),
    "auditlog"           : (["auditlog"], mode_auditlog),
    "globalvars"         : (["global"], mode_globalvars),
    "edit_configvar"     : (["global"], mode_edit_configvar),

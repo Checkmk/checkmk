@@ -3263,6 +3263,8 @@ class Dictionary(ValueSpec):
             self.render_input_form(varprefix, value)
         elif self._render == "form" and form == None:
             self.render_input_form(varprefix, value)
+        elif self._render == "form_part" and form == None:
+            self.render_input_form(varprefix, value, as_part=True)
         else:
             self.render_input_normal(varprefix, value, self._render == "oneline")
 
@@ -3336,16 +3338,20 @@ class Dictionary(ValueSpec):
         elif oneline and self._headers == "sup":
             html.write('</tr></table>')
 
-    def render_input_form(self, varprefix, value):
+    def render_input_form(self, varprefix, value, as_part=False):
         if self._headers:
             for header, sections in self._headers:
-                self.render_input_form_header(varprefix, value, header, sections)
+                self.render_input_form_header(varprefix, value, header, sections, as_part)
         else:
-            self.render_input_form_header(varprefix, value, self.title() or _("Properties"), None)
-        forms.end()
+            self.render_input_form_header(varprefix, value, self.title() or _("Properties"), None, as_part)
 
-    def render_input_form_header(self, varprefix, value, title, sections):
-        forms.header(title, isopen=self._form_isopen, narrow=self._form_narrow)
+        if not as_part:
+            forms.end()
+
+    def render_input_form_header(self, varprefix, value, title, sections, as_part):
+        if not as_part:
+            forms.header(title, isopen=self._form_isopen, narrow=self._form_narrow)
+
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
                 continue

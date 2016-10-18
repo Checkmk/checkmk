@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import math, grp, pprint, os, errno, marshal, re, fcntl, time
+import traceback
 from cmk.exceptions import MKException, MKGeneralException
 from cmk.regex import regex
 import cmk.store as store
@@ -325,6 +326,10 @@ def logger(level, msg):
             (time.strftime('%Y-%m-%d %H:%M:%S'), level, os.getpid(), msg))
     finally:
         release_lock(log_file)
+
+
+def log_exception():
+    logger(LOG_ERR, "%s %s: %s" % (html.request_uri(), _('Internal error'), traceback.format_exc()))
 
 
 # Escape/strip unwanted chars from (user provided) strings to

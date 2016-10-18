@@ -509,14 +509,197 @@ function update_bulk_moveto(val) {
     fields = null;
 }
 
-//   +----------------------------------------------------------------------+
-//   |           ____            _ _           _   _                        |
-//   |          |  _ \ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __             |
-//   |          | |_) / _ \ '_ \| | |/ __/ _` | __| |/ _ \| '_ \            |
-//   |          |  _ <  __/ |_) | | | (_| (_| | |_| | (_) | | | |           |
-//   |          |_| \_\___| .__/|_|_|\___\__,_|\__|_|\___/|_| |_|           |
-//   |                    |_|                                               |
-//   +----------------------------------------------------------------------+
+//#.
+//#   .-Activation---------------------------------------------------------.
+//#   |              _        _   _            _   _                       |
+//#   |             / \   ___| |_(_)_   ____ _| |_(_) ___  _ __            |
+//#   |            / _ \ / __| __| \ \ / / _` | __| |/ _ \| '_ \           |
+//#   |           / ___ \ (__| |_| |\ V / (_| | |_| | (_) | | | |          |
+//#   |          /_/   \_\___|\__|_| \_/ \__,_|\__|_|\___/|_| |_|          |
+//#   |                                                                    |
+//#   +--------------------------------------------------------------------+
+//#   | The WATO activation works this way:                                |
+//#   | a) The user chooses one activation mode (affected sites, selected  |
+//#   |    sites or a single site)                                         |
+//#   | b) The JS GUI starts a single "worker" which calls the python code |
+//#   |    first to locking the sites and creating the sync snapshot(s)    |
+//#   | c) Then the snapshot is synced to the sites and activated on the   |
+//#   |    sites indidivually.                                             |
+//#   | d) Once a site finishes, it's changes are commited and the site is |
+//#   |    unlocked individually.                                          |
+//#   '--------------------------------------------------------------------'
+
+function activate_changes(mode, site_id)
+{
+    var sites = [];
+
+    if (mode == "selected") {
+        var checkboxes = document.getElementsByClassName("site_checkbox");
+        for (var i = 0; i < checkboxes.length; i++) {
+            if (checkboxes[i].checked) {
+                // strip leading "site_" to get the site id
+                sites.push(checkboxes[i].name.substr(5));
+            }
+        }
+
+        if (sites.length == 0) {
+            // TODO: Error, you have to select a site
+        }
+        
+    } else if (mode == "site") {
+        sites.push(site_id);
+    }
+
+    var activate_until = document.getElementById("activate_until");
+    if (!activate_until)
+        return;
+
+    var comment = "";
+    var comment_field = document.getElementsByName("activate_p_comment")[0];
+    if (comment_field.value != "")
+        comment = comment_field.value;
+
+    var activate_foreign = 0;
+    var foreign_checkbox = document.getElementsByName("activate_p_foreign")[0];
+    if (foreign_checkbox && foreign_checkbox.checked)
+        activate_foreign = 1;
+
+    start_activation(sites, activate_until.value, comment, activate_foreign);
+}
+
+function start_activation(sites, activate_until, comment, activate_foreign)
+{
+    show_activation_info("Initializing activation...");
+
+    var post_data = "activate_until=" + encodeURIComponent(activate_until)
+                  + "&sites=" + encodeURIComponent(sites.join(","))
+                  + "&comment=" + encodeURIComponent(comment)
+                  + "&activate_foreign=" + encodeURIComponent(activate_foreign);
+
+    console.log(post_data);
+
+    call_ajax("ajax_start_activation.py", {
+        response_handler : handle_start_activation,
+        error_handler    : handle_start_activation_error,
+        method           : "POST",
+        post_data        : post_data,
+        add_ajax_id      : false
+    });
+
+    lock_activation_controls(true);
+}
+
+function handle_start_activation(_unused, response_json)
+{
+    var response = JSON.parse(response_json);
+
+    if (response.result_code == 1) {
+        show_activation_error(response.result);       
+    } else {
+        monitor_activation_progress(response.result.activation_id);
+    }
+}
+
+function handle_start_activation_error(_unused, status_code, error_msg)
+{
+    show_activation_error("Failed to start activation ["+status_code+"]: " + error_msg);
+    finish_activation();
+}
+
+function show_activation_error(text)
+{
+    var container = document.getElementById("activation_msg");
+    container.style.display = "block";
+    var msg = container.childNodes[0];
+
+    add_class(msg, "error");
+    remove_class(msg, "success");
+
+    msg.innerHTML = text;
+}
+
+function show_activation_info(text)
+{
+    var container = document.getElementById("activation_msg");
+    container.style.display = "block";
+    var msg = container.childNodes[0];
+
+    add_class(msg, "success");
+    remove_class(msg, "error");
+
+    msg.innerHTML = text;
+}
+
+function hide_activation_message()
+{
+    var msg = document.getElementById("activation_msg");
+    if (msg)
+        msg.style.display = "none";
+}
+
+function lock_activation_controls(lock)
+{
+    var elements = [];
+    elements.push(document.getElementById("activate_affected"));
+    elements.push(document.getElementById("activate_selected"));
+
+    elements.concat(document.getElementsByName("activate_p_comment"));
+    elements.concat(document.getElementsByClassName("site_checkbox"));
+    elements.concat(document.getElementsByClassName("activate_site"));
+
+    for (var i = 0; i < elements.length; i++) {
+        elements[i].disabled = lock ? "disabled" : false;
+    }
+}
+
+function monitor_activation_progress(activation_id)
+{
+    show_activation_info("Activating...");
+
+    call_ajax("ajax_activation_state.py?activation_id=" + encodeURIComponent(activation_id), {
+        response_handler : handle_activation_progress,
+        error_handler    : handle_activation_progress_error,
+        handler_data     : activation_id,
+        method           : "GET",
+        add_ajax_id      : false
+    });
+}
+
+function handle_activation_progress(activation_id, response_json)
+{
+    var response = JSON.parse(response_json);
+    if (response.result_code == 1) {
+        show_activation_error(response.result);
+        return; // Abort on error!
+    } else {
+        update_activation_state(response.result);
+        setTimeout(function() { return monitor_activation_progress(activation_id); }, 500);
+    }
+}
+
+function update_activation_state(response)
+{
+    console.log(response);
+}
+
+function handle_activation_progress_error(activation_id, status_code, error_msg)
+{
+    show_activation_error("Failed to fetch activation state ["+status_code+"]: " + error_msg + ". " +
+                          "Retrying in 1 second.");
+
+    setTimeout(function() { return monitor_activation_progress(activation_id); }, 1000);
+}
+
+function finish_activation()
+{
+    lock_activation_controls(false);
+}
+
+//
+// DEPRECATED CODE BELOW. CLEAN UP!
+//
+
+
 var replication_progress = new Array();
 
 function wato_do_replication(siteid, est) {

@@ -139,10 +139,7 @@ def handler(mod_python_req, fields = None, is_profiling = False):
 
     except Exception, e:
         html.unplug()
-        msg = "%s %s: %s" % (html.request_uri(), _('Internal error'), traceback.format_exc())
-        if type(msg) == unicode:
-            msg = msg.encode('utf-8')
-        logger(LOG_ERR, msg)
+        log_exception()
         if plain_error():
             html.write(_("Internal error") + ": %s\n" % html.attrencode(e))
         elif not fail_silently():

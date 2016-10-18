@@ -47,6 +47,9 @@ import config, hooks, userdb, multitar
 import sites
 import traceback
 import ast
+import threading
+import tarfile
+import cStringIO
 from lib import *
 from valuespec import *
 
@@ -248,7 +251,7 @@ def log_commit_pending():
 #
 
 
-def add_change(action_name, text, obj=None, add_user=True, need_sync=True, need_restart=None, domains=None, sites=None):
+def add_change(action_name, text, obj=None, add_user=True, need_sync=None, need_restart=None, domains=None, sites=None):
     # Default to a core only change
     if domains == None:
         domains = [ConfigDomainCore]
@@ -265,34 +268,72 @@ def add_change(action_name, text, obj=None, add_user=True, need_sync=True, need_
     if sites == None:
         sites = config.sitenames()
 
+    change_id = gen_id()
+
     for site_id in sites:
-        add_change_to_site(site_id, action_name, text, obj, add_user, need_sync, need_restart, domains)
+        add_change_to_site(site_id, change_id, action_name, text, obj, add_user, need_sync, need_restart, domains)
 
 
 def add_service_change(host, action_name, text):
     add_change(action_name, text, obj=host, sites=[host.site_id()], need_sync=False)
 
 
-def add_change_to_site(site_id, action_name, text, obj, add_user, need_sync, need_restart, domains):
+def add_change_to_site(site_id, change_id, action_name, text, obj, add_user, need_sync, need_restart, domains):
     # Individual changes may override the domain restart default value
     if need_restart == None:
         need_restart = any([ d.needs_restart for d in domains ])
 
-    def serialize_object(obj):
-        return obj.__class__.__name__, obj.ident()
+    if need_sync == None:
+        need_sync = any([ d.needs_sync for d in domains ])
 
-    update_replication_status(site_id, {
+    def serialize_object(obj):
+        if obj == None:
+            return None
+        else:
+            return obj.__class__.__name__, obj.ident()
+
+    update_replication_status(site_id, {}, changes=[{
+        "id"           : change_id,
+        "action_name"  : action_name,
+        "text"         : "%s" % text,
+        "object"       : serialize_object(obj),
+        "user_id"      : config.user.id if add_user else None,
+        "domains"      : [ d.ident for d in domains ],
+        "time"         : time.time(),
         "need_sync"    : need_sync,
         "need_restart" : need_restart,
-    }, changes=[{
-        "action_name" : action_name,
-        "text"        : "%s" % text,
-        "object"      : serialize_object(obj),
-        "user_id"     : config.user.id if add_user else None,
-        "domains"     : [ d.ident for d in domains ],
-        "time"        : time.time(),
     }])
 
+
+def get_changes_of_site(site_id):
+    repstatus = load_replication_status()
+    return load_replication_status()[site_id].get("changes", [])
+
+
+# Returns a list of changes ordered by time and grouped by the change.
+# Each change contains a list of affected sites.
+def get_pending_changes_grouped():
+    changes = {}
+
+    repstatus = load_replication_status()
+    for site_id, status in load_replication_status().items():
+        if not status.get("changes"):
+            continue
+
+        for change in status["changes"]:
+            change_id = change["id"]
+
+            if change_id not in changes:
+                changes[change_id] = change.copy()
+
+            affected_sites = changes[change_id].setdefault("affected_sites", [])
+            affected_sites.append(site_id)
+
+    return changes
+
+
+def get_number_of_pending_changes():
+    return len(get_pending_changes_grouped())
 
 
 class ConfigDomain(object):
@@ -309,12 +350,14 @@ class ConfigDomain(object):
 
 
 class ConfigDomainCore(ConfigDomain):
+    needs_sync    = True
     needs_restart = True
     ident = "check_mk"
 
 
 
 class ConfigDomainGUI(ConfigDomain):
+    needs_sync    = True
     needs_restart = False
     ident = "multisite"
 
@@ -3274,25 +3317,6 @@ def create_nagvis_backends(sites):
     file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.paths.omd_root, 'w').write('\n'.join(cfg))
 
 
-def create_site_globals_file(siteid, tmp_dir):
-    if not os.path.exists(tmp_dir):
-        make_nagios_directory(tmp_dir)
-    sites = load_sites()
-    site = sites[siteid]
-    config = site.get("globals", {})
-
-    # Add global setting for disabling WATO right here. It is not
-    # available as a normal global option. That would be too dangerous.
-    # You could disable WATO on the master very easily that way...
-    # The default value is True - even for sites configured with an
-    # older version of Check_MK.
-    config["wato_enabled"] = not site.get("disable_wato", True)
-
-    config["userdb_automatic_sync"] = site.get("user_sync", userdb.user_sync_default_config(siteid))
-
-    file(tmp_dir + "/sitespecific.mk", "w").write("%r\n" % config)
-
-
 def create_distributed_wato_file(siteid, mode):
     out = create_user_file(cmk.paths.check_mk_config_dir + "/distributed_wato.mk", "w")
     out.write(wato_fileheader())
@@ -3375,9 +3399,6 @@ def do_site_login(site_id, name, password):
         except:
             raise MKAutomationException(response)
 
-def upload_file(url, file_path, insecure):
-    return get_url(url, insecure, params = ' -F snapshot=@%s' % file_path)
-
 def get_url(url, insecure, user=None, password=None, params = '', post_data = None):
     cred = ''
     if user:
@@ -3428,6 +3449,7 @@ def check_mk_remote_automation(siteid, command, args, indata, stdin_data=None, t
            % site.get("alias", siteid))
 
     # If the site is not up-to-date, synchronize it first.
+    # TODO: Where is this done/needed?
     repstatus = load_replication_status()
     if repstatus.get(siteid, {}).get("need_sync"):
         synchronize_site(config.site(siteid), restart=False)
@@ -3512,6 +3534,13 @@ def wato_slave_sites():
     return [ (site_id, site) for site_id, site in config.sites.items()
                                                   if site.get("replication") ]
 
+
+def wato_activation_sites():
+    return [ (site_id, site) for site_id, site in config.configured_sites()
+                if config.site_is_local(site_id)
+                   or site.get("replication") ]
+
+
 def declare_site_attribute():
     undeclare_host_attribute("site")
     declare_host_attribute(SiteAttribute(), show_in_table = True, show_in_folder = True)
@@ -3553,19 +3582,10 @@ class SiteAttribute(ValueSpecAttribute):
         else:
             return []
 
-# The replication status contains information about each
-# site. It is a dictionary from the site id to a dict with
-# the following keys:
-# "need_sync" : 17,  # number of non-synchronized changes
-# "need_restart" : True, # True, if remote site needs a restart (cmk -R)
+
 def load_replication_status(lock=False):
-    repstatus = store.load_data_from_file(repstatus_file, {}, lock)
+    return store.load_data_from_file(repstatus_file, {}, lock)
 
-    for site_id, status in repstatus.items():
-        if config.site_is_local(site_id): # nevery sync to local site
-            status["need_sync"] = False
-
-    return repstatus
 
 def save_replication_status(repstatus):
     store.save_data_to_file(repstatus_file, repstatus)
@@ -3583,10 +3603,7 @@ def clear_replication_status(site_id):
 
 
 # Updates one or more dict elements of a site in an atomic way.
-def update_replication_status(site_id, vars, times=None, changes=None):
-    if times == None:
-        times = {}
-
+def update_replication_status(site_id, vars, changes=None):
     make_nagios_directory(var_dir)
     repstatus = load_replication_status(lock=True)
 
@@ -3596,23 +3613,30 @@ def update_replication_status(site_id, vars, times=None, changes=None):
 
     repstatus[site_id].update(vars)
 
-    # Nevery sync to local site
-    if config.site_is_local(site_id):
-        repstatus[site_id]["need_sync"] = False
-
-    # Apply optional replication / activation time updates
-    for what, duration in times.items():
-        old_times = repstatus[site_id]["times"]
-        if what not in old_times:
-            old_times[what] = duration
-        else:
-            old_times[what] = 0.8 * old_times[what] + 0.2 * duration
-
     # Optionally add new pending change entries
     if changes:
         repstatus[site_id]["changes"] += changes
 
     save_replication_status(repstatus)
+
+
+def update_activation_time(site_id, ty, duration):
+    repstatus = load_replication_status(lock=True)
+
+    repstatus.setdefault(site_id, {})
+    times = repstatus[site_id].setdefault("times", {})
+
+    if ty not in times:
+        times[ty] = duration
+    else:
+        times[ty] = 0.8 * times[ty] + 0.2 * duration
+
+    save_replication_status(repstatus)
+
+
+def get_activation_time(site_id, ty):
+    repstatus = load_replication_status(lock=True)
+    return repstatus.get(site_id, {}).get("times", {}).get(ty)
 
 
 # Returns a list of site ids where users can login
@@ -3629,6 +3653,7 @@ def update_login_sites_replication_status():
         update_replication_status(site_id, {'need_sync': True})
 
 
+# TODO: Remove this?
 def global_replication_state():
     repstatus = load_replication_status()
     some_dirty = False
@@ -3642,88 +3667,19 @@ def global_replication_state():
         if srs.get("need_sync") or srs.get("need_restart"):
             some_dirty = True
 
-    if some_dirty:
+    if get_dirty_sites():
         return "dirty"
     else:
         return "clean"
 
 
-def remove_sync_snapshot(siteid):
-    path = sync_snapshot_file(siteid)
-    if os.path.exists(path):
-        os.remove(path)
-
-
-def sync_snapshot_file(siteid):
-    return cmk.paths.tmp_dir + "/sync-%s.tar.gz" % siteid
-
-
-def create_sync_snapshot(site_id):
-    path = sync_snapshot_file(site_id)
-    if not os.path.exists(path):
-        tmp_path = "%s-%s" % (path, id(html))
-
-        # Add site-specific global settings.
-        site_tmp_dir = cmk.paths.tmp_dir + "/sync-%s-specific-%s" % (site_id, id(html))
-        create_site_globals_file(site_id, site_tmp_dir)
-
-        paths = replication_paths + [("dir", "sitespecific", site_tmp_dir)]
-
-        # Remove Event Console settings, if this site does not want it (might
-        # be removed in some future day)
-        if not config.sites[site_id].get("replicate_ec"):
-            paths = [ e for e in paths if e[1] != "mkeventd" ]
-
-        # Remove extensions if site does not want them
-        if not config.sites[site_id].get("replicate_mkps"):
-            paths = [ e for e in paths if e[1] not in [ "local", "mkps" ] ]
-
-        multitar.create(tmp_path, paths)
-        shutil.rmtree(site_tmp_dir)
-        os.rename(tmp_path, path)
-
-
-def synchronize_site(site, restart):
-    if config.site_is_local(site["id"]):
-        if restart:
-            start = time.time()
-            configuration_warnings = restart_site(site)
-            update_replication_status(site["id"],
-                { "need_restart" : False },
-                { "restart" : time.time() - start})
-            return configuration_warnings
-        else:
-            return []
-
-    create_sync_snapshot(site["id"])
-    try:
-        start = time.time()
-        result = push_snapshot_to_site(site, restart)
-        duration = time.time() - start
-        update_replication_status(site["id"], {},
-           { restart and "sync+restart" or "restart" : duration,
-           })
-
-        # Pre 1.2.7i3 sites return True on success and a string on error.
-        # 1.2.7i3 and later return a ist of warning messages on success.
-        # [] means OK and no warnings. The error handling is unchanged
-        if result == True:
-            result = []
-        if type(result) == list:
-            update_replication_status(site["id"], {
-                "need_sync": False,
-                "result" : _("Success"),
-                "warnings" : result,
-                })
-            if restart:
-                update_replication_status(site["id"], { "need_restart": False })
-        else:
-            update_replication_status(site["id"], { "result" : result })
-        return result
-
-    except Exception, e:
-        update_replication_status(site["id"], { "result" : str(e) })
-        raise
+def get_dirty_sites():
+    dirty = []
+    repstatus = load_replication_status()
+    for site_id, _unused_site in wato_activation_sites():
+        if repstatus[site_id].get("changes", []):
+            dirty.append(site_id)
+    return dirty
 
 
 def automation_push_snapshot():
@@ -3819,37 +3775,6 @@ def mkeventd_reload():
     log_audit(None, "mkeventd-activate", _("Activated changes of event console configuration"))
 
 
-# Isolated restart without prior synchronization. Currently this
-# is only being called for the local site.
-def restart_site(site):
-    start = time.time()
-    configuration_warnings = check_mk_automation(site["id"], config.wato_activation_method)
-    duration = time.time() - start
-    update_replication_status(site["id"],
-        { "need_restart" : False, "warnings" : configuration_warnings }, { "restart" : duration })
-    return configuration_warnings
-
-
-def push_snapshot_to_site(site, do_restart):
-    mode = site.get("replication", "slave")
-    url_base = site["multisiteurl"] + "automation.py?"
-    var_string = html.urlencode_vars([
-        ("command",    "push-snapshot"),
-        ("secret",     site["secret"]),
-        ("siteid",     site["id"]),         # This site must know it's ID
-        ("mode",       mode),
-        ("restart",    do_restart and "yes" or "on"),
-        ("debug",      config.debug and "1" or ""),
-    ])
-    url = url_base + var_string
-    response_text = upload_file(url, sync_snapshot_file(site["id"]), site.get('insecure', False))
-    try:
-        return ast.literal_eval(response_text)
-    except:
-        raise MKAutomationException(_("Garbled automation response from site %s: '%s'") %
-            (site["id"], response_text))
-
-
 def push_user_profile_to_site(site, user_id, profile):
     url = site["multisiteurl"] + "automation.py?" + html.urlencode_vars([
         ("command",    "push-profile"),
@@ -3917,6 +3842,802 @@ def ajax_profile_repl():
 # Add pending entry to make sync possible later for admins
 def add_profile_replication_change(site_id, result):
     add_change("edit-users", _('Profile changed (sync failed: %s)') % result, sites=[site_id], need_restart=False)
+
+
+
+class ActivateChanges(object):
+    def __init__(self):
+        self._changes = self._get_changes()
+        super(ActivateChanges, self).__init__()
+
+
+    def _get_changes(self):
+        changes = get_pending_changes_grouped()
+        return sorted(changes.items(), key=lambda (k, v): v["time"])
+
+
+    def _get_last_change_id(self):
+        return self._changes[-1][1]["id"]
+
+
+
+class ActivateChangesManager(ActivateChanges):
+    activation_base_dir = cmk.paths.tmp_dir + "/wato/activation"
+
+    def __init__(self):
+        self._sites            = []
+        self._activate_until   = None
+        self._comment          = None
+        self._activate_foreign = False
+        self._activation_id    = None
+        self._snapshot_id      = None
+        super(ActivateChangesManager, self).__init__()
+
+
+    def activate_until(self):
+        return self._activate_until
+
+
+    def load(self, activation_id):
+        self._activation_id = activation_id
+
+        if not os.path.exists(self._info_path()):
+            raise MKUserError(None, "Unknown activation process")
+
+        self._load_activation()
+
+
+    # Creates the snapshot and starts the single site sync processes. In case these
+    # steps could not be started, exceptions are raised and have to be handled by
+    # the caller.
+    #
+    # On success a separate thread is started that writes it's state to a state file
+    # below "var/check_mk/wato/activation/<id>_general.state". The <id> is written to
+    # the javascript code and can be used for fetching the activation state while
+    # the activation is running.
+    #
+    # For each site a separate thread is started that controls the activation of the
+    # configuration on that site. The state is checked by the general activation
+    # thread.
+    def start(self, sites, activate_until, comment=None, activate_foreign=False):
+        self._sites            = self._get_sites(sites)
+        self._activate_until   = activate_until
+        self._comment          = comment
+        self._activate_foreign = activate_foreign
+        self._activation_id    = self._new_activation_id()
+        self._time_started     = time.time()
+        self._snapshot_id      = None
+
+        self._save_activation()
+
+        self._pre_activate_changes()
+        self._create_snapshots()
+
+        self._save_activation()
+
+        # TODO: Log activation log entry + comment
+
+        self._start_activation()
+
+        self._do_housekeeping()
+
+        return self._activation_id
+
+
+    def _new_activation_id(self):
+        return gen_id()
+
+
+    def _get_sites(self, sites):
+        for site_id in sites:
+            if site_id not in dict(wato_activation_sites()):
+                raise MKUserError("sites", _("The site \"%s\" does not exist.") % site_id)
+
+        return sites
+
+
+    def _info_path(self):
+        return "%s/%s/info.mk" % (self.activation_base_dir, self._activation_id)
+
+
+    def _site_snapshot_file(self, site_id):
+        return "%s/%s/site_%s_sync.tar.gz" % (self.activation_base_dir, self._activation_id, site_id)
+
+
+    def _load_activation(self):
+        self.__dict__.update(store.load_data_from_file(self._info_path(), {}))
+
+
+    def _save_activation(self):
+        try:
+            os.makedirs(os.path.dirname(self._info_path()))
+        except OSError, e:
+            if e.errno == 17: # File exists
+                pass
+            else:
+                raise
+
+        return store.save_data_to_file(self._info_path(), {
+            "_sites"            : self._sites,
+            "_activate_until"   : self._activate_until,
+            "_comment"          : self._comment,
+            "_activate_foreign" : self._activate_foreign,
+            "_activation_id"    : self._activation_id,
+            "_snapshot_id"      : self._snapshot_id,
+            "_time_started"     : self._time_started,
+        })
+
+
+    # Give hooks chance to do some pre-activation things (and maybe stop
+    # the activation)
+    def _pre_activate_changes(self):
+        try:
+            call_hook_pre_distribute_changes()
+        except Exception, e:
+            log_exception()
+            if config.debug:
+                raise
+            raise MKUserError(None, _("Can not start activation: %s" % e))
+
+
+    # Lock WATO modifications during snapshot creation
+    def _create_snapshots(self):
+        lock_exclusive()
+
+        if not self._changes:
+            raise MKUserError(None, _("Currently there are no changes to activate."))
+
+        if self._get_last_change_id() != self._activate_until:
+            raise MKUserError(None,
+                              _("Another change has been made in the meantime. Please review it "
+                                "to ensure you also want to activate it now and start the "
+                                "activation again."))
+
+        # Create (legacy) WATO config snapshot
+        create_snapshot()
+
+        for site_id in self._sites:
+            self._create_site_sync_snapshot(site_id)
+
+        unlock_exclusive()
+
+
+    def _create_site_sync_snapshot(self, site_id):
+        snapshot_path = self._site_snapshot_file(site_id)
+
+        # Add site-specific global settings.
+        site_tmp_dir = cmk.paths.tmp_dir + "/sync-%s-specific-%s" % (site_id, id(html))
+        self._create_site_globals_file(site_id, site_tmp_dir)
+
+        paths = replication_paths + [("dir", "sitespecific", site_tmp_dir)]
+
+        # Remove Event Console settings, if this site does not want it (might
+        # be removed in some future day)
+        if not config.sites[site_id].get("replicate_ec"):
+            paths = [ e for e in paths if e[1] != "mkeventd" ]
+
+        # Remove extensions if site does not want them
+        if not config.sites[site_id].get("replicate_mkps"):
+            paths = [ e for e in paths if e[1] not in [ "local", "mkps" ] ]
+
+        multitar.create(snapshot_path, paths)
+        shutil.rmtree(site_tmp_dir)
+
+
+    def _create_site_globals_file(self, site_id, tmp_dir):
+        try:
+            os.makedirs(tmp_dir)
+        except OSError, e:
+            if e.errno == 17: # File exists
+                pass
+            else:
+                raise
+
+        sites = load_sites()
+        site = sites[site_id]
+        config = site.get("globals", {})
+
+        config.update({
+            "wato_enabled"          : not site.get("disable_wato", True),
+            "userdb_automatic_sync" : site.get("user_sync", userdb.user_sync_default_config(site_id)),
+        })
+
+        file(tmp_dir + "/sitespecific.mk", "w").write("%r\n" % config)
+
+
+    def _start_activation(self):
+        for site_id in self._sites:
+            self._start_site_activation(site_id)
+
+
+    def _start_site_activation(self, site_id):
+        ActivateChangesSite(site_id, self._activation_id, self._site_snapshot_file(site_id)).start()
+
+
+    def get_state(self):
+        state = {
+            "sites": {},
+        }
+
+        for site_id in self._sites:
+            state["sites"][site_id] = self._load_site_state(site_id)
+
+        return state
+
+
+    def _load_site_state(self, site_id):
+        state_path = "%s/%s/site_%s.mk" % \
+            (self.activation_base_dir, self._activation_id, site_id)
+
+        return store.load_data_from_file(state_path, {})
+
+
+    def _do_housekeeping(self):
+        # TODO: Cleanup stale activations?
+        pass
+
+
+
+PHASE_STARTED   = "started"  # Just started, nothing happened yet
+PHASE_SYNC      = "sync"     # About to sync
+PHASE_ACTIVATE  = "activate" # sync done activating changes
+PHASE_FINISHING = "finishin" # Remote work done, finalizing local state
+PHASE_DONE      = "done"     # Done (with good or bad result)
+
+
+class ActivateChangesSite(threading.Thread):
+    # TODO: Hier weiter!
+    def __init__(self, site_id, activation_id, site_snapshot_file):
+        super(ActivateChangesSite, self).__init__()
+
+        self._site_id       = site_id
+        self._activation_id = activation_id
+        self._changes       = self._get_changes()
+        self.daemon         = True
+
+        self._time_started  = None
+        self._time_updated  = None
+        self._time_ended    = None
+        self._phase         = None
+        self._status_text   = None
+
+
+    def run(self):
+        try:
+            self._time_started = time.time()
+            self._set_result(PHASE_STARTED, _("Started"))
+
+            self._lock_activation()
+
+            if self._is_sync_needed():
+                self._synchronize_site()
+
+            if self._is_restart_needed():
+                self._do_restart()
+
+            self._confirm_changes()
+
+            self._unlock_activation()
+
+            self._set_result(PHASE_DONE, _("Success"))
+        except Exception, e:
+            log_exception()
+            self._set_result(PHASE_DONE, _("Failed to activate: %s") % e)
+
+
+    def _lock_activation(self):
+        repstatus = load_replication_status(lock=True)
+
+        if self._is_already_activating(repstatus.get(self._site_id, {})):
+            raise MKGeneralException(_("The site is currently locked by another activation process. Please try again later"))
+
+        # This call unlocks the replication status file after setting "current_activation"
+        # which will prevent other users from starting an activation for this site.
+        update_replication_status(self._site_id, {"current_activation": self._activation_id})
+
+
+    def _is_currently_activating(self, rep_status):
+        if not rep_status.get("current_activation"):
+            return False
+
+        current_activation_id = repstatus.get(self._site_id, {}).get("current_activation")
+        # TODO: Is this activation still in progress?
+        # - Check whether or not activation still exists
+        # - Check whether or not site threads are still working
+        #   (flock on the <activation_id>/site_<site_id>.mk file)
+
+
+
+    def _unlock_activation(self):
+        update_replication_status(self._site_id, {
+            "last_activation"    : self._activation_id,
+            "current_activation" : None,
+        })
+
+
+    def _is_sync_needed(self):
+        if config.site_is_local(self._site_id):
+            return False
+
+        need_sync = False
+        for change in self._changes:
+            need_sync |= change["need_sync"]
+
+        return need_sync
+
+
+    # This is not done on the local site
+    def _synchronize_site(self):
+        self._set_result(PHASE_SYNC, _("Sychronizing"))
+
+        start = time.time()
+        result = self._push_snapshot_to_site()
+        self._cleanup_snapshot()
+        duration = time.time() - start
+
+        update_activation_time(self._site_id, "sync", duration)
+
+        # Pre 1.2.7i3 sites return True on success and a string on error.
+        # 1.2.7i3 and later return a list of warning messages on success.
+        # [] means OK and no warnings. The error handling is unchanged
+        if result == True:
+            result = []
+
+        if type(result) == list:
+            update_replication_status(self._site_id, {
+                "result"   : _("Success"),
+                "warnings" : result,
+            })
+        else:
+            update_replication_status(site["id"], { "result" : result })
+        return result
+
+
+    def _push_snapshot_to_site(self):
+        site = config.site(self._site_id)
+
+        url = html.makeuri_contextless([
+            ("command",    "push-snapshot"),
+            ("secret",     site["secret"]),
+            ("siteid",     site["id"]),         # This site must know it's ID
+            ("debug",      config.debug and "1" or ""),
+            ("mode",       "slave"), # TODO: Deprecated. Remove it!
+            ("restart",    "no"), # TODO: Deprecated. Remove it!
+        ], filename=site["multisiteurl"] + "automation.py")
+
+        response_text = self._upload_file(url, sync_snapshot_file(self._site_id), site.get('insecure', False))
+        try:
+            return ast.literal_eval(response_text)
+        except:
+            raise MKAutomationException(_("Garbled automation response from site %s: '%s'") %
+                (site["id"], response_text))
+
+
+    def _upload_file(url, file_path, insecure):
+        return get_url(url, insecure, params = ' -F snapshot=@%s' % file_path)
+
+
+    def _cleanup_snapshot(self):
+        pass # TODO: Snapshot is not needed anymore
+
+
+    def _is_activate_needed(self):
+        need_restart = False
+        for change in self._changes:
+            need_restart |= change["need_restart"]
+
+        return need_restart
+
+
+    def _do_activate(self):
+        self._set_result(PHASE_ACTIVATE, _("Activating"))
+
+        # TODO: Hand over the affected domains to remote site to restart/reload the needed parts
+        start = time.time()
+        configuration_warnings = check_mk_automation(site["id"], config.wato_activation_method)
+        duration = time.time() - start
+        update_activation_time(self._site_id, "restart", duration)
+        return configuration_warnings
+
+
+    def _get_changes(self):
+        manager = ActivateChangesManager()
+        manager.load(self._activation_id)
+        change_id = manager.activate_until()
+
+        repstatus = load_replication_status(lock=False)
+        all_changes = repstatus.get(self._site_id, {}).get("changes", [])
+
+        # Find the last activated change and return all changes till this entry
+        # (including the one we were searching for)
+        changes = []
+        for change in all_changes:
+            changes.append(change)
+            if change["id"] == change_id:
+                break
+        return changes
+
+
+    def _confirm_changes(self):
+        self._set_result(PHASE_FINISHING, _("Finalizing"))
+
+        repstatus = load_replication_status(lock=True)
+        try:
+            changes = repstatus.get(self._site_id, {}).get("changes", [])
+
+            # Find the last activated change and delete all changes till this entry
+            # (including the one we were searching for)
+            del_index = None
+            for index, change in enumerate(changes):
+                if change["id"] == change_id:
+                    del_index = index + 1
+                    break
+
+            if del_index:
+                changes = changes[del_index:]
+
+        finally:
+            save_replication_status(repstatus)
+
+
+    def _set_result(self, phase, msg):
+        self._phase       = phase
+        self._status_text = msg
+
+        if phase == PHASE_DONE:
+            self._time_ended, self._time_updated = time.time()
+        else:
+            self._time_updated = time.time()
+
+        self._save_state()
+
+
+    def _save_state(self):
+        state_path = "%s/%s/site_%s.mk" % \
+            (ActivateChangesManager.activation_base_dir, self._activation_id, self._site_id)
+
+        return store.save_data_to_file(state_path, {
+            "_site_id"          : self._site_id,
+            "_phase"            : self._phase,
+            "_status_text"      : self._status_text,
+            "_time_started"     : self._time_started,
+            "_time_updated"     : self._time_updated,
+            "_time_ended"       : self._time_ended,
+        })
+
+
+#.
+#   .--Snapshots-----------------------------------------------------------.
+#   |           ____                        _           _                  |
+#   |          / ___| _ __   __ _ _ __  ___| |__   ___ | |_ ___            |
+#   |          \___ \| '_ \ / _` | '_ \/ __| '_ \ / _ \| __/ __|           |
+#   |           ___) | | | | (_| | |_) \__ \ | | | (_) | |_\__ \           |
+#   |          |____/|_| |_|\__,_| .__/|___/_| |_|\___/ \__|___/           |
+#   |                            |_|                                       |
+#   +----------------------------------------------------------------------+
+#   | WATO config snapshots                                                |
+#   '----------------------------------------------------------------------'
+# TODO: May be removed in near future.
+
+def create_snapshot():
+    make_nagios_directory(snapshot_dir)
+
+    snapshot_name = "wato-snapshot-%s.tar" % time.strftime("%Y-%m-%d-%H-%M-%S",
+                                                        time.localtime(time.time()))
+
+    data = {}
+    data["comment"]       = _("Activated changes by %s") % config.user.id
+    data["created_by"]    = config.user.id
+    data["type"]          = "automatic"
+    data["snapshot_name"] = snapshot_name
+
+    do_create_snapshot(data)
+
+    log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
+    do_snapshot_maintenance()
+
+    return snapshot_name
+
+
+def do_create_snapshot(data):
+    snapshot_name = data["snapshot_name"]
+    snapshot_dir  = cmk.paths.var_dir + "/wato/snapshots"
+    work_dir      = snapshot_dir + "/workdir/%s" % snapshot_name
+
+    try:
+        if not os.path.exists(work_dir):
+            os.makedirs(work_dir)
+
+        # Open / initialize files
+        filename_target = "%s/%s"        % (snapshot_dir, snapshot_name)
+        filename_work   = "%s/%s.work"   % (work_dir, snapshot_name)
+
+        file(filename_target, "w").close()
+
+        def get_basic_tarinfo(name):
+            tarinfo = tarfile.TarInfo(name)
+            tarinfo.mtime = time.time()
+            tarinfo.uid   = 0
+            tarinfo.gid   = 0
+            tarinfo.mode  = 0644
+            tarinfo.type  = tarfile.REGTYPE
+            return tarinfo
+
+        # Initialize the snapshot tar file and populate with initial information
+        tar_in_progress = tarfile.open(filename_work, "w")
+
+        for key in [ "comment", "created_by", "type" ]:
+            tarinfo       = get_basic_tarinfo(key)
+            encoded_value = data[key].encode("utf-8")
+            tarinfo.size  = len(encoded_value)
+            tar_in_progress.addfile(tarinfo, cStringIO.StringIO(encoded_value))
+
+        tar_in_progress.close()
+
+        # Process domains (sorted)
+        subtar_info = {}
+        for name, info in sorted(get_default_backup_domains().items()):
+            prefix          = info.get("prefix","")
+            filename_subtar = "%s.tar.gz" % name
+            path_subtar     = "%s/%s" % (work_dir, filename_subtar)
+
+            paths = map(lambda x: x[1] == "" and "." or x[1], info.get("paths", []))
+            command = [ "tar", "czf", path_subtar, "--ignore-failed-read",
+                        "--force-local", "-C", prefix ] + paths
+
+            proc = subprocess.Popen(command, stdin=None, close_fds=True,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=prefix)
+            stdout, stderr = proc.communicate()
+            exit_code      = proc.wait()
+            # Allow exit codes 0 and 1 (files changed during backup)
+            if exit_code not in [0, 1]:
+                raise MKGeneralException("Error while creating backup of %s (Exit Code %d) - %s.\n%s" %
+							(name, exit_code, stderr, command))
+
+            subtar_size   = os.stat(path_subtar).st_size
+            subtar_hash   = sha256(file(path_subtar).read()).hexdigest()
+            subtar_signed = sha256(subtar_hash + snapshot_secret()).hexdigest()
+            subtar_info[filename_subtar] = (subtar_hash, subtar_signed)
+
+            # Append tar.gz subtar to snapshot
+            command = [ "tar", "--append", "--file="+filename_work, filename_subtar ]
+            proc = subprocess.Popen(command, cwd = work_dir, close_fds=True)
+            proc.communicate()
+            exit_code = proc.wait()
+
+            if os.path.exists(filename_subtar):
+                os.unlink(filename_subtar)
+
+            if exit_code != 0:
+                raise MKGeneralException("Error on adding backup domain %s to tarfile" % name)
+
+        # Now add the info file which contains hashes and signed hashes for
+        # each of the subtars
+        info = ''.join([ '%s %s %s\n' % (k, v[0], v[1]) for k, v in subtar_info.items() ]) + '\n'
+
+        tar_in_progress = tarfile.open(filename_work, "a")
+        tarinfo      = get_basic_tarinfo("checksums")
+        tarinfo.size = len(info)
+        tar_in_progress.addfile(tarinfo, cStringIO.StringIO(info))
+        tar_in_progress.close()
+
+        shutil.move(filename_work, filename_target)
+
+    finally:
+        shutil.rmtree(work_dir)
+
+
+def do_snapshot_maintenance():
+    snapshots = []
+    for f in os.listdir(snapshot_dir):
+        if f.startswith('wato-snapshot-'):
+            status = get_snapshot_status(f)
+            # only remove automatic and legacy snapshots
+            if status.get("type") in [ "automatic", "legacy" ]:
+                snapshots.append(f)
+
+    snapshots.sort(reverse=True)
+    while len(snapshots) > config.wato_max_snapshots:
+        log_audit(None, "snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
+        os.remove(snapshot_dir + snapshots.pop())
+
+
+# Returns status information for snapshots or snapshots in progress
+def get_snapshot_status(snapshot, validate_checksums = False):
+    if type(snapshot) == tuple:
+        name, file_stream = snapshot
+    else:
+        name = snapshot
+        file_stream = None
+
+    # Defaults of available keys
+    status = {
+        "name"            : "",
+        "total_size"      : 0,
+        "type"            : None,
+        "files"           : {},
+        "comment"         : "",
+        "created_by"      : "",
+        "broken"          : False,
+        "progress_status" : "",
+    }
+
+    def access_snapshot(handler):
+        if file_stream:
+            file_stream.seek(0)
+            return handler(file_stream)
+        else:
+            return handler(snapshot_dir + name)
+
+    def check_size():
+        if file_stream:
+            file_stream.seek(0, os.SEEK_END)
+            size = file_stream.tell()
+        else:
+            statinfo = os.stat(snapshot_dir + name)
+            size = statinfo.st_size
+        if size < 256:
+            raise MKGeneralException(_("Invalid snapshot (too small)"))
+        else:
+            status["total_size"] = size
+
+    def check_extension():
+        # Check snapshot extension: tar or tar.gz
+        if name.endswith(".tar.gz"):
+            status["type"]    = "legacy"
+            status["comment"] = _("Snapshot created with old version")
+        elif not name.endswith(".tar"):
+            raise MKGeneralException(_("Invalid snapshot (incorrect file extension)"))
+
+    def check_content():
+        status["files"] = access_snapshot(multitar.list_tar_content)
+
+        if status.get("type") == "legacy":
+            allowed_files = map(lambda x: "%s.tar" % x[1], backup_paths)
+            for tarname in status["files"].keys():
+                if tarname not in allowed_files:
+                    raise MKGeneralException(_("Invalid snapshot (contains invalid tarfile %s)") % tarname)
+        else: # new snapshots
+            for entry in ["comment", "created_by", "type"]:
+                if entry in status["files"]:
+                    status[entry] = access_snapshot(lambda x: multitar.get_file_content(x, entry))
+                else:
+                    raise MKGeneralException(_("Invalid snapshot (missing file: %s)") % entry)
+
+    def check_core():
+        if "check_mk.tar.gz" not in status["files"]:
+            return
+
+        cmk_tar = cStringIO.StringIO(access_snapshot(lambda x: multitar.get_file_content(x, 'check_mk.tar.gz')))
+        files = multitar.list_tar_content(cmk_tar)
+        using_cmc = os.path.exists(cmk.paths.omd_root + '/etc/check_mk/conf.d/microcore.mk')
+        snapshot_cmc = 'conf.d/microcore.mk' in files
+        if using_cmc and not snapshot_cmc:
+            raise MKGeneralException(_('You are currently using the Check_MK Micro Core, but this snapshot does not use the '
+                                       'Check_MK Micro Core. If you need to migrate your data, you could consider changing '
+                                       'the core, restoring the snapshot and changing the core back again.'))
+        elif not using_cmc and snapshot_cmc:
+            raise MKGeneralException(_('You are currently not using the Check_MK Micro Core, but this snapshot uses the '
+                                       'Check_MK Micro Core. If you need to migrate your data, you could consider changing '
+                                       'the core, restoring the snapshot and changing the core back again.'))
+
+    def check_checksums():
+        for f in status["files"].values():
+            f['checksum'] = None
+
+        # checksums field might contain three states:
+        # a) None  - This is a legacy snapshot, no checksum file available
+        # b) False - No or invalid checksums
+        # c) True  - Checksums successfully validated
+        if status['type'] == 'legacy':
+            status['checksums'] = None
+            return
+
+        if 'checksums' not in status['files'].keys():
+            status['checksums'] = False
+            return
+
+        # Extract all available checksums from the snapshot
+        checksums_raw = access_snapshot(lambda x: multitar.get_file_content(x, 'checksums'))
+        checksums = {}
+        for l in checksums_raw.split('\n'):
+            line = l.strip()
+            if ' ' in line:
+                parts = line.split(' ')
+                if len(parts) == 3:
+                    checksums[parts[0]] = (parts[1], parts[2])
+
+        # now loop all known backup domains and check wheter or not they request
+        # checksum validation, there is one available and it is valid
+        status['checksums'] = True
+        for domain_id, domain in backup_domains.items():
+            filename = domain_id + '.tar.gz'
+            if not domain.get('checksum', True) or filename not in status['files']:
+                continue
+
+            if filename not in checksums:
+                continue
+
+            checksum, signed = checksums[filename]
+
+            # Get hashes of file in question
+            subtar = access_snapshot(lambda x: multitar.get_file_content(x, filename))
+            subtar_hash   = sha256(subtar).hexdigest()
+            subtar_signed = sha256(subtar_hash + snapshot_secret()).hexdigest()
+
+            status['files'][filename]['checksum'] = checksum == subtar_hash and signed == subtar_signed
+            status['checksums'] &= status['files'][filename]['checksum']
+
+    try:
+        if len(name) > 35:
+            status["name"] = "%s %s" % (name[14:24], name[25:33].replace("-",":"))
+        else:
+            status["name"] = name
+
+        if not file_stream:
+            # Check if the snapshot build is still in progress...
+            path_status = "%s/workdir/%s/%s.status" % (snapshot_dir, name, name)
+            path_pid    = "%s/workdir/%s/%s.pid"    % (snapshot_dir, name, name)
+
+            # Check if this process is still running
+            if os.path.exists(path_pid):
+                if os.path.exists(path_pid) and not os.path.exists("/proc/%s" % open(path_pid).read()):
+                    status["progress_status"] = _("ERROR: Snapshot progress no longer running!")
+                    raise MKGeneralException(_("Error: The process responsible for creating the snapshot is no longer running!"))
+                else:
+                    status["progress_status"] = _("Snapshot build currently in progress")
+
+            # Read snapshot status file (regularly updated by snapshot process)
+            if os.path.exists(path_status):
+                lines = file(path_status, "r").readlines()
+                status["comment"] = lines[0].split(":", 1)[1]
+                file_info = {}
+                for filename in lines[1:]:
+                    name, info = filename.split(":", 1)
+                    text, size = info[:-1].split(":", 1)
+                    file_info[name] = {"size" : saveint(size), "text": text}
+                status["files"] = file_info
+                return status
+
+        # Snapshot exists and is finished - do some basic checks
+        check_size()
+        check_extension()
+        check_content()
+        check_core()
+
+        if validate_checksums:
+            check_checksums()
+
+    except Exception, e:
+        if config.debug:
+            status["broken_text"] = traceback.format_exc()
+            status["broken"]      = True
+        else:
+            status["broken_text"] = '%s' % e
+            status["broken"]      = True
+    return status
+
+
+def get_default_backup_domains():
+    domains = {}
+    for domain, value in backup_domains.items():
+        if "default" in value and not value.get("deprecated"):
+            domains.update({domain: value})
+    return domains
+
+
+def snapshot_secret():
+    path = cmk.paths.default_config_dir + '/snapshot.secret'
+    try:
+        return file(path).read()
+    except IOError:
+        # create a secret during first use
+        try:
+            s = os.urandom(256)
+        except NotImplementedError:
+            s = sha256(time.time())
+        file(path, 'w').write(s)
+        return s
 
 
 #.

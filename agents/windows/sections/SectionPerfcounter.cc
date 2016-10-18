@@ -81,7 +81,7 @@ bool SectionPerfcounter::produceOutputInner(std::ostream &out,
                 instance_name = instance_names[instance_values.first];
             }
             out << to_utf8(instance_name.c_str()) << ","
-                << to_utf8(join(instance_values.second, L",").c_str());
+                << to_utf8(join(instance_values.second, L",").c_str()) << "\n";
         }
     } catch (const std::exception &e) {
         crash_log("Exception: %s", e.what());

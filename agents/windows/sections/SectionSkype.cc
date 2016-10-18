@@ -25,9 +25,10 @@
 #include "SectionSkype.h"
 #include "SectionPerfcounter.h"
 
-SectionSkype::SectionSkype() {
+SectionSkype::SectionSkype() : SectionGroup("skype") {
     withToggleIfMissing();
     withNestedSubtables();
+    withSeparator(',');
 
     for (LPCWSTR data_source :
          {L"LS:WEB - Address Book Web Query",

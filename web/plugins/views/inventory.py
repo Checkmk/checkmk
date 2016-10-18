@@ -165,12 +165,18 @@ def render_inv_subtree_dict(hostname, tree_id, invpath, node):
 
     if leaf_nodes:
         leaf_nodes.sort()
-        html.write("<table>")
+        html.open_table()
         for title, invpath_sub, value in leaf_nodes:
-            html.write("<tr><th title='%s'>%s</th><td>" % (invpath_sub, title))
+            html.open_tr()
+            html.open_th(title=title)
+            html.write(invpath_sub)
+            html.close_th()
+
+            html.open_td()
             render_inv_subtree(hostname, tree_id, invpath_sub, value)
-            html.write("</td></tr>")
-        html.write("</table>")
+            html.close_td()
+            html.close_tr()
+        html.close_table()
 
     non_leaf_nodes = [ item for item in items if not is_leaf_type(item[1]) ]
     non_leaf_nodes.sort()
@@ -189,14 +195,14 @@ def render_inv_subtree_list(hostname, tree_id, invpath, node):
 
     elif type(node) == tuple:
         html.write(_("Removed entries") + ":<br>")
-        html.write("<span class=invold>")
+        html.open_span(class_="invold")
         render_inv_subtree_list(hostname, tree_id, invpath, node[0])
-        html.write("</span>")
+        html.close_span()
 
         html.write(_("New entries") + ":<br>")
-        html.write("<span class=invnew>")
+        html.open_span(class_="invnew")
         render_inv_subtree_list(hostname, tree_id, invpath, node[1])
-        html.write("</span>")
+        html.close_span()
 
     else:
         for nr, value in enumerate(node):
@@ -213,21 +219,21 @@ def render_inv_subtree_leaf(hostname, tree_id, invpath, node):
     if type(node) == tuple:
         if node[0] == node[1] or node[0] == None:
             if node[0] == None:
-                html.write("<span class=invnew>")
+                html.open_span(class_="invnew")
             render_inv_subtree_leaf_value(hostname, tree_id, invpath, node[1])
             if node[0] == None:
-                html.write("</span>")
+                html.close_span()
         else:
-            html.write("<span class=invold>")
+            html.open_span(class_="invold")
             render_inv_subtree_leaf_value(hostname, tree_id, invpath, node[0])
-            html.write("</span>")
+            html.close_span()
             html.write(u" → ")
-            html.write("<span class=invnew>")
+            html.open_span(class_="invnew")
             render_inv_subtree_leaf_value(hostname, tree_id, invpath, node[1])
-            html.write("</span>")
+            html.close_span()
     else:
         render_inv_subtree_leaf_value(hostname, tree_id, invpath, node)
-    html.write("<br>")
+    html.br()
 
 def render_inv_subtree_leaf_value(hostname, tree_id, invpath, node):
     hint = inv_display_hint(invpath)
@@ -255,15 +261,15 @@ def render_inv_subtree_leaf_value(hostname, tree_id, invpath, node):
 def render_inv_dicttable(hostname, tree_id, invpath, node):
     # In delta mode node is a pair of (old_items, new_items)
     if type(node) == tuple:
-        html.write(_("Removed entries") + ":")
-        html.write("<span class=invold>")
+        html.write_text(_("Removed entries") + ":")
+        html.write_span(class_="invold")
         render_inv_dicttable(hostname, tree_id, invpath, node[0])
-        html.write("</span>")
+        html.close_span()
 
         html.write(_("New entries") + ":")
-        html.write("<span class=invnew>")
+        html.write_span(class_="invnew")
         render_inv_dicttable(hostname, tree_id, invpath, node[1])
-        html.write("</span>")
+        html.close_span()
         return
 
     hint = inv_display_hint(invpath)
@@ -298,18 +304,18 @@ def render_inv_dicttable(hostname, tree_id, invpath, node):
             ("view_name", hint["view"] ),
             ("host", hostname)],
             filename="view.py")
-        html.write('<div class=invtablelink><a href="%s">%s</a></div>' %
-            (url, _("Open this table for filtering / sorting")))
+        html.open_div(class_="invtablelink")
+        html.a(_("Open this table for filtering / sorting"), href=url)
 
     # We cannot use table here, since html.plug() does not work recursively
-    html.write('<table class=data>')
-    html.write('<tr>')
+    html.open_table(class_="data")
+    html.open_tr()
     for title, key in titles:
-        html.write('<th>%s</th>' % title)
-    html.write('</tr>')
+        html.th(title)
+    html.close_tr()
 
     for nr, entry in enumerate(node):
-        html.write('<tr class=even0>')
+        html.open_tr(class_="even0")
         for title, key in titles:
             value = entry.get(key)
             invpath_sub = invpath + "%d.%s" % (nr, key)
@@ -321,15 +327,14 @@ def render_inv_dicttable(hostname, tree_id, invpath, node):
             hint = inv_display_hint(invpath_sub)
             if "paint_function" in hint:
                 td_class, text = hint["paint_function"](value)
-                classtext = ' class="%s"' % td_class
             else:
-                classtext = ""
+                td_class = None
 
-            html.write('<td%s>' % classtext)
+            html.open_td(class_=td_class)
             render_inv_subtree(hostname, tree_id, invpath_sub, value)
-            html.write('</td>')
-        html.write('</tr>')
-    html.write('</table>')
+            html.close_td()
+        html.close_tr()
+    html.close_table()
 
 
 # Convert .foo.bar:18.test to .foo.bar:*.test
@@ -854,8 +859,11 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
 
     if config.debug_livestatus_queries \
             and html.output_format == "html" and display_options.enabled(display_options.W):
-        html.write('<div class="livestatus message" onmouseover="this.style.display=\'none\';">'
-                           '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
+        html.open_div(class_="livestatus message", onmouseover="this.style.display=\'none\';")
+        html.open_tt()
+        html.write(query.replace('\n', '<br>\n'))
+        html.close_tt()
+        html.close_div()
 
     sites.live().set_only_sites(only_sites)
     sites.live().set_prepend_site(True)

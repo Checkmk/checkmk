@@ -47,9 +47,9 @@ class FilterText(Filter):
         current_value = self._current_value()
         html.text_input(self.htmlvars[0], current_value, self.negateable and 'neg' or '')
         if self.negateable:
-            html.write(" <nobr>")
+            html.open_nobr()
             html.checkbox(self.htmlvars[1], label=_("negate"))
-            html.write("</nobr>")
+            html.close_nobr()
 
     def filter(self, infoname):
         current_value = self._current_value()
@@ -147,7 +147,8 @@ class FilterIPAddress(Filter):
 
     def display(self):
         html.text_input(self.htmlvars[0])
-        html.write("<br><br>")
+        html.br()
+        html.br()
         html.begin_radio_group()
         html.radiobutton(self.htmlvars[1], "yes", True, _("Prefix match"))
         html.radiobutton(self.htmlvars[1], "no", False, _("Exact match"))
@@ -289,13 +290,13 @@ class FilterMultigroup(Filter):
             return current
 
     def display(self):
-        html.write('<div class=multigroup>')
+        html.open_div(class_="multigroup")
         self.valuespec().render_input(self.htmlvar, self.selection())
         if self.negateable:
-            html.write(" <nobr>")
+            html.open_nobr()
             html.checkbox(self.htmlvars[1], label=_("negate"))
-            html.write("</nobr>")
-        html.write('</div>')
+            html.close_nobr()
+        html.close_div()
 
     def filter(self, infoname):
         current = self.selection()
@@ -340,9 +341,9 @@ class FilterGroupCombo(Filter):
             choices = [("", "")] + choices
         html.sorted_select(self.htmlvars[0], choices)
         if not self.enforce:
-            html.write(" <nobr>")
+            html.open_nobr()
             html.checkbox(self.htmlvars[1], label=_("negate"))
-            html.write("</nobr>")
+            html.close_nobr()
 
     def current_value(self):
         htmlvar = self.htmlvars[0]
@@ -583,7 +584,7 @@ class FilterTristate(Filter):
 
     def display(self):
         current = html.var(self.varname)
-        html.begin_radio_group(horizontal = True)
+        html.begin_radio_group(horizontal=True)
         for value, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
             checked = current == value or (current in [ None, ""] and int(value) == self.deflt)
             html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
@@ -614,7 +615,7 @@ class FilterStateType(FilterTristate):
 
     def display(self):
         current = html.var(self.varname)
-        html.begin_radio_group(horizontal = True)
+        html.begin_radio_group(horizontal=True)
         for value, text in [("0", _("SOFT")), ("1", _("HARD")), ("-1", _("(ignore)"))]:
             checked = current == value or (current in [ None, ""] and int(value) == self.deflt)
             html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
@@ -774,18 +775,23 @@ class FilterTime(Filter):
                   [ ("abs", _("Date (YYYY-MM-DD)")),
                     ("unix", _("UNIX timestamp")) ]
 
-        html.write("<table class=filtertime>")
+        html.open_table(class_="filtertime")
         for what, whatname in [
             ( "from", _("From") ),
             ( "until", _("Until") ) ]:
             varprefix = self.name + "_" + what
-            html.write("<tr><td>%s:</td>" % whatname)
-            html.write("<td>")
+            html.open_tr()
+            html.open_td()
+            html.write("%s:" % whatname)
+            html.close_td()
+            html.open_td()
             html.text_input(varprefix, style="width: 116px;")
-            html.write("</td><td>")
+            html.close_td()
+            html.open_td()
             html.select(varprefix + "_range", choices, "3600")
-            html.write("</td></tr>")
-        html.write("</table>")
+            html.close_td()
+            html.close_tr()
+        html.close_table()
 
 
     def filter(self, infoname):
@@ -886,7 +892,7 @@ class FilterLogClass(Filter):
             defval = ""
         else:
             defval = "on"
-        html.write("<table cellspacing=0 cellpadding=0>")
+        html.open_table(cellspacing=0, cellpadding=0)
         if config.filter_columns == 1:
             num_cols = 4
         else:
@@ -894,19 +900,21 @@ class FilterLogClass(Filter):
         col = 1
         for l, c in self.log_classes:
             if col == 1:
-                html.write("<tr>")
-            html.write("<td>")
+                html.open_tr()
+            html.open_td()
             html.checkbox("logclass%d" % l, defval)
             html.write(c)
-            html.write("</td>")
+            html.close_td()
             if col == num_cols:
-                html.write("</tr>\n")
+                html.close_tr()
                 col = 1
             else:
                 col += 1
         if col < num_cols:
-            html.write("<td></td></tr>")
-        html.write("</table>\n")
+            html.open_td()
+            html.close_td()
+            html.close_tr()
+        html.close_table()
 
     def filter(self, infoname):
         headers = []
@@ -946,20 +954,27 @@ class FilterLogState(Filter):
         return True
 
     def display(self):
-        html.write("<table class=alertstatefilter><tr><td>")
+        html.open_table(class_="alertstatefilter")
+        html.open_tr()
+        html.open_td()
         html.begin_checkbox_group()
         for varsuffix, what, state, text in self._items:
             if state == 0:
                 title = _("Host") if what == "host" else _("Service")
-                html.write("<u>%s:</u></td><td>" % title)
+                html.u("%s:" % title)
+                html.close_td()
+                html.open_td()
             html.write("&nbsp; ")
             html.checkbox("logst_" + varsuffix, True, label=text)
             if not html.mobile:
-                html.write("<br>")
+                html.br()
             if varsuffix == "h2":
-                html.write("</td><td>")
+                html.close_td()
+                html.open_td()
         html.end_checkbox_group()
-        html.write("</td></tr></table>")
+        html.close_td()
+        html.close_tr()
+        html.close_table()
 
     def filter(self, infoname):
         headers = []
@@ -985,7 +1000,7 @@ class NotificationPhaseFilter(FilterTristate):
 
     def display(self):
         current = html.var(self.varname)
-        html.begin_radio_group(horizontal = False)
+        html.begin_radio_group(horizontal=False)
         for value, text in [
             ("-1", _("Show all phases of notifications")),
             ("1",  _("Show just preliminary notifications")),
@@ -993,7 +1008,7 @@ class NotificationPhaseFilter(FilterTristate):
         ]:
             checked = current == value or (current in [ None, ""] and int(value) == self.deflt)
             html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
-            html.write("<br>")
+            html.br()
         html.end_radio_group()
 
     def filter_code(self, infoname, positive):
@@ -1073,24 +1088,28 @@ class FilterHostTags(Filter):
                 grouped[entry[0]].append([tag, title])
 
         html.javascript('g_hosttag_groups = %s;' % json.dumps(grouped))
-        html.write('<table>')
+        html.open_table()
         for num in range(self.count):
             prefix = 'host_tag_%d' % num
-            html.write('<tr><td>')
+            html.open_tr()
+            html.open_td()
             html.sorted_select(prefix + '_grp',
                 [("", "")] + groups,
                 onchange = 'host_tag_update_value(\'%s\', this.value)' % prefix,
                 attrs = {'style': 'width:129px'}
             )
-            html.write('</td><td>')
+            html.close_td()
+            html.open_td()
             html.sorted_select(prefix + '_op', [("", "")] + operators,
                 attrs = {'style': 'width:36px'})
-            html.write('</td><td>')
+            html.close_td()
+            html.open_td()
             html.sorted_select(prefix + '_val',
                 html.var(prefix + '_grp') and grouped[html.var(prefix + '_grp')] or [("", "")],
                 attrs = {'style': 'width:129px'})
-            html.write('</td></tr>')
-        html.write('</table>')
+            html.close_td()
+            html.close_tr()
+        html.close_table()
 
     def hosttag_filter(self, negate, tag):
         return  'Filter: host_custom_variables %s TAGS (^|[ ])%s($|[ ])' % (negate and '!~' or '~', lqencode(tag))

@@ -133,7 +133,7 @@ if mkeventd_enabled:
                 html.checkbox(self._name + "_" + str(name), True, label=title)
                 if (title[0].isupper() and chars > 24) or \
                     (title[0].islower() and chars > 36):
-                    html.write("<br>")
+                    html.br()
                     chars = 0
             html.end_checkbox_group()
 

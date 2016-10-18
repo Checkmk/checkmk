@@ -45,20 +45,25 @@ import notifications
 #   '----------------------------------------------------------------------'
 
 def dashlet_overview(nr, dashlet):
-    html.write(
-        '<table class=dashlet_overview>'
-        '<tr><td valign=top>'
-        '<a href="http://mathias-kettner.de/check_mk.html"><img style="margin-right: 30px;" src="images/check_mk.trans.120.png"></a>'
-        '</td>'
-        '<td><h2>Check_MK Multisite</h2>'
-        'Welcome to Check_MK Multisite. If you want to learn more about Multisite, please visit '
-        'our <a href="http://mathias-kettner.de/checkmk_multisite.html">online documentation</a>. '
-        'Multisite is part of <a href="http://mathias-kettner.de/check_mk.html">Check_MK</a> - an Open Source '
-        'project by <a href="http://mathias-kettner.de">Mathias Kettner</a>.'
-        '</td>'
-    )
 
-    html.write('</tr></table>')
+    html.open_table(class_="dashlet_overview")
+    html.open_tr()
+    html.open_td(valign="top")
+    html.open_a(href="http://mathias-kettner.de/check_mk.html")
+    html.img("images/check_mk.trans.120.png", style="margin-right: 30px;")
+    html.close_a()
+    html.close_td()
+
+    html.open_td()
+    html.h2("Check_MK Multisite")
+    html.write_html('Welcome to Check_MK Multisite. If you want to learn more about Multisite, please visit '
+                    'our <a href="http://mathias-kettner.de/checkmk_multisite.html">online documentation</a>. '
+                    'Multisite is part of <a href="http://mathias-kettner.de/check_mk.html">Check_MK</a> - an Open Source '
+                    'project by <a href="http://mathias-kettner.de">Mathias Kettner</a>.')
+    html.close_td()
+
+    html.close_tr()
+    html.close_table()
 
 dashlet_types["overview"] = {
     "title"       : _("Overview / Introduction"),
@@ -81,8 +86,9 @@ dashlet_types["overview"] = {
 #   '----------------------------------------------------------------------'
 
 def dashlet_mk_logo(nr, dashlet):
-    html.write('<a href="http://mathias-kettner.de/check_mk.html">'
-     '<img style="margin-right: 30px;" src="images/check_mk.trans.120.png"></a>')
+    html.open_a(href="http://mathias-kettner.de/check_mk.html")
+    html.img("images/check_mk.trans.120.png", style="margin-right: 30px;")
+    html.close_a()
 
 dashlet_types["mk_logo"] = {
     "title"       : _("Check_MK Logo"),
@@ -243,13 +249,11 @@ def render_statistics(pie_id, what, table, filter, dashlet):
     pies = zip(table, result)
     total = sum([x[1] for x in pies])
 
-    html.write("<div class=stats>")
-    html.write('<canvas class=pie width=%d height=%d id="%s_stats" style="float: left"></canvas>' %
-            (pie_diameter, pie_diameter, pie_id))
-    html.write('<img src="images/globe.png" class="globe">')
+    html.open_div(class_="stats")
+    html.canvas('', class_="pie", id_="%s_stats" % pie_id, width=pie_diameter, height=pie_diameter, style="float: left")
+    html.img("images/globe.png", class_="globe")
 
-    html.write('<table class="hoststats%s" style="float:left">' % (
-        len(pies) > 1 and " narrow" or ""))
+    html.open_table(class_=["hoststats"] + (["narrow"] if len(pies) > 0 else []), style="float:left")
 
     table_entries = pies
     while len(table_entries) < 6:
@@ -269,14 +273,13 @@ def render_statistics(pie_id, what, table, filter, dashlet):
             else:
                 url += '&' + html.urlencode_vars(url_params.items())
 
-        html.write('<tr><th><a href="%s">%s</a></th>' % (url, name))
-        style = ''
-        if color:
-            style = ' style="background-color: %s"' % color
-        html.write('<td class=color%s>'
-                   '</td><td><a href="%s">%s</a></td></tr>' % (style, url, count))
+        html.open_tr()
+        html.th(html.render_a(name, href=url))
+        html.td('', class_="color", style="background-color: %s" % color if color else '')
+        html.td(html.render_a(count, href=url))
+        html.close_tr()
 
-    html.write("</table>")
+    html.close_table()
 
     r = 0.0
     pie_parts = []
@@ -312,8 +315,8 @@ def render_statistics(pie_id, what, table, filter, dashlet):
                 remaining_part           -= part
                 remaining_separatorspace -= separator
 
+    html.close_div()
 
-    html.write("</div>")
     html.javascript("""
 function chart_pie(pie_id, x_scale, radius, color, right_side) {
     var context = document.getElementById(pie_id + "_stats").getContext('2d');
@@ -357,7 +360,7 @@ if (has_canvas_support()) {
 
 
 def dashlet_graph(nr, dashlet):
-    html.write('<div id="dashlet_graph_%d"></div>' % (nr))
+    html.div('', id_="dashlet_graph_%d" % nr)
 
 
 def dashlet_graph_reload_js(nr, dashlet):
@@ -598,9 +601,11 @@ function load_graph_img(nr, img, img_url, c_w, c_h)
 #   '----------------------------------------------------------------------'
 
 def dashlet_nodata(nr, dashlet):
-    html.write("<div class=nodata><div class=msg>")
+    html.open_div(class_="nodata")
+    html.open_div(class_="msg")
     html.write(dashlet.get("text"))
-    html.write("</div></div>")
+    html.close_div()
+    html.close_div()
 
 dashlet_types["nodata"] = {
     "title"       : _("Static text"),
@@ -807,26 +812,29 @@ body.side {
     %s
 }
 </style>''' % overflow)
-    html.write('<body class="side">\n')
-    html.write('<div id="check_mk_sidebar">\n')
-    html.write('<div id="side_content">\n')
-    html.write("<div id=\"snapin_container_%s\" class=snapin>\n" % dashlet['snapin'])
-    html.write("<div id=\"snapin_%s\" class=\"content\">\n" % (dashlet['snapin']))
+    html.open_body(class_="side")
+    html.open_div(id_="check_mk_sidebar")
+    html.open_div(id_="side_content")
+    html.open_div(id_="snapin_container_%s" % dashlet['snapin'], class_="snapin")
+    html.open_div(id_="snapin_%s" % dashlet['snapin'], class_="content")
     sidebar.render_snapin_styles(snapin)
     snapin['render']()
-    html.write('</div>\n')
-    html.write('</div>\n')
-    html.write('</div>\n')
-    html.write('</div>\n')
+    html.close_div()
+    html.close_div()
+    html.close_div()
+    html.close_div()
     html.body_end()
+
 
 def dashlet_snapin_get_snapins():
     import sidebar # FIXME: HACK, clean this up somehow
     return sorted([ (k, v['title']) for k, v in sidebar.sidebar_snapins.items() ], key=lambda x: x[1])
 
+
 def dashlet_snapin_title(dashlet):
     import sidebar # FIXME: HACK, clean this up somehow
     return sidebar.sidebar_snapins[dashlet['snapin']]['title']
+
 
 dashlet_types["snapin"] = {
     "title"          : _("Sidebar Snapin"),
@@ -868,7 +876,7 @@ def ajax_delete_user_notification():
 
 def dashlet_notify_users(nr, dashlet):
 
-    html.write('<div class="notify_users">')
+    html.open_div(class_="notify_users")
     table.begin("notify_users", sortable=False, searchable=False, omit_if_empty=True)
 
 
@@ -893,8 +901,7 @@ def dashlet_notify_users(nr, dashlet):
                'var row = btn.parentNode.parentNode;'
                'row.parentNode.removeChild(row);}')
 
-    html.write("</div>")
-
+    html.close_div()
 
 dashlet_types["notify_users"] = {
     "title"       : _("User notifications"),
@@ -944,9 +951,12 @@ def dashlet_failed_notifications(nr, dashlet):
                     '<img src="images/button_closetimewarp.png" style="width:32px;height:32px;">'
                     '</a>&nbsp;' % confirm_url) + content
 
-        html.write('<div class="has_failed_notifications">'
-                   '  <div class="failed_notifications_inner">%s</div>'
-                   '</div>' % content)
+        html.open_div(class_="has_failed_notifications")
+        html.open_div(class_="failed_notifications_inner")
+        html.write(content)
+        html.close_div()
+        html.close_div()
+
 
 dashlet_types["notify_failed_notifications"] = {
     "title"       : _("Failed Notifications"),

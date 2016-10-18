@@ -74,9 +74,9 @@ multisite_commands.append({
     "title"       : _("Reschedule active checks"),
     "render"      : lambda: \
         html.button("_resched_checks", _("Reschedule")) == \
-        html.write(_("and spread over") + " ") == \
+        html.write_text(_("and spread over") + " ") == \
         html.number_input("_resched_spread", 0, size=3) == \
-        html.write(" " + _("minutes") + " "),
+        html.write_text(" " + _("minutes") + " "),
     "action"      : command_reschedule,
     "row_stats"   : True, # Get information about number of rows and current row nr.
 })
@@ -265,17 +265,31 @@ def command_fake_checks(cmdtag, spec, row):
 
 
 def render_fake_form(what):
-    html.write("<table><tr><td>")
-    html.write("%s: " % _("Plugin output"))
-    html.write("</td><td>")
+    html.open_table()
+
+    html.open_tr()
+    html.open_td()
+    html.write_text("%s: " % _("Plugin output"))
+    html.close_td()
+    html.open_td()
     html.text_input("_fake_output", "", size=50)
-    html.write("</td></tr><tr><td>")
-    html.write("%s: " % _("Performance data"))
-    html.write("</td><td>")
+    html.close_td()
+    html.close_tr()
+
+    html.open_tr()
+    html.open_td()
+    html.write_text("%s: " % _("Performance data"))
+    html.close_td()
+    html.open_td()
     html.text_input("_fake_perfdata", "", size=50)
-    html.write("</td></tr><tr><td>")
-    html.write(_("Result:"))
-    html.write("</td><td>")
+    html.close_td()
+    html.close_tr()
+
+    html.open_tr()
+    html.open_td()
+    html.write_text(_("Result:"))
+    html.close_td()
+    html.open_td()
     if what == "host":
         html.button("_fake_0", _("Up"))
         html.button("_fake_2", _("Down"))
@@ -284,7 +298,10 @@ def render_fake_form(what):
         html.button("_fake_1", _("Warning"))
         html.button("_fake_2", _("Critical"))
         html.button("_fake_3", _("Unknown"))
-    html.write("</td></tr></table>")
+    html.close_td()
+    html.close_tr()
+
+    html.close_table()
 
 multisite_commands.append({
     "tables"      : [ "host" ],
@@ -343,7 +360,7 @@ multisite_commands.append({
     "permission"  : "action.customnotification",
     "title"       : _("Custom notification"),
     "render"      : lambda: \
-        html.write(_('Comment') + ": ") == \
+        html.write_text(_('Comment') + ": ") == \
         html.text_input("_cusnot_comment", "TEST", size=20, submit="_customnotification") == \
         html.write(" &nbsp; ") == \
         html.checkbox("_cusnot_forced", False, label=_("forced")) == \
@@ -431,15 +448,15 @@ multisite_commands.append({
     "render"      : lambda: \
         html.button("_acknowledge", _("Acknowledge")) == \
         html.button("_remove_ack", _("Remove Acknowledgement")) == \
-        html.write("<hr>") == \
+        html.hr() == \
         html.checkbox("_ack_sticky", True, label=_("sticky")) == \
         html.checkbox("_ack_notify", True, label=_("send notification")) == \
         html.checkbox("_ack_persistent", False, label=_('persistent comment')) == \
-        html.write("<hr>") == \
+        html.hr() == \
         Age(display=["days", "hours", "minutes"], label=_("Expire acknowledgement after")).render_input("_ack_expire", 0) == \
         html.help(_("Note: Expiration of acknowledgements only works when using the Check_MK Micro Core.")) == \
-        html.write("<hr>") == \
-        html.write(_("Comment") + ": ") == \
+        html.hr() == \
+        html.write_text(_("Comment") + ": ") == \
         html.text_input("_ack_comment", size=48, submit="_acknowledge"),
     "action"      : command_acknowledgement,
     "group"       : _("Acknowledge"),
@@ -476,7 +493,7 @@ multisite_commands.append({
     "permission"  : "action.addcomment",
     "title"       : _("Add comment"),
     "render"      : lambda: \
-        html.write(_('Comment')+": ") == \
+        html.write_text(_('Comment')+": ") == \
         html.text_input("_comment", size=33, submit="_add_comment") == \
         html.write(" &nbsp; ") == \
         html.button("_add_comment", _("Add comment")),
@@ -680,57 +697,57 @@ def get_child_hosts(site, hosts, recurse):
 
 
 def paint_downtime_buttons(what):
-    html.write(_('Downtime Comment')+": ")
+    html.write_text(_('Downtime Comment')+": ")
     html.text_input("_down_comment", "", size=60, submit="")
-    html.write("<hr>")
+    html.hr()
     html.button("_down_from_now", _("From now for"))
     html.write("&nbsp;")
     html.number_input("_down_minutes", 60, size=4, submit="_down_from_now")
     html.write("&nbsp; " + _("minutes"))
-    html.write("<hr>")
+    html.hr()
     for time_range in config.user_downtime_timeranges:
         html.button("_downrange__%s" % time_range['end'], time_range['title'])
     if what != "aggr":
         html.write(" &nbsp; - &nbsp;")
         html.button("_down_remove", _("Remove all"))
-    html.write("<hr>")
+    html.hr()
     if config.adhoc_downtime and config.adhoc_downtime.get("duration"):
         adhoc_duration = config.adhoc_downtime.get("duration")
         adhoc_comment  = config.adhoc_downtime.get("comment", "")
         html.button("_down_adhoc", _("Adhoc for %d minutes") % adhoc_duration)
         html.write("&nbsp;")
-        html.write(_('with comment')+": ")
+        html.write_text(_('with comment')+": ")
         html.write(adhoc_comment)
-        html.write("<hr>")
+        html.hr()
 
     html.button("_down_custom", _("Custom time range"))
     html.datetime_input("_down_from", time.time(), submit="_down_custom")
     html.write("&nbsp; "+_('to')+" &nbsp;")
     html.datetime_input("_down_to", time.time() + 7200, submit="_down_custom")
-    html.write("<hr>")
+    html.hr()
     html.checkbox("_down_flexible", False, label=_('flexible with max. duration')+" ")
     html.time_input("_down_duration", 2, 0)
-    html.write(" "+_('(HH:MM)'))
+    html.write_text(" "+_('(HH:MM)'))
     if what == "host":
-        html.write("<hr>")
+        html.hr()
         html.checkbox("_include_childs", False, label=_('Also set downtime on child hosts'))
-        html.write("  ")
+        html.write_text("  ")
         html.checkbox("_include_childs_recurse", False, label=_('Do this recursively'))
     elif what == "service":
-        html.write("<hr>")
+        html.hr()
         html.checkbox("_on_hosts", False, label=_('Schedule downtimes on the affected '
                                                   '<b>hosts</b> instead of on the individual '
                                                   'services'))
 
     if has_recurring_downtimes():
-        html.write("<hr>")
+        html.hr()
         html.checkbox("_down_do_recur", False,
                       label=_("Repeat this downtime on a regular base every"))
-        html.write(" ")
+        html.write_text(" ")
         recurring_selections = [ (str(k), v) for (k,v) in
                                  sorted(wato.recurring_downtimes_types.items())]
         html.select("_down_recurring", recurring_selections, "3")
-        html.write(_("(This only works when using CMC)"))
+        html.write_text(_("(This only works when using CMC)"))
 
 
 def has_recurring_downtimes():

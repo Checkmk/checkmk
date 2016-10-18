@@ -1184,7 +1184,7 @@ def show_event_simulator():
     html.button("simulate", _("Try out"))
     html.button("_generate", _("Generate Event!"))
     html.end_form()
-    html.write("<br>")
+    html.br()
 
     if html.var("simulate"):
         return vs_mkeventd_event.from_html_vars("event")
@@ -1761,7 +1761,7 @@ def mode_mkeventd_status(phase):
     status = mkeventd.get_status()
     repl_mode = status["status_replication_slavemode"]
     html.write("<h3>%s</h3>" % _("Current Server Status"))
-    html.write("<ul>")
+    html.open_ul()
     html.write("<li>%s</li>" % _("Event Daemon is running."))
     html.write("<li>%s: <b>%s</b></li>" % (_("Current replication mode"),
         { "sync" : _("synchronize"),
@@ -1776,7 +1776,7 @@ def mode_mkeventd_status(phase):
         else:
             html.write(_("<li>No successful synchronization so far.</li>"))
 
-    html.write("</ul>")
+    html.close_ul()
 
     if config.user.may("mkeventd.switchmode"):
         html.begin_form("switch")
@@ -1926,7 +1926,7 @@ def mode_mkeventd_mibs(phase):
                  "packing them into a <tt>.zip</tt> file. Only files in the root directory "
                  "of the zip file will be processed.<br><br>"))
 
-    html.begin_form("upload_form", method = "POST")
+    html.begin_form("upload_form", method="POST")
     forms.header(_("Upload MIB file"))
 
     forms.section(_("Select file"))
@@ -1948,7 +1948,7 @@ def show_mib_table(path, title):
     is_custom_dir = path == mkeventd.mib_upload_dir
 
     if is_custom_dir:
-        html.begin_form("bulk_delete_form", method = "POST")
+        html.begin_form("bulk_delete_form", method="POST")
 
     table.begin("mibs_"+path, title, searchable=False)
     for filename, mib in sorted(load_snmp_mibs(path).items()):

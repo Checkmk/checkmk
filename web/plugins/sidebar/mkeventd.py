@@ -70,7 +70,7 @@ def render_mkeventd_performance():
             write_line(title, "%.2f ms" % (value * 1000))
         elif name != "sync":
             write_line(title, _("-.-- ms"))
-    html.write("</table>\n")
+    html.close_table()
 
 if mkeventd_enabled:
     sidebar_snapins["mkeventd_performance"] = {

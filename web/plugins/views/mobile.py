@@ -727,30 +727,31 @@ def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkb
     painter_options.set("ts_format", "rel")
 
     odd = "odd"
-    html.write('<table class="mobile data">')
+    html.open_table(class_="mobile data")
 
     # Paint header
     if view.get("column_headers") != "off":
-        html.write("<tr>")
+        html.open_tr()
         n = 0
         for cell in cells:
             cell.paint_as_header()
-        html.write("</tr>\n")
+        html.close_tr()
 
     # Paint data rows
     for row in rows:
         odd = odd == "odd" and "even" or "odd"
-        html.write('<tr class="%s0">' % odd)
+        html.open_tr(class_="%s0" % odd)
         for n, cell in enumerate(cells):
             if n > 0 and n % num_columns == 0:
-                html.write('</tr><tr class="%s0">' % odd)
+                html.close_tr()
+                html.open_tr(class_="%s0" % odd)
             if n == len(cells) - 1 and n % num_columns != (num_columns - 1):
                 tdattrs = 'colspan="%d"' % (num_columns - (n % num_columns))
             else:
                 tdattrs = ""
             cell.paint(row, tdattrs=tdattrs)
-        html.write('</row>')
-    html.write('</table>')
+        html.close_row()
+    html.close_table()
     html.javascript('$("table.mobile a").attr("data-ajax", "false");')
 
 multisite_layouts["mobiletable"] = {
@@ -769,25 +770,36 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
     painter_options.set("ts_format", "rel")
 
     odd = "odd"
-    html.write('<ul class="mobilelist" data-role="listview">\n')
+    html.open_ul(class_="mobilelist", **{"data-role":"listview"})
 
     # Paint data rows
     for row in rows:
-        html.write('<li>')
+        html.open_li()
         rendered_cells = [ cell.render(row) for cell in cells ]
         if rendered_cells: # First cell (assumedly state) is left
-            html.write('<p class="ui-li-aside ui-li-desc %s">%s</p>' % rendered_cells[0])
+            rendered_class, rendered_content = rendered_cells[0]
+            html.open_p(class_=["ui-li-aside", "ui-li-desc", rendered_class])
+            html.write(rendered_content)
+            html.close_p()
+
             if len(rendered_cells) > 1:
                 content = " &middot; ".join([ rendered_cell[1] for rendered_cell
                                               in rendered_cells[1:num_columns+1]])
-                html.write('<h3>%s</h3>' % content)
+                html.h3(HTML(content))
+
                 for rendered_cell, cell in zip(rendered_cells[num_columns+1:],
                                                cells[num_columns+1:]):
-                    html.write('<p class="ui-li-desc">')
+                    rendered_class, rendered_content = rendered_cell
+                    html.open_p(class_="ui-li-desc")
                     cell.paint_as_header()
-                    html.write(': <span class="%s">%s</span></p>\n' % rendered_cell)
-        html.write('</li>\n')
-    html.write('</ul>')
+                    html.write(': ')
+                    html.open_span(class_=rendered_class)
+                    html.write(rendered_content)
+                    html.close_span()
+                    html.close_p()
+
+        html.close_li()
+    html.close_ul()
     html.javascript('$("ul.mobilelist a").attr("data-ajax", "false");')
 
 multisite_layouts["mobilelist"] = {
@@ -805,19 +817,23 @@ def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_chec
     painter_options.set("ts_format", "both")
 
     for row in rows:
-        html.write('<table class=dataset>')
+        html.open_table(class_="dataset")
         for cell in cells:
             tdclass, content = cell.render(row)
             if not content:
                 continue # Omit empty cells
 
-            html.write('<tr class=header>')
-            html.write('<th>%s</th></tr>\n' % cell.title())
-            html.write('<tr class=data>')
-            cell.paint(row)
-            html.write('</tr>\n')
+            html.open_tr(class_="header")
+            html.open_th()
+            html.write(cell.title())
+            html.close_th()
+            html.close_tr()
 
-        html.write('</table>')
+            html.open_tr(class_="data")
+            cell.paint(row)
+            html.close_tr()
+
+        html.close_table()
     html.javascript('$("table.dataset > tbody > tr.data > td").addClass("ui-shadow").not(".state").addClass("nonstatus");\n'
                     '$("table.dataset > tbody > tr.data a").attr("data-ajax", "false");\n')
 

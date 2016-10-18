@@ -76,18 +76,46 @@ def load_plugins(force):
 
 
 # Helper functions to be used by snapins
-# TODO: Replace wrappers in code
+def render_link(text, url, target="main", onclick = None):
+    # Convert relative links into absolute links. We have three kinds
+    # of possible links and we change only [3]
+    # [1] protocol://hostname/url/link.py
+    # [2] /absolute/link.py
+    # [3] relative.py
+    if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != '/':
+        url = config.url_prefix() + "check_mk/" + url
+    return html.render_a(text, href=url, class_="link", target=target or '',\
+                         onfocus = "if (this.blur) this.blur();",\
+                         onclick = onclick or None)
+
+
 def link(text, url, target="main", onclick = None):
-    return html.render_link(text, url, target=target, onclick=onclick)
+    return html.write(render_link(text, url, target=target, onclick=onclick))
+
 
 def simplelink(text, url, target="main"):
-    html.simplelink(text, url, target)
+    link(text, url, target)
+    html.br()
+
 
 def bulletlink(text, url, target="main", onclick = None):
-    html.bulletlink(text, url, target, onclick)
+    html.open_li(class_="sidebar")
+    link(text, url, target, onclick)
+    html.close_li()
+
 
 def iconlink(text, url, icon):
-    html.iconlink(text, url, icon)
+    html.open_a(class_=["iconlink", "link"], target="main", href=url)
+    html.icon(icon=icon, help=None, cssclass="inline")
+    html.write_text(text)
+    html.close_a()
+    html.br()
+
+
+def nagioscgilink(text, target):
+    html.open_li(class_="sidebar")
+    html.a(text, class_="link", target="main", href="%snagios/cgi-bin/%s" % (html.url_prefix(), target))
+    html.close_li()
 
 
 def begin_footnote_links():
@@ -99,12 +127,9 @@ def end_footnote_links():
 def footnotelinks(links):
     begin_footnote_links()
     for text, target in links:
-        html.link(text, target)
+        link(text, target)
     end_footnote_links()
 
-
-def nagioscgilink(text, target):
-    html.nagioscgilink(text, target)
 
 
 def heading(text):

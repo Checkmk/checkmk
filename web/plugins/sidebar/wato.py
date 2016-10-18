@@ -36,10 +36,10 @@ import config, wato, views, dashboard
 #   +----------------------------------------------------------------------+
 def render_wato(mini):
     if not config.wato_enabled:
-        html.write(_("WATO is disabled."))
+        html.write_text(_("WATO is disabled."))
         return False
     elif not config.user.may("wato.use"):
-        html.write(_("You are not allowed to use Check_MK's web configuration GUI."))
+        html.write_text(_("You are not allowed to use Check_MK's web configuration GUI."))
         return False
 
     if mini:
@@ -59,7 +59,7 @@ def render_wato(mini):
     num_pending = wato.num_pending_changes()
     if num_pending:
         footnotelinks([(_("%d changes") % num_pending, "wato.py?mode=changelog")])
-        html.write('<div class=clear></div>')
+        html.div('', class_="clear")
 
 
 sidebar_snapins["admin"] = {
@@ -196,12 +196,12 @@ def render_tree_folder(tree_id, folder, js_func):
 
     # Suppress indentation for non-emtpy root folder
     if folder['.path'] == '' and is_leaf:
-        html.write("<ul>") # empty root folder
+        html.open_ul() # empty root folder
     elif folder and folder['.path'] != '':
-        html.write("<ul style='padding-left: 0px;'>")
+        html.open_ul(style="padding-left:0px;")
 
-    title = '<a class="link" href="#" onclick="%s(this, \'%s\');">%s (%d)</a>' % (
-            js_func, folder[".path"], html.attrencode(folder["title"]), folder[".num_hosts"])
+    title = html.render_a("%s (%d)" % (folder["title"], folder[".num_hosts"]), href="#", class_="link",
+                          onclick="%s(this, \'%s\');" % (js_func, folder[".path"]))
 
     if not is_leaf:
         html.begin_foldable_container(tree_id, "/" + folder[".path"], False, HTML(title))
@@ -209,9 +209,9 @@ def render_tree_folder(tree_id, folder, js_func):
             render_tree_folder(tree_id, subfolder, js_func)
         html.end_foldable_container()
     else:
-        html.write("<li>" + title + "</li>")
+        html.li(title)
 
-    html.write("</ul>")
+    html.close_ul()
 
 
 def sort_by_title(folders):
@@ -225,7 +225,7 @@ def sort_by_title(folders):
 def render_wato_foldertree():
     if not wato.is_wato_slave_site():
         if not config.wato_enabled:
-            html.write(_("WATO is disabled."))
+            html.write_text(_("WATO is disabled."))
             return False
 
     user_folders = compute_foldertree()
@@ -239,8 +239,8 @@ def render_wato_foldertree():
     dashboard.load_dashboards()
     topic_views  = visuals_by_topic(views.permitted_views().items() + dashboard.permitted_dashboards().items())
     topics = [ (t, t) for t, s in topic_views ]
-    html.select("topic", topics, selected_topic, onchange = 'wato_tree_topic_changed(this)')
-    html.write('<span class=left>%s</span>' % _('Topic:'))
+    html.select("topic", topics, selected_topic, onchange='wato_tree_topic_changed(this)')
+    html.span(_('Topic:'), class_="left")
 
     for topic, view_list in topic_views:
         targets = []
@@ -261,9 +261,9 @@ def render_wato_foldertree():
         else:
             default = selected_target
 
-        html.select("target_%s" % topic, targets, default, attrs = attrs, onchange = 'wato_tree_target_changed(this)')
+        html.select("target_%s" % topic, targets, default, attrs=attrs, onchange='wato_tree_target_changed(this)')
 
-    html.write('<span class=left>%s</span>' % _('View:'))
+    html.span(_("View:"), class_="left")
 
     # Now render the whole tree
     if user_folders:

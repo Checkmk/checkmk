@@ -441,15 +441,18 @@ if mkeventd_enabled:
         if config.user.may("mkeventd.update_comment"):
             html.write('<tr><td>%s</td><td>' % _("Change comment:"))
             html.text_input('_mkeventd_comment', size=50)
-            html.write('</td></tr>')
+            html.close_td()
+            html.close_tr()
         if config.user.may("mkeventd.update_contact"):
             html.write('<tr><td>%s</td><td>' % _("Change contact:"))
             html.text_input('_mkeventd_contact', size=50)
-            html.write('</td></tr>')
+            html.close_td()
+            html.close_tr()
         html.write('<td></td><td>')
         html.checkbox('_mkeventd_acknowledge', True, label=_("Set event to acknowledged"))
-        html.write('</td></tr>')
-        html.write('</table>')
+        html.close_td()
+        html.close_tr()
+        html.close_table()
         html.button('_mkeventd_update', _("Update"))
 
     def command_mkeventd_update(cmdtag, spec, row):
@@ -515,7 +518,7 @@ if mkeventd_enabled:
     def render_mkeventd_actions():
         for action_id, title in mkeventd.action_choices(omit_hidden = True):
             html.button("_action_" + action_id, title)
-            html.write("<br>")
+            html.br()
 
     def command_mkeventd_action(cmdtag, spec, row):
         for action_id, title in mkeventd.action_choices(omit_hidden = True):

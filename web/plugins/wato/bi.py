@@ -939,7 +939,7 @@ class ModeBIEditPack(ModeBI):
 
 
     def page(self):
-        html.begin_form("bi_pack", method = "POST")
+        html.begin_form("bi_pack", method="POST")
         self._vs_pack().render_input("bi_pack", self._pack)
         forms.end()
         html.hidden_fields()
@@ -1311,7 +1311,7 @@ class ModeBIEditAggregation(ModeBI):
 
 
     def page(self):
-        html.begin_form("biaggr", method = "POST")
+        html.begin_form("biaggr", method="POST")
         self._vs_aggregation.render_input("aggr", self._edited_aggregation)
         forms.end()
         html.hidden_fields()

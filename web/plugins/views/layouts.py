@@ -42,17 +42,18 @@ def init_rowselect(view):
 def render_checkbox(view, row, num_tds):
     # value contains the number of columns of this datarow. This is
     # needed for hiliting the correct number of TDs
-    html.write("<input type=checkbox name=\"%s\" value=%d />" %
-                                    (row_id(view, row), num_tds + 1))
+    html.input(type_="checkbox", name=row_id(view, row), value=(num_tds+1))
 
 def render_checkbox_td(view, row, num_tds):
-    html.write("<td class=checkbox>")
+    html.open_td(class_="checkbox")
     render_checkbox(view, row, num_tds)
-    html.write("</td>")
+    html.close_td()
 
 def render_group_checkbox_th():
-    html.write("<th><input type=button class=checkgroup name=_toggle_group"
-               " onclick=\"toggle_group_rows(this);\" value=\"%s\" /></th>" % _('X'))
+    html.open_th()
+    html.input(type_="button", class_="checkgroup", name="_toggle_group",
+               onclick="toggle_group_rows(this);", value=_('X'))
+    html.close_th()
 
 #.
 #   .--Dataset-------------------------------------------------------------.
@@ -71,28 +72,32 @@ def render_single_dataset(rows, view, group_cells, cells, num_columns, _ignore_s
     for row in rows:
         save_state_for_playing_alarm_sounds(row)
 
-    html.write('<table class="data single">\n')
+    html.open_table(class_="data single")
     rownum = 0
     odd = "odd"
     while rownum < len(rows):
         if rownum > 0:
-            html.write("<tr class=gap><td class=gap colspan=%d></td></tr>\n" % (1 + num_columns))
+            html.open_tr(class_="gap")
+            html.td("", class_="gap", colspan=(num_columns + 1))
+            html.close_tr()
         thispart = rows[rownum:rownum + num_columns]
         for cell in cells:
             odd = odd == "odd" and "even" or "odd"
-            html.write('<tr class="data %s0">' % odd)
+            html.open_tr(class_="data %s0" % odd)
             if view.get("column_headers") != "off":
-                html.write("<td class=left>%s</td>" % cell.title(use_short=False))
+                html.open_td(class_="left")
+                html.write(cell.title(use_short=False))
+                html.close_td()
 
             for row in thispart:
                 cell.paint(row)
 
             if len(thispart) < num_columns:
-                html.write("<td class=gap style=\"border-style: none;\" colspan=%d></td>" % (1 + num_columns - len(thispart)))
-            html.write("</tr>\n")
+                html.td('', class_="gap", style="border-style: none;", colspan=(1 + num_columns - len(thispart)))
+            html.close_tr()
         rownum += num_columns
-    html.write("</table>\n")
-    html.write("</div>\n")
+    html.close_table()
+    html.close_div()
 
 
 multisite_layouts["dataset"] = {
@@ -169,25 +174,27 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
 
     # render one group
     def render_group(header, rows_with_ids):
-        html.write("<table class=groupheader cellspacing=0 cellpadding=0 border=0><tr class=groupheader>")
+        html.open_table(class_="groupheader", cellspacing=0,  cellpadding=0, border=0)
+        html.open_tr(class_="groupheader")
         painted = False
         for cell in group_cells:
             if painted:
-                html.write("<td>,</td>")
+                html.td(",")
             painted = cell.paint(rows_with_ids[0][1])
-        html.write("</tr></table>\n")
+        html.close_tr()
+        html.close_table()
 
-        html.write("<table class=data>")
+        html.open_table(class_="data")
         odd = "even"
 
         def show_header_line():
-            html.write("<tr>")
+            html.open_tr()
             if show_checkboxes:
                 render_group_checkbox_th()
             for cell in cells:
                 cell.paint_as_header()
                 html.write("\n")
-            html.write("</tr>\n")
+            html.close_tr()
 
         column_headers = view.get("column_headers")
         if column_headers != "off":
@@ -231,7 +238,7 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
             if num_grouped_rows > 0:
                 num_grouped_rows -= 1
                 if group_hidden:
-                    hide = " style=\"display:none\""
+                    hide = "display:none"
 
             if group_hidden != None and num_grouped_rows == 0:
                 # last row in group
@@ -240,7 +247,7 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
 
             css_classes.append("%s%d" % (odd, state))
 
-            html.write('<tr class="data %s"%s>' % (" ".join(css_classes), hide))
+            html.open_tr(class_=["data"] + css_classes, style=hide)
 
             if show_checkboxes:
                 render_checkbox_td(view, row, num_cells)
@@ -248,34 +255,34 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
             for cell in cells:
                 cell.paint(row)
 
-            html.write("</tr>\n")
+            html.close_tr()
 
-        html.write("</table>\n")
+        html.close_table()
         init_rowselect(view)
 
     # render table
-    html.write("<table class=\"boxlayout%s\"><tr>" % (css_class and " "+css_class or ""))
+    html.open_table(class_=["boxlayout", css_class if css_class else ''])
+    html.open_tr()
     for column in columns:
-        html.write("<td class=boxcolumn>")
+        html.open_td(class_="boxcolumn")
         for header, rows_with_ids in column:
             render_group(header, rows_with_ids)
-        html.write("</td>")
-    html.write("</tr></table>\n")
+        html.close_td()
+    html.close_tr()
+    html.close_table()
 
 
 def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
     is_open = html.foldable_container_is_open("grouped_rows", index, False)
-    closed_class = not is_open and " closed" or ""
+    html.open_tr(class_=["data", "grouped_row_header", "closed" if not is_open else '', "%s0" % trclass])
+    html.open_td(colspan=num_cells,
+                 onclick="toggle_grouped_rows('grouped_rows', '%s', this, %d)" % (index, num_rows))
 
-    html.write("<tr class=\"data grouped_row_header%s %s0\">" %
-                                            (closed_class, trclass))
-    html.write("<td colspan=\"%d\" onclick=\"toggle_grouped_rows("
-               "'grouped_rows', '%s', this, %d)\">" %
-                (num_cells, index, num_rows))
-    html.write('<img align=absbottom class="treeangle nform %s" src="images/tree_black_closed.png">' %
-                                    ("open" if is_open else "closed"))
-    html.write("%s (%d)</td>" % (html.attrencode(group_spec["title"]), num_rows))
-    html.write("</tr>")
+    html.img("images/tree_black_closed.png", align="absbottom", class_=["treeangle", "nform", "open" if is_open else "closed"])
+    html.write("%s (%d)" % (html.attrencode(group_spec["title"]), num_rows))
+
+    html.close_td()
+    html.close_tr()
 
     return not is_open
 
@@ -380,7 +387,7 @@ multisite_layouts["boxed_graph"] = {
 #   '----------------------------------------------------------------------'
 
 def render_tiled(rows, view, group_cells, cells, _ignore_num_columns, show_checkboxes):
-    html.write("<table class=\"data tiled\">\n")
+    html.open_table(class_="data tiled")
 
     last_group = None
     group_open = False
@@ -392,16 +399,28 @@ def render_tiled(rows, view, group_cells, cells, _ignore_num_columns, show_check
 
                 # paint group header
                 if group_open:
-                    html.write("</td></tr>\n")
-                html.write("<tr><td><table class=groupheader><tr class=groupheader>")
+                    html.close_td()
+                    html.close_tr()
+                html.open_tr()
+                html.open_td()
+                html.open_table(class_="groupheader")
+                html.open_tr(class_="groupheader")
+
                 painted = False
                 for cell in group_cells:
                     if painted:
-                        html.write("<td>,</td>")
+                        html.td(',')
                     painted = cell.paint(row)
 
-                html.write('</tr></table></td></tr>'
-                           '<tr><td class=tiles>\n')
+                html.close_tr()
+                html.close_table()
+
+                html.close_td()
+                html.close_tr()
+
+                html.open_tr()
+                html.open_td(class_="tiles")
+
                 group_open = True
                 last_group = this_group
 
@@ -423,9 +442,12 @@ def render_tiled(rows, view, group_cells, cells, _ignore_num_columns, show_check
                 sclass = "sstatep"
 
         if not group_open:
-            html.write("<tr><td class=tiles>")
+            html.open_tr()
+            html.open_td(class_="tiles")
             group_open = True
-        html.write('<div class="tile %s"><table>' % sclass)
+
+        html.open_div(class_=["tile", sclass])
+        html.open_table()
 
         # We need at least five cells
         if len(cells) < 5:
@@ -433,25 +455,47 @@ def render_tiled(rows, view, group_cells, cells, _ignore_num_columns, show_check
 
         rendered = [ cell.render(row) for cell in cells ]
 
-        html.write("<tr><td class=\"tl %s\">" % (rendered[1][0],))
+        html.open_tr()
+        html.open_td(class_=["tl", rendered[1][0]])
         if show_checkboxes:
             render_checkbox(view, row, len(cells)-1)
-        html.write("%s</td><td class=\"tr %s\">%s</td></tr>\n" % \
-                    (rendered[1][1], rendered[2][0], rendered[2][1]))
-        html.write("<tr><td colspan=2 class=\"center %s\">%s</td></tr>\n" % \
-                    (rendered[0][0], rendered[0][1]))
+        html.write("%s" % rendered[1][1])
+        html.close_td()
+        html.open_td(class_=["tr", rendered[2][0]])
+        html.write("%s" % rendered[2][1])
+        html.close_td()
+        html.close_tr()
+
+        html.open_tr()
+        html.open_td(colspan=2, class_=["center", rendered[0][0]])
+        html.write("%s" % rendered[0][1])
+        html.close_td()
+        html.close_tr()
 
         for css, cont in rendered[5:]:
-            html.write("<tr><td colspan=2 class=\"cont %s\">%s</td></tr>\n" % \
-                        (css, cont))
+            html.open_tr()
+            html.open_td(colspan=2, class_=["cont", css])
+            html.write("%s" % cont)
+            html.close_td()
+            html.close_tr()
 
-        html.write("<tr><td class=\"bl %s\">%s</td><td class=\"br %s\">%s</td></tr>\n" % \
-                    (rendered[3][0], rendered[3][1], rendered[4][0], rendered[4][1]))
-        html.write("</table></div>\n")
+        html.open_tr()
+        html.open_td(class_=["bl", rendered[3][0]])
+        html.write("%s" % rendered[3][1])
+        html.close_td()
+        html.open_td(class_=["br", rendered[4][0]])
+        html.write("%s" % rendered[4][1])
+        html.close_td()
+        html.close_tr()
+
+        html.close_table()
+        html.close_div()
 
     if group_open:
-        html.write("</td></tr>\n")
-    html.write("</table>\n")
+        html.close_td()
+        html.close_tr()
+
+    html.close_table()
     init_rowselect(view)
 
 
@@ -477,11 +521,12 @@ multisite_layouts["tiled"] = {
 #   |  width of the columns.                                               |
 #   '----------------------------------------------------------------------'
 
+
 def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkboxes):
 
     repeat_heading_every = 20 # in case column_headers is "repeat"
 
-    html.write("<table class='data table'>\n")
+    html.open_table(class_='data table')
     last_group = None
     odd = "even"
     column = 1
@@ -491,22 +536,22 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
         num_cells += 1
 
     def show_header_line():
-        html.write("<tr>")
+        html.open_tr()
         for n in range(1, num_columns + 1):
             if show_checkboxes:
                 if n == 1:
                     render_group_checkbox_th()
                 else:
-                    html.write('<th></th>')
+                    html.th('')
 
             last_cell = cells[-1]
             for cell in cells:
                 cell.paint_as_header(is_last_column_header=cell == last_cell)
 
             if n < num_columns:
-                html.write('<td class=gap></td>')
+                html.td('', class_="gap")
 
-        html.write("</tr>\n")
+        html.close_tr()
 
     if not group_cells and view.get("column_headers") != "off":
         show_header_line()
@@ -538,9 +583,9 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
             if this_group != last_group:
                 if column != 1: # not a the beginning of a new line
                     for i in range(column-1, num_columns):
-                        html.write('<td class=gap></td>')
-                        html.write("<td class=fillup colspan=%d></td>" % num_cells)
-                    html.write("</tr>\n")
+                        html.td('', class_="gap")
+                        html.td('', class_="fillup", colspan=num_cells)
+                    html.close_tr()
                     column = 1
 
                 group_open = True
@@ -555,16 +600,20 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
                         break
 
                 if not header_is_empty:
-                    html.write("<tr class=groupheader>")
-                    html.write("<td class=groupheader colspan=%d><table class=groupheader cellspacing=0 cellpadding=0 border=0><tr>" %
-                         (num_cells * (num_columns + 2) + (num_columns - 1)))
+                    html.open_tr(class_="groupheader")
+                    html.open_td(class_="groupheader", colspan=(num_cells * (num_columns + 2) + (num_columns - 1)))
+                    html.open_table(class_="groupheader", cellspacing=0, cellpadding=0, border=0)
+                    html.open_tr()
                     painted = False
                     for cell in group_cells:
                         if painted:
-                            html.write("<td>,</td>")
+                            html.td(',')
                         painted = cell.paint(row)
 
-                    html.write("</tr></table></td></tr>\n")
+                    html.close_tr()
+                    html.close_table()
+                    html.close_td()
+                    html.close_tr()
 
                 # Table headers
                 if view.get("column_headers") != "off":
@@ -574,7 +623,7 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
 
         # Should we wrap over to a new line?
         if column >= num_columns + 1:
-            html.write("</tr>\n")
+            html.close_tr()
             column = 1
 
         # At the beginning of the line? Beginn new line
@@ -607,7 +656,7 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
             if num_grouped_rows > 0:
                 num_grouped_rows -= 1
                 if group_hidden:
-                    hide = " style=\"display:none\""
+                    hide = "display:none"
 
             if group_hidden != None and num_grouped_rows == 0:
                 # last row in group
@@ -620,12 +669,12 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
                 css_classes.append("multicolumn")
             css_classes += ["%s%d" % (odd, state)]
 
-
-            html.write('<tr class="data %s"%s>' % (" ".join(css_classes), hide))
+            html.open_tr(class_=["data"] + css_classes, style=hide)
 
         # Not first columns: Create one empty column as separator
         else:
-            html.write('<td class=gap></td>')
+            html.open_td(class_="gap")
+            html.close_td()
 
 
         if show_checkboxes:
@@ -639,11 +688,14 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
 
     if group_open:
         for i in range(column-1, num_columns):
-            html.write('<td class=gap></td>')
-            html.write("<td class=fillup colspan=%d></td>" % num_cells)
-        html.write("</tr>\n")
-    html.write("</table>\n")
+            html.td('', class_="gap")
+            html.td('', class_="fillup", colspan=num_cells)
+        html.close_tr()
+    html.close_table()
     init_rowselect(view)
+
+
+
 
 multisite_layouts["table"] = {
     "title"  : _("Table"),
@@ -677,12 +729,14 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
              create_matrices(rows, group_cells, cells, num_columns):
 
         # Paint the matrix. Begin with the group headers
-        html.write('<table class="data matrix">')
+        html.open_table(class_="data matrix")
         odd = "odd"
         for cell_nr, cell in enumerate(group_cells):
             odd = odd == "odd" and "even" or "odd"
-            html.write('<tr class="data %s0">' % odd)
-            html.write('<td class=matrixhead>%s</td>' % cell.title(use_short=False))
+            html.open_tr(class_="data %s0" % odd)
+            html.open_td(class_="matrixhead")
+            html.write(cell.title(use_short=False))
+            html.close_td()
             for group, group_row in groups:
                 tdclass, content = cell.render(group_row)
                 if cell_nr > 0:
@@ -690,8 +744,10 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
                     majority_value = header_majorities.get(cell_nr-1, None)
                     if majority_value != None and majority_value != gv:
                         tdclass += " minority"
-                html.write('<td class="left %s">%s</td>' % (tdclass, content))
-            html.write("</tr>")
+                html.open_td(class_=["left", tdclass])
+                html.write(content)
+                html.close_td()
+            html.close_tr()
 
         # Now for each unique service^H^H^H^H^H^H ID column paint one row
         for row_id in unique_row_ids:
@@ -706,19 +762,22 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
                     continue
 
             odd = odd == "odd" and "even" or "odd"
-            html.write('<tr class="data %s0">' % odd)
+            html.open_tr(class_="data %s0" % odd)
             tdclass, content = cells[0].render(matrix_cells[row_id].values()[0])
-            html.write('<td class="left %s">%s</td>' % (tdclass, content))
+            html.open_td(class_=["left", tdclass])
+            html.write(content)
+            html.close_td()
 
             # Now go through the groups and paint the rest of the
             # columns
             for group_id, group_row in groups:
                 cell_row = matrix_cells[row_id].get(group_id)
                 if cell_row == None:
-                    html.write("<td></td>")
+                    html.td('')
                 else:
                     if len(cells) > 2:
-                        html.write("<td class=cell><table>")
+                        html.open_td(class_="cell")
+                        html.open_table()
 
                     for cell_nr, cell in enumerate(cells[1:]):
                         tdclass, content = cell.render(cell_row)
@@ -729,16 +788,19 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
                             tdclass += " minority"
 
                         if len(cells) > 2:
-                            html.write("<tr>")
-                        html.write('<td class="%s">%s</td>' % (tdclass, content))
+                            html.open_tr()
+                        html.open_td(class_=tdclass)
+                        html.write(content)
+                        html.close_td()
                         if len(cells) > 2:
-                            html.write("</tr>")
+                            html.close_tr()
 
                     if len(cells) > 2:
-                        html.write("</table></td>")
-            html.write('</tr>')
+                        html.close_table()
+                        html.close_td()
+            html.close_tr()
 
-        html.write("</table>")
+        html.close_table()
 
 
 def csv_export_matrix(rows, view, group_cells, cells):

@@ -228,15 +228,12 @@ def header(title, isopen = True, table_id = "", narrow = False, css=None):
     except:
         pass
 
-    if table_id:
-        table_id = ' id="%s"' % table_id
-    else:
-        table_id = ''
-    html.write('<table %s class="nform%s%s">' % (table_id, narrow and " narrow" or "", css and (" " + css) or ""))
+    html.open_table(id_=table_id if table_id else None,
+                    class_=["nform", "narrow" if narrow else None, css if css else None])
     fold_id = strip_bad_chars(title)
     g_section_isopen = html.begin_foldable_container(
             html.form_name and html.form_name or "nform", fold_id, isopen, title, indent="nform")
-    html.write('<tr class="top %s"><td colspan=2></td></tr>' % (g_section_isopen and "open" or "closed"))
+    html.tr(html.render_td('', colspan=2), class_=["top", "open" if g_section_isopen else "closed"])
     g_header_open = True
     g_section_open = False
 
@@ -244,49 +241,56 @@ def header(title, isopen = True, table_id = "", narrow = False, css=None):
 def container():
     global g_section_open
     if g_section_open:
-        html.write('</td></tr>')
-    html.write('<tr class="%s"><td colspan=2 class=container>' %
-         (g_section_isopen and "open" or "closed"))
+        html.close_td()
+        html.close_tr()
+    html.open_tr(class_="open" if g_section_isopen else "closed")
+    html.open_td(colspan=2, class_=container)
     g_section_open = True
 
-def space():
-    html.write('<tr><td colspan=2 style="height:15px;"></td></tr>')
 
-def section(title = None, checkbox = None, id = "", simple=False, hide = False, legend = True):
+def space():
+    html.tr(html.render_td('', colspan=2, style="height:15px;"))
+
+
+def section(title = None, checkbox = None, id = None, simple=False, hide = False, legend = True):
+
+    # TODO: Refactor
+    section_id = id
+
     #html.guitest_record_output("forms", ("section", title))
     global g_section_open
     if g_section_open:
-        html.write('</td></tr>')
-    if id:
-        id = ' id="%s"' % id
-    html.write('<tr class="%s"%s%s>' %
-            (g_section_isopen and "open" or "closed", id,
-             hide and ' style="display:none;"' or ''))
+        html.close_td()
+        html.close_tr()
+    html.open_tr(id_=section_id, class_="open" if g_section_isopen else "closed",
+                 style="display:none;" if hide else None)
 
     if legend:
-        html.write('<td class="legend%s">' % (simple and " simple" or ""))
+        html.open_td(class_=["legend", "simple" if simple else None])
         if title:
-            html.write('<div class="title%s">%s<span class="dots">%s</span></div>' %
-                      (checkbox and " withcheckbox" or "", title, "."*100))
+            html.open_div(class_=["title", "withcheckbox" if checkbox else None])
+            html.write_text(title)
+            html.span('.'*100, class_="dots")
+            html.close_div()
         if checkbox:
-            html.write('<div class=checkbox>')
+            html.open_div(class_="checkbox")
             if type(checkbox) == str:
                 html.write(checkbox)
             else:
                 name, active, attrname = checkbox
                 html.checkbox(name, active, onclick = 'wato_toggle_attribute(this, \'%s\')' % attrname)
-            html.write('</div>')
-        html.write('</td>')
-    html.write('<td class="content%s">' % (simple and " simple" or ""))
+            html.close_div()
+        html.close_td()
+    html.open_td(class_=["content", "simple" if simple else None])
     g_section_open = True
 
 def end():
     global g_header_open
     g_header_open = False
     if g_section_open:
-        html.write('</td></tr>')
+        html.close_td()
+        html.close_tr()
     html.end_foldable_container()
-    html.write('<tr class="bottom %s"><td colspan=2></td></tr>'
-            % (g_section_isopen and "open" or "closed"))
-    html.write('</table>')
+    html.tr(html.render_td('', colspan=2), class_=["bottom", "open" if g_section_isopen else "closed"])
+    html.close_table()
 

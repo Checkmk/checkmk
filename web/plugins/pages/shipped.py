@@ -47,6 +47,7 @@ import inventory
 import notifications
 import valuespec
 
+
 # map URLs to page rendering functions
 
 pagehandlers.update({

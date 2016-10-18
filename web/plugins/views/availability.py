@@ -287,12 +287,17 @@ def render_availability_tables(availability_tables, what, avoptions):
     av_levels = avoptions["av_levels"]
     if av_levels and not "omit_av_levels" in avoptions["labelling"]:
         warn, crit = av_levels
-        html.write('<div class="avlegend levels">')
-        html.write('<h3>%s</h3>' % _("Availability levels"))
-        html.write('<div class="state state0">%s</div><div class=level>&ge; %.3f%%</div>' % (_("OK"), warn))
-        html.write('<div class="state state1">%s</div><div class=level>&ge; %.3f%%</div>' % (_("WARN"), crit))
-        html.write('<div class="state state2">%s</div><div class=level>&lt; %.3f%%</div>' % (_("CRIT"), crit))
-        html.write('</div>')
+        html.open_div(class_="avlegend levels")
+        html.h3(_("Availability levels"))
+
+        html.div(_("OK"), class_="state state0")
+        html.div("&ge; %.3f%%" % warn, class_="level")
+        html.div(_("WARN"), class_="state state1")
+        html.div("&ge; %.3f%%" % crit, class_="level")
+        html.div(_("CRIT"), class_="state state2")
+        html.div("&lt; %.3f%%" % crit, class_="level")
+
+        html.close_div()
 
     # Legend for timeline
     if "display_timeline_legend" in avoptions["labelling"] and avoptions["show_timeline"]:
@@ -306,11 +311,13 @@ def render_availability_timelines(what, av_data, avoptions):
 
 def render_availability_timeline(what, av_entry, avoptions):
 
-    html.write("<h3>%s %s</h3>" % (_("Timeline of"), availability.object_title(what, av_entry)))
+    html.open_h3()
+    html.write("%s %s" % (_("Timeline of"), availability.object_title(what, av_entry)))
+    html.close_h3()
 
     timeline_rows = av_entry["timeline"]
     if not timeline_rows:
-        html.write('<div class=info>%s</div>' % _("No information available"))
+        html.div(_("No information available"), class_="info")
         return
 
     timeline_layout = availability.layout_timeline(what, timeline_rows, av_entry["considered_duration"], avoptions, "standalone")
@@ -357,20 +364,27 @@ def render_availability_timeline(what, av_entry, avoptions):
 
 
 def render_timeline_legend(what):
-    html.write('<div class="avlegend timeline">')
-    html.write('<h3>%s</h3>' % _('Timeline colors'))
-    html.write('<div class="state state0">%s</div>' % (what == "host" and _("UP") or _("OK")))
+
+    html.open_div(class_="avlegend timeline")
+
+    html.h3(_('Timeline colors'))
+    html.div(_("UP") if what == "host" else _("OK"), class_="state state0")
+
     if what != "host":
-        html.write('<div class="state state1">%s</div>'    % _("WARN"))
-    html.write('<div class="state state2">%s</div>' % (what == "host" and _("DOWN") or _("CRIT")))
-    html.write('<div class="state state3">%s</div>' % (what == "host" and _("UNREACH") or _("UNKNOWN")))
-    html.write('<div class="state flapping">%s</div>' % _("Flapping"))
+        html.div(_("WARN"), class_="state state1")
+
+    html.div(_("DOWN") if what == "host" else _("CRIT"), class_="state state2")
+    html.div(_("UNREACH") if what == "host" else _("UNKNOWN"), class_="state state3")
+    html.div(_("Flapping"), class_="state flapping")
+
     if what != "host":
-        html.write('<div class="state hostdown">%s</div>' % _("H.Down"))
-    html.write('<div class="state downtime">%s</div>' % _("Downtime"))
-    html.write('<div class="state ooservice">%s</div>' % _("OO/Service"))
-    html.write('<div class="state unmonitored">%s</div>' % _("unmonitored"))
-    html.write('</div>')
+        html.div(_("H.Down"), class_="state hostdown")
+
+    html.div(_("Downtime"), class_="state downtime")
+    html.div(_("OO/Service"), class_="state ooservice")
+    html.div(_("unmonitored"), class_="state unmonitored")
+
+    html.close_div()
 
 
 def render_availability_table(group_title, availability_table, what, avoptions):
@@ -402,9 +416,9 @@ def render_availability_table(group_title, availability_table, what, avoptions):
 
         if "timeline" in row:
             table.cell(_("Timeline"), css="timeline")
-            html.write('<a href="%s">' % timeline_url)
+            html.open_a(href=timeline_url)
             render_timeline_bar(row["timeline"], "inline")
-            html.write('</a>')
+            html.close_a()
 
         # Columns with the actual availability data
         for (title, help), (text, css) in zip(av_table["cell_titles"], row["cells"]):
@@ -429,29 +443,36 @@ def render_availability_table(group_title, availability_table, what, avoptions):
 def render_timeline_bar(timeline_layout, style):
     render_date = timeline_layout["render_date"]
     from_time, until_time = timeline_layout["range"]
-    html.write('<div class="timelinerange %s">' % style)
+    html.open_div(class_=["timelinerange", style])
+
     if style == "standalone":
-        html.write('<div class=from>%s</div><div class=until>%s</div></div>' % (
-            render_date(from_time), render_date(until_time)))
+        html.div(render_date(from_time), class_="from")
+        html.div(render_date(until_time), class_="until")
 
     if "time_choords" in timeline_layout:
         timebar_width = 500 # CSS width of inline timebar
         for position, title in timeline_layout["time_choords"]:
             pixel = timebar_width * position
-            html.write('<div title="%s" class="timelinechoord" style="left: %dpx"></div>' % (title, pixel))
+            html.div('', title=title, class_="timelinechoord", style="left: %dpx" % pixel)
 
-    html.write('<table class="timeline %s">' % style)
-    html.write('<tr class=timeline>')
+    html.open_table(class_=["timeline", style])
+    html.open_tr(class_="timeline")
     for row_nr, title, width, css in timeline_layout["spans"]:
-        if style == "standalone" and row_nr != None:
-            hovercode = ' onmouseover="timeline_hover(this, %d, 1);" onmouseout="timeline_hover(this, %d, 0);"' % (row_nr, row_nr)
-        else:
-            hovercode = ""
 
-        html.write('<td%s style="width: %.3f%%" title="%s" class="%s"></td>' % (
-                     hovercode, width, html.attrencode(title), css))
-    html.write("</tr></table>")
-    html.write("</div>")
+        td_attrs = {"style": "width: %.3f%%" % width,
+                    "title": title,
+                    "class": css,}
+
+        if style == "standalone" and row_nr is not None:
+            td_attrs.update({"onmouseover": "timeline_hover(this, %d, 1);" % row_nr,
+                             "onmouseout" : "timeline_hover(this, %d, 0);" % row_nr, })
+
+        html.td('', **td_attrs)
+
+    html.close_tr()
+    html.close_table()
+
+    html.close_div()
 
 
 
@@ -550,7 +571,8 @@ def render_bi_availability(title, aggr_rows):
                 tdclass, htmlcode = bi.render_tree_foldable(row, boxes=False, omit_root=False,
                                          expansion_level=bi.load_ex_level(), only_problems=False, lazy=False)
                 html.plug()
-                html.write('<h3>')
+                # TODO: SOMETHING IS WRONG IN HERE (used to be the same situation in original code!)
+                html.open_h3()
 
                 # render icons for back and forth
                 if int(these_spans[0]["from"]) == timewarp:
@@ -753,7 +775,7 @@ def edit_annotation():
         availability.update_annotations(site_host_svc, value, replace_existing=annotation)
         html.drain() # omit previous HTML code, not needed
         html.unplug()
-        html.del_all_vars(prefix = "editanno_")
+        html.del_all_vars(prefix="editanno_")
         html.del_var("filled_in")
         return False
 

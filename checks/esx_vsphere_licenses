@@ -25,11 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output from agent:
-#esx_vsphere_licenses:sep(9)>>>
-#VMware vSphere 5 Standard   100 130
-#VMware vSphere 5 Enterprise 86 114
-#VMware vSphere 5 Enterprise 22 44 # Licenses may appear multiple times (keys different)
-#vCenter Server 5 Standard   1 1
+# esx_vsphere_licenses:sep(9)>>>
+# VMware vSphere 5 Standard   100 130
+# VMware vSphere 5 Enterprise 86 114
+# VMware vSphere 5 Enterprise 22 44 # Licenses may appear multiple times (keys different)
+# vCenter Server 5 Standard   1 1
 
 def parse_esx_vsphere_licenses(info):
     parsed = {}

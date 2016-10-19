@@ -98,34 +98,35 @@ WScript.echo "<<<mssql_versions>>>"
 ' Loop all found local MSSQL server instances
 ' Try different trees to handle different versions of MSSQL
 On Error Resume Next
-'try SQL Server 2016:
+' try SQL Server 2016:
 Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement13")
 If Err.Number <> 0 Then
     Err.Clear()
-    ' try SQL Server 2014:
-    Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement12")
-    If Err.Number <> 0 Then
-        Err.Clear()
-        ' try SQL Server 2012:
-        Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement11")
-        If Err.Number <> 0 Then
-            Err.Clear()
-            ' try SQL Server 2008
-            Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement10")
-            If Err.Number <> 0 Then
-                Err.Clear()
-                ' try MSSQL < 10
-                Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement")
-                If Err.Number <> 0 Then
-                    WScript.echo "Error: " & Err.Number & " " & Err.Description
-                    Err.Clear()
-                    wscript.quit()
-                End If
-            End If
-        End If
-    End If
-End If
+	' try SQL Server 2014:
+	Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement12")
+	If Err.Number <> 0 Then
+		Err.Clear()
+		' try SQL Server 2012:
+		Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement11")
+		If Err.Number <> 0 Then
+			Err.Clear()
 
+			' try SQL Server 2008
+			Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement10")
+			If Err.Number <> 0 Then
+				Err.Clear()
+
+				' try MSSQL < 10
+				Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement")
+				If Err.Number <> 0 Then
+					WScript.echo "Error: " & Err.Number & " " & Err.Description
+					Err.Clear()
+					wscript.quit()
+				End If
+			End If
+		End If
+	End If
+End If
 On Error Goto 0
 
 Set WMIservice = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")

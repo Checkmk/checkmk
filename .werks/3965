@@ -1,0 +1,12 @@
+Title: Nagios: Improved handling of broken core config
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476875916
+Class: fix
+
+In case of configuration validation issues, the broken config, which
+will be replaced by the former config on validation issues, is copied
+to /omd/sites/[site]/tmp/check_mk/check_mk_objects.cfg.broken for
+diagnose actions.

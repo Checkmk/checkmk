@@ -3868,6 +3868,11 @@ def do_restart(only_reload = False):
             do_core_action(only_reload and "reload" or "restart")
         else:
             sys.stderr.write("Configuration for monitoring core is invalid. Rolling back.\n")
+
+            broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.paths.tmp_dir
+            file(broken_config_path, "w").write(file(cmk.paths.nagios_objects_file).read())
+            sys.stderr.write("The broken file has been copied to \"%s\" for analysis.\n" % broken_config_path)
+
             if backup_path:
                 os.rename(backup_path, cmk.paths.nagios_objects_file)
             else:

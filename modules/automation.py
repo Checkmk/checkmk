@@ -502,11 +502,16 @@ def automation_restart(job = "restart"):
                 do_precompile_hostchecks()
             do_core_action(job)
         else:
+            broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.paths.tmp_dir
+            file(broken_config_path, "w").write(file(cmk.paths.nagios_objects_file).read())
+
             if backup_path:
                 os.rename(backup_path, objects_file)
             else:
                 os.remove(objects_file)
-            raise MKAutomationError("Configuration for monitoring core is invalid. Rolling back.")
+            raise MKAutomationError(
+                "Configuration for monitoring core is invalid. Rolling back. "
+                "The broken file has been copied to \"%s\" for analysis." % broken_config_path)
 
     except Exception, e:
         if backup_path and os.path.exists(backup_path):

@@ -29,6 +29,8 @@
 import cmk.tty as tty
 import cmk.paths
 
+import cmk_base.console as console
+
 #   .--Create config-------------------------------------------------------.
 #   |      ____                _                          __ _             |
 #   |     / ___|_ __ ___  __ _| |_ ___    ___ ___  _ __  / _(_) __ _       |
@@ -943,8 +945,7 @@ def stripped_python_file(filename):
 
 
 def precompile_hostcheck(hostname):
-    if opt_verbose:
-        sys.stderr.write("%s%s%-16s%s:" % (tty.bold, tty.blue, hostname, tty.normal))
+    console.verbose("%s%s%-16s%s:", tty.bold, tty.blue, hostname, tty.normal, stream=sys.stderr)
 
     compiled_filename = cmk.paths.precompiled_hostchecks_dir + "/" + hostname
     source_filename = compiled_filename + ".py"
@@ -957,8 +958,7 @@ def precompile_hostcheck(hostname):
     # check table, enriched with addition precompiled information.
     check_table = get_precompiled_check_table(hostname)
     if len(check_table) == 0:
-        if opt_verbose:
-            sys.stderr.write("(no Check_MK checks)\n")
+        console.verbose("(no Check_MK checks)\n")
         return
 
     output = file(source_filename + ".new", "w")
@@ -985,8 +985,14 @@ if os.path.islink(%(dst)r):
 
     # initialize global variables
     output.write("""
-# very simple commandline parsing: only -v and -d are supported
-opt_verbose = ('-v' in sys.argv) and 1 or 0
+# very simple commandline parsing: only -v (once or twice) and -d are supported
+
+cmk.log.setup_console_logging()
+logger = cmk.log.get_logger("base")
+
+# TODO: This is not really good parsing, because it not cares about syntax like e.g. "-nv".
+#       The later regular argument parsing is handling this correctly. Try to clean this up.
+cmk.log.set_verbosity(verbosity=len([ a for a in sys.argv if a in [ "-v", "--verbose"] ]))
 
 import cmk.debug
 
@@ -1100,8 +1106,7 @@ no_discovery_possible = None
         output.write("# %s\n" % filename)
         output.write(stripped_python_file(filename))
         output.write("\n\n")
-        if opt_verbose:
-            sys.stderr.write(" %s%s%s" % (tty.green, filename.split('/')[-1], tty.normal))
+        console.verbose(" %s%s%s", tty.green, filename.split('/')[-1], tty.normal, stream=sys.stderr)
 
     # Make sure all checks are converted to the new API
     output.write("convert_check_info()\n")
@@ -1257,12 +1262,11 @@ no_discovery_possible = None
     # operation here.
     if os.path.exists(source_filename):
         if file(source_filename).read() == file(source_filename + ".new").read():
-            if opt_verbose:
-                sys.stderr.write(" (%s is unchanged)\n" % source_filename)
+            console.verbose(" (%s is unchanged)\n", source_filename, stream=sys.stderr)
             os.remove(source_filename + ".new")
             return
-        elif opt_verbose:
-            sys.stderr.write(" (new content)")
+        else:
+            console.verbose(" (new content)", stream=sys.stderr)
 
     os.rename(source_filename + ".new", source_filename)
     if not delay_precompile:
@@ -1273,7 +1277,6 @@ no_discovery_possible = None
             os.remove(compiled_filename)
         os.symlink(hostname + ".py", compiled_filename)
 
-    if opt_verbose:
-        sys.stderr.write(" ==> %s.\n" % compiled_filename)
+    console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
 
 #.

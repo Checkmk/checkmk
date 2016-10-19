@@ -57,6 +57,8 @@ import cmk.paths
 import cmk.render as render
 import cmk.man_pages as man_pages
 
+import cmk_base.console as console
+
 #   .--Prelude-------------------------------------------------------------.
 #   |                  ____           _           _                        |
 #   |                 |  _ \ _ __ ___| |_   _  __| | ___                   |
@@ -79,8 +81,6 @@ if '--debug' in sys.argv[1:]:
 
 opt_interactive  = '--interactive' in sys.argv[1:]
 
-opt_verbose = 0 # TODO: Remove this once opt_verbose is gone
-
 cmk.log.setup_console_logging()
 logger = cmk.log.get_logger("base")
 
@@ -92,7 +92,7 @@ if '--profile' in sys.argv[1:]:
     import cProfile
     g_profile = cProfile.Profile()
     g_profile.enable()
-    logger.verbose("Enabled profiling.")
+    console.verbose("Enabled profiling.\n")
 
 
 #.
@@ -297,7 +297,7 @@ except Exception, e:
 # those checks that do not support inventory. It must be known before
 # we read in all the checks
 def no_discovery_possible(check_type, info):
-    logger.verbose("%s does not support discovery. Skipping it.\n", check_type)
+    console.verbose("%s does not support discovery. Skipping it.\n", check_type)
     return []
 
 
@@ -1769,14 +1769,14 @@ def snmp_get_oid(hostname, ipaddress, oid):
                  oid_prefix ]
 
     debug_cmd = [ "''" if a == "" else a for a in command ]
-    vverbose("Running '%s'\n" % " ".join(debug_cmd))
+    console.vverbose("Running '%s'\n" % " ".join(debug_cmd))
 
     snmp_process = subprocess.Popen(command, close_fds=True,
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     exitstatus = snmp_process.wait()
     if exitstatus:
-        logger.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error")
-        logger.verbose(snmp_process.stderr.read())
+        console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
+        console.verbose(snmp_process.stderr.read()+"\n")
         return None
 
     line = snmp_process.stdout.readline().strip()
@@ -1831,7 +1831,7 @@ def get_single_oid(hostname, ipaddress, oid):
     if oid in g_single_oid_cache:
         return g_single_oid_cache[oid]
 
-    vverbose("       Getting OID %s: " % oid)
+    console.vverbose("       Getting OID %s: " % oid)
     if opt_use_snmp_walk or is_usewalk_host(hostname):
         walk = get_stored_snmpwalk(hostname, oid)
         # get_stored_snmpwalk returns all oids that start with oid but here
@@ -1855,9 +1855,9 @@ def get_single_oid(hostname, ipaddress, oid):
             value = None
 
     if value != None:
-        vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))
+        console.vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))
     else:
-        vverbose("failed.\n")
+        console.vverbose("failed.\n")
 
     set_oid_cache(hostname, oid, value)
     return value
@@ -2273,7 +2273,7 @@ def cached_dns_lookup(hostname, family):
 
         # Update our cached address if that has changed or was missing
         if ipa != cached_ip:
-            verbose("Updating IPv%d DNS cache for %s: %s\n" % (family, hostname, ipa))
+            console.verbose("Updating IPv%d DNS cache for %s: %s\n" % (family, hostname, ipa))
             g_ip_lookup_cache[(hostname, family)] = ipa
             write_ip_lookup_cache()
 
@@ -2365,25 +2365,25 @@ def do_update_dns_cache():
     updated = 0
     failed = []
 
-    verbose("Updating DNS cache...\n")
+    console.verbose("Updating DNS cache...\n")
     for hostname in all_active_hosts():
         # Use intelligent logic. This prevents DNS lookups for hosts
         # with statically configured addresses, etc.
         for family in [ 4, 6]:
             if (family == 4 and is_ipv4_host(hostname)) \
                or (family == 6 and is_ipv6_host(hostname)):
-                verbose("%s (IPv%d)..." % (hostname, family))
+                console.verbose("%s (IPv%d)..." % (hostname, family))
                 try:
                     if family == 4:
                         ip = lookup_ipv4_address(hostname)
                     else:
                         ip = lookup_ipv6_address(hostname)
 
-                    verbose("%s\n" % ip)
+                    console.verbose("%s\n" % ip)
                     updated += 1
                 except Exception, e:
                     failed.append(hostname)
-                    verbose("lookup failed: %s\n" % e)
+                    console.verbose("lookup failed: %s\n" % e)
                     if cmk.debug.enabled():
                         raise
                     continue
@@ -2664,7 +2664,7 @@ def pack_autochecks():
 
 def do_backup(tarname):
     import tarfile
-    logger.verbose("Creating backup file '%s'...", tarname)
+    console.verbose("Creating backup file '%s'...\n", tarname)
     tar = tarfile.open(tarname, "w:gz")
 
     for name, path, canonical_name, descr, is_dir, \
@@ -2692,17 +2692,17 @@ def do_backup(tarname):
             info.mode = 0644
             info.type = tarfile.REGTYPE
             info.name = subtarname
-            logger.verbose("  Added %s (%s) with a size of %s", descr, absdir, render.bytes(info.size))
+            console.verbose("  Added %s (%s) with a size of %s\n", descr, absdir, render.bytes(info.size))
             tar.addfile(info, StringIO(subdata))
 
     tar.close()
-    logger.verbose("Successfully created backup.")
+    console.verbose("Successfully created backup.\n")
 
 
 def do_restore(tarname):
     import shutil
 
-    logger.verbose("Restoring from '%s'...", tarname)
+    console.verbose("Restoring from '%s'...\n", tarname)
 
     if not os.path.exists(tarname):
         raise MKGeneralException("Unable to restore: File does not exist")
@@ -2714,7 +2714,7 @@ def do_restore(tarname):
             basedir = absdir
             filename = "."
             if os.path.exists(absdir):
-                logger.verbose("  Deleting old contents of '%s'", absdir)
+                console.verbose("  Deleting old contents of '%s'\n", absdir)
                 # The path might point to a symbalic link. So it is no option
                 # to call shutil.rmtree(). We must delete just the contents
                 for f in os.listdir(absdir):
@@ -2726,20 +2726,20 @@ def do_restore(tarname):
                             else:
                                 os.remove(p)
                         except Exception, e:
-                            logger.warning("  Warning: cannot delete %s: %s", p, e)
+                            console.warning("  Cannot delete %s: %s", p, e)
         else:
             basedir = os.path.dirname(absdir)
             filename = os.path.basename(absdir)
             canonical_path = basedir + "/" + canonical_name
             if os.path.exists(canonical_path):
-                logger.verbose("  Deleting old version of '%s'", canonical_path)
+                console.verbose("  Deleting old version of '%s'\n", canonical_path)
                 os.remove(canonical_path)
 
         if not os.path.exists(basedir):
-            logger.verbose("  Creating directory %s", basedir)
+            console.verbose("  Creating directory %s\n", basedir)
             os.makedirs(basedir)
 
-        logger.verbose("  Extracting %s (%s)", descr, absdir)
+        console.verbose("  Extracting %s (%s)\n", descr, absdir)
         if is_dir:
             os.system("tar xzf '%s' --force-local --to-stdout '%s' 2>/dev/null "
                       "| tar xf - -C '%s' '%s' 2>/dev/null" % \
@@ -2757,15 +2757,15 @@ def do_restore(tarname):
             if group_www:
                 to_group = ":%s" % omd_site()
 
-                logger.verbose("  Adding group write permissions")
+                console.verbose("  Adding group write permissions\n")
                 os.system("chmod -R g+w '%s'" % absdir)
             else:
                 to_group = ":root"
 
-            logger.verbose("  Changing ownership to %s%s\n", to_user, to_group)
+            console.verbose("  Changing ownership to %s%s\n", to_user, to_group)
             os.system("chown -R '%s%s' '%s' 2>/dev/null" % (to_user, to_group, absdir))
 
-    logger.verbose("Successfully restored backup.")
+    console.verbose("Successfully restored backup.\n")
 
 
 def do_flush(hosts):
@@ -3243,7 +3243,7 @@ def do_snmpwalk(hostnames):
 
 
 def do_snmpwalk_on(hostname, filename):
-    verbose("%s:\n" % hostname)
+    console.verbose("%s:\n" % hostname)
     ip = lookup_ipv4_address(hostname)
 
     out = file(filename, "w")
@@ -3256,7 +3256,7 @@ def do_snmpwalk_on(hostname, filename):
 
     for oid in oids_to_walk:
         try:
-            verbose("Walk on \"%s\"..." % oid)
+            console.verbose("Walk on \"%s\"..." % oid)
 
             if is_inline_snmp_host(hostname):
                 rows = inline_snmpwalk_on_suboid(hostname, None, oid)
@@ -3266,13 +3266,13 @@ def do_snmpwalk_on(hostname, filename):
 
             for oid, value in rows:
                 out.write("%s %s\n" % (oid, value))
-            verbose("%d variables.\n" % len(rows))
+            console.verbose("%d variables.\n" % len(rows))
         except:
             if cmk.debug.enabled():
                 raise
 
     out.close()
-    verbose("Successfully Wrote %s%s%s.\n" % (tty.bold, filename, tty.normal))
+    console.verbose("Successfully Wrote %s%s%s.\n" % (tty.bold, filename, tty.normal))
 
 
 def do_snmpget(oid, hostnames):
@@ -3779,20 +3779,18 @@ def do_update(with_precompile):
 def do_check_nagiosconfig():
     if monitoring_core == 'nagios':
         command = cmk.paths.nagios_binary + " -vp "  + cmk.paths.nagios_config_file + " 2>&1"
-        sys.stdout.write("Validating Nagios configuration...")
-        if opt_verbose:
-            sys.stderr.write("Running '%s'" % command)
-        sys.stderr.flush()
+        console.verbose("Running '%s'\n" % command)
+        console.output("Validating Nagios configuration...")
 
         process = os.popen(command, "r")
         output = process.read()
         exit_status = process.close()
         if not exit_status:
-            sys.stdout.write(tty.ok + "\n")
+            console.output(tty.ok + "\n")
             return True
         else:
-            sys.stdout.write("ERROR:\n")
-            sys.stderr.write(output)
+            console.output("ERROR:\n")
+            console.output(output, stream=sys.stderr)
             return False
     else:
         return True
@@ -3842,8 +3840,7 @@ def do_restart(only_reload = False):
         # Save current configuration
         if os.path.exists(cmk.paths.nagios_objects_file):
             backup_path = cmk.paths.nagios_objects_file + ".save"
-            if opt_verbose:
-                sys.stderr.write("Renaming %s to %s\n" % (cmk.paths.nagios_objects_file, backup_path))
+            console.verbose("Renaming %s to %s\n", cmk.paths.nagios_objects_file, backup_path, stream=sys.stderr)
             os.rename(cmk.paths.nagios_objects_file, backup_path)
         else:
             backup_path = None
@@ -3923,7 +3920,7 @@ def do_donation():
         sys.stderr.write("No hosts specified. You need to set donation_hosts in main.mk.\n")
         sys.exit(1)
 
-    verbose("Donating files %s\n" % " ".join(cache_files))
+    console.verbose("Donating files %s\n" % " ".join(cache_files))
     import base64
     indata = base64.b64encode(os.popen("tar czf - -C %s %s" % (cmk.paths.tcp_cache_dir, " ".join(donate))).read())
     output = os.popen(donation_command, "w")
@@ -3980,9 +3977,7 @@ def do_scan_parents(hosts):
             del hosts[0]
             # skip hosts that already have a parent
             if len(parents_of(host)) > 0:
-                if opt_verbose:
-                    sys.stdout.write("(manual parent) ")
-                    sys.stdout.flush()
+                console.verbose("(manual parent) ")
                 continue
             chunk.append(host)
 
@@ -4039,9 +4034,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
     # Start processes in parallel
     procs = []
     for host in hosts:
-        if opt_verbose:
-            sys.stdout.write("%s " % host)
-            sys.stdout.flush()
+        console.verbose("%s " % host)
         try:
             ip = lookup_ipv4_address(host)
             command = "traceroute -w %d -q %d -m %d -n %s 2>&1" % (
@@ -4075,8 +4068,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
 
         if len(lines) == 1 and lines[0].startswith("ERROR:"):
             message = lines[0][6:].strip()
-            if opt_verbose:
-                sys.stderr.write("%s: %s\n" % (host, message))
+            console.verbose("%s: %s\n", host, message, stream=sys.stderr)
             dot(tty.red, "D")
             gateways.append((None, "dnserror", 0, message))
             continue
@@ -4155,8 +4147,7 @@ def scan_parents_of(hosts, silent=False, settings={}):
             # gateway can be monitored via the standard host check
             if ping_probes:
                 if not gateway_reachable_via_ping(r, ping_probes):
-                    if opt_verbose:
-                        sys.stderr.write("(not using %s, not reachable)\n" % r)
+                    console.verbose("(not using %s, not reachable)\n", r, stream=sys.stderr)
                     skipped_gateways += 1
                     continue
             route = r
@@ -4172,11 +4163,10 @@ def scan_parents_of(hosts, silent=False, settings={}):
         # TTLs already have been filtered out)
         gateway_ip = route
         gateway = ip_to_hostname(route)
-        if opt_verbose:
-            if gateway:
-                sys.stdout.write("%s(%s) " % (gateway, gateway_ip))
-            else:
-                sys.stdout.write("%s " % gateway_ip)
+        if gateway:
+            console.verbose("%s(%s) ", gateway, gateway_ip)
+        else:
+            console.verbose("%s ", gateway_ip)
 
         # Try to find DNS name of host via reverse DNS lookup
         dns_name = ip_to_dnsname(gateway_ip)
@@ -4628,7 +4618,6 @@ for o,a in opts:
     # -v/--verbose is handled above manually. Simply ignore it here.
     if o in [ '-v', '--verbose' ]:
         _verbosity += 1
-        opt_verbose += 1 # TODO: Remove this once opt_verbose usage has been removed
     elif o in [ '-f', '--force' ]:
         opt_force = True
     elif o == '-c':

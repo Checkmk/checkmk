@@ -33,15 +33,23 @@ def test_setup_console_logging(capsys):
 def test_set_verbosity():
     l = cmk.log.get_logger("test_logger")
     assert l.getEffectiveLevel() == cmk.log.INFO
+    assert l.is_verbose() == False
+    assert l.is_very_verbose() == False
 
     cmk.log.set_verbosity(0)
     assert l.getEffectiveLevel() == cmk.log.INFO
+    assert l.is_verbose() == False
+    assert l.is_very_verbose() == False
 
     cmk.log.set_verbosity(1)
     assert l.getEffectiveLevel() == cmk.log.VERBOSE
+    assert l.is_verbose() == True
+    assert l.is_very_verbose() == False
 
     cmk.log.set_verbosity(2)
     assert l.getEffectiveLevel() == cmk.log.DEBUG
+    assert l.is_verbose() == True
+    assert l.is_very_verbose() == True
 
     with pytest.raises(NotImplementedError):
         cmk.log.set_verbosity(3)

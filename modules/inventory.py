@@ -29,6 +29,8 @@ import gzip
 import cmk.tty as tty
 import cmk.paths
 
+import cmk_base.console as console
+
 inventory_output_dir = cmk.paths.var_dir + "/inventory"
 inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
 inventory_pprint_output = True
@@ -64,7 +66,7 @@ for f in filelist:
         try:
             execfile(f)
         except Exception, e:
-            sys.stderr.write("Error in inventory plugin file %s: %s\n" % (f, e))
+            console.output("Error in inventory plugin file %s: %s\n", f, e, stream=sys.stderr)
             if cmk.debug.enabled():
                 raise
             sys.exit(5)
@@ -176,13 +178,13 @@ def do_inv(hostnames):
     errors = []
     for hostname in hostnames:
         try:
-            verbose("Doing HW/SW-Inventory for %s..." % hostname)
+            console.verbose("Doing HW/SW-Inventory for %s..." % hostname)
             do_inv_for(hostname)
-            verbose("..OK\n")
+            console.verbose("..OK\n")
         except Exception, e:
             if cmk.debug.enabled():
                 raise
-            verbose("Failed: %s\n" % e)
+            console.verbose("Failed: %s\n" % e)
             errors.append("Failed to inventorize %s: %s" % (hostname, e))
         cleanup_globals()
 
@@ -195,7 +197,7 @@ def do_inv_check(hostname):
         inv_tree, old_timestamp = do_inv_for(hostname)
         num_entries = count_nodes(g_inv_tree)
         if not num_entries:
-            sys.stdout.write("OK - Found no data\n")
+            console.output("OK - Found no data\n")
             sys.exit(0)
 
         infotext = "found %d entries" % num_entries
@@ -224,13 +226,13 @@ def do_inv_check(hostname):
                 if opt_inv_hw_changes:
                     infotext += state_markers[opt_inv_hw_changes]
 
-        sys.stdout.write(core_state_names[state] + " - " + infotext + "\n")
+        console.output(core_state_names[state] + " - " + infotext + "\n")
         sys.exit(state)
 
     except Exception, e:
         if cmk.debug.enabled():
             raise
-        sys.stdout.write("Inventory failed: %s\n" % e)
+        console.output("Inventory failed: %s\n" % e)
         sys.exit(opt_inv_fail_status)
 
 
@@ -279,9 +281,7 @@ def do_inv_for(hostname):
             # Note: this also excludes existing sections without info..
             continue
 
-        if opt_verbose:
-            sys.stdout.write(tty.green + tty.bold + info_type + " " + tty.normal)
-            sys.stdout.flush()
+        console.verbose(tty.green + tty.bold + info_type + " " + tty.normal)
 
         # Inventory functions can optionally have a second argument: parameters.
         # These are configured via rule sets (much like check parameters).
@@ -298,9 +298,7 @@ def do_inv_for(hostname):
     inv_cleanup_tree(g_inv_tree)
     old_timestamp = save_inv_tree(hostname)
 
-    if opt_verbose:
-        sys.stdout.write("..%s%s%d%s entries" % (tty.bold, tty.yellow, count_nodes(g_inv_tree), tty.normal))
-        sys.stdout.flush()
+    console.verbose("..%s%s%d%s entries" % (tty.bold, tty.yellow, count_nodes(g_inv_tree), tty.normal))
 
     run_inv_export_hooks(hostname, g_inv_tree)
     return g_inv_tree, old_timestamp
@@ -321,9 +319,7 @@ def extend_tree_with_check_mk_inventory_info(hostname):
         raise MKGeneralException(_("Cannot parse persisted file of %s: %s") % (hostname, e))
 
     add_check_mk_inventory_info_to_tree(persisted_data)
-    if opt_verbose:
-        sys.stdout.write(tty.green + tty.bold + "check_mk_sections" + " " + tty.normal)
-        sys.stdout.flush()
+    console.verbose(tty.green + tty.bold + "check_mk_sections" + " " + tty.normal)
 
 
 def add_check_mk_inventory_info_to_tree(persisted_data):
@@ -371,21 +367,21 @@ def save_inv_tree(hostname):
 
         if old_tree != g_inv_tree:
             if old_tree:
-                verbose("..changed")
+                console.verbose("..changed")
                 old_time = os.stat(path).st_mtime
                 arcdir = "%s/%s" % (inventory_archive_dir, hostname)
                 if not os.path.exists(arcdir):
                     os.makedirs(arcdir)
                 os.rename(path, arcdir + ("/%d" % old_time))
             else:
-                verbose("..new")
+                console.verbose("..new")
 
             file(path, "w").write(r + "\n")
             gzip.open(path + ".gz", "w").write(r + "\n")
             # Inform Livestatus about the latest inventory update
             file(inventory_output_dir + "/.last", "w")
         else:
-            verbose("..unchanged")
+            console.verbose("..unchanged")
 
     else:
         if os.path.exists(path): # Remove empty inventory files. Important for host inventory icon
@@ -400,9 +396,7 @@ def run_inv_export_hooks(hostname, tree):
     for hookname, ruleset in inv_exports.items():
         entries = host_extra_conf(hostname, ruleset)
         if entries:
-            if opt_verbose:
-                sys.stdout.write(", running %s%s%s%s..." % (tty.blue, tty.bold, hookname, tty.normal))
-                sys.stdout.flush()
+            console.verbose(", running %s%s%s%s..." % (tty.blue, tty.bold, hookname, tty.normal))
             params = entries[0]
             try:
                 inv_export[hookname]["export_function"](hostname, params, tree)

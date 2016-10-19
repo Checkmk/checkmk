@@ -31,6 +31,7 @@ import subprocess
 import cmk.tty as tty
 
 import cmk_base.agent_simulator
+import cmk_base.console as console
 
 OID_END              =  0  # Suffix-part of OID that was not specified
 OID_STRING           = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
@@ -254,12 +255,12 @@ def perform_snmpwalk(hostname, ip, check_type, base_oid, fetchoid):
         # .1.3.6.1.2.1.1.1.0 was being walked. We try to detect these situations
         # by removing any duplicate OID information
         if len(rows) > 1 and rows[0][0] == rows[1][0]:
-            vverbose("Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rows[0][0])
+            console.vverbose("Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rows[0][0])
             rows = rows[:1]
 
         for row_oid, val in rows:
             if row_oid in added_oids:
-                vverbose("Duplicate OID found: %s (%s)\n" % (row_oid, val))
+                console.vverbose("Duplicate OID found: %s (%s)\n" % (row_oid, val))
             else:
                 rowinfo.append((row_oid, val))
                 added_oids.add(row_oid)
@@ -420,14 +421,14 @@ def get_cached_snmpwalk(hostname, fetchoid):
     path = cmk.paths.var_dir + "/snmp_cache/" + hostname + "/" + fetchoid
 
     try:
-        vverbose("  Loading %s from walk cache %s\n" % (fetchoid, path))
+        console.vverbose("  Loading %s from walk cache %s\n" % (fetchoid, path))
         return eval(file(path).read())
     except IOError:
         return None # don't print error when not cached yet
     except:
         if cmk.debug.enabled():
             raise
-        verbose("Failed to read cached SNMP walk from %s, ignoring.\n" % path)
+        console.verbose("Failed to read cached SNMP walk from %s, ignoring.\n" % path)
         return None
 
 
@@ -435,7 +436,7 @@ def save_snmpwalk_cache(hostname, fetchoid, rowinfo):
     base_dir = cmk.paths.var_dir + "/snmp_cache/" + hostname + "/"
     if not os.path.exists(base_dir):
         os.makedirs(base_dir)
-    vverbose("  Caching walk of %s\n" % fetchoid)
+    console.vverbose("  Caching walk of %s\n" % fetchoid)
     file(base_dir + fetchoid, "w").write("%r\n" % rowinfo)
 
 
@@ -453,7 +454,7 @@ def get_stored_snmpwalk(hostname, oid):
 
     path = cmk.paths.snmpwalks_dir + "/" + hostname
 
-    vverbose("  Loading %s from %s\n" % (oid, path))
+    console.vverbose("  Loading %s from %s\n" % (oid, path))
 
     rowinfo = []
 
@@ -578,7 +579,7 @@ def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False, context_name = None
     command += [ "-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ip, portspec), oid ]
 
     debug_cmd = [ "''" if a == "" else a for a in command ]
-    vverbose("Running '%s'\n" % " ".join(debug_cmd))
+    console.vverbose("Running '%s'\n" % " ".join(debug_cmd))
 
     snmp_process = subprocess.Popen(command, close_fds=True, stdin=open(os.devnull),
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -618,6 +619,6 @@ def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False, context_name = None
     error = snmp_process.stderr.read()
     exitstatus = snmp_process.wait()
     if exitstatus:
-        verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error: %s\n" % error.strip())
+        console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error: %s\n" % error.strip())
         raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" % (ip, error.strip(), exitstatus))
     return rowinfo

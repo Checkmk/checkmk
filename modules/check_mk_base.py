@@ -101,25 +101,6 @@ def reset_global_caches():
     for cachevar_name in g_global_caches:
         globals()[cachevar_name] = {}
 
-# Output text if opt_verbose is set (-v). Adds no linefeed
-def verbose(text):
-    if opt_verbose:
-        try:
-            sys.stdout.write(text)
-            sys.stdout.flush()
-        except:
-            pass # avoid exception on broken pipe (e.g. due to | head)
-
-# Output text if, opt_verbose >= 2 (-vv).
-def vverbose(text):
-    if opt_verbose >= 2:
-        verbose(text)
-
-def warning(reason):
-    stripped = reason.lstrip()
-    indent = reason[:len(reason) - len(stripped)]
-    sys.stderr.write("%s%s%sWARNING:%s %s\n" % (indent, tty.bold, tty.yellow, tty.normal, stripped))
-
 
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
@@ -508,7 +489,7 @@ def store_persisted_info(hostname, persisted):
         file("%s.#new" % file_path, "w").write("%r\n" % persisted)
         os.rename("%s.#new" % file_path, file_path)
 
-        verbose("Persisted sections %s.\n" % ", ".join(persisted.keys()))
+        console.verbose("Persisted sections %s.\n" % ", ".join(persisted.keys()))
 
 
 def add_persisted_info(hostname, info):
@@ -531,9 +512,9 @@ def add_persisted_info(hostname, info):
         if now < persisted_until or opt_force:
             if section not in info:
                 info[section] = persisted_section
-                vverbose("Added persisted section %s.\n" % section)
+                console.vverbose("Added persisted section %s.\n" % section)
         else:
-            verbose("Persisted section %s is outdated by %d seconds. Deleting it.\n" % (
+            console.verbose("Persisted section %s is outdated by %d seconds. Deleting it.\n" % (
                     section, now - persisted_until))
             del persisted[section]
             modified = True
@@ -557,7 +538,7 @@ def get_piggyback_files(hostname):
                 file_path = dir + "/" + sourcehost
 
                 if cachefile_age(file_path) > piggyback_max_cachefile_age:
-                    verbose("Piggyback file %s is outdated by %d seconds. Deleting it.\n" %
+                    console.verbose("Piggyback file %s is outdated by %d seconds. Deleting it.\n" %
                         (file_path, cachefile_age(file_path) - piggyback_max_cachefile_age))
                     os.remove(file_path)
                     continue
@@ -575,7 +556,7 @@ def get_piggyback_info(hostname):
     if not hostname:
         return output
     for sourcehost, file_path in get_piggyback_files(hostname):
-        verbose("Using piggyback information from host %s.\n" % sourcehost)
+        console.verbose("Using piggyback information from host %s.\n" % sourcehost)
         output += file(file_path).read()
     return output
 
@@ -583,7 +564,7 @@ def get_piggyback_info(hostname):
 def store_piggyback_info(sourcehost, piggybacked):
     piggyback_path = cmk.paths.tmp_dir + "/piggyback/"
     for backedhost, lines in piggybacked.items():
-        verbose("Storing piggyback data for %s.\n" % backedhost)
+        console.verbose("Storing piggyback data for %s.\n" % backedhost)
         dir = piggyback_path + backedhost
         if not os.path.exists(dir):
             os.makedirs(dir)
@@ -607,7 +588,7 @@ def remove_piggyback_info_from(sourcehost, keep=[]):
         if backedhost not in ['.', '..'] and backedhost not in keep:
             path = piggyback_path + backedhost + "/" + sourcehost
             if os.path.exists(path):
-                verbose("Removing stale piggyback file %s\n" % path)
+                console.verbose("Removing stale piggyback file %s\n" % path)
                 os.remove(path)
                 removed += 1
 
@@ -683,10 +664,10 @@ def read_cache_file(relpath, max_cache_age):
             result = f.read(10000000)
             f.close()
             if len(result) > 0:
-                verbose("Using data from cachefile %s.\n" % cachefile)
+                console.verbose("Using data from cachefile %s.\n" % cachefile)
                 return result
         else:
-            vverbose("Skipping cache file %s: Too old "
+            console.vverbose("Skipping cache file %s: Too old "
                              "(age is %d sec, allowed is %s sec)\n" %
                    (cachefile, cachefile_age(cachefile), max_cache_age))
 
@@ -747,7 +728,7 @@ def get_agent_info(hostname, ipaddress, max_cache_age):
 def get_agent_info_program(commandline):
     exepath = commandline.split()[0] # for error message, hide options!
 
-    vverbose("Calling external program %s\n" % commandline)
+    console.vverbose("Calling external program %s\n" % commandline)
     p = None
     try:
         if monitoring_core == "cmc":
@@ -825,7 +806,7 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
             s.settimeout(tcp_connect_timeout)
         except:
             pass # some old Python versions lack settimeout(). Better ignore than fail
-        vverbose("Connecting via TCP to %s:%d.\n" % (ipaddress, port))
+        console.vverbose("Connecting via TCP to %s:%d.\n" % (ipaddress, port))
         s.connect((ipaddress, port))
         # Immediately close sending direction. We do not send any data
         # s.shutdown(socket.SHUT_WR)
@@ -1204,7 +1185,7 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
 # This is the main check function - the central entry point to all and
 # everything
 def do_check(hostname, ipaddress, only_check_types = None):
-    verbose("Check_mk version %s\n" % cmk.__version__)
+    console.verbose("Check_mk version %s\n" % cmk.__version__)
 
     start_time = time.time()
 
@@ -1293,9 +1274,9 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     if opt_keepalive:
         add_keepalive_active_check_result(hostname, output)
-        verbose(output)
+        console.verbose(output)
     else:
-        sys.stdout.write(core_state_names[status] + " - " + output.encode('utf-8'))
+        console.output(core_state_names[status] + " - " + output.encode('utf-8'))
 
     return status
 
@@ -1364,11 +1345,11 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
         # Skip checks that are not in their check period
         period = check_period_of(hostname, description)
         if period and not check_timeperiod(period):
-            verbose("Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
+            console.verbose("Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
             return False
 
         elif period:
-            vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))
+            console.vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))
 
         infotype = checkname.split('.')[0]
         try:
@@ -1430,7 +1411,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
             # handling of wrapped counters via exception. Do not submit
             # any check result in that case:
             except MKCounterWrapped, e:
-                verbose("%-20s PEND - Cannot compute check result: %s\n" % (description, e))
+                console.verbose("%-20s PEND - Cannot compute check result: %s\n" % (description, e))
                 dont_submit = True
 
             except Exception, e:
@@ -1897,17 +1878,24 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
     if not opt_dont_submit:
         submit_to_core(host, servicedesc, state, infotext + perftext, cached_at, cache_interval)
 
-    if opt_verbose:
-        if opt_showperfdata:
-            infotext_fmt = "%-56s"
-            p = ' (%s)' % (" ".join(perftexts))
-        else:
-            p = ''
-            infotext_fmt = "%s"
-        color = tty.states[state]
-        verbose(("%-20s %s%s"+infotext_fmt+"%s%s\n") % (servicedesc.encode('utf-8'),
-                                       tty.bold, color, make_utf8(infotext.split('\n')[0]),
-                                       tty.normal, make_utf8(p)))
+    output_check_result(servicedesc, state, infotext, perftexts)
+
+
+def output_check_result(servicedesc, state, infotext, perftexts):
+    if not logger.is_verbose():
+        return
+
+    if opt_showperfdata:
+        infotext_fmt = "%-56s"
+        p = ' (%s)' % (" ".join(perftexts))
+    else:
+        p = ''
+        infotext_fmt = "%s"
+
+    console.verbose("%-20s %s%s"+infotext_fmt+"%s%s\n",
+        servicedesc.encode('utf-8'), tty.bold, tty.states[state],
+        make_utf8(infotext.split('\n')[0]),
+        tty.normal, make_utf8(p))
 
 
 def submit_to_core(host, service, state, output, cached_at = None, cache_interval = None):
@@ -2407,7 +2395,7 @@ def submit_aggregated_results(hostname):
     if not host_is_aggregated(hostname):
         return
 
-    verbose("\n%s%sAggregates Services:%s\n" % (tty.bold, tty.blue, tty.normal))
+    console.verbose("\n%s%sAggregates Services:%s\n" % (tty.bold, tty.blue, tty.normal))
 
     global g_aggregated_service_results
     items = g_aggregated_service_results.items()
@@ -2432,14 +2420,7 @@ def submit_aggregated_results(hostname):
         if not opt_dont_submit:
             submit_to_core(aggr_hostname, servicedesc, status, text)
 
-        if opt_verbose:
-            color = tty.states[status]
-            lines = text.split('\\n')
-            verbose("%-20s %s%s%-70s%s\n" % (servicedesc, tty.bold, color, lines[0], tty.normal))
-            if len(lines) > 1:
-                for line in lines[1:]:
-                    verbose("  %s\n" % line)
-                verbose("-------------------------------------------------------------------------------\n")
+        output_check_result(servicedesc, status, text, [])
 
 
 def submit_check_mk_aggregation(hostname, status, output):
@@ -2449,7 +2430,7 @@ def submit_check_mk_aggregation(hostname, status, output):
     if not opt_dont_submit:
         submit_to_core(summary_hostname(hostname), "Check_MK", status, output)
 
-    verbose("%-20s %s%s%-70s%s\n" % ("Check_MK", tty.bold, tty.states[status], output, tty.normal))
+    console.verbose("%-20s %s%s%-70s%s\n" % ("Check_MK", tty.bold, tty.states[status], output, tty.normal))
 
 
 #.
@@ -2467,7 +2448,7 @@ def submit_check_mk_aggregation(hostname, status, output):
 # register SIGINT handler for consistent CTRL+C handling
 # TODO: use MKTerminate() signal instead and handle output and exit code in check_mk.py
 def interrupt_handler(signum, frame):
-    sys.stderr.write('<Interrupted>\n')
+    console.output('<Interrupted>\n', stream=sys.stderr)
     sys.exit(1)
 
 

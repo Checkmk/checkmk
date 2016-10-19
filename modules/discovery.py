@@ -28,6 +28,8 @@ from cmk.regex import regex
 import cmk.tty as tty
 import cmk.paths
 
+import cmk_base.console as console
+
 #   .--cmk -I--------------------------------------------------------------.
 #   |                                  _           ___                     |
 #   |                    ___ _ __ ___ | | __      |_ _|                    |
@@ -46,11 +48,11 @@ import cmk.paths
 def do_discovery(hostnames, check_types, only_new):
     use_caches = opt_use_cachefile
     if not hostnames:
-        verbose("Discovering services on all hosts:\n")
+        console.verbose("Discovering services on all hosts:\n")
         hostnames = all_active_realhosts()
         use_caches = True
     else:
-        verbose("Discovering services on %s:\n" % ", ".join(hostnames))
+        console.verbose("Discovering services on %s:\n" % ", ".join(hostnames))
 
     # For clusters add their nodes to the list. Clusters itself
     # cannot be discovered but the user is allowed to specify
@@ -70,17 +72,17 @@ def do_discovery(hostnames, check_types, only_new):
     # Now loop through all hosts
     for hostname in hostnames:
         try:
-            verbose(tty.bold + hostname + tty.normal + ":\n")
+            console.verbose(tty.bold + hostname + tty.normal + ":\n")
             if cmk.debug.enabled():
                 on_error = "raise"
             else:
                 on_error = "warn"
             do_discovery_for(hostname, check_types, only_new, use_caches, on_error)
-            verbose("\n")
+            console.verbose("\n")
         except Exception, e:
             if cmk.debug.enabled():
                 raise
-            verbose(" -> Failed: %s\n" % e)
+            console.verbose(" -> Failed: %s\n" % e)
 
         cleanup_globals()
 
@@ -138,9 +140,9 @@ def do_discovery_for(hostname, check_types, only_new, use_caches, on_error):
     found_check_types.sort()
     if found_check_types:
         for check_type in found_check_types:
-            verbose("  %s%3d%s %s\n" % (tty.green + tty.bold, stats[check_type], tty.normal, check_type))
+            console.verbose("  %s%3d%s %s\n" % (tty.green + tty.bold, stats[check_type], tty.normal, check_type))
     else:
-        verbose("  nothing%s\n" % (only_new and " new" or ""))
+        console.verbose("  nothing%s\n" % (only_new and " new" or ""))
 
 
 # determine changed services on host.
@@ -414,7 +416,7 @@ def set_rediscovery_flag(hostname, need_rediscovery):
 marked_host_discovery_timeout = 120
 
 def discover_marked_hosts():
-    verbose("Doing discovery for all marked hosts:\n")
+    console.verbose("Doing discovery for all marked hosts:\n")
 
     def queue_age():
         oldest = time.time()
@@ -448,7 +450,7 @@ def discover_marked_hosts():
 
     if not os.path.exists(autodiscovery_dir):
         # there is obviously nothing to do
-        verbose("  Nothing to do. %s is missing.\n" % autodiscovery_dir)
+        console.verbose("  Nothing to do. %s is missing.\n" % autodiscovery_dir)
         return
 
     now_ts = time.time()
@@ -464,22 +466,22 @@ def discover_marked_hosts():
 
     hosts = os.listdir(autodiscovery_dir)
     if not hosts:
-        verbose("  Nothing to do. No hosts marked by discovery check.\n")
+        console.verbose("  Nothing to do. No hosts marked by discovery check.\n")
         return
 
     activation_required = False
 
     for hostname in hosts:
-        verbose("%s%s%s:\n" % (tty.bold, hostname, tty.normal))
+        console.verbose("%s%s%s:\n" % (tty.bold, hostname, tty.normal))
         host_flag_path = autodiscovery_dir + "/" + hostname
 
         if hostname not in all_configured_hosts():
             os.remove(host_flag_path)
-            verbose("  Skipped. Host does not exist in configuration. Removing mark.\n")
+            console.verbose("  Skipped. Host does not exist in configuration. Removing mark.\n")
             continue
 
         if time.time() > end_time_ts:
-            warning("  Timeout of %d seconds reached. Lets do the remaining hosts next time." % marked_host_discovery_timeout)
+            console.warning("  Timeout of %d seconds reached. Lets do the remaining hosts next time." % marked_host_discovery_timeout)
             break
 
         # have to do hosts one-by-one because each could have a different configuration
@@ -498,23 +500,23 @@ def discover_marked_hosts():
         why_not = may_rediscover(params)
         if not why_not:
             redisc_params = params["inventory_rediscovery"]
-            verbose("  Doing discovery with mode '%s'...\n" % mode_table[redisc_params["mode"]])
+            console.verbose("  Doing discovery with mode '%s'...\n" % mode_table[redisc_params["mode"]])
             result, error = discover_on_host(mode_table[redisc_params["mode"]], hostname,
                                              params["inventory_check_do_scan"], True,
                                              service_filter=item_filters)
             if error is not None:
                 if error:
-                    verbose("failed: %s\n" % error)
+                    console.verbose("failed: %s\n" % error)
                 else:
                     # for offline hosts the error message is empty. This is to remain
                     # compatible with the automation code
-                    verbose("  failed: host is offline\n")
+                    console.verbose("  failed: host is offline\n")
             else:
                 new_services, removed_services, kept_services, total_services = result
                 if new_services == 0 and removed_services == 0 and kept_services == total_services:
-                    verbose("  nothing changed.\n")
+                    console.verbose("  nothing changed.\n")
                 else:
-                    verbose("  %d new, %d removed, %d kept, %d total services.\n" % (tuple(result)))
+                    console.verbose("  %d new, %d removed, %d kept, %d total services.\n" % (tuple(result)))
                     if redisc_params["activation"]:
                         activation_required = True
 
@@ -525,10 +527,10 @@ def discover_marked_hosts():
             # every time the cron job runs
             os.remove(host_flag_path)
         else:
-            verbose("  skipped: %s\n" % why_not)
+            console.verbose("  skipped: %s\n" % why_not)
 
     if activation_required:
-        verbose("\nRestarting monitoring core with updated configuration...\n")
+        console.verbose("\nRestarting monitoring core with updated configuration...\n")
         if monitoring_core == "cmc":
             do_reload()
         else:
@@ -748,7 +750,7 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
     global g_hostname
     g_hostname = hostname
 
-    vverbose("  SNMP scan:\n")
+    console.vverbose("  SNMP scan:\n")
     if not in_binary_hostlist(hostname, snmp_without_sys_descr):
         for oid, name in [ (".1.3.6.1.2.1.1.1.0", "system description"),
                            (".1.3.6.1.2.1.1.2.0", "system object") ]:
@@ -761,7 +763,7 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
                     "description and system object OIDs." % (name, oid))
     else:
         # Fake OID values to prevent issues with a lot of scan functions
-        vverbose("       Skipping system description OID "
+        console.vverbose("       Skipping system description OID "
                  "(Set .1.3.6.1.2.1.1.1.0 and .1.3.6.1.2.1.1.2.0 to \"\")\n")
         set_oid_cache(hostname, ".1.3.6.1.2.1.1.1.0", "")
         set_oid_cache(hostname, ".1.3.6.1.2.1.1.2.0", "")
@@ -806,7 +808,7 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
                 result = scan_function(oid_function)
                 if result is not None and type(result) not in [ str, bool ]:
                     if on_error == "warn":
-                        warning("   SNMP scan function of %s returns invalid type %s." %
+                        console.warning("   SNMP scan function of %s returns invalid type %s." %
                                 (check_type, type(result)))
                     elif on_error == "raise":
                         raise MKGeneralException("SNMP Scan aborted.")
@@ -819,16 +821,16 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
                 raise
             except:
                 if on_error == "warn":
-                    warning("   Exception in SNMP scan function of %s" % check_type)
+                    console.warning("   Exception in SNMP scan function of %s" % check_type)
                 elif on_error == "raise":
                     raise
         else:
             found.append(check_type)
             default_found.append(check_type)
 
-    vverbose("   SNMP scan found:       %s%s%s%s\n" % (tty.bold, tty.yellow, " ".join(positive_found), tty.normal))
+    console.vverbose("   SNMP scan found:       %s%s%s%s\n" % (tty.bold, tty.yellow, " ".join(positive_found), tty.normal))
     if default_found:
-        vverbose("   without scan function: %s%s%s%s\n" % (tty.bold, tty.blue, " ".join(default_found), tty.normal))
+        console.vverbose("   without scan function: %s%s%s%s\n" % (tty.bold, tty.blue, " ".join(default_found), tty.normal))
 
 
     found.sort()
@@ -930,7 +932,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, u
 
     except Exception, e:
         if on_error == "warn":
-            warning("  Exception in discovery function of check type '%s': %s" % (check_type, e))
+            console.warning("  Exception in discovery function of check type '%s': %s" % (check_type, e))
         elif on_error == "raise":
             raise
         return []
@@ -1237,14 +1239,12 @@ def read_autochecks_of(hostname, world="config"):
     try:
         autochecks_raw = eval(file(filepath).read())
     except SyntaxError,e:
-        if opt_verbose or cmk.debug.enabled():
-            sys.stderr.write("Syntax error in file %s: %s\n" % (filepath, e))
+        console.verbose("Syntax error in file %s: %s\n", filepath, e, stream=sys.stderr)
         if cmk.debug.enabled():
             raise
         return []
     except Exception, e:
-        if opt_verbose or cmk.debug.enabled():
-            sys.stderr.write("Error in file %s:\n%s\n" % (filepath, e))
+        console.verbose("Error in file %s:\n%s\n", filepath, e, stream=sys.stderr)
         if cmk.debug.enabled():
             raise
         return []

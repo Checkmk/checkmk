@@ -170,8 +170,11 @@ else:
     # The following code in the else: block completely replaces the used functionality of NaServer/NaElements
     import base64
     import requests
-    from requests.packages.urllib3.exceptions import InsecureRequestWarning
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+    try:
+        from requests.packages.urllib3.exceptions import InsecureRequestWarning
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+    except:
+        pass
 
     from lxml import etree
     from StringIO import StringIO
@@ -212,6 +215,9 @@ else:
                                   doctype = "<!DOCTYPE netapp SYSTEM 'file:/etc/netapp_filer.dtd'>",
                                   xml_declaration = True, encoding = "UTF-8")
 
+
+        def add_error_message(self, message):
+            self.error_messages.add_message(message)
 
         # Converts: ['perf-object-get-instances', [['objectname', 'nfsv3'], ['instance-uuids', [['instance-uuid', '5']]]]]
         # into a xml etree:
@@ -263,7 +269,7 @@ else:
             if self.debug:
                 print "######## GOT RESPONSE #######"
                 if self.last_response.status != "passed":
-                    print "Error: Unable to parse content of response: %s" % self.last_response.content
+                    print "Error: Unable to parse content of response: %s" % self.last_response.raw_response_text
                 else:
                     print prettify(self.last_response.content.get_node())
 
@@ -1130,7 +1136,7 @@ try:
             server.set_vfiler(vfiler)
             response = server.invoke("snapmirror-get-status")
             data = response.children_get()
-            if not data:
+            if not data or len(data) <= 1:
                 continue
             data = data[1]
             print format_config(data, "snapvault", "source-location",
@@ -1193,6 +1199,7 @@ try:
 
 except Exception, e:
     # Shouldn't happen at all...
+    server.add_error_message("Agent Exception (contact developer): %s" % e)
     if opt_debug:
         raise
 finally:

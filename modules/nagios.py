@@ -983,10 +983,6 @@ if os.path.islink(%(dst)r):
     # Register default Check_MK signal handler
     output.write("register_sigint_handler()\n")
 
-    # TODO: can we avoid adding this module if no predictive monitoring
-    # is being used?
-    output.write(stripped_python_file(cmk.paths.modules_dir + "/prediction.py"))
-
     # initialize global variables
     output.write("""
 # very simple commandline parsing: only -v and -d are supported

@@ -38,7 +38,7 @@ def paint_host_inventory(row, invpath):
         return hint["paint_function"](invdata)
     elif invdata == None:
         return "", ""
-    elif type(invdata) in ( str, unicode ):
+    elif type(invdata) in ( str, unicode, HTML ):
         return "", invdata
     elif not is_leaf_type(invdata):
         return paint_inv_tree(row, invpath)

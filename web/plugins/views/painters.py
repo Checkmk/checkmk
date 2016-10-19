@@ -295,10 +295,14 @@ def process_multisite_icons(what, row, tags, custom_vars, toplevel):
                         raise
                     result = ("alert", "%s" % e)
 
-                if result == None:
+                if result is None:
                     continue
 
-                elif type(result) in [str,unicode]:
+                elif type(result) in [str, unicode, HTML]:
+
+                    if isinstance(result, HTML):
+                        result = str(result)
+
                     # TODO: This is handling the deprecated API with 1.2.7. Remove this one day.
                     if result[0] == '<':
                         # seems like an old format icon (html code). In regular rendering

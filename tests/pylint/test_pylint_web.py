@@ -56,7 +56,9 @@ def test_pylint_web():
         for plugin_file, plugin_base in files:
             plugin_path = plugin_base +"/"+plugin_file
 
-            if plugin_dir in ["icons","perfometer"]:
+            if plugin_file.startswith('.'):
+                continue
+            elif plugin_dir in ["icons","perfometer"]:
                 module_name = "views"
             elif plugin_dir == "pages":
                 module_name = "modules"

@@ -667,10 +667,9 @@ elif [ -x /usr/sbin/ssmtp ] ; then
 
 fi
 
-# postfix would write to stderr but only if it's a tty
 if type postmulti >/dev/null ; then
     echo "<<<postfix_mailq_status:sep(58)>>>"
-    script -qfc 'postmulti -p status' /dev/null
+    script -c 'postmulti -p status'
 fi
 
 

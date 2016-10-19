@@ -7429,8 +7429,8 @@ def event_rule_match_conditions(flavour):
           ListChoice(
                title = _("Match host event type"),
                help = _("Select the host event types and transitions this rule should handle. Note: "
-                        "If you activate this option and do <b>not</b> also specify host event "
-                        "types then this rule will never hold for host notifications!"),
+                        "If you activate this option and do <b>not</b> also specify service event "
+                        "types then this rule will never hold for service notifications!"),
                choices = [
                    ( 'rd', _("UP")          + u" ➤ " + _("DOWN")),
                    ( 'dr', _("DOWN")        + u" ➤ " + _("UP")),
@@ -7446,8 +7446,8 @@ def event_rule_match_conditions(flavour):
            ListChoice(
                title = _("Match service event type"),
                 help  = _("Select the service event types and transitions this rule should handle. Note: "
-                          "If you activate this option and do <b>not</b> also specify service event "
-                          "types then this rule will never hold for service notifications!"),
+                          "If you activate this option and do <b>not</b> also specify host event "
+                          "types then this rule will never hold for host notifications!"),
                choices = [
                    ( 'rw', _("OK")      + u" ➤ " + _("WARN")),
                    ( 'rr', _("OK")      + u" ➤ " + _("OK")),

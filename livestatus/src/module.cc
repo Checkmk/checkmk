@@ -90,7 +90,7 @@ int g_num_queued_connections =
     0; /* current number of queued connections (for statistics) */
 int g_num_active_connections =
     0; /* current number of active connections (for statistics) */
-size_t g_thread_stack_size = 65536; /* stack size of threads */
+size_t g_thread_stack_size = 1024 * 1024; /* stack size of threads */
 extern int g_disable_statehist_filtering;
 
 #define false 0

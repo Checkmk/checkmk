@@ -51,6 +51,7 @@
     Notifications:
     * 3957 mail: now allows extra HTML section between body and table
     * 3900 FIX: Notification analysis: Fixed wrong color for host notification states
+    * 3968 FIX: Notifications / Alert handling: Fixed configuring nth notifications without state changes...
 
     BI:
     * 3955 BI rule ID can now be renamed

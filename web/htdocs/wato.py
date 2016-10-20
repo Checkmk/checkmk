@@ -7433,11 +7433,17 @@ def event_rule_match_conditions(flavour):
                         "types then this rule will never hold for service notifications!"),
                choices = [
                    ( 'rd', _("UP")          + u" ➤ " + _("DOWN")),
-                   ( 'dr', _("DOWN")        + u" ➤ " + _("UP")),
                    ( 'ru', _("UP")          + u" ➤ " + _("UNREACHABLE")),
+
+                   ( 'dr', _("DOWN")        + u" ➤ " + _("UP")),
                    ( 'du', _("DOWN")        + u" ➤ " + _("UNREACHABLE")),
+
                    ( 'ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
                    ( 'ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
+
+                   ( '?r', _("any")         + u" ➤ " + _("UP")),
+                   ( '?d', _("any")         + u" ➤ " + _("DOWN")),
+                   ( '?u', _("any")         + u" ➤ " + _("UNREACHABLE")),
                ] + add_choices,
                default_value = [ 'rd', 'dr', ] + add_default,
          )
@@ -7466,6 +7472,11 @@ def event_rule_match_conditions(flavour):
                    ( 'ur', _("UNKNOWN") + u" ➤ " + _("OK")),
                    ( 'uw', _("UNKNOWN") + u" ➤ " + _("WARN")),
                    ( 'uc', _("UNKNOWN") + u" ➤ " + _("CRIT")),
+
+                   ( '?r', _("any") + u" ➤ " + _("OK")),
+                   ( '?w', _("any") + u" ➤ " + _("WARN")),
+                   ( '?c', _("any") + u" ➤ " + _("CRIT")),
+                   ( '?u', _("any") + u" ➤ " + _("UNKNOWN")),
 
                ] + add_choices,
                default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', ] + add_default,

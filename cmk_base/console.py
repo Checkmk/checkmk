@@ -70,8 +70,8 @@ def vverbose(text, *args, **kwargs):
 
 # TODO: Inconsistent -> Adds newline and other functions don't
 def warning(text, *args):
-    stripped = reason.lstrip()
-    indent = reason[:len(reason) - len(stripped)]
+    stripped = text.lstrip()
+    indent = text[:len(text) - len(stripped)]
 
     text = "%s%s%sWARNING:%s %s\n" % (indent, tty.bold, tty.yellow, tty.normal, stripped)
 

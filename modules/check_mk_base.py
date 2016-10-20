@@ -63,6 +63,7 @@ import cmk.paths
 import cmk_base.agent_simulator
 import cmk_base.utils
 import cmk_base.prediction
+import cmk_base.console as console
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing

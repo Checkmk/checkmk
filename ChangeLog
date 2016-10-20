@@ -8,6 +8,7 @@
     * 3650 FIX: Fixed bash versionitis, unbreaking cached check results....
     * 3960 FIX: if.include: fixed wrong order if interface groups are configured
     * 3903 FIX: mssql.vbs: Fixed support for MSSQL server 2016
+    * 3967 FIX: raritan_emx: Fixed broken check (wrong include temperature.includes)
 
     Multisite:
     * 3902 FIX: Graph search view: Changing painter options made page empty

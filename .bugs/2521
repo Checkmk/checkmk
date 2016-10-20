@@ -1,0 +1,10 @@
+Title: Scheduled reports should be save on network share
+Component: multisite
+State: open
+Date: 2016-10-20 20:59:31
+Targetversion: future
+Class: feature
+
+Scheduled reports should not only be send by email.
+It should be possible, that the user can save them on a network share.
+We have just integrated network mounts. It should be possible to use them for saving generated reports, too.

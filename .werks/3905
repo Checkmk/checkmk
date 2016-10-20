@@ -9,7 +9,9 @@ Class: feature
 If postfix is configured with multi directories then the linux agent provides information
 about deferred and active mail queue length of these directories.
 
-Note: existing ruleset mailqueue length is now deprecated. These checks will
-work further on but the related ruleset won't be applied any more except default levels.
-Please use new service descriptions for these checks below global settings, rediscover the
-affected hosts and use new mail queue length ruleset.
+Note: The existing ruleset mailqueue length is now deprecated. These checks will
+work further on but the related ruleset won't be applied any more except the default levels.
+To make these new checks work, please
+1. rediscover the affected hosts
+2. use new mail queue length ruleset and
+3. enable "use new service description" for these checks below global settings.

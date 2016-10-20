@@ -16,6 +16,9 @@
     WATO:
     * 3821 FIX: WATO Network Scan: Fixed risk of loosing site tags when performing a network scan...
 
+    Notifications:
+    * 3968 FIX: Notifications / Alert handling: Fixed configuring nth notifications without state changes...
+
 
 1.2.8p12:
     Core & Setup:

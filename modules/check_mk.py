@@ -58,6 +58,7 @@ import cmk.render as render
 import cmk.man_pages as man_pages
 
 import cmk_base.console as console
+import cmk_base.cache
 
 #   .--Prelude-------------------------------------------------------------.
 #   |                  ____           _           _                        |
@@ -1951,11 +1952,12 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
         skip_autochecks = True
 
     # speed up multiple lookup of same host
-    if not skip_autochecks and use_cache and hostname in g_check_table_cache:
+    check_table_cache = cmk_base.cache.get("check_tables")
+    if not skip_autochecks and use_cache and hostname in check_table_cache:
         if remove_duplicates and is_dual_host(hostname):
-            return remove_duplicate_checks(g_check_table_cache[hostname])
+            return remove_duplicate_checks(check_table_cache[hostname])
         else:
-            return g_check_table_cache[hostname]
+            return check_table_cache[hostname]
 
     check_table = {}
 
@@ -2078,7 +2080,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
                 deps.append(d)
 
     if not skip_autochecks and use_cache:
-        g_check_table_cache[hostname] = check_table
+        check_table_cache[hostname] = check_table
 
     if remove_duplicates:
         return remove_duplicate_checks(check_table)

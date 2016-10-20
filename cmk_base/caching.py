@@ -24,10 +24,35 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-"""This is the python module hierarchy used by Check_MK's core
-components, former called modules. This hosts the checking,
-discovery and a lot of other functionality."""
+"""Managing in-memory caches through the execution time of cmk"""
 
-import cmk_base.caching
+from cmk.exceptions import MKGeneralException
 
-cache = cmk_base.caching.CacheManager()
+
+class CacheManager(object):
+    def __init__(self):
+        self._caches = {}
+
+
+    def register(self, name):
+        if name in self._caches:
+            raise MKGeneralException("The cache \"%s\" is already registered" % name)
+
+        self._caches[name] = Cache()
+        return self._caches[name]
+
+
+    def clear_all():
+        for cache in self._caches.values():
+            cache.clear()
+
+
+    def get(self, name):
+        return self._caches[name]
+
+
+
+# Just a small wrapper round a dict to get some caching specific functionality
+# for analysis etc.
+class Cache(dict):
+    pass

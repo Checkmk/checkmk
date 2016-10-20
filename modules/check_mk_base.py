@@ -64,6 +64,7 @@ import cmk_base.agent_simulator
 import cmk_base.utils
 import cmk_base.prediction
 import cmk_base.console as console
+import cmk_base.cache
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -99,8 +100,7 @@ def reset_global_caches():
     global g_ip_lookup_cache
     g_ip_lookup_cache   = None  # permanently cached ipaddresses from ipaddresses.cache
 
-    for cachevar_name in g_global_caches:
-        globals()[cachevar_name] = {}
+    cmk_base.cache.clear_all()
 
 
 # global variables used to cache temporary values that do not need
@@ -125,10 +125,8 @@ g_global_caches              = []
 
 # global variables used to cache temporary values that need to
 # be reset after a configuration change.
-g_check_table_cache          = {} # per-host-checktables
-g_global_caches.append('g_check_table_cache')
-g_nodesof_cache              = {} # Nodes of cluster hosts
-g_global_caches.append('g_nodesof_cache')
+cmk_base.cache.register("check_tables") # Check table of a host
+cmk_base.cache.register("nodes_of") # Nodes of cluster hosts
 
 reset_global_caches()
 
@@ -1973,16 +1971,17 @@ def i_am_root():
 # Returns the nodes of a cluster, or None if hostname is
 # not a cluster
 def nodes_of(hostname):
-    nodes = g_nodesof_cache.get(hostname, False)
+    nodes_of_cache = cmk_base.cache.get("nodes_of")
+    nodes = nodes_of_cache.get(hostname, False)
     if nodes != False:
         return nodes
 
     for tagged_hostname, nodes in clusters.items():
         if hostname == tagged_hostname.split("|")[0]:
-            g_nodesof_cache[hostname] = nodes
+            nodes_of_cache[hostname] = nodes
             return nodes
 
-    g_nodesof_cache[hostname] = None
+    nodes_of_cache[hostname] = None
     return None
 
 def check_uses_snmp(check_type):

@@ -1,0 +1,9 @@
+Title: Skype for Business checks: refactored most of the checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476960884
+Class: fix
+
+Note: Due to a bug in the windows agent these check weren't discovered, anyway.

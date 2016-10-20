@@ -26,50 +26,68 @@
 
 
 # these defaults were specified by customer
-factory_settings['skype_defaultlevels'] = {
-    'failed_search_requests':          {"upper": (1.0, 2.0)},
-    'failed_locations_requests':       {"upper": (1.0, 2.0)},
-    'timedout_ad_requests':            {"upper": (0.01, 0.02)},
-    '5xx_responses':                   {"upper": (1.0, 2.0)},
-    'message_processing_time':         {"upper": (1.0, 2.0)}, # for edge servers: < 3
-    'asp_requests_rejected':           {"upper": (1, 2)},
-    'failed_file_requests':            {"upper": (1.0, 2.0)},
-    'join_failures':                   {"upper": (1, 2)},
-    'failed_validate_cert':            {"upper": (1, 2)},
+factory_settings['skype_mobile_defaultlevels'] = {
+    'requests_processing':             {"upper": (10000, 20000)}
+}
 
+factory_settings['skype_xmpp_defaultlevels'] = {
+    'failed_outbound_streams':         {"upper": (0.01, 0.02)},
+    'failed_inbound_streams':          {"upper": (0.01, 0.02)}
+}
+
+factory_settings['skype_edgeauth_defaultlevels'] = {
+    'bad_requests':                    {"upper": (20, 40)},
+}
+
+factory_settings['skype_mediation_server_defaultlevels'] = {
+    'load_call_failure_index':         {"upper": (10, 20)},
+    'failed_calls_because_of_proxy':   {"upper": (10, 20)},
+    'failed_calls_because_of_gateway': {"upper": (10, 20)},
+    'media_connectivity_failure':      {"upper": (1, 2)},
+}
+
+factory_settings['skype_sip_defaultlevels'] = {
+    'message_processing_time':         {"upper": (1.0, 2.0)}, # for edge servers: < 3
     'incoming_responses_dropped':      {"upper": (1.0, 2.0)},
     'incoming_requests_dropped':       {"upper": (1.0, 2.0)},
     'queue_latency':                   {"upper": (0.1, 0.2)},
     'sproc_latency':                   {"upper": (0.1, 0.2)},
     'throttled_requests':              {"upper": (0.2, 0.4)},
     'local_503_responses':             {"upper": (0.01, 0.02)},
-
-    'incomplete_calls':                {"upper": (20, 40)},
-    'create_conference_latency':       {"upper": (5000, 10000)},
-    'allocation_latency':              {"upper": (5000, 10000)},
-
     'timedout_incoming_messages':      {"upper": (2, 4)},
     'holding_time_incoming':           {"upper": (6.0, 12.0)},
     'flow_controlled_connections':     {"upper": (1, 2)},
     'outgoing_queue_delay':            {"upper": (2.0, 4.0)},
     'timedout_sends':                  {"upper": (0.01, 0.02)},
     'authentication_errors':           {"upper": (1, 2)},
+}
 
-    'load_call_failure_index':         {"upper": (10, 20)},
-    'failed_calls_because_of_proxy':   {"upper": (10, 20)},
-    'failed_calls_because_of_gateway': {"upper": (10, 20)},
-    'media_connectivity_failure':      {"upper": (1, 2)},
+factory_settings['skype_conferencing_defaultlevels'] = {
+    'incomplete_calls':                {"upper": (20, 40)},
+    'create_conference_latency':       {"upper": (5000, 10000)},
+    'allocation_latency':              {"upper": (5000, 10000)},
+}
 
-    'bad_requests':                    {"upper": (20, 40)},
-
+factory_settings["skype_edge_defaultlevels"] = {
     'authentication_failures':         {"upper": (20, 40)},
     'allocate_requests_exceeding':     {"upper": (20, 40)},
     'packets_dropped':                 {"upper": (200, 400)},
+}
 
+factory_settings["skype_proxy_defaultlevels"] = {
     'throttled_connections':           {"upper": (1, 2)},
-    'requests_processing':             {"upper": (10000, 20000)},
-    'failed_outbound_streams':         {"upper": (0.01, 0.02)},
-    'failed_inbound_streams':          {"upper": (0.01, 0.02)}
+}
+
+factory_settings['skype_defaultlevels'] = {
+    'failed_search_requests':          {"upper": (1.0, 2.0)},
+    'failed_locations_requests':       {"upper": (1.0, 2.0)},
+    'timedout_ad_requests':            {"upper": (0.01, 0.02)},
+    '5xx_responses':                   {"upper": (1.0, 2.0)},
+
+    'asp_requests_rejected':           {"upper": (1, 2)},
+    'failed_file_requests':            {"upper": (1.0, 2.0)},
+    'join_failures':                   {"upper": (1, 2)},
+    'failed_validate_cert':            {"upper": (1, 2)},
 }
 
 
@@ -87,7 +105,6 @@ def check_skype(item, params, parsed):
 
     yield wmi_yield_raw_persec(parsed["LS:WEB - Address Book Web Query"], item,
                                "WEB - Failed search requests/sec",
-                               label=" failed search requests/sec",
                                perfvar="failed_search",
                                levels=params['failed_search_requests'])
 
@@ -235,8 +252,8 @@ check_info['skype.conferencing'] = {
     'has_perfdata'            : True,
     'service_description'     : "Skype Conferencing",
     'includes'                : ['wmi.include'],
-    'group'                   : 'skype',
-    'default_levels_variable' : 'skype_defaultlevels'
+    'group'                   : 'skype_conferencing',
+    'default_levels_variable' : 'skype_conferencing_defaultlevels'
 }
 
 
@@ -347,8 +364,8 @@ check_info['skype.sip_stack'] = {
     'check_function'          : check_skype_sip_stack,
     'has_perfdata'            : True,
     'service_description'     : "Skype SIP Stack",
-    'group'                   : 'skype',
-    'default_levels_variable' : 'skype_defaultlevels'
+    'group'                   : 'skype_sip',
+    'default_levels_variable' : 'skype_sip_defaultlevels'
 }
 
 
@@ -393,8 +410,8 @@ check_info['skype.mediation_server'] = {
     'check_function'          : check_skype_mediation_server,
     'has_perfdata'            : True,
     'service_description'     : "Skype Mediation Server",
-    'group'                   : 'skype',
-    'default_levels_variable' : 'skype_defaultlevels'
+    'group'                   : 'skype_mediation_server',
+    'default_levels_variable' : 'skype_mediation_server_defaultlevels'
 }
 
 
@@ -413,8 +430,8 @@ check_info['skype.edge_auth'] = {
     'check_function'          : check_skype_edge_auth,
     'has_perfdata'            : True,
     'service_description'     : "Skype Edge Authentification",
-    'group'                   : 'skype',
-    'default_levels_variable' : 'skype_defaultlevels'
+    'group'                   : 'skype_edgeauth',
+    'default_levels_variable' : 'skype_edgeauth_defaultlevels'
 }
 
 def check_skype_av_edge(item, params, parsed):
@@ -469,7 +486,7 @@ check_info['skype.edge'] = {
     'has_perfdata'            : True,
     'service_description'     : "Skype AV Edge %s",
     'group'                   : 'skype_edge',
-    'default_levels_variable' : 'skype_defaultlevels'
+    'default_levels_variable' : 'skype_edge_defaultlevels'
 }
 
 
@@ -495,7 +512,7 @@ check_info['skype.data_proxy'] = {
     'has_perfdata'            : True,
     'service_description'     : "Skype Data Proxy %s",
     'group'                   : 'skype_proxy',
-    'default_levels_variable' : 'skype_defaultlevels'
+    'default_levels_variable' : 'skype_proxy_defaultlevels'
 }
 
 
@@ -521,8 +538,8 @@ check_info['skype.xmpp_proxy'] = {
     'check_function'          : check_skype_xmpp_proxy,
     'has_perfdata'            : True,
     'service_description'     : "Skype XMPP Proxy",
-    'group'                   : 'skype',
-    'default_levels_variable' : 'skype_defaultlevels'
+    'group'                   : 'skype_xmpp',
+    'default_levels_variable' : 'skype_xmpp_defaultlevels'
 }
 
 
@@ -565,6 +582,6 @@ check_info['skype.mobile'] = {
     'check_function'          : check_skype_mobile,
     'has_perfdata'            : True,
     'service_description'     : "Skype Mobile Sessions",
-    'group'                   : 'skype',
-    'default_levels_variable' : 'skype_defaultlevels'
+    'group'                   : 'skype_mobile',
+    'default_levels_variable' : 'skype_mobile_defaultlevels'
 }

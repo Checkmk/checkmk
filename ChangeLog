@@ -34,6 +34,7 @@
     * 3960 FIX: if.include: fixed wrong order if interface groups are configured
     * 3828 FIX: agent_netapp: improved error reporting. fixed exception when snapmirror-get-status returns no values
     * 3966 FIX: apc_symmetra raritan_emx: Fixed wrong include "temperature.includes"...
+    * 3829 FIX: Skype for Business checks: refactored most of the checks...
 
     Multisite:
     * 3959 Two new filters for the comment view: author and comment text field

@@ -296,7 +296,7 @@ check_info['apc_symmetra.temp'] = {
     'default_levels_variable'   : 'apc_symmetra_temp_default_levels',
     'has_perfdata'              : True,
     'group'                     : 'temperature',
-    'includes'                  : [ 'temperature.includes' ],
+    'includes'                  : [ 'temperature.include' ],
 }
 
 

@@ -121,7 +121,7 @@ check_info['raritan_emx'] = {
                               ]),
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.13742.8"],
     "group"                 : "temperature",
-    "includes"              : [ "temperature.includes", "raritan.include" ],
+    "includes"              : [ "temperature.include", "raritan.include" ],
 }
 
 #.

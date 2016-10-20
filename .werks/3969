@@ -1,0 +1,13 @@
+Title: CentOS 5.5: Fixed incompatibility with the available OpenSSL 0.98
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476967437
+Class: fix
+
+When opening the GUI, the following error occured, making the GUI unusable:
+
+RuntimeError: You are linking against OpenSSL 0.9.8, which is no longer support by the OpenSSL project. You need to upgrade to a newer version of OpenSSL.
+
+This has been fixed now.

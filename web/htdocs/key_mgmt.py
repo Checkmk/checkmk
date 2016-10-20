@@ -26,6 +26,11 @@
 
 import os
 import pprint
+
+# This is needed for at least CentOS 5.5
+# TODO: Drop this until all supported platforms have newer versions available.
+os.environ["CRYPTOGRAPHY_ALLOW_OPENSSL_098"] = "1"
+
 from OpenSSL import crypto
 
 import table

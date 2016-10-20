@@ -29,6 +29,7 @@ of console input / output"""
 
 import sys
 
+import cmk.tty as tty
 import cmk.log
 logger = cmk.log.get_logger("base")
 
@@ -75,4 +76,4 @@ def warning(text, *args):
 
     text = "%s%s%sWARNING:%s %s\n" % (indent, tty.bold, tty.yellow, tty.normal, stripped)
 
-    console.output(text, *args, stream=sys.stderr)
+    output(text, *args, stream=sys.stderr)

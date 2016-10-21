@@ -184,8 +184,14 @@ class Site(object):
 
     def read_file(self, rel_path):
         p = self.execute(["cat", "%s/%s" % (self.root, rel_path)], stdout=subprocess.PIPE)
-        p.wait()
+        if p.wait() != 0:
+            raise MKGeneralException("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
         return p.stdout.read()
+
+
+    def file_exists(self, rel_path):
+        p = self.execute(["test", "-e", "%s/%s" % (self.root, rel_path)], stdout=subprocess.PIPE)
+        return p.wait() == 0
 
 
     def cleanup_if_wrong_version(self):
@@ -269,8 +275,15 @@ class Site(object):
         web = CMKWebSession(self)
         web.login()
         web.get("wato.py")
-        assert os.path.exists(self.root + "/etc/check_mk/conf.d/wato/rules.mk"), \
-            "Failed to initialize WATO data structures"
+
+        for f in [
+                "etc/check_mk/conf.d/wato/rules.mk",
+                "etc/check_mk/multisite.d/wato/hosttags.mk",
+                "etc/check_mk/conf.d/wato/global.mk",
+                "var/check_mk/web/automation",
+                "var/check_mk/web/automation/automation.secret" ]:
+            assert self.file_exists(f), \
+                    "Failed to initialize WATO data structures (%s missing)" % f
 
 
     # This opens a currently free TCP port and remembers it in the object for later use

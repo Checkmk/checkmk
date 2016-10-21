@@ -211,8 +211,9 @@ void *main_thread(void *data) {
                 g_max_fd_ever = cc;
             }
             if (fcntl(cc, F_SETFD, FD_CLOEXEC) < 0) {
-                Warning(fl_logger_livestatus) << generic_error(
+                generic_error ge(
                     "cannot set close-on-exec bit on client socket");
+                Warning(fl_logger_livestatus) << ge;
             }
             fl_client_queue->addConnection(cc);  // closes fd
             g_num_queued_connections++;
@@ -375,8 +376,9 @@ int open_unix_socket() {
             Debug(fl_logger_nagios) << "removed old socket file "
                                     << g_socket_path;
         } else {
-            Alert(fl_logger_nagios) << generic_error(
-                "cannot remove old socket file " + string(g_socket_path));
+            generic_error ge("cannot remove old socket file " +
+                             string(g_socket_path));
+            Alert(fl_logger_nagios) << ge;
             return false;
         }
     }
@@ -384,15 +386,15 @@ int open_unix_socket() {
     g_unix_socket = socket(PF_UNIX, SOCK_STREAM, 0);
     g_max_fd_ever = g_unix_socket;
     if (g_unix_socket < 0) {
-        Critical(fl_logger_nagios)
-            << generic_error("cannot create UNIX socket");
+        generic_error ge("cannot create UNIX socket");
+        Critical(fl_logger_nagios) << ge;
         return false;
     }
 
     // Imortant: close on exec -> check plugins must not inherit it!
     if (fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) < 0) {
-        Informational(fl_logger_nagios)
-            << generic_error("cannot set close-on-exec bit on socket");
+        generic_error ge("cannot set close-on-exec bit on socket");
+        Informational(fl_logger_nagios) << ge;
     }
 
     // Bind it to its address. This creates the file with the name g_socket_path
@@ -401,8 +403,9 @@ int open_unix_socket() {
     strncpy(sockaddr.sun_path, g_socket_path, sizeof(sockaddr.sun_path));
     if (bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
              sizeof(sockaddr)) < 0) {
-        Error(fl_logger_nagios) << generic_error(
-            "cannot bind UNIX socket to adress " + string(g_socket_path));
+        generic_error ge("cannot bind UNIX socket to adress " +
+                         string(g_socket_path));
+        Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
     }
@@ -410,16 +413,17 @@ int open_unix_socket() {
     // Make writable group members (fchmod didn't do nothing for me. Don't know
     // why!)
     if (0 != chmod(g_socket_path, 0660)) {
-        Error(fl_logger_nagios) << generic_error(
-            "cannot change file permissions for UNIX socket at " +
-            string(g_socket_path) + " to 0660");
+        generic_error ge("cannot change file permissions for UNIX socket at " +
+                         string(g_socket_path) + " to 0660");
+        Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
     }
 
     if (0 != listen(g_unix_socket, 3 /* backlog */)) {
-        Error(fl_logger_nagios) << generic_error(
-            "cannot listen to UNIX socket at " + string(g_socket_path));
+        generic_error ge("cannot listen to UNIX socket at " +
+                         string(g_socket_path));
+        Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
     }

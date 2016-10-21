@@ -128,9 +128,10 @@ void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
         if (retval > 0 && FD_ISSET(fd, &fds)) {
             ssize_t bytes_written = write(fd, buffer, bytes_to_write);
             if (bytes_written == -1) {
-                Informational(_logger) << generic_error(
-                    "could not write " + to_string(bytes_to_write) +
-                    " bytes to client socket");
+                generic_error ge("could not write " +
+                                 to_string(bytes_to_write) +
+                                 " bytes to client socket");
+                Informational(_logger) << ge;
                 break;
             }
             buffer += bytes_written;

@@ -71,14 +71,16 @@ unique_ptr<vector<char>> HostFileColumn::getBlob(void *data) {
     if (fd == -1) {
         // It is OK when inventory/logwatch files do not exist.
         if (errno != ENOENT) {
-            Warning(_logger) << generic_error("cannot open " + path);
+            generic_error ge("cannot open " + path);
+            Warning(_logger) << ge;
         }
         return nullptr;
     }
 
     struct stat st;
     if (fstat(fd, &st) == -1) {
-        Warning(_logger) << generic_error("cannot stat " + path);
+        generic_error ge("cannot stat " + path);
+        Warning(_logger) << ge;
         return nullptr;
     }
     if (!S_ISREG(st.st_mode)) {
@@ -93,7 +95,8 @@ unique_ptr<vector<char>> HostFileColumn::getBlob(void *data) {
         ssize_t bytes_read = read(fd, buffer, bytes_to_read);
         if (bytes_read == -1) {
             if (errno != EINTR) {
-                Warning(_logger) << generic_error("could not read " + path);
+                generic_error ge("could not read " + path);
+                Warning(_logger) << ge;
                 close(fd);
                 return nullptr;
             }

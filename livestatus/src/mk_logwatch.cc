@@ -55,8 +55,8 @@ void mk_logwatch_acknowledge(const string &host_name, const string &file_name) {
 
     int r = remove(path.c_str());
     if (r != 0) {
-        Warning(logger) << generic_error(
-            "Cannot acknowledge mk_logfile file '" + file_name + "' of host '" +
-            host_name + "'");
+        generic_error ge("Cannot acknowledge mk_logfile file '" + file_name +
+                         "' of host '" + host_name + "'");
+        Warning(logger) << ge;
     }
 }

@@ -60,7 +60,8 @@ Logfile::Logfile(const CommandsHolder &commands_holder, string path, bool watch)
     , _logclasses_read(0) {
     int fd = open(_path.c_str(), O_RDONLY);
     if (fd < 0) {
-        Informational(_logger) << generic_error("cannot open logfile " + _path);
+        generic_error ge("cannot open logfile " + _path);
+        Informational(_logger) << ge;
         return;
     }
 
@@ -138,8 +139,8 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
 
         file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
-            Informational(_logger)
-                << generic_error("cannot open logfile " + _path);
+            generic_error ge("cannot open logfile " + _path);
+            Informational(_logger) << ge;
             return;
         }
 
@@ -285,14 +286,15 @@ void Logfile::updateReferences() {
 char *Logfile::readIntoBuffer(size_t *size) {
     int fd = open(_path.c_str(), O_RDONLY);
     if (fd < 0) {
-        Warning(_logger) << generic_error("cannot open " + _path +
-                                          " for reading");
+        generic_error ge("cannot open " + _path + " for reading");
+        Warning(_logger) << ge;
         return nullptr;
     }
 
     off_t o = lseek(fd, 0, SEEK_END);
     if (o == -1) {
-        Warning(_logger) << generic_error("cannot seek to end of " + _path);
+        generic_error ge("cannot seek to end of " + _path);
+        Warning(_logger) << ge;
         close(fd);
         return nullptr;
     }
@@ -303,16 +305,17 @@ char *Logfile::readIntoBuffer(size_t *size) {
     // add space for binary 0 at beginning and end
     char *buffer = static_cast<char *>(malloc(*size + 2));
     if (buffer == nullptr) {
-        Warning(_logger) << generic_error("cannot malloc buffer for reading " +
-                                          _path);
+        generic_error ge("cannot malloc buffer for reading " + _path);
+        Warning(_logger) << ge;
         close(fd);
         return nullptr;
     }
 
     ssize_t r = read(fd, buffer + 1, *size);
     if (r < 0) {
-        Warning(_logger) << generic_error("cannot read " + to_string(*size) +
-                                          " bytes from " + _path);
+        generic_error ge("cannot read " + to_string(*size) + " bytes from " +
+                         _path);
+        Warning(_logger) << ge;
         free(buffer);
         close(fd);
         return nullptr;

@@ -1,0 +1,11 @@
+Title: openbsd_sensors: Genugate devices are now handling hardware sensors
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i2
+Date: 1477057485
+Class: feature
+
+Genugate and other OpenBSD devices are now handling hardware sensors if the
+data comes by SNMP. Included are temperature, fan and voltage sensors. For
+all of these new checks thresholds can be set.

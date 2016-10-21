@@ -34,25 +34,54 @@ class CacheManager(object):
         self._caches = {}
 
 
-    def register(self, name):
-        if name in self._caches:
-            raise MKGeneralException("The cache \"%s\" is already registered" % name)
-
-        self._caches[name] = Cache()
-        return self._caches[name]
+    def exists(self, name):
+        return name in self._caches
 
 
-    def clear_all():
+    def _get(self, name, cache_class):
+        try:
+            return self._caches[name]
+        except KeyError:
+            if not issubclass(cache_class, Cache):
+                raise MKGeneralException("The cache object must be a instance of Cache()")
+
+            self._caches[name] = cache_class()
+            return self._caches[name]
+
+
+    def get_dict(self, name):
+        return self._get(name, DictCache)
+
+
+    def get_set(self, name):
+        return self._get(name, SetCache)
+
+
+    def get_list(self, name):
+        return self._get(name, ListCache)
+
+
+    def clear_all(self):
         for cache in self._caches.values():
             cache.clear()
 
 
-    def get(self, name):
-        return self._caches[name]
 
+class Cache(object):
+    def is_empty(self):
+        return not self
 
 
 # Just a small wrapper round a dict to get some caching specific functionality
 # for analysis etc.
-class Cache(dict):
+class DictCache(dict, Cache):
     pass
+
+
+class SetCache(set, Cache):
+    pass
+
+
+class ListCache(list, Cache):
+    def clear(self):
+        del self[:] # Clear the list in place

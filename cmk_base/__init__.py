@@ -30,4 +30,12 @@ discovery and a lot of other functionality."""
 
 import cmk_base.caching
 
-cache = cmk_base.caching.CacheManager()
+# This cache manager holds all caches that rely on the configuration
+# and have to be flushed once the configuration is reloaded in the
+# keepalive mode
+config_cache = cmk_base.caching.CacheManager()
+
+# These caches are not automatically cleared during the whole execution
+# time of the current Check_MK process. Single cached may be cleaned
+# manually during execution.
+runtime_cache = cmk_base.caching.CacheManager()

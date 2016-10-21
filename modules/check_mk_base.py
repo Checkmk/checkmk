@@ -64,7 +64,7 @@ import cmk_base.agent_simulator
 import cmk_base.utils
 import cmk_base.prediction
 import cmk_base.console as console
-import cmk_base.cache
+import cmk_base
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -89,20 +89,6 @@ import cmk_base.cache
 #   |  Definition of global variables and constants.                       |
 #   '----------------------------------------------------------------------'
 
-# Global caches that are valid until the configuration changes. These caches
-# are need to be reset in keepalive mode after a configuration change has
-# been signalled.
-def reset_global_caches():
-    global g_singlehost_checks
-    g_singlehost_checks = None  # entries in checks used by just one host
-    global g_multihost_checks
-    g_multihost_checks  = None  # entries in checks used by more than one host
-    global g_ip_lookup_cache
-    g_ip_lookup_cache   = None  # permanently cached ipaddresses from ipaddresses.cache
-
-    cmk_base.cache.clear_all()
-
-
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
 g_infocache                  = {} # In-memory cache of host info.
@@ -121,14 +107,6 @@ g_single_oid_cache           = {}
 g_broken_snmp_hosts          = set([])
 g_broken_agent_hosts         = set([])
 g_timeout                    = None
-g_global_caches              = []
-
-# global variables used to cache temporary values that need to
-# be reset after a configuration change.
-cmk_base.cache.register("check_tables") # Check table of a host
-cmk_base.cache.register("nodes_of") # Nodes of cluster hosts
-
-reset_global_caches()
 
 # variables set later by getopt. These are defined here since in precompiled
 # mode the module check_mk.py is not present and we need all options to be
@@ -1535,40 +1513,40 @@ def is_manual_check(hostname, check_type, item):
     return (check_type, item) in manual_checks
 
 
-g_snmp_info_set  = {}
-g_global_caches.append("g_snmp_info_set")
-g_check_info_set = {}
-g_global_caches.append("g_check_info_set")
-def initialize_checktype_caches():
-    global g_snmp_info_set
-    global g_check_info_set
+def initialize_check_type_caches():
+    snmp_cache = cmk_base.config_cache.get_set("check_type_snmp")
+    snmp_cache.update(snmp_info.keys())
 
-    if not g_snmp_info_set:
-        g_snmp_info_set  = set(snmp_info.keys())
-        g_check_info_set = set(check_info.keys())
+    tcp_cache = cmk_base.config_cache.get_set("check_type_tcp")
+    tcp_cache.update(check_info.keys())
 
-g_is_snmp_check_cache = {}
-g_global_caches.append("g_is_snmp_check_cache")
+
 def is_snmp_check(check_name):
-    if check_name in g_is_snmp_check_cache:
-        return g_is_snmp_check_cache[check_name]
+    cache = cmk_base.config_cache.get_dict("is_snmp_check")
 
-    initialize_checktype_caches()
-    result = check_name.split(".")[0] in g_snmp_info_set
-    g_is_snmp_check_cache[check_name] = result
-    return result
+    try:
+        return cache[check_name]
+    except KeyError:
+        snmp_checks = cmk_base.config_cache.get_set("check_type_snmp")
 
-g_is_tcp_check_cache = {}
-g_global_caches.append("g_is_tcp_check_cache")
+        result = check_name.split(".")[0] in snmp_checks
+        cache[check_name] = result
+        return result
+
+
 def is_tcp_check(check_name):
-    if check_name in g_is_tcp_check_cache:
-        return g_is_tcp_check_cache[check_name]
+    cache = cmk_base.config_cache.get_dict("is_tcp_check")
 
-    initialize_checktype_caches()
-    result = check_name in g_check_info_set and check_name.split(".")[0] not in g_snmp_info_set # snmp check basename
-    g_is_tcp_check_cache[check_name] = result
-    return result
+    try:
+        return cache[check_name]
+    except KeyError:
+        tcp_checks = cmk_base.config_cache.get_set("check_type_tcp")
+        snmp_checks = cmk_base.config_cache.get_set("check_type_snmp")
 
+        result = check_name in tcp_checks \
+                  and check_name.split(".")[0] not in snmp_checks # snmp check basename
+        cache[check_name] = result
+        return result
 
 
 def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text):
@@ -1971,7 +1949,7 @@ def i_am_root():
 # Returns the nodes of a cluster, or None if hostname is
 # not a cluster
 def nodes_of(hostname):
-    nodes_of_cache = cmk_base.cache.get("nodes_of")
+    nodes_of_cache = cmk_base.config_cache.get_dict("nodes_of")
     nodes = nodes_of_cache.get(hostname, False)
     if nodes != False:
         return nodes

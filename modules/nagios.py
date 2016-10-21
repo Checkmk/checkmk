@@ -1110,6 +1110,7 @@ no_discovery_possible = None
 
     # Make sure all checks are converted to the new API
     output.write("convert_check_info()\n")
+    output.write("initialize_check_type_caches()\n")
 
     # handling of clusters
     if is_cluster(hostname):

@@ -57,8 +57,8 @@ import cmk.paths
 import cmk.render as render
 import cmk.man_pages as man_pages
 
+import cmk_base
 import cmk_base.console as console
-import cmk_base.cache
 
 #   .--Prelude-------------------------------------------------------------.
 #   |                  ____           _           _                        |
@@ -375,6 +375,7 @@ def load_checks():
     # Now convert check_info to new format.
     convert_check_info()
     verify_checkgroup_members()
+    initialize_check_type_caches()
 
 
 def checks_by_checkgroup():
@@ -557,44 +558,38 @@ def management_protocol(hostname):
 # Returns a set of all host names, regardless if currently
 # disabled or monitored on a remote site. Does not return
 # cluster hosts.
-g_all_configured_realhosts_cache = {}
-g_global_caches.append("g_all_configured_realhosts_cache")
 def all_configured_realhosts():
-    global g_all_configured_realhosts_cache
-    if not g_all_configured_realhosts_cache:
-        g_all_configured_realhosts_cache = set(strip_tags(all_hosts))
-    return g_all_configured_realhosts_cache
+    cache = cmk_base.config_cache.get_set("all_configured_realhosts")
+    if cache.is_empty():
+        cache.update(strip_tags(all_hosts))
+    return cache
+
 
 # Returns a set of all cluster names, regardless if currently
 # disabled or monitored on a remote site. Does not return
 # normal hosts.
-g_all_configured_clusters_cache = {}
-g_global_caches.append("g_all_configured_clusters_cache")
 def all_configured_clusters():
-    global g_all_configured_clusters_cache
-    if not g_all_configured_clusters_cache:
-        g_all_configured_clusters_cache = set(strip_tags(clusters.keys()))
-    return g_all_configured_clusters_cache
+    cache = cmk_base.config_cache.get_set("all_configured_clusters")
+    if cache.is_empty():
+        cache.update(strip_tags(clusters.keys()))
+    return cache
 
 
 # Returns a set of all hosts, regardless if currently
 # disabled or monitored on a remote site.
-g_all_configured_hosts_cache = {}
-g_global_caches.append("g_all_configured_hosts_cache")
 def all_configured_hosts():
-    global g_all_configured_hosts_cache
-    if not g_all_configured_hosts_cache:
-        g_all_configured_hosts_cache = all_configured_realhosts().union(all_configured_clusters())
-    return g_all_configured_hosts_cache
+    cache = cmk_base.config_cache.get_set("all_configured_hosts")
+    if cache.is_empty():
+        cache.update(all_configured_realhosts(), all_configured_clusters())
+    return cache
+
 
 # Returns a set of all active hosts
-g_all_active_hosts_cache = None
-g_global_caches.append('g_all_active_hosts_cache')
 def all_active_hosts():
-    global g_all_active_hosts_cache
-    if not g_all_active_hosts_cache:
-        g_all_active_hosts_cache = all_active_realhosts().union(all_active_clusters())
-    return g_all_active_hosts_cache
+    cache = cmk_base.config_cache.get_set("all_active_hosts")
+    if cache.is_empty():
+        cache.update(all_active_realhosts(), all_active_clusters())
+    return cache
 
 # Returns a list of all hosts which are associated with this site,
 # but have been removed by the "only_hosts" rule. Normally these
@@ -759,32 +754,38 @@ def convert_host_ruleset(ruleset, with_foreign_hosts):
 
     return new_rules
 
-g_host_extra_conf_converted_rulesets_cache = {}
-g_global_caches.append('g_host_extra_conf_converted_rulesets_cache')
-g_host_extra_conf_cache = {}
-g_global_caches.append("g_host_extra_conf_cache")
+
 def host_extra_conf(hostname, ruleset):
-    global g_host_extra_conf_cache
     # When the requested host is part of the local sites configuration,
     # then use only the sites hosts for processing the rules
     with_foreign_hosts = hostname not in all_active_hosts()
+
+    ruleset_cache = cmk_base.config_cache.get_dict("converted_host_rulesets")
     cache_id = id(ruleset), with_foreign_hosts
+
+    conf_cache = cmk_base.config_cache.get_dict("host_extra_conf")
+
     try:
-        ruleset = g_host_extra_conf_converted_rulesets_cache[cache_id]
+        ruleset = ruleset_cache[cache_id]
     except KeyError:
         ruleset = convert_host_ruleset(ruleset, with_foreign_hosts)
-        g_host_extra_conf_converted_rulesets_cache[cache_id] = ruleset
+        ruleset_cache[cache_id] = ruleset
+
+        # TODO: LM: Why is this not on one indent level upper?
+        #           The regular case of the above exception handler
+        #           assigns "ruleset", but it is never used. Is this OK?
+        #           And if it is OK, why is it different to service_extra_conf()?
+
         # Generate single match cache
-        g_host_extra_conf_cache[cache_id] = {}
+        conf_cache[cache_id] = {}
         for item, hostname_list in ruleset:
             for name in hostname_list:
-                g_host_extra_conf_cache[cache_id].setdefault(name, [])
-                g_host_extra_conf_cache[cache_id][name].append(item)
+                conf_cache[cache_id].setdefault(name, []).append(item)
 
-
-    if hostname not in g_host_extra_conf_cache[cache_id]:
+    if hostname not in conf_cache[cache_id]:
         return []
-    return g_host_extra_conf_cache[cache_id][hostname]
+
+    return conf_cache[cache_id][hostname]
 
 
 def parse_host_rule(rule):
@@ -828,15 +829,16 @@ def host_extra_conf_merged(hostname, conf):
             rule_dict.setdefault(key, value)
     return rule_dict
 
-g_in_binary_hostlist_cache = {}
-g_global_caches.append("g_in_binary_hostlist_cache")
+
 def in_binary_hostlist(hostname, conf):
+    # TODO: This cache is never used. And now?
+    cache = cmk_base.config_cache.get_dict("in_binary_hostlist")
     cache_id = id(conf), hostname
 
     # if we have just a list of strings just take it as list of hostnames
     if conf and type(conf[0]) == str:
         result = hostname in conf
-        g_in_binary_hostlist_cache[cache_id] = result
+        cache[cache_id] = result
     else:
         for entry in conf:
             entry, rule_options = get_rule_options(entry)
@@ -865,16 +867,16 @@ def in_binary_hostlist(hostname, conf):
 
                 if hosttags_match_taglist(tags_of_host(hostname), tags) and \
                        in_extraconf_hostlist(hostlist, hostname):
-                    g_in_binary_hostlist_cache[cache_id] = not negate
+                    cache[cache_id] = not negate
                     break
 
             except:
                 MKGeneralException("Invalid entry '%r' in host configuration list: "
                                    "must be tupel with 1 or 2 entries" % (entry,))
         else:
-            g_in_binary_hostlist_cache[cache_id] = False
+            cache[cache_id] = False
 
-    return g_in_binary_hostlist_cache[cache_id]
+    return cache[cache_id]
 
 
 # Pick out the last element of an entry if it is a dictionary.
@@ -935,13 +937,13 @@ def convert_pattern(pattern):
 def convert_pattern_list(patterns):
     return tuple([ convert_pattern(p) for p in patterns ])
 
-g_hostlist_match_cache = {}
-g_global_caches.append('g_hostlist_match_cache')
 
 def all_matching_hosts(tags, hostlist, with_foreign_hosts):
     cache_id = tuple(tags), tuple(hostlist), with_foreign_hosts
+    cache = cmk_base.config_cache.get_dict("hostlist_match")
+
     try:
-        return g_hostlist_match_cache[cache_id]
+        return cache[cache_id]
     except KeyError:
         pass
 
@@ -966,11 +968,9 @@ def all_matching_hosts(tags, hostlist, with_foreign_hosts):
                (not tags or hosttags_match_taglist(tags_of_host(hostname), tags)):
                matching.add(hostname)
 
-    g_hostlist_match_cache[cache_id] = matching
+    cache[cache_id] = matching
     return matching
 
-g_converted_service_rulesets_cache = {}
-g_global_caches.append('g_converted_service_rulesets_cache')
 
 def convert_service_ruleset(ruleset, with_foreign_hosts):
     new_rules = []
@@ -999,30 +999,29 @@ def convert_service_ruleset(ruleset, with_foreign_hosts):
     return new_rules
 
 
-g_extraconf_servicelist_cache = {}
-g_global_caches.append('g_extraconf_servicelist_cache')
-
 # Compute outcome of a service rule set that has an item
 def service_extra_conf(hostname, service, ruleset):
     # When the requested host is part of the local sites configuration,
     # then use only the sites hosts for processing the rules
     with_foreign_hosts = hostname not in all_active_hosts()
     cache_id = id(ruleset), with_foreign_hosts
+    ruleset_cache = cmk_base.config_cache.get_dict("converted_service_rulesets")
     try:
-        ruleset = g_converted_service_rulesets_cache[cache_id]
+        ruleset = ruleset_cache[cache_id]
     except KeyError:
         ruleset = convert_service_ruleset(ruleset, with_foreign_hosts)
-        g_converted_service_rulesets_cache[cache_id] = ruleset
+        ruleset_cache[cache_id] = ruleset
 
     entries = []
+    cache = cmk_base.config_cache.get_dict("extraconf_servicelist")
     for item, hosts, service_matchers in ruleset:
         if hostname in hosts:
             cache_id = service_matchers, service
             try:
-                match = g_extraconf_servicelist_cache[cache_id]
-            except:
+                match = cache[cache_id]
+            except KeyError:
                 match = in_servicematcher_list(service_matchers, service)
-                g_extraconf_servicelist_cache[cache_id] = match
+                cache[cache_id] = match
 
             if match:
                 entries.append(item)
@@ -1065,20 +1064,22 @@ def in_boolean_serviceconf_list(hostname, service_description, ruleset):
     # then use only the sites hosts for processing the rules
     with_foreign_hosts = hostname not in all_active_hosts()
     cache_id = id(ruleset), with_foreign_hosts
+    ruleset_cache = cmk_base.config_cache.get_dict("converted_service_rulesets")
     try:
-        ruleset = g_converted_service_rulesets_cache[cache_id]
+        ruleset = ruleset_cache[cache_id]
     except KeyError:
         ruleset = convert_boolean_service_ruleset(ruleset, with_foreign_hosts)
-        g_converted_service_rulesets_cache[cache_id] = ruleset
+        ruleset_cache[cache_id] = ruleset
 
+    cache = cmk_base.config_cache.get_dict("extraconf_servicelist")
     for negate, hosts, service_matchers in ruleset:
         if hostname in hosts:
             cache_id = service_matchers, service_description
             try:
-                match = g_extraconf_servicelist_cache[cache_id]
-            except:
+                match = cache[cache_id]
+            except KeyError:
                 match = in_servicematcher_list(service_matchers, service_description)
-                g_extraconf_servicelist_cache[cache_id] = match
+                cache[cache_id] = match
 
             if match:
                 return not negate
@@ -1335,22 +1336,25 @@ def parse_negated(pattern):
         negate = False
     return negate, pattern
 
-g_strip_tags_cache = {}
-g_global_caches.append("g_strip_tags_cache")
-def strip_tags(tagged_hostlist):
-    tuple_list = tuple(tagged_hostlist)
-    if tuple_list in g_strip_tags_cache:
-        return g_strip_tags_cache[tuple_list]
 
-    result = map(lambda h: h.split('|', 1)[0], tagged_hostlist)
-    g_strip_tags_cache[tuple_list] = result
-    return result
+def strip_tags(tagged_hostlist):
+    cache = cmk_base.config_cache.get_dict("strip_tags")
+
+    cache_id = tuple(tagged_hostlist)
+    try:
+        return cache[cache_id]
+    except KeyError:
+        result = map(lambda h: h.split('|', 1)[0], tagged_hostlist)
+        cache[cache_id] = result
+        return result
+
 
 def tags_of_host(hostname):
     try:
         return hosttags[hostname]
     except KeyError:
         return []
+
 
 hosttags = {}
 def collect_hosttags():
@@ -1359,17 +1363,17 @@ def collect_hosttags():
         hosttags[parts[0]] = sorted(parts[1:])
 
 
-g_hosttag_taglist_cache = {}
-g_global_caches.append('g_hosttag_taglist_cache')
-
 # Check if a host fulfills the requirements of a tags
 # list. The host must have all tags in the list, except
 # for those negated with '!'. Those the host must *not* have!
 # New in 1.1.13: a trailing + means a prefix match
 def hosttags_match_taglist(hosttags, required_tags):
+    cache = cmk_base.config_cache.get_dict("hosttags_match_taglist")
+
+    cache_id = tuple(hosttags), tuple(required_tags)
+
     try:
-        cache_id = tuple(hosttags), tuple(required_tags)
-        return g_hosttag_taglist_cache[cache_id]
+        return cache[cache_id]
     except KeyError:
         pass
 
@@ -1387,10 +1391,10 @@ def hosttags_match_taglist(hosttags, required_tags):
             matches = tag in hosttags
 
         if matches == negate:
-            g_hosttag_taglist_cache[cache_id] = False
+            cache[cache_id] = False
             return False
 
-    g_hosttag_taglist_cache[cache_id] = True
+    cache[cache_id] = True
     return True
 
 #.
@@ -1886,17 +1890,15 @@ def is_cluster(hostname):
 
 # If host is node of one or more clusters, return a list of the cluster host names.
 # If not, return an empty list.
-g_clusters_of_cache = {}
-g_global_caches.append('g_clusters_of_cache')
 def clusters_of(hostname):
-    if not g_clusters_of_cache:
+    cache = cmk_base.config_cache.get_dict("clusters_of")
+    if cache.is_empty():
         for cluster, hosts in clusters.items():
             clustername = cluster.split('|', 1)[0]
             for name in hosts:
-                g_clusters_of_cache.setdefault(name, [])
-                g_clusters_of_cache[name].append(clustername)
+                cache.setdefault(name, []).append(clustername)
 
-    return g_clusters_of_cache.get(hostname, [])
+    return cache.get(hostname, [])
 
 # Determine weather a service (found on a physical host) is a clustered
 # service and - if yes - return the cluster host of the service. If
@@ -1945,14 +1947,12 @@ def host_of_clustered_service(hostname, servicedesc):
 # Format: (checkname, item) -> (params, description)
 
 def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='config', skip_autochecks=False):
-    global g_singlehost_checks
-    global g_multihost_checks
 
     if is_ping_host(hostname):
         skip_autochecks = True
 
     # speed up multiple lookup of same host
-    check_table_cache = cmk_base.cache.get("check_tables")
+    check_table_cache = cmk_base.config_cache.get_dict("check_tables")
     if not skip_autochecks and use_cache and hostname in check_table_cache:
         if remove_duplicates and is_dual_host(hostname):
             return remove_duplicate_checks(check_table_cache[hostname])
@@ -1961,16 +1961,8 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
 
     check_table = {}
 
-    # First time? Split up all checks in single and
-    # multi-host-checks
-    if g_singlehost_checks == None:
-        g_singlehost_checks = {}
-        g_multihost_checks = []
-        for entry in checks:
-            if len(entry) == 4 and type(entry[0]) == str:
-                g_singlehost_checks.setdefault(entry[0], []).append(entry)
-            else:
-                g_multihost_checks.append(entry)
+    single_host_checks = cmk_base.config_cache.get_dict("single_host_checks")
+    multi_host_checks  = cmk_base.config_cache.get_list("multi_host_checks")
 
     hosttags = tags_of_host(hostname)
 
@@ -2048,10 +2040,10 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
         for entry in read_autochecks_of(hostname, world):
             handle_entry(entry)
 
-    for entry in g_singlehost_checks.get(hostname, []):
+    for entry in single_host_checks.get(hostname, []):
         handle_entry(entry)
 
-    for entry in g_multihost_checks:
+    for entry in multi_host_checks:
         handle_entry(entry)
 
     # Now add checks a cluster might receive from its nodes
@@ -2251,22 +2243,23 @@ def replace_datasource_program_macros(hostname, ipaddress, cmd):
 
 
 # Variables needed during the renaming of hosts (see automation.py)
-ignore_ip_lookup_failures = False
-g_failed_ip_lookups = []
-g_dns_cache = {}
-g_global_caches.append('g_dns_cache')
-
 def cached_dns_lookup(hostname, family):
+    cache = cmk_base.config_cache.get_dict("cached_dns_lookup")
+    cache_id = hostname, family
+
     # Address has already been resolved in prior call to this function?
-    if (hostname, family) in g_dns_cache:
-        return g_dns_cache[(hostname, family)]
+    try:
+        return cache[cache_id]
+    except KeyError:
+        pass
 
     # Prepare file based fall-back DNS cache in case resolution fails
-    init_ip_lookup_cache()
+    # TODO: Find a place where this only called once!
+    ip_lookup_cache = initialize_ip_lookup_cache()
 
-    cached_ip = g_ip_lookup_cache.get((hostname, family))
+    cached_ip = ip_lookup_cache.get(cache_id)
     if cached_ip and use_dns_cache:
-        g_dns_cache[(hostname, family)] = cached_ip
+        cache[cache_id] = cached_ip
         return cached_ip
 
     # Now do the actual DNS lookup
@@ -2276,25 +2269,26 @@ def cached_dns_lookup(hostname, family):
         # Update our cached address if that has changed or was missing
         if ipa != cached_ip:
             console.verbose("Updating IPv%d DNS cache for %s: %s\n" % (family, hostname, ipa))
-            g_ip_lookup_cache[(hostname, family)] = ipa
+            ip_lookup_cache[cache_id] = ipa
             write_ip_lookup_cache()
 
-        g_dns_cache[(hostname, family)] = ipa # Update in-memory-cache
+        cache[cache_id] = ipa # Update in-memory-cache
         return ipa
 
     except:
         # DNS failed. Use cached IP address if present, even if caching
         # is disabled.
         if cached_ip:
-            g_dns_cache[(hostname, family)] = cached_ip
+            cache[cache_id] = cached_ip
             return cached_ip
         else:
-            g_dns_cache[(hostname, family)] = None
+            cache[cache_id] = None
             raise
 
 
 def lookup_ipv4_address(hostname):
     return lookup_ip_address(hostname, 4)
+
 
 def lookup_ipv6_address(hostname):
     return lookup_ip_address(hostname, 6)
@@ -2338,25 +2332,32 @@ def lookup_ip_address(hostname, family=None):
 
 
 def init_ip_lookup_cache():
-    global g_ip_lookup_cache
-    if g_ip_lookup_cache is None:
-        try:
-            g_ip_lookup_cache = eval(file(cmk.paths.var_dir + '/ipaddresses.cache').read())
+    # Already created and initialized. Simply return it!
+    if cmk_base.config_cache.exists("ip_lookup"):
+        return cmk_base.config_cache.get_dict("ip_lookup")
 
-            # be compatible to old caches which were created by Check_MK without IPv6 support
-            if g_ip_lookup_cache and type(g_ip_lookup_cache.keys()[0]) != tuple:
-                new_cache = {}
-                for key, val in g_ip_lookup_cache.items():
-                    new_cache[(key, 4)] = val
-                g_ip_lookup_cache = new_cache
-        except:
-            g_ip_lookup_cache = {}
+    ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")
+
+    try:
+        ip_lookup_cache.update(eval(file(cmk.paths.var_dir + '/ipaddresses.cache').read()))
+
+        # be compatible to old caches which were created by Check_MK without IPv6 support
+        if ip_lookup_cache and type(ip_lookup_cache.keys()[0]) != tuple:
+            new_cache = {}
+            for key, val in ip_lookup_cache.items():
+                new_cache[(key, 4)] = val
+            ip_lookup_cache = new_cache
+    except:
+        # TODO: Would be better to log it somewhere to make the failure transparent
+        pass
+
+    return ip_lookup_cache
 
 
 def write_ip_lookup_cache():
     # TODO: Write using cmk.store
     suffix = "." + str(os.getpid())
-    file(cmk.paths.var_dir + '/ipaddresses.cache' + suffix, 'w').write(repr(g_ip_lookup_cache))
+    file(cmk.paths.var_dir + '/ipaddresses.cache' + suffix, 'w').write(repr(ip_lookup_cache))
     os.rename(cmk.paths.var_dir + '/ipaddresses.cache' + suffix, cmk.paths.var_dir + '/ipaddresses.cache')
 
 
@@ -2424,14 +2425,15 @@ def exit_code_spec(hostname):
 
 
 # Remove illegal characters from a service description
-g_sanitize_service_description_cache = {}
-g_global_caches.append("g_sanitize_service_description_cache")
 def sanitize_service_description(descr):
-    if descr in g_sanitize_service_description_cache:
-        return g_sanitize_service_description_cache[descr]
-    new_descr = "".join([ c for c in descr if c not in nagios_illegal_chars ]).rstrip("\\")
-    g_sanitize_service_description_cache[descr] = new_descr
-    return new_descr
+    cache = cmk_base.config_cache.get_dict("sanitize_service_description")
+
+    try:
+        return cache[descr]
+    except KeyError:
+        new_descr = "".join([ c for c in descr if c not in nagios_illegal_chars ]).rstrip("\\")
+        cache[descr] = new_descr
+        return new_descr
 
 
 def service_description(hostname, check_type, item):
@@ -3050,6 +3052,9 @@ def get_cluster_attributes(hostname, nodes):
 
     return attrs
 
+
+ignore_ip_lookup_failures = False
+g_failed_ip_lookups = []
 
 def ip_address_of(hostname, family=None):
     try:
@@ -4417,6 +4422,8 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
     # over WATO.
     checks = static + checks
 
+    initialize_check_caches()
+
     # Check for invalid configuration variables
     vars_after_config = all_nonfunction_vars()
     ignored_variables = set(['vars_before_config', 'parts',
@@ -4450,6 +4457,17 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
         ('tcp_cache_dir',       cmk.paths.tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
         ('logwatch_dir',        cmk.paths.logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
         ]
+
+
+def initialize_check_caches():
+    single_host_checks = cmk_base.config_cache.get_dict("single_host_checks")
+    multi_host_checks  = cmk_base.config_cache.get_list("multi_host_checks")
+
+    for entry in checks:
+        if len(entry) == 4 and type(entry[0]) == str:
+            single_host_checks.setdefault(entry[0], []).append(entry)
+        else:
+            multi_host_checks.append(entry)
 
 
 # Compute parameters for a check honoring factory settings,

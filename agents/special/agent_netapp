@@ -926,6 +926,22 @@ try:
                                                           "aggr-space-attributes.size-total"    : "size-total"})
 
 
+        # LUNs
+        luns = query("lun-get-iter")
+        if luns:
+            print "<<<netapp_api_luns:sep(9)>>>"
+            print format_config(luns, "lun", "path",
+                                config_report = [
+                                "size",
+                                "size-used",
+                                "path",
+                                "online",
+                                "read-only",
+                                "vserver",
+                                "volume"
+                                ])
+
+
         # Diagnosis status
         diag_status = query("diagnosis-status-get")
         if diag_status:

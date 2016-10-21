@@ -9973,6 +9973,87 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_storage,
+    "netapp_luns",
+    _("NetApp LUNs"),
+    Alternative(
+        elements = [
+            FixedValue(
+                   title = _("Ignore used space"),
+                   help  = _("Some luns, e.g. jfs formatted, tend to report incorrect used space values"),
+                   label = _("Ignore used space"),
+                   value = True,
+                   totext = "",
+            ),
+            Dictionary(
+                title = _("Configure levels for used space"),
+                elements = [
+                     ("levels",
+                        Alternative(
+                            title = _("Levels for LUN"),
+                            show_alternative_title = True,
+                            default_value = (80.0, 90.0),
+                            match = match_dual_level_type,
+                            elements = [
+                                   get_free_used_dynamic_valuespec("free", "LUN"),
+                                   Transform(
+                                            get_free_used_dynamic_valuespec("used", "LUN", default_value = (20.0, 10.0)),
+                                            allow_empty = False,
+                                            forth = transform_filesystem_free,
+                                            back  = transform_filesystem_free,
+                                   )
+                            ]
+                         )
+                    ),
+                    (  "trend_range",
+                       Optional(
+                           Integer(
+                               title = _("Time Range for lun filesystem trend computation"),
+                               default_value = 24,
+                               minvalue = 1,
+                               unit= _("hours")),
+                           title = _("Trend computation"),
+                           label = _("Enable trend computation"))),
+                    (  "trend_mb",
+                       Tuple(
+                           title = _("Levels on trends in MB per time range"),
+                           elements = [
+                               Integer(title = _("Warning at"), unit = _("MB / range"), default_value = 100),
+                               Integer(title = _("Critical at"), unit = _("MB / range"), default_value = 200)
+                           ])),
+                    (  "trend_perc",
+                       Tuple(
+                           title = _("Levels for the percentual growth per time range"),
+                           elements = [
+                               Percentage(title = _("Warning at"), unit = _("% / range"), default_value = 5,),
+                               Percentage(title = _("Critical at"), unit = _("% / range"), default_value = 10,),
+                           ])),
+                    (  "trend_timeleft",
+                       Tuple(
+                           title = _("Levels on the time left until the lun filesystem gets full"),
+                           elements = [
+                               Integer(title = _("Warning if below"), unit = _("hours"), default_value = 12,),
+                               Integer(title = _("Critical if below"), unit = _("hours"), default_value = 6, ),
+                            ])),
+                    ( "trend_showtimeleft",
+                            Checkbox( title = _("Display time left in check output"), label = _("Enable"),
+                                       help = _("Normally, the time left until the lun filesystem is full is only displayed when "
+                                                "the configured levels have been breached. If you set this option "
+                                                "the check always reports this information"))
+                    ),
+                    ( "trend_perfdata",
+                      Checkbox(
+                          title = _("Trend performance data"),
+                          label = _("Enable generation of performance data from trends"))),
+            ]
+        )
+      ]
+    ),
+    TextAscii(title = _("LUN name")),
+    match_type = "dict",
+)
+
+register_check_parameters(
     subgroup_applications,
     "services",
     _("Windows Services"),

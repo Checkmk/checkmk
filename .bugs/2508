@@ -1,0 +1,8 @@
+Title: Disabled Services: disabled active checks just vanish
+Component: wato
+State: open
+Date: 2016-10-21 15:35:58
+Targetversion: 1.2.8
+Class: nastiness
+
+If active checks are disabled by WATO rule this check vanishs completely and will not be shown as "disabled service" in the service discovery like passive checks. This is not only inconsistent behavior but could also be confusing at some point.

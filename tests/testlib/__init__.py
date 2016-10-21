@@ -274,7 +274,11 @@ class Site(object):
     def init_wato(self):
         web = CMKWebSession(self)
         web.login()
-        web.get("wato.py")
+
+        # Call WATO once for creating the default WATO configuration
+        response = web.get("wato.py").text
+        assert "<title>WATO" in response
+        assert "<div class=title>Manual Checks</div>" in response
 
         for f in [
                 "etc/check_mk/conf.d/wato/rules.mk",

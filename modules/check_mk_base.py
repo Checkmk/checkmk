@@ -1474,7 +1474,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
             error_sections.add(infotype)
             continue
 
-        if info or info == []:
+        if info or info in [ [], {} ]:
             num_success += 1
             try:
                 check_function = check_info[checkname]["check_function"]

@@ -1388,7 +1388,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
             error_sections.add(infotype)
             return False
 
-        if info or info == []:
+        if info or info in [ [], {} ]:
             try:
                 check_function = check_info[checkname]["check_function"]
             except:

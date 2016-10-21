@@ -37,6 +37,7 @@ def ucd_scan_function(oid):
             "HP Onboard Administrator" in oid(".1.3.6.1.2.1.1.1.0") or \
             # for barracuda spam firewall appliance
             "barracuda" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
+            "genugate" in oid(".1.3.6.1.2.1.1.1.0") or \
             # for artec email archiv appliance
             ( oid('.1.3.6.1.2.1.1.2.0') == '.1.3.6.1.4.1.8072.3.2.10' and \
               "version" in oid('.1.3.6.1.2.1.1.1.0').lower() and \

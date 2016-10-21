@@ -35,8 +35,10 @@ def inventory_oracle_sessions(info):
     return [ (line[0], "oracle_sessions_default_levels") for line in info if len(line) >= 2 ]
 
 def check_oracle_sessions(item, params, info):
+    item_found = False
     for line in info:
         if line[0] == item:
+            item_found = True
             err = oracle_handle_ora_errors(line)
             if err == False:
                 continue
@@ -54,10 +56,11 @@ def check_oracle_sessions(item, params, info):
             else:
                 return (0, infotext, perfdata)
 
-    # In case of missing information we assume that the login into
-    # the database has failed and we simply skip this check. It won't
-    # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped("Login into database failed")
+    if not item_found:
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise MKCounterWrapped("Login into database failed")
 
 
 check_info["oracle_sessions"] = {

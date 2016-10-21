@@ -1,0 +1,9 @@
+Title: oracle_sessions: fixed empty section handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p14
+Date: 1477033910
+Class: fix
+
+

@@ -1,6 +1,7 @@
 1.2.8p14:
     Checks & Agents:
     * 3961 FIX: fixed error sections handling if parse function is available
+    * 3962 FIX: oracle_sessions: fixed empty section handling
 
 
 1.2.8p13:

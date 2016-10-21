@@ -134,6 +134,12 @@ def check_oracle_performance(item, _no_params, parsed):
             perfdata.append((perfvar, rate))
 
         yield 0, ", ".join(infotexts), perfdata
+        return
+
+    # In case of missing information we assume that the login into
+    # the database has failed and we simply skip this check. It won't
+    # switch to UNKNOWN, but will get stale.
+    raise MKCounterWrapped("Login into database failed")
 
 
 check_info['oracle_performance'] = {

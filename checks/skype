@@ -105,6 +105,7 @@ def check_skype(item, params, parsed):
 
     yield wmi_yield_raw_persec(parsed["LS:WEB - Address Book Web Query"], item,
                                "WEB - Failed search requests/sec",
+                               label=" failed search requests/sec",
                                perfvar="failed_search",
                                levels=params['failed_search_requests'])
 

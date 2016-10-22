@@ -29,6 +29,8 @@ import signal
 import cmk.paths
 import cmk.man_pages as man_pages
 
+import cmk_base.rulesets as rulesets
+
 # TODO: Inherit from MKGeneralException
 class MKAutomationError(Exception):
     def __init__(self, reason):
@@ -276,7 +278,7 @@ def automation_analyse_service(args):
     # 1. Manual checks
     for nr, (checkgroup, entries) in enumerate(static_checks.items()):
         for entry in entries:
-            entry, rule_options = get_rule_options(entry)
+            entry, rule_options = rulesets.get_rule_options(entry)
             if rule_options.get("disabled"):
                 continue
 
@@ -292,7 +294,7 @@ def automation_analyse_service(args):
                 hostlist = entry[1]
                 taglist = []
 
-            if hosttags_match_taglist(tags_of_host(hostname), taglist) and \
+            if rulesets.hosttags_match_taglist(tags_of_host(hostname), taglist) and \
                in_extraconf_hostlist(hostlist, hostname):
                descr = service_description(hostname, checktype, item)
                if descr == servicedesc:

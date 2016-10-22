@@ -59,6 +59,7 @@ import cmk.man_pages as man_pages
 
 import cmk_base
 import cmk_base.console as console
+import cmk_base.rulesets as rulesets
 
 #   .--Prelude-------------------------------------------------------------.
 #   |                  ____           _           _                        |
@@ -679,7 +680,7 @@ def parse_hostname_list(args, with_clusters = True, with_foreign_hosts = False):
 
             num_found = 0
             for hostname in valid_hosts:
-                if hosttags_match_taglist(tags_of_host(hostname), tagspec):
+                if rulesets.hosttags_match_taglist(tags_of_host(hostname), tagspec):
                     hostlist.append(hostname)
                     num_found += 1
             if num_found == 0:
@@ -744,7 +745,7 @@ def convert_host_ruleset(ruleset, with_foreign_hosts):
         sys.stderr.write('WARNING: deprecated entry [ "" ] in host configuration list\n')
 
     for rule in ruleset:
-        item, tags, hostlist, rule_options = parse_host_rule(rule)
+        item, tags, hostlist, rule_options = rulesets.parse_host_rule(rule)
         if rule_options.get("disabled"):
             continue
 
@@ -788,22 +789,6 @@ def host_extra_conf(hostname, ruleset):
     return conf_cache[cache_id][hostname]
 
 
-def parse_host_rule(rule):
-    rule, rule_options = get_rule_options(rule)
-
-    num_elements = len(rule)
-    if num_elements == 2:
-        item, hostlist = rule
-        tags = []
-    elif num_elements == 3:
-        item, tags, hostlist = rule
-    else:
-        raise MKGeneralException("Invalid entry '%r' in host configuration list: must "
-                                 "have 2 or 3 entries" % (rule,))
-
-    return item, tags, hostlist, rule_options
-
-
 # Needed for agent bakery: Compute ruleset for "generic" host. This
 # fictious host has no name and no tags. It matches all rules that
 # do not require specific hosts or tags. But it matches rules that
@@ -812,8 +797,8 @@ def generic_host_extra_conf(ruleset):
     entries = []
 
     for rule in ruleset:
-        item, tags, hostlist = parse_host_rule(rule)[:-1]
-        if tags and not hosttags_match_taglist([], tags):
+        item, tags, hostlist = rulesets.parse_host_rule(rule)[:-1]
+        if tags and not rulesets.hosttags_match_taglist([], tags):
             continue
         if not in_extraconf_hostlist(hostlist, ""):
             continue
@@ -841,7 +826,7 @@ def in_binary_hostlist(hostname, conf):
         cache[cache_id] = result
     else:
         for entry in conf:
-            entry, rule_options = get_rule_options(entry)
+            entry, rule_options = rulesets.get_rule_options(entry)
             if rule_options.get("disabled"):
                 continue
 
@@ -865,7 +850,7 @@ def in_binary_hostlist(hostname, conf):
                     else:
                         tags, hostlist = entry
 
-                if hosttags_match_taglist(tags_of_host(hostname), tags) and \
+                if rulesets.hosttags_match_taglist(tags_of_host(hostname), tags) and \
                        in_extraconf_hostlist(hostlist, hostname):
                     cache[cache_id] = not negate
                     break
@@ -877,65 +862,6 @@ def in_binary_hostlist(hostname, conf):
             cache[cache_id] = False
 
     return cache[cache_id]
-
-
-# Pick out the last element of an entry if it is a dictionary.
-# This is a new feature (1.2.0p3) that allows to add options
-# to rules. Currently only the option "disabled" is being
-# honored. WATO also uses the option "comment".
-def get_rule_options(entry):
-    if type(entry[-1]) == dict:
-        return entry[:-1], entry[-1]
-    else:
-        return entry, {}
-
-
-# Converts a regex pattern which is used to e.g. match services within Check_MK
-# to a function reference to a matching function which takes one parameter to
-# perform the matching and returns a two item tuple where the first element
-# tells wether or not the pattern is negated and the second element the outcome
-# of the match.
-# This function tries to parse the pattern and return different kind of matching
-# functions which can then be performed faster than just using the regex match.
-def convert_pattern(pattern):
-    def is_infix_string_search(pattern):
-        return pattern.startswith('.*') and not is_regex(pattern[2:])
-
-    def is_exact_match(pattern):
-        return pattern[-1] == '$' and not is_regex(pattern[:-1])
-
-    def is_prefix_match(pattern):
-        return pattern[-2:] == '.*' and not is_regex(pattern[:-2])
-
-    if pattern == '':
-        return False, lambda txt: True # empty patterns match always
-
-    negate, pattern = parse_negated(pattern)
-
-    if is_exact_match(pattern):
-        # Exact string match
-        return negate, lambda txt: pattern[:-1] == txt
-
-    elif is_infix_string_search(pattern):
-        # Using regex to search a substring within text
-        return negate, lambda txt: pattern[2:] in txt
-
-    elif is_prefix_match(pattern):
-        # prefix match with tailing .*
-        pattern = pattern[:-2]
-        return negate, lambda txt: txt[:len(pattern)] == pattern
-
-    elif is_regex(pattern):
-        # Non specific regex. Use real prefix regex matching
-        return negate, lambda txt: regex(pattern).match(txt) != None
-
-    else:
-        # prefix match without any regex chars
-        return negate, lambda txt: txt[:len(pattern)] == pattern
-
-
-def convert_pattern_list(patterns):
-    return tuple([ convert_pattern(p) for p in patterns ])
 
 
 def all_matching_hosts(tags, hostlist, with_foreign_hosts):
@@ -965,7 +891,7 @@ def all_matching_hosts(tags, hostlist, with_foreign_hosts):
             # When no tag matching is requested, do not filter by tags. Accept all hosts
             # and filter only by hostlist
             if in_extraconf_hostlist(hostlist, hostname) and \
-               (not tags or hosttags_match_taglist(tags_of_host(hostname), tags)):
+               (not tags or rulesets.hosttags_match_taglist(tags_of_host(hostname), tags)):
                matching.add(hostname)
 
     cache[cache_id] = matching
@@ -975,7 +901,7 @@ def all_matching_hosts(tags, hostlist, with_foreign_hosts):
 def convert_service_ruleset(ruleset, with_foreign_hosts):
     new_rules = []
     for rule in ruleset:
-        rule, rule_options = get_rule_options(rule)
+        rule, rule_options = rulesets.get_rule_options(rule)
         if rule_options.get("disabled"):
             continue
 
@@ -994,7 +920,7 @@ def convert_service_ruleset(ruleset, with_foreign_hosts):
         hosts = all_matching_hosts(tags, hostlist, with_foreign_hosts)
 
         # And now preprocess the configured patterns in the servlist
-        new_rules.append((item, hosts, convert_pattern_list(servlist)))
+        new_rules.append((item, hosts, rulesets.convert_pattern_list(servlist)))
 
     return new_rules
 
@@ -1020,7 +946,7 @@ def service_extra_conf(hostname, service, ruleset):
             try:
                 match = cache[cache_id]
             except KeyError:
-                match = in_servicematcher_list(service_matchers, service)
+                match = rulesets.in_servicematcher_list(service_matchers, service)
                 cache[cache_id] = match
 
             if match:
@@ -1031,7 +957,7 @@ def service_extra_conf(hostname, service, ruleset):
 def convert_boolean_service_ruleset(ruleset, with_foreign_hosts):
     new_rules = []
     for rule in ruleset:
-        entry, rule_options = get_rule_options(rule)
+        entry, rule_options = rulesets.get_rule_options(rule)
         if rule_options.get("disabled"):
             continue
 
@@ -1053,7 +979,7 @@ def convert_boolean_service_ruleset(ruleset, with_foreign_hosts):
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
         hosts = all_matching_hosts(tags, hostlist, with_foreign_hosts)
-        new_rules.append((negate, hosts, convert_pattern_list(servlist)))
+        new_rules.append((negate, hosts, rulesets.convert_pattern_list(servlist)))
 
     return new_rules
 
@@ -1078,7 +1004,7 @@ def in_boolean_serviceconf_list(hostname, service_description, ruleset):
             try:
                 match = cache[cache_id]
             except KeyError:
-                match = in_servicematcher_list(service_matchers, service_description)
+                match = rulesets.in_servicematcher_list(service_matchers, service_description)
                 cache[cache_id] = match
 
             if match:
@@ -1137,21 +1063,6 @@ def in_extraconf_hostlist(hostlist, hostname):
             if cmk.debug.enabled():
                 raise
 
-    return False
-
-# Slow variant of checking wether a service is matched by a list
-# of regexes - used e.g. by cmk --notify
-def in_extraconf_servicelist(servicelist, service):
-    return in_servicematcher_list(convert_pattern_list(servicelist), service)
-
-
-def in_servicematcher_list(service_matchers, item):
-    for negate, func in service_matchers:
-        result = func(item)
-        if result:
-            return not negate
-
-    # no match in list -> negative answer
     return False
 
 def extra_host_conf_of(hostname):
@@ -1326,17 +1237,6 @@ def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
 #   |  Helper functions for dealing with host tags                         |
 #   '----------------------------------------------------------------------'
 
-def parse_negated(pattern):
-    # Allow negation of pattern with prefix '!'
-    try:
-        negate = pattern[0] == '!'
-        if negate:
-            pattern = pattern[1:]
-    except IndexError:
-        negate = False
-    return negate, pattern
-
-
 def strip_tags(tagged_hostlist):
     cache = cmk_base.config_cache.get_dict("strip_tags")
 
@@ -1362,40 +1262,6 @@ def collect_hosttags():
         parts = taggedhost.split("|")
         hosttags[parts[0]] = sorted(parts[1:])
 
-
-# Check if a host fulfills the requirements of a tags
-# list. The host must have all tags in the list, except
-# for those negated with '!'. Those the host must *not* have!
-# New in 1.1.13: a trailing + means a prefix match
-def hosttags_match_taglist(hosttags, required_tags):
-    cache = cmk_base.config_cache.get_dict("hosttags_match_taglist")
-
-    cache_id = tuple(hosttags), tuple(required_tags)
-
-    try:
-        return cache[cache_id]
-    except KeyError:
-        pass
-
-    for tag in required_tags:
-        negate, tag = parse_negated(tag)
-        if tag and tag[-1] == '+':
-            tag = tag[:-1]
-            matches = False
-            for t in hosttags:
-                if t.startswith(tag):
-                    matches = True
-                    break
-
-        else:
-            matches = tag in hosttags
-
-        if matches == negate:
-            cache[cache_id] = False
-            return False
-
-    cache[cache_id] = True
-    return True
 
 #.
 #   .--Aggregation---------------------------------------------------------.
@@ -1444,7 +1310,7 @@ def aggregated_service_name(hostname, servicedesc):
         if len(hostlist) == 1 and hostlist[0] == "":
             sys.stderr.write('WARNING: deprecated hostlist [ "" ] in service_aggregations. Please use all_hosts instead\n')
 
-        if hosttags_match_taglist(tags_of_host(hostname), tags) and \
+        if rulesets.hosttags_match_taglist(tags_of_host(hostname), tags) and \
            in_extraconf_hostlist(hostlist, hostname):
             if type(pattern) != str:
                 raise MKGeneralException("Invalid entry '%r' in service_aggregations:\n "
@@ -2024,7 +1890,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
         if not is_checkname_valid(checkname):
             return
 
-        if hosttags_match_taglist(hosttags, tags) and \
+        if rulesets.hosttags_match_taglist(hosttags, tags) and \
                in_extraconf_hostlist(hostlist, hostname):
             descr = service_description(hostname, checkname, item)
             if service_ignored(hostname, checkname, descr):
@@ -2108,7 +1974,7 @@ def get_precompiled_check_parameters(hostname, item, params, check_type):
 def service_deps(hostname, servicedesc):
     deps = []
     for entry in service_dependencies:
-        entry, rule_options = get_rule_options(entry)
+        entry, rule_options = rulesets.get_rule_options(entry)
         if rule_options.get("disabled"):
             continue
 
@@ -2121,7 +1987,7 @@ def service_deps(hostname, servicedesc):
             raise MKGeneralException("Invalid entry '%r' in service dependencies: "
                                      "must have 3 or 4 entries" % entry)
 
-        if hosttags_match_taglist(tags_of_host(hostname), tags) and \
+        if rulesets.hosttags_match_taglist(tags_of_host(hostname), tags) and \
            in_extraconf_hostlist(hostlist, hostname):
             for pattern in patternlist:
                 matchobject = regex(pattern).search(servicedesc)
@@ -3141,7 +3007,7 @@ def list_all_hosts_with_tags(tags):
         hostlist = all_active_hosts()
 
     for h in hostlist:
-        if hosttags_match_taglist(tags_of_host(h), tags):
+        if rulesets.hosttags_match_taglist(tags_of_host(h), tags):
             hosts.append(h)
     return hosts
 
@@ -4383,7 +4249,7 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
     static = []
     for entries in static_checks.values():
         for entry in entries:
-            entry, rule_options = get_rule_options(entry)
+            entry, rule_options = rulesets.get_rule_options(entry)
             if rule_options.get("disabled"):
                 continue
 

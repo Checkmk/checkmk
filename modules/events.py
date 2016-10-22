@@ -28,7 +28,11 @@
 # only) by the alert handling
 
 import pprint, urllib, select, subprocess, socket
+
 from cmk.regex import regex
+
+import cmk_base.rulesets as rulesets
+
 
 def event_keepalive(event_function, log_function, call_every_loop=None, loop_interval=None, shutdown_function=None):
     last_config_timestamp = config_timestamp()
@@ -331,7 +335,7 @@ def event_match_hosttags(rule, context):
     required = rule.get("match_hosttags")
     if required:
         tags = context.get("HOSTTAGS", "").split()
-        if not hosttags_match_taglist(tags, required):
+        if not rulesets.hosttags_match_taglist(tags, required):
             return "The host's tags %s do not match the required tags %s" % (
                 "|".join(tags), "|".join(required))
 
@@ -495,7 +499,7 @@ def event_match_services(rule, context):
             return "The rule specifies a list of services, but this is a host notification."
         servicelist = rule["match_services"]
         service = context["SERVICEDESC"]
-        if not in_extraconf_servicelist(servicelist, service):
+        if not rulesets.in_extraconf_servicelist(servicelist, service):
             return "The service's description '%s' does not match by the list of " \
                    "allowed services (%s)" % (service, ", ".join(servicelist))
 
@@ -505,7 +509,7 @@ def event_match_exclude_services(rule, context):
         return
     excludelist = rule.get("match_exclude_services", [])
     service = context["SERVICEDESC"]
-    if in_extraconf_servicelist(excludelist, service):
+    if rulesets.in_extraconf_servicelist(excludelist, service):
         return "The service's description '%s' matches the list of excluded services" \
           % context["SERVICEDESC"]
 

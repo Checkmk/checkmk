@@ -10,9 +10,6 @@ description:
 item:
  The item is the number of the sensor as string - usually {"1"}.
 
-perfdata:
- One variable: the current temperature in degrees celsius.
-
 inventory:
  All available temperature sensors are automatically inventorized.
 

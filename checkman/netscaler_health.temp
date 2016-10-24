@@ -13,9 +13,6 @@ description:
 item:
  The name of the sensor according to the {sysHealthname} in the {nsSysHealthTable}
 
-perfdata:
- One value for each service: the temperature of the sensor
-
 inventory:
  For each temperature sensor found on the appliance a service is created.
 

@@ -12,6 +12,3 @@ inventory:
  Depending on the configuration, creates a summary check or one
  check per datastore.
 
-perfdata:
- Three values: read, write and ios (per second)
-

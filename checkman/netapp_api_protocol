@@ -13,5 +13,3 @@ inventory:
 item:
  The name of the protocol.
 
-perfdata:
- The read and write operations per second.

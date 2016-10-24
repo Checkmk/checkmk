@@ -17,10 +17,6 @@ description:
 item:
  The name of the OpenVPN connection (first column in the status file).
 
-perfdata:
- Two variables: the number of bytes per second inbound and outbound traffic.
- Note: the check output, PNP template and Perf-O-Meter convert this to MBit/sec.
-
 inventory:
  One service per active connection will be created. Please use
  {ignored_services} if you want to restrict this.

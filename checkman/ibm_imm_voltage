@@ -19,5 +19,3 @@ inventory:
 item:
  The name of the power supply measurement channel as extracted from the OID {voltDescr}
 
-perfdata:
- The voltage of the measurement channel

@@ -20,5 +20,3 @@ item:
 inventory:
  Creates one check per node.
 
-perfdata:
- Two values: The write cache usage and the total cache usage in percent.

@@ -14,9 +14,6 @@ description:
  in the queue reach the defined thresholds.
 
 
-perfdata:
- One variable: the number of messages in the queue
-
 inventory:
  On each system which provides the {qmail-qstat} command one service is being created.
 

@@ -7,5 +7,3 @@ description:
   The current Fanspeed in percent for a InRow Cooling devices.
   The Ouput in only informatial and everytime {OK}
 
-perfdata:
- fanspeed: The current speed in percent

@@ -15,8 +15,5 @@ description:
 item:
  The unit name and the name of the humidity sensor
 
-perfdata:
- One variable: the humidity
-
 inventory:
  All humidity sensors on all cmciii units are detected

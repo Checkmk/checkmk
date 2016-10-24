@@ -13,6 +13,3 @@ description:
 inventory:
  One service per database.
 
-perfdata:
- Two values. Shared and exclusive locks.
-

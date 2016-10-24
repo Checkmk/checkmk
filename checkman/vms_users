@@ -7,5 +7,3 @@ description:
  This check is always OK and lists all interactively logged in users
  with their current number of sessions.
 
-perfdata:
-  One integer value: the total number of interactive sessions.

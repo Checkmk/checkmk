@@ -12,8 +12,5 @@ description:
 item:
  The only item is called "Power Supply System"
 
-perfdata:
- One value: The power (Watt) of the device.
-
 inventory:
  One service per device.

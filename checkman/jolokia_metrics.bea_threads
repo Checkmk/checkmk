@@ -15,13 +15,6 @@ description:
 item:
  The name of the application server instance as configured by the agent.
 
-perfdata:
- The following values are returned in the perfdata:
-   The count of threads for processing requests,
-   The count of idle threads that are ready to process requests,
-   The count of threads that are in standby,
-   The count of "hogging" threads that are executing for too long.
-
 inventory:
  One check is created per JVM instance sent by the Jolokia agent.
 

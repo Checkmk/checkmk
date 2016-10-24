@@ -26,11 +26,6 @@ description:
 item:
  The mount point.
 
-perfdata:
-  This check does not provide performance data. The disk usage is assumedly
-  measured on the file server itself.  Duplicating that data on all clients
-  would unneccessarily create redundant RRDs.
-
 inventory:
   All CIFS mounts are found automatically. This is done
   by scanning {/proc/mounts} (linux) or using the mount command (aix). The file {/etc/fstab}

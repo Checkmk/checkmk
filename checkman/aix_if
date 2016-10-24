@@ -68,15 +68,3 @@ examples:
    ( [{ "name" : "Group WLAN", "iftype" : 6, "single" : True }], [ "lan" ], ALL_HOSTS )
  ]
 
-perfdata:
- {in}: The number of bytes received per second.
- {inucast}: The number of unicast packets received per second.
- {innucast}: The number of broadcast and multicast packets per second.
- {inerr}: The number of input errors per second.
- {out}: The number of bytes sent per second.
- {outucast}: The number of unicast packets sent per second.
- {outnucast}: The number of broadcast and multicast packets sent per second.
- {outerr}: The number of output errors per second.
- {in_avg_?}: optional: The averaged number of received bytes over a longer range of time
- {out_avg_?}: optional: The averaged number of sent bytes
-

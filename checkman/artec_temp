@@ -12,8 +12,5 @@ description:
 item:
  The disk name.
 
-perfdata:
- The Temperature.
-
 inventory:
  One service is created.

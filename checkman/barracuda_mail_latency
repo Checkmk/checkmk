@@ -12,8 +12,5 @@ description:
 item:
  No item.
 
-perfdata:
- Mail latency in seconds.
-
 inventory:
  One service is created.

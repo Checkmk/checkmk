@@ -9,6 +9,3 @@ description:
 inventory:
  One service will be created
 
-perfdata:
- usage: The current usage in Byte
-

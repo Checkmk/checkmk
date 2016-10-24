@@ -10,6 +10,3 @@ description:
 inventory:
  One check per module will be created
 
-perfdata:
- The actual utilization, together with it's warn and crit levels
-

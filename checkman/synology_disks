@@ -19,6 +19,3 @@ item:
 inventory:
  One check is created for each Disk
 
-perfdata:
- Temperature of the disk
-

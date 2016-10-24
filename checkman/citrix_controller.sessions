@@ -10,9 +10,6 @@ description:
  for this to work. The check allows to set upper levels on active, inactive and total
  sessions. Defaults are not set.
 
-perfdata:
- Three values: The total, inactive and active sessions.
-
 inventory:
  One service per controller is created.
 

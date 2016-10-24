@@ -9,7 +9,3 @@ description:
 item:
  The id of the module
 
-perfdata:
- One value is returned: The amount of memory used (in Bytes),
- together with warn and crit levels and maximum value
-

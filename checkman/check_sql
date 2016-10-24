@@ -29,5 +29,3 @@ description:
 
   See the {usage} page of the check for details about the invocation on the command line.
 
-perfdata:
- Optionally, one value: the third field of the database response.

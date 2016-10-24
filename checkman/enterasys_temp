@@ -14,7 +14,3 @@ inventory:
  Creates one service on every Enterasys Switch in which a temperature
  sensor is found to be active.
 
-perfdata:
- One value: The temperature in degree celsius, together with it's warn and
- crit levels.
-

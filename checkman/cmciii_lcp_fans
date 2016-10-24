@@ -17,9 +17,6 @@ description:
 item:
  The number of the fan
 
-perfdata:
- One variable: the average temperature in degrees celsius
-
 inventory:
  there are six fan positions in the device. Fans are inventorized only
  if their status is not "Off".

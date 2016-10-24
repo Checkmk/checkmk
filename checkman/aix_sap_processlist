@@ -18,5 +18,3 @@ item:
 inventory:
  One service is created for each discovered process on each instance.
 
-perfdata:
- The runtime of the process.

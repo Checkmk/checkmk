@@ -13,10 +13,6 @@ item:
  If a name is reported for the sensor by the device: The name and the
  sensor ID. Otherwise the sensor ID only.
 
-perfdata:
- One value: The temperature in degree celsius, together with it's minimum and
- maximum and levels for warn and crit.
-
 inventory:
  Creates one check for every Temperature Sensor (function = 1).
 

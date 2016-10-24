@@ -35,9 +35,6 @@ examples:
  # Default levels for all queues
  msx_queues_default_levels = (100, 200)
 
-perfdata:
- One value: the current length of the queue in question.
-
 inventory:
  For each queue that is defined in {winperf_msx_queues} one check
  will be created if the agent outputs the matching performance counters.

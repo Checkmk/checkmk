@@ -23,10 +23,6 @@ item:
  {ORA} {<SID>.<JOB_OWNER>.<JOB_NAME>} {Job} for each entry from the
  plugin.
 
-perfdata:
- One value: the duration of the last job execution in seconds.
-
-
 inventory:
  One separate check for each enabled job will be created.
 

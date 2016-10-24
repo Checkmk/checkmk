@@ -20,7 +20,3 @@ inventory:
  A service will be generated if the CBL-AIRLASOR-IP1000 MIB is supported by
  the remote device.
 
-perfdata:
- the check automatically generates performance data for all sensors that
- monitor a temperature.
-

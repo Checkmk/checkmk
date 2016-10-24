@@ -11,8 +11,5 @@ description:
 item:
  The outdoor temperature id.
 
-perfdata:
- The temperature.
-
 inventory:
  One service per outdoor temperature is created.

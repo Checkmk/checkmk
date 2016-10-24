@@ -12,8 +12,5 @@ description:
 item:
  Temperature System.
 
-perfdata:
- The temperature in Celsuis.
-
 inventory:
  One service per is created.

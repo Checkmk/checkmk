@@ -22,5 +22,3 @@ inventory:
 item:
  The index number of the refclock.
 
-perfdata:
- Radio types: field strength in %. Supplemented by corellation in % if available.

@@ -18,5 +18,3 @@ item:
 inventory:
  One service for each frontend is created.
 
-perfdata:
- The session rate of the frontend.

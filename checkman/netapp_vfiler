@@ -13,5 +13,3 @@ inventory:
 item:
  A string naming the vFiler as defined on the Filer.
 
-perfdata:
- The check does not generate perfdata.

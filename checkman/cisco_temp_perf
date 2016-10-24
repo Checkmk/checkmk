@@ -14,9 +14,6 @@ description:
  In addition to {cisco_temp} this check determines performance
  data.
 
-perfdata:
- The current temperature in degrees celsius
-
 item:
  The description of the sensor as provided by the device.
 

@@ -9,8 +9,5 @@ description:
  Additionally the check monitors the number of broken and spare disks.
  You can define {WARN}/{CRIT} levels for the ratio of {broken / (broken + spare)} disks.
 
-perfdata:
- The total raw capacity and the number of total, spare and broken disks.
-
 inventory:
  Configures one check on each device.

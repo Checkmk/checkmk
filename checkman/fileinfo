@@ -56,11 +56,6 @@ examples:
      ALL_HOSTS, [ "File.*snapshot" ] ),
  ]
 
-perfdata:
-  Two values: the size of the file in bytes and the age
-  of the file in seconds (the time since the last
-  modification of the file).
-
 inventory:
   For each file that the agent sends one service will
   be created.

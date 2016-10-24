@@ -19,9 +19,6 @@ item:
  I.e. webservices webservices jolokia
  This name is probably dependant on running a loadbalanced install or not.
 
-perfdata:
- The number of sessions along with the upper (high) alert levels.
-
 inventory:
  One check is created for each selvet running inside a weblogic
  instance sent by the agent.

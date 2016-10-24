@@ -11,6 +11,3 @@ description:
 inventory:
  One service will be created
 
-perfdata:
- One graph for vms and one for hosts
-

@@ -26,9 +26,6 @@ examples:
  # is older than 30 minutes.
  mssql_backup_default_levels = (1800, 3600)
 
-perfdata:
- One value: the number of seconds since the last backup.
-
 inventory:
  One separate check for each tablespace will be created.
 

@@ -9,8 +9,5 @@ description:
 
  Default levels are 80, 90 percent. These are configurable.
 
-perfdata:
- The CPU utilization.
-
 inventory:
  One service is created.

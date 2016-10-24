@@ -12,8 +12,5 @@ item:
  "IO INPUT %d" or "IO INPUT" the user-defined string describing
  the channel.
 
-perfdata:
- This check currently has no performance data.
-
 inventory:
  All channels are automatically inventorized with their state.

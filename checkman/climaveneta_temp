@@ -10,9 +10,6 @@ description:
 item:
  The item is the sensor description of the sensor as string.
 
-perfdata:
- the current temperature in degree celsius
-
 inventory:
  All available temperature sensors are automatically inventorized.
 

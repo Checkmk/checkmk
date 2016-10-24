@@ -17,6 +17,3 @@ description:
 inventory:
  One service per loadbalancer device will be created.
 
-perfdata:
- The number of client connections and the number of client connections.
-

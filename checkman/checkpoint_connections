@@ -11,6 +11,3 @@ description:
 inventory:
  One service will be created
 
-perfdata:
- current number of connections
-

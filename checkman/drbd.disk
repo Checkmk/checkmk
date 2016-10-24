@@ -16,6 +16,3 @@ inventory:
  Each configured DRBD device will result in one service during inventory. All
  devices with the connection state "Unconfigured" are skipped.
 
-perfdata:
- It contains the current read and write disk I/O given as kb/s
- in the values {read} and {write}.

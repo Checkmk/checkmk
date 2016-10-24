@@ -21,9 +21,6 @@ examples:
     ( (10.0, 20.0), [ "snmp" ], ALL_HOSTS, [ "CPU load" ] ),
  ]
 
-perfdata:
- Three values: the load average of the last 1, 5 and 15 minutes.
-
 inventory:
  One service will be created for each check supporting the UCD
  MIB. Currently the SNMP scan function will only consider hosts

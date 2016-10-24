@@ -19,12 +19,3 @@ item:
 inventory:
  The inventory creates one service for each network port for which RMON is activated.
 
-perfdata:
- {bcast}: The number of broadcast packets received per second.
- {mcast}: The number of multicast packets received per second.
- {0-63b}: The number of octects of size 0-63 bytes
- {64-127b}: The number of octects pre second of size 64-127 bytes
- {128-255b}: The number of octects pre second of size 128-255 bytes
- {256-511b}: The number of octects pre second of size 256-511 bytes
- {512-1023b}: The number of octects pre second of size 512-1023 bytes
- {1024-1518b}: The number of octects pre second of size 1024-1518 bytes

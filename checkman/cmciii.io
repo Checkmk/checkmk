@@ -15,8 +15,5 @@ description:
 item:
  The internal name of the input or output ports
 
-perfdata:
- None
-
 inventory:
  All input and output ports are inventorized

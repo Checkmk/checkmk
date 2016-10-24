@@ -16,6 +16,3 @@ inventory:
 item:
  The ID of the detector.
 
-perfdata:
- One value: The chamber deviation in percent from the chamber deviation
- limits.

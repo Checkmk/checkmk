@@ -8,11 +8,6 @@ description:
  The check was reporting load readings, not utilization! Those load readings
  aren't actualy usable as the number of cores processing that load isn't known.
 
-perfdata:
- util1: The CPU utilization of the last 1 minutes in percent.
- util5: The CPU utilization of the last 5 minutes in percent.
- util15: The CPU utilization of the last 15 minutes in percent.
-
 inventory:
  Since this check is obsolete, no items are discovered
 

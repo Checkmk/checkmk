@@ -17,11 +17,5 @@ description:
 item:
  The MSSQL instance name and the tablespace name separated by a space.
 
-perfdata:
- lock_requests/sec(int): Number of requested locks per second.
- lock_timeouts/sec(int): Number of lock timeouts per second.
- number_of_deadlocks/sec(int): Number of deadlocks per second.
- lock_waits/sec(int): Number of lock waits per second.
-
 inventory:
  One separate check for each tablespace will be created.

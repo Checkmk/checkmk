@@ -7,9 +7,6 @@ description:
  This check monitors the state of the temperature sensor on Liebert UPS devices.
  {warn} and {crit} levels can be defined for the temperature.
 
-perfdata:
- The actual temperature in degrees celcius
-
 inventory:
  The inventory works for all devices which have a '.1.3.6.1.4.1.476.1.42' in their
  system description OID. No items are expected.

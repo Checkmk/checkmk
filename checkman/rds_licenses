@@ -12,6 +12,3 @@ description:
 inventory:
  One service per license type will be created.
 
-perfdata:
- The license usage, together with it's warn and crit levels
-

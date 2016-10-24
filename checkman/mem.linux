@@ -35,7 +35,3 @@ item:
 inventory:
  One item per Linux host is being created.
 
-perfdata:
- For every value in {/proc/meminfo} one performance variable
- is being output.
-

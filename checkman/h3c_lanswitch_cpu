@@ -29,6 +29,3 @@ item:
  A string describing the switch and unit number, for example {"Switch 2 CPU 0"}
  or {"Switch 1 Slot 11"}.
 
-perfdata:
- One value: the 5 minute average CPU usage in percent (from 0 to 100).
-

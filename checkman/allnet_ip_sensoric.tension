@@ -12,8 +12,5 @@ item:
  If a name is reported for the sensor by the device: The name and the
  sensor ID. Otherwise the sensor ID only.
 
-perfdata:
- Exactly one number: The value as reported by the device.
-
 inventory:
  Creates one check for every Electric Tension Sensor (function = 12).

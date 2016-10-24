@@ -15,9 +15,5 @@ description:
 item:
  The name of the OMD site.
 
-perfdata:
- Several values. At least the {host_checks} and {service_checks}. The exact
- list might vary.
-
 inventory:
  One check per running OMD site is being created.

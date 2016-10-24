@@ -9,8 +9,5 @@ description:
 item:
  The identifier of the phase (usually {"Source 1 Phase 1"}, {"Source 1 Phase 2"}, {"Source 1Phase 3"}).
 
-perfdata:
- Three values: Voltage, current and power.
-
 inventory:
  Creates six items - one per source and input phase.

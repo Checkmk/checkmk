@@ -14,10 +14,6 @@ inventory:
 item:
  The ID of the detector.
 
-perfdata:
- One value: The temperature in degree celsius, together with levels for warning
- and critical.
-
 examples:
  # set other default levels
  wagner_titanus_topsense_temperature_default_values = (25, 40)

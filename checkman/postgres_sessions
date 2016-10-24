@@ -15,6 +15,3 @@ inventory:
   The check generates one item for the sessions connected to the PostgreSQL
   daemon.
 
-perfdata:
-  The check generates perfdata for the total and running sessions.
-

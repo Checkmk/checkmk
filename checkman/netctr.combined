@@ -23,17 +23,6 @@ examples:
  netctr_counters  = [ 'rx_bytes', 'tx_bytes', 'rx_errors', 'tx_errors' ]
 
 
-perfdata:
-  Per default this check sends lots of performance variables:
-  {rx_bytes}: the number of received bytes,
-  {tx_bytes}: the number of transmitted bytes,
-  {rx_packets}: the number of received packets,
-  {tx_packets}: the number of transmitted packets,
-  {rx_errors}: the number of errors while receiving,
-  {tx_errors}: the number of transmission errors,
-  {tx_collisions}: the number of collision. By setting {netctr_counters} you
-  can change this list of variables.
-
 inventory:
   All network interfaces except {lo} and {sit...} are found and
   inventorized.

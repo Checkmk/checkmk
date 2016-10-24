@@ -10,9 +10,6 @@ description:
 item:
  The name of the FAN as defines in the SNMP data.
 
-perfdata:
- The current rotations per minute (RPM) of the fan.
-
 inventory:
  All fans are automatically detected.
 

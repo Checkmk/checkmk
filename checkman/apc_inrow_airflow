@@ -12,5 +12,3 @@ examples:
      "level_high" : ( 10.0, 11.0 )
     }
 
-perfdata:
- flow: The current flow in liter/s

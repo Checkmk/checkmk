@@ -8,9 +8,6 @@ description:
  to use this check you need to activate the output of the TCP connection information in
  {check_mk.ini}. You can do this by adding {counters = 638:tcp_conn} to the section {[winperf]}.
 
-perfdata:
- The number of established connections
-
 inventory:
  If the windows agents has the section {<<<winperf_tcp_conn>>>}, then one check
  will be created

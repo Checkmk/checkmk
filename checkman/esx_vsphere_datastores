@@ -15,9 +15,6 @@ description:
 item:
  The logical name of the filesystem (not the mountpoint!)
 
-perfdata:
- See {df} for details
-
 inventory:
  One service per datastore will be created.
 

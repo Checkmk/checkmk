@@ -20,10 +20,6 @@ examples:
     ("router1", "bintec_sensors.temp", 'Left 1', bintec_sensors_temp_default_levels),
  ]
 
-perfdata:
- One value: The temperature in degree celsius, together with it's levels for {WARN}
- and {CRIT}.
-
 inventory:
  Creates one check per temperature sensor (sensorType 1).
 

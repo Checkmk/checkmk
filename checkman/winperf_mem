@@ -10,9 +10,6 @@ description:
  This {check_mk.ini} configuration can also be done via WATO in the agent bakery rules.
  You can configure levels for the number of pages per second.
 
-perfdata:
- The number of pages per second
-
 inventory:
  If the windows agents has the section {<<<winperf_mem>>>}, then one check
  will be created

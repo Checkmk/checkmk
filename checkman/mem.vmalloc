@@ -27,10 +27,6 @@ inventory:
  Please add {mem.vmalloc} to {ignored_checktypes}
  if you do not need this check.
 
-perfdata:
- Two variables: the current usage in MB and the size of
- the largest chunk in MB.
-
 examples:
  # set warn/used for used size to 100 MB and 120 MB.
  # set levels for largest chunk to 50% / 30% of total

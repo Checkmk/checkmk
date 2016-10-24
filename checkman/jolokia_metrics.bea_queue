@@ -19,9 +19,6 @@ item:
  followed by the name of the application.
  I.e. webservices webservices
 
-perfdata:
- The number queued requests
-
 inventory:
  One check is created for each application running inside a weblogic
  instance sent by the agent.

@@ -10,5 +10,3 @@ description:
 
  This check can be configured by Wato.
 
-perfdata:
- One value: The used space on the share in Bytes.

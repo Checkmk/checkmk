@@ -13,5 +13,3 @@ inventory:
 examples:
  apc_inrow_temp_default_levels = ( 30, 35 )
 
-perfdata:
- temp: The current temperature in degree celsius

@@ -20,5 +20,3 @@ item:
  The name of the sensor, which is either "internal" or "external {<id>}",
  and {<id>} is the numerical id of the sensor.
 
-perfdata:
- The temperature of the sensor.

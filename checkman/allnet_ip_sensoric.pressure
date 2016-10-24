@@ -12,8 +12,5 @@ item:
  If a name is reported for the sensor by the device: The name and the
  sensor ID. Otherwise the sensor ID only.
 
-perfdata:
- One value: The pressure in bars.
-
 inventory:
  Creates one check for every Pressure Sensor (function = 16).

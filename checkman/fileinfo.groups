@@ -61,11 +61,6 @@ examples:
       }, ALL_HOSTS, ["File group"]),
   ]
 
-perfdata:
-  Four values: the aggregated size of all files in group, the age
-  of the oldest and newest file in seconds (the time since the last
-  modification of the file) and the count of all files.
-
 inventory:
   You have to configure at least on pattern for each
   fileinfo group

@@ -22,11 +22,6 @@ description:
 item:
  The name of the backup.
 
-perfdata:
- Returns three values: The number of directories backuped in the last
- execution of the backup, the number of files backuped and the total
- size backuped in Bytes.
-
 inventory:
  Finds one service for every backup configured.
 

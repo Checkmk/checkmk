@@ -30,13 +30,6 @@ description:
  Currently, testing has been completed with the Dell PowerConnect 5448 and 5424 models,
  however the service check may work with other models.
 
-perfdata:
- Each PSU sensor uses a single variable value (0..1) representing
- the state of the PSU itself. A 1 represents a normal "ON" state, where as
- a 0 represents any "OFF", which can mean warning, critical, shutdown,
- not present (only if previously present), or not functioning. This is simply
- to chart the state of the PSU itself.
-
 inventory:
  During the inventory phase of check_mk, it will create one or more service {Sensor psX_unitX}
  entries, as long as the MIB defined above is supported on the switch.

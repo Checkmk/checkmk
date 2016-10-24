@@ -19,9 +19,6 @@ description:
 item:
  Number of the PSU (as string, not int).
 
-perfdata:
- It contains the current power usage in watts in the {output} value.
-
 examples:
  checks += [
   # Manually configured check:

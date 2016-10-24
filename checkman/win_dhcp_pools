@@ -22,10 +22,6 @@ examples:
  # Set warning to 5 percent of free leases and critical to 2 percent
  win_dhcp_pools_default_levels = (5, 2)
 
-perfdata:
- Three variables: The number of free leases {free}, used leases {used} and
- pending leases {pending}.
-
 inventory:
  Each DHCP pool will result in one service on the DHCP server.
 

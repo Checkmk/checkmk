@@ -16,9 +16,6 @@ description:
  the check gets critical. If will become green again if the check is
  being reinventorized.
 
-perfdata:
- One variable for each of the known state counters.
-
 inventory:
  If there is at least one supported value available for a HDD one service is
  inventorized.

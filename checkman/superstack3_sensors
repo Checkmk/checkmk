@@ -16,5 +16,3 @@ item:
 inventory:
  One service is created for each item found in the switch.
 
-perfdata:
- It does not generate any performance data as the info from the switches is just textual.

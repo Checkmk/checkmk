@@ -18,8 +18,3 @@ examples:
     ]), [], ['esx_cluster'] ),
  ] + static_checks['cpu_utilization_cluster']
 
-perfdata:
-  One value: The current usage in percent - ranging from 0 to 100.
-  The "maximum" value is not 100, but the number of CPU threads. This
-  case be used for scaling the graph in terms of the number of used CPU threads.
-

@@ -9,8 +9,5 @@ description:
  It shows the number if incoming and outgoing bytes and packets, the connection rate
  and the current connections.
 
-perfdata:
- Incoming/Outgoing bytes and packet. The connection rate and the current connections.
-
 inventory:
  One check is generated per source NAT.

@@ -9,9 +9,6 @@ description:
 inventory:
  One service will be created.
 
-perfdata:
- Three graphs will be created, for total, active and inactive. Each with it's warn and crit levels
-
 examples:
  citrix_sessions_default_levels = {
     "total"     : ( 60, 65 ),

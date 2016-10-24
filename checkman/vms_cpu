@@ -10,11 +10,6 @@ description:
 
  A level can be set only on {wait} (disk wait).
 
-perfdata:
- Three variables: The percentage of time spent in {user}, {system} and {wait}
- (disk wait). The idle time can be computed by substracting those three values
- from 100%. The user value contains also {nice}.
-
 inventory:
  One check per host is created for OpenVMS systems.
 

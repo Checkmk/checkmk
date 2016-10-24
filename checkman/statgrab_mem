@@ -31,10 +31,6 @@ examples:
    ( ["host12","host34"], "statgrab_mem", None, (8192, 12288) )
  ]
 
-perfdata:
-  Two values: The RAM used in MB (without Caches) and the swap space used
-  in MB.
-
 inventory:
   Finds one service on every machine with statgrab: The memory used.
 

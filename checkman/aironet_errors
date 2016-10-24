@@ -15,9 +15,6 @@ examples:
  # 2.0 and 20.0 per second
  aironet_default_error_levels = (2.0, 20.0)
 
-perfdata:
- The error rate (as a counter value)
-
 inventory:
  On check is generated for each radio present (even if not activated)
 

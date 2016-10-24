@@ -45,9 +45,6 @@ examples:
 
  # more examples in check manpage for df
 
-perfdata:
- see check manpage for df
-
 inventory:
  Creates one check for every Disk Group in the agent's output.
 

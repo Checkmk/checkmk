@@ -11,16 +11,6 @@ description:
  the plugin {psperf.bat} into the {plugins} directory of you Windows agent.
  Do not use {wmicchecks.bat}. This is obsolete.
 
-perfdata:
- In all cases the number of matching running processes found on the target
- system is sent. If the agent supports it, also the virtual prozess size (VSZ)
- and the resident size (RSS) in kB is send as well as the percentage of CPU
- used by the matching processes.
-
- If more than one process is matching, the values are added. The actual memory
- usage of all processes together might be significantly smaller than the computed
- size since they might (and most propably do) share memory.
-
 inventory:
  {ps.perf} supports inventory in exactly the same way as {ps}, just
  that the variable {inventory_processes_perf} is used instead of

@@ -9,6 +9,3 @@ description:
 inventory:
  Creates two checks "Temperature CPU" and "Temperature System"
 
-perfdata:
- One variable: the current temperature in degrees celsius.
-

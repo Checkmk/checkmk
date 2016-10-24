@@ -13,9 +13,6 @@ description:
 inventory:
  One service per detected CPU will be created.
 
-perfdata:
- The CPU utilization value in percent for every CPU
-
 item:
  The name of the CPU
 

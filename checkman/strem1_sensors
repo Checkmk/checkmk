@@ -11,11 +11,6 @@ item:
  Each sensor which returns a value different than -999.9 results in one service. The item
  containts the group name and the sensor type.
 
-perfdata:
- Depends on the sensor type. In case of temperature the service outputs a perfdata value
- {temperature} and the current value, warn, crit in the provided measure unit. In case of
- humidity the check returns a perfdata value {humindity} with the percentage value.
-
 inventory:
  All available sensors are automatically inventorized.
 

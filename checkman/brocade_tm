@@ -29,12 +29,6 @@ examples:
     ( { "brcdTMStatsEgressEnqueuePkts": (500,5000) }, ["prod"], ALL_HOSTS ),
     ]
 
-perfdata:
- Seven statistical values for each interface are returned: brcdTMStatsTotalIngressPktsCnt,
- brcdTMStatsIngressEnqueuePkts, brcdTMStatsEgressEnqueuePkts, brcdTMStatsIngressDequeuePkts,
- brcdTMStatsIngressTotalQDiscardPkts, brcdTMStatsIngressOldestDiscardPkts,
- brcdTMStatsEgressDiscardPkts
-
 inventory:
  Finds one item per network interface
 

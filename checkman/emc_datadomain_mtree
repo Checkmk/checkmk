@@ -15,9 +15,6 @@ description:
 item:
  Name of the Mtree
 
-perfdata:
- The Precompiled size of the MTree Data in Bytes
-
 inventory:
  Automatically configures one check for every cwMTreesensor found on the
  device

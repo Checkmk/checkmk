@@ -14,8 +14,5 @@ description:
 item:
  "ID of the enclosure" - "ID of the hard disk"
 
-perfdata:
- The percentage of time the disk is busy are reported by the device
-
 inventory:
  Automatically configures one check for every disk found

@@ -12,9 +12,6 @@ description:
  The check will result in a WARNING/CRITICAL state when the given thresholds
  for the CPU load are reached.
 
-perfdata:
- One variable: the current CPU percentage (0..100)
-
 inventory:
  On each switch which supports this MIB one service {CPU} is being created.
 

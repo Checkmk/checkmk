@@ -15,9 +15,6 @@ description:
 item:
  The accesspoint name.
 
-perfdata:
- No performance data.
-
 inventory:
  One service for each access point is created.
 

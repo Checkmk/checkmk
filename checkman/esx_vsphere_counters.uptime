@@ -7,9 +7,6 @@ description:
  This check is always OK and simply outputs the uptime of an ESX host
  system.
 
-perfdata:
- The uptime in seconds.
-
 inventory:
  One check per system is created if the agent has a section {<<<uptime>>>}.
 

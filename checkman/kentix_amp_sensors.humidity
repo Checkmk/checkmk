@@ -13,9 +13,6 @@ description:
 
  The sensor state can be OK, WARN or CRIT.
 
-perfdata:
- One variable: the humidity.
-
 item:
  Name of the sensor provided by the device.
 

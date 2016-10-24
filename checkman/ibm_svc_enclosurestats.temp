@@ -20,10 +20,6 @@ item:
 inventory:
  Creates one check per enclosure.
 
-perfdata:
- One value: The temperature in degree celsius, together with it's levels for
- warn and crit.
-
 examples:
  # set default levels to 30 and 45 percent:
  ibm_svc_enclosurestats_temperature_default_levels = (30, 45)

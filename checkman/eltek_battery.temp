@@ -11,8 +11,5 @@ description:
 item:
  Battery.
 
-perfdata:
- The temperature of the battery.
-
 inventory:
  One service is created.

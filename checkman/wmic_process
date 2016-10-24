@@ -27,10 +27,6 @@ item:
  If you choose {"APACHE"} as item, for example, then the check will be
  named {proc_APACHE}.
 
-perfdata:
- Four value are sent: (1) The memory usage in MB, (2) The page file usage in MB,
- (3) The CPU usage in user mode in %, (4) The CPU usage in kernel mode in %.
-
 examples:
  # Monitor ressources used by SSHD processes.
  # Warn at 20MB RAM or 10MB page file or 80% CPU usage

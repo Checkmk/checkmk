@@ -54,19 +54,3 @@ examples:
    ( ["host12","host34"], "mem.used", None, (8192, 12288) )
  ]
 
-perfdata:
- Three variables are stored: the physical RAM,
- the used swap space and the sum of both. Maximum
- values for both variables are also transmitted, so that
- they can be visualized. All values are in Megabytes (1024 * 1024 bytes).
-
- The template for PNP4Nagios that is shipped with check_mk
- stacks swap usage on top of RAM usage und thus shows
- the amount of virtual RAM that is used by processes.
-
- On Linux some additional performance values are output,
- for example the size of the page tables and the shared
- memory.
-
- If averaging is turned on, then a value {memusedavg} is added.
-

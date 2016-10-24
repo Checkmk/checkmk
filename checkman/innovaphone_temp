@@ -9,6 +9,3 @@ description:
 inventory:
  One check will be created
 
-perfdata:
- The actual temperature in celsisus, together with it's warn and crit levels
-

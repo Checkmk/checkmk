@@ -11,9 +11,6 @@ description:
 item:
  consecutive numbers.
 
-perfdata:
- One value: in_freq
-
 inventory:
  Creates exactly one item.
 

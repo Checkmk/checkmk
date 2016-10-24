@@ -20,9 +20,6 @@ examples:
     # on all hosts with the tag "linux"
     (["hp"], ALL_HOSTS, "hpux_cpu", None, (4, 8)),
  ]
-perfdata:
-  Three values: The load average for 1, 5 and 15 minutes.
-
 inventory:
   One service is created if the agent outputs valid data.
 

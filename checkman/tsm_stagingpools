@@ -28,7 +28,3 @@ item:
 inventory:
  The check creates one item per staging pool found.
 
-perfdata:
-  The number of tapes that are considered free,
-  the average utilization  and the levels for alerting
-

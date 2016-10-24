@@ -11,9 +11,6 @@ description:
  Lower and upper warning and critical levels are enforced and may be
  configured.  A non-OK state is triggered according to these levels.
 
-perfdata:
- The humidity of the sensor.
-
 inventory:
  One service for each sensor of a PDU is created.
 

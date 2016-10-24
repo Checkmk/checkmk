@@ -17,5 +17,3 @@ description:
 inventory:
  Creates one check per IBM SVC / V7000 device.
 
-perfdata:
- Two values: The write cache usage and the total cache usage in percent.

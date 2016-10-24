@@ -13,8 +13,5 @@ description:
 item:
  The index and type of processes.
 
-perfdata:
- The number of processes.
-
 inventory:
  One service per process type is created.

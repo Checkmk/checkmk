@@ -9,9 +9,6 @@ description:
 item:
  Always "System"
 
-perfdata:
- One value: The current temperature.
-
 inventory:
  One check per device is created.
 

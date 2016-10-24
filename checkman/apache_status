@@ -41,8 +41,3 @@ inventory:
 item:
  A string-combination of servername and port, e.g. {127.0.0.1:5000}.
 
-perfdata:
- This check outputs lots of performance variables since this is the
- purpose of the check. Please look at the shipped PNP template for
- details.
-

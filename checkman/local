@@ -15,10 +15,6 @@ item:
  within all checks of the host. It is the second word in
  the line output by the agent.
 
-perfdata:
- A local check may or may not send one or more custom performance
- variables.
-
 inventory:
  All local checks are automatically inventorized. There
  are no specific configuration variables.

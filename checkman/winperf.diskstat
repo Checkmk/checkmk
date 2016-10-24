@@ -17,10 +17,6 @@ description:
  useful levels an average over a longer period of time would be needed.
  A future implementation might change this.
 
-perfdata:
- Two variables: the averaged disk throughput summed up over all disks,
- for read and for write access.
-
 inventory:
  A check of this type is automatically created for all Windows
  hosts.

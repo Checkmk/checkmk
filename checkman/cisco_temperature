@@ -11,9 +11,6 @@ description:
  The check supports both sensor status and device levels provided, if
  existent.
 
-perfdata:
- The current temperature in degrees celsius
-
 item:
  The description of the sensor as provided by the device, or the ID of the sensor,
  if no description is available.

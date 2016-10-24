@@ -22,5 +22,3 @@ inventory:
  Each configured DRBD device will result in one service during inventory. All
  devices with the connection state "Unconfigured" are skipped.
 
-perfdata:
- One dataset is appended for each of the counters above.

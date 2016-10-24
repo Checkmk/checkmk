@@ -14,9 +14,5 @@ description:
  The check only records the information. At the moment there are no thresholds
  for this check.
 
-perfdata:
- The check outputs the following performance data values: {Discovers}, {Offers},
- {Requests}, {Acks}, {Nacks}, {Declines}, {Releases}, {Scopes}.
-
 inventory:
  Per DHCP Server one service will be created.

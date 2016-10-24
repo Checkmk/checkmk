@@ -26,9 +26,6 @@ examples:
     # on all hosts with the tag "unix"
     (["unix"], ALL_HOSTS, "statgrab_load", None, (4, 8)),
  ]
-perfdata:
-  Three values: The load average for 1, 5 and 15 minutes.
-
 inventory:
  One check per host is created if the agent contains a {statgrab_load}
  section.

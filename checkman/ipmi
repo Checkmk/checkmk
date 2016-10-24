@@ -35,11 +35,6 @@ inventory:
  {impi_ignore_nr} to {True} then these sensors will
  be ignored.
 
-perfdata:
- In summary mode only the current ambient temperature
- will be output - if available. In detailed mode each
- sensors outputs its current value.
-
 examples:
  # Ignore sensors in state 'nr'
  ipmi_ignore_nr = True

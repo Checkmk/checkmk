@@ -11,5 +11,3 @@ description:
 inventory:
  There is one service created on inventory.
 
-perfdata:
- current utilization

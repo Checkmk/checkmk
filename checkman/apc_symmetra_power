@@ -16,9 +16,6 @@ examples:
  # Trigger warning/critical level if power drops below 100 or 20 Watt
  apc_power_default_levels = (100, 20)
 
-perfdata:
- The current output power int Watt
-
 inventory:
  Supported.
 

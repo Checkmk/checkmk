@@ -12,9 +12,6 @@ description:
 item:
  The chassis number combined with the module number, e.g. Chassis 1 Module 1
 
-perfdata:
- The averaged 3_3v and 12v values
-
 inventory:
  Creates on server per chassis module
 

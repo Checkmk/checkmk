@@ -34,10 +34,6 @@ examples:
  # Set default levels for heap memory to 500 MB / 800 MB
  j4p_performance_mem_default_levels = (500, 800)
 
-perfdata:
- Two variables: the heap memory usage and the non heap memory usage
- in MB.
-
 inventory:
  One check is created for each JMX instance sent by the agent.
  The agent currently supports only one instance, but that might

@@ -15,5 +15,3 @@ description:
  In addition to the state, the check displays the following other parameters
  of the server: drsPotentialPower, drsMaxPowerSpecification, drsWattsReading, drsAmpsReading
 
-perfdata:
- One variable: the power consumption in Watts

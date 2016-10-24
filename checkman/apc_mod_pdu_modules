@@ -9,5 +9,3 @@ description:
  It goes to {WARN} if the devices reports an warning state for the module.
  The check also reports the current output in kw
 
-perfdata:
- current_power: The current ouput in kw

@@ -11,9 +11,6 @@ description:
 item:
  Sensor number, sensor name
 
-perfdata:
- Temperature
-
 inventory:
  One service per sensor is created.
 

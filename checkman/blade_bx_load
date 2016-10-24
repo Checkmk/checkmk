@@ -18,9 +18,6 @@ examples:
     (["bx600"], ALL_HOSTS, "blade_bx_load", None, (4, 8)),
  ]
 
-perfdata:
-  Three values: The load average for 1, 5 and 15 minutes.
-
 inventory:
   Returns one check on each blade enclosure.
 

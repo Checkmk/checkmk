@@ -11,9 +11,6 @@ description:
 item:
  The sensor number: "1" or "2".
 
-perfdata:
- One variable: the current temperature in degrees celsius.
-
 inventory:
  There are always two temperature sensors detected. Creates one service for each sensor.
 

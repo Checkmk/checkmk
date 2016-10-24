@@ -10,15 +10,6 @@ description:
 
  A level can be set only on {wait} (disk wait).
 
-perfdata:
- The following 3 float values:
-
- {user}: CPU utilization in user space in percent
-
- {sys}: CPU utilization in kernel space in percent
-
- {wait}: CPU time for I/O wait in percent
-
 inventory:
  On each LPAR one check is generated.
 

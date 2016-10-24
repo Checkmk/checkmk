@@ -11,5 +11,3 @@ description:
 inventory:
  All sections defined in mtr.cfg will come back in the inventory as hosts.
 
-perfdata:
- Per defined host mtr will report packet loss, roundtrip time, best, worst, stddev per hop and the destination.

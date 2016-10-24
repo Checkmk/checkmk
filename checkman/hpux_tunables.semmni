@@ -17,7 +17,3 @@ inventory:
  {hpux_tunables} generates one check per host for each of the supported
  tunables.
 
-perfdata:
-  The name of the tunable along with it's usage, threshold and warning /
-  crit levels.
-

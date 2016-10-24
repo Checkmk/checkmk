@@ -11,5 +11,3 @@ description:
 inventory:
  One service will be created for each system.
 
-perfdata:
- {age}: The Age of the oldest Checkpoint in seconds

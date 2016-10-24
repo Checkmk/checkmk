@@ -17,9 +17,6 @@ item:
 
  }
 
-perfdata:
- The Perm Space usage in bytes
-
 inventory:
  One check is created for each Jolokia instance sent by the agent.
 

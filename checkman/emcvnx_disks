@@ -28,8 +28,5 @@ item:
  Consists of bus ID, enclosure ID and disk ID as returned by the agent.
  E. g. "1/1 Disk 9"
 
-perfdata:
- Two values: Read-I/O and Write-I/O in Bytes/sec
-
 inventory:
  Automatically configures one check for every disk listed in the agent output.

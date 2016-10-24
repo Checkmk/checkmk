@@ -12,8 +12,5 @@ description:
  See "Monitoring VMWare ESX with Check_MK" in the online documentation
  as well.
 
-perfdata:
- One value is returned: The currently demanded CPU MHz.
-
 inventory:
  On each VM one check is generated.

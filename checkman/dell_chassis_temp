@@ -12,9 +12,6 @@ item:
  drsChassisFrontPanelAmbientTemperature,
  drsCMCAmbientTemperature, drsCMCProcessorTemperature
 
-perfdata:
- One variable per item : the temperature
-
 inventory:
  All three hardcoded sensors
 

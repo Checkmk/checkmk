@@ -11,9 +11,6 @@ description:
  the usage during the complete check interval but is just a snapshot
  of the current usage.
 
-perfdata:
- One variable: the current CPU percentage (0..100)
-
 inventory:
  One check is automatically created if at least one CPU
  entry is found in the SNMP output.

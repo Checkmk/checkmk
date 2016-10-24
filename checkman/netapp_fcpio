@@ -22,9 +22,6 @@ examples:
   ('netapp_filer2', 'netapp_fcpio', None, { "read" : (2000, 3000), "write" : (3000, 4000) }),
  ]
 
-perfdata:
- Two values: The number of write IOPS and the number of read IOPS.
-
 inventory:
  Configures one check on each filer.
 

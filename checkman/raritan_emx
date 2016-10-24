@@ -13,9 +13,6 @@ description:
 item:
  Rack ID, Sensor Type, Sensor Name
 
-perfdata:
- Temperature
-
 inventory:
  One service per sensor will be created
 

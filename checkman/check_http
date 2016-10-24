@@ -16,7 +16,3 @@ description:
 
  This check can be configured by Wato.
 
-perfdata:
- If checking expiration of SSL certificate: None.
-
- Otherwise two values: The response time in seconds and the size of the response in Bytes.

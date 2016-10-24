@@ -15,8 +15,5 @@ item:
  The ID of the sensor taken from SNMP. It contains 3 numbers separated by
  dots, e. g. 129.45.3
 
-perfdata:
- Exactly one value: The temperature in degree celsius.
-
 inventory:
  Creates one check for every temperature sensor found by SNMP.

@@ -11,8 +11,5 @@ description:
  This check can be used with all printer supporting the {CANON-MIB}
  (.1.3.6.1.4.1.1602.1.11).
 
-perfdata:
- The number of processed pages. The label is {count} for all services.
-
 inventory:
  One service is being created for each measure point

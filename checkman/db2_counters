@@ -16,6 +16,3 @@ item:
 inventory:
  One separate check for each database will be created.
 
-perfdata:
- Three values: The rate per second of deadlocks, lockwaits and sortoverflows.
-

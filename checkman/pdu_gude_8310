@@ -9,9 +9,6 @@ description:
 item:
  ID of the phase, an integer beginning with {1} for the first phase.
 
-perfdata:
- kWh, W, A, V, VA
-
 inventory:
  One service per Phase
 

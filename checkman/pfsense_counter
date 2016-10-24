@@ -12,5 +12,3 @@ description:
 inventory:
  One service per pfSense device will be created.
 
-perfdata:
- The packet rates and, if enabled, their moving average.

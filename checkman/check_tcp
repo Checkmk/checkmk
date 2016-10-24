@@ -19,5 +19,3 @@ description:
 
  This check can be configured by Wato.
 
-perfdata:
- One value: The response time in seconds.

@@ -11,6 +11,3 @@ description:
 inventory:
  One check will be created
 
-perfdata:
- The currently percentage of free channels, together with it's warn and crit levels
-

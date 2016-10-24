@@ -11,9 +11,6 @@ description:
 item:
  The component where the fans are located, e.g chassis or switch
 
-perfdata:
- Three values: Voltage, current and power
-
 inventory:
  Creates on service per switch module
 

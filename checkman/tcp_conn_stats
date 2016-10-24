@@ -7,9 +7,6 @@ description:
  This check monitors the number of TCP connections in the various possible states,
  which are: {ESTABLISHED}, {SYN_SENT}, {SYN_RECV}, {LAST_ACK}, {CLOSE_WAIT}, {TIME_WAIT}, {CLOSED}, {CLOSING}, {FIN_WAIT1}, {FIN_WAIT2}.
 
-perfdata:
- One variable for each of the state types listed in the description (which are ten).
-
 inventory:
  If there is at least one TCP connection, then one check will be created.
  On agents supporting {tcp_conn_stats} this should always be the case since at

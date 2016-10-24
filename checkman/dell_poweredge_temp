@@ -25,9 +25,6 @@ item:
  Either the name of the location variable configured for the temperature sensor, or
  the chassis index and sensor index seperated by a dash.
 
-perfdata:
- One variable: the temperature
-
 inventory:
  All temperature sensors which do not have the state settings unknown are detected
 

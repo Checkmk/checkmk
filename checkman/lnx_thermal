@@ -10,9 +10,6 @@ description:
 item:
   "Zone "+(The ID of the thermal zone)
 
-perfdata:
-  One value: The current temperature in °C
-
 inventory:
   Creates one check for earch thermal zone.
 

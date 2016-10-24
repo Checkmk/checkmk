@@ -9,9 +9,6 @@ description:
 item:
  The name of the sensor as described in the SNMP output.
 
-perfdata:
- The current temperature value for each sensor
-
 inventory:
  The inventory creates a service for each sensor in the system
 

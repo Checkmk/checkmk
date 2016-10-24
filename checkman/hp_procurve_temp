@@ -13,8 +13,5 @@ description:
 item:
  The system name of the switch.
 
-perfdata:
- One variable: the system temperature in celsius.
-
 inventory:
  One service is created for the system temperature.

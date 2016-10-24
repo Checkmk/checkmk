@@ -23,9 +23,6 @@ item:
  it is build from the ID of the ClusterNode plus the ID of the interface
  separated by a dot. For Interface 2 on ClusterNode 1 e. g. 1.2
 
-perfdata:
- See man page of {if64}
-
 inventory:
  Finds one item per FibreChannel Interface.
 

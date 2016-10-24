@@ -9,9 +9,6 @@ description:
  This check can go WARN or CRIT when the uptime is below or above certain
  configurable levels.
 
-perfdata:
- The uptime in seconds.
-
 inventory:
  One check per system is created if the agent has a section {<<<uptime>>>}.
 

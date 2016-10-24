@@ -14,10 +14,6 @@ description:
 item:
  {Operations} and {Replica Operations}.
 
-perfdata:
- The rate of {getmore}, {insert}, {update}, {command}, {query} and
- {delete} operations.
-
 inventory:
  Creates a service for the {Operations} and another one for
  {Replica Operations} (if applicable).

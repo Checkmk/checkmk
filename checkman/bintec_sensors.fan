@@ -9,9 +9,6 @@ description:
 item:
  The sensorDescr from SNMP.
 
-perfdata:
- None
-
 inventory:
  For each fan one service is created
 

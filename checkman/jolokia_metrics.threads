@@ -17,14 +17,6 @@ description:
 item:
  The name of the application server instance as configured by the agent.
 
-perfdata:
- The following values are returned in the perfdata:
-   Rate of thread creations,
-   Count of Threads currently running,
-   Count of Daemon Threads currently serving other threads,
-   Maximum number of Threads started at any given time during the JVM lifetime,
-   Number of Threads started since starting the JVM.
-
 inventory:
  One check is created per JVM sent by the Jolokia agent.
 

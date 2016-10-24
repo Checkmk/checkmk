@@ -22,14 +22,6 @@ examples:
  # Set default levels for number of threads to (WARN 50, CRIT 80)
  j4p_performance_threads_default_levels = (50, 80)
 
-perfdata:
- Several variables:
- ThreadRate: Number of threads created per interval.
- ThreadCount: Number of threads.
- DeamonThreadCount: Number of daemon threads.
- PeakThreadCount: Maximum number of threads since program start.
- TotalStartedThreadCount: total number of started threads since program start.
-
 inventory:
  One check is created for each JMX instance sent by the agent.
 

@@ -11,9 +11,6 @@ item:
 
  Example: "2.3" A humidity sensor(type 3) on port 2
 
-perfdata:
- The current humidity in percent, lower crit, lower warn, upper warn, upper crit
-
 inventory:
  The inventory creates a service for each humidity sensor found
 

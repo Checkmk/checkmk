@@ -15,5 +15,3 @@ inventory:
 item:
  A string named after our Cluster partner.
 
-perfdata:
- The check does not generate perfdata.

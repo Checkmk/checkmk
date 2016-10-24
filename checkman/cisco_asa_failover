@@ -18,10 +18,6 @@ description:
  The check is not tested against un-clustered ASA devices.
 
 
-perfdata:
-  none
-
-
 item:
   No item is generated.
 

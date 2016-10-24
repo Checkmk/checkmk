@@ -14,5 +14,3 @@ inventory:
 item:
  The ID of the detector.
 
-perfdata:
- One value: The level of smoke in percent.

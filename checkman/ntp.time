@@ -26,10 +26,6 @@ examples:
  # Set critical stratum to 3, global warning/critical levels to 5.0 and 10.0 ms
  ntp_default_levels = (3, 5.0, 10.0)
 
-perfdata:
- Two variables: the time {offset} to the peer in milliseconds and the
- {jitter} in ms.
-
 inventory:
  If at least one peer is present, exactly one check is created, if
  {ntp_inventory_mode} is set to {"summary"} or {"both"}.

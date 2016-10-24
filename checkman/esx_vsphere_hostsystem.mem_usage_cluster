@@ -17,6 +17,3 @@ examples:
     ]), [], ['esx_cluster'] ),
  ] + static_checks['mem_cluster']
 
-perfdata:
- One value: the current total usage in bytes.
-

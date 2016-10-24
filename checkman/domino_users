@@ -7,9 +7,6 @@ description:
  This check uses snmp to extract the number of users on a Lotus Domino Server.
  Warning and critical upper limits can be set to the number of users.
 
-perfdata:
- The number of users
-
 inventory:
  One service is created per Lotus Domino Server.
 

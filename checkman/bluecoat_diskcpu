@@ -15,9 +15,5 @@ item:
 
   The item {CPU} represents the CPU utilization.
 
-perfdata:
-  One value representing the usage (for the Disk check) or utilization
-  (for the CPU check)
-
 inventory:
  Returns two checks for each appliance (machine): {Disk} and {CPU}

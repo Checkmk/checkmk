@@ -8,8 +8,5 @@ description:
  cycle using SNMP and the HP-UX SNMP agent. It outputs values
  for user, system, nice and idle.
 
-perfdata:
- Four variables: The percentage of time spent in {user}, {system}, {nice} and {idle}.
-
 inventory:
  One check per host is created if the agent supports this check.

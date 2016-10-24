@@ -13,12 +13,6 @@ description:
  This daemon is mainly found on Linux and is used by some
  hardware appliances (such as Riverbed Steelhead).
 
-perfdata:
- Three variables: The percentage of time spent in {user}, {system} and {wait}
- (disk wait). The idle time can be computed by substracting those three values
- from 100%. The user value contains also {nice}. The system value also contains
- hardware and software interrupts.
-
 inventory:
  One check per host is created if the agent supports the UCD-MIB.
  Currently the SNMP scan function will only consider hosts

@@ -7,9 +7,6 @@ description:
  This check measures the number of existing (not neccessarily
  running) processes on OpenVMS. You can set levels on the number.
 
-perfdata:
- One value: the number of processes.
-
 inventory:
  One check per OpenVMS system will be created.
 

@@ -20,5 +20,3 @@ item:
 inventory:
  Creates one check per enclosure.
 
-perfdata:
- One value: The power consumption in watt.

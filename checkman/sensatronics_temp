@@ -10,9 +10,6 @@ description:
 item:
  Combination of IO unit number (3-6) and sensors Name
 
-perfdata:
- One variable: the current temperature in degrees celsius.
-
 inventory:
  All available temperature sensors are automatically inventorized.
 

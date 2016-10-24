@@ -13,5 +13,3 @@ description:
 inventory:
  Two summary checks are created for each shelf. {Temperature Internal Shelfes} and {Temperature Ambient Shelfs}
 
-perfdata:
- The maximum temperature of all the sensors of the type in question.

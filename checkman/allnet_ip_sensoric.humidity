@@ -14,10 +14,6 @@ item:
  If a name is reported for the sensor by the device: The name and the
  sensor ID. Otherwise the sensor ID only.
 
-perfdata:
- One value: The humidity in percent, together with it's lower and upper
- levels.
-
 inventory:
  Creates one check for every Humidity Sensor (function = 2).
 

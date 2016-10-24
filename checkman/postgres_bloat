@@ -17,7 +17,3 @@ description:
 inventory:
   The check generates one service for each database
 
-perfdata:
-  Two values. A total sum of all table and all index wasted bytes.
-  Per default only the top 10 tables of each database are accumulated.
-

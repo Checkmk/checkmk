@@ -10,9 +10,6 @@ description:
 
  The check uses the SNMP OID {DISMAN-EVENT-MIB::sysUpTime}.
 
-perfdata:
- The uptime in seconds.
-
 inventory:
  One check per system is created if the host provides that information.
 

@@ -15,7 +15,3 @@ description:
 inventory:
   The check generates one item per instance for the sessions connected to the MySQL daemon.
 
-perfdata:
-  The check generates perfdata for the total and running sessions, and the
-  connection rate.
-

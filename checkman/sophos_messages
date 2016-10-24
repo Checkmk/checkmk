@@ -10,8 +10,5 @@ description:
 item:
  The name of the type of messages.
 
-perfdata:
- The rates of the total number and the inbound and outbound messages.
-
 inventory:
  One service per type is created.

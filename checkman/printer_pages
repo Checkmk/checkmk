@@ -7,8 +7,5 @@ description:
  This check shows how much pages the printer ever printed.
  The printer has to support the generic PRINTER-MIB.
 
-perfdata:
- The Number of printed pages.
-
 inventory:
  Supported.

@@ -13,6 +13,3 @@ item:
 inventory:
  One check for each cpu module is created by the inventory.
 
-perfdata:
- The actual utilization, together with it's warn and crit levels
-

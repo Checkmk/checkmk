@@ -10,6 +10,3 @@ description:
 inventory:
  One service for each VPN tunnel will be create
 
-perfdata:
- tunnel state: returns 1 if VPN tunnel is up and 0 if VPN tunnel is down
-

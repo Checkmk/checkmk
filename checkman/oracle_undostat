@@ -33,14 +33,6 @@ item:
  The SID of the database in uppercase (as appearing in the process
  name of the pmon_... process).
 
-perfdata:
- Four values: The values are the following:
-
- First the amount of active undo blocks. Second the number of maximum
- concurrent transactions in 10 minutes. Third the tuned undo retention.
- This is the value for the levels parameter. Fourth the maximum time
- for a running query. Last the non space error count.
-
 examples:
  checkgroup_parameters['oracle_undostat'] = [
    ( {'nospaceerrcnt_state': 1}, [], ALL_HOSTS, ALL_SERVICES ),

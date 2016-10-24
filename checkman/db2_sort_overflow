@@ -15,6 +15,3 @@ item:
 inventory:
  One separate check for each database will be created.
 
-perfdata:
- The overflow in percent.
-

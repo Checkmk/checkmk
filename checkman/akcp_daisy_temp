@@ -11,9 +11,6 @@ description:
 item:
  The description of the sensor as string as specified by the user during board configuration.
 
-perfdata:
- The current temperature in degree celsius.
-
 inventory:
  All available (without the first, see description) temperature sensors are automatically inventorized.
 

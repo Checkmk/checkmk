@@ -11,8 +11,5 @@ description:
 item:
  The fan id.
 
-perfdata:
- No performance data.
-
 inventory:
  One service per fan is created.

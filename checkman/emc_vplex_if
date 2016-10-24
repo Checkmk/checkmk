@@ -18,12 +18,3 @@ item:
 inventory:
  The inventory creates one service for each port
 
-perfdata:
- {in}: The number of bytes received per second.
-
- {out}: The number of bytes sent per second.
-
- {in_avg_?}: optional: The averaged number of received bytes over a longer range of time
-
- {out_avg_?}: optional: The averaged number of sent bytes
-

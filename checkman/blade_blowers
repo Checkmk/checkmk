@@ -10,10 +10,6 @@ description:
 inventory:
  All blowers are detected automatically.
 
-perfdata:
- For each blower the percentage and the RPMs are sent as performance
- data.
-
 item:
  The item is a string of the format {"I/N"} where {I} is the number
  of the blower beginning from {1} and {N} is the number of blowers.

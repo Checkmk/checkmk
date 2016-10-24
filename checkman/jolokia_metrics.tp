@@ -15,11 +15,6 @@ description:
 item:
  The name of the application server instance as configured by the agent.
 
-perfdata:
- The following values are returned in the perfdata:
-   currentThreadsBusy
-   currentThreadsCount
-
 inventory:
  One check is created per thread pool sent by the Jolokia agent.
 

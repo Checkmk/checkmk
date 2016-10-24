@@ -13,8 +13,5 @@ description:
 item:
  The name of the module.
 
-perfdata:
- The temperature.
-
 inventory:
  One service per module is created.

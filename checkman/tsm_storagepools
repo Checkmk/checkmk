@@ -16,6 +16,3 @@ item:
 inventory:
  The check inventorizes all storage pools on the server, independent of their type.
 
-perfdata:
-  The used capacity in Megabytes.
-

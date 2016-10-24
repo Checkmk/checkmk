@@ -10,6 +10,3 @@ description:
 inventory:
  Creates one service per Palo Alto firewall.
 
-perfdata:
- The total active sessions, as well as active tcp, udp, icmp and
- sslproxy sessions.

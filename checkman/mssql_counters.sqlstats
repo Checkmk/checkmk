@@ -9,8 +9,5 @@ description:
 item:
  The MSSQL object, instance and counter names separated by spaces.
 
-perfdata:
- The current rate of the counter as delivered by the SQL statistics object.
-
 inventory:
  One separate check for each counter will be created.

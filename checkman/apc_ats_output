@@ -19,8 +19,3 @@ examples:
      'load_perc_min': (10.0, 5.0)
      }
 
-perfdata:
- volt: The current ouput in volt
- watt: The current output in watt
- ampere: The current used output in ampere
- load_perc: The current load in percent

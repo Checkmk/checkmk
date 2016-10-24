@@ -11,6 +11,3 @@ description:
 inventory:
  The inventory will create one service per device.
 
-perfdata:
- the current humidity in percent, lower crit, lower warn, upper warn, upper crit
-

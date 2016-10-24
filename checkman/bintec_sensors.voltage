@@ -11,8 +11,5 @@ description:
 item:
  The sensorDescr from SNMP.
 
-perfdata:
- One value: The voltage.
-
 inventory:
  Creates one check per voltage sensor (sensorType 3).

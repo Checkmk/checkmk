@@ -9,9 +9,6 @@ description:
  {WARN} or {CRIT} is returned, if the usage in the last 60 sec was above
  given thresholds. {OK} is returned otherwise.
 
-perfdata:
- One value: The vFilers CPU utilization in percent.
-
 inventory:
  Creates one check for each vFiler.
 

@@ -15,9 +15,6 @@ description:
 item:
  "ID of the enclosure" - "ID of the sensor"
 
-perfdata:
- The temperatur measured by the sensor
-
 inventory:
  Automatically configures one check for every sensor found on the
  device

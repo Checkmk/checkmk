@@ -11,9 +11,6 @@ description:
 item:
  consecutive numbers.
 
-perfdata:
- One value: temperature.
-
 inventory:
  Creates up to two items - one per temperature sensor.
 

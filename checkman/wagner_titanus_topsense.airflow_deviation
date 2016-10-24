@@ -18,10 +18,6 @@ inventory:
 item:
  The ID of the detector.
 
-perfdata:
- One value: The airflow deviation in percent, together with it's upper
- levels for warning and critical.
-
 examples:
  # set other default levels
  wagner_titanus_topsense_airflow_deviation_default_values = (-30.0, -10.0, 10.0, 30.0)

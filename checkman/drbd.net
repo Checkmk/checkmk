@@ -17,6 +17,3 @@ inventory:
  Each configured DRBD device will result in one service during inventory. All
  devices with the connection state "Unconfigured" are skipped.
 
-perfdata:
- It contains the current inbound and outbound network load given as kb/s
- in the values {in} and {out}.

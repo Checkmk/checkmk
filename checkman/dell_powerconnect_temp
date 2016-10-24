@@ -35,14 +35,6 @@ examples:
  # Indicate warning at 30 degrees C, and indicate critical for 35 degrees C
  dell_powerconnect_temp_default_values = (30, 35)
 
-perfdata:
- The temperature chart uses a single variable, the temperature (0..200) representing
- the switchs internal temperature in degrees Celcius.
-
- The sensor chart uses a single variable to indicate the state (0..1), where a 1
- represents the sensor is "ON". A 0 represents the switch is is "OFF" any any other
- state where it is non-operational, or unavailable.
-
 inventory:
  During the inventory phase of check_mk, it will identify one service {Temperature},
  as long as the MIB defined above is supported on the switch.

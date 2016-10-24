@@ -11,9 +11,6 @@ description:
 item:
  The identifier of the phase ({"Phase 1"}, {"Phase 2"}, {"Phase 3"}).
 
-perfdata:
- Five values: voltage, current, power, appower and energy.
-
 inventory:
  Creates three or four items - one per input phase.
 

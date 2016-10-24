@@ -63,15 +63,6 @@ examples:
  ]
 
 
-perfdata:
-  For each port there are sent {in}, {out}, {rxframes}, {txframes}, {rxcrcs},
-  {rxencoutframes}, {c3discards} and {notxcredits}. If averaging is turned on,
-  each value comes twice: once normal and once with {_avg} appended as averaged
-  value. All rates are in Bytes/s or Frames/s. If you are using PNP4Nagios,
-  you are strongly encouraged to set {RRD_STORAGE_TYPE = MULTIPLE} in
-  {process_perfdata.cfg}. Please note that you need to re-create or convert existing
-  RRD databases if you change this setting.
-
 inventory:
   The inventory creates checks for all operational ports. What this exactly means
   can be configured (see CONFIGURATION VARIABLES).

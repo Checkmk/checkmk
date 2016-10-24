@@ -10,6 +10,3 @@ description:
 inventory:
  One check per ESX host system is being created.
 
-perfdata:
- One value: the current usage in bytes.
-

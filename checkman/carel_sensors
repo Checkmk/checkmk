@@ -7,9 +7,6 @@ description:
  This check monitors the temperature for Carel
  air conditioning devices.
 
-perfdata:
- The current temperature in degrees celsius
-
 item:
  The description of the sensor.
 

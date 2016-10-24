@@ -12,9 +12,6 @@ examples:
  # set default levels to 90 and 99 percent:
  netapp_api_cpu_default_levels = (90.0, 99.0)
 
-perfdata:
- The CPU utilization in percent.
-
 inventory:
  Creates one check.
 

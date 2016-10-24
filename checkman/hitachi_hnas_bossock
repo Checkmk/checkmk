@@ -17,6 +17,3 @@ inventory:
 item:
  The ID of the node
 
-perfdata:
- The number of Bossock Fibers
-

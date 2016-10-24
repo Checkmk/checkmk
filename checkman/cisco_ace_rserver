@@ -24,5 +24,3 @@ item:
 inventory:
  One service for each real server is created
 
-perfdata:
- The current number of connections going through a real server.

@@ -16,9 +16,6 @@ description:
 item:
  The name of the channel
 
-perfdata:
- One variable: the message count
-
 inventory:
  One service will be created for each channel.
 

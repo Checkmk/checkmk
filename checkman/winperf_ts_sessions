@@ -17,6 +17,3 @@ description:
 inventory:
   The check generates service per host.
 
-perfdata:
-  The check generates perfdata for the active and inactive sessions.
-

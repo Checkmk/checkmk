@@ -12,5 +12,3 @@ description:
 inventory:
  Exactly one service is discovered.
 
-perfdata:
- Three float values: cpu load of the last 1, 5 and 15 minutes

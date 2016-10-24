@@ -13,5 +13,3 @@ description:
 inventory:
  One service per controller is created.
 
-perfdata:
- One value: The current number of desktops registered.

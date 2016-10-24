@@ -17,5 +17,3 @@ inventory:
 item:
  The phase identifier.
 
-perfdata:
- Voltage, current, power, apparent power and frequency.

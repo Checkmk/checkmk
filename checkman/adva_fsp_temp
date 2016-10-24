@@ -22,9 +22,6 @@ description:
 item:
  The name of the module or port
 
-perfdata:
- One variable: the temperature
-
 inventory:
  All temperature sensors on all modules/ports are detected
 

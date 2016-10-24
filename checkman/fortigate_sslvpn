@@ -12,5 +12,3 @@ description:
 inventory:
  One service per virtual domain will be created
 
-perfdata:
- current number of active tunnels, users and web sessions

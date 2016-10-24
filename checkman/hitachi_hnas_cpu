@@ -27,10 +27,6 @@ examples:
    ("my-hnas", "hitachi_hnas_cpu", '1', {'levels': (75.0, 85.0)})
  ]
 
-perfdata:
- One value cpu_util is returned which represents the CPU Utilization (in percent)
- together with warn and crit levels.
-
 inventory:
  Finds one item per PNode
 

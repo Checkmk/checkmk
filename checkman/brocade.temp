@@ -9,9 +9,6 @@ description:
 item:
  The number of the sensor (1, 2, 3 ...) as described in the SNMP output.
 
-perfdata:
- The current temperature value for each sensor
-
 inventory:
  The inventory creates a service for each sensor unless it is marked as absent
  in {swSensorStatus}

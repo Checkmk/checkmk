@@ -15,5 +15,3 @@ description:
 inventory:
  One service for the number of access points
 
-perfdata:
- The number of access points.

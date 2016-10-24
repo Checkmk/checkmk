@@ -16,8 +16,5 @@ item:
  Consists of the SP Name and the SP Port ID as returned by the agent.
  E. g. "SP A Port 0"
 
-perfdata:
- Two values: Blocks Read/sec and Blocks Written/sec
-
 inventory:
  Automatically configures one check for every HBA listed in the agent output.

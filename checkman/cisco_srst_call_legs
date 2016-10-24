@@ -8,9 +8,5 @@ description:
  device since going active. This Cisco device supports the Cisco Unified SRST feature.
  The status is always OK.
 
-perfdata:
- One variable: the total number of SIP call legs routed through the device since
- going active.
-
 inventory:
  One service is created for each device.

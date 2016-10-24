@@ -11,8 +11,5 @@ description:
 item:
  Name of the wifi or "Summary" for the overall number of clients.
 
-perfdata:
- One variable: the current number of clients.
-
 inventory:
  One check for each wifi network, and one summary check will be created.

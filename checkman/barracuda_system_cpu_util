@@ -11,8 +11,5 @@ description:
 item:
  No item.
 
-perfdata:
- CPU utilization
-
 inventory:
  One service is created.

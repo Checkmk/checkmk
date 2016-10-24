@@ -16,13 +16,5 @@ description:
 item:
  The MSSQL instance name and the tablespace name separated by a space.
 
-perfdata:
- size: Total size of the database in bytes
- unallocated: Unreserved space in the database in bytes
- reserved: Space allocated by objects within the database in bytes
- data: Bytes used for data
- indexes: Bytes used for indexes
- unused: Reserved space in bytes for objects but unused
-
 inventory:
  One separate check for each tablespace will be created.

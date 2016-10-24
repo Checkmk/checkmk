@@ -25,9 +25,6 @@ examples:
     "total" : (3000, 2200), # total warning at 3000MB left, total crit at 2200MB left
  }
 
-perfdata:
- The heap and non-heap usage information and levels in Megabytes.
-
 inventory:
  One check is created for each Jolokia instance sent by the agent.
 

@@ -29,9 +29,6 @@ examples:
    ("my-mlx-device", "brocade_mlx.temperature", 'Switch Fabric Module 35', (40, 50)
  ]
 
-perfdata:
- one value per sensor is returned: The temperature in °C, together with warn and crit levels
-
 inventory:
  Finds one item per module
 

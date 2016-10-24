@@ -17,8 +17,5 @@ item:
  The instance name as configured in {j4p.conf} with the variable
  {instance}.
 
-perfdata:
- One variable {uptime} with the uptime in seconds since program start.
-
 inventory:
  One check is created for each JMX instance sent by the agent.

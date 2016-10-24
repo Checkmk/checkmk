@@ -13,8 +13,5 @@ description:
 item:
  The collection name
 
-perfdata:
- Collection size, growth and trend until full.
-
 inventory:
  One service is created for each collection

@@ -17,10 +17,6 @@ description:
 inventory:
  Creates one check IBM SVC / V7000 device.
 
-perfdata:
- One value: The utilization in percent, together with it's levels for
- warn and crit.
-
 examples:
  # set default levels to 70 and 80 percent:
  ibm_svc_cpu_default_levels = (70.0, 80.0)

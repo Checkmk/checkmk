@@ -16,6 +16,3 @@ description:
 inventory:
  One service named {System Updates} is being created for each host.
 
-perfdata:
- Two values important and optional which contain the number of pending updates.
-

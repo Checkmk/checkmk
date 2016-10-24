@@ -27,11 +27,3 @@ inventory:
  For each fixed disk one service is generated - if the description
  of the filesystem in not listed in {inventory_df_exclude_mountpoints}.
 
-perfdata:
- One or three values: The first value is the used space of the filesystem
- in MB. Also the minimum (0 MB), maximum (size of the filesystem) and the warning and critical
- levels in MB are provided. If {trend_range} is set (the default), then
- two additional values are output: the change of the usage in MB per range
- since the last check (e.g. in MB per 24 hours) and the averaged change (so called trend),
- also in MB per range.
-

@@ -34,9 +34,3 @@ inventory:
   If it is set to {["physical"]} then one check will be created per volume.
   You can also set {["summary", "physical"]} to create both variants.
 
-perfdata:
-  The volumes throughput for read and write in bytes per second. If averaging
-  is turned on, then two additional values are sent: the averaged read and
-  write throughput.
-
-  The volumes write and write latency and the operations per second.

@@ -13,13 +13,5 @@ description:
 item:
   The mountpoint of the filesystem
 
-perfdata:
-  Two values per user. {<user>_blocks} reports the currently allocated space
-  of the user in bytes and {<user>_files} reports the number of files currently
-  owned by user.
-  Two values per group. {group_<group>_blocks} reports the currently allocated space
-  of the group in bytes and {group_<group>_files} reports the number of files currently
-  owned by group.
-
 inventory:
   Creates one check for each filesystem with enabled quotas

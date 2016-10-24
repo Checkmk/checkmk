@@ -19,8 +19,5 @@ description:
 item:
  The unit name and the name of the temperature sensor
 
-perfdata:
- One variable: the temperature
-
 inventory:
  All single temperature sensors on all cmciii units are detected

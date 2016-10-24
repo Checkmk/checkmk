@@ -10,9 +10,6 @@ description:
 item:
  The name of the sensor "a string".
 
-perfdata:
- One variable: the current temperature.
-
 inventory:
  All available temperature sensors are automatically inventorized.
 

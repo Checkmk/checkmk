@@ -36,13 +36,3 @@ inventory:
   If it is set to {["physical"]} then one check will be created per director.
   You can also set {["summary", "physical"]} to create both variants.
 
-perfdata:
-  The directors throughput for read and write in bytes per second. If averaging
-  is turned on, then two additional values are sent: the averaged read and
-  write throughput.
-
-  The directors write and write latency and operations per second.
-
-  The queue length of for the frontend interfaces.
-
-

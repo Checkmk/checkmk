@@ -22,6 +22,3 @@ inventory:
 item:
  The index number of the refclock.
 
-perfdata:
- number of good satellites and number of visible satellites.
-

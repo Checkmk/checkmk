@@ -11,9 +11,6 @@ item:
 
  Example: "2.6" A smoke sensor(type 6) on port 2
 
-perfdata:
- The current state of the smoke sensor
-
 inventory:
  The inventory creates a service for each smoke sensor found
 

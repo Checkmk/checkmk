@@ -13,8 +13,5 @@ description:
 item:
  The ID of the Overcurrent protector, eg. C1.
 
-perfdata:
- One value: The current current in Ampère.
-
 inventory:
  One check per overcurrent protector is created.

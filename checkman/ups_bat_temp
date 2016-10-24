@@ -9,9 +9,6 @@ description:
 item:
  The description of the sensor as provided by the device.
 
-perfdata:
- The actual temperature in degree
-
 inventory:
  One check for each sensor is created by the inventory
 

@@ -16,13 +16,3 @@ inventory:
   One check is created if a non-empty {<<<aix_memory>>>} section is
   present in the agent output.
 
-perfdata:
- Three variables are stored: the physical RAM,
- the used swap space and the sum of both. Maximum
- values for both variables are also transmitted, so that
- they can be visualized. All values are in Megabytes (1024 * 1024 bytes).
-
- The template for PNP4Nagios that is shipped with Check_MK
- stacks swap usage on top of RAM usage und thus shows
- the amount of virtual RAM that is used by processes.
-

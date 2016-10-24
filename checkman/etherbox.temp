@@ -11,9 +11,6 @@ item:
 
  Example: "2.1" A temperature sensor(type 1) on port 2
 
-perfdata:
- The current temperature value and its warn/crit limits
-
 inventory:
  The inventory creates a service for each temperature sensor found
 

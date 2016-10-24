@@ -15,8 +15,3 @@ item:
 inventory:
  One separate check for each database will be created.
 
-perfdata:
- Four values: The first value is the used space of the logfile. Then the size
- of logfile itself (in case it is growing). Finally the growth and the trend.
- For more information regarding trend and growth you can have a look at the df manpage.
-

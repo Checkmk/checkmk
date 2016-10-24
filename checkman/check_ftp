@@ -11,5 +11,3 @@ description:
  It can check response times against given thresholds. In fact internally it
  uses the generic TCP connection check.
 
-perfdata:
- The response time

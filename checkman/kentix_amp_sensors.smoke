@@ -16,8 +16,5 @@ description:
 item:
  The sensor name of the device.
 
-perfdata:
- One variable: the smoke (in percent).
-
 inventory:
  One service per sensor is created.

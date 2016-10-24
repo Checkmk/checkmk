@@ -12,10 +12,6 @@ description:
  There is one special handling in the check. If the vserver is not available
  and all its children pool members are down the check reports {OK}.
 
-perfdata:
- min/max and mean connection duration, total connections, connection rate
- incoming and outgoing bytes and packets and the packet velocity asic rate
-
 inventory:
  Any virtual server that is found online will be added during inventory
  and checked for it's status. Virtual servers in the various "Warning"

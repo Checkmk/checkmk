@@ -17,8 +17,5 @@ description:
 item:
  None
 
-perfdata:
- One variable: the current water flow in l/min
-
 inventory:
  None

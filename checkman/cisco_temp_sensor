@@ -20,9 +20,6 @@ item:
  .1.3.6.1.4.1.9.9.91
 
 
-perfdata:
- One value: the current temperature including warning and critical levels.
-
 inventory:
  One separate service per sensor is being created.
 

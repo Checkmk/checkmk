@@ -14,5 +14,3 @@ description:
 inventory:
   The check generates one item per Database found.
 
-perfdata:
-  The the size of the database.

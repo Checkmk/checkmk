@@ -28,10 +28,6 @@ examples:
    ("my-mlx-device", "brocade_mlx.module_mem", '33 NI-MLX-32_MR Management', { "levels": (75.0, 85.0) }),
  ]
 
-perfdata:
- one value is returned: The amount of memory used (in Bytes),
- together with warn and crit levels and maximum value
-
 inventory:
  Finds one item per NI-MLX or BR-MLX module.
  Modules with state "empty" or "Blocked for full height card" are omitted.

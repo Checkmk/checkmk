@@ -6,9 +6,6 @@ distribution: check_mk
 description:
  Check CPU utilization of the last 5 minutes in percent on Cisco devices.
 
-perfdata:
- One value: The CPU utilization of the last 5 minutes in percent.
-
 inventory:
  One service per CPU
 

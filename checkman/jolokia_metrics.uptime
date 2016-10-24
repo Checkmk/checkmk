@@ -11,9 +11,6 @@ description:
  To use this plugin, Jolokia and the agent plugin need to be installed
  on the monitored server.
 
-perfdata:
- The uptime in seconds.
-
 inventory:
  One check is created for each application running inside an Jolokia
  instance sent by the agent.

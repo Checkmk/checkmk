@@ -10,9 +10,6 @@ description:
 item:
  The description of the sensor as string as specified by the user during board configuration.
 
-perfdata:
- The current humidity in percent, lower crit, lower warn, upper warn, upper crit.
-
 inventory:
  All online humidity sensors are automatically detected and inventorized.
 

@@ -10,9 +10,6 @@ description:
 item:
  The description of the cpu as provided by the device.
 
-perfdata:
- The actual temperature in degree, together with it's warn and crit levels
-
 inventory:
  One check for each cpu is created by the inventory.
 

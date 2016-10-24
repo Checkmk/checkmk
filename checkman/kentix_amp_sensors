@@ -16,8 +16,5 @@ description:
 item:
  The sensor name.
 
-perfdata:
- One variable: the temperature.
-
 inventory:
  One service is created per sensor.

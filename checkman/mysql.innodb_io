@@ -20,5 +20,3 @@ inventory:
   The check generates one item per instance, representing the InnoDB writers for a MySQL
   Daemon.
 
-perfdata:
-  The bytes read and written via InnoDB, along with the levels.

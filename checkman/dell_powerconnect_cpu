@@ -31,10 +31,6 @@ examples:
  # Indicate warning at 50% CPU load, and indicate critical for 60%
  dell_powerconnect_cpu_default_levels = (50, 60)
 
-perfdata:
- Each chart uses a single variable, the CPU percentage (0..100) representing
- the state of the load average at the time the check occurred.
-
 inventory:
  During the inventory phase of check_mk, it will identify one service {CPU},
  as long as the MIB defined above is supported on the switch.

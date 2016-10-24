@@ -14,9 +14,6 @@ description:
 item:
  The component where the fans are located prefixed by "Ambient", e.g. "Ambient Chassis 1"
 
-perfdata:
- One variable: The temperature
-
 inventory:
  One summary check for each component is created
 

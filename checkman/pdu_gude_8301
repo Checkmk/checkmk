@@ -9,9 +9,6 @@ description:
 item:
  ID of the Phase
 
-perfdata:
- kWh, W, A, V, VA
-
 inventory:
  One service per Phase
 

@@ -13,9 +13,6 @@ description:
 item:
  The name of the sensor as reported by {nvidia-settings -q all}
 
-perfdata:
- One variable: the current temperature in degrees celsius.
-
 inventory:
  All available temperature sensors are automatically inventorized except
  for the core which is handled in nvidia.temp_core

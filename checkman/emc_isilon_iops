@@ -12,9 +12,6 @@ description:
 item:
  The diskPerfDeviceName as reported by SNMP, e. g. "bay 4"
 
-perfdata:
- One value: The number of IOPS.
-
 inventory:
  Finds exactly one service per disk in an EMC Isilon Storage.
 

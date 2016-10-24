@@ -18,9 +18,6 @@ item:
  The number of the counter, followed by a colon followed by a
  description of the counter.
 
-perfdata:
- The current rate in bytes or operations per second.
-
 inventory:
  All counters automatically detected.
 

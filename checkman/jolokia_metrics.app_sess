@@ -17,9 +17,6 @@ item:
  The name of the application server instance as configured by the agent
  followed by the name of the application. I.e. tomcat7 /examples
 
-perfdata:
- The number of sessions along with the upper (high) alert levels.
-
 inventory:
  One check is created for each application running inside an Jolokia
  instance sent by the agent.

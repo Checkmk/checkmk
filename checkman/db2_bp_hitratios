@@ -18,5 +18,3 @@ inventory:
  One separate check is created for each bufferpool in a database. Bufferpools named IBMSYSTEMBP*
  are ignored.
 
-perfdata:
- Four values: xda_hitratio, data_hitratio, index_hitratio and total_hitratio in percent

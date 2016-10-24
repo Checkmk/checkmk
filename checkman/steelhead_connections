@@ -12,14 +12,6 @@ description:
  Currently there is no way to apply levels and the check is always {OK}.
 
 
-perfdata:
- Five values: {active}: the number of currently active connections (optimized),
- {established}: the number of established connections (optimized), {halfOpened}:
- the number of half opened connections (optimized), {halfClosed}: the number
- of half closed connections (optimizied), {passthrough}: the number of unoptimized
- connections. The total number and the number of optimized connections can be computed
- from these values by simple additions.
-
 inventory:
  One service per Riverbed Steelhead appliance will be created.
 

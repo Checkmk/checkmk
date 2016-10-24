@@ -17,6 +17,3 @@ item:
 inventory:
  The check creates one item per queue found.
 
-perfdata:
-  The check does not support performance data.
-

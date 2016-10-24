@@ -26,9 +26,6 @@ examples:
     ( (80, 160), [ 'prod' ], ALL_HOSTS, [ "ORA .* sessions" ])
  ]
 
-perfdata:
- One value: the current number of active sessions.
-
 inventory:
  One separate check for each database found running will
  be created.

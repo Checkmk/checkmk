@@ -12,7 +12,3 @@ description:
 inventory:
  Creates one check per vServer
 
-perfdata:
- Depends on the activated protocols for this server.
- Perfdata may contain Read/Write data, Read/Write packets, Read/Write Latency
- and Read/Write operations.

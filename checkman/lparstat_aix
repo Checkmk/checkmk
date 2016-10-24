@@ -10,24 +10,5 @@ description:
 
  The check always returns {OK} state.
 
-perfdata:
- The following 8 float values:
-
- {user}: CPU utilization in user space in percent
-
- {sys}: CPU utilization in kernel space in percent
-
- {wait}: CPU time for I/O wait in percent
-
- {idle}: CPU idle time in percent
-
- {physc}: The number of physical processors consumed by the LPAR
-
- {entc}: The percentage of the entitled capacity consumed by the LPAR
-
- {lbusy}: The percentage of logical processor(s) utilization that occurred while executing at the user and system level
-
- {app}: The available physical processors in the shared pool
-
 inventory:
  On each LPAR one check is generated.

@@ -32,11 +32,6 @@ examples:
    ("my-mlx-device", "brocade_mlx.module_cpu", '33 NI-MLX-32_MR Management', { "levels": (75.0, 85.0) }),
  ]
 
-perfdata:
- four value are returned, cpu_util1, cpu_util5, cpu_util60 and cpu_util300:
- The CPU Utilization (in percent) in the last 1/5/60/300 sec.
- cpu_util60 together with warn and crit levels.
-
 inventory:
  Finds one item per NI-MLX or BR-MLX module.
  Modules with state "empty" or "Blocked for full height card" are omitted.

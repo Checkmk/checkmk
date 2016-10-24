@@ -12,8 +12,5 @@ description:
  The check will result in a WARNING/CRITICAL state when the given thresholds
  for the CPU utilization are reached.
 
-perfdata:
- One variable: the current CPU utilization in percent
-
 inventory:
  On each gateway one service is created.

@@ -15,8 +15,5 @@ description:
 item:
  The name of the power supply module
 
-perfdata:
- One variable: the current in Ampere
-
 inventory:
  All connected power supply units are detected

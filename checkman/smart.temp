@@ -21,9 +21,6 @@ inventory:
 item:
  The device name. Example: {/dev/sda}
 
-perfdata:
- One variable: the current temperature in degrees celsius.
-
 examples:
  # Set the warning threshold to 40 and critical to 50 degrees celsius.
  smart_temp_default_levels = (35, 40)

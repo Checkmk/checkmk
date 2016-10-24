@@ -13,8 +13,5 @@ description:
 item:
  The name of the Devices
 
-perfdata:
- Two variables: the current number of clients and the uptime in sec
-
 inventory:
  One check for each device will be created

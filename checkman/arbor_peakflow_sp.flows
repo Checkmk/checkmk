@@ -10,5 +10,3 @@ description:
 inventory:
  Exactly one service is discovered.
 
-perfdata:
- One integer value: Flow count

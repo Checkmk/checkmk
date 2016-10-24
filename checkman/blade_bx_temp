@@ -16,9 +16,6 @@ description:
 item:
   The index of the temperature sensor as returned by SNMP
 
-perfdata:
-  One value: The temperature in °C
-
 inventory:
  Creates one check per power module.
 

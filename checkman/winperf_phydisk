@@ -56,16 +56,6 @@ examples:
    ( {"write" : (20, 50), "average" : 10 }, [ "oracle" ], ALL_HOSTS, [ "Disk IO" ])
  ]
 
-perfdata:
-  The disk throughput for read and write in bytes per second. If averaging
-  is turned on, then two additional values are sent: the averaged read and
-  write throughput.
-
-  In the legacy mode only one variable: the throughput since the last check
-  in in bytes(!) per second, either for read or for write.
-
-  The IOPS are returned if {"latency_perfdata"} is set to True.
-
 inventory:
   The inventory is configured via {diskstat_inventory_mode}. If this is set
   to {"single"} (the default), then one check will be created for each

@@ -9,6 +9,3 @@ description:
  minute on a Lotus Domino Server.  Warning and critical upper limits can be
  set.
 
-perfdata:
- The number of transactions per minute
-

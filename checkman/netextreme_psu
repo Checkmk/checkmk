@@ -12,8 +12,5 @@ description:
 item:
  Power Supply 1.
 
-perfdata:
- The power in Watt.
-
 inventory:
  One service is created.

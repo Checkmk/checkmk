@@ -14,5 +14,3 @@ item:
 inventory:
  One service will be created for each member
 
-perfdata:
- The size and used space of the device

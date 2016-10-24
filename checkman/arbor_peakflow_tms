@@ -11,5 +11,3 @@ description:
 inventory:
  Exactly one service is discovered.
 
-perfdata:
-  Two integer value: Percentage of RAM and Swap used.

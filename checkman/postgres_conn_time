@@ -12,6 +12,3 @@ description:
 inventory:
   One service will be created.
 
-perfdata:
-  The connection time.
-

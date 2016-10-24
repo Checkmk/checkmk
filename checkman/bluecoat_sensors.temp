@@ -12,8 +12,5 @@ description:
 item:
  The sensor description as returned by SNMP
 
-perfdata:
-  One number: The measured value.
-
 inventory:
   Finds one service for each temperature sensor.

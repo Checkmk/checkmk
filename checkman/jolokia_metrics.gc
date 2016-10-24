@@ -22,11 +22,6 @@ item:
  The name of the application server instance and name of the garbage collection
  as sent by the agent.
 
-perfdata:
- The following values are returned in the perfdata:
-    Garbage collection count per Minute
-    Garbage collection time per Minute
-
 inventory:
  One check is created per garbage collector sent by the Jolokia agent.
 

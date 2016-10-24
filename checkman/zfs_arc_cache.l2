@@ -8,10 +8,6 @@ description:
 
  This check is only for reporting and always returns {OK}.
 
-perfdata:
- 2 values are reported:
- l2_hit_ratio in percent and l2_size in bytes
-
 inventory:
  Creates exactly on check on every machine having an L2 cache,
  that means reporting an l2_size greater than 0.

@@ -16,9 +16,6 @@ description:
  Note: this check is deprecated and not used by modern Check_MK agents.
  It is replaced by {winperf_processor.util}.
 
-perfdata:
- The averaged percentage of CPU utilization during the last check cycle.
-
 inventory:
  A check of this type is automatically created for all Windows
  hosts.

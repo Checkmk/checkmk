@@ -7,11 +7,6 @@ description:
  Check CPU utilization of the last few seconds and 1/5 minutes in percent on Trapeze (Juniper) devices.
  The current utilization is informational only and does not generate alarms.
 
-perfdata:
- utilc: The CPU utilization of the last few seconds in percent.
- util1: The CPU utilization of the last 1 minutes in percent.
- util5: The CPU utilization of the last 5 minutes in percent.
-
 inventory:
  One service for the first CPU will be created
 

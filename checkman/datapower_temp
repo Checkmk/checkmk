@@ -13,8 +13,5 @@ description:
  may be configured. Also, it may be configured that the upper warning and
  critical levels are taken from the device itself.
 
-perfdata:
- One variable: the temperature
-
 inventory:
  On each gateway one service is created for each sensor found

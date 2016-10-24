@@ -16,7 +16,3 @@ inventory:
  If the needed information is available via SNMP one service
  for the target host will be created.
 
-perfdata:
- Three variables: the physical RAM, the virtual memory and the
- sum of both.
-

@@ -10,9 +10,6 @@ description:
 item:
  The identifier of the phase (usually {"1"}, {"2"}, {"3"}).
 
-perfdata:
- Three values: Voltage, current, load.
-
 inventory:
  One check per Socomec UPS output phase is created.
 

@@ -13,9 +13,6 @@ description:
 item:
  The name of the queue
 
-perfdata:
-  One Grpah for the Message count will be created
-
 inventory:
  One service will be created for each queue
 

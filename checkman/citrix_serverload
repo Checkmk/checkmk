@@ -12,8 +12,5 @@ description:
 inventory:
  One service will be created.
 
-perfdata:
- One graph will be created, with it's warn and crit levels
-
 examples:
  citrix_serverload_default_levels = ( 8500, 9500 )

@@ -9,9 +9,6 @@ description:
 item:
  "RX" or "TX"
 
-perfdata:
- One value: The current voltage
-
 inventory:
  One check per PLL is created.
 

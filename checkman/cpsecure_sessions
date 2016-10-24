@@ -11,10 +11,6 @@ description:
 item:
   Name of the protocol, in upper case letters, for example {"SMTP"}.
 
-perfdata:
-  One variable per check: the number of current sessions of the
-  checked protocol.
-
 inventory:
   For each {enabled} protocol one check is created.
 

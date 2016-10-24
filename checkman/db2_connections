@@ -18,6 +18,3 @@ item:
 inventory:
  One separate check for each database will be created.
 
-perfdata:
- Two values. The number of connections and the latency.
-

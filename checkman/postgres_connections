@@ -12,6 +12,3 @@ description:
 inventory:
   The check generates one service for each database
 
-perfdata:
-  The current number of active connections
-

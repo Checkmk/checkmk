@@ -14,9 +14,6 @@ description:
 
  This check is cluster-aware.
 
-perfdata:
- The IO, errors, resets, retries, sessions and noise floor.
-
 inventory:
  One service per access point is created.
 

@@ -23,9 +23,6 @@ examples:
     ('host1', 'statgrab_disk', 'write', None),
   ]
 
-perfdata:
-  One value per Check: Disk IO in Bytes/s
-
 inventory:
   Finds two checks on every machine with statgrab: Disk IO read and
   Disk IO write

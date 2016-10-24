@@ -11,5 +11,3 @@ description:
 inventory:
  One service will be created
 
-perfdata:
- One value is returned: The number of DHCP leases per second

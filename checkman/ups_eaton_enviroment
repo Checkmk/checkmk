@@ -10,11 +10,6 @@ description:
 item:
  None
 
-perfdata:
- Temperature
- External Tempreature
- Humidty
-
 inventory:
  One service will be created
 

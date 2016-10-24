@@ -83,16 +83,6 @@ examples:
                 8: ('linkDown',2),
  }
 
-perfdata:
-  For each port the following performance data are collected: {in}, {out},
-  {rxobjects}, {txobjects}, {rxcrcs}, {rxencoutframes}, {c3discards}
-  and {notxcredits}. If averaging is turned on, for each of these
-  values the average is also gathered and plotted. {_avg} is appended to
-  the averages. All rates are in Bytes/s or Objects/s. If you are using
-  PNP4Nagios, you are strongly encouraged to set {RRD_STORAGE_TYPE = MULTIPLE}
-  in {process_perfdata.cfg}. You need to re-create or convert existing RRD
-  database if you change this setting.
-
 inventory:
   The inventory creates checks for all operational ports. It can be configured
   (see CONFIGURATION VARIABLES) how operational ports are defined.

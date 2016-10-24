@@ -21,9 +21,6 @@ description:
 item:
  The name of the location variable configured for the power unit
 
-perfdata:
- One variable: the power consumption in Watts
-
 inventory:
  All power units
 

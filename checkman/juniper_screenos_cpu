@@ -6,10 +6,6 @@ distribution: check_mk
 description:
  Check CPU utilization of the last minute and  last 15 minutes in percent on Juniper ScreenOS devices.
 
-perfdata:
- util1: The CPU utilization of the last few seconds in percent.
- util15: The CPU utilization of the last 15 minutes in percent.
-
 inventory:
  One service will be created
 

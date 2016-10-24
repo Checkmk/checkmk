@@ -24,6 +24,3 @@ item:
  The SID of the database in uppercase (as appearing in the process
  name of the pmon_... process).
 
-perfdata:
- One value: the current apply lag in seconds
-

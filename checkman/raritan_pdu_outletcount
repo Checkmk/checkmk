@@ -11,10 +11,6 @@ description:
  Only if you set levels explicitly, it returns {WARN} or {CRIT} if
  the value is outside the given ranges.
 
-perfdata:
- Exactly one number: The outlet count. If levels are given: Together
- with it's levels.
-
 inventory:
  Creates exactly one check per host called Outlet Count.
 

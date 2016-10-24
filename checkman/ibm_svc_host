@@ -23,10 +23,6 @@ description:
  with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
  can be configured by WATO.
 
-perfdata:
- Five values are reported: The number of hosts reporting
- active, inactive, degraded, offline and unidentified status.
-
 inventory:
  Creates exactly one check for every IBM SVC / Storwize V3700 / V7000 named
  IBM SVC Hosts.

@@ -9,9 +9,6 @@ description:
 item:
  The identifier of the phase (usually {"Phase 1"}, {"Phase 2"}, {"Phase 3"}).
 
-perfdata:
- Three values: Voltage, current and frequency.
-
 inventory:
  Creates one or three items - one per input phase.
 

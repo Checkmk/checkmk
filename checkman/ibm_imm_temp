@@ -21,6 +21,3 @@ inventory:
 item:
  The name of the temperature sensor as extracted from the OID {tempDescr}
 
-perfdata:
- The temperature of the sensor
-

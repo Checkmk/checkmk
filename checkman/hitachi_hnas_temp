@@ -14,8 +14,5 @@ description:
 item:
  The ID of the PNode plus the ID of the sensor, separated by a dot. E. g. 1.2
 
-perfdata:
- One value: The measured temperature in °C
-
 inventory:
  Finds one item per temperature sensor

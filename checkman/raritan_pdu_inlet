@@ -11,9 +11,6 @@ description:
 item:
  The ID Number of the phase.
 
-perfdata:
- Five values: Voltage, current, power, apparent power and energy
-
 inventory:
  One check per phase is created.
 

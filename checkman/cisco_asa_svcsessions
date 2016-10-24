@@ -9,5 +9,3 @@ description:
 inventory:
  One service will be created.
 
-perfdata:
- One graph will be created

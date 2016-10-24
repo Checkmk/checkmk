@@ -19,9 +19,6 @@ description:
 item:
  The name of the queue
 
-perfdata:
-  One Grpah for the Enqueue Count and one for the Enqueue Count will be created
-
 inventory:
  One service will be created for each queue
 

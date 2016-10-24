@@ -8,8 +8,5 @@ description:
  and the count of color prints.
  The status is always OK.
 
-perfdata:
- The number of printed pages: total prints, black/white prints color prints.
-
 inventory:
  One service is created for each printer.

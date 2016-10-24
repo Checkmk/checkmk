@@ -17,9 +17,6 @@ description:
 item:
  The id of the power supply unit
 
-perfdata:
- One variable: the calculated current power consumption in Watts
-
 inventory:
  All power units
 

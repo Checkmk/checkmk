@@ -21,9 +21,6 @@ description:
 item:
  The name of the printer in CUPS as printed by {lpstat -p}.
 
-perfdata:
- It contains the current number of jobs in the queue.
-
 inventory:
  Checks are created for all available printers in {lpstat -p} output.
 

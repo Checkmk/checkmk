@@ -25,9 +25,6 @@ description:
 item:
  This check generates no item.
 
-perfdata:
- None
-
 inventory:
  The check first looks for a cooling device vendor (this
  is where it needs to be extended to cover other Carel devices),

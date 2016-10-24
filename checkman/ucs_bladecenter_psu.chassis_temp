@@ -14,9 +14,6 @@ description:
 item:
  The chassis description, e.g. Chassis 1
 
-perfdata:
- One variable: The temperature
-
 inventory:
  Creates one service per chassis module
 

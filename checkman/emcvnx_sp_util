@@ -13,8 +13,5 @@ description:
 item:
  None.
 
-perfdata:
- The storage processor utilization in percent.
-
 inventory:
  One service is created.

@@ -14,14 +14,6 @@ description:
  A combination with a larger value of {max_check_attempts}
  or {notification_delay} might also be useful here.
 
-perfdata:
-  One or two values: the first value is current usage in percent - ranging from
-  0 to 100. The "maximum" value is not 100, but the number of CPU threads. This
-  case be used for scaling the graph in terms of the number of used CPU threads.
-
-  If averaging is enabled then a second value is sent: the averaged CPU utilization
-  ranging from 0 to 100.
-
 inventory:
  A check of this type is automatically created for all Windows
  hosts.

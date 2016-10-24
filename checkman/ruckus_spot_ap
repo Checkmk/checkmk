@@ -12,6 +12,3 @@ description:
 inventory:
  Creates one check.
 
-perfdata:
- Six values. For each band the number of devices, the number of drifted devices and
- the number of not responding devices.

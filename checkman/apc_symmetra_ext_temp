@@ -11,9 +11,6 @@ description:
 item:
  The index of the sensor, e.g. {"1"}.
 
-perfdata:
- One variable: the current temperature in degrees celsius.
-
 inventory:
  All available temperature sensors are automatically inventorized.
 

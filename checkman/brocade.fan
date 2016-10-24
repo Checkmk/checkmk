@@ -9,9 +9,6 @@ description:
 item:
  The number of the FAN (1, 2, 3 ...) as described in the SNMP output.
 
-perfdata:
- The speed of each fan.
-
 inventory:
 
  The inventory creates a service for each fan unless it is marked as absent

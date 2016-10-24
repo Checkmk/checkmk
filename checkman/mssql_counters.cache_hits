@@ -18,9 +18,6 @@ item:
  The MSSQL instance name, counter name and object name (like the tablespace
  name) are used for the item.
 
-perfdata:
- One value(float): The percentage of queries which hit the cache.
-
 inventory:
  One separate check for each available cache hit counter will be created.
  This might be dedicated to tablespaces but also MSSQL server internal parts

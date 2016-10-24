@@ -21,5 +21,3 @@ inventory:
 item:
  The sole item is named "/".
 
-perfdata:
- One integer value: Percentage of disk space used.

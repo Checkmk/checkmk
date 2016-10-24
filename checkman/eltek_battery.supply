@@ -11,8 +11,5 @@ description:
 item:
  Supply.
 
-perfdata:
- The voltage and current.
-
 inventory:
  One service is created.

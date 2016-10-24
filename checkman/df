@@ -117,24 +117,6 @@ examples:
 
 
 
-perfdata:
- Two or four values: The first value is the used space of the filesystem
- in MB. Also the minimum (0 MB), maximum (size of the filesystem) and the warning and critical
- levels in MB are provided. If you set the parameter {"trend_perfdata" : True}, then
- two additional values are output: the change of the usage in MB per range
- since the last check (e.g. in MB per 24 hours) and the averaged change (so called trend),
- also in MB per range. Please note, that as of version 1.1.11i3, performance data for
- trends is enabled per default. You can globally disable that in {main.mk}
- with {filesystem_default_levels["trend_perfdata"] = False}.
-
- The last value is the number of used inodes - for filesystems that have
- inodes.
-
- Please note that - until you use the storage type {MULTIPLE} in PNP4Nagios -
- changing the parameter {"trend_perfdata"} will stop all updates to
- your existing filesystem RRDs. You need either to delete or convert your RRDs
- if you want to change.
-
 inventory:
  df supports inventory. All filesystem the agent reports
  will be inventorized except mount points listed in

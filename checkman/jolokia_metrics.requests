@@ -14,8 +14,5 @@ description:
 item:
  The name of the application server instance as configured by the agent
 
-perfdata:
- The number of requests served.
-
 inventory:
  One check is created for each JVM instance sent by the agent.

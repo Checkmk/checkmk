@@ -26,9 +26,6 @@ item:
 
     0/0 SP B I/O Module 0
 
-perfdata:
- None
-
 inventory:
  Automatically configures one check for every hardware status entry listed
  in the agent output and not having status "Empty" (Entries having "Empty"

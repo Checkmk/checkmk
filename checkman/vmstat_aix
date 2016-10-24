@@ -8,6 +8,3 @@ description:
  Only performance data is written. Alerting is not implemented (returns always
  {OK} if input data is valid).
 
-perfdata:
- Four variables: The percentage of time spent in {user}, {system}, {idle} and {wait}
-

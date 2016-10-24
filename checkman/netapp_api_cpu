@@ -8,9 +8,6 @@ description:
 
  Returns {WARN}/{CRIT} if the current utilization is above the given levels.
 
-perfdata:
- The CPU utilization in percent.
-
 inventory:
  Creates one check.
 

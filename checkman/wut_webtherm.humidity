@@ -10,9 +10,6 @@ description:
 item:
  The item is the number of the sensor as string - usually {"2"}.
 
-perfdata:
- One variable: the current humidity.
-
 inventory:
  All available humidity sensors are automatically inventorized.
 

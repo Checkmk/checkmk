@@ -14,9 +14,5 @@ description:
  The check will result in WARNING/CRITICAL states when the number of items
  in the queues have reached the defined thresholds.
 
-perfdata:
- Two variables for each queue: the number of messages and the
- total size of the messages in the queue in bytes.
-
 inventory:
  On each system which provides the {nullmailer-send} command one service is created.

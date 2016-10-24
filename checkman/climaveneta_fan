@@ -9,9 +9,6 @@ description:
 item:
  The id of the fan (1 or 2)
 
-perfdata:
- None
-
 inventory:
  For each fan one service is created
 

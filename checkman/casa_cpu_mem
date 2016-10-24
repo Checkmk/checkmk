@@ -10,7 +10,3 @@ description:
 item:
  The description of the cpu module as provided by the device.
 
-perfdata:
- One value is returned: The amount of memory used (in Bytes),
- together with warn and crit levels and maximum value
-

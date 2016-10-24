@@ -14,10 +14,6 @@ inventory:
  need individual levels for your hosts, please define this check
  explicitely in {checks}.
 
-perfdata:
- On variable: the current number of threads and processes found on
- the system.
-
 examples:
  checks += [
     # set levels to 500 / 1000 on all hosts with tag "sap"

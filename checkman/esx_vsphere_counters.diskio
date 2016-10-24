@@ -12,6 +12,3 @@ description:
 inventory:
  One service per ESX host is being created.
 
-perfdata:
- Three values: read, write and ios (per second)
-

@@ -10,10 +10,6 @@ item:
  The unit name and the phase identifier ("Phase 1"), or Summary for overall
  power and energy.
 
-perfdata:
- Voltage in Volt, power in Watt, current in Ampère, energy in Wh, apparent power in VA.
- Only Power and Energy for the summary Item.
-
 inventory:
  One item per phase and one summary item is added.
 

@@ -13,9 +13,6 @@ description:
  Warning and critical levels can
  be given for the remaining run time for the capacity.
 
-perfdata:
- The remaining runtime in minutes and the capacity in percent
-
 inventory:
  One service per UPS will be created.
 

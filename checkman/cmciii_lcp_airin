@@ -21,8 +21,5 @@ description:
 item:
  None
 
-perfdata:
- One variable: the average temperature in degrees celsius
-
 inventory:
  None

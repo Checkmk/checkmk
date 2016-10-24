@@ -27,9 +27,6 @@ examples:
    ( ["lnx"], ALL_HOSTS, "kernel", "Major Page Faults", (200, 400) )
  ]
 
-perfdata:
- One variable: the current value of the counter.
-
 inventory:
  Per default one check for {"Major Page Faults"},
  {"Context Switches"} and {"Process Creations"}

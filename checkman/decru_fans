@@ -20,8 +20,3 @@ inventory:
 critical (int): RPM below which the FAN gets critical
 warning (int): RPM below which the FAN gets warning
 
-[configuration]
-decru_fan_default_levels (int, int): Default levels for fans that
- have been detected via inventory. These variable is preset with
- {(8000, 8400)}. You may have to adapt it if your hardware has
- other cooling fans then mine had.

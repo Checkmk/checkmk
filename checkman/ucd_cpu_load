@@ -35,6 +35,3 @@ inventory:
 warning (float): The 15 minute average load that triggers a warning
 critical (float): The level for the critical state
 
-[configuration]
-cpuload_default_levels(float, float): The default levels for all CPU load checks. This is
-  preset to {(5, 10)}.

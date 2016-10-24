@@ -26,5 +26,3 @@ item:
 max_failed (int): The maximum number of failures to be tolerated. All counts above
  will raise a CRITICAL state
 
-[configuration]
-ad_replication_default_params (tuple of ints): Default value is set to 15/20 (warn/crit) {(15,20)}.

@@ -26,6 +26,3 @@ inventory:
 warn (int): The warning level: the power should not drop at or below this level
 crit (int): The critical level: the power must not drop at or below this level
 
-[configuration]
-apc_power_default_levels (int, int): The default levels to be used
-   for inventorized checks. This variable is preset to {(20, 1)}

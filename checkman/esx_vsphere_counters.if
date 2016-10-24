@@ -28,6 +28,3 @@ inventory:
 [parameters]
 parameters(dict): Compatible with {if64}
 
-[configuration]
-various: compatible with {if64}.
-

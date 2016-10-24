@@ -40,7 +40,3 @@ perfdata:
 inventory:
  All plugins configured in {mrpe.cfg} are automatically inventorized.
 
-[configuration]
-perfdata_format (string): Set to {"pnp"} for adding the check command
- for PNP4Nagios. Set to {"standard"} for omitting template information
- and better comply with the Nagios standard.

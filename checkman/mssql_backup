@@ -36,5 +36,3 @@ inventory:
 warn_seconds(int): Check will raise a warning state if last backup is older than this value.
 crit_seconds(int): Check will raise a critical state if last backup is older than this value.
 
-[configuration]
-mssql_backup_default_levels(int, int): Global default level. This is preset to {None}, which dsiables the thresholds.

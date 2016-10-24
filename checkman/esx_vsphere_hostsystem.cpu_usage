@@ -26,6 +26,3 @@ parameters(dict): A dictionary with the following keys:
 
   {"average"}: A number of minutes for enabling averaging.
 
-[configuration]
-esx_host_cpu_default_levels(dict): Default levels, preset to an empty dictionary, which means that no levels
-  will be applied.

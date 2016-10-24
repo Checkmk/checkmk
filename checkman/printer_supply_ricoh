@@ -20,6 +20,3 @@ warning(int): The supply level in percentage at which (and below) a warning is t
 critical(int): The supply level in percentage at which (and below) a critical state is reached.
 
 
-[configuration]
-printer_supply_ricoh_default(int, int): Set global default levels for warning and critical
-

@@ -46,16 +46,3 @@ inventory:
 warn(int): Warning level for number of mails in queue
 crit(int): Critical level
 
-[configuration]
-msx_queues_default_levels(int, int): Default warning and critical levels for
- inventorized checks
-
-winperf_msx_queues(dict): A dictionary defining the mail queues to be
-  inventorized. The keys of this dictionary are names of the queues to be
-  used in the service descriptions. These names are freely definable and need
-  not to be identical to the "official" names.  The values
-  are the numbers (as string) of the according performance counters. If you
-  are in search of those numbers, open a command box on your Windows host,
-  call {lodctr /s:counters.ini} and than copy the file {counters.ini} to
-  Linux. There convert it with {recode UTF-16LE..UTF-8 counters.ini}. Now
-  you can view it e.g. with {less} and look for the counter numbers.

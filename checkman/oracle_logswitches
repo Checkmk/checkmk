@@ -36,6 +36,3 @@ lo_warn(int): Lower warning level.
 hi_warn(int): Make the check warn if there were at least that many log switches in the last 60 minutes.
 hi_crit(int): Upper critical level.
 
-[configuration]
-oracle_logswitches_default_levels(int, int, int, int): Global default levels used for all checks which have no specific configuration. This is preset to {(-1, -1, 50, 100)}.
-

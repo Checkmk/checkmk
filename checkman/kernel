@@ -48,8 +48,3 @@ warning (int): The rate per second which triggers a warning. A value of {None} d
 
 critical (int): The rate per second which triggers a critical state. A value of {None} disables the level.
 
-[configuration]
-inventory_kernel_counters (list of strings): List of performance counters the inventory should create checks for. Default is {[ "pgmajfault", "ctxt", "processes" ]}.
-
-kernel_default_levels (int, int): Default levels for newly inventorized checks. Default is {(None, None)}, which disables the levels and makes the check always OK.
-

@@ -20,6 +20,3 @@ parameters(tuple): parameters is a tuple of two values
 
  {crit}: (int) The critical level
 
-[configuration]
-domino_users_default_levels (tuple): This variable is preset to { (1000,1500) }
-

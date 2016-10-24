@@ -29,5 +29,3 @@ inventory:
 [parameters]
 parameters (dict): See man page of {df}.
 
-[configuration]
-filesystem_default_levels: And other, see man page of {df}.

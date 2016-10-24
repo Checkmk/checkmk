@@ -22,6 +22,3 @@ perfdata:
 warning (int): The temperature in degree celsius that triggers a WARNING state.
 critical (int): The temperature in degree celsius that triggers a CRITICAL state.
 
-[configuration]
-enterasys_temp_default_levels(int, int): The default levels for WARNING and
- CRITICAL state, preset to (30, 35)

@@ -29,6 +29,3 @@ examples:
 warning (int): temperature at which a warning level is triggered
 critical (int): critical level for temperature
 
-[configuration]
-apc_temp_default_levels (int, int): Default levels for warning
- and critical. This is preset to {(25, 30)}.

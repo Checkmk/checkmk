@@ -51,6 +51,3 @@ inventory:
 warning (int): The temperature, in degrees Celcius, at which a warning state is triggered.
 critical (int): The temperature, in degrees Celcius, at which a critical state is triggered.
 
-[configuration]
-dell_powerconnect_cpu_default_levels(int, int): The Default percentage values used by the inventory checks.
- These variables are pre-set to {(35, 40)}.

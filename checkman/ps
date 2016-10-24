@@ -140,10 +140,6 @@ examples:
    # user name the process was running as to the service description
    ( "SCS %s/%s/%s %u", "~(..)\.sap(...)_SCS([0-9]+) pf=", GRAB_USER, 1, 1, 1, 1 ),
  ]
-[configuration]
-inventory_processes (list): A list of 7-tuples. See {INVENTORY} for details.
-
-[parameters]
 procname (string): Process specification. This can either be the name of a process as ouput by the agent.
    It must exactly match the first column of the agents output. Or - if the string is
    beginning with a tilde - it is interpreted as a regular expression that must match

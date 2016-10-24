@@ -44,18 +44,3 @@ warning (float): The percentage of errors at which a warning is triggered.
  one error occurs for each 200 packets sent or received.
 critical (float): The percentage of errors at which a critical level is reached.
 
-[configuration]
-netctr_default_params (float, float): Error percentages for warning and critical
- that are used by inventorized checks. This variable is preset to {(0.1, 0.01)}
-netctr_counters (list of strings): The list of network counters that are sent
- as performance data and that are the basis for error computation. The default
- list is {rx_bytes}, {tx_bytes}, {rx_packets}, {tx_packets}, {rx_errors}, {tx_errors},
- {tx_collisions}. Further available counters are
- {rx_drop}, {rx_fifo}, {rx_frame}, {rx_compressed}, {rx_multicast}, {tx_drop},
- {tx_fifo}, {tx_carrier} and {tx_compressed}.
- Please note: If you change this parameter, you need to delete and recreate
- all existing round robin databases of this check type. You graphing tool
- most probably will not be able to alter the existing databases in order to
- reflect the changes.
-
-

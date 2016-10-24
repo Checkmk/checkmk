@@ -14,11 +14,3 @@ item:
 inventory:
  One item per power outlet will be found.
 
-[configuration]
-apc_powerswitch_warning_states: A tuple of states leading to {WARN} level, default is
- apc_powerswitch_warning_states = (2,)
- meaning {WARN} is returned on power state {off}
-
-apc_powerswitch_critical_states: A tuple of states leading to {CRIT} level, default is
- apc_powerswitch_critical_states  = ()
- meaning {CRIT} is returned in no case by default

@@ -19,8 +19,3 @@ warning (float): the percentage of virtual memory used
 critical (float): the percentage or absolute value
  at which CRITICAL state is triggered
 
-[configuration]
-esx_host_mem_default_levels(float, float): Levels used by
- all checks that are created by inventory. This defaults to {(80.0, 90.0)}.
-
-

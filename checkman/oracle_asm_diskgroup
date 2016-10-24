@@ -60,6 +60,3 @@ parameters(dict): see check manpage for df. The following parameters
  {normal} or {high} redundancy Disk Groups. An information for this is
  added to the check output, when {req_mir_free} is {True}
 
-[configuration]
-asm_diskgroup_default_levels: see check manpage for df and comments above
-filesystem_default_levels: is not valid anymore! Please use {asm_diskgroup_default_levels}

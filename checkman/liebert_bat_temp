@@ -21,5 +21,3 @@ parameters (tuple): A pair of numbers for warning and critical level
 
  critical (int): The temperature that triggers an {CRIT} state
 
-[configuration]
-liebert_bat_temp_default (tuple): Default warning and critical level

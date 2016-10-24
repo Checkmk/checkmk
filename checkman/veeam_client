@@ -40,6 +40,3 @@ parameters(tuple): parameters is a dictionary with one value
   backup in seconds
 
 
-[configuration]
-veeam_client_default_levels (dict): This variable is preset to
-{{ "age": ( 108000, 172800 ) } }

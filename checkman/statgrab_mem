@@ -46,8 +46,3 @@ warning (int or float): the percentage of virtual memory used
 critical (int or float): the percentage or absolute value
  at which {CRIT} state is triggered
 
-[configuration]
-memused_default_levels (float, float): Levels used by
- all checks that are created by inventory. If not set they
- have defaults of (150.0, 200.0)
-

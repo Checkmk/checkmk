@@ -30,6 +30,3 @@ inventory:
 [parameters]
 tuple (int, int): The two values are the levels for {WARN} and {CRIT}.
 
-[configuration]
-bintec_sensors_temp_default_levels (int, int): The default levels for {WARN}
- and {CRIT}, defaults to (35, 40).

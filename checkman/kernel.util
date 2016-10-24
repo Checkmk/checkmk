@@ -28,6 +28,3 @@ dictionary: A dictionary for two keys, both of which are optional:
   {"util"} a pair of float values with percentages for warning and critical
   for the total utilization
 
-[configuration]
-kernel_util_default_levels (dictionary): Default levels used by inventorized
-  checks. The default is not to impose any levels.

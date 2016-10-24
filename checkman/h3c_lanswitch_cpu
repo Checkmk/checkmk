@@ -36,7 +36,3 @@ perfdata:
 warning (int): the percentage of 5-minute average usage at which the check returns WARN.
 critical (int): the percentage of 5-minute average usage at which the check goes critical.
 
-[configuration]
-switch_cpu_default_levels (int, int): the default warn and critical levels.
- They are preset to {(50,75)} (meaning 50% for WARN and 75% for CRIT).
-

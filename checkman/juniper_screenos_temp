@@ -19,6 +19,3 @@ inventory:
 warn(float): the temperature at which a WARN state is reached
 crit(float): the temperature at which a CRIT state is reached
 
-[configuration]
-juniper_screenos_temp_default_levels (int, int): Default levels for warning and critical used
-  by inventorized checks. This is preset to {(70, 80)}

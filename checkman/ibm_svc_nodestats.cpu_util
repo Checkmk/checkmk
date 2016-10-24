@@ -42,6 +42,3 @@ examples:
 [parameters]
 parameters (float, float): levels of CPU utilization for {WARN} and {CRIT} in percent
 
-[configuration]
-ibm_svc_cpu_default_levels (float, float): The standard levels for {WARN} and
-    {CRIT}, preset to (80.0, 90.0)

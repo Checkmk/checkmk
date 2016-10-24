@@ -42,6 +42,3 @@ parameters (dict): with the element
   If a value is given as float, it is interpreted as percentage.
   If a value is given as int, it is interpreted as an absolute value in megabytes.
 
-[configuration]
-brocade_mlx_mem_default_levels(dict): The standard levels for {WARN} and
-    {CRIT}, preset to { "levels": (80.0, 90.0) }

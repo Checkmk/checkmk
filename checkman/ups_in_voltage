@@ -22,5 +22,3 @@ parameters (tuple): A pair of numbers for warning and critical level
 
  critical (int): The lower limit which triggers an CRITICAL state
 
-[configuration]
-ups_in_voltage_default_levels (tuple): Default warning and critical level

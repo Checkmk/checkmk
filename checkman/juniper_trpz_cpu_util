@@ -19,6 +19,3 @@ inventory:
 warning (int): The percentage of CPU utilization that triggers a warning level.
 critical (int): The percentage of CPU utilization that triggers a critical level.
 
-[configuration]
-juniper_trpz_cpu_util_default_levels (int, int): Default levels for warning and critical used
-  by inventorized checks. This is preset to {(80.0, 90.0)}

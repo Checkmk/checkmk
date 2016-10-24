@@ -26,15 +26,3 @@ warn(float): Warning percentage for the tunables allocation
 crit(float): Critical percentage for the  tunables allocation
 
 
-[configuration]:
- Generally the checks only track the usage and a limit has to be defined
- using check_parameters.
- The checks {nproc} and {nkthread} come with pre-configured default levels:
-
-hpux_tunables_nproc_default_levels (float, float):
-  The percentage of running processes compared to the kernel limit for running
-  processes.
-
-hpux_tunables_nkthread_default_levels (float, float):
-  The percentage of threads of running processes compared to the kernel limit
-  for running threads.

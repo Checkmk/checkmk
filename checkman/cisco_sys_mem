@@ -20,6 +20,3 @@ parameters (tuple): A tuple with the following values
 
  {crit}: (int) The critical level in percent
 
-[configuration]
-cisco_sys_mem_default_levels (tuple): This variable is preset to { (80.0,90.0) }
-

@@ -29,5 +29,3 @@ inventory:
 warning(int): Time difference in seconds at which the check goes to warning.
 critical(int): Time difference triggering a critical state.
 
-[configuration]
-systemtime_default_values(int, int): Default check levels in seconds of time diference. This is preset to {(30, 60)}.

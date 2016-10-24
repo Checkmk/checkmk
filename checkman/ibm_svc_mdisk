@@ -54,12 +54,3 @@ parameters (dict): parameters is a dictionary with eight keys
 
     {'unmanaged_mode'}: (int) - Resulting state if disk is in unmanaged mode.
 
-[configuration]
-ibm_svc_mdisk_default_levels (dict): This variable is preset to {{ 'online_state' : 0,
-    'degraded_state' : 1,
-    'offline_state'  : 2,
-    'excluded_state' : 2,
-    'managed_mode'   : 0,
-    'array_mode'     : 0,
-    'image_mode'     : 0,
-    'unmanaged_mode' : 1 }}

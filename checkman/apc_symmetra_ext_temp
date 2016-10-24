@@ -25,7 +25,3 @@ examples:
 warn (int): degrees at which a warning level is triggerd
 crit (int): degress for a critical level
 
-[configuration]
-apc_symmetra_ext_temp_default_levels (int, int):
-  Default levels used for inventorized checks.
-

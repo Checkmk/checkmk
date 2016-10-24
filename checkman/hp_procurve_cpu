@@ -22,7 +22,3 @@ inventory:
 warning (int): CPU utilization percentage at which a warning level is triggered.
 critical (int): CPU utilization percentage at which a critical level is triggered.
 
-[configuration]
-hp_procurve_cpu_default_levels (int, int): Default levels used by inventorized checks.
- This variable is preset to {(80, 90)}.
-

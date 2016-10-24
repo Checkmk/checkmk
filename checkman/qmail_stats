@@ -24,7 +24,3 @@ inventory:
 warning (int): Queues with more than this value will result in a WARNING state
 critical (int): Number of messages in the queue to result in a CRITICAL stat
 
-[configuration]
-qmail_stats_default_levels (int, int): The global default levels for all checks
- of this type. This is preset to {(10, 20)} (which means that the check
- gets critical if there are more than {20} messages in the queue).

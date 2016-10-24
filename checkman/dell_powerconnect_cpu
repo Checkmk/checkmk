@@ -43,6 +43,3 @@ inventory:
 warning (int): The CPU utilization percentage at which a warning state is triggered.
 critical (int): The CPU utilization percentage at which a critical state is triggered.
 
-[configuration]
-dell_powerconnect_cpu_default_levels(int, int): The Default percentage values used by the inventory checks.
- These variables are pre-set to {(80, 90)}.

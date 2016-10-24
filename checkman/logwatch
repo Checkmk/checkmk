@@ -65,30 +65,3 @@ patterns (list): The parameter can be used to reclassify
  from the 20th message on it will be {'C'}. The counts are reset each
  time the host is being checked.
 
-[configuration]
-logwatch_patterns (dict): A dictionary for reclassifying
- the level of certain messages. This is especially useful
- for the Window agent, since that uses the pre-classification
- of Windows and might not meet your needs. The key of each entry is the name
- of a logfile (see {item}). The value of each entry is
- a list of pairs as described in {parameters}. It is also
- possible to restrict entries to single hosts or groups
- of hosts by prepending list of host and host tags to the pairs,
- as seen in the example.
-
-logwatch_max_filesize (int): This is preset to 500000
- and limits the maximum size of a logfile stored on the monitoring
- servers (i.e. the amount of unacknowledged problem messages).
- As soon as the maximum size is reached, the check gets critical.
- (It probably anyways is with so many problem messages lying around).
-
-logwatch_dir (string): Directory where log messages are
- stored. The default value is {/var/lib/check_mk/logwatch}.
- For each host a subdirectory is created. The name of the
- files therein are the names of the logfiles with slashes
- replaced by backslashes.
-
-logwatch_service_output (string): Change the output of the service to ony
- show the count of events whitout the last error message.  Default is {default} which
- shows the last error message and the count,  use {count} if
- you only want to see the count.

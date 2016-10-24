@@ -38,7 +38,3 @@ examples:
 [parameters]
 parameters (int, int): temperature levels in degree celsius for {WARN} and {CRIT}
 
-[configuration]
-allnet_ip_sensoric_temp_default_levels (int, int): The standard levels
-    for {WARN} and {CRIT}, preset to (35, 40)
-

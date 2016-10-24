@@ -28,7 +28,3 @@ warning (int or float): the precentage of virtual memory used
 critical (int or float): the percentage or absolute value
  at which CRITICAL state is triggered
 
-[configuration]
-memused_default_levels (float, float): Levels used by
- all checks that are created by inventory.
-

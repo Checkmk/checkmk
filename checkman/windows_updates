@@ -29,5 +29,3 @@ opt_warn (int): Number of pending optional updates to raise a WARNING state
 opt_crit (int): Number of pending optional updates to raise a CRITICAL state
                 Can be set to None for disabling the level.
 
-[configuration]
-windows_updates_default_params (tuple of four ints): Default value is set to {(None, None, None, None)}

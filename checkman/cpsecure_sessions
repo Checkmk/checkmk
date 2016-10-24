@@ -35,6 +35,3 @@ examples:
 warning (int): Number of concurrent sessions at which a warning level is triggered
 critical (int): Critical level for number of sessions
 
-[configuration]
-cpsecure_sessions_default_levels (int, int): Default levels for warning and critical. This is preset to {(2500, 5000)}.
-

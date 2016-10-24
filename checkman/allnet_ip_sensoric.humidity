@@ -41,6 +41,3 @@ examples:
 parameters (int, int, int, int): lower CRIT, lower WARN, upper WARN and
     upper CRIT levels for humidity in percent
 
-[configuration]
-allnet_ip_sensoric_humidity_default_levels (int, int, int, int): The standard levels
-    preset to ( 35, 40, 60, 65 )

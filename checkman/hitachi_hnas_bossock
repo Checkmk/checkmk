@@ -23,7 +23,3 @@ perfdata:
 [parameters]
 parameters (tuple): warn, crit levels (int, int)
 
-[configuration]
-hitachi_hnas_bossock_default_levels(tuple): The standard levels for {WARN} and
-    {CRIT}, preset to (250, 350)
-

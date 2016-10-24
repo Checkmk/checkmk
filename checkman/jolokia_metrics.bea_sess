@@ -37,5 +37,3 @@ high_warn (int): If the number of sessions climbs to this level,
 high_crit (int): If the number of sessions climbs to this level,
  a CRITICAL state is triggered
 
-[configuration]
-jolokia_metrics_app_sess_default_levels (int, int, int, int): Default levels warning and critical

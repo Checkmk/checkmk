@@ -29,9 +29,3 @@ good_crit (int): This is a lower threshold. When the number of good satellites d
  below this value a {CRITICAL} state is raised.
  The default is set to {3}. The threshold can be disabled by setting to {None}.
 
-[configuration]
-mbg_lantime_refclock_default_levels (int, int): A tuple ofintegers: The default
- levels. These levels are used for inventorized checks. This variable
- is preset to {(0, 0)}
-
-

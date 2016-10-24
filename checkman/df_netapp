@@ -160,9 +160,3 @@ magic_factor (float): Optional: Magic factor that adapts the levels
  and lowers them for small ones. Please look at online
  documentation for more details about the magic factor.
 
-[configuration]
-inventory_df_exclude_fs (list of strings): This has no effect on NetAPP filers.
-inventory_df_exclude_mountpoints (list of strings): List of mount points to exclude from inventory
-filesystem_default_levels: Default levels for volumes detected by inventory.
- This variable is preset to {{ "levels" : (80, 90), "magic_normsize"  : 20,
- "levels_low" : (50, 60), "trend_range" : 24 }}

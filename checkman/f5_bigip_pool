@@ -34,5 +34,3 @@ warning (int): issue a warning if there are less than warn members left in a loa
 
 crit (int): go to critical state if there are less than crit members left in a load balancing pool. Note: 0 active members will always result in a critical state.
 
-[configuration]
-f5_bigip_pool_default_levels = (int, int): The default levels for all F5 BIG-IP pool checks. This is preset to {(2, 1)}.

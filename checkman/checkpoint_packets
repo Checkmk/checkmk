@@ -25,10 +25,3 @@ parameters(dict): a dictionary with the follwing keys
 
  {"logged"}: a tuple of warning and critical levels (integers) for the packet rate
 
-[configuration]
-checkpoint_packets_default_levels(dict): This variable is preset to
- {{ "accepted": (100000, 200000),
-    "rejected": (100000, 200000),
-    "dropped":  (100000, 200000),
-    "logged":   (100000, 200000),
- }}

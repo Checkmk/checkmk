@@ -32,6 +32,3 @@ parameters(dict): parameters is a dictionary with a key for each monitored count
 
  The numbers are integers and represent the counter increase per second.
 
-[configuration]
-netscaler_dnsrates_default_levels(dict): This variable is preset to
-{{ "query_rate": (1500.0, 2000.0), "answer_rate": (1500.0, 2000.0) }}

@@ -25,5 +25,3 @@ parameters (dict): One Tuple for each sensor
 
  critical (int): The lower limit which triggers a CRITICAL state
 
-[configuration]
-ups_eaton_enviroment_default (dict): Default warning and critical level for each sensor

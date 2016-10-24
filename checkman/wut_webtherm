@@ -36,6 +36,3 @@ examples:
 warning (int): Temperature at which a warning level is triggered
 critical (int): Critical level for temperature
 
-[configuration]
-wut_webtherm_defaultlevels (int, int): Default levels for warning
- and critical. This is preset to {(30,35)}.

@@ -34,5 +34,3 @@ warn (int): a WARN state is triggered is this many threads are running
  a WARNING state is triggered
 crit (int): a CRITICAL state is triggered is this many threads are running
 
-[configuration]
-jolokia_metrics_threads_default_levels (int, int): Default levels, warning and critical

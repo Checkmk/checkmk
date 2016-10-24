@@ -50,6 +50,3 @@ parameters (dict): This check requires a dictionary with the following keys.
  Float numbers are interpreted as available total memory usage
 
 
-[configuration]
-jolokia_metrics_mem_default_levels (dict): Default warn/crit levels for heap, nonheap and total
-

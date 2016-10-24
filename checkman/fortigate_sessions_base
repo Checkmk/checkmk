@@ -12,8 +12,3 @@ inventory:
 warning (int): Minimum seesion count for warning level
 crit (int): Minimum session count for critical level
 
-[configuration]
-fortigate_sessions_base_default_levels = (int, int): The default levels for all checks of this kind.
-
-perfdata:
- current amount of sessions on the device

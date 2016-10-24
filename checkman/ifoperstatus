@@ -26,10 +26,3 @@ targetstatus (string): The target status of the interface, for example {"up"} or
  There are other possible values for the target status: {"unknown"}, {"dormant"},
  {"notPresent"} or {"lowerLayerDown"}.
 
-[configuration]
-ifoperstatus_monitor_unused (boolean): Determines weather unused ports should
- be monitored. This has an influence only on inventory. If set to True,
- it will created checks with target status 'down' for unused ports. The default
- value is False.
-ifoperstatus_inventory_porttypes (list of strings): list of port types to be found
- be inventory. Default is {[ "ethernetCsmacd" ]}.

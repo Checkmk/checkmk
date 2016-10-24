@@ -31,6 +31,3 @@ inventory:
 warn (int): This many queue entries will trigger a WARNING state
 crit (int): This many queue entries will trigger a CRITICAL state
 
-[configuration]
-jolokia_metrics_queue_default_levels (int, int): Default levels warning and critical
-

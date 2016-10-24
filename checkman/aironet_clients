@@ -35,9 +35,3 @@ warning (int): Warning level for signal strength or quality. Note that
  for the check item {"clients"} and should be set to {None} in that case.
 critical (int): Critical levels, {None} in case of {"clients"}.
 
-[configuration]
-aironet_default_strength_levels (int, int): Default levels for signal
- strength. They are preset to {(-80, -70)}.
-aironet_default_quality_levels (int, int): Default levels for signal
- quality. They are preset to {(40, 20)}.
-

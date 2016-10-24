@@ -13,8 +13,3 @@ inventory:
 warning (int): Minimum memory usage in percent for warning level
 crit (int): Minimum memory usage in percent for critical level
 
-[configuration]
-fortigate_memory_base_default_levels = (int, int): The default levels for all checks of this kind.
-
-perfdata:
- current memory usage

@@ -29,6 +29,3 @@ warning (int): The percentage of CPU usage that triggers
 critical (int): The percentage of CPU usage that triggers
  a CRITICAL state
 
-[configuration]
-winperf_cpu_default_levels (int, int): Default levels warning and critical
-

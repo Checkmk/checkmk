@@ -28,10 +28,6 @@ perfdata:
  {post_avg_?}: The average number of outbound bytes after executing the QoS over a longer range of time
  {drop_avg_?}: The averagebe number of dropped bytes over a longer range of time
 
-[configuration]
-cisco_qos_default_values (dict): Dictionary with the values specified in parameters
-
-[parameters]
 parameters (dict): This check requires a dictionary with the following keys.
 
  {"post"} - A pair of two values to be used as WARN/CRIT levels

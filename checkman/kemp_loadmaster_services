@@ -23,6 +23,3 @@ perfdata:
 warn(int): Warning level for the number of active connections.
 crit(int): Critical level for the number of active connections.
 
-[configuration]
-kemp_loadmaster_service_default_levels(int, int): The default levels to be used for
- inventorized checks for {warn} and {crit}.  They are preset to {(1500, 2000)}.

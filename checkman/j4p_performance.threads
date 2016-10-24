@@ -37,6 +37,3 @@ inventory:
 warning (int): The warning level for number of threads
 critical (int): The critical level for number of threads
 
-[configuration]
-j4p_performance_threads_default_levels (int, int): Default levels for number of threads.
- This is preset to {(80, 100)}.

@@ -72,6 +72,3 @@ parameters (dict): This check uses a dictionary as parameter. The following
  In that case all warn/crit levels are applied to the averaged values.
 
 
-[configuration]
-memory_win_default_levels (dict): Levels used by
- all checks that are created by inventory.

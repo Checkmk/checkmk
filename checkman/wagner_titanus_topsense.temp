@@ -38,6 +38,3 @@ parameters (tuple): A pair of numbers for warn and crit level.
     the check returns {WARN}. If the temperature in degree celsius is higher
     or equal crit, the check returns {CRIT}.
 
-[configuration]
-wagner_titanus_topsense_temperature_default_values(int, int):
-    Default levels for warning and critical, preset to (30, 35)

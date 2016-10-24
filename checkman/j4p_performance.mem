@@ -47,6 +47,3 @@ inventory:
 warning (int): The warning level for used memory in MB
 critical (int): The critical level for used memory in MB
 
-[configuration]
-j4p_performance_mem_default_levels (int, int): Default levels for memory usage in MB. This
-    is preset to {(1000, 2000)}.

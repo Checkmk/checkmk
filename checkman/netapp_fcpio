@@ -37,6 +37,3 @@ parameters (dict): A dictionary with the following optional keys:
     {"write"}: Pair of integers of warn and crit: Return {WARN}/{CRIT} if the
     current value vor read IOPS is higher or equal these values.
 
-[configuration]
-netapp_fcpio_default_levels(dict): The default levels to be used for
- inventorized checks. They are preset to {{"read" : (None, None), "write" : (None, None)}}.

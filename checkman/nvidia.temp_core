@@ -25,11 +25,3 @@ inventory:
 warning (int): temperature at which a warning level is triggered
 critical (int): critical level for temperature
 
-[configuration]
-parameters(dict): parameters is a dictionary with the following keys
-
- {"levels"}: a tuple of upper warning and critical levels for the temperature. This is preset to (60,65)
-
- {"output_unit"}: "c", "f" or "k", the check will output the temperature in the specified unit. If this is not set, output is in degrees Celsius.
-
- {"input_unit"}: "c, "f" or "k". By default, the check interprets the sensor value according to the unit sent by the device. This key allows to override this. Use carefully, as this may lead to a misinterpreted temperature. Should only be used if the device reports its unit incorrectly.

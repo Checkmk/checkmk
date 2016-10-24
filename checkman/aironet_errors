@@ -26,7 +26,3 @@ warning (float): Error rate in errors/sec at which a warning level is
  triggered.
 critical (float): Critical level for error rate
 
-[configuration]
-aironet_default_error_levels (float, float): Default levels for error
- rate, used by inventorized checks. This is preset to {(1.0, 10.0)}.
-

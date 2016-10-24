@@ -31,6 +31,3 @@ warn (int): Number of processes and threads at which a warning level
  is triggered
 crit (int): Number for a critical state
 
-[configuration]
-threads_default_levels (int, int): Levels used for all checks found
- by inventory. This variable is preset to {(2000, 4000)}.

@@ -32,5 +32,3 @@ inventory:
 [parameters]
 parameters (dict): See man page of {if64}.
 
-[configuration]
-All: See man page of {if64}.

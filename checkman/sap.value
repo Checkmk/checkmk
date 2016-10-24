@@ -45,10 +45,6 @@ examples:
    ( {'match': '~SAP BI Monitors/BI Monitor'}, [], ALL_HOSTS ),
  ] + inventory_sap_values
 
-[configuration]
-inventory_sap_values (list): A list of 3-tuples. See {INVENTORY} for details.
-
-[parameters]
 match (string): Matching specification. This can either be the full path of the node or
    a regular expressing matching the path. In case of a regular expression it must be
    prefixed with a {~}. It can also be set to {None} to inventorize all nodes provided

@@ -24,5 +24,3 @@ parameters(tuple): parameters is a tuple of two values
 
  {crit}: (int) The critical level in days
 
-[configuration]
-ups_test_default (tuple): This variable is preset to { (0,0) }

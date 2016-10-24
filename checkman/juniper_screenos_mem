@@ -16,6 +16,3 @@ perfdata:
 warning (float): The percentage of memory usage that triggers a warning level.
 critical (float): The percentage of memory usage that triggers a critical level.
 
-[configuration]
-juniper_screenos_mem_default_levels (float, float): Default levels for warning and critical used
-  by inventorized checks. This is preset to {(70.0, 80.0)}

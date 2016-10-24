@@ -86,6 +86,3 @@ parameters (dict): The check previously used a pair of
   a number of minutes. The levels are then applied to the
   averaged value over that time horizon.
 
-[configuration]
-memused_default_levels (float, float): Levels used by
- all checks that are created by inventory.

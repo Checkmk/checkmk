@@ -13,5 +13,3 @@ inventory:
 perfdata:
  tunnel state: returns 1 if VPN tunnel is up and 0 if VPN tunnel is down
 
-[configuration]:
- There are no configuration values

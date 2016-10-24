@@ -22,6 +22,3 @@ examples:
 [parameters]
 levels(dict from string to (int, int)): A python dictionary from check state to a pair of integers for warning and critical levels. For state types not listed in the dictionary no state check is done. The default parameter is an empty dictionary, which makes this check always OK.
 
-[configuration]
-tcp_conn_stats_default_levels (dict from string to (int, int)): default levels used for all
- inventorized checks.

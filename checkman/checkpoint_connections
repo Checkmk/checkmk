@@ -18,5 +18,3 @@ perfdata:
 warning (int): Minimum connection count for warning level
 crit (int): Minimum connection count for critical level
 
-[configuration]
-checkpoint_connection_default_levels = (int, int): The default levels for all checks of this kind.

@@ -30,7 +30,3 @@ warn_perc(int): If the speed is less or equal this percentage of max speed
 crit_perc(int): If the speed is less or equal this percentage of max speed
   the check results in {CRIT} state.
 
-[configuration]
-blade_bx_fan_default_error_levels(int, int): A pair of integers: The default
- levels for {WARN} and {CRIT}. These levels are used for inventorized checks.
- This variable is preset to {( 50, 40 )}

@@ -29,7 +29,3 @@ examples:
 warning (int): minimum value leading to a WARNING state
 critical (int): mimimum value leading to a CRITICAL state
 
-[configuration]
-strem1_temp_defaultlevels (int/None, int/None): default temperature levels for warning, critical states. Preset to (28, 32). None disables a threshold.
-strem1_humidity_defaultlevels (int/None, int/None): default humidity levels for warning, critical states. Preset to (28, 32). None disables a threshold.
-strem1_wetness_defaultlevels (int/None, int/None): default wetness levels for warning, critical states. Preset to (28, 32). None disables a threshold.

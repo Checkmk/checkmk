@@ -23,33 +23,6 @@ description:
  the agent. Please refer to the online documentation
  for how to install that plugin.
 
-[configuration]
-inventory_oracle_rman_incremental_details (boolean):
- This variable is for backward compatibility. This is needed when old
- rules for backups with DB_INCR instead of DB_INCR_0 are existing and
- a merge to the new behavior is not possigle..
- Please insert the following variable to main.mk for old behavior:
-
- inventory_oracle_rman_incremental_details=False
-
- The default is True for this variable
-
-item:
- The SID of the database in uppercase (as appearing in the process
- name of the pmon_... process).
-
-perfdata:
- One value: The time since the last successfull backup.
-
-inventory:
- One separate check for each DB_INCR, DB_FULL, ARCHIVELOG and
- CONTROLFILE for each database.
-
- checkgroup_parameters['oracle_rman'] = [
-  ( {'backup_age': (10800, 21600)}
-   , [], ALL_HOSTS, ALL_SERVICES ),
-
-[parameters]
 parameters (dict):
 
  "backup_age": (int, int) - Maximum time in seconds for warn and crit

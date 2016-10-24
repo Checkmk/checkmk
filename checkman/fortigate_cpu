@@ -12,8 +12,3 @@ inventory:
 warning (float): Minimum cpu load for warning level
 crit (float): Minimum cpu load for critical level
 
-[configuration]
-fortigate_cpu_default_levels = (float, float): The default levels for all checks of this kind.
-
-perfdata:
- current utilization

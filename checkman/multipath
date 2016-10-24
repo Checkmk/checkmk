@@ -38,6 +38,3 @@ examples:
 numpaths(int): The only parameter is the number of expected paths. This is not
   a tuple but a simple integer value.
 
-[configuration]
-inventory_multipath_rules(ruleset): A dictionary ruleset with currently the only possible
-  key being {use_alias}. See section inventory for details.

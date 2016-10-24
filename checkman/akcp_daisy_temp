@@ -25,6 +25,3 @@ examples:
 warning (int): temperature in degrees at which the check goes warning
 critical (int): level for critical temperature
 
-[configuration]
-akcp_daisy_temp_defaultlevels (int, int): Default levels. This is
- preset to {(28, 32)}.

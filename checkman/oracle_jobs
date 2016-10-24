@@ -39,7 +39,3 @@ parameters (dict):
  {"run_duration"}:  By default a tuple containing the warn and crit levels
  in seconds for the run_duration of the job.
 
-[configuration]
-disabled (boolean): Default is {True}
-run_duration (int): Maximum run dureation for a job in seconds. Default is
- None. Example for WARN=10 and CRIT=30 Seconds. {(10, 30)}

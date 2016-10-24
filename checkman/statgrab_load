@@ -37,8 +37,3 @@ inventory:
 warning (int): 15 minute average load at which a {WARN} is triggered.
 critical (int): 15 minute average load at which a {CRIT} state is triggered.
 
-[configuration]
-cpuload_default_levels (int, int): A pair of floats or integers: The default
- levels. These levels are used for inventorized checks. This variable
- is preset to {(5, 10)}
-

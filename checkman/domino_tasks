@@ -78,10 +78,6 @@ examples:
                                 'okmin': 1
                                 'okmax': 1,
  ]
-[configuration]
-inv_domino_tasks (list): A list of 7-tuples. See {INVENTORY} for details.
-
-[parameters]
 parameters (dict): The parameters can be given in a dictionary based syntax
    with the elements below.
 

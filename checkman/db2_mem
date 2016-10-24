@@ -12,5 +12,3 @@ description:
 inventory:
  One service will be created for each instance
 
-[configuration]
-db2_mem_default_levels (tuple): Default warning and critical level in percent

@@ -42,20 +42,3 @@ parameters (dict):
         {"limits_input_power"}: a tuple of lower and upper critical values in dBm,
         {"limits_output_power"}: a tuple of lower and upper critical values in dBm
 
-[configuration]
-adva_fsp_if_inventory_porttypes (list of strings):  List of interface types the inventory should create checks for.
-  Default is {[ '1', '6', '56' ]}, which means that all other, ethernet and fibre channel interfaces
-  will be monitored. Please see the SNMP MIB description of {ifType} for a complete list of port types.
-
-adva_fsp_if_inventory_portstates (list of strings): Per default this variable is set to {['1']}, which means that
-  only ports found in the state {up} are being added to the monitoring. If you set this to {['1', '2', '5']} then
-  also ports in state {down} and {dormant} will be monitored.
-
-adva_fsp_if_inventory_uses_description (boolean): Whether inventory should use
-  the interface description as item (instead of the interface index). Default
-  is {True}.
-
-adva_fsp_if_inventory_uses_alias (boolean): Whether inventory should use
-  the interface alias as item. In this case make sure that it is
-  unique by configuring useful aliases in the switch. Check_MK does not check
-  for uniqueness. Default is {False}.

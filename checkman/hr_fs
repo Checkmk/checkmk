@@ -91,5 +91,3 @@ magic_factor (float): Optional: Magic factor that adapts the levels
  and lowers them for small ones. Please look at online
  documentation for more details about the magic factor.
 
-[configuration]
-filesystem_default_levels (dict, pair or triple): Default levels for filesystem detected by inventory. For further paramters please refer to the man page of {df}.

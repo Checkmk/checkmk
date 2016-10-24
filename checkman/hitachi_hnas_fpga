@@ -40,6 +40,3 @@ inventory:
 parameters (dict): with the element
 {"levels"}: (float, float): levels of FPGA utilization for {WARN} and {CRIT} in percent
 
-[configuration]
-hitachi_hnas_fpga_default_levels(dict): The standard levels for {WARN} and
-    {CRIT}, preset to { "levels": (80.0, 90.0) }

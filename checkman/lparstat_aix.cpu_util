@@ -29,6 +29,3 @@ critical (int): The percentage of {wait} that triggers a critical level
 
  The parameters may also be set to {None}, which makes the check alwas {OK}.
 
-[configuration]
-kernel_util_default_levels (int, int): Default levels used by inventorized
-  checks. This is present to {None}, which disables the levels.

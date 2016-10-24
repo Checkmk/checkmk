@@ -13,14 +13,6 @@ description:
  A list of ignored services can be configured. These services will not be
  considered when determining the stopped services.
 
-[configuration]
-{services_summary_default_levels(dict):} A dictionary with the following preset keys
-
-{"ignored": (),}
-{"state_of_stopped": 0}
-
-
-[parameters]
 parameters(dict):  A dictionary with the following keys:
 
  {"ignored"}: tuple: A tuple of service names or regular expressions for

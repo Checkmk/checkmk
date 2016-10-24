@@ -37,9 +37,3 @@ inventory:
  To change this behavior, please edit the configuration variables, see section
  "configuration".
 
-[configuration]
-qlogic_fcport_inventory_opstates (list): List of operational states the port needs
- to be in to be inventorized, defaults to [ "1", "3" ]
-
-qlogic_fcport_inventory_admstates (list): List of admin states the port needs
- to be in to be inventorized, defaults to [ "1", "3" ]

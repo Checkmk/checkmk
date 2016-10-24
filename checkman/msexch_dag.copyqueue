@@ -24,7 +24,3 @@ item:
 warn(int): Warning level for the maximum number of logs in the queues
 crit(int): Critical level
 
-[configuration]
-msexch_dag_copyqueue_default_levels(int, int): Default warning and critical levels for the maximum copy
- queue length over all queues. The default is preset to {( 100, 200 )}
-

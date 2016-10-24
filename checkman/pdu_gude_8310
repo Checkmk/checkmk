@@ -25,5 +25,3 @@ examples:
 [parameters]
 parameters(dict): Warning and Critical levels as tuple for Items kWh, W, A, V, VA in dict
 
-[configuration]
-pdu_gude_default_levels (dict): Default warning and critical level for each value

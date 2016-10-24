@@ -29,8 +29,3 @@ warn (int): 15 minute average load at which a {WARN} is triggered.
 
 crit (int): 15 minute average load at which {CRIT} state is triggered.
 
-[configuration]
-blade_bx_cpuload_default_levels(int,int): A pair of integers: The default
- levels for {WARN} and {CRIT}. These levels are used for inventorized checks.
- This variable is preset to {( 5, 20 )}
-

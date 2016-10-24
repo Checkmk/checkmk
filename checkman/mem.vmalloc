@@ -49,8 +49,3 @@ warn_chunk (int or float): if the size of the largest chunk reaches
 crit_chunk (int or float): critical level for the size of the
  largest available chunk.
 
-[configuration]
-mem_vmalloc_default_levels (int/float, int/float, int/float, int/float):
- Levels used by checks created by inventory. The default value is set
- to {(80.0, 90.0, 64, 32)}.
-

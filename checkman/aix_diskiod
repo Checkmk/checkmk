@@ -65,13 +65,3 @@ inventory:
  performance values. Make sure that your graphing tool is setup to
  a changing number of variables.
 
-[configuration]
-diskstat_defaul_levels(dict): The default parameter used for inventorized
-                             checks. This is preset to the empty dictionary.
-                              That means that no averaging is done and no
-                              levels are applied.
-
-diskstat_inventory_mode(string): Either {"single"} for one service per disk
- or {"summary"} for the throughput of all disks summed up in one service.
- Also possible is {"legacy"} for the old style mode (see above). Default
- is {"single"}.

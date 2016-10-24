@@ -30,8 +30,3 @@ critical(int): The supply level in percentage at which (and below) a critical st
 upturn(bool): Upturn the toner levels
 
 
-[configuration]
-printer_supply_default_levels(int, int): Set global default levels for warning and critical
-printer_supply_some_remaining_status (int): Set the reported nagios state when the fill state
-  is something between empty and small remaining capacity. Default is: 1 (WARN).
-

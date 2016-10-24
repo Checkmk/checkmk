@@ -26,6 +26,3 @@ warning low (int): lower border for warning level
 warning high (int): upper border for triggering warning level
 critical high (int): upper border for critical level
 
-[configuration]
-akcp_sensor_temperature_defaultlevels (int, int): Default levels. This is
- preset to {(32, 35)}.

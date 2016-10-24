@@ -136,15 +136,6 @@ examples:
     }),
  ]
 
-[configuration]
-inventory_services (list of entries): List of service declarations.
- For each matching service found on the target host, one check will
- be added to your monitoring.
-inventory_services_rules (list of rules): List of service inventory rules.
- For each matching entry in each rule found on the target host one check
- will be added to your monitoring.
-
-[parameters]
 parameters(dict): A dictionary with the following optional keys:
  {"states"}: A list of triples. Each triple specifies the monitoring
  state for a service that is in a certain state. The first element

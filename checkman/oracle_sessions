@@ -37,6 +37,3 @@ inventory:
 warning(int): The number of active sessions triggering a warning
 critical(int): The number of active sessions making the check critical
 
-[configuration]
-oracle_sessions_default_levels(int, int): Global default levels used for all checks which have no specific configuration. This is preset to {(50, 100)}.
-

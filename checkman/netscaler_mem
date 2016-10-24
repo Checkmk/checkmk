@@ -21,7 +21,3 @@ perfdata:
 warning (float): The percentage of memory usage that triggers a warning level.
 critical (float): The percentage of memory usage that triggers a critical level.
 
-[configuration]
-netscaler_mem_default_levels (float, float): Default levels for warning and critical used
- by inventorized checks. This is preset to {(80.0, 90.0)}
-

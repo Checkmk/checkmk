@@ -27,13 +27,3 @@ inventory:
 warn (int): a WARN state is triggered by count/busy threads of max
 crit (int): a CRIT state is triggered by count/busy threads of max
 
-[configuration]
-jolokia_metrics_tp_default_levels { 'currentThreadsBusy' : (int, int),
- 'currentThreadsCount' : (int, int) }: by default only currentThreadsbusy (80, 90)
- is configured.
-
-examples:
- jolokia_metrics_tp_default_levels = {
-     'currentThreadsBusy' : (80, 90)
-     'currentThreadsCount' : (None, None)
- }

@@ -38,5 +38,3 @@ perfdata:
 [parameters]
 parameters (dict): See man page of {if} for details
 
-[configuration]
-various: See man page of {if} for details

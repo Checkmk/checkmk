@@ -125,28 +125,3 @@ inventory:
  performance values. Make sure that your graphing tool is setup to
  a changing number of variables.
 
-[configuration]
-diskstat_defaul_levels(dict): The default parameter used for inventorized
-                             checks. This is preset to the empty dictionary.
-                              That means that no averaging is done and no
-                              levels are applied.
-
-diskstat_inventory_mode(string): By default this is now set to {"rule"} for
- fine-grained configuration of blockdevices to monitor.
- The actual rule is defined in {"diststat_inventory"}.
-
- The following older style parameters are also still available and mapped
- to rules internally. Either {"single"} for one service per disk
- or {"summary"} for the throughput of all disks summed up in one service.
- Also possible is {"legacy"} for the old style mode (see above). Default
- is {"summary"}.
-
-
-diskstat_inventory(list): This is a list of block device types to track.
- Possible values are {"summary"}, which creates a summary item showing the IO
- rate of all disks, but not other block devices.
- If you want statistics for every single disk, you can use {"phyiscal"}.
- Enabling {"lvm"} will generate one item for each LVM volume, including snapshot
- volumes.
- Enabling {"vxvm"} will generate one item for each volume managed by VxVM,
- including layered volumes.

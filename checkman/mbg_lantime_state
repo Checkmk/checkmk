@@ -29,9 +29,3 @@ ref_offset_warn (int): refclock offsets above this value will raise a {WARNING} 
 ref_offset_crit (int): refclock offsets above this value will raise a {CRITICAL} state.
   The default is set to {1000} microseconds. The threshold can be disabled by setting to {None}.
 
-[configuration]
-mbg_lantime_state_default_levels (int, int, int, int): A tuple of four floats or integers: The default
- levels. These levels are used for inventorized checks. This variable
- is preset to {(0, 0, 500, 1000)}
-
-

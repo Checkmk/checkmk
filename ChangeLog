@@ -3,6 +3,9 @@
     * 3961 FIX: fixed error sections handling if parse function is available
     * 3962 FIX: oracle_sessions: fixed empty section handling
 
+    Multisite:
+    * 3970 SEC: Fixed possible URL injection on index page...
+
 
 1.2.8p13:
     Checks & Agents:

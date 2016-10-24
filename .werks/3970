@@ -1,0 +1,15 @@
+Title: Fixed possible URL injection on index page
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p14
+Date: 1477295864
+Class: security
+
+Till this version it was possible to inject authenticated users external URLs
+as start URLs for their GUI.
+
+An attacker could use this to make an authenticated GUI user open a page of his
+choice when the user clicks on a prepared link.
+
+One example URL which could be used: "index.py?start_url=//heise.de".

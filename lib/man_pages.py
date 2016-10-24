@@ -512,7 +512,7 @@ class ManPageRenderer(object):
 
         bg_color = 4
         fg_color = 7
-        self._bold_color         = tty.white + tty.bold
+        self._tty_color         = tty.white + tty.bold
         self._normal_color       = tty.normal + tty.colorset(fg_color, bg_color)
         self._title_color_left   = tty.colorset(0, 7, 1)
         self._title_color_right  = tty.colorset(0, 7)
@@ -543,12 +543,13 @@ class ManPageRenderer(object):
         self._print_header()
         header = self.man_page['header']
 
-        self._print_sectionheader(header['title'])
+        self._print_manpage_title(header['title'])
 
         ags = []
         for agent in header['agents']:
             ags.append(check_mk_agents.get(agent, agent.upper()))
-        self._print_splitline(self._header_color_left, "Supported Agents:        ", self._header_color_right, ", ".join(ags))
+
+        self._print_begin_splitlines()
 
         distro = header['distribution']
         if distro == 'check_mk':
@@ -556,6 +557,9 @@ class ManPageRenderer(object):
         self._print_splitline(self._header_color_left, "Distribution:            ", self._header_color_right, distro)
 
         self._print_splitline(self._header_color_left, "License:                 ", self._header_color_right, header['license'])
+        self._print_splitline(self._header_color_left, "Supported Agents:        ", self._header_color_right, ", ".join(ags))
+
+        self._print_end_splitlines()
 
         self._print_empty_line()
         self._print_textbody(header['description'])
@@ -576,17 +580,17 @@ class ManPageRenderer(object):
         else:
             self._print_line("None.")
 
-        self._print_subheader("Performance data")
+        self._print_subheader("Metrics")
         if header.has_key('perfdata'):
             self._print_textbody(header['perfdata'])
         else:
             self._print_textbody("None.")
 
-        self._print_subheader("Inventory")
+        self._print_subheader("Discovery")
         if header.has_key('inventory'):
             self._print_textbody(header['inventory'])
         else:
-            self._print_textbody("No inventory supported.")
+            self._print_textbody("No discovery supported.")
 
         self._print_subheader("Configuration variables")
         if self.man_page.has_key('configuration'):
@@ -621,7 +625,7 @@ class ManPageRenderer(object):
         raise NotImplementedError()
 
 
-    def _print_sectionheader(self, title):
+    def _print_manpage_title(self, title):
         raise NotImplementedError()
 
 
@@ -631,6 +635,14 @@ class ManPageRenderer(object):
 
     def _print_line(self, line, attr=None, no_markup = False):
         raise NotImplementedError()
+
+
+    def _print_begin_splitlines(self):
+        pass
+
+
+    def _print_end_splitlines(self):
+        pass
 
 
     def _print_splitline(self, attr1, left, attr2, right):
@@ -674,14 +686,14 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
     def _markup(self, line, attr):
         # Replaces braces in the line but preserves the inner braces
-        return re.sub('(?<!{){', self._bold_color, re.sub('(?<!})}', tty.normal + attr, line))
+        return re.sub('(?<!{){', self._tty_color, re.sub('(?<!})}', tty.normal + attr, line))
 
 
     def _print_header(self):
         pass
 
 
-    def _print_sectionheader(self, title):
+    def _print_manpage_title(self, title):
         self._print_splitline(self._title_color_left, "%-25s" % self.name,
                               self._title_color_right, title)
 
@@ -825,7 +837,7 @@ class NowikiManPageRenderer(ManPageRenderer):
 
 
     def index_entry(self):
-        return "<tr><td class=tt>%s</td><td>[check_%s|%s]</td></tr>\n" % \
+        return "<tr><td class=\"tt narrow\">%s</td><td>[check_%s|%s]</td></tr>\n" % \
                   (self.name, self.name, self.man_page["header"]["title"])
 
 
@@ -838,18 +850,21 @@ class NowikiManPageRenderer(ManPageRenderer):
         # preserve the inner { and } in double braces and then replace the braces left
         return line.replace('{{', '{&#123;') \
                    .replace('}}', '&#125;}') \
-                   .replace("{", "<b>") \
-                   .replace("}", "</b>")
+                   .replace("{", "<tt>") \
+                   .replace("}", "</tt>")
 
 
     def _print_header(self):
         self.output.write("TI:Check manual page of %s\n" % self.name)
-        self.output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
-        self.output.write("SA:checks\n")
+        # It does not make much sense to print the date of the HTML generation
+        # of the man page here. More useful would be the Check_MK version where
+        # the plugin first appeared. But we have no access to that - alas.
+        # self.output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
+        self.output.write("SA:check_plugins_catalog,check_plugins_list\n")
 
 
-    def _print_sectionheader(self, title):
-        self.output.write("H1:%s\n" % title)
+    def _print_manpage_title(self, title):
+        self.output.write("<b>%s</b>\n" % title)
 
 
     def _print_subheader(self, line):
@@ -863,8 +878,16 @@ class NowikiManPageRenderer(ManPageRenderer):
             self.output.write("%s\n" % self._markup(line))
 
 
+    def _print_begin_splitlines(self):
+        self.output.write("<table>\n")
+
+
+    def _print_end_splitlines(self):
+        self.output.write("</table>\n")
+
+
     def _print_splitline(self, attr1, left, attr2, right):
-        self.output.write("<b style=\"width: 300px;\">%s</b> %s\n\n" % (left, right))
+        self.output.write("<tr><td>%s</td><td>%s</td></tr>\n" % (left, right))
 
 
     def _print_empty_line(self):
@@ -883,8 +906,9 @@ class NowikiManPageRenderer(ManPageRenderer):
         else:
             name = left
             typ = ""
-        self.output.write("<tr><td class=tt>%s</td><td>%s</td><td>%s</td></tr>\n" %
-                                                            (name, typ, self._markup(text)))
+        self.output.write("<tr><td class=tt>%s</td>"
+                          "<td>%s</td><td>%s</td></tr>\n" %
+                        (name, typ, self._markup(text)))
 
 
     def _begin_table(self, titles):

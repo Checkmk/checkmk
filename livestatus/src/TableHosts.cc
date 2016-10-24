@@ -643,15 +643,16 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         "The gzipped file content content of the Check_MK HW/SW-Inventory",
         g_mk_inventory_path, ".gz", indirect_offset, extra_offset));
 
+    extern char g_mk_logwatch_path[];
     table->addColumn(new LogwatchListColumn(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch",
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, g_mk_logwatch_path));
 
     table->addDynamicColumn(new DynamicLogwatchFileColumn(
         prefix + "mk_logwatch_file",
         "This contents of a logfile fetched via mk_logwatch", indirect_offset,
-        extra_offset));
+        extra_offset, g_mk_logwatch_path));
 
     table->addColumn(new HostSpecialDoubleColumn(
         prefix + "staleness", "Staleness indicator for this host",

@@ -28,16 +28,10 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 
-#ifdef CMC
-#include "Config.h"
-#define MK_LOGWATCH_PATH g_config->_mk_logwatch_path
-#else
-extern char g_mk_logwatch_path[];
-#define MK_LOGWATCH_PATH g_mk_logwatch_path
-#endif
-
-std::string mk_logwatch_path_of_host(const std::string &host_name);
-void mk_logwatch_acknowledge(const std::string &host_name,
+std::string mk_logwatch_path_of_host(const std::string &logwatch_path,
+                                     const std::string &host_name);
+void mk_logwatch_acknowledge(const std::string &logwatch_path,
+                             const std::string &host_name,
                              const std::string &file_name);
 
 #endif  // mk_logwatch_h

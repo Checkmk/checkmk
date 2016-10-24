@@ -299,11 +299,12 @@ TableStatus::TableStatus(Logger *logger) : Table(logger) {
                                    &g_num_clientthreads));
 
     // Special stuff for Check_MK
-    addColumn(new StatusSpecialIntColumn("mk_inventory_last",
-                                         "The timestamp of the last time a "
-                                         "host has been inventorized by "
-                                         "Check_MK HW/SW-Inventory",
-                                         SPIC_MK_INVENTORY_LAST));
+    extern char g_mk_inventory_path[];
+    addColumn(new StatusSpecialIntColumn(
+        "mk_inventory_last",
+        "The timestamp of the last time a host has been inventorized by "
+        "Check_MK HW/SW-Inventory",
+        g_mk_inventory_path, SPIC_MK_INVENTORY_LAST));
 }
 
 string TableStatus::name() const { return "status"; }

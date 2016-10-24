@@ -194,7 +194,8 @@ bool Store::answerLogwatchCommandRequest(const char *command) {
         }
         std::string host_name(host_name_begin, host_name_end - host_name_begin);
         std::string file_name(host_name_end + 1);
-        mk_logwatch_acknowledge(host_name, file_name);
+        extern char g_mk_logwatch_path[];
+        mk_logwatch_acknowledge(g_mk_logwatch_path, host_name, file_name);
         return true;
     }
     return false;

@@ -51,7 +51,7 @@ void LogwatchListColumn::output(void *row, RowRenderer &r,
 #endif
 
     ListRenderer l(r);
-    string path = mk_logwatch_path_of_host(host_name);
+    string path = mk_logwatch_path_of_host(_logwatch_path, host_name);
     if (path != "") {
         if (DIR *dir = opendir(path.c_str())) {
             while (true) {

@@ -26,6 +26,8 @@
 #include "mk_inventory.h"
 #include "pnp4nagios.h"
 
+using std::string;
+
 int32_t HostSpecialIntColumn::getValue(void *row, contact * /* auth_user */) {
     void *data = shiftPointer(row);
     if (data == nullptr) {
@@ -46,8 +48,11 @@ int32_t HostSpecialIntColumn::getValue(void *row, contact * /* auth_user */) {
         case HSIC_PNP_GRAPH_PRESENT:
             return pnpgraph_present(hst->name);
 
-        case HSIC_MK_INVENTORY_LAST:
-            return mk_inventory_last(hst->name);
+        case HSIC_MK_INVENTORY_LAST: {
+            extern char g_mk_inventory_path[];
+            return mk_inventory_last(string(g_mk_inventory_path) + "/" +
+                                     hst->name);
+        }
     }
     // never reached, make -Wall happy
     return 0;

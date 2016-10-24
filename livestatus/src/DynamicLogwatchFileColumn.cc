@@ -26,7 +26,6 @@
 #include <ostream>
 #include "HostFileColumn.h"
 #include "Logger.h"
-#include "mk_logwatch.h"
 
 using std::string;
 
@@ -67,7 +66,7 @@ Column *DynamicLogwatchFileColumn::createColumn(const std::string &name,
         return nullptr;
     }
 
-    return new HostFileColumn(
-        name, "Contents of logwatch file", MK_LOGWATCH_PATH,
-        "/" + unescape_filename(arguments), _indirect_offset, _extra_offset);
+    return new HostFileColumn(name, "Contents of logwatch file", _logwatch_path,
+                              "/" + unescape_filename(arguments),
+                              _indirect_offset, _extra_offset);
 }

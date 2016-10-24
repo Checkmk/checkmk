@@ -34,11 +34,16 @@ class DynamicLogwatchFileColumn : public DynamicColumn {
 public:
     DynamicLogwatchFileColumn(const std::string &name,
                               const std::string &description,
-                              int indirect_offset, int extra_offset = -1)
-        : DynamicColumn(name, description, indirect_offset, extra_offset) {}
+                              int indirect_offset, int extra_offset,
+                              const std::string &logwatch_path)
+        : DynamicColumn(name, description, indirect_offset, extra_offset)
+        , _logwatch_path(logwatch_path) {}
     virtual ~DynamicLogwatchFileColumn() {}
     Column *createColumn(const std::string &name,
                          const std::string &arguments) override;
+
+private:
+    std::string _logwatch_path;
 };
 
 #endif  // DynamicLogwatchFileColumn_h

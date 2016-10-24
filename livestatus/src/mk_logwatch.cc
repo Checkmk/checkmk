@@ -30,16 +30,14 @@
 
 using std::string;
 
-string mk_logwatch_path_of_host(const string &host_name) {
-    string path(MK_LOGWATCH_PATH);
-    if (path == "") {
-        return "";
-    }
-    path += pnp_cleanup(host_name);
-    return path;
+string mk_logwatch_path_of_host(const string &logwatch_path,
+                                const string &host_name) {
+    return logwatch_path.empty() ? ""
+                                 : (logwatch_path + pnp_cleanup(host_name));
 }
 
-void mk_logwatch_acknowledge(const string &host_name, const string &file_name) {
+void mk_logwatch_acknowledge(const std::string &logwatch_path,
+                             const string &host_name, const string &file_name) {
     Logger *logger = Logger::getLogger("cmk.livestatus");
     if (file_name.find('/') != string::npos) {
         Warning(logger) << "Invalid character / in mk_logfile filename '"
@@ -47,13 +45,12 @@ void mk_logwatch_acknowledge(const string &host_name, const string &file_name) {
         return;
     }
 
-    string path(MK_LOGWATCH_PATH);
-    if (path == "") {
+    string path = mk_logwatch_path_of_host(logwatch_path, host_name);
+    if (path.empty()) {
         return;
     }
-    path += pnp_cleanup(host_name) + "/" + file_name;
 
-    int r = remove(path.c_str());
+    int r = remove((path + "/" + file_name).c_str());
     if (r != 0) {
         generic_error ge("Cannot acknowledge mk_logfile file '" + file_name +
                          "' of host '" + host_name + "'");

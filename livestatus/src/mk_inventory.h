@@ -28,7 +28,6 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 
-int mk_inventory_last(const std::string &host);
-int mk_inventory_last_of_all();
+int mk_inventory_last(const std::string &path);
 
 #endif  // mk_inventory_h

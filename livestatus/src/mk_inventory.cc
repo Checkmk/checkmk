@@ -25,24 +25,9 @@
 #include "mk_inventory.h"
 #include <sys/stat.h>
 
-#ifdef CMC
-#include "Config.h"
-#define MK_INVENTORY_PATH g_config->_mk_inventory_path
-#else
-extern char g_mk_inventory_path[];
-#define MK_INVENTORY_PATH g_mk_inventory_path
-#endif
-
 using std::string;
 
-int mk_inventory_last(const string &host) {
+int mk_inventory_last(const string &path) {
     struct stat st;
-    return stat((string(MK_INVENTORY_PATH) + "/" + host).c_str(), &st) != 0
-               ? 0
-               : st.st_mtime;
-}
-
-int mk_inventory_last_of_all() {
-    // Check_MK Inventory touches the file ".last" after each inventory
-    return mk_inventory_last(".last");
+    return stat(path.c_str(), &st) != 0 ? 0 : st.st_mtime;
 }

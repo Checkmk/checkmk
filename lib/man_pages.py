@@ -567,55 +567,12 @@ class ManPageRenderer(object):
             self._print_subheader("Item")
             self._print_textbody(header['item'])
 
-        self._print_subheader("Check parameters")
-        if self.man_page.has_key('parameters'):
-            self._begin_table(["Parameter", "Type", "Description"])
-            first = True
-            for parameter_name, text in self.man_page['parameters']:
-                if not first:
-                    self._print_empty_line()
-                first = False
-                self._print_splitwrap(self._parameters_color, parameter_name + ": ", self._normal_color, text)
-            self._end_table()
-        else:
-            self._print_line("None.")
-
-        self._print_subheader("Metrics")
-        if header.has_key('perfdata'):
-            self._print_textbody(header['perfdata'])
-        else:
-            self._print_textbody("None.")
-
         self._print_subheader("Discovery")
         if header.has_key('inventory'):
             self._print_textbody(header['inventory'])
         else:
             self._print_textbody("No discovery supported.")
 
-        self._print_subheader("Configuration variables")
-        if self.man_page.has_key('configuration'):
-            self._begin_table(["Variable", "Type", "Description"])
-            first = True
-            for conf_name, text in self.man_page['configuration']:
-                if not first:
-                    self._print_empty_line()
-                first = False
-                self._print_splitwrap(tty.colorset(2, 4, 1), conf_name + ": ",
-                                tty.normal + tty.colorset(7, 4), text)
-            self._end_table()
-        else:
-            self._print_line("None.")
-
-        if header.has_key("examples"):
-            self._print_subheader("Examples")
-            lines = header['examples'].split('\n')
-            self._begin_main_mk()
-            for line in lines:
-                if line.lstrip().startswith('#'):
-                    self._print_line(line)
-                elif line != "<br>":
-                    self._print_line(line, self._examples_color, True) # nomarkup
-            self._end_main_mk()
 
         self._print_empty_line()
         self.output.flush()

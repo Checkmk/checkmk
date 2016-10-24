@@ -42,6 +42,7 @@
 
     Multisite:
     * 3959 Two new filters for the comment view: author and comment text field
+    * 3970 SEC: Fixed possible URL injection on index page...
     * 3897 FIX: Fixed possible exception in raw edition when rendering graphs
     * 3898 FIX: Unmonitored services: Fixed possible bug in case discovery service produces unexpected output
     * 3902 FIX: Graph search view: Changing painter options made page empty

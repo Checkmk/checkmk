@@ -8,12 +8,3 @@ description:
  This check is only applicable for clusters and cannot be inventorized.
  You need to create a manual check for it in WATO and assign it to a cluster host.
 
-examples:
- static_checks['mem_cluster'] = [
-   ( ('esx_vsphere_hostsystem.mem_usage_cluster', None,
-    [(2, (60.0, 70.0)),
-     (5, (70.0, 80.0)),
-     (7, (85.0, 90.0))
-    ]), [], ['esx_cluster'] ),
- ] + static_checks['mem_cluster']
-

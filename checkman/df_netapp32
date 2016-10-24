@@ -36,54 +36,6 @@ description:
 item:
  The name of the aggregate or volume on the NetAPP filer.
 
-examples:
- # Set default levels for all volume to 90/95 (simple way)
- filesystem_default_levels = (90, 95)
-
- # alternative: Set default levels via new dictionary method:
- filesystem_default_levels = {
-    "levels"         : (80, 90),  # levels in percent
-    "magic"          : 0.8,       # magic factor
-    "magic_normsize" : 20,        # normsize in GB
-    "levels_low"     : (50, 60),  # magic never lowers levels below this (percent)
-    "trend_range"    : 48,        # hours
-    "trend_mb"       : (10, 20),  # MB of change during trend_range
-    "trend_perc"     : (1, 2),    # Percent change during trend_range
-    "trend_timeleft" : (72, 48),  # run time left in hours until full
-    "trend_perfdata" : False      # no performance data for trends
- }
-
- # alternative[2]: Just change the default partially
- filesystem_default_levels["magic"] = 0.8
-
- # Make df output trend performance data (beware of exsting RRDs)
- filesystem_default_levels["trend_perfdata"] = True
-
-
- # Override warning/critical levels for all checks where
- # levels are "filesystem_default_levels"
- check_parameters = [
-    # Hosts with tag "vms" get 85/95
-    ( (85, 95), ["vms"], ALL_HOSTS, [ "fs_" ] ),
-    # all /sapdata partitions will never be critical
-    ( (101, 101), ALL_HOSTS, [ "fs_/sapdata$" ] ),
-    # Partitions below "/var" get 80/90 with magic factor 0.5
-    ( (80, 90, 0.5), ALL_HOSTS, [ "fs_/var" ] ),
-    # /usr and /opt on hosts zlnx01 and zlnx02
-    ( (98, 99), [ "zlnx01", "zlnx02" ], [ "fs_/usr$", "fs_/opt$" ] ),
-    # All filesystems on clusters get 80/95
-    ( (80, 95), CLUSTER_HOSTS, [ "fs_" ] ),
-    # Complex parameters in dictionary form
-    ( {"levels":(80,90), "trend_range":48, "trend_mb":(20,40)},
-      [ "windows" ], ALL_HOSTS, [ "fs_" ]),
- ]
-
- # Exclude temporary backup from inventory
- inventory_df_exclude_mountpoints = [ "/mnt/backup" ]
-
- # Exclude certain filesystems from being inventorized at all (does not apply here)
- inventory_df_exclude_fs = [ "iso9660", "romfs" ]
-
 inventory:
  df supports inventory. All filesystem the agent reports
  will be inventorized except mount points listed in

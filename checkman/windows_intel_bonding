@@ -13,13 +13,6 @@ description:
 item:
  The name of the bonding interface, etc {Bond_10.4}.
 
-examples:
- # On windows hosts the lowest numbered eth interface should be
- # the active one.
- check_parameters = [
-    ( { "expect_active" : "lowest" }, [ 'windows'], ALL_HOSTS, ALL_SERVICES )
- ]
-
 inventory:
  One check per {active} bonding interface will be created.
 

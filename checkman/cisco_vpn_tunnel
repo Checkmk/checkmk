@@ -16,11 +16,3 @@ inventory:
 item:
  Check item is the ip address of the remote tunnel endpoint
 
-examples:
- checkgroup_parameters.setdefault('vpn_tunnel', [])
-
- checkgroup_parameters['vpn_tunnel'] = [
-   ( {'state': 1, 'tunnels': [('12.34.56.78', 'dark tunnel', 2)]}, [], ALL_HOSTS, ALL_SERVICES ),
-   ] + checkgroup_parameters['vpn_tunnel']
-
-

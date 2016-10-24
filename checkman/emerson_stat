@@ -24,13 +24,6 @@ description:
  (9) "testing"
 
 
-examples:
- # host does not have a system description OID
- snmp_without_sys_descr = [
-  ( [], ['liebert-cabinet'] ),
-  ] + snmp_without_sys_descr
-
-
 inventory:
  The inventory process checks if the device has a system description OIDs (.1.3.6.1.2.1.1.2.0)
  and if the name of this OID begins with "Emerson Network Power". In case the device does

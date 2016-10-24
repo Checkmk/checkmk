@@ -9,9 +9,3 @@ description:
 inventory:
  One service will be created.
 
-examples:
- citrix_sessions_default_levels = {
-    "total"     : ( 60, 65 ),
-    "active"     : ( 60, 65 ),
-    "inactive"   : ( 10, 15 ),
- }

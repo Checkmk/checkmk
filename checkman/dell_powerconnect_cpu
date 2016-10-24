@@ -23,14 +23,6 @@ description:
  Currently, testing has been completed with the Dell PowerConnect 5448 and 5424 models,
  however the service check may work with other models.
 
-examples:
- It is possible to over-ride the default WARNING and CRITICAL threshold values
- defined above, by ensuring the following variable configuration is set in
- your local main.mk file.
-
- # Indicate warning at 50% CPU load, and indicate critical for 60%
- dell_powerconnect_cpu_default_levels = (50, 60)
-
 inventory:
  During the inventory phase of check_mk, it will identify one service {CPU},
  as long as the MIB defined above is supported on the switch.

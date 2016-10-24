@@ -15,12 +15,6 @@ description:
  the warn/crit levels are interpreted as {absolute} values - not
  as values {per cpu} (like the in agent based load check).
 
-examples:
- # Set CPU load levels for all SNMP devices to 10.0 and 20.0
- check_parameters += [
-    ( (10.0, 20.0), [ "snmp" ], ALL_HOSTS, [ "CPU load" ] ),
- ]
-
 inventory:
  One service will be created for each check supporting the UCD
  MIB. Currently the SNMP scan function will only consider hosts

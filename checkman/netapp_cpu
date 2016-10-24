@@ -8,10 +8,6 @@ description:
 
  Returns {WARN}/{CRIT} if the current utilization is above the given levels.
 
-examples:
- # set default levels to 90 and 99 percent:
- netapp_cpu_default_levels = (90.0, 99.0)
-
 inventory:
  Configures one check on each filer.
 

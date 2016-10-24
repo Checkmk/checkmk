@@ -12,11 +12,3 @@ description:
 inventory:
  One check for each online accesspoint is created
 
-examples:
- checkgroup_parameters.setdefault('cisco_wlc', [])
-
- checkgroup_parameters['cisco_wlc'] = [
-   ( {'ap_name': [('HOMEOFFICE', 0), ('FALLBACK', 2)]}, [], ALL_HOSTS, ALL_SERVICES ),
- ] + checkgroup_parameters['cisco_wlc']
-
-

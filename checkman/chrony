@@ -14,11 +14,6 @@ description:
 
  When {chrony} is not found running, the check goes to {CRIT}.
 
-examples:
- # At stratum of 3 or more it gets critical
- # Warn/Crit levels for offset is 5 ms / 10 ms
- ntp_default_levels = (3, 5.0, 10.0)
-
 inventory:
  If chrony is running, then one service is being created.
 

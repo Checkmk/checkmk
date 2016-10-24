@@ -10,20 +10,6 @@ description:
  Returns {WARN} or {CRIT} if the latest backup is older than given ages.
  Returns {CRIT} if the tmutil command returns an error.
 
-examples:
- # set default levels to 21600 sec (6h) for WARN and 43200 sec (12h) for CRIT
- timemachine_default_levels = { "age": ( 86400, 172800 ) }
-
- # Check timemachine backups on a box called MyMAC with default levels
- checks += [
-   ("MyMAC", "timemachine", None, timemachine_default_levels),
- ]
-
- # or use individual levels for warn and crit
- checks += [
-   ("MyMAC", "timemachine", None, {'age': (10000, 20000)}),
- ]
-
 inventory:
  Finds exactly one service on every MAC OS machine having tmutil installed.
 

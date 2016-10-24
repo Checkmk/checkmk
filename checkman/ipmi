@@ -35,13 +35,3 @@ inventory:
  {impi_ignore_nr} to {True} then these sensors will
  be ignored.
 
-examples:
- # Ignore sensors in state 'nr'
- ipmi_ignore_nr = True
-
- # Make inventory produce detailed IPMI checks
- ipmi_summarize = False
-
- # Ignore certain types of sensors
- ipmi_ignored_sensors = [ "Power_Meter", "Virtual_Fan" ]
-

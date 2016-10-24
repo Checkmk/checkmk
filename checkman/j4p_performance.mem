@@ -30,10 +30,6 @@ item:
  Please note that the current implementation of the agent plugin
  supports only one instance per host.
 
-examples:
- # Set default levels for heap memory to 500 MB / 800 MB
- j4p_performance_mem_default_levels = (500, 800)
-
 inventory:
  One check is created for each JMX instance sent by the agent.
  The agent currently supports only one instance, but that might

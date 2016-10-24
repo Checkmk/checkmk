@@ -14,16 +14,3 @@ item:
 inventory:
   For each {enabled} protocol one check is created.
 
-examples:
- # set global default levels for number of sessions for
- # all protocols:
- cpsecure_sessions_default_levels = ( 100, 1000 )
-
- # Define manual checks with individual levels for some protocols
- # for all hosts with the tag "csg"
- checks += [
-   (["csg"], ALL_HOSTS, "cpsecure_sessions", 'SMTP',  (600, 1000)),
-   (["csg"], ALL_HOSTS, "cpsecure_sessions", 'FTP',   (60, 100)),
-   (["csg"], ALL_HOSTS, "cpsecure_sessions", 'IMAP',  (60, 100)),
- ]
-

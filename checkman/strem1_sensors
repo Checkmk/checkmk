@@ -14,9 +14,3 @@ item:
 inventory:
  All available sensors are automatically inventorized.
 
-examples:
- # set default levels for all sensors
- strem1_temp_defaultlevels     = (28, 32)
- strem1_humidity_defaultlevels = (None, None)
- strem1_wetness_defaultlevels  = (None, None)
-

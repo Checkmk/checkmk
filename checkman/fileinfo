@@ -45,17 +45,6 @@ item:
   would need four backslashes in a row in order to denote one
   backslash in the file's path.
 
-examples:
- check_parameters += [
-   # Alert if backup files are too small
-   ( { "minsize" : (5000000, 10000000) },
-     ALL_HOSTS, [ "File D:\\Backup\\*.zip" ] ),
-
-   # Alert if snapshot file are too old
-   ( { "maxage" : (120, 180) },
-     ALL_HOSTS, [ "File.*snapshot" ] ),
- ]
-
 inventory:
   For each file that the agent sends one service will
   be created.

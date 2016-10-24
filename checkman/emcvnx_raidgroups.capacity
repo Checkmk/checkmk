@@ -19,10 +19,3 @@ item:
 inventory:
  Automatically configures one check for every RAID Group listed in the agent output.
 
-examples:
- # set levels for RAID group 0 to 90% for WARN and 95% for CRIT
- # for all hosts with the host tag emcvnx
- checkgroup_parameters['filesystem'] = [
-   ( {'levels': (90.0, 95.0)}, ['emcvnx'], ALL_HOSTS, ['0$'] ),
-   ] + checkgroup_parameters['filesystem']
-

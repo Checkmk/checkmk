@@ -30,11 +30,3 @@ inventory:
  you want to ignore certain log files.
 
 
-examples:
-  logwatch_patterns = {
-     "System":             [ ('W', "crash"),
-                             ('I', "svchost") ],
-                             ((10,30), "login.*failed") ],
-     "/var/log/messages":  [ ( ['test'], ALL_HOSTS, 'I', "sshd") ]
-  }
-

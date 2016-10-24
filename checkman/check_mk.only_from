@@ -10,15 +10,6 @@ description:
  agent is configured via an {.ini}-file. The Linux agent is configured
  via {/etc/xinetd.d/check_mk}.
 
-examples:
- # Expect agent to accecpt only localhost and one specific network
- check_mk_only_from_default = [ "192.168.56.0/30", "127.0.0.1" ]
-
- # Hosts with the tag 'dmz' should have an different configuration
- check_parameters += [
-  ( [ "10.0.0.0/8" ], [ "dmz" ], ALL_HOSTS, [ "Check_MK Agent Access" ] ),
- ]
-
 inventory:
  One check is created per host, if {check_mk_only_from_default} is explicitely
  set in {main.mk} and the agent provides an {OnlyFrom:} header in the section

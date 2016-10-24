@@ -13,13 +13,6 @@ description:
 item:
  One of the three strings {"clients"}, {"strength"} or {"quality"}.
 
-examples:
- # Warn if strength is worse than -85dB, crit if worse than -65dB
- aironet_default_strength_levels = (-85, -65)
-
- # Set levels for quality to 20 and 10 percent
- aironet_default_quality_levels = (20, 10)
-
 inventory:
  If at least one client is logged in, all three checks will
  be generated.

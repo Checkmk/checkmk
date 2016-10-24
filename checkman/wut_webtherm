@@ -13,19 +13,3 @@ item:
 inventory:
  All available temperature sensors are automatically inventorized.
 
-examples:
- # set default levels for all webtherms
- wut_webtherm_defaultlevels = (25, 30)
-
- # set more rigid levels for all hosts with the tag {zuluft}
- # for the first sensor, by defining explicit checks:
- zuluft_levels = ( 19, 25 )
- checks += [
-  ( [ "zuluft" ], ALL_HOSTS, "wut_webtherm", "1", zuluft_levels )
- ]
-
- # Set even mor specific levels for one thermometer
- checks += [
-   ("webtherm3", "wut_webtherm", '1', (15, 18) ),
- ]
-

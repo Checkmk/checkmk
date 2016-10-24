@@ -10,18 +10,6 @@ description:
  set levels, the check only reports measured numbers and returns always {OK}
  status.
 
-examples:
- # set default levels to 1000 (warn) and 2000 (crit) for both
- # read and write
- netapp_fcpio_default_levels = { "read" : (1000, 2000), "write" : (1000, 2000)}
-
- checks += [
-  # check netapp_filer1 against default levels
-  ('netapp_filer1', 'netapp_fcpio', None, netapp_fcpio_default_levels),
-  # check netapp_filer1 against separate levels
-  ('netapp_filer2', 'netapp_fcpio', None, { "read" : (2000, 3000), "write" : (3000, 4000) }),
- ]
-
 inventory:
  Configures one check on each filer.
 

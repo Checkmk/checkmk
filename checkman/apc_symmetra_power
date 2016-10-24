@@ -12,10 +12,6 @@ description:
 item:
  The index of the phase, e.g. {"1"}.
 
-examples:
- # Trigger warning/critical level if power drops below 100 or 20 Watt
- apc_power_default_levels = (100, 20)
-
 inventory:
  Supported.
 

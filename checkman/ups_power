@@ -11,10 +11,6 @@ description:
  the phases must not drop. Each phase is realized as a separate
  check.
 
-examples:
- # Trigger warning/critical level if power drops below 100 or 20 Watt
- ups_power_default_levels = (100, 20)
-
 inventory:
  Supported.
 

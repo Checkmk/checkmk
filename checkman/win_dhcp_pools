@@ -18,10 +18,6 @@ description:
 item:
  The name of the DHCP pool as configured on the DHCP server.
 
-examples:
- # Set warning to 5 percent of free leases and critical to 2 percent
- win_dhcp_pools_default_levels = (5, 2)
-
 inventory:
  Each DHCP pool will result in one service on the DHCP server.
 

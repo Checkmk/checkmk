@@ -28,20 +28,6 @@ description:
 item:
  Name of the aggregation as defined in the system
 
-examples:
- # Example configuration with usage levels at 75%/90%, trend enabled
- # and performance data for global, nfs, fcp and iscsi
- checkgroup_parameters['filesystem'] = [
-  ( {'trend_range': 24,
-     'trend_mb': (100, 200),
-     'trend_showtimeleft': True,
-     'trend_perc': (5.0, 10.0),
-     'trend_perfdata': True},
-     'levels': (75.0, 90.0),
-     [], ALL_HOSTS, ALL_SERVICES ),
- ] + checkgroup_parameters['filesystem']
-
-
 inventory:
  All {local} aggregations are automatically inventorized.
 

@@ -18,9 +18,3 @@ description:
 inventory:
  One check is being created for each device.
 
-examples:
- # Make 'Energiesparen' an OK state
- printer_alerts_text_map = {
-     'Energiesparen' : 0,
- }
-

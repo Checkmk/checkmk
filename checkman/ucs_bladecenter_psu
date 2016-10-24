@@ -15,10 +15,3 @@ item:
 inventory:
  Creates on server per chassis module
 
-examples:
-  check_parameters += [
-    ({'3v3v': {'lower_levels': (2.5, 2.0), 'upper_levels': (4.0, 4.5)},
-      '12v':  {'lower_levels': (11.0, 10.0), 'upper_levels': (13.0, 14.0)}},
-       ALL_HOSTS, ALL_SERVICES),
-  ]
-

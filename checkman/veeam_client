@@ -20,10 +20,6 @@ description:
  In addition {WARN} and {CRIT} levels can be set for the time since the end
  of the last backup.
 
-examples:
- # sets the warning and critical levels to 5 and 10 days, respectively
-  veeam_client_default_levels = { "age": ( 432000, 864000 ) }
-
 inventory:
  A check will be created for all hosts known to check_mk and reported
  by the Veeam agent plugin.

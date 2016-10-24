@@ -13,7 +13,3 @@ item:
 inventory:
  All available temperature sensors are automatically inventorized.
 
-examples:
- # set default levels for all akcp temperature sensors
- akcp_sensor_temp_defaultlevels = (28, 34)
-

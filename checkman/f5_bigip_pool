@@ -18,13 +18,6 @@ description:
  following oids: ltmPoolMemberMonitorState, ltmPoolMemberMonitorStatus,
  ltmPoolMemberSessionStatus
 
-examples:
- # Let the Pool named ABC on your first F5 be in WARNING state when it reaches 5 active members or in CRITICAL for anything between 3 and 0.
- check_parameters += [
- ( (5, 3), [ "f5-1" ], [ "Load Balancing Pool Pool_ABC" ]),
- ]
-
-
 inventory:
  The check collects a list of the pools defined on a system. It will include
  non-enabled ones, as this is considered a temporary state.

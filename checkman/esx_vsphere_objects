@@ -19,10 +19,3 @@ item:
  The text {HostSystem} or {VM} followed by a space followed by the name of the host system
  or VM.
 
-examples:
- # Allow VMs beginning with "testvm" to be powered off.
- check_parameters = [
-   ( { "states" : { "poweredOff" : 0 } }, [ "esx-host01" ], [ "VM testvm" ]),
- ]
-
-

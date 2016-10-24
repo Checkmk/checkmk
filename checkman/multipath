@@ -27,10 +27,3 @@ inventory:
  One check for each multipath device is created. Via {iventory_multipath_rules}
  you can specify wether an alias should be used as item instead of the UUID.
 
-examples:
- # Use the alias as item if one is being set
- inventory_multipath_rules = [
-   ( {'use_alias': True}, [], ALL_HOSTS ),
- ]
-
-

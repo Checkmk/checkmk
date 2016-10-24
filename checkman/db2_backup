@@ -14,11 +14,6 @@ description:
 item:
  The DB2 instance name followed by a : and the database name, e.g. db2ilog1:REST1
 
-examples:
- # Set global default values. Raise critical if last successful
- # backup is older than 28 days and warning if it is older than 14 days.
- db2_backup_default_levels = (86400 * 14, 86400 * 30)
-
 inventory:
  One separate check for each database will be created.
 

@@ -11,15 +11,6 @@ description:
 item:
  The sensorDescr from SNMP.
 
-examples:
- # set new default levels
- bintec_sensors_temp_default_levels = (50, 60)
-
- # check temperature sensor "Left 1" of router1 with default levels
- checks += [
-    ("router1", "bintec_sensors.temp", 'Left 1', bintec_sensors_temp_default_levels),
- ]
-
 inventory:
  Creates one check per temperature sensor (sensorType 1).
 

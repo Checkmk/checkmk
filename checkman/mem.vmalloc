@@ -27,9 +27,3 @@ inventory:
  Please add {mem.vmalloc} to {ignored_checktypes}
  if you do not need this check.
 
-examples:
- # set warn/used for used size to 100 MB and 120 MB.
- # set levels for largest chunk to 50% / 30% of total
- # vmalloc size
- mem_vmalloc_default_levels = (100, 120, 50.0, 30.0)
-

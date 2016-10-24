@@ -15,11 +15,6 @@ description:
 item:
  Number of the blade (as string, not int).
 
-examples:
- checks += [
-  ( "hostabc", "blade_bays", "8", None)
- ]
-
 inventory:
  All blades that are powered on are automatically
  inventorized.

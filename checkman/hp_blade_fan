@@ -14,12 +14,5 @@ description:
 item:
  Number of the FAN (as string, not int).
 
-examples:
- checks += [
-  # Manually configured check:
-  # Hostname, checkname, item-id, params
-  ( "examplehost", "hp_blade_fan", "1", None)
- ]
-
 inventory:
  All FANs with the present state "present" are automatically inventorized.

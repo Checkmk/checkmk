@@ -14,7 +14,3 @@ item:
 inventory:
  All available temperature sensors are automatically inventorized.
 
-examples:
- # Set default levels for all checks to 30 and 35 degrees
- apc_symmetra_ext_temp_default_levels = (30, 35)
-

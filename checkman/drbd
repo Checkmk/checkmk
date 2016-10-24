@@ -15,22 +15,6 @@ description:
 item:
  The name of the DRBD device e.g. {drbd0}
 
-examples:
- # Set expected "cs" to "Connected", first node to primary and second to secondary
- # and both nodes to up-to-date.
- checks += [
-   ( 'srvnd01', 'drbd', 'drbd0',
-        {'diskstates_inventory': ['UpToDate', 'UpToDate'], 'roles_inventory': ['Primary', 'Secondary']}
-   )
- ]
-
- # Set Primary/Primary setup to OK, Secondary/Primary to WARN
- # Set the diskstate "Inconsistent" to OK for Primary and Secondary
- checkgroup_parameters['drbd'] = [
- ( {'roles': [('primary_primary', 0), ('secondary_primary', 1)],
-    'diskstates': [('primary_Inconsistent', 0), ('secondary_Inconsistent', 0)]}, [], ALL_HOSTS, ALL_SERVICES ),
- )
-
 inventory:
  Each configured DRBD device will result in one service during inventory. All
  devices with the connection state "Unconfigured" are skipped.

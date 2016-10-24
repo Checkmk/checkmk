@@ -21,16 +21,6 @@ description:
  Make sure you have the statgrab binary available on the monitored
  machine. Under HP-UX you also need to activate the hpux_statgrab agent plugin.
 
-examples:
- # Change default levels from 150%/200% to 100%/150%:
- memused_default_levels = (100.0, 150.0)
- checks += [
-   # make explicit check for hosts with tag "solaris"
-   ( ["solaris"], ALL_HOSTS, "statgrab_mem", None, (80.0, 100.0) ),
-   # use absolute levels at 8GB / 12GB for some other hosts
-   ( ["host12","host34"], "statgrab_mem", None, (8192, 12288) )
- ]
-
 inventory:
   Finds one service on every machine with statgrab: The memory used.
 

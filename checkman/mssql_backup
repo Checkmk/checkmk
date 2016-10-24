@@ -20,12 +20,6 @@ description:
 item:
  The MSSQL instance name and the tablespace name separated by a space.
 
-examples:
- # Set global default values. Raise critical if last successful
- # backup is older than 1 hour (3600 seconds) and warning if it
- # is older than 30 minutes.
- mssql_backup_default_levels = (1800, 3600)
-
 inventory:
  One separate check for each tablespace will be created.
 

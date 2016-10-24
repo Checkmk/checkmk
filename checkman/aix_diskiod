@@ -14,28 +14,6 @@ item:
  Either {"SUMMARY"} for a summarized check of alls LUNs or the
  name of the disk device, e.g. {"hdisk15"}.
 
-examples:
- # create one check for all disks
- diskstat_inventory_mode = "summary"
-
- # Set default levels for diskstat
- diskstat_default_levels = {
-   "read" :    (10, 20),   # level for read MB/sec
-   "write" :   (20, 40),   # level for write MB/sec
-   "average" : 15,         # averaging in minutes
- }
-
- # Alternative: just enable averaging over 10 minutes,
- # do not apply levels:
- diskstat_default_levels = {
-     "average" : 15
- }
-
- # Settings for certain hosts:
- check_parameters += [
-   ( {"write" : (20, 50), "average" : 10 }, [ "oracle" ], ALL_HOSTS, [ "Disk IO" ])
- ]
-
 inventory:
   The inventory is configured via {diskstat_inventory_mode}. If this is set
   to {"single"} (the default), then one check will be created for each

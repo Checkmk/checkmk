@@ -21,15 +21,3 @@ item:
 inventory:
  Creates one check for every MDisk in the IBM SVC / Storwize V3700 / V7000 device.
 
-examples:
- # Set the levels for all checks to:
- ibm_svc_mdisk_default_levels = {
-    'online_state'   : 0,
-    'degraded_state' : 1,
-    'offline_state'  : 2,
-    'excluded_state' : 2,
-    'managed_mode'   : 0,
-    'array_mode'     : 0,
-    'image_mode'     : 0,
-    'unmanaged_mode' : 1 }
-

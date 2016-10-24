@@ -13,12 +13,3 @@ item:
 inventory:
  All online humidity sensors are automatically detected and inventorized.
 
-examples:
- # set default levels for all akcp humidity sensors
- akcp_sensor_humidity_defaultlevels = (35, 40, 60, 65)
-
- # to Overwrite the default levels for a sensor
- checks += [
-   ( 'hostname', "akcp_expansion_sensor_humidity", 'sensor description', ( lower crit, lower warn, upper warn, upper crit ) ),
- ]
-

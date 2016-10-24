@@ -20,17 +20,3 @@ item:
 inventory:
  Creates one check per enclosure.
 
-examples:
- # set default levels to 30 and 45 percent:
- ibm_svc_enclosurestats_temperature_default_levels = (30, 45)
-
- # Check temperature of enclosure 1 on a IBM SVC called my-svc with default levels
- checks += [
-   ("my-svc", "ibm_svc_enclosurestats.temp", '1', ibm_svc_enclosurestats_temperature_default_levels)
- ]
-
- # or use individual levels for warn and crit
- checks += [
-   ("my-svc", "ibm_svc_enclosurestats.temp", '1', (40, 50))
- ]
-

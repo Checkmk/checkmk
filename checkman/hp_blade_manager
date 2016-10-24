@@ -20,12 +20,5 @@ description:
 item:
  Number of the manager (as string, not int).
 
-examples:
- checks += [
-  # Manually configured check:
-  # Hostname, checkname, item-id, params
-  ( "examplehost", "hp_blade_manager", "1", None)
- ]
-
 inventory:
  All manager boards with the present state "present" are automatically inventorized.

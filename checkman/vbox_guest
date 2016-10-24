@@ -16,8 +16,3 @@ inventory:
  of your Linux guests, you need to configure explicit checks using
  {checks=}.
 
-examples:
- # Force this check on all hosts with the tags {vboxguest} and {linux}.
- checks += [
-   ( ["vboxguest", "linux"], ALL_HOSTS, "vbox_guest", None, None ),
- ]

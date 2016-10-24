@@ -12,8 +12,3 @@ description:
 inventory:
  One service for each group will be created
 
-examples:
- logwatch_groups = [
-     ([("Debug Group", ("/var/log/*.err","/var/log/*.debug"))], ALL_HOSTS),
-     ([("Message_group", ("/var/log/messages*",""))], ['test2'], ALL_HOSTS),
- ]

@@ -13,12 +13,3 @@ item:
 inventory:
  All available humidity sensors are automatically inventorized.
 
-examples:
- # set default levels for all apc humidity sensors
- apc_humidity_default_levels = (35, 40, 60, 65)
-
- # to Overwrite the default levels levels for a sensor
- check_parameters += [
-   ( ( lower crit, lower warn, upper warn, upper crit ), ['hostname'], ['Humidity Senosr Name'] ),
- ]
-

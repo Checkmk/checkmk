@@ -11,15 +11,6 @@ description:
  This check is compatible with the check {cpu.loads} of the linux
  agent.
 
-examples:
- # Set default levels to a load of 4 and 8 per CPU
- cpuload_default_levels = (4.0, 8.0).
-
- checks = [
-    # Use levels 4 per CPU (warning) and 8 per CPU (critical)
-    # on all hosts with the tag "linux"
-    (["hp"], ALL_HOSTS, "hpux_cpu", None, (4, 8)),
- ]
 inventory:
   One service is created if the agent outputs valid data.
 

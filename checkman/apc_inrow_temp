@@ -10,6 +10,3 @@ inventory:
  One check will be created for each temperatuere senosr:
  Entering/Leaving Fluid, Supply/Return Air, Rack Inlet
 
-examples:
- apc_inrow_temp_default_levels = ( 30, 35 )
-

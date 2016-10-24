@@ -33,9 +33,3 @@ item:
  The SID of the database in uppercase (as appearing in the process
  name of the pmon_... process).
 
-examples:
- checkgroup_parameters['oracle_undostat'] = [
-   ( {'nospaceerrcnt_state': 1}, [], ALL_HOSTS, ALL_SERVICES ),
- ]
-
-

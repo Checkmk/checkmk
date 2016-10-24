@@ -17,10 +17,6 @@ description:
 item:
  The name or IP address of the peer (first column in output of {ntpq -p}.
 
-examples:
- # Set critical stratum to 3, global warning/critical levels to 5.0 and 10.0 ms
- ntp_default_levels = (3, 5.0, 10.0)
-
 inventory:
  Checks are created for all peers which have been contacted at least once,
  if {ntp_inventory_mode} is set to {"detailed"} or {"both"}. In case

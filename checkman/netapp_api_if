@@ -65,10 +65,3 @@ inventory:
 
   For example: if_groups = ([{"name" : "Group vFiler0", "iftype" : 6, "single" : True}], ["lan"], ALL_HOSTS )
 
-examples:
- Definition for grouped interfaces
- if_groups = [
-   ( [{"name" : "VLAN", "iftype" : 53, "single" : True },
-   ( [{ "name" : "Group vFiler0", "iftype" : 6, "single" : True }], [ "lan" ], ALL_HOSTS )
- ]
-

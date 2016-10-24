@@ -14,11 +14,3 @@ inventory:
  need individual levels for your hosts, please define this check
  explicitely in {checks}.
 
-examples:
- checks += [
-    # set levels to 500 / 1000 on all hosts with tag "sap"
-    ( ["sap"], ALL_HOSTS, "cpu.threads", None, (500, 1000) ),
-    # Exception for one specific host
-    ( "megahost", "cpu.threads", None, (5000, 8000) ),
- ]
-

@@ -31,17 +31,3 @@ inventory:
  node found on the target host. If an entry matches, a new check will
  be created according to the entry (if it's not already existing).
 
-examples:
- # Examples for automatic inventorization of processes
- inventory_sap_values = [
-   # Matches all nodes which paths starts with MyCompany/MyStructure
-   ( {'match': '~MyCompany/MyStructure'}, [], ALL_HOSTS ),
-
-   # Matches all nodes below SAP BI Monitors/BI Monitor
-   ( {'match': '~SAP BI Monitors/BI Monitor'}, [], ALL_HOSTS ),
- ] + inventory_sap_values
-
-match (string): Matching specification. This can either be the full path of the node or
-   a regular expressing matching the path. In case of a regular expression it must be
-   prefixed with a {~}. It can also be set to {None} to inventorize all nodes provided
-   by the {mk_sap} agent plugin.

@@ -44,13 +44,3 @@ inventory:
  information about the Windows page file, then the check
  {<<<mem.win>>>} is being used instead.
 
-examples:
- # Change default levels from 150%/200% to 100%/150%:
- memused_default_levels = (100.0, 150.0)
- checks = [
-   # make explicit check for hosts with tag "oracle"
-   ( ["oracle"], ALL_HOSTS, "mem.used", None, (80.0, 100.0) ),
-   # use absolute levels at 8GB / 12GB for some other hosts
-   ( ["host12","host34"], "mem.used", None, (8192, 12288) )
- ]
-

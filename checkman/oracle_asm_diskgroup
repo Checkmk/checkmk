@@ -38,13 +38,6 @@ item:
  See also check manpage for {df}. All configurations are usable for ORACLE ASM
  Disk Groups as well.
 
-examples:
- # Set default levels for all filesystems (including ORACLE ASM Disk Groups)
- # to 90/95
- asm_diskgroup_default_levels = (90, 95)
-
- # more examples in check manpage for df
-
 inventory:
  Creates one check for every Disk Group in the agent's output.
 

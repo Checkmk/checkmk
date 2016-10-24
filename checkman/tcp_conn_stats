@@ -12,7 +12,3 @@ inventory:
  On agents supporting {tcp_conn_stats} this should always be the case since at
  least the connection to the agent should be shown.
 
-examples:
- # set levels for TIME_WAIT and ESTABLISHED
- tcp_conn_stats_default_levels = { "TIME_WAIT" : (20, 50), "ESTABLISHED" : (100, 200) }
-

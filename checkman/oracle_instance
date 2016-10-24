@@ -87,13 +87,6 @@ description:
  More details can be found in the documentation in
  https://mathias-kettner.de/checkmk_oracle.html
 
-examples:
- oracle_instance_defaults = {
-    "logins"         : 2,
-    "noforcelogging" : 1,
-    "noarchivelog"   : 1,
- }
-
 item:
  ORA <ORACLE_SID> Instance
 

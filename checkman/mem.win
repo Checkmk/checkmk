@@ -39,17 +39,3 @@ inventory:
  a Unix-like system is assumed and the check {mem.used} is
  being used instead.
 
-examples:
- # Set the default levels
- memory_win_default_levels = {
-    "memory"   : (80.0, 90.0), # alert at 80%/90% usage
-    "pagefile" : (2048, 1024), # alert, if less then 2/1 GB free
-    "average"  : 60,           # apply levels on 60-min average
- }
-
- # Disable memory levels for all hosts with the tag "test"
- check_parameters += [
-    ( { "memory" : (101.0, 101.0) },
-      [ "test" ], ALL_HOSTS, [ "Memory and pagefile" ] ),
- ]
-

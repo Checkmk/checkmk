@@ -37,32 +37,6 @@ item:
  in the check item (and thus the service description). This can be turned
  off.
 
-examples:
- # Generally turn on averaging with 15 Minutes on all ports:
- brocade_fcport_default_levels["average"] = 15
-
- # Alternative: set all default parameters at once:
- brocade_fcport_default_levels = {
-    "rxcrcs":           (3.0, 20.0),   # allowed percentage of CRC errors
-    "rxencoutframes":   (3.0, 20.0),   # allowed percentage of Enc-OUT Frames
-    "notxcredits":      (3.0, 20.0),   # allowed percentage of No Tx Credits
-    "c3discards":       (3.0, 20.0),   # allowed percentage of C3 discards
-    "assumed_speed":    2.0,           # used, if speed not available in SNMP data
-    "bw":               (80.0, 90.0),  # percentual levels for throughput
-    "average":          30,            # apply all levels on 30 minute average
- }
-
- # Set traffic levels to 80/90% on ISL ports
- check_parameters += [
-   ( { "bw" : (80.0, 90.0) }, ALL_HOSTS, [ "Port .* ISL" ]),
- ]
-
- # Ignore port states on non-ISL ports
- check_parameters += [
-   ( { "phystate" : None, "opstate" : None }, ALL_HOSTS, [ "!Port .* ISL", "Port" ]),
- ]
-
-
 inventory:
   The inventory creates checks for all operational ports. What this exactly means
   can be configured (see CONFIGURATION VARIABLES).

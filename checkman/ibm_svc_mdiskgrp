@@ -25,10 +25,3 @@ inventory:
  Creates one check for every MDiskGrp in th IBM SVC / Storwize V3700 / V7000
  device.
 
-examples:
- # set levels for the MDiskGrp Quorum_1 to 90% for WARN and 95% for CRIT
- # for all hosts with the host tag ibmsvc
- checkgroup_parameters['filesystem'] = [
-   ( {'levels': (90.0, 95.0)}, ['ibmsvc'], ALL_HOSTS, ['Quorum_1$'] ),
-   ] + checkgroup_parameters['filesystem']
-

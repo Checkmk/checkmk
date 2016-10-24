@@ -13,12 +13,3 @@ item:
 inventory:
  All available temperature sensors are automatically inventorized.
 
-examples:
- # set default levels for all temperature sensors
- apc_temp_default_levels = (20, 24)
-
- # Set specific levels for one sensor
- checks += [
-   ("apcusv47", "apc_symmetra_temp", 'Temp Sensor MM:3', (22, 26) ),
- ]
-

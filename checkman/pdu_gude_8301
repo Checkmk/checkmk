@@ -12,10 +12,3 @@ item:
 inventory:
  One service per Phase
 
-examples:
- pdu_gude_default_levels = {
-        "V"    : ( 220, 210 ),
-        "A"    : ( 15, 16 ),
-        "W"    : ( 3500, 3600 ),
-    }
-

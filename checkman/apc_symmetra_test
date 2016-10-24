@@ -9,10 +9,6 @@ description:
  "failed" and it has a warning or ciritical state if the date of the last self test is more
  than the warning or critical level ago.
 
-examples:
- # sets the warning and critical levels to 5 and 10 days, respectively
- ups_test_default = ( 5, 10 )
-
 inventory:
  The inventory process checks if the device has a system description OIDs (.1.3.6.1.2.1.1.2.0)
  and if the name of this OID is known to the test. If this is true the system is inventorized.

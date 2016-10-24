@@ -17,19 +17,3 @@ item:
 inventory:
  Creates one check for every Humidity Sensor (function = 2).
 
-examples:
- # set default levels lower levels to 30 and 40 % and
- # the default levels upper levels to 70 and 75 %
- allnet_ip_sensoric_humidity_default_levels = ( 30, 40, 70, 75 )
-
- # Check humidity of named sensor on a ALLNET IP Sensoric called sen01
- # with default levels
- checks += [
-   ("sen01", "allnet_ip_sensoric.humidity", 'Luftfeuchte Rack Sensor 12', allnet_ip_sensoric_humidity_default_levels)
- ]
-
- # or use individual levels for warn and crit
- checks += [
-   ("sen01", "allnet_ip_sensoric.humidity", 'Luftfeuchte Rack Sensor 12', (10, 20, 80, 90))
- ]
-

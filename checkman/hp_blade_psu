@@ -19,12 +19,5 @@ description:
 item:
  Number of the PSU (as string, not int).
 
-examples:
- checks += [
-  # Manually configured check:
-  # Hostname, checkname, item-id, params
-  ( "examplehost", "hp_blade_psu", "1", None)
- ]
-
 inventory:
  All PSUs with the present state "present" are automatically inventorized.

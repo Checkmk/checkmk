@@ -15,16 +15,6 @@ description:
 item:
  The name of the application server instance as configured by the agent.
 
-examples:
- # Number of requests low crit, low warn, high warn, high crit
- jolokia_metrics_serv_req_default_levels = (-1, -1, 5000, 6000)
-
- checks += [
-    # set warning level to 10.000 requests and crit to 12.000
-    # for instance ExampleServer on machine appserver1
-    ( "appserver1", "jolokia_metrics.serv_req", "ExampleServer", (-1, -1, 10000, 12000) ),
- ]
-
 inventory:
  One check is created for each Jolokia instance sent by the agent.
 

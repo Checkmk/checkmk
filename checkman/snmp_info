@@ -7,12 +7,6 @@ description:
  This check retrieves the values {sysDescr}, {sysContact}, {sysName} and
  {sysLocation} and displays them. It is alwas OK.
 
-examples:
- # Force snmp_info as manual check on all SNMP hosts
- checks += [
-   ( [ "snmp" ], ALL_HOSTS, "snmp_info", None, None ),
- ]
-
 inventory:
  One check per SNMP host will be created.
 

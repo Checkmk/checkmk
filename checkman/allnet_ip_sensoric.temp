@@ -16,18 +16,3 @@ item:
 inventory:
  Creates one check for every Temperature Sensor (function = 1).
 
-examples:
- # set default levels to 30 and 45 °C:
- allnet_ip_sensoric_temp_default_levels = (30, 45)
-
- # Check temperature of named sensor on a ALLNET IP Sensoric called sen01
- # with default levels
- checks += [
-   ("sen01", "allnet_ip_sensoric.temp", 'Temperatur Rack Sensor 11', allnet_ip_sensoric_temp_default_levels)
- ]
-
- # or use individual levels for warn and crit
- checks += [
-   ("sen01", "allnet_ip_sensoric.temp", 'Temperatur Rack Sensor 11', (40, 50))
- ]
-

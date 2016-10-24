@@ -12,8 +12,3 @@ description:
 inventory:
   One check per ESX Host System will be created.
 
-examples:
- check_parameters = [
-  ([{'states': {'2': 0, '1': 0}, 'name': 'VMware Rollup Health'}], [], ALL_HOSTS, ["Hardware Sensors"]),
- ]
-

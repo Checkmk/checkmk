@@ -15,17 +15,6 @@ item:
  The SID of the database (as appearing in the process
  name of the pmon_... process).
 
-examples:
- # Set global default values to 20 sessions for
- # warning and 100 sessions for critical
- oracle_sessions_default_levels = (20, 100)
-
- # Set higher levels for productive systems
- # (having the host tag 'prod')
- check_parameters += [
-    ( (80, 160), [ 'prod' ], ALL_HOSTS, [ "ORA .* sessions" ])
- ]
-
 inventory:
  One separate check for each database found running will
  be created.

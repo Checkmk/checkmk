@@ -27,11 +27,3 @@ item:
  If you choose {"APACHE"} as item, for example, then the check will be
  named {proc_APACHE}.
 
-examples:
- # Monitor ressources used by SSHD processes.
- # Warn at 20MB RAM or 10MB page file or 80% CPU usage
- # Critical at 30MB RAM or 15MB page file or 90% CPU usage
- checks += [
-  ( "klapp", "wmic_process", "SSHD", ( "sshd.exe", 20, 30, 10, 15, 80, 90)),
- ]
-

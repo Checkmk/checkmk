@@ -12,5 +12,3 @@ description:
 inventory:
  One service will be created.
 
-examples:
- citrix_serverload_default_levels = ( 8500, 9500 )

@@ -58,32 +58,3 @@ inventory:
  the inventory specification. That way you can make the inventory apply some
  rules only to certain hosts.
 
-examples:
- # Examples for manually configured checks
- checks += [
-   # make sure 6 Router tasks are running
-   ( 'somehost', 'domino_tasks', 'Router', {
-                                'process': 'Router',
-                                'warnmin': 1,
-                                'warnmax': 1,
-                                'okmin': 1
-                                'okmax': 1,
-   }),
-
-   # the same, but  for all hosts with the tag "lnx"
-   ( ["lnx"], ALL_HOSTS, "domino_tasks", "Router", {
-                                'process': 'Router',
-                                'warnmin': 1,
-                                'warnmax': 1,
-                                'okmin': 1
-                                'okmax': 1,
- ]
-parameters (dict): The parameters can be given in a dictionary based syntax
-   with the elements below.
-
-{"process"}: name of the task, see above
-{"user"}: None, see above
-{"warnmin"}: see above
-{"warnmax"}: see above
-{"okmin"}: see above
-{"okmax"}: see above

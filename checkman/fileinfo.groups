@@ -30,37 +30,6 @@ description:
 item:
   Configured name of the file group
 
-examples:
-  # old syntax of file group patterns, still valid
-  fileinfo_groups = [
-     ([("Auth_group",r"/var/log/auth*")], ALL_HOSTS),
-     ([("Message_group", r"/var/log/messages*")], ['test2'], ALL_HOSTS),
-  ]
-
-  # new syntax of file group patterns, including exclude pattern
-  fileinfo_groups = [
-     ([("Auth_group", ("/var/log/auth*","/var/log/*.debug"))], ALL_HOSTS),
-     ([("Message_group", ("/var/log/messages*",""))], ['test2'], ALL_HOSTS),
-  ]
-
-  # syntax of check
-  check_parameters = [
-     ({
-        "minsize": (200.0, 300.0),
-        "maxsize": (400.0, 500.0),
-        "mincount": (2, 3),
-        "maxcount": (3, 4),
-        "minage_oldest": (50, 60),
-        "maxage_oldest": (100, 120),
-        "minage_newest": (10, 20),
-        "maxage_newest": (30, 40),
-        "minsize_largest": (2048, 1024),
-        "maxsize_largest": (2048, 1024),
-        "minsize_largest": (10240, 20480),
-        "maxsize_largest": (10240, 20480),
-      }, ALL_HOSTS, ["File group"]),
-  ]
-
 inventory:
   You have to configure at least on pattern for each
   fileinfo group

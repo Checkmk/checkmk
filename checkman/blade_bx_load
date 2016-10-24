@@ -8,16 +8,6 @@ description:
   BX600 Blade Enclosure. The values for 1, 5 and 15 minute average are
   reported.
 
-examples:
- # Set default levels to a load of 4 and 8
- blade_bx_cpuload_default_levels = (4.0, 8.0).
-
- checks += [
-    # Use levels 4 (warning) and 8 (critical)
-    # on all hosts with the tag "bx600"
-    (["bx600"], ALL_HOSTS, "blade_bx_load", None, (4, 8)),
- ]
-
 inventory:
   Returns one check on each blade enclosure.
 

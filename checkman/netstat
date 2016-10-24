@@ -16,29 +16,3 @@ description:
 item:
   A user defined identifier of the connection.
 
-examples:
-  # Make sure that a connection from 192.168.0.1 is established
-  # to the host winsrv1 (192.168.0.2) on port 445:
-  checks += [
-    ( 'winsrv1', 'win_netstat', 'My Test Connection',
-       {
-        'local_ip'  : '192.168.0.2',
-        'local_port': 445,
-        'remote_ip' : '192.168.0.1',
-        'state'     : 'ESTABLISHED',
-        'proto'     : 'TCP'
-       }
-    ),
-  ]
-
-  # Check if TCP port 80 is listening
-  checks += [
-    ( 'websrv1', 'win_netstat', 'HTTP Listener',
-         {
-          'local_port': 80,
-          'state'     : 'LISTEN',
-          'proto'     : 'TCP'
-         },
-    ),
-  ]
-

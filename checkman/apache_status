@@ -20,21 +20,6 @@ description:
  With the optional item 'page' its posible to change the status page from server-status to a
  name you want
 
-examples:
- servers = [
- {
-  'protocol' : 'http',
-  'address'  : 'localhost',
-  'port'     : 80 ,
- },
- {
-  'protocol' : 'https',
-  'address'  : 'localhost',
-  'port'     : 443 ,
-  'page'     : 'server-status-2',
- },
- ]
-
 inventory:
  One service per Apache server will be created.
 

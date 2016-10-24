@@ -18,17 +18,3 @@ inventory:
 item:
  The ID of the detector.
 
-examples:
- # set other default levels
- wagner_titanus_topsense_airflow_deviation_default_values = (-30.0, -10.0, 10.0, 30.0)
-
- # check detector 1 with default levels
- checks += [
-     ("ras", "wagner_titanus_topsense.airflow_deviation", '1', wagner_titanus_topsense_airflow_deviation_default_values)
- ]
-
- # check detector 1 with individual levels
- checks += [
-     ( "ras", "wagner_titanus_topsense.airflow_deviation", '1', (-40.0, -30.0, 30.0, 40.0) )
- ]
-

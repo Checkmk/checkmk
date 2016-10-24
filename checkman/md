@@ -11,11 +11,6 @@ description:
 item:
  The Linux raid device without {/dev/}, for example {"md0"}.
 
-examples:
- checks += [
-    ( "somehost", "md", "md0", None )
- ]
-
 inventory:
  All RAID devices except those with raid level 0 are automatically detected.
  The RAID 0 devices's output is completely different from the others.

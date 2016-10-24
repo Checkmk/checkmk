@@ -18,13 +18,6 @@ description:
 item:
  The name of the application server instance as configured by the agent.
 
-examples:
- jolokia_metrics_mem_default_levels = {
-    "heap"    : (2000,1000),    # heap warning when 2000MB left, heap crit when 1000 MB left
-    "nonheap" : (75.0, 95.7),   # nonheap warning at 75.0% usage, nonheap crit at 95.7% usage
-    "total" : (3000, 2200), # total warning at 3000MB left, total crit at 2200MB left
- }
-
 inventory:
  One check is created for each Jolokia instance sent by the agent.
 

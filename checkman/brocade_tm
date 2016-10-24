@@ -10,25 +10,6 @@ description:
 item:
  The name of the network interface
 
-examples:
- # Set default levels for check
- brocade_tm_default_levels(dict) = {
-            'brcdTMStatsTotalIngressPktsCnt': (1000,10000),
-            'brcdTMStatsIngressEnqueuePkts': (1000,10000),
-            'brcdTMStatsEgressEnqueuePkts': (1000,10000),
-            'brcdTMStatsIngressDequeuePkts': (1000,10000),
-            'brcdTMStatsIngressTotalQDiscardPkts': (1000,10000),
-            'brcdTMStatsIngressOldestDiscardPkts': (1000,10000),
-            'brcdTMStatsEgressDiscardPkts': (1000,10000),
-        }
-
- # checkgroup_parameters syntax
- # hosts in production get lower levels of brcdTMStatsEgressEnqueuePkts
- checkgroup_parameters.setdefault('brocade_tm', [])
- checkgroup_parameters['brocade_tm'] += [
-    ( { "brcdTMStatsEgressEnqueuePkts": (500,5000) }, ["prod"], ALL_HOSTS ),
-    ]
-
 inventory:
  Finds one item per network interface
 

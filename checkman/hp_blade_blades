@@ -20,12 +20,5 @@ description:
 item:
  Number of the blade (as string, not int).
 
-examples:
- checks += [
-  # Manually configured check:
-  # Hostname, checkname, item-id, params
-  ( "examplehost", "hp_blade_blades", "1", None)
- ]
-
 inventory:
  All blades with the present state "present" are automatically inventorized.

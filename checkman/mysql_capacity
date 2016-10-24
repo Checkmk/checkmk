@@ -25,9 +25,3 @@ inventory:
  The check generates one item per Database found.
  Internal MySQL databases are ignored.
 
-examples:
-  # Configure a WARN / CRIT level of 100GB / 200GB for all systems.
-  check_parameters += [
-    ((100000, 300000), ALL_HOSTS, [ "MySQL DB.*Size" ]),
-  ]
-

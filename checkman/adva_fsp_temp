@@ -25,27 +25,3 @@ item:
 inventory:
  All temperature sensors on all modules/ports are detected
 
-examples:
- # Set levels via dictionary, old check_mk syntax
- check_parameters = [
- ( {'trend_range': 60,
-    'trend_c': (1, 5),
-    'trend_timeleft': (1000, 500)
- }, [], ALL_HOSTS, [ "PL" ] )
- ]
-
- # set levels via wato syntax:
- checkgroup_parameters.setdefault('temperature_trends', [])
-
- checkgroup_parameters['temperature_trends'] = [
-   ( {'trend_c': (1, 5), 'trend_timeleft': (1000, 500), 'trend_range': 60}, [], ALL_HOSTS, ALL_SERVICES ),
-   ] + checkgroup_parameters['temperature_trends']
-
- # set default values
- adva_fsp_temp_default_levels = {
-     # range in minutes, default is no trend computation
-     'trend_range': None,
-     'trend_c': (1, 5),
-     'trend_timeleft': (240, 120),
- }
-

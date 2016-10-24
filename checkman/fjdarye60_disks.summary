@@ -16,9 +16,3 @@ inventory:
  If at least one disk is found, exactly one check will be created for
  the host.
 
-examples:
- # Expect 5 available(=online) and one spare disk
- checks += [
-   ( 'arc', 'fjdarye60_disks.summary', None, { "available": 5, "spare": 1 } )
- ]
-

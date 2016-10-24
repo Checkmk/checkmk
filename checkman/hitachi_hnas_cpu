@@ -13,20 +13,6 @@ description:
 item:
  The ID of the PNode.
 
-examples:
- # set default levels to 70 and 80 percent:
- hitachi_hnas_cpu_default_levels = { "levels": (70.0, 80.0) }
-
- # Check CPU Utilization of PNode with ID 1 on a HNAS called my-hnas with default levels
- checks += [
-   ("my-hnas", "hitachi_hnas_cpu", '1', hitachi_hnas_cpu_default_levels)
- ]
-
- # or use individual levels for warn and crit
- checks += [
-   ("my-hnas", "hitachi_hnas_cpu", '1', {'levels': (75.0, 85.0)})
- ]
-
 inventory:
  Finds one item per PNode
 

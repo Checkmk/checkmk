@@ -22,19 +22,6 @@ description:
 item:
  The name of the queue as defined in {winperf_msx_queues}.
 
-examples:
- # Define queues to be monitored
- winperf_msx_queues = {
-        "Active Remote Delivery"          : "10334",
-        "Retry Remote Delivery"           : "10336",
-        "Active Mailbox Delivery"         : "10338",
-        "Retry Non-Smtp Delivery"         : "10344",
-        "Items Queued For Delivery Total" : "10350",
- }
-
- # Default levels for all queues
- msx_queues_default_levels = (100, 200)
-
 inventory:
  For each queue that is defined in {winperf_msx_queues} one check
  will be created if the agent outputs the matching performance counters.

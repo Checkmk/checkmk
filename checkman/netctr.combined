@@ -15,14 +15,6 @@ item:
  The name of the network interface as shown by {ifconfig},
  for example {"eth0"}
 
-examples:
- # set levels to 0.01 promille for warning and 0.1 promille for errors
- netctr_default_params = (0.01, 0.1)
-
- # Reduce list of performance variables:
- netctr_counters  = [ 'rx_bytes', 'tx_bytes', 'rx_errors', 'tx_errors' ]
-
-
 inventory:
   All network interfaces except {lo} and {sit...} are found and
   inventorized.

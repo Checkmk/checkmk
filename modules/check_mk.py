@@ -1914,13 +1914,15 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
 
     # Now add checks a cluster might receive from its nodes
     if is_cluster(hostname):
+        single_host_checks = cmk_base.config_cache.get_dict("single_host_checks")
+
         for node in nodes_of(hostname):
-            node_checks = g_singlehost_checks.get(node, [])
+            node_checks = single_host_checks.get(node, [])
             if not skip_autochecks:
                 node_checks = node_checks + read_autochecks_of(node, world)
             for entry in node_checks:
                 if len(entry) == 4:
-                    entry = entry[1:] # drop hostname from g_singlehost_checks
+                    entry = entry[1:] # drop hostname from single_host_checks
                 checkname, item, params = entry
                 descr = service_description(node, checkname, item)
                 if hostname == host_of_clustered_service(node, descr):
@@ -2197,7 +2199,7 @@ def lookup_ip_address(hostname, family=None):
     return cached_dns_lookup(hostname, family)
 
 
-def init_ip_lookup_cache():
+def initialize_ip_lookup_cache():
     # Already created and initialized. Simply return it!
     if cmk_base.config_cache.exists("ip_lookup"):
         return cmk_base.config_cache.get_dict("ip_lookup")
@@ -2221,6 +2223,8 @@ def init_ip_lookup_cache():
 
 
 def write_ip_lookup_cache():
+    ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")
+
     # TODO: Write using cmk.store
     suffix = "." + str(os.getpid())
     file(cmk.paths.var_dir + '/ipaddresses.cache' + suffix, 'w').write(repr(ip_lookup_cache))

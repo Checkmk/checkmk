@@ -27,6 +27,7 @@
 from cmk.regex import regex, is_regex
 from cmk.exceptions import MKGeneralException
 
+import cmk_base
 
 def parse_host_rule(rule):
     rule, rule_options = get_rule_options(rule)

@@ -32,9 +32,3 @@ examples:
      ( "ras", "wagner_titanus_topsense.temp", '1', (20, 50) )
  ]
 
-[parameters]
-parameters (tuple): A pair of numbers for warn and crit level.
-    If the temperature in degree celsius is higher or equal warn,
-    the check returns {WARN}. If the temperature in degree celsius is higher
-    or equal crit, the check returns {CRIT}.
-

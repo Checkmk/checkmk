@@ -32,21 +32,3 @@ inventory:
  One check is created for each Jolokia instance sent by the agent.
 
 
-[parameters]
-parameters (dict): This check requires a dictionary with the following keys.
-                   If a key is missing no WARN/CRIT verfication is done for
-                   this specific key
-
- {"heap"} - A pair of two values to be used as WARN/CRIT levels
- Integer numbers are interpreted as remaining heap memory
- Float numbers are interpreted as available heap memory usage
-
- {"nonheap"} - A pair of two values to be used as WARN/CRIT levels
- Integer numbers are interpreted as remaining nonheap memory
- Float numbers are interpreted as available nonheap memory usage
-
- {"total"} - A pair of two values to be used as WARN/CRIT levels
- Integer numbers are interpreted as remaining total memory
- Float numbers are interpreted as available total memory usage
-
-

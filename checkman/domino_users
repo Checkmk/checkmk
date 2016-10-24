@@ -13,10 +13,3 @@ perfdata:
 inventory:
  One service is created per Lotus Domino Server.
 
-[parameters]
-parameters(tuple): parameters is a tuple of two values
-
- {warn}: (int) The warning level
-
- {crit}: (int) The critical level
-

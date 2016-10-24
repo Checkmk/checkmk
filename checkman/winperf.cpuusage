@@ -23,9 +23,3 @@ inventory:
  A check of this type is automatically created for all Windows
  hosts.
 
-[parameters]
-warning (int): The percentage of CPU usage that triggers
- a WARNING state
-critical (int): The percentage of CPU usage that triggers
- a CRITICAL state
-

@@ -20,11 +20,3 @@ examples:
  ] + checkgroup_parameters['cisco_wlc']
 
 
-[parameters]
-parameters(dict): with the key "ap_name"
-
- The values in this dict are lists of tuples. Each tuple contains (ap_name(string), action(int))
- where the ap_name is the human readable name of the AP.
- The action represents the outcome when this name missing and
- ranges from 0 to 3 (OK, WARN, CRIT, UNKNOWN)
-

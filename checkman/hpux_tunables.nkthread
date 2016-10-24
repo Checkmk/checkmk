@@ -21,8 +21,3 @@ perfdata:
   The name of the tunable along with it's usage, threshold and warning /
   crit levels.
 
-[parameters]
-warn(float): Warning percentage for the tunables allocation
-crit(float): Critical percentage for the  tunables allocation
-
-

@@ -16,12 +16,3 @@ item:
 inventory:
  For each fan found on the appliance a service is created.
 
-[parameters]
-parameters(dict): parameters is a dictionary with two keys
-
- {"lower"}: a tuple of lower warning and critical levels for the fan rpm.
-
- {"upper"}: a tuple of upper warning and critical levels for the fan rpm.
-
- The numbers are integers.
-

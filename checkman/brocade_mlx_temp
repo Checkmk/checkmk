@@ -35,7 +35,3 @@ perfdata:
 inventory:
  Finds one item per module
 
-[parameters]
-warn(int): {WARN} state is triggered, if at least one temperature is higher than this.
-crit(int): {CRIT} state is triggered, if at least one temperature is higher than this.
-

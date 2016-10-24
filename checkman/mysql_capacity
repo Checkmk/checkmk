@@ -35,8 +35,3 @@ examples:
     ((100000, 300000), ALL_HOSTS, [ "MySQL DB.*Size" ]),
   ]
 
-[parameters]
-warn(int): warning level for the database size in MB
-crit(int): critical level for the dataase size in MB
-
-

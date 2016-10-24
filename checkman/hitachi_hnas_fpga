@@ -36,7 +36,3 @@ perfdata:
 inventory:
  Finds one item per FPGA
 
-[parameters]
-parameters (dict): with the element
-{"levels"}: (float, float): levels of FPGA utilization for {WARN} and {CRIT} in percent
-

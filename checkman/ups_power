@@ -21,7 +21,3 @@ perfdata:
 inventory:
  Supported.
 
-[parameters]
-warn (int): The warning level: the power should not drop at or below this level
-crit (int): The critical level: the power must not drop at or below this level
-

@@ -33,10 +33,3 @@ inventory:
  A check will be created for all hosts known to check_mk and reported
  by the Veeam agent plugin.
 
-[parameters]
-parameters(tuple): parameters is a dictionary with one value
-
-  {"age"}: a tuple of warning and critical limits for the time since last
-  backup in seconds
-
-

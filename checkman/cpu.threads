@@ -26,8 +26,3 @@ examples:
     ( "megahost", "cpu.threads", None, (5000, 8000) ),
  ]
 
-[parameters]
-warn (int): Number of processes and threads at which a warning level
- is triggered
-crit (int): Number for a critical state
-

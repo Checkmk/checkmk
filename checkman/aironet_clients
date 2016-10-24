@@ -29,9 +29,3 @@ inventory:
  If at least one client is logged in, all three checks will
  be generated.
 
-[parameters]
-warning (int): Warning level for signal strength or quality. Note that
- the signal strength levels are always negative. Levels are ignored
- for the check item {"clients"} and should be set to {None} in that case.
-critical (int): Critical levels, {None} in case of {"clients"}.
-

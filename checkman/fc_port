@@ -99,33 +99,3 @@ inventory:
   Ports with the admininstrative state of 1 (unkown) or 3 (offline) are not
   inventorized.
 
-[parameters]
-parameters (dict): This check works with dictionary based parameters. The
- following keys are allowed:
-
-  {"bw"}: A pair of warn / crit levels on the throughput. Floating point
-  numbers are interpreted as percentages of the maximum bandwidth of
-  the port, e.g. {(80.0, 90.0)}. Integer numbers are interpreted as megabytes,
-  e.g. {(100, 150)}.
-
-  {"assumed_speed"}: On some older devices the automatic detection of the
-  link speed does not work. You can set the assumed link speed (in GBit/s)
-  here (example: {2.0})
-
-  {"rxcrcs"}: A pair of percentages of the maximum allowed CRC errors on
-  received frames. The default is set to {(3.0, 20.0)}, which will warn
-  at 3% and be critical at 20% of errors.
-
-  {"rxencoutframes"}: A pair of percentages for the Enc-Out frames rate. The
-  default is {(3.0, 20.0)}.
-
-  {"notxcredits"}: A pair of percentages for no-TxCredits errors. The default
-  is {(3.0, 20.0)}.
-
-  {"c3discards"}: A pair of percentages for the C3 discards. The default is
-  {(3.0, 20.0)}.
-
-  {"average"}: A number in minutes. If this parameter is set, then averaging
-  is turned on and all levels will be applied to the averaged values, not
-  the the current ones. Per default, averaging is turned off.
-

@@ -36,14 +36,3 @@ examples:
      ( "ras", "wagner_titanus_topsense.airflow_deviation", '1', (-40.0, -30.0, 30.0, 40.0) )
  ]
 
-[parameters]
-parameters (tuple): Containing the four numbers lower_crit, lower_warn, upper_warn, upper_crit.
-    If the airflow deviation in percent from the set point
-    is lower or equal lower_crit, the check returns {CRIT}.
-    If the airflow deviation in percent from the set point
-    is lower or equal lower_warn, the check returns {WARN}.
-    If the airflow deviation in percent from the set point
-    is higher or equal upper_warn, the check returns {WARN}.
-    If the airflow deviation in percent from the set point
-    is higher or equal upper_crit, the check returns {CRIT}.
-

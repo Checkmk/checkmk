@@ -24,5 +24,3 @@ inventory:
  One check will be created for every bonding interface found in state
  up or degraded.
 
-[parameters]
-parameters (dict): see lnx_bonding check manpage.

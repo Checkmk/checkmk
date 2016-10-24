@@ -18,7 +18,3 @@ perfdata:
 inventory:
  On each switch which supports this MIB one service {CPU} is being created.
 
-[parameters]
-warning (int): CPU utilization percentage at which a warning level is triggered.
-critical (int): CPU utilization percentage at which a critical level is triggered.
-

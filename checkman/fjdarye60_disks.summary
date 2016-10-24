@@ -22,12 +22,3 @@ examples:
    ( 'arc', 'fjdarye60_disks.summary', None, { "available": 5, "spare": 1 } )
  ]
 
-[parameters]
-expected_state (dictionary): A dictionary from the statenames to the number
- of disks expected in that state. Possible state names are:
- {"available"}, {"broken"}, {"notavailable"}, {"notsupported"},{"present"},
- {"readying"}, {"recovering"}, {"partbroken"}, {"spare"}, {"formating"},
- {"unformated"}, {"notexist"}, {"copying"}. The check will report {CRITICAL}
- if there are not enough disks in at least one state or otherwise {WARNING} if at
- least one state has an exceeding number of disks.
-

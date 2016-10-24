@@ -28,6 +28,3 @@ perfdata:
 inventory:
  Finds exactly one check on every node.
 
-[parameters]
-parameters (dict): See man page of {df}.
-

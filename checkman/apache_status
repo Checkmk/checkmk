@@ -46,12 +46,3 @@ perfdata:
  purpose of the check. Please look at the shipped PNP template for
  details.
 
-[parameters]
-parameters(dict): a dictionary with the optional key
-
- {"OpenSlots"}   : (int, int) -  lower warn/crit levels for the number of remaining open slots
- {"BusyWorkers"} : (int, int) -  upper warn/crit levels for the number busy workers
-
-
-
-

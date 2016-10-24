@@ -16,10 +16,3 @@ description:
 
  The resource status can be "all", "foreign", "local" or "none.
 
-[parameters]
-expected_state (string/list): The expected resource status. This can be one expected
- state as string or multiple expected states given as list. The parameter defaults to
- the resource status during inventory.
-
-inventory:
- Each node will get one service from this check.

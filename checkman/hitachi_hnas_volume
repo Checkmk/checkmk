@@ -32,6 +32,3 @@ perfdata:
 inventory:
  Finds one item per Volume.
 
-[parameters]
-parameters (dict): See man page of {df}.
-

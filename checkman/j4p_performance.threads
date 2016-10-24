@@ -33,7 +33,3 @@ perfdata:
 inventory:
  One check is created for each JMX instance sent by the agent.
 
-[parameters]
-warning (int): The warning level for number of threads
-critical (int): The critical level for number of threads
-

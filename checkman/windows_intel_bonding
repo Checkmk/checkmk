@@ -23,15 +23,3 @@ examples:
 inventory:
  One check per {active} bonding interface will be created.
 
-[parameters]
-parameters (dict): Currently two parameters are available in this dict:
-
- {"primary"}: The assumed primary interface. This is for agents that do
- not provide this information. In that case this is set automatically
- by the inventory to the currently active interface.
-
- {"expect_active"}: Which interface should be expected active. This is one
- of the following strings: {"primary"}: The interface set by the
- parameter {"primary"}, {"lowest"}: The interface sorting lowest
- alphabetically, {"ignore"}: Ignore which interace is active.
-

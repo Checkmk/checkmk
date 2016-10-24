@@ -41,7 +41,3 @@ inventory:
  Finds one item per NI-MLX or BR-MLX module.
  Modules with state "empty" or "Blocked for full height card" are omitted.
 
-[parameters]
-parameters (dict): with the element
-{"levels"}: (float, float): levels of CPU utilization for {WARN} and {CRIT} in percent
-

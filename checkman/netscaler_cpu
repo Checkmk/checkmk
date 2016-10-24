@@ -19,9 +19,3 @@ perfdata:
 item:
  The name of the CPU
 
-[parameters]
-parameters(dict): parameters is a dictionary with one key
-
- {"levels"}: a tuple of warning and critical levels for the CPU utilization.
- The numbers are integers and represent a percentage value.
-

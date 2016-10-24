@@ -28,10 +28,3 @@ perfdata:
 inventory:
   Automatically.
 
-[parameters]
-warning (int): 15 minute average load {per processor} at which a
-  warning is triggered. If you set this value to 2 on a 16 CPU
-  machine, then a warning will be reached at a load of 32.
-critical (int): 15 minute average load per processor at which
-  a critical state is triggered.
-

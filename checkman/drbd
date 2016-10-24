@@ -35,11 +35,3 @@ inventory:
  Each configured DRBD device will result in one service during inventory. All
  devices with the connection state "Unconfigured" are skipped.
 
-[parameters]
-parameters (dict): A dictionary with the following keys
-roles_inventory (list): The state of the drbd roles during the inventory (see example)
-roles_diskstates (list): The state of the drbd diskstates during the inventory (see example)
-roles (list of tuple): The expected roles and its state. Can also be set to None (instead of list) to disable
- alerting on this value.
-roles (list of tuple): The expected role/diskstate value and its state. Can also be set to None (instead of list) to disable
- alerting on this value.

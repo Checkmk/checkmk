@@ -16,9 +16,3 @@ inventory:
 perfdata:
  Two values. Shared and exclusive locks.
 
-[parameters]
-parameters(dict): The parameters are a dictionary with the following optional keys
-
-    {'levels_shared'}: An int tuple specifiy the WARN and CRIT limit for shared access locks.
-
-    {'levels_exclusive'}: An int tuple specifiy the WARN and CRIT limit for exclusive locks.

@@ -33,7 +33,3 @@ inventory:
  One check per host is created if the agent contains a {statgrab_load}
  section.
 
-[parameters]
-warning (int): 15 minute average load at which a {WARN} is triggered.
-critical (int): 15 minute average load at which a {CRIT} state is triggered.
-

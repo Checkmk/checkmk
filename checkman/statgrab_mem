@@ -38,11 +38,3 @@ perfdata:
 inventory:
   Finds one service on every machine with statgrab: The memory used.
 
-[parameters]
-warning (int or float): the percentage of virtual memory used
- by processes at which {WARN} state is triggered. If the
- level is defined as an integer value then it is interpreted
- as an absolute value in megabytes.
-critical (int or float): the percentage or absolute value
- at which {CRIT} state is triggered
-

@@ -27,23 +27,3 @@ item:
 perfdata:
  One value: the current apply lag in seconds
 
-[parameters]
-parameters (dict):
-
- "apply_lag": (int, int) - Maximum time in seconds for the apply_lag
- in Data Guard. no default value
-
- "apply_lag_min": (int, int) - Minimum time in seconds for the apply_lag
- in Data Guard. no default value
-
- "transport_lag": (int, int) - Maximum time in seconds for the transport_lag
- in Data Guard. no default value
-
-inventory:
- One separate check for each database found running will
- be created.
-
- checkgroup_parameters['oracle_dataguard_stats'] = [
-  ( {'apply_lag': (10800, 21600)
-   , 'transport_lag': (10800, 21600)}
-   , [], ALL_HOSTS, ALL_SERVICES ),

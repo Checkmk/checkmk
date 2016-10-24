@@ -47,17 +47,3 @@ examples:
  ]
 
 
-[parameters]
-parameters (dict):
-
- "levels": (int, int) - Minimum time in seconds for TUNED_UNDORETENTION from
- v$undostat. Default is 300 for crit and 600 for warn.
-
- "nospaceerrcnt_state": (int) - Expected state when a non space error count occurs
- in v$undstat. The default is 2 for crit. Allowed values are 0=ok, 1=warn and 3=unknown.
-
-inventory:
- One separate check for each database found running will
- be created.
-
-

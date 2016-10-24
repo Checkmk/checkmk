@@ -22,11 +22,3 @@ inventory:
  set to {True} in {inventory_heartbeat_crm_rules}, then the node which is currently
  DC will be required to stay DC in future.
 
-[parameters]
-max_age (int): Maximum age of the reported "last status" in seconds.
-dc (string): The name of the node which is expected to be the DC. If this is set to {None} then
- the DC is not checked.
-num_nodes (int): Expected number of nodes in the cluster. The check is disabled
- when the value is set to {None}.
-num_resources (int): Expected number of resources in the cluster. The check is
- disabled when the value is set to {None}.

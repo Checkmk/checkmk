@@ -38,9 +38,3 @@ inventory:
   All network interfaces except {lo} and {sit...} are found and
   inventorized.
 
-[parameters]
-warning (float): The percentage of errors at which a warning is triggered.
- If you set this to {0.5}, then you get a warning if in one check cycle at least
- one error occurs for each 200 packets sent or received.
-critical (float): The percentage of errors at which a critical level is reached.
-

@@ -14,9 +14,3 @@ inventory:
 perfdata:
  The license usage, together with it's warn and crit levels
 
-[parameters]
-One of three choices: Either {None}. This is the default. The service will
- go CRIT if all licenses are used up. Or you specify a pair of integers.
- This will be the number of free licenses at which or below a WARN or CRIT
- is being triggerd. Or a pair of floats, which will be interpreted as
- percentages of free licenses for WARN and CRIT.

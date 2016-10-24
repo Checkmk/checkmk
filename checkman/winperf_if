@@ -35,6 +35,3 @@ inventory:
 perfdata:
  See man page of {if} for details
 
-[parameters]
-parameters (dict): See man page of {if} for details
-

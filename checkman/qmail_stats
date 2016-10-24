@@ -20,7 +20,3 @@ perfdata:
 inventory:
  On each system which provides the {qmail-qstat} command one service is being created.
 
-[parameters]
-warning (int): Queues with more than this value will result in a WARNING state
-critical (int): Number of messages in the queue to result in a CRITICAL stat
-

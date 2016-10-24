@@ -19,15 +19,3 @@ inventory:
  interface. This is only relevant if you configure a detection of
  a change in the active interface.
 
-[parameters]
-parameters (dict): Currently two parameters are available in this dict:
-
- {"primary"}: The assumed primary interface. This is determined during
- inventory since Opoen vSwitch does not allow to configure a primary
- interface.
-
- {"expect_active"}: Which interface should be expected active. This is one
- of the following strings: {"primary"}: The interface set by the
- parameter {"primary"}, {"lowest"}: The interface sorting lowest
- alphabetically, {"ignore"}: Ignore which interace is active.
-

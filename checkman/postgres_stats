@@ -13,9 +13,3 @@ description:
 inventory:
   Two services for each database. One for VACUUM and one for ANALYZE.
 
-[parameters]
-parameters(dict): The parameters are a dictionary with the following optional keys
-
-    {'last_vacuum'}: An int tuple containing limits for the maximum last vacuum age
-
-    {'last_analyze'}: An int tuple containing limits for the maximum last analyze age

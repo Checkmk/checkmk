@@ -16,10 +16,3 @@ description:
 inventory:
  One checks is created for each windows host.
 
-[parameters]
-parameters(dict): A dictionary with the following keys:
-
- { 'signature_age' } : A tuple of warn and crit, default values are (86400, 7*86400)
-
- { 'fullscan_age' }  : A tuple of warn and crit, default values are (86400, 7*86400)
-

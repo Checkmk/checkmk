@@ -24,8 +24,3 @@ inventory:
  set in {main.mk} and the agent provides an {OnlyFrom:} header in the section
  {<<<check_mk>>>}.
 
-[parameters]
-target_networks (list(string)): A python list of the allowed networks and IP addresses the
- agent should be configured for. The order of the entries is not relevant. To host addresses
- a {/32} will be appended automatically.
-

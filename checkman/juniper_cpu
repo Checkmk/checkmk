@@ -16,7 +16,3 @@ perfdata:
 inventory:
  Since this check is obsolete, no items are discovered
 
-[parameters]
-warning (int): The percentage of CPU utilization that triggers a warning level.
-critical (int): The percentage of CPU utilization that triggers a critical level.
-

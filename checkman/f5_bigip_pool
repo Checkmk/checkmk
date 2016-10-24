@@ -29,8 +29,3 @@ inventory:
  The check collects a list of the pools defined on a system. It will include
  non-enabled ones, as this is considered a temporary state.
 
-[parameters]
-warning (int): issue a warning if there are less than warn members left in a load balancing pool
-
-crit (int): go to critical state if there are less than crit members left in a load balancing pool. Note: 0 active members will always result in a critical state.
-

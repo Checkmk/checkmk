@@ -26,6 +26,3 @@ inventory:
  This might be dedicated to tablespaces but also MSSQL server internal parts
  like the "Buffer Manager".
 
-[parameters]
-warn_percent(int): Check will raise a warning state if ratio is below or equal this value.
-crit_percent(int): Check will raise a critical state if ratio is below or equal this value.

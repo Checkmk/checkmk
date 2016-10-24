@@ -26,8 +26,3 @@ examples:
  ]
 
 
-[parameters]
-params(dict): A dictionary will currently one optional key: {states}. This is again a dictionary
- with the optional entries {"poweredOn"}, {"poweredOff"} and {"suspended"}. The value for each
- entry is {0}, {1}, {2} or {3} and sets the check result in that case to OK, WARN, CRIT or UNKNOWN.
-

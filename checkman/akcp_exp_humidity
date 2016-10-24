@@ -25,9 +25,3 @@ examples:
    ( 'hostname', "akcp_expansion_sensor_humidity", 'sensor description', ( lower crit, lower warn, upper warn, upper crit ) ),
  ]
 
-[parameters]
-critical low (int): lower border for triggering critical level
-warning low (int): lower border for warning level
-warning high (int): upper border for triggering warning level
-critical high (int): upper border for critical level
-

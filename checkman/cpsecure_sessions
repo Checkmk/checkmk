@@ -31,7 +31,3 @@ examples:
    (["csg"], ALL_HOSTS, "cpsecure_sessions", 'IMAP',  (60, 100)),
  ]
 
-[parameters]
-warning (int): Number of concurrent sessions at which a warning level is triggered
-critical (int): Critical level for number of sessions
-

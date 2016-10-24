@@ -26,8 +26,3 @@ inventory:
  that the variable {inventory_processes_perf} is used instead of
  {inventory_processes}.
 
-[parameters]
-params (5 or 6 tuple): Please refer to {ps} for information about the parameters.
-parameters (dict): or the parameters can be given in the new, dictionary based syntax.
-   Please refer to {ps} for information about the parameters.
-

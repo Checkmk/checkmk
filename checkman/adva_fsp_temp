@@ -52,17 +52,3 @@ examples:
      'trend_timeleft': (240, 120),
  }
 
-[parameters]
-parameters (dict): a dictionary containing the parameters for the trend
- computation with the following keys:
-
- {"trend_range"}: The time range in minutes over which trends are computed.
- If you set this to None then trend computing is disabled and the check
- outputs only one performance data value.
-
- {"trend_c"}: A tuple of numbers specifying limits for the temperature increase
- in degrees Celcius within the configured time range
-
- {"trend_timeleft"}: A tuple of numbers specifying the minimum time in minutes
- left before the temperature limit is reached
-

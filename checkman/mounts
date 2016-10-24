@@ -31,7 +31,3 @@ inventory:
  {/dev}, so network filesystems and virtual filesystems are excluded
  by the agent.
 
-[parameters]
-target_options (list of strings): The list of expected mount options. During
- inventory this list is being put into the check's parameter.
- Example: {['data=ordered', 'rw']}

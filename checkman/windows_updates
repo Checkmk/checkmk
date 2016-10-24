@@ -19,13 +19,3 @@ inventory:
 perfdata:
  Two values important and optional which contain the number of pending updates.
 
-[parameters]
-imp_warn (int): Number of pending important updates to raise a WARNING state.
-                Can be set to None for disabling the level.
-imp_crit (int): Number of pending important updates to raise a CRITICAL state
-                Can be set to None for disabling the level.
-opt_warn (int): Number of pending optional updates to raise a WARNING state
-                Can be set to None for disabling the level.
-opt_crit (int): Number of pending optional updates to raise a CRITICAL state
-                Can be set to None for disabling the level.
-

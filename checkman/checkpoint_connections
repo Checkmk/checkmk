@@ -14,7 +14,3 @@ inventory:
 perfdata:
  current number of connections
 
-[parameters]
-warning (int): Minimum connection count for warning level
-crit (int): Minimum connection count for critical level
-

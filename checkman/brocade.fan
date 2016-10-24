@@ -18,7 +18,3 @@ inventory:
  in {swSensorStatus}
 
 
-[parameters]
-warn(int): the minimum fan speed for an OK state
-crit(int): the minimum fan speed for a WARN state
-

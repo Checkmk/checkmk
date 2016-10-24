@@ -27,6 +27,3 @@ perfdata:
 inventory:
  Creates one check per temperature sensor (sensorType 1).
 
-[parameters]
-tuple (int, int): The two values are the levels for {WARN} and {CRIT}.
-

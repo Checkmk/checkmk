@@ -15,6 +15,3 @@ perfdata:
 inventory:
  For each fan one service is created
 
-[parameters]
-warn (int): Warning if speed is below
-crit (int): Critical if speed is below

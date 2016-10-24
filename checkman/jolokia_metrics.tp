@@ -23,7 +23,3 @@ perfdata:
 inventory:
  One check is created per thread pool sent by the Jolokia agent.
 
-[parameters]
-warn (int): a WARN state is triggered by count/busy threads of max
-crit (int): a CRIT state is triggered by count/busy threads of max
-

@@ -34,7 +34,3 @@ perfdata:
 inventory:
  Finds one item per PNode
 
-[parameters]
-parameters (dict): with the element
-{"levels"}: (float, float): levels of CPU utilization for {WARN} and {CRIT} in percent
-

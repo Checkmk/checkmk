@@ -25,13 +25,3 @@ inventory:
  instance sent by the agent.
 
 
-[parameters]
-low_crit (int): If the number of sessions falls to this level,
- a CRITICAL state is triggered
-low_warn (int): If the number of sessions falls to this level,
- a WARNING state is triggered
-high_warn (int): If the number of sessions climbs to this level,
- a WARNING state is triggered
-high_crit (int): If the number of sessions climbs to this level,
- a CRITICAL state is triggered
-

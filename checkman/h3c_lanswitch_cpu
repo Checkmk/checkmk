@@ -32,7 +32,3 @@ item:
 perfdata:
  One value: the 5 minute average CPU usage in percent (from 0 to 100).
 
-[parameters]
-warning (int): the percentage of 5-minute average usage at which the check returns WARN.
-critical (int): the percentage of 5-minute average usage at which the check goes critical.
-

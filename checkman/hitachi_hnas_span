@@ -25,6 +25,3 @@ perfdata:
 inventory:
  Finds one item per Span.
 
-[parameters]
-parameters (dict): See man page of {df}.
-

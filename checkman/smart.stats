@@ -23,8 +23,3 @@ inventory:
  If there is at least one supported value available for a HDD one service is
  inventorized.
 
-[parameters]
-params(dict from string to int): A python dictionary which contains
- the current values of all counters during the inventory. This paramer is
- usually not set manually.
-

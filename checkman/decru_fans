@@ -16,7 +16,3 @@ perfdata:
 inventory:
  All fans are automatically detected.
 
-[parameters]
-critical (int): RPM below which the FAN gets critical
-warning (int): RPM below which the FAN gets warning
-

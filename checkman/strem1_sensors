@@ -25,7 +25,3 @@ examples:
  strem1_humidity_defaultlevels = (None, None)
  strem1_wetness_defaultlevels  = (None, None)
 
-[parameters]
-warning (int): minimum value leading to a WARNING state
-critical (int): mimimum value leading to a CRITICAL state
-

@@ -29,7 +29,3 @@ perfdata:
 inventory:
  Each DHCP pool will result in one service on the DHCP server.
 
-[parameters]
-warning (int): Percentage of free leases to be left in the pool to issue a warning.
-critical (int): Percentage of free leases to be left in the pool to issue a critical.
-

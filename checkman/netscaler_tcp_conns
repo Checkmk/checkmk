@@ -20,12 +20,3 @@ inventory:
 perfdata:
  The number of client connections and the number of client connections.
 
-[parameters]
-parameters(dict): parameters is a dictionary with a key for each monitored value.
-
- {"server_conns"}: a tuple of warning and critical levels.
-
- {"client conns"}: a tuple of warning and critical levels.
-
- The numbers are integers.
-

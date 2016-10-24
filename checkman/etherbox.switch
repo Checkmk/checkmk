@@ -20,5 +20,3 @@ perfdata:
 inventory:
  The inventory creates a service for each switch contact sensor found
 
-[parameters]
-expected_state (string): the expected state of this switch: "open", "closed" or "ignore"

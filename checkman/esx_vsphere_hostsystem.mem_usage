@@ -13,9 +13,3 @@ inventory:
 perfdata:
  One value: the current usage in bytes.
 
-[parameters]
-warning (float): the percentage of virtual memory used
- by processes at which WARNING state is triggered.
-critical (float): the percentage or absolute value
- at which CRITICAL state is triggered
-

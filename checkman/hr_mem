@@ -20,11 +20,3 @@ perfdata:
  Three variables: the physical RAM, the virtual memory and the
  sum of both.
 
-[parameters]
-warning (int or float): the precentage of virtual memory used
- by processes at which WARNING state is triggered. If the
- level is defined as an integer value then it is interpreted
- as an absolute value in megabytes.
-critical (int or float): the percentage or absolute value
- at which CRITICAL state is triggered
-

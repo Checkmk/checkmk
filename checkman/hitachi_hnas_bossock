@@ -20,6 +20,3 @@ item:
 perfdata:
  The number of Bossock Fibers
 
-[parameters]
-parameters (tuple): warn, crit levels (int, int)
-

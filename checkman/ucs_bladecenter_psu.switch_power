@@ -17,12 +17,3 @@ perfdata:
 inventory:
  Creates on service per switch module
 
-[parameters]
-parameters (dict): This check supports three types of parameters,
-none of which have default values. It is a dictionary with the following keys:
-
- {"voltage"}: Warning and critical levels for voltage in int, denoting the minimum required voltage in volt.
-
- {"current"}: Warning and critical levels for current in int, denoted in Ampère
-
- {"power"}: Warning and critical levels for power in int, denoted in Watt.

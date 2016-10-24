@@ -33,7 +33,3 @@ inventory:
  One separate check for each database found running will
  be created.
 
-[parameters]
-warning(int): The number of active sessions triggering a warning
-critical(int): The number of active sessions making the check critical
-

@@ -16,7 +16,3 @@ perfdata:
 inventory:
  All available temperature sensors are automatically inventorized.
 
-[parameters]
-warn(int): Warning level for the temperature, default 35.
-crit(int): Critical level for the temperature, default 40.
-

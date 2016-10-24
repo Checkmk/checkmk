@@ -22,6 +22,3 @@ examples:
         "W"    : ( 3500, 3600 ),
     }
 
-[parameters]
-parameters(dict): Warning and Critical levels as tuple for Items kWh, W, A, V, VA in dict
-

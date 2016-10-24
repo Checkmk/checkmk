@@ -36,9 +36,3 @@ inventory:
  Finds one item per NI-MLX or BR-MLX module.
  Modules with state "empty" or "Blocked for full height card" are omitted.
 
-[parameters]
-parameters (dict): with the element
-{"levels"}: (int or float, int or float): Levels of memory usage for {WARN} and {CRIT}.
-  If a value is given as float, it is interpreted as percentage.
-  If a value is given as int, it is interpreted as an absolute value in megabytes.
-

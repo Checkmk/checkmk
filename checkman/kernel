@@ -43,8 +43,3 @@ examples:
   # Make inventory create only checks for pgmajfault
   inventory_kernel_counters = [ "pgmajfault", "pgpgin", "pgpgout" ]
 
-[parameters]
-warning (int): The rate per second which triggers a warning. A value of {None} disables the level.
-
-critical (int): The rate per second which triggers a critical state. A value of {None} disables the level.
-

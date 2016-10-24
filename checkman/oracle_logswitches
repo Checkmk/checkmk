@@ -29,10 +29,3 @@ inventory:
  One separate check for each database found running will
  be created.
 
-[parameters]
-lo_crit(int): The check will get critical if only that many (or fewer) log switches appeared in the
- last 60 minutes. Set this to {-1} in order to disable this bound.
-lo_warn(int): Lower warning level.
-hi_warn(int): Make the check warn if there were at least that many log switches in the last 60 minutes.
-hi_crit(int): Upper critical level.
-

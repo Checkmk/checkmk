@@ -20,7 +20,3 @@ inventory:
 item:
  The database name on the Mailbox Server
 
-[parameters]
-warn(int): Warning level for the maximum number of logs in the queues
-crit(int): Critical level
-

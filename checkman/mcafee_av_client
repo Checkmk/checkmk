@@ -15,7 +15,3 @@ description:
 inventory:
  One check is created for each windows host.
 
-[parameters]
-parameters(dict): A dictionary with the following key:
-
- { 'signature_age' } : A tuple of warn and crit, default values are (86400, 7*86400)

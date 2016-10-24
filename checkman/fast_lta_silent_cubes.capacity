@@ -28,6 +28,3 @@ perfdata:
 inventory:
  Finds exactly one check on every system (head unit).
 
-[parameters]
-parameters (dict): See man page of {df}.
-

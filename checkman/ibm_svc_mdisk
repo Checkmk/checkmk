@@ -33,24 +33,3 @@ examples:
     'image_mode'     : 0,
     'unmanaged_mode' : 1 }
 
-[parameters]
-parameters (dict): parameters is a dictionary with eight keys
-
-    (int) is in range [0 ... 3]. Sense of value: 0 OK, 1 WARNING, 2 CRITICAL or 3 UNKNOWN
-
-    {'online_state'}: (int) - Resulting state if disk is online.
-
-    {'degraded_state'}: (int) - Resulting state if disk is degraded.
-
-    {'offline_state'}: (int) - Resulting state if disk is offline.
-
-    {'excluded_state'}: (int) - Resulting state if disk is excluded.
-
-    {'managed_mode'}: (int) - Resulting state if disk is in managed mode.
-
-    {'array_mode'}: (int) - Resulting state if disk is in array mode.
-
-    {'image_mode'}: (int) - Resulting state if disk is in image mode.
-
-    {'unmanaged_mode'}: (int) - Resulting state if disk is in unmanaged mode.
-

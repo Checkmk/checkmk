@@ -17,14 +17,3 @@ perfdata:
 inventory:
  One item per phase and one summary item is added.
 
-[parameters]
-parameters (dict): This check supports four types of parameters,
-none of which have default values. It is a dictionary with the following keys:
-
- {"voltage"}: Warning and critical levels for voltage in int, denoting the minimum required voltage in volt.
-
- {"current"}: Warning and critical levels for current in int, denoted in Ampère
-
- {"power"}: Warning and critical levels for power in int, denoted in Watt.
-
- {"appower"}: Warning and critical levels for apparent power in int, denoted in AV.

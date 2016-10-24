@@ -23,10 +23,3 @@ inventory:
 item:
  The name of the fan according to the snmp output
 
-[parameters]
-parameters(dict): parameters is a dictionary with two keys
-
- {"lower"}: a tuple of lower warning and critical values for the fan rpm
-
- {"upper"}: a tuple of upper warning and critical values for the fan rpm
-

@@ -25,8 +25,3 @@ perfdata:
 inventory:
  If chrony is running, then one service is being created.
 
-[parameters]
-max_stratum (int): The stratum at which the check gets critical
-warning (float): the offset in ms at which a warning is triggered
-critical (float): the critical offset in ms
-

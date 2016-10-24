@@ -16,6 +16,3 @@ perfdata:
 inventory:
  All available temperature sensors are automatically inventorized.
 
-[parameters]
-warning (int): temperature in degrees at which the check goes warning
-critical (int): level for critical temperature

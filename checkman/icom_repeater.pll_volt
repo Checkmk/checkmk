@@ -15,10 +15,3 @@ perfdata:
 inventory:
  One check per PLL is created.
 
-[parameters]
-parameters(dict): This checks parameters are a dictionary with the
- (optional) keys {"rx"} and {"tx"}, under each of which lies a list of
- tuples (frequency, (warn_lower, crit_lower, warn, crit)), where frequency is
- the upper boundary of the frequency range for which the parameters
- (warn_lower, crit_lower, warn, crit)
-

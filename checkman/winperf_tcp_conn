@@ -15,7 +15,3 @@ inventory:
  If the windows agents has the section {<<<winperf_tcp_conn>>>}, then one check
  will be created
 
-[parameters]
-levels(dict from string to (int, int)): A python dictionary with the key
- ESTABLISHED and a pair of integers for warning and critical levels. If this
- state is not listed then the check will be always OK

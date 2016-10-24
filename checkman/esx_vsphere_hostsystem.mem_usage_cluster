@@ -20,10 +20,3 @@ examples:
 perfdata:
  One value: the current total usage in bytes.
 
-[parameters]
-parameters (dict): A list of tuples where you can define the number of
- minimum required nodes and the corresponding levels.
-
-OneElement Tuple: number_of_nodes(int), (WARN(float), CRIT(float))
-
- Please refer example.

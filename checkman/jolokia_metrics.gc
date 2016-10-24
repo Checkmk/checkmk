@@ -30,18 +30,3 @@ perfdata:
 inventory:
  One check is created per garbage collector sent by the Jolokia agent.
 
-[parameters]
-Tuple(int, int): Collection count
-
-    warn: a WARN state is triggered by to many collections per minute
-
-    crit: a CRITICAL state is triggered by to many collections per minute
-
-Tuple(int, int): Collection time
-
-    warn: a WARN state is triggered by assuming to many time for
-                collections per minute
-
-    crit: a CRITICAL state is triggered by assuming to many time for
-                collections per minute
-

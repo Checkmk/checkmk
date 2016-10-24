@@ -23,10 +23,3 @@ perfdata:
   The "maximum" value is not 100, but the number of CPU threads. This
   case be used for scaling the graph in terms of the number of used CPU threads.
 
-[parameters]
-parameters (list): A list of tuples where you can define the number of
- minimum required nodes and the corresponding levels.
-
- One Element: ( number_of_nodes(int), ( WARN(float), CRIT(float) ) )
-
- Please refer example.

@@ -21,11 +21,3 @@ description:
 inventory:
  One check per device is created automatically.
 
-[parameters]
-good_warn (int): This is a lower threshold. When the number of good satellites drops
- below this value a {WARNING} state is raised.
- The default is set to {3}. The threshold can be disabled by setting to {None}.
-good_crit (int): This is a lower threshold. When the number of good satellites drops
- below this value a {CRITICAL} state is raised.
- The default is set to {3}. The threshold can be disabled by setting to {None}.
-

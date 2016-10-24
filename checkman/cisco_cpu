@@ -21,7 +21,3 @@ perfdata:
 inventory:
  One service per Cisco device is created.
 
-[parameters]
-warning (int): The percentage of CPU utilization that triggers a warning level.
-critical (int): The percentage of CPU utilization that triggers a critical level.
-

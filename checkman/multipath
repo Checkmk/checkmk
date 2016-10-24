@@ -34,7 +34,3 @@ examples:
  ]
 
 
-[parameters]
-numpaths(int): The only parameter is the number of expected paths. This is not
-  a tuple but a simple integer value.
-

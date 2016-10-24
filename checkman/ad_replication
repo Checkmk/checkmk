@@ -22,7 +22,3 @@ inventory:
 item:
  The name of the replication partner.
 
-[parameters]
-max_failed (int): The maximum number of failures to be tolerated. All counts above
- will raise a CRITICAL state
-

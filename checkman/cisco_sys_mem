@@ -13,10 +13,3 @@ description:
 perfdata:
  The memory utilization in percent
 
-[parameters]
-parameters (tuple): A tuple with the following values
-
- {warn}: (int) The warning level in percent
-
- {crit}: (int) The critical level in percent
-

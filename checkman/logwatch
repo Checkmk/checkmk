@@ -38,30 +38,3 @@ examples:
      "/var/log/messages":  [ ( ['test'], ALL_HOSTS, 'I', "sshd") ]
   }
 
-[parameters]
-patterns (list): The parameter can be used to reclassify
- log messages sent by the agent. You can assign one of
- the three levels {'I'} (ignore), {'W'} (warning) or
- {'C'} (critical) to each message. It is only possible
- to reclassify messages that have already been classified
- by the agent with an original level of {I}, {W} or {C}.
- As of version 1.1.13i1 the Windows agent supports sending
- always all messages and classifying non-problems as {I}.
- This is done by a configution
- via {check_mk.ini} and setting the level for a logfile to {all}.
- Those messages can later be reclassified.
-
- Each entry of the list is a pair of the new level and an
- extended regular expression searched in the log line.
- Please note, that because logwatch checks are usually
- inventorized, it is easier to use the global configuration variable
- {logwatch_patterns} instead of explicit check parameters.
- Example: {[ ('I', "sshd"), ('C', "foo.*bar") ]}
-
- In the current version of this check a level can be substituted
- by a pair of numbers, e.g. instead of {'W'} you can write {(10, 20)}.
- In that case the message will be considered as {'I'} for the first
- 9 appearances, further appearances will be classified as {'W'} and
- from the 20th message on it will be {'C'}. The counts are reset each
- time the host is being checked.
-

@@ -32,7 +32,3 @@ examples:
    ("webtherm3", "wut_webtherm", '1', (15, 18) ),
  ]
 
-[parameters]
-warning (int): Temperature at which a warning level is triggered
-critical (int): Critical level for temperature
-

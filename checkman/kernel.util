@@ -19,12 +19,3 @@ inventory:
  check with the parameter {kernel_util_default_levels}, which is
  preset to {None} thus imposing no levels and making the check always OK.
 
-[parameters]
-dictionary: A dictionary for two keys, both of which are optional:
-
-  {"iowait"} a pair of float values with percentages for warning and critical
-  for the disk wait
-
-  {"util"} a pair of float values with percentages for warning and critical
-  for the total utilization
-

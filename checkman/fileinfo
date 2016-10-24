@@ -65,25 +65,3 @@ inventory:
   For each file that the agent sends one service will
   be created.
 
-[parameters]
-parameters (dict): This check uses dictionary based
-  parameters. Per default no parameters are set and
-  the check is OK, if the file is not missing or if
-  the file is missing it is UNKNOWN.
-
-  {"minage"}: A pair of integers for the warning and
-  critical level of the minimum file age in seconds.
-  A missing key or {None} disables the minimum age
-  checking. The borders itself always belong to the
-  better state, so {(60, 120)} will make the check
-  OK as long as the age of the file is not exceeding
-  60 seconds and warning if the age is 120 seconds
-  or less.
-
-  {"maxage"}: Pair of integers for the maximum file
-  age in seconds.
-
-  {"minsize"}: The minimum size of the file in bytes
-  (pair of integers).
-
-  {"maxsize"}: The maximum size.

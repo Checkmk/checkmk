@@ -28,6 +28,3 @@ examples:
  # Set the warning threshold to 40 and critical to 50 degrees celsius.
  smart_temp_default_levels = (35, 40)
 
-[parameters]
-warning (int): The degrees celsius to trigger a WARNING state
-critical (int): The degrees celsius to trigger a CRITICAL state

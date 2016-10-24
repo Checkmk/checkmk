@@ -49,19 +49,3 @@ item:
 perfdata:
  One value: the current apply lag in seconds
 
-[parameters]
-parameters (dict):
-
- "levels": (int, int) - Maximum time in seconds for warn and crit
- for the last Checkpoint over all Datafiles. No default value
-
- "backup_age": (int, int) - Maximum time in seconds for warn and crit
- for datafiles in Online Backup Mode.
-
-inventory:
- One separate check for each database found running will
- be created.
-
- checkgroup_parameters['oracle_recovery_status'] = [
-  ( {'backup_age': (10800, 21600)}
-   , [], ALL_HOSTS, ALL_SERVICES ),

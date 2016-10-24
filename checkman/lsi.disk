@@ -21,7 +21,3 @@ inventory:
  That way, you will be notified by Nagios, even if a disk changes
  from state {HSP} to {ONL}.
 
-[parameters]
-targetstate (string): The should-have state of the disk, for example
- {"ONL"},  {"HSP"},  {"FLT"} or {"MIS"}
-

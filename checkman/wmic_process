@@ -39,12 +39,3 @@ examples:
   ( "klapp", "wmic_process", "SSHD", ( "sshd.exe", 20, 30, 10, 15, 80, 90)),
  ]
 
-[parameters]
-name (string): The name of the process including {.exe}
-
-memwarn, memcrit (int, int): The levels in MB for memory usage
-
-pagewarn, pagecrit (int, int): The level in MB for page file usage
-
-cpuwarn, cpucrit (int, int): The level in % for CPU usage (kernel plus user)
-

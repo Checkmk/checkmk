@@ -21,10 +21,3 @@ inventory:
  (.1.3.6.1.2.1.1.2.0) and if the name of this OID is known to the test. If
  this is true the system is inventorized.
 
-[parameters]
-parameters(tuple): parameters is a tuple of two values
-
- {warn}: (int) The warning level in days
-
- {crit}: (int) The critical level in days
-

@@ -15,9 +15,3 @@ inventory:
 perfdata:
   The current number of active connections
 
-[parameters]
-parameters(dict): The parameters are a dictionary with the following optional keys
-
-    {'levels_perc'}: A float tuple specifying a percentage of the maximum connection count
-
-    {'levels_abs'}: An int tuple specifying absolute levels

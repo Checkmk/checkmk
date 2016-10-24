@@ -25,6 +25,3 @@ inventory:
  set to {True} in {inventory_heartbeat_crm_rules}, then the node which is currently
  holding the resource will be required to also hold it in future.
 
-[parameters]
-node (string): The expected node to handle this resource. When set to {None},
- then the node will not be checked, only the resource state.

@@ -37,15 +37,3 @@ examples:
  # vmalloc size
  mem_vmalloc_default_levels = (100, 120, 50.0, 30.0)
 
-[parameters]
-warn_used (int or float): the amount of used vmalloc space
- triggering a warning. If the level is specified as an integer,
- it is interpreted as an absolute value in MB. Float values
- are interpreted as percentages of the total vmalloc area.
-crit_used (int or float): used amount that triggers a critical state.
-warn_chunk (int or float): if the size of the largest chunk reaches
- that value or is below, a warning is triggered. The value is
- in MB (int) or percentage of the total vmalloc area (float)
-crit_chunk (int or float): critical level for the size of the
- largest available chunk.
-

@@ -20,25 +20,3 @@ inventory:
 perfdata:
   The check does not support performance data.
 
-[parameters]
-parameters (dict): To allow fine-grained and optional configuration, this check uses a dictionary.
-
-                   {"connections"} - a pair of two integer values to be used as WARN/CRIT
-                   level for the number of connections. The defaults will be None, None
-                   equalling an {OK} status.
-                   {"messageRate"} - a pair of two integer values to be used as WARN/CRIT
-                   level for the number of messages delivered. The defaults will be None, None
-                   equalling an {OK} status.
-                   {"dataRate"} - a pair of two integer values to be used as WARN/CRIT
-                   level for the amount of data processed. The defaults will be None, None
-                   equalling an {OK} status, and the unit is undocumented by Symantec.
-                   {"queuedMessages"} - a pair of two integer values to be used as WARN/CRIT
-                   level for the number of messages currently queued. This is probably the most
-                   important to monitor. The defaults will be None, None
-                   equalling an {OK} status.
-                   {"queueSize"} - a pair of two integer values to be used as WARN/CRIT
-                   level for the size of this queue. The defaults will be None, None
-                   equalling an {OK} status. Note that the unit is undocumented by Symantec.
-                   {"deferredMessages"} - a pair of two integer values to be used as WARN/CRIT
-                   level for the number of messages in a deferred state. The defaults will be None, None
-                   equalling an {OK} status.

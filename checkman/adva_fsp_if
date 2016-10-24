@@ -37,8 +37,3 @@ inventory:
  are {up} and are of type {1} (other), {6} (ethernetCsmacd), and {56}
  (fibreChannel).
 
-[parameters]
-parameters (dict):
-        {"limits_input_power"}: a tuple of lower and upper critical values in dBm,
-        {"limits_output_power"}: a tuple of lower and upper critical values in dBm
-

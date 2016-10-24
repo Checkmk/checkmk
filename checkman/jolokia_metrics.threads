@@ -29,8 +29,3 @@ inventory:
  One check is created per JVM sent by the Jolokia agent.
 
 
-[parameters]
-warn (int): a WARN state is triggered is this many threads are running
- a WARNING state is triggered
-crit (int): a CRITICAL state is triggered is this many threads are running
-

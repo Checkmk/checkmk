@@ -21,14 +21,3 @@ inventory:
   On each host where the agent plugin {mk_mysql} is being installed
   and the MySQL daemon is running one service per instance is being generated.
 
-[parameters]
-parameters (dict): A dictionary with currentl just one possible key: {"perc_used"}. This
-  is a pair if two floating point numbers:
-
-  {warn} (float): The maximum connection usage (in percent) that triggers
-    a {WARN} state.
-
-  {crit} (float): The maximum connection usage (in percent) that triggers
-    a {CRIT} state.
-
-  If {perc_used} is not set, the check always returns {OK} state.

@@ -9,7 +9,3 @@ description:
 inventory:
  One service will be created
 
-[parameters]
-warning (int): Minimum memory usage in percent for warning level
-crit (int): Minimum memory usage in percent for critical level
-

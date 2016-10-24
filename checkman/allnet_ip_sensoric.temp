@@ -35,6 +35,3 @@ examples:
    ("sen01", "allnet_ip_sensoric.temp", 'Temperatur Rack Sensor 11', (40, 50))
  ]
 
-[parameters]
-parameters (int, int): temperature levels in degree celsius for {WARN} and {CRIT}
-

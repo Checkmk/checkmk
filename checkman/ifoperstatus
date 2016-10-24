@@ -20,9 +20,3 @@ inventory:
  checks for all interfaces found up and of the correct types (default is {ethernetCsmacd})
  are created.
 
-[parameters]
-targetstatus (string): The target status of the interface, for example {"up"} or {"down"}. This
- can also be given as list of string to set multiple expected states.
- There are other possible values for the target status: {"unknown"}, {"dormant"},
- {"notPresent"} or {"lowerLayerDown"}.
-

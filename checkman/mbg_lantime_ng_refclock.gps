@@ -25,7 +25,3 @@ item:
 perfdata:
  number of good satellites and number of visible satellites.
 
-[parameters]
-parameters(tuple): A tuple of warning and critical levels for the number of
- good satellites, default is (3, 3)
-

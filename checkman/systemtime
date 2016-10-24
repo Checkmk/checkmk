@@ -25,7 +25,3 @@ inventory:
   One service will be created for each host supporting this check.
   Currently this is the windows agent in version 1.1.10 or later.
 
-[parameters]
-warning(int): Time difference in seconds at which the check goes to warning.
-critical(int): Time difference triggering a critical state.
-

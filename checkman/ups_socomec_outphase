@@ -16,9 +16,3 @@ perfdata:
 inventory:
  One check per Socomec UPS output phase is created.
 
-[parameters]
-parameters (dict): This check supports two types of parameters. It is a dictionary with the following keys:
-
- {"voltage"}: Warning and critical levels for voltage in int, denoting the minimum required voltage in volt. Default values are (210, 200).
-
- {"load"}: Warning and critical levels for load in int, denoting load in percent. Default values are (80, 90).

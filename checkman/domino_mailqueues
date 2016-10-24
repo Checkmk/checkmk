@@ -15,8 +15,3 @@ inventory:
  The names of the mail queues are predefined in the check. If the corresponding
  oid is found, the corresponding mail queue is inventorized.
 
-[parameters]
-parameters (dict): The parameters can be given in a dictionary based syntax
-   with the single element below.
-
-{"queue_length"}: a tuple of warning and critical levels

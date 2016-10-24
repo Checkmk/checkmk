@@ -10,7 +10,3 @@ description:
 inventory:
  One check will be created
 
-[parameters]
-warning(int): minimal age in secounds for warning state
-critical(int): minimal age in secounds for critical state
-

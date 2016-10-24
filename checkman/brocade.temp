@@ -17,7 +17,3 @@ inventory:
  in {swSensorStatus}
 
 
-[parameters]
-warn(int): the temperature at which a WARN state is reached
-crit(int): the temperature at which a CRIT state is reached
-

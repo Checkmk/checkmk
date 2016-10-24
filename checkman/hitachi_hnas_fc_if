@@ -29,6 +29,3 @@ perfdata:
 inventory:
  Finds one item per FibreChannel Interface.
 
-[parameters]
-parameters (dict): See man page of {if64}.
-

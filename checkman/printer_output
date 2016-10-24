@@ -20,8 +20,3 @@ description:
 inventory:
  One check is being created for each unit with a unique name.
 
-[parameters]
-parameters (dict):
-
- {"capacity_levels"}: A tuple containing the percentage thresholds for
- {WARNING} and {CRITICAL} states.

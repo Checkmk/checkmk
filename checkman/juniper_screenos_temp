@@ -15,7 +15,3 @@ perfdata:
 inventory:
  The inventory creates a service for each sensor in the system
 
-[parameters]
-warn(float): the temperature at which a WARN state is reached
-crit(float): the temperature at which a CRIT state is reached
-

@@ -21,7 +21,3 @@ examples:
  # set default levels for all akcp temperature sensors
  akcp_daisy_temp_defaultlevels = (28, 34)
 
-[parameters]
-warning (int): temperature in degrees at which the check goes warning
-critical (int): level for critical temperature
-

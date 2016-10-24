@@ -39,7 +39,3 @@ inventory:
  During the inventory phase of check_mk, it will identify one service {CPU},
  as long as the MIB defined above is supported on the switch.
 
-[parameters]
-warning (int): The CPU utilization percentage at which a warning state is triggered.
-critical (int): The CPU utilization percentage at which a critical state is triggered.
-

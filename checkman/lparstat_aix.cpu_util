@@ -22,10 +22,3 @@ perfdata:
 inventory:
  On each LPAR one check is generated.
 
-[parameters]
-warning (int): The percentage of {wait} that triggers a warning level.
-
-critical (int): The percentage of {wait} that triggers a critical level
-
- The parameters may also be set to {None}, which makes the check alwas {OK}.
-

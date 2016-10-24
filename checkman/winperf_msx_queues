@@ -42,7 +42,3 @@ inventory:
  For each queue that is defined in {winperf_msx_queues} one check
  will be created if the agent outputs the matching performance counters.
 
-[parameters]
-warn(int): Warning level for number of mails in queue
-crit(int): Critical level
-

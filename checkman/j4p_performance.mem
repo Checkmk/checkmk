@@ -43,7 +43,3 @@ inventory:
  The agent currently supports only one instance, but that might
  be changed in future.
 
-[parameters]
-warning (int): The warning level for used memory in MB
-critical (int): The critical level for used memory in MB
-

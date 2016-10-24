@@ -47,7 +47,3 @@ inventory:
  During the inventory phase of check_mk, it will identify one service {Temperature},
  as long as the MIB defined above is supported on the switch.
 
-[parameters]
-warning (int): The temperature, in degrees Celcius, at which a warning state is triggered.
-critical (int): The temperature, in degrees Celcius, at which a critical state is triggered.
-

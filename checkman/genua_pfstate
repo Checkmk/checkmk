@@ -24,9 +24,3 @@ inventory:
  (case insensitive). If it also contains valid pf state output, the device is
  inventorized.
 
-[parameters]
-parameters(dict): parameters is a dictionary with one key
-
- {"used"}: a tuple of lower warning and critical values for the number
-    of used PF states
-

@@ -32,6 +32,3 @@ perfdata:
  trends is enabled per default. You can globally disable that in {main.mk}
  with {filesystem_default_levels["trend_perfdata"] = False}.
 
-[parameters]
-parameters (dict): See man page of {df}.
-

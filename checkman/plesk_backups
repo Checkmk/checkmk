@@ -46,9 +46,3 @@ inventory:
  One check per plesk domain is created if the {plesk_backups} agent plugin
  is installed and working (it outputs the {<<<plesk_backups>>>} section).
 
-[parameters]
-backup_age(int, int): if the age of the backup (in seconds) is older than the first value, return {WARN} state, if older than the second one, return {CRIT} state
-total_size(int, int): if the total size of all backups on the backup space (in bytes) is larger than than the first value, return {WARN} state, if larger than the second one, return {CRIT} state
-no_backup_configured_state(int): the numeric state that should be returned if no backup is configured ( 0 = {OK}, 1 = {WARN}, 2 = {CRIT} )
-no_backup_found_state(int): the numeric state that should be returned if no backup can be found ( 0 = {OK}, 1 = {WARN}, 2 = {CRIT} )
-

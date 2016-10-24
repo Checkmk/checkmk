@@ -26,6 +26,3 @@ perfdata:
 inventory:
  Finds one check for each volume on a FAST LTA Storage System.
 
-[parameters]
-parameters (dict): See man page of {df}.
-

@@ -14,14 +14,3 @@ inventory:
 perfdata:
  The packet rates for all four types of packets
 
-[parameters]
-parameters(dict): a dictionary with the follwing keys
-
- {"accepted"}: a tuple of warning and critical levels (integers) for the packet rate
-
- {"rejected"}: a tuple of warning and critical levels (integers) for the packet rate
-
- {"dropped"}: a tuple of warning and critical levels (integers) for the packet rate
-
- {"logged"}: a tuple of warning and critical levels (integers) for the packet rate
-

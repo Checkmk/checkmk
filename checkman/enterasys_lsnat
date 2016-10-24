@@ -10,8 +10,3 @@ description:
 inventory:
  One check is created for each Enterasys device
 
-[parameters]
-parameters (dict): A dictionary with the following optional keys:
-
-    {"current_bindings"}: tuple(int, int) representing the warn and crit limits for this check
-

@@ -39,9 +39,3 @@ perfdata:
  {max_res_bytes}: Maximum resident set size of the process during its lifetime.
  {avg_mem_bytes}: Average total (data+stack+text) memory use of the process.
 
-[parameters]
-parameters(dict): parameters is a dictionary with one key
-
- {"age"}: contains a tuple for the warning and critical limits for the time
- since last start of the job. Units are seconds.
-

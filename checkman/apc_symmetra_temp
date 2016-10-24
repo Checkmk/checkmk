@@ -25,7 +25,3 @@ examples:
    ("apcusv47", "apc_symmetra_temp", 'Temp Sensor MM:3', (22, 26) ),
  ]
 
-[parameters]
-warning (int): temperature at which a warning level is triggered
-critical (int): critical level for temperature
-

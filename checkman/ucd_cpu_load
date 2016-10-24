@@ -31,7 +31,3 @@ inventory:
  try an explicit inventory with {cmk --checks ucd_cpu_load -I HOSTNAME}
  if that is not the case.
 
-[parameters]
-warning (float): The 15 minute average load that triggers a warning
-critical (float): The level for the critical state
-

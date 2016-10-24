@@ -31,16 +31,3 @@ perfdata:
 inventory:
  One check is created for each Jolokia instance sent by the agent.
 
-[parameters]
-lo_crit(int): Return {CRIT} if number of requests is lower or equal than
-  this value.
-
-lo_warn(int): Return {WARN} if number of requests is lower or equal than
-  this value.
-
-hi_warn(int): Return {WARN} if number of requests is higher or equal than
-  this value.
-
-hi_crit(int): Return {CRIT} if number of requests is higher or equal than
-  this value.
-

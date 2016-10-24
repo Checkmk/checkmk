@@ -38,21 +38,3 @@ perfdata:
 inventory:
  Finds one item per network interface
 
-[parameters]
-parameters(dict): parameters is a dictionary with seven keys
-
-{"brcdTMStatsTotalIngressPktsCnt"}: a tuple of warning and critical levels
-
-{"brcdTMStatsIngressEnqueuePkts"}: a tuple of warning and critical levels
-
-{"brcdTMStatsEgressEnqueuePkts"}: a tuple of warning and critical levels
-
-{"brcdTMStatsIngressDequeuePkts"}: a tuple of warning and critical levels
-
-{"brcdTMStatsIngressTotalQDiscardPkts"}: a tuple of warning and critical levels
-
-{"brcdTMStatsIngressOldestDiscardPkts"}: a tuple of warning and critical levels
-
-{"brcdTMStatsEgressDiscardPkts"}: a tuple of warning and critical levels
-
-

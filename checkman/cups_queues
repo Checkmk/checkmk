@@ -27,8 +27,3 @@ perfdata:
 inventory:
  Checks are created for all available printers in {lpstat -p} output.
 
-[parameters]
-job_count (int, int): WARN/CRIT if number of jobs are above
-job_age (int, int): WARN/CRIT if oldest job is above in seconds
-is_idle (int): Internal state for pritner state "is idle"
-

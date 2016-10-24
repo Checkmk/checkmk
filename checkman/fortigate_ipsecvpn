@@ -8,7 +8,3 @@ description:
 inventory:
  One service will be created
 
-[parameters]
-warning (int): number of tunnels in state "down" for warning level
-crit (int): number of tunnels in state "down" for critical level
-

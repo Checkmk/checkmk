@@ -56,7 +56,3 @@ perfdata:
  purpose of the check. Please look at the shipped PNP template for
  details.
 
-[parameters]
-parameters(dict): a dictionary with these optional keys:
-
- {"active_connections"} : (int, int) - warn/crit levels for the number of currently active connections

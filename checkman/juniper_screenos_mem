@@ -12,7 +12,3 @@ inventory:
 perfdata:
  usage: The current usage in MB
 
-[parameters]
-warning (float): The percentage of memory usage that triggers a warning level.
-critical (float): The percentage of memory usage that triggers a critical level.
-

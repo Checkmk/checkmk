@@ -26,14 +26,3 @@ perfdata:
  stacks swap usage on top of RAM usage und thus shows
  the amount of virtual RAM that is used by processes.
 
-[parameters]
-parameters (dict):
-  {"levels"}: A pair of two int or float values: if these are
-  float it means the the percentage of virtual memory used
-  by processes at which WARNING/CRIT state is triggered. If the
-  two numbers are defined as an integer value then they are interpreted
-  as an absolute value in megabytes.
-
-  {"average"}: This key is optional. If set (integer), it means
-  a number of minutes. The levels are then applied to the
-  averaged value over that time horizon.

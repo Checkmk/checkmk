@@ -18,9 +18,3 @@ perfdata:
 inventory:
  Creates exactly one check per host called Outlet Count.
 
-[parameters]
-tuple(int, int, int, int): crit_low, warn_low, warn_high, crit_high:
-  If the value is lower or equal crit_low, the check returns {CRIT}.
-  If the value is lower or equal warn_low, the check returns {WARN}.
-  If the value is higher or equal warn_high, the check returns {WARN}.
-  If the value is higher or equal crit_high, the check returns {CRIT}.

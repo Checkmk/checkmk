@@ -13,7 +13,3 @@ perfdata:
 inventory:
  One service will be created
 
-[parameters]
-warning (float): The percentage of CPU utilization for the last 15 minutes that triggers a warning level.
-critical (float): The percentage of CPU utilization for the last 15 minutes that triggers a critical level.
-

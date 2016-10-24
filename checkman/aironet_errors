@@ -21,8 +21,3 @@ perfdata:
 inventory:
  On check is generated for each radio present (even if not activated)
 
-[parameters]
-warning (float): Error rate in errors/sec at which a warning level is
- triggered.
-critical (float): Critical level for error rate
-

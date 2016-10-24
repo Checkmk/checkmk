@@ -18,8 +18,3 @@ inventory:
  One check is automatically created if at least one CPU
  entry is found in the SNMP output.
 
-[parameters]
-warning (int): CPU utilization percentage at which a warning level ist triggered.
-
-critical (int): CPU utilization percentage at which a critical level ist triggered.
-

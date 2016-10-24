@@ -16,11 +16,3 @@ perfdata:
 inventory:
  One check for each cpu is created by the inventory.
 
-[parameters]
-parameters (tuple): A pair of numbers for warning and critical level
-
- warning (int): The temperature that triggers a {WARN} state
-
- critical (int): The temperature that triggers a {CRIT} state
-
-

@@ -18,11 +18,3 @@ inventory:
  One check is created for each application running inside an Jolokia
  instance sent by the agent.
 
-[parameters]
-parameters (dict): A dictionary with the following optional keys:
-
-    {"min"}: Pair of integers of warn and crit: the minimum required uptime
-    uptime in seconds.
-
-    {"max"}: Pair of integers of warn and crit: the maximum allowed uptime
-    uptime in seconds.

@@ -21,8 +21,3 @@ inventory:
  in state {UNOPEN} will be ignored. Also LUNs with only
  one path will be ignored (there are usually local devices).
 
-[parameters]
-active (int): The number of paths expected in state {ACTIVE}
-standby (int): The number of paths expected in state {STANDBY}
-failed (int): The number of paths expected in state {FAILED}
-unopen (int): The number of paths expected in state {UNOPEN}

@@ -15,7 +15,3 @@ inventory:
  Per library one check is created
 
 
-[parameters]
-critical(int): Below or equal this level the check goes in critical state
-warning(int): Below or equal the level the checks goes in warning state
-

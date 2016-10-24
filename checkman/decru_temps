@@ -24,7 +24,3 @@ inventory:
  during the inventory plus 4 or 8 degrees is used as warning
  or critical level resp.
 
-[parameters]
-warning (int): temperature (celsius) above which a warning level is reached
-critical (int): temperature (celsius) above which a critical level is reached
-

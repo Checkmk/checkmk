@@ -13,7 +13,3 @@ perfdata:
 inventory:
  One check per OpenVMS system will be created.
 
-[parameters]
-warn(int): warning level for the number of processes
-crit(int): critical level for the number of processes
-

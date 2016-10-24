@@ -38,6 +38,3 @@ examples:
    ("my-svc", "ibm_svc_enclosurestats.temp", '1', (40, 50))
  ]
 
-[parameters]
-parameters (int, int): temperature levels in degree celsius for {WARN} and {CRIT}
-

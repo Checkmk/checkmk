@@ -18,9 +18,3 @@ inventory:
  a state other than {notavailable} (3) during the inventory run are added to the
  configuration. The {notavailable} state indicates that one disk is not installed.
 
-[parameters]
-expected_state (string): The expected state where the check reports {OK}.
- On all other states the check will report {CRITICAL}. Valid states are:
- {"available"}, {"broken"}, {"notavailable"}, {"notsupported"},{"present"},
- {"readying"}, {"recovering"}, {"partbroken"}, {"spare"}, {"formating"},
- {"unformated"}, {"notexist"}, {"copying"}.

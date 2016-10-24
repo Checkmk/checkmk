@@ -25,18 +25,3 @@ examples:
        ALL_HOSTS, ALL_SERVICES),
   ]
 
-[parameters]
-parameters(dict): This checks parameters are a dictionary with the
- following (optional) keys:
-
-  {"3v3v"}: levels
-
-  {"12v"}:  levels
-
-  whereas the levels are a dictionary of
-
-  {"lower_levels"}: A float tuple (warn, crit) containing the upper levels. No defaults.
-
-  {"upper_levels"}: A float tuple (warn, crit) containing the lower levels. No defaults.
-
-

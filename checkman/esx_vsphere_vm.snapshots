@@ -13,8 +13,3 @@ perfdata:
 inventory:
  On each VM one check is generated if there is snapshot information available
 
-[parameters]
-parameters (dict): The dictionary supports the following key
-
- {"age"}: Warning and critical levels for the age of the latest snapshot in seconds
-

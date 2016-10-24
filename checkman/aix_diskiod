@@ -48,20 +48,3 @@ inventory:
   created that has at least one hard disk. If set to {"legacy"} then a
   separate check for read and write will be created (deprecated).
 
-[parameters]
-"read": The levels to be applied to the read throughput. It this entry is
- {None} or missing in the dictionary, then no levels are applied. This is
- the defaut. The values are in MB per second. Setting {"read"} to {(20, 40)}
- will warn if 20 MB/s is exceeded and make the check critical at 40 MB/s.
- If averaging is turned on, then the levels are applied to the averaged
- values!
-
-"write": The levels for the write throughput.
-
-"average": If this is not {None}, it will be interpreted as a time range
- in minutes to do averaging over. Set this to {15} in order to have
- the levels applied to a 15-minute average instead of the current
- values (approx.). Turning the average on will also create two additional
- performance values. Make sure that your graphing tool is setup to
- a changing number of variables.
-

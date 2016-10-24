@@ -51,12 +51,3 @@ perfdata:
 inventory:
  Creates one check for every Disk Group in the agent's output.
 
-[parameters]
-parameters(dict): see check manpage for df. The following parameters
- are added for more functionality.
-
- {"req_mir_free"}: If this is set to {True}, the free space is checked
- against the req_mir_free instead of free_mb. This works only for
- {normal} or {high} redundancy Disk Groups. An information for this is
- added to the check output, when {req_mir_free} is {True}
-

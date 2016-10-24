@@ -23,10 +23,3 @@ perfdata:
 inventory:
   Returns one Check for each fan.
 
-[parameters]
-warn_perc(int): If the speed is less or equal this percentage of max speed
-  the check results in {WARN} state.
-
-crit_perc(int): If the speed is less or equal this percentage of max speed
-  the check results in {CRIT} state.
-

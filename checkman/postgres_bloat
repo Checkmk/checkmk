@@ -21,14 +21,3 @@ perfdata:
   Two values. A total sum of all table and all index wasted bytes.
   Per default only the top 10 tables of each database are accumulated.
 
-[parameters]
-parameters(dict): The parameters are a dictionary with the following optional keys
-
-    {'table_bloat_abs'}: An int tuple containing limits for the absolute wasted bytes per table
-
-    {'table_bloat_perc'}: A float tuple containing the percentage limits per table
-
-    {'index_bloat_abs'}: An int tuple containing limits for the absolute wasted bytes per table index
-
-    {'index_bloat_perc'}: A float tuple containing the percentage limits per table index
-

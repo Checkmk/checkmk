@@ -12,9 +12,3 @@ inventory:
 perfdata:
  One variable: the current temperature in degrees celsius.
 
-[parameters]
-A tuple (int, int): With the follwowing values
-warning : The degrees celsius to trigger a WARNING state
-critical : The degrees celsius to trigger a CRITICAL state
-
-

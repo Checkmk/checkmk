@@ -19,13 +19,3 @@ description:
 inventory:
  One check per device is created automatically.
 
-[parameters]
-stratum_warn (int): stratums above this value will raise a {WARNING} state.
-  The default is set to {0}. The threshold can be disabled by setting to {None}.
-stratum_warn (int): stratums above this value will raise a {CRITICAL} state.
-  The default is set to {0}. The threshold can be disabled by setting to {None}.
-ref_offset_warn (int): refclock offsets above this value will raise a {WARNING} state.
-  The default is set to {500} microseconds. The threshold can be disabled by setting to {None}.
-ref_offset_crit (int): refclock offsets above this value will raise a {CRITICAL} state.
-  The default is set to {1000} microseconds. The threshold can be disabled by setting to {None}.
-

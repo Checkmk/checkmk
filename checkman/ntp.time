@@ -34,8 +34,3 @@ inventory:
  If at least one peer is present, exactly one check is created, if
  {ntp_inventory_mode} is set to {"summary"} or {"both"}.
 
-[parameters]
-critical_stratum (int): The stratum at which the check gets critical
-warning (float): The offset in ms at which a warning is triggered
-critical (float): the critical offset in ms
-

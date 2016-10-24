@@ -12,5 +12,3 @@ description:
 inventory:
  One service for each network will be created.
 
-[parameters]
-parameters(tuple): levels for warn/crit

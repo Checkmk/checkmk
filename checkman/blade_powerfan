@@ -21,8 +21,3 @@ perfdata:
   Two values: The current percentage of the maximum design speed and the
   current speed in RPM.
 
-[parameters]
-warning (int): percentage of the maximum speed, at and below which a warning
-  is triggered.
-critical (int): percentage of the maximum speed, at and below which a critical
-  state is triggered.

@@ -111,6 +111,5 @@ check_info["ibm_svc_system"] = {
     "check_function"        : check_ibm_svc_system,
     "inventory_function"    : inventory_ibm_svc_system,
     "service_description"   : "Info",
-    "has_perfdata"          : False,
 }
 

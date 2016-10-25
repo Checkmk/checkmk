@@ -67,7 +67,6 @@ def check_ibm_xraid_pdisks(item, _no_params, info):
 check_info["ibm_xraid_pdisks"] = {
       "check_function"     : check_ibm_xraid_pdisks,
       "service_description": "RAID PDisk %s",
-      "has_perfdata"       : False,
       "inventory_function" : inventory_ibm_xraid_pdisks,
       # there is no information about the ext mib in the right place
       # (at least on windows)

@@ -214,7 +214,6 @@ check_info['skype.mcu'] = {
         "LS:ImMcu - MCU Health And Performance",
     ]),
     'check_function'      : check_skype_mcu,
-    'has_perfdata'        : False,
     'service_description' : "Skype MCU Health",
 }
 

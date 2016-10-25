@@ -115,7 +115,6 @@ check_info['siemens_plc.flag'] = {
     "inventory_function"      : inventory_siemens_plc_flag,
     "check_function"          : check_siemens_plc_flag,
     "service_description"     : "Flag %s",
-    "has_perfdata"            : False,
     "group"                   : "siemens_plc_flag",
 }
 
@@ -244,7 +243,6 @@ check_info['siemens_plc.info'] = {
     "inventory_function"      : inventory_siemens_plc_info,
     "check_function"          : check_siemens_plc_info,
     "service_description"     : "Info %s",
-    "has_perfdata"            : False,
 }
 
 #.
@@ -281,5 +279,4 @@ check_info['siemens_plc_cpu_state'] = {
     "inventory_function"      : inventory_siemens_plc_cpu_state,
     "check_function"          : check_siemens_plc_cpu_state,
     "service_description"     : "CPU state",
-    "has_perfdata"            : False,
 }

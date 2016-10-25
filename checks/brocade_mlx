@@ -84,7 +84,6 @@ check_info["brocade_mlx.module_status"] = {
     "service_description"   : "Status Module %s",
     "snmp_info"             : brocade_mlx_info,
     "snmp_scan_function"    : brocade_mlx_scan,
-    "has_perfdata"          : False,
 }
 
 #.

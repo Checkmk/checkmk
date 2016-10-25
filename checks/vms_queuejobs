@@ -59,5 +59,4 @@ check_info['vms_queuejobs'] = {
     "check_function" :      check_vms_queuejobs,
     "inventory_function" :  inventory_vms_queuejobs,
     "service_description" : "Queue Jobs",
-    "has_perfdata" :        False,
 }

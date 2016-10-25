@@ -38,6 +38,5 @@ check_info["symantec_av_progstate"] = {
     "check_function"        : check_symantec_av_progstate,
     "inventory_function"    : inventory_symantec_av_progstate,
     "service_description"   : "AV Program Status",
-    "has_perfdata"          : False,
 }
 

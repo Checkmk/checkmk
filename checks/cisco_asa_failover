@@ -96,7 +96,6 @@ check_info["cisco_asa_failover"]  = {
     "check_function"     : check_cisco_asa_failover,
     "inventory_function" : inventory_cisco_asa_failover,
     "service_description": "Cluster Status",
-    "has_perfdata"       : False,
     "snmp_scan_function" : lambda oid: oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco adaptive security") \
                                        or "cisco pix security" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "snmp_info"          : (".1.3.6.1.4.1.9.9.147.1.2.1.1.1", [

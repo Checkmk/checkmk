@@ -755,7 +755,6 @@ check_info["jolokia_metrics.app_state"] = {
     "service_description" : "JVM %s State",
     "check_function"      : check_jolokia_metrics_app_state,
     "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "app_state"),
-    "has_perfdata"        : False,
 }
 
 check_info["jolokia_metrics.app_sess"] = {

@@ -225,7 +225,6 @@ def check_j4p_performance_app_state(item, _unused, info):
 check_info["j4p_performance.app_state"] = {'check_function': check_j4p_performance_app_state,
  'default_levels_variable': None,
  'group': 'j4p_performance.app_state',
- 'has_perfdata': False,
  'inventory_function': lambda i: inventory_j4p_performance_apps(i, "app_state"),
  'node_info': False,
  'service_description': 'JMX %s State',

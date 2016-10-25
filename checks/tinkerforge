@@ -172,7 +172,6 @@ check_info['tinkerforge'] = {
     'inventory_function'  : lambda parsed: inventory_tinkerforge('master', parsed),
     'check_function'      : check_tinkerforge_master,
     'parse_function'      : parse_tinkerforge,
-    'has_perfdata'        : False,
     'service_description' : "Master %s"
 }
 

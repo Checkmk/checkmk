@@ -118,7 +118,6 @@ check_info['fritz.config'] = {
   "inventory_function"  : inventory_fritz_config,
   "check_function"      : check_fritz_config,
   "service_description" : "Configuration",
-  "has_perfdata"        : False,
 }
 
 #
@@ -201,5 +200,4 @@ check_info["fritz.link"] = {
     'check_function':          check_fritz_link,
     'inventory_function':      inventory_fritz_link,
     'service_description':     'Link Info',
-    'has_perfdata':            False,
 }

@@ -128,7 +128,6 @@ check_info["wagner_titanus_topsense.info"] = {
     "check_function"        : check_wagner_titanus_topsense_info,
     "inventory_function"    : inventory_wagner_titanus_topsense_info,
     "service_description"   : "Topsense Info",
-    "has_perfdata"          : False,
     "snmp_info"             : wagner_titanus_topsense_info,
     "snmp_scan_function"    : wagner_titanus_topsense_scan
 }
@@ -163,7 +162,6 @@ check_info["wagner_titanus_topsense.overall_status"] = {
     "check_function"        : check_wagner_titanus_topsense_overall_status,
     "inventory_function"    : inventory_wagner_titanus_topsense_overall_status,
     "service_description"   : "Overall Status",
-    "has_perfdata"          : False,
     "snmp_info"             : wagner_titanus_topsense_info,
     "snmp_scan_function"    : wagner_titanus_topsense_scan
 }
@@ -212,7 +210,6 @@ check_info["wagner_titanus_topsense.alarm"] = {
     "check_function"        : check_wagner_titanus_topsense_alarm,
     "inventory_function"    : inventory_wagner_titanus_topsense_alarm,
     "service_description"   : "Alarm Detector %s",
-    "has_perfdata"          : False,
     "snmp_info"             : wagner_titanus_topsense_info,
     "snmp_scan_function"    : wagner_titanus_topsense_scan
 }

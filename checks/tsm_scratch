@@ -64,6 +64,5 @@ check_info["tsm_scratch"] = {
     "check_function"        : check_tsm_scratch,
     "inventory_function"    : inventory_tsm_scratch,
     "service_description"   : "Scratch Pool %s",
-    "has_perfdata"          : False,
 }
 

@@ -36,5 +36,4 @@ active_check_info['mkevents'] = {
     "command_line"        : '$USER1$/check_mkevents $ARG1$',
     "argument_function"   : check_mkevents_arguments,
     "service_description" : check_mkevents_description,
-    "has_perfdata"        : False,
 }

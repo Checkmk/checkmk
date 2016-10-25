@@ -233,7 +233,6 @@ check_info['services'] = {
     "check_function"          : check_windows_services,
     "inventory_function"      : inventory_windows_services,
     "service_description"     : "Service %s",
-    "has_perfdata"            : False,
     "node_info"               : True,
     "group"                   : "services",
     "default_levels_variable" : "services_default_levels",

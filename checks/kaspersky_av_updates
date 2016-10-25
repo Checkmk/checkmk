@@ -53,6 +53,5 @@ check_info["kaspersky_av_updates"] = {
     "check_function"        : check_kaspersky_av_updates,
     "inventory_function"    : inventory_kaspersky_av_updates,
     "service_description"   : "AV Update Status",
-    "has_perfdata"          : False,
 }
 

@@ -111,7 +111,6 @@ check_info["win_printers"] = {
     "group"                  : "windows_printer_queues",
     "inventory_function"     : inventory_win_printers,
     "service_description"    : "Printer %s",
-    "has_perfdata"           : False,
     "default_levels_variable" : "win_printer_default_levels",
 }
 

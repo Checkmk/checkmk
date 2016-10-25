@@ -96,6 +96,5 @@ check_info["ibm_svc_enclosure"] = {
     "check_function"        : check_ibm_svc_enclosure,
     "inventory_function"    : inventory_ibm_svc_enclosure,
     "service_description"   : "Enclosure %s",
-    "has_perfdata"          : False,
 }
 

@@ -81,7 +81,6 @@ check_info["alcatel_timetra_chassis"] = {
     "check_function"        : check_alcatel_timetra_chassis,
     "inventory_function"    : inventory_alcatel_timetra_chassis,
     "service_description"   : "Device %s",
-    "has_perfdata"          : False,
     "snmp_scan_function"    : lambda oid: "TiMOS" in oid(".1.3.6.1.2.1.1.1.0"),
     "snmp_info"             : (".1.3.6.1.4.1.6527.3.1.2.2.1.8.1", [
                                                         8,  # tmnxHwName

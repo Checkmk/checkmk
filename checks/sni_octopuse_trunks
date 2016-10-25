@@ -66,7 +66,6 @@ check_info['sni_octopuse_trunks'] = {
     'check_function'     : check_octopus_trunks,
     'inventory_function' : inventory_octopus_trunks,
     'service_description': "Trunk Port %s",
-    'has_perfdata'       : False,
     'snmp_scan_function' : lambda oid: "agent for hipath" in \
                                   oid(".1.3.6.1.2.1.1.1.0").lower(),
     'snmp_info'          : [ (".1.3.6.1.4.1.231.7.2.9.3.8.1", [

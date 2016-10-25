@@ -57,5 +57,4 @@ check_info["windows_multipath"]  = {
     "check_function"     : check_windows_multipath,
     "inventory_function" : inventory_windows_multipath,
     "service_description": "Multipath",
-    "has_perfdata"       : False,
 }

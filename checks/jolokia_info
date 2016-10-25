@@ -48,6 +48,5 @@ check_info["jolokia_info"] = {
     "service_description" : "JVM %s",
     "check_function"      : check_jolokia_info,
     "inventory_function"  : inventory_jolokia_info,
-    "has_perfdata"        : False,
 }
 

@@ -145,7 +145,6 @@ check_info["qlogic_sanbox.psu"] = {
     "check_function"        : check_qlogic_sanbox_psu,
     "inventory_function"    : inventory_qlogic_sanbox_psu,
     "service_description"   : "PSU %s",
-    "has_perfdata"          : False,
     "snmp_info"             : (".1.3.6.1.3.94.1.8.1", [3, # connUnitSensorName
                                                        4, # connUnitSensorStatus
                                                        6, # connUnitSensorMessage

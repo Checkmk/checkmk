@@ -49,6 +49,5 @@ check_info["vxvm_multipath"] = {
     "check_function"          : check_vxvm_multipath,
     "inventory_function"      : lambda info: [(item[0], None) for item in info],
     "service_description"     : "Multipath %s",
-    "has_perfdata"            : False,
 }
 

@@ -68,6 +68,5 @@ check_info["symantec_av_updates"] = {
     "group"                 : "antivir_update_age",
     "inventory_function"    : inventory_symantec_av_updates,
     "service_description"   : "AV Update Status",
-    "has_perfdata"          : False,
 }
 

@@ -63,6 +63,5 @@ check_info["tsm_sessions"] = {
     "check_function"        : check_tsm_sessions,
     "inventory_function"    : inventory_tsm_sessions,
     "service_description"   : "tsm_sessions",
-    "has_perfdata"          : False,
 }
 

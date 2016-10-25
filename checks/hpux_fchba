@@ -93,6 +93,5 @@ check_info['hpux_fchba'] = {
     "check_function"          : check_hpux_fchba,
     "inventory_function"      : inventory_hpux_fchba,
     "service_description"     : "FC HBA %s",
-    "has_perfdata"            : False,
 }
 

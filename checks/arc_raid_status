@@ -66,6 +66,5 @@ check_info["arc_raid_status"] = {
     "check_function"        : check_arc_raid_status,
     "inventory_function"    : inventory_arc_raid_status,
     "service_description"   : "Raid Array #%s",
-    "has_perfdata"          : False,
 }
 

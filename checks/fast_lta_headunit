@@ -85,7 +85,6 @@ check_info["fast_lta_headunit.status"] = {
     "check_function"        : check_fast_lta_headunit_status,
     "inventory_function"    : inventory_fast_lta_headunit_status,
     "service_description"   : "Fast LTA Headunit Status",
-    "has_perfdata"          : False,
     "snmp_info"             : fast_lta_headunit_info,
     "snmp_scan_function"    : fast_lta_headunit_scan
 }
@@ -132,7 +131,6 @@ check_info["fast_lta_headunit.replication"] = {
     "check_function"        : check_fast_lta_headunit_replication,
     "inventory_function"    : inventory_fast_lta_headunit_replication,
     "service_description"   : "Fast LTA Replication",
-    "has_perfdata"          : False,
     "snmp_info"             : fast_lta_headunit_info,
     "snmp_scan_function"    : fast_lta_headunit_scan
 }

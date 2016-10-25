@@ -55,6 +55,5 @@ active_check_info['bi_aggr'] = {
     "command_line"        : '$USER1$/check_bi_aggr $ARG1$',
     "argument_function"   : check_bi_aggr_arguments,
     "service_description" : lambda params: "Aggr %s" % params[1],
-    "has_perfdata"        : False,
 }
 

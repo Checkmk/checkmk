@@ -42,6 +42,5 @@ check_info["vxvm_enclosures"] = {
     "check_function"          : check_vxvm_enclosures,
     "inventory_function"      : lambda info: [(item[0], None) for item in info],
     "service_description"     : "Enclosure %s",
-    "has_perfdata"            : False,
 }
 

@@ -199,7 +199,6 @@ check_info["cbl_airlaser.status"]  = {
     "check_function"       : check_cbl_airlaser_status,
     "inventory_function"   : inventory_cbl_airlaser,
     "service_description"  : "CBL Airlaser Status",
-    "has_perfdata"         : False,
     "snmp_scan_function"   : lambda oid: "airlaser" in oid(".1.3.6.1.2.1.1.1.0").lower() \
                              and oid(".1.3.6.1.4.1.2800.2.1.1.0"),
      "snmp_info"            : [ (".1.3.6.1.4.1.2800.2", [ "1.3" ]),

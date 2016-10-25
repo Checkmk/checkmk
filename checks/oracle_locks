@@ -89,7 +89,6 @@ check_info["oracle_locks"] = {
     'check_function':          check_oracle_locks,
     'inventory_function':      inventory_oracle_locks,
     'service_description':     'ORA %s Locks',
-    'has_perfdata':            False,
     "default_levels_variable" : "oracle_locks_defaults",
     'group':                   'oracle_locks',
 }

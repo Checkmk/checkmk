@@ -56,6 +56,5 @@ check_info["ibm_svc_eventlog"] = {
     "check_function"        : check_ibm_svc_eventlog,
     "inventory_function"    : inventory_ibm_svc_eventlog,
     "service_description"   : "Eventlog",
-    "has_perfdata"          : False,
 }
 

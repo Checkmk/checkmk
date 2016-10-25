@@ -100,7 +100,6 @@ check_info["brocade.power"] = {
     "check_function"        : check_brocade_power,
     "inventory_function"    : inventory_brocade_power,
     "service_description"   : "Power supply %s",
-    "has_perfdata"          : False,
     "snmp_info"             : brocade_info,
     'snmp_scan_function'    : brocade_scan,
 }

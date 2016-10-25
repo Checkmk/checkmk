@@ -295,7 +295,6 @@ check_info["libelle_business_shadow.info"] = {
     "check_function"        : check_libelle_business_shadow_info,
     "inventory_function"    : inventory_libelle_business_shadow_info,
     "service_description"   : "Libelle Business Shadow Info",
-    "has_perfdata"          : False,
 }
 
 #.
@@ -332,7 +331,6 @@ check_info["libelle_business_shadow.status"] = {
     "check_function"        : check_libelle_business_shadow_status,
     "inventory_function"    : inventory_libelle_business_shadow_status,
     "service_description"   : "Libelle Business Shadow Status",
-    "has_perfdata"          : False,
 }
 
 #.
@@ -370,7 +368,6 @@ check_info["libelle_business_shadow.process"] = {
     "check_function"        : check_libelle_business_shadow_process,
     "inventory_function"    : inventory_libelle_business_shadow_process,
     "service_description"   : "Libelle Business Shadow Process",
-    "has_perfdata"          : False,
 }
 
 #.

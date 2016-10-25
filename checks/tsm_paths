@@ -38,6 +38,5 @@ check_info["tsm_paths"] = {
     "check_function"        : check_tsm_paths,
     "inventory_function"    : inventory_tsm_paths,
     "service_description"   : "TSM Paths",
-    "has_perfdata"          : False,
 }
 

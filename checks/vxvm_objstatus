@@ -77,6 +77,5 @@ check_info["vxvm_objstatus"] = {
     "check_function"          : check_vxvm_objstatus,
     "inventory_function"      : inventory_vxvm_objstatus,
     "service_description"     : "VXVM objstatus %s",
-    "has_perfdata"            : False,
 }
 

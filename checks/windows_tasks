@@ -114,6 +114,5 @@ check_info["windows_tasks"] = {
     "check_function"        : check_windows_tasks,
     "inventory_function"    : inventory_windows_tasks,
     "service_description"   : "Task %s",
-    "has_perfdata"          : False,
 }
 

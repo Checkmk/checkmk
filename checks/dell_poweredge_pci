@@ -59,7 +59,6 @@ check_info["dell_poweredge_pci"] = {
     "check_function"        : check_dell_poweredge_pci,
     "inventory_function"    : inventory_dell_poweredge_pci,
     "service_description"   : "PCI %s",
-    "has_perfdata"          : False,
     "snmp_info"             : ( ".1.3.6.1.4.1.674.10892.5.4.1100.80.1", [
                                       #"1", # pCIDevicechassisIndex       0
                                       #"2", # pCIDeviceIndex              1

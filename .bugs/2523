@@ -1,0 +1,19 @@
+Title: Distributed Monitoring: Not blocked automatic updates for slave sites
+Component: wato
+State: open
+Date: 2016-10-25 12:23:06
+Targetversion: 1.2.8
+Class: bug
+
+The user is using a distributed monitoring setup with central WATO configuration.
+The slave sites are only monitoring a part of the hosts configured on the master and
+the site ID is inherited by the folder properties.
+
+Our normal setup will disable WATO on all slave sites. The problem is, that this will not
+disable WebAPI or the direct Multisite URLs. We should block this both ways, too.
+Otherwise the user is able to make locale changes, which will be overwritten by the
+global configuration on a later time.
+
+Workaround:
+Only do those automatic changes on the Master site. Never do it on the slave site.
+Take care about, that all of the scripts are using the Master site for those configurations.

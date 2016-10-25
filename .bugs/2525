@@ -1,0 +1,10 @@
+Title: Reports should have manual page break option
+Component: multisite
+State: open
+Date: 2016-10-25 12:47:46
+Targetversion: 1.2.8
+Class: todo
+
+The reports include the content and will make a automatically page break, if needed.
+It is a good option, that the user can define a static page break after one element.
+We should a an option for manual page breaks.

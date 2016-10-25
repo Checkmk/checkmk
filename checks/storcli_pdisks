@@ -1,0 +1,87 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_storcli_pdisks(info):
+
+    statenames = {
+        "DHS"       : "Dedicated Hot Spare",
+        "GHS"       : "Global Hot Spare",
+        "UGood"     : "Unconfigured Good",
+        "Ubad"      : "Unconfigured Bad",
+        "Onln"      : "Online",
+        "Offln"     : "Offline",
+    }
+
+    parsed = {}
+
+    separator_count = 0
+    for line in info:
+        if line[0].startswith("-----"):
+            separator_count += 1
+        elif separator_count == 2:
+            eid_and_slot, device, state, drivegroup, size, size_unit = line[:6]
+            parsed[eid_and_slot + "-" + device] = {
+                "state"     : statenames.get(state, state),
+                "size"      : (float(size), size_unit)
+            }
+        if separator_count == 3:
+            break
+
+    return parsed
+
+
+def inventory_storcli_pdisks(parsed):
+    for item in parsed:
+        yield (item, None)
+
+
+def check_storcli_pdisks(item, _no_params, parsed):
+
+    infotext = "Size: %f %s" % parsed[item]["size"]
+
+    diskstate = parsed[item]["state"]
+    state_severities = {
+        "Dedicated Hot Spare"  : 0,
+        "Global Hot Spare"     : 0,
+        "Unconfigured Good"    : 0,
+        "Unconfigured Bad"     : 1,
+        "Online"               : 0,
+        "Offline"              : 2,
+    }
+
+    infotext += ", Disk State: %s" % diskstate
+    status = state_severities.get(diskstate, 3)
+
+    return status, infotext
+
+
+check_info["storcli_pdisks"] = {
+    "parse_function"        : parse_storcli_pdisks,
+    "inventory_function"    : inventory_storcli_pdisks,
+    "check_function"        : check_storcli_pdisks,
+    "service_description"   : "RAID PDisk EID:Slot-Device %s"
+}

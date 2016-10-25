@@ -1,4 +1,4 @@
-title: LSI MegaRAID: Logical disks
+title: LSI MegaRAID: Logical disks (via MegaCLI)
 agents: linux
 catalog: os/storage
 license: GPL

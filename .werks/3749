@@ -1,0 +1,8 @@
+Title: storcli_pdisks, storcli_vdrives: New checks to monitor RAID status via StorCLI utility
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i2
+Date: 1477409325
+Class: feature
+

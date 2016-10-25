@@ -1,4 +1,4 @@
-title: LSI MegaRAID: State of physical disks
+title: LSI MegaRAID: State of physical disks (via MegaCLI)
 agents: linux
 catalog: os/storage
 license: GPL

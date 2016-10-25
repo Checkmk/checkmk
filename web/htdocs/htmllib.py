@@ -353,12 +353,12 @@ class HTMLGenerator(OutputFunnel):
 
 
     # these tags can be called by their tag names, e.g. 'self.title(content)'
-    _shortcut_tags = set(['title', 'h1', 'h2', 'h3', 'th', 'tr', 'td', 'center',\
+    _shortcut_tags = set(['title', 'h1', 'h2', 'h3', 'th', 'tr', 'td', 'center', 'pre',\
                           'div', 'p', 'span', 'canvas', 'strong', 'sub', 'tt', 'u', 'i', 'b'])
 
     # these tags can be called by open_name(), close_name() and render_name(), e.g. 'self.open_html()'
     _tag_names = set(['html', 'head', 'body', 'header', 'footer', 'a', 'b',\
-                              'script', 'form', 'button', 'p', 'select', 'pre',\
+                              'script', 'form', 'button', 'p', 'select',\
                               'table', 'tbody', 'row', 'ul', 'li', 'br', 'nobr', 'input'])
 
     # Of course all shortcut tags can be used as well.

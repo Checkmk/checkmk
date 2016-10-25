@@ -821,9 +821,13 @@ def host_extra_conf_merged(hostname, conf):
 
 
 def in_binary_hostlist(hostname, conf):
-    # TODO: This cache is never used. And now?
     cache = cmk_base.config_cache.get_dict("in_binary_hostlist")
     cache_id = id(conf), hostname
+
+    try:
+        return cache[cache_id]
+    except KeyError:
+        pass
 
     # if we have just a list of strings just take it as list of hostnames
     if conf and type(conf[0]) == str:

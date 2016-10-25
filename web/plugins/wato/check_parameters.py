@@ -8720,6 +8720,13 @@ register_check_parameters(
     match_type = "first",
 )
 
+def convert_oracle_sessions(value):
+    if isinstance(value, tuple):
+        return {'sessions_abs' : value }
+    if 'sessions_abs' not in value:
+        value['sessions_abs'] = (100, 200)
+    return value
+
 register_check_parameters(
     subgroup_applications,
     "oracle_sessions",
@@ -8728,28 +8735,35 @@ register_check_parameters(
         Dictionary(
             elements = [
                 ("sessions_abs",
-                    Tuple(
-                         title = _("Number of active sessions"),
-                         help =  _("This check monitors the current number of active sessions on Oracle"),
-                         elements = [
-                             Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100),
-                             Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
-                          ],
-                    ),
-                ),
+                    Alternative(
+                        title = _("Absolute levels of active sessions"),
+                        style = "dropdown",
+                        help = _("This check monitors the current number of active sessions on Oracle"),
+                        elements = [
+                            FixedValue(None, title = _("Do not use absolute levels"), totext = ""),
+                            Tuple(
+                                title = _("Number of active sessions"),
+                                elements = [
+                                    Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100),
+                                    Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
+                                    ],
+                                ),
+                            ],
+                        )),
                 ("sessions_perc",
                     Tuple(
                          title = _("Relative levels of active sessions."),
-                         help =  _("Set upper levels of active sessions relative to max. number of sessions."),
+                         help =  _("Set upper levels of active sessions relative to max. number of sessions. This is optional."),
                          elements = [
                              Percentage(title = _("Warning at")),
                              Percentage(title = _("Critical at")),
                           ],
                     ),
                 ),
-            ]
+            ],
+            optional_keys = ["sessions_perc"],
         ),
-        forth = lambda p: type(p) == tuple and { "sessions_abs" : p } or p,
+        forth = convert_oracle_sessions
     ),
     TextAscii(
         title = _("Database name"),

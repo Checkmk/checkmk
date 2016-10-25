@@ -53,7 +53,7 @@ def check_ucd_cpu_util(item, params, info):
 
     total = sum(rates)
     if total == 0:
-        return (3, "counters have not moved since last check, looks like state fake data")
+        raise MKCounterWrapped("Rates have not changed since last interval")
 
     parts = [ r/total for r in rates ]
     user = 100 * (parts[0] + parts[1])

@@ -6,5 +6,4 @@ Version: 1.4.0i2
 Date: 1477397596
 Class: fix
 
-When relative levels are given in a rule but no absolute levels, the default levels from the checkplugin are still used.
-This change is compatible and will ignore absolute levels in a given rule, if not explicitly set. Defaults for absolute levels are still used if no rule is given.
+When relative levels were given in a rule but no absolute levels, the default levels from the checkplugin still have been used. Now absolute levels are ignored by default if setting up a rule. This allows to set up a rule for only relative levels. This change is compatible to existing rules! Additionally defaults for absolute levels are still used if no rule is given.

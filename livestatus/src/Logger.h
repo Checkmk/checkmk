@@ -100,30 +100,39 @@ class SimpleFormatter : public Formatter {
 
 class Handler {
 public:
-    virtual ~Handler() { delete getFormatter(); }
+    virtual ~Handler() { setFormatter(std::unique_ptr<Formatter>()); }
     virtual void publish(const LogRecord &record) = 0;
 
     Formatter *getFormatter() const { return _formatter; }
     void setFormatter(std::unique_ptr<Formatter> formatter) {
+        delete _formatter;
         _formatter = formatter.release();
     }
 
 protected:
-    Handler() { setFormatter(std::make_unique<SimpleFormatter>()); }
+    Handler() : _formatter(new SimpleFormatter()) {}
 
 private:
     std::atomic<Formatter *> _formatter;
 };
 
-class StreamHandler : public Handler {
+class SharedStreamHandler : public Handler {
+public:
+    SharedStreamHandler(std::mutex &mutex, std::ostream &os);
+
+private:
+    std::mutex &_mutex;
+    std::ostream &_os;
+
+    void publish(const LogRecord &record) override;
+};
+
+class StreamHandler : public SharedStreamHandler {
 public:
     explicit StreamHandler(std::ostream &os);
 
 private:
     std::mutex _mutex;
-    std::ostream &_os;
-
-    void publish(const LogRecord &record) override;
 };
 
 class FileHandler : public StreamHandler {
@@ -151,6 +160,7 @@ public:
 
     Handler *getHandler() const { return _handler; }
     void setHandler(std::unique_ptr<Handler> handler) {
+        delete _handler;
         _handler = handler.release();
     }
 

@@ -37,6 +37,7 @@ using std::mutex;
 using std::ostream;
 using std::ostringstream;
 using std::string;
+using std::unique_ptr;
 
 ostream &operator<<(ostream &os, const LogLevel &c) {
     return os << static_cast<int>(c);
@@ -47,13 +48,16 @@ void SimpleFormatter::format(ostream &os, const LogRecord &record) {
        << "[" << record.getLevel() << "] " << record.getMessage();
 }
 
-StreamHandler::StreamHandler(ostream &os) : _os(os) {}
+SharedStreamHandler::SharedStreamHandler(mutex &mutex, ostream &os)
+    : _mutex(mutex), _os(os) {}
 
-void StreamHandler::publish(const LogRecord &record) {
+void SharedStreamHandler::publish(const LogRecord &record) {
     lock_guard<mutex> lg(_mutex);
     getFormatter()->format(_os, record);
     _os << endl;
 }
+
+StreamHandler::StreamHandler(ostream &os) : SharedStreamHandler(_mutex, os) {}
 
 FileHandler::FileHandler(const std::string &filename) : StreamHandler(_os) {
     _os.open(filename, std::ofstream::app);
@@ -66,11 +70,10 @@ Logger::Logger(string name, Logger *parent)
     : _name(move(name))
     , _parent(parent)
     , _level(LogLevel::debug)
-    , _use_parent_handlers(true) {
-    setHandler(make_unique<StreamHandler>(cerr));
-}
+    , _handler(_name.empty() ? nullptr : new StreamHandler(cerr))
+    , _use_parent_handlers(true) {}
 
-Logger::~Logger() { delete getHandler(); }
+Logger::~Logger() { setHandler(unique_ptr<Handler>()); }
 
 // static
 Logger *Logger::getLogger(const string &name) {

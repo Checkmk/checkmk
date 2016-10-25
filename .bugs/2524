@@ -1,0 +1,19 @@
+Title: Distributed Monitoring: Micro Core does need a restart instead of reload to activate the changes
+Component: core
+State: open
+Date: 2016-10-25 12:29:16
+Targetversion: 1.2.8
+Class: bug
+
+The user is using a distributed monitoring setup with central WATO configuration.
+The slave sites are only monitoring a part of the hosts configured on the master and
+the site ID is inherited by the folder properties.
+
+If the user want to fix his broken configuration, because there were changes made on slave sites, the correct
+configuration is only used, if the Micro Core is restartet completly. The normal reload does not work.
+
+Testscenario:
+Master and two slave sites. Add some hosts on the Mater site and put add those hosts the the slave sites.
+Make some changes on the slave site. Those hosts will be duplicated in the global monitoring. If you
+edit the global site settings and make the activation, the hosts does not disappear. Only a cmk -R on the
+slave site will fix it. The correct configuration is applied, but will not be actived for monitoring.

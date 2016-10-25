@@ -96,12 +96,12 @@ def page_api():
         response = { "result_code": 0, "result": action_response }
 
     except MKException, e:
-        response = { "result_code": 1, "result": str(e) }
+        response = { "result_code": 1, "result": "%s" % e }
 
     except Exception, e:
         if config.debug:
             raise
-        response = { "result_code": 1, "result": str(e) }
+        response = { "result_code": 1, "result": "%s" % e }
 
     if html.output_format == "json":
         html.write(json.dumps(response))

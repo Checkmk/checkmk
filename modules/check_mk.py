@@ -758,6 +758,7 @@ def convert_host_ruleset(ruleset, with_foreign_hosts):
 
 # TODO: Remove this when checks have been moved to cmk_base.checks
 hosttags_match_taglist = rulesets.hosttags_match_taglist
+get_rule_options = rulesets.get_rule_options
 
 
 def host_extra_conf(hostname, ruleset):

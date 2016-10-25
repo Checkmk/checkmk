@@ -1,0 +1,12 @@
+Title: ucd_cpu_util: no longer reports an UNKNOWN error when the counter data wasn't updated
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p14
+Date: 1477407867
+
+The check now raises an MKCounterWrapped instead.
+This means that the check might go stale, when the data no longer updates.
+

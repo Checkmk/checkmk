@@ -2,6 +2,7 @@
     Checks & Agents:
     * 3961 FIX: fixed error sections handling if parse function is available
     * 3962 FIX: oracle_sessions: fixed empty section handling
+    * 3831 FIX: ucd_cpu_util: no longer reports an UNKNOWN error when the counter data wasn't updated...
 
     Multisite:
     * 3970 SEC: Fixed possible URL injection on index page...

@@ -1,0 +1,26 @@
+Title: Distributed Monitoring: User action breaks configuration
+Component: multisite
+State: open
+Date: 2016-10-25 12:10:19
+Targetversion: 1.2.8
+Class: bug
+
+The user is using a distributed monitoring setup with central WATO configuration.
+The slave sites are only monitoring a part of the hosts configured on the master and
+the site ID is inherited by the folder properties.
+
+Our normal setup will disable WATO on all slave sites. If the user is activating it
+or will use our WebAPI or Multisite URLs for adaptations, the configuration is broken.
+All hosts will be started to monitor on this slave. It is related to the missing site ID
+in our configuration. All unknown site IDs will be replaced with the ID from the slave.
+
+We should take care about the transfered configuration to our slave sites. Those sites should
+only receive the configuration which is needed by them.
+
+Otherwise we have to handle the missing site IDs correctly. Any modification on slave sites
+should not break the correct configuration.
+
+Workaround:
+Please modify global settings of affected slave sites. Edit and save without any change.
+After the activation, all slave sites will be updated to the correct configuration.
+If the duplicated hosts does not disappear, please login to the slave and do a cmk -R as site user.

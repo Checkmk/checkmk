@@ -158,16 +158,8 @@ def test_load_man_page_format():
     _check_man_page_structure(page)
 
     # Check optional keys
-    for key in [ 'perfdata', 'item', 'examples', 'inventory']:
+    for key in [ 'item', 'inventory']:
         assert key in page["header"]
-
-    for entry in page["configuration"]:
-        assert type(entry) == tuple
-        assert len(entry) == 2
-
-    for entry in page["parameters"]:
-        assert type(entry) == tuple
-        assert len(entry) == 2
 
 
 def test_print_man_page_nowiki_index(capsys):
@@ -190,7 +182,8 @@ def test_print_man_page_nowiki_content(capsys):
     assert err == ""
 
     assert content.startswith("TI:")
-    assert "\nH1:" in content
+    assert "\nSA:" in content
+    assert "License:" in content
 
 
 def test_print_man_page(capsys):

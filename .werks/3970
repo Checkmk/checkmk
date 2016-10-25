@@ -14,3 +14,5 @@ An attacker could use this to make an authenticated GUI user open a page of his
 choice when the user clicks on a prepared link.
 
 One example URL which could be used: "index.py?start_url=//heise.de".
+
+Thanks to Marcel Bilal for reporting the issue!

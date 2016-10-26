@@ -36,9 +36,8 @@ string mk_logwatch_path_of_host(const string &logwatch_path,
                                  : (logwatch_path + pnp_cleanup(host_name));
 }
 
-void mk_logwatch_acknowledge(const std::string &logwatch_path,
+void mk_logwatch_acknowledge(Logger *logger, const std::string &logwatch_path,
                              const string &host_name, const string &file_name) {
-    Logger *logger = Logger::getLogger("cmk.livestatus");
     if (file_name.find('/') != string::npos) {
         Warning(logger) << "Invalid character / in mk_logfile filename '"
                         << file_name << "' of host '" << host_name << "'";

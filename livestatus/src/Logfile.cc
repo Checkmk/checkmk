@@ -46,7 +46,8 @@ using std::vector;
 
 extern unsigned long g_max_lines_per_logfile;
 
-Logfile::Logfile(const CommandsHolder &commands_holder, string path, bool watch)
+Logfile::Logfile(Logger *logger, const CommandsHolder &commands_holder,
+                 string path, bool watch)
     : _commands_holder(commands_holder)
     , _path(move(path))
     , _since(0)
@@ -56,7 +57,7 @@ Logfile::Logfile(const CommandsHolder &commands_holder, string path, bool watch)
 #ifdef CMC
     , _world(nullptr)
 #endif
-    , _logger(Logger::getLogger("cmk.livestatus"))
+    , _logger(logger)
     , _logclasses_read(0) {
     int fd = open(_path.c_str(), O_RDONLY);
     if (fd < 0) {

@@ -26,14 +26,15 @@
 #define ColumnFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include "Column.h"
 #include "Filter.h"
 #include "FilterVisitor.h"
-class Column;
 
 class ColumnFilter : public Filter {
 public:
     void accept(FilterVisitor &v) override { v.visit(*this); }
-    virtual Column *column() = 0;
+    virtual Column *column() const = 0;
+    Logger *logger() const { return column()->logger(); }
 };
 
 #endif  // ColumnFilter_h

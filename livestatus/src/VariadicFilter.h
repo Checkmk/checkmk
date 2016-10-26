@@ -31,6 +31,7 @@
 #include <string>
 #include "Filter.h"
 class FilterVisitor;
+class Logger;
 
 enum class LogicalOperator { and_, or_ };
 
@@ -43,7 +44,7 @@ public:
     void accept(FilterVisitor &v) override;
     void addSubfilter(Filter *);
     Filter *stealLastSubfiler();
-    void combineFilters(int count, LogicalOperator andor);
+    void combineFilters(Logger *logger, int count, LogicalOperator andor);
     bool hasSubFilters() { return !_subfilters.empty(); }
     _subfilters_t::iterator begin() { return _subfilters.begin(); }
     _subfilters_t::iterator end() { return _subfilters.end(); }

@@ -29,14 +29,16 @@
 #include <string>
 #include "DynamicColumn.h"
 class Column;
+class Logger;
 
 class DynamicLogwatchFileColumn : public DynamicColumn {
 public:
     DynamicLogwatchFileColumn(const std::string &name,
                               const std::string &description,
                               int indirect_offset, int extra_offset,
-                              const std::string &logwatch_path)
-        : DynamicColumn(name, description, indirect_offset, extra_offset)
+                              Logger *logger, const std::string &logwatch_path)
+        : DynamicColumn(name, description, indirect_offset, extra_offset,
+                        logger)
         , _logwatch_path(logwatch_path) {}
     virtual ~DynamicLogwatchFileColumn() {}
     Column *createColumn(const std::string &name,

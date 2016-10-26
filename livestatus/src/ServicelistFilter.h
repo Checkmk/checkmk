@@ -42,7 +42,7 @@ public:
     ServicelistFilter(ServicelistColumn *column, RelationalOperator relOp,
                       const std::string &value);
     bool accepts(void *row, contact *auth_user, int timezone_offset) override;
-    ServicelistColumn *column() override;
+    ServicelistColumn *column() const override;
 
 private:
     ServicelistColumn *_column;

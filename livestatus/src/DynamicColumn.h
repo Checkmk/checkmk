@@ -28,11 +28,12 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 class Column;
+class Logger;
 
 class DynamicColumn {
 public:
     DynamicColumn(std::string name, std::string description,
-                  int indirect_offset, int extra_offset);
+                  int indirect_offset, int extra_offset, Logger *logger);
     virtual ~DynamicColumn();
     std::string name() const;
     virtual Column *createColumn(const std::string &name,
@@ -43,6 +44,7 @@ protected:
     const std::string _description;  // Note: Currently unused!
     const int _indirect_offset;
     const int _extra_offset;
+    Logger *const _logger;
 };
 
 #endif  // DynamicColumn_h

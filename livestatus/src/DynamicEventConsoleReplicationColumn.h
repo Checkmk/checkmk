@@ -32,12 +32,14 @@ class Column;
 #ifdef CMC
 class Core;
 #endif
+class Logger;
 
 class DynamicEventConsoleReplicationColumn : public DynamicColumn {
 public:
     DynamicEventConsoleReplicationColumn(const std::string &name,
                                          const std::string &description,
-                                         int indirect_offset, int extra_offset
+                                         int indirect_offset, int extra_offset,
+                                         Logger *logger
 #ifdef CMC
                                          ,
                                          Core *core

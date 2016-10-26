@@ -63,6 +63,8 @@ public:
 
     void setError(ResponseCode code, const std::string &message);
 
+    Logger *getLogger() const { return _logger; }
+
 private:
     char *_buffer;
     char *_writepos;

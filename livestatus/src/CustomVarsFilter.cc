@@ -121,7 +121,7 @@ bool CustomVarsFilter::accepts(void *row, contact * /* auth_user */,
         case RelationalOperator::doesnt_match_icase:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            Informational(_logger)
+            Informational(logger())
                 << "Sorry. Operator " << _relOp
                 << " for custom variable list columns not implemented.";
             return false;
@@ -129,4 +129,4 @@ bool CustomVarsFilter::accepts(void *row, contact * /* auth_user */,
     return false;  // unreachable
 }
 
-CustomVarsColumn *CustomVarsFilter::column() { return _column; }
+CustomVarsColumn *CustomVarsFilter::column() const { return _column; }

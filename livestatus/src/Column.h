@@ -67,10 +67,10 @@ public:
     }
     virtual Filter *createFilter(RelationalOperator, const std::string &);
 
-protected:
-    Logger *const _logger;
+    Logger *logger() const { return _logger; }
 
 private:
+    Logger *const _logger;
     std::string _name;
     std::string _description;
     int _indirect_offset;

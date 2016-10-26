@@ -50,7 +50,7 @@ class LogCache {
 public:
     std::mutex _lock;
 
-    LogCache(const CommandsHolder &commands_holder,
+    LogCache(Logger *logger, const CommandsHolder &commands_holder,
              unsigned long max_cached_messages);
     ~LogCache();
 #ifdef CMC

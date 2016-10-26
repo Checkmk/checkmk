@@ -47,7 +47,7 @@ public:
     bool accepts(void *row, contact *auth_user, int timezone_offset) override;
     const std::string *valueForIndexing(
         const std::string &column_name) const override;
-    ListColumn *column() override;
+    ListColumn *column() const override;
 
 private:
     ListColumn *_column;

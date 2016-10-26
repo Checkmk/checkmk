@@ -32,7 +32,7 @@
 
 class EventConsoleConnection {
 public:
-    explicit EventConsoleConnection(std::string path);
+    explicit EventConsoleConnection(Logger *logger, std::string path);
     std::string getPath() const { return _path; }
     void run();
 

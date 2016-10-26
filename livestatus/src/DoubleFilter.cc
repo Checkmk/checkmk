@@ -57,11 +57,11 @@ bool DoubleFilter::accepts(void *row, contact * /* auth_user */,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Informational(_logger) << "Sorry. Operator " << _relOp
-                                   << " for float columns not implemented.";
+            Informational(logger()) << "Sorry. Operator " << _relOp
+                                    << " for float columns not implemented.";
             return false;
     }
     return false;  // unreachable
 }
 
-DoubleColumn *DoubleFilter::column() { return _column; }
+DoubleColumn *DoubleFilter::column() const { return _column; }

@@ -277,7 +277,7 @@ void Query::parseAndOrLine(char *line, LogicalOperator andor,
         return;
     }
 
-    filter.combineFilters(number, andor);
+    filter.combineFilters(_logger, number, andor);
 }
 
 void Query::parseNegateLine(char *line, VariadicFilter &filter,

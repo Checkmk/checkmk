@@ -52,7 +52,7 @@ Renderer::Renderer(OutputBuffer *output,
     : _data_encoding(data_encoding)
     , _output(output)
     , _timezone_offset(timezone_offset)
-    , _logger(Logger::getLogger("cmk.livestatus")) {
+    , _logger(output->getLogger()) {
     _output->setResponseHeader(response_header);
     _output->setDoKeepalive(do_keep_alive);
     if (invalid_header_message != "") {

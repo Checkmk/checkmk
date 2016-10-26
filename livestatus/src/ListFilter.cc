@@ -53,7 +53,7 @@ bool ListFilter::accepts(void *row, contact * /* auth_user */,
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
             if (!_empty_ref) {
-                Informational(_logger)
+                Informational(logger())
                     << "Sorry, equality for lists implemented only "
                        "for emptyness";
             }
@@ -71,8 +71,8 @@ bool ListFilter::accepts(void *row, contact * /* auth_user */,
         case RelationalOperator::doesnt_match_icase:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            Informational(_logger) << "Sorry. Operator " << _relOp
-                                   << " for list columns not implemented.";
+            Informational(logger()) << "Sorry. Operator " << _relOp
+                                    << " for list columns not implemented.";
             return false;
     }
     return false;  // unreachable
@@ -98,4 +98,4 @@ const string *ListFilter::valueForIndexing(const string &column_name) const {
     return nullptr;  // unreachable
 }
 
-ListColumn *ListFilter::column() { return _column; }
+ListColumn *ListFilter::column() const { return _column; }

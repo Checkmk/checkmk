@@ -112,4 +112,4 @@ const string *StringFilter::valueForIndexing(const string &column_name) const {
     return nullptr;  // unreachable
 }
 
-StringColumn *StringFilter::column() { return _column; }
+StringColumn *StringFilter::column() const { return _column; }

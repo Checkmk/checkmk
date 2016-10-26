@@ -652,7 +652,7 @@ void TableHosts::addColumns(Table *table, const string &prefix,
     table->addDynamicColumn(new DynamicLogwatchFileColumn(
         prefix + "mk_logwatch_file",
         "This contents of a logfile fetched via mk_logwatch", indirect_offset,
-        extra_offset, g_mk_logwatch_path));
+        extra_offset, table->_logger, g_mk_logwatch_path));
 
     table->addColumn(new HostSpecialDoubleColumn(
         prefix + "staleness", "Staleness indicator for this host",

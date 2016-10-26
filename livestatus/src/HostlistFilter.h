@@ -42,7 +42,7 @@ public:
     HostlistFilter(HostlistColumn *column, RelationalOperator relOp,
                    std::string value);
     bool accepts(void *row, contact *auth_user, int timezone_offset) override;
-    HostlistColumn *column() override;
+    HostlistColumn *column() const override;
 
 private:
     HostlistColumn *_column;

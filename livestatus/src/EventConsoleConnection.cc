@@ -36,10 +36,8 @@ using std::ostream;
 using std::ostringstream;
 using std::string;
 
-EventConsoleConnection::EventConsoleConnection(string path)
-    : _path(move(path))
-    , _socket(-1)
-    , _logger(Logger::getLogger("cmk.livestatus"), [this](ostream &os) {
+EventConsoleConnection::EventConsoleConnection(Logger *logger, string path)
+    : _path(move(path)), _socket(-1), _logger(logger, [this](ostream &os) {
         os << "[mkeventd at " << getPath() << "] ";
     }) {}
 

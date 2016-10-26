@@ -40,7 +40,7 @@ TableEventConsoleReplication::TableEventConsoleReplication(Logger *logger)
 #endif
 {
     addDynamicColumn(new DynamicEventConsoleReplicationColumn(
-        "value", "The replication value", -1, -1
+        "value", "The replication value", -1, -1, _logger
 #ifdef CMC
         ,
         core

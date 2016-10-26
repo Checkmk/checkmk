@@ -49,7 +49,7 @@ using std::mutex;
 using std::string;
 
 Store::Store(Logger *logger)
-    : _log_cache(_commands_holder, g_max_cached_messages)
+    : _log_cache(logger, _commands_holder, g_max_cached_messages)
     , _table_contacts(logger)
     , _table_commands(_commands_holder, logger)
     , _table_hostgroups(logger)
@@ -195,7 +195,8 @@ bool Store::answerLogwatchCommandRequest(const char *command) {
         std::string host_name(host_name_begin, host_name_end - host_name_begin);
         std::string file_name(host_name_end + 1);
         extern char g_mk_logwatch_path[];
-        mk_logwatch_acknowledge(g_mk_logwatch_path, host_name, file_name);
+        mk_logwatch_acknowledge(_logger, g_mk_logwatch_path, host_name,
+                                file_name);
         return true;
     }
     return false;

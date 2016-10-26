@@ -41,7 +41,7 @@ public:
     AttributelistFilter(AttributelistColumn *column, RelationalOperator relOp,
                         unsigned long ref);
     bool accepts(void *row, contact *auth_user, int timezone_offset) override;
-    AttributelistColumn *column() override;
+    AttributelistColumn *column() const override;
 
 private:
     AttributelistColumn *_column;

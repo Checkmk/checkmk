@@ -43,7 +43,7 @@ public:
     CustomVarsFilter(CustomVarsColumn *column, RelationalOperator relOp,
                      std::string value);
     bool accepts(void *row, contact *auth_user, int timezone_offset) override;
-    CustomVarsColumn *column() override;
+    CustomVarsColumn *column() const override;
 
 private:
     CustomVarsColumn *_column;

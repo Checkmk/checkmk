@@ -81,11 +81,11 @@ bool HostlistFilter::accepts(void *row, contact * /* auth_user */,
         case RelationalOperator::doesnt_match_icase:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            Informational(_logger) << "Sorry. Operator " << _relOp
-                                   << " for host lists not implemented.";
+            Informational(logger()) << "Sorry. Operator " << _relOp
+                                    << " for host lists not implemented.";
             return false;
     }
     return false;  // unreachable
 }
 
-HostlistColumn *HostlistFilter::column() { return _column; }
+HostlistColumn *HostlistFilter::column() const { return _column; }

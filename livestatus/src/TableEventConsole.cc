@@ -36,6 +36,7 @@
 #include "Config.h"
 #include "Core.h"
 #include "World.h"
+class Logger;
 #else
 host *getHostByDesignation(const char *designation);
 extern char g_mkeventd_socket_path[4096];
@@ -48,13 +49,14 @@ using std::vector;
 namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(string path, string table_name, Query *query
+    ECTableConnection(Logger *logger, string path, string table_name,
+                      Query *query
 #ifdef CMC
                       ,
                       Core *core
 #endif
                       )
-        : EventConsoleConnection(path)
+        : EventConsoleConnection(logger, path)
         , _table_name(move(table_name))
         , _query(query)
 #ifdef CMC
@@ -138,9 +140,9 @@ void TableEventConsole::answerQuery(Query *query) {
     // skip "eventconsole" prefix :-P
     string internal_name = name().substr(12);
 #ifdef CMC
-    ECTableConnection(path, internal_name, query, _core)
+    ECTableConnection(_logger, path, internal_name, query, _core)
 #else
-    ECTableConnection(path, internal_name, query)
+    ECTableConnection(_logger, path, internal_name, query)
 #endif
         .run();
 }

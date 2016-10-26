@@ -42,7 +42,7 @@ public:
     DoubleFilter(DoubleColumn *column, RelationalOperator relOp,
                  const std::string &value);
     bool accepts(void *row, contact *auth_user, int timezone_offset) override;
-    DoubleColumn *column() override;
+    DoubleColumn *column() const override;
 
 private:
     DoubleColumn *_column;

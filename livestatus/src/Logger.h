@@ -151,7 +151,6 @@ public:
 
     virtual ~Logger() = default;
 
-
     bool isLoggable(LogLevel level) const;
 
     virtual std::string getName() const = 0;
@@ -231,8 +230,8 @@ class ContextLogger : public LoggerDecorator {
 public:
     using ContextEmitter = std::function<void(std::ostream &)>;
 
- ContextLogger(Logger *logger, const ContextEmitter &context)
-     : LoggerDecorator(logger), _context(context) {}
+    ContextLogger(Logger *logger, const ContextEmitter &context)
+        : LoggerDecorator(logger), _context(context) {}
 
     void emitContext(std::ostream &os) const override;
 

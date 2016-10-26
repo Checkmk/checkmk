@@ -51,12 +51,12 @@ extern char *log_file;
 
 int num_cached_log_messages = 0;
 
-LogCache::LogCache(const CommandsHolder &commands_holder,
+LogCache::LogCache(Logger *logger, const CommandsHolder &commands_holder,
                    unsigned long max_cached_messages)
     : _commands_holder(commands_holder)
     , _max_cached_messages(max_cached_messages)
     , _num_at_last_check(0)
-    , _logger(Logger::getLogger("cmk.livestatus")) {
+    , _logger(logger) {
     updateLogfileIndex();
 }
 
@@ -142,7 +142,7 @@ void LogCache::updateLogfileIndex() {
 }
 
 void LogCache::scanLogfile(char *path, bool watch) {
-    auto logfile = new Logfile(_commands_holder, path, watch);
+    auto logfile = new Logfile(_logger, _commands_holder, path, watch);
     time_t since = logfile->since();
     if (since != 0) {
         // make sure that no entry with that 'since' is existing yet.

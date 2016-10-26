@@ -52,17 +52,16 @@ string unescape_filename(string filename) {
 
 Column *DynamicLogwatchFileColumn::createColumn(const std::string &name,
                                                 const std::string &arguments) {
-    Logger *logger = Logger::getLogger("cmk.livestatus");
     // arguments contains a file name
     if (arguments.empty()) {
-        Warning(logger) << "Invalid arguments for column '" << _name
-                        << "': missing file name";
+        Warning(_logger) << "Invalid arguments for column '" << _name
+                         << "': missing file name";
         return nullptr;
     }
 
     if (arguments.find('/') != string::npos) {
-        Warning(logger) << "Invalid arguments for column '" << _name
-                        << "': file name '" << arguments << "' contains slash";
+        Warning(_logger) << "Invalid arguments for column '" << _name
+                         << "': file name '" << arguments << "' contains slash";
         return nullptr;
     }
 

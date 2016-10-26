@@ -42,7 +42,7 @@ class IntFilter : public ColumnFilter {
 public:
     IntFilter(IntColumn *column, RelationalOperator relOp, std::string value);
     bool accepts(void *row, contact *auth_user, int timezone_offset) override;
-    IntColumn *column() override;
+    IntColumn *column() const override;
     void findIntLimits(const std::string &column_name, int *lower, int *upper,
                        int timezone_offset) const override;
     bool optimizeBitmask(const std::string &column_name, uint32_t *mask,

@@ -52,7 +52,7 @@ AttributelistFilter::AttributelistFilter(AttributelistColumn *column,
    Also number comparisons
  */
 
-AttributelistColumn *AttributelistFilter::column() { return _column; }
+AttributelistColumn *AttributelistFilter::column() const { return _column; }
 
 bool AttributelistFilter::accepts(void *row, contact * /* auth_user */,
                                   int /* timezone_offset */) {
@@ -81,7 +81,7 @@ bool AttributelistFilter::accepts(void *row, contact * /* auth_user */,
             return act_value <= _ref;
         case RelationalOperator::equal_icase:
         case RelationalOperator::not_equal_icase:
-            Informational(_logger)
+            Informational(logger())
                 << "Sorry. Operator " << _relOp
                 << " for attribute list columns not implemented.";
             return false;

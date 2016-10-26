@@ -27,10 +27,12 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
+class Logger;
 
 std::string mk_logwatch_path_of_host(const std::string &logwatch_path,
                                      const std::string &host_name);
-void mk_logwatch_acknowledge(const std::string &logwatch_path,
+
+void mk_logwatch_acknowledge(Logger *logger, const std::string &logwatch_path,
                              const std::string &host_name,
                              const std::string &file_name);
 

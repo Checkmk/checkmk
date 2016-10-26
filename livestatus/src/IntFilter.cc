@@ -36,7 +36,7 @@ using std::string;
 IntFilter::IntFilter(IntColumn *column, RelationalOperator relOp, string value)
     : _column(column), _relOp(relOp), _ref_string(move(value)) {}
 
-IntColumn *IntFilter::column() { return _column; }
+IntColumn *IntFilter::column() const { return _column; }
 
 // overridden by TimeFilter in order to apply timezone offset from Localtime:
 // header
@@ -69,8 +69,8 @@ bool IntFilter::accepts(void *row, contact *auth_user, int timezone_offset) {
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Informational(_logger) << "Sorry. Operator " << _relOp
-                                   << " for integer columns not implemented.";
+            Informational(logger()) << "Sorry. Operator " << _relOp
+                                    << " for integer columns not implemented.";
             return false;
     }
     return false;  // unreachable
@@ -132,8 +132,8 @@ void IntFilter::findIntLimits(const string &column_name, int *lower, int *upper,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Emergency(_logger) << "Invalid relational operator " << _relOp
-                               << " in IntFilter::findIntLimits";
+            Emergency(logger()) << "Invalid relational operator " << _relOp
+                                << " in IntFilter::findIntLimits";
             return;
     }
 }
@@ -191,8 +191,8 @@ bool IntFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Emergency(_logger) << "Invalid relational operator " << _relOp
-                               << " in IntFilter::optimizeBitmask";
+            Emergency(logger()) << "Invalid relational operator " << _relOp
+                                << " in IntFilter::optimizeBitmask";
             return false;
     }
     return false;  // unreachable

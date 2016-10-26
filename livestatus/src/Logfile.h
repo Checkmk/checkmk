@@ -60,8 +60,8 @@ private:
     Logger *const _logger;
 
 public:
-    Logfile(const CommandsHolder &commands_holder, std::string path,
-            bool watch);
+    Logfile(Logger *logger, const CommandsHolder &commands_holder,
+            std::string path, bool watch);
     ~Logfile();
 
     std::string path() { return _path; }

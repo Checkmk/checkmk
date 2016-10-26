@@ -46,8 +46,8 @@ using std::vector;
 namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(string path, string command)
-        : EventConsoleConnection(path), _command(move(command)) {}
+    ECTableConnection(Logger *logger, string path, string command)
+        : EventConsoleConnection(logger, path), _command(move(command)) {}
     string getResult() const { return _result; }
 
 private:
@@ -76,13 +76,13 @@ private:
 
 DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
     const std::string &name, const std::string &description,
-    int indirect_offset, int extra_offset
+    int indirect_offset, int extra_offset, Logger *logger
 #ifdef CMC
     ,
     Core *core
 #endif
     )
-    : DynamicColumn(name, description, indirect_offset, extra_offset)
+    : DynamicColumn(name, description, indirect_offset, extra_offset, logger)
 #ifdef CMC
     , _core(core)
 #endif
@@ -96,7 +96,7 @@ Column *DynamicEventConsoleReplicationColumn::createColumn(
 #else
     string path = g_mkeventd_socket_path;
 #endif
-    ECTableConnection ec(path, "REPLICATE " + arguments);
+    ECTableConnection ec(_logger, path, "REPLICATE " + arguments);
     ec.run();
     return new ReplicationColumn(name, "replication value", -1, -1,
                                  ec.getResult());

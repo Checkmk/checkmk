@@ -1,0 +1,14 @@
+Title: df_zos: Fixed ignoring last filesystem after new discovery
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i2
+Date: 1477487290
+
+Filesystemcheck df_zos was ignoring the last filesystem, because not all versions
+of z/OS will end with a zero line after the df command. This was fixed with adding
+the pattern line fix at the end of the agent output.
+
+Pleae do a new discovery to check, if there is a filesystem is missing.

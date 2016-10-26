@@ -51,9 +51,10 @@ def parse_df_zos(info):
     for line in info:
         if line[0].startswith('#####'):
             # Add item for filesystem
-            parsed.setdefault(fs, {})
-            parsed[fs].setdefault('size', usage)
-            parsed[fs].setdefault('options', options)
+            if fs and usage and options:
+                parsed.setdefault(fs, {})
+                parsed[fs].setdefault('size', usage)
+                parsed[fs].setdefault('options', options)
 
             fs = None
             usage = []

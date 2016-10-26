@@ -149,40 +149,95 @@ class Logger {
 public:
     static Logger *getLogger(const std::string &name);
 
-    ~Logger();
+    virtual ~Logger() = default;
 
-    std::string getName() const { return _name; }
 
-    Logger *getParent() const { return _parent; }
+    bool isLoggable(LogLevel level) const;
 
-    LogLevel getLevel() const { return _level; }
-    void setLevel(LogLevel level) { _level = level; }
+    virtual std::string getName() const = 0;
 
-    Handler *getHandler() const { return _handler; }
-    void setHandler(std::unique_ptr<Handler> handler) {
-        delete _handler;
-        _handler = handler.release();
-    }
+    virtual Logger *getParent() const = 0;
 
-    bool getUseParentHandlers() const { return _use_parent_handlers; }
-    void setUseParentHandlers(bool useParentHandlers) {
-        _use_parent_handlers = useParentHandlers;
-    }
+    virtual LogLevel getLevel() const = 0;
+    virtual void setLevel(LogLevel level) = 0;
 
-    bool isLoggable(LogLevel level) { return level <= getLevel(); }
-    void log(const LogRecord &record);
+    virtual Handler *getHandler() const = 0;
+    virtual void setHandler(std::unique_ptr<Handler> handler) = 0;
+
+    virtual bool getUseParentHandlers() const = 0;
+    virtual void setUseParentHandlers(bool useParentHandlers) = 0;
+
+    virtual void emitContext(std::ostream &) const = 0;
+
+    virtual void log(const LogRecord &record) = 0;
+};
+
+class ConcreteLogger : public Logger {
+public:
+    ConcreteLogger(const std::string &name, Logger *parent);
+    ~ConcreteLogger();
+
+    std::string getName() const override;
+
+    Logger *getParent() const override;
+
+    LogLevel getLevel() const override;
+    void setLevel(LogLevel level) override;
+
+    Handler *getHandler() const override;
+    void setHandler(std::unique_ptr<Handler> handler) override;
+
+    bool getUseParentHandlers() const override;
+    void setUseParentHandlers(bool useParentHandlers) override;
+
+    void emitContext(std::ostream &) const override;
+
+    void log(const LogRecord &record) override;
 
 private:
-    static Logger _global_logger;
-
     const std::string _name;
     Logger *const _parent;
     std::atomic<LogLevel> _level;
     std::atomic<Handler *> _handler;
     std::atomic<bool> _use_parent_handlers;
+};
 
-    Logger(std::string name, Logger *parent);
-    friend class LogManager;
+class LoggerDecorator : public Logger {
+public:
+    explicit LoggerDecorator(Logger *logger);
+
+    std::string getName() const override;
+
+    Logger *getParent() const override;
+
+    LogLevel getLevel() const override;
+    void setLevel(LogLevel level) override;
+
+    Handler *getHandler() const override;
+    void setHandler(std::unique_ptr<Handler> handler) override;
+
+    bool getUseParentHandlers() const override;
+    void setUseParentHandlers(bool useParentHandlers) override;
+
+    void emitContext(std::ostream &os) const override;
+
+    void log(const LogRecord &record) override;
+
+protected:
+    Logger *const _logger;
+};
+
+class ContextLogger : public LoggerDecorator {
+public:
+    using ContextEmitter = std::function<void(std::ostream &)>;
+
+ ContextLogger(Logger *logger, const ContextEmitter &context)
+     : LoggerDecorator(logger), _context(context) {}
+
+    void emitContext(std::ostream &os) const override;
+
+private:
+    const ContextEmitter _context;
 };
 
 // -----------------------------------------------------------------------------
@@ -205,17 +260,21 @@ private:
 
 class LogStream {
 public:
-    LogStream(Logger *logger, LogLevel level)
-        : _logger(logger), _level(level) {}
+    LogStream(Logger *logger, LogLevel level) : _logger(logger), _level(level) {
+        // The test and all the similar ones below are just optimizations.
+        if (_logger->isLoggable(_level)) {
+            _logger->emitContext(_os);
+        }
+    }
+
     virtual ~LogStream() {
-        if (_logger->isLoggable(_level)) {  // the test is just an optimization
+        if (_logger->isLoggable(_level)) {
             _logger->log(LogRecord(_level, _os.str()));
         }
     }
 
     template <typename T>
     std::ostream &operator<<(const T &t) {
-        // the test is just an optimization
         return _logger->isLoggable(_level) ? (_os << t) : _os;
     }
 
@@ -227,79 +286,38 @@ protected:
 
 // -----------------------------------------------------------------------------
 
-class LoggerAdapter {
-public:
-    LoggerAdapter(Logger *l, const std::function<void(std::ostream &)> &p)
-        : logger(l), prefix(p) {}
-
-    Logger *const logger;
-    const std::function<void(std::ostream &)> prefix;
-};
-
-// -----------------------------------------------------------------------------
-
 struct Emergency : public LogStream {
     explicit Emergency(Logger *logger)
         : LogStream(logger, LogLevel::emergency) {}
-    explicit Emergency(LoggerAdapter &adapter)
-        : LogStream(adapter.logger, LogLevel::emergency) {
-        adapter.prefix(_os);
-    }
 };
 
 struct Alert : public LogStream {
     explicit Alert(Logger *logger) : LogStream(logger, LogLevel::alert) {}
-    explicit Alert(LoggerAdapter &adapter)
-        : LogStream(adapter.logger, LogLevel::alert) {}
 };
 
 struct Critical : public LogStream {
     explicit Critical(Logger *logger) : LogStream(logger, LogLevel::critical) {}
-    explicit Critical(LoggerAdapter &adapter)
-        : LogStream(adapter.logger, LogLevel::critical) {
-        adapter.prefix(_os);
-    }
 };
 
 struct Error : public LogStream {
     explicit Error(Logger *logger) : LogStream(logger, LogLevel::error) {}
-    explicit Error(LoggerAdapter &adapter)
-        : LogStream(adapter.logger, LogLevel::error) {
-        adapter.prefix(_os);
-    }
 };
 
 struct Warning : public LogStream {
     explicit Warning(Logger *logger) : LogStream(logger, LogLevel::warning) {}
-    explicit Warning(LoggerAdapter &adapter)
-        : LogStream(adapter.logger, LogLevel::warning) {
-        adapter.prefix(_os);
-    }
 };
 
 struct Notice : public LogStream {
     explicit Notice(Logger *logger) : LogStream(logger, LogLevel::notice) {}
-    explicit Notice(LoggerAdapter &adapter)
-        : LogStream(adapter.logger, LogLevel::notice) {
-        adapter.prefix(_os);
-    }
 };
 
 struct Informational : public LogStream {
     explicit Informational(Logger *logger)
         : LogStream(logger, LogLevel::informational) {}
-    explicit Informational(LoggerAdapter &adapter)
-        : LogStream(adapter.logger, LogLevel::informational) {
-        adapter.prefix(_os);
-    }
 };
 
 struct Debug : public LogStream {
     explicit Debug(Logger *logger) : LogStream(logger, LogLevel::debug) {}
-    explicit Debug(LoggerAdapter &adapter)
-        : LogStream(adapter.logger, LogLevel::debug) {
-        adapter.prefix(_os);
-    }
 };
 
 // -----------------------------------------------------------------------------

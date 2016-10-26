@@ -46,7 +46,7 @@ private:
     std::string _path;
     int _socket;
     bool writeRequest();
-    LoggerAdapter _logger;
+    ContextLogger _logger;
 };
 
 #endif  // EventConsoleConnection_h

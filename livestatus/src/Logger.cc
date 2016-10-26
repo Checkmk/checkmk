@@ -39,9 +39,13 @@ using std::ostringstream;
 using std::string;
 using std::unique_ptr;
 
+// -----------------------------------------------------------------------------
+
 ostream &operator<<(ostream &os, const LogLevel &c) {
     return os << static_cast<int>(c);
 }
+
+// -----------------------------------------------------------------------------
 
 void SimpleFormatter::format(ostream &os, const LogRecord &record) {
     os << FormattedTimePoint(record.getTimePoint(), "%F %T ")  //
@@ -59,28 +63,56 @@ void SharedStreamHandler::publish(const LogRecord &record) {
 
 StreamHandler::StreamHandler(ostream &os) : SharedStreamHandler(_mutex, os) {}
 
-FileHandler::FileHandler(const std::string &filename) : StreamHandler(_os) {
+FileHandler::FileHandler(const string &filename) : StreamHandler(_os) {
     _os.open(filename, std::ofstream::app);
     if (!_os) {
         throw generic_error("could not open logfile " + filename);
     }
 }
 
-Logger::Logger(string name, Logger *parent)
-    : _name(move(name))
-    , _parent(parent)
-    , _level(LogLevel::debug)
-    , _handler(_name.empty() ? nullptr : new StreamHandler(cerr))
-    , _use_parent_handlers(true) {}
-
-Logger::~Logger() { setHandler(unique_ptr<Handler>()); }
+// -----------------------------------------------------------------------------
 
 // static
 Logger *Logger::getLogger(const string &name) {
     return LogManager::getLogManager()->getLogger(name);
 }
 
-void Logger::log(const LogRecord &record) {
+bool Logger::isLoggable(LogLevel level) const { return level <= getLevel(); }
+
+ConcreteLogger::ConcreteLogger(const string &name, Logger *parent)
+    : _name(name)
+    , _parent(parent)
+    , _level(LogLevel::debug)
+    , _handler(name.empty() ? nullptr : new StreamHandler(cerr))
+    , _use_parent_handlers(true) {}
+
+ConcreteLogger::~ConcreteLogger() { setHandler(unique_ptr<Handler>()); }
+
+string ConcreteLogger::getName() const { return _name; }
+
+Logger *ConcreteLogger::getParent() const { return _parent; }
+
+LogLevel ConcreteLogger::getLevel() const { return _level; }
+
+void ConcreteLogger::setLevel(LogLevel level) { _level = level; }
+
+Handler *ConcreteLogger::getHandler() const { return _handler; }
+
+void ConcreteLogger::setHandler(unique_ptr<Handler> handler) {
+    delete _handler;
+    _handler = handler.release();
+}
+
+bool ConcreteLogger::getUseParentHandlers() const {
+    return _use_parent_handlers;
+}
+void ConcreteLogger::setUseParentHandlers(bool useParentHandlers) {
+    _use_parent_handlers = useParentHandlers;
+}
+
+void ConcreteLogger::emitContext(ostream & /*unused*/) const {}
+
+void ConcreteLogger::log(const LogRecord &record) {
     if (!isLoggable(record.getLevel())) {
         return;
     }
@@ -94,6 +126,43 @@ void Logger::log(const LogRecord &record) {
         }
     }
 }
+
+LoggerDecorator::LoggerDecorator(Logger *logger) : _logger(logger) {}
+
+string LoggerDecorator::getName() const { return _logger->getName(); }
+
+Logger *LoggerDecorator::getParent() const { return _logger->getParent(); }
+
+LogLevel LoggerDecorator::getLevel() const { return _logger->getLevel(); }
+
+void LoggerDecorator::setLevel(LogLevel level) { _logger->setLevel(level); }
+
+Handler *LoggerDecorator::getHandler() const { return _logger->getHandler(); }
+
+void LoggerDecorator::setHandler(unique_ptr<Handler> handler) {
+    _logger->setHandler(move(handler));
+}
+
+bool LoggerDecorator::getUseParentHandlers() const {
+    return _logger->getUseParentHandlers();
+}
+
+void LoggerDecorator::setUseParentHandlers(bool useParentHandlers) {
+    _logger->setUseParentHandlers(useParentHandlers);
+}
+
+void LoggerDecorator::emitContext(ostream &os) const {
+    _logger->emitContext(os);
+}
+
+void LoggerDecorator::log(const LogRecord &record) { _logger->log(record); }
+
+void ContextLogger::emitContext(ostream &os) const {
+    _logger->emitContext(os);
+    _context(os);
+}
+
+// -----------------------------------------------------------------------------
 
 Logger *LogManager::getLogger(const string &name) {
     Logger *current = lookup("", nullptr);
@@ -117,18 +186,16 @@ Logger *LogManager::lookup(const string &name, Logger *parent) {
     lock_guard<mutex> lg(_mutex);
     auto it = _known_loggers.find(name);
     if (it == _known_loggers.end()) {
-        // Just because *we* are a friend of Logger doesn't mean that
-        // make_unique is a friend, too, so we have to use a helper class.
-        struct Helper : public Logger {
-            Helper(const string &name, Logger *parent) : Logger(name, parent) {}
-        };
-        it = _known_loggers.emplace(name, make_unique<Helper>(name, parent))
+        it = _known_loggers
+                 .emplace(name, make_unique<ConcreteLogger>(name, parent))
                  .first;
     }
     return it->second.get();
 }
 
 LogManager LogManager::_global_log_manager;
+
+// -----------------------------------------------------------------------------
 
 ostream &operator<<(ostream &os, const generic_error &ge) {
     return os << ge.what();

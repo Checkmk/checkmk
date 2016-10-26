@@ -1,0 +1,11 @@
+Title: mrpe: fixed broken long output when using the CMC
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p14
+Date: 1477472567
+
+The long output of the mrpe check was appended to the plugin output.
+This has been fixed.

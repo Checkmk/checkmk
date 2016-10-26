@@ -106,7 +106,7 @@ def check_mrpe(item, params, info):
                 # name of check command needed for PNP to choose the correct template
                 if check_name:
                     perf_parsed.append(check_name)
-                best_result = state, "\\n".join(output), perf_parsed
+                best_result = state, "\n".join(output), perf_parsed
                 best_state = state
 
 

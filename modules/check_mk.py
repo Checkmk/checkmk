@@ -271,7 +271,7 @@ config_variable_names = set(vars().keys()).difference(known_vars)
 # at check time (and many of what is also needed at administration time).
 try:
     modules = [ 'check_mk_base', 'discovery', 'snmp', 'notify', 'events',
-                 'alert_handling', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery', 'cap' ]
+                 'alert_handling', 'cmc', 'inline_snmp', 'agent_bakery', 'cap' ]
     for module in modules:
         if module_exists(module):
             load_module(module)

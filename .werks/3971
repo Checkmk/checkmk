@@ -1,0 +1,10 @@
+Title: Event Console: Event numbers are now also displayed in tactical overview snapin
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i2
+Date: 1477490226
+Class: feature
+
+In addition to the host and service states, the tactical overview is now showing numbers
+for the open events in the Event Console.

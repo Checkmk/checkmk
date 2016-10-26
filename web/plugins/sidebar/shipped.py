@@ -589,6 +589,13 @@ def get_tactical_overview_data(extra_filter_headers):
         "Filter: host_custom_variable_names < _REALNAME\n" + \
         extra_filter_headers
 
+    event_query = (
+        "GET eventconsoleevents\n"
+        "Stats: event_phase != \n"
+        "Stats: event_phase = ack\n"
+        "Stats: event_phase = open\n"
+    )
+
     try:
         hstdata = sites.live().query_summed_stats(host_query)
         svcdata = sites.live().query_summed_stats(service_query)
@@ -601,52 +608,120 @@ def get_tactical_overview_data(extra_filter_headers):
         if notdata is None:
             notdata = [0]
 
+        event_data = sites.live().query_summed_stats(event_query)
+
     except livestatus.MKLivestatusNotFoundError:
         return None, None, None
 
-    return hstdata, svcdata, notdata
+    return hstdata, svcdata, notdata, event_data
 
 def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
     if extra_url_variables is None:
         extra_url_variables = []
 
-    hstdata, svcdata, notdata = get_tactical_overview_data(extra_filter_headers)
+    hstdata, svcdata, notdata, event_data = get_tactical_overview_data(extra_filter_headers)
 
-    if hstdata is None or svcdata is None or notdata is None:
-        html.write("<center>No data from any site</center>")
+    if hstdata is None or svcdata is None or notdata is None or event_data is None:
+        html.write("<center>%s</center>" % _("No data from any site"))
         return
 
     td_class = 'col3'
     if hstdata[-1] or svcdata[-1]:
         td_class = 'col4'
 
+    rows = [
+        {
+            "what"  : 'host',
+            "title" : _("Hosts"),
+            "data"  : hstdata,
+            "views" : {
+                "all"       : [
+                    ("view_name", "allhosts"),
+                ],
+                "handled"   : [
+                    ("view_name", 'hostproblems'),
+                ],
+                "unhandled" : [
+                    ("view_name", "hostproblems"),
+                    ("is_host_acknowledged", 0),
+                ],
+                "stale"     : [
+                    ("view_name", 'stale_hosts'),
+                ],
+            },
+        },
+        {
+            "what"  : "service",
+            "title" : _("Services"),
+            "data"  : svcdata,
+            "views" : {
+                "all"       : [
+                    ("view_name", "allservices"),
+                ],
+                "handled"   : [
+                    ("view_name", "svcproblems"),
+                ],
+                "unhandled" : [
+                    ("view_name", "svcproblems"),
+                    ("is_service_acknowledged", 0),
+                ],
+                "stale"     : [
+                    ("view_name", "uncheckedsvc"),
+                ],
+            },
+        },
+        {
+            "what"  : "event",
+            "title" : _("Events"),
+            "data"  : event_data,
+            "views" : {
+                "all"       : [
+                    ("view_name", "ec_events"),
+                ],
+                "handled"   : [
+                    ("view_name", "ec_events"),
+                    ("event_phase_ack", "on"),
+                ],
+                "unhandled" : [
+                    ("view_name", "ec_events"),
+                    ("event_phase_open", "on"),
+                ],
+                "stale"     : None,
+            },
+        },
+    ]
+
     html.write("<table class=\"content_center tacticaloverview\" cellspacing=2 cellpadding=0 border=0>\n")
-    for title, data, view, stale_view, what in [
-            (_("Hosts"),    hstdata, 'hostproblems', 'stale_hosts',  'host'),
-            (_("Services"), svcdata, 'svcproblems',  'uncheckedsvc', 'service')]:
+    for row in rows:
+        if row["what"] == "event":
+            amount, problems, unhandled_problems = row["data"]
+            stales = 0
+        else:
+            amount, problems, unhandled_problems, stales = row["data"]
 
-        amount, problems, unhandled_problems, stales = data
-
-        title_row = "<tr><th>%s</th><th>%s</th><th>%s</th>" % (title, _('Problems'), _('Unhandled'))
+        title_row = "<tr><th>%s</th><th>%s</th><th>%s</th>" % \
+                    (row["title"], _('Problems'), _('Unhandled'))
         if td_class == 'col4':
             title_row += "<th>%s</th></tr>" % _("Stale")
         html.write("%s\n" % title_row)
 
         html.write("<tr>")
-        url = html.makeuri_contextless([("view_name", "all" + what + "s")] + extra_url_variables, filename="view.py")
-        html.write('<td class="total %s"><a target="main" href="%s">%d</a></td>' % (td_class, url, amount))
+        url = html.makeuri_contextless(row["views"]["all"] + extra_url_variables,filename="view.py")
+        html.write('<td class="total %s"><a target="main" href="%s">%d</a></td>' %
+                                                            (td_class, url, amount))
 
-        for value, unhandled in [ (problems, False), (unhandled_problems, True) ]:
-            url = html.makeuri_contextless([("view_name", view)] + extra_url_variables, filename="view.py")
-            if unhandled:
-                url += "&is_%s_acknowledged=0" % what
+        for value, ty in [ (problems, "handled"), (unhandled_problems, "unhandled") ]:
+            url = html.makeuri_contextless(row["views"][ty] + extra_url_variables, filename="view.py")
             text = link(str(value), url)
             html.write('<td class="%s%s">%s</td>' % (td_class, value == 0 and " " or ' states prob', text))
 
         if td_class == 'col4':
-            url = html.makeuri_contextless([("view_name", stale_view)] + extra_url_variables, filename="view.py")
-            text = link(str(stales), url)
-            html.write('<td class="%s%s">%s</td>' % (td_class, value == 0 and " " or ' states prob', text))
+            if row["views"]["stale"]:
+                url = html.makeuri_contextless(row["views"]["stale"] + extra_url_variables, filename="view.py")
+                text = link(str(stales), url)
+                html.write('<td class="%s%s">%s</td>' % (td_class, value == 0 and " " or ' states prob', text))
+            else:
+                html.write("<td></td>\n")
 
         html.write("</tr>\n")
     html.write("</table>\n")

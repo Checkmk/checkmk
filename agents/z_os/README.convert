@@ -1,5 +1,7 @@
 Lesbar:
-iconv -f ibm-1047 -t utf-8 FILENAME | tr "\205" "\12" | tr -d "\302"
+- Agent: iconv -f ibm-1047 -t utf-8 check_mk_agent | tr "\205" "\12" | tr -d "\302" > check_mk_agent.zOS
+- Wrapper: iconv -f ibm-1047 -t utf-8 check_mk_agent_wrapper | tr "\205" "\12" | tr -d "\302" > check_mk_agent.wrapper
 
 z/OS:
-iconv -f utf-8 -t ibm-1047 FILENAME | tr "\12" "\205" | tr -d "\302"
+- Agent: iconv -f utf-8 -t ibm-1047 check_mk_agent.zOS | tr "\12" "\205" | tr -d "\302" > check_mk_agent
+- Wrapper: iconv -f utf-8 -t ibm-1047 check_mk_agent.wrapper | tr "\12" "\205" | tr -d "\302" > check_mk_agent_wrapper

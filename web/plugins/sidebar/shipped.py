@@ -696,6 +696,10 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
         if row["what"] == "event":
             amount, problems, unhandled_problems = row["data"]
             stales = 0
+
+            # no events open and disabled in local site: don't show events
+            if amount == 0 and not config.mkeventd_enabled:
+                continue
         else:
             amount, problems, unhandled_problems, stales = row["data"]
 

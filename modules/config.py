@@ -29,6 +29,7 @@
 # variables are preset in checks/* as well.
 
 monitoring_core                    = "nagios" # other option: "cmc"
+mkeventd_enabled                   = False # Set by OMD hook
 agent_port                         = 6556
 agent_ports                        = []
 agent_encryption                   = []

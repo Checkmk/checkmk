@@ -673,6 +673,7 @@ if mkeventd_enabled:
             'event_sl',
             'event_sl_max',
             'hostregex',
+            'siteopt',
         ],
         'hard_filtervars': [
             ( 'event_phase_open',     "on" ),
@@ -847,6 +848,8 @@ if mkeventd_enabled:
             'history_who',
             'history_what',
             'host_state_type',
+            'hostregex',
+            'siteopt',
         ],
         'hard_filtervars': [
            ('history_time_from', '1'),

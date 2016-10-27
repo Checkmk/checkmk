@@ -236,7 +236,7 @@ class OutputFunnel(object):
             text = text.value
 
         if type(text) not in [str, unicode]: # also possible: type Exception!
-            raise MKGeneralException(_('Type Error: html.write accepts str and unicode input objects only!'))
+            raise MKGeneralException(_('Write accepts str and unicode objects only!'))
 
         if self.plugged:
             self.plugged_text += text
@@ -928,7 +928,7 @@ class HTMLCheck_MK(HTMLGenerator):
 
         self.icon_button(None, _("Toggle context help texts"), "help", id="helpbutton",
                          onclick="toggle_help()", style="display:none", ty="icon", cssclass=cssclass)
-        self.open_a(href="http://mathias-kettner.de", class_="head_logo")
+        self.open_a(href=_("http://mathias-kettner.de"), class_="head_logo")
         self.img(src="images/logo_cmk_small.png")
         self.close_a()
         self.close_td()

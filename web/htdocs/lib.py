@@ -850,10 +850,17 @@ def metric_number_with_precision(v, *args, **kwargs):
     if v < 0:
         return "-" + metric_number_with_precision(-v, *args, **kwargs)
 
-    kwargs["base"] = 1000.0
-    scale_symbol, places_after_comma, scale_factor = calculate_scaled_number(v, *args, **kwargs)
+    subargs = {
+        "base": 1000.0,
+        "precision": kwargs.get("precision", 2),
+    }
+    scale_symbol, places_after_comma, scale_factor = calculate_scaled_number(v, *args, **subargs)
     scaled_value = float(v) / scale_factor
-    return (u"%%.%df %%s" % places_after_comma) % (scaled_value, scale_symbol)
+    text = ((u"%%.%df %%s" % places_after_comma) % (scaled_value, scale_symbol)).rstrip()
+    if kwargs.get("drop_zeroes"):
+        text = text.rstrip("0").rstrip(".")
+    return text
+
 
 
 def metric_number_with_precision_list(values, *args, **kwargs):

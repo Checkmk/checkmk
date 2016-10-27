@@ -59,7 +59,7 @@ void EventConsoleConnection::run() {
         close(_socket);
         return;
     }
-    Informational(&_logger) << "successfully connected";
+    Debug(&_logger) << "successfully connected";
 
     if (!writeRequest()) {
         generic_error ge("cannot write");
@@ -69,7 +69,7 @@ void EventConsoleConnection::run() {
         Alert(&_logger) << ge;
     }
 
-    Informational(&_logger) << "closing connection";
+    Debug(&_logger) << "closing connection";
     close(_socket);
 }
 

@@ -41,7 +41,7 @@ extern Encoding g_data_encoding;
 extern unsigned long g_max_cached_messages;
 
 using std::chrono::duration_cast;
-using std::chrono::microseconds;
+using std::chrono::milliseconds;
 using std::chrono::system_clock;
 using std::list;
 using std::lock_guard;
@@ -130,10 +130,18 @@ list<string> getLines(InputBuffer *input) {
 }  // namespace
 
 void Store::logRequest(const string &line, const list<string> &lines) {
-    Informational info(_logger);
-    info << "Request: " << line;
-    for (const auto &l : lines) {
-        info << R"(\n)" << l;
+    Informational log(_logger);
+    log << "request: " << line;
+    if (_logger->isLoggable(LogLevel::debug)) {
+        for (const auto &l : lines) {
+            log << R"(\n)" << l;
+        }
+    } else {
+        size_t s = lines.size();
+        if (s > 0) {
+            log << R"(\n{)" << s << (s == 1 ? " line follows" : " lines follow")
+                << "...}";
+        }
     }
 }
 
@@ -235,8 +243,8 @@ void Store::answerGetRequest(const list<string> &lines, OutputBuffer *output,
 
     auto start = system_clock::now();
     Query(lines, table, g_data_encoding).process(output);
-    auto elapsed = duration_cast<microseconds>(system_clock::now() - start);
-    Informational(_logger) << "Time to process request: " << elapsed.count()
-                           << "us. Size of answer: " << output->size()
+    auto elapsed = duration_cast<milliseconds>(system_clock::now() - start);
+    Informational(_logger) << "processed request in " << elapsed.count()
+                           << " ms, replied with " << output->size()
                            << " bytes";
 }

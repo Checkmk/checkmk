@@ -71,7 +71,7 @@ unit_info[""] = {
 unit_info["count"] = {
     "title"    : _("Count"),
     "symbol"   : "",
-    "render"   : lambda v: metric_number_with_precision(v),
+    "render"   : lambda v: metric_number_with_precision(v, drop_zeroes=True),
     "stepping" : "integer", # for vertical graph labels
 }
 
@@ -2191,8 +2191,8 @@ metric_info["host_check_rate"] = {
 
 metric_info["monitored_hosts"] = {
     "title" : _("Monitored hosts"),
-    "unit"  : "1/s",
-    "color" : "52/a",
+    "unit"  : "count",
+    "color" : "52/b",
 }
 
 metric_info["hosts_active"] = {
@@ -2233,8 +2233,8 @@ metric_info["service_check_rate"] = {
 
 metric_info["monitored_services"] = {
     "title" : _("Monitored services"),
-    "unit"  : "1/s",
-    "color" : "21/a",
+    "unit"  : "count",
+    "color" : "21/b",
 }
 
 metric_info["livestatus_connect_rate"] = {
@@ -6767,18 +6767,39 @@ graph_info.append({
 })
 
 graph_info.append({
-    "title" : _("Check helper usage"),
     "metrics" : [
-        ( "helper_usage_cmk",     "area" ),
+        ( "livestatus_usage", "area" ),
+    ],
+    "range" : (0, 100),
+})
+
+
+graph_info.append({
+    "metrics" : [
+        ( "livestatus_overflows_rate", "area" ),
+    ],
+})
+
+
+graph_info.append({
+    "metrics" : [
+        ( "helper_usage_cmk",  "area" ),
+    ],
+    "range" : (0, 100),
+})
+
+graph_info.append({
+    "metrics" : [
         ( "helper_usage_generic", "area" ),
     ],
+    "range" : (0, 100),
 })
 
 graph_info.append({
     "title" : _("Average check latency"),
     "metrics" : [
-        ( "average_latency_cmk",     "area" ),
-        ( "average_latency_generic", "area" ),
+        ( "average_latency_cmk",     "line" ),
+        ( "average_latency_generic", "line" ),
     ],
 })
 

@@ -9,7 +9,6 @@ sys.path.insert(0, "%s/web/htdocs" % cmk_path())
 
 # external imports
 import re
-import json
 
 # internal imports
 from htmllib import html
@@ -55,14 +54,6 @@ class DeprecatedRenderer(object):
         self.body_classes = ['main']
         self.link_target = None
 
-        self.context_buttons_open = False
-        self.keybindings_enabled = True
-        self.keybindings = []
-
-
-    def add_keybinding(self, keylist, jscode):
-        self.keybindings.append([keylist, jscode])
-
 
     def header(self, title='', **args):
         if self.output_format == "html":
@@ -83,6 +74,66 @@ class DeprecatedRenderer(object):
         if self.screenshotmode:
             body_classes.append("screenshotmode")
         return " ".join(body_classes)
+
+
+    #
+    # Helper functions to be used by snapins
+    #
+    def url_prefix(self):
+        raise NotImplementedError()
+
+
+    def render_link(self, text, url, target="main", onclick = None):
+        # Convert relative links into absolute links. We have three kinds
+        # of possible links and we change only [3]
+        # [1] protocol://hostname/url/link.py
+        # [2] /absolute/link.py
+        # [3] relative.py
+        if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != '/':
+            url = self.url_prefix() + "check_mk/" + url
+        onclick = onclick and (' onclick="%s"' % self.attrencode(onclick)) or ''
+        return '<a onfocus="if (this.blur) this.blur();" target="%s" ' \
+               'class=link href="%s"%s>%s</a>' % \
+                (self.attrencode(target or ""), self.attrencode(url), onclick, self.attrencode(text))
+
+
+    def link(self, text, url, target="main", onclick = None):
+        self.write(self.render_link(text, url, target=target, onclick=onclick))
+
+
+    def simplelink(self, text, url, target="main"):
+        self.write(self.render_link(text, url, target) + "<br>\n")
+
+
+    def bulletlink(self, text, url, target="main", onclick = None):
+        self.write("<li class=sidebar>" + self.render_link(text, url, target, onclick) + "</li>\n")
+
+
+    def iconlink(self, text, url, icon):
+        linktext = self.render_icon(icon, cssclass="inline") \
+                   + self.attrencode(text)
+        self.write('<a target=main class="iconlink link" href="%s">%s</a><br>' % \
+                (self.attrencode(url), linktext))
+
+
+    def begin_footnote_links(self):
+        self.write('<div class="footnotelink">')
+
+
+    def end_footnote_links(self):
+        self.write('</div>')
+
+
+    def footnotelinks(self, links):
+        self.begin_footnote_links()
+        for text, target in links:
+            self.write(self.render_link(text, target))
+        self.end_footnote_links()
+
+
+    def nagioscgilink(self, text, target):
+        self.write("<li class=sidebar><a target=\"main\" class=link href=\"%snagios/cgi-bin/%s\">%s</a></li>" % \
+                (self.url_prefix(), target, self.attrencode(text)))
 
 
     def add_custom_style_sheet(self):
@@ -204,100 +255,6 @@ class DeprecatedRenderer(object):
         self.write(self.render_icon_button(*args, **kwargs))
 
 
-    def popup_trigger(self, *args, **kwargs):
-        self.write(self.render_popup_trigger(*args, **kwargs))
-
-
-    def render_popup_trigger(self, content, ident, what=None, data=None, url_vars=None,
-                             style=None, menu_content=None, cssclass=None, onclose=None):
-        style = style and (' style="%s"' % style) or ""
-        src = '<div class="popup_trigger%s" id="popup_trigger_%s"%s>\n' % (cssclass and (" " + cssclass) or "", ident, style)
-        onclick = "toggle_popup(event, this, \'%s\', %s, %s, %s, %s, %s);" % \
-                    (ident, what and  "'"+what+"'" or 'null',
-                     self.attrencode(json.dumps(data)) if data else 'null',
-                     url_vars and "'"+self.urlencode_vars(url_vars)+"'" or 'null',
-                     menu_content and "'"+self.attrencode(menu_content)+"'" or 'null',
-                     onclose and "'%s'" % onclose.replace("'", "\\'") or 'null')
-        src += '<a class="popup_trigger" href="javascript:void(0);" onclick="%s">\n' % onclick
-        src += content
-        src += '</a>'
-        src += '</div>\n'
-        return src
-
-
-
-    #
-    # Context Buttons
-    #
-
-
-    def begin_context_buttons(self):
-        if not self.context_buttons_open:
-            self.context_button_hidden = False
-            self.write("<table class=contextlinks><tr><td>\n")
-            self.context_buttons_open = True
-
-
-    def end_context_buttons(self):
-        if self.context_buttons_open:
-            if self.context_button_hidden:
-                self.write('<div title="%s" id=toggle class="contextlink short" '
-                      % _("Show all buttons"))
-                self._context_button_hover_code("_short")
-                self.write("><a onclick='unhide_context_buttons(this);' href='#'>...</a></div>")
-            self.write("</td></tr></table>\n")
-        self.context_buttons_open = False
-
-
-    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=None, fkey=None):
-        #self.guitest_record_output("context_button", (title, url, icon))
-        title = self.attrencode(title)
-        display = "block"
-        if bestof:
-            counts = self.get_button_counts()
-            weights = counts.items()
-            weights.sort(cmp = lambda a,b: cmp(a[1],  b[1]))
-            best = dict(weights[-bestof:])
-            if id not in best:
-                display="none"
-                self.context_button_hidden = True
-
-        if not self.context_buttons_open:
-            self.begin_context_buttons()
-
-        title = "<span>%s</span>" % self.attrencode(title)
-        if icon:
-            title = '%s%s' % (self.render_icon(icon, cssclass="inline", middle=False), title)
-
-        if id:
-            idtext = " id='%s'" % self.attrencode(id)
-        else:
-            idtext = ""
-        self.write('<div%s style="display:%s" class="contextlink%s%s" ' %
-            (idtext, display, hot and " hot" or "", (fkey and self.keybindings_enabled) and " button" or ""))
-        self._context_button_hover_code(hot and "_hot" or "")
-        self.write('>')
-        self.write('<a href="%s"' % self.attrencode(url))
-        if hover_title:
-            self.write(' title="%s"' % self.attrencode(hover_title))
-        if bestof:
-            self.write(' onclick="count_context_button(this); " ')
-        if fkey and self.keybindings_enabled:
-            title += '<div class=keysym>F%d</div>' % fkey
-            self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % self.attrencode(url))
-        self.write('>%s</a></div>\n' % title)
-
-
-    def get_button_counts(self):
-        raise NotImplementedError()
-
-
-    def _context_button_hover_code(self, what):
-        self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % what)
-        self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % what)
-
-
-
 
     # Only strip off some tags. We allow some simple tags like
     # <b>, <tt>, <i> to be part of the string. This is useful
@@ -326,146 +283,6 @@ class DeprecatedRenderer(object):
                     .replace('"', "&quot;")\
                     .replace("<", "&lt;")\
                     .replace(">", "&gt;")
-
-    #
-    # Encoding and escaping
-    #
-
-
-    # Encode HTML attributes. Replace HTML syntax with HTML text.
-    # For example: replace '"' with '&quot;', '<' with '&lt;'.
-    # This code is slow. Works on str and unicode without changing
-    # the type. Also works on things that can be converted with '%s'.
-    def _escape_attribute(self, value):
-        attr_type = type(value)
-        if value is None:
-            return ''
-        elif attr_type == int:
-            return str(value)
-        elif isinstance(value, HTML):
-            return value.value # This is HTML code which must not be escaped
-        elif attr_type not in [str, unicode]: # also possible: type Exception!
-            value = "%s" % value # Note: this allows Unicode. value might not have type str now
-        return value.replace("&", "&amp;")\
-                    .replace('"', "&quot;")\
-                    .replace("<", "&lt;")\
-                    .replace(">", "&gt;")
-
-
-    # render HTML text.
-    # We only strip od some tags and allow some simple tags
-    # such as <h1>, <b> or <i> to be part of the string.
-    # This is useful for messages where we want to keep formatting
-    # options. (Formerly known as 'permissive_attrencode') """
-    # for the escaping functions
-    _unescaper_text = re.compile(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
-    _unescaper_href = re.compile(r'&lt;a href=&quot;(.*?)&quot;&gt;')
-    def _escape_text(self, text):
-
-        if isinstance(text, HTML):
-            return text.value # This is HTML code which must not be escaped
-
-        text = self._escape_attribute(text)
-        text = self._unescaper_text.sub(r'<\1\2>', text)
-        # Also repair link definitions
-        text = self._unescaper_href.sub(r'<a href="\1">', text)
-        return text
-
-
-    # This function returns a str object, never unicode!
-    # Beware: this code is crucial for the performance of Multisite!
-    # Changing from the self coded urlencode to urllib.quote
-    # is saving more then 90% of the total HTML generating time
-    # on more complex pages!
-    def urlencode_vars(self, vars):
-        output = []
-        for varname, value in sorted(vars):
-            if type(value) == int:
-                value = str(value)
-            elif type(value) == unicode:
-                value = value.encode("utf-8")
-
-            try:
-                # urllib is not able to encode non-Ascii characters. Yurks
-                output.append(varname + '=' + urllib.quote(value))
-            except:
-                output.append(varname + '=' + self.urlencode(value)) # slow but working
-
-        return '&'.join(output)
-
-
-    def urlencode(self, value):
-        if type(value) == unicode:
-            value = value.encode("utf-8")
-        elif value == None:
-            return ""
-        ret = ""
-        for c in value:
-            if c == " ":
-                c = "+"
-            elif ord(c) <= 32 or ord(c) > 127 or c in [ '#', '+', '"', "'", "=", "&", ":", "%" ]:
-                c = "%%%02x" % ord(c)
-            ret += c
-        return ret
-
-
-    # Escape a variable name so that it only uses allowed charachters for URL variables
-    def varencode(self, varname):
-        if varname == None:
-            return "None"
-        if type(varname) == int:
-            return varname
-
-        ret = ""
-        for c in varname:
-            if not c.isdigit() and not c.isalnum() and c != "_":
-                ret += "%%%02x" % ord(c)
-            else:
-                ret += c
-        return ret
-
-
-    def u8(self, c):
-        if ord(c) > 127:
-            return "&#%d;" % ord(c)
-        else:
-            return c
-
-
-    def utf8_to_entities(self, text):
-        if type(text) != unicode:
-            return text
-        else:
-            return text.encode("utf-8")
-
-
-    # remove all HTML-tags
-    def strip_tags(self, ht):
-        if type(ht) not in [str, unicode]:
-            return ht
-        while True:
-            x = ht.find('<')
-            if x == -1:
-                break
-            y = ht.find('>', x)
-            if y == -1:
-                break
-            ht = ht[0:x] + ht[y+1:]
-        return ht.replace("&nbsp;", " ")
-
-
-    def strip_scripts(self, ht):
-        while True:
-            x = ht.find('<script')
-            if x == -1:
-                break
-            y = ht.find('</script>')
-            if y == -1:
-                break
-            ht = ht[0:x] + ht[y+9:]
-        return ht
-
-
 
 
     #
@@ -581,6 +398,19 @@ class HTMLTester(object):
             return t
 
 
+class GeneratorTester(HTMLTester, HTMLGenerator):
+    def __init__(self):
+        super(GeneratorTester, self).__init__()
+        HTMLTester.__init__(self)
+        HTMLGenerator.__init__(self)
+
+
+class HTMLCheck_MKTester(HTMLTester, HTMLCheck_MK):
+
+    def __init__(self):
+        super(HTMLCheck_MKTester, self).__init__()
+
+
     def add_custom_style_sheet(self):
         #raise NotImplementedError()
         pass
@@ -609,28 +439,34 @@ class HTMLTester(object):
         return "OMD"
 
 
-    def get_button_counts(self):
-        return {"1": 1, "2": 2, "3": 3,}
-
-
-class GeneratorTester(HTMLTester, HTMLGenerator):
-    def __init__(self):
-        super(GeneratorTester, self).__init__()
-        HTMLTester.__init__(self)
-        HTMLGenerator.__init__(self)
-
-
-class HTMLCheck_MKTester(HTMLTester, html):
-    pass
-#    def __init__(self):
-#        super(HTMLCheck_MKTester, self).__init__()
-
-
 class HTMLOrigTester(HTMLTester, DeprecatedRenderer):
-    pass
 
 
+    def add_custom_style_sheet(self):
+        #raise NotImplementedError()
+        pass
 
 
+    def css_filename_for_browser(self, css):
+        #raise NotImplementedError()
+        return "file/name/css_%s" % css
+
+
+    def javascript_filename_for_browser(self, jsname):
+        #raise NotImplementedError()
+        return "file/name/js_%s" % jsname 
+
+
+    def top_heading(self, title):
+        self.top_heading_left(title)
+        self.top_heading_right()
+
+
+    def detect_icon_path(self, icon_name):
+        return "test/%s.jpg" % icon_name
+
+
+    def url_prefix(self):
+        return "OMD"
 
 

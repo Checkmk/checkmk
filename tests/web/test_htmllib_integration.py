@@ -105,56 +105,47 @@ def test_generator():
     compare_and_empty(old, new)
 
 
-def test_renderers_instance():
-
-    new = HTMLCheck_MKTester()
-
-    assert isinstance(new.render_icon("icon"), HTML)
-    assert isinstance(new.render_icon_button("www.url.de", "help", "icon"), HTML)
-    assert isinstance(new.render_popup_trigger("content", "ident"), HTML)
-    assert isinstance(new.render_hidden_field("var", "val"), HTML)
-    assert not new.render_hidden_field("var", None) or isinstance(new.render_hidden_field("var", None), HTML)
-    assert isinstance(new.render_checkbox("var"), HTML)
-
-
-def context_button_test(obj, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, fkey=None, id_in_best=False):
-    obj.begin_context_buttons()
-    obj.context_button(title, url, icon=icon, hot=hot, id=id_, bestof=bestof, hover_title=hover_title, fkey=fkey)
-    if id_in_best:
-        obj.context_button_hidden = True
-    obj.end_context_buttons()
-
-
-def test_context_buttons():
+#
+# Helper functions to be used by snapins
+#
+def test_snapin_helper_functions():
 
     old = HTMLOrigTester()
     new = HTMLCheck_MKTester()
     old.plug()
     new.plug()
 
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me"))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico"))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id"))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!"))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!", fkey=112))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!", fkey=112, bestof = True))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!", fkey=112, bestof = True, id_in_best=True))
+    gentest(old, new, lambda x: x.link("TEXT", "www.url.de", target="MEINS!", onclick="alert('Hallo Welt!');"))
+    gentest(old, new, lambda x: x.simplelink("Test", 'www.url.de', target='main'))
+    gentest(old, new, lambda x: x.bulletlink("Test", 'www.url.de', target='main', onclick="javascript.void();"))
+    gentest(old, new, lambda x: x.iconlink("Test", 'www.url.de', icon="TestIcon"))
+    gentest(old, new, lambda x: x.nagioscgilink("Test", 'home'))
+
+
+
+
+
+
 
 
 def test_check_mk():
 
     old = HTMLOrigTester()
     new = HTMLCheck_MKTester()
+
+
     old.plug()
     new.plug()
 
+
     # form elements
+
 
     # gentest(old, new, lambda x: x.begin_form("Test", method="GET"))
     # gentest(old, new, lambda x: x.begin_form("Test", method="POST"))
     # gentest(old, new, lambda x: x.begin_form("Test", action="TestAction", onsubmit="Do Something"))
     # gentest(old, new, lambda x: x.begin_form("Test", add_transid=False))
+
 
 
     assert compare_html(\
@@ -178,18 +169,6 @@ def test_check_mk():
                   onclick="Do domething", style="Test Style", target="Test Target",
                   cssclass="test", ty="button"))
 
-    gentest(old, new, lambda x: x.popup_trigger("CONTENT", 0, what="it", data=None, url_vars=None,
-                             style=None, menu_content=None, cssclass=None, onclose=None))
-    gentest(old, new, lambda x: x.popup_trigger("CONTENT", 0, what="it", data="data", url_vars=[("lol", "true")],
-                             style=None, menu_content=None, cssclass=None, onclose=None))
-    gentest(old, new, lambda x: x.popup_trigger("CONTENT", 0, what="it", data=None, url_vars=[("lol", "true")],
-                             style="height:50px;", menu_content=None, cssclass=None, onclose=None))
-    gentest(old, new, lambda x: x.popup_trigger("CONTENT", 0, what="it", data=None, url_vars=[("lol", "true")],
-                             style="height:50px;", menu_content="test_content", cssclass=None, onclose=None))
-    gentest(old, new, lambda x: x.popup_trigger("CONTENT", 0, what="it", data=None, url_vars=[("lol", "true")],
-                             style="height:50px;", menu_content="test_content", cssclass="class", onclose=None))
-    gentest(old, new, lambda x: x.popup_trigger("CONTENT", 0, what="it", data=None, url_vars=[("lol", "true")],
-                             style="height:50px;", menu_content="test_content", cssclass="class", onclose="close();"))
 
     # headers
 
@@ -202,7 +181,7 @@ def test_check_mk():
     gentest(old, new, lambda x: x.top_heading_right())
 
 
-    javascripts = ['hallo_welt.js']
+    javascripts = ['alert(\"Hallo Welt!\");']
     stylesheets = ['pages', 'teststylesheet']
 
 

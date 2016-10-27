@@ -403,7 +403,7 @@ int open_unix_socket() {
     strncpy(sockaddr.sun_path, g_socket_path, sizeof(sockaddr.sun_path));
     if (bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
              sizeof(sockaddr)) < 0) {
-        generic_error ge("cannot bind UNIX socket to adress " +
+        generic_error ge("cannot bind UNIX socket to address " +
                          string(g_socket_path));
         Error(fl_logger_nagios) << ge;
         close(g_unix_socket);

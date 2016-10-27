@@ -12,6 +12,7 @@ mk-livestatus-*.tar.gz
 mkeventd-*.tar.gz
 check-mk-*.exe
 var/
+.cache/
 .bugs/.my_ids
 .bugs/.last
 .werks/.my_ids

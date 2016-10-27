@@ -9,6 +9,7 @@
 
     Multisite:
     * 3970 SEC: Fixed possible URL injection on index page...
+    * 4037 FIX: Fix graphs that have optional metrics...
 
 
 1.2.8p13:

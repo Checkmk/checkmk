@@ -616,7 +616,10 @@ def evaluate_literal(expression, translated_metrics):
         unit = translated_metrics[varname]["unit"]
 
     if color == None:
-        color = parse_color_into_hexrgb(metric_info[varname]["color"])
+        if varname in metric_info:
+            color = parse_color_into_hexrgb(metric_info[varname]["color"])
+        else:
+            color = "#808080"
     return value, unit, color
 
 

@@ -1,0 +1,13 @@
+Title: Fix graphs that have optional metrics
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p14
+Date: 1477574118
+
+These graphs templates are not very common, but they can be
+painted even if a check does not certain metrics. The bug
+resulted in these graphs not being shown and single graphs
+for each of their metrics instead.

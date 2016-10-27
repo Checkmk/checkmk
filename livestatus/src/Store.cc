@@ -129,6 +129,14 @@ list<string> getLines(InputBuffer *input) {
 }
 }  // namespace
 
+void Store::logRequest(const string &line, const list<string> &lines) {
+    Informational info(_logger);
+    info << "Request: " << line;
+    for (const auto &l : lines) {
+        info << R"(\n)" << l;
+    }
+}
+
 bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
     output->reset();
     InputBuffer::Result res = input->readRequest();
@@ -142,17 +150,21 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
     }
     string l = input->nextLine();
     const char *line = l.c_str();
-    Informational(_logger) << "Query: " << line;
     if (strncmp(line, "GET ", 4) == 0) {
-        answerGetRequest(getLines(input), output,
-                         lstrip(const_cast<char *>(line) + 4));
+        auto lines = getLines(input);
+        logRequest(l, lines);
+        answerGetRequest(lines, output, lstrip(const_cast<char *>(line) + 4));
     } else if (strcmp(line, "GET") == 0) {
         // only to get error message
-        answerGetRequest(getLines(input), output, "");
+        auto lines = getLines(input);
+        logRequest(l, lines);
+        answerGetRequest(lines, output, "");
     } else if (strncmp(line, "COMMAND ", 8) == 0) {
+        logRequest(l, {});
         answerCommandRequest(lstrip(const_cast<char *>(line) + 8));
         output->setDoKeepalive(true);
     } else if (strncmp(line, "LOGROTATE", 9) == 0) {
+        logRequest(l, {});
         Informational(_logger) << "Forcing logfile rotation";
         rotate_log_file(time(nullptr));
         schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
@@ -160,7 +172,8 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
                            reinterpret_cast<void *>(get_next_log_rotation_time),
                            1, nullptr, nullptr, 0);
     } else {
-        Warning(_logger) << "Invalid request '" << line << "'";
+        logRequest(l, {});
+        Warning(_logger) << "Invalid request '" << l << "'";
         output->setError(OutputBuffer::ResponseCode::invalid_request,
                          "Invalid request method");
     }

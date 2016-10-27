@@ -102,6 +102,8 @@ private:
 
     void addTable(Table *table);
     Table *findTable(const std::string &name);
+    void logRequest(const std::string &line,
+                    const std::list<std::string> &lines);
     void answerGetRequest(const std::list<std::string> &lines, OutputBuffer *,
                           const char *);
     void answerCommandRequest(const char *);

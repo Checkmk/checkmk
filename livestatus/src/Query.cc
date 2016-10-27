@@ -99,7 +99,6 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding)
         line_copy.push_back('\0');
         char *buffer = &line_copy[0];
         rstrip(buffer);
-        Informational(_logger) << "Query: " << buffer;
         if (strncmp(buffer, "Filter:", 7) == 0) {
             parseFilterLine(lstrip(buffer + 7), _filter);
 
@@ -712,8 +711,10 @@ void Query::parseLocaltimeLine(char *line) {
         return;
     }
     _timezone_offset = full * 1800;
-    Debug(_logger) << "Timezone difference is " << (_timezone_offset / 3600.0)
-                   << " hours";
+    if (_timezone_offset != 0) {
+        Debug(_logger) << "timezone difference is " << _timezone_offset / 3600.0
+                       << " hours";
+    }
 }
 
 bool Query::doStats() { return !_stats_columns.empty(); }

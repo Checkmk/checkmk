@@ -58,6 +58,7 @@ from cmk.regex import regex
 import cmk.tty as tty
 import cmk.render as render
 import cmk.crash_reporting as crash_reporting
+import cmk.cpu_tracking as cpu_tracking
 import cmk.paths
 
 import cmk_base.agent_simulator
@@ -689,9 +690,12 @@ def get_agent_info(hostname, ipaddress, max_cache_age):
         # as ssh or rsh or agent_vsphere) instead of a TCP connect.
         commandline = get_datasource_program(hostname, ipaddress)
         if commandline:
+            cpu_tracking.push_phase("ds")
             output = get_agent_info_program(commandline)
         else:
+            cpu_tracking.push_phase("agent")
             output = get_agent_info_tcp(hostname, ipaddress)
+        cpu_tracking.pop_phase()
 
         # Got new data? Write to cache file
         write_cache_file(hostname, output)
@@ -1162,9 +1166,9 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
 # This is the main check function - the central entry point to all and
 # everything
 def do_check(hostname, ipaddress, only_check_types = None):
-    console.verbose("Check_mk version %s\n" % cmk.__version__)
+    cpu_tracking.start("busy")
+    console.verbose("Check_MK version %s\n" % cmk.__version__)
 
-    start_time = time.time()
 
     expected_version = agent_target_version(hostname)
 
@@ -1233,16 +1237,21 @@ def do_check(hostname, ipaddress, only_check_types = None):
     if checkresult_file_fd != None:
         close_checkresult_file()
 
-    run_time = time.time() - start_time
-    if check_mk_perfdata_with_times:
-        if opt_keepalive:
-            times = get_keepalive_times()
-        else:
-            times = os.times()
+    cpu_tracking.end()
+    phase_times = cpu_tracking.get_times()
+    total_times = phase_times["TOTAL"]
+    run_time = total_times[4]
 
+    if check_mk_perfdata_with_times:
         output += "execution time %.1f sec|execution_time=%.3f user_time=%.3f "\
-                  "system_time=%.3f children_user_time=%.3f children_system_time=%.3f\n" %\
-                (run_time, run_time, times[0], times[1], times[2], times[3])
+                  "system_time=%.3f children_user_time=%.3f children_system_time=%.3f" %\
+                (run_time, run_time, total_times[0], total_times[1], total_times[2], total_times[3])
+
+        for phase, times in phase_times.items():
+            if phase in [ "agent", "snmp", "ds" ]:
+                t = times[4] - sum(times[:4]) # real time - CPU time
+                output += " cmk_time_%s=%.3f" % (phase, t)
+        output += "\n"
     else:
         output += "execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
 

@@ -1,0 +1,10 @@
+Title: Measurement of time used by Check_MK now includes time waited for agent
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.4.0i2
+Date: 1477574025
+Class: feature
+
+Now in the graph you can see how much time was spent waiting for the monitoring
+agent.

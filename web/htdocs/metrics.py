@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # Frequently used variable names:
-# perf_data_string:   Raw performance data as sent by the core, e.g "foor=17M;1;2;4;5"
+# perf_data_string:   Raw performance data as sent by the core, e.g "foo=17M;1;2;4;5"
 # perf_data:          Split performance data, e.g. [("foo", "17", "M", "1", "2", "4", "5")]
 # translated_metrics: Completely parsed and translated into metrics, e.g. { "foo" : { "value" : 17.0, "unit" : { "render" : ... }, ... } }
 # color:              RGB color representation ala HTML, e.g. "#ffbbc3" or "#FFBBC3", len() is always 7!

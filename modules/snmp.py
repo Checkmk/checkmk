@@ -243,12 +243,14 @@ def perform_snmpwalk(hostname, ip, check_type, base_oid, fetchoid):
         snmp_contexts = [None]
 
     for context_name in snmp_contexts:
+        cpu_tracking.push_phase("snmp")
         if is_inline_snmp_host(hostname):
             rows = inline_snmpwalk_on_suboid(hostname, check_type, fetchoid, base_oid,
                                                                   context_name=context_name,
                                                                   ipaddress=ip)
         else:
             rows = snmpwalk_on_suboid(hostname, ip, fetchoid, context_name=context_name)
+        cpu_tracking.pop_phase()
 
         # I've seen a broken device (Mikrotik Router), that broke after an
         # update to RouterOS v6.22. It would return 9 time the same OID when

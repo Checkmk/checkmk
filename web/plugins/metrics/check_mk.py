@@ -1714,7 +1714,7 @@ metric_info["hours_since_service"] = {
 }
 
 metric_info["execution_time"] = {
-    "title" : _("Execution time"),
+    "title" : _("Total execution time"),
     "unit"  : "s",
     "color" : "#d080af",
 }
@@ -2284,6 +2284,25 @@ metric_info["livestatus_overflows_rate"] = {
     "unit"  : "1/s",
     "color" : "16/a",
 }
+
+metric_info["cmk_time_agent"] = {
+    "title" : _("Time spent waiting for Check_MK agent"),
+    "unit" : "s",
+    "color" : "35/a",
+}
+
+metric_info["cmk_time_snmp"] = {
+    "title" : _("Time spent waiting for SNMP responses"),
+    "unit" : "s",
+    "color" : "36/a",
+}
+
+metric_info["cmk_time_ds"] = {
+    "title" : _("Time spent waiting for special agent"),
+    "unit" : "s",
+    "color" : "34/a",
+}
+
 
 metric_info["num_open_events"] = {
     "title" : _("Open events"),
@@ -5907,6 +5926,25 @@ graph_info.append({
         ( "user_time,children_user_time,system_time,children_system_time,+,+,+#888888", "line", _("Total") ),
     ],
     "omit_zero_metrics" : True,
+    "conflicting_metrics" : [ "cmk_time_agent", "cmk_time_snmp", "cmk_time_ds" ],
+})
+
+
+graph_info.append({
+    "title" : _("Time usage by phase"),
+    "metrics" : [
+        ( "user_time,children_user_time,+",     "stack", _("CPU time in user space") ),
+        ( "system_time,children_system_time,+", "stack", _("CPU time in operating system") ),
+        ( "cmk_time_agent",                     "stack" ),
+        ( "cmk_time_snmp",                      "stack" ),
+        ( "cmk_time_ds",                        "stack" ),
+        ( "execution_time",                     "line" ),
+    ],
+    "optional_metrics" : [
+        "cmk_time_agent",
+        "cmk_time_snmp",
+        "cmk_time_ds"
+    ],
 })
 
 graph_info.append({
@@ -5952,7 +5990,7 @@ graph_info.append({
         "load1:warn",
         "load1:crit",
     ],
-    "optional_metrics" : [ "load15" ],
+    "optional_metrics" : [ "load15", ],
 })
 
 graph_info.append({

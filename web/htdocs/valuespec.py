@@ -4158,6 +4158,7 @@ class SSHKeyPair(ValueSpec):
 
     @classmethod
     def _get_key_fingerprint(cls, value):
+        private_key, public_key = value
         key = base64.b64decode(public_key.strip().split()[1].encode('ascii'))
         fp_plain = hashlib.md5(key).hexdigest()
         return ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))

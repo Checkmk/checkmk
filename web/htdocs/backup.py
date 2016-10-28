@@ -471,7 +471,7 @@ class Jobs(BackupEntityCollection):
                 html.write(_("Started at %s") % render.date_and_time(state["started"]))
                 duration = time.time() - state["started"]
                 if state["state"] == "finished":
-                    html.write(", Finished at %s" % render.date_and_time(state["started"]))
+                    html.write(", Finished at %s" % render.date_and_time(state["finished"]))
                     duration = state["finished"] - state["started"]
 
                 if "size" in state:

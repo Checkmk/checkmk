@@ -4140,6 +4140,7 @@ class SSHKeyPair(ValueSpec):
     def _generate_ssh_key(cls, varprefix):
         key = RSA.generate(4096)
         private_key = key.exportKey('PEM')
+        pubkey = key.publickey()
         public_key  = pubkey.exportKey('OpenSSH')
         return (private_key, public_key)
 

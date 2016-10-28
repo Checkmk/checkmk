@@ -32,6 +32,8 @@
 # - Checkbox -> rename to Boolean
 
 import math, os, time, re, sre_constants, urlparse, forms, tempfile
+import base64
+import hashlib
 import socket
 from lib import *
 import cmk.defines as defines
@@ -4134,8 +4136,8 @@ class SSHKeyPair(ValueSpec):
 
 
     @classmethod
-    def _generate_ssh_key(clazz, varprefix):
-        tmp_file_name_base = clazz._tmp_file_name()
+    def _generate_ssh_key(cls, varprefix):
+        tmp_file_name_base = cls._tmp_file_name()
         private_key_file = tmp_file_name_base + ".key"
         public_key_file = private_key_file + ".pub"
         f = os.popen("echo | ssh-keygen -t rsa -b 4096 -f %s 2>&1" %
@@ -4155,14 +4157,10 @@ class SSHKeyPair(ValueSpec):
 
 
     @classmethod
-    def _get_key_fingerprint(clazz, value):
-        private_key, public_key = value
-        tmp_file_name = clazz._tmp_file_name()
-        file(tmp_file_name + ".pub", "w").write(public_key)
-        line = os.popen("ssh-keygen -lf %s" % quote_shell_string(tmp_file_name)).read()
-        os.remove(tmp_file_name)
-        #   4096 ff:ac:2b:b0:2a:12:84:f5:94:ae:7a:36:9e:73:a4:0f heute@Klappfisch (RSA)
-        return line.split()[1]
+    def _get_key_fingerprint(cls, value):
+        key = base64.b64decode(public_key.strip().split()[1].encode('ascii'))
+        fp_plain = hashlib.md5(key).hexdigest()
+        return ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))
 
 
     @staticmethod

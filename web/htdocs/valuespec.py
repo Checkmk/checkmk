@@ -37,6 +37,7 @@ import hashlib
 import socket
 from lib import *
 import cmk.defines as defines
+from Crypto.PublicKey import RSA
 
 try:
     import simplejson as json
@@ -4137,22 +4138,9 @@ class SSHKeyPair(ValueSpec):
 
     @classmethod
     def _generate_ssh_key(cls, varprefix):
-        tmp_file_name_base = cls._tmp_file_name()
-        private_key_file = tmp_file_name_base + ".key"
-        public_key_file = private_key_file + ".pub"
-        f = os.popen("echo | ssh-keygen -t rsa -b 4096 -f %s 2>&1" %
-                     quote_shell_string(private_key_file))
-        output = f.read()
-        status = f.close()
-        os.remove(tmp_file_name_base)
-        if status:
-            os.remove(private_key_file)
-            os.remove(public_key_file)
-            raise MKUserError(varprefix, _("Failed to create SSH key pair: %s") % output)
-        private_key = file(private_key_file).read()
-        public_key = file(public_key_file).read()
-        os.remove(private_key_file)
-        os.remove(public_key_file)
+        key = RSA.generate(4096)
+        private_key = key.exportKey('PEM')
+        public_key  = pubkey.exportKey('OpenSSH')
         return (private_key, public_key)
 
 
@@ -4162,13 +4150,6 @@ class SSHKeyPair(ValueSpec):
         key = base64.b64decode(public_key.strip().split()[1].encode('ascii'))
         fp_plain = hashlib.md5(key).hexdigest()
         return ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))
-
-
-    @staticmethod
-    def _tmp_file_name():
-        fd, path = tempfile.mkstemp(dir=cmk.paths.tmp_dir)
-        os.close(fd)
-        return path
 
 
 

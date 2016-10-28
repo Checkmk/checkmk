@@ -3438,7 +3438,7 @@ def mode_bulk_discovery(phase):
                 if not html.get_checkbox("ignore_errors"):
                     arguments = [ "@raiseerrors" ] + arguments
 
-                timeout = html.request_timeout()
+                timeout = html.request_timeout() - 2
 
                 unlock_exclusive() # Avoid freezing WATO when hosts do not respond timely
                 counts, failed_hosts = check_mk_automation(site_id, "inventory",

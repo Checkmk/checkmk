@@ -236,7 +236,7 @@ class Site(object):
         for site_id in os.listdir("/omd/sites"):
             if site_id != self.id and site_id.startswith(cleanup_pattern):
                 print "Cleaning up old site: %s" % site_id
-                #self.rm(site_id)
+                self.rm(site_id)
 
 
     def start(self):

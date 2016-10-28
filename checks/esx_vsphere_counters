@@ -368,8 +368,10 @@ def inventory_esx_vsphere_counters_uptime(parsed):
 def check_esx_vsphere_counters_uptime(_no_item, params, parsed):
     if "sys.uptime" not in parsed:
         raise MKCounterWrapped("Counter data is missing")
-
-    return check_uptime_seconds(params, int(parsed["sys.uptime"][""][0][0][-1]))
+    uptime = int(parsed["sys.uptime"][""][0][0][-1])
+    if uptime < 0:
+        raise MKCounterWrapped("Counter data is corrupt")
+    return check_uptime_seconds(params, uptime)
 
 
 check_info['esx_vsphere_counters.uptime'] = {

@@ -1,4 +1,4 @@
-Title: mk_jolokia: Use JSON library to parse JSON output in lieu of eval()
+Title: mk_jolokia: Fix possible code injection
 Level: 1
 Component: checks
 Compatible: incomp
@@ -6,6 +6,18 @@ Version: 1.2.8p10
 Date: 1472111893
 Class: security
 
-Previously, the mk_jolokia agent plugin would try to parse the JSON data
-returned from jolokia with eval(). Now, the simplejson or json python
-libraries are a prerequisite for the plugin to work.
+The plugin now requires either the json or simplejson python library to work.
+
+Python 2.6 or higher ships with json, in this case, the plugin will work just
+as before.
+
+simplejson is available for Python 2.5 and higher, installation of this package
+is required for the plugin to work.
+
+Older python versions are not supported, please query your Jolokia instances
+from another host in these cases (recommended) or continue to use the old version
+of the plugin. (not recommended)
+
+In absence of the json or simplejson python libraries, the mk_jolokia plugin
+would previously try to parse the Jolokia response with python eval(), allowing
+a MITM attacker to inject arbitrary code.

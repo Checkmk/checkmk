@@ -67,6 +67,7 @@
 
     Notifications:
     * 3957 mail: now allows extra HTML section between body and table
+    * 3972 It's now possible to bulk notifications based on Event console contacts
     * 3900 FIX: Notification analysis: Fixed wrong color for host notification states
     * 3968 FIX: Notifications / Alert handling: Fixed configuring nth notifications without state changes...
 

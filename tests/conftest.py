@@ -93,6 +93,11 @@ def site(request):
 
     site = testlib.Site(site_id=site_id(), version=site_version(),
                         edition=site_edition(), reuse=reuse_site())
+
+    cleanup_pattern = os.environ.get("CLEANUP_OLD")
+    if cleanup_pattern:
+        site.cleanup_old_sites(cleanup_pattern)
+
     site.cleanup_if_wrong_version()
     site.create()
     site.open_livestatus_tcp()

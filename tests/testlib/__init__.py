@@ -226,8 +226,17 @@ class Site(object):
             self.rm()
 
 
-    def rm(self):
-        assert omd(["-f", "rm", "--kill", self.id]) == 0
+    def rm(self, site_id=None):
+        if site_id == None:
+            site_id = self.id
+        assert omd(["-f", "rm", "--kill", site_id]) == 0
+
+
+    def cleanup_old_sites(self, cleanup_pattern):
+        for site_id in os.listdir("/omd/sites"):
+            if site_id != site.id() and site_id.startswith(cleanup_pattern):
+                print "Cleaning up old site: %s" % site_id
+                #self.rm(site_id)
 
 
     def start(self):

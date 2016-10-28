@@ -130,7 +130,7 @@ def compare_soup(html1, html2):
                 if key.startswith("on") or key == "style":
                     val1 = filter(lambda x: x, map(lambda x: unify_attrs(x).strip(' '), attrs1.pop(key, '').split(';')))
                     val2 = filter(lambda x: x, map(lambda x: unify_attrs(x).strip(' '), attrs2.pop(key, '').split(';')))
-                    assert val1 == val2, '\n%s\n%s' % (attrs1, attrs2)
+                    assert val1 == val2, '\n%s\n%s' % (val1, val2)
 
             assert attrs1 == attrs2, '\n%s\n%s' % (d1, d2)
 

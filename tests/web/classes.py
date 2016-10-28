@@ -50,6 +50,7 @@ class DeprecatedRenderer(object):
 
         self.enable_debug = False
         self.screenshotmode = False
+        self.have_help = False
         self.help_visible = False
 
         self.body_classes = ['main']
@@ -123,6 +124,17 @@ class DeprecatedRenderer(object):
         self.write("<hr class=\"header\">\n")
         if self.enable_debug:
             self._dump_get_vars()
+
+
+    # Embed help box, whose visibility is controlled by a global
+    # button in the page.
+    def help(self, text):
+        if text and text.strip():
+            self.have_help = True
+            self.write('<div class=help style="display: %s">' % (
+                        not self.help_visible and "none" or "block"))
+            self.write(text.strip())
+            self.write('</div>')
 
 
     #

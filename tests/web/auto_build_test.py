@@ -29,7 +29,7 @@ from bs4 import BeautifulSoup as bs
 
 # internal imports
 from classes import HTMLOrigTester, HTMLCheck_MKTester
-from tools import compare_html , gentest, compare_and_empty
+from tools import compare_html, gentest, compare_and_empty
 '''
 
 function_start = lambda x: '''
@@ -67,15 +67,27 @@ if __name__ == "__main__":
             exit(0)
 
     counter = 0
+    indent = ' ' * 4
 
     with open(autotest_filename, 'w') as auto:
         auto.write(header)
         with open(sys.argv[1], 'r') as diff:
+
+            old_line = []
+            new_line = []
+
             for line in diff:
+
+                line = line[0] + line[1:].lstrip(' ')
 
                 if re.match(r'@@.*', line):
                     if counter > 0:
+                        auto.write(indent + indent.join(old_line))
+                        auto.write(indent + indent.join(new_line))
+                        auto.write("\n\n")
                         auto.write(function_end)
+                        old_line = []
+                        new_line = []
                     auto.write(function_start(counter))
                     counter += 1
                     continue
@@ -87,21 +99,28 @@ if __name__ == "__main__":
                     continue
 
                 if not re.match(r'[+|-].+', line) and line[0] not in ['+', '-']:
-                    auto.write(line[1:])
+                    old_line.append(line[1:])
+                    new_line.append(line[1:])
 
                 elif re.match(r'[+]{3}.*', line) or re.match(r'[-]{3}.*', line):
                     continue
 
                 elif re.match(r'[-]\s*html\..*', line):
                     pattern = re.compile(r'[-]\s*html\.')
-                    auto.write(re.sub(r'\s*html\.', '    old.', line[1:], count=1))
+                    old_line.append(re.sub(r'\s*html\.', 'old.', line[1:], count=1))
 
                 elif re.match(r'[+]\s*html\..*', line):
                     pattern = re.compile(r'\s*html\.')
-                    auto.write(pattern.sub('    new.', line[1:], count=1))
+                    new_line.append(pattern.sub('new.', line[1:], count=1))
+
+                elif re.match(r'[-].*', line):
+                    old_line.append(line[1:])
+
+                elif re.match(r'[+].*', line):
+                    new_line.append(line[1:])
 
                 else:
-                    auto.write(line[1:])
+                    print line
 
         if(counter > 0):
             auto.write(function_end)

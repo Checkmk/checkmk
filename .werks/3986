@@ -1,0 +1,10 @@
+Title: esx_vsphere_counters.uptime: fixed incorrect alert when receiving corrupted counter data
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p14
+Date: 1477647498
+
+The check reported a negative uptime.

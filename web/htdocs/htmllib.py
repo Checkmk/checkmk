@@ -349,15 +349,17 @@ class HTMLGenerator(OutputFunnel):
             non HtML relevant signs '&amp;', '&lt;', '&gt;' and '&quot;'. """
 
 
+    # TODO: Replace u, i, b with underline, italic, bold, usw.
+
+
     # these tags can be called by their tag names, e.g. 'self.title(content)'
     _shortcut_tags = set(['title', 'h1', 'h2', 'h3', 'th', 'tr', 'td', 'center',\
-                              'div', 'p', 'span', 'canvas', 'strong', 'sub', 'tt', 'u'])
+                          'div', 'p', 'span', 'canvas', 'strong', 'sub', 'tt', 'u', 'i', 'b'])
 
     # these tags can be called by open_name(), close_name() and render_name(), e.g. 'self.open_html()'
     _tag_names = set(['html', 'head', 'body', 'header', 'footer', 'a', 'b',\
                               'script', 'form', 'button', 'p', 'select', 'pre',\
-                              'table', 'row', 'ul', 'li', 'br', 'nobr', 'input',\
-                              'tt'])
+                              'table', 'tbody', 'row', 'ul', 'li', 'br', 'nobr', 'input'])
 
     # Of course all shortcut tags can be used as well.
     _tag_names.update(_shortcut_tags)
@@ -565,7 +567,7 @@ class HTMLGenerator(OutputFunnel):
 
     def _render_content_tag(self, tag_name, tag_content, **attrs):
         tag = ''
-        if not tag_content:
+        if tag_content in ['', None]:
             tag = "%s</%s>" % (self._render_opening_tag(tag_name, **attrs), tag_name)
         elif isinstance(tag_content, HTML):
             tag = "%s%s</%s>" % (self._render_opening_tag(tag_name, **attrs).rstrip('\n'),
@@ -616,6 +618,7 @@ class HTMLGenerator(OutputFunnel):
                 return lambda content, **attrs: HTML(self._render_content_tag(tag_name, content, **attrs))
 
         else:
+            # FIXME: This returns None, which is not a very informative error message
             return object.__getattribute__(self, name)
 
     #
@@ -658,6 +661,10 @@ class HTMLGenerator(OutputFunnel):
         self.write(self._render_opening_tag('a', **attrs))
 
 
+    def render_a(self, content, href, **attrs):
+        attrs['href'] = href
+        return HTML(self._render_content_tag('a', content, **attrs))
+
     def a(self, content, href, **attrs):
         attrs['href'] = href
         self.write(self._render_content_tag('a', content, **attrs))
@@ -679,6 +686,11 @@ class HTMLGenerator(OutputFunnel):
     def javascript_file(self, name):
         """ <script type="text/javascript" src="js/%(name)s.js"/>\n """
         self.write(self._render_content_tag('script', '', type_="text/javascript", src='js/%s.js' % name))
+
+
+    def render_img(self, src, **attrs):
+        attrs['src'] = src
+        return HTML(self._render_opening_tag('img', close_tag=True, **attrs))
 
 
     def img(self, src, **attrs):
@@ -795,6 +807,7 @@ class HTMLCheck_MK(HTMLGenerator):
         self.render_headfoot = True
         self.enable_debug = False
         self.screenshotmode = False
+        self.have_help = False
         self.help_visible = False
 
         # browser options
@@ -940,6 +953,20 @@ class HTMLCheck_MK(HTMLGenerator):
             self._dump_get_vars()
 
 
+    # Embed help box, whose visibility is controlled by a global
+    # button in the page.
+
+    # TODO: Add to integration tests!!!
+
+    def help(self, text):
+        if text and text.strip():
+            self.have_help = True
+            self.open_div(class_="help", style="display: %s;" % (
+                        "block" if self.help_visible else "none"))
+            # TODO: Replace with write_text???
+            self.write(text.strip())
+            self.close_div()
+
     #
     # HTML form rendering
     #
@@ -949,12 +976,16 @@ class HTMLCheck_MK(HTMLGenerator):
         raise NotImplementedError()
 
 
+
+    #FIXME: Change order of input arguments in one: icon and render_icon!!
+
     def icon(self, help, icon, **kwargs):
 
         #TODO: Refactor
         title = help
+        icon_name = icon
 
-        self.write(self.render_icon(icon_name=icon, help=title, **kwargs))
+        self.write(self.render_icon(icon_name=icon_name, help=title, **kwargs))
 
 
     def empty_icon(self):
@@ -1160,7 +1191,6 @@ class html(DeprecationWrapper):
         self._request_timeout = 110 # seconds
 
         # Settings
-        self.have_help = False
         self.io_error = False
         self.mobile = False
         self.buffering = True
@@ -2151,16 +2181,6 @@ class html(DeprecationWrapper):
               "language. You can configure the localizations "
               "<a href=\"%s\">in the global settings</a>.") % url))
 
-
-    # Embed help box, whose visibility is controlled by a global
-    # button in the page.
-    def help(self, text):
-        if text and text.strip():
-            self.have_help = True
-            self.write('<div class=help style="display: %s">' % (
-                        not self.help_visible and "none" or "block"))
-            self.write(text.strip())
-            self.write('</div>')
 
     def _dump_get_vars(self):
         self.begin_foldable_container("html", "debug_vars", True, _("GET/POST variables of this page"))
